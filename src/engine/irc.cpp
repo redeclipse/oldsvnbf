@@ -635,7 +635,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 	else
 	{
 		ircsend(n, "%s", p);
-		ircprintf(n, NULL, "\fc>%s< %s", n->nick, p);
+		ircprintf(n, NULL, "\fa>%s< %s", n->nick, p);
 	}
 }
 

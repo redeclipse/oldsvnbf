@@ -1262,7 +1262,7 @@ namespace ai
 
 namespace hud
 {
-	extern int hudwidth, hudsize, radarflags;
+	extern int hudwidth, hudsize, radarflagnames;
 	extern float radarblipblend, radarnameblend, inventoryblend, inventoryskew;
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);

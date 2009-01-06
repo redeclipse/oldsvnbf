@@ -7,6 +7,16 @@ namespace hud
 	int hudwidth = 0;
 	scoreboard sb;
 
+	VARP(hudsize, 0, 2400, INT_MAX-1);
+
+	VARP(showstats, 0, 0, 1);
+	VARP(statrate, 0, 200, 1000);
+	VARP(showfps, 0, 2, 2);
+
+	VARP(titlecardtime, 0, 2000, 10000);
+	VARP(titlecardfade, 0, 3000, 10000);
+	FVARP(titlecardsize, 0, 0.3f, 1000);
+
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 0);
 	VARP(showindicator, 0, 1, 1);
@@ -71,30 +81,19 @@ namespace hud
 	FVARP(radarnameblend, 0, 1.f, 1);
 	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
-	VARP(radardist, 0, 256, INT_MAX-1);
-	VARP(radarcard, 0, 0, 2); // 0 = none, 1 = cardinals, 2 = editmode degrees too
-	VARP(radaritems, 0, 1, 2);
-	VARP(radarplayers, 0, 1, 2);
+	VARP(radardist, 0, 128, INT_MAX-1);
+	VARP(radarcard, 0, 1, 2); // 0 = none, 1 = editmode only, 2 = always
+	VARP(radaritems, 0, 1, 2); // 0 = none, 1 = editmode only, 2 = always
+	VARP(radaritemnames, 0, 0, 1);
+	VARP(radarplayers, 0, 1, 2); // 0 = none, 1 = editmode only, 2 = always
+	VARP(radarplayernames, 0, 0, 1);
 	VARP(radarhealth, 0, 1, 2);
-	VARP(radarflags, 0, 2, 2);
+	VARP(radarflags, 0, 1, 1);
+	VARP(radarflagnames, 0, 1, 1);
     VARP(radarborder, 0, 0, 1);
 	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 128, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
-
-	//VARP(showtips, 0, 2, 3);
-	//VARP(showenttips, 0, 1, 2);
-	//VARP(showhudents, 0, 10, 100);
-
-	VARP(hudsize, 0, 2400, INT_MAX-1);
-
-	VARP(titlecardtime, 0, 2000, 10000);
-	VARP(titlecardfade, 0, 3000, 10000);
-	FVARP(titlecardsize, 0, 0.3f, 1000);
-
-	VARP(showstats, 0, 0, 1);
-	VARP(statrate, 0, 200, 1000);
-	VARP(showfps, 0, 2, 2);
 
 	void colourskew(float &r, float &g, float &b, float skew)
 	{
@@ -132,16 +131,8 @@ namespace hud
 
 	enum
 	{
-		POINTER_NONE = 0,
-		POINTER_RELATIVE,
-		POINTER_GUI,
-		POINTER_EDIT,
-		POINTER_SPEC,
-		POINTER_HAIR,
-		POINTER_TEAM,
-		POINTER_HIT,
-		POINTER_SNIPE,
-		POINTER_MAX
+		POINTER_NONE = 0, POINTER_RELATIVE, POINTER_GUI, POINTER_EDIT, POINTER_SPEC,
+		POINTER_HAIR, POINTER_TEAM, POINTER_HIT, POINTER_SNIPE, POINTER_MAX
 	};
 
     const char *getpointer(int index)
@@ -221,6 +212,7 @@ namespace hud
         switch(gun)
         {
             case GUN_PLASMA: case GUN_FLAMER: case GUN_CG: s *= 0.8f; break;
+            default: break;
         }
         glColor4f(1.f, 1.f, 1.f, fade);
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
@@ -255,7 +247,6 @@ namespace hud
 	void drawpointers(int w, int h)
 	{
         int index = POINTER_NONE;
-
 		if(UI::hascursor()) index = UI::hascursor(true) ? POINTER_GUI : POINTER_NONE;
         else if(hidehud || !showcrosshair || world::player1->state == CS_DEAD || !connected()) index = POINTER_NONE;
         else if(world::player1->state == CS_EDITING) index = POINTER_EDIT;
@@ -297,7 +288,6 @@ namespace hud
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
 			glOrtho(0, hudwidth, hudsize, 0, -1, 1);
-
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 
@@ -311,9 +301,7 @@ namespace hud
 				x = y = 0.5f;
 
 			int cx = int(hudwidth*x), cy = int(hudsize*y);
-
 			drawpointer(index, cx, cy, cs, r, g, b, fade);
-
 			if(index > POINTER_GUI)
 			{
 				if(world::player1->state == CS_ALIVE)
@@ -344,16 +332,8 @@ namespace hud
 		glTexCoord2f(tx1, ty2); glVertex2f(x, y+h);
 		glEnd();
 	}
-
-	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th)
-	{
-		drawquad(x, y, w, h, tx, ty, tx+tw, ty+th);
-	}
-
-	void drawsized(float x, float y, float s)
-	{
-		drawtex(x, y, s, s);
-	}
+	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
+	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
 
 	float radarrange()
 	{
@@ -402,7 +382,7 @@ namespace hud
 			if(font && *font) pushfont(font);
 			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
 				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
-				ta = rd.axis ? TEXT_CENTERED : (rd.swap ? TEXT_RIGHT_JUSTIFY : TEXT_LEFT_JUSTIFY),
+				ta = rd.axis ? TEXT_CENTERED|TEXT_NO_INDENT : (rd.swap ? TEXT_RIGHT_JUSTIFY|TEXT_NO_INDENT : TEXT_LEFT_JUSTIFY),
 				tf = int((fade >= 0.f ? fade : blend)*255.f);
 			s_sprintfdlv(str, text, text);
 			draw_textx("%s", tx, ty, 255, 255, 255, tf, ta, -1, -1, str);
@@ -424,7 +404,7 @@ namespace hud
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(lastmillis-d->lastspawn <= REGENWAIT)
 				fade *= clamp(float(lastmillis-d->lastspawn)/float(REGENWAIT), 0.f, 1.f);
-			if(radarplayers > 1) drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
+			if(radarplayernames > 2) drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
 			else drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend);
 		}
 	}
@@ -480,7 +460,7 @@ namespace hud
 			}
 			string text; text[0] = 0;
 			if(insel) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(radaritems > 1) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else if(radaritemnames) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
 			else drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend);
 		}
 	}
@@ -588,8 +568,8 @@ namespace hud
 				);
 			}
 		}
-		if(m_edit(world::gamemode) || radaritems) drawentblips(w, h, cs/2, blend);
-		if(radarplayers)
+		if(radaritems > m_edit(world::gamemode) ? 0 : 1) drawentblips(w, h, cs/2, blend);
+		if(radarplayers > m_edit(world::gamemode) ? 0 : 1)
 		{
 			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
 				drawplayerblip(world::players[i], w, h, cs/2, blend);
@@ -599,7 +579,7 @@ namespace hud
 			if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
 			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend);
 		}
-		if(radarcard) drawcardinalblips(w, h, cs/2, blend, m_edit(world::gamemode) && radarcard > 1);
+		if(radarcard > m_edit(world::gamemode) ? 0 : 1) drawcardinalblips(w, h, cs/2, blend, m_edit(world::gamemode));
 	}
 
 	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)

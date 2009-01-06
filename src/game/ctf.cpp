@@ -204,7 +204,7 @@ namespace ctf
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		if(hud::radarflags > 1) hud::drawblip(w, h, s, fade, 3, dir, r, g, b,
+		if(hud::radarflagnames) hud::drawblip(w, h, s, fade, 3, dir, r, g, b,
 				"hud", fade*hud::radarnameblend, "%s%s %s", teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
 		else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
     }

@@ -99,13 +99,13 @@ static inline T min(T a, T b)
 
 // easy safe strings
 
-#define _MAXDEFSTR 260
-typedef char string[_MAXDEFSTR];
+#define MAXSTRLEN 512 // must be at least 512 bytes to comply with rfc1459
+typedef char string[MAXSTRLEN];
 
-inline void formatstring(char *d, const char *fmt, va_list v) { _vsnprintf(d, _MAXDEFSTR, fmt, v); d[_MAXDEFSTR-1] = 0; }
+inline void formatstring(char *d, const char *fmt, va_list v) { _vsnprintf(d, MAXSTRLEN, fmt, v); d[MAXSTRLEN-1] = 0; }
 inline char *s_strncpy(char *d, const char *s, size_t m) { strncpy(d,s,m); d[m-1] = 0; return d; }
-inline char *s_strcpy(char *d, const char *s) { return s_strncpy(d,s,_MAXDEFSTR); }
-inline char *s_strcat(char *d, const char *s) { size_t n = strlen(d); return s_strncpy(d+n,s,_MAXDEFSTR-n); }
+inline char *s_strcpy(char *d, const char *s) { return s_strncpy(d,s,MAXSTRLEN); }
+inline char *s_strcat(char *d, const char *s) { size_t n = strlen(d); return s_strncpy(d+n,s,MAXSTRLEN-n); }
 
 
 struct s_sprintf_f
@@ -636,7 +636,7 @@ template <class T, int SIZE> struct ringbuf
 inline char *newstring(size_t l)                { return new char[l+1]; }
 inline char *newstring(const char *s, size_t l) { return s_strncpy(newstring(l), s, l+1); }
 inline char *newstring(const char *s)           { return newstring(s, strlen(s));          }
-inline char *newstringbuf(const char *s)        { return newstring(s, _MAXDEFSTR-1);       }
+inline char *newstringbuf(const char *s)        { return newstring(s, MAXSTRLEN-1);       }
 
 #if defined(WIN32) && !defined(__GNUC__)
 #ifdef _DEBUG
