@@ -742,6 +742,18 @@ struct animmodel : model
                 matrixstack[matrixpos].rotate(pitchamount*RAD, axis);
             }
 
+            if(!(anim&ANIM_NORENDER))
+            {
+                glPushMatrix();
+                glMultMatrixf(matrixstack[matrixpos].v);
+                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
+                {
+                    glMatrixMode(GL_TEXTURE);
+                    glLoadMatrixf(matrixstack[matrixpos].v);
+                    glMatrixMode(GL_MODELVIEW);
+                }
+            }
+
             if(!(anim&(ANIM_NOSKIN|ANIM_NORENDER)))
             {
                 if(renderpath!=R_FIXEDFUNCTION)
@@ -753,27 +765,6 @@ struct animmodel : model
                 else
                 {
                     if(fogging) refractfogplane = rfogplane;
-                    if(lightmodels)
-                    {
-                        loopv(skins) if(!skins[i].fullbright)
-                        {
-                            GLfloat pos[4] = { rdir.x*1000, rdir.y*1000, rdir.z*1000, 0 };
-                            glLightfv(GL_LIGHT0, GL_POSITION, pos);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(!(anim&ANIM_NORENDER))
-            {
-                glPushMatrix();
-                glMultMatrixf(matrixstack[matrixpos].v);
-                if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
-                {
-                    glMatrixMode(GL_TEXTURE);
-                    glLoadMatrixf(matrixstack[matrixpos].v);
-                    glMatrixMode(GL_MODELVIEW);
                 }
             }
 
@@ -946,6 +937,12 @@ struct animmodel : model
 
         if(!(anim&ANIM_NOSKIN))
         {
+            if(renderpath==R_FIXEDFUNCTION && lightmodels)
+            {
+                GLfloat pos[4] = { dir.x*1000, dir.y*1000, dir.z*1000, 0 };
+                glLightfv(GL_LIGHT0, GL_POSITION, pos);
+            }
+
             fogplane = plane(0, 0, 1, o.z-reflectz);
 
             lightcolor = color;
