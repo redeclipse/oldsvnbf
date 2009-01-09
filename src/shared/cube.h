@@ -1,5 +1,4 @@
 #include "tools.h"
 #include "command.h"
 #include "geom.h"
-#include "attrs.h"
 #include "ents.h"

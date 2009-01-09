@@ -8,6 +8,7 @@ CLIENT_LIBS+= -lrt
 endif
 CLIENT_OBJS= \
 	shared/tools.o \
+	shared/hash.o \
 	shared/geom.o \
 	engine/bih.o \
 	engine/blend.o \
@@ -64,6 +65,7 @@ SCXXFLAGS= -Wall -fsigned-char -DSTANDALONE -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
+	shared/hash-standalone.o \
 	engine/command-standalone.o \
 	engine/irc-standalone.o	\
 	engine/server-standalone.o \
@@ -75,6 +77,7 @@ DCXXFLAGS= -Wall -fsigned-char -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) 
 DAEMON_LIBS=-Lenet -lenet -lz
 DAEMON_OBJS= \
 	shared/tools-daemon.o \
+	shared/hash-daemon.o \
 	engine/command-daemon.o \
 	engine/irc-daemon.o	\
 	engine/master-daemon.o \
@@ -141,6 +144,7 @@ all: client server
 shared/geom.o: shared/pch.h shared/tools.h shared/geom.h
 shared/pch.o: shared/pch.h
 shared/tools.o: shared/pch.h shared/tools.h
+shared/hash.o: shared/pch.h shared/tools.h shared/hash.h
 engine/bih.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 engine/bih.o: shared/command.h shared/geom.h shared/attrs.h shared/ents.h
 engine/bih.o: shared/iengine.h shared/igame.h engine/sound.h engine/world.h

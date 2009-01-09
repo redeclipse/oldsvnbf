@@ -438,25 +438,6 @@ extern void addserver(const char *name, int port, int qport);
 extern void writeservercfg();
 
 // client
-struct serverinfo
-{
-    enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
-
-    string name;
-    string map;
-    string sdesc;
-    int numplayers, ping, resolved, port, qport;
-    vector<int> attr;
-    ENetAddress address;
-
-    serverinfo()
-     : numplayers(0), ping(999), resolved(UNRESOLVED), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT)
-    {
-        name[0] = map[0] = sdesc[0] = '\0';
-    }
-};
-extern vector<serverinfo *> servers;
-
 extern void servertoclient(int chan, uchar *buf, int len);
 extern void localservertoclient(int chan, uchar *buf, int len);
 extern bool connected(bool attempt = true);
