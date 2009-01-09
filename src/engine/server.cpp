@@ -1,5 +1,6 @@
 // server.cpp: little more than enhanced multicaster
 // runs dedicated or as client coroutine
+#define MAINCPP
 
 #include "pch.h"
 #include "engine.h"
@@ -791,3 +792,5 @@ int main(int argc, char* argv[])
 	return 0;
 }
 #endif
+
+#undef MAINCPP
