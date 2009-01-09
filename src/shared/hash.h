@@ -5,9 +5,9 @@
 
 #define TIGER_PASSES 3
 
-struct tiger
+namespace tiger
 {
-    static const int littleendian;
+    const int littleendian = 1;
 
     typedef unsigned long long int chunk;
 
@@ -17,33 +17,9 @@ struct tiger
         chunk chunks[3];
     };
 
-    static chunk sboxes[4*256];
+    chunk sboxes[4*256];
 
-    static void gensboxes()
-    {
-        const char *str = "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham";
-        chunk state[3] = { 0x0123456789ABCDEFULL, 0xFEDCBA9876543210ULL, 0xF096A5B4C3B2E187ULL };
-        uchar temp[64];
-
-        if(!*(const char *)&littleendian) loopj(64) temp[j^7] = str[j];
-        else loopj(64) temp[j] = str[j];
-        loopi(1024) loop(col, 8) ((uchar *)&sboxes[i])[col] = i&0xFF;
-
-        int abc = 2;
-        loop(pass, 5) loopi(256) for(int sb = 0; sb < 1024; sb += 256)
-        {
-            abc++;
-            if(abc >= 3) { abc = 0; compress((chunk *)temp, state); }
-            loop(col, 8)
-            {
-                uchar val = ((uchar *)&sboxes[sb+i])[col];
-                ((uchar *)&sboxes[sb+i])[col] = ((uchar *)&sboxes[sb + ((uchar *)&state[abc])[col]])[col];
-                ((uchar *)&sboxes[sb + ((uchar *)&state[abc])[col]])[col] = val;
-            }
-        }
-    }
-
-    static void compress(const chunk *str, chunk state[3])
+    void compress(const chunk *str, chunk state[3])
     {
         chunk a, b, c;
         chunk aa, bb, cc;
@@ -99,7 +75,31 @@ struct tiger
         state[2] = c;
     }
 
-    static void hash(const uchar *str, int length, hashval &val)
+    void gensboxes()
+    {
+        const char *str = "Tiger - A Fast New Hash Function, by Ross Anderson and Eli Biham";
+        chunk state[3] = { 0x0123456789ABCDEFULL, 0xFEDCBA9876543210ULL, 0xF096A5B4C3B2E187ULL };
+        uchar temp[64];
+
+        if(!*(const char *)&littleendian) loopj(64) temp[j^7] = str[j];
+        else loopj(64) temp[j] = str[j];
+        loopi(1024) loop(col, 8) ((uchar *)&sboxes[i])[col] = i&0xFF;
+
+        int abc = 2;
+        loop(pass, 5) loopi(256) for(int sb = 0; sb < 1024; sb += 256)
+        {
+            abc++;
+            if(abc >= 3) { abc = 0; compress((chunk *)temp, state); }
+            loop(col, 8)
+            {
+                uchar val = ((uchar *)&sboxes[sb+i])[col];
+                ((uchar *)&sboxes[sb+i])[col] = ((uchar *)&sboxes[sb + ((uchar *)&state[abc])[col]])[col];
+                ((uchar *)&sboxes[sb + ((uchar *)&state[abc])[col]])[col] = val;
+            }
+        }
+    }
+
+    void hash(const uchar *str, int length, hashval &val)
     {
         static bool init = false;
         if(!init) { gensboxes(); init = true; }
@@ -145,8 +145,5 @@ struct tiger
         *(chunk *)(temp+56) = (chunk)length<<3;
         compress((chunk *)temp, val.chunks);
     }
-};
-
-const int tiger::littleendian = 1;
-tiger::chunk tiger::sboxes[4*256];
+}
 
