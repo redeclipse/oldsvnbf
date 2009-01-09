@@ -207,7 +207,7 @@ engine/master.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 engine/master.o: shared/command.h shared/geom.h shared/attrs.h shared/ents.h
 engine/master.o: shared/iengine.h shared/igame.h engine/sound.h
 engine/master.o: engine/world.h engine/octa.h engine/lightmap.h engine/bih.h
-engine/master.o: engine/texture.h engine/model.h
+engine/master.o: engine/texture.h engine/model.h shared/crypto.h shared/hash.h
 engine/material.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 engine/material.o: shared/command.h shared/geom.h shared/attrs.h
 engine/material.o: shared/ents.h shared/iengine.h shared/igame.h
