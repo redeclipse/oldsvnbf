@@ -44,7 +44,7 @@ struct masterclient
     vector<authreq> authreqs;
     bool isserver;
 
-    masterclient() : inputpos(0), outputpos(0), isserver(false) {}
+    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), isserver(false) {}
 };
 
 vector<masterclient *> masterclients;
@@ -265,7 +265,7 @@ bool checkmasterclientinput(masterclient &c)
 			if(*p) continue;
 			else result = true;
 		}
-		else if(!strcmp(w[0], "add"))
+		else if(!strcmp(w[0], "server"))
 		{
 			c.port = ENG_SERVER_PORT;
 			c.qport = ENG_QUERY_PORT;

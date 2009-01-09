@@ -430,7 +430,6 @@ void sendpongs()		// reply all server info requests
 	}
 }
 
-#ifdef STANDALONE
 bool resolverwait(const char *name, int port, ENetAddress *address)
 {
 	return enet_address_set_host(address, name) >= 0;
@@ -442,8 +441,8 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &remot
 	if(result<0) enet_socket_destroy(sock);
 	return result;
 }
-#endif
 
+#ifndef STANDALONE
 ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const char *req, ENetAddress *localaddress = NULL)
 {
 	if(remoteaddress.host==ENET_HOST_ANY)
@@ -490,46 +489,15 @@ bool masterreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
 	return true;
 }
 
-ENetSocket mssock = ENET_SOCKET_NULL;
-ENetAddress msaddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-ENetAddress masteradr = { ENET_HOST_ANY, ENET_PORT_ANY };
-int lastupdatemaster = 0;
-uchar masterrep[MAXTRANS];
-ENetBuffer masterb;
-
-void updatemaster()
-{
-	if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
-	s_sprintfd(s)("add %d %d", serverport, serverqueryport);
-	masteradr.port = servermasterport;
-	mssock = mastersend(masteradr, servermaster, s, &msaddress);
-	masterrep[0] = 0;
-	masterb.data = masterrep;
-	masterb.dataLength = MAXTRANS-1;
-}
-
-void checkmasterreply()
-{
-	if(mssock!=ENET_SOCKET_NULL && !masterreceive(mssock, masterb))
-	{
-		mssock = ENET_SOCKET_NULL;
-		conoutf("\fgmaster reply: %s", masterrep);
-	}
-}
-
-#ifndef STANDALONE
 #define RETRIEVELIMIT 20000
 uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
-	masteradr.port = servermasterport;
-	ENetAddress address = masteradr;
+	ENetAddress address = { ENET_HOST_ANY, servermasterport };
 	ENetSocket sock = mastersend(address, servermaster, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
-	masteradr = address;
-
-	s_sprintfd(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, masteradr.port);
+	s_sprintfd(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, address.port);
 	renderprogress(0, text);
 
 	ENetBuffer eb;
@@ -562,23 +530,12 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 
 	sendpongs();
 
-	if(servertype >= 2)
+	if(servertype >= 2 && totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 	{
-		if(*servermaster) checkmasterreply();
-
-		if(totalmillis-lastupdatemaster > 60*60*1000 && *servermaster)		// send alive signal to master every hour of uptime
-		{
-			updatemaster();
-			lastupdatemaster = totalmillis;
-		}
-
-		if(totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
-		{
-			laststatus = totalmillis;
-			if(bsend || brec || server::numclients(-1, false, true))
-				conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(-1, false, true), bsend/60.0f/1024, brec/60.0f/1024);
-			bsend = brec = 0;
-		}
+		laststatus = totalmillis;
+		if(bsend || brec || server::numclients(-1, false, true))
+			conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(-1, false, true), bsend/60.0f/1024, brec/60.0f/1024);
+		bsend = brec = 0;
 	}
 
 	ENetEvent event;
@@ -678,9 +635,7 @@ void setupserver()
 	ENetAddress address = { ENET_HOST_ANY, serverport };
 	if(*serverip)
 	{
-		if(enet_address_set_host(&address, serverip) < 0)
-			conoutf("\frWARNING: server address not resolved");
-		else msaddress.host = address.host;
+		if(enet_address_set_host(&address, serverip) < 0) conoutf("\frWARNING: server address not resolved");
 	}
 	serverhost = enet_host_create(&address, serverclients + server::reserveclients(), 0, serveruprate);
 	if(!serverhost)
@@ -708,10 +663,6 @@ void setupserver()
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
 
-	if(servertype >= 2 && *servermaster)
-	{
-		updatemaster();
-	}
 	if(verbose) conoutf("\fggame server for %s started", game);
 
 #ifndef STANDALONE
