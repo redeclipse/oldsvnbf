@@ -57,6 +57,7 @@ void setupmaster()
 	ENetAddress address = { ENET_HOST_ANY,  masterport };
 	if(*masterip && enet_address_set_host(&address, masterip) < 0) fatal("failed to resolve master address: %s", masterip);
 	if((mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM)) == ENET_SOCKET_NULL) fatal("failed to create master server socket");
+	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_REUSEADDR, 1) < 0) fatal("failed to set master server socket option");
 	if(enet_socket_bind(mastersocket, &address) < 0) fatal("failed to bind master server socket");
 	if(enet_socket_listen(mastersocket, -1) < 0) fatal("failed to listen on master server socket");
 	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1) < 0) fatal("failed to make master server socket non-blocking");
@@ -337,18 +338,19 @@ void checkmaster()
 		if(masterclients.length()>=MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
 		else if(masterclientsocket!=ENET_SOCKET_NULL)
 		{
-			int dups = 0;
-			loopv(masterclients) if(masterclients[i]->address.host == address.host) dups++;
-			if(dups >= DUP_LIMIT) enet_socket_destroy(masterclientsocket);
-			else
+			int dups = 0, oldest = -1;
+			loopv(masterclients) if(masterclients[i]->address.host == address.host)
 			{
-				masterclient *c = new masterclient;
-				c->address = address;
-				c->socket = masterclientsocket;
-				c->connecttime = lastmillis;
-				masterclients.add(c);
-				enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
+				dups++;
+				if(oldest<0 || masterclients[i]->connecttime < masterclients[oldest]->connecttime) oldest = i;
 			}
+			if(dups >= DUP_LIMIT) purgemasterclient(oldest);
+			masterclient *c = new masterclient;
+			c->address = address;
+			c->socket = masterclientsocket;
+			c->connecttime = lastmillis;
+			masterclients.add(c);
+			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
 		}
 	}
 
