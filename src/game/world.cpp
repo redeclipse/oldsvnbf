@@ -673,8 +673,8 @@ namespace world
 			}
 			if(show)
 			{
-				if(isme) announce(anc, "\fw%s %s", colorname(d), d->obit);
-				else conoutf("\fw%s %s", colorname(d), d->obit);
+				if(isme) announce(anc, "\fa%s %s", colorname(d), d->obit);
+				else conoutf("\fa%s %s", colorname(d), d->obit);
 			}
 		}
 		vec pos = headpos(d);
