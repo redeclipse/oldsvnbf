@@ -262,9 +262,47 @@
 					<Add option="-fomit-frame-pointer" />
 				</Compiler>
 			</Target>
+			<Target title="genkey">
+				<Option output="..\bin\bfserver.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="..\" />
+				<Option object_output=".objs\server" />
+				<Option deps_output=".deps\server" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Option projectIncludeDirsRelation="1" />
+				<Option projectResourceIncludeDirsRelation="1" />
+				<Option projectLibDirsRelation="1" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O2" />
+					<Add option="-Wall" />
+					<Add option="-fsigned-char" />
+					<Add option="-finline-functions" />
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-fno-strict-aliasing" />
+					<Add option="-DSTANDALONE" />
+					<Add option="-DGENKEY" />
+					<Add directory="shared" />
+					<Add directory="engine" />
+					<Add directory="game" />
+					<Add directory="enet\include" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
+					<Add library="z" />
+					<Add directory="lib\mingw" />
+					<Add directory="lib" />
+				</Linker>
+			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="client;daemon;server;" />
+			<Add alias="All" targets="client;daemon;server;genkey;" />
 		</VirtualTargets>
 		<Unit filename="bloodfrontier.rc">
 			<Option compilerVar="WINDRES" />
@@ -274,12 +312,27 @@
 			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\host.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\include\enet\callbacks.h">
 			<Option target="client" />
@@ -336,21 +389,63 @@
 		</Unit>
 		<Unit filename="enet\list.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\packet.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\peer.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\protocol.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\unix.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="enet\win32.c">
 			<Option compilerVar="CC" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="engine\animmodel.h">
 			<Option target="client" />
@@ -421,6 +516,9 @@
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
+		</Unit>
+		<Unit filename="engine\genkey.cpp">
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="engine\glare.cpp">
 			<Option target="client" />
@@ -599,7 +697,15 @@
 			<Option target="profile" />
 			<Option target="data" />
 		</Unit>
-		<Unit filename="engine\server.cpp" />
+		<Unit filename="engine\server.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
+		</Unit>
 		<Unit filename="engine\serverbrowser.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -689,6 +795,14 @@
 		<Unit filename="game\ai.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="profile" />
+		</Unit>
+		<Unit filename="game\auth.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
 			<Option target="profile" />
 		</Unit>
 		<Unit filename="game\client.cpp">
@@ -1018,6 +1132,7 @@
 			<Option target="daemon-dbg" />
 			<Option target="server" />
 			<Option target="profile" />
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="shared\cube.h">
 			<Option target="data" />
@@ -1050,6 +1165,7 @@
 			<Option target="daemon-dbg" />
 			<Option target="server" />
 			<Option target="profile" />
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="shared\iengine.h">
 			<Option target="data" />
@@ -1083,7 +1199,15 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="shared\tools.h" />
+		<Unit filename="shared\tools.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="data" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

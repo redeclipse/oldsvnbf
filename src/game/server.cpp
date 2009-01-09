@@ -199,12 +199,14 @@ namespace server
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool connected, local, spectator, timesync, wantsmaster, online;
+        bool connected, local, spectator, timesync, online;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent> events;
 		vector<uchar> position, messages;
         vector<clientinfo *> targets;
+        uint authreq;
+        string authname;
 
 		clientinfo() { reset(); }
 
@@ -230,7 +232,8 @@ namespace server
 			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            connected = local = spectator = wantsmaster = online = false;
+            connected = local = spectator = online = false;
+            authreq = 0;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
@@ -1775,6 +1778,31 @@ namespace server
 		}
 	}
 
+    void hashpassword(int cn, int sessionid, const char *pwd, char *result)
+    {
+        char buf[2*sizeof(string)];
+        s_sprintf(buf)("%d %d ", cn, sessionid);
+        s_strcpy(&buf[strlen(buf)], pwd);
+        tiger::hashval hv;
+        tiger::hash((uchar *)buf, strlen(buf), hv);
+        loopi(sizeof(hv.bytes))
+        {
+            uchar c = hv.bytes[i];
+            *result++ = "0123456789abcdef"[c&0xF];
+            *result++ = "0123456789abcdef"[c>>4];
+        }
+        *result = '\0';
+    }
+
+    bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
+    {
+        string hash;
+        hashpassword(ci->clientnum, ci->sessionid, wanted, hash);
+        return !strcmp(hash, given);
+    }
+
+	#include "auth.h"
+
 	void serverupdate()
 	{
 		if(!numclients(-1, false, true)) return;
@@ -1833,6 +1861,8 @@ namespace server
 			masterupdate = false;
 		}
 
+		auth::update();
+
 		if((m_timed(gamemode) && numclients(-1, false, true)) &&
 			((sv_timelimit != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 				checkintermission();
@@ -1853,71 +1883,6 @@ namespace server
 			}
 		}
 		else ai::checkai();
-	}
-
-    void hashpassword(int cn, int sessionid, const char *pwd, char *result)
-    {
-        char buf[2*sizeof(string)];
-        s_sprintf(buf)("%d %d ", cn, sessionid);
-        s_strcpy(&buf[strlen(buf)], pwd);
-        tiger::hashval hv;
-        tiger::hash((uchar *)buf, strlen(buf), hv);
-        loopi(sizeof(hv.bytes))
-        {
-            uchar c = hv.bytes[i];
-            *result++ = "0123456789abcdef"[c&0xF];
-            *result++ = "0123456789abcdef"[c>>4];
-        }
-        *result = '\0';
-    }
-
-    bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
-    {
-        string hash;
-        hashpassword(ci->clientnum, ci->sessionid, wanted, hash);
-        return !strcmp(hash, given);
-    }
-
-    void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
-	{
-        if(approved && (!val || !ci->wantsmaster)) return;
-		const char *name = "";
-		if(val)
-		{
-            bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
-			if(ci->privilege)
-			{
-				if(!adminpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
-			}
-            else if(ci->state.state==CS_SPECTATOR && !haspass) return;
-            loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
-			{
-				if(haspass) clients[i]->privilege = PRIV_NONE;
-				else return;
-			}
-            if(haspass) ci->privilege = PRIV_ADMIN;
-            else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
-            {
-                ci->wantsmaster = true;
-                srvoutf("%s wants master, but they need to be approved.", colorname(ci), ci->clientnum);
-                srvmsgf(-1, "Type \"/approve %d\" to approve.");
-                return;
-            }
-			else ci->privilege = PRIV_MASTER;
-			name = privname(ci->privilege);
-		}
-		else
-		{
-			if(!ci->privilege) return;
-			name = privname(ci->privilege);
-			ci->privilege = 0;
-		}
-		mastermode = MM_OPEN;
-        allowedips.setsize(0);
-        srvoutf("%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
-		currentmaster = val ? ci->clientnum : -1;
-		masterupdate = true;
-        loopv(clients) clients[i]->wantsmaster = false;
 	}
 
     bool allowbroadcast(int n)
@@ -1964,7 +1929,7 @@ namespace server
 		bool complete = !numclients(n, false, true);
         if(ci->connected)
         {
-		    if(ci->privilege) setmaster(ci, false);
+		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci));
 		    ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
@@ -2057,7 +2022,7 @@ namespace server
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT };
+		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -2910,18 +2875,8 @@ namespace server
 				{
 					int val = getint(p);
 					getstring(text, p);
-					setmaster(ci, val!=0, text);
+					auth::setmaster(ci, val!=0, text);
 					// don't broadcast the master password
-					break;
-				}
-
-				case SV_APPROVEMASTER:
-				{
-					int mn = getint(p);
-					if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
-					clientinfo *candidate = (clientinfo *)getinfo(mn);
-					if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
-					setmaster(candidate, true, "", true);
 					break;
 				}
 
@@ -2946,6 +2901,21 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
                     QUEUE_MSG;
+					break;
+				}
+
+				case SV_AUTHTRY:
+				{
+					getstring(text, p);
+					auth::tryauth(ci, text);
+					break;
+				}
+
+				case SV_AUTHANS:
+				{
+					uint id = (uint)getint(p);
+					getstring(text, p);
+					auth::answerchallenge(ci, id, text);
 					break;
 				}
 

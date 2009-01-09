@@ -304,25 +304,6 @@ extern bool resolverwait(const char *name, int port, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 
 // client
-struct serverinfo
-{
-    enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
-
-    string name;
-    string map;
-    string sdesc;
-    int numplayers, ping, resolved, port, qport;
-    vector<int> attr;
-    ENetAddress address;
-
-    serverinfo()
-     : numplayers(0), ping(999), resolved(UNRESOLVED), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT)
-    {
-        name[0] = map[0] = sdesc[0] = '\0';
-    }
-};
-extern vector<serverinfo *> servers;
-
 extern void c2sinfo(int rate = 33);
 extern void sendpackettoserv(ENetPacket *packet, int chan);
 extern void disconnect(int onlyclean = 0, int async = 0);

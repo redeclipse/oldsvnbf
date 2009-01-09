@@ -238,13 +238,13 @@ namespace client
     }
 	COMMAND(setmaster, "s");
 
-    void approvemaster(const char *who)
+    void tryauth()
     {
-        if(!remote) return;
-        int i = parseplayer(who);
-        if(i>=0) addmsg(SV_APPROVEMASTER, "ri", i);
+        if(!cl.authname[0]) return;
+        cl.lastauth = lastmillis;
+        addmsg(SV_AUTHTRY, "rs", cl.authname);
     }
-	ICOMMAND(approve, "s", (char *s), approvemaster(s));
+	ICOMMAND(auth, "", (), tryauth());
 
     void togglespectator(int val, const char *who)
 	{
@@ -258,7 +258,7 @@ namespace client
 		/*
 		if(remote && spectator && (!world::player1->privilege || type<SV_MASTERMODE))
 		{
-			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER };
+			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER, SV_AUTHTRY, SV_AUTHANS };
 			bool allowed = false;
 			loopi(sizeof(spectypes)/sizeof(spectypes[0])) if(type==spectypes[i])
 			{
@@ -1632,6 +1632,25 @@ namespace client
 					gameent *b = world::newclient(bn);
 					if(!b) break;
 					ai::init(b, at, on, sk, bn, text, tm);
+					break;
+				}
+
+				case SV_AUTHCHAL:
+				{
+					uint id = (uint)getint(p);
+					getstring(text, p);
+					if(cl.lastauth && lastmillis - cl.lastauth < 60*1000 && cl.authname[0])
+					{
+						ecjacobian answer;
+						answer.parse(text);
+						answer.mul(cl.authkey);
+						answer.normalize();
+						vector<char> buf;
+						answer.x.printdigits(buf);
+						buf.add('\0');
+						//conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
+						addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
+					}
 					break;
 				}
 
