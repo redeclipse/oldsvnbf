@@ -1,4 +1,10 @@
 // engine defs
+#ifdef MAINCPP
+#define EXTERN
+#else
+#define EXTERN extern
+#endif
+
 #define ENG_VERSION			79
 #define ENG_NAME			"Blood Frontier"
 #define ENG_RELEASE			"Alpha 2.9 SVN"
@@ -13,6 +19,7 @@
 #include "cube.h"
 #include "iengine.h"
 #include "igame.h"
+
 #ifdef IRC
 #include "irc.h"
 #endif

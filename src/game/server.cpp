@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "game.h"
 #include "hash.h"
+
 namespace server
 {
 	struct srventity
