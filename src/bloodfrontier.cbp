@@ -1011,6 +1011,14 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
+		<Unit filename="shared\crypto.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+		</Unit>
 		<Unit filename="shared\cube.h">
 			<Option target="data" />
 			<Option target="client" />
@@ -1033,6 +1041,14 @@
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="profile" />
+		</Unit>
+		<Unit filename="shared\hash.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
 			<Option target="profile" />
 		</Unit>
 		<Unit filename="shared\iengine.h">
