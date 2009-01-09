@@ -240,9 +240,9 @@ namespace client
 
     void tryauth()
     {
-        if(!cl.authname[0]) return;
-        cl.lastauth = lastmillis;
-        addmsg(SV_AUTHTRY, "rs", cl.authname);
+        if(!world::authname[0]) return;
+        world::lastauth = lastmillis;
+        addmsg(SV_AUTHTRY, "rs", world::authname);
     }
 	ICOMMAND(auth, "", (), tryauth());
 
@@ -1639,11 +1639,11 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					if(cl.lastauth && lastmillis - cl.lastauth < 60*1000 && cl.authname[0])
+					if(world::lastauth && lastmillis - world::lastauth < 60*1000 && world::authname[0])
 					{
 						ecjacobian answer;
 						answer.parse(text);
-						answer.mul(cl.authkey);
+						answer.mul(world::authkey);
 						answer.normalize();
 						vector<char> buf;
 						answer.x.printdigits(buf);

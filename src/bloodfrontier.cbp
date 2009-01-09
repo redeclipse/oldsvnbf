@@ -263,9 +263,9 @@
 				</Compiler>
 			</Target>
 			<Target title="genkey">
-				<Option output="..\bin\bfserver.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="..\bin\bfgenkey.exe" prefix_auto="0" extension_auto="0" />
 				<Option working_dir="..\" />
-				<Option object_output=".objs\server" />
+				<Option object_output=".objs\genkey" />
 				<Option deps_output=".deps\server" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -485,10 +485,10 @@
 		<Unit filename="engine\command.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
 		</Unit>
 		<Unit filename="engine\console.cpp">
 			<Option target="client" />
@@ -1113,17 +1113,14 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
-		<Unit filename="shared\attrs.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-		</Unit>
 		<Unit filename="shared\command.h">
-			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
 			<Option target="profile" />
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="shared\crypto.h">
 			<Option target="client" />
@@ -1157,6 +1154,15 @@
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="profile" />
+		</Unit>
+		<Unit filename="shared\hash.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+			<Option target="genkey" />
 		</Unit>
 		<Unit filename="shared\hash.h">
 			<Option target="client" />
@@ -1194,20 +1200,13 @@
 		<Unit filename="shared\tools.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
-			<Option target="server" />
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
-		</Unit>
-		<Unit filename="shared\tools.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
 			<Option target="profile" />
-			<Option target="data" />
+			<Option target="genkey" />
 		</Unit>
+		<Unit filename="shared\tools.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
