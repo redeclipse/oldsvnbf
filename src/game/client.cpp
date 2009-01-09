@@ -982,16 +982,6 @@ namespace client
 					break;
 				}
 
-				case SV_SOUND:
-				{
-					int tcn = getint(p), snd = getint(p);
-					if(snd < 0 || snd >= S_MAX) break;
-					gameent *t = world::getclient(tcn);
-					if(!t) break;
-					playsound(snd, t->o, t, SND_FORCED);
-					break;
-				}
-
 				case SV_TEXT:
 				{
 					int tcn = getint(p);

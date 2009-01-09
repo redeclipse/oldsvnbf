@@ -453,10 +453,10 @@ namespace entities
 			{
 				if(d->useaction)
 				{
+					d->useaction = false;
 					if(d->requse < 0)
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
-						d->useaction = false;
 						d->requse = lastmillis;
 					}
 					else if(d == world::player1) playsound(S_DENIED, d->o, d);

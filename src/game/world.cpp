@@ -490,7 +490,8 @@ namespace world
 					s_sprintfd(ds)("@%d", damage);
 					part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
 				}
-				playsound(S_PAIN1+rnd(5), d->o, d);
+				if(!issound(d->vschan))
+					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 			}
 
 			if(d != actor)
@@ -505,7 +506,8 @@ namespace world
 					else if(damage >= 50) snd = 3;
 					else if(damage >= 25) snd = 2;
 					else if(damage >= 10) snd = 1;
-					playsound(S_DAMAGE1+snd, actor->o, actor);
+					if(!issound(actor->dschan))
+						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
 				}
 				if(actor == player1) lasthit = lastmillis;
 			}
@@ -654,7 +656,11 @@ namespace world
 				}
 			}
 		}
-		if(dth >= 0) playsound(dth, d->o, d);
+		if(dth >= 0)
+		{
+			if(issound(d->vschan)) removesound(d->vschan);
+			playsound(dth, d->o, d, 0, -1, -1, -1, &d->vschan);
+		}
 		if(showobituaries)
 		{
 			bool isme = (d == player1 || actor == player1), show = false;
@@ -765,14 +771,6 @@ namespace world
         resetstates(ST_ALL);
         // prevent the player from being in the middle of nowhere if he doesn't get spawned
         entities::spawnplayer(player1, -1, true);
-	}
-
-	void playsoundc(int n, gameent *d = NULL)
-	{
-		if(n < 0 || n >= S_MAX) return;
-		gameent *c = d ? d : player1;
-		if(c == player1 || c->ai) client::addmsg(SV_SOUND, "i2", c->clientnum, n);
-		playsound(n, c->o, c);
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)

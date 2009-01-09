@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			140
+#define GAMEVERSION			141
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -407,7 +407,7 @@ extern gametypes gametype[], mutstype[];
 // network messages codes, c2s, c2c, s2c
 enum
 {
-	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_SOUND, SV_CDIS,
+	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_CDIS,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
 	SV_DROP, SV_GUNSELECT, SV_TAUNT,
@@ -432,7 +432,7 @@ char msgsizelookup(int msg)
 	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
 		SV_CONNECT, 0, SV_INITS2C, 5, SV_WELCOME, 1, SV_INITC2S, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
-		SV_ANNOUNCE, 0, SV_SOUND, 3, SV_CDIS, 2,
+		SV_ANNOUNCE, 0, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4, SV_FORCEDEATH, 2,
 		SV_DROP, 4, SV_GUNSELECT, 0, SV_TAUNT, 2,
@@ -991,7 +991,7 @@ struct gameent : dynent, gamestate
 {
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
 		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
-			totalshots, smoothmillis, lastnode, respawned, suicided, wschan,
+			totalshots, smoothmillis, lastnode, respawned, suicided, vschan, dschan, wschan,
 				reqswitch, reqreload, requse;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
@@ -1001,7 +1001,7 @@ struct gameent : dynent, gamestate
 	bool attacking, reloading, useaction, obliterated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 
-	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
+	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
 		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
@@ -1013,8 +1013,10 @@ struct gameent : dynent, gamestate
 		if(ai) delete ai;
 		removetrackedparticles(this);
 		removetrackedsounds(this);
+		if(issound(vschan)) removesound(vschan);
+		if(issound(dschan)) removesound(dschan);
 		if(issound(wschan)) removesound(wschan);
-		wschan = -1;
+		vschan = dschan = wschan = -1;
 	}
 
 	void hitpush(int damage, int flags, const vec &dir)
