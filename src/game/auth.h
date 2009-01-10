@@ -96,15 +96,11 @@ namespace auth
 
     void tryauth(clientinfo *ci, const char *user)
     {
-        if(!isconnected())
-        {
-            if(!lastconnect || lastmillis - lastconnect > 60*1000) connect();
-            if(!isconnected())
-            {
-                sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
-                return;
-            }
-        }
+		if(!isconnected())
+		{
+			sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+			return;
+		}
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, false, 100);
@@ -125,33 +121,40 @@ namespace auth
 
     void processinput()
     {
-        if(inputpos <= 0) return;
+		if(inputpos < 0) return;
+		const int MAXWORDS = 25;
+		char *w[MAXWORDS];
+		const char *p = input;
+		int numargs = MAXWORDS;
+		conoutf("authserv: %s", p);
+		for(bool cont = true; cont; )
+		{
+			loopi(MAXWORDS)
+			{
+				w[i] = (char *)"";
+				if(i > numargs) continue;
+				char *s = parsetext(p);
+				if(s) w[i] = s;
+				else numargs = i;
+			}
 
-        char *end = (char *)memchr(input, '\n', inputpos);
-        while(end)
-        {
-            *end++ = '\0';
-
-            //printf("authserv: %s\n", input);
-
-            uint id;
-            string val;
-            if((sscanf(input, "error %s", val) == 2) || (sscanf(input, "echo %s", val) == 2))
-				conoutf("authserver: %s", val);
-            else if(sscanf(input, "failauth %u", &id) == 1)
-                authfailed(id);
-            else if(sscanf(input, "succauth %u", &id) == 1)
-                authsucceeded(id);
-            else if(sscanf(input, "chalauth %u %s", &id, val) == 2)
-                authchallenged(id, val);
-
-            inputpos = &input[inputpos] - end;
-            memmove(input, end, inputpos);
-
-            end = (char *)memchr(input, '\n', inputpos);
-        }
-
-        if(inputpos >= (int)sizeof(input)) disconnect();
+			p += strcspn(p, ";\n\0"); p++;
+			if(!*w[0])
+			{
+				if(*p) continue;
+				else cont = false;
+			}
+			else if(!strcmp(w[0], "error")) conoutf("authserv serror: %s", w[1]);
+			else if(!strcmp(w[0], "echo")) conoutf("authserv replied: %s", w[1]);
+			else if(!strcmp(w[0], "failauth")) authfailed((uint)(atoi(w[1])));
+			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])));
+			else if(!strcmp(w[0], "chalauth")) authchallenged((uint)(atoi(w[1])), w[2]);
+			loopj(numargs) if(w[j]) delete[] w[j];
+		}
+		//inputpos = &input[inputpos] - p;
+		//memmove(input, p, inputpos);
+        //if(inputpos >= (int)sizeof(input)) disconnect();
+        inputpos = input[0] = 0;
     }
 
     void connect()
@@ -159,27 +162,29 @@ namespace auth
         if(socket != ENET_SOCKET_NULL) return;
 
         lastconnect = lastmillis;
-
-        conoutf("connecting to authentication server...");
-        socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
-        if(socket != ENET_SOCKET_NULL)
-        {
-            ENetAddress authserver = { ENET_HOST_ANY, servermasterport };
-            int result = enet_socket_connect(socket, &authserver);
-            if(result < 0)
-            {
-                enet_socket_destroy(socket);
-                socket = ENET_SOCKET_NULL;
-            }
-            else enet_socket_set_option(socket, ENET_SOCKOPT_NONBLOCK, 1);
-        }
-        if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
-        else
-        {
-        	conoutf("connected to authentication server");
-        	s_sprintfd(msg)("server %d %d\n", serverport, serverqueryport);
-        	addoutput(msg);
-        }
+		conoutf("connecting to authentication server %s:[%d]...", servermaster, servermasterport);
+		ENetAddress authserver = { ENET_HOST_ANY, servermasterport };
+		if(enet_address_set_host(&authserver, servermaster) < 0) conoutf("could not set authentication host");
+		else
+		{
+			socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
+			if(socket != ENET_SOCKET_NULL)
+			{
+				if(enet_socket_connect(socket, &authserver) < 0)
+				{
+					enet_socket_destroy(socket);
+					socket = ENET_SOCKET_NULL;
+				}
+				else enet_socket_set_option(socket, ENET_SOCKOPT_NONBLOCK, 1);
+			}
+			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
+			else
+			{
+				conoutf("connected to authentication server, registering");
+				s_sprintfd(msg)("server %d %d\n", serverport, serverqueryport);
+				addoutput(msg);
+			}
+		}
     }
 
     void disconnect()
@@ -191,6 +196,7 @@ namespace auth
 
         output.setsizenodelete(0);
         outputpos = inputpos = 0;
+       	conoutf("disconnected from authentication server");
     }
 
     void flushoutput()
@@ -233,11 +239,15 @@ namespace auth
 
     void update()
     {
-        if(!isconnected()) return;
+        if(!isconnected())
+        {
+			if(!lastconnect || lastmillis - lastconnect > 60*1000) connect();
+			if(!isconnected()) return;
+        }
 
-        int authreqs = 0;
-        loopv(clients) if(clients[i]->authreq) authreqs++;
-        if(!authreqs) return;
+        //int authreqs = 0;
+        //loopv(clients) if(clients[i]->authreq) authreqs++;
+        //if(!authreqs) return;
 
         flushoutput();
         flushinput();

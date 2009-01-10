@@ -1805,84 +1805,85 @@ namespace server
 
 	void serverupdate()
 	{
-		if(!numclients(-1, false, true)) return;
-		gamemillis += curtime;
-		if(m_demo(gamemode)) readdemo();
-		else if(minremain)
+		if(numclients(-1, false, true))
 		{
-			processevents();
-			bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
-			loopv(sents) switch(sents[i].type)
+			gamemillis += curtime;
+			if(m_demo(gamemode)) readdemo();
+			else if(minremain)
 			{
-				case TRIGGER:
+				processevents();
+				bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
+				loopv(sents) switch(sents[i].type)
 				{
-					if(sents[i].attr2 == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
+					case TRIGGER:
 					{
-						sents[i].spawned = false;
-						sents[i].millis = gamemillis;
-						sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
-					}
-					break;
-				}
-				default:
-				{
-					if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
-					{
-						if(!finditem(i, true, sv_itemspawntime*1000))
+						if(sents[i].attr2 == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
 						{
-							loopvk(clients)
-							{
-								clientinfo *ci = clients[k];
-								ci->state.dropped.remove(i);
-								loopj(GUN_MAX) if(ci->state.entid[j] == i)
-									ci->state.entid[j] = -1;
-							}
-							sents[i].spawned = true;
+							sents[i].spawned = false;
 							sents[i].millis = gamemillis;
-							sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+							sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
 						}
+						break;
 					}
-					break;
+					default:
+					{
+						if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
+						{
+							if(!finditem(i, true, sv_itemspawntime*1000))
+							{
+								loopvk(clients)
+								{
+									clientinfo *ci = clients[k];
+									ci->state.dropped.remove(i);
+									loopj(GUN_MAX) if(ci->state.entid[j] == i)
+										ci->state.entid[j] = -1;
+								}
+								sents[i].spawned = true;
+								sents[i].millis = gamemillis;
+								sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+							}
+						}
+						break;
+					}
+				}
+				if(smode) smode->update();
+				mutate(smuts, mut->update());
+			}
+
+			while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
+				bannedips.remove(0);
+			loopv(connects) if(totalmillis-connects[i]->connectmillis>15000)
+				disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
+
+			if(masterupdate)
+			{
+				clientinfo *m = currentmaster>=0 ? (clientinfo *)getinfo(currentmaster) : NULL;
+				sendf(-1, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
+				masterupdate = false;
+			}
+
+			if((m_timed(gamemode) && numclients(-1, false, true)) &&
+				((sv_timelimit != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
+					checkintermission();
+
+			if(interm && gamemillis >= interm) // wait then call for next map
+			{
+				if(sv_votelimit && !maprequest)
+				{
+					if(demorecord) enddemorecord();
+					sendf(-1, 1, "ri", SV_NEWGAME);
+					maprequest = true;
+					interm = gamemillis+(sv_votelimit*1000);
+				}
+				else
+				{
+					interm = 0;
+					checkvotes(true);
 				}
 			}
-			if(smode) smode->update();
-			mutate(smuts, mut->update());
+			else ai::checkai();
 		}
-
-		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
-			bannedips.remove(0);
-        loopv(connects) if(totalmillis-connects[i]->connectmillis>15000)
-            disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
-
-		if(masterupdate)
-		{
-			clientinfo *m = currentmaster>=0 ? (clientinfo *)getinfo(currentmaster) : NULL;
-			sendf(-1, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
-			masterupdate = false;
-		}
-
 		auth::update();
-
-		if((m_timed(gamemode) && numclients(-1, false, true)) &&
-			((sv_timelimit != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
-				checkintermission();
-
-		if(interm && gamemillis >= interm) // wait then call for next map
-		{
-			if(sv_votelimit && !maprequest)
-			{
-				if(demorecord) enddemorecord();
-				sendf(-1, 1, "ri", SV_NEWGAME);
-				maprequest = true;
-				interm = gamemillis+(sv_votelimit*1000);
-			}
-			else
-			{
-				interm = 0;
-				checkvotes(true);
-			}
-		}
-		else ai::checkai();
 	}
 
     bool allowbroadcast(int n)
