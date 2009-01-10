@@ -417,6 +417,39 @@ char *parseword(const char *&p, int arg, int &infix)					   // parse single argu
 	return s;
 }
 
+char *parsetext(const char *&p)
+{
+	for(;;)
+	{
+		p += strspn(p, " \t\r");
+		if(p[0] != '/' || p[1] != '/') break;
+		p += strcspn(p, "\n\0");
+	}
+	if(*p=='\"')
+	{
+		p++;
+		const char *word = p;
+		p += strcspn(p, "\"\r\n\0");
+		char *s = newstring(word, p-word);
+		if(*p=='\"') p++;
+		return s;
+	}
+	const char *word = p;
+	for(;;)
+	{
+		p += strcspn(p, "/; \t\r\n\0");
+		if(p[0] != '/' || p[1] == '/') break;
+		else if(p[1] == '\0') { p++; break; }
+		p += 2;
+	}
+	if(p-word != 0)
+	{
+		char *s = newstring(word, p-word);
+		return s;
+	}
+	return NULL;
+}
+
 char *conc(char **w, int n, bool space)
 {
 	int len = space ? max(n-1, 0) : 0;

@@ -2,6 +2,7 @@
 
 extern int verbose, curtime, lastmillis, totalmillis;
 extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
+extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
 extern void console(const char *s, int n, ...);

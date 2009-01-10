@@ -122,7 +122,8 @@ extern const char *getalias(const char *name);
 
 extern bool overrideidents, persistidents, worldidents, interactive;
 
-extern char *parseword(char *&p);
+extern char *parseword(const char *&p, int arg, int &infix);
+extern char *parsetext(const char *&p);
 extern void explodelist(const char *s, vector<char *> &elems);
 extern int listlen(const char *s);
 extern char *indexlist(const char *s, int pos);

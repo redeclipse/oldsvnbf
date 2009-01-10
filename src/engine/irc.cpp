@@ -33,7 +33,7 @@ void ircconnect(ircnet *n)
 	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
 	if(*n->ip && n->sock != ENET_SOCKET_NULL && enet_socket_bind(n->sock, &address) < 0)
 		conoutf("failed to bind connection socket", n->ip);
-	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address)<0)
+	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address) < 0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);
 		n->state = IRC_DISC;

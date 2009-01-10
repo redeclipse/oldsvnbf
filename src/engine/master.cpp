@@ -213,57 +213,28 @@ void purgemasterclient(int n)
 
 bool checkmasterclientinput(masterclient &c)
 {
-	if(c.inputpos<0) return true;
-	bool result = false;
+	if(c.inputpos < 0) return true;
 	const int MAXWORDS = 25;
-	char *w[MAXWORDS], *p = c.input;
+	char *w[MAXWORDS];
+	const char *p = c.input;
 	int numargs = MAXWORDS;
-	conoutf("master cmd from %s: %s", c.name, p);
-	while(!result)
+	conoutf("{%s} %s", c.name, p);
+	for(bool cont = true; cont; )
 	{
 		loopi(MAXWORDS)
 		{
 			w[i] = (char *)"";
 			if(i > numargs) continue;
-			for(;;)
-			{
-				p += strspn(p, " \t\r");
-				if(p[0] != '/' || p[1] != '/') break;
-				p += strcspn(p, "\n\0");
-			}
-			if(*p=='\"')
-			{
-				p++;
-				const char *word = p;
-				p += strcspn(p, "\"\r\n\0");
-				char *s = newstring(word, p-word);
-				if(*p=='\"') p++;
-				if(s) w[i] = s;
-				else numargs = i;
-				continue;
-			}
-			const char *word = p;
-			for(;;)
-			{
-				p += strcspn(p, "/; \t\r\n\0");
-				if(p[0] != '/' || p[1] == '/') break;
-				else if(p[1] == '\0') { p++; break; }
-				p += 2;
-			}
-			if(p-word == 0) numargs = i;
-			else
-			{
-				char *s = newstring(word, p-word);
-				if(s) w[i] = s;
-				else numargs = i;
-			}
+			char *s = parsetext(p);
+			if(s) w[i] = s;
+			else numargs = i;
 		}
 
 		p += strcspn(p, ";\n\0"); p++;
 		if(!*w[0])
 		{
 			if(*p) continue;
-			else result = true;
+			else cont = false;
 		}
 		else if(!strcmp(w[0], "server"))
 		{
@@ -271,9 +242,8 @@ bool checkmasterclientinput(masterclient &c)
 			c.qport = ENG_QUERY_PORT;
 			if(*w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
 			if(*w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
-			masteroutf(c, "echo [server initiated]\n");
+			masteroutf(c, "echo \"server initiated\"\n");
 			c.isserver = true;
-			result = true;
 		}
 		else if(!strcmp(w[0], "list"))
 		{
@@ -282,32 +252,24 @@ bool checkmasterclientinput(masterclient &c)
 				masterclient &s = *masterclients[j];
 				masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.qport);
 			}
-			result = true;
 		}
 		else
 		{
 			if(c.isserver)
 			{
-				if(!strcmp(w[0], "reqauth"))
-				{
-					reqauth(c, uint(atoi(w[1])), w[2]);
-					result = true;
-				}
-				else if(!strcmp(w[0], "confauth"))
-				{
-					confauth(c, uint(atoi(w[1])), w[2]);
-					result = true;
-				}
+				if(!strcmp(w[0], "reqauth")) reqauth(c, uint(atoi(w[1])), w[2]);
+				else if(!strcmp(w[0], "confauth")) confauth(c, uint(atoi(w[1])), w[2]);
+				else masteroutf(c, "error \"unknown command\"\n");
 			}
-			if(!result)
-			{
-				masteroutf(c, "error [unknown command]\n");
-				result = true;
-			}
+			else masteroutf(c, "error \"unknown command\"\n");
 		}
 		loopj(numargs) if(w[j]) delete[] w[j];
 	}
-	return result || c.inputpos < (int)sizeof(c.input);
+	//c.inputpos = &c.input[c.inputpos] - p;
+	//memmove(c.input, p, c.inputpos);
+	//return c.inputpos < (int)sizeof(c.input);
+	c.inputpos = c.input[0] = 0;
+	return true;
 }
 
 fd_set readset, writeset;
