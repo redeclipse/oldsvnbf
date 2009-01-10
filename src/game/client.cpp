@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "engine.h"
+#include "crypto.h"
 #include "game.h"
 namespace client
 {
@@ -7,6 +8,17 @@ namespace client
 		demoplayback = false, needsmap = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
+
+    int lastauth = 0;
+    string authname = "";
+    gfint authkey;
+
+    void setauthkey(const char *name, const char *key)
+    {
+        s_strcpy(authname, name);
+        authkey.parse(key);
+    }
+    ICOMMAND(authkey, "ss", (char *name, char *key), setauthkey(name, key));
 
 	// collect c2s messages conveniently
 	vector<uchar> messages;
@@ -240,9 +252,9 @@ namespace client
 
     void tryauth()
     {
-        if(!world::authname[0]) return;
-        world::lastauth = lastmillis;
-        addmsg(SV_AUTHTRY, "rs", world::authname);
+        if(!authname[0]) return;
+        lastauth = lastmillis;
+        addmsg(SV_AUTHTRY, "rs", authname);
     }
 	ICOMMAND(auth, "", (), tryauth());
 
@@ -1639,11 +1651,11 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					if(world::lastauth && lastmillis - world::lastauth < 60*1000 && world::authname[0])
+					if(lastauth && lastmillis - lastauth < 60*1000 && authname[0])
 					{
 						ecjacobian answer;
 						answer.parse(text);
-						answer.mul(world::authkey);
+						answer.mul(authkey);
 						answer.normalize();
 						vector<char> buf;
 						answer.x.printdigits(buf);

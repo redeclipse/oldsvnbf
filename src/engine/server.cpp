@@ -430,6 +430,7 @@ void sendpongs()		// reply all server info requests
 	}
 }
 
+#ifdef STANDALONE
 bool resolverwait(const char *name, int port, ENetAddress *address)
 {
 	return enet_address_set_host(address, name) >= 0;
@@ -441,6 +442,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &remot
 	if(result<0) enet_socket_destroy(sock);
 	return result;
 }
+#endif
 
 #ifndef STANDALONE
 ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const char *req, ENetAddress *localaddress = NULL)

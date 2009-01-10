@@ -1283,10 +1283,6 @@ namespace world
 			quakewobble, damageresidue, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim;
 	extern bool intermission, zooming;
 
-    extern int lastauth;
-    extern string authname;
-    extern gfint authkey;
-
 	extern gameent *player1;
 	extern vector<gameent *> players;
 
