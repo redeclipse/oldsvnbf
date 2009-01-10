@@ -12,10 +12,6 @@ namespace world
     bool prevzoom = false, zooming = false;
 	int quakewobble = 0, damageresidue = 0, liquidchan = -1;
 
-    int lastauth = 0;
-    string authname;
-    gfint authkey;
-
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
 	gameent lastplayerstate;
@@ -92,17 +88,9 @@ namespace world
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
 
-    void setauthkey(const char *name, const char *key)
-    {
-        s_strcpy(authname, name);
-        authkey.parse(key);
-    }
-    ICOMMAND(authkey, "ss", (char *name, char *key), setauthkey(name, key));
-
 	void start()
 	{
 		s_strcpy(player1->name, "unnamed");
-		authname[0] = 0;
 	}
 
 	char *gametitle() { return server::gamename(gamemode, mutators); }
