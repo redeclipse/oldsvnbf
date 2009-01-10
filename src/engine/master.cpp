@@ -216,11 +216,15 @@ bool checkmasterclientinput(masterclient &c)
 	if(c.inputpos < 0) return true;
 	const int MAXWORDS = 25;
 	char *w[MAXWORDS];
-	const char *p = c.input;
 	int numargs = MAXWORDS;
-	conoutf("{%s} %s", c.name, p);
-	for(bool cont = true; cont; )
-	{
+    for(char *p = c.input, *end;; p = end)
+    {
+        end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
+        if(!end) break;
+        *end++ = '\0';
+
+        conoutf("{%s} %s", c.name, p);
+
 		loopi(MAXWORDS)
 		{
 			w[i] = (char *)"";
@@ -231,12 +235,7 @@ bool checkmasterclientinput(masterclient &c)
 		}
 
 		p += strcspn(p, ";\n\0"); p++;
-		if(!*w[0])
-		{
-			if(*p) continue;
-			else cont = false;
-		}
-		else if(!strcmp(w[0], "server"))
+		if(!strcmp(w[0], "server"))
 		{
 			c.port = ENG_SERVER_PORT;
 			c.qport = ENG_QUERY_PORT;
@@ -259,17 +258,15 @@ bool checkmasterclientinput(masterclient &c)
 			{
 				if(!strcmp(w[0], "reqauth")) reqauth(c, uint(atoi(w[1])), w[2]);
 				else if(!strcmp(w[0], "confauth")) confauth(c, uint(atoi(w[1])), w[2]);
-				else masteroutf(c, "error \"unknown command\"\n");
+				else if(w[0]) masteroutf(c, "error \"unknown command\"\n");
 			}
-			else masteroutf(c, "error \"unknown command\"\n");
+			else if(w[0]) masteroutf(c, "error \"unknown command\"\n");
 		}
 		loopj(numargs) if(w[j]) delete[] w[j];
 	}
-	//c.inputpos = &c.input[c.inputpos] - p;
-	//memmove(c.input, p, c.inputpos);
-	//return c.inputpos < (int)sizeof(c.input);
-	c.inputpos = c.input[0] = 0;
-	return true;
+	c.inputpos = &c.input[c.inputpos] - p;
+	memmove(c.input, p, c.inputpos);
+	return c.inputpos < (int)sizeof(c.input);
 }
 
 fd_set readset, writeset;
