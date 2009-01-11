@@ -442,7 +442,7 @@ namespace client
 		conoutf("\fmgetting map...");
 		addmsg(SV_GETMAP, "r");
 	}
-	ICOMMAND(getmap, "", (), getmap());
+	ICOMMAND(regetmap, "", (), getmap());
 
 	void stopdemo()
 	{
@@ -521,7 +521,7 @@ namespace client
 			else conoutf("\frfailed to open map file: %s", mapfext);
 		}
 	}
-	ICOMMAND(sendmap, "", (), sendmap());
+	ICOMMAND(resendmap, "", (), sendmap());
 
 	void parsecommand(gameent *d, char *cmd, char *arg)
 	{

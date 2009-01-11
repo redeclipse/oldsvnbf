@@ -207,16 +207,18 @@ void purgemasterclient(int n)
 {
 	masterclient &c = *masterclients[n];
 	enet_socket_destroy(c.socket);
+	conoutf("master peer %s disconnected", c.name);
 	delete masterclients[n];
 	masterclients.remove(n);
 }
 
 bool checkmasterclientinput(masterclient &c)
 {
-	if(c.inputpos < 0) return true;
+	if(c.inputpos < 0) return false;
 	const int MAXWORDS = 25;
-	char *w[MAXWORDS], *p = c.input;
+	char *w[MAXWORDS];
 	int numargs = MAXWORDS;
+	const char *p = c.input;
     for(char *end;; p = end)
     {
         end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
@@ -242,15 +244,20 @@ bool checkmasterclientinput(masterclient &c)
 			if(*w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
 			if(*w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
 			masteroutf(c, "echo \"server initiated\"\n");
+			conoutf("master peer %s registered as a server",  c.name);
 			c.isserver = true;
 		}
 		else if(!strcmp(w[0], "list"))
 		{
+			int servs = 0;
 			loopvj(masterclients) if(masterclients[j]->isserver)
 			{
 				masterclient &s = *masterclients[j];
 				masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.qport);
+				servs++;
 			}
+			masteroutf(c, "\n");
+			conoutf("sent master peer %s %d server(s)",  c.name, servs);
 		}
 		else
 		{
@@ -310,6 +317,7 @@ void checkmaster()
 			c->connecttime = lastmillis;
 			masterclients.add(c);
 			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
+			conoutf("master peer %s connected", c->name);
 		}
 	}
 
@@ -329,6 +337,7 @@ void checkmaster()
 				{
 					c.output.setsizenodelete(0);
 					c.outputpos = 0;
+					if(!c.isserver) { purgemasterclient(i--); continue; }
 				}
 			}
 			else { purgemasterclient(i--); continue; }
@@ -347,7 +356,7 @@ void checkmaster()
 			}
 			else { purgemasterclient(i--); continue; }
 		}
-		//if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; }
+		/* if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; } */
         if(!c.isserver && ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= CLIENT_TIME)
         {
         	purgemasterclient(i--);

@@ -464,7 +464,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
-	s_sprintfd(mget)("%s", req);
+	s_sprintfd(mget)("%s\n", req);
 	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
 	conoutf("\fwsending request to %s:[%d]", hostname, remoteaddress.port);

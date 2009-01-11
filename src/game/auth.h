@@ -123,11 +123,12 @@ namespace auth
     {
 		if(inputpos < 0) return;
 		const int MAXWORDS = 25;
-		char *w[MAXWORDS], *p = c.input;
+		char *w[MAXWORDS];
 		int numargs = MAXWORDS;
+		const char *p = input;
 		for(char *end;; p = end)
 		{
-			end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
+			end = (char *)memchr(p, '\n', &input[inputpos] - p);
 			if(!end) break;
 			*end++ = '\0';
 
@@ -239,8 +240,13 @@ namespace auth
     {
         if(!isconnected())
         {
-			if(!lastconnect || lastmillis - lastconnect > 60*1000) connect();
+			if(servertype >= 2 && (!lastconnect || lastmillis - lastconnect > 60*1000)) connect();
 			if(!isconnected()) return;
+        }
+        else if(servertype < 2)
+        {
+        	disconnect();
+        	return;
         }
 
         //int authreqs = 0;
