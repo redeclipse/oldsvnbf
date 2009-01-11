@@ -123,9 +123,9 @@ namespace auth
     {
 		if(inputpos < 0) return;
 		const int MAXWORDS = 25;
-		char *w[MAXWORDS];
+		char *w[MAXWORDS], *p = c.input;
 		int numargs = MAXWORDS;
-		for(char *p = c.input, *end;; p = end)
+		for(char *end;; p = end)
 		{
 			end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
 			if(!end) break;
