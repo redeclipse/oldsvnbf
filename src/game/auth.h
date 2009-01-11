@@ -124,11 +124,15 @@ namespace auth
 		if(inputpos < 0) return;
 		const int MAXWORDS = 25;
 		char *w[MAXWORDS];
-		const char *p = input;
 		int numargs = MAXWORDS;
-		conoutf("authserv: %s", p);
-		for(bool cont = true; cont; )
+		for(char *p = c.input, *end;; p = end)
 		{
+			end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
+			if(!end) break;
+			*end++ = '\0';
+
+			conoutf("{authserv} %s", p);
+
 			loopi(MAXWORDS)
 			{
 				w[i] = (char *)"";
@@ -139,22 +143,16 @@ namespace auth
 			}
 
 			p += strcspn(p, ";\n\0"); p++;
-			if(!*w[0])
-			{
-				if(*p) continue;
-				else cont = false;
-			}
-			else if(!strcmp(w[0], "error")) conoutf("authserv serror: %s", w[1]);
+			if(!strcmp(w[0], "error")) conoutf("authserv serror: %s", w[1]);
 			else if(!strcmp(w[0], "echo")) conoutf("authserv replied: %s", w[1]);
 			else if(!strcmp(w[0], "failauth")) authfailed((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "chalauth")) authchallenged((uint)(atoi(w[1])), w[2]);
 			loopj(numargs) if(w[j]) delete[] w[j];
 		}
-		//inputpos = &input[inputpos] - p;
-		//memmove(input, p, inputpos);
-        //if(inputpos >= (int)sizeof(input)) disconnect();
-        inputpos = input[0] = 0;
+		inputpos = &input[inputpos] - p;
+		memmove(input, p, inputpos);
+        if(inputpos >= (int)sizeof(input)) disconnect();
     }
 
     void connect()
