@@ -597,7 +597,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 							}
 #endif
 
-						#define OVERRIDEVAR(saveval, resetval) \
+						#define OVERRIDEVAR(saveval, resetval, clearval) \
 							if(overrideidents && id->flags&IDF_OVERRIDE) \
 							{ \
 								if(id->flags&IDF_PERSIST) \
@@ -606,13 +606,17 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 									break; \
 								} \
 								if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
+                                else { clearval; } \
 							} \
-							else if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; }
-
+							else \
+                            { \
+                                if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; } \
+                                clearval; \
+                            }
 #ifndef STANDALONE
 						WORLDVAR;
 #endif
-						OVERRIDEVAR(id->overrideval.i = *id->storage.i, )
+						OVERRIDEVAR(id->overrideval.i = *id->storage.i, , )
 						int i1 = parseint(w[1]);
 						if(i1<id->minval || i1>id->maxval)
 						{
@@ -635,7 +639,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 #ifndef STANDALONE
 						WORLDVAR;
 #endif
-						OVERRIDEVAR(id->overrideval.f = *id->storage.f, );
+						OVERRIDEVAR(id->overrideval.f = *id->storage.f, , );
 						float f1 = atof(w[1]);
 						if(f1<id->minvalf || f1>id->maxvalf)
 						{
@@ -657,7 +661,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 #ifndef STANDALONE
 						WORLDVAR;
 #endif
-						OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s);
+						OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s, delete[] *id->storage.s);
 						*id->storage.s = newstring(w[1]);
 						id->changed();
 #ifndef STANDALONE
