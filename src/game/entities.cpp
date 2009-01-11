@@ -810,7 +810,12 @@ namespace entities
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
 			if(physics::entinmap(d, false)) return true;
 		}
-		world::suicide(d, HIT_SPAWN);
+		if(m_edit(world::gamemode))
+		{
+			physics::entinmap(d, true);
+			return true;
+		}
+		else world::suicide(d, HIT_SPAWN);
 		return false;
 	}
 

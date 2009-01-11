@@ -129,7 +129,7 @@ void aliasa(const char *name, char *action)
 		idents->access(d.name, d);
 #else
 		ident &c = idents->access(d.name, d);
-		client::editvar(&c, interactive);
+		client::editvar(&c, interactive && !overrideidents);
 #endif
 	}
 	else if(b->type != ID_ALIAS)
@@ -154,7 +154,7 @@ void aliasa(const char *name, char *action)
 				b->flags |= IDF_WORLD;
 
 #ifndef STANDALONE
-			client::editvar(b, interactive);
+			client::editvar(b, interactive && !overrideidents);
 #endif
 		}
 	}
@@ -626,7 +626,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						*id->storage.i = i1;
 						id->changed();											 // call trigger function if available
 #ifndef STANDALONE
-						client::editvar(id, interactive);
+						client::editvar(id, interactive && !overrideidents);
 #endif
 					}
 					break;
@@ -649,7 +649,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						*id->storage.f = f1;
 						id->changed();
 #ifndef STANDALONE
-						client::editvar(id, interactive);
+						client::editvar(id, interactive && !overrideidents);
 #endif
 					}
 					break;
@@ -665,7 +665,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						*id->storage.s = newstring(w[1]);
 						id->changed();
 #ifndef STANDALONE
-						client::editvar(id, interactive);
+						client::editvar(id, interactive && !overrideidents);
 #endif
 					}
 					break;
