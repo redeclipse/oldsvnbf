@@ -694,8 +694,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
 				{
 					int numvars = hdr.version >= 25 ? gzgetint(f) : gzgetc(f), vars = 0;
+					overrideidents = worldidents = true;
+					persistidents = false;
 					renderprogress(0, "loading variables...");
-					loopi (numvars)
+					loopi(numvars)
 					{
 						vars++;
 						if(verbose) renderprogress(float(i)/float(vars), "loading variables...");
@@ -757,6 +759,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 								conoutf("\frWARNING: ignoring variable %s stored in map", vname);
 						}
 					}
+					persistidents = true;
+					overrideidents = worldidents = false;
 					if(verbose) conoutf("\fwloaded %d variables", vars);
 				}
 

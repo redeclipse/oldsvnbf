@@ -718,6 +718,8 @@ void splitocta(cube *c, int size)
 
 void clearworldvars(bool msg = false)
 {
+	overrideidents = worldidents = true;
+	persistidents = false;
 	enumerate(*idents, ident, id, {
 		if(id.flags&IDF_WORLD) // reset world vars
 		{
@@ -747,6 +749,8 @@ void clearworldvars(bool msg = false)
 			}
 		}
 	});
+	overrideidents = worldidents = false;
+	persistidents = true;
 	if(msg) conoutf("world variables reset");
 }
 
