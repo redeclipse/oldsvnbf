@@ -4,7 +4,7 @@ namespace auth
     char input[4096];
     vector<char> output;
     int inputpos = 0, outputpos = 0;
-    int lastconnect = 0;
+    int lastconnect = 0, lastactivity = 0;
     uint nextauthreq = 0;
 
 	extern void connect();
@@ -156,6 +156,14 @@ namespace auth
         if(inputpos >= (int)sizeof(input)) disconnect();
     }
 
+	void regserver()
+	{
+		conoutf("updating authentication server");
+		s_sprintfd(msg)("server %d %d\n", serverport, serverqueryport);
+		addoutput(msg);
+		lastactivity = lastmillis;
+	}
+
     void connect()
     {
         if(socket != ENET_SOCKET_NULL) return;
@@ -177,12 +185,7 @@ namespace auth
 				else enet_socket_set_option(socket, ENET_SOCKOPT_NONBLOCK, 1);
 			}
 			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
-			else
-			{
-				conoutf("connected to authentication server, registering");
-				s_sprintfd(msg)("server %d %d\n", serverport, serverqueryport);
-				addoutput(msg);
-			}
+			else regserver();
 		}
     }
 
@@ -206,8 +209,9 @@ namespace auth
         buf.data = &output[outputpos];
         buf.dataLength = output.length() - outputpos;
         int sent = enet_socket_send(socket, NULL, &buf, 1);
-        if(sent >= 0)
+        if(sent > 0)
         {
+        	lastactivity = lastmillis;
             outputpos += sent;
             if(outputpos >= output.length())
             {
@@ -215,7 +219,7 @@ namespace auth
                 outputpos = 0;
             }
         }
-        else disconnect();
+        else if(sent < 0) disconnect();
     }
 
     void flushinput()
@@ -233,7 +237,7 @@ namespace auth
             inputpos += recv;
             processinput();
         }
-        else disconnect();
+        else if(recv < 0) disconnect();
     }
 
     void update()
@@ -249,10 +253,7 @@ namespace auth
         	return;
         }
 
-        //int authreqs = 0;
-        //loopv(clients) if(clients[i]->authreq) authreqs++;
-        //if(!authreqs) return;
-
+        if(lastmillis - lastactivity > 10*60*1000) regserver();
         flushoutput();
         flushinput();
     }

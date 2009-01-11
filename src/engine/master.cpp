@@ -15,6 +15,13 @@
 #include <errno.h>
 #endif
 
+#define MASTER_LIMIT 4096
+#define CLIENT_TIME (60*1000)
+#define SERVER_TIME (11*60*1000)
+#define AUTH_TIME (60*1000)
+#define AUTH_LIMIT 100
+#define DUP_LIMIT 16
+
 VAR(masterserver, 0, 1, 1);
 VAR(masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(masterip, "");
@@ -39,12 +46,11 @@ struct masterclient
     string name;
     char input[4096];
     vector<char> output;
-    int inputpos, outputpos, port, qport;
-    enet_uint32 connecttime;
+    int inputpos, outputpos, port, qport, lastactivity;
     vector<authreq> authreqs;
     bool isserver;
 
-    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), isserver(false) {}
+    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), lastactivity(0), isserver(false) {}
 };
 
 vector<masterclient *> masterclients;
@@ -241,11 +247,16 @@ bool checkmasterclientinput(masterclient &c)
 		{
 			c.port = ENG_SERVER_PORT;
 			c.qport = ENG_QUERY_PORT;
-			if(*w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
-			if(*w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
-			masteroutf(c, "echo \"server initiated\"\n");
-			conoutf("master peer %s registered as a server",  c.name);
-			c.isserver = true;
+			if(w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
+			if(w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
+			c.lastactivity = lastmillis;
+			if(c.isserver) masteroutf(c, "echo \"server updated\"\n");
+			else
+			{
+				masteroutf(c, "echo \"server initiated\"\n");
+				conoutf("master peer %s registered as a server",  c.name);
+				c.isserver = true;
+			}
 		}
 		else if(!strcmp(w[0], "list"))
 		{
@@ -301,20 +312,20 @@ void checkmaster()
 	{
 		ENetAddress address;
 		ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
-		if(masterclients.length()>=MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
+		if(masterclients.length() >= MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
 		else if(masterclientsocket!=ENET_SOCKET_NULL)
 		{
 			int dups = 0, oldest = -1;
 			loopv(masterclients) if(masterclients[i]->address.host == address.host)
 			{
 				dups++;
-				if(oldest<0 || masterclients[i]->connecttime < masterclients[oldest]->connecttime) oldest = i;
+				if(oldest<0 || masterclients[i]->lastactivity < masterclients[oldest]->lastactivity) oldest = i;
 			}
 			if(dups >= DUP_LIMIT) purgemasterclient(oldest);
 			masterclient *c = new masterclient;
 			c->address = address;
 			c->socket = masterclientsocket;
-			c->connecttime = lastmillis;
+			c->lastactivity = lastmillis;
 			masterclients.add(c);
 			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
 			conoutf("master peer %s connected", c->name);
@@ -357,7 +368,7 @@ void checkmaster()
 			else { purgemasterclient(i--); continue; }
 		}
 		/* if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; } */
-        if(!c.isserver && ENET_TIME_DIFFERENCE(lastmillis, c.connecttime) >= CLIENT_TIME)
+        if(lastmillis - c.lastactivity >= (c.isserver ? SERVER_TIME : CLIENT_TIME))
         {
         	purgemasterclient(i--);
         	continue;

@@ -23,8 +23,14 @@
 #ifdef IRC
 #include "irc.h"
 #endif
+
 #ifdef MASTERSERVER
-#include "master.h"
+extern void setupmaster();
+extern void checkmaster();
+extern void cleanupmaster();
+
+extern int masterserver, masterport;
+extern char *masterip;
 #endif
 
 #include "sound.h"

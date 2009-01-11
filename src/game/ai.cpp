@@ -219,7 +219,12 @@ namespace ai
 				int minbal = sv_botminamt > sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
 					maxbal = sv_botminamt < sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
 					balance = clamp(int(numplayers*sv_botbalance), minbal, maxbal);
-				if(m_team(gamemode, mutators)) balance *= numteams(gamemode, mutators);
+				if(m_team(gamemode, mutators))
+				{
+					int nump = numclients(-1, true, true), numt = numteams(gamemode, mutators);
+					balance *= numt;
+					if(numplayers > balance && nump%numt) balance += numt-(nump%numt);
+				}
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}
