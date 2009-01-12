@@ -913,8 +913,7 @@ void autograss(char *name)
 {
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
-	s_sprintfd(pname)("%s", name);
-	s.autograss = newstring(name[0] ? pname : "textures/grass");
+	s.autograss = newstring(name[0] ? name : "textures/grass");
 }
 COMMAND(autograss, "s");
 
