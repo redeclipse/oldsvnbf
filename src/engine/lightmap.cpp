@@ -10,7 +10,7 @@ VARW(lightlod, 0, 0, 10);
 VARW(ambient, 0, 25, 64);
 VARW(skylight, 0, 0, 0xFFFFFF);
 VARW(lmshadows, 0, 1, 1);
-VARW(mmshadows, 0, 1, 1);
+VARW(mmshadows, 0, 2, 2);
 
 static surfaceinfo brightsurfaces[6] =
 {
