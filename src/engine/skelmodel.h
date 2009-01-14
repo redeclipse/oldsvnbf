@@ -888,11 +888,7 @@ struct skelmodel : animmodel
             DELETEA(invbones);
             DELETEA(matinvbones);
             DELETEA(matframebones);
-            if(shared <= 1) loopi(numbones)
-            {
-                if(bones[i].parent < 0) bones[i].base.translate(transdiff);
-                bones[i].base.scale(scalediff);
-            }
+            if(shared <= 1) loopi(numbones) bones[i].base.scale(scalediff);
             for(; scaledframes < numframes; scaledframes++)
             {
                 dualquat *frame = &framebones[scaledframes*numbones];
