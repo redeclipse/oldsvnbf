@@ -184,7 +184,7 @@ void setfullscreen(bool enable)
 #if defined(WIN32) || defined(__APPLE__)
     initwarning(enable ? "fullscreen" : "windowed");
 #else
-    if(enable == !(screen->flags&SDL_FULLSCREEN)) 
+    if(enable == !(screen->flags&SDL_FULLSCREEN))
     {
         SDL_WM_ToggleFullScreen(screen);
         inputgrab(grabinput!=0);
@@ -373,7 +373,8 @@ void resetgl()
 
 COMMAND(resetgl, "");
 
-bool activewindow = true, warpmouse = false;
+bool activewindow = true;
+int warpmouse = 0;
 
 vector<SDL_Event> events;
 
@@ -406,7 +407,7 @@ void resetcursor(bool warp, bool reset)
 	if(warp && grabinput)
 	{
 		SDL_WarpMouse(screen->w/2, screen->h/2);
-		warpmouse = true;
+		warpmouse++;
 	}
 	if(reset) cursorx = cursory = aimx = aimy = 0.5f;
 }
@@ -454,15 +455,12 @@ void checkinput()
 #ifdef __APPLE__
 					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if(warpmouse &&
-						event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
+					if(warpmouse > 0 && event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
 					{
-						warpmouse = false;
+						warpmouse--;
 						break;
 					}
-
-					if(world::mousemove(event.motion.xrel, event.motion.yrel,
-							event.motion.x, event.motion.y, screen->w, screen->h))
+					if(world::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
 					{
 						resetcursor(true, false); // game controls engine cursor
 					}
@@ -803,6 +801,7 @@ int main(int argc, char **argv)
 
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
 	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
+	warpmouse += 5;
 
 	conoutf("\fminit: video mode");
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;

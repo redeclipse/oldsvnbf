@@ -576,10 +576,6 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 		</Unit>
-		<Unit filename="engine\master.h">
-			<Option target="daemon" />
-			<Option target="daemon-dbg" />
-		</Unit>
 		<Unit filename="engine\material.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
