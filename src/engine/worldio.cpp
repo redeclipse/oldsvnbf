@@ -15,7 +15,7 @@ sometype mapdirs[] = {
 
 string mapfile, mapname;
 VAR(maptype, 1, -1, -1);
-SVARW(maptitle, "Untitled by Unknown");
+SVARW(maptitle, "");
 
 void setnames(const char *fname, int type)
 {
