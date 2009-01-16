@@ -5,4 +5,4 @@ Non-definitive todo / wanted feature list, read at own peril.
 	- tag_ironsight?
 	- when crouching, roll grenades along the ground instead?
 
-* Fix rifle sounds and visual appearance of projectile.
+* Fix rifle sounds and visual appearance of projectile
