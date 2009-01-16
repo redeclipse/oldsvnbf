@@ -455,13 +455,12 @@ struct md5 : skelmodel
             loadingmd5 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
-        else if(!loaddefaultparts()) // md5 without configuration, try default tris and skin
+        else // md5 without configuration, try default tris and skin 
         {
             persistidents = true;
             loadingmd5 = NULL;
-            return false;
+            if(!loaddefaultparts()) return false;
         }
-        loadingmd5 = NULL;
         loopv(parts)
         {
             skelpart *p = (skelpart *)parts[i];
