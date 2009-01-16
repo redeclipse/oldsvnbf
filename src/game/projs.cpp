@@ -437,8 +437,8 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
-						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.3f);
-						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.1f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.35f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.15f);
 					}
 					break;
 				}
@@ -451,8 +451,8 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.25f);
-						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.075f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.25f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.01f);
 					}
 					break;
 				}
@@ -466,8 +466,8 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.25f);
-						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.12f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.35f);
+						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, proj.radius*0.15f);
 						part_create(PART_PLASMA_SOFT, 1, proj.o, col, 0.6f);
 					}
 					break;
@@ -477,13 +477,14 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float adjust = proj.radius*64.f,
+						float adjust = proj.radius*86.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(254*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(32*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_STREAK, col, proj.radius*0.35f);
-						part_flare(proj.to, proj.o, 1, PART_STREAK_LERP, col, proj.radius*0.2f);
+						int col = ((int(254*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(64*max(1.f-proj.lifesize,0.2f)));
+						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, proj.radius*0.6f);
+						col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(8*max(1.f-proj.lifesize,0.2f)));
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.2f);
 					}
 					break;
 				}

@@ -629,7 +629,8 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
-    new taperenderer("particles/flare", PT_TAPE|PT_LERP, 0, 0),
+    new taperenderer("particles/sflare", PT_TAPE|PT_LERP, 0, 0),
+    new taperenderer("particles/fflare", PT_TAPE|PT_LERP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
     new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
@@ -643,7 +644,8 @@ static partrenderer *parts[] =
     new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP, 0, 0),
-    new taperenderer("particles/flare", PT_TAPE|PT_GLARE, 0, 0),
+    new taperenderer("particles/sflare", PT_TAPE|PT_GLARE, 0, 0),
+    new taperenderer("particles/fflare", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 100, DECAL_STAIN),
@@ -1127,7 +1129,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
         case 12: //snow
         case 13: //sparks
         {
-            const int typemap[]   = { PART_STREAK, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW, PART_SPARK };
+            const int typemap[]   = { PART_SFLARE, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW, PART_SPARK };
             const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f };
             const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   200,  40, 200 };
             int type = typemap[attr1-4];
