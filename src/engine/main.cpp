@@ -373,8 +373,8 @@ void resetgl()
 
 COMMAND(resetgl, "");
 
-bool activewindow = true;
-int warpmouse = 0;
+bool activewindow = true, warpmouse = false;
+int ignoremouse = 0;
 
 vector<SDL_Event> events;
 
@@ -407,7 +407,7 @@ void resetcursor(bool warp, bool reset)
 	if(warp && grabinput)
 	{
 		SDL_WarpMouse(screen->w/2, screen->h/2);
-		warpmouse++;
+		warpmouse = true;
 	}
 	if(reset) cursorx = cursory = aimx = aimy = 0.5f;
 }
@@ -455,15 +455,11 @@ void checkinput()
 #ifdef __APPLE__
 					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
 #endif
-					if(warpmouse > 0 && event.motion.x == screen->w/2 && event.motion.y == screen->h/2)
-					{
-						warpmouse--;
-						break;
-					}
-					if(world::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
-					{
+					//conoutf("mouse: %d %d, %d %d [%s, %d]", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, warpmouse ? "true" : "false", ignoremouse);
+					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2) warpmouse = false;
+					else if(ignoremouse) ignoremouse--;
+					else if(world::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
 						resetcursor(true, false); // game controls engine cursor
-					}
 				}
 				break;
 			}
@@ -801,7 +797,7 @@ int main(int argc, char **argv)
 
 	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
 	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
-	warpmouse += 5;
+	ignoremouse += 3;
 
 	conoutf("\fminit: video mode");
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
