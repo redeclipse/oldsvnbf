@@ -332,8 +332,8 @@ extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
 extern Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL);
 extern Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg);
 
-extern void materialreset();
-extern void texturereset();
+extern void resetmaterials();
+extern void resettextures();
 extern void setshader(char *name);
 extern void setshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
 extern int findtexturetype(char *name, bool tryint = false);

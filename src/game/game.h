@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			143
+#define GAMEVERSION			144
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -44,7 +44,7 @@ enum								// entity types
 	CHECKPOINT,						// 14 idx
 	CAMERA,							// 15 idx mindist maxdist
 	WAYPOINT,						// 16 cmd
-	MAXENTTYPES						// 19
+	MAXENTTYPES						// 17
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
@@ -54,7 +54,8 @@ enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_MAX };
 struct enttypes
 {
 	int	type,			links,	radius,	usetype,
-			canlink;
+			canlink,
+			reclink;
 	bool	noisy;	const char *name;
 };
 #ifdef GAMESERVER
@@ -62,86 +63,103 @@ enttypes enttype[] = {
 	{
 		NOTUSED,		0,		0,		EU_NONE,
 			0,
+			0,
 			true,				"none"
 	},
 	{
 		LIGHT,			59,		0,		EU_NONE,
 			inttobit(SPOTLIGHT),
+			0,
 			false,				"light"
 	},
 	{
 		MAPMODEL,		58,		0,		EU_NONE,
+			inttobit(TRIGGER),
 			inttobit(TRIGGER),
 			false,				"mapmodel"
 	},
 	{
 		PLAYERSTART,	59,		0,		EU_NONE,
 			0,
+			0,
 			false,				"playerstart"
 	},
 	{
 		ENVMAP,			0,		0,		EU_NONE,
+			0,
 			0,
 			false,				"envmap"
 	},
 	{
 		PARTICLES,		59,		0,		EU_NONE,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"particles"
 	},
 	{
 		MAPSOUND,		58,		0,		EU_NONE,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"sound"
 	},
 	{
 		SPOTLIGHT,		59,		0,		EU_NONE,
+			0,
 			0,
 			false,				"spotlight"
 	},
 	{
 		WEAPON,			59,		16,		EU_ITEM,
 			0,
+			0,
 			false,				"weapon"
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(TELEPORT),
+			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"teleport"
 	},
 	{
 		ACTOR,			59,		0,		EU_NONE,
+			0,
 			0,
 			false,				"actor"
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
+			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"trigger"
 	},
 	{
 		PUSHER,			58,		12,		EU_AUTO,
+			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"pusher"
 	},
 	{
 		FLAG,			48,		32,		EU_NONE,
 			inttobit(FLAG),
+			0,
 			false,				"flag"
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
 			inttobit(CHECKPOINT),
+			0,
 			false,				"checkpoint"
 	},
 	{
 		CAMERA,			48,		0,		EU_NONE,
 			inttobit(CAMERA),
+			0,
 			false,				"camera"
 	},
 	{
 		WAYPOINT,		1,		16,		EU_NONE,
 			inttobit(WAYPOINT),
+			0,
 			true,				"waypoint"
 	}
 };
@@ -1266,12 +1284,13 @@ namespace ai
 
 namespace hud
 {
-	extern int hudwidth, hudsize, radarflagnames;
+	extern int hudwidth, hudsize, damageresidue, radarflagnames;
 	extern float radarblipblend, radarnameblend, inventoryblend, inventoryskew;
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(float x, float y, float s);
 	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "radar", float fade = -1.f, const char *text = NULL, ...);
+	extern void damagecompass(int n, const vec &loc);
 	extern int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern const char *flagtex(int team = TEAM_NEUTRAL);
 	extern float radarrange();
@@ -1280,7 +1299,7 @@ namespace hud
 namespace world
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, damageresidue, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim;
+			quakewobble, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim;
 	extern bool intermission, zooming;
 
 	extern gameent *player1;

@@ -776,21 +776,21 @@ Slot materialslots[MATF_VOLUME+1];
 
 int curtexnum = 0, curmatslot = -1;
 
-void texturereset()
+void resettextures()
 {
     resetslotshader();
 	curtexnum = 0;
 	slots.setsize(0);
 }
 
-COMMAND(texturereset, "");
+ICOMMAND(texturereset, "", (void), if(editmode || worldidents) resettextures(););
 
-void materialreset()
+void resetmaterials()
 {
     loopi(MATF_VOLUME+1) materialslots[i].reset();
 }
 
-COMMAND(materialreset, "");
+ICOMMAND(materialreset, "", (void), if(editmode || worldidents) resetmaterials(););
 sometype textypes[] =
 {
 	{"c", TEX_DIFFUSE},

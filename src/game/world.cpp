@@ -10,7 +10,7 @@ namespace world
 	vec swaydir(0, 0, 0);
     int lasthit = 0, lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0;
     bool prevzoom = false, zooming = false;
-	int quakewobble = 0, damageresidue = 0, liquidchan = -1;
+	int quakewobble = 0, liquidchan = -1;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -440,7 +440,7 @@ namespace world
 
 			adjustscaled(float, player1->roll);
 			adjustscaled(int, quakewobble);
-			adjustscaled(int, damageresidue);
+			adjustscaled(int, hud::damageresidue);
 
 			if(player1->state == CS_DEAD)
 			{
@@ -476,7 +476,8 @@ namespace world
 			if(d == player1)
 			{
 				quakewobble += damage/2;
-				damageresidue += damage*2;
+				hud::damageresidue += damage*2;
+				hud::damagecompass(damage, actor->o);
 			}
 
 			if(d->type == ENT_PLAYER)
