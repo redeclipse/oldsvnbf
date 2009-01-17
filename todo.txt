@@ -4,7 +4,3 @@ Non-definitive todo / wanted feature list, read at own peril.
 	- pitching causes torso to enter legs
 	- tag_ironsight?
 	- when crouching, roll grenades along the ground instead?
-
-* Fix rifle sounds and visual appearance of projectile
-* Ensure entities which require reciprocal links enforce the fact
-* Restrict commands like mapmodelreset

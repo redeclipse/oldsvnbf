@@ -754,14 +754,14 @@ void clearworldvars(bool msg = false)
 	if(msg) conoutf("world variables reset");
 }
 
-ICOMMAND(resetworldvars, "", (), clearworldvars(true));
+ICOMMAND(resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true));
 
 void resetmap()
 {
 	renderprogress(0, "resetting map...");
-	materialreset();
-	texturereset();
-	mapmodelreset();
+	resetmaterials();
+	resettextures();
+	resetmapmodels();
 	clearoverrides();
 	clearsound();
 	cleanreflections();

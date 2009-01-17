@@ -230,13 +230,13 @@ void mapmodelcompat(int *rad, int *h, int *tex, char *name, char *shadow)
 	mmodel(name);
 }
 
-void mapmodelreset() { mapmodels.setsize(0); }
+void resetmapmodels() { mapmodels.setsize(0); }
 
 mapmodelinfo &getmminfo(int i) { return mapmodels.inrange(i) ? mapmodels[i] : *(mapmodelinfo *)0; }
 
 COMMAND(mmodel, "s");
 COMMANDN(mapmodel, mapmodelcompat, "iiiss");
-COMMAND(mapmodelreset, "");
+ICOMMAND(mapmodelreset, "", (void), if(editmode || worldidents) resetmapmodels(););
 ICOMMAND(mapmodelindex, "s", (char *a), {
 	if (!*a) intret(mapmodels.length());
 	else

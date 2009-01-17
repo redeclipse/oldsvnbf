@@ -878,54 +878,45 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
 		{
 			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
-			int g;
-
+			bool recip = (enttype[e.type].reclink & f.type) || (enttype[f.type].reclink & e.type);
+			int g = -1, h = -1;
 			if((toggle || !add) && (g = e.links.find(node)) >= 0)
 			{
-				int h;
 				if(!add || (toggle && (!canlink(node, index) || (h = f.links.find(index)) >= 0)))
 				{
 					e.links.remove(g);
+					if(recip) f.links.remove(h);
 					fixentity(e); fixentity(f);
-					if(local && m_edit(world::gamemode))
-						client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
-
-					if(verbose >= 3)
-						conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
+					if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
 				else if(toggle && canlink(node, index))
 				{
 					f.links.add(index);
+					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
 					fixentity(e); fixentity(f);
-					if(local && m_edit(world::gamemode))
-						client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
-
-					if(verbose >= 3)
-						conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
+					if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
 			else if(toggle && canlink(node, index) && (g = f.links.find(index)) >= 0)
 			{
 				f.links.remove(g);
+				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
 				fixentity(e); fixentity(f);
-				if(local && m_edit(world::gamemode))
-					client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
-
-				if(verbose >= 3)
-					conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
+				if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
 			else if(toggle || add)
 			{
 				e.links.add(node);
+				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
 				fixentity(e); fixentity(f);
-				if(local && m_edit(world::gamemode))
-					client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
-
-				if(verbose >= 3)
-					conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
+				if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
@@ -1327,7 +1318,16 @@ namespace entities
 		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
-			loopvrev(e.links) if(!canlink(j, e.links[i], true)) e.links.remove(i);
+			loopvrev(e.links)
+			{
+				if(!canlink(j, e.links[i], true)) e.links.remove(i);
+				else if(ents.inrange(e.links[i]))
+				{
+					gameentity &f = *(gameentity *)ents[e.links[i]];
+					if(((enttype[e.type].reclink & f.type) || (enttype[f.type].reclink & e.type)) && f.links.find(j) < 0)
+						f.links.add(j);
+				}
+			}
 
 			switch(e.type)
 			{
