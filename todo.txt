@@ -7,3 +7,4 @@ Non-definitive todo / wanted feature list, read at own peril.
 
 * Fix rifle sounds and visual appearance of projectile
 * Ensure entities which require reciprocal links enforce the fact
+* Restrict commands like mapmodelreset
