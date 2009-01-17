@@ -1460,10 +1460,14 @@ void filltexlist()
 	}
 }
 
-void edittex(int i)
+void edittex(int i, bool save = true)
 {
     lasttex = i;
     lasttexmillis = totalmillis;
+    if(save)
+    {
+        loopvj(texmru) if(texmru[j]==lasttex) { curtexindex = j; break; }
+    }
     mpedittex(i, allfaces, sel, true);
 }
 
@@ -1474,7 +1478,7 @@ void edittex_(int *dir)
 	texpaneltimer = 5000;
 	if(!(lastsel==sel)) tofronttex();
     curtexindex = clamp(curtexindex<0 ? 0 : curtexindex+*dir, 0, curtexnum-1);
-    edittex(texmru[curtexindex]);
+    edittex(texmru[curtexindex], false);
 }
 
 void gettex()
