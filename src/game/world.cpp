@@ -210,7 +210,7 @@ namespace world
 	void announce(int idx, const char *msg, ...)
 	{
 		s_sprintfdlv(text, msg, msg);
-		console("%s", CON_CENTER|CON_NORMAL, text);
+		conoutf("%s", text);
 		playsound(idx, camera1->o, camera1, SND_FORCED);
 	}
 	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
@@ -700,7 +700,7 @@ namespace world
 		}
 		else if(timeremain > 0)
 		{
-			console("\f2time remaining: %d %s", CON_NORMAL|CON_CENTER, timeremain, timeremain==1 ? "minute" : "minutes");
+			conoutf("\fctime remaining: %d %s", timeremain, timeremain==1 ? "minute" : "minutes");
 		}
 	}
 
@@ -763,7 +763,7 @@ namespace world
 	void startmap(const char *name)	// called just after a map load
 	{
 		const char *title = getmaptitle();
-		if(*title) console("%s", CON_CENTER|CON_NORMAL, title);
+		if(*title) conoutf("%s", title);
 		intermission = false;
         player1->respawned = player1->suicided = maptime = 0;
         preload();

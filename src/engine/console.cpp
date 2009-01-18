@@ -3,16 +3,10 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(centertime, 200, 5000, INT_MAX-1);
-VARP(centerlines, 0, 3, 5);
-FVARP(centerblend, 0, 0.99f, 1);
-
 VARP(contime, 200, 20000, INT_MAX-1);
 FVARP(conblend, 0, 0.99f, 1);
 
-ICOMMAND(centerprint, "C", (char *s), console("\f6%s", CON_CENTER, s););
-
-vector<cline> conlines[CN_MAX];
+vector<cline> conlines;
 
 int conskip = 0;
 
@@ -29,52 +23,35 @@ void setconskip(int *n)
 
 COMMANDN(conskip, setconskip, "i");
 
-void conline(const char *sf, int n, int type = CON_NORMAL)
+void conline(const char *sf, int n)
 {
-	int _types[] = { CON_NORMAL, CON_CENTER };
+	cline cl;
+	cl.cref = conlines.length()>100 ? conlines.pop().cref : newstringbuf("");
+	cl.outtime = lastmillis;
+	conlines.insert(n, cl);
 
-	loopi(CN_MAX)
+	int c = 0;
+	#define addcref(d) { cl.cref[c] = d; c++; }
+	if(n)
 	{
-		if (type & _types[i])
+		addcref(' ');
+		addcref(' ');
+		s_strcat(cl.cref, sf);
+	}
+	addcref(0);
+	s_strcat(cl.cref, sf);
+
+	if(n)
+	{
+		string sd;
+		loopj(2)
 		{
-			cline cl;
-			cl.cref = conlines[i].length()>100 ? conlines[i].pop().cref : newstringbuf("");
-			cl.outtime = lastmillis;
-
-			int pos = n && i == CN_CENTER ? n : 0;
-			conlines[i].insert(pos,cl);
-
-			int c = 0;
-			#define addcref(d) { cl.cref[c] = d; c++; }
-
-			if(type & CON_HILIGHT)
+			int off = n+j;
+			if(conlines.inrange(off))
 			{
-				addcref('\f');
-				addcref('0');
-			}
-			if(n && i != CN_CENTER)
-			{
-				addcref(' ');
-				addcref(' ');
-				s_strcat(cl.cref, sf);
-			}
-
-			addcref(0);
-			s_strcat(cl.cref, sf);
-
-			if (n)
-			{
-				string sd;
-				loopj(2)
-				{
-					int off = pos+(i != CN_CENTER ? j : -j);
-					if (conlines[i].inrange(off))
-					{
-						if (j) s_sprintf(sd)("%s\fs", conlines[i][off].cref);
-						else s_sprintf(sd)("\fS%s", conlines[i][off].cref);
-						s_strcpy(conlines[i][off].cref, sd);
-					}
-				}
+				if(j) s_sprintf(sd)("%s\fs", conlines[off].cref);
+				else s_sprintf(sd)("\fS%s", conlines[off].cref);
+				s_strcpy(conlines[off].cref, sd);
 			}
 		}
 	}
@@ -82,22 +59,22 @@ void conline(const char *sf, int n, int type = CON_NORMAL)
 
 SVAR(contimefmt, "%c");
 
-void console(const char *s, int type, ...)
+void console(const char *s, ...)
 {
-	s_sprintfdlv(sf, type, s);
+	s_sprintfdv(sf, s);
 	string osf, psf, fmt;
 	s_sprintf(fmt)(contimefmt);
 	filtertext(osf, sf);
-	s_sprintf(psf)("%s [%02x] %s", gettime(fmt), type, osf);
+	s_sprintf(psf)("%s %s", gettime(fmt), osf);
 	printf("%s\n", osf);
 	fflush(stdout);
-	conline(sf, 0, type);
+	conline(sf, 0);
 }
 
 void conoutf(const char *s, ...)
 {
 	s_sprintfdv(sf, s);
-	console("%s", CON_NORMAL, sf);
+	console("%s", sf);
 #ifdef IRC
 	string osf;
 	filtertext(osf, sf);
@@ -160,29 +137,15 @@ int renderconsole(int w, int h, int x, int y, int s)
 	vector<char *> refs;
 	refs.setsizenodelete(0);
 
-	if (!UI::hascursor() && centerlines)
-	{
-		loopv(conlines[CN_CENTER]) if(lastmillis-conlines[CN_CENTER][i].outtime<centertime)
-		{
-			refs.add(conlines[CN_CENTER][i].cref);
-			if(refs.length() >= centerlines) break;
-		}
-		int z = ((h/4)*3)-FONTH*2;
-		loopv(refs)
-			z += draw_textx("%s", w/2, z, 255, 255, 255, int(255*centerblend), TEXT_CENTERED|TEXT_NO_INDENT, -1, s/2, refs[i]);
-	}
-
 	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
-
 	refs.setsizenodelete(0);
-
 	if(numl)
 	{
-		loopv(conlines[CN_NORMAL])
+		loopv(conlines)
 		{
-			if(conskip ? i>=conskip-1 || i>=conlines[CN_NORMAL].length()-numl : fullconsole || lastmillis-conlines[CN_NORMAL][i].outtime<contime)
+			if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : fullconsole || lastmillis-conlines[i].outtime<contime)
 			{
-				refs.add(conlines[CN_NORMAL][i].cref);
+				refs.add(conlines[i].cref);
 				if (refs.length() >= numl) break;
 			}
 		}

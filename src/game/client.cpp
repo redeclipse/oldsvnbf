@@ -23,13 +23,9 @@ namespace client
 	// collect c2s messages conveniently
 	vector<uchar> messages;
 
-	VARP(centerchat, 0, 1, 1);
 	VARP(colourchat, 0, 1, 1);
-
 	SVARP(serversort, "");
-
 	ICOMMAND(mastermode, "i", (int *val), if(remote) addmsg(SV_MASTERMODE, "ri", *val));
-
 	ICOMMAND(getname, "", (), result(world::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[world::player1->team].name));
 
@@ -163,19 +159,19 @@ namespace client
 
 	void edittoggled(bool edit)
 	{
-		if(!edit)
-		{
-			world::player1->state = CS_ALIVE;
-			world::player1->o.z -= world::player1->height; // entinmap wants feet pos
-		}
-		else
+		if(edit)
 		{
 			world::player1->state = CS_EDITING;
 			world::resetstates(ST_DEFAULT);
 		}
+		else
+		{
+			world::player1->state = CS_ALIVE;
+			world::player1->o.z -= world::player1->height; // entinmap wants feet pos
+		}
 		physics::entinmap(world::player1, false); // find spawn closest to current floating pos
-		if(m_edit(world::gamemode))
-			addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
+		if(m_edit(world::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
+		entities::edittoggled(edit);
 	}
 
 	int parseplayer(const char *arg)
@@ -346,7 +342,7 @@ namespace client
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 		}
 
-		console("%s", (centerchat ? CON_CENTER : 0)|CON_NORMAL, s);
+		conoutf("%s", s);
 		playsound(S_CHAT, camera1->o, camera1, SND_FORCED);
 	}
 

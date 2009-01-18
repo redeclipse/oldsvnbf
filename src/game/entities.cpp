@@ -1064,6 +1064,7 @@ namespace entities
 					if(d->crouching) cmds |= WP_CROUCH;
 					curnode = ents.length();
 					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
+					clearentcache();
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair);
@@ -1368,6 +1369,12 @@ namespace entities
 	void mapstart()
 	{
 		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : 0;
+		clearentcache();
+	}
+
+	void edittoggled(bool edit)
+	{
+		if(!edit) clearentcache();
 	}
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
