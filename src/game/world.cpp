@@ -262,6 +262,7 @@ namespace world
 
 	void spawneffect(const vec &o, int colour, int radius, float size, int num, int fade, float vel)
 	{
+		part_create(PART_ELECTRIC_SLENS, fade, o, colour, size);
 		regularshape(PART_ELECTRIC, radius*2, colour, 21, num, fade, o, size, vel);
 		adddynlight(o, radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
 	}

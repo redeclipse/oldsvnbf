@@ -28,7 +28,8 @@ struct flare
     bool sparkle;
 };
 
-VAR(flarelights, 0, 0, 1);
+VARW(flarelights, 0, 0, 1);
+VARP(flareparts, 0, 1, 1);
 VARP(flarecutoff, 0, 1000, 10000);
 VARP(flaresize, 20, 100, 500);
 
@@ -87,42 +88,46 @@ struct flarerenderer : partrenderer
         newflare(o, center, r, g, b, mod, size, sun, sparkle);
     }
 
-    void makelightflares()
+    void setupflares()
     {
         numflares = 0; //regenerate flarelist each frame
         shinetime = lastmillis/10;
+    }
 
-        if(editmode || !flarelights) return;
-
-        const vector<extentity *> &ents = entities::getents();
-        vec viewdir;
-        vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, viewdir);
-        extern const vector<int> &checklightcache(int x, int y);
-        const vector<int> &lights = checklightcache(int(camera1->o.x), int(camera1->o.y));
-        loopv(lights)
-        {
-            entity &e = *ents[lights[i]];
-            if(e.type != ET_LIGHT) continue;
-            bool sun = (e.attr1==0);
-            float radius = float(e.attr1);
-            vec flaredir = vec(e.o).sub(camera1->o);
-            float len = flaredir.magnitude();
-            if(!sun && (len > radius)) continue;
-            if(isvisiblesphere(0.0f, e.o) > (sun?VFC_FOGGED:VFC_FULL_VISIBLE)) continue;
-            vec center = vec(viewdir).mul(flaredir.dot(viewdir)).add(camera1->o);
-            float mod, size;
-            if(sun) //fixed size
-            {
-                mod = 1.0;
-                size = len * flaresize / 100.0f;
-            }
-            else
-            {
-                mod = (radius-len)/radius;
-                size = flaresize / 5.0f;
-            }
-            newflare(e.o, center, e.attr2, e.attr3, e.attr4, mod, size, sun, sun);
-        }
+    void drawflares()
+    {
+    	if(flarelights)
+    	{
+			const vector<extentity *> &ents = entities::getents();
+			vec viewdir;
+			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, viewdir);
+			extern const vector<int> &checklightcache(int x, int y);
+			const vector<int> &lights = checklightcache(int(camera1->o.x), int(camera1->o.y));
+			loopv(lights)
+			{
+				entity &e = *ents[lights[i]];
+				if(e.type != ET_LIGHT) continue;
+				bool sun = (e.attr1==0);
+				float radius = e.attr1*(flaresize/100.f);
+				vec flaredir = vec(e.o).sub(camera1->o);
+				float len = flaredir.magnitude();
+				if(!sun && (len > radius)) continue;
+				if(isvisiblesphere(0.0f, e.o) > (sun?VFC_FOGGED:VFC_FULL_VISIBLE)) continue;
+				vec center = vec(viewdir).mul(flaredir.dot(viewdir)).add(camera1->o);
+				float mod, size;
+				if(sun) //fixed size
+				{
+					mod = 1.0;
+					size = len * flaresize / 100.0f;
+				}
+				else
+				{
+					mod = (radius-len)/radius;
+					size = flaresize / 10.0f;
+				}
+				newflare(e.o, center, e.attr2, e.attr3, e.attr4, mod, size, sun, sun);
+			}
+    	}
     }
 
     int count()
@@ -184,5 +189,23 @@ struct flarerenderer : partrenderer
     //square per round hole - use addflare(..) instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
-static flarerenderer flares("particles/lensflares", 64);
+static flarerenderer flares("particles/lensflares", 128);
 
+void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size)
+{
+	//frustrum + fog check
+	if(isvisiblesphere(0.0f, o) > VFC_FULL_VISIBLE) return;
+	//find closest point between camera line of sight and flare pos
+	vec viewdir;
+	vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, viewdir);
+	vec flaredir = vec(o).sub(camera1->o);
+	vec center = viewdir.mul(flaredir.dot(viewdir)).add(camera1->o);
+	float mod;
+	mod = (flarecutoff-vec(o).sub(center).squaredlen())/flarecutoff;
+	if(mod >= 0.0f) flares.newflare(o, center, r, g, b, mod, size, false, sparkle);
+}
+
+void addlensflarecolour(vec &o, int colour, bool sparkle, float size)
+{
+	addlensflare(o, uchar(colour>>16), uchar((colour>>8)&0xFF), uchar(colour&0xFF), sparkle, size);
+}

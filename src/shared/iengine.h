@@ -156,8 +156,10 @@ enum
     PT_RND4		= 1<<9,		// uses random image quarters
     PT_FLIP		= 1<<10,	// uses random flipping
     PT_LERP		= 1<<11,	// use very sparingly - order of blending issues
-    PT_GLARE	= 1<<12,
-    PT_SOFT		= 1<<13
+    PT_GLARE	= 1<<12,	// use glare when available
+    PT_SOFT		= 1<<13,	// use soft quad rendering when available
+    PT_LENS		= 1<<14,	// add a lens flare effect too
+    PT_SPARKLE	= 1<<15		// add a sparkle to lens flare
 };
 
 enum
@@ -167,12 +169,16 @@ enum
     PART_SMOKE, PART_SMOKE_RISE_SLOW, PART_SMOKE_RISE_SLOW_SOFT, PART_SMOKE_RISE_FAST, PART_SMOKE_SINK,
     PART_BLOOD,
     PART_EDIT,
-    PART_SPARK,
+    PART_SPARK, PART_SPARK_LENS, PART_SPARK_SLENS,
     PART_FIREBALL_SOFT, PART_FIREBALL,
+    PART_FIREBALL_SOFT_LENS, PART_FIREBALL_LENS,
+    PART_FIREBALL_SOFT_SLENS, PART_FIREBALL_SLENS,
     PART_PLASMA_SOFT, PART_PLASMA,
-    PART_ELECTRIC,
+    PART_PLASMA_SOFT_LENS, PART_PLASMA_LENS,
+    PART_PLASMA_SOFT_SLENS, PART_PLASMA_SLENS,
+    PART_ELECTRIC, PART_ELECTRIC_LENS, PART_ELECTRIC_SLENS,
     PART_SFLARE, PART_FFLARE,
-    PART_MUZZLE_FLASH,
+    PART_MUZZLE_FLASH, PART_MUZZLE_FLASH_LENS, PART_MUZZLE_FLASH_SLENS,
     PART_LINE,
     PART_SNOW,
     PART_TEXT, PART_TEXT_RISE,

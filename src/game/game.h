@@ -234,7 +234,7 @@ struct guntypes
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
 	bool	radial,	extinguish,	reloads,	snipes;
-	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight;
+	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight,		partsize;
 	const char
 			*name, 		*text,	*item,						*vwep,
 			*proj;
@@ -248,7 +248,7 @@ guntypes guntype[GUN_MAX] =
 			20,		20,		250,	1000,	15,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,		4.75f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -258,7 +258,7 @@ guntypes guntype[GUN_MAX] =
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
-			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
+			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,		0.35f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
@@ -268,7 +268,7 @@ guntypes guntype[GUN_MAX] =
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
-			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
+			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,		0.25f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
@@ -278,7 +278,7 @@ guntypes guntype[GUN_MAX] =
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
-			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
+			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,		56.f,
 			"flamer",	"\fn",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -288,7 +288,7 @@ guntypes guntype[GUN_MAX] =
 			10,		10,		250,    1250,	34,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,		0.4f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -298,7 +298,7 @@ guntypes guntype[GUN_MAX] =
 			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		0.6f,
 			"rifle",	"\fr",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -308,7 +308,7 @@ guntypes guntype[GUN_MAX] =
 			1,		4,		1500,	3000,	200,	250,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
-			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,
+			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,		3.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
