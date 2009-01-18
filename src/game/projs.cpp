@@ -296,44 +296,44 @@ namespace projs
 		{
 			case GUN_PLASMA:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.6f); // smoke
-				part_create(PART_PLASMA, 75, from, 0x226688, 1.2f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.6f);
+				part_create(PART_PLASMA_SLENS, 75, from, 0x226688, 1.2f, d);
 				adddynlight(from, 60, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
 			case GUN_SG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x666666, 4.f); // smoke
-				part_create(PART_MUZZLE_FLASH, 100, from, 0xFFAA00, 4.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x666666, 4.f);
+				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFAA00, 4.f, d);
 				adddynlight(from, 60, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
 
 			case GUN_CG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f); // smoke
-				part_create(PART_MUZZLE_FLASH, 50, from, 0xFFAA00, 3.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f);
+				part_create(PART_MUZZLE_FLASH_SLENS, 50, from, 0xFFAA00, 3.f, d);
                 adddynlight(from, 40, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
 			}
 			case GUN_FLAMER:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0x444444, 2.f); // smoke
-				part_create(PART_FIREBALL, 100, from, 0xFF2200, 2.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0x444444, 2.f);
+				part_create(PART_FIREBALL_SLENS, 100, from, 0xFF2200, 2.f, d);
 				adddynlight(from, 60, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
 			case GUN_CARBINE:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0xAAAAAA, 1.f); // smoke
-				part_create(PART_MUZZLE_FLASH, 100, from, 0xFFCC22, 2.f, d);
+				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0xAAAAAA, 1.f);
+				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFCC22, 2.f, d);
                 adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
 			}
 			case GUN_RIFLE:
 			{
-				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f); // smoke
-				part_create(PART_PLASMA, 75, from, 0xFF2222, 1.f, d);
+				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f);
+				part_create(PART_PLASMA_SLENS, 75, from, 0xFF2222, 1.5f, d);
                 adddynlight(from, 50, vec(0.4f, 0.1f, 0.1f), 75, 0, DL_FLASH);
 				break;
 			}
@@ -388,8 +388,8 @@ namespace projs
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0x226688, 4.75f*proj.lifesize);
-					part_create(part, 1, proj.o, 0x44AADD, 2.25f*proj.lifesize); // brighter center part
+					part_create(part, 1, proj.o, 0x226688, guntype[proj.gun].partsize*proj.lifesize);
+					part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, guntype[proj.gun].partsize*0.5f*proj.lifesize); // brighter center part
 					break;
 				}
 				case GUN_FLAMER:
@@ -406,9 +406,9 @@ namespace projs
 					}
 					loopi(steps) // pull some trickery to simulate a stream
 					{
-						float res = float(steps-i)/float(steps), size = clamp(56.f*proj.lifesize*res, 1.5f, 30.f);
+						float res = float(steps-i)/float(steps), size = clamp(guntype[proj.gun].partsize*proj.lifesize*res, 1.5f, 30.f);
 						int col = ((int(200*max((1.f-proj.lifespan)*res,0.3f))<<16)+1)|((int(80*max((1.f-proj.lifespan)*res,0.2f))+1)<<8);
-						part_create(PART_FIREBALL_SOFT, 1, pos, col, size);
+						part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, 1, pos, col, size);
 						if(pos.dist(proj.from) <= size) break;
 						pos.add(dir);
 						if((proj.movement > 2.f) && proj.o.dist(pos) > proj.movement) break;
@@ -419,11 +419,11 @@ namespace projs
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*2.5f*proj.lifesize);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*guntype[proj.gun].partsize*proj.lifesize);
 					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 					{
-						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*(moving ? 1.f : 2.f));
+						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*guntype[proj.gun].partsize*(moving ? 0.5f : 1.f));
 						proj.lasteffect = lastmillis;
 					}
 					break;
@@ -437,8 +437,8 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.35f);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.15f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
 					}
 					break;
 				}
@@ -451,8 +451,8 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.25f);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.01f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
 					}
 					break;
 				}
@@ -466,9 +466,9 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, proj.radius*0.35f);
-						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, proj.radius*0.15f);
-						part_create(PART_PLASMA_SOFT, 1, proj.o, col, 0.6f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
+						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
+						part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, col, 0.6f);
 					}
 					break;
 				}
@@ -482,16 +482,16 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(254*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(64*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, proj.radius*0.6f);
+						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, guntype[proj.gun].partsize);
 						col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(8*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, proj.radius*0.2f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
 					}
 					break;
 				}
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, 0xFFFFFF, proj.radius);
+					part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, 0xFFFFFF, proj.radius);
 					break;
 				}
 			}
@@ -516,7 +516,7 @@ namespace projs
 				{
 					float res = float(steps-i)/float(steps), size = clamp(proj.radius*proj.lifesize*res, 0.1f, proj.radius);
 					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(48*max(res,0.1f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, pos, col, size);
+					part_create(i ? PART_PLASMA_SOFT : PART_PLASMA_SOFT_SLENS, 1, pos, col, size);
 					pos.add(dir);
 					if(proj.o.dist(pos) > proj.movement) break;
 				}
@@ -537,9 +537,9 @@ namespace projs
 				{
 					case GUN_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, 4.75f*proj.lifesize);
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x44AADD, 2.25f*proj.lifesize); // brighter center part
-						part_create(PART_SMOKE_RISE_SLOW, 250, proj.o, 0x88AABB, 2.4f); // smoke
+						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, guntype[proj.gun].partsize*proj.lifesize);
+						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, guntype[proj.gun].partsize*0.5f*proj.lifesize); // brighter center part
+						part_create(PART_SMOKE_RISE_SLOW, 250, proj.o, 0x88AABB, 2.4f);
 						adddynlight(proj.o, 1.15f*guntype[proj.gun].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
 						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
 						break;
@@ -547,7 +547,7 @@ namespace projs
 					case GUN_FLAMER:
 					case GUN_GL:
 					{ // both basically explosions
-						part_create(proj.gun == GUN_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, proj.gun == GUN_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.15f)), 0xBB4400, guntype[proj.gun].explode*0.3f); // corona
+						part_create(proj.gun == GUN_FLAMER ? PART_FIREBALL_SOFT_SLENS : PART_PLASMA_SOFT_SLENS, proj.gun == GUN_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.15f)), 0xBB4400, guntype[proj.gun].explode*0.3f); // corona
 						int deviation = int(guntype[proj.gun].explode*0.5f);
 						loopi(rnd(3)+2)
 						{
@@ -570,23 +570,26 @@ namespace projs
 					case GUN_SG: case GUN_CG:
 					{
 						if(proj.lifetime)
-							part_splash(PART_SPARK, proj.gun == GUN_SG ? 10 : 20, 500, proj.o, 0xFFAA22, proj.radius*(proj.gun == GUN_SG ? 0.25f : 0.1f), 8);
+						{
+							part_create(PART_SPARK_SLENS, 500, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f);
+							part_splash(PART_SPARK, proj.gun == GUN_SG ? 10 : 20, 500, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f, 8);
+						}
 						break;
 					}
 					case GUN_CARBINE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, 200, proj.o, 0xAAAAAA, proj.radius*1.f);
-						adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*2.f);
+						part_create(PART_SMOKE_RISE_SLOW, 200, proj.o, 0xAAAAAA, guntype[proj.gun].partsize);
+						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
 					}
 					case GUN_RIFLE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, proj.radius*1.f);
-						adddynlight(proj.o, proj.radius*6.f, vec(0.9f, 0.1f, 0.1f), 200, 10);
-						adddecal(DECAL_SCORCH, proj.o, proj.norm, proj.radius*3.f);
-                        adddecal(DECAL_ENERGY, proj.o, proj.norm, proj.radius*3.f, bvec(254, 32, 32));
+						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, guntype[proj.gun].partsize);
+						adddynlight(proj.o, 6.f, vec(0.9f, 0.1f, 0.1f), 200, 10);
+						adddecal(DECAL_SCORCH, proj.o, proj.norm, 3.f);
+                        adddecal(DECAL_ENERGY, proj.o, proj.norm, 3.f, bvec(254, 32, 32));
 						break;
 					}
 				}
@@ -667,17 +670,18 @@ namespace projs
                 {
                     case GUN_SG: case GUN_CG:
                     {
-                        part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, proj.radius*(proj.gun == GUN_SG ? 0.25f : 0.1f), 8);
+						part_create(PART_SPARK_SLENS, 250, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f);
+                        part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f, 8);
                         if(!proj.lastbounce)
-                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.radius*(proj.gun == GUN_SG ? 3.f : 1.5f));
+                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.gun == GUN_SG ? 3.f : 1.5f);
                         break;
                     }
                     case GUN_FLAMER:
                     {
                         if(!proj.lastbounce)
                         {
-                            adddecal(DECAL_SCORCH, proj.o, proj.norm, 96.f*proj.lifesize);
-                            adddecal(DECAL_ENERGY, proj.o, proj.norm, 128.f*proj.lifesize, bvec(184, 88, 0));
+                            adddecal(DECAL_SCORCH, proj.o, proj.norm, guntype[proj.gun].explode*3.f*proj.lifesize);
+                            adddecal(DECAL_ENERGY, proj.o, proj.norm, guntype[proj.gun].explode*4.f*proj.lifesize, bvec(184, 88, 0));
                         }
                         break;
                     }
@@ -968,19 +972,19 @@ namespace projs
 				case GUN_PLASMA:
 				{
 					vec col(0.1f*max(1.f-proj.lifespan,0.1f), 0.4f*max(1.f-proj.lifespan,0.1f), 0.6f*max(1.f-proj.lifespan,0.1f));
-					adddynlight(proj.o, guntype[proj.gun].explode*proj.lifesize, col);
+					adddynlight(proj.o, guntype[proj.gun].explode*1.15f*proj.lifesize, col);
 					break;
 				}
 				case GUN_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.1f), 0.25f*max(1.f-proj.lifespan,0.05f), 0.00f);
-					adddynlight(proj.o, guntype[proj.gun].explode*proj.lifespan, col);
+					adddynlight(proj.o, guntype[proj.gun].explode*1.15f*proj.lifespan, col);
 					break;
 				}
 				case GUN_RIFLE:
 				{
-					vec col(0.9f, 0.1f, 0.1f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(proj.radius*2.5f));
-					adddynlight(proj.o, proj.radius*3.f, col);
+					vec col(0.9f, 0.1f, 0.1f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
+					adddynlight(proj.o, 3.f, col);
 					break;
 				}
 				default:

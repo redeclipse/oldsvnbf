@@ -63,6 +63,7 @@ struct partrenderer
     virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) = NULL;
     virtual int adddepthfx(vec &bbmin, vec &bbmax) { return 0; }
     virtual void update() { }
+    virtual void makeflares() { }
     virtual void render() = NULL;
     virtual bool haswork() = NULL;
     virtual int count() = NULL; //for debug
@@ -116,7 +117,23 @@ struct partrenderer
             }
         }
     }
+
+	void makeflare(particle *p)
+	{
+		vec o, d;
+		int blend, ts;
+		calc(p, blend, ts, o, d);
+		if(blend > 0)
+		{
+			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
+			extern int flaresize;
+			addlensflare(o, p->color[0], p->color[1], p->color[2], type&PT_SPARKLE, p->size*(flaresize/100.f));
+		}
+	}
 };
+
+#include "depthfx.h"
+#include "lensflare.h"
 
 struct listparticle : particle
 {
@@ -241,7 +258,16 @@ struct listrenderer : partrenderer
 
         endrender();
     }
+
+    void makeflares()
+    {
+        for(listparticle **prev = &list, *p = list; p; p = *prev)
+            makeflare(p);
+    }
 };
+
+#include "explosion.h"
+#include "lightning.h"
 
 struct meterrenderer : listrenderer
 {
@@ -577,6 +603,15 @@ struct varenderer : partrenderer
         }
     }
 
+    void makeflares()
+    {
+        loopi(numparts)
+        {
+            particle *p = &parts[i];
+            makeflare(p);
+        }
+    }
+
     void render()
     {
         preload();
@@ -591,11 +626,6 @@ struct varenderer : partrenderer
 typedef varenderer<PT_PART> quadrenderer;
 typedef varenderer<PT_TAPE> taperenderer;
 typedef varenderer<PT_TRAIL> trailrenderer;
-
-#include "depthfx.h"
-#include "explosion.h"
-#include "lensflare.h"
-#include "lightning.h"
 
 struct softquadrenderer : quadrenderer
 {
@@ -631,22 +661,45 @@ static partrenderer *parts[] =
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
     new taperenderer("particles/sflare", PT_TAPE|PT_LERP, 0, 0),
     new taperenderer("particles/fflare", PT_TAPE|PT_LERP, 0, 0),
+
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
     new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -10, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -20, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 10, 0),
+
     new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 50, DECAL_BLOOD),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE, 0, 0),
+
     new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 10, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_LENS, 10, 0),
+    new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_LENS|PT_SPARKLE, 10, 0),
+
     new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
     new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, -10, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS, -10, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS, -10, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS|PT_SPARKLE, -10, 0),
+    new quadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS|PT_SPARKLE, -10, 0),
+
     new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
     new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
+    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS, 0, 0),
+    new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS, 0, 0),
+    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS|PT_SPARKLE, 0, 0),
+    new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS|PT_SPARKLE, 0, 0),
+
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP, 0, 0),
+	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_LENS, 0, 0),
+	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_LENS|PT_SPARKLE, 0, 0),
+
     new taperenderer("particles/sflare", PT_TAPE|PT_GLARE, 0, 0),
     new taperenderer("particles/fflare", PT_TAPE|PT_GLARE, 0, 0),
+
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP, 0, 0),
+    new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS, 0, 0),
+    new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LENS|PT_SPARKLE, 0, 0),
+
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 100, DECAL_STAIN),
     &texts, &textups, &meters, &metervs,
@@ -1176,7 +1229,13 @@ void updateparticles()
     }
     else emit = false;
 
-    flares.makelightflares();
+    flares.setupflares();
 	entities::drawparticles();
+	flares.drawflares(); // do after drawparticles so that we can make flares for them too
+	if(flareparts) loopi(sizeof(parts)/sizeof(parts[0]))
+	{
+		if(!(parts[i]->type&PT_LENS)) continue;
+		parts[i]->makeflares();
+	}
 }
 
