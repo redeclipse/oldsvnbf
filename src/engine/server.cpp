@@ -8,9 +8,9 @@
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 
 #ifdef STANDALONE
-void console(const char *s, int n, ...)
+void console(const char *s, ...)
 {
-	s_sprintfdlv(str, n, s);
+	s_sprintfdv(str, s);
 	string st;
 	filtertext(st, str);
 	printf("%s\n", st);
@@ -18,7 +18,7 @@ void console(const char *s, int n, ...)
 void conoutf(const char *s, ...)
 {
 	s_sprintfdv(str, s);
-	console("%s", 0, str);
+	console("%s", str);
 #ifdef IRC
 	string st;
 	filtertext(st, str);

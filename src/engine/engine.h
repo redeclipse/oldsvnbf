@@ -630,21 +630,8 @@ enum
 };
 
 // console
-enum
-{
-	CN_NORMAL = 0,
-	CN_CENTER,
-	CN_MAX
-};
-#define CON_NORMAL		0x0001
-#define CON_CENTER		0x0002
-#define CON_HILIGHT		0x0004
-
 struct cline { char *cref; int outtime; };
-extern vector<cline> conlines[CN_MAX];
-
-extern void console(const char *s, int type, ...);
-
+extern vector<cline> conlines;
 extern void rehash(bool reload = true);
 
 // command

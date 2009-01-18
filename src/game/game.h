@@ -1195,6 +1195,7 @@ namespace entities
 	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
 	extern void preload();
 	extern void mapstart();
+	extern void edittoggled(bool edit);
 	extern const char *findname(int type);
 	extern void adddynlights();
 	extern void render();

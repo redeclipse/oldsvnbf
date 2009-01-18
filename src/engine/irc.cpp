@@ -48,7 +48,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 	if(!n) return;
 	s_sprintfdlv(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
-	console("[%s] >>> %s", 0, n->name, str);
+	console("[%s] >>> %s", n->name, str);
 	s_strcat(str, "\n");
 	ENetBuffer buf;
 	buf.data = str;
@@ -262,7 +262,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 	}
 	if(n->type == IRCT_RELAY)
 		server::srvmsgf(-1, "%s %s", s, str);
-	console("%s %s", 0, s, str); // console is not used to relay
+	console("%s %s", s, str); // console is not used to relay
 }
 
 void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])

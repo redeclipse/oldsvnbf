@@ -127,7 +127,7 @@ struct partrenderer
 		{
 			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
 			extern int flaresize;
-			addlensflare(o, p->color[0], p->color[1], p->color[2], type&PT_SPARKLE, p->size*(flaresize/100.f));
+			addlensflare(o, p->color[0], p->color[1], p->color[2], type&PT_SPARKLE, p->size*(flaresize/25.f));
 		}
 	}
 };

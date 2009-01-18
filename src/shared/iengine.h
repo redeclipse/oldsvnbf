@@ -5,7 +5,7 @@ extern int servertype, serverport, serverqueryport, servermasterport, serverclie
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
 extern void conoutf(const char *s, ...);
-extern void console(const char *s, int n, ...);
+extern void console(const char *s, ...);
 
 #ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
