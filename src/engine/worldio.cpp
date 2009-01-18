@@ -679,11 +679,12 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
+                resetmap();
+
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
 				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-				resetmap();
 
 				maptype = MAP_BFGZ;
 
@@ -809,11 +810,12 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
+                resetmap();
+
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
 				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
-				resetmap();
 
 				maptype = MAP_OCTA;
 
