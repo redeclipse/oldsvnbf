@@ -48,9 +48,9 @@ struct masterclient
     vector<char> output;
     int inputpos, outputpos, port, qport, lastactivity;
     vector<authreq> authreqs;
-    bool isserver;
+    bool isserver, ishttp;
 
-    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), lastactivity(0), isserver(false) {}
+    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), lastactivity(0), isserver(false), ishttp(false) {}
 };
 
 vector<masterclient *> masterclients;
@@ -230,9 +230,9 @@ bool checkmasterclientinput(masterclient &c)
         end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
         if(!end) break;
         *end++ = '\0';
+        if(c.ishttp) continue; // eat up the rest of the bytes, we've done our bit
 
-        conoutf("{%s} %s", c.name, p);
-
+        //conoutf("{%s} %s", c.name, p);
 		loopi(MAXWORDS)
 		{
 			w[i] = (char *)"";
@@ -243,14 +243,40 @@ bool checkmasterclientinput(masterclient &c)
 		}
 
 		p += strcspn(p, ";\n\0"); p++;
-		if(!strcmp(w[0], "server"))
+
+		if(!strcmp(w[0], "GET") && w[1] && *w[1] == '/') // cheap server-to-http hack
+		{
+			loopi(numargs)
+			{
+				if(i)
+				{
+					if(i == 1)
+					{
+						char *q = newstring(&w[i][1]);
+						delete[] w[i];
+						w[i] = q;
+					}
+					w[i-1] = w[i];
+				}
+				else delete[] w[i];
+			}
+			w[numargs-1] = (char *)"";
+			numargs--;
+			c.ishttp = true;
+		}
+
+		if(!strcmp(w[0], "server") && !c.ishttp)
 		{
 			c.port = ENG_SERVER_PORT;
 			c.qport = ENG_QUERY_PORT;
 			if(w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
 			if(w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
 			c.lastactivity = lastmillis;
-			if(c.isserver) masteroutf(c, "echo \"server updated\"\n");
+			if(c.isserver)
+			{
+				masteroutf(c, "echo \"server updated\"\n");
+				conoutf("master peer %s updated server info",  c.name);
+			}
 			else
 			{
 				masteroutf(c, "echo \"server initiated\"\n");
@@ -268,7 +294,7 @@ bool checkmasterclientinput(masterclient &c)
 				servs++;
 			}
 			masteroutf(c, "\n");
-			conoutf("sent master peer %s %d server(s)",  c.name, servs);
+			conoutf("master peer %s was sent %d server(s)",  c.name, servs);
 		}
 		else
 		{
@@ -276,9 +302,17 @@ bool checkmasterclientinput(masterclient &c)
 			{
 				if(!strcmp(w[0], "reqauth")) reqauth(c, uint(atoi(w[1])), w[2]);
 				else if(!strcmp(w[0], "confauth")) confauth(c, uint(atoi(w[1])), w[2]);
-				else if(w[0]) masteroutf(c, "error \"unknown command\"\n");
+				else if(w[0])
+				{
+					masteroutf(c, "error \"unknown command %s\"\n", w[0]);
+					conoutf("master peer %s (server) sent unknown command: %s", w[0]);
+				}
 			}
-			else if(w[0]) masteroutf(c, "error \"unknown command\"\n");
+			else if(w[0])
+			{
+				masteroutf(c, "error \"unknown command %s\"\n", w[0]);
+				conoutf("master peer %s (client) sent unknown command: %s", w[0]);
+			}
 		}
 		loopj(numargs) if(w[j]) delete[] w[j];
 	}
