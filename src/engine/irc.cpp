@@ -304,7 +304,33 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					DELETEA(q); DELETEA(r);
 				}
 			}
-			else if(ismsg) ircprintf(n, g ? w[g+1] : NULL, "\fw<%s> %s", user[0], w[g+2]);
+			else if(ismsg)
+			{
+#if 0 // y'know, for when the bot should say stuff on command..
+				if(n->relay && ((g && !strcasecmp(w[g+1], n->nick)) || !strncasecmp(w[g+2], n->nick, strlen(n->nick))))
+				{
+					const int MAXWORDS = 25;
+					char *w[MAXWORDS];
+					int numargs = MAXWORDS;
+					const char *p = &w[g+2][strlen(n->nick)];
+					while(p && *p && (*p == ':' || *p == ';' || *p == ',' || *p == ' ' || *p == '\t'))
+						p++;
+					loopi(MAXWORDS)
+					{
+						w[i] = (char *)"";
+						if(i > numargs) continue;
+						char *s = parsetext(p);
+						if(s) w[i] = s;
+						else numargs = i;
+					}
+					p += strcspn(p, "\n\0"); p++;
+					if(!strcmp(w[0], "help"))
+					else if(w[0])
+					loopj(numargs) if(w[j]) delete[] w[j];
+				}
+#endif
+				ircprintf(n, g ? w[g+1] : NULL, "\fw<%s> %s", user[0], w[g+2]);
+			}
 			else ircprintf(n, g ? w[g+1] : NULL, "\fo-%s- %s", user[0], w[g+2]);
 		}
 	}

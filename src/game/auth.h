@@ -132,8 +132,7 @@ namespace auth
 			if(!end) break;
 			*end++ = '\0';
 
-			conoutf("{authserv} %s", p);
-
+			//conoutf("{authserv} %s", p);
 			loopi(MAXWORDS)
 			{
 				w[i] = (char *)"";
@@ -144,11 +143,12 @@ namespace auth
 			}
 
 			p += strcspn(p, ";\n\0"); p++;
-			if(!strcmp(w[0], "error")) conoutf("authserv serror: %s", w[1]);
-			else if(!strcmp(w[0], "echo")) conoutf("authserv replied: %s", w[1]);
+			if(!strcmp(w[0], "error")) conoutf("authserv error: %s", w[1]);
+			else if(!strcmp(w[0], "echo")) conoutf("authserv reply: %s", w[1]);
 			else if(!strcmp(w[0], "failauth")) authfailed((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "chalauth")) authchallenged((uint)(atoi(w[1])), w[2]);
+			else if(w[0]) conoutf("authserv sent invalid command: %s", w[0]);
 			loopj(numargs) if(w[j]) delete[] w[j];
 		}
 		inputpos = &input[inputpos] - p;
