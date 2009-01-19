@@ -102,7 +102,7 @@ namespace world
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
 		if(player1->state == CS_WAITING) return false;
-		if(inzoom()) return false;
+		//if(inzoom()) return false;
 		return true;
 	}
 
@@ -1642,10 +1642,8 @@ namespace world
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
                 renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent, early);
         }
-        else if(player1->state == CS_ALIVE && !thirdperson)
-        {
+        else if(player1->state == CS_ALIVE)
             renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent, early);
-        }
     }
 
 	bool clientoption(char *arg) { return false; }

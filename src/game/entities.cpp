@@ -435,31 +435,27 @@ namespace entities
 		return false;
 	}
 
-	void execitem(int n, gameent *d)
+	void execitem(int n, gameent *d, bool &tried)
 	{
 		gameentity &e = *(gameentity *)ents[n];
-		int sgun = m_spawngun(world::gamemode, world::mutators), attr = e.type == WEAPON ? gunattr(e.attr1, sgun) : e.attr1;
-		if(!d->canuse(e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis))
-		{
-			if(enttype[e.type].usetype == EU_ITEM && d->useaction)
-			{
-				d->useaction = false;
-				if(d == world::player1) playsound(S_DENIED, d->o, d);
-			}
-		}
-		else switch(enttype[e.type].usetype)
+		switch(enttype[e.type].usetype)
 		{
 			case EU_ITEM:
 			{
 				if(d->useaction)
 				{
-					d->useaction = false;
 					if(d->requse < 0)
 					{
-						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
-						d->requse = lastmillis;
+						int sgun = m_spawngun(world::gamemode, world::mutators), attr = e.type == WEAPON ? gunattr(e.attr1, sgun) : e.attr1;
+						if(d->canuse(e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis))
+						{
+							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
+							d->requse = lastmillis;
+							d->useaction = false;
+						}
+						else tried = true;
 					}
-					else if(d == world::player1) playsound(S_DENIED, d->o, d);
+					else tried = true;
 				}
 				break;
 			}
@@ -565,6 +561,7 @@ namespace entities
         actitems.setsizenodelete(0);
 		if(collateitems(d, actitems))
 		{
+			bool tried = false;
 			while(!actitems.empty())
 			{
 				actitem &t = actitems.last();
@@ -586,8 +583,13 @@ namespace entities
 					}
 					default: break;
 				}
-				if(ents.inrange(ent)) execitem(ent, d);
+				if(ents.inrange(ent)) execitem(ent, d, tried);
 				actitems.pop();
+			}
+			if(tried && d->useaction && d == world::player1)
+			{
+				playsound(S_DENIED, d->o, d);
+				d->useaction = false;
 			}
 		}
 		if(m_ctf(world::gamemode)) ctf::checkflags(d);
