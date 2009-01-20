@@ -17,6 +17,15 @@ SVARG(stfmaps, "eight warground warehouse tower rivals refuge citadel");
 VARG(maprotate, 0, 1, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 1, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
+VARG(maxhealth, 0, 100, INT_MAX-1);
+VARG(maxcarry, 0, 2, WEAPON_MAX-1);
+
+VARG(regendelay, 0, 3, INT_MAX-1);
+VARG(regentime, 0, 1, INT_MAX-1);
+VARG(regenhealth, 0, 10, INT_MAX-1);
+VARG(spawnprotecttime, 0, 3, INT_MAX-1);
+VARG(paintfreezetime, 0, 3, INT_MAX-1);
+
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
@@ -33,16 +42,22 @@ VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
 
-VARG(spawngun, 0, GUN_PLASMA, GUN_MAX-1);
-VARG(instaspawngun, 0, GUN_RIFLE, GUN_MAX-1);
+VARG(spawnweapon, 0, WEAPON_PLASMA, WEAPON_TOTAL-1);
+VARG(instaspawnweapon, 0, WEAPON_RIFLE, WEAPON_TOTAL-1);
 
-FVARG(botbalance, 0, 1.f, 10.f);
+VARG(spawndelay, 0, 1, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
+VARG(stfspawndelay, 0, 5, INT_MAX-1); // .. in stf
+VARG(ctfspawndelay, 0, 3, INT_MAX-1); // .. in ctf
+FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in instagib
+FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
+
+FVARG(botbalance, 0, 1.f, 1000);
 VARG(botminamt, 0, 2, MAXCLIENTS-1);
 VARG(botmaxamt, 0, 32, MAXCLIENTS-1);
 VARG(botminskill, 0, 80, 100);
 VARG(botmaxskill, 0, 100, 100);
 
-FVARG(damagescale, 0.1f, 1.f, 10);
-FVARG(gravityscale, 0.1f, 1.f, 10);
-FVARG(jumpscale, 0.1f, 1.f, 10);
-FVARG(speedscale, 0.1f, 1.f, 10);
+FVARG(damagescale, 0.1f, 1.f, 1000);
+FVARG(gravityscale, 0.1f, 1.f, 1000);
+FVARG(jumpscale, 0.1f, 1.f, 1000);
+FVARG(speedscale, 0.1f, 1.f, 1000);

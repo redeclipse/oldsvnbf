@@ -19,9 +19,9 @@ struct ctfstate
         int interptime;
 #endif
 
-        flag() 
+        flag()
 #ifndef GAMESERVER
-          : ent(NULL) 
+          : ent(NULL)
 #endif
         { reset(); }
 
@@ -146,9 +146,9 @@ namespace ctf
 	extern void setupflags();
 	extern void setscore(int team, int total);
 	extern void checkflags(gameent *d);
+	extern void drawlast(int w, int h, int &tx, int &ty);
 	extern void drawblips(int w, int h, int s, float blend);
 	extern int drawinventory(int x, int y, int s, float blend);
-	extern int respawnwait(gameent *d);
 	extern void preload();
 	extern void render();
 	extern void aifind(gameent *d, aistate &b, vector<interest> &interests);

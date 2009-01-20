@@ -1,6 +1,6 @@
 // the interface the game uses to access the engine
 
-extern int verbose, curtime, lastmillis, totalmillis;
+extern int kidmode, verbose, curtime, lastmillis, totalmillis;
 extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
@@ -105,12 +105,6 @@ enum
     TEXT_RIGHT_JUSTIFY = 2<<8,
 };
 
-enum
-{
-	AL_LEFT = 0,
-	AL_CENTER,
-	AL_RIGHT
-};
 extern bool setfont(const char *name);
 extern bool pushfont(const char *name);
 extern bool popfont(int num = 1);
@@ -469,5 +463,6 @@ enum // cube empty-space materials
     MAT_AICLIP = 3 << MATF_CLIP_SHIFT,  // clip monsters only
 
     MAT_DEATH  = 1 << MATF_FLAG_SHIFT,  // force player suicide
+    MAT_LADDER = 2 << MATF_FLAG_SHIFT,  // acts as ladder (move up/down)
     MAT_EDIT   = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
 };

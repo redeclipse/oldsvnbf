@@ -7,7 +7,6 @@ struct stfstate
 	static const int OCCUPYLIMIT = 100;
 	static const int SECURESCORE = 1;
 	static const int SCORESECS = 10;
-	static const int RESPAWNSECS = 3;
 
 	struct flag
 	{
@@ -186,8 +185,8 @@ namespace stf
 	extern void updateflag(int i, int owner, int enemy, int converted);
 	extern void setscore(int team, int total);
 	extern void setupflags();
+	extern void drawlast(int w, int h, int &tx, int &ty);
 	extern void drawblips(int w, int h, int s, float blend);
-	extern int respawnwait(gameent *d);
 	extern int drawinventory(int x, int y, int s, float blend);
 	extern void preload();
 	extern void render();

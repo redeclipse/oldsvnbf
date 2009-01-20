@@ -42,21 +42,21 @@ namespace entities
 				addentinfo(str);
 			}
 		}
-		if(type == WEAPON)
+		else if(type == WEAPON)
 		{
-			int sgun = m_spawngun(world::gamemode, world::mutators),
-				attr = m_edit(world::gamemode) ? attr1 : gunattr(attr1, sgun);
-			if(isgun(attr))
+			int sweap = m_spawnweapon(world::gamemode, world::mutators),
+				attr = m_edit(world::gamemode) ? attr1 : weapattr(attr1, sweap);
+			if(isweap(attr))
 			{
-				s_sprintf(str)("\fs%s%s\fS", guntype[attr].text, guntype[attr].name);
+				s_sprintf(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
 				addentinfo(str);
 				if(full)
 				{
-					if(attr2&GNT_FORCED) addentinfo("forced");
+					if(attr2&WEAPFLAG_FORCED) addentinfo("forced");
 				}
 			}
 		}
-		if(type == MAPMODEL)
+		else if(type == MAPMODEL)
 		{
 			if(mapmodels.inrange(attr1)) addentinfo(mapmodels[attr1].name);
 			if(full)
@@ -67,7 +67,7 @@ namespace entities
 				if(attr5&MMT_NODYNSHADOW) addentinfo("nodynshadow");
 			}
 		}
-		if(type == MAPSOUND)
+		else if(type == MAPSOUND)
 		{
 			if(mapsounds.inrange(attr1)) addentinfo(mapsounds[attr1].sample->name);
 			if(full)
@@ -77,7 +77,7 @@ namespace entities
 				if(attr5&SND_NOCULL) addentinfo("nocull");
 			}
 		}
-		if(type == TRIGGER)
+		else if(type == TRIGGER)
 		{
 			if(full)
 			{
@@ -91,7 +91,7 @@ namespace entities
 				addentinfo(str);
 			}
 		}
-		if(type == WAYPOINT)
+		else if(type == WAYPOINT)
 		{
 			if(full)
 			{
@@ -107,8 +107,8 @@ namespace entities
 		{
 			case WEAPON:
 			{
-				int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(attr1, sgun);
-				return guntype[attr].item;
+				int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(attr1, sweap);
+				return weaptype[attr].item;
 			}
 			case FLAG: return teamtype[attr2].flag;
 			default: break;
@@ -140,20 +140,20 @@ namespace entities
 				part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 			}
 			playsound(S_ITEMPICKUP, d->o, d);
-			if(isgun(g))
+			if(isweap(g))
 			{
 				d->ammo[g] = d->entid[g] = -1;
-				d->gunselect = g;
+				d->weapselect = g;
 			}
-			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
-			d->useitem(n, e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr1, sweap);
+			d->useitem(n, e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sweap, lastmillis);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
 				gameentity &f = *(gameentity *)ents[r];
-				attr = gunattr(f.attr1, sgun);
-				if(isgun(attr)) projs::drop(d, attr, r, d == world::player1 || d->ai);
+				attr = weapattr(f.attr1, sweap);
+				if(isweap(attr)) projs::drop(d, attr, r, d == world::player1 || d->ai);
 			}
-			world::spawneffect(pos, 0x221188, enttype[e.type].radius);
+			world::spawneffect(pos, 0x6666FF, enttype[e.type].radius);
 			e.spawned = s;
 		}
 	}
@@ -446,8 +446,8 @@ namespace entities
 				{
 					if(d->requse < 0)
 					{
-						int sgun = m_spawngun(world::gamemode, world::mutators), attr = e.type == WEAPON ? gunattr(e.attr1, sgun) : e.attr1;
-						if(d->canuse(e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis))
+						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr1, sweap) : e.attr1;
+						if(d->canuse(e.type, attr, e.attr2, e.attr3, e.attr4, e.attr5, sweap, lastmillis))
 						{
 							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
 							d->requse = lastmillis;
@@ -619,7 +619,7 @@ namespace entities
 			{
 				projent &proj = *projs::projs[i];
 				if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-				world::spawneffect(proj.o, 0x221188, enttype[ents[proj.id]->type].radius);
+				world::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
 				proj.beenused = true;
 				proj.state = CS_DEAD;
 			}
@@ -702,8 +702,8 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attr1 < 0) e.attr1 += GUN_MAX;
-				while(e.attr1 >= GUN_MAX) e.attr1 -= GUN_MAX;
+				while(e.attr1 < 0) e.attr1 += WEAPON_TOTAL; // don't allow superimposed weaps
+				while(e.attr1 >= WEAPON_TOTAL) e.attr1 -= WEAPON_TOTAL;
 				break;
 			case PLAYERSTART:
 				while(e.attr1 < 0) e.attr1 += 360;
@@ -1103,22 +1103,22 @@ namespace entities
 					break;
 				}
 
-				// 8	I_SHELLS		8	WEAPON		GUN_SG
-				// 9	I_BULLETS		8	WEAPON		GUN_CG
-				// 10	I_ROCKETS		8	WEAPON		GUN_FLAMER
-				// 11	I_ROUNDS		8	WEAPON		GUN_RIFLE
-				// 12	I_GRENADES		8	WEAPON		GUN_GL
-				// 13	I_CARTRIDGES	8	WEAPON		GUN_PLASMA
+				// 8	I_SHELLS		8	WEAPON		WEAPON_SG
+				// 9	I_BULLETS		8	WEAPON		WEAPON_CG
+				// 10	I_ROCKETS		8	WEAPON		WEAPON_FLAMER
+				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
+				// 12	I_GRENADES		8	WEAPON		WEAPON_GL
+				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PLASMA
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
-					int gun = f.type-8, gunmap[6] = {
-						GUN_SG, GUN_CG, GUN_FLAMER, GUN_RIFLE, GUN_GL, GUN_CARBINE
+					int weap = f.type-8, weapmap[6] = {
+						WEAPON_SG, WEAPON_CG, WEAPON_FLAMER, WEAPON_RIFLE, WEAPON_GL, WEAPON_CARBINE
 					};
 
-					if(gun >= 0 && gun <= 5)
+					if(weap >= 0 && weap <= 5)
 					{
 						f.type = WEAPON;
-						f.attr1 = gunmap[gun];
+						f.attr1 = weapmap[weap];
 						f.attr2 = 0;
 					}
 					else f.type = NOTUSED;
@@ -1339,7 +1339,7 @@ namespace entities
 					if(mtype == MAP_BFGZ && gver <= 90)
 					{ // move grenades to the end of the weapon array
 						if(e.attr1 >= 4) e.attr1--;
-						else if(e.attr1 == 3) e.attr1 = GUN_GL;
+						else if(e.attr1 == 3) e.attr1 = WEAPON_GL;
 					}
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attr1 >= 4)
 						e.attr1++; // add in carbine
@@ -1496,8 +1496,8 @@ namespace entities
 
 	void renderentlight(gameentity &e)
 	{
-		vec colour = vec(e.attr2, e.attr3, e.attr4).div(255.f);
-		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize), colour);
+		vec colour = vec(e.attr2, e.attr3, e.attr4).div(264.f);
+		adddynlight(vec(e.o), float(e.attr1 ? e.attr1 : hdr.worldsize)*0.9f, colour);
 	}
 
 	void adddynlights()
@@ -1525,8 +1525,8 @@ namespace entities
 			if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
 			if(e.type == WEAPON)
 			{
-				int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
-				if(isgun(attr)) weapons::preload(attr);
+				int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr1, sweap);
+				if(isweap(attr)) weapons::preload(attr);
 			}
 		}
     }
@@ -1645,15 +1645,24 @@ namespace entities
 		if(edit)
 		{
 			hasent = world::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
-			part_create(PART_EDIT, 1, o, hasent ? 0x6611DD : 0x221188, hasent ? 3.0f : 1.5f);
+			part_create(PART_EDIT, 1, o, hasent ? 0x8822FF : 0x6611EE, hasent ? 3.0f : 1.5f);
 			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
 				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s);
 				if(showentinfo >= 3 || hasent)
 				{
-					s_sprintf(s)("@%s%d %d %d %d %d", hasent ? "\fw" : "\fa", e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
-					part_text(pos.add(off), s);
+					short *attr = &e.attr1;
+					loopk(5)
+					{
+						if(*enttype[e.type].attrs[k])
+						{
+							s_sprintf(s)("@%s%s:%d", hasent ? "\fw" : "\fa", enttype[e.type].attrs[k], *attr);
+							part_text(pos.add(off), s);
+							attr += sizeof(short);
+						}
+						else break;
+					}
 				}
 			}
 		}

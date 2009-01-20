@@ -48,7 +48,7 @@ namespace client
 namespace hud
 {
 	extern void drawhud(int w, int h);
-	extern void drawpointers(int w, int h);
+	extern void drawlast(int w, int h);
 	extern bool getcolour(vec &colour);
 	extern void gamemenus();
 }
@@ -65,6 +65,7 @@ namespace physics
 	extern void updatephysstate(physent *d);
 	extern bool droptofloor(vec &o, float radius, float height);
 	extern float maxspeed(physent *d);
+	extern bool issolid(physent *d);
 	extern bool iscrouching(physent *d);
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
 	extern float gravityforce(physent *d);

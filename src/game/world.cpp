@@ -85,6 +85,8 @@ namespace world
 	VARP(showobituaries, 0, 2, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
 	VARP(playdamagetones, 0, 2, 2);
 
+	VARP(noblood, 0, 0, 1);
+
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
 
@@ -110,7 +112,7 @@ namespace world
 	{
 		if(player1->state == CS_EDITING) return editmouse;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specmouse;
-		if(inzoom()) return guntype[player1->gunselect].snipes ? snipemouse : pronemouse;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemouse : pronemouse;
 		if(isthirdperson()) return thirdpersonmouse;
 		return firstpersonmouse;
 	}
@@ -119,14 +121,14 @@ namespace world
 	{
 		if(player1->state == CS_EDITING) return editdeadzone;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specdeadzone;
-		if(inzoom()) return guntype[player1->gunselect].snipes ? snipedeadzone : pronedeadzone;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipedeadzone : pronedeadzone;
 		if(isthirdperson()) return thirdpersondeadzone;
 		return firstpersondeadzone;
 	}
 
 	int panspeed()
 	{
-		if(inzoom()) return guntype[player1->gunselect].snipes ? snipepanspeed : pronepanspeed;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipepanspeed : pronepanspeed;
 		if(player1->state == CS_EDITING) return editpanspeed;
 		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specpanspeed;
 		if(isthirdperson()) return thirdpersonpanspeed;
@@ -158,7 +160,7 @@ namespace world
 		zoomset(false, 0);
 		return false;
 	}
-	int zoomtime() { return guntype[player1->gunselect].snipes ? snipetime : pronetime; }
+	int zoomtime() { return weaptype[player1->weapselect].snipes ? snipetime : pronetime; }
 
 	bool inzoom()
 	{
@@ -179,7 +181,7 @@ namespace world
 		if(zoomallow())
 		{
 			bool on = false;
-			switch(guntype[player1->gunselect].snipes ? snipetype : pronetype)
+			switch(weaptype[player1->weapselect].snipes ? snipetype : pronetype)
 			{
 				case 1: on = down; break;
 				case 0: default:
@@ -215,18 +217,9 @@ namespace world
 	}
 	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
 
-	int respawnwait(gameent *d)
-	{
-		int wait = 0;
-		if(m_stf(gamemode)) wait = stf::respawnwait(d);
-		else if(m_ctf(gamemode)) wait = ctf::respawnwait(d);
-		return wait;
-	}
-
 	void respawn(gameent *d)
 	{
-		if(d->state == CS_DEAD && !respawnwait(d))
-			respawnself(d);
+		if(d->state == CS_DEAD) respawnself(d);
 	}
 
 	bool tvmode()
@@ -244,7 +237,12 @@ namespace world
 				if(tvmode()) return false;
         	}
 			if(d->state == CS_DEAD) return false;
-			if(intermission) return false;
+			else if(d->state == CS_ALIVE)
+			{
+				if(intermission) return false;
+				if(m_paint(gamemode, mutators) && ((gameent *)d)->damageprotect(lastmillis, paintfreezetime*1000))
+					return false;
+			}
         }
         return true;
     }
@@ -252,7 +250,6 @@ namespace world
 	void respawnself(gameent *d)
 	{
 		d->stopmoving();
-
 		if(d->respawned != d->lifesequence)
 		{
 			client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
@@ -264,7 +261,7 @@ namespace world
 	{
 		part_create(PART_ELECTRIC_SLENS, fade, o, colour, size);
 		regularshape(PART_ELECTRIC, radius*2, colour, 21, num, fade, o, size, vel);
-		adddynlight(o, radius, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
+		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
 	}
 
 	gameent *pointatplayer()
@@ -307,7 +304,7 @@ namespace world
 			// reset perma-state
 			gameent *d;
 			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-				d->resetstate(lastmillis);
+				d->resetstate(lastmillis, maxhealth);
 		}
 	}
 
@@ -376,15 +373,15 @@ namespace world
 			d->muzzle = vec(d->o).add(dir).add(right);
         }
 
-		loopi(GUN_MAX) if(d->gunstate[i] != GNS_IDLE)
+		loopi(WEAPON_MAX) if(d->weapstate[i] != WPSTATE_IDLE)
 		{
-			if(d->state != CS_ALIVE || (d->gunstate[i] != GNS_POWER && lastmillis-d->gunlast[i] >= d->gunwait[i]))
-				d->setgunstate(i, GNS_IDLE, 0, lastmillis);
+			if(d->state != CS_ALIVE || (d->weapstate[i] != WPSTATE_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
+				d->setweapstate(i, WPSTATE_IDLE, 0, lastmillis);
 		}
 
-		if(d->reqswitch > 0 && lastmillis-d->reqswitch > GUNSWITCHDELAY*2) d->reqswitch = -1;
-		if(d->reqreload > 0 && lastmillis-d->reqreload > guntype[d->gunselect].rdelay*2) d->reqreload = -1;
-		if(d->requse > 0 && lastmillis-d->requse > GUNSWITCHDELAY*2) d->requse = -1;
+		if(d->reqswitch > 0 && lastmillis-d->reqswitch > WEAPSWITCHDELAY*2) d->reqswitch = -1;
+		if(d->reqreload > 0 && lastmillis-d->reqreload > weaptype[d->weapselect].rdelay*2) d->reqreload = -1;
+		if(d->requse > 0 && lastmillis-d->requse > WEAPSWITCHDELAY*2) d->requse = -1;
 	}
 
 
@@ -461,7 +458,7 @@ namespace world
 		if(player1->clientnum >= 0) c2sinfo(40);
 	}
 
-	void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
+	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
 		if(flags&HIT_PUSH && (d == player1 || d->ai))
@@ -485,7 +482,9 @@ namespace world
 			{
 				vec p = headpos(d);
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
+				if(kidmode || noblood || weap == WEAPON_PAINT || m_paint(gamemode, mutators))
+					 part_splash(PART_BLOOD, 3, 3000, p, 0x00FF00, 2.f, int(d->radius));
+				else part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead)
 				{
 					s_sprintfd(ds)("@%d", damage);
@@ -513,23 +512,32 @@ namespace world
 				if(actor == player1) lasthit = lastmillis;
 			}
 
-			ai::damaged(d, actor, gun, flags, damage, health, millis, dir);
+			ai::damaged(d, actor, weap, flags, damage, health, millis, dir);
 		}
 	}
 
-	void killed(int gun, int flags, int damage, gameent *d, gameent *actor)
+	void killed(int weap, int flags, int damage, gameent *d, gameent *actor)
 	{
 		if(d->type != ENT_PLAYER) return;
 
-		d->obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > MAXHEALTH;
         d->lastregen = 0;
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
 
-		int anc = -1, dth = S_DIE1+rnd(2);
-		if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
-		else if(d->obliterated) dth = S_SPLAT;
+		int anc = -1, dth = -1;
+		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators))
+		{
+			dth = S_SPLAT;
+			d->obliterated = false;
+		}
+		else
+		{
+			d->obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > maxhealth;
+			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
+			else if(d->obliterated) dth = S_SPLOSH;
+			else dth = S_DIE1+rnd(2);
+		}
 
 		if(d == player1)
 		{
@@ -553,9 +561,9 @@ namespace world
 			else if(flags&HIT_FALL) s_strcpy(d->obit, "thought they could fly");
 			else if(flags&HIT_SPAWN) s_strcpy(d->obit, "tried to spawn inside solid matter");
 			else if(flags&HIT_LOST) s_strcpy(d->obit, "got very, very lost");
-        	else if(flags && isgun(gun))
+        	else if(flags && isweap(weap))
         	{
-				static const char *suicidenames[GUN_MAX] = {
+				static const char *suicidenames[WEAPON_MAX] = {
 					"found out what their plasma tasted like",
 					"discovered buckshot bounces",
 					"got caught up in their own crossfire",
@@ -563,16 +571,18 @@ namespace world
 					"pulled off a seemingly impossible stunt",
 					"pulled off a seemingly impossible stunt",
 					"decided to kick it, kamikaze style",
+					"ate paint"
 				};
-        		s_strcpy(d->obit, suicidenames[gun]);
+        		s_strcpy(d->obit, suicidenames[weap]);
         	}
+        	else if(m_paint(gamemode, mutators)) s_strcpy(d->obit, "was taken out of the game");
         	else if(flags&HIT_EXPLODE) s_strcpy(d->obit, "was obliterated");
         	else if(flags&HIT_BURN) s_strcpy(d->obit, "burnt up");
         	else s_strcpy(d->obit, "suicided");
         }
 		else
 		{
-			static const char *obitnames[3][GUN_MAX] = {
+			static const char *obitnames[3][WEAPON_MAX] = {
 				{
 					"was plasmified by",
 					"was filled with buckshot by",
@@ -581,6 +591,7 @@ namespace world
 					"was skewered by",
 					"was pierced by",
 					"was blown to pieces by",
+					"was painted by"
 				},
 				{
 					"was plasmafied by",
@@ -590,6 +601,7 @@ namespace world
 					"was given an extra orifice by",
 					"was expertly sniped by",
 					"was blown to pieces by",
+					"was painted by"
 				},
 				{
 					"was reduced to ooze by",
@@ -599,17 +611,18 @@ namespace world
 					"was spliced by",
 					"had their head blown clean off by",
 					"was obliterated by",
+					"was painted by"
 				}
 			};
 
-			int o = d->obliterated ? 2 : (flags&HIT_HEAD && !guntype[gun].explode ? 1 : 0);
-			const char *oname = isgun(gun) ? obitnames[o][gun] : "was killed by";
+			int o = d->obliterated ? 2 : (flags&HIT_HEAD && !weaptype[weap].explode ? 1 : 0);
+			const char *oname = isweap(weap) ? obitnames[o][weap] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));
 			else
 			{
 				s_sprintf(d->obit)("%s %s", oname, colorname(actor));
-				switch(actor->spree)
+				if(!kidmode) switch(actor->spree)
 				{
 					case 5:
 					{
@@ -637,9 +650,9 @@ namespace world
 					}
 					case 50:
 					{
-						s_strcat(d->obit, " creating a bloodbath!");
+						s_strcat(d->obit, noblood || m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
-						s_sprintfd(ds)("@\fgBLOODBATH");
+						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
@@ -651,7 +664,7 @@ namespace world
 							s_sprintfd(ds)("@\fgHEADSHOT");
 							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
-						else if(d->obliterated || lastmillis-d->lastspawn <= REGENWAIT*3) anc = S_V_OWNED;
+						else if(d->obliterated || lastmillis-d->lastspawn <= spawnprotecttime*1000+1000) anc = S_V_OWNED;
 						break;
 					}
 				}
@@ -678,12 +691,15 @@ namespace world
 				else conoutf("\fa%s %s", colorname(d), d->obit);
 			}
 		}
-		vec pos = headpos(d);
-		int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
-		loopi(rnd(gibs)+1)
-			projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, 0, rnd(100)+1, 50);
+		if(!kidmode && !noblood && !m_paint(gamemode, mutators))
+		{
+			vec pos = headpos(d);
+			int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
+			loopi(rnd(gibs)+1)
+				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, 0, rnd(100)+1, 50);
+		}
 
-		ai::killed(d, actor, gun, flags, damage);
+		ai::killed(d, actor, weap, flags, damage);
 	}
 
 	void timeupdate(int timeremain)
@@ -780,7 +796,7 @@ namespace world
 		float bestdist = 1e16f;
 		loopi(numdynents()) if((o = (gameent *)iterdynents(i)))
 		{
-            if(!o || o==at || o->state!=CS_ALIVE || lastmillis-o->lastspawn <= REGENWAIT) continue;
+            if(!o || o==at || o->state!=CS_ALIVE || !physics::issolid(o)) continue;
             float dist;
 			if(intersect(o, from, to, dist) && dist < bestdist)
 			{
@@ -912,11 +928,11 @@ namespace world
 		if(inzoom())
 		{
 			int frame = lastmillis-lastzoom, f = pronefov,
-				t = guntype[player1->gunselect].snipes ? snipetime : pronetime;
-			if(guntype[player1->gunselect].snipes) switch(player1->gunselect)
+				t = weaptype[player1->weapselect].snipes ? snipetime : pronetime;
+			if(weaptype[player1->weapselect].snipes) switch(player1->weapselect)
 			{
-				case GUN_CARBINE: f = snipecarbinefov; break;
-				case GUN_RIFLE: f = sniperiflefov; break;
+				case WEAPON_CARBINE: f = snipecarbinefov; break;
+				case WEAPON_RIFLE: f = sniperiflefov; break;
 				default: break;
 			}
 			float diff = float(fov()-f),
@@ -954,7 +970,7 @@ namespace world
 			if(allowmove(player1))
 			{
 				float scale = inzoom() ?
-						(guntype[player1->gunselect].snipes? snipesensitivity : pronesensitivity)
+						(weaptype[player1->weapselect].snipes? snipesensitivity : pronesensitivity)
 					: sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && invmouse ? -1.f : 1.f));
@@ -1470,15 +1486,15 @@ namespace world
 	{
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
-			gun = d->gunselect, lastaction = 0,
+			weap = d->weapselect, lastaction = 0,
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
-		bool secondary = false, showgun = isgun(gun);
+		bool secondary = false, showweap = isweap(weap);
 
 		if(d->state == CS_SPECTATOR || d->state == CS_WAITING) return;
 		else if(d->state == CS_DEAD)
 		{
 			if(d->obliterated) return; // not shown at all
-			showgun = false;
+			showweap = false;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
 			int t = lastmillis-lastaction;
@@ -1488,7 +1504,7 @@ namespace world
 		else if(d->state == CS_EDITING)
 		{
 			animflags = ANIM_EDIT|ANIM_LOOP;
-			showgun = false;
+			showweap = false;
 		}
 		else if(d->state == CS_LAGGED) animflags = ANIM_LAG|ANIM_LOOP;
 		else if(intermission)
@@ -1514,58 +1530,58 @@ namespace world
 		}
 		else if(third && lastmillis-d->lastpain <= 300)
 		{
-			secondary = third && allowmove(d);
+			secondary = third;
 			lastaction = d->lastpain;
 			animflags = ANIM_PAIN;
 			animdelay = 300;
 		}
 		else
 		{
-			secondary = third && allowmove(d);
-			if(showgun)
+			secondary = third;
+			if(showweap)
 			{
-				int gunstate = GNS_IDLE;
-				if(lastmillis-d->gunlast[gun] <= d->gunwait[gun])
+				int weapstate = WPSTATE_IDLE;
+				if(lastmillis-d->weaplast[weap] <= d->weapwait[weap])
 				{
-					gunstate = d->gunstate[gun];
-					lastaction = d->gunlast[gun];
-					animdelay = d->gunwait[gun];
+					weapstate = d->weapstate[weap];
+					lastaction = d->weaplast[weap];
+					animdelay = d->weapwait[weap];
 				}
-				switch(gunstate)
+				switch(weapstate)
 				{
-					case GNS_SWITCH:
-					case GNS_PICKUP:
+					case WPSTATE_SWITCH:
+					case WPSTATE_PICKUP:
 					{
-						if(lastmillis-d->gunlast[gun] <= d->gunwait[gun]/2)
+						if(lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2)
 						{
-							if(d->hasgun(d->lastgun, m_spawngun(gamemode, mutators))) gun = d->lastgun;
-							else showgun = false;
+							if(d->hasweap(d->lastweap, m_spawnweapon(gamemode, mutators))) weap = d->lastweap;
+							else showweap = false;
 						}
 						animflags = ANIM_SWITCH;
 						break;
 					}
-					case GNS_POWER:
+					case WPSTATE_POWER:
 					{
-						if(!guntype[gun].power) gunstate = GNS_SHOOT;
-						animflags = (guntype[gun].anim+gunstate);
+						if(!weaptype[weap].power) weapstate = WPSTATE_SHOOT;
+						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}
-					case GNS_SHOOT:
+					case WPSTATE_SHOOT:
 					{
-						if(guntype[gun].power) showgun = false;
-						animflags = (guntype[gun].anim+gunstate);
+						if(weaptype[weap].power) showweap = false;
+						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}
-					case GNS_RELOAD:
+					case WPSTATE_RELOAD:
 					{
-						if(guntype[gun].power) showgun = false;
-						animflags = (guntype[gun].anim+gunstate);
+						if(weaptype[weap].power) showweap = false;
+						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}
-					case GNS_IDLE:	default:
+					case WPSTATE_IDLE:	default:
 					{
-						if(!d->hasgun(gun, m_spawngun(gamemode, mutators))) showgun = false;
-						else animflags = (guntype[gun].anim+gunstate)|ANIM_LOOP;
+						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
+						else animflags = (weaptype[weap].anim+weapstate)|ANIM_LOOP;
 						break;
 					}
 				}
@@ -1575,9 +1591,9 @@ namespace world
 		if(shownamesabovehead && third && d != player1)
 			part_text(d->abovehead(), colorname(d, NULL, "@"));
 
-		if(showgun)
+		if(showweap)
 		{ // we could probably animate the vwep too now..
-			a[ai].name = guntype[gun].vwep;
+			a[ai].name = weaptype[weap].vwep;
 			a[ai].tag = "tag_weapon";
 			a[ai].anim = ANIM_VWEP|ANIM_LOOP;
 			a[ai].basetime = 0;
@@ -1623,7 +1639,7 @@ namespace world
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
 			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
-				renderplayer(d, true, d->state == CS_LAGGED || (d->state == CS_ALIVE && lastmillis-d->lastspawn <= REGENWAIT));
+				renderplayer(d, true, !physics::issolid(d));
         }
 
 		entities::render();
@@ -1640,10 +1656,10 @@ namespace world
         if(isthirdperson() || !rendernormally)
         {
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
-                renderplayer(player1, true, (player1->state == CS_ALIVE && lastmillis-player1->lastspawn <= REGENWAIT) || thirdpersontranslucent, early);
+                renderplayer(player1, true, !physics::issolid(player1) || thirdpersontranslucent, early);
         }
         else if(player1->state == CS_ALIVE)
-            renderplayer(player1, false, (lastmillis-player1->lastspawn <= REGENWAIT) || firstpersontranslucent, early);
+            renderplayer(player1, false, !physics::issolid(player1) || firstpersontranslucent, early);
     }
 
 	bool clientoption(char *arg) { return false; }

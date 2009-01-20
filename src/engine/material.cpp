@@ -131,7 +131,8 @@ sometype materials[] =
 	{"noclip", MAT_NOCLIP},
     {"lava", MAT_LAVA},
     {"aiclip", MAT_AICLIP},
-    {"death", MAT_DEATH}
+    {"death", MAT_DEATH},
+    {"ladder", MAT_LADDER},
 };
 
 int findmaterial(const char *name, bool tryint)
@@ -513,13 +514,14 @@ void rendermatgrid(vector<materialsurface *> &vismats)
 			lastmat = curmat;
             switch(curmat)
             {
-                case MAT_WATER:  glColor3ub( 0,  0, 85); break; // blue
+                case MAT_WATER:  glColor3ub( 0,  0,  85); break; // blue
                 case MAT_CLIP:   glColor3ub(85,  0,  0); break; // red
-                case MAT_GLASS:  glColor3ub( 0, 85, 85); break; // cyan
-                case MAT_NOCLIP: glColor3ub( 0, 85,  0); break; // green
-                case MAT_LAVA:   glColor3ub(85, 40,  0); break; // orange
-                case MAT_AICLIP: glColor3ub(85, 85,  0); break; // yellow
-                case MAT_DEATH:  glColor3ub(40, 40, 40); break; // black
+                case MAT_GLASS:  glColor3ub( 0,  85, 85); break; // cyan
+                case MAT_NOCLIP: glColor3ub( 0,  85, 0); break; // green
+                case MAT_LAVA:   glColor3ub(85,  40, 0); break; // orange
+                case MAT_AICLIP: glColor3ub(85,  85, 0); break; // yellow
+                case MAT_DEATH:  glColor3ub(40,  40, 40); break; // black
+                case MAT_LADDER: glColor3ub(128, 64, 224); break; // violet
             }
 		}
 		drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, -0.1f);
@@ -806,6 +808,7 @@ void rendermaterials()
                         case MAT_LAVA:   glColor3ub(  0, 128, 255); break; // orange
                         case MAT_AICLIP: glColor3ub(  0,   0, 255); break; // yellow
                         case MAT_DEATH:  glColor3ub(192, 192, 192); break; // black
+                        case MAT_LADDER: glColor3ub(196, 128, 254); break; // violet
                     }
 					break;
 				}

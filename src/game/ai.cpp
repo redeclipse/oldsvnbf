@@ -356,12 +356,12 @@ namespace ai
 		{
 			vec dir = vec(from).sub(to).normalize();
 			float targyaw, targpitch, mindist = d->radius*d->radius, dist = from.squaredist(to);
-			if(guntype[d->gunselect].explode) mindist = guntype[d->gunselect].explode*guntype[d->gunselect].explode;
+			if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
 			if(mindist <= dist)
 			{
 				vectoyawpitch(dir, targyaw, targpitch);
-				float rtime = (d->skill*guntype[d->gunselect].rdelay/2000.f)+(d->skill*guntype[d->gunselect].adelay/200.f),
-						skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->gunselect == GUN_GL ? 1.f : 1e16f),
+				float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
+						skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
 							cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 				if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew) return true;
 			}
@@ -547,7 +547,7 @@ namespace ai
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
 			n.tolerance = e->radius*2.f;
-			n.score = ep.squaredist(dp)/(force || d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)) ? 10.f : 1.f);
+			n.score = ep.squaredist(dp)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 10.f : 1.f);
 			n.defers = false;
 			n.expire = 5000;
 		}
@@ -560,12 +560,12 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
-			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(e.attr1, sgun);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr1, sweap);
 			switch(e.type)
 			{
 				case WEAPON:
 				{
-					if(e.spawned && isgun(attr) && !d->hasgun(attr, sgun))
+					if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
@@ -573,8 +573,8 @@ namespace ai
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.tolerance = enttype[e.type].radius+d->radius;
-						n.score = pos.squaredist(e.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
-						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
+						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
+						n.defers = d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators));
 						n.expire = 10000;
 					}
 					break;
@@ -587,12 +587,12 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
-			int sgun = m_spawngun(world::gamemode, world::mutators), attr = gunattr(entities::ents[proj.id]->attr1, sgun);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(entities::ents[proj.id]->attr1, sweap);
 			switch(entities::ents[proj.id]->type)
 			{
 				case WEAPON:
 				{
-					if(isgun(attr) && !d->hasgun(attr, sgun))
+					if(isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						if(proj.owner == d) break;
 						interest &n = interests.add();
@@ -601,8 +601,8 @@ namespace ai
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.tolerance = enttype[WEAPON].radius+d->radius;
-						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->gunpref ? 10.f : 1.f);
-						n.defers = d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators));
+						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
+						n.defers = d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators));
 						n.expire = 10000;
 					}
 					break;
@@ -619,7 +619,7 @@ namespace ai
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
 		if(m_team(world::gamemode, world::mutators)) assist(d, b, interests);
-		if(!d->hasgun(d->ai->gunpref, m_spawngun(world::gamemode, world::mutators)))
+		if(!d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
 			items(d, b, interests, false);
 		while(!interests.empty())
 		{
@@ -671,7 +671,7 @@ namespace ai
 		return false;
 	}
 
-	void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir)
+	void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir)
 	{
 		if(d->ai)
 		{
@@ -702,16 +702,22 @@ namespace ai
 		if(d->ai) d->ai->reset();
 	}
 
-	void killed(gameent *d, gameent *e, int gun, int flags, int damage)
+	void killed(gameent *d, gameent *e, int weap, int flags, int damage)
 	{
-		if(d->ai) d->ai->reset();
+		if(d->ai)
+		{
+			d->ai->reset();
+			aistate &b = d->ai->getstate();
+			b.next = 500+rnd((101-d->skill)*100);
+		}
 	}
 
 	bool dowait(gameent *d, aistate &b)
 	{
+		if(d->state == CS_WAITING) return true; // just wait my precious..
 		if(d->state == CS_DEAD)
 		{
-			if(d->respawned != d->lifesequence && !world::respawnwait(d))
+			if(d->respawned != d->lifesequence && !d->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators)))
 				world::respawnself(d);
 			return true;
 		}
@@ -812,7 +818,7 @@ namespace ai
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
+					if(d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 					{
 						if(hastarget(d, b, pos, ep))
 						{
@@ -832,22 +838,22 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE)
 		{
-			int sgun = m_spawngun(world::gamemode, world::mutators);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators);
 			switch(b.targtype)
 			{
 				case AI_T_ENTITY:
 				{
-					if(d->hasgun(d->ai->gunpref, sgun)) return false;
+					if(d->hasweap(d->ai->weappref, sweap)) return false;
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return false;
-						int attr = gunattr(e.attr1, sgun);
+						int attr = weapattr(e.attr1, sweap);
 						switch(e.type)
 						{
 							case WEAPON:
 							{
-								if(!e.spawned || d->hasgun(attr, sgun)) return false;
+								if(!e.spawned || d->hasweap(attr, sweap)) return false;
 								break;
 							}
 							default: break;
@@ -858,17 +864,17 @@ namespace ai
 				}
 				case AI_T_DROP:
 				{
-					if(d->hasgun(d->ai->gunpref, sgun)) return false;
+					if(d->hasweap(d->ai->weappref, sweap)) return false;
 					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return false;
-						int attr = gunattr(entities::ents[proj.id]->attr1, sgun);
+						int attr = weapattr(entities::ents[proj.id]->attr1, sweap);
 						switch(entities::ents[proj.id]->type)
 						{
 							case WEAPON:
 							{
-								if(d->hasgun(attr, sgun) || proj.owner == d) return false;
+								if(d->hasweap(attr, sweap) || proj.owner == d) return false;
 								break;
 							}
 							default: break;
@@ -1019,33 +1025,33 @@ namespace ai
 
 	bool request(gameent *d, aistate &b, int busy)
 	{
-		int sgun = m_spawngun(world::gamemode, world::mutators);
+		int sweap = m_spawnweapon(world::gamemode, world::mutators);
 		if(!busy && d->reqswitch < 0)
 		{
-			int gun = -1;
-			if(d->hasgun(d->ai->gunpref, sgun)) gun = d->ai->gunpref; // could be any gun
-			else loopi(GUN_MAX) if(d->hasgun(i, sgun, 1)) gun = i; // only choose carriables here
-			if(gun != d->gunselect && d->canswitch(gun, sgun, lastmillis))
+			int weap = -1;
+			if(d->hasweap(d->ai->weappref, sweap)) weap = d->ai->weappref; // could be any weap
+			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
+			if(weap != d->weapselect && d->canswitch(weap, sweap, lastmillis))
 			{
-				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, gun);
+				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-world::maptime, weap);
 				d->reqswitch = lastmillis;
 				return true;
 			}
 		}
 
-		if(!d->ammo[d->gunselect] && d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0)
+		if(!d->ammo[d->weapselect] && d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0)
 		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->weapselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
 
-		int gunpref = d->ai->gunpref;
+		int weappref = d->ai->weappref;
 		if(b.type == AI_S_INTEREST && b.targtype == AI_T_ENTITY &&
 			entities::ents.inrange(b.target) && entities::ents[b.target]->type == WEAPON)
-				gunpref = entities::ents[b.target]->attr1;
+				weappref = entities::ents[b.target]->attr1;
 
-		if(busy <= 1 && !d->hasgun(gunpref, sgun) && !d->useaction && d->requse < 0)
+		if(busy <= 1 && !d->hasweap(weappref, sweap) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -1078,12 +1084,12 @@ namespace ai
 				if(entities::ents.inrange(ent))
 				{
 					extentity &e = *entities::ents[ent];
-					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, sgun, lastmillis)) switch(e.type)
+					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, sweap, lastmillis)) switch(e.type)
 					{
 						case WEAPON:
 						{
-							int attr = gunattr(e.attr1, sgun);
-							if(d->hasgun(attr, sgun) || attr != gunpref) break;
+							int attr = weapattr(e.attr1, sweap);
+							if(d->hasweap(attr, sweap) || attr != weappref) break;
 							d->useaction = true;
 							d->usetime = lastmillis;
 							return true;
@@ -1095,9 +1101,9 @@ namespace ai
 			}
 		}
 
-		if(!busy && d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0)
+		if(!busy && d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0)
 		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->weapselect);
 			d->reqreload = lastmillis;
 			return true;
 		}
@@ -1198,7 +1204,7 @@ namespace ai
 			if(!decision(d, &p)) busy = 2;
 			if(!request(d, b, busy) && !busy) target(d, b);
 			entities::checkitems(d);
-			weapons::shoot(d, d->ai->target, guntype[d->gunselect].power); // always use full power
+			weapons::shoot(d, d->ai->target, weaptype[d->weapselect].power); // always use full power
 			if(!b.idle && d->lastnode == d->ai->lastnode)
 			{
 				d->ai->timeinnode += curtime;
@@ -1239,9 +1245,9 @@ namespace ai
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && guntype[p->gun].explode)
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
 			{
-				float limit = guessradius+(guntype[p->gun].explode*p->lifesize);
+				float limit = guessradius+(weaptype[p->weap].explode*p->lifesize);
 				limit *= limit; // square it to avoid expensive square roots
 				loopvk(entities::ents)
 				{

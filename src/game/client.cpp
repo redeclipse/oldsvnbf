@@ -786,12 +786,12 @@ namespace client
         if(resume && d==world::player1)
         {
             getint(p);
-            loopi(GUN_MAX) getint(p);
+            loopi(WEAPON_MAX) getint(p);
         }
         else
         {
-            d->gunselect = getint(p);
-            loopi(GUN_MAX) d->ammo[i] = getint(p);
+            d->weapselect = getint(p);
+            loopi(WEAPON_MAX) d->ammo[i] = getint(p);
         }
     }
 
@@ -871,8 +871,8 @@ namespace client
 				d->crouching = f&1 ? true : false;
 				if(crouch != d->crouching) d->crouchtime = lastmillis;
                 vec oldpos(d->o);
-                if(world::allowmove(d))
-                {
+                //if(world::allowmove(d))
+                //{
                     d->o = o;
                     d->o.z += d->height;
                     d->vel = vel;
@@ -880,7 +880,7 @@ namespace client
                     d->physstate = physstate & 0x0F;
                     physics::updatephysstate(d);
                     updatepos(d);
-                }
+                //}
                 if(d->state==CS_DEAD)
                 {
                     d->resetinterp();
@@ -976,7 +976,7 @@ namespace client
 					{
 						case SPHY_JUMP: t->jumptime = lastmillis; break;
 						case SPHY_IMPULSE: t->lastimpulse = lastmillis; break;
-						case SPHY_POWER: t->setgunstate(t->gunselect, GNS_POWER, 0, lastmillis); break;
+						case SPHY_POWER: t->setweapstate(t->weapselect, WPSTATE_POWER, 0, lastmillis); break;
 						default: break;
 					}
 					break;
@@ -1113,7 +1113,7 @@ namespace client
 				{
 					int lcn = getint(p);
 					gameent *f = world::newclient(lcn);
-					f->respawn(lastmillis);
+					f->respawn(lastmillis, 100);
 					parsestate(f, p);
 					f->state = CS_SPAWNING;
 					playsound(S_RESPAWN, f->o, f);
@@ -1126,12 +1126,12 @@ namespace client
 					int lcn = getint(p), ent = getint(p);
 					gameent *f = world::newclient(lcn);
 					if(f == world::player1 && editmode) toggleedit();
-					f->respawn(lastmillis);
+					f->respawn(lastmillis, 100);
 					parsestate(f, p);
 					f->state = CS_ALIVE;
 					if(f == world::player1 || f->ai)
 					{
-						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->gunselect);
+						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->weapselect);
 						entities::spawnplayer(f, ent, ent < 0);
 						playsound(S_RESPAWN, f->o, f);
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
@@ -1143,7 +1143,7 @@ namespace client
 
 				case SV_SHOTFX:
 				{
-					int scn = getint(p), gun = getint(p), power = getint(p);
+					int scn = getint(p), weap = getint(p), power = getint(p);
 					vec from;
 					loopk(3) from[k] = getint(p)/DMF;
 					int ls = getint(p);
@@ -1154,10 +1154,10 @@ namespace client
 						loopk(3) to[k] = getint(p)/DMF;
 					}
 					gameent *s = world::getclient(scn);
-					if(!s || !isgun(gun)) break;
+					if(!s || !isweap(weap)) break;
 					if(s->muzzle != vec(-1, -1, -1)) from = s->muzzle;
-					s->setgunstate(gun, GNS_SHOOT, guntype[gun].adelay, lastmillis);
-					projs::shootv(gun, power, from, locs, s, false);
+					s->setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, lastmillis);
+					projs::shootv(weap, power, from, locs, s, false);
 					break;
 				}
 
@@ -1165,7 +1165,7 @@ namespace client
 				{
 					int tcn = getint(p),
 						acn = getint(p),
-						gun = getint(p),
+						weap = getint(p),
 						flags = getint(p),
 						damage = getint(p),
 						health = getint(p);
@@ -1174,17 +1174,17 @@ namespace client
 					dir.normalize();
 					gameent *target = world::getclient(tcn), *actor = world::getclient(acn);
 					if(!target || !actor) break;
-					world::damaged(gun, flags, damage, health, target, actor, lastmillis, dir);
+					world::damaged(weap, flags, damage, health, target, actor, lastmillis, dir);
 					break;
 				}
 
 				case SV_RELOAD:
 				{
-					int trg = getint(p), gun = getint(p), amt = getint(p);
+					int trg = getint(p), weap = getint(p), amt = getint(p);
 					gameent *target = world::getclient(trg);
-					if(!target || !isgun(gun)) break;
-					target->setgunstate(gun, GNS_RELOAD, guntype[gun].rdelay, lastmillis);
-					target->ammo[gun] = amt;
+					if(!target || !isweap(weap)) break;
+					target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
+					target->ammo[weap] = amt;
 					target->reqreload = -1;
 					playsound(S_RELOAD, target->o, target);
 					break;
@@ -1203,16 +1203,22 @@ namespace client
 
 				case SV_DIED:
 				{
-					int vcn = getint(p), acn = getint(p), frags = getint(p), spree = getint(p),
-						gun = getint(p), flags = getint(p), damage = getint(p);
+					int vcn = getint(p), acn = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
 					gameent *victim = world::getclient(vcn), *actor = world::getclient(acn);
+					if(!actor || !victim) break;
+					world::killed(weap, flags, damage, victim, actor);
+					victim->lastdeath = lastmillis;
+					victim->weapreset(true);
+					break;
+				}
+
+				case SV_FRAG:
+				{
+					int acn = getint(p), frags = getint(p), spree = getint(p);
+					gameent *actor = world::getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
 					actor->spree = spree;
-					if(!victim) break;
-					world::killed(gun, flags, damage, victim, actor);
-					victim->lastdeath = lastmillis;
-					victim->gunreset(true);
 					break;
 				}
 
@@ -1229,12 +1235,12 @@ namespace client
 					break;
 				}
 
-				case SV_GUNSELECT:
+				case SV_WEAPSELECT:
 				{
-					int trg = getint(p), gun = getint(p);
+					int trg = getint(p), weap = getint(p);
 					gameent *target = world::getclient(trg);
-					if(!target || !isgun(gun)) break;
-					target->gunswitch(gun, lastmillis);
+					if(!target || !isweap(weap)) break;
+					target->weapswitch(weap, lastmillis);
 					target->reqswitch = -1;
 					playsound(S_SWITCH, target->o, target);
 					break;
@@ -1256,7 +1262,7 @@ namespace client
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						gameent *f = world::newclient(lcn);
-						if(f!=world::player1) f->respawn(0);
+						if(f!=world::player1) f->respawn(0, 100);
 						parsestate(f, p, true);
 					}
 					break;
@@ -1274,7 +1280,7 @@ namespace client
 						s_sprintfd(ds)("@%s", item);
 						part_text(entities::ents[ent]->o, ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 					}
-					world::spawneffect(entities::ents[ent]->o, 0x221188, enttype[entities::ents[ent]->type].radius);
+					world::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
 					break;
 				}
 
@@ -1288,10 +1294,10 @@ namespace client
 
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
-					int lcn = getint(p), ent = getint(p), spawn = getint(p), gun = getint(p), drop = getint(p);
+					int lcn = getint(p), ent = getint(p), spawn = getint(p), weap = getint(p), drop = getint(p);
 					gameent *target = world::getclient(lcn);
 					if(!target) break;
-					entities::useeffects(target, ent, spawn, gun, drop);
+					entities::useeffects(target, ent, spawn, weap, drop);
 					target->requse = -1;
 					break;
 				}
@@ -1705,9 +1711,8 @@ namespace client
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		int ac = 0, bc = 0;
-
-		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length()) ac = 1;
-		if(b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length()) bc = 1;
+		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length() && (kidmode < 2 || m_paint(a->attr[1], a->attr[2]))) ac = 1;
+		if(b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length() && (kidmode < 2 || m_paint(b->attr[1], b->attr[2]))) bc = 1;
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;
 
@@ -1965,10 +1970,11 @@ namespace client
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
 					serverinfo *si = servers[j];
-					if(si->ping >= 0 && si->attr.length())
+					if(si->ping < 999 && si->attr.length() && (kidmode < 2 || m_paint(si->attr[1], si->attr[2])))
 					{
 						if(serverentry(g, i, si)) n = j;
 					}
+					else g->button("*", 0x444444);
 				}
 				serverendcolumn(g, i);
 			}
