@@ -4,35 +4,34 @@
 namespace weapons
 {
 	VARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
-	VARP(skipspawngun, 0, 0, 1); // whether to skip spawngun when switching
+	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skipgrenades, 0, 1, 1); // whether to skip grenades when switching
 
-	ICOMMAND(gunselect, "", (), intret(world::player1->gunselect));
+	ICOMMAND(weapselect, "", (), intret(world::player1->weapselect));
 	ICOMMAND(ammo, "s", (char *a),
 	{
-		int n = a[0] ? atoi(a) : world::player1->gunselect;
-		intret(isgun(n) ? world::player1->ammo[n] : -1);
+		int n = a[0] ? atoi(a) : world::player1->weapselect;
+		intret(isweap(n) ? world::player1->ammo[n] : -1);
 	});
 
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
-		if(a < -1 || b < -1 || a >= GUN_MAX || b >= GUN_MAX) return;
-		if(d->reqswitch >= 0) return;
-		if (!world::allowmove(world::player1) || world::inzoom()) return;
-		int s = d->gunselect, sgun = m_spawngun(world::gamemode, world::mutators);
-		loopi(GUN_MAX) // only loop the amount of times we have guns for
+		if(a < -1 || b < -1 || a >= WEAPON_MAX || b >= WEAPON_MAX) return;
+		if(d->reqswitch >= 0 || world::inzoom()) return;
+		int s = d->weapselect, sweap = m_spawnweapon(world::gamemode, world::mutators);
+		loopi(WEAPON_MAX) // only loop the amount of times we have weaps for
 		{
 			if(a >= 0) s = a;
 			else s += b;
 
-			while(s > GUN_MAX-1) s -= GUN_MAX;
-			while(s < 0) s += GUN_MAX;
-			if(a < 0 && ((skipspawngun && s == m_spawngun(world::gamemode, world::mutators)) || (skipgrenades && s == GUN_GL)))
+			while(s > WEAPON_MAX-1) s -= WEAPON_MAX;
+			while(s < 0) s += WEAPON_MAX;
+			if(a < 0 && ((skipspawnweapon && s == m_spawnweapon(world::gamemode, world::mutators)) || (skipgrenades && s == WEAPON_GL)))
 				continue;
 
-			if(d->canswitch(s, sgun, lastmillis))
+			if(d->canswitch(s, sweap, lastmillis))
 			{
-				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, s);
+				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-world::maptime, s);
 				d->reqswitch = lastmillis;
 				return;
 			}
@@ -44,8 +43,8 @@ namespace weapons
 
 	bool doautoreload(gameent *d)
 	{
-		if(autoreload && !d->ammo[d->gunselect]) return true;
-		if(autoreload > 1 && lastmillis-d->gunlast[d->gunselect] > guntype[d->gunselect].rdelay*autoreload)
+		if(autoreload && !d->ammo[d->weapselect]) return true;
+		if(autoreload > 1 && lastmillis-d->weaplast[d->weapselect] > weaptype[d->weapselect].rdelay*autoreload)
 			return true;
 
 		return false;
@@ -53,19 +52,19 @@ namespace weapons
 
 	void reload(gameent *d)
 	{
-		int sgun = m_spawngun(world::gamemode, world::mutators);
-		if(!gunloads(d->gunselect, sgun))
+		int sweap = m_spawnweapon(world::gamemode, world::mutators);
+		if(!weaploads(d->weapselect, sweap))
 		{
-			int bestgun = d->bestgun(sgun);
-			if(d->ammo[d->gunselect] <= 0 && d->canswitch(bestgun, sgun, lastmillis) && d->reqswitch < 0)
+			int bestweap = d->bestweap(sweap);
+			if(d->ammo[d->weapselect] <= 0 && d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
 			{
-				client::addmsg(SV_GUNSELECT, "ri3", d->clientnum, lastmillis-world::maptime, bestgun);
+				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-world::maptime, bestweap);
 				d->reqswitch = lastmillis;
 			}
 		}
-		else if(d->canreload(d->gunselect, sgun, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
+		else if(d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
 		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->gunselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->weapselect);
 			d->reqreload = lastmillis;
 		}
 	}
@@ -90,44 +89,44 @@ namespace weapons
 
 	void shoot(gameent *d, vec &targ, int force)
 	{
-		if(!d->canshoot(d->gunselect, m_spawngun(world::gamemode, world::mutators), lastmillis))
+		if(!d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 			return;
 
-		int power = force, powertime = guntype[d->gunselect].power+guntype[d->gunselect].time;
-		if(guntype[d->gunselect].power)
+		int power = force, powertime = weaptype[d->weapselect].power+weaptype[d->weapselect].time;
+		if(weaptype[d->weapselect].power)
 		{
 			if(!power)
 			{
-				if(d->gunstate[d->gunselect] != GNS_POWER) // FIXME: not synched in MP yet!!
+				if(d->weapstate[d->weapselect] != WPSTATE_POWER) // FIXME: not synched in MP yet!!
 				{
 					if(d->attacking)
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
-						d->setgunstate(d->gunselect, GNS_POWER, 0, lastmillis);
+						d->setweapstate(d->weapselect, WPSTATE_POWER, 0, lastmillis);
 					}
 					else return;
 				}
 
-				power = lastmillis-d->gunlast[d->gunselect];
+				power = lastmillis-d->weaplast[d->weapselect];
 				if(d->attacking && power < powertime) return;
 			}
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;
 
-		if(guntype[d->gunselect].max) d->ammo[d->gunselect] = max(d->ammo[d->gunselect]-1, 0);
-		d->setgunstate(d->gunselect, GNS_SHOOT, guntype[d->gunselect].adelay, lastmillis);
-		d->totalshots += int(guntype[d->gunselect].damage*damagescale)*guntype[d->gunselect].rays;
+		if(weaptype[d->weapselect].max) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-1, 0);
+		d->setweapstate(d->weapselect, WPSTATE_SHOOT, weaptype[d->weapselect].adelay, lastmillis);
+		d->totalshots += int(weaptype[d->weapselect].damage*damagescale)*weaptype[d->weapselect].rays;
 
 		vec to = targ, from = d->muzzle, unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-		kickback.mul(guntype[d->gunselect].kick*(physics::iscrouching(d) ? 0.1f : 1.f));
+		kickback.mul(weaptype[d->weapselect].kick*(physics::iscrouching(d) ? 0.1f : 1.f));
 		d->vel.add(kickback);
-		if(d == world::player1) world::quakewobble += guntype[d->gunselect].wobble;
+		if(d == world::player1) world::quakewobble += weaptype[d->weapselect].wobble;
 		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
-		// move along the eye ray towards the gun origin, stopping when something is hit
+		// move along the eye ray towards the weap origin, stopping when something is hit
 		// nudge the target a tiny bit forward in the direction of the camera for stability
         if(barrier <= 1e-3f)
         {
@@ -149,32 +148,32 @@ namespace weapons
 		vector<vec> vshots;
 		vector<ivec> shots;
 		#define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
-		loopi(guntype[d->gunselect].rays)
+		loopi(weaptype[d->weapselect].rays)
 		{
 			vec dest;
-			if(guntype[d->gunselect].spread)
-				offsetray(from, to, guntype[d->gunselect].spread, guntype[d->gunselect].zdiv, dest);
+			if(weaptype[d->weapselect].spread)
+				offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
-			if(d->gunselect == GUN_GL && power < powertime)
+			if(d->weapselect == WEAPON_GL && power < powertime)
 				dest.z += from.dist(dest)/8;
 			addshot;
 		}
-		projs::shootv(d->gunselect, power, from, vshots, d, true);
+		projs::shootv(d->weapselect, power, from, vshots, d, true);
 		client::addmsg(SV_SHOOT, "ri7iv",
-			d->clientnum, lastmillis-world::maptime, d->gunselect, power,
+			d->clientnum, lastmillis-world::maptime, d->weapselect, power,
 				int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
 					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
 	}
 
-    void preload(int gun)
+    void preload(int weap)
     {
-    	int g = gun < 0 ? m_spawngun(world::gamemode, world::mutators) : gun;
-    	if(isgun(g))
+    	int g = weap < 0 ? m_spawnweapon(world::gamemode, world::mutators) : weap;
+    	if(isweap(g))
         {
         	string mdl;
-            s_sprintf(mdl)("weapons/%s", guntype[g].name);
+            s_sprintf(mdl)("weapons/%s", weaptype[g].name);
             loadmodel(mdl, -1, true);
-			s_sprintf(mdl)("weapons/%s/vwep", guntype[g].name);
+			s_sprintf(mdl)("weapons/%s/vwep", weaptype[g].name);
 			loadmodel(mdl, -1, true);
         }
     }

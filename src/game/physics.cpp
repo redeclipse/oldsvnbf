@@ -84,6 +84,21 @@ namespace physics
 	}
 	ICOMMAND(taunt, "", (), { taunt(world::player1); });
 
+	bool issolid(physent *d)
+	{
+		if(d->state == CS_ALIVE)
+		{
+			if(d->type == ENT_PLAYER)
+			{
+				gameent *o = (gameent *)d;
+				if(o->protect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0))
+					return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
 	bool iscrouching(physent *d)
 	{
 		return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200;
@@ -251,7 +266,6 @@ namespace physics
         return false;
     }
 
-	#if 0
 	bool trystepdown(physent *d, vec &dir, float step, float a, float b)
 	{
 		vec old(d->o);
@@ -267,11 +281,26 @@ namespace physics
 		d->o = old;
 		return false;
 	}
-	#endif
+
+	bool trystep(physent *d, vec &dir, float step, const vec &way)
+	{
+		vec old(d->o);
+		vec dv(dir.x, dir.y, step*way.z), v(dv);
+		v.mul(stairheight/step);
+		d->o.add(v);
+		if(!collide(d, way, slopez))
+		{
+			d->o = old;
+			d->o.add(dv);
+			if(collide(d, way)) return true;
+		}
+		d->o = old;
+		return false;
+	}
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-	#if 0
+#if 0
 		if(d->physstate >= PHYS_FLOOR && (floor.z == 0.0f || floor.z == 1.0f))
 		{
 			vec moved(d->o);
@@ -284,7 +313,7 @@ namespace physics
 			}
 			else d->o = moved;
 		}
-	#endif
+#endif
         if(floor.z > 0.0f && floor.z < slopez)
         {
             if(floor.z >= wallz) switchfloor(d, dir, floor);
@@ -306,7 +335,7 @@ namespace physics
     #endif
         switchfloor(d, dir, floor);
         d->timeinair = 0;
-        if(d->physstate!=PHYS_STEP_UP || !collided)
+        if(d->physstate!=PHYS_STEP_UP || !collided || d->onladder)
             d->physstate = floor.z >= floorz ? PHYS_FLOOR : PHYS_SLOPE;
 		d->floor = floor;
 	}
@@ -355,10 +384,44 @@ namespace physics
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o);
-		#if 0
-		if(d->physstate == PHYS_STEP_DOWN && dir.z <= 0.0f && world::allowmove(d) && (d->move || d->strafe))
+		float step = dir.magnitude()*stepspeed;
+		if(d->onladder)
 		{
-			float step = dir.magnitude()*stepspeed;
+			if(dir.z < 0.f)
+			{
+				if(trystep(d, dir, step, vec(0, 0, -1)))
+				{
+					d->physstate = PHYS_STEP_DOWN;
+					return true;
+				}
+				d->o.z -= step;
+				if(collide(d, vec(0, 0, -1)))
+				{
+					d->physstate = PHYS_STEP_DOWN;
+					return true;
+				}
+				d->o = old;
+			}
+			else
+			{
+				if(trystep(d, dir, step, vec(0, 0, 1)))
+				{
+					d->physstate = PHYS_STEP_UP;
+					return true;
+				}
+				d->o.z += step;
+				if(collide(d, vec(0, 0, 1)))
+				{
+					d->physstate = PHYS_STEP_UP;
+					return true;
+				}
+				d->o = old;
+			}
+			if(d->physstate == PHYS_FALL) d->physstate = PHYS_FLOOR;
+		}
+#if 0
+		else if(d->physstate == PHYS_STEP_DOWN && dir.z < 0.f)
+		{
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
 			if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
 			if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
@@ -366,7 +429,8 @@ namespace physics
 			if(collide(d, vec(0, 0, -1))) return true;
 			d->o = old;
 		}
-		#endif
+#endif
+
 		bool collided = false, slidecollide = false;
 		vec obstacle;
 		d->o.add(dir);
@@ -438,7 +502,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
-        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
+        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid || pl->onladder)
 		{
 			pl->lastimpulse = 0;
 			if(pl->jumping)
@@ -467,13 +531,11 @@ namespace physics
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
-			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || pl->onladder || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
 
             if(!floating && pl->physstate >= PHYS_SLOPE)
 			{
-				/* move up or down slopes in air
-				 * but only move up slopes in liquid
-				 */
+				// move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
                 m.z = pl->inliquid ? max(m.z, dz) : dz;
 			}
@@ -522,8 +584,8 @@ namespace physics
     void updatematerial(physent *pl, bool local, bool floating)
     {
 		vec v = pl->type == ENT_PLAYER ? world::feetpos(pl, 1.f) : pl->o;
-		int material = lookupmaterial(v);
-		int curmat = material&MATF_VOLUME, oldmat = pl->inmaterial&MATF_VOLUME;
+		int material = lookupmaterial(v), curmat = material&MATF_VOLUME, flagmat = material&MATF_FLAGS,
+			oldmat = pl->inmaterial&MATF_VOLUME;
 
 		if(!floating && curmat != oldmat)
 		{
@@ -547,11 +609,12 @@ namespace physics
 					pl->vel.mul(liquidscale);
 
 				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
-					world::suicide((gameent *)pl, curmat == MAT_LAVA ? HIT_MELT : 0);
+					world::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 			}
 		}
 		pl->inmaterial = material;
 		pl->inliquid = !floating && isliquid(curmat);
+		pl->onladder = !floating && flagmat == MAT_LADDER;
     }
 
 	// main physics routine, moves a player/monster for a time step
@@ -566,7 +629,7 @@ namespace physics
 		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
 
         // apply gravity
-        if(!floating && pl->type!=ENT_CAMERA) modifygravity(pl, millis);
+        if(!floating && pl->type!=ENT_CAMERA && !pl->onladder) modifygravity(pl, millis);
 		// apply any player generated changes in velocity
 		modifyvelocity(pl, local, floating, millis);
 
@@ -611,7 +674,7 @@ namespace physics
 
         if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && local && pl->o.z < 0 && pl->state == CS_ALIVE)
         {
-            world::suicide((gameent *)pl, HIT_FALL);
+            world::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
             return false;
         }
 

@@ -614,7 +614,8 @@ bool overlapsdynent(const vec &o, float radius)
 		loopv(dynents)
 		{
 			physent *d = dynents[i];
-			if(o.dist(d->o)-d->radius < radius) return true;
+			if(physics::issolid(d) && o.dist(d->o)-d->radius < radius)
+				return true;
 		}
 	}
 	return false;
@@ -629,7 +630,7 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 		loopv(dynents)
 		{
 			physent *o = dynents[i];
-			if(o==d || d->o.reject(o->o, d->radius+o->radius)) continue;
+			if(o==d || !physics::issolid(o) || d->o.reject(o->o, d->radius+o->radius)) continue;
             if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
             {
                 if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))

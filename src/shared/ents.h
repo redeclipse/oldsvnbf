@@ -71,7 +71,7 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
 	int inmaterial;
-    bool inliquid, blocked, moving;
+    bool inliquid, onladder, blocked, moving;
     physent *onplayer;
     bool jumping, crouching;
     int jumptime, crouchtime, lastimpulse;
@@ -104,7 +104,7 @@ struct physent                                  // base entity type, can be affe
     void reset()
     {
     	inmaterial = timeinair = jumptime = crouchtime = lastimpulse = 0;
-    	inliquid = jumping = crouching = false;
+    	inliquid = onladder = jumping = crouching = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vec(-1, -1, -1);

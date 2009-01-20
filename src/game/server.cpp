@@ -19,12 +19,12 @@ namespace server
 
     static const int DEATHMILLIS = 300;
 
-	enum { GE_NONE = 0, GE_SHOT, GE_SWITCH, GE_RELOAD, GE_DESTROY, GE_USE, GE_SUICIDE };
+	enum { GAMEEVENT_NONE = 0, GAMEEVENT_SHOT, GAMEEVENT_SWITCH, GAMEEVENT_RELOAD, GAMEEVENT_DESTROY, GAMEEVENT_USE, GAMEEVENT_SUICIDE };
 
 	struct shotevent
 	{
         int millis, id;
-		int gun, power, num;
+		int weap, power, num;
 		ivec from;
 		vector<ivec> shots;
 	};
@@ -32,13 +32,13 @@ namespace server
 	struct switchevent
 	{
 		int millis, id;
-		int gun;
+		int weap;
 	};
 
 	struct reloadevent
 	{
 		int millis, id;
-		int gun;
+		int weap;
 	};
 
 	struct hitset
@@ -57,7 +57,7 @@ namespace server
 	struct destroyevent
 	{
         int millis, id;
-		int gun, radial;
+		int weap, radial;
 		vector<hitset> hits;
 	};
 
@@ -77,7 +77,7 @@ namespace server
 		int type;
 		shotevent shot;
 		destroyevent destroy;
-		switchevent gunsel;
+		switchevent weapsel;
 		reloadevent reload;
 		suicideevent suicide;
 		useevent use;
@@ -117,7 +117,7 @@ namespace server
 	{
 		vec o;
 		int state;
-        projectilestate dropped, gunshots[GUN_MAX];
+        projectilestate dropped, weapshots[WEAPON_MAX];
 		int frags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
@@ -134,18 +134,18 @@ namespace server
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
 			lifesequence = 0;
 			dropped.reset();
-            loopi(GUN_MAX) gunshots[i].reset();
+            loopi(WEAPON_MAX) weapshots[i].reset();
 
 			aireinit = timeplayed = 0;
 			effectiveness = 0;
             frags = deaths = teamkills = shotdamage = damage = 0;
 
-			respawn(-1);
+			respawn(-1, 100);
 		}
 
-		void respawn(int millis)
+		void respawn(int millis, int heal)
 		{
-			gamestate::respawn(millis);
+			gamestate::respawn(millis, heal);
 			o = vec(-1e10f, -1e10f, -1e10f);
 		}
 
@@ -322,7 +322,7 @@ namespace server
 		virtual void update() {}
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
-		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
+		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
 	};
 
 	vector<srventity> sents;
@@ -483,6 +483,7 @@ namespace server
 			}
 		}
 		else *muts = G_M_NONE;
+		if(kidmode > 1 && !(*muts&G_M_PAINT)) *muts |= G_M_PAINT;
     }
 
 	int mutscheck(int mode, int muts)
@@ -590,7 +591,7 @@ namespace server
 				clientinfo *ci = clients[k];
 				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (spawntime && gamemillis-sents[i].millis <= spawntime)))
 					return true;
-				else loopj(GUN_MAX) if(ci->state.entid[j] == i) return spawned;
+				else loopj(WEAPON_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
 			if(spawned && spawntime && gamemillis-sents[i].millis <= spawntime)
 				return true;
@@ -686,7 +687,7 @@ namespace server
 	void spawnstate(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_spawngun(gamemode, mutators), !m_noitems(gamemode, mutators));
+		gs.spawnstate(m_spawnweapon(gamemode, mutators), sv_maxhealth, !m_noitems(gamemode, mutators));
 		gs.lifesequence++;
 	}
 
@@ -696,7 +697,7 @@ namespace server
 		spawnstate(ci);
 		int spawn = pickspawn(ci);
 		sendf(ci->state.isai() ? ci->state.ownernum : ci->clientnum, 1, "ri8v",
-			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.gunselect, GUN_MAX, &gs.ammo[0]);
+			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
@@ -709,8 +710,8 @@ namespace server
         putint(p, gs.frags);
         putint(p, gs.lifesequence);
         putint(p, gs.health);
-        putint(p, gs.gunselect);
-        loopi(GUN_MAX) putint(p, gs.ammo[i]);
+        putint(p, gs.weapselect);
+        loopi(WEAPON_MAX) putint(p, gs.ammo[i]);
     }
 
 	void relayf(int r, const char *s, ...)
@@ -1152,30 +1153,30 @@ namespace server
 		if(&sc) sc.save(ci->state);
 	}
 
-	struct droplist { int gun, ent; };
+	struct droplist { int weap, ent; };
 	void dropitems(clientinfo *ci, bool discon = false)
 	{
 		servstate &ts = ci->state;
 		vector<droplist> drop;
-		int sgun = m_spawngun(gamemode, mutators);
-		if(!discon && sv_kamikaze && (sv_kamikaze > 2 || (ts.hasgun(GUN_GL, sgun) && (sv_kamikaze > 1 || ts.gunselect == GUN_GL))))
+		int sweap = m_spawnweapon(gamemode, mutators);
+		if(!discon && sv_kamikaze && (sv_kamikaze > 2 || (ts.hasweap(WEAPON_GL, sweap) && (sv_kamikaze > 1 || ts.weapselect == WEAPON_GL))))
 		{
-			ts.gunshots[GUN_GL].add(-1);
+			ts.weapshots[WEAPON_GL].add(-1);
 			droplist &d = drop.add();
-			d.gun = GUN_GL;
+			d.weap = WEAPON_GL;
 			d.ent = -1;
 		}
 		if(!m_noitems(gamemode, mutators) && (discon || sv_itemdropping))
 		{
-			loopi(GUN_MAX) if(ts.hasgun(i, sgun, 1) && sents.inrange(ts.entid[i]))
+			loopi(WEAPON_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 			{
-				if(!(sents[ts.entid[i]].attr2&GNT_FORCED))
+				if(!(sents[ts.entid[i]].attr2&WEAPFLAG_FORCED))
 				{
 					if(!discon)
 					{
 						ts.dropped.add(ts.entid[i]);
 						droplist &d = drop.add();
-						d.gun = i;
+						d.weap = i;
 						d.ent = ts.entid[i];
 					}
 					sents[ts.entid[i]].spawned = false;
@@ -1185,7 +1186,7 @@ namespace server
 		}
 		if(!discon)
 		{
-			loopi(GUN_MAX) ts.entid[i] = ts.ammo[i] = -1;
+			loopi(WEAPON_MAX) ts.entid[i] = ts.ammo[i] = -1;
 			if(!drop.empty())
 				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 		}
@@ -1377,7 +1378,7 @@ namespace server
             sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum,
                 gs.state, gs.frags,
                 gs.lifesequence, gs.health,
-                gs.gunselect, GUN_MAX, &gs.ammo[0], -1);
+                gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
         }
     }
 
@@ -1549,60 +1550,65 @@ namespace server
 		ci->events.remove(0, n);
 	}
 
-	void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush = ivec(0, 0, 0))
+	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		servstate &ts = target->state;
-		if(gamemillis-ts.lastspawn <= REGENWAIT) return;
+		if(ts.protect(gamemillis, sv_spawnprotecttime*1000, m_paint(gamemode, mutators) ? sv_paintfreezetime*1000 : 0)) return;
 
 		int realdamage = damage, realflags = flags, nodamage = 0;
-		if(smode && !smode->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; }
-		mutate(smuts, if(!mut->damage(target, actor, realdamage, gun, realflags, hitpush)) { nodamage++; });
+		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
+		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if(!m_play(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
 			nodamage++;
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_PUSH; // so it impacts, but not hurts
-
 		if(hithurts(realflags))
 		{
-			if(realflags&HIT_HEAD || realflags&HIT_MELT || realflags&HIT_FALL)
-				realdamage = int(realdamage*sv_damagescale);
-			else if(realflags&HIT_TORSO)
-				realdamage = int(realdamage*0.5f*sv_damagescale);
-			else if(realflags&HIT_LEGS)
-				realdamage = int(realdamage*0.25f*sv_damagescale);
+			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*sv_damagescale);
+			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*sv_damagescale);
+			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*sv_damagescale);
 			else realdamage = int(realdamage*sv_damagescale);
-
-			if(realdamage && m_insta(gamemode, mutators))
-				realdamage = max(realdamage, ts.health);
+			if(realdamage && m_insta(gamemode, mutators)) realdamage = max(realdamage, ts.health);
 			ts.dodamage(realdamage, gamemillis);
 			actor->state.damage += realdamage;
 		}
 		else realdamage = int(realdamage*0.5f*sv_damagescale);
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, gun, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 
-		if(hithurts(realflags) && realdamage && ts.health <= 0)
+		bool killed = hithurts(realflags) && realdamage && ts.health <= 0;
+		if(killed || m_paint(gamemode, mutators))
 		{
-            target->state.deaths++;
-            if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
+            if(killed)
+            {
+				target->state.deaths++;
+				if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
+            }
+
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
+            if(m_paint(gamemode, mutators) && killed) fragvalue *= 2;
             actor->state.frags += fragvalue;
-            if(fragvalue > 0)
+			if(fragvalue > 0)
 			{
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
 				if(m_team(gamemode, mutators)) loopv(clients) if(clients[i]->team != actor->team) enemies++; else friends++;
 				else { friends = 1; enemies = clients.length()-1; }
-                actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
-                actor->state.spree++;
+				actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
+				actor->state.spree++;
 			}
-			dropitems(target);
-			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, gun, realflags, realdamage);
-            target->position.setsizenodelete(0);
-			if(smode) smode->died(target, actor);
-			mutate(smuts, mut->died(target, actor));
-			ts.state = CS_DEAD;
-			ts.lastdeath = gamemillis;
-			ts.gunreset(true);
-			// don't issue respawn yet until DEATHMILLIS has elapsed
+			sendf(-1, 1, "ri4", SV_FRAG, actor->clientnum, actor->state.frags, actor->state.spree);
+
+			if(killed)
+			{
+				dropitems(target);
+				sendf(-1, 1, "ri6", SV_DIED, target->clientnum, actor->clientnum, weap, realflags, realdamage);
+				target->position.setsizenodelete(0);
+				if(smode) smode->died(target, actor);
+				mutate(smuts, mut->died(target, actor));
+				ts.state = CS_DEAD;
+				ts.lastdeath = gamemillis;
+				ts.weapreset(true);
+				// don't issue respawn yet until DEATHMILLIS has elapsed
+			}
 		}
 	}
 
@@ -1613,25 +1619,26 @@ namespace server
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
 		dropitems(ci);
-		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, gs.frags, 0, -1, e.flags, ci->state.health);
+		sendf(-1, 1, "ri4", SV_FRAG, ci->clientnum, ci->state.frags, ci->state.spree);
+		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.lastdeath = gamemillis;
-		gs.gunreset(true);
+		gs.weapreset(true);
 	}
 
 	void processevent(clientinfo *ci, destroyevent &e)
 	{
 		servstate &gs = ci->state;
-		if(isgun(e.gun))
+		if(isweap(e.weap))
 		{
-			if(!gs.gunshots[e.gun].find(e.id) < 0) return;
-			else if(!guntype[e.gun].radial || !e.radial) // 0 is destroy
+			if(!gs.weapshots[e.weap].find(e.id) < 0) return;
+			else if(!weaptype[e.weap].radial || !e.radial) // 0 is destroy
 			{
-				gs.gunshots[e.gun].remove(e.id);
-				e.radial = guntype[e.gun].explode;
+				gs.weapshots[e.weap].remove(e.id);
+				e.radial = weaptype[e.weap].explode;
 			}
 			loopv(e.hits)
 			{
@@ -1640,48 +1647,48 @@ namespace server
 					dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (dist<0 || dist>size))) continue;
-				int damage = e.radial  ? int(guntype[e.gun].damage*(1.f-dist/EXPLOSIONSCALE/size)) : guntype[e.gun].damage;
-				dodamage(target, ci, damage, e.gun, h.flags, h.dir);
+				int damage = e.radial  ? int(weaptype[e.weap].damage*(1.f-dist/EXPLOSIONSCALE/size)) : weaptype[e.weap].damage;
+				dodamage(target, ci, damage, e.weap, h.flags, h.dir);
 			}
 		}
-		else if(e.gun == -1) gs.dropped.remove(e.id);
+		else if(e.weap == -1) gs.dropped.remove(e.id);
 	}
 
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canshoot(e.gun, m_spawngun(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 		{
-			if(guntype[e.gun].max && isgun(e.gun))
-				gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
+			if(weaptype[e.weap].max && isweap(e.weap))
+				gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
 			return;
 		}
-		if(guntype[e.gun].max) gs.ammo[e.gun] = max(gs.ammo[e.gun]-1, 0); // keep synched!
-		gs.setgunstate(e.gun, GNS_SHOOT, guntype[e.gun].adelay, e.millis);
+		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
+		gs.setweapstate(e.weap, WPSTATE_SHOOT, weaptype[e.weap].adelay, e.millis);
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
-			e.gun, e.power, e.from[0], e.from[1], e.from[2],
+			e.weap, e.power, e.from[0], e.from[1], e.from[2],
 					e.shots.length(), e.shots.length()*sizeof(ivec)/sizeof(int), e.shots.getbuf(),
 						ci->state.isai() ? ci->state.ownernum : ci->clientnum);
-		gs.shotdamage += guntype[e.gun].damage*e.gun*e.num;
+		gs.shotdamage += weaptype[e.weap].damage*e.weap*e.num;
 	}
 
 	void processevent(clientinfo *ci, switchevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canswitch(e.gun, m_spawngun(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 			return;
-		gs.gunswitch(e.gun, e.millis);
-		sendf(-1, 1, "ri3", SV_GUNSELECT, ci->clientnum, e.gun);
+		gs.weapswitch(e.weap, e.millis);
+		sendf(-1, 1, "ri3", SV_WEAPSELECT, ci->clientnum, e.weap);
 	}
 
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isgun(e.gun) || !gs.canreload(e.gun, m_spawngun(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 			return;
-		gs.setgunstate(e.gun, GNS_RELOAD, guntype[e.gun].rdelay, e.millis);
-		gs.ammo[e.gun] = clamp(max(gs.ammo[e.gun], 0) + guntype[e.gun].add, guntype[e.gun].add, guntype[e.gun].max);
-		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.gun, gs.ammo[e.gun]);
+		gs.setweapstate(e.weap, WPSTATE_RELOAD, weaptype[e.weap].rdelay, e.millis);
+		gs.ammo[e.weap] = clamp(max(gs.ammo[e.weap], 0) + weaptype[e.weap].add, weaptype[e.weap].add, weaptype[e.weap].max);
+		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.weap, gs.ammo[e.weap]);
 	}
 
 	void processevent(clientinfo *ci, useevent &e)
@@ -1689,10 +1696,10 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 			return;
-		int sgun = m_spawngun(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? gunattr(sents[e.ent].attr1, sgun) : sents[e.ent].attr1;
-		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sgun, e.millis))
+		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr1, sweap) : sents[e.ent].attr1;
+		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sweap, e.millis))
 			return;
-		if(!sents[e.ent].spawned && !(sents[e.ent].attr2&GNT_FORCED))
+		if(!sents[e.ent].spawned && !(sents[e.ent].attr2&WEAPFLAG_FORCED))
 		{
 			bool found = false;
 			loopv(clients)
@@ -1707,30 +1714,31 @@ namespace server
 			if(!found) return;
 		}
 
-		int gun = -1, dropped = -1;
-		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sgun) >= MAXCARRY) gun = gs.drop(attr, sgun);
-		if(isgun(gun))
+		int weap = -1, dropped = -1;
+		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= sv_maxcarry)
+			weap = gs.drop(attr, sweap);
+		if(isweap(weap))
 		{
-			dropped = gs.entid[gun];
-			gs.ammo[gun] = gs.entid[gun] = -1;
-			gs.gunselect = gun;
+			dropped = gs.entid[weap];
+			gs.ammo[weap] = gs.entid[weap] = -1;
+			gs.weapselect = weap;
 		}
-		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sgun, e.millis);
+		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sweap, e.millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);
-			if(!(sents[dropped].attr2&GNT_FORCED))
+			if(!(sents[dropped].attr2&WEAPFLAG_FORCED))
 			{
 				sents[dropped].spawned = false;
 				sents[dropped].millis = gamemillis;
 			}
 		}
-		if(!(sents[e.ent].attr2&GNT_FORCED))
+		if(!(sents[e.ent].attr2&WEAPFLAG_FORCED))
 		{
 			sents[e.ent].spawned = false;
 			sents[e.ent].millis = gamemillis;
 		}
-		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, e.ent, sents[e.ent].spawned ? 1 : 0, gun, dropped);
+		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, e.ent, sents[e.ent].spawned ? 1 : 0, weap, dropped);
 	}
 
 	void processevents()
@@ -1743,12 +1751,12 @@ namespace server
 				int lastpain = gamemillis-ci->state.lastpain,
 					lastregen = gamemillis-ci->state.lastregen;
 
-				if(m_regen(gamemode, mutators) && ci->state.health < MAXHEALTH)
+				if(m_regen(gamemode, mutators) && ci->state.health < sv_maxhealth && sv_regenhealth && sv_regendelay && sv_regentime)
 				{
-					if((!ci->state.lastregen && lastpain >= REGENWAIT) || (ci->state.lastregen && lastregen >= REGENTIME))
+					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
 					{
-						int health = ci->state.health - (ci->state.health % REGENHEAL);
-						ci->state.health = min(health + REGENHEAL, MAXHEALTH);
+						int health = ci->state.health - (ci->state.health % sv_regenhealth);
+						ci->state.health = min(health + sv_regenhealth, sv_maxhealth);
 						ci->state.lastregen = gamemillis;
 						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 					}
@@ -1766,12 +1774,12 @@ namespace server
 				}
 				switch(ev.type)
 				{
-					case GE_SHOT: { chkevent(ev.shot); break; }
-					case GE_SWITCH: { chkevent(ev.gunsel); break; }
-					case GE_RELOAD: { chkevent(ev.reload); break; }
-					case GE_DESTROY: { chkevent(ev.destroy); break; }
-					case GE_USE: { chkevent(ev.use); break; }
-					case GE_SUICIDE: { processevent(ci, ev.suicide); break; }
+					case GAMEEVENT_SHOT: { chkevent(ev.shot); break; }
+					case GAMEEVENT_SWITCH: { chkevent(ev.weapsel); break; }
+					case GAMEEVENT_RELOAD: { chkevent(ev.reload); break; }
+					case GAMEEVENT_DESTROY: { chkevent(ev.destroy); break; }
+					case GAMEEVENT_USE: { chkevent(ev.use); break; }
+					case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); break; }
 				}
 				clearevent(ci);
 			}
@@ -1835,7 +1843,7 @@ namespace server
 								{
 									clientinfo *ci = clients[k];
 									ci->state.dropped.remove(i);
-									loopj(GUN_MAX) if(ci->state.entid[j] == i)
+									loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
 										ci->state.entid[j] = -1;
 								}
 								sents[i].spawned = true;
@@ -1882,6 +1890,23 @@ namespace server
 				}
 			}
 			else ai::checkai();
+
+			if(!m_duke(gamemode, mutators))
+			{
+				loopv(clients) if(clients[i]->state.state == CS_WAITING)
+				{
+					clientinfo *cp = clients[i];
+					int nospawn = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)) ? 1 : 0;
+					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
+					if(!nospawn)
+					{
+						cp->state.state = CS_DEAD; // safety
+						cp->state.respawn(gamemillis, sv_maxhealth);
+						sendspawn(cp);
+					}
+				}
+			}
 		}
 		auth::update();
 	}
@@ -2023,7 +2048,7 @@ namespace server
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
+		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -2284,7 +2309,7 @@ namespace server
 					{
 						ci->events.setsizenodelete(0);
 						ci->state.dropped.reset();
-						loopk(GUN_MAX) ci->state.gunshots[k].reset();
+						loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
 					}
 					QUEUE_MSG;
 					break;
@@ -2295,39 +2320,47 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					int nospawn = 0;
+					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
+					int nospawn = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)) ? 1 : 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
-					if(cp->state.state!=CS_DEAD || cp->state.lastrespawn>=0 || nospawn)
-						break;
-					if(cp->state.lastdeath) cp->state.respawn(gamemillis);
-					sendspawn(cp);
+					if(nospawn)
+					{
+						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
+						cp->state.state = CS_WAITING;
+						loopk(WEAPON_MAX) cp->state.entid[k] = -1;
+					}
+					else
+					{
+						if(cp->state.lastdeath) cp->state.respawn(gamemillis, sv_maxhealth);
+						sendspawn(cp);
+					}
 					break;
 				}
 
-				case SV_GUNSELECT:
+				case SV_WEAPSELECT:
 				{
-					int lcn = getint(p), id = getint(p), gun = getint(p);
+					int lcn = getint(p), id = getint(p), weap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &ev = cp->addevent();
-					ev.type = GE_SWITCH;
-					ev.gunsel.id = id;
-					ev.gunsel.gun = gun;
-					seteventmillis(ev.gunsel);
+					ev.type = GAMEEVENT_SWITCH;
+					ev.weapsel.id = id;
+					ev.weapsel.weap = weap;
+					seteventmillis(ev.weapsel);
 					break;
 				}
 
 				case SV_SPAWN:
 				{
-					int lcn = getint(p), ls = getint(p), gunselect = getint(p);
+					int lcn = getint(p), ls = getint(p), weapselect = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastrespawn<0)
 						break;
 					cp->state.lastrespawn = -1;
 					cp->state.state = CS_ALIVE;
-					cp->state.gunselect = gunselect;
+					cp->state.weapselect = weapselect;
 					if(smode) smode->spawned(cp);
 					mutate(smuts, mut->spawned(cp););
 					QUEUE_BUF(100,
@@ -2344,7 +2377,7 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &ev = cp->addevent();
-					ev.type = GE_SUICIDE;
+					ev.type = GAMEEVENT_SUICIDE;
 					ev.suicide.flags = flags;
 					break;
 				}
@@ -2355,16 +2388,16 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
 					gameevent &ev = havecn ? cp->addevent() : dummyevent;
-					ev.type = GE_SHOT;
+					ev.type = GAMEEVENT_SHOT;
 					ev.shot.id = getint(p);
-					ev.shot.gun = getint(p);
+					ev.shot.weap = getint(p);
 					ev.shot.power = getint(p);
 					if(cp) seteventmillis(ev.shot);
 					loopk(3) ev.shot.from[k] = getint(p);
 					ev.shot.num = getint(p);
 					loopj(ev.shot.num)
 					{
-                        if(p.overread() || !isgun(ev.shot.gun) || j >= guntype[ev.shot.gun].rays) return;
+                        if(p.overread() || !isweap(ev.shot.weap) || j >= weaptype[ev.shot.weap].rays) return;
 						ivec &dest = ev.shot.shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
@@ -2373,28 +2406,28 @@ namespace server
 
 				case SV_RELOAD:
 				{
-					int lcn = getint(p), id = getint(p), gun = getint(p);
+					int lcn = getint(p), id = getint(p), weap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
 						break;
 					gameevent &ev = cp->addevent();
-					ev.type = GE_RELOAD;
+					ev.type = GAMEEVENT_RELOAD;
 					ev.reload.id = id;
-					ev.reload.gun = gun;
+					ev.reload.weap = weap;
 					seteventmillis(ev.reload);
 					break;
 				}
 
-				case SV_DESTROY: // cn millis gun id radial hits
+				case SV_DESTROY: // cn millis weap id radial hits
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
 					gameevent &ev = havecn ? cp->addevent() : dummyevent;
-					ev.type = GE_DESTROY;
+					ev.type = GAMEEVENT_DESTROY;
 					ev.destroy.id = getint(p);
 					if(cp) seteventmillis(ev.destroy); // this is the event millis
-					ev.destroy.gun = getint(p);
+					ev.destroy.weap = getint(p);
 					ev.destroy.id = getint(p); // this is the actual id
 					ev.destroy.radial = getint(p);
 					int hits = getint(p);
@@ -2416,7 +2449,7 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					gameevent &ev = cp->addevent();
-					ev.type = GE_USE;
+					ev.type = GAMEEVENT_USE;
 					ev.use.id = id;
 					ev.use.ent = ent;
 					seteventmillis(ev.use);
@@ -2561,7 +2594,7 @@ namespace server
 						{
 							clientinfo *cp = clients[k];
 							cp->state.dropped.reset();
-							cp->state.gunreset(false);
+							cp->state.weapreset(false);
 						}
 						setupspawns(true, np);
 						notgotinfo = false;
@@ -2689,9 +2722,9 @@ namespace server
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
 						spinfo->state.state = CS_DEAD;
-						spinfo->state.respawn(gamemillis);
+						spinfo->state.respawn(gamemillis, sv_maxhealth);
 						int nospawn = 0;
-						if (smode && !smode->canspawn(spinfo)) { nospawn++; }
+						if(smode && !smode->canspawn(spinfo)) { nospawn++; }
 						mutate(smuts, {
 							if (!mut->canspawn(spinfo)) { nospawn++; }
 						});
@@ -2776,7 +2809,7 @@ namespace server
 					{
 						clientinfo *cq = clients[k];
 						cq->state.dropped.remove(n);
-						loopj(GUN_MAX) if(cq->state.entid[j] == n)
+						loopj(WEAPON_MAX) if(cq->state.entid[j] == n)
 							cq->state.entid[j] = -1;
 					}
 					if(enttype[sents[n].type].usetype == EU_ITEM || sents[n].type == TRIGGER)

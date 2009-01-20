@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			144
+#define GAMEVERSION			145
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -11,8 +11,8 @@ enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
-	S_SPLAT, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE,
+	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
+	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE, S_PAINT,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -27,24 +27,24 @@ enum
 
 enum								// entity types
 {
-	NOTUSED = ET_EMPTY,				// 0  entity slot not in use in map
-	LIGHT = ET_LIGHT,				// 1  radius, intensity or red, green, blue
-	MAPMODEL = ET_MAPMODEL,			// 2  idx, yaw, pitch, roll, flags
-	PLAYERSTART = ET_PLAYERSTART,	// 3  angle, team, id
-	ENVMAP = ET_ENVMAP,				// 4  radius
-	PARTICLES = ET_PARTICLES,		// 5  type, [others]
-	MAPSOUND = ET_SOUND,			// 6  idx, maxrad, minrad, volume, flags
-	SPOTLIGHT = ET_SPOTLIGHT,		// 7  radius
-	WEAPON = ET_GAMESPECIFIC,		// 8  gun, flags
-	TELEPORT,						// 9  yaw, pitch, push, [radius] [portal]
-	ACTOR,							// 10
-	TRIGGER,						// 11 idx, type, acttype, [radius]
-	PUSHER,							// 12 zpush, ypush, xpush, [radius]
-	FLAG,							// 13 idx, team
-	CHECKPOINT,						// 14 idx
-	CAMERA,							// 15 idx mindist maxdist
-	WAYPOINT,						// 16 cmd
-	MAXENTTYPES						// 17
+	NOTUSED = ET_EMPTY,
+	LIGHT = ET_LIGHT,
+	MAPMODEL = ET_MAPMODEL,
+	PLAYERSTART = ET_PLAYERSTART,
+	ENVMAP = ET_ENVMAP,
+	PARTICLES = ET_PARTICLES,
+	MAPSOUND = ET_SOUND,
+	SPOTLIGHT = ET_SPOTLIGHT,
+	WEAPON = ET_GAMESPECIFIC,
+	TELEPORT,
+	ACTOR,
+	TRIGGER,
+	PUSHER,
+	FLAG,
+	CHECKPOINT,
+	CAMERA,
+	WAYPOINT,
+	MAXENTTYPES
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
@@ -56,7 +56,8 @@ struct enttypes
 	int	type,			links,	radius,	usetype,
 			canlink,
 			reclink;
-	bool	noisy;	const char *name;
+	bool	noisy;	const char *name,
+			*attrs[5];
 };
 #ifdef GAMESERVER
 enttypes enttype[] = {
@@ -64,103 +65,120 @@ enttypes enttype[] = {
 		NOTUSED,		0,		0,		EU_NONE,
 			0,
 			0,
-			true,				"none"
+			true,				"none",
+			{ "",		"",			"",			"",			"" }
 	},
 	{
 		LIGHT,			59,		0,		EU_NONE,
 			inttobit(SPOTLIGHT),
 			0,
-			false,				"light"
+			false,				"light",
+			{ "radius",	"red",		"green",	"blue",		"" }
 	},
 	{
 		MAPMODEL,		58,		0,		EU_NONE,
 			inttobit(TRIGGER),
 			inttobit(TRIGGER),
-			false,				"mapmodel"
+			false,				"mapmodel",
+			{ "idx",	"yaw",		"pitch",	"roll",		"flags" }
 	},
 	{
 		PLAYERSTART,	59,		0,		EU_NONE,
 			0,
 			0,
-			false,				"playerstart"
+			false,				"playerstart",
+			{ "yaw",	"team",		"id",			"",			"" }
 	},
 	{
 		ENVMAP,			0,		0,		EU_NONE,
 			0,
 			0,
-			false,				"envmap"
+			false,				"envmap",
+			{ "radius",	"",			"",			"",			"" }
 	},
 	{
 		PARTICLES,		59,		0,		EU_NONE,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"particles"
+			false,				"particles",
+			{ "type",	"a",		"b",		"c",		"d" }
 	},
 	{
 		MAPSOUND,		58,		0,		EU_NONE,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"sound"
+			false,				"sound",
+			{ "id",		"minrad",	"maxrad",	"volume",	"flags" }
 	},
 	{
 		SPOTLIGHT,		59,		0,		EU_NONE,
 			0,
 			0,
-			false,				"spotlight"
+			false,				"spotlight",
+			{ "radius",	"",			"",			"",			"" }
 	},
 	{
 		WEAPON,			59,		16,		EU_ITEM,
 			0,
 			0,
-			false,				"weapon"
+			false,				"weapon",
+			{ "id",		"flags",	"",			"",			"" }
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(TELEPORT),
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
-			false,				"teleport"
+			false,				"teleport",
+			{ "yaw",	"pitch",	"push",		"radius",	"colour" }
 	},
 	{
 		ACTOR,			59,		0,		EU_NONE,
 			0,
 			0,
-			false,				"actor"
+			false,				"actor",
+			{ "",		"",			"",			"",			"" }
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
-			false,				"trigger"
+			false,				"trigger",
+			{ "id",		"type",		"action",	"radius",	"" }
 	},
 	{
 		PUSHER,			58,		12,		EU_AUTO,
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
-			false,				"pusher"
+			false,				"pusher",
+			{ "zpush",	"ypush",	"xpush",	"radius",	"" }
 	},
 	{
 		FLAG,			48,		32,		EU_NONE,
 			inttobit(FLAG),
 			0,
-			false,				"flag"
+			false,				"flag",
+			{ "id",		"team",		"",			"",			"" }
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
 			inttobit(CHECKPOINT),
 			0,
-			false,				"checkpoint"
+			false,				"checkpoint",
+			{ "id",		"",			"",			"",			"" }
 	},
 	{
 		CAMERA,			48,		0,		EU_NONE,
 			inttobit(CAMERA),
 			0,
-			false,				"camera"
+			false,				"camera",
+			{ "id",		"mindist",	"maxdist",	"",			"" }
 	},
 	{
 		WAYPOINT,		1,		16,		EU_NONE,
 			inttobit(WAYPOINT),
 			0,
-			true,				"waypoint"
+			true,				"waypoint",
+			{ "flags",	"",			"",			"",			"" }
 	}
 };
 #else
@@ -169,7 +187,7 @@ extern enttypes enttype[];
 
 enum
 {
-	ANIM_PAIN= ANIM_GAMESPECIFIC, ANIM_JUMP, ANIM_IMPULSE, ANIM_SINK,
+	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP, ANIM_IMPULSE, ANIM_SINK,
 	ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
@@ -183,37 +201,39 @@ enum
     ANIM_MAX
 };
 
-#define GUNSWITCHDELAY	800
+#define WEAPSWITCHDELAY	800
 #define PLAYERHEIGHT	15.f
 #define EXPLOSIONSCALE	16.f
 
 enum
 {
-	GUN_PLASMA = 0,
-	GUN_SG,
-	GUN_CG,
-	GUN_FLAMER,
-	GUN_CARBINE,
-	GUN_RIFLE,
-	GUN_GL,
-	GUN_MAX
+	WEAPON_PLASMA = 0,
+	WEAPON_SG,
+	WEAPON_CG,
+	WEAPON_FLAMER,
+	WEAPON_CARBINE,
+	WEAPON_RIFLE,
+	WEAPON_GL,
+	WEAPON_TOTAL, // end of selectable weapon set
+	WEAPON_PAINT = WEAPON_TOTAL,
+	WEAPON_MAX // end of superimposed weapon set
 };
 
 enum
 {
-	GNT_NONE = 0,
-	GNT_FORCED = 1<<0, // forced spawned
+	WEAPFLAG_NONE = 0,
+	WEAPFLAG_FORCED = 1<<0, // forced spawned
 };
 
 enum
 {
-	GNS_IDLE = 0,
-	GNS_SHOOT,
-	GNS_RELOAD,
-	GNS_POWER,
-	GNS_SWITCH,
-	GNS_PICKUP,
-	GNS_MAX
+	WPSTATE_IDLE = 0,
+	WPSTATE_SHOOT,
+	WPSTATE_RELOAD,
+	WPSTATE_POWER,
+	WPSTATE_SWITCH,
+	WPSTATE_PICKUP,
+	WPSTATE_MAX
 };
 
 enum
@@ -227,9 +247,9 @@ enum
 	COLLIDE_TRACE  = 1<<4
 };
 
-struct guntypes
+struct weaptypes
 {
-	int	info, 			anim,			kick,	wobble,
+	int	info, 				anim,			kick,	wobble,
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
@@ -240,10 +260,10 @@ struct guntypes
 			*proj;
 };
 #ifdef GAMESERVER
-guntypes guntype[GUN_MAX] =
+weaptypes weaptype[WEAPON_MAX] =
 {
 	{
-		GUN_PLASMA,		ANIM_PLASMA,	-5,		5,
+		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		250,	1000,	15,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
@@ -253,7 +273,7 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_SG,			ANIM_SHOTGUN,	-30,    30,
+		WEAPON_SG,			ANIM_SHOTGUN,	-30,    30,
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -263,7 +283,7 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_CG,			ANIM_CHAINGUN,	-5,	     5,
+		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -273,17 +293,17 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_FLAMER,		ANIM_FLAMER,	-1,		 1,
+		WEAPON_FLAMER,		ANIM_FLAMER,	-1,		 1,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,		56.f,
-			"flamer",	"\fn",	"weapons/flamer/item",		"weapons/flamer/vwep",
+			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
 	{
-		GUN_CARBINE,	ANIM_CARBINE,	-15,	15,
+		WEAPON_CARBINE,		ANIM_CARBINE,	-15,	15,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		250,    1250,	34,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -293,17 +313,17 @@ guntypes guntype[GUN_MAX] =
 			""
 	},
 	{
-		GUN_RIFLE,		ANIM_RIFLE,		-20,  	20,
+		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,
 			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
 			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		0.6f,
-			"rifle",	"\fr",	"weapons/rifle/item",		"weapons/rifle/vwep",
+			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
 	{
-		GUN_GL,			ANIM_GRENADES,	-5,    5,
+		WEAPON_GL,			ANIM_GRENADES,	-5,    5,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		4,		1500,	3000,	200,	250,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
@@ -312,15 +332,25 @@ guntypes guntype[GUN_MAX] =
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
+	{
+		WEAPON_PAINT,		ANIM_RIFLE,		-20,  	20,
+			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
+			5,		5,		500,	1000,	25,		1000,	0,		10000,
+			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			false,	false,		true,		true,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		1.5f,
+			"paintgun",	"\fm",	"weapons/rifle/item",		"weapons/rifle/vwep",
+			""
+	},
 };
 #else
-extern guntypes guntype[];
+extern weaptypes weaptype[];
 #endif
 
-#define isgun(a)		(a > -1 && a < GUN_MAX)
-#define gunloads(a,b)	(a == b || guntype[a].reloads)
-#define guncarry(a,b)	(a != b && guntype[a].reloads)
-#define gunattr(a,b)	(a != b ? a : (b != GUN_GL ? GUN_GL : GUN_PLASMA))
+#define isweap(a)		(a > -1 && a < WEAPON_MAX)
+#define weaploads(a,b)	(a == b || weaptype[a].reloads)
+#define weapcarry(a,b)	(a != b && weaptype[a].reloads)
+#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GL ? WEAPON_GL : WEAPON_PLASMA))
 
 enum
 {
@@ -335,8 +365,9 @@ enum
 	HIT_LEGS	= 1<<7,
 	HIT_TORSO	= 1<<8,
 	HIT_HEAD	= 1<<9,
-	HIT_SPAWN	= 1<<10,
-	HIT_LOST	= 1<<11,
+	HIT_FULL	= 1<<10,
+	HIT_SPAWN	= 1<<11,
+	HIT_LOST	= 1<<12,
 };
 
 #define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
@@ -361,11 +392,12 @@ enum
 	G_M_INSTA	= 1<<2,
 	G_M_DUEL	= 1<<3,
 	G_M_LMS		= 1<<4,
-	G_M_DM		= G_M_INSTA,
-	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA,
-	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
+	G_M_PAINT	= 1<<5,
+	G_M_DM		= G_M_INSTA|G_M_PAINT,
+	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT,
+	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_DUEL|G_M_LMS,
 };
-#define G_M_NUM 5
+#define G_M_NUM 6
 
 struct gametypes
 {
@@ -386,6 +418,7 @@ gametypes gametype[] = {
 	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"instagib" },
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man-standing" },
+	{ G_M_PAINT,		G_M_ALL,				G_M_PAINT,				"paintball" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -410,25 +443,29 @@ extern gametypes gametype[], mutstype[];
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
+#define m_paint(a,b)		((b & G_M_PAINT) || (gametype[a].implied & G_M_PAINT))
 
-#define m_duke(a,b)			(a >= G_DEATHMATCH && (m_duel(a, b) || m_lms(a, b)))
-#define m_regen(a,b)		(a >= G_DEATHMATCH && !m_insta(a, b) && !m_duke(a, b))
+#define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
+#define m_dmrules(a,b)		(a >= G_DEATHMATCH && !m_duke(a,b))
+#define m_regen(a,b)		(m_dmrules(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
 #ifdef GAMESERVER
-#define m_spawngun(a,b)		(m_insta(a,b) ? sv_instaspawngun : sv_spawngun)
-#define m_noitems(a,b)		(sv_itemsallowed < (m_insta(a,b) ? 2 : 1))
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? sv_instaspawnweapon : sv_spawnweapon))
+#define m_spawndelay(a,b)	(m_dmrules(a,b) ? int((m_stf(a) ? sv_stfspawndelay : (m_ctf(a) ? sv_ctfspawndelay : sv_spawndelay))*(m_insta(a, b) ? sv_instaspawnscale : 1)*(m_paint(a, b) ? sv_paintspawnscale : 1)*1000)+(m_paint(a, b) ? sv_paintfreezetime*1000 : 0) : 0)
+#define m_noitems(a,b)		(m_paint(a,b) || (sv_itemsallowed < (m_insta(a,b) ? 2 : 1)))
 #else
-#define m_spawngun(a,b)		(m_insta(a,b) ? instaspawngun : spawngun)
-#define m_noitems(a,b)		(itemsallowed < (m_insta(a,b) ? 2 : 1))
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? instaspawnweapon : spawnweapon))
+#define m_spawndelay(a,b)	(m_dmrules(a,b) ? int((m_stf(a) ? stfspawndelay : (m_ctf(a) ? ctfspawndelay : spawndelay))*(m_insta(a, b) ? instaspawnscale : 1)*(m_paint(a, b) ? paintspawnscale : 1)*1000)+(m_paint(a, b) ? paintfreezetime*1000 : 0) : 0)
+#define m_noitems(a,b)		(m_paint(a,b) || (itemsallowed < (m_insta(a,b) ? 2 : 1)))
 #endif
 
 // network messages codes, c2s, c2c, s2c
 enum
 {
 	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_CDIS,
-	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_DAMAGE, SV_SHOTFX,
+	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_FRAG, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
-	SV_DROP, SV_GUNSELECT, SV_TAUNT,
+	SV_DROP, SV_WEAPSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
@@ -452,9 +489,9 @@ char msgsizelookup(int msg)
 	{
 		SV_CONNECT, 0, SV_INITS2C, 5, SV_WELCOME, 1, SV_INITC2S, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_CDIS, 2,
-		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_DAMAGE, 10, SV_SHOTFX, 9,
+		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 6, SV_FRAG, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4, SV_FORCEDEATH, 2,
-		SV_DROP, 4, SV_GUNSELECT, 0, SV_TAUNT, 2,
+		SV_DROP, 4, SV_WEAPSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
@@ -547,12 +584,6 @@ enum
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
 
 #define MAXNAMELEN		16
-#define MAXHEALTH		100
-#define MAXCARRY		2
-
-#define REGENWAIT		3000
-#define REGENTIME		1000
-#define REGENHEAL		10
 
 enum
 {
@@ -632,124 +663,124 @@ extern aitypes aitype[];
 // inherited by gameent and server clients
 struct gamestate
 {
-	int health, ammo[GUN_MAX], entid[GUN_MAX];
-	int lastgun, gunselect, gunstate[GUN_MAX], gunwait[GUN_MAX], gunlast[GUN_MAX];
+	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
+	int lastweap, weapselect, weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
 	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
 	int aitype, ownernum, skill, spree;
 
 	gamestate() : lifesequence(0), aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
-	int hasgun(int gun, int sgun, int level = 0, int exclude = -1)
+	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
 	{
-		if(isgun(gun) && gun != exclude)
+		if(isweap(weap) && weap != exclude)
 		{
-			if(ammo[gun] > 0 || (gunloads(gun, sgun) && !ammo[gun])) switch(level)
+			if(ammo[weap] > 0 || (weaploads(weap, sweap) && !ammo[weap])) switch(level)
 			{
-				case 0: default: return true; break; // has gun at all
-				case 1: if(guncarry(gun, sgun)) return true; break; // only carriable
-				case 2: if(ammo[gun] > 0) return true; break; // only with actual ammo
-				case 3: if(ammo[gun] > 0 && gunloads(gun, sgun)) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[gun] >= (gunloads(gun, sgun) ? 0 : guntype[gun].max)) return true; break; // only reloadable or those with < max
+				case 0: default: return true; break; // has weap at all
+				case 1: if(weapcarry(weap, sweap)) return true; break; // only carriable
+				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
+				case 3: if(ammo[weap] > 0 && weaploads(weap, sweap)) return true; break; // only reloadable with actual ammo
+				case 4: if(ammo[weap] >= (weaploads(weap, sweap) ? 0 : weaptype[weap].max)) return true; break; // only reloadable or those with < max
 			}
 		}
 		return false;
 	}
 
-	int bestgun(int sgun, bool force = true)
+	int bestweap(int sweap, bool force = true)
 	{
 		int best = -1;
-		loopi(GUN_MAX) if(hasgun(i, sgun, 1)) best = i;
-		if(!isgun(best) && force) loopi(GUN_MAX) if(hasgun(i, sgun, 0)) best = i;
+		loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) best = i;
+		if(!isweap(best) && force) loopi(WEAPON_MAX) if(hasweap(i, sweap, 0)) best = i;
 		return best;
 	}
 
-	int carry(int sgun)
+	int carry(int sweap)
 	{
 		int carry = 0;
-		loopi(GUN_MAX) if(hasgun(i, sgun, 1)) carry++;
+		loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) carry++;
 		return carry;
 	}
 
-	int drop(int sgun, int exclude = -1)
+	int drop(int sweap, int exclude = -1)
 	{
-		int gun = -1;
-		if(hasgun(gunselect, sgun, 1, exclude)) gun = gunselect;
+		int weap = -1;
+		if(hasweap(weapselect, sweap, 1, exclude)) weap = weapselect;
 		else
 		{
-			loopi(GUN_MAX) if(hasgun(i, sgun, 1, exclude))
+			loopi(WEAPON_MAX) if(hasweap(i, sweap, 1, exclude))
 			{
-				gun = i;
+				weap = i;
 				break;
 			}
 		}
-		return gun;
+		return weap;
 	}
 
-	void gunreset(bool full = false)
+	void weapreset(bool full = false)
 	{
-		loopi(GUN_MAX)
+		loopi(WEAPON_MAX)
 		{
 			if(full)
 			{
-				gunstate[i] = GNS_IDLE;
-				gunwait[i] = gunlast[i] = 0;
+				weapstate[i] = WPSTATE_IDLE;
+				weapwait[i] = weaplast[i] = 0;
 				ammo[i] = -1;
 			}
 			entid[i] = -1;
 		}
-		if(full) lastgun = gunselect = -1;
+		if(full) lastweap = weapselect = -1;
 	}
 
-	void setgunstate(int gun, int state, int delay, int millis)
+	void setweapstate(int weap, int state, int delay, int millis)
 	{
-		if(isgun(gun))
+		if(isweap(weap))
 		{
-			gunstate[gun] = state;
-			gunwait[gun] = delay;
-			gunlast[gun] = millis;
+			weapstate[weap] = state;
+			weapwait[weap] = delay;
+			weaplast[weap] = millis;
 		}
 	}
 
-	void gunswitch(int gun, int millis, int state = GNS_SWITCH)
+	void weapswitch(int weap, int millis, int state = WPSTATE_SWITCH)
 	{
-		lastgun = gunselect;
-		setgunstate(lastgun, GNS_SWITCH, GUNSWITCHDELAY, millis);
-		gunselect = gun;
-		setgunstate(gun, state, GUNSWITCHDELAY, millis);
+		lastweap = weapselect;
+		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
+		weapselect = weap;
+		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
 	}
 
-	bool gunwaited(int gun, int millis)
+	bool weapwaited(int weap, int millis)
 	{
-		return !isgun(gun) || millis-gunlast[gun] >= gunwait[gun];
+		return !isweap(weap) || millis-weaplast[weap] >= weapwait[weap];
 	}
 
-	bool canswitch(int gun, int sgun, int millis)
+	bool canswitch(int weap, int sweap, int millis)
 	{
-		if(gun != gunselect && gunwaited(gunselect, millis) && hasgun(gun, sgun) && gunwaited(gun, millis))
+		if(weap != weapselect && weapwaited(weapselect, millis) && hasweap(weap, sweap) && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
 
-	bool canshoot(int gun, int sgun, int millis)
+	bool canshoot(int weap, int sweap, int millis)
 	{
-		if(hasgun(gun, sgun) && ammo[gun] > 0 && gunwaited(gun, millis))
+		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
 
-	bool canreload(int gun, int sgun, int millis)
+	bool canreload(int weap, int sweap, int millis)
 	{
-		if(gunwaited(gunselect, millis) && gunloads(gun, sgun) && hasgun(gun, sgun) && ammo[gun] < guntype[gun].max && gunwaited(gun, millis))
+		if(weapwaited(weapselect, millis) && weaploads(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
 
-	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sgun, int millis)
+	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sweap, int millis)
 	{
 		if((type != TRIGGER || attr3 == TA_AUTO) && enttype[type].usetype == EU_AUTO)
 			return true;
-		if(gunwaited(gunselect, millis)) switch(type)
+		if(weapwaited(weapselect, millis)) switch(type)
 		{
 			case TRIGGER:
 			{
@@ -758,7 +789,7 @@ struct gamestate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if(isgun(attr1) && !hasgun(attr1, sgun, 4) && gunwaited(attr1, millis))
+				if(isweap(attr1) && !hasweap(attr1, sweap, 4) && weapwaited(attr1, millis))
 					return true;
 				break;
 			}
@@ -767,15 +798,15 @@ struct gamestate
 		return false;
 	}
 
-	void useitem(int id, int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sgun, int millis)
+	void useitem(int id, int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sweap, int millis)
 	{
 		switch(type)
 		{
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				gunswitch(attr1, millis, hasgun(attr1, sgun) ? (gunselect != attr1 ? GNS_SWITCH : GNS_RELOAD) : GNS_PICKUP);
-				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+guntype[attr1].add, 1, guntype[attr1].max);
+				weapswitch(attr1, millis, hasweap(attr1, sweap) ? (weapselect != attr1 ? WPSTATE_SWITCH : WPSTATE_RELOAD) : WPSTATE_PICKUP);
+				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+weaptype[attr1].add, 1, weaptype[attr1].max);
 				entid[attr1] = id;
 				break;
 			}
@@ -783,27 +814,32 @@ struct gamestate
 		}
 	}
 
-	void respawn(int millis)
+	void respawn(int millis, int heal)
 	{
-		health = MAXHEALTH;
+		health = heal;
 		lastdeath = lastpain = lastregen = spree = 0;
 		lastspawn = millis;
 		lastrespawn = -1;
-		gunreset(true);
+		weapreset(true);
 	}
 
-	void spawnstate(int sgun, bool others)
+	void spawnstate(int sweap, int heal, bool others)
 	{
-		health = MAXHEALTH;
-		lastgun = gunselect = sgun;
-		loopi(GUN_MAX)
+		health = heal;
+		lastweap = weapselect = sweap;
+		loopi(WEAPON_MAX)
 		{
-			gunstate[i] = GNS_IDLE;
-			gunwait[i] = gunlast[i] = 0;
-			ammo[i] = (i == sgun || (others && !guntype[i].reloads)) ? guntype[i].add : -1;
+			weapstate[i] = WPSTATE_IDLE;
+			weapwait[i] = weaplast[i] = 0;
+			ammo[i] = (i == sweap || (others && !weaptype[i].reloads)) ? weaptype[i].add : -1;
 			entid[i] = -1;
 		}
 	}
+
+    int respawnwait(int millis, int delay)
+    {
+        return lastdeath ? max(0, delay-(millis-lastdeath)) : 0;
+    }
 
 	// just subtract damage here, can set death, etc. later in code calling this
 	int dodamage(int damage, int millis)
@@ -812,6 +848,24 @@ struct gamestate
 		lastpain = millis;
 		health -= damage;
 		return damage;
+	}
+
+	int spawnprotect(int millis, int delay)
+	{
+		return delay ? max(0, delay-(millis-lastspawn)) : 0;
+	}
+
+	int damageprotect(int millis, int delay)
+	{
+		return delay ? max(0, delay-(millis-lastpain)) : 0;
+	}
+
+	int protect(int millis, int spawn, int damage)
+	{
+		int delay = 0;
+		if((delay = spawnprotect(millis, spawn)) > 0) return delay;
+		if((delay = damageprotect(millis, damage)) > 0) return delay;
+		return 0;
 	}
 };
 
@@ -946,7 +1000,7 @@ struct aistate
 	void reset()
 	{
 		expire = cycle = stuck = 0;
-		next = millis;
+		next = millis+rnd(3000);
 		targtype = target = -1;
 		idle = wasidle = override = false;
 		defers = true;
@@ -958,7 +1012,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, gunpref, lastnode, prevnode, timeinnode;
+	int enemy, lastseen, weappref, lastnode, prevnode, timeinnode;
 	float targyaw, targpitch;
 	bool dontmove, tryreset;
 
@@ -970,7 +1024,7 @@ struct aiinfo
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
-		while((gunpref = rnd(GUN_MAX)) == GUN_GL) if(!rnd(3)) break;
+		while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
 		spot = target = vec(0, 0, 0);
 		enemy = lastseen = lastnode = prevnode = -1;
 		timeinnode = 0;
@@ -1025,7 +1079,7 @@ struct gameent : dynent, gamestate
 		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
-		respawn(-1);
+		respawn(-1, 100);
 	}
 	~gameent()
 	{
@@ -1058,20 +1112,20 @@ struct gameent : dynent, gamestate
 		stopactions();
 	}
 
-	void respawn(int millis)
+	void respawn(int millis, int heal)
 	{
 		stopmoving();
 		dynent::reset();
-		gamestate::respawn(millis);
+		gamestate::respawn(millis, heal);
 		obliterated = false;
         lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;
 	}
 
-	void resetstate(int millis)
+	void resetstate(int millis, int heal)
 	{
-		respawn(millis);
+		respawn(millis, heal);
 		frags = deaths = totaldamage = totalshots = 0;
 		//if(state != CS_SPECTATOR) state = CS_DEAD;
 	}
@@ -1087,7 +1141,7 @@ struct projent : dynent
 	bool local, beenused, radial, extinguish;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int schan, id, gun;
+	int schan, id, weap;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
@@ -1229,10 +1283,10 @@ namespace projs
 
 	extern void reset();
 	extern void update();
-	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int gun = -1);
+	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int weap = -1);
 	extern void preload();
 	extern void remove(gameent *owner);
-	extern void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
+	extern void shootv(int weap, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
 	extern void drop(gameent *d, int g, int n, bool local = true);
 	extern void adddynlights();
 	extern void render();
@@ -1244,7 +1298,7 @@ namespace weapons
 	extern void reload(gameent *d);
 	extern void shoot(gameent *d, vec &targ, int force = 0);
 	extern bool doautoreload(gameent *d);
-	extern void preload(int gun = -1);
+	extern void preload(int weap = -1);
 }
 
 namespace ai
@@ -1261,7 +1315,7 @@ namespace ai
 	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
 	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)			(y->state == CS_ALIVE && lastmillis-y->lastspawn > REGENWAIT)
+    #define AIMAYTARG(y)			(y->state == CS_ALIVE && !y->protect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0))
 	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
 	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
@@ -1275,8 +1329,8 @@ namespace ai
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool walk = false, bool retry = false);
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float radius = AIISCLOSE, float guard = AIISNEAR, bool walk = false);
 	extern void spawned(gameent *d);
-	extern void damaged(gameent *d, gameent *e, int gun, int flags, int damage, int health, int millis, vec &dir);
-	extern void killed(gameent *d, gameent *e, int gun, int flags, int damage);
+	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
+	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);
 	extern void update();
 	extern void avoid();
 	extern void think(gameent *d, bool run);
@@ -1300,7 +1354,8 @@ namespace hud
 namespace world
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim;
+			quakewobble, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim,
+				noblood;
 	extern bool intermission, zooming;
 
 	extern gameent *player1;
@@ -1312,7 +1367,6 @@ namespace world
 	extern void clientdisconnected(int cn);
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, const char *msg, ...);
-	extern int respawnwait(gameent *d);
 	extern void respawn(gameent *d);
 	extern void respawnself(gameent *d);
 	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 15.f);
@@ -1328,8 +1382,8 @@ namespace world
 	extern int zoomtime();
 	extern bool tvmode();
 	extern void resetstates(int types);
-	extern void damaged(int gun, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
-	extern void killed(int gun, int flags, int damage, gameent *d, gameent *actor);
+	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
+	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor);
 	extern void timeupdate(int timeremain);
 }
 #endif

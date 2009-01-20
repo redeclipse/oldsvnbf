@@ -195,7 +195,9 @@ namespace hud
 
 				g.separator();
 
-				g.textf("%s: \fs\f0%d\fS frag(s), \fs\f0%d\fS death(s)", 0xFFFFFF, "player", world::player1->name, world::player1->frags, world::player1->deaths);
+				g.textf("%s: \fs\f0%d\fS %s(s), \fs\f0%d\fS %s(s)", 0xFFFFFF, "player", world::player1->name,
+					world::player1->frags, m_paint(world::gamemode, world::mutators) ? "tag" : "frag",
+					world::player1->deaths, m_paint(world::gamemode, world::mutators) ? "out" : "death");
 				g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, "info", world::player1->totaldamage, world::player1->totalshots-world::player1->totaldamage, accuracy);
 
 				if(m_mission(world::gamemode))
@@ -291,7 +293,7 @@ namespace hud
 				{
 					g.pushlist();
 					g.strut(7);
-					g.text("frags", fgcolor);
+					g.text(m_paint(world::gamemode, world::mutators) ? "tags" : "frags", fgcolor);
 					loopscoregroup(o, g.textf("%d", 0xFFFFFF, NULL, o->frags));
 					g.poplist();
 				}

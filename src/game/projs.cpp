@@ -39,7 +39,8 @@ namespace projs
 
 	void hitproj(gameent *d, projent &proj)
 	{
-		int flags = HIT_PROJ|HIT_PUSH|hitzones(proj.o, d->o, d->height, d->aboveeye);
+		int flags = HIT_PROJ|HIT_PUSH;
+		flags |= proj.weap != WEAPON_PAINT ? hitzones(proj.o, d->o, d->height, d->aboveeye) : HIT_FULL;
 		hitpush(d, proj, flags);
 	}
 
@@ -92,30 +93,33 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				proj.aboveeye = proj.height = proj.radius = guntype[proj.gun].offset;
-				proj.elasticity = guntype[proj.gun].elasticity;
-				proj.reflectivity = guntype[proj.gun].reflectivity;
-				proj.relativity = guntype[proj.gun].relativity;
-				proj.waterfric = guntype[proj.gun].waterfric;
-				proj.weight = guntype[proj.gun].weight;
-				proj.projcollide = guntype[proj.gun].collide;
-				proj.radial = guntype[proj.gun].radial;
-				proj.extinguish = guntype[proj.gun].extinguish;
-				proj.mdl = guntype[proj.gun].proj;
+				proj.aboveeye = proj.height = proj.radius = weaptype[proj.weap].offset;
+				proj.elasticity = weaptype[proj.weap].elasticity;
+				proj.reflectivity = weaptype[proj.weap].reflectivity;
+				proj.relativity = weaptype[proj.weap].relativity;
+				proj.waterfric = weaptype[proj.weap].waterfric;
+				proj.weight = weaptype[proj.weap].weight;
+				proj.projcollide = weaptype[proj.weap].collide;
+				proj.radial = weaptype[proj.weap].radial;
+				proj.extinguish = weaptype[proj.weap].extinguish;
+				proj.mdl = weaptype[proj.weap].proj;
 				break;
 			}
 			case PRJ_GIBS:
 			{
-				proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
-				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.15f;
-				proj.reflectivity = 0.f;
-				proj.relativity = 1.0f;
-				proj.waterfric = 2.0f;
-				proj.weight = 50.f;
-				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
-				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
-				break;
+				if(!kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
+				{
+					proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
+					proj.aboveeye = 1.0f;
+					proj.elasticity = 0.15f;
+					proj.reflectivity = 0.f;
+					proj.relativity = 1.0f;
+					proj.waterfric = 2.0f;
+					proj.weight = 50.f;
+					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
+					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
+					break;
+				} // otherwise fall through
 			}
 			case PRJ_DEBRIS:
 			{
@@ -181,7 +185,7 @@ namespace projs
 
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.radial) proj.height = proj.radius = guntype[proj.gun].explode*0.01f;
+			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode*0.01f;
 			if(proj.projcollide)
 			{
 				vec ray(proj.vel);
@@ -222,12 +226,12 @@ namespace projs
 					}
 				}
 			}
-			if(proj.radial) proj.height = proj.radius = guntype[proj.gun].offset;
+			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].offset;
 		}
         proj.resetinterp();
 	}
 
-	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id, int gun)
+	void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id, int weap)
 	{
 		if(!d || !speed) return;
 
@@ -244,7 +248,7 @@ namespace projs
 		proj.maxspeed = speed;
 		if(id) proj.id = id;
 		else proj.id = lastmillis;
-        proj.gun = gun;
+        proj.weap = weap;
 		proj.lastradial = lastmillis;
 		proj.movement = 0;
 		proj.owner = d;
@@ -254,93 +258,94 @@ namespace projs
 
 	void drop(gameent *d, int g, int n, bool local)
 	{
-		if(isgun(g))
+		if(isweap(g))
 		{
 			vec from(d->o), to(d->muzzle);
 			if(n >= 0)
 			{
-				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && entities::ents.inrange(n) && !(entities::ents[n]->attr2&GNT_FORCED))
+				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && entities::ents.inrange(n) && !(entities::ents[n]->attr2&WEAPFLAG_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
 			}
-			else if(g == GUN_GL) create(from, to, local, d, PRJ_SHOT, 1, guntype[g].time, 1, 1, -1, g);
+			else if(g == WEAPON_GL) create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
 			d->ammo[g] = d->entid[g] = -1;
-			d->setgunstate(g, GNS_PICKUP, GUNSWITCHDELAY, lastmillis);
+			d->setweapstate(g, WPSTATE_PICKUP, WEAPSWITCHDELAY, lastmillis);
 		}
 	}
 
-	void shootv(int gun, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
+	void shootv(int weap, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
 	{
-		int delay = guntype[gun].delay, millis = delay,
-			life = guntype[gun].time, speed = guntype[gun].speed;
+		int delay = weaptype[weap].delay, millis = delay,
+			life = weaptype[weap].time, speed = weaptype[weap].speed;
 
-		if(guntype[gun].power)
+		if(weaptype[weap].power)
 		{
-			speed = int(speed*clamp(float(clamp(power, 0, guntype[gun].power))/float(guntype[gun].power), 0.f, 1.f));
-			if(power > guntype[gun].power)
+			speed = int(speed*clamp(float(clamp(power, 0, weaptype[weap].power))/float(weaptype[weap].power), 0.f, 1.f));
+			if(power > weaptype[weap].power)
 			{
-				float skew = 1.f-clamp(float(power-guntype[gun].power)/float(guntype[gun].time), 0.f, 1.f);
+				float skew = 1.f-clamp(float(power-weaptype[weap].power)/float(weaptype[weap].time), 0.f, 1.f);
 				life = int(life*skew);
 				if(!life) speed = millis = delay = 1;
 			}
 		}
 
-		if(gun == GUN_FLAMER)
+		if(weap == WEAPON_FLAMER)
 		{
-			int ends = lastmillis+(d->gunwait[gun]*2);
+			int ends = lastmillis+(d->weapwait[weap]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-			else playsound(guntype[gun].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+			else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else if(!guntype[gun].time || life) playsound(guntype[gun].sound, d->o, d);
+		else if(!weaptype[weap].time || life) playsound(weaptype[weap].sound, d->o, d);
 
-		switch(gun)
+		switch(weap)
 		{
-			case GUN_PLASMA:
+			case WEAPON_PLASMA:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.6f);
 				part_create(PART_PLASMA_SLENS, 75, from, 0x226688, 1.2f, d);
-				adddynlight(from, 60, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
+				adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
-			case GUN_SG:
+			case WEAPON_SG:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x666666, 4.f);
 				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFAA00, 4.f, d);
-				adddynlight(from, 60, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
+				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
 
-			case GUN_CG:
+			case WEAPON_CG:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f);
 				part_create(PART_MUZZLE_FLASH_SLENS, 50, from, 0xFFAA00, 3.f, d);
-                adddynlight(from, 40, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
+                adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
 			}
-			case GUN_FLAMER:
+			case WEAPON_FLAMER:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0x444444, 2.f);
 				part_create(PART_FIREBALL_SLENS, 100, from, 0xFF2200, 2.f, d);
-				adddynlight(from, 60, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
+				adddynlight(from, 48, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
-			case GUN_CARBINE:
+			case WEAPON_CARBINE:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0xAAAAAA, 1.f);
 				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFCC22, 2.f, d);
-                adddynlight(from, 50, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
+                adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
 			}
-			case GUN_RIFLE:
+			case WEAPON_RIFLE:
 			{
 				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f);
-				part_create(PART_PLASMA_SLENS, 75, from, 0xFF2222, 1.5f, d);
-                adddynlight(from, 50, vec(0.4f, 0.1f, 0.1f), 75, 0, DL_FLASH);
+				part_create(PART_PLASMA_SLENS, 75, from, 0x6611FF, 1.5f, d);
+                adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
 				break;
 			}
+			case WEAPON_PAINT: break;
 		}
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, guntype[gun].time, millis, speed, 0, gun);
+			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, weaptype[weap].time, millis, speed, 0, weap);
 			millis += delay;
 		}
 	}
@@ -349,19 +354,19 @@ namespace projs
 	{
 		if(lastmillis-proj.lastradial > 250) // for the flamer this results in at most 20 damage per second
 		{
-			int radius = int(guntype[proj.gun].explode*max(proj.lifesize, 0.1f));
+			int radius = int(weaptype[proj.weap].explode*max(proj.lifesize, 0.1f));
 			if(radius > 0)
 			{
 				hits.setsizenodelete(0);
 				loopi(world::numdynents())
 				{
 					gameent *f = (gameent *)world::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
 					radialeffect(f, proj, false, radius);
 				}
 				if(!hits.empty())
 				{
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.gun, proj.id >= 0 ? proj.id-world::maptime : proj.id,
+					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.weap, proj.id >= 0 ? proj.id-world::maptime : proj.id,
 							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 					proj.lastradial = lastmillis;
 				}
@@ -375,11 +380,11 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.owner) proj.from = proj.owner->muzzle;
-			if(guntype[proj.gun].fsound >= 0 && !issound(proj.schan))
-				playsound(guntype[proj.gun].fsound, proj.o, &proj, 0, proj.gun == GUN_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
-			switch(proj.gun)
+			if(weaptype[proj.weap].fsound >= 0 && !issound(proj.schan))
+				playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, proj.weap == WEAPON_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
+			switch(proj.weap)
 			{
-				case GUN_PLASMA:
+				case WEAPON_PLASMA:
 				{
 					int part = PART_PLASMA;
 					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.1f, 1.f);
@@ -388,11 +393,11 @@ namespace projs
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0x226688, guntype[proj.gun].partsize*proj.lifesize);
-					part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, guntype[proj.gun].partsize*0.5f*proj.lifesize); // brighter center part
+					part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
+					part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
 					break;
 				}
-				case GUN_FLAMER:
+				case WEAPON_FLAMER:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
@@ -406,7 +411,7 @@ namespace projs
 					}
 					loopi(steps) // pull some trickery to simulate a stream
 					{
-						float res = float(steps-i)/float(steps), size = clamp(guntype[proj.gun].partsize*proj.lifesize*res, 1.5f, 30.f);
+						float res = float(steps-i)/float(steps), size = clamp(weaptype[proj.weap].partsize*proj.lifesize*res, 1.5f, 30.f);
 						int col = ((int(200*max((1.f-proj.lifespan)*res,0.3f))<<16)+1)|((int(80*max((1.f-proj.lifespan)*res,0.2f))+1)<<8);
 						part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, 1, pos, col, size);
 						if(pos.dist(proj.from) <= size) break;
@@ -415,20 +420,20 @@ namespace projs
 					}
 					break;
 				}
-				case GUN_GL:
+				case WEAPON_GL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*guntype[proj.gun].partsize*proj.lifesize);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*weaptype[proj.weap].partsize*proj.lifesize);
 					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
 					{
-						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*guntype[proj.gun].partsize*(moving ? 0.5f : 1.f));
+						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*weaptype[proj.weap].partsize*(moving ? 0.5f : 1.f));
 						proj.lasteffect = lastmillis;
 					}
 					break;
 				}
-				case GUN_SG:
+				case WEAPON_SG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
@@ -437,12 +442,12 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, weaptype[proj.weap].partsize*0.5f);
 					}
 					break;
 				}
-				case GUN_CG:
+				case WEAPON_CG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
@@ -451,12 +456,12 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, weaptype[proj.weap].partsize*0.5f);
 					}
 					break;
 				}
-				case GUN_CARBINE:
+				case WEAPON_CARBINE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
@@ -466,26 +471,38 @@ namespace projs
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
-						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, guntype[proj.gun].partsize);
-						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
+						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
+						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, weaptype[proj.weap].partsize*0.5f);
 						part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, col, 0.6f);
 					}
 					break;
 				}
-				case GUN_RIFLE:
+				case WEAPON_RIFLE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
-						float adjust = proj.radius*86.f,
+						float adjust = proj.radius*96.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(254*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(64*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, guntype[proj.gun].partsize);
-						col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(32*max(1.f-proj.lifesize,0.2f)))<<8)|(int(8*max(1.f-proj.lifesize,0.2f)));
-						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, guntype[proj.gun].partsize*0.5f);
+						int col = ((int(96*max(1.f-proj.lifesize,0.2f))<<16))|((int(16*max(1.f-proj.lifesize,0.2f)))<<8)|(int(254*max(1.f-proj.lifesize,0.2f)));
+						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, weaptype[proj.weap].partsize);
+						col = ((int(64*max(1.f-proj.lifesize,0.1f))<<16))|((int(8*max(1.f-proj.lifesize,0.1f)))<<8)|(int(196*max(1.f-proj.lifesize,0.1f)));
+						part_flare(proj.to, proj.o, 1, PART_SFLARE_LERP, col, weaptype[proj.weap].partsize*0.5f);
 					}
+					break;
+				}
+				case WEAPON_PAINT:
+				{
+					int part = PART_PLASMA;
+					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.1f, 1.f);
+					else
+					{
+						part = PART_PLASMA_SOFT;
+						proj.lifesize = 1.f;
+					}
+					part_create(part, 1, proj.o, 0xFF44FF, weaptype[proj.weap].partsize*proj.lifesize);
 					break;
 				}
 				default:
@@ -496,16 +513,16 @@ namespace projs
 				}
 			}
 		}
-		else if(proj.projtype == PRJ_GIBS)
+		else if(proj.projtype == PRJ_GIBS && !kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(lastmillis-proj.lasteffect > 500)
 			{
-				part_create(PART_BLOOD, 5000, proj.o, 0x66FFFF, 2.f);
+				if(!kidmode && !world::noblood) part_create(PART_BLOOD, 5000, proj.o, 0x66FFFF, 2.f);
 				proj.lasteffect = lastmillis;
 			}
 		}
-		else if(proj.projtype == PRJ_DEBRIS)
+		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || world::noblood || m_paint(world::gamemode, world::mutators))))
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
@@ -532,83 +549,90 @@ namespace projs
 			case PRJ_SHOT:
 			{
 				if(proj.owner) proj.from = proj.owner->muzzle;
-				if(guntype[proj.gun].esound >= 0) playsound(guntype[proj.gun].esound, proj.o);
-				switch(proj.gun)
+				if(weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o);
+				switch(proj.weap)
 				{
-					case GUN_PLASMA:
+					case WEAPON_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, guntype[proj.gun].partsize*proj.lifesize);
-						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, guntype[proj.gun].partsize*0.5f*proj.lifesize); // brighter center part
+						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
 						part_create(PART_SMOKE_RISE_SLOW, 250, proj.o, 0x88AABB, 2.4f);
-						adddynlight(proj.o, 1.15f*guntype[proj.gun].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
+						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(0.1f, 0.4f, 0.6f), 200, 10);
 						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
 						break;
 					}
-					case GUN_FLAMER:
-					case GUN_GL:
+					case WEAPON_FLAMER:
+					case WEAPON_GL:
 					{ // both basically explosions
-						part_create(proj.gun == GUN_FLAMER ? PART_FIREBALL_SOFT_SLENS : PART_PLASMA_SOFT_SLENS, proj.gun == GUN_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.15f)), 0xBB4400, guntype[proj.gun].explode*0.3f); // corona
-						int deviation = int(guntype[proj.gun].explode*0.5f);
+						part_create(proj.weap == WEAPON_FLAMER ? PART_FIREBALL_SOFT_SLENS : PART_PLASMA_SOFT_SLENS, proj.weap == WEAPON_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0xBB4400, weaptype[proj.weap].explode*0.3f); // corona
+						int deviation = int(weaptype[proj.weap].explode*0.5f);
 						loopi(rnd(3)+2)
 						{
-							vec to = vec(vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-							part_create(PART_FIREBALL_SOFT, proj.gun == GUN_FLAMER ? 500 : 1000, to, 0x992200, guntype[proj.gun].explode);
+							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
+							part_create(PART_FIREBALL_SOFT, proj.weap == WEAPON_FLAMER ? 500 : 1000, to, 0x992200, weaptype[proj.weap].explode);
 						}
-						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.gun == GUN_FLAMER ? 500 : 2000, vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.25f)), proj.gun == GUN_FLAMER ? 0x444444 : 0x222222, guntype[proj.gun].explode);
-						adddynlight(proj.o, 1.15f*guntype[proj.gun].explode, vec(1.1f, 0.22f, 0.02f), proj.gun == GUN_FLAMER ? 250 : 1500, 10);
-						if(proj.gun == GUN_GL)
+						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.weap == WEAPON_FLAMER ? 500 : 2000, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x444444 : 0x222222, weaptype[proj.weap].explode);
+						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), proj.weap == WEAPON_FLAMER ? 250 : 1500, 10);
+						if(proj.weap == WEAPON_GL)
 						{
-							world::quakewobble += max(int(guntype[proj.gun].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/guntype[proj.gun].explode)), 1);
-							part_fireball(vec(proj.o).sub(vec(0, 0, guntype[proj.gun].explode*0.25f)), float(guntype[proj.gun].explode*1.15f), PART_EXPLOSION, 500, 0xAA3300, 1.f);
+							world::quakewobble += max(int(weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)), 1);
+							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.15f), PART_EXPLOSION, 500, 0xAA3300, 1.f);
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, 0, rnd(750), rnd(60)+40);
 						}
-						adddecal(DECAL_SCORCH, proj.o, proj.norm, guntype[proj.gun].explode);
-						adddecal(DECAL_ENERGY, proj.o, proj.norm, guntype[proj.gun].explode*0.75f, bvec(196, 24, 0));
+						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
+						adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.75f, bvec(196, 24, 0));
 						break;
 					}
-					case GUN_SG: case GUN_CG:
+					case WEAPON_SG: case WEAPON_CG:
 					{
 						if(proj.lifetime)
 						{
-							part_create(PART_SPARK_SLENS, 500, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f);
-							part_splash(PART_SPARK, proj.gun == GUN_SG ? 10 : 20, 500, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f, 8);
+							part_create(PART_SPARK_SLENS, 500, proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f);
+							part_splash(PART_SPARK, proj.weap == WEAPON_SG ? 10 : 20, 500, proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f, 8);
 						}
 						break;
 					}
-					case GUN_CARBINE:
+					case WEAPON_CARBINE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, 200, proj.o, 0xAAAAAA, guntype[proj.gun].partsize);
+						part_create(PART_SMOKE_RISE_SLOW, 200, proj.o, 0xAAAAAA, weaptype[proj.weap].partsize);
 						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
 					}
-					case GUN_RIFLE:
+					case WEAPON_RIFLE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, guntype[proj.gun].partsize);
-						adddynlight(proj.o, 6.f, vec(0.9f, 0.1f, 0.1f), 200, 10);
+						part_create(PART_SMOKE_RISE_SLOW, 100, proj.o, 0x444444, weaptype[proj.weap].partsize);
+						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), 200, 10);
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, 3.f);
-                        adddecal(DECAL_ENERGY, proj.o, proj.norm, 3.f, bvec(254, 32, 32));
+                        adddecal(DECAL_ENERGY, proj.o, proj.norm, 3.f, bvec(96, 16, 254));
+						break;
+					}
+					case WEAPON_PAINT:
+					{
+						proj.from = vec(proj.o).sub(proj.vel);
+						part_splash(PART_BLOOD, 3, 3000, proj.o, 0x00FF00, 1.f);
+                        adddecal(DECAL_BLOOD, proj.o, proj.norm, 5.f, bvec(1, 254, 1));
 						break;
 					}
 				}
 				if(proj.local)
 				{
 					hits.setsizenodelete(0);
-					if(guntype[proj.gun].explode)
+					if(weaptype[proj.weap].explode)
 					{
 						loopi(world::numdynents())
 						{
 							gameent *f = (gameent *)world::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || lastmillis-f->lastspawn <= REGENWAIT) continue;
-							radialeffect(f, proj, proj.gun == GUN_GL, guntype[proj.gun].explode);
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+							radialeffect(f, proj, proj.weap == WEAPON_GL, weaptype[proj.weap].explode);
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
 						hitproj((gameent *)proj.hit, proj);
 
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.gun, proj.id >= 0 ? proj.id-world::maptime : proj.id,
+					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.weap, proj.id >= 0 ? proj.id-world::maptime : proj.id,
 							0, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 				}
 				break;
@@ -617,7 +641,7 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					if(entities::ents.inrange(proj.id)) world::spawneffect(proj.o, 0x221188, enttype[entities::ents[proj.id]->type].radius);
+					if(entities::ents.inrange(proj.id)) world::spawneffect(proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
 					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-world::maptime, -1, proj.id, 0, 0);
 				}
 				break;
@@ -666,37 +690,40 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                switch(proj.gun)
+                switch(proj.weap)
                 {
-                    case GUN_SG: case GUN_CG:
+                    case WEAPON_SG: case WEAPON_CG:
                     {
-						part_create(PART_SPARK_SLENS, 250, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f);
-                        part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, guntype[proj.gun].partsize*0.75f, 8);
+						part_create(PART_SPARK_SLENS, 250, proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f);
+                        part_splash(PART_SPARK, 5, 250, proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f, 8);
                         if(!proj.lastbounce)
-                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.gun == GUN_SG ? 3.f : 1.5f);
+                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAPON_SG ? 3.f : 1.5f);
                         break;
                     }
-                    case GUN_FLAMER:
+                    case WEAPON_FLAMER:
                     {
                         if(!proj.lastbounce)
                         {
-                            adddecal(DECAL_SCORCH, proj.o, proj.norm, guntype[proj.gun].explode*3.f*proj.lifesize);
-                            adddecal(DECAL_ENERGY, proj.o, proj.norm, guntype[proj.gun].explode*4.f*proj.lifesize, bvec(184, 88, 0));
+                            adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
+                            adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
                         }
                         break;
                     }
                     default: break;
                 }
-                if(vol && guntype[proj.gun].rsound >= 0)
-                    playsound(guntype[proj.gun].rsound, proj.o, &proj, 0, vol);
+                if(vol && weaptype[proj.weap].rsound >= 0)
+                    playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
                 break;
             }
             case PRJ_GIBS:
             {
-                if(!proj.lastbounce)
-                    adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
-                if(vol) playsound(S_SPLAT, proj.o, &proj, 0, vol);
-                break;
+            	if(!kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
+            	{
+					if(!proj.lastbounce)
+						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
+					break;
+            	} // otherwise fall through
             }
             case PRJ_DEBRIS:
             {
@@ -827,9 +854,9 @@ namespace projs
 		if(!blocked) proj.movement += dist;
 		if(proj.projtype == PRJ_SHOT)
 		{
-			switch(proj.gun)
+			switch(proj.weap)
 			{
-				case GUN_GL:
+				case WEAPON_GL:
 				{
 					adddiff(proj.yaw);
 					adddiff(proj.pitch);
@@ -914,7 +941,7 @@ namespace projs
 			if(!proj.owner || proj.state == CS_DEAD) destroy(proj);
 			else
 			{
-				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawngun changes
+				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
 					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attr1, entities::ents[proj.id]->attr2, entities::ents[proj.id]->attr3, entities::ents[proj.id]->attr4, entities::ents[proj.id]->attr5);
 
 				if(proj.waittime > 0)
@@ -967,24 +994,24 @@ namespace projs
 		loopv(projs) if(projs[i]->ready() && projs[i]->projtype == PRJ_SHOT)
 		{
 			projent &proj = *projs[i];
-			switch(proj.gun)
+			switch(proj.weap)
 			{
-				case GUN_PLASMA:
+				case WEAPON_PLASMA:
 				{
 					vec col(0.1f*max(1.f-proj.lifespan,0.1f), 0.4f*max(1.f-proj.lifespan,0.1f), 0.6f*max(1.f-proj.lifespan,0.1f));
-					adddynlight(proj.o, guntype[proj.gun].explode*1.15f*proj.lifesize, col);
+					adddynlight(proj.o, weaptype[proj.weap].explode*1.1f*proj.lifesize, col);
 					break;
 				}
-				case GUN_FLAMER:
+				case WEAPON_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.1f), 0.25f*max(1.f-proj.lifespan,0.05f), 0.00f);
-					adddynlight(proj.o, guntype[proj.gun].explode*1.15f*proj.lifespan, col);
+					adddynlight(proj.o, weaptype[proj.weap].explode*1.1f*proj.lifespan, col);
 					break;
 				}
-				case GUN_RIFLE:
+				case WEAPON_RIFLE:
 				{
-					vec col(0.9f, 0.1f, 0.1f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
-					adddynlight(proj.o, 3.f, col);
+					vec col(0.4f, 0.05f, 1.f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
+					adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, col);
 					break;
 				}
 				default:

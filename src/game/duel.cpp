@@ -21,7 +21,7 @@ struct duelservmode : servmode
 			{
 				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				ci->state.state = CS_WAITING;
-				loopk(GUN_MAX) ci->state.entid[k] = -1;
+				loopk(WEAPON_MAX) ci->state.entid[k] = -1;
 			}
 			if(msg)
 			{
@@ -38,7 +38,7 @@ struct duelservmode : servmode
 		if(n >= 0) duelqueue.remove(n);
 	}
 
-	bool damage(clientinfo *target, clientinfo *actor, int damage, int gun, int flags, const ivec &hitpush)
+	bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
 	{
 		if(dueltime) return false;
 		return true;
@@ -63,7 +63,7 @@ struct duelservmode : servmode
 				{
 					clientinfo *ci = clients[k];
 					ci->state.dropped.remove(i);
-					loopj(GUN_MAX) if(ci->state.entid[j] == i)
+					loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
 						ci->state.entid[j] = -1;
 				}
 				sents[i].millis = gamemillis; // hijack its spawn time
@@ -111,7 +111,7 @@ struct duelservmode : servmode
 					{
 						clientinfo *ci = clients[duelqueue[i]];
 						ci->state.state = CS_ALIVE;
-						ci->state.respawn(gamemillis);
+						ci->state.respawn(gamemillis, sv_maxhealth);
 						sendspawn(ci);
 						alive.add(ci);
 					}

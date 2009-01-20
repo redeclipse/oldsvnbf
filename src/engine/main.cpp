@@ -359,7 +359,7 @@ void resetgl()
     if(!reloadtexture("textures/notexture") ||
 		!reloadtexture("textures/blank") ||
 		!reloadtexture("textures/logo") ||
-		!reloadtexture(loadback))
+		!reloadtexture(kidmode ? "textures/kidback" : loadback))
 			fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;

@@ -1281,7 +1281,7 @@ void loadbackground(int w, int h)
 {
 	glColor3f(1, 1, 1);
 
-	settexture(loadback);
+	settexture(kidmode ? "textures/kidback" : loadback);
 
 	glBegin(GL_QUADS);
 
@@ -1684,7 +1684,7 @@ void drawnoview()
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);
 		UI::render();
-		hud::drawpointers(w, h);
+		hud::drawlast(w, h);
 	}
 
     glDisable(GL_TEXTURE_2D);
@@ -1859,7 +1859,7 @@ void drawview(int targtype)
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);
 		UI::render();
-		hud::drawpointers(w, h);
+		hud::drawlast(w, h);
 	}
 	glDisable(GL_TEXTURE_2D);
 

@@ -156,7 +156,6 @@ struct ctfservmode : ctfstate, servmode
 #include "game.h"
 namespace ctf
 {
-    const int RESPAWNSECS = 3;
 	ctfstate st;
 
 	void dropflags()
@@ -208,6 +207,19 @@ namespace ctf
 				"hud", fade*hud::radarnameblend, "%s%s %s", teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
 		else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
     }
+
+	void drawlast(int w, int h, int &tx, int &ty)
+	{
+		if(world::player1->state == CS_ALIVE)
+		{
+			loopv(st.flags) if(st.flags[i].owner == world::player1)
+			{
+				//ctfstate::flag &f = st.flags[i];
+				ty += draw_textx("Return the flag!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1);
+				break;
+			}
+		}
+	}
 
     void drawblips(int w, int h, int s, float blend)
     {
@@ -469,11 +481,6 @@ namespace ctf
        }
     }
 
-    int respawnwait(gameent *d)
-    {
-        return max(0, (m_insta(world::gamemode, world::mutators) ? RESPAWNSECS/2 : RESPAWNSECS)*1000-(lastmillis-d->lastpain));
-    }
-
 	bool aihomerun(gameent *d, aistate &b)
 	{
 		vec pos = world::headpos(d);
@@ -538,10 +545,10 @@ namespace ctf
 			{
 				bool guard = false;
 				if(f.owner || targets.empty()) guard = true;
-				else if(d->gunselect == d->ai->gunpref)
+				else if(d->weapselect == d->ai->weappref)
 				{ // see if we can relieve someone who only has a plasma
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && t->gunselect != t->ai->gunpref)
+					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && t->weapselect != t->ai->weappref)
 					{
 						guard = true;
 						break;
@@ -555,7 +562,7 @@ namespace ctf
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.tolerance = enttype[FLAG].radius;
-					n.score = pos.squaredist(f.pos())/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
+					n.score = pos.squaredist(f.pos())/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
 					n.defers = false;
 					n.expire = 10000;
 				}

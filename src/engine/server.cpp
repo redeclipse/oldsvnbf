@@ -6,6 +6,7 @@
 #include "engine.h"
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
+int kidmode = 0;
 
 #ifdef STANDALONE
 void console(const char *s, ...)
@@ -694,6 +695,7 @@ bool serveroption(char *opt)
 {
 	switch(opt[1])
 	{
+		case 'k': kidmode = atoi(opt+2); return true;
 		case 'g': setsvar("game", opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;

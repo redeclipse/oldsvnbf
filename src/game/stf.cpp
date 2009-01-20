@@ -293,10 +293,17 @@ namespace stf
 		}
 	}
 
-    int respawnwait(gameent *d)
-    {
-        return max(0, (m_insta(world::gamemode, world::mutators) ? st.RESPAWNSECS/2 : st.RESPAWNSECS)*1000-(lastmillis-d->lastpain));
-    }
+	void drawlast(int w, int h, int &tx, int &ty)
+	{
+		if(world::player1->state == CS_ALIVE)
+		{
+			loopv(st.flags) if(insideflag(st.flags[i], world::player1) && (st.flags[i].owner == world::player1->team || st.flags[i].enemy == world::player1->team))
+			{
+				ty += draw_textx("Securing..", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1);
+				break;
+			}
+		}
+	}
 
 	void drawblips(int w, int h, int s, float blend)
 	{
@@ -420,7 +427,7 @@ namespace stf
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
 				n.tolerance = enttype[FLAG].radius*2.f;
-				n.score = pos.squaredist(f.pos)/(d->gunselect != d->ai->gunpref ? 10.f : 100.f);
+				n.score = pos.squaredist(f.pos)/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
 				n.defers = false;
 				n.expire = 10000;
 			}
