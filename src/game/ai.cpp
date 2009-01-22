@@ -560,7 +560,7 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr1, sweap);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr[0], sweap);
 			switch(e.type)
 			{
 				case WEAPON:
@@ -587,7 +587,7 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(entities::ents[proj.id]->attr1, sweap);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
 			switch(entities::ents[proj.id]->type)
 			{
 				case WEAPON:
@@ -848,7 +848,7 @@ namespace ai
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return false;
-						int attr = weapattr(e.attr1, sweap);
+						int attr = weapattr(e.attr[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -869,7 +869,7 @@ namespace ai
 					{
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return false;
-						int attr = weapattr(entities::ents[proj.id]->attr1, sweap);
+						int attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
 						switch(entities::ents[proj.id]->type)
 						{
 							case WEAPON:
@@ -947,7 +947,7 @@ namespace ai
 				vec dir(off.x, off.y, 0);
 				if(dir.magnitude() <= AIJUMPHEIGHT) d->ai->dontmove = true; // going up
 			}
-			if(((e.attr1 & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+			if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
 			{
 				d->crouching = !d->crouching;
 				d->crouchtime = lastmillis;
@@ -1049,7 +1049,7 @@ namespace ai
 		int weappref = d->ai->weappref;
 		if(b.type == AI_S_INTEREST && b.targtype == AI_T_ENTITY &&
 			entities::ents.inrange(b.target) && entities::ents[b.target]->type == WEAPON)
-				weappref = entities::ents[b.target]->attr1;
+				weappref = entities::ents[b.target]->attr[0];
 
 		if(busy <= 1 && !d->hasweap(weappref, sweap) && !d->useaction && d->requse < 0)
 		{
@@ -1084,11 +1084,11 @@ namespace ai
 				if(entities::ents.inrange(ent))
 				{
 					extentity &e = *entities::ents[ent];
-					if(d->canuse(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, sweap, lastmillis)) switch(e.type)
+					if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis)) switch(e.type)
 					{
 						case WEAPON:
 						{
-							int attr = weapattr(e.attr1, sweap);
+							int attr = weapattr(e.attr[0], sweap);
 							if(d->hasweap(attr, sweap) || attr != weappref) break;
 							d->useaction = true;
 							d->usetime = lastmillis;

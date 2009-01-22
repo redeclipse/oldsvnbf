@@ -1217,7 +1217,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
 
 void makeparticles(entity &e)
 {
-	makeparticle(e.o, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+	makeparticle(e.o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 }
 
 void updateparticles()

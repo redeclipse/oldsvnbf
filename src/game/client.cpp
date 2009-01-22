@@ -1274,7 +1274,7 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, true);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attr1, entities::ents[ent]->attr2, entities::ents[ent]->attr4, entities::ents[ent]->attr4, entities::ents[ent]->attr5, false);
+					const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attr[0], entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
 					if(item)
 					{
 						s_sprintfd(ds)("@%s", item);

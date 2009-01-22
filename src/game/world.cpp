@@ -1099,10 +1099,10 @@ namespace world
 						vec pos(e.o);
 						if(e.type == MAPMODEL)
 						{
-							mapmodelinfo &mmi = getmminfo(e.attr1);
+							mapmodelinfo &mmi = getmminfo(e.attr[0]);
 							vec center, radius;
 							mmi.m->collisionbox(0, center, radius);
-							if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attr2));
+							if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attr[1]));
 							pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*2.f;
 						}
 						if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
@@ -1114,9 +1114,9 @@ namespace world
 							c.ent = i;
 							if(!k)
 							{
-								c.idx = e.attr1;
-								if(e.attr2) c.mindist = e.attr2;
-								if(e.attr3) c.maxdist = e.attr3;
+								c.idx = e.attr[0];
+								if(e.attr[1]) c.mindist = e.attr[1];
+								if(e.attr[2]) c.maxdist = e.attr[2];
 							}
 						}
 					}

@@ -107,8 +107,8 @@ struct flarerenderer : partrenderer
 			{
 				entity &e = *ents[lights[i]];
 				if(e.type != ET_LIGHT) continue;
-				bool sun = (e.attr1==0);
-				float radius = e.attr1*(flaresize/100.f);
+				bool sun = (e.attr[0]==0);
+				float radius = e.attr[0]*(flaresize/100.f);
 				vec flaredir = vec(e.o).sub(camera1->o);
 				float len = flaredir.magnitude();
 				if(!sun && (len > radius)) continue;
@@ -125,7 +125,7 @@ struct flarerenderer : partrenderer
 					mod = (radius-len)/radius;
 					size = flaresize / 10.0f;
 				}
-				newflare(e.o, center, e.attr2, e.attr3, e.attr4, mod, size, sun, sun);
+				newflare(e.o, center, e.attr[1], e.attr[2], e.attr[3], mod, size, sun, sun);
 			}
     	}
     }

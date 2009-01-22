@@ -358,7 +358,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-					if(e.lastemit && e.spawned && e.attr5&MMT_HIDE) continue;
+					if(e.lastemit && e.spawned && e.attr[4]&MMT_HIDE) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -390,15 +390,15 @@ void rendermapmodel(extentity &e)
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0, flags = MDL_CULL_VFC|MDL_CULL_DIST|MDL_DYNLIGHT;
     if(e.lastemit)
     {
-    	if(e.attr5&MMT_HIDE && e.spawned) return;
+    	if(e.attr[4]&MMT_HIDE && e.spawned) return;
 		anim = e.spawned ? ANIM_TRIGGER_ON : ANIM_TRIGGER_OFF;
 		if(lastmillis-e.lastemit < TRIGGERTIME) basetime = e.lastemit;
 		else anim |= ANIM_END;
     }
-	if((e.lastemit || e.attr5&MMT_NOSHADOW) && !(e.attr5&MMT_NODYNSHADOW))
+	if((e.lastemit || e.attr[4]&MMT_NOSHADOW) && !(e.attr[4]&MMT_NODYNSHADOW))
 		flags |= MDL_DYNSHADOW;
-	mapmodelinfo &mmi = getmminfo(e.attr1);
-	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr2%360), (float)(e.attr3%360), (float)(e.attr4%360), flags, NULL, NULL, basetime);
+	mapmodelinfo &mmi = getmminfo(e.attr[0]);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr[1]%360), (float)(e.attr[2]%360), (float)(e.attr[3]%360), flags, NULL, NULL, basetime);
 }
 
 extern int reflectdist;
@@ -432,7 +432,7 @@ void renderreflectedmapmodels()
         loopv(oe->mapmodels)
         {
            extentity &e = *ents[oe->mapmodels[i]];
-           if(e.visible || (e.lastemit && e.spawned && e.attr5&MMT_HIDE)) continue;
+           if(e.visible || (e.lastemit && e.spawned && e.attr[4]&MMT_HIDE)) continue;
            e.visible = true;
         }
     }
@@ -1624,7 +1624,7 @@ void renderfoggedvas(renderstate &cur, bool doquery = false)
 
 void rendershadowmappass(renderstate &cur, vtxarray *va)
 {
-    if(cur.vbuf!=va->vbuf) 
+    if(cur.vbuf!=va->vbuf)
     {
         changevbuf(cur, RENDERPASS_SHADOWMAP, va);
         changefogplane(cur, RENDERPASS_SHADOWMAP, va);

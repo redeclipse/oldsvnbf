@@ -263,7 +263,7 @@ namespace projs
 			vec from(d->o), to(d->muzzle);
 			if(n >= 0)
 			{
-				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && entities::ents.inrange(n) && !(entities::ents[n]->attr2&WEAPFLAG_FORCED))
+				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && entities::ents.inrange(n) && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
 			}
 			else if(g == WEAPON_GL) create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
@@ -942,7 +942,7 @@ namespace projs
 			else
 			{
 				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
-					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attr1, entities::ents[proj.id]->attr2, entities::ents[proj.id]->attr3, entities::ents[proj.id]->attr4, entities::ents[proj.id]->attr5);
+					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4]);
 
 				if(proj.waittime > 0)
 				{

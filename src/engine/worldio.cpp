@@ -493,7 +493,7 @@ void save_world(const char *mname, bool nolms)
 		{
 			entity tmp = *ents[i];
 			endianswap(&tmp.o, sizeof(int), 3);
-			endianswap(&tmp.attr1, sizeof(short), 5);
+			endianswap(&tmp.attr, sizeof(short), ENTATTRS);
 			gzwrite(f, &tmp, sizeof(entity));
 			entities::writeent(f, i, *ents[i]);
 			extentity &e = (extentity &)*ents[i];
@@ -911,13 +911,13 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				ents.add(&e);
 				gzread(f, &e, sizeof(entity));
 				endianswap(&e.o, sizeof(int), 3);
-				endianswap(&e.attr1, sizeof(short), 5);
+				endianswap(&e.attr, sizeof(short), ENTATTRS);
 				e.links.setsize(0);
 				e.spawned = false;
 				e.lastemit = 0;
 				e.inoctanode = false;
 				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
-					e.attr5 = 0; // init ever-present attr5
+					e.attr[4] = 0; // init ever-present attr5
 				if(maptype == MAP_OCTA)
 				{
 					loopj(eif) gzgetc(f);
@@ -959,16 +959,16 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				}
 				if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 				{
-					e.o.z += e.attr3;
-					if(e.attr4) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
-					e.attr3 = e.attr4 = 0;
+					e.o.z += e.attr[2];
+					if(e.attr[3]) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr[3]);
+					e.attr[2] = e.attr[3] = 0;
 				}
 				if(hdr.version <= 31 && e.type == ET_MAPMODEL)
 				{
-					int angle = e.attr1;
-					e.attr1 = e.attr2;
-					e.attr2 = angle;
-					e.attr3 = e.attr4 = e.attr5 = 0;
+					int angle = e.attr[0];
+					e.attr[0] = e.attr[1];
+					e.attr[1] = angle;
+					e.attr[2] = e.attr[3] = e.attr[4] = 0;
 				}
 			}
 			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
@@ -1058,9 +1058,9 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						conoutf("\frWARNING: auto import linked spotlight %d to light %d", i, closest);
 					}
 				}
-				if(e.type == ET_MAPMODEL && e.attr1 >= 0)
+				if(e.type == ET_MAPMODEL && e.attr[0] >= 0)
 				{
-					if(mapmodels.find(e.attr1) < 0) mapmodels.add(e.attr1);
+					if(mapmodels.find(e.attr[0]) < 0) mapmodels.add(e.attr[0]);
 				}
 			}
 
