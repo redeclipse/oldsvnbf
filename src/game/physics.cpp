@@ -804,15 +804,11 @@ namespace physics
 				} \
 			}
 
-		inmapchk(10, { d->o.add(vec(d->vel).mul((rnd(21)-10)*i/5)); });
-		inmapchk(10, {
-				d->o.add(vec(d->vel).mul((rnd(21)-10)*i/5));
-				d->o.z += fabs(d->vel.z)*((rnd(21)-10)*i/5)*2;
-			});
+		inmapchk(10, { d->o.add(vec(d->vel).mul(i)); });
 		inmapchk(100, {
-				d->o.x += (rnd(21)-10)*i/5;  // increasing distance
-				d->o.y += (rnd(21)-10)*i/5;
-				d->o.z += (rnd(21)-10)*i/5;
+				d->o.x += (rnd(21)-10)*i/10.f;  // increasing distance
+				d->o.y += (rnd(21)-10)*i/10.f;
+				d->o.z += (rnd(21)-10)*i/10.f;
 			});
 
 		d->o = orig;
