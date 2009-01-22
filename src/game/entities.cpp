@@ -475,32 +475,35 @@ namespace entities
 								loopv(e.links)
 									if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
 										teleports.add(e.links[i]);
-								bool teleported = false;
-								while(!teleports.empty())
+								if(!teleports.empty())
 								{
-									int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
-									gameentity &f = *(gameentity *)ents[t];
-									d->timeinair = 0;
-									d->falling = vec(0, 0, 0);
-									d->o = vec(f.o).sub(vec(0, 0, d->height/2));
-									if(physics::entinmap(d, false))
+									bool teleported = false;
+									while(!teleports.empty())
 									{
-										d->yaw = f.attr1;
-										d->pitch = f.attr2;
-										float mag = max(d->vel.magnitude(), f.attr3 ? float(f.attr3) : 100.f);
-										vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-										d->vel.mul(mag);
-										world::fixfullrange(d->yaw, d->pitch, d->roll, true);
-										f.lastuse = f.lastemit = e.lastemit;
-										execlink(d, n, true);
-										execlink(d, t, true);
-										if(d == world::player1) world::resetstates(ST_VIEW);
-										teleported = true;
-										break;
+										int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
+										gameentity &f = *(gameentity *)ents[t];
+										d->timeinair = 0;
+										d->falling = vec(0, 0, 0);
+										d->o = vec(f.o).add(vec(0, 0, d->height/2));
+										if(physics::entinmap(d, false))
+										{
+											d->yaw = f.attr1;
+											d->pitch = f.attr2;
+											float mag = max(d->vel.magnitude(), f.attr3 ? float(f.attr3) : 100.f);
+											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
+											d->vel.mul(mag);
+											world::fixfullrange(d->yaw, d->pitch, d->roll, true);
+											f.lastuse = f.lastemit = e.lastemit;
+											execlink(d, n, true);
+											execlink(d, t, true);
+											if(d == world::player1) world::resetstates(ST_VIEW);
+											teleported = true;
+											break;
+										}
+										teleports.remove(r); // must've really sucked, try another one
 									}
-									teleports.remove(r); // must've really sucked, try another one
+									if(!teleported) world::suicide(d, HIT_SPAWN);
 								}
-								if(!teleported) world::suicide(d, HIT_SPAWN);
 							}
 							break;
 						}
