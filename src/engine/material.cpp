@@ -407,7 +407,7 @@ void setupmaterials(int start, int len)
 		int root = uf.find(i);
 		if(i==root) continue;
 		materialsurface &m = *water[i].m, &n = *water[root].m;
-		if(m.light && (!m.light->attr1 || !n.light || (n.light->attr1 && m.light->attr1 > n.light->attr1))) n.light = m.light;
+		if(m.light && (!m.light->attr[0] || !n.light || (n.light->attr[0] && m.light->attr[0] > n.light->attr[0]))) n.light = m.light;
 		water[root].depth += water[i].depth;
 		water[root].area += water[i].area;
 	}

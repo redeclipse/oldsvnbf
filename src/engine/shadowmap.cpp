@@ -44,7 +44,7 @@ void guessshadowdir()
         switch(e.type)
         {
             case ET_LIGHT:
-                if(!e.attr1) { lightpos.add(e.o); numlights++; }
+                if(!e.attr[0]) { lightpos.add(e.o); numlights++; }
                 break;
 
              case ET_MAPMODEL:

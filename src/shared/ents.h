@@ -5,10 +5,11 @@
 
 enum { ET_EMPTY=0, ET_LIGHT, ET_MAPMODEL, ET_PLAYERSTART, ET_ENVMAP, ET_PARTICLES, ET_SOUND, ET_SPOTLIGHT, ET_GAMESPECIFIC };
 
+#define ENTATTRS 5
 struct entity                                   // persistent map entity
 {
     vec o;                                      // position
-    short attr1, attr2, attr3, attr4, attr5;
+    short attr[ENTATTRS];						// attributes
     uchar type;                                 // type is one of the above
     uchar reserved;
 };

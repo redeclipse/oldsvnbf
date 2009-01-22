@@ -8,12 +8,12 @@ namespace server
 {
 	struct srventity
 	{
-		int type, attr1, attr2, attr3, attr4, attr5;
+		int type;
+		short attr[ENTATTRS];
 		bool spawned;
 		int millis;
 
-		srventity() : type(NOTUSED),
-			attr1(0), attr2(0), attr3(0), attr4(0), attr5(0), spawned(false), millis(0) {}
+		srventity() : type(NOTUSED), spawned(false), millis(0) { loopi(ENTATTRS) attr[i] = 0; }
 		~srventity() {}
 	};
 
@@ -626,9 +626,9 @@ namespace server
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
-			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr2, TEAM_FIRST))
+			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST))
 			{
-				spawns[sents[i].attr2].add(i);
+				spawns[sents[i].attr[1]].add(i);
 				totalspawns++;
 			}
 			if(totalspawns && m_team(gamemode, mutators))
@@ -1170,7 +1170,7 @@ namespace server
 		{
 			loopi(WEAPON_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 			{
-				if(!(sents[ts.entid[i]].attr2&WEAPFLAG_FORCED))
+				if(!(sents[ts.entid[i]].attr[1]&WEAPFLAG_FORCED))
 				{
 					if(!discon)
 					{
@@ -1696,10 +1696,10 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 			return;
-		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr1, sweap) : sents[e.ent].attr1;
-		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sweap, e.millis))
+		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
+		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr[1], sents[e.ent].attr[2], sents[e.ent].attr[3], sents[e.ent].attr[4], sweap, e.millis))
 			return;
-		if(!sents[e.ent].spawned && !(sents[e.ent].attr2&WEAPFLAG_FORCED))
+		if(!sents[e.ent].spawned && !(sents[e.ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			bool found = false;
 			loopv(clients)
@@ -1723,17 +1723,17 @@ namespace server
 			gs.ammo[weap] = gs.entid[weap] = -1;
 			gs.weapselect = weap;
 		}
-		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr2, sents[e.ent].attr3, sents[e.ent].attr4, sents[e.ent].attr5, sweap, e.millis);
+		gs.useitem(e.ent, sents[e.ent].type, attr, sents[e.ent].attr[1], sents[e.ent].attr[2], sents[e.ent].attr[3], sents[e.ent].attr[4], sweap, e.millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);
-			if(!(sents[dropped].attr2&WEAPFLAG_FORCED))
+			if(!(sents[dropped].attr[1]&WEAPFLAG_FORCED))
 			{
 				sents[dropped].spawned = false;
 				sents[dropped].millis = gamemillis;
 			}
 		}
-		if(!(sents[e.ent].attr2&WEAPFLAG_FORCED))
+		if(!(sents[e.ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			sents[e.ent].spawned = false;
 			sents[e.ent].millis = gamemillis;
@@ -1825,7 +1825,7 @@ namespace server
 				{
 					case TRIGGER:
 					{
-						if(sents[i].attr2 == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
+						if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
 						{
 							sents[i].spawned = false;
 							sents[i].millis = gamemillis;
@@ -2464,11 +2464,11 @@ namespace server
 					if(sents.inrange(ent) && sents[ent].type == TRIGGER)
 					{
 						bool commit = false;
-						switch(sents[ent].attr2)
+						switch(sents[ent].attr[1])
 						{
 							case TR_NONE:
 							{
-								if(!sents[ent].spawned || sents[ent].attr3 != TA_AUTO)
+								if(!sents[ent].spawned || sents[ent].attr[2] != TA_AUTO)
 								{
 									sents[ent].millis = gamemillis;
 									sents[ent].spawned = !sents[ent].spawned;
@@ -2577,11 +2577,11 @@ namespace server
 						{
 							while(sents.length() <= n) sents.add();
 							sents[n].type = type;
-							sents[n].attr1 = attr1;
-							sents[n].attr2 = attr2;
-							sents[n].attr3 = attr3;
-							sents[n].attr4 = attr4;
-							sents[n].attr5 = attr5;
+							sents[n].attr[0] = attr1;
+							sents[n].attr[1] = attr2;
+							sents[n].attr[2] = attr3;
+							sents[n].attr[3] = attr4;
+							sents[n].attr[4] = attr5;
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
@@ -2799,11 +2799,11 @@ namespace server
 					loopk(3) getint(p);
 					while(sents.length() <= n) sents.add();
 					sents[n].type = getint(p);
-					sents[n].attr1 = getint(p);
-					sents[n].attr2 = getint(p);
-					sents[n].attr3 = getint(p);
-					sents[n].attr4 = getint(p);
-					sents[n].attr5 = getint(p);
+					sents[n].attr[0] = getint(p);
+					sents[n].attr[1] = getint(p);
+					sents[n].attr[2] = getint(p);
+					sents[n].attr[3] = getint(p);
+					sents[n].attr[4] = getint(p);
 					QUEUE_MSG;
 					loopvk(clients)
 					{

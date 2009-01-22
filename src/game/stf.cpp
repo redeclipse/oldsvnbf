@@ -348,7 +348,7 @@ namespace stf
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
             b.pos = b.o;
-			s_sprintfd(alias)("flag_%d", e->attr1);
+			s_sprintfd(alias)("flag_%d", e->attr[0]);
 			const char *name = getalias(alias);
 			if(name[0]) s_strcpy(b.name, name);
 			else s_sprintf(b.name)("flag %d", st.flags.length());

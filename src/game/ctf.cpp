@@ -302,13 +302,13 @@ namespace ctf
         st.reset();
         #define setupaddflag(a,b) \
         { \
-            index = st.addflag(a->o, a->attr2, b); \
+            index = st.addflag(a->o, a->attr[1], b); \
 			if(st.flags.inrange(index)) st.flags[index].ent = a; \
 			else continue; \
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !isteam(world::gamemode, world::mutators, a->attr2, TEAM_NEUTRAL)) continue; \
+			if(a->type != FLAG || !isteam(world::gamemode, world::mutators, a->attr[1], TEAM_NEUTRAL)) continue; \
 			else \
 			{ \
 				int already = -1; \
@@ -341,7 +341,7 @@ namespace ctf
 				setupaddflag(g, BASE_FLAG); // add link as flag
 				setuphomeflag;
 			}
-            if(!added && isteam(world::gamemode, world::mutators, e->attr2, TEAM_FIRST)) // not linked and is a team flag
+            if(!added && isteam(world::gamemode, world::mutators, e->attr[1], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
         }
         vec center(0, 0, 0);

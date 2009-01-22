@@ -1405,8 +1405,8 @@ void initenvmaps()
 		const extentity &ent = *ents[i];
 		if(ent.type != ET_ENVMAP) continue;
 		envmap &em = envmaps.add();
-        em.radius = ent.attr1 ? max(0, min(10000, int(ent.attr1))) : envmapradius;
-        em.size = ent.attr2 ? max(4, min(9, int(ent.attr2))) : 0;
+        em.radius = ent.attr[0] ? max(0, min(10000, int(ent.attr[0]))) : envmapradius;
+        em.size = ent.attr[1] ? max(4, min(9, int(ent.attr[1]))) : 0;
 		em.o = ent.o;
 		em.tex = 0;
 	}

@@ -373,16 +373,12 @@ namespace hud
 				{
 					ty += draw_textx("%s (%d)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].name, i);
 					pushfont("hud");
-					const char *info = entities::entinfo(e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, true);
+					const char *info = entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true);
 					if(info && *info) ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, info);
-					short *attr = &e.attr1;
 					loopk(5)
 					{
 						if(*enttype[e.type].attrs[k])
-						{
-							ty += draw_textx("%s:%d", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].attrs[k], *attr);
-							attr += sizeof(short);
-						}
+							ty += draw_textx("%s:%d", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].attrs[k], e.attr[k]);
 						else break;
 					}
 					gotit[e.type]++;
@@ -550,12 +546,12 @@ namespace hud
 			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != enthover)
 			{
 				gameentity &e = *(gameentity *)entities::ents[entgroup[i]];
-				drawentblip(w, h, s, blend, entgroup[i], e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, true);
+				drawentblip(w, h, s, blend, entgroup[i], e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
 			if(entities::ents.inrange(enthover))
 			{
 				gameentity &e = *(gameentity *)entities::ents[enthover];
-				drawentblip(w, h, s, blend, enthover, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, true);
+				drawentblip(w, h, s, blend, enthover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
 		}
 		else
@@ -563,13 +559,13 @@ namespace hud
 			loopv(entities::ents)
 			{
 				gameentity &e = *(gameentity *)entities::ents[i];
-				drawentblip(w, h, s, blend, i, e.o, e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5, e.spawned, e.lastspawn, false);
+				drawentblip(w, h, s, blend, i, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, false);
 			}
 			loopv(projs::projs) if(projs::projs[i]->projtype == PRJ_ENT && projs::projs[i]->ready())
 			{
 				projent &proj = *projs::projs[i];
 				if(entities::ents.inrange(proj.id))
-					drawentblip(w, h, s, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr1, entities::ents[proj.id]->attr2, entities::ents[proj.id]->attr3, entities::ents[proj.id]->attr4, entities::ents[proj.id]->attr5, true, proj.spawntime, false);
+					drawentblip(w, h, s, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4], true, proj.spawntime, false);
 			}
 		}
 	}

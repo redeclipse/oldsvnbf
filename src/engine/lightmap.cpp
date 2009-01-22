@@ -332,9 +332,9 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
         float mag = ray.magnitude();
         if(!mag) continue;
         float attenuation = 1;
-        if(light.attr1)
+        if(light.attr[0])
         {
-            attenuation -= mag / float(light.attr1);
+            attenuation -= mag / float(light.attr[0]);
             if(attenuation <= 0) continue;
         }
         ray.mul(1.0f / mag);
@@ -356,7 +356,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(light.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				attenuation *= spotatten;
@@ -378,9 +378,9 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
                 intensity = angle * attenuation;
 				break;
 		}
-		r += intensity * float(light.attr2);
-		g += intensity * float(light.attr3);
-		b += intensity * float(light.attr4);
+		r += intensity * float(light.attr[1]);
+		g += intensity * float(light.attr[2]);
+		b += intensity * float(light.attr[3]);
 	}
     switch(lmtype&LM_TYPE)
 	{
@@ -806,7 +806,7 @@ VARF(lightcachesize, 4, 6, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
-	if(e < 0 || !entities::getents()[e]->attr1)
+	if(e < 0 || !entities::getents()[e]->attr[0])
 	{
 		for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
 		{
@@ -817,7 +817,7 @@ void clearlightcache(int e)
 	else
 	{
 		const extentity &light = *entities::getents()[e];
-		int radius = light.attr1;
+		int radius = light.attr[0];
         for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
         for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
 		{
@@ -846,7 +846,7 @@ const vector<int> &checklightcache(int x, int y)
         {
             case ET_LIGHT:
             {
-                int radius = light.attr1;
+                int radius = light.attr[0];
                 if(radius > 0)
                 {
                     if(light.o.x + radius < cx || light.o.x - radius > cx + csize ||
@@ -867,7 +867,7 @@ const vector<int> &checklightcache(int x, int y)
 
 static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
-    int radius = light.attr1;
+    int radius = light.attr[0];
     if(radius > 0)
     {
         if(light.o.x + radius < cx || light.o.x - radius > cx + size ||
@@ -1912,7 +1912,7 @@ void lightent(extentity &e, float height)
 	float amb = ambient/255.0f;
 	if(e.type==ET_MAPMODEL)
 	{
-		model *m = loadmodel(NULL, e.attr1);
+		model *m = loadmodel(NULL, e.attr[0]);
 		if(m) height = m->above()*0.75f;
 	}
 	else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
@@ -1962,15 +1962,15 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		vec ray(target);
 		ray.sub(e.o);
 		float mag = ray.magnitude();
-		if(e.attr1 && mag >= float(e.attr1))
+		if(e.attr[0] && mag >= float(e.attr[0]))
 			continue;
 
 		ray.div(mag);
 		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
 			continue;
 		float intensity = 1;
-		if(e.attr1)
-			intensity -= mag / float(e.attr1);
+		if(e.attr[0])
+			intensity -= mag / float(e.attr[0]);
 
 		if(e.links.length())
 		{
@@ -1988,16 +1988,16 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;
 			}
 		}
 
-		color.add(vec(e.attr2, e.attr3, e.attr4).div(255).mul(intensity));
+		color.add(vec(e.attr[1], e.attr[2], e.attr[3]).div(255).mul(intensity));
 
-		intensity *= e.attr2*e.attr3*e.attr4;
+		intensity *= e.attr[1]*e.attr[2]*e.attr[3];
 
 		if(fabs(mag)<1e-3) dir.add(vec(0, 0, 1));
 		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
@@ -2034,15 +2034,15 @@ entity *brightestlight(const vec &target, const vec &dir)
 		vec ray(target);
 		ray.sub(e.o);
 		float mag = ray.magnitude();
-		if(e.attr1 && mag >= float(e.attr1))
+		if(e.attr[0] && mag >= float(e.attr[0]))
 			 continue;
 
 		ray.div(mag);
 		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
 			continue;
 		float intensity = 1;
-		if(e.attr1)
-			intensity -= mag / float(e.attr1);
+		if(e.attr[0])
+			intensity -= mag / float(e.attr[0]);
 
 		if(e.links.length())
 		{
@@ -2060,7 +2060,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr1)))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;
