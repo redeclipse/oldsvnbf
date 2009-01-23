@@ -652,6 +652,11 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
+		<Unit filename="engine\ragdoll.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="profile" />
+		</Unit>
 		<Unit filename="engine\rendergl.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />

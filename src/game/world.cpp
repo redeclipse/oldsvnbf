@@ -248,8 +248,8 @@ namespace world
 	{
 		if(d->state == CS_DEAD)
 		{
-			int wait = d->respawnwait(lastmillis, m_spawndelay(gamemode, mutators));
-			if(!wait || m_spawndelay(gamemode, mutators)-wait > int(m_spawndelay(gamemode, mutators)*spawndelaywait))
+			int sdelay = m_spawndelay(gamemode, mutators), wait = d->respawnwait(lastmillis, sdelay);
+			if(!wait || sdelay-wait > min(sdelay, spawndelaywait*1000))
 			{
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 				d->respawned = d->lifesequence;
@@ -515,16 +515,13 @@ namespace world
 		d->deaths++;
 
 		int anc = -1, dth = -1;
-		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators))
-		{
-			dth = S_SPLAT;
-			d->obliterated = false;
-		}
+		bool obliterated = false;
+		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators)) dth = S_SPLAT;
 		else
 		{
-			d->obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > maxhealth;
+			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > maxhealth;
 			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
-			else if(d->obliterated) dth = S_SPLOSH;
+			else if(obliterated) dth = S_SPLOSH;
 			else dth = S_DIE1+rnd(2);
 		}
 
@@ -603,7 +600,7 @@ namespace world
 				}
 			};
 
-			int o = d->obliterated ? 2 : (flags&HIT_HEAD && !weaptype[weap].explode ? 1 : 0);
+			int o = obliterated ? 2 : (flags&HIT_HEAD && !weaptype[weap].explode ? 1 : 0);
 			const char *oname = isweap(weap) ? obitnames[o][weap] : "was killed by";
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));
@@ -652,7 +649,7 @@ namespace world
 							s_sprintfd(ds)("@\fgHEADSHOT");
 							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
-						else if(d->obliterated || lastmillis-d->lastspawn <= spawnprotecttime*1000+1000) anc = S_V_OWNED;
+						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*1000+1000) anc = S_V_OWNED;
 						break;
 					}
 				}
@@ -682,7 +679,7 @@ namespace world
 		if(!kidmode && !noblood && !m_paint(gamemode, mutators))
 		{
 			vec pos = headpos(d);
-			int gdiv = d->obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
+			int gdiv = obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20);
 			loopi(rnd(gibs)+1)
 				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, 0, rnd(100)+1, 50);
 		}
@@ -1487,7 +1484,6 @@ namespace world
 		if(d->state == CS_SPECTATOR || d->state == CS_WAITING) return;
 		else if(d->state == CS_DEAD)
 		{
-			if(d->obliterated) return; // not shown at all
 			showweap = false;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
@@ -1646,7 +1642,7 @@ namespace world
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
-			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
+			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING)
 				renderplayer(d, true, showtranslucent(d, true));
         }
 
@@ -1663,7 +1659,7 @@ namespace world
     {
         if(isthirdperson() || !rendernormally)
         {
-            if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
+            if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING)
                 renderplayer(player1, true, showtranslucent(player1, true), early);
         }
         else if(player1->state == CS_ALIVE)
