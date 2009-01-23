@@ -9,12 +9,12 @@ namespace physics
 	FVARW(movespeed,		0, 50.f, 1000);	// speed
 
 	FVARW(impulsevel,		0, 100.f, 1000);	// extra velocity to add when impulsing
-	FVARW(impulsespeed,	0, 100.f, 1000);	// modifier of gravity that determines impulse interval
+	FVARW(impulsespeed,		0, 100.f, 1000);	// modifier of gravity that determines impulse interval
 	VARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsespeed)
 
 	FVARW(liquidfric,		0, 10.f, 100);
 	FVARW(liquidscale,		0, 0.9f, 100);
-	FVARW(sinkfric,		0, 2.f, 100);
+	FVARW(sinkfric,			0, 2.f, 100);
 	FVARW(floorfric,		0, 5.f, 100);
 	FVARW(airfric,			0, 25.f, 100);
 
@@ -24,9 +24,9 @@ namespace physics
 	FVARW(wallz,			0, 0.2f, 1);
 	FVARW(stepspeed,		0.5f, 1.0f, 2);
 
-	FVARP(floatspeed,		1.f,	100.f,		1000.f);
-	VARP(physframetime,	5,			5,			20);
-	VARP(physinterp,       0,          1,          1);
+	FVARP(floatspeed,		1.f, 100.f, 1000.f);
+	VARP(physframetime,		5, 5, 20);
+	VARP(physinterp,		0, 1, 1);
 
 	int physsteps = 0, lastphysframe = 0;
 
@@ -496,7 +496,7 @@ namespace physics
 		if(floating)
 		{
 			pl->lastimpulse = 0;
-			if(pl->jumping)
+			if(world::allowmove(pl) && pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				pl->jumping = false;
@@ -506,7 +506,7 @@ namespace physics
         else if(pl->physstate >= PHYS_SLOPE || pl->inliquid || pl->onladder)
 		{
 			pl->lastimpulse = 0;
-			if(pl->jumping)
+			if(world::allowmove(pl) && pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
@@ -515,7 +515,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
-		else if(pl->jumping && canimpulse(pl))
+		else if(world::allowmove(pl) && pl->jumping && canimpulse(pl))
 		{
 			vec dir;
 			vecfromyawpitch(pl->yaw, pl->move || pl->strafe ? pl->pitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
@@ -533,14 +533,11 @@ namespace physics
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || pl->onladder || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
-
             if(!floating && pl->physstate >= PHYS_SLOPE)
-			{
-				// move up or down slopes in air but only move up slopes in liquid
+			{ // move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
                 m.z = pl->inliquid ? max(m.z, dz) : dz;
 			}
-
 			m.normalize();
 		}
 

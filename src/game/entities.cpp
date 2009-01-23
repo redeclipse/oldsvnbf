@@ -444,7 +444,7 @@ namespace entities
 			{
 				if(d->useaction)
 				{
-					if(d->requse < 0)
+					if(world::allowmove(d) && d->requse < 0)
 					{
 						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 						if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis))

@@ -9,6 +9,7 @@ namespace hud
 
 	VARP(hudsize, 0, 2400, INT_MAX-1);
 
+	VARP(shownotices, 0, 3, 4);
 	VARP(showstats, 0, 0, 1);
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 2, 2);
@@ -65,6 +66,7 @@ namespace hud
 	TVAR(flamertex, "textures/flamer", 0);
 	TVAR(carbinetex, "textures/carbine", 0);
 	TVAR(rifletex, "textures/rifle", 0);
+	TVAR(paintguntex, "textures/paintgun", 0);
 	TVAR(neutralflagtex, "textures/team", 0);
 	TVAR(alphaflagtex, "textures/teamalpha", 0);
 	TVAR(betaflagtex, "textures/teambeta", 0);
@@ -81,6 +83,7 @@ namespace hud
 	TVAR(flamercliptex, "textures/flamerclip", 3);
 	TVAR(carbinecliptex, "textures/carbineclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
+	TVAR(paintguncliptex, "textures/paintgunclip", 3);
 
 	VARP(showradar, 0, 1, 1);
 	TVAR(radartex, "textures/radar", 3);
@@ -202,7 +205,7 @@ namespace hud
         const char *cliptexs[WEAPON_MAX] = {
             plasmacliptex, shotguncliptex, chainguncliptex,
             flamercliptex, carbinecliptex, riflecliptex, grenadescliptex, // end of regular weapons
-			riflecliptex
+			paintguncliptex
         };
         Texture *t = textureload(cliptexs[weap], 3);
         int ammo = world::player1->ammo[weap], maxammo = weaptype[weap].max;
@@ -335,72 +338,180 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// superhud!
-		pushfont("super");
-		int tx = hudwidth-FONTH, ty = FONTH, tf = int(255*hudblend);
-		if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
+		if(shownotices)
 		{
-			int delay = world::player1->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators));
-			const char *msg = world::player1->state != CS_WAITING && world::player1->lastdeath ?
-				(m_paint(world::gamemode, world::mutators) ? "Tagged out!" : "Fragged!")
-			: "Waiting..";
-			ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
-			if(delay)
+			pushfont("super");
+			int ty = showradar ? int(hudsize*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
+			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
-				pushfont("emphasis");
-				ty += draw_textx("Down for \fs\fg%.2f\fS second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
-				popfont();
-			}
-		}
-		else if(world::player1->state == CS_ALIVE)
-		{
-			if(m_paint(world::gamemode, world::mutators))
-			{
-				int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
-				if(delay)
+				int delay = world::player1->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators));
+				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Waiting..";
+				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
+				if(shownotices > 1)
 				{
-					ty += draw_textx("Painted!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
-					pushfont("emphasis");
-					ty += draw_textx("Frozen for \fs\fg%.2f\fS second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
-					popfont();
+					char *a = executeret("searchbinds attack 0 \"\fs\fw, or\fS \"");
+					s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
+					if(a) delete[] a;
+					if(delay)
+					{
+						pushfont("emphasis");
+						ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+						popfont();
+						if(world::player1->state != CS_WAITING && shownotices > 2 && m_spawndelay(world::gamemode, world::mutators)-delay > int(m_spawndelay(world::gamemode, world::mutators)*spawndelaywait))
+						{
+							pushfont("default");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							popfont();
+						}
+					}
+					else
+					{
+						pushfont("emphasis");
+						ty += draw_textx("Ready to respawn", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+						popfont();
+						if(world::player1->state != CS_WAITING && shownotices > 2)
+						{
+							pushfont("default");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							popfont();
+						}
+					}
 				}
 			}
-		}
-		else if(world::player1->state == CS_EDITING)
-		{
-			int gotit[MAXENTTYPES], numgot = 0;
-			loopi(MAXENTTYPES) gotit[i] = 0;
-			loopv(entities::ents) if(entgroup.find(i) >= 0 || enthover == i)
+			else if(world::player1->state == CS_ALIVE)
 			{
-				gameentity &e = *(gameentity *)entities::ents[i];
-				if(gotit[e.type] < 3 && entities::cansee(e))
+				if(m_paint(world::gamemode, world::mutators))
 				{
-					if(!numgot) ty += draw_textx("Selected Ent(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
-
-					pushfont("emphasis");
-					ty += draw_textx("%s (%d)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].name, i);
-					popfont();
-
-					pushfont("hud");
-					const char *info = entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true);
-					if(info && *info) ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, info);
-					loopk(5)
+					int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
+					if(delay)
 					{
-						if(*enttype[e.type].attrs[k])
-							ty += draw_textx("%s:%d", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].attrs[k], e.attr[k]);
-						else break;
+						ty += draw_textx("Frozen!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						if(shownotices > 1)
+						{
+							pushfont("emphasis");
+							ty += draw_textx("Thaw in [ \fs\fy%.2f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+							popfont();
+						}
+					}
+				}
+				if(shownotices > 2)
+				{
+					pushfont("default");
+					vector<actitem> actitems;
+					if(entities::collateitems(world::player1, actitems))
+					{
+						char *a = executeret("searchbinds action 0 \"\fs\fw, or\fS \"");
+						s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
+						if(a) delete[] a;
+						while(!actitems.empty())
+						{
+							actitem &t = actitems.last();
+							int ent = -1;
+							switch(t.type)
+							{
+								case ITEM_ENT:
+								{
+									if(!entities::ents.inrange(t.target)) break;
+									ent = t.target;
+									break;
+								}
+								case ITEM_PROJ:
+								{
+									if(!projs::projs.inrange(t.target)) break;
+									projent &proj = *projs::projs[t.target];
+									ent = proj.id;
+									break;
+								}
+								default: break;
+							}
+							if(entities::ents.inrange(ent))
+							{
+								extentity &e = *entities::ents[ent];
+								if(enttype[e.type].usetype == EU_ITEM)
+								{
+									int drop = -1, sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+									if(e.type == WEAPON && weapcarry(world::player1->weapselect, sweap) && world::player1->ammo[e.attr[0]] < 0 &&
+										weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, e.attr[0]);
+									if(isweap(drop))
+									{
+										s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
+										ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+									}
+									else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+									break;
+								}
+								else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
+								{
+									ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+									break;
+								}
+							}
+							actitems.pop();
+						}
+					}
+					if(shownotices > 3)
+					{
+						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
+						{
+							char *a = executeret("searchbinds zoom 0 \"\fs\fw, or\fS \"");
+							s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
+							if(a) delete[] a;
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
+						}
+						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
+						{
+							char *a = executeret("searchbinds attack 0 \"\fs\fw, or\fS \"");
+							s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
+							if(a) delete[] a;
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+						}
+						if(world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
+						{
+							char *a = executeret("searchbinds reload 0 \"\fs\fw, or\fS \"");
+							s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
+							if(a) delete[] a;
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
+								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
+						}
 					}
 					popfont();
-
-					gotit[e.type]++;
-					numgot++;
 				}
 			}
+			else if(world::player1->state == CS_EDITING)
+			{
+				int gotit[MAXENTTYPES], numgot = 0;
+				loopi(MAXENTTYPES) gotit[i] = 0;
+				loopv(entities::ents) if(entgroup.find(i) >= 0 || enthover == i)
+				{
+					gameentity &e = *(gameentity *)entities::ents[i];
+					if(gotit[e.type] < 3 && entities::cansee(e))
+					{
+						if(!numgot) ty += draw_textx("Selected Ent(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						pushfont("emphasis");
+						ty += draw_textx("%s (%d)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].name, i);
+						popfont();
+						pushfont("default");
+						const char *info = entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true);
+						if(info && *info) ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, info);
+						loopk(5)
+						{
+							if(*enttype[e.type].attrs[k])
+								ty += draw_textx("%s:%d", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].attrs[k], e.attr[k]);
+							else break;
+						}
+						popfont();
+						gotit[e.type]++;
+						numgot++;
+					}
+				}
+			}
+
+			if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty);
+			else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty);
+
+			popfont();
 		}
-
-		if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty);
-		else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty);
-
-		popfont();
 
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
@@ -510,7 +621,7 @@ namespace hud
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			drawblip(w, h, s, blend*radarblipblend, 2, dir, 1.f, 1.f, 1.f, "hud", blend*radarcardblend, "%s", card);
+			drawblip(w, h, s, blend*radarblipblend, 2, dir, 1.f, 1.f, 1.f, "default", blend*radarcardblend, "%s", card);
 		}
 	}
 
@@ -700,7 +811,7 @@ namespace hud
 	{
 		const char *hudtexs[WEAPON_MAX] = {
 			plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex,
-			rifletex
+			paintguntex
 		};
 		int sy = 0, sweap = m_spawnweapon(world::gamemode, world::mutators);
 		loopi(WEAPON_MAX) if(world::player1->hasweap(i, sweap) || lastmillis-world::player1->weaplast[i] < world::player1->weapwait[i])

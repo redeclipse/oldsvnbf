@@ -46,7 +46,8 @@ namespace weapons
 		if(autoreload && !d->ammo[d->weapselect]) return true;
 		if(autoreload > 1 && lastmillis-d->weaplast[d->weapselect] > weaptype[d->weapselect].rdelay*autoreload)
 			return true;
-
+		if(m_paint(world::gamemode, world::mutators) && d->damageprotect(lastmillis, paintfreezetime*1000) >= weaptype[d->weapselect].rdelay)
+			return true; // auto reload when frozen
 		return false;
 	}
 
@@ -99,7 +100,7 @@ namespace weapons
 			{
 				if(d->weapstate[d->weapselect] != WPSTATE_POWER) // FIXME: not synched in MP yet!!
 				{
-					if(d->attacking)
+					if(d->attacking && world::allowmove(d))
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
 						d->setweapstate(d->weapselect, WPSTATE_POWER, 0, lastmillis);
@@ -108,11 +109,11 @@ namespace weapons
 				}
 
 				power = lastmillis-d->weaplast[d->weapselect];
-				if(d->attacking && power < powertime) return;
+				if(world::allowmove(d) && d->attacking && power < powertime) return;
 			}
 			d->attacking = false;
 		}
-		else if(!d->attacking) return;
+		else if(!d->attacking || !world::allowmove(d)) return;
 
 		if(weaptype[d->weapselect].max) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-1, 0);
 		d->setweapstate(d->weapselect, WPSTATE_SHOOT, weaptype[d->weapselect].adelay, lastmillis);

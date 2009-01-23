@@ -87,6 +87,11 @@ namespace projs
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
+	const int paintcolours[10] = {
+		0xFFFFFF, 0x2222FF, 0xFF2222, 0x22FF22, 0xFFFF22,
+		0xFF8822, 0xFF22FF, 0x22FFFF, 0xFF2288, 0x222222
+	};
+
 	void init(projent &proj, bool waited)
 	{
 		switch(proj.projtype)
@@ -103,6 +108,12 @@ namespace projs
 				proj.radial = weaptype[proj.weap].radial;
 				proj.extinguish = weaptype[proj.weap].extinguish;
 				proj.mdl = weaptype[proj.weap].proj;
+				if(proj.weap == WEAPON_PAINT)
+				{
+					if(m_team(world::gamemode, world::mutators) && proj.owner)
+						proj.colour = paintcolours[proj.owner->team];
+					else proj.colour = paintcolours[rnd(10)];
+				}
 				break;
 			}
 			case PRJ_GIBS:
@@ -341,7 +352,11 @@ namespace projs
                 adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
 				break;
 			}
-			case WEAPON_PAINT: break;
+			case WEAPON_PAINT:
+			{
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x999999, 0.5f);
+				break;
+			}
 		}
 		loopv(locs)
 		{
@@ -496,19 +511,20 @@ namespace projs
 				case WEAPON_PAINT:
 				{
 					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.1f, 1.f);
+					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.25f, 1.f);
 					else
 					{
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0xFF44FF, weaptype[proj.weap].partsize*proj.lifesize);
+					part_create(part, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
+					part_create(PART_PLASMA_LERP, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize*0.5f);
 					break;
 				}
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, 0xFFFFFF, proj.radius);
+					part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, proj.radius);
 					break;
 				}
 			}
@@ -612,8 +628,10 @@ namespace projs
 					case WEAPON_PAINT:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_splash(PART_BLOOD, 3, 3000, proj.o, 0x00FF00, 1.f);
-                        adddecal(DECAL_BLOOD, proj.o, proj.norm, 5.f, bvec(1, 254, 1));
+						int r = 255-(proj.colour>>16), g = 255-((proj.colour>>8)&0xFF), b = 255-(proj.colour&0xFF),
+							colour = (r<<16)|(g<<8)|b;
+						part_splash(PART_BLOOD, 5, 5000, proj.o, colour, 2.f, 4);
+                        adddecal(DECAL_BLOOD, proj.o, proj.norm, rnd(4)+4.f, bvec(r, g, b));
 						break;
 					}
 				}
