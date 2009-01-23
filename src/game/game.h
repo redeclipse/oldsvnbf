@@ -582,6 +582,11 @@ enum
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
 
+const int paintcolours[10] = {
+    0xFFFFFF, 0x2222FF, 0xFF2222, 0x22FF22, 0xFFFF22,
+    0xFF8822, 0xFF22FF, 0x22FFFF, 0xFF2288, 0x222222
+};
+
 #define MAXNAMELEN		16
 
 enum
@@ -1341,7 +1346,7 @@ namespace hud
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(float x, float y, float s);
 	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "radar", float fade = -1.f, const char *text = NULL, ...);
-	extern void damagecompass(int n, const vec &loc);
+	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
 	extern int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern const char *flagtex(int team = TEAM_NEUTRAL);
 	extern float radarrange();

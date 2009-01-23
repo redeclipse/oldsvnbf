@@ -465,7 +465,7 @@ namespace world
 			{
 				quakewobble += damage/2;
 				hud::damageresidue += damage*2;
-				hud::damagecompass(damage, actor->o);
+				hud::damagecompass(damage, actor->o, actor, weap);
 			}
 
 			if(d->type == ENT_PLAYER)

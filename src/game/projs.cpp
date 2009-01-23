@@ -87,11 +87,6 @@ namespace projs
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
-	const int paintcolours[10] = {
-		0xFFFFFF, 0x2222FF, 0xFF2222, 0x22FF22, 0xFFFF22,
-		0xFF8822, 0xFF22FF, 0x22FFFF, 0xFF2288, 0x222222
-	};
-
 	void init(projent &proj, bool waited)
 	{
 		switch(proj.projtype)
