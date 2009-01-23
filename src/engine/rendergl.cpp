@@ -1311,7 +1311,7 @@ void loadbackground(int w, int h)
 	glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
 	glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
 
-    if(aw > w)
+    if(w > aw)
     {
         glTexCoord2f(0, 0); glVertex2f(0, cy-ah/2);
         glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
@@ -1324,7 +1324,7 @@ void loadbackground(int w, int h)
         glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
     }
 
-    if(ah > h)
+    if(h > ah)
     {
         glTexCoord2f(0, 0); glVertex2f(cx-aw/2, 0);
         glTexCoord2f(1, 0); glVertex2f(cx+aw/2, 0);
