@@ -335,7 +335,7 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// superhud!
-		pushfont("emphasis");
+		pushfont("super");
 		int tx = hudwidth-FONTH, ty = FONTH, tf = int(255*hudblend);
 		if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 		{
@@ -346,32 +346,40 @@ namespace hud
 			ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 			if(delay)
 			{
-				pushfont("hud");
+				pushfont("emphasis");
 				ty += draw_textx("Down for \fs\fg%.2f\fS second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 				popfont();
 			}
 		}
 		else if(world::player1->state == CS_ALIVE)
 		{
-			if(m_paint(world::gamemode, world::mutators) && lastmillis-world::player1->lastpain <= paintfreezetime*1000)
+			if(m_paint(world::gamemode, world::mutators))
 			{
-				int delay = (paintfreezetime*1000)-(lastmillis-world::player1->lastpain);
-				ty += draw_textx("Painted!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
-				pushfont("hud");
-				ty += draw_textx("Frozen for \fs\fg%.2f\fS second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
-				popfont();
+				int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
+				if(delay)
+				{
+					ty += draw_textx("Painted!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+					pushfont("emphasis");
+					ty += draw_textx("Frozen for \fs\fg%.2f\fS second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+					popfont();
+				}
 			}
 		}
 		else if(world::player1->state == CS_EDITING)
 		{
-			int gotit[MAXENTTYPES];
+			int gotit[MAXENTTYPES], numgot = 0;
 			loopi(MAXENTTYPES) gotit[i] = 0;
 			loopv(entities::ents) if(entgroup.find(i) >= 0 || enthover == i)
 			{
 				gameentity &e = *(gameentity *)entities::ents[i];
 				if(gotit[e.type] < 3 && entities::cansee(e))
 				{
+					if(!numgot) ty += draw_textx("Selected Ent(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+
+					pushfont("emphasis");
 					ty += draw_textx("%s (%d)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].name, i);
+					popfont();
+
 					pushfont("hud");
 					const char *info = entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true);
 					if(info && *info) ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, info);
@@ -381,8 +389,10 @@ namespace hud
 							ty += draw_textx("%s:%d", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].attrs[k], e.attr[k]);
 						else break;
 					}
-					gotit[e.type]++;
 					popfont();
+
+					gotit[e.type]++;
+					numgot++;
 				}
 			}
 		}
@@ -474,7 +484,7 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int colour = teamtype[d->team].colour, delay = d->spawnprotect(lastmillis, spawnprotecttime*1000);
+			int colour = teamtype[d->team].colour, delay = d->spawnprotect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);

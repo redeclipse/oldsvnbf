@@ -1553,7 +1553,8 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		servstate &ts = target->state;
-		if(ts.protect(gamemillis, sv_spawnprotecttime*1000, m_paint(gamemode, mutators) ? sv_paintfreezetime*1000 : 0)) return;
+		int sp = sv_spawnprotecttime*1000, pf = m_paint(gamemode, mutators) ? sv_paintfreezetime*1000 : 0;
+		if(ts.spawnprotect(gamemillis, sp, pf) || ts.damageprotect(gamemillis, pf)) return;
 
 		int realdamage = damage, realflags = flags, nodamage = 0;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
@@ -1569,7 +1570,7 @@ namespace server
 			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*sv_damagescale);
 			else realdamage = int(realdamage*sv_damagescale);
 			if(realdamage && m_insta(gamemode, mutators)) realdamage = max(realdamage, ts.health);
-			ts.dodamage(realdamage, gamemillis);
+			ts.dodamage(gamemillis, (ts.health -= realdamage));
 			actor->state.damage += realdamage;
 		}
 		else realdamage = int(realdamage*0.5f*sv_damagescale);
@@ -1585,8 +1586,9 @@ namespace server
             }
 
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
-            if(m_paint(gamemode, mutators) && killed) fragvalue *= 2;
+            if(m_paint(gamemode, mutators) && !m_insta(gamemode, mutators) && killed) fragvalue *= 2;
             actor->state.frags += fragvalue;
+
 			if(fragvalue > 0)
 			{
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
@@ -1748,11 +1750,9 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				int lastpain = gamemillis-ci->state.lastpain,
-					lastregen = gamemillis-ci->state.lastregen;
-
 				if(m_regen(gamemode, mutators) && ci->state.health < sv_maxhealth && sv_regenhealth && sv_regendelay && sv_regentime)
 				{
+					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
 					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
 					{
 						int health = ci->state.health - (ci->state.health % sv_regenhealth);
@@ -2321,11 +2321,12 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
-					int nospawn = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)) ? 1 : 0;
+					int wait = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)), nospawn = wait ? 1 : 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if(nospawn)
 					{
+						if(wait <= int(m_spawndelay(gamemode, mutators)*sv_spawndelaywait)) break;
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
 						loopk(WEAPON_MAX) cp->state.entid[k] = -1;

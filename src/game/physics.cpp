@@ -33,7 +33,7 @@ namespace physics
 	#define imov(name,v,d,s,os) \
 		void do##name(bool down) \
 		{ \
-			world::player1->s = down && world::allowmove(world::player1); \
+			world::player1->s = down; \
 			world::player1->v = world::player1->s ? d : (world::player1->os ? -(d) : 0); \
 		} \
 		ICOMMAND(name, "D", (int *down), { do##name(*down!=0); });
@@ -47,7 +47,7 @@ namespace physics
 	#define iput(x,y,t,z,a) \
 		void do##x(bool down) \
 		{ \
-			if(world::allowmove(world::player1)) \
+			if(world::player1->state == CS_ALIVE) \
 			{ \
 				if(a) \
 				{ \
@@ -62,7 +62,8 @@ namespace physics
 			} \
 			else \
 			{ \
-				if(a && world::player1->y && world::player1->t >= 0) world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
+				if(a && world::player1->y && world::player1->t >= 0) \
+					world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
 				world::player1->y = false; \
 				if(z && down) world::respawn(world::player1); \
 			} \
@@ -91,8 +92,8 @@ namespace physics
 			if(d->type == ENT_PLAYER)
 			{
 				gameent *o = (gameent *)d;
-				if(o->protect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0))
-					return false;
+				int sp = spawnprotecttime*1000, pf = m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0;
+				if(o->spawnprotect(lastmillis, sp, pf) || o->damageprotect(lastmillis, pf)) return false;
 			}
 			return true;
 		}

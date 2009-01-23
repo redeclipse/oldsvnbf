@@ -447,7 +447,7 @@ namespace world
 				else if(lastmillis-player1->lastpain < 2000)
 					physics::move(player1, 10, false);
 			}
-			else 
+			else
             {
                 if(player1->ragdoll) cleanragdoll(player1);
                 if(player1->state == CS_ALIVE)
@@ -467,14 +467,10 @@ namespace world
 	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
-		if(flags&HIT_PUSH && (d == player1 || d->ai))
-			d->hitpush(damage, flags, dir);
+		if(flags&HIT_PUSH && (d == player1 || d->ai)) d->hitpush(damage, flags, dir);
 		if(hithurts(flags))
 		{
-			d->lastregen = 0;
-			d->lastpain = lastmillis;
-			d->health = health;
-
+			d->dodamage(millis, health);
 			if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
 			if(d == player1)
@@ -1434,7 +1430,7 @@ namespace world
 				o.add(dir);
 			}
 		}
-        
+
 		int anim = animflags, basetime = lastaction, basetime2 = 0;
 		if(animoverride)
 		{
@@ -1475,8 +1471,8 @@ namespace world
 			}
 		}
 
-        if(third && testanims && d == player1) yaw = 0; 
-        else yaw += 90; 
+        if(third && testanims && d == player1) yaw = 0;
+        else yaw += 90;
         if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/1000.0f, 0.0f);
 
         if(d->ragdoll && (!ragdoll || anim!=ANIM_DYING)) cleanragdoll(d);
@@ -1643,6 +1639,17 @@ namespace world
         renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
+	bool showtranslucent(gameent *d, bool third = true)
+	{
+		if(!physics::issolid(d))
+		{
+			int prot = d->spawnprotect(lastmillis, spawnprotecttime*1000, m_paint(gamemode, mutators) ? paintfreezetime*1000 : 0);
+			if(prot && prot%500 >= 250) return false; // flash spawnprotected players
+			return true;
+		}
+		return d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent);
+	}
+
 	void render()
 	{
 		if(intermission)
@@ -1657,7 +1664,7 @@ namespace world
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
 			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING && (d->state!=CS_DEAD || !d->obliterated))
-				renderplayer(d, true, !physics::issolid(d));
+				renderplayer(d, true, showtranslucent(d, true));
         }
 
 		entities::render();
@@ -1674,10 +1681,10 @@ namespace world
         if(isthirdperson() || !rendernormally)
         {
             if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING && (player1->state!=CS_DEAD || !player1->obliterated))
-                renderplayer(player1, true, !physics::issolid(player1) || thirdpersontranslucent, early);
+                renderplayer(player1, true, showtranslucent(player1, true), early);
         }
         else if(player1->state == CS_ALIVE)
-            renderplayer(player1, false, !physics::issolid(player1) || firstpersontranslucent, early);
+            renderplayer(player1, false, showtranslucent(player1, false), early);
     }
 
 	bool clientoption(char *arg) { return false; }

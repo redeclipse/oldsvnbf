@@ -708,14 +708,14 @@ namespace ai
 		{
 			d->ai->reset();
 			aistate &b = d->ai->getstate();
-			b.next = 500+rnd((101-d->skill)*100);
+			b.next = lastmillis + 500 + rnd((101-d->skill)*10);
 		}
 	}
 
 	bool dowait(gameent *d, aistate &b)
 	{
 		if(d->state == CS_WAITING) return true; // just wait my precious..
-		if(d->state == CS_DEAD)
+		else if(d->state == CS_DEAD)
 		{
 			if(d->respawned != d->lifesequence && !d->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators)))
 				world::respawnself(d);
@@ -1220,7 +1220,7 @@ namespace ai
 		}
 		else d->stopmoving();
         if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d, false);
-		else 
+		else
         {
             if(d->ragdoll) cleanragdoll(d);
             physics::move(d, 1, true);
