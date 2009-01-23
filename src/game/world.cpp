@@ -1484,7 +1484,7 @@ namespace world
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
 		int flags = MDL_LIGHT;
-		if(d != player1) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
+		if(d != player1 && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
 		if(d->type != ENT_PLAYER) flags |= MDL_CULL_DIST;
         if(early) flags |= MDL_NORENDER;
 		else if(trans) flags |= MDL_TRANSLUCENT;
