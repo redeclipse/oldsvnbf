@@ -442,7 +442,7 @@ namespace hud
 								}
 								else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
 								{
-									ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+									ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 									break;
 								}
 							}
