@@ -608,6 +608,11 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			if(!f) continue;
 
 			Texture *mapshot = notexture;
+            const char *mapshotname = strrchr(mapname, '/');
+            if(!mapshotname) mapshotname = strrchr(mapname, '\\');
+            if(mapshotname) mapshotname++;
+            else mapshotname = mapname;
+    
 			bool samegame = true;
 			int eif = 0;
 
@@ -684,7 +689,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
-				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 
 				maptype = MAP_BFGZ;
 
@@ -815,7 +820,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
-				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 
 				maptype = MAP_OCTA;
 
@@ -1088,7 +1093,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			initlights();
 			allchanged(true);
 
-			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapname);
+			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 			renderprogress(0, "starting world...");
 			startmap(mapname);
 			RUNWORLD("on_start");
