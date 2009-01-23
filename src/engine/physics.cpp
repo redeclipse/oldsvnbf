@@ -867,7 +867,8 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(o->o.x+o->radius < x1 || o->o.y+o->radius < y1 || o->o.x-o->radius > x2 || o->o.y-o->radius > y2) continue;
+            if(!physics::issolid(o) || o->o.x+o->radius < x1 || o->o.y+o->radius < y1 || o->o.x-o->radius > x2 || o->o.y-o->radius > y2)
+				continue;
             float dist;
             if(intersect(o, from, to, dist) && dist < bestdist)
             {

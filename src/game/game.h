@@ -842,30 +842,27 @@ struct gamestate
     }
 
 	// just subtract damage here, can set death, etc. later in code calling this
-	int dodamage(int damage, int millis)
+	void dodamage(int millis, int heal)
 	{
 		lastregen = 0;
 		lastpain = millis;
-		health -= damage;
-		return damage;
-	}
-
-	int spawnprotect(int millis, int delay)
-	{
-		return delay ? max(0, delay-(millis-lastspawn)) : 0;
+		health = heal;
 	}
 
 	int damageprotect(int millis, int delay)
 	{
-		return delay ? max(0, delay-(millis-lastpain)) : 0;
+		int amt = 0;
+		if(lastpain && delay && millis-lastpain <= delay) amt = delay-(millis-lastpain);
+		return amt;
 	}
 
-	int protect(int millis, int spawn, int damage)
+	int spawnprotect(int millis, int delay, int after)
 	{
-		int delay = 0;
-		if((delay = spawnprotect(millis, spawn)) > 0) return delay;
-		if((delay = damageprotect(millis, damage)) > 0) return delay;
-		return 0;
+		int amt = 0;
+		if(lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
+		if(!amt && lastpain && millis-lastpain >= delay && after && millis-(lastpain+delay) <= after)
+			amt = after-(millis-(lastpain+delay));
+		return amt;
 	}
 };
 
@@ -1315,7 +1312,7 @@ namespace ai
 	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
 	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)			(y->state == CS_ALIVE && !y->protect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0))
+    #define AIMAYTARG(y)			(y->state == CS_ALIVE && physics::issolid(y))
 	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
 	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
