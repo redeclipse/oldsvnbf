@@ -868,9 +868,15 @@ namespace hud
 		}
 	}
 
-	float dcompass[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    struct damagecompassdir
+    {
+        float damage;
+        vec color;        
+        
+        damagecompassdir() : damage(0), color(1, 0, 0) {}
+    } damagecompassdirs[8];
 
-	void damagecompass(int n, const vec &loc)
+	void damagecompass(int n, const vec &loc, gameent *actor, int weap)
 	{
 		if(!showdamagecompass) return;
 		vec delta = vec(loc).sub(camera1->o).normalize();
@@ -878,32 +884,41 @@ namespace hud
 		vectoyawpitch(delta, yaw, pitch);
 		yaw -= camera1->yaw;
 		if(yaw < 0) yaw += 360;
-		int dir = (int(yaw+22.5f)%360)/45;
-		dcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
-		if(dcompass[dir] > 1) dcompass[dir] = 1;
+        damagecompassdir &dir = damagecompassdirs[(int(yaw+22.5f)%360)/45];
+        dir.damage += max(n, damagecompassmin)/float(damagecompassmax);
+        if(dir.damage > 1) dir.damage = 1;
+        if(weap == WEAPON_PAINT) 
+        {
+            int col = paintcolours[actor->type == ENT_PLAYER && m_team(world::gamemode, world::mutators) ? actor->team : rnd(10)];
+            dir.color = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
+        }
+        else if(kidmode || world::noblood) dir.color = vec(1, 0.25f, 1);
+        else dir.color = vec(1, 0, 0);
 	}
 
 	void drawdamagecompass(int w, int h, int s, float blend)
 	{
 		int dirs = 0;
 		float size = damagecompasssize*min(h, w)/2.0f;
-		loopi(8) if(dcompass[i]>0)
+		loopi(8) if(damagecompassdirs[i].damage > 0)
 		{
 			if(!dirs)
 			{
                 usetexturing(false);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				bool alt = kidmode || world::noblood || m_paint(world::gamemode, world::mutators);
-				glColor4f(1, alt ? 0.25f : 0.f, alt ? 1.f : 0.f, damagecompassblend*blend);
 			}
 			dirs++;
+
+            damagecompassdir &dir = damagecompassdirs[i];
 
 			glPushMatrix();
 			glTranslatef(w/2, h/2, 0);
 			glRotatef(i*45, 0, 0, 1);
 			glTranslatef(0, -size/2.0f-min(h, w)/4.0f, 0);
-			float logscale = 32, scale = log(1 + (logscale - 1)*dcompass[i]) / log(logscale);
+			float logscale = 32, scale = log(1 + (logscale - 1)*dir.damage) / log(logscale);
 			glScalef(size*scale, size*scale, 0);
+
+            glColor4f(dir.color.x, dir.color.y, dir.color.z, damagecompassblend*blend);
 
 			glBegin(GL_TRIANGLES);
 			glVertex3f(1, 1, 0);
@@ -914,7 +929,7 @@ namespace hud
 
 			// fade in log space so short blips don't disappear too quickly
 			scale -= float(curtime)/damagecompassfade;
-			dcompass[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
+			dir.damage = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
 		}
         if(dirs) usetexturing(true);
 	}
