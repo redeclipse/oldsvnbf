@@ -258,17 +258,17 @@ engine/rendermodel.o: shared/tools.h shared/command.h shared/geom.h
 engine/rendermodel.o: shared/ents.h shared/iengine.h shared/igame.h
 engine/rendermodel.o: engine/sound.h engine/world.h engine/octa.h
 engine/rendermodel.o: engine/lightmap.h engine/bih.h engine/texture.h
-engine/rendermodel.o: engine/model.h engine/animmodel.h engine/vertmodel.h
-engine/rendermodel.o: engine/skelmodel.h engine/md2.h engine/md3.h
-engine/rendermodel.o: engine/md5.h engine/obj.h
+engine/rendermodel.o: engine/model.h engine/ragdoll.h engine/animmodel.h
+engine/rendermodel.o: engine/vertmodel.h engine/skelmodel.h engine/md2.h
+engine/rendermodel.o: engine/md3.h engine/md5.h engine/obj.h
 engine/renderparticles.o: shared/pch.h engine/engine.h shared/cube.h
 engine/renderparticles.o: shared/tools.h shared/command.h shared/geom.h
 engine/renderparticles.o: shared/ents.h shared/iengine.h shared/igame.h
 engine/renderparticles.o: engine/sound.h engine/world.h engine/octa.h
 engine/renderparticles.o: engine/lightmap.h engine/bih.h engine/texture.h
 engine/renderparticles.o: engine/model.h engine/rendertarget.h
-engine/renderparticles.o: engine/depthfx.h engine/explosion.h
-engine/renderparticles.o: engine/lensflare.h engine/lightning.h
+engine/renderparticles.o: engine/depthfx.h engine/lensflare.h
+engine/renderparticles.o: engine/explosion.h engine/lightning.h
 engine/rendersky.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 engine/rendersky.o: shared/command.h shared/geom.h shared/ents.h
 engine/rendersky.o: shared/iengine.h shared/igame.h engine/sound.h
