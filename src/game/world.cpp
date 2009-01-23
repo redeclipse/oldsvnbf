@@ -550,7 +550,7 @@ namespace world
 			anc = S_V_FRAGGED;
 			hud::sb.showscores(true);
 			d->stopmoving();
-			//d->pitch = 0;
+			d->pitch = 0;
 			d->roll = 0;
 		}
 		else
