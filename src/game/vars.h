@@ -1,3 +1,5 @@
+VARG(serverdebug, 0, 1, 1);
+
 #ifdef STANDALONE
 SVARG(defaultmap, "warground");
 VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);

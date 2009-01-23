@@ -7,7 +7,7 @@
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 int kidmode = 0;
-
+ICOMMAND(getkidmode, "", (void), intret(kidmode));
 #ifdef STANDALONE
 void console(const char *s, ...)
 {

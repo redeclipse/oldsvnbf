@@ -101,11 +101,12 @@ namespace world
 
 	bool isthirdperson()
 	{
+		if(player1->state == CS_DEAD) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
 		if(player1->state == CS_WAITING) return false;
-		//if(inzoom()) return false;
+		if(inzoom()) return false;
 		return true;
 	}
 
@@ -218,11 +219,6 @@ namespace world
 	}
 	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
 
-	void respawn(gameent *d)
-	{
-		if(d->state == CS_DEAD) respawnself(d);
-	}
-
 	bool tvmode()
 	{
 		return player1->state == CS_SPECTATOR && spectv;
@@ -248,13 +244,16 @@ namespace world
         return true;
     }
 
-	void respawnself(gameent *d)
+	void respawn(gameent *d)
 	{
-		d->stopmoving();
-		if(d->respawned != d->lifesequence)
+		if(d->state == CS_DEAD)
 		{
-			client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
-			d->respawned = d->lifesequence;
+			int wait = d->respawnwait(lastmillis, m_spawndelay(gamemode, mutators));
+			if(!wait || m_spawndelay(gamemode, mutators)-wait > int(m_spawndelay(gamemode, mutators)*spawndelaywait))
+			{
+				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+				d->respawned = d->lifesequence;
+			}
 		}
 	}
 
@@ -343,17 +342,6 @@ namespace world
 				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
 			}
 			else d->height = PLAYERHEIGHT;
-		}
-		else if(d->state == CS_DEAD)
-		{
-			if(d->obliterated) d->height = PLAYERHEIGHT;
-			else
-			{
-				int t = lastmillis-d->lastpain;
-				if(t < 0) d->height = PLAYERHEIGHT;
-				float amt = t > 900 ? 0.9f : clamp(float(t)/1000.f, 0.f, 0.9f);
-				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*amt);
-			}
 		}
 		else d->height = PLAYERHEIGHT;
 		d->o.z += d->height;
@@ -484,9 +472,8 @@ namespace world
 			{
 				vec p = headpos(d);
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(kidmode || noblood || weap == WEAPON_PAINT || m_paint(gamemode, mutators))
-					 part_splash(PART_BLOOD, 3, 3000, p, 0x00FF00, 2.f, int(d->radius));
-				else part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
+				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
+					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead)
 				{
 					s_sprintfd(ds)("@%d", damage);
@@ -592,7 +579,7 @@ namespace world
 					"was skewered by",
 					"was pierced by",
 					"was blown to pieces by",
-					"was painted by"
+					"was tagged out by"
 				},
 				{
 					"was plasmafied by",
@@ -602,7 +589,7 @@ namespace world
 					"was given an extra orifice by",
 					"was expertly sniped by",
 					"was blown to pieces by",
-					"was painted by"
+					"was tagged out by"
 				},
 				{
 					"was reduced to ooze by",
@@ -612,7 +599,7 @@ namespace world
 					"was spliced by",
 					"had their head blown clean off by",
 					"was obliterated by",
-					"was painted by"
+					"was tagged out by"
 				}
 			};
 
@@ -1641,13 +1628,9 @@ namespace world
 
 	bool showtranslucent(gameent *d, bool third = true)
 	{
-		if(!physics::issolid(d))
-		{
-			int prot = d->spawnprotect(lastmillis, spawnprotecttime*1000, m_paint(gamemode, mutators) ? paintfreezetime*1000 : 0);
-			if(prot && prot%500 >= 250) return false; // flash spawnprotected players
-			return true;
-		}
-		return d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent);
+		if(!physics::issolid(d)) return true;
+		if(d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent)) return true;
+		return false;
 	}
 
 	void render()

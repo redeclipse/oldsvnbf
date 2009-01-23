@@ -1602,6 +1602,7 @@ namespace server
 			if(killed)
 			{
 				dropitems(target);
+				// don't issue respawn yet until DEATHMILLIS has elapsed
 				sendf(-1, 1, "ri6", SV_DIED, target->clientnum, actor->clientnum, weap, realflags, realdamage);
 				target->position.setsizenodelete(0);
 				if(smode) smode->died(target, actor);
@@ -1609,7 +1610,6 @@ namespace server
 				ts.state = CS_DEAD;
 				ts.lastdeath = gamemillis;
 				ts.weapreset(true);
-				// don't issue respawn yet until DEATHMILLIS has elapsed
 			}
 		}
 	}
@@ -1659,10 +1659,16 @@ namespace server
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(weaptype[e.weap].max && isweap(e.weap))
-				gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
+			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
+			return;
+		}
+		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		{
+			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
 			return;
 		}
 		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
@@ -1677,8 +1683,16 @@ namespace server
 	void processevent(clientinfo *ci, switchevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
 			return;
+		}
+		if(!gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", e.weap);
+			return;
+		}
 		gs.weapswitch(e.weap, e.millis);
 		sendf(-1, 1, "ri3", SV_WEAPSELECT, ci->clientnum, e.weap);
 	}
@@ -1686,8 +1700,16 @@ namespace server
 	void processevent(clientinfo *ci, reloadevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || !isweap(e.weap) || !gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		if(!gs.isalive(gamemillis) || !isweap(e.weap))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
 			return;
+		}
+		if(!gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", e.weap);
+			return;
+		}
 		gs.setweapstate(e.weap, WPSTATE_RELOAD, weaptype[e.weap].rdelay, e.millis);
 		gs.ammo[e.weap] = clamp(max(gs.ammo[e.weap], 0) + weaptype[e.weap].add, weaptype[e.weap].add, weaptype[e.weap].max);
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, e.weap, gs.ammo[e.weap]);
@@ -1697,10 +1719,16 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
+		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
 		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr[1], sents[e.ent].attr[2], sents[e.ent].attr[3], sents[e.ent].attr[4], sweap, e.millis))
+		{
+			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", e.ent);
 			return;
+		}
 		if(!sents[e.ent].spawned && !(sents[e.ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			bool found = false;
@@ -1713,12 +1741,15 @@ namespace server
 					found = true;
 				}
 			}
-			if(!found) return;
+			if(!found)
+			{
+				if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", e.ent);
+				return;
+			}
 		}
 
 		int weap = -1, dropped = -1;
-		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= sv_maxcarry)
-			weap = gs.drop(attr, sweap);
+		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= sv_maxcarry) weap = gs.drop(attr, sweap);
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
@@ -2326,7 +2357,7 @@ namespace server
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if(nospawn)
 					{
-						if(wait <= int(m_spawndelay(gamemode, mutators)*sv_spawndelaywait)) break;
+						if(wait && m_spawndelay(gamemode, mutators)-wait <= int(m_spawndelay(gamemode, mutators)*sv_spawndelaywait)) break;
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
 						loopk(WEAPON_MAX) cp->state.entid[k] = -1;

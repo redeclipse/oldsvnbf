@@ -435,7 +435,7 @@ namespace ai
 
 	bool enemy(gameent *d, aistate &b, const vec &pos, float radius)
 	{
-		if(d->ai->enemy < 0)
+		if(world::allowmove(d) && d->ai->enemy < 0)
 		{
 			gameent *t = NULL, *e = NULL;
 			vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
@@ -650,7 +650,7 @@ namespace ai
 
 	bool decision(gameent *d, bool *pursue)
 	{
-		if(d->attacking) return false;
+		if(d->attacking || !world::allowmove(d)) return false;
 		aistate &b = d->ai->getstate();
 		switch(b.type)
 		{
@@ -675,7 +675,7 @@ namespace ai
 	{
 		if(d->ai)
 		{
-			if(AITARG(d, e, true)) // see if this ai is interested in a grudge
+			if(world::allowmove(d) && AITARG(d, e, true)) // see if this ai is interested in a grudge
 			{
 				bool p = false;
 				if(decision(d, &p))
@@ -689,7 +689,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && AITARG(t, e, true))
+			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && AITARG(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				violence(t, c, e, false);
@@ -718,7 +718,7 @@ namespace ai
 		else if(d->state == CS_DEAD)
 		{
 			if(d->respawned != d->lifesequence && !d->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators)))
-				world::respawnself(d);
+				world::respawn(d);
 			return true;
 		}
 		else if(d->state == CS_ALIVE)
@@ -1051,7 +1051,7 @@ namespace ai
 			entities::ents.inrange(b.target) && entities::ents[b.target]->type == WEAPON)
 				weappref = entities::ents[b.target]->attr[0];
 
-		if(busy <= 1 && !d->hasweap(weappref, sweap) && !d->useaction && d->requse < 0)
+		if(world::allowmove(d) && busy <= 1 && !d->hasweap(weappref, sweap) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -1197,28 +1197,31 @@ namespace ai
 	{
 		vec pos = world::headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->ai->target);
-		if(world::allowmove(d) && d->state == CS_ALIVE)
+		if(d->state != CS_ALIVE || !world::allowmove(d)) d->stopmoving();
+		if(d->state == CS_ALIVE)
 		{
 			bool p = false;
-			int busy = process(d, b) ? 1 : 0;
-			if(!decision(d, &p)) busy = 2;
+			int busy = world::allowmove(d) && process(d, b) ? 1 : 0;
+			if(world::allowmove(d) && !decision(d, &p)) busy = 2;
 			if(!request(d, b, busy) && !busy) target(d, b);
 			entities::checkitems(d);
 			weapons::shoot(d, d->ai->target, weaptype[d->weapselect].power); // always use full power
-			if(!b.idle && d->lastnode == d->ai->lastnode)
+			if(world::allowmove(d))
 			{
-				d->ai->timeinnode += curtime;
-				if(d->ai->timeinnode >= 10000 && !d->ai->tryreset) d->ai->reset(true); // maybe we've gone insane, wipe our brain
-				else if(d->ai->timeinnode >= 20000) world::suicide(d, HIT_LOST); // fine, we're better off doing something than nothing
+				if(!b.idle && d->lastnode == d->ai->lastnode)
+				{
+					d->ai->timeinnode += curtime;
+					if(d->ai->timeinnode >= 10000 && !d->ai->tryreset) d->ai->reset(true); // maybe we've gone insane, wipe our brain
+					else if(d->ai->timeinnode >= 20000) world::suicide(d, HIT_LOST); // fine, we're better off doing something than nothing
+				}
+				else
+				{
+					d->ai->timeinnode = 0;
+					d->ai->prevnode = d->ai->lastnode;
+				}
+				d->ai->lastnode = d->lastnode;
 			}
-			else
-			{
-				d->ai->timeinnode = 0;
-				d->ai->prevnode = d->ai->lastnode;
-			}
-			d->ai->lastnode = d->lastnode;
 		}
-		else d->stopmoving();
         if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d, false);
 		else
         {
@@ -1280,7 +1283,7 @@ namespace ai
 				aistate &c = d->ai->state[i];
 				if(run)
 				{
-					bool override = d->state == CS_ALIVE && d->ai->route.empty(), expired = lastmillis >= c.next;
+					bool override = d->state == CS_ALIVE && world::allowmove(d) && d->ai->route.empty(), expired = lastmillis >= c.next;
 					if(override || expired)
 					{
 						int frame = 0, result = 0;

@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			145
+#define GAMEVERSION			146
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -333,13 +333,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_RIFLE,		-20,  	20,
+		WEAPON_PAINT,		ANIM_CARBINE,		-20,  	20,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
-			5,		5,		500,	1000,	25,		1000,	0,		10000,
+			20,		20,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		1.5f,
-			"paintgun",	"\fm",	"weapons/rifle/item",		"weapons/rifle/vwep",
+			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
 };
@@ -514,7 +514,6 @@ char msgsizelookup(int msg)
 #else
 extern char msgsizelookup(int msg);
 #endif
-
 enum { SPHY_NONE = 0, SPHY_JUMP, SPHY_IMPULSE, SPHY_POWER, SPHY_MAX };
 
 #define DEMO_MAGIC "BFDZ"
@@ -860,8 +859,8 @@ struct gamestate
 	{
 		int amt = 0;
 		if(lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
-		if(!amt && lastpain && millis-lastpain >= delay && after && millis-(lastpain+delay) <= after)
-			amt = after-(millis-(lastpain+delay));
+		if(!amt && lastpain && delay && after && millis-lastpain >= after && millis-(lastpain+after) <= delay)
+			amt = delay-(millis-(lastpain+after));
 		return amt;
 	}
 };
@@ -1138,7 +1137,7 @@ struct projent : dynent
 	bool local, beenused, radial, extinguish;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int schan, id, weap;
+	int schan, id, weap, colour;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
@@ -1162,6 +1161,7 @@ struct projent : dynent
 		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
 		schan = id = -1;
 		movement = roll = lifespan = lifesize = 0.f;
+		colour = 0xFFFFFF;
 		beenused = radial = extinguish = false;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
@@ -1365,7 +1365,6 @@ namespace world
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, const char *msg, ...);
 	extern void respawn(gameent *d);
-	extern void respawnself(gameent *d);
 	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 15.f);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);

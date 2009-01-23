@@ -210,14 +210,18 @@ const char *getkeyname(int code)
     return km ? km->name : NULL;
 }
 
-void searchbinds(char *action, int type, int limit)
+void searchbinds(char *action, int type, int limit, char *sep)
 {
     vector<char> names;
     enumerate(keyms, keym, km,
     {
         if(!strcmp(km.actions[type], action))
         {
-            if(names.length()) names.add(' ');
+            if(names.length())
+            {
+            	if(sep && *sep) names.put(sep, strlen(sep));
+				else names.add(' ');
+            }
             names.put(km.name, strlen(km.name));
             if(limit > 0 && !--limit) break;
         }
@@ -261,9 +265,9 @@ ICOMMAND(editbind, "ss", (char *key, char *action), bindkey(key, action, keym::A
 ICOMMAND(getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
 ICOMMAND(getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
 ICOMMAND(geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
-ICOMMAND(searchbinds,     "si", (char *action, int *limit), searchbinds(action, keym::ACTION_DEFAULT, max(*limit, 0)));
-ICOMMAND(searchspecbinds, "si", (char *action, int *limit), searchbinds(action, keym::ACTION_SPECTATOR, max(*limit, 0)));
-ICOMMAND(searcheditbinds, "si", (char *action, int *limit), searchbinds(action, keym::ACTION_EDITING, max(*limit, 0)));
+ICOMMAND(searchbinds,     "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_DEFAULT, max(*limit, 0), sep));
+ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep));
+ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_EDITING, max(*limit, 0), sep));
 
 void saycommand(char *init)						 // turns input to the command line on or off
 {

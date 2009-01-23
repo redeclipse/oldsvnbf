@@ -659,6 +659,8 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
+    new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, -10, 0),
+    new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, 0, 0),
     new taperenderer("particles/sflare", PT_TAPE|PT_LERP, 0, 0),
     new taperenderer("particles/fflare", PT_TAPE|PT_LERP, 0, 0),
 
