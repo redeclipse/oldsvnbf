@@ -1290,7 +1290,7 @@ void gettextres(int &w, int &h)
 
 const char *loadback = "textures/loadback";
 
-void loadbackground(int w, int h)
+void loadbackground(int w, int h, Texture *t)
 {
 	glColor3f(1, 1, 1);
 
@@ -1339,6 +1339,37 @@ void loadbackground(int w, int h)
 
 	glEnd();
 
+    if(t)
+    {
+        float tx1 = 378/1024.f, tx2 = 648/1024.f, txc = cx-aw/2 + aw*(tx1 + tx2)/2, txr = aw*(tx2 - tx1)/2,
+              ty1 = 307/1024.f, ty2 = 658/1024.f, tyc = cy-ah/2 + ah*(ty1 + ty2)/2, tyr = ah*(ty2 - ty1)/2;
+
+        glBindTexture(GL_TEXTURE_2D, t->id);
+        glBegin(GL_TRIANGLE_FAN);
+        const int subdiv = 16;
+        const float solid = 0.8f;
+        loopi(subdiv+1)
+        {
+            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
+            glTexCoord2f(0.5f + solid*0.5f*rx, 0.5f + solid*0.5f*ry);
+            glVertex2f(txc + solid*txr*rx, tyc + solid*tyr*ry);
+        }
+        glEnd();
+        glBegin(GL_QUAD_STRIP);
+        loopi(subdiv+1)
+        {
+            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
+            glColor4f(1, 1, 1, 0);
+            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
+            glVertex2f(txc + txr*rx, tyc + tyr*ry);
+            glColor4f(1, 1, 1, 1);
+            glTexCoord2f(0.5f + solid*0.5f*rx, 0.5f + solid*0.5f*ry);
+            glVertex2f(txc + solid*txr*rx, tyc + solid*tyr*ry);
+        }
+        glEnd();
+        glColor3f(1, 1, 1);
+    }
+    
     int x = (w-512)/2, y = 128;
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
@@ -1376,7 +1407,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		loadbackground(w, h);
+		loadbackground(w, h, t);
 
         if(text)
         {
@@ -1385,6 +1416,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
             draw_text(text, 70, 2*FONTH + FONTH/2);
             glPopMatrix();
         }
+#if 0
 		if(t)
 		{
 			glBindTexture(GL_TEXTURE_2D, t->id);
@@ -1403,12 +1435,12 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
 			glEnd();
 		}
+#endif
         if(overlaytext)
         {
-			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
             glPushMatrix();
             glScalef(1/3.0f, 1/3.0f, 1);
-			draw_textx("%s", x*3+sz*3-FONTH, y*3+FONTH, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, sz*3-FONTH*2, overlaytext);
+			draw_textx("%s", (w/2)*3, (h/2)*3+FONTH, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, overlaytext);
             glPopMatrix();
         }
 
