@@ -1072,6 +1072,31 @@ namespace world
 					camera1->pitch = player1->aimpitch = player1->pitch;
 				}
 			}
+			#define scalecameraangle \
+				{ \
+					float amt = float(curtime)/1000.f, offyaw = fabs(yaw-camera1->yaw)*amt, offpitch = fabs(pitch-camera1->pitch)*amt*0.25f; \
+					if(yaw > camera1->yaw) { \
+						camera1->yaw += offyaw; \
+						if(yaw < camera1->yaw) camera1->yaw = yaw; \
+					} \
+					else if(yaw < camera1->yaw) \
+					{ \
+						camera1->yaw -= offyaw; \
+						if(yaw > camera1->yaw) camera1->yaw = yaw; \
+					} \
+					if(pitch > camera1->pitch) \
+					{ \
+						camera1->pitch += offpitch; \
+						if(pitch < camera1->pitch) camera1->pitch = pitch; \
+					} \
+					else if(pitch < camera1->pitch) \
+					{ \
+						camera1->pitch -= offpitch; \
+						if(pitch > camera1->pitch) camera1->pitch = pitch; \
+					} \
+					yaw = camera1->aimyaw = camera1->yaw; \
+					pitch = camera1->aimpitch = camera1->pitch; \
+				}
 			if(tvmode())
 			{
 				if(cameras.empty()) loopk(2)
@@ -1174,39 +1199,24 @@ namespace world
 					}
 					player1->o = camera1->o = cam->pos;
 					vec dir = vec(cam->dir).sub(camera1->o).normalize();
-					vectoyawpitch(dir, camera1->yaw, camera1->pitch);
-					if(cam == oldcam)
+					float yaw = camera1->yaw, pitch = camera1->pitch;
+					vectoyawpitch(dir, yaw, pitch);
+					if(cam == oldcam) { scalecameraangle; }
+					else
 					{
-						float amt = float(curtime)/1000.f,
-							offyaw = fabs(camera1->yaw-camera1->aimyaw)*amt, offpitch = fabs(camera1->pitch-camera1->aimpitch)*amt*0.25f;
-
-						if(camera1->yaw > camera1->aimyaw)
-						{
-							camera1->aimyaw += offyaw;
-							if(camera1->yaw < camera1->aimyaw) camera1->aimyaw = camera1->yaw;
-						}
-						else if(camera1->yaw < camera1->aimyaw)
-						{
-							camera1->aimyaw -= offyaw;
-							if(camera1->yaw > camera1->aimyaw) camera1->aimyaw = camera1->yaw;
-						}
-
-						if(camera1->pitch > camera1->aimpitch)
-						{
-							camera1->aimpitch += offpitch;
-							if(camera1->pitch < camera1->aimpitch) camera1->aimpitch = camera1->pitch;
-						}
-						else if(camera1->pitch < camera1->aimpitch)
-						{
-							camera1->aimpitch -= offpitch;
-							if(camera1->pitch > camera1->aimpitch) camera1->aimpitch = camera1->pitch;
-						}
-						camera1->yaw = camera1->aimyaw;
-						camera1->pitch = camera1->aimpitch;
+						camera1->yaw = camera1->aimyaw = yaw;
+						camera1->pitch = camera1->aimpitch = pitch;
 					}
-					player1->yaw = player1->aimyaw = camera1->aimyaw = camera1->yaw;
-					player1->pitch = player1->aimpitch = camera1->aimpitch = camera1->pitch;
+					player1->yaw = player1->aimyaw = camera1->yaw;
+					player1->pitch = player1->aimpitch = camera1->pitch;
 				}
+			}
+			else if(player1->state == CS_DEAD)
+			{
+				vec pos = headpos(player1, player1->height*0.5f), dir = vec(pos).sub(camera1->o).normalize();
+				float yaw = camera1->yaw, pitch = camera1->pitch;
+				vectoyawpitch(dir, yaw, pitch);
+				scalecameraangle;
 			}
 			else
 			{
@@ -1585,9 +1595,7 @@ namespace world
 			}
 		}
 
-		if(shownamesabovehead && third && d != player1)
-			part_text(d->abovehead(), colorname(d, NULL, "@"));
-
+		if(shownamesabovehead && third && d != player1) part_text(d->abovehead(), colorname(d, NULL, "@"));
 		if(showweap)
 		{ // we could probably animate the vwep too now..
 			a[ai].name = weaptype[weap].vwep;
