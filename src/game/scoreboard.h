@@ -19,6 +19,8 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
+		IVARP(autoshowscores, 0, 1, 1);
+		IVARP(showscoresdelay, -1, -1, INT_MAX-1);
 		IVARP(scoresinfo, 0, 1, 1);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showpj, 0, 0, 1);
@@ -30,6 +32,20 @@ namespace hud
 		scoreboard() : scoreson(false)
 		{
 			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
+		}
+
+		bool canshowscores()
+		{
+			if(!scoreson && autoshowscores() && world::player1->state == CS_DEAD)
+			{
+				if(!showscoresdelay()) return true;
+				else
+				{
+					int delay = showscoresdelay() > 0 ? showscoresdelay()*1000 : min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000);
+					if(!delay || lastmillis-world::player1->lastdeath >= delay) return true;
+				}
+			}
+			return false;
 		}
 
 		void showscores(bool on, bool interm = false)

@@ -294,7 +294,7 @@ namespace world
 		if(types & ST_CURSOR) resetcursor();
 		if(types & ST_GAME)
 		{
-			hud::sb.showscores(false);
+			if(hud::sb.scoreson) hud::sb.showscores(false);
 			cleargui();
 			lasthit = 0;
 		}
@@ -447,6 +447,8 @@ namespace world
 			    }
 			    else physics::move(player1, 10, true);
             }
+
+            if(hud::sb.canshowscores()) hud::sb.showscores(true);
 		}
 
 		if(player1->clientnum >= 0) c2sinfo(40);
@@ -528,7 +530,6 @@ namespace world
 		if(d == player1)
 		{
 			anc = S_V_FRAGGED;
-			hud::sb.showscores(true);
 			d->stopmoving();
 			d->pitch = 0;
 			d->roll = 0;
@@ -1213,7 +1214,7 @@ namespace world
 			}
 			else if(player1->state == CS_DEAD)
 			{
-				vec pos = headpos(player1, player1->height*0.5f), dir = vec(pos).sub(camera1->o).normalize();
+				vec dir = vec(player1->o).sub(camera1->o).normalize();
 				float yaw = camera1->yaw, pitch = camera1->pitch;
 				vectoyawpitch(dir, yaw, pitch);
 				scalecameraangle;
