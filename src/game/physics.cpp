@@ -96,7 +96,7 @@ namespace physics
 			}
 			return true;
 		}
-		return false;
+        return d->state == CS_DEAD;
 	}
 
 	bool iscrouching(physent *d)
