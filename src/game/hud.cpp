@@ -893,7 +893,7 @@ namespace hud
             dir.color = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
         }
         else if(kidmode || world::noblood) dir.color = vec(1, 0.25f, 1);
-        else dir.color = vec(1, 0, 0);
+        else dir.color = vec(0.75f, 0, 0);
 	}
 
 	void drawdamagecompass(int w, int h, int s, float blend)
