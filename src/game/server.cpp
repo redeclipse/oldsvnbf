@@ -1620,7 +1620,7 @@ namespace server
         ci->state.deaths++;
 		dropitems(ci);
 		sendf(-1, 1, "ri4", SV_FRAG, ci->clientnum, ci->state.frags, ci->state.spree);
-		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, -1, e.flags, ci->state.health);
+		sendf(-1, 1, "ri6", SV_DIED, ci->clientnum, ci->clientnum, -1, e.flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
