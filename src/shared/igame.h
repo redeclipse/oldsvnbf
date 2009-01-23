@@ -70,6 +70,7 @@ namespace physics
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
 	extern float gravityforce(physent *d);
 	extern void interppos(physent *d);
+    extern void updateragdoll(dynent *d, const vec &center, float radius);
 }
 
 namespace world

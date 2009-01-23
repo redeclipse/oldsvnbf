@@ -1219,7 +1219,12 @@ namespace ai
 			d->ai->lastnode = d->lastnode;
 		}
 		else d->stopmoving();
-		physics::move(d, 1, true);
+        if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
+		else 
+        {
+            if(d->ragdoll) cleanragdoll(d);
+            physics::move(d, 1, true);
+        }
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
 

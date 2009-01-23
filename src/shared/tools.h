@@ -648,7 +648,7 @@ inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator
 #endif
 #endif
 
-extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL);
+extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
 extern char *makefile(const char *s, const char *e = "", int revision = 0, int start = 1, bool skip = false);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);

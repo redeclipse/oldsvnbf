@@ -275,6 +275,12 @@ extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
 extern void setbbfrommodel(dynent *d, const char *mdl);
 
+// ragdoll
+
+extern bool validragdoll(dynent *d, int millis);
+extern void moveragdoll(dynent *d);
+extern void cleanragdoll(dynent *d);
+
 // server
 #define MAXCLIENTS 256                  // in a multiplayer game, can be arbitrarily changed
 #define MAXTRANS 5000                  // max amount of data to swallow in 1 go
