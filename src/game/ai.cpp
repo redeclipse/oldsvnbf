@@ -1219,7 +1219,7 @@ namespace ai
 			d->ai->lastnode = d->lastnode;
 		}
 		else d->stopmoving();
-        if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
+        if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d, false);
 		else 
         {
             if(d->ragdoll) cleanragdoll(d);

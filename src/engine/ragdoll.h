@@ -376,7 +376,7 @@ bool validragdoll(dynent *d, int millis)
     return d->ragdoll && d->ragdoll->millis >= millis;
 }
 
-void moveragdoll(dynent *d)
+void moveragdoll(dynent *d, bool smooth)
 {
     if(!curtime || !d->ragdoll) return;
 
@@ -393,8 +393,12 @@ void moveragdoll(dynent *d)
 
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     eye.add(d->ragdoll->offset);
-    float k = pow(ragdolleyesmooth, curtime/ragdolleyesmoothmillis);
-    d->o.mul(k).add(eye.mul(1-k));
+    if(smooth)
+    {
+        float k = pow(ragdolleyesmooth, curtime/ragdolleyesmoothmillis);
+        d->o.mul(k).add(eye.mul(1-k));
+    }
+    else d->o = eye;
 }
 
 void cleanragdoll(dynent *d)

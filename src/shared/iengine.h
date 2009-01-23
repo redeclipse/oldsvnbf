@@ -278,7 +278,7 @@ extern void setbbfrommodel(dynent *d, const char *mdl);
 // ragdoll
 
 extern bool validragdoll(dynent *d, int millis);
-extern void moveragdoll(dynent *d);
+extern void moveragdoll(dynent *d, bool smooth);
 extern void cleanragdoll(dynent *d);
 
 // server

@@ -874,7 +874,7 @@ namespace physics
 		}
 		else if(d->state==CS_DEAD)
         {
-            if(d->ragdoll) moveragdoll(d);
+            if(d->ragdoll) moveragdoll(d, false);
             else if(lastmillis-d->lastpain<2000) move(d, res, local);
         }
 	}

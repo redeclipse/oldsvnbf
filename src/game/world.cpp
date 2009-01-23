@@ -443,7 +443,7 @@ namespace world
 
 			if(player1->state == CS_DEAD)
 			{
-                if(player1->ragdoll) moveragdoll(player1);
+                if(player1->ragdoll) moveragdoll(player1, true);
 				else if(lastmillis-player1->lastpain < 2000)
 					physics::move(player1, 10, false);
 			}
