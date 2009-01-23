@@ -770,6 +770,7 @@ namespace hud
 		{
 			if(!dirs)
 			{
+                usetexturing(false);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				bool alt = kidmode || world::noblood || m_paint(world::gamemode, world::mutators);
 				glColor4f(1, alt ? 0.25f : 0.75f, alt ? 1.f : 0.75f, damagecompassblend*blend);
@@ -794,6 +795,7 @@ namespace hud
 			scale -= float(curtime)/damagecompassfade;
 			dcompass[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
 		}
+        if(dirs) usetexturing(true);
 	}
 
 	void drawsniper(int w, int h, int s, float blend)

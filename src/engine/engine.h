@@ -653,6 +653,7 @@ extern float curfov, fovy, aspect;
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false, float zscale = 1);
 extern void transplayer();
 
+extern void usetexturing(bool on);
 extern void renderprimitive(bool on);
 extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
 extern void rendertris(vec &fr, float yaw, float pitch, float size = 1.f, float r = 255.f, float g = 255.f, float b = 255.f, bool fill = true, bool nf = false);

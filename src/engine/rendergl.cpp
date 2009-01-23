@@ -2049,6 +2049,20 @@ void gl_drawframe(int w, int h)
 	}
 
 
+void usetexturing(bool on)
+{
+    if (on)
+    {
+        defaultshader->set();
+        glEnable(GL_TEXTURE_2D);
+    }
+    else
+    {
+        notextureshader->set();
+        glDisable(GL_TEXTURE_2D);
+    } 
+}
+
 void renderprimitive(bool on)
 {
 	if (on)
