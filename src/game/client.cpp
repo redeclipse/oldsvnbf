@@ -1041,7 +1041,6 @@ namespace client
 					if(f==world::player1)
 					{
 						if(editmode) toggleedit();
-						hud::sb.showscores(true);
 					}
                     else f->resetinterp();
 					f->state = CS_DEAD;
@@ -1066,7 +1065,7 @@ namespace client
 
 				case SV_NEWGAME: // server requests next game
 				{
-					hud::sb.showscores(false);
+					if(hud::sb.scoreson) hud::sb.showscores(false);
 					if(!guiactive()) showgui("game");
 					break;
 				}
@@ -1497,8 +1496,7 @@ namespace client
 					else if(s->state==CS_SPECTATOR)
 					{
 						s->state = CS_DEAD;
-						if(s==world::player1) hud::sb.showscores(true);
-                        else s->resetinterp();
+						if(s!=world::player1) s->resetinterp();
 					}
 					break;
 				}
@@ -1511,7 +1509,7 @@ namespace client
 					if(s==world::player1)
 					{
 						if(editmode) toggleedit();
-						hud::sb.showscores(false);
+						if(hud::sb.scoreson) hud::sb.showscores(false);
 					}
 					s->state = CS_WAITING;
 					break;
