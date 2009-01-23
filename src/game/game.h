@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			146
+#define GAMEVERSION			147
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -333,12 +333,12 @@ weaptypes weaptype[WEAPON_MAX] =
 			"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_CARBINE,		-20,  	20,
+		WEAPON_PAINT,		ANIM_CARBINE,		-5,  	5,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
-			20,		20,		500,	1000,	25,		1000,	0,		10000,
+			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		1.5f,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		1.75f,
 			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -1068,7 +1068,7 @@ struct gameent : dynent, gamestate
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	aiinfo *ai;
     vec muzzle, mdir[MDIR_MAX];
-	bool attacking, reloading, useaction, obliterated, k_up, k_down, k_left, k_right;
+	bool attacking, reloading, useaction, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
@@ -1113,7 +1113,6 @@ struct gameent : dynent, gamestate
 		stopmoving();
 		dynent::reset();
 		gamestate::respawn(millis, heal);
-		obliterated = false;
         lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;

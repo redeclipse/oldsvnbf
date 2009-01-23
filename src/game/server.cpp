@@ -2352,12 +2352,12 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
-					int wait = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)), nospawn = wait ? 1 : 0;
+					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay), nospawn = wait ? 1 : 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if(nospawn)
 					{
-						if(wait && m_spawndelay(gamemode, mutators)-wait <= int(m_spawndelay(gamemode, mutators)*sv_spawndelaywait)) break;
+						if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
 						loopk(WEAPON_MAX) cp->state.entid[k] = -1;

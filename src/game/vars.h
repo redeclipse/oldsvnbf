@@ -50,7 +50,7 @@ VARG(instaspawnweapon, 0, WEAPON_RIFLE, WEAPON_TOTAL-1);
 VARG(spawndelay, 0, 3, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
 VARG(stfspawndelay, 0, 5, INT_MAX-1); // .. in stf
 VARG(ctfspawndelay, 0, 3, INT_MAX-1); // .. in ctf
-FVARG(spawndelaywait, 0, 0.5f, 1000); // scale the above values to define delay before allowing wait state
+VARG(spawndelaywait, 0, 1, INT_MAX-1); // wait this long before allowing wait state
 FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in instagib
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 

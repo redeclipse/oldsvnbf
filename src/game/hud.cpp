@@ -344,7 +344,7 @@ namespace hud
 			int ty = showradar ? int(hudsize*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
-				int delay = world::player1->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators));
+				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->respawnwait(lastmillis, sdelay);
 				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Waiting..";
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
@@ -357,7 +357,7 @@ namespace hud
 						pushfont("emphasis");
 						ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 						popfont();
-						if(world::player1->state != CS_WAITING && shownotices > 2 && m_spawndelay(world::gamemode, world::mutators)-delay > int(m_spawndelay(world::gamemode, world::mutators)*spawndelaywait))
+						if(world::player1->state != CS_WAITING && shownotices > 2 && sdelay-delay > min(sdelay, spawndelaywait*1000))
 						{
 							pushfont("default");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
