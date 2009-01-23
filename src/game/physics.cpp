@@ -581,10 +581,9 @@ namespace physics
         }
     }
 
-    void updatematerial(physent *pl, bool local, bool floating)
+    void updatematerial(physent *pl, const vec &center, float radius, const vec &bottom, bool local, bool floating)
     {
-		vec v = pl->type == ENT_PLAYER ? world::feetpos(pl, 1.f) : pl->o;
-		int material = lookupmaterial(v), curmat = material&MATF_VOLUME, flagmat = material&MATF_FLAGS,
+		int material = lookupmaterial(bottom), curmat = material&MATF_VOLUME, flagmat = material&MATF_FLAGS,
 			oldmat = pl->inmaterial&MATF_VOLUME;
 
 		if(!floating && curmat != oldmat)
@@ -598,8 +597,8 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(v, getwatercolour(mcol), PART_WATER, 2.f, 4, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(pl->o).sub(vec(0, 0, pl->height/2.f)), getlavacolour(mcol), PART_FIREBALL, 2.f, int(pl->height/2.f), S_BURNING);
+				mattrig(bottom, getwatercolour(mcol), PART_WATER, 2.f, 4, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), PART_FIREBALL, 2.f, int(radius), S_BURNING);
 
 			if(local)
 			{
@@ -615,6 +614,18 @@ namespace physics
 		pl->inmaterial = material;
 		pl->inliquid = !floating && isliquid(curmat);
 		pl->onladder = !floating && flagmat == MAT_LADDER;
+    }
+
+    void updatematerial(physent *pl, bool local, bool floating)
+    {
+        updatematerial(pl, pl->o, pl->height/2.f, pl->type == ENT_PLAYER ? world::feetpos(pl, 1.f) : pl->o, local, floating);
+    }
+
+    void updateragdoll(dynent *d, const vec &center, float radius)
+    {
+        vec bottom(center);
+        bottom.z -= radius/2.f;
+        updatematerial(d, center, radius, bottom, false, false);
     }
 
 	// main physics routine, moves a player/monster for a time step
@@ -861,7 +872,11 @@ namespace physics
 			if(smoothmove && d->smoothmillis>0) predictplayer(d, true, res, local);
 			else move(d, res, local);
 		}
-		else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) move(d, res, local);
+		else if(d->state==CS_DEAD)
+        {
+            if(d->ragdoll) moveragdoll(d);
+            else if(lastmillis-d->lastpain<2000) move(d, res, local);
+        }
 	}
 
 	bool droptofloor(vec &o, float radius, float height)

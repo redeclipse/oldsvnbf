@@ -92,14 +92,14 @@ struct md3 : vertmodel
                     loopj(3) tag.rotation[1][j] *= -1;
                     // then restore it
                     loopj(3) tag.rotation[j][1] *= -1;
-                    m.X.w = tag.pos.x;
-                    m.Y.w = tag.pos.y;
-                    m.Z.w = tag.pos.z;
+                    m.a.w = tag.pos.x;
+                    m.b.w = tag.pos.y;
+                    m.c.w = tag.pos.z;
                     loopj(3)
                     {
-                        m.X[j] = tag.rotation[j][0];
-                        m.Y[j] = tag.rotation[j][1];
-                        m.Z[j] = tag.rotation[j][2];
+                        m.a[j] = tag.rotation[j][0];
+                        m.b[j] = tag.rotation[j][1];
+                        m.c[j] = tag.rotation[j][2];
                     }
 #if 0
                     tags[i].pos = vec(tag.pos.x, -tag.pos.y, tag.pos.z);
@@ -219,7 +219,10 @@ struct md3 : vertmodel
             loadingmd3 = NULL;
             if(!loaddefaultparts()) return false;
         }
-        loopv(parts) parts[i]->meshes = parts[i]->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, -translate.y, translate.z));
+        scale /= 4;
+        translate.y = -translate.y;
+        parts[0]->translate = translate;
+        loopv(parts) parts[i]->meshes->shared++;
         preloadshaders();
         return loaded = true;
     }
@@ -279,7 +282,7 @@ void md3skin(char *meshname, char *tex, char *masks, float *envmapmax, float *en
         s.tex = textureload(makerelpath(md3dir, tex), 0, true, false);
         if(*masks)
         {
-            s.masks = textureload(makerelpath(md3dir, masks, "<ffmask:25>"), 0, true, false);
+            s.masks = textureload(makerelpath(md3dir, masks, NULL, "<ffmask:25>"), 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
         }

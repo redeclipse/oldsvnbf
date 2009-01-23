@@ -14,7 +14,6 @@ namespace world
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
-	gameent lastplayerstate;
 	dynent fpsmodel;
 
 	VARW(numplayers, 0, 4, MAXCLIENTS/2);
@@ -86,6 +85,8 @@ namespace world
 	VARP(playdamagetones, 0, 2, 2);
 
 	VARP(noblood, 0, 0, 1);
+
+    VARP(ragdoll, 0, 1, 1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -442,17 +443,22 @@ namespace world
 
 			if(player1->state == CS_DEAD)
 			{
-				if(lastmillis-player1->lastpain < 2000)
+                if(player1->ragdoll) moveragdoll(player1);
+				else if(lastmillis-player1->lastpain < 2000)
 					physics::move(player1, 10, false);
 			}
-			else if(player1->state == CS_ALIVE)
-			{
-				physics::move(player1, 10, true);
-				addsway(player1);
-				entities::checkitems(player1);
-				weapons::reload(player1);
-			}
-			else physics::move(player1, 10, true);
+			else 
+            {
+                if(player1->ragdoll) cleanragdoll(player1);
+                if(player1->state == CS_ALIVE)
+			    {
+				    physics::move(player1, 10, true);
+				    addsway(player1);
+				    entities::checkitems(player1);
+				    weapons::reload(player1);
+			    }
+			    else physics::move(player1, 10, true);
+            }
 		}
 
 		if(player1->clientnum >= 0) c2sinfo(40);
@@ -543,9 +549,8 @@ namespace world
 		{
 			anc = S_V_FRAGGED;
 			hud::sb.showscores(true);
-			lastplayerstate = *player1;
 			d->stopmoving();
-			d->pitch = 0;
+			//d->pitch = 0;
 			d->roll = 0;
 		}
 		else
@@ -1429,7 +1434,7 @@ namespace world
 				o.add(dir);
 			}
 		}
-
+        
 		int anim = animflags, basetime = lastaction, basetime2 = 0;
 		if(animoverride)
 		{
@@ -1470,6 +1475,12 @@ namespace world
 			}
 		}
 
+        if(third && testanims && d == player1) yaw = 0; 
+        else yaw += 90; 
+        if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/1000.0f, 0.0f);
+
+        if(d->ragdoll && (!ragdoll || anim!=ANIM_DYING)) cleanragdoll(d);
+
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
 		int flags = MDL_LIGHT;
@@ -1479,7 +1490,7 @@ namespace world
 		else if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
-		rendermodel(NULL, mdl, anim, o, !third && testanims && d == player1 ? 0 : yaw+90, pitch, roll, flags, e, attachments, basetime, basetime2);
+		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2);
 	}
 
 	void renderplayer(gameent *d, bool third, bool trans, bool early = false)
@@ -1497,9 +1508,16 @@ namespace world
 			showweap = false;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
-			int t = lastmillis-lastaction;
-			if(t < 0) return;
-			if(t > 1000) animflags = ANIM_DEAD|ANIM_LOOP;
+            if(ragdoll)
+            {
+                if(!validragdoll(d, lastaction)) animflags |= ANIM_RAGDOLL;
+            }
+            else
+            {
+			    int t = lastmillis-lastaction;
+			    if(t < 0) return;
+			    if(t > 1000) animflags = ANIM_DEAD|ANIM_LOOP;
+            }
         }
 		else if(d->state == CS_EDITING)
 		{

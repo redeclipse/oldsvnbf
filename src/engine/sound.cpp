@@ -157,7 +157,7 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, ve
 ICOMMAND(registersound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, gamesounds)));
 ICOMMAND(mapsound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, mapsounds)));
 
-void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, vec &pos, int *curvol, int *curpan)
+void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
 	bool posliquid = isliquid(lookupmaterial(pos)&MATF_VOLUME),
 			camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
@@ -248,7 +248,7 @@ void updatesounds()
 	if(music && !Mix_PlayingMusic()) musicdone(true);
 }
 
-int playsound(int n, vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)
+int playsound(int n, const vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)
 {
 	if(nosound || !soundvol) return -1;
 

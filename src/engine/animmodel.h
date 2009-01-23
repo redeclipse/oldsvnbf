@@ -91,7 +91,12 @@ struct animmodel : model
             {
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
             }
-            else if(lightmodels && !enablelighting) { glEnable(GL_LIGHTING); enablelighting = true; }
+            else if(lightmodels && !enablelighting)
+            {
+                glEnable(GL_LIGHTING);
+                enablelighting = true;
+                if(!enablerescale) { glEnable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE); enablerescale = true; }
+            }
             int needsfog = -1;
             if(fogging)
             {
@@ -271,6 +276,7 @@ struct animmodel : model
                 if(enableglow) disableglow();
                 if(enableenvmap) disableenvmap();
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
+                if(enablerescale) { glDisable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE); enablerescale = false; }
                 if(enablefog) disablefog(true);
                 if(shadowmapping) SETMODELSHADER(b, shadowmapcaster);
                 else /*if(as->anim&ANIM_SHADOW)*/ SETMODELSHADER(b, notexturemodel); // this shader also gets used with color mask disabled
@@ -356,6 +362,7 @@ struct animmodel : model
                             glEnable(GL_TEXTURE_GEN_R);
                         }
                         enableenvmap = true;
+                        if(!enablerescale) { glEnable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE); enablerescale = true; }
                     }
                     if(lastenvmaptex!=emtex) { glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, emtex); lastenvmaptex = emtex; }
                     glActiveTexture_(GL_TEXTURE0_ARB);
@@ -382,16 +389,6 @@ struct animmodel : model
             DELETEA(name);
         }
 
-        virtual mesh *allocate() = 0;
-        virtual mesh *copy()
-        {
-            mesh &m = *allocate();
-            if(name) m.name = newstring(name);
-            m.noclip = noclip;
-            return &m;
-        }
-
-        virtual void scaleverts(const vec &transdiff, float scalediff) {}
         virtual void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m) {}
         virtual void gentris(int frame, Texture *tex, vector<BIH::tri> *out, const matrix3x4 &m) {}
 
@@ -423,7 +420,7 @@ struct animmodel : model
         }
 
         virtual int findtag(const char *name) { return -1; }
-        virtual void concattagtransform(int frame, int i, const matrix3x4 &m, matrix3x4 &n) {}
+        virtual void concattagtransform(part *p, int frame, int i, const matrix3x4 &m, matrix3x4 &n) {}
 
         void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m)
         {
@@ -440,41 +437,8 @@ struct animmodel : model
         bool hasframes(int i, int n) const { return i>=0 && i+n<=totalframes(); }
         int clipframes(int i, int n) const { return min(n, totalframes() - i); }
 
-        virtual meshgroup *allocate() = 0;
-        virtual meshgroup *copy()
-        {
-            meshgroup &group = *allocate();
-            group.name = newstring(name);
-            loopv(meshes) group.meshes.add(meshes[i]->copy())->group = &group;
-            group.scale = scale;
-            group.translate = translate;
-            return &group;
-        }
-
-        virtual void scaletags(const vec &transdiff, float scalediff) {}
-
-        meshgroup *scaleverts(float nscale, const vec &ntranslate)
-        {
-            if(nscale==scale && ntranslate==translate) { shared++; return this; }
-            else if(next || shared)
-            {
-                if(!next) next = copy();
-                return next->scaleverts(nscale, ntranslate);
-            }
-            float scalediff = nscale/scale;
-            vec transdiff(ntranslate);
-            transdiff.sub(translate);
-            transdiff.mul(scale);
-            loopv(meshes) meshes[i]->scaleverts(transdiff, scalediff);
-            scaletags(transdiff, scalediff);
-            scale = nscale;
-            translate = ntranslate;
-            shared++;
-            return this;
-        }
-
         virtual void cleanup() {}
-        virtual void render(const animstate *as, float pitch, const vec &axis, part *p) {}
+        virtual void render(const animstate *as, float pitch, const vec &axis, dynent *d, part *p) {}
     };
 
     virtual meshgroup *loadmeshes(char *name, va_list args) { return NULL; }
@@ -514,8 +478,9 @@ struct animmodel : model
         vector<animspec> *anims[MAXANIMPARTS];
         int numanimparts;
         float pitchscale, pitchoffset, pitchmin, pitchmax;
+        vec translate;
 
-        part() : meshes(NULL), numanimparts(1), pitchscale(1), pitchoffset(0), pitchmin(0), pitchmax(0)
+        part() : meshes(NULL), numanimparts(1), pitchscale(1), pitchoffset(0), pitchmin(0), pitchmax(0), translate(0, 0, 0)
         {
             loopk(MAXANIMPARTS) anims[k] = NULL;
         }
@@ -531,22 +496,28 @@ struct animmodel : model
 
         void calcbb(int frame, vec &bbmin, vec &bbmax, const matrix3x4 &m)
         {
-            meshes->calcbb(frame, bbmin, bbmax, m);
+            matrix3x4 t = m;
+            t.translate(translate);
+            t.scale(model->scale);
+            meshes->calcbb(frame, bbmin, bbmax, t);
             loopv(links)
             {
                 matrix3x4 n;
-                meshes->concattagtransform(frame, links[i].tag, m, n);
+                meshes->concattagtransform(this, frame, links[i].tag, m, n);
                 links[i].p->calcbb(frame, bbmin, bbmax, n);
             }
         }
 
         void gentris(int frame, vector<BIH::tri> *tris, const matrix3x4 &m)
         {
-            meshes->gentris(frame, skins, tris, m);
+            matrix3x4 t = m;
+            t.translate(translate);
+            t.scale(model->scale);
+            meshes->gentris(frame, skins, tris, t);
             loopv(links)
             {
                 matrix3x4 n;
-                meshes->concattagtransform(frame, links[i].tag, m, n);
+                meshes->concattagtransform(this, frame, links[i].tag, m, n);
                 links[i].p->gentris(frame, tris, n);
             }
         }
@@ -667,7 +638,12 @@ struct animmodel : model
             if(d && interp>=0)
             {
                 animinterpinfo &ai = d->animinterp[interp];
-                if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>animationinterpolationtime)
+                if(d->ragdoll && !(anim&ANIM_RAGDOLL))
+                {
+                    ai.prev.range = ai.cur.range = 0;
+                    ai.lastswitch = -1;
+                }
+                else if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>animationinterpolationtime)
                 {
                     ai.prev = ai.cur = info;
                     ai.lastswitch = lastmillis-animationinterpolationtime*2;
@@ -746,6 +722,8 @@ struct animmodel : model
             {
                 glPushMatrix();
                 glMultMatrixf(matrixstack[matrixpos].v);
+                if(model->scale!=1) glScalef(model->scale, model->scale, model->scale);
+                if(!translate.iszero()) glTranslatef(translate.x, translate.y, translate.z);
                 if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
                 {
                     glMatrixMode(GL_TEXTURE);
@@ -758,17 +736,19 @@ struct animmodel : model
             {
                 if(renderpath!=R_FIXEDFUNCTION)
                 {
-                    if(fogging) setfogplane(rfogplane);
+                    if(fogging) setfogplane(plane(rfogplane).translate(translate).scale(model->scale));
                     setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
-                    setenvparamf("camera", SHPARAM_VERTEX, 1, rcampos.x, rcampos.y, rcampos.z, 1);
+                    vec ocampos(rcampos);
+                    ocampos.div(model->scale).sub(translate);
+                    setenvparamf("camera", SHPARAM_VERTEX, 1, ocampos.x, ocampos.y, ocampos.z, 1);
                 }
                 else
                 {
-                    if(fogging) refractfogplane = rfogplane;
+                    if(fogging) refractfogplane = plane(rfogplane).translate(translate).scale(model->scale);
                 }
             }
 
-            meshes->render(as, pitch, axis, this);
+            meshes->render(as, pitch, axis, d, this);
 
             if(!(anim&ANIM_NORENDER))
             {
@@ -924,9 +904,13 @@ struct animmodel : model
 
         matrixpos = 0;
         matrixstack[0].identity();
-        matrixstack[0].translate(o);
-        matrixstack[0].rotate_around_z((yaw+180)*RAD);
-        if(roll) matrixstack[0].rotate_around_x(-roll*RAD);
+        if(!d || !d->ragdoll || anim&ANIM_RAGDOLL)
+        {
+            matrixstack[0].translate(o);
+            matrixstack[0].rotate_around_z((yaw+180)*RAD);
+            if(roll) matrixstack[0].rotate_around_x(-roll*RAD);
+        }
+        else pitch = 0;
 
         if(anim&ANIM_NORENDER)
         {
@@ -943,18 +927,20 @@ struct animmodel : model
                 glLightfv(GL_LIGHT0, GL_POSITION, pos);
             }
 
-            fogplane = plane(0, 0, 1, o.z-reflectz);
-
             lightcolor = color;
 
+            fogplane = plane(0, 0, 1, -reflectz);
             rdir = dir;
-            rdir.rotate_around_z((-yaw-180.0f)*RAD);
-            rdir.rotate_around_x(roll*RAD);
-
             campos = camera1->o;
-            campos.sub(o);
-            campos.rotate_around_z((-yaw-180.0f)*RAD);
-            campos.rotate_around_x(roll*RAD);
+            if(!d || !d->ragdoll || anim&ANIM_RAGDOLL)
+            {
+                fogplane.offset += o.z;
+                rdir.rotate_around_z((-yaw-180.0f)*RAD);
+                rdir.rotate_around_x(roll*RAD);
+                campos.sub(o);
+                campos.rotate_around_z((-yaw-180.0f)*RAD);
+                campos.rotate_around_x(roll*RAD);
+            }
 
             if(envmapped()) anim |= ANIM_ENVMAP;
             else if(a) for(int i = 0; a[i].tag; i++) if(a[i].m && a[i].m->envmapped())
@@ -1188,7 +1174,7 @@ struct animmodel : model
         center.add(radius);
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enablenormals, enabletangents, enablebones;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enablenormals, enabletangents, enablebones, enablerescale;
     static vec lightcolor;
     static plane refractfogplane;
     static float lastalphatest;
@@ -1200,7 +1186,7 @@ struct animmodel : model
 
     void startrender()
     {
-        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enableoverbright = enablelighting = enablefog = enablenormals = enabletangents = enablebones = false;
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enableoverbright = enablelighting = enablefog = enablenormals = enabletangents = enablebones = enablerescale = false;
         enablecullface = true;
         lastalphatest = -1;
         lastvbuf = lasttcbuf = lastmtcbuf = lastxbuf = lastnbuf = lastbbuf = lastsdata = lastbdata = NULL;
@@ -1324,6 +1310,7 @@ struct animmodel : model
         if(enableglow) disableglow();
         if(enableoverbright) disableoverbright();
         if(enablelighting) glDisable(GL_LIGHTING);
+        if(enablerescale) glDisable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE);
         if(lastenvmaptex) disableenvmap(true);
         if(!enablecullface) glEnable(GL_CULL_FACE);
         if(fogtmu>=0) disablefog(true);
@@ -1332,7 +1319,7 @@ struct animmodel : model
 
 bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enablealphatest = false, animmodel::enablealphablend = false,
      animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enableoverbright = false, animmodel::enablelighting = false, animmodel::enablelight0 = false, animmodel::enablecullface = true,
-     animmodel::enablefog = false, animmodel::enablenormals = false, animmodel::enabletangents = false, animmodel::enablebones = false;
+     animmodel::enablefog = false, animmodel::enablenormals = false, animmodel::enabletangents = false, animmodel::enablebones = false, animmodel::enablerescale = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
 float animmodel::lastalphatest = -1;

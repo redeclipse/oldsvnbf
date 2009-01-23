@@ -209,7 +209,10 @@ struct obj : vertmodel
             loadingobj = NULL;
             if(!loaddefaultparts()) return false;
         }
-        loopv(parts) parts[i]->meshes = parts[i]->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, -translate.y, translate.z));
+        scale /= 4;
+        translate.y = -translate.y;
+        parts[0]->translate = translate;
+        loopv(parts) parts[i]->meshes->shared++;
         preloadshaders();
         return loaded = true;
     }
@@ -269,7 +272,7 @@ void objskin(char *meshname, char *tex, char *masks, float *envmapmax, float *en
         s.tex = textureload(makerelpath(objdir, tex), 0, true, false);
         if(*masks)
         {
-            s.masks = textureload(makerelpath(objdir, masks, "<ffmask:25>"), 0, true, false);
+            s.masks = textureload(makerelpath(objdir, masks, NULL, "<ffmask:25>"), 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
         }

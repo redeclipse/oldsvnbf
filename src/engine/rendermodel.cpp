@@ -6,6 +6,7 @@ VARP(animationinterpolationtime, 0, 150, 1000);
 
 model *loadingmodel = NULL;
 
+#include "ragdoll.h"
 #include "animmodel.h"
 #include "vertmodel.h"
 #include "skelmodel.h"
@@ -213,6 +214,76 @@ void mdlname()
 }
 
 COMMAND(mdlname, "");
+
+#define checkragdoll \
+    skelmodel *m = dynamic_cast<skelmodel *>(loadingmodel); \
+    if(!m) { conoutf("\frnot loading a skeletal model"); return; } \
+    skelmodel::skelmeshgroup *meshes = (skelmodel::skelmeshgroup *)m->parts.last()->meshes; \
+    if(!meshes) return; \
+    skelmodel::skeleton *skel = meshes->skel; \
+    if(!skel->ragdoll) skel->ragdoll = new ragdollskel; \
+    ragdollskel *ragdoll = skel->ragdoll; \
+    if(ragdoll->loaded) return;
+
+
+void rdvert(float *x, float *y, float *z)
+{
+    checkragdoll;
+    ragdollskel::vert &v = ragdoll->verts.add();
+    v.pos = vec(*x, *y, *z);
+}
+COMMAND(rdvert, "fff");
+
+void rdeye(int *v)
+{
+    checkragdoll;
+    ragdoll->eye = *v;
+}
+COMMAND(rdeye, "i");
+
+void rdtri(int *v1, int *v2, int *v3)
+{
+    checkragdoll;
+    ragdollskel::tri &t = ragdoll->tris.add();
+    t.vert[0] = *v1;
+    t.vert[1] = *v2;
+    t.vert[2] = *v3;
+}
+COMMAND(rdtri, "iii");
+
+void rdjoint(int *n, int *t, char *v1, char *v2, char *v3)
+{
+    checkragdoll;
+    ragdollskel::joint &j = ragdoll->joints.add();
+    j.bone = *n;
+    j.tri = *t;
+    j.vert[0] = v1[0] ? atoi(v1) : -1;
+    j.vert[1] = v2[0] ? atoi(v2) : -1;
+    j.vert[2] = v3[0] ? atoi(v3) : -1;
+}
+COMMAND(rdjoint, "iisss");
+
+void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist)
+{
+    checkragdoll;
+    ragdollskel::distlimit &d = ragdoll->distlimits.add();
+    d.vert[0] = *v1;
+    d.vert[1] = *v2;
+    d.mindist = *mindist;
+    d.maxdist = max(*maxdist, *mindist);
+}
+COMMAND(rdlimitdist, "iiff");
+
+void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *qz, float *qw)
+{
+    checkragdoll;
+    ragdollskel::rotlimit &r = ragdoll->rotlimits.add();
+    r.tri[0] = *t1;
+    r.tri[1] = *t2;
+    r.maxangle = *maxangle * RAD;
+    r.middle = matrix3x3(quat(*qx, *qy, *qz, *qw));
+}
+COMMAND(rdlimitrot, "iifffff");
 
 // mapmodels
 
@@ -436,8 +507,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     {
         anim |= ANIM_NOSKIN;
         if(renderpath!=R_FIXEDFUNCTION)
-            setenvparamf("shadowintensity", SHPARAM_VERTEX, 1,
-                (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - b.basetime)/1000.0f, 0.0f) : 1.0f);
+            setenvparamf("shadowintensity", SHPARAM_VERTEX, 1, 1.0f);
     }
     else
     {
@@ -477,8 +547,7 @@ void endmodelbatches()
             {
                 batchedmodel &bm = b.batched[j];
                 if(bm.flags&(MDL_SHADOW|MDL_DYNSHADOW))
-                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y),
-                        (bm.anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - bm.basetime)/1000.0f, 0.0f) : 1.0f);
+                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.d && bm.d->ragdoll ? bm.d->ragdoll->center : bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y), 1.0f);
             }
             flushblobs();
         }
@@ -616,8 +685,16 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 	{
         m->boundbox(0/*frame*/, center, bbradius); // FIXME
         radius = bbradius.magnitude();
-        center.rotate_around_z((-180-yaw)*RAD);
-		center.add(o);
+        if(d && d->ragdoll)
+        {
+            radius = max(radius, d->ragdoll->radius);
+            center = d->ragdoll->center;
+        }
+        else
+        {
+            center.rotate_around_z((-180-yaw)*RAD);
+            center.add(o);
+        }
         if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
 		if(flags&MDL_CULL_VFC)
 		{
@@ -690,14 +767,20 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     vec lightcolor(1, 1, 1), lightdir(0, 0, 1);
     if(!shadowmapping)
     {
+        vec pos = o;
         if(d)
-		{
-        	if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
+        {
+            if(!reflecting && !refracting) d->occluded = OCCLUDE_NOTHING;
             if(!light) light = &d->light;
             if(flags&MDL_LIGHT && light->millis!=lastmillis)
             {
-                lightreaching(d->o, light->color, light->dir);
-                dynlightreaching(o, light->color, light->dir);
+                if(d->ragdoll)
+                {
+                    pos = d->ragdoll->center;
+                    pos.z += radius/2;
+                }
+                lightreaching(pos, light->color, light->dir);
+                dynlightreaching(pos, light->color, light->dir);
                 world::lighteffects(d, light->color, light->dir);
                 light->millis = lastmillis;
             }
@@ -706,18 +789,18 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         {
             if(!light)
             {
-                lightreaching(o, lightcolor, lightdir);
-                dynlightreaching(o, lightcolor, lightdir);
-			}
+                lightreaching(pos, lightcolor, lightdir);
+                dynlightreaching(pos, lightcolor, lightdir);
+            }
             else if(light->millis!=lastmillis)
             {
-                lightreaching(o, light->color, light->dir);
-                dynlightreaching(o, light->color, light->dir);
+                lightreaching(pos, light->color, light->dir);
+                dynlightreaching(pos, light->color, light->dir);
                 light->millis = lastmillis;
             }
         }
         if(light) { lightcolor = light->color; lightdir = light->dir; }
-        if(flags&MDL_DYNLIGHT) dynlightreaching(o, lightcolor, lightdir);
+        if(flags&MDL_DYNLIGHT) dynlightreaching(pos, lightcolor, lightdir);
     }
 
 	if(a) for(int i = 0; a[i].tag; i++)
@@ -758,8 +841,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
     if(shadow && !reflecting && refracting<=0)
     {
-        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, o, d ? d->radius : max(bbradius.x, bbradius.y),
-            (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - basetime)/1000.0f, 0.0f) : 1.0f);
+        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, d && d->ragdoll ? center : o, d ? d->radius : max(bbradius.x, bbradius.y), 1.0f);
         flushblobs();
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
@@ -770,8 +852,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     {
         anim |= ANIM_NOSKIN;
         if(renderpath!=R_FIXEDFUNCTION)
-            setenvparamf("shadowintensity", SHPARAM_VERTEX, 1,
-                (anim&ANIM_INDEX)==ANIM_DYING ? max(1.0f - (lastmillis - basetime)/1000.0f, 0.0f) : 1.0f);
+            setenvparamf("shadowintensity", SHPARAM_VERTEX, 1, 1.0f);
     }
     else
     {
@@ -832,9 +913,9 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
     s_sprintf(dirs[2])("textures/");
     masks = notexture;
 
-	#define tryload(tex, path) loopi(4) { s_sprintfd(s)("%s%s", i < 3 ? dirs[i] : "", path); if((tex = textureload(s, 0, true, false)) != NULL) break; }
-    tryload(skin, "skin");
-    tryload(masks, "<ffmask:25>masks");
+	#define tryload(tex, cmd, path) loopi(4) { if((tex = textureload(makerelpath(i < 3 ? dirs[i] : "", path, NULL, cmd), 0, true, false)) != NULL) break; }
+    tryload(skin, NULL, "skin");
+    tryload(masks, "<ffmask:25>", "masks");
 }
 
 void setbbfrommodel(dynent *d, const char *mdl)

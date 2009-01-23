@@ -360,6 +360,8 @@ struct md5 : skelmodel
                             /*if(memcmp(&j, &basejoints[i], sizeof(j))) usedjoints[i] = 1; */
                         }
                         frame[i] = dualquat(j.orient, j.pos);
+                        frame[i].fixantipodal(skel->framebones[i]);
+
 #if 0
                         if(h.parent<0) frame[i] = dualquat(j.orient, j.pos);
                         else (frame[i] = frame[h.parent]).mul(dualquat(j.orient, j.pos));
@@ -461,16 +463,24 @@ struct md5 : skelmodel
             loadingmd5 = NULL;
             if(!loaddefaultparts()) return false;
         }
+        scale /= 4;
+        parts[0]->translate = translate;
         loopv(parts)
         {
             skelpart *p = (skelpart *)parts[i];
             p->endanimparts();
-            p->meshes = p->meshes->scaleverts(scale/4.0f, i ? vec(0, 0, 0) : vec(translate.x, translate.y, translate.z));
+            p->meshes->shared++;    
         }
         preloadshaders();
         return loaded = true;
     }
 };
+
+void setmd5dir(char *name)
+{
+    if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
+    s_sprintf(md5dir)("models/%s", name);
+}
 
 void md5load(char *meshfile, char *skelname)
 {
@@ -567,7 +577,7 @@ void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *en
         s.tex = textureload(makerelpath(md5dir, tex), 0, true, false);
         if(*masks)
         {
-            s.masks = textureload(makerelpath(md5dir, masks, "<ffmask:25>"), 0, true, false);
+            s.masks = textureload(makerelpath(md5dir, masks, NULL, "<ffmask:25>"), 0, true, false);
             s.envmapmax = *envmapmax;
             s.envmapmin = *envmapmin;
         }
@@ -708,6 +718,7 @@ void md5noclip(char *meshname, int *noclip)
     loopmd5meshes(meshname, m, m.noclip = *noclip!=0);
 }
 
+COMMANDN(md5dir, setmd5dir, "s");
 COMMAND(md5load, "ss");
 COMMAND(md5tag, "ss");
 COMMAND(md5pitch, "sffff");
