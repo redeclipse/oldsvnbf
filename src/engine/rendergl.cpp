@@ -1296,12 +1296,46 @@ void loadbackground(int w, int h)
 
 	settexture(kidmode ? "textures/kidback" : loadback);
 
+    float cx = 0.5f*w, cy = 0.5f*h,
+          aw = h*4.0f/3.0f, ah = h;
+    if(aw > w)
+    {
+        aw = w;
+        ah = w*3.0f/4.0f;
+    }
+
 	glBegin(GL_QUADS);
 
-	glTexCoord2f(0, 0); glVertex2f(0, 0);
-	glTexCoord2f(1, 0); glVertex2f(w, 0);
-	glTexCoord2f(1, 1); glVertex2f(w, h);
-	glTexCoord2f(0, 1); glVertex2f(0, h);
+	glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+	glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+	glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+	glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+
+    if(aw > w)
+    {
+        glTexCoord2f(0, 0); glVertex2f(0, cy-ah/2);
+        glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+        glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+        glTexCoord2f(0, 1); glVertex2f(0, cy+ah/2);
+
+        glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+        glTexCoord2f(1, 0); glVertex2f(w, cy-ah/2);
+        glTexCoord2f(1, 1); glVertex2f(w, cy+ah/2);
+        glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+    }
+
+    if(ah > h)
+    {
+        glTexCoord2f(0, 0); glVertex2f(cx-aw/2, 0);
+        glTexCoord2f(1, 0); glVertex2f(cx+aw/2, 0);
+        glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+        glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+
+        glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+        glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+        glTexCoord2f(1, 1); glVertex2f(cx+aw/2, h);
+        glTexCoord2f(0, 1); glVertex2f(cx-aw/2, h);
+    }
 
 	glEnd();
 
