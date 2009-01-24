@@ -1186,7 +1186,7 @@ namespace server
 		}
 		if(!discon)
 		{
-			loopi(WEAPON_MAX) ts.entid[i] = -1;//ts.ammo[i] = -1;
+			ts.weapreset(false);
 			if(!drop.empty())
 				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 		}
@@ -2351,7 +2351,7 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
+					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || ci->state.isalive(gamemillis)) break;
 					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay), nospawn = wait ? 1 : 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
@@ -2360,7 +2360,7 @@ namespace server
 						if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
-						loopk(WEAPON_MAX) cp->state.entid[k] = -1;
+						cp->state.weapreset(false);
 					}
 					else
 					{
