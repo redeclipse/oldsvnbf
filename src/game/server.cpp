@@ -1717,7 +1717,7 @@ namespace server
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		servstate &gs = ci->state;
-		if(!gs.isalive(gamemillis) || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
+		if(gs.state!=CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
 			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
