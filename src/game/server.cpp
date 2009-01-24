@@ -1609,7 +1609,7 @@ namespace server
 				mutate(smuts, mut->died(target, actor));
 				ts.state = CS_DEAD;
 				ts.lastdeath = gamemillis;
-				ts.weapreset(true);
+				//ts.weapreset(true);
 			}
 		}
 	}
@@ -1628,7 +1628,7 @@ namespace server
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.lastdeath = gamemillis;
-		gs.weapreset(true);
+		//gs.weapreset(true);
 	}
 
 	void processevent(clientinfo *ci, destroyevent &e)
