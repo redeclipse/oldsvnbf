@@ -1546,8 +1546,7 @@ namespace server
 
 	void clearevent(clientinfo *ci)
 	{
-		int n = 1;
-		ci->events.remove(0, n);
+		ci->events.remove(0, 1);
 	}
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
@@ -1774,60 +1773,79 @@ namespace server
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, e.ent, sents[e.ent].spawned ? 1 : 0, weap, dropped);
 	}
 
+	void flushevents(clientinfo *ci, int millis)
+	{
+		while(ci->events.length())
+		{
+			gameevent &ev = ci->events[0];
+			#define chkevent(q) \
+			{ \
+				if(q.millis > millis) return; \
+				else if(q.millis >= ci->lastevent) \
+				{ \
+					ci->lastevent = q.millis; \
+					processevent(ci, q); \
+				} \
+				clearevent(ci); \
+			}
+			switch(ev.type)
+			{
+				case GAMEEVENT_SHOT: { chkevent(ev.shot); break; }
+				case GAMEEVENT_SWITCH: { chkevent(ev.weapsel); break; }
+				case GAMEEVENT_RELOAD: { chkevent(ev.reload); break; }
+				case GAMEEVENT_DESTROY: { chkevent(ev.destroy); break; }
+				case GAMEEVENT_USE: { chkevent(ev.use); break; }
+				case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); clearevent(ci); break; }
+			}
+		}
+	}
+
 	void processevents()
 	{
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			while(ci->events.length())
-			{
-				gameevent &ev = ci->events[0];
-				#define chkevent(q) \
-				{ \
-                    if(q.millis <= gamemillis) \
-                    { \
-						if(q.millis >= ci->lastevent) \
-						{ \
-							ci->lastevent = q.millis; \
-							processevent(ci, q); \
-						} \
-						clearevent(ci); \
-                    } \
-				}
-				switch(ev.type)
-				{
-					case GAMEEVENT_SHOT: { chkevent(ev.shot); break; }
-					case GAMEEVENT_SWITCH: { chkevent(ev.weapsel); break; }
-					case GAMEEVENT_RELOAD: { chkevent(ev.reload); break; }
-					case GAMEEVENT_DESTROY: { chkevent(ev.destroy); break; }
-					case GAMEEVENT_USE: { chkevent(ev.use); break; }
-					case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); clearevent(ci); break; }
-				}
-			}
+			flushevents(ci, gamemillis);
 		}
 	}
 
-    void hashpassword(int cn, int sessionid, const char *pwd, char *result)
-    {
-        char buf[2*sizeof(string)];
-        s_sprintf(buf)("%d %d ", cn, sessionid);
-        s_strcpy(&buf[strlen(buf)], pwd);
-        tiger::hashval hv;
-        tiger::hash((uchar *)buf, strlen(buf), hv);
-        loopi(sizeof(hv.bytes))
-        {
-            uchar c = hv.bytes[i];
-            *result++ = "0123456789abcdef"[c&0xF];
-            *result++ = "0123456789abcdef"[c>>4];
-        }
-        *result = '\0';
-    }
+	void cleartimedevents(clientinfo *ci)
+	{
+		int keep = 0;
+		loopv(ci->events)
+		{
+			switch(ci->events[i].type)
+			{
+				case GAMEEVENT_DESTROY:
+					if(keep < i) { ci->events.remove(keep, i - keep); i = keep; }
+					keep = i+1;
+					continue;
+			} 
+		}
+		ci->events.setsize(keep);
+	}
 
-    bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
-    {
-        string hash;
-        hashpassword(ci->clientnum, ci->sessionid, wanted, hash);
-        return !strcmp(hash, given);
+	void hashpassword(int cn, int sessionid, const char *pwd, char *result)
+	{
+		char buf[2*sizeof(string)];
+		s_sprintf(buf)("%d %d ", cn, sessionid);
+		s_strcpy(&buf[strlen(buf)], pwd);
+		tiger::hashval hv;
+		tiger::hash((uchar *)buf, strlen(buf), hv);
+		loopi(sizeof(hv.bytes))
+		{
+			uchar c = hv.bytes[i];
+			*result++ = "0123456789abcdef"[c&0xF];
+			*result++ = "0123456789abcdef"[c>>4];
+		}
+		*result = '\0';
+	}
+
+	bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
+	{
+		string hash;
+		hashpassword(ci->clientnum, ci->sessionid, wanted, hash);
+		return !strcmp(hash, given);
     }
 
 	#include "auth.h"
@@ -2367,7 +2385,7 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || cp->state.isalive(gamemillis)) break;
+					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
 					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay);
 					if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
 					int nospawn = 0;
@@ -2375,6 +2393,8 @@ namespace server
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
 					if(!nospawn)
 					{
+						if(cp->state.lastdeath) flushevents(cp, cp->state.lastdeath + DEATHMILLIS);
+						cleartimedevents(cp);
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
 						cp->state.weapreset(false);
