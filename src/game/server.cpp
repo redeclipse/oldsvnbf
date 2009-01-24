@@ -2351,7 +2351,7 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || ci->state.isalive(gamemillis)) break;
+					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
 					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay), nospawn = wait ? 1 : 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
