@@ -191,20 +191,14 @@ namespace hud
 		void gui(g3d_gui &g, bool firstpass)
 		{
 			g.start(menustart, 0.03f, NULL, false);
-
 			int numgroups = groupplayers();
 
-			s_sprintfd(modemapstr)("%s: %s", server::gamename(world::gamemode, world::mutators), getmapname());
+			g.textf("%s", 0xFFFFFF, "info", server::gamename(world::gamemode, world::mutators));
 			if((m_timed(world::gamemode) || client::demoplayback) && world::minremain >= 0)
 			{
-				if(!world::minremain) s_strcat(modemapstr, ", intermission");
-				else
-				{
-					s_sprintfd(cstr)(", %d %s remain", world::minremain, world::minremain==1 ? "minute" : "minutes");
-					s_strcat(modemapstr, cstr);
-				}
+				if(!world::minremain) g.textf("%s: intermission", 0xFFFFFF, "info", getmapname());
+				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), world::minremain, world::minremain==1 ? "minute" : "minutes");
 			}
-			g.text(modemapstr, 0xFFFFFF, "server");
 
 			if(!world::minremain || scoresinfo())
 			{
