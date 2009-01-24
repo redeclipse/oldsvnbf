@@ -182,6 +182,29 @@ SDL_Surface *texmad(SDL_Surface *s, const vec &mul, const vec &add)
     return s;
 }
 
+SDL_Surface *texmix(SDL_Surface *s, int c1, int c2, int c3, int c4)
+{
+    int numchans = c1 < 0 ? 0 : (c2 < 0 ? 1 : (c3 < 0 ? 2 : (c4 < 0 ? 3 : 4)));
+    if(numchans <= 0) return s;
+    SDL_Surface *m = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 8*numchans, 0, 0, 0, 0);
+    if(!m) fatal("create surface");
+    uchar *dst = (uchar *)m->pixels, *src = (uchar *)s->pixels;
+    loopi(s->h*s->w)
+    {
+        switch(numchans)
+        {
+            case 4: dst[3] = src[c4];
+            case 3: dst[2] = src[c3];
+            case 2: dst[1] = src[c2];
+            case 1: dst[0] = src[c1];
+        } 
+        src += s->format->BytesPerPixel;
+        dst += m->format->BytesPerPixel;
+    }
+    SDL_FreeSurface(s);
+    return m;
+}
+
 static SDL_Surface stubsurface;
 
 SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear)
@@ -693,6 +716,7 @@ SDL_Surface *texturedata(const char *tname, Slot::Tex *tex, bool msg, bool *comp
         else if(!strncmp(cmd, "rotate", len)) s = texrotate(s, atoi(arg[0]), tex ? tex->type : 0);
         else if(!strncmp(cmd, "reorient", len)) s = texreorient(s, atoi(arg[0])>0, atoi(arg[1])>0, atoi(arg[2])>0, tex ? tex->type : TEX_DIFFUSE);
         else if(!strncmp(cmd, "crop", len)) s = texcrop(s, atoi(arg[0]), atoi(arg[1]), atoi(arg[2]), atoi(arg[3]));
+        else if(!strncmp(cmd, "mix", len)) s = texmix(s, *arg[0] ? atoi(arg[0]) : -1, *arg[1] ? atoi(arg[1]) : -1, *arg[2] ? atoi(arg[2]) : -1, *arg[3] ? atoi(arg[3]) : -1);
         else if(!strncmp(cmd, "compress", len))
         {
             if(compress) *compress = true;
