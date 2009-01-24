@@ -278,7 +278,7 @@ vector<serverinfo *> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
 int lastinfo = 0;
 
-static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int qport = 29786, uint ip = ENET_HOST_ANY)
+static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, uint ip = ENET_HOST_ANY)
 {
     serverinfo *si = new serverinfo;
     si->address.host = ip;
@@ -395,7 +395,7 @@ void checkpings()
         if(len <= 0) return;
         serverinfo *si = NULL;
         loopv(servers) if(addr.host == servers[i]->address.host && addr.port == servers[i]->address.port) { si = servers[i]; break; }
-        if(!si && searchlan) si = newserver(NULL, addr.host);
+        if(!si && searchlan) si = newserver(NULL, ENG_SERVER_PORT, ENG_QUERY_PORT, addr.host);
         if(!si) continue;
         ucharbuf p(ping, len);
         si->ping = totalmillis - getint(p);
