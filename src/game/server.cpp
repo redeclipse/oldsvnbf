@@ -1779,21 +1779,6 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.state == CS_ALIVE)
-			{
-				if(m_regen(gamemode, mutators) && ci->state.health < sv_maxhealth && sv_regenhealth && sv_regendelay && sv_regentime)
-				{
-					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
-					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
-					{
-						int health = ci->state.health - (ci->state.health % sv_regenhealth);
-						ci->state.health = min(health + sv_regenhealth, sv_maxhealth);
-						ci->state.lastregen = gamemillis;
-						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
-					}
-				}
-			}
-
 			while(ci->events.length())
 			{
 				gameevent &ev = ci->events[0];
@@ -1842,6 +1827,81 @@ namespace server
 
 	#include "auth.h"
 
+	void checkents()
+	{
+		bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
+		loopv(sents) switch(sents[i].type)
+		{
+			case TRIGGER:
+			{
+				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
+				{
+					sents[i].spawned = false;
+					sents[i].millis = gamemillis;
+					sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
+				}
+				break;
+			}
+			default:
+			{
+				if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
+				{
+					if(!finditem(i, true, sv_itemspawntime*1000))
+					{
+						loopvk(clients)
+						{
+							clientinfo *ci = clients[k];
+							ci->state.dropped.remove(i);
+							loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
+								ci->state.entid[j] = -1;
+						}
+						sents[i].spawned = true;
+						sents[i].millis = gamemillis;
+						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	void checkclients()
+	{
+		loopv(clients)
+		{
+			clientinfo *ci = clients[i];
+			if(ci->state.state == CS_ALIVE)
+			{
+				if(m_regen(gamemode, mutators) && ci->state.health < sv_maxhealth && sv_regenhealth && sv_regendelay && sv_regentime)
+				{
+					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
+					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
+					{
+						int health = ci->state.health - (ci->state.health % sv_regenhealth);
+						ci->state.health = min(health + sv_regenhealth, sv_maxhealth);
+						ci->state.lastregen = gamemillis;
+						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
+					}
+				}
+			}
+			else if(ci->state.state == CS_WAITING)
+			{
+				if(!m_duke(gamemode, mutators) && !ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
+				{
+					int nospawn = 0;
+					if(smode && !smode->canspawn(ci, false, true)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(ci, false, true)) { nospawn++; });
+					if(!nospawn)
+					{
+						ci->state.state = CS_DEAD; // safety
+						ci->state.respawn(gamemillis, sv_maxhealth);
+						sendspawn(ci);
+					}
+				}
+			}
+		}
+	}
+
 	void serverupdate()
 	{
 		if(numclients(-1, false, true))
@@ -1851,40 +1911,7 @@ namespace server
 			else if(minremain)
 			{
 				processevents();
-				bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
-				loopv(sents) switch(sents[i].type)
-				{
-					case TRIGGER:
-					{
-						if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
-						{
-							sents[i].spawned = false;
-							sents[i].millis = gamemillis;
-							sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
-						}
-						break;
-					}
-					default:
-					{
-						if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
-						{
-							if(!finditem(i, true, sv_itemspawntime*1000))
-							{
-								loopvk(clients)
-								{
-									clientinfo *ci = clients[k];
-									ci->state.dropped.remove(i);
-									loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
-										ci->state.entid[j] = -1;
-								}
-								sents[i].spawned = true;
-								sents[i].millis = gamemillis;
-								sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-							}
-						}
-						break;
-					}
-				}
+				checkents();
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
@@ -1921,23 +1948,7 @@ namespace server
 				}
 			}
 			else ai::checkai();
-
-			if(!m_duke(gamemode, mutators))
-			{
-				loopv(clients) if(clients[i]->state.state == CS_WAITING)
-				{
-					clientinfo *cp = clients[i];
-					int nospawn = cp->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)) ? 1 : 0;
-					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
-					if(!nospawn)
-					{
-						cp->state.state = CS_DEAD; // safety
-						cp->state.respawn(gamemillis, sv_maxhealth);
-						sendspawn(cp);
-					}
-				}
-			}
+			checkclients();
 		}
 		auth::update();
 	}
@@ -2352,20 +2363,16 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || cp->state.isalive(gamemillis)) break;
-					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay), nospawn = wait ? 1 : 0;
+					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay);
+					if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
+					int nospawn = 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
-					if(nospawn)
+					if(!nospawn)
 					{
-						if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
 						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
 						cp->state.state = CS_WAITING;
 						cp->state.weapreset(false);
-					}
-					else
-					{
-						if(cp->state.lastdeath) cp->state.respawn(gamemillis, sv_maxhealth);
-						sendspawn(cp);
 					}
 					break;
 				}

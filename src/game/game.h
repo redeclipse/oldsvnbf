@@ -446,16 +446,15 @@ extern gametypes gametype[], mutstype[];
 #define m_paint(a,b)		((b & G_M_PAINT) || (gametype[a].implied & G_M_PAINT))
 
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
-#define m_dmrules(a,b)		(a >= G_DEATHMATCH && !m_duke(a,b))
-#define m_regen(a,b)		(m_dmrules(a,b) && !m_insta(a,b) && !m_paint(a,b))
+#define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
 #ifdef GAMESERVER
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? sv_instaspawnweapon : sv_spawnweapon))
-#define m_spawndelay(a,b)	(m_dmrules(a,b) ? int((m_stf(a) ? sv_stfspawndelay : (m_ctf(a) ? sv_ctfspawndelay : sv_spawndelay))*(m_insta(a, b) ? sv_instaspawnscale : 1)*(m_paint(a, b) ? sv_paintspawnscale : 1)*1000)+(m_paint(a, b) ? sv_paintfreezetime*1000 : 0) : 0)
+#define m_spawndelay(a,b)	int((m_stf(a) ? sv_stfspawndelay : (m_ctf(a) ? sv_ctfspawndelay : sv_spawndelay))*(m_insta(a, b) ? sv_instaspawnscale : 1)*(m_paint(a, b) ? sv_paintspawnscale : 1)*1000)+(m_paint(a, b) ? sv_paintfreezetime*1000 : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || (sv_itemsallowed < (m_insta(a,b) ? 2 : 1)))
 #else
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? instaspawnweapon : spawnweapon))
-#define m_spawndelay(a,b)	(m_dmrules(a,b) ? int((m_stf(a) ? stfspawndelay : (m_ctf(a) ? ctfspawndelay : spawndelay))*(m_insta(a, b) ? instaspawnscale : 1)*(m_paint(a, b) ? paintspawnscale : 1)*1000)+(m_paint(a, b) ? paintfreezetime*1000 : 0) : 0)
+#define m_spawndelay(a,b)	int((m_stf(a) ? stfspawndelay : (m_ctf(a) ? ctfspawndelay : spawndelay))*(m_insta(a, b) ? instaspawnscale : 1)*(m_paint(a, b) ? paintspawnscale : 1)*1000)+(m_paint(a, b) ? paintfreezetime*1000 : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || (itemsallowed < (m_insta(a,b) ? 2 : 1)))
 #endif
 

@@ -21,7 +21,7 @@ struct duelservmode : servmode
 			{
 				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				ci->state.state = CS_WAITING;
-				loopk(WEAPON_MAX) ci->state.entid[k] = -1;
+				ci->state.weapreset(false);
 			}
 			if(msg)
 			{
