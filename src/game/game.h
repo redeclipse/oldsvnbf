@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			147
+#define GAMEVERSION			148
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -254,7 +254,8 @@ struct weaptypes
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
 	bool	radial,	extinguish,	reloads,	snipes;
-	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight,		partsize;
+	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight,
+			partsize,	hitpush;
 	const char
 			*name, 		*text,	*item,						*vwep,
 			*proj;
@@ -268,7 +269,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			20,		20,		250,	1000,	15,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,		4.75f,
+			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
+			4.75f,		20.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -278,7 +280,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
-			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,		0.35f,
+			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
+			0.35f,		30.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
@@ -288,7 +291,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
-			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,		0.25f,
+			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
+			0.25f,		15.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
@@ -298,7 +302,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			50,		50,		100, 	2000,	25,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
-			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,		56.f,
+			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
+			56.f,		5.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -308,7 +313,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			10,		10,		250,    1250,	34,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,		0.4f,
+			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
+			0.4f,		50.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -318,7 +324,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		0.6f,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
+			0.6f,		100.f,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -328,7 +335,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			1,		4,		1500,	3000,	200,	250,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
-			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,		3.f,
+			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,
+			3.f,		200.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
@@ -338,7 +346,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,		1.75f,
+			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
+			1.75f,		10.f,
 			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -368,6 +377,7 @@ enum
 	HIT_FULL	= 1<<10,
 	HIT_SPAWN	= 1<<11,
 	HIT_LOST	= 1<<12,
+	HIT_KILL	= 1<<13
 };
 
 #define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
@@ -1091,13 +1101,6 @@ struct gameent : dynent, gamestate
 		if(issound(dschan)) removesound(dschan);
 		if(issound(wschan)) removesound(wschan);
 		vschan = dschan = wschan = -1;
-	}
-
-	void hitpush(int damage, int flags, const vec &dir)
-	{
-		int force = damage;
-		if(flags&HIT_WAVE || !hithurts(flags)) force /= 2;
-		vel.add(vec(dir).mul(damage*100.f/weight));
 	}
 
 	void stopactions()
