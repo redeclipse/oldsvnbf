@@ -1186,7 +1186,7 @@ namespace server
 		}
 		if(!discon)
 		{
-			loopi(WEAPON_MAX) ts.entid[i] = ts.ammo[i] = -1;
+			//loopi(WEAPON_MAX) ts.entid[i] = ts.ammo[i] = -1;
 			if(!drop.empty())
 				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 		}
