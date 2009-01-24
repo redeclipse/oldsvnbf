@@ -20,7 +20,8 @@ namespace hud
 		vector<gameent *> spectators;
 
 		IVARP(autoshowscores, 0, 1, 1);
-		IVARP(showscoresdelay, -INT_MAX+1, -2, INT_MAX-1);
+		IVARP(showscoreswait, 0, 1, 1);
+		IVARP(showscoresdelay, 0, 2, INT_MAX-1);
 		IVARP(scoresinfo, 0, 1, 1);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showpj, 0, 0, 1);
@@ -41,7 +42,7 @@ namespace hud
 				if(!showscoresdelay()) return true;
 				else
 				{
-					int delay = showscoresdelay() > 0 ? showscoresdelay()*1000 : min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000*min(1, abs(showscoresdelay())));
+					int delay = !showscoreswait() ? showscoresdelay()*1000 : min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000*showscoresdelay());
 					if(!delay || lastmillis-world::player1->lastdeath >= delay) return true;
 				}
 			}
