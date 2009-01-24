@@ -87,6 +87,9 @@ namespace world
 	VARP(noblood, 0, 0, 1);
 
     VARP(ragdoll, 0, 1, 1);
+    FVARP(hitpushforce, 0, 1.f, 10000);
+    FVARP(deadpushforce, 0, 2.f, 10000);
+    FVARP(wavepushforce, 0, 0.5f, 10000);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -457,7 +460,6 @@ namespace world
 	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
-		if(flags&HIT_PUSH && (d == player1 || d->ai)) d->hitpush(damage, flags, dir);
 		if(hithurts(flags))
 		{
 			d->dodamage(millis, health);
@@ -502,8 +504,15 @@ namespace world
 				}
 				if(actor == player1) lasthit = lastmillis;
 			}
-
 			ai::damaged(d, actor, weap, flags, damage, health, millis, dir);
+		}
+		if(flags&HIT_PUSH && (d == player1 || d->ai))
+		{
+			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
+			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushforce*wavepushscale;
+			else if(d->health <= 0) force *= deadpushforce*deadpushscale;
+			else force *= hitpushforce*hitpushscale;
+			d->vel.add(vec(dir).mul(force));
 		}
 	}
 

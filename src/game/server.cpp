@@ -1573,19 +1573,21 @@ namespace server
 			actor->state.damage += realdamage;
 		}
 		else realdamage = int(realdamage*0.5f*sv_damagescale);
+
+		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
+		else realflags &= ~HIT_KILL;
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 
-		bool killed = hithurts(realflags) && realdamage && ts.health <= 0;
-		if(killed || m_paint(gamemode, mutators))
+		if(realflags&HIT_KILL || m_paint(gamemode, mutators))
 		{
-            if(killed)
+            if(realflags&HIT_KILL)
             {
 				target->state.deaths++;
 				if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
             }
 
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
-            if(m_paint(gamemode, mutators) && !m_insta(gamemode, mutators) && killed) fragvalue *= 2;
+            if(m_paint(gamemode, mutators) && !m_insta(gamemode, mutators) && realflags&HIT_KILL) fragvalue *= 2;
             actor->state.frags += fragvalue;
 
 			if(fragvalue > 0)
@@ -1598,7 +1600,7 @@ namespace server
 			}
 			sendf(-1, 1, "ri4", SV_FRAG, actor->clientnum, actor->state.frags, actor->state.spree);
 
-			if(killed)
+			if(realflags&HIT_KILL)
 			{
 				dropitems(target);
 				// don't issue respawn yet until DEATHMILLIS has elapsed
@@ -1820,7 +1822,7 @@ namespace server
 					if(keep < i) { ci->events.remove(keep, i - keep); i = keep; }
 					keep = i+1;
 					continue;
-			} 
+			}
 		}
 		ci->events.setsize(keep);
 	}

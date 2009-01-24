@@ -586,7 +586,9 @@ namespace projs
 						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), proj.weap == WEAPON_FLAMER ? 250 : 1500, 10);
 						if(proj.weap == WEAPON_GL)
 						{
-							world::quakewobble += max(int(weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)), 1);
+							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
+							if(proj.weap == m_spawnweapon(world::gamemode, world::mutators)) wobble *= 0.25f;
+							world::quakewobble = clamp(world::quakewobble + max(int(wobble), 1), 0, 1000);
 							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.15f), PART_EXPLOSION, 500, 0xAA3300, 1.f);
 							loopi(rnd(20)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(1500)+1500, 0, rnd(750), rnd(60)+40);
