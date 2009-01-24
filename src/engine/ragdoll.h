@@ -395,7 +395,7 @@ void moveragdoll(dynent *d, bool smooth)
     eye.add(d->ragdoll->offset);
     if(smooth)
     {
-        float k = pow(ragdolleyesmooth, curtime/ragdolleyesmoothmillis);
+        float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
         d->o.mul(k).add(eye.mul(1-k));
     }
     else d->o = eye;
