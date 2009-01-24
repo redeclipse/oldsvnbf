@@ -2,7 +2,7 @@ namespace hud
 {
 	struct scoreboard : g3d_callback
 	{
-		bool scoreson;
+		bool scoreson, shownscores;
 		int menustart;
 
 		struct sline { string s; };
@@ -29,14 +29,14 @@ namespace hud
 		IVARP(highlightscore, 0, 1, 1);
 		IVARP(showconnecting, 0, 0, 1);
 
-		scoreboard() : scoreson(false)
+		scoreboard() : scoreson(false), shownscores(false)
 		{
 			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
 		}
 
 		bool canshowscores()
 		{
-			if(!scoreson && autoshowscores() && world::player1->state == CS_DEAD)
+			if(autoshowscores() && world::player1->state == CS_DEAD && !scoreson && !shownscores)
 			{
 				if(!showscoresdelay()) return true;
 				else
@@ -442,6 +442,8 @@ namespace hud
 		void show()
 		{
 			if(scoreson) g3d_addgui(this);
+			if(world::player1->state == CS_DEAD) { if(scoreson) shownscores = true; }
+			else shownscores = false;
 		}
 	};
 	extern scoreboard sb;

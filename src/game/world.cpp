@@ -1103,7 +1103,7 @@ namespace world
 				if(cameras.empty()) loopk(2)
 				{
 					physent d = *player1;
-					d.radius = d.height = 1;
+					d.radius = d.height = 2.f;
 					loopv(entities::ents) if((k && !enttype[entities::ents[i]->type].noisy) || entities::ents[i]->type == CAMERA)
 					{
 						gameentity &e = *(gameentity *)entities::ents[i];
@@ -1214,7 +1214,7 @@ namespace world
 			}
 			else if(player1->state == CS_DEAD)
 			{
-				vec dir = vec(player1->o).sub(camera1->o).normalize();
+				vec dir = vec(ragdollcenter(player1)).sub(camera1->o).normalize();
 				float yaw = camera1->yaw, pitch = camera1->pitch;
 				vectoyawpitch(dir, yaw, pitch);
 				scalecameraangle;

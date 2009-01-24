@@ -280,6 +280,7 @@ extern void setbbfrommodel(dynent *d, const char *mdl);
 extern bool validragdoll(dynent *d, int millis);
 extern void moveragdoll(dynent *d, bool smooth);
 extern void cleanragdoll(dynent *d);
+extern vec ragdollcenter(dynent *d);
 
 // server
 #define MAXCLIENTS 256                  // in a multiplayer game, can be arbitrarily changed
