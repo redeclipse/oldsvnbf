@@ -1186,7 +1186,7 @@ namespace server
 		}
 		if(!discon)
 		{
-			//loopi(WEAPON_MAX) ts.entid[i] = ts.ammo[i] = -1;
+			loopi(WEAPON_MAX) ts.entid[i] = -1;//ts.ammo[i] = -1;
 			if(!drop.empty())
 				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 		}
@@ -1609,7 +1609,7 @@ namespace server
 				mutate(smuts, mut->died(target, actor));
 				ts.state = CS_DEAD;
 				ts.lastdeath = gamemillis;
-				//ts.weapreset(true);
+				ts.weapreset(false);//true);
 			}
 		}
 	}
@@ -1628,7 +1628,7 @@ namespace server
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.lastdeath = gamemillis;
-		//gs.weapreset(true);
+		gs.weapreset(false);//true);
 	}
 
 	void processevent(clientinfo *ci, destroyevent &e)
