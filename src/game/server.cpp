@@ -1784,10 +1784,15 @@ namespace server
 				gameevent &ev = ci->events[0];
 				#define chkevent(q) \
 				{ \
-                    if(q.millis>gamemillis) break; \
-                    if(q.millis<ci->lastevent) { clearevent(ci); continue; } \
-                    ci->lastevent = q.millis; \
-					processevent(ci, q); \
+                    if(q.millis <= gamemillis) \
+                    { \
+						if(q.millis >= ci->lastevent) \
+						{ \
+							ci->lastevent = q.millis; \
+							processevent(ci, q); \
+						} \
+						clearevent(ci); \
+                    } \
 				}
 				switch(ev.type)
 				{
@@ -1796,9 +1801,8 @@ namespace server
 					case GAMEEVENT_RELOAD: { chkevent(ev.reload); break; }
 					case GAMEEVENT_DESTROY: { chkevent(ev.destroy); break; }
 					case GAMEEVENT_USE: { chkevent(ev.use); break; }
-					case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); break; }
+					case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); clearevent(ci); break; }
 				}
-				clearevent(ci);
 			}
 		}
 	}
