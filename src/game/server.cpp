@@ -1784,8 +1784,9 @@ namespace server
 				gameevent &ev = ci->events[0];
 				#define chkevent(q) \
 				{ \
-					if(q.millis < ci->lastevent) break; \
-					ci->lastevent = q.millis; \
+                    if(q.millis>gamemillis) break; \
+                    if(q.millis<ci->lastevent) { clearevent(ci); continue; } \
+                    ci->lastevent = q.millis; \
 					processevent(ci, q); \
 				}
 				switch(ev.type)
