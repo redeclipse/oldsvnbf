@@ -39,7 +39,7 @@ namespace projs
 
 	void hitproj(gameent *d, projent &proj)
 	{
-		int flags = HIT_PROJ|HIT_PUSH;
+		int flags = HIT_PROJ;
 		flags |= proj.weap != WEAPON_PAINT ? hitzones(proj.o, d->o, d->height, d->aboveeye) : HIT_FULL;
 		hitpush(d, proj, flags);
 	}
@@ -53,11 +53,11 @@ namespace projs
 		if(dist < 0) dist = 0;
 		if(dist < radius)
 		{
-			int flags = (explode ? HIT_EXPLODE|HIT_PUSH : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
+			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
 			hitpush(d, proj, flags, int(dist*DMF), radius);
 		}
 		else if(explode && dist < radius*2)
-			hitpush(d, proj, HIT_PUSH|HIT_WAVE, int(dist*DMF), radius);
+			hitpush(d, proj, HIT_WAVE, int(dist*DMF), radius);
 	}
 
 	void remove(gameent *owner)

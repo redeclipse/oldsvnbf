@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			148
+#define GAMEVERSION			149
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -270,7 +270,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
-			4.75f,		20.f,
+			4.75f,		45.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -281,7 +281,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
-			0.35f,		30.f,
+			0.35f,		35.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
@@ -292,7 +292,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
-			0.25f,		15.f,
+			0.25f,		40.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
@@ -314,7 +314,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
-			0.4f,		50.f,
+			0.4f,		100.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -325,7 +325,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
-			0.6f,		100.f,
+			0.6f,		150.f,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -347,7 +347,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
-			1.75f,		10.f,
+			1.75f,		15.f,
 			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -364,17 +364,16 @@ extern weaptypes weaptype[];
 enum
 {
 	HIT_NONE 	= 0,
-	HIT_PROJ	= 1<<0,
-	HIT_EXPLODE	= 1<<1,
-	HIT_BURN	= 1<<2,
-	HIT_MELT	= 1<<3,
-	HIT_FALL	= 1<<4,
-	HIT_WAVE	= 1<<5,
-	HIT_PUSH	= 1<<6,
-	HIT_LEGS	= 1<<7,
-	HIT_TORSO	= 1<<8,
-	HIT_HEAD	= 1<<9,
-	HIT_FULL	= 1<<10,
+	HIT_LEGS	= 1<<1,
+	HIT_TORSO	= 1<<2,
+	HIT_HEAD	= 1<<3,
+	HIT_FULL	= 1<<4,
+	HIT_PROJ	= 1<<5,
+	HIT_EXPLODE	= 1<<6,
+	HIT_BURN	= 1<<7,
+	HIT_MELT	= 1<<8,
+	HIT_FALL	= 1<<9,
+	HIT_WAVE	= 1<<10,
 	HIT_SPAWN	= 1<<11,
 	HIT_LOST	= 1<<12,
 	HIT_KILL	= 1<<13

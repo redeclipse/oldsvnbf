@@ -1561,7 +1561,7 @@ namespace server
 		if(!m_play(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team))
 			nodamage++;
 
-		if(nodamage || !hithurts(realflags)) realflags = HIT_PUSH; // so it impacts, but not hurts
+		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
 		if(hithurts(realflags))
 		{
 			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*sv_damagescale);

@@ -506,7 +506,7 @@ namespace world
 			}
 			ai::damaged(d, actor, weap, flags, damage, health, millis, dir);
 		}
-		if(flags&HIT_PUSH && (d == player1 || d->ai))
+		if(d == player1 || d->ai)
 		{
 			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushforce*wavepushscale;
