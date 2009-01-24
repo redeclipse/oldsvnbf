@@ -15,7 +15,7 @@ struct ragdollskel
     {
         int vert[2];
         float mindist, maxdist;
-    }; 
+    };
 
     struct rotlimit
     {
@@ -55,7 +55,7 @@ struct ragdollskel
             joint &j = joints[i];
             j.weight = 0;
             vec pos(0, 0, 0);
-            loopk(3) if(j.vert[k]>=0) 
+            loopk(3) if(j.vert[k]>=0)
             {
                 pos.add(verts[j.vert[k]].pos);
                 j.weight++;
@@ -73,13 +73,13 @@ struct ragdollskel
             m.c.cross(m.a, vec(v3).sub(v1)).normalize();
             m.b.cross(m.c, m.a);
 
-            j.orient = matrix3x4(m, m.transform(pos).neg());        
+            j.orient = matrix3x4(m, m.transform(pos).neg());
         }
         loopv(verts) if(verts[i].weight) verts[i].weight = 1/verts[i].weight;
         reljoints.setsize(0);
 
         loaded = true;
-    } 
+    }
 
     void addreljoint(int bone, int parent)
     {
@@ -116,7 +116,7 @@ struct ragdolldata
           lastmove(lastmillis),
           timestep(0),
           scale(scale),
-          verts(new vert[skel->verts.length()]), 
+          verts(new vert[skel->verts.length()]),
           tris(new matrix3x3[skel->tris.length()]),
           reljoints(skel->reljoints.empty() ? NULL : new matrix3x4[skel->reljoints.length()])
     {
@@ -173,8 +173,8 @@ struct ragdolldata
 };
 
 /*
-    seed particle position = avg(modelview * base2anim * spherepos)  
-    mapped transform = invert(curtri) * origtrig 
+    seed particle position = avg(modelview * base2anim * spherepos)
+    mapped transform = invert(curtri) * origtrig
     parented transform = parent{invert(curtri) * origtrig} * (invert(parent{base2anim}) * base2anim)
 */
 
@@ -198,7 +198,7 @@ void ragdolldata::constraindist()
         v2.weight++;
     }
 }
-        
+
 void ragdolldata::constrainrot()
 {
     loopv(skel->rotlimits)
@@ -234,16 +234,16 @@ void ragdolldata::constrainrot()
         matrix3x3 wrot, crot1, crot2;
         wrot.rotate(0.5f*RAD, axis);
         float w1 = 0, w2 = 0;
-        loopk(3) 
-        { 
-            w1 += wrot.transform(v1[k]).dist(v1[k]); 
-            w2 += wrot.transform(v2[k]).dist(v2[k]); 
+        loopk(3)
+        {
+            w1 += wrot.transform(v1[k]).dist(v1[k]);
+            w2 += wrot.transform(v2[k]).dist(v2[k]);
         }
         crot1.rotate(angle*w2/(w1+w2), axis);
         crot2.rotate(-angle*w1/(w1+w2), axis);
         vec r1[3], r2[3], diff1(0, 0, 0), diff2(0, 0, 0);
-        loopk(3) 
-        { 
+        loopk(3)
+        {
             r1[k] = crot1.transform(v1[k]);
             r2[k] = crot2.transform(v2[k]);
             diff1.add(r1[k]).sub(v1[k]);
@@ -298,9 +298,9 @@ void ragdolldata::constrain()
     loopv(skel->verts)
     {
         vert &v = verts[i];
-        if(v.weight) 
+        if(v.weight)
         {
-            d.o = v.newpos.div(v.weight);        
+            d.o = v.newpos.div(v.weight);
             if(collide(&d, vec(v.newpos).sub(v.pos), 0, false)) v.pos = v.newpos;
             else
             {
@@ -327,7 +327,7 @@ void ragdolldata::move(dynent *pl, float ts)
     if(!expirefric) return;
     if(timestep) expirefric *= ts/timestep;
 
-    physics::updateragdoll(pl, center, radius); 
+    physics::updateragdoll(pl, center, radius);
     float gravity = physics::gravityforce(pl);
 
     physent d;
@@ -349,9 +349,9 @@ void ragdolldata::move(dynent *pl, float ts)
         if(v.collided)
         {
             v.oldpos = vec(curpos).sub(dir.reflect(wall));
-            v.pos = curpos; 
+            v.pos = curpos;
             collisions++;
-        }   
+        }
         else v.oldpos = curpos;
     }
 
@@ -366,7 +366,7 @@ void ragdolldata::move(dynent *pl, float ts)
     loopi(ragdollconstrain) constrain();
     calctris();
     calcboundsphere();
-}    
+}
 
 FVAR(ragdolleyesmooth, 0, 0.5f, 1);
 VAR(ragdolleyesmoothmillis, 1, 250, 10000);
@@ -406,3 +406,8 @@ void cleanragdoll(dynent *d)
     DELETEP(d->ragdoll);
 }
 
+vec ragdollcenter(dynent *d)
+{
+    if(!d->ragdoll) return vec(d->o).sub(vec(0, 0, d->height*0.5f));
+	return d->ragdoll->center;
+}

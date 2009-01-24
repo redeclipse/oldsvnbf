@@ -1972,7 +1972,7 @@ namespace client
 					{
 						if(serverentry(g, i, si)) n = j;
 					}
-					else g->button("*", 0x444444);
+					else g->button("-", 0x999999);
 				}
 				serverendcolumn(g, i);
 			}
