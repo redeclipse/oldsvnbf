@@ -537,18 +537,20 @@ struct varenderer : partrenderer
         if(regen)
         {
             p->flags &= ~0x80;
-            #define FLIP(a) (!rnd(2) ? a : 0x00)
-            int orient = p->flags&3, flip = type&PT_FLIP ? FLIP(0x01)|FLIP(0x02) : 0;
-            #define SETTEXCOORDS(u1, u2, v1, v2) \
+            int orient = p->flags&3, flip = type&PT_FLIP ? rnd(4) : 0;
+            #define SETTEXCOORDS(u1c, u2c, v1c, v2c) \
             { \
-                vs[orient].u       = flip&0x01 ? u2 : u1; \
-                vs[orient].v       = flip&0x02 ? v1 : v2; \
-                vs[(orient+1)&3].u = flip&0x01 ? u1 : u2; \
-                vs[(orient+1)&3].v = flip&0x02 ? v1 : v2; \
-                vs[(orient+2)&3].u = flip&0x01 ? u1 : u2; \
-                vs[(orient+2)&3].v = flip&0x02 ? v2 : v1; \
-                vs[(orient+3)&3].u = flip&0x01 ? u2 : u1; \
-                vs[(orient+3)&3].v = flip&0x02 ? v2 : v1; \
+                float u1 = u1c, u2 = u2c, v1 = v1c, v2 = v2c; \
+                if(flip&0x01) swap(u1, u2); \
+                if(flip&0x02) swap(v1, v2); \
+                vs[orient].u       = u1; \
+                vs[orient].v       = v2; \
+                vs[(orient+1)&3].u = u2; \
+                vs[(orient+1)&3].v = v2; \
+                vs[(orient+2)&3].u = u2; \
+                vs[(orient+2)&3].v = v1; \
+                vs[(orient+3)&3].u = u1; \
+                vs[(orient+3)&3].v = v1; \
             }
             float piece = 1.f, off = 0.f;
             if(frames > 1)
