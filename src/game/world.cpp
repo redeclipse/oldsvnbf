@@ -1075,6 +1075,8 @@ namespace world
 			}
 			#define scalecameraangle \
 				{ \
+					if(camera1->yaw < yaw-180.0f) camera1->yaw += 360.0f; \
+					if(camera1->yaw > yaw+180.0f) camera1->yaw -= 360.0f; \
 					float amt = float(curtime)/1000.f, offyaw = fabs(yaw-camera1->yaw)*amt, offpitch = fabs(pitch-camera1->pitch)*amt*0.25f; \
 					if(yaw > camera1->yaw) { \
 						camera1->yaw += offyaw; \
