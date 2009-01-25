@@ -568,7 +568,7 @@ void endmodelbatches()
 				translucentmodel &tm = translucent.add();
 				tm.m = b.m;
 				tm.batched = &bm;
-				tm.dist = camera1->o.dist(bm.pos);
+				tm.dist = camera1->o.dist(bm.d && bm.d->ragdoll ? bm.d->ragdoll->center : bm.pos);
 				continue;
 			}
 			if(!rendered) { b.m->startrender(); rendered = true; }
