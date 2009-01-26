@@ -228,6 +228,7 @@ bool checkmasterclientinput(masterclient &c)
     for(char *end;; p = end)
     {
         end = (char *)memchr(p, '\n', &c.input[c.inputpos] - p);
+        if(!end) end = (char *)memchr(p, '\0', &c.input[c.inputpos] - p);
         if(!end) break;
         *end++ = '\0';
         if(c.ishttp) continue; // eat up the rest of the bytes, we've done our bit
