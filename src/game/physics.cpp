@@ -327,17 +327,17 @@ namespace physics
 
     void landing(physent *d, vec &dir, const vec &floor, bool collided)
 	{
-    #if 0
+#if 0
         if(d->physstate == PHYS_FALL)
         {
             d->timeinair = 0;
             if(dir.z < 0.0f) dir.z = d->vel.z = 0.0f;
         }
-    #endif
+#endif
         switchfloor(d, dir, floor);
         d->timeinair = 0;
-        if(d->physstate!=PHYS_STEP_UP || !collided || d->onladder)
-            d->physstate = floor.z >= floorz ? PHYS_FLOOR : PHYS_SLOPE;
+        if(d->physstate!=PHYS_STEP_UP || !collided /*|| d->onladder*/)
+            d->physstate = floor.z >= floorz /*|| d->onladder*/ ? PHYS_FLOOR : PHYS_SLOPE;
 		d->floor = floor;
 	}
 
@@ -385,10 +385,11 @@ namespace physics
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o);
-		float step = dir.magnitude()*stepspeed;
+		/*
 		if(d->onladder)
 		{
-			if(dir.z < 0.f)
+			float step = dir.magnitude()*stepspeed;
+			if(d->move < 0)
 			{
 				if(trystep(d, dir, step, vec(0, 0, -1)))
 				{
@@ -403,7 +404,7 @@ namespace physics
 				}
 				d->o = old;
 			}
-			else
+			else if(d->move > 0)
 			{
 				if(trystep(d, dir, step, vec(0, 0, 1)))
 				{
@@ -418,8 +419,9 @@ namespace physics
 				}
 				d->o = old;
 			}
-			if(d->physstate == PHYS_FALL) d->physstate = PHYS_FLOOR;
+			if(d->physstate == PHYS_FALL || d->physstate == PHYS_SLOPE) d->physstate = PHYS_FLOOR;
 		}
+		*/
 #if 0
 		else if(d->physstate == PHYS_STEP_DOWN && dir.z < 0.f)
 		{
@@ -475,8 +477,7 @@ namespace physics
         }
 
 		vec floor(0, 0, 0);
-		bool slide = collided,
-			 found = findfloor(d, collided, obstacle, slide, floor);
+		bool slide = collided, found = findfloor(d, collided, obstacle, slide, floor);
         if(slide || (!collided && floor.z > 0 && floor.z < wallz))
         {
             slideagainst(d, dir, slide ? obstacle : floor, found || slidecollide);
@@ -503,12 +504,23 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
-        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid || pl->onladder)
+        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid /*|| pl->onladder*/)
 		{
 			pl->lastimpulse = 0;
 			if(world::allowmove(pl) && pl->jumping)
 			{
-				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
+				/*
+				if(pl->onladder)
+				{
+					vec dir;
+					vecfromyawpitch(pl->aimyaw, pl->aimpitch, -1, pl->strafe, dir);
+					dir.normalize();
+					dir.mul(jumpvelocity(pl));
+					pl->vel.add(dir);
+				}
+				else
+				*/
+				pl->vel.z += max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
 				playsound(S_JUMP, pl->o, pl);
 				pl->jumping = false;
@@ -518,7 +530,7 @@ namespace physics
 		else if(world::allowmove(pl) && pl->jumping && canimpulse(pl))
 		{
 			vec dir;
-			vecfromyawpitch(pl->yaw, pl->move || pl->strafe ? pl->pitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
+			vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
 			dir.normalize();
 			dir.mul(impulsevelocity(pl));
 			pl->vel.add(dir);
@@ -532,7 +544,7 @@ namespace physics
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
-			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || pl->onladder || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, /*pl->onladder ? 0 :*/ pl->move, pl->strafe, m);
             if(!floating && pl->physstate >= PHYS_SLOPE)
 			{ // move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
@@ -581,7 +593,7 @@ namespace physics
 
     void updatematerial(physent *pl, const vec &center, float radius, const vec &bottom, bool local, bool floating)
     {
-		int material = lookupmaterial(bottom), curmat = material&MATF_VOLUME, flagmat = material&MATF_FLAGS,
+		int material = lookupmaterial(bottom), curmat = material&MATF_VOLUME, //flagmat = material&MATF_FLAGS,
 			oldmat = pl->inmaterial&MATF_VOLUME;
 
 		if(!floating && curmat != oldmat)
@@ -611,7 +623,7 @@ namespace physics
 		}
 		pl->inmaterial = material;
 		pl->inliquid = !floating && isliquid(curmat);
-		pl->onladder = !floating && flagmat == MAT_LADDER;
+		pl->onladder = false; //!floating && flagmat == MAT_LADDER;
     }
 
     void updatematerial(physent *pl, bool local, bool floating)
@@ -638,7 +650,7 @@ namespace physics
 		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
 
         // apply gravity
-        if(!floating && pl->type!=ENT_CAMERA && !pl->onladder) modifygravity(pl, millis);
+        if(!floating && pl->type!=ENT_CAMERA /*&& !pl->onladder*/) modifygravity(pl, millis);
 		// apply any player generated changes in velocity
 		modifyvelocity(pl, local, floating, millis);
 

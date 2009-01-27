@@ -180,7 +180,7 @@ void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurfa
 {
 	loopi(6)
 	{
-        static uchar matmasks[3] = { MATF_VOLUME, MATF_CLIP, MAT_DEATH };
+        static uchar matmasks[4] = { MATF_VOLUME, MATF_CLIP, MAT_DEATH, MAT_LADDER };
         int matmask = 0, vis = MATSURF_NOT_VISIBLE;
         loopj(sizeof(matmasks)/sizeof(matmasks[0]))
         {
@@ -808,7 +808,7 @@ void rendermaterials()
                         case MAT_LAVA:   glColor3ub(  0, 128, 255); break; // orange
                         case MAT_AICLIP: glColor3ub(  0,   0, 255); break; // yellow
                         case MAT_DEATH:  glColor3ub(192, 192, 192); break; // black
-                        case MAT_LADDER: glColor3ub(196, 128, 254); break; // violet
+                        case MAT_LADDER: glColor3ub(64,  196,  32); break; // violet
                     }
 					break;
 				}

@@ -129,6 +129,7 @@ namespace auth
 		for(char *end;; p = end)
 		{
 			end = (char *)memchr(p, '\n', &input[inputpos] - p);
+			if(!end) end = (char *)memchr(p, '\0', &input[inputpos] - p);
 			if(!end) break;
 			*end++ = '\0';
 
