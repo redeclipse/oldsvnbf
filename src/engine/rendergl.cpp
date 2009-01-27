@@ -1369,8 +1369,8 @@ void loadbackground(int w, int h, Texture *t)
         glEnd();
         glColor3f(1, 1, 1);
     }
-    
-    int x = (w-512)/2, y = 128;
+
+    int x = (w-512)/2, y = 80;
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0); glVertex2f(x,    y);
@@ -1413,7 +1413,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         {
             glPushMatrix();
             glScalef(1/3.0f, 1/3.0f, 1);
-            draw_text(text, 70, 2*FONTH + FONTH/2);
+            draw_text(text, 70, FONTH/2);
             glPopMatrix();
         }
 #if 0
@@ -1446,8 +1446,8 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 
 		glPushMatrix();
 		glScalef(1/3.0f, 1/3.0f, 1);
-		draw_textx("v%.2f (%s)", w*3-FONTH, int(h*2.6f), 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
-		draw_textx("%s", w*3-FONTH, int(h*2.6f)+FONTH, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
+		draw_textx("v%.2f (%s)", w*3-FONTH, h*3-FONTH*2-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
+		draw_textx("%s", w*3-FONTH, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
 		glPopMatrix();
 
 		SDL_GL_SwapBuffers();
@@ -1519,22 +1519,22 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 
 	if(text1)
 	{
-		bar(1, w, 4, 0.1f, 0.1f, 0.1f);
-		if(bar1>0) bar(bar1, w, 4, 0.2f, 0.2f, 0.2f);
+		bar(1, w, 2, 0.1f, 0.1f, 0.1f);
+		if(bar1>0) bar(bar1, w, 2, 0.2f, 0.2f, 0.2f);
 	}
 
 	if(bar2>0)
 	{
-		bar(1, w, 6, 0.1f, 0.1f, 0.1f);
-		bar(bar2, w, 6, 0.2f, 0.2f, 0.2f);
+		bar(1, w, 4, 0.1f, 0.1f, 0.1f);
+		bar(bar2, w, 4, 0.2f, 0.2f, 0.2f);
 	}
 
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
 
-	if(text1) draw_text(text1, 2*FONTH, 4*FONTH + FONTH/2);
-	if(bar2>0) draw_text(text2, 2*FONTH, 6*FONTH + FONTH/2);
+	if(text1) draw_text(text1, 2*FONTH, 2*FONTH + FONTH/2);
+	if(bar2>0) draw_text(text2, 2*FONTH, 4*FONTH + FONTH/2);
 
 	glDisable(GL_BLEND);
 
@@ -2092,7 +2092,7 @@ void usetexturing(bool on)
     {
         notextureshader->set();
         glDisable(GL_TEXTURE_2D);
-    } 
+    }
 }
 
 void renderprimitive(bool on)
