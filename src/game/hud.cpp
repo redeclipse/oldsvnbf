@@ -871,8 +871,8 @@ namespace hud
     struct damagecompassdir
     {
         float damage;
-        vec color;        
-        
+        vec color;
+
         damagecompassdir() : damage(0), color(1, 0, 0) {}
     } damagecompassdirs[8];
 
@@ -887,7 +887,7 @@ namespace hud
         damagecompassdir &dir = damagecompassdirs[(int(yaw+22.5f)%360)/45];
         dir.damage += max(n, damagecompassmin)/float(damagecompassmax);
         if(dir.damage > 1) dir.damage = 1;
-        if(weap == WEAPON_PAINT) 
+        if(weap == WEAPON_PAINT)
         {
             int col = paintcolours[actor->type == ENT_PLAYER && m_team(world::gamemode, world::mutators) ? actor->team : rnd(10)];
             dir.color = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
@@ -1022,9 +1022,8 @@ namespace hud
 		{
 			if(world::player1->state == CS_EDITING)
 			{
-				by -= draw_textx("pos:%.2f,%.2f,%.2f vel:%.2f,%.2f,%.2f yaw:%.2f pitch:%.2f", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
+				by -= draw_textx("pos:%.2f,%.2f,%.2f yaw:%.2f pitch:%.2f", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 						world::player1->o.x, world::player1->o.y, world::player1->o.z,
-						world::player1->vel.x, world::player1->vel.y, world::player1->vel.z,
 						world::player1->yaw, world::player1->pitch);
 				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
