@@ -368,6 +368,15 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			ircprintf(n, w[g+1], "\fo%s (%s@%s) has left", user[0], user[1], user[2]);
 		}
 	}
+	else if(!strcasecmp(w[g], "NICK"))
+	{
+		if(numargs > g+1) ircprintf(n, NULL, "\fm%s (%s@%s) is now known as", user[0], user[1], user[2], w[g+1]);
+	}
+	else if(!strcasecmp(w[g], "QUIT"))
+	{
+		if(numargs > g+1) ircprintf(n, NULL, "\fr%s (%s@%s) has quit: %s", user[0], user[1], user[2], w[g+1]);
+		else ircprintf(n, NULL, "\fr%s (%s@%s) has quit", user[0], user[1], user[2]);
+	}
 	else if(!strcasecmp(w[g], "KICK"))
 	{
 		if(numargs > g+2)
