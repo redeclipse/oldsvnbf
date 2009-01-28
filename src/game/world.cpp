@@ -583,8 +583,8 @@ namespace world
 					"was filled with buckshot by",
 					"was riddled with holes by",
 					"was char-grilled by",
-					"was skewered by",
 					"was pierced by",
+					"was given laser burn by",
 					"was blown to pieces by",
 					"was tagged out by"
 				},
@@ -603,8 +603,8 @@ namespace world
 					"was turned into little chunks by",
 					"was swiss-cheesed by",
 					"was made the main course by order of chef",
-					"was spliced by",
-					"had their head blown clean off by",
+					"was skewered by",
+					"had their head laser-scalpeled off by",
 					"was obliterated by",
 					"was tagged out by"
 				}
