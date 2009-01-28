@@ -1487,7 +1487,8 @@ namespace world
 
 		int flags = MDL_LIGHT;
 		if(d != player1 && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
-		if(d->type != ENT_PLAYER) flags |= MDL_CULL_DIST;
+        if(d->type == ENT_PLAYER) flags |= MDL_FULLBRIGHT;
+		else flags |= MDL_CULL_DIST;
         if(early) flags |= MDL_NORENDER;
 		else if(trans) flags |= MDL_TRANSLUCENT;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
