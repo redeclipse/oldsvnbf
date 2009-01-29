@@ -484,7 +484,7 @@ namespace entities
 										gameentity &f = *(gameentity *)ents[t];
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
-										d->o = vec(f.o).add(vec(0, 0, d->height/2));
+										d->o = vec(f.o).add(vec(0, 0, d->height/2.f));
 										if(physics::entinmap(d, false))
 										{
 											d->yaw = f.attr[0];
