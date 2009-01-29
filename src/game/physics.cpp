@@ -633,6 +633,7 @@ namespace physics
 
     void updateragdoll(dynent *d, const vec &center, float radius)
     {
+        radius = d->height/2.f;
         vec bottom(center);
         bottom.z -= radius/2.f;
         updatematerial(d, center, radius, bottom, false, false);
