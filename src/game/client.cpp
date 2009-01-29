@@ -1912,8 +1912,8 @@ namespace client
 			case SINFO_MAXCLIENTS:
 			{
 				if(diff) { g->button("", colour); break; }
-				if(si->attr.length() > 4 && si->attr[5] >= 0)
-					s_sprintf(text)("%d", si->attr[5]);
+				if(si->attr.length() > 4 && si->attr[4] >= 0)
+					s_sprintf(text)("%d", si->attr[4]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1935,8 +1935,8 @@ namespace client
 			case SINFO_TIME:
 			{
 				if(diff) { g->button("", colour); break; }
-				if(si->attr.length() > 3 && si->attr[4] >= 0)
-					s_sprintf(text)("%d %s", si->attr[4], si->attr[4] == 1 ? "min" : "mins");
+				if(si->attr.length() > 3 && si->attr[3] >= 0)
+					s_sprintf(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
