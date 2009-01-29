@@ -5,6 +5,7 @@
 namespace hud
 {
 	int damageresidue = 0, hudwidth = 0;
+	vector<int> teamkills;
 	scoreboard sb;
 
 	VARP(hudsize, 0, 2400, INT_MAX-1);
@@ -54,6 +55,8 @@ namespace hud
 	FVARP(cursorblend, 0, 1.f, 1);
 
 	VARP(showinventory, 0, 1, 1);
+	VARP(inventoryammo, 0, 1, 2);
+	VARP(inventoryweapids, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.7f, 1);
@@ -106,6 +109,18 @@ namespace hud
 	FVARP(radarskew, -1, -0.3f, 1);
 	VARP(editradardist, 0, 128, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
+
+	void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
+	{
+		glBegin(GL_QUADS);
+		glTexCoord2f(tx1, ty1); glVertex2f(x, y);
+		glTexCoord2f(tx2, ty1); glVertex2f(x+w, y);
+		glTexCoord2f(tx2, ty2); glVertex2f(x+w, y+h);
+		glTexCoord2f(tx1, ty2); glVertex2f(x, y+h);
+		glEnd();
+	}
+	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
+	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
 
 	void colourskew(float &r, float &g, float &b, float skew)
 	{
@@ -328,6 +343,17 @@ namespace hud
 		if(index > POINTER_NONE) drawpointer(w, h, index);
 	}
 
+	int numteamkills()
+	{
+		int numkilled = 0;
+		loopvrev(teamkills)
+		{
+			if(lastmillis-teamkills[i] <= 30000) numkilled++;
+			else teamkills.remove(i);
+		}
+		return numkilled;
+	}
+
 	void drawlast(int w, int h)
 	{
 		glMatrixMode(GL_PROJECTION);
@@ -345,7 +371,7 @@ namespace hud
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->respawnwait(lastmillis, sdelay);
-				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Waiting..";
+				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
@@ -380,6 +406,22 @@ namespace hud
 			}
 			else if(world::player1->state == CS_ALIVE)
 			{
+				if(m_team(world::gamemode, world::mutators) && numteamkills() > 3)
+				{
+					ty += draw_textx("Don't shoot team mates!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+					if(shownotices > 1)
+					{
+						pushfont("emphasis");
+						settexture(teamtype[world::player1->team].icon);
+						glColor4f(1.f, 1.f, 1.f, tf);
+						drawsized(tx-FONTH, ty, FONTH);
+						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+						popfont();
+						pushfont("default");
+						ty += draw_textx("Shoot anyone not the same colour", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						popfont();
+					}
+				}
 				if(m_paint(world::gamemode, world::mutators))
 				{
 					int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
@@ -518,18 +560,6 @@ namespace hud
 		glDisable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 	}
-
-	void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
-	{
-		glBegin(GL_QUADS);
-		glTexCoord2f(tx1, ty1); glVertex2f(x, y);
-		glTexCoord2f(tx2, ty1); glVertex2f(x+w, y);
-		glTexCoord2f(tx2, ty2); glVertex2f(x+w, y+h);
-		glTexCoord2f(tx1, ty2); glVertex2f(x, y+h);
-		glEnd();
-	}
-	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
-	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
 
 	float radarrange()
 	{
@@ -829,9 +859,20 @@ namespace hud
 				);
 			}
 			else if(i != world::player1->weapselect) skew = inventoryskew;
-
-			if(i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP)
-				sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%d", world::player1->ammo[i]);
+			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
+			string text; text[0] = 0;
+			if(inventoryweapids && (instate || inventoryweapids == 2))
+			{
+				s_sprintfd(sa)("[\fs%s%d\fS]", weaptype[i].text, i);
+				s_strcat(text, sa);
+			}
+			if(inventoryammo && (instate || inventoryammo == 2))
+			{
+				s_sprintfd(sa)("%d", world::player1->ammo[i]);
+				if(text[0]) s_strcat(text, "\n");
+				s_strcat(text, sa);
+			}
+			if(text[0]) sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%s", text);
 			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
 		}
 		return sy;

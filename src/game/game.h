@@ -1343,6 +1343,7 @@ namespace hud
 {
 	extern int hudwidth, hudsize, damageresidue, radarflagnames;
 	extern float radarblipblend, radarnameblend, inventoryblend, inventoryskew;
+	extern vector<int> teamkills;
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(float x, float y, float s);

@@ -693,6 +693,8 @@ namespace world
 			loopi(rnd(gibs)+1)
 				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(2000)+1000, 0, rnd(100)+1, 50);
 		}
+		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
+			hud::teamkills.add(lastmillis);
 
 		ai::killed(d, actor, weap, flags, damage);
 	}
