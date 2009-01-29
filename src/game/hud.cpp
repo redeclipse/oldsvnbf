@@ -863,13 +863,13 @@ namespace hud
 			string text; text[0] = 0;
 			if(inventoryweapids && (instate || inventoryweapids == 2))
 			{
-				s_sprintfd(sa)("[\fs%s%d\fS]", weaptype[i].text, i);
+				s_sprintfd(sa)("\fs%s%d\fS", weaptype[i].text, i+1);
 				s_strcat(text, sa);
 			}
 			if(inventoryammo && (instate || inventoryammo == 2))
 			{
 				s_sprintfd(sa)("%d", world::player1->ammo[i]);
-				if(text[0]) s_strcat(text, "\n");
+				if(text[0]) s_strcat(text, " ");
 				s_strcat(text, sa);
 			}
 			if(text[0]) sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%s", text);
