@@ -118,7 +118,7 @@ namespace server
 		vec o;
 		int state;
         projectilestate dropped, weapshots[WEAPON_MAX];
-		int frags, deaths, teamkills, shotdamage, damage;
+		int frags, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
@@ -138,7 +138,7 @@ namespace server
 
 			aireinit = timeplayed = 0;
 			effectiveness = 0;
-            frags = deaths = teamkills = shotdamage = damage = 0;
+            frags = flags = deaths = teamkills = shotdamage = damage = 0;
 
 			respawn(-1, 100);
 		}
@@ -159,12 +159,13 @@ namespace server
 	{
 		uint ip;
 		string name;
-		int frags, timeplayed, deaths, teamkills, shotdamage, damage;
+		int frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
 		float effectiveness;
 
 		void save(servstate &gs)
 		{
 			frags = gs.frags;
+			flags = gs.flags;
             deaths = gs.deaths;
             teamkills = gs.teamkills;
             shotdamage = gs.shotdamage;
@@ -176,6 +177,7 @@ namespace server
 		void restore(servstate &gs)
 		{
 			gs.frags = frags;
+			gs.flags = flags;
             gs.deaths = deaths;
             gs.teamkills = teamkills;
             gs.shotdamage = shotdamage;
@@ -195,7 +197,7 @@ namespace server
 
 	struct clientinfo
 	{
-		int clientnum, connectmillis, sessionid, team;
+		int clientnum, connectmillis, sessionid, ping, team;
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
@@ -229,6 +231,7 @@ namespace server
 
 		void reset()
 		{
+			ping = 0;
 			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
@@ -2717,9 +2720,16 @@ namespace server
 					break;
 
 				case SV_CLIENTPING:
-					getint(p);
+				{
+					int ping = getint(p);
+					if(ci)
+					{
+						ci->ping = ping;
+						loopv(clients) if(clients[i]->state.ownernum == ci->clientnum) clients[i]->ping = ping;
+					}
 					QUEUE_MSG;
 					break;
+				}
 
 				case SV_MASTERMODE:
 				{

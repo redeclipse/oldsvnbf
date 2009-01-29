@@ -63,6 +63,7 @@ struct ctfservmode : ctfstate, servmode
 				if(isctfhome(f, ci->team) && f.owner<0 && !f.droptime && newpos.dist(f.spawnloc) < enttype[FLAG].radius/2)
 				{
 					returnflag(i);
+					ci->state.flags++;
 					int score = addscore(ci->team);
 					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
 					if(sv_ctflimit && score >= sv_ctflimit) startintermission();
