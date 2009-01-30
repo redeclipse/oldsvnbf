@@ -992,22 +992,20 @@ namespace server
 
 		votecount *best = NULL;
 		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
-
-		int reqvotes = max(maxvotes / 2, force ? 1 : 2);
-		bool gotvotes = best && best->count >= reqvotes;
+		bool gotvotes = best && best->count >= min(max(maxvotes/2, force ? 1 : 2), force ? 1 : maxvotes);
 		if(force || gotvotes)
 		{
 			if(demorecord) enddemorecord();
 			if(gotvotes)
 			{
-				srvoutf("vote passed by majority: %s on map %s", gamename(best->mode, best->muts), best->map);
+				srvoutf("\fcvote passed by majority: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else
 			{
 				const char *map = choosemap(smapname);
-				srvoutf("vote defaulted, server chooses: %s on map %s", gamename(gamemode, mutators), map);
+				srvoutf("\fcvote defaulted, server chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
@@ -1033,13 +1031,13 @@ namespace server
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
 		{
 			if(demorecord) enddemorecord();
-			srvoutf("%s [%s] forced %s on map %s", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf("\fc%s [%s] forced: \fs\fw%s on map %s\fS", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
 		{
-			srvoutf("%s suggests %s on map %s", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf("\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			checkvotes();
 		}
 	}
