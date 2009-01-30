@@ -318,11 +318,10 @@ namespace projs
 				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
-
 			case WEAPON_CG:
 			{
 				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f);
-				part_create(PART_MUZZLE_FLASH_SLENS, 50, from, 0xFFAA00, 3.f, d);
+				part_create(PART_MUZZLE_FLASH, 25, from, 0xFFAA00, 3.f, d);
                 adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
 			}

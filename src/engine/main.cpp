@@ -359,6 +359,7 @@ void resetgl()
     if(!reloadtexture("textures/notexture") ||
 		!reloadtexture("textures/blank") ||
 		!reloadtexture("textures/logo") ||
+		!reloadtexture("textures/cube2") ||
 		!reloadtexture(kidmode ? "textures/kidback" : loadback))
 			fatal("failed to reload core textures");
     reloadfonts();

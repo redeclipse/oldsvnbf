@@ -735,7 +735,7 @@ namespace server
 	{
 		s_sprintfdlv(str, s, s);
 		srvmsgf(-1, "%s", str);
-		relayf(1, "%s", str);
+		relayf(2, "%s", str);
 	}
 
 	void writedemo(int chan, void *data, int len)
@@ -1349,7 +1349,7 @@ namespace server
 					default: return;
 				}
 				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
-				relayf(1, "\fm%s set %s to %s", colorname(ci), cmd, val);
+				relayf(2, "\fm%s set %s to %s", colorname(ci), cmd, val);
 			}
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
@@ -2035,7 +2035,7 @@ namespace server
 		    savescore(ci);
 		    dropitems(ci, true);
 		    sendf(-1, 1, "ri2", SV_CDIS, n);
-		    if(ci->name[0]) relayf(1, "\fo%s has left the game", colorname(ci));
+		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
 		    ai::removeai(ci, complete);
 		    clients.removeobj(ci);
         }
@@ -2267,7 +2267,7 @@ namespace server
                 sendwelcome(ci);
                 sendresume(ci);
                 sendinitc2s(ci);
-                relayf(1, "\fg%s has joined the game", colorname(ci));
+                relayf(2, "\fg%s has joined the game", colorname(ci));
 
                 ai::refreshai();
             }
@@ -2609,7 +2609,7 @@ namespace server
 						string oldname, newname;
 						s_strcpy(oldname, colorname(ci));
 						s_strcpy(newname, colorname(ci, text));
-						relayf(1, "\fm%s is now known as %s", oldname, newname);
+						relayf(2, "\fm%s is now known as %s", oldname, newname);
 					}
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
 					int team = getint(p);
@@ -2913,14 +2913,14 @@ namespace server
 						case ID_VAR:
 						{
 							int val = getint(p);
-							relayf(1, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
+							relayf(2, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
 							QUEUE_INT(val);
 							break;
 						}
 						case ID_FVAR:
 						{
 							float val = getfloat(p);
-							relayf(1, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
+							relayf(2, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
 							QUEUE_FLT(val);
 							break;
 						}
@@ -2929,7 +2929,7 @@ namespace server
 						{
 							string val;
 							getstring(val, p);
-							relayf(1, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
+							relayf(2, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
 							QUEUE_STR(val);
 							break;
 						}

@@ -127,7 +127,7 @@ struct partrenderer
 		{
 			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
 			extern int flaresize;
-			addlensflare(o, p->color[0], p->color[1], p->color[2], type&PT_SPARKLE, p->size*1.25f*(flaresize/100.f));
+			addlensflare(o, p->color[0], p->color[1], p->color[2], type&PT_SPARKLE, p->size*1.15f*(flaresize/100.f));
 		}
 	}
 };
@@ -1235,11 +1235,11 @@ void updateparticles()
 
     flares.setupflares();
 	entities::drawparticles();
-	flares.drawflares(); // do after drawparticles so that we can make flares for them too
 	if(flareparts) loopi(sizeof(parts)/sizeof(parts[0]))
 	{
 		if(!(parts[i]->type&PT_LENS)) continue;
 		parts[i]->makeflares();
 	}
+	flares.drawflares(); // do after drawparticles so that we can make flares for them too
 }
 
