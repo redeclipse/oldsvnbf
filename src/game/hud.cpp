@@ -862,10 +862,7 @@ namespace hud
 			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
 			string text; text[0] = 0;
 			if(inventoryammo && (instate || inventoryammo == 2))
-			{
-				s_sprintfd(sa)("%d", world::player1->ammo[i]);
-				s_strcat(text, sa);
-			}
+				s_sprintf(text)("%d", world::player1->ammo[i]);
             if(inventoryweapids && (instate || inventoryweapids == 2))
             {
 				static string weapids[WEAPON_MAX];
@@ -881,8 +878,7 @@ namespace hud
 					}
 					lastweapids = changedkeys;
 				}
-                s_sprintfd(sa)("\fs%s%s\fS", weaptype[i].text, weapids[i]);
-                if(text[0]) s_strcat(text, " ");
+                s_sprintfd(sa)(text[0] ? " \fs%s%s\fS" : "\fs%s%s\fS", weaptype[i].text, weapids[i]);
                 s_strcat(text, sa);
             }
 			if(text[0]) sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%s", text);
