@@ -530,11 +530,10 @@ namespace hud
 					gameentity &e = *(gameentity *)entities::ents[i];
 					if(gotit[e.type] < 3 && entities::cansee(e))
 					{
-						if(!numgot) ty += draw_textx("Selected Ent(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
-						pushfont("emphasis");
+						pushfont("default");
 						ty += draw_textx("%s (%d)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, enttype[e.type].name, i);
 						popfont();
-						pushfont("default");
+						pushfont("sub");
 						const char *info = entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true);
 						if(info && *info) ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, info);
 						loopk(5)

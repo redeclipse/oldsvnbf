@@ -1320,7 +1320,6 @@ namespace entities
 
 		physent dummyent;
 		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
-		int entities = 0;
 		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
@@ -1357,7 +1356,6 @@ namespace entities
 				}
 				case WAYPOINT:
 				{
-					entities++;
 					if(mtype == MAP_BFGZ && gver <= 90)
 						e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
 					break;
