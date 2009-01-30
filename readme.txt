@@ -7,7 +7,7 @@ If you are interested in development, or require technical support please visit 
 The source code, license, and related documentation can be found in the 'src' subdirectory of this archive. Enjoy messing around with our little project, and be sure to have fun!
 
 Regards,
-	Acord, Quin, and the Blood Frontier Team
+	The Blood Frontier Team
 
 = BLOOD FRONTIER =
 	
@@ -40,11 +40,12 @@ Blood Frontier is based on the Sauerbraten game engine, both of which are covere
 
 	http://www.opensource.org/licenses/zlib-license.php
 
-Blood Frontier, Copyright (C) 2006-2008
+Blood Frontier, Copyright (C) 2006-2009
 	* Tony "Acord" Cord
 	* Quinton "Quin" Reeves 
+	* Lee "Eihrul" Salzman 
 
-Sauerbraten (Cube Engine 2), Copyright (C) 2001-2008
+Sauerbraten (Cube Engine 2), Copyright (C) 2001-2009
 	* Wouter "aardappel" van Oortmerssen
 	* Lee "Eihrul" Salzman 
 
