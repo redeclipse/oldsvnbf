@@ -200,7 +200,7 @@ namespace hud
 				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), world::minremain, world::minremain==1 ? "minute" : "minutes");
 			}
 
-			if(!world::minremain || scoresinfo())
+			if(world::intermission || scoresinfo())
 			{
 				int accuracy = world::player1->totaldamage*100/max(world::player1->totalshots, 1);
 

@@ -461,10 +461,12 @@ extern gametypes gametype[], mutstype[];
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? sv_instaspawnweapon : sv_spawnweapon))
 #define m_spawndelay(a,b)	int((m_stf(a) ? sv_stfspawndelay : (m_ctf(a) ? sv_ctfspawndelay : sv_spawndelay))*(m_insta(a, b) ? sv_instaspawnscale : 1)*(m_paint(a, b) ? sv_paintspawnscale : 1)*1000)+(m_paint(a, b) ? sv_paintfreezetime*1000 : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || (sv_itemsallowed < (m_insta(a,b) ? 2 : 1)))
+#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : sv_maxhealth)
 #else
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? instaspawnweapon : spawnweapon))
 #define m_spawndelay(a,b)	int((m_stf(a) ? stfspawndelay : (m_ctf(a) ? ctfspawndelay : spawndelay))*(m_insta(a, b) ? instaspawnscale : 1)*(m_paint(a, b) ? paintspawnscale : 1)*1000)+(m_paint(a, b) ? paintfreezetime*1000 : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || (itemsallowed < (m_insta(a,b) ? 2 : 1)))
+#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : maxhealth)
 #endif
 
 // network messages codes, c2s, c2c, s2c

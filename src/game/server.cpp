@@ -690,7 +690,7 @@ namespace server
 	void spawnstate(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_spawnweapon(gamemode, mutators), sv_maxhealth, !m_noitems(gamemode, mutators));
+		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), !m_noitems(gamemode, mutators));
 		gs.lifesequence++;
 	}
 
@@ -1571,7 +1571,6 @@ namespace server
 			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*sv_damagescale);
 			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*sv_damagescale);
 			else realdamage = int(realdamage*sv_damagescale);
-			if(realdamage && m_insta(gamemode, mutators)) realdamage = max(realdamage, ts.health);
 			ts.dodamage(gamemillis, (ts.health -= realdamage));
 			actor->state.damage += realdamage;
 		}
@@ -1579,6 +1578,7 @@ namespace server
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
 		else realflags &= ~HIT_KILL;
+
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 
 		if(realflags&HIT_KILL || m_paint(gamemode, mutators))
@@ -1900,13 +1900,14 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				if(m_regen(gamemode, mutators) && ci->state.health < sv_maxhealth && sv_regenhealth && sv_regendelay && sv_regentime)
+				int m = m_maxhealth(gamemode, mutators);
+				if(m_regen(gamemode, mutators) && ci->state.health < m && sv_regenhealth && sv_regendelay && sv_regentime)
 				{
 					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
 					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
 					{
 						int health = ci->state.health - (ci->state.health % sv_regenhealth);
-						ci->state.health = min(health + sv_regenhealth, sv_maxhealth);
+						ci->state.health = min(health + sv_regenhealth, m);
 						ci->state.lastregen = gamemillis;
 						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 					}
@@ -1922,7 +1923,7 @@ namespace server
 					if(!nospawn)
 					{
 						ci->state.state = CS_DEAD; // safety
-						ci->state.respawn(gamemillis, sv_maxhealth);
+						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						sendspawn(ci);
 					}
 				}
@@ -2798,7 +2799,7 @@ namespace server
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
 						spinfo->state.state = CS_DEAD;
-						spinfo->state.respawn(gamemillis, sv_maxhealth);
+						spinfo->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						int nospawn = 0;
 						if(smode && !smode->canspawn(spinfo)) { nospawn++; }
 						mutate(smuts, {
