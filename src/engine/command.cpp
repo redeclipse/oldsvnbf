@@ -726,6 +726,13 @@ void exec(const char *cfgfile)
 	if(!execfile(cfgfile)) conoutf("\frcould not read %s", cfgfile);
 }
 
+#ifndef STANDALONE
+static int sortidents(ident **x, ident **y)
+{
+    return strcmp((*x)->name, (*y)->name);
+}
+#endif
+
 void writecfg()
 {
 #ifndef STANDALONE
@@ -733,12 +740,24 @@ void writecfg()
 	if(!f) return;
 	client::writeclientinfo(f);
 	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, server::gamever());
-	enumerate(*idents, ident, id,
+    vector<ident *> ids;
+    enumerate(*idents, ident, id, ids.add(&id));
+    ids.sort(sortidents);
+    loopv(ids)
+    {
+        ident &id = *ids[i];
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
 			case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
 			case ID_FVAR: fprintf(f, "%s %s\n", id.name, floatstr(*id.storage.f)); break;
 			case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
+		}
+	}
+	loopv(ids)
+	{
+		ident &id = *ids[i];
+		if(id.flags&IDF_PERSIST) switch(id.type)
+		{
 			case ID_ALIAS:
 			{
 				if(id.override==NO_OVERRIDE && id.action[0])
@@ -746,7 +765,7 @@ void writecfg()
 				break;
 			}
 		}
-	);
+	}
 	writebinds(f);
 	writecompletions(f);
 	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
