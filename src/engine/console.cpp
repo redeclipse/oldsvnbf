@@ -443,7 +443,7 @@ void execbind(keym &k, bool isdown)
     }
     if(isdown)
     {
-        int state = editmode ? keym::ACTION_EDITING : (client::state() == CS_SPECTATOR || client::state() == CS_WAITING ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
+        int state = editmode ? keym::ACTION_EDITING : (client::state() == CS_SPECTATOR ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;

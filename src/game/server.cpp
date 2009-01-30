@@ -215,7 +215,7 @@ namespace server
 		gameevent &addevent()
 		{
 			static gameevent dummy;
-            if(state.state==CS_SPECTATOR || state.state==CS_WAITING || events.length()>100) return dummy;
+            if(state.state==CS_SPECTATOR || events.length()>100) return dummy;
 			return events.add();
 		}
 

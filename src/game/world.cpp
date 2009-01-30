@@ -104,11 +104,9 @@ namespace world
 
 	bool isthirdperson()
 	{
-		if(player1->state == CS_DEAD) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
-		if(player1->state == CS_WAITING) return false;
 		if(inzoom()) return false;
 		return true;
 	}
@@ -116,7 +114,7 @@ namespace world
 	int mousestyle()
 	{
 		if(player1->state == CS_EDITING) return editmouse;
-		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specmouse;
+		if(player1->state == CS_SPECTATOR) return specmouse;
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemouse : pronemouse;
 		if(isthirdperson()) return thirdpersonmouse;
 		return firstpersonmouse;
@@ -125,7 +123,7 @@ namespace world
 	int deadzone()
 	{
 		if(player1->state == CS_EDITING) return editdeadzone;
-		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specdeadzone;
+		if(player1->state == CS_SPECTATOR) return specdeadzone;
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipedeadzone : pronedeadzone;
 		if(isthirdperson()) return thirdpersondeadzone;
 		return firstpersondeadzone;
@@ -135,7 +133,7 @@ namespace world
 	{
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipepanspeed : pronepanspeed;
 		if(player1->state == CS_EDITING) return editpanspeed;
-		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specpanspeed;
+		if(player1->state == CS_SPECTATOR) return specpanspeed;
 		if(isthirdperson()) return thirdpersonpanspeed;
 		return firstpersonpanspeed;
 	}
@@ -143,7 +141,7 @@ namespace world
 	int fov()
 	{
 		if(player1->state == CS_EDITING) return editfov;
-		if(player1->state == CS_SPECTATOR || player1->state == CS_WAITING) return specfov;
+		if(player1->state == CS_SPECTATOR) return specfov;
 		if(isthirdperson()) return thirdpersonfov;
 		return firstpersonfov;
 	}
@@ -236,7 +234,7 @@ namespace world
         		if(UI::hascursor(true)) return false;
 				if(tvmode()) return false;
         	}
-			if(d->state == CS_DEAD) return false;
+			if(d->state == CS_DEAD || d->state == CS_WAITING) return false;
 			else if(d->state == CS_ALIVE)
 			{
 				if(intermission) return false;
@@ -393,70 +391,6 @@ namespace world
 		}
 	}
 
-	void updateworld()		// main game update loop
-	{
-		if(!curtime) return;
-        if(!maptime)
-        {
-        	maptime = lastmillis;
-        	return;
-        }
-
-        if(connected())
-        {
-            // do shooting/projectile update here before network update for greater accuracy with what the player sees
-			if(!allowmove(player1)) player1->stopmoving();
-
-            gameent *d = NULL;
-            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
-				checkoften(d, d == player1 || d->ai);
-
-            physics::update();
-            projs::update();
-            entities::update();
-            ai::update();
-
-            if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
-
-            otherplayers();
-        }
-
-		gets2c();
-
-		if(connected())
-		{
-			#define adjustscaled(t,n) \
-				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
-
-			adjustscaled(float, player1->roll);
-			adjustscaled(int, quakewobble);
-			adjustscaled(int, hud::damageresidue);
-
-			if(player1->state == CS_DEAD)
-			{
-                if(player1->ragdoll) moveragdoll(player1, true);
-				else if(lastmillis-player1->lastpain < 2000)
-					physics::move(player1, 10, false);
-			}
-			else
-            {
-                if(player1->ragdoll) cleanragdoll(player1);
-                if(player1->state == CS_ALIVE)
-			    {
-				    physics::move(player1, 10, true);
-				    addsway(player1);
-				    entities::checkitems(player1);
-				    weapons::reload(player1);
-			    }
-			    else physics::move(player1, 10, true);
-            }
-
-            if(hud::sb.canshowscores()) hud::sb.showscores(true);
-		}
-
-		if(player1->clientnum >= 0) c2sinfo(40);
-	}
-
 	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
 	{
 		if(d->state != CS_ALIVE || intermission) return;
@@ -539,13 +473,15 @@ namespace world
 		if(d == player1)
 		{
 			anc = S_V_FRAGGED;
+			/*
 			d->stopmoving();
 			d->pitch = 0;
 			d->roll = 0;
+			*/
 		}
 		else
         {
-            d->move = d->strafe = 0;
+        	// d->move = d->strafe = 0;
             d->resetinterp();
         }
 
@@ -706,7 +642,7 @@ namespace world
 		{
 			if(!intermission)
 			{
-				player1->stopmoving();
+				player1->stopmoving(true);
 				hud::sb.showscores(true, true);
 				intermission = true;
 			}
@@ -947,7 +883,7 @@ namespace world
 	{
 		bool hascursor = UI::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
-		if(hascursor || mousestyle() >= 1)
+		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING))
 		{
 			if(absmouse) // absolute positions, unaccelerated
 			{
@@ -964,7 +900,13 @@ namespace world
 		}
 		else
 		{
-			if(allowmove(player1))
+			if(player1->state == CS_WAITING)
+			{
+				camera1->yaw += mousesens(dx, w, yawsensitivity*sensitivity);
+				camera1->pitch -= mousesens(dy, h, pitchsensitivity*sensitivity*(!hascursor && invmouse ? -1.f : 1.f));
+				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
+			}
+			else if(allowmove(player1))
 			{
 				float scale = inzoom() ?
 						(weaptype[player1->weapselect].snipes? snipesensitivity : pronesensitivity)
@@ -1057,12 +999,9 @@ namespace world
 		return 0;
 	}
 
-	void recomputecamera(int w, int h)
+	void checkcamera()
 	{
-		fixview(w, h);
-
 		camera1 = &camera;
-
 		if(camera1->type != ENT_CAMERA)
 		{
 			camera1->reset();
@@ -1070,48 +1009,101 @@ namespace world
 			camera1->state = CS_ALIVE;
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 1;
 		}
+	}
 
-		if(connected() && maptime)
+	#define scalecameraangle \
+		{ \
+			if(camera1->yaw < yaw-180.0f) camera1->yaw += 360.0f; \
+			if(camera1->yaw > yaw+180.0f) camera1->yaw -= 360.0f; \
+			float amt = float(curtime)/1000.f, offyaw = fabs(yaw-camera1->yaw)*amt, offpitch = fabs(pitch-camera1->pitch)*amt*0.25f; \
+			if(yaw > camera1->yaw) { \
+				camera1->yaw += offyaw; \
+				if(yaw < camera1->yaw) camera1->yaw = yaw; \
+			} \
+			else if(yaw < camera1->yaw) \
+			{ \
+				camera1->yaw -= offyaw; \
+				if(yaw > camera1->yaw) camera1->yaw = yaw; \
+			} \
+			if(pitch > camera1->pitch) \
+			{ \
+				camera1->pitch += offpitch; \
+				if(pitch < camera1->pitch) camera1->pitch = pitch; \
+			} \
+			else if(pitch < camera1->pitch) \
+			{ \
+				camera1->pitch -= offpitch; \
+				if(pitch > camera1->pitch) camera1->pitch = pitch; \
+			} \
+			yaw = camera1->aimyaw = camera1->yaw; \
+			pitch = camera1->aimpitch = camera1->pitch; \
+		}
+
+	void updateworld()		// main game update loop
+	{
+		if(!curtime) return;
+        if(!maptime)
+        {
+        	maptime = lastmillis;
+        	return;
+        }
+
+        if(connected())
+        {
+            // do shooting/projectile update here before network update for greater accuracy with what the player sees
+			if(!allowmove(player1)) player1->stopmoving(player1->state != CS_WAITING);
+
+            gameent *d = NULL;
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
+				checkoften(d, d == player1 || d->ai);
+
+            physics::update();
+            projs::update();
+            entities::update();
+            ai::update();
+
+            if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
+
+            otherplayers();
+        }
+
+		gets2c();
+
+		if(connected())
 		{
-			if(!lastcamera)
+			#define adjustscaled(t,n) \
+				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
+
+			adjustscaled(float, player1->roll);
+			adjustscaled(int, quakewobble);
+			adjustscaled(int, hud::damageresidue);
+
+			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
-				resetcursor();
-				cameras.setsize(0);
-				lastspec = 0;
-				if(mousestyle() == 2)
-				{
-					camera1->yaw = player1->aimyaw = player1->yaw;
-					camera1->pitch = player1->aimpitch = player1->pitch;
-				}
+                if(player1->ragdoll) moveragdoll(player1, true);
+				else if(lastmillis-player1->lastpain < 2000)
+					physics::move(player1, 10, false);
 			}
-			#define scalecameraangle \
-				{ \
-					if(camera1->yaw < yaw-180.0f) camera1->yaw += 360.0f; \
-					if(camera1->yaw > yaw+180.0f) camera1->yaw -= 360.0f; \
-					float amt = float(curtime)/1000.f, offyaw = fabs(yaw-camera1->yaw)*amt, offpitch = fabs(pitch-camera1->pitch)*amt*0.25f; \
-					if(yaw > camera1->yaw) { \
-						camera1->yaw += offyaw; \
-						if(yaw < camera1->yaw) camera1->yaw = yaw; \
-					} \
-					else if(yaw < camera1->yaw) \
-					{ \
-						camera1->yaw -= offyaw; \
-						if(yaw > camera1->yaw) camera1->yaw = yaw; \
-					} \
-					if(pitch > camera1->pitch) \
-					{ \
-						camera1->pitch += offpitch; \
-						if(pitch < camera1->pitch) camera1->pitch = pitch; \
-					} \
-					else if(pitch < camera1->pitch) \
-					{ \
-						camera1->pitch -= offpitch; \
-						if(pitch > camera1->pitch) camera1->pitch = pitch; \
-					} \
-					yaw = camera1->aimyaw = camera1->yaw; \
-					pitch = camera1->aimpitch = camera1->pitch; \
-				}
-			if(tvmode())
+			else
+            {
+                if(player1->ragdoll) cleanragdoll(player1);
+                if(player1->state == CS_ALIVE)
+			    {
+				    physics::move(player1, 10, true);
+				    addsway(player1);
+				    entities::checkitems(player1);
+				    weapons::reload(player1);
+			    }
+			    else if(!tvmode()) physics::move(player1, 10, true);
+            }
+			checkcamera();
+			if(player1->state == CS_WAITING)
+			{
+				camera1->move = player1->move;
+				camera1->strafe = player1->strafe;
+				physics::move(camera1, 10, true);
+			}
+			else if(tvmode())
 			{
 				if(cameras.empty()) loopk(2)
 				{
@@ -1158,7 +1150,7 @@ namespace world
 							vec avg(0, 0, 0);
 							gameent *d;
 							c.reset();
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->state == CS_ALIVE || d->state == CS_DEAD))
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 							{
 								vec trg, pos = feetpos(d);
 								float dist = c.pos.dist(pos);
@@ -1224,6 +1216,35 @@ namespace world
 					player1->yaw = player1->aimyaw = camera1->yaw;
 					player1->pitch = player1->aimpitch = camera1->pitch;
 				}
+			}
+            if(hud::sb.canshowscores()) hud::sb.showscores(true);
+		}
+
+		if(player1->clientnum >= 0) c2sinfo(40);
+	}
+
+	void recomputecamera(int w, int h)
+	{
+		fixview(w, h);
+		checkcamera();
+		if(connected() && maptime)
+		{
+			if(!lastcamera)
+			{
+				resetcursor();
+				cameras.setsize(0);
+				lastspec = 0;
+				if(mousestyle() == 2 && player1->state != CS_WAITING)
+				{
+					camera1->yaw = player1->aimyaw = player1->yaw;
+					camera1->pitch = player1->aimpitch = player1->pitch;
+				}
+			}
+
+			if(player1->state == CS_WAITING || tvmode())
+			{
+				camera1->aimyaw = camera1->yaw;
+				camera1->aimpitch = camera1->pitch;
 			}
 			else if(player1->state == CS_DEAD)
 			{
@@ -1506,8 +1527,8 @@ namespace world
 			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = isweap(weap);
 
-		if(d->state == CS_SPECTATOR || d->state == CS_WAITING) return;
-		else if(d->state == CS_DEAD)
+		if(d->state == CS_SPECTATOR) return;
+		else if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			showweap = false;
 			animflags = ANIM_DYING;
@@ -1665,7 +1686,7 @@ namespace world
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
-			if(d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_SPAWNING)
+			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
 				renderplayer(d, true, showtranslucent(d, true));
         }
 
@@ -1680,11 +1701,8 @@ namespace world
 
     void renderavatar(bool early)
     {
-        if(isthirdperson() || !rendernormally)
-        {
-            if(player1->state!=CS_SPECTATOR && player1->state!=CS_WAITING)
+        if((isthirdperson() || !rendernormally || player1->state == CS_DEAD || player1->state == CS_WAITING) && player1->state != CS_SPECTATOR)
                 renderplayer(player1, true, showtranslucent(player1, true), early);
-        }
         else if(player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
