@@ -2782,7 +2782,7 @@ namespace server
 				case SV_SPECTATOR:
 				{
 					int spectator = getint(p), val = getint(p);
-					if((ci->state.state==CS_SPECTATOR || spectator!=sender) && !haspriv(ci, PRIV_MASTER, true)) break;
+					if(((mastermode >= 2 && ci->state.state==CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
 					if(!spinfo) break;
 
