@@ -8,17 +8,14 @@ namespace hud
 	vector<int> teamkills;
 	scoreboard sb;
 
-	VARP(hudsize, 0, 2400, INT_MAX-1);
+	VARP(hudsize, 0, 2048, INT_MAX-1);
 
 	VARP(shownotices, 0, 3, 4);
 	VARP(showstats, 0, 0, 1);
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 2, 2);
 
-	VARP(titlecardtime, 0, 2000, 10000);
-	VARP(titlecardfade, 0, 3000, 10000);
-	FVARP(titlecardsize, 0, 0.3f, 1000);
-
+	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 0);
 	FVARP(damageblend, 0, 0.75f, 1);
@@ -62,8 +59,6 @@ namespace hud
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.7f, 1);
-	FVARP(inventorytextscale, 0, 1.25f, 1000);
-	FVARP(inventorytextblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
 	TVAR(chainguntex, "textures/chaingun", 0);
@@ -372,6 +367,18 @@ namespace hud
 		{
 			pushfont("super");
 			int ty = showradar ? int(hudsize*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
+
+			if(!world::maptime || lastmillis-world::maptime < titlecard)
+			{
+				const char *title = getmaptitle();
+				if(!*title) title = getmapname();
+				pushfont("emphasis");
+				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, title);
+				popfont();
+				pushfont("default");
+				ty += draw_textx("Playing: %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, server::gamename(world::gamemode, world::mutators));
+				popfont();
+			}
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->respawnwait(lastmillis, sdelay);
@@ -715,43 +722,6 @@ namespace hud
 		}
 	}
 
-	void drawtitlecard(int w, int h)
-	{
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0;
-		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
-
-		int bs = int(oy*titlecardsize), bp = int(oy*0.01f), bx = ox-bs-bp-os, by = bp+os,
-			secs = world::maptime ? lastmillis-world::maptime : 0;
-		float fade = hudblend, amt = 1.f;
-
-		if(secs < titlecardtime)
-		{
-			amt = clamp(float(secs)/float(titlecardtime), 0.f, 1.f);
-			fade = clamp(amt*fade, 0.f, 1.f);
-		}
-		else if(secs < titlecardtime+titlecardfade)
-			fade = clamp(fade*(1.f-(float(secs-titlecardtime)/float(titlecardfade))), 0.f, 1.f);
-
-		const char *title = getmaptitle();
-		if(!*title) title = getmapname();
-
-		int rs = int(bs*amt), rx = bx+(bs-rs), ry = by;
-		glColor4f(1.f, 1.f, 1.f, fade*0.9f);
-		if(!rendericon(getmapname(), rx, ry, rs, rs))
-			rendericon("textures/emblem", rx, ry, rs, rs);
-		glColor4f(1.f, 1.f, 1.f, fade);
-		rendericon(guioverlaytex, rx, ry, rs, rs);
-
-		pushfont("emphasis");
-		int tx = bx + bs, ty = by + bs + FONTH/4, ts = int(tx*(1.f-amt));
-		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, title);
-		popfont();
-		pushfont("default");
-		ty += draw_textx("Playing: %s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, server::gamename(world::gamemode, world::mutators));
-		popfont();
-	}
-
 	void drawradar(int w, int h, int s, float blend)
 	{
 		const struct rdpat {
@@ -811,30 +781,26 @@ namespace hud
 		drawsized(x-int(s), y-int(s), int(s));
 		if(text && *text)
 		{
-			float off = skew*inventorytextscale;
 			glPushMatrix();
-			glScalef(off, off, 1);
+			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
-			int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-s+FONTH/4)*(1.f/off)),
-				tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
+			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*inventoryblend*blend*skew);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
+			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
 		}
 		return int(s);
 	}
 
-	void drawitemsubtext(int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
+	void drawitemsubtext(int x, int y, float skew, const char *font, float blend, const char *text, ...)
 	{
-		float /*f = fade*skew, s = size*skew,*/ off = skew*inventorytextscale;
 		glPushMatrix();
-		glScalef(off, off, 1);
+		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-FONTH-FONTH/4)*(1.f/off)),
-			tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
+		int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y)*(1.f/skew))-FONTH-FONTH/4, ti = int(255.f*inventoryblend*blend*skew);
 		s_sprintfdlv(str, text, text);
-		draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
+		draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
 	}
@@ -890,7 +856,7 @@ namespace hud
 					}
 					lastweapids = changedkeys;
 				}
-                drawitemsubtext(x, oldy, size, fade, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
+                drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
             }
 		}
 		return sy;
@@ -921,7 +887,7 @@ namespace hud
 
 		int sy = 0;
 		sy += drawitem(healthtex, x, y, size, fade, skew);
-		if(inventoryhealth > 1) drawitemsubtext(x, y, size, fade, skew, "sub", blend, "%d", world::player1->health);
+		if(inventoryhealth > 1) drawitemsubtext(x, y, skew, "sub", blend, "%d", world::player1->health);
 		return sy;
 	}
 
@@ -1043,9 +1009,9 @@ namespace hud
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
-		if(secs < titlecardtime+titlecardfade+titlecardfade)
+		if(secs < titlecard)
 		{
-			float amt = clamp(float(secs-titlecardtime-titlecardfade)/float(titlecardfade), 0.f, 1.f);
+			float amt = clamp(float(secs)/float(titlecard), 0.f, 1.f);
 			fade *= amt;
 		}
 
@@ -1131,21 +1097,16 @@ namespace hud
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		if(world::maptime && connected())
-		{
-			if(lastmillis-world::maptime < titlecardtime+titlecardfade)
-				drawtitlecard(w, h);
-			else drawgamehud(w, h);
-		}
+		if(world::maptime && connected()) drawgamehud(w, h);
 		drawhudelements(w, h);
 		glDisable(GL_BLEND);
 	}
 
 	bool getcolour(vec &colour)
 	{
-		if(!world::maptime || lastmillis-world::maptime < titlecardtime)
+		if(!world::maptime || lastmillis-world::maptime < titlecard)
 		{
-			float fade = world::maptime ? float(lastmillis-world::maptime)/float(titlecardtime) : 0.f;
+			float fade = world::maptime ? float(lastmillis-world::maptime)/float(titlecard) : 0.f;
 			if(fade < 1.f)
 			{
 				colour = vec(fade, fade, fade);

@@ -1352,7 +1352,7 @@ namespace hud
 	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "radar", float fade = -1.f, const char *text = NULL, ...);
 	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
 	extern int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
-	extern void drawitemsubtext(int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...);
+	extern void drawitemsubtext(int x, int y, float skew, const char *font, float blend, const char *text, ...);
 	extern const char *flagtex(int team = TEAM_NEUTRAL);
 	extern float radarrange();
 }

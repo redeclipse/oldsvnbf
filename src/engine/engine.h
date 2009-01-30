@@ -7,14 +7,14 @@
 
 #define ENG_VERSION			80
 #define ENG_NAME			"Blood Frontier"
-#define ENG_RELEASE			"Beta 1 RC1"
-#define ENG_URL				"http://bloodfrontier.com/"
+#define ENG_RELEASE			"Beta 1"
+#define ENG_URL				"http://www.bloodfrontier.com/"
 #define ENG_BLURB			"It's bloody fun!"
 
 #define ENG_SERVER_PORT		28795
 #define ENG_QUERY_PORT		28796
 #define ENG_MASTER_PORT		28800
-#define ENG_MASTER_HOST		"bloodfrontier.com"
+#define ENG_MASTER_HOST		"play.bloodfrontier.com"
 
 #include "cube.h"
 #include "iengine.h"

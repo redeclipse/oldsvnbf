@@ -205,7 +205,7 @@ bool ircaddchan(int type, const char *name, const char *channel, const char *pas
 	ircchan &d = n->channels.add();
 	d.state = IRCC_NONE;
 	d.type = type;
-	d.relay = clamp(relay, 0, 2);
+	d.relay = clamp(relay, 0, 3);
 	d.lastjoin = 0;
 	s_strcpy(d.name, channel);
 	s_strcpy(d.passkey, passkey);

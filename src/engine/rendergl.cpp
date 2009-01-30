@@ -1370,13 +1370,21 @@ void loadbackground(int w, int h, Texture *t)
         glColor3f(1, 1, 1);
     }
 
-    int x = (w-512)/2, y = 80;
+    int x = w-516, y = h-132;
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0); glVertex2f(x,    y);
     glTexCoord2f(1, 0); glVertex2f(x+512, y);
-    glTexCoord2f(1, 1); glVertex2f(x+512, y+256);
-    glTexCoord2f(0, 1); glVertex2f(x,    y+256);
+    glTexCoord2f(1, 1); glVertex2f(x+512, y+128);
+    glTexCoord2f(0, 1); glVertex2f(x,    y+128);
+    glEnd();
+    x = w-396; y = h-58;
+    settexture("textures/cube2", 3);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2f(x,    y);
+    glTexCoord2f(1, 0); glVertex2f(x+96, y);
+    glTexCoord2f(1, 1); glVertex2f(x+96, y+32);
+    glTexCoord2f(0, 1); glVertex2f(x,    y+32);
     glEnd();
 }
 
