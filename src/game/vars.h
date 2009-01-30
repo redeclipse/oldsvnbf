@@ -55,8 +55,6 @@ FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in inst
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 
 FVARG(botbalance, 0, 1.f, 1000);
-VARG(botminamt, 0, 2, MAXCLIENTS-1);
-VARG(botmaxamt, 0, 32, MAXCLIENTS-1);
 VARG(botminskill, 0, 80, 100);
 VARG(botmaxskill, 0, 100, 100);
 

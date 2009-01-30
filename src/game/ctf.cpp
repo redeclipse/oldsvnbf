@@ -513,15 +513,11 @@ namespace ctf
 
 	bool aicheck(gameent *d, aistate &b)
 	{
-		vector<int> hasflags, targets;
+		vector<int> hasflags;
 		loopv(st.flags)
 		{
 			ctfstate::flag &g = st.flags[i];
-			if(g.owner)
-			{
-				if(g.owner == d) hasflags.add(i);
-				else if(g.owner->team == d->team) targets.add(i);
-			}
+			if(g.owner == d) hasflags.add(i);
 		}
 		if(!hasflags.empty() && aihomerun(d, b)) return true;
 		return false;

@@ -347,7 +347,7 @@ namespace hud
 		int numkilled = 0;
 		loopvrev(teamkills)
 		{
-			if(lastmillis-teamkills[i] <= 30000) numkilled++;
+			if(lastmillis-teamkills[i] <= 60000) numkilled++;
 			else teamkills.remove(i);
 		}
 		return numkilled;
@@ -415,13 +415,13 @@ namespace hud
 			}
 			else if(world::player1->state == CS_ALIVE)
 			{
-				if(m_team(world::gamemode, world::mutators) && numteamkills() > 3)
+				if(m_team(world::gamemode, world::mutators) && numteamkills() >= 3)
 				{
 					ty += draw_textx("Don't shoot team mates!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
 					if(shownotices > 1)
 					{
 						pushfont("emphasis");
-						settexture(teamtype[world::player1->team].icon);
+						settexture(flagtex(world::player1->team));
 						glColor4f(1.f, 1.f, 1.f, tf);
 						drawsized(tx-FONTH, ty, FONTH);
 						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
@@ -903,7 +903,7 @@ namespace hud
                       r = step.r*hlerp + steps[i-1].r*(1-hlerp),
                       g = step.g*hlerp + steps[i-1].g*(1-hlerp),
                       b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-                glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size); 
+                glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size);
                 glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(x, y - size + hoff*size);
             }
             if(step.health > health + margin)
@@ -912,13 +912,13 @@ namespace hud
                       r = step.r*hlerp + steps[i-1].r*(1-hlerp),
                       g = step.g*hlerp + steps[i-1].g*(1-hlerp),
                       b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-                glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size); 
+                glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size);
                 glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(x, y - size + hoff*size);
                 break;
             }
             float off = 1 - step.health, hfade = fade;
             if(step.health > health) hfade *= 1 - (step.health - health)/margin;
-            glColor4f(step.r, step.g, step.b, hfade); glTexCoord2f(0, off); glVertex2f(x - size/2, y - size + off*size);    
+            glColor4f(step.r, step.g, step.b, hfade); glTexCoord2f(0, off); glVertex2f(x - size/2, y - size + off*size);
             glColor4f(step.r, step.g, step.b, hfade); glTexCoord2f(1, off); glVertex2f(x, y - size + off*size);
         }
         glEnd();
