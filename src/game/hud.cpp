@@ -152,8 +152,9 @@ namespace hud
 			s += int(s*ss*skew);
 		}
 
-		if(world::player1->health < maxhealth)
-			colourskew(r, g, b, clamp(float(world::player1->health)/float(maxhealth), 0.f, 1.f));
+		int m = m_maxhealth(world::gamemode, world::mutators);
+		if(world::player1->health < m)
+			colourskew(r, g, b, clamp(float(world::player1->health)/float(m), 0.f, 1.f));
 	}
 
 	enum
@@ -867,7 +868,7 @@ namespace hud
             {
 				static string weapids[WEAPON_MAX];
 				static int lastweapids = -1;
-				if(lastweapids != changedkeys) 
+				if(lastweapids != changedkeys)
 				{
 					loopj(WEAPON_MAX)
 					{

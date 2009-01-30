@@ -111,7 +111,7 @@ struct duelservmode : servmode
 					{
 						clientinfo *ci = clients[duelqueue[i]];
 						ci->state.state = CS_ALIVE;
-						ci->state.respawn(gamemillis, sv_maxhealth);
+						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						sendspawn(ci);
 						alive.add(ci);
 					}

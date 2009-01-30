@@ -307,7 +307,7 @@ namespace world
 			// reset perma-state
 			gameent *d;
 			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-				d->resetstate(lastmillis, maxhealth);
+				d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 		}
 	}
 
@@ -530,7 +530,7 @@ namespace world
 		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators)) dth = S_SPLAT;
 		else
 		{
-			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > maxhealth;
+			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators);
 			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
 			else if(obliterated) dth = S_SPLOSH;
 			else dth = S_DIE1+rnd(2);
