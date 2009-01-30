@@ -868,7 +868,20 @@ namespace hud
 			}
             if(inventoryweapids && (instate || inventoryweapids == 2))
             {
-                s_sprintfd(sa)("\fs%s%d\fS", weaptype[i].text, i+1);
+				static string weapids[WEAPON_MAX];
+				static int lastweapids = -1;
+				if(lastweapids != changedkeys) 
+				{
+					loopj(WEAPON_MAX)
+					{
+						s_sprintfd(action)("weapon %d", j);
+						const char *id = searchbind(action, 0);
+						if(id) s_strcpy(weapids[j], id);
+						else s_sprintf(weapids[j])("%d", j);
+					}
+					lastweapids = changedkeys;
+				}
+                s_sprintfd(sa)("\fs%s%s\fS", weaptype[i].text, weapids[i]);
                 if(text[0]) s_strcat(text, " ");
                 s_strcat(text, sa);
             }

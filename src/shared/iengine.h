@@ -67,12 +67,15 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
 // console
+extern int changedkeys;
+
 extern void keypress(int code, bool isdown, int cooked);
 extern int rendercommand(int x, int y, int w);
 extern int renderconsole(int w, int h, int x, int y, int s);
 extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
+extern const char *searchbind(const char *action, int type);
 
 // menus
 extern void newgui(char *name, char *contents, char *initaction = NULL, char *header = NULL);

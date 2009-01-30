@@ -230,6 +230,15 @@ void searchbinds(char *action, int type, int limit, char *sep)
     result(names.getbuf());
 }
 
+const char *searchbind(const char *action, int type)
+{
+    enumerate(keyms, keym, km,
+    {
+        if(!strcmp(km.actions[type], action)) return km.name;
+    });
+    return NULL;
+}
+
 keym *findbind(char *key)
 {
     enumerate(keyms, keym, km,
@@ -245,6 +254,8 @@ void getbind(char *key, int type)
     result(km ? km->actions[type] : "");
 }
 
+int changedkeys = 0;
+
 void bindkey(char *key, char *action, int state, const char *cmd)
 {
     if(overrideidents) { conoutf("\frcannot override %s \"%s\"", cmd, key); return; }
@@ -257,6 +268,7 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     int len = strlen(action);
     while(len>0 && isspace(action[len-1])) len--;
     binding = newstring(action, len);
+    changedkeys = totalmillis;
 }
 
 ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
