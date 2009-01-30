@@ -57,6 +57,8 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventoryweapids, 0, 1, 2);
+	VARP(inventoryhealth, 0, 2, 2);
+	VARP(inventorythrob, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.7f, 1);
@@ -70,6 +72,7 @@ namespace hud
 	TVAR(carbinetex, "textures/carbine", 0);
 	TVAR(rifletex, "textures/rifle", 0);
 	TVAR(paintguntex, "textures/paintgun", 0);
+	TVAR(healthtex, "textures/health", 0);
 	TVAR(neutralflagtex, "textures/team", 0);
 	TVAR(alphaflagtex, "textures/teamalpha", 0);
 	TVAR(betaflagtex, "textures/teambeta", 0);
@@ -376,9 +379,7 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
-					char *a = executeret("searchbinds attack 0 \"\fs\fw, or\fS \"");
-					s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
-					if(a) delete[] a;
+					const char *actkey = searchbindlist("attack", 0, 5, "\fs\fw, or \fS");
 					if(delay)
 					{
 						pushfont("emphasis");
@@ -443,9 +444,7 @@ namespace hud
 					vector<actitem> actitems;
 					if(entities::collateitems(world::player1, actitems))
 					{
-						char *a = executeret("searchbinds action 0 \"\fs\fw, or\fS \"");
-						s_sprintfd(actkey)("%s", a && *a ? a : "ACTION");
-						if(a) delete[] a;
+						const char *actkey = searchbindlist("action", 0, 5, "\fs\fw, or \fS");
 						while(!actitems.empty())
 						{
 							actitem &t = actitems.last();
@@ -496,23 +495,17 @@ namespace hud
 					{
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
-							char *a = executeret("searchbinds zoom 0 \"\fs\fw, or\fS \"");
-							s_sprintfd(actkey)("%s", a && *a ? a : "ZOOM");
-							if(a) delete[] a;
+							const char *actkey = searchbindlist("zoom", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
 						}
 						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							char *a = executeret("searchbinds attack 0 \"\fs\fw, or\fS \"");
-							s_sprintfd(actkey)("%s", a && *a ? a : "ATTACK");
-							if(a) delete[] a;
+							const char *actkey = searchbindlist("attack", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 						}
 						if(world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							char *a = executeret("searchbinds reload 0 \"\fs\fw, or\fS \"");
-							s_sprintfd(actkey)("%s", a && *a ? a : "RELOAD");
-							if(a) delete[] a;
+							const char *actkey = searchbindlist("reload", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
 								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
@@ -727,7 +720,6 @@ namespace hud
 		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0;
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
-		pushfont("emphasis");
 
 		int bs = int(oy*titlecardsize), bp = int(oy*0.01f), bx = ox-bs-bp-os, by = bp+os,
 			secs = world::maptime ? lastmillis-world::maptime : 0;
@@ -752,8 +744,11 @@ namespace hud
 		rendericon(guioverlaytex, rx, ry, rs, rs);
 
 		int tx = bx + bs, ty = by + bs + FONTH/2, ts = int(tx*(1.f-amt));
-		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, server::gamename(world::gamemode, world::mutators));
+		pushfont("emphasis");
 		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, title);
+		popfont();
+		pushfont("default");
+		ty += draw_textx("Playing: %s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, server::gamename(world::gamemode, world::mutators));
 		popfont();
 	}
 
@@ -819,7 +814,7 @@ namespace hud
 			float off = skew*inventorytextscale;
 			glPushMatrix();
 			glScalef(off, off, 1);
-			int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-s+FONTW/4)*(1.f/off)),
+			int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-s+FONTH/4)*(1.f/off)),
 				tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
 			if(font && *font) pushfont(font);
 			s_sprintfdlv(str, text, text);
@@ -828,6 +823,20 @@ namespace hud
 			glPopMatrix();
 		}
 		return int(s);
+	}
+
+	void drawitemsubtext(int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
+	{
+		float /*f = fade*skew, s = size*skew,*/ off = skew*inventorytextscale;
+		glPushMatrix();
+		glScalef(off, off, 1);
+		int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-FONTH-FONTH/4)*(1.f/off)),
+			tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
+		if(font && *font) pushfont(font);
+		s_sprintfdlv(str, text, text);
+		draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
+		if(font && *font) popfont();
+		glPopMatrix();
 	}
 
 	const char *flagtex(int team)
@@ -861,10 +870,12 @@ namespace hud
 			}
 			else if(i != world::player1->weapselect) skew = inventoryskew;
 			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
-			string text; text[0] = 0;
-			if(inventoryammo && (instate || inventoryammo == 2))
-				s_sprintf(text)("%d", world::player1->ammo[i]);
-            if(inventoryweapids && (instate || inventoryweapids == 2))
+			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
+			if(delay < 1000) skew *= delay/1000.f;
+			if(inventoryammo && (instate || inventoryammo > 1))
+				sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
+			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
+            if(inventoryweapids && (instate || inventoryweapids > 1))
             {
 				static string weapids[WEAPON_MAX];
 				static int lastweapids = -1;
@@ -873,18 +884,44 @@ namespace hud
 					loopj(WEAPON_MAX)
 					{
 						s_sprintfd(action)("weapon %d", j);
-						const char *id = searchbind(action, 0);
-						if(id) s_strcpy(weapids[j], id);
-						else s_sprintf(weapids[j])("%d", j);
+						const char *actkey = searchbind(action, 0);
+						if(actkey && *actkey) s_strcpy(weapids[j], actkey);
+						else s_sprintf(weapids[j])("%d", j+1);
 					}
 					lastweapids = changedkeys;
 				}
-                s_sprintfd(sa)(text[0] ? " \fs%s%s\fS" : "\fs%s%s\fS", weaptype[i].text, weapids[i]);
-                s_strcat(text, sa);
+                drawitemsubtext(x, oldy, size, fade, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
             }
-			if(text[0]) sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "emphasis", blend, "%s", text);
-			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
 		}
+		return sy;
+	}
+
+	int drawhealth(int x, int y, int s, float blend)
+	{
+		float fade = inventoryblend*blend, size = s, skew = 1.f;
+		if(world::player1->state == CS_ALIVE)
+		{
+			int delay = lastmillis-world::player1->lastspawn;
+			if(delay < 1000) skew *= delay/1000.f;
+			if(inventorythrob && regentime && world::player1->lastregen && lastmillis-world::player1->lastregen < regentime*1000)
+			{
+				float amt = clamp((lastmillis-world::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
+				if(amt < 0.5f) amt = 1.f-amt;
+				fade *= amt;
+				if(inventorythrob > 1) skew *= amt;
+			}
+		}
+		else if(world::player1->state == CS_DEAD)
+		{
+			int delay = lastmillis-world::player1->lastdeath;
+			if(delay < 1000) skew *= 1.f-(delay/1000.f);
+			else return 0;
+		}
+		else return 0;
+
+		int sy = 0;
+		sy += drawitem(healthtex, x, y, size, fade, skew);
+		if(inventoryhealth > 1) drawitemsubtext(x, y, size, fade, skew, "sub", blend, "%d", world::player1->health);
 		return sy;
 	}
 
@@ -892,7 +929,8 @@ namespace hud
 	{
 		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w),
 			cr = cs/4, cc = 0;
-		if(world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
+		if(inventoryhealth && (cc = drawhealth(cx, cy, cs, blend)) > 0) cy -= cc+cr;
+		if((inventoryammo || inventoryweapids) && world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
 		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 	}
