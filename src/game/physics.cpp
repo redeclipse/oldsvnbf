@@ -71,10 +71,10 @@ namespace physics
 		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
 
 	iput(crouch,	crouching,	crouchtime,	false,	CROUCHTIME);
-	iput(jump,		jumping,	jumptime,	true,	0);
+	iput(jump,		jumping,	jumptime,	false,	0);
 	iput(attack,	attacking,	attacktime,	true,	0);
-	iput(reload,	reloading,	reloadtime,	true,	0);
-	iput(action,	useaction,	usetime,	true,	0);
+	iput(reload,	reloading,	reloadtime,	false,	0);
+	iput(action,	useaction,	usetime,	false,	0);
 
 	void taunt(gameent *d)
 	{
@@ -97,7 +97,7 @@ namespace physics
 			}
 			return true;
 		}
-        return d->state == CS_DEAD;
+        return d->state == CS_DEAD || d->state == CS_WAITING;
 	}
 
 	bool iscrouching(physent *d)
@@ -129,7 +129,7 @@ namespace physics
 
 	float maxspeed(physent *d)
 	{
-		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_WAITING && d->state != CS_EDITING)
+		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
 			return d->maxspeed*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f)*(float(d->weight)/100.f)*speedscale;
 		}
@@ -138,7 +138,7 @@ namespace physics
 
 	bool movepitch(physent *d)
 	{
-		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_WAITING || d->state == CS_EDITING;
+		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_EDITING;
 	}
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
@@ -644,7 +644,7 @@ namespace physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR || pl->state == CS_WAITING);
+		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
 		float secs = millis/1000.f;
 
 		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
@@ -719,19 +719,19 @@ namespace physics
 	{
         if(physsteps <= 0)
         {
-            if(local) interppos(d);
+            if(local && d->type != ENT_CAMERA) interppos(d);
             return;
         }
 
-        if(local)
+        if(local && d->type != ENT_CAMERA)
         {
             d->o = d->newpos;
             d->o.z += d->height;
         }
         loopi(physsteps-1) moveplayer(d, moveres, local, physframetime);
-        if(local) d->deltapos = d->o;
+        if(local && d->type != ENT_CAMERA) d->deltapos = d->o;
         moveplayer(d, moveres, local, physframetime);
-        if(local)
+        if(local && d->type != ENT_CAMERA)
         {
             d->newpos = d->o;
             d->deltapos.sub(d->newpos);
@@ -882,7 +882,7 @@ namespace physics
 			if(smoothmove && d->smoothmillis>0) predictplayer(d, true, res, local);
 			else move(d, res, local);
 		}
-		else if(d->state==CS_DEAD)
+		else if(d->state==CS_DEAD || d->state == CS_WAITING)
         {
             if(d->ragdoll) moveragdoll(d, false);
             else if(lastmillis-d->lastpain<2000) move(d, res, local);

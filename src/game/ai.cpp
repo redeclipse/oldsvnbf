@@ -54,7 +54,7 @@ namespace ai
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
 				ci->state.skill = clamp(s, 1, 100);
-				ci->state.state = CS_DEAD;
+				ci->state.state = CS_WAITING;
 				ci->state.aireinit = 0;
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
@@ -1200,7 +1200,7 @@ namespace ai
 	{
 		vec pos = world::headpos(d);
 		findorientation(pos, d->yaw, d->pitch, d->ai->target);
-		if(d->state != CS_ALIVE || !world::allowmove(d)) d->stopmoving();
+		if(d->state != CS_ALIVE || !world::allowmove(d)) d->stopmoving(true);
 		if(d->state == CS_ALIVE)
 		{
 			bool p = false;
@@ -1225,7 +1225,7 @@ namespace ai
 				d->ai->lastnode = d->lastnode;
 			}
 		}
-        if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d, false);
+        if((d->state == CS_DEAD || d->state == CS_WAITING) && d->ragdoll) moveragdoll(d, false);
 		else
         {
             if(d->ragdoll) cleanragdoll(d);
@@ -1326,7 +1326,7 @@ namespace ai
 				break;
 			}
 		}
-		else d->stopmoving();
+		else d->stopmoving(true);
 		d->lastupdate = lastmillis;
 	}
 

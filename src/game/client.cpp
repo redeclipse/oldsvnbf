@@ -336,7 +336,7 @@ namespace client
 		if(flags&SAY_ACTION) s_sprintf(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
 		else s_sprintf(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
-		if(d->state != CS_DEAD && d->state != CS_SPECTATOR && d->state != CS_WAITING)
+		if(d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(ds)("@%s", &s);
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
@@ -576,7 +576,7 @@ namespace client
 
 	void gotoplayer(const char *arg)
 	{
-		if(world::player1->state!=CS_SPECTATOR && world::player1->state!=CS_WAITING && world::player1->state!=CS_EDITING) return;
+		if(world::player1->state!=CS_SPECTATOR && world::player1->state!=CS_EDITING) return;
 		int i = parseplayer(arg);
 		if(i>=0 && i!=world::player1->clientnum)
 		{
@@ -809,7 +809,7 @@ namespace client
 		const float dz = world::player1->o.z-d->o.z;
 		const float rz = world::player1->aboveeye+world::player1->height;
 		const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
-		if(fx<r && fy<r && fz<rz && world::player1->state!=CS_SPECTATOR && world::player1->state!=CS_WAITING && d->state!=CS_DEAD)
+		if(fx<r && fy<r && fz<rz && d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_DEAD)
 		{
 			if(fx<fy) d->o.y += dy<0 ? r-fy : -(r-fy);  // push aside
 			else	  d->o.x += dx<0 ? r-fx : -(r-fx);
@@ -883,7 +883,7 @@ namespace client
                     physics::updatephysstate(d);
                     updatepos(d);
                 //}
-                if(d->state==CS_DEAD)
+                if(d->state==CS_DEAD || d->state==CS_WAITING)
                 {
                     d->resetinterp();
                     d->smoothmillis = 0;

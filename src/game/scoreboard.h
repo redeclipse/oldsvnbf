@@ -20,8 +20,8 @@ namespace hud
 		vector<gameent *> spectators;
 
 		IVARP(autoshowscores, 0, 1, 1);
-		IVARP(showscoreswait, 0, 1, 1);
-		IVARP(showscoresdelay, 0, 2, INT_MAX-1);
+		IVARP(showscoreswait, 0, 0, 1);
+		IVARP(showscoresdelay, 0, 3, INT_MAX-1);
 		IVARP(scoresinfo, 0, 1, 1);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showpj, 0, 0, 1);
@@ -39,10 +39,10 @@ namespace hud
 		{
 			if(autoshowscores() && world::player1->state == CS_DEAD && !scoreson && !shownscores)
 			{
-				if(!showscoresdelay()) return true;
+				if(!showscoresdelay() && !showscoreswait()) return true;
 				else
 				{
-					int delay = !showscoreswait() ? showscoresdelay()*1000 : min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000*showscoresdelay());
+					int delay = showscoreswait() ? min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000) : showscoresdelay()*1000;
 					if(!delay || lastmillis-world::player1->lastdeath >= delay) return true;
 				}
 			}
@@ -437,7 +437,7 @@ namespace hud
 		void show()
 		{
 			if(scoreson) g3d_addgui(this);
-			if(world::player1->state == CS_DEAD) { if(scoreson) shownscores = true; }
+			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING) { if(scoreson) shownscores = true; }
 			else shownscores = false;
 		}
 	};

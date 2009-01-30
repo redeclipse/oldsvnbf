@@ -1104,22 +1104,17 @@ struct gameent : dynent, gamestate
 		vschan = dschan = wschan = -1;
 	}
 
-	void stopactions()
+	void stopmoving(bool full)
 	{
+		if(full) move = strafe = 0;
 		attacking = reloading = useaction = false;
 		attacktime = reloadtime = usetime = 0;
 	}
 
-	void stopmoving()
-	{
-		dynent::stopmoving();
-		stopactions();
-	}
-
 	void respawn(int millis, int heal)
 	{
-		stopmoving();
-		dynent::reset();
+		stopmoving(true);
+		physent::reset();
 		gamestate::respawn(millis, heal);
         lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;

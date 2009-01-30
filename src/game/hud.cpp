@@ -877,7 +877,7 @@ namespace hud
 				if(inventorythrob > 1) skew *= amt;
 			}
 		}
-		else if(world::player1->state == CS_DEAD)
+		else if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 		{
 			int delay = lastmillis-world::player1->lastdeath;
 			if(delay < 1000) skew *= 1.f-(delay/1000.f);
