@@ -210,96 +210,31 @@ const char *getkeyname(int code)
     return km ? km->name : NULL;
 }
 
-struct searchbindcache
+void searchbindlist(const char *action, int type, int limit, const char *sep, vector<char> &names)
 {
-	char *action, *sep;
-	int type, limit;
-	vector<char> names;
-
-	searchbindcache() : action(NULL), sep(NULL), type(0), limit(0) {}
-	~searchbindcache() { clear(); }
-
-	void clear()
-	{
-		if(action) delete[] action;
-		if(sep) delete[] sep;
-		names.setsize(0);
-	}
-
-	bool match(const char *a, int t, int l, const char *s)
-	{
-		if(t != type || strcmp(a, action)) return false;
-		if(l != limit) return false;
-		if((s && !sep) || (!s && sep)) return false;
-		if(strcmp(s, sep)) return false;
-		return true;
-	}
-
-	void make()
-	{
-		int iter = 0;
-		enumerate(keyms, keym, km,
-		{
-			if(!strcmp(km.actions[type], action))
-			{
-				iter++;
-				if(names.length())
-				{
-					if(sep && *sep) names.put(sep, strlen(sep));
-					else names.add(' ');
-				}
-				names.put(km.name, strlen(km.name));
-				if(limit > 0 && iter >= limit) return;
-			}
-		});
-	}
-};
-static vector<searchbindcache> searchbindnames;
-
-void makesearchbind(const char *action, int type, int limit, const char *sep)
-{
-	searchbindcache &s = searchbindnames.add();
-	s.action = newstring(action);
-	s.type = type;
-	s.limit = limit;
-	if(sep && *sep) s.sep = newstring(sep);
-	s.make();
-	s.names.add('\0');
-	//conoutf("made search bind: %s %d %d (%s)", s.action, s.type, s.limit, s.names.getbuf());
-}
-
-int findsearchbind(const char *action, int type, int limit, const char *sep)
-{
-	int idx = -1;
-	loopv(searchbindnames) if(searchbindnames[i].match(action, type, limit, sep))
-	{
-		idx = i;
-		break;
-	}
-	if(!searchbindnames.inrange(idx))
-	{
-		idx = searchbindnames.length();
-		makesearchbind(action, type, limit, sep);
-	}
-	return idx;
-}
-
-void searchbinds(char *action, int type, int limit, char *sep)
-{
-	int idx = findsearchbind(action, type, limit, sep);
-    result(searchbindnames.inrange(idx) ? searchbindnames[idx].names.getbuf() : NULL);
+    enumerate(keyms, keym, km,
+    {
+        if(!strcmp(km.actions[type], action))
+        {
+            if(names.length())
+            {
+                if(sep && *sep) names.put(sep, strlen(sep));
+                else names.add(' ');
+            }
+            names.put(km.name, strlen(km.name));
+            if(limit > 0 && !--limit) break;
+        }
+    });
+    names.add('\0');
 }
 
 const char *searchbind(const char *action, int type)
 {
-	int idx = findsearchbind(action, type, 1, NULL);
-    return searchbindnames.inrange(idx) ? searchbindnames[idx].names.getbuf() : NULL;
-}
-
-const char *searchbindlist(const char *action, int type, int limit, const char *sep)
-{
-	int idx = findsearchbind(action, type, limit, sep);
-    return searchbindnames.inrange(idx) ? searchbindnames[idx].names.getbuf() : NULL;
+    enumerate(keyms, keym, km,
+    {
+        if(!strcmp(km.actions[type], action)) return km.name;
+    });
+    return NULL;
 }
 
 keym *findbind(char *key)
@@ -332,7 +267,6 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     while(len>0 && isspace(action[len-1])) len--;
     binding = newstring(action, len);
     changedkeys = totalmillis;
-    searchbindnames.setsize(0);
 }
 
 ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
@@ -341,9 +275,9 @@ ICOMMAND(editbind, "ss", (char *key, char *action), bindkey(key, action, keym::A
 ICOMMAND(getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
 ICOMMAND(getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
 ICOMMAND(geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
-ICOMMAND(searchbinds,     "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_DEFAULT, max(*limit, 0), sep));
-ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep));
-ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), searchbinds(action, keym::ACTION_EDITING, max(*limit, 0), sep));
+ICOMMAND(searchbinds,     "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, list); result(list.getbuf()); });
+ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, list); result(list.getbuf()); });
+ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, list); result(list.getbuf()); });
 
 void saycommand(char *init)						 // turns input to the command line on or off
 {
