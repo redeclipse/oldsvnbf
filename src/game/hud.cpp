@@ -1112,16 +1112,16 @@ namespace hud
 		{
 			if(world::player1->state == CS_EDITING)
 			{
-				by -= draw_textx("pos:%.2f,%.2f,%.2f yaw:%.2f pitch:%.2f", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
-						world::player1->o.x, world::player1->o.y, world::player1->o.z,
-						world::player1->yaw, world::player1->pitch);
+				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
+						(int)world::player1->o.x, (int)world::player1->o.y, (int)world::player1->o.z,
+						(int)world::player1->yaw, (int)world::player1->pitch);
 				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
 							sel.cx, sel.cxs, sel.cy, sel.cys);
 				by -= draw_textx("corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
 								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("cube:%s%d ents:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
-					selchildcount<0 ? "1/" : "", abs(selchildcount), entgroup.length());
+				by -= draw_textx("cube:%s%d ents:%d[%d]", bx, by, 255, 255, 255, int(255*hudblend), TEXT_LEFT_JUSTIFY, -1, bs,
+					selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length());
 			}
 		}
 		if(getcurcommand()) by -= rendercommand(bx, by, bs);
