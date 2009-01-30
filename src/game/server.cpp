@@ -1282,10 +1282,11 @@ namespace server
 				val[0] = 0;
 				switch(id->type)
 				{
+#if 0
 					case ID_COMMAND:
 					{
 						string s;
-						if(nargs <= 1 || !arg) s_strcpy(s, cmd);
+						if(nargs <= 1 || !arg) s_sprintf(s)("sv_%s", cmd);
 						else s_sprintf(s)("sv_%s %s", cmd, arg);
 						char *ret = executeret(s);
 						if(ret)
@@ -1295,6 +1296,7 @@ namespace server
 						}
 						return;
 					}
+#endif
 					case ID_VAR:
 					{
 						if(nargs <= 1 || !arg)
