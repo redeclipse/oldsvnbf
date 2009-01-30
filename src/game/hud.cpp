@@ -891,7 +891,7 @@ namespace hud
         } steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
         settexture(healthtex, 3);
         glBegin(GL_QUAD_STRIP);
-        int size = int(s*skew);
+        int size = int(1.5f*s*skew);
         float health = clamp(world::player1->health/float(m_maxhealth(world::gamemode, world::mutators)), 0.0f, 1.0f);
         const float margin = 0.1f;
         loopi(sizeof(steps)/sizeof(steps[0]))
