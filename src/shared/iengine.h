@@ -76,7 +76,28 @@ extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
 extern const char *searchbind(const char *action, int type);
-extern const char *searchbindlist(const char *action, int type, int limit, const char *sep);
+extern void searchbindlist(const char *action, int type, int limit, const char *sep, vector<char> &names);
+
+struct bindlist
+{
+    vector<char> names;
+    int lastsearch;
+
+    bindlist() : lastsearch(-1) {}
+
+    const char *search(const char *action, int type = 0, int limit = 0, const char *sep = NULL)
+    {
+        if(names.empty() || lastsearch != changedkeys)
+        {
+            names.setsize(0);
+            searchbindlist(action, type, limit, sep, names);
+            lastsearch = changedkeys;
+        }
+        return names.getbuf();
+    }
+};
+
+#define SEARCHBINDCACHE(def) static bindlist __##def; const char *def = __##def.search
 
 // menus
 extern void newgui(char *name, char *contents, char *initaction = NULL, char *header = NULL);

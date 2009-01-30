@@ -379,7 +379,7 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
-					const char *actkey = searchbindlist("attack", 0, 5, "\fs\fw, or \fS");
+					SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
 					if(delay)
 					{
 						pushfont("emphasis");
@@ -444,7 +444,7 @@ namespace hud
 					vector<actitem> actitems;
 					if(entities::collateitems(world::player1, actitems))
 					{
-						const char *actkey = searchbindlist("action", 0, 5, "\fs\fw, or \fS");
+						SEARCHBINDCACHE(actkey)("action", 0, 5, "\fs\fw, or \fS");
 						while(!actitems.empty())
 						{
 							actitem &t = actitems.last();
@@ -495,17 +495,17 @@ namespace hud
 					{
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
-							const char *actkey = searchbindlist("zoom", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(actkey)("zoom", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
 						}
 						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							const char *actkey = searchbindlist("attack", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 						}
 						if(world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							const char *actkey = searchbindlist("reload", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(actkey)("reload", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
 								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
