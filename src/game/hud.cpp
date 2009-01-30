@@ -923,7 +923,7 @@ namespace hud
         }
         glEnd();
 
-		if(inventoryhealth > 1) drawitemsubtext(x, y, skew, "sub", blend, "%d", world::player1->health);
+		if(inventoryhealth > 1) drawitemsubtext(x, y, skew, "sub", blend, "%d", max(world::player1->health, 0));
 		return size;
 	}
 
