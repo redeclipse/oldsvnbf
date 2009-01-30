@@ -7,10 +7,10 @@ obey this license, for further information see:
 LICENSE
 =======
 
-Blood Frontier, Copyright (C) 2006-2008
-	Tony "acord" Cord, Quinton "quin" Reeves
+Blood Frontier, Copyright (C) 2006-2009
+	Tony "acord" Cord, Quinton "quin" Reeves, Lee "eihrul" Salzman
 
-Sauerbraten, Copyright (C) 2001-2008
+Sauerbraten, Copyright (C) 2001-2009
 	Wouter "aardappel" van Oortmerssen, Lee "eihrul" Salzman
 
 This software is provided 'as-is', without any express or implied
