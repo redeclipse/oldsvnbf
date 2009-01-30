@@ -743,8 +743,8 @@ namespace hud
 		glColor4f(1.f, 1.f, 1.f, fade);
 		rendericon(guioverlaytex, rx, ry, rs, rs);
 
-		int tx = bx + bs, ty = by + bs + FONTH/2, ts = int(tx*(1.f-amt));
 		pushfont("emphasis");
+		int tx = bx + bs, ty = by + bs + FONTH/4, ts = int(tx*(1.f-amt));
 		ty += draw_textx("%s", tx-ts, ty, 255, 255, 255, int(255.f*fade), TEXT_RIGHT_JUSTIFY, -1, tx-FONTH, title);
 		popfont();
 		pushfont("default");
@@ -814,9 +814,9 @@ namespace hud
 			float off = skew*inventorytextscale;
 			glPushMatrix();
 			glScalef(off, off, 1);
+			if(font && *font) pushfont(font);
 			int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-s+FONTH/4)*(1.f/off)),
 				tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
-			if(font && *font) pushfont(font);
 			s_sprintfdlv(str, text, text);
 			draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
@@ -830,9 +830,9 @@ namespace hud
 		float /*f = fade*skew, s = size*skew,*/ off = skew*inventorytextscale;
 		glPushMatrix();
 		glScalef(off, off, 1);
+		if(font && *font) pushfont(font);
 		int tx = int((x-FONTW/4)*(1.f/off)), ty = int((y-FONTH-FONTH/4)*(1.f/off)),
 			tc = int(255.f*skew), ti = int(255.f*inventorytextblend*blend);
-		if(font && *font) pushfont(font);
 		s_sprintfdlv(str, text, text);
 		draw_textx("%s", tx, ty, tc, tc, tc, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 		if(font && *font) popfont();
