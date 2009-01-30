@@ -1011,7 +1011,7 @@ struct aistate
 	void reset()
 	{
 		expire = cycle = stuck = 0;
-		next = millis+rnd(3000);
+		next = millis;
 		targtype = target = -1;
 		idle = wasidle = override = false;
 		defers = true;
@@ -1052,7 +1052,7 @@ struct aiinfo
 
 	void removestate(int index = -1)
 	{
-		if(index < 0 && state.length()) state.pop();
+		if(index < 0) { loopvrev(state) if(state[i].type != AI_S_ATTACK) { state.remove(i); break; } }
 		else if(state.inrange(index)) state.remove(index);
 		if(!state.length()) addstate(AI_S_WAIT);
 	}
@@ -1065,8 +1065,8 @@ struct aiinfo
 
 	aistate &getstate(int idx = -1)
 	{
-		if(state.inrange(idx)) return state[idx];
-		else loopvrev(state) if(state[i].type != AI_S_ATTACK) return state[i];
+		if(idx < 0) { loopvrev(state) if(state[i].type != AI_S_ATTACK) return state[i]; }
+		else if(state.inrange(idx)) return state[idx];
 		return state.last();
 	}
 };

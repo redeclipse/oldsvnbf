@@ -1651,7 +1651,7 @@ namespace server
 			loopv(e.hits)
 			{
 				hitset &h = e.hits[i];
-				float size = e.radial ? (h.flags&HIT_WAVE ? e.radial*2 : e.radial) : 0.f,
+				float size = e.radial ? (h.flags&HIT_WAVE ? e.radial*3 : e.radial) : 0.f,
 					dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (dist<0 || dist>size))) continue;

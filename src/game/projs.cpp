@@ -23,7 +23,7 @@ namespace projs
 		return hits;
 	}
 
-	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0, int radius = 0)
+	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
 		hitmsg &h = hits.add();
 		h.flags = flags;
@@ -54,10 +54,9 @@ namespace projs
 		if(dist < radius)
 		{
 			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
-			hitpush(d, proj, flags, int(dist*DMF), radius);
+			hitpush(d, proj, flags, int(dist*DMF));
 		}
-		else if(explode && dist < radius*2)
-			hitpush(d, proj, HIT_WAVE, int(dist*DMF), radius);
+		else if(explode && dist < radius*3) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
 	}
 
 	void remove(gameent *owner)

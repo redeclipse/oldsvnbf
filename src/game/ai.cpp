@@ -214,17 +214,16 @@ namespace ai
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(m_play(gamemode) && sv_botbalance > 0.f && numplayers)
+			if(m_play(gamemode) && sv_botbalance > 0.f)
 			{
-				int minbal = sv_botminamt > sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
-					maxbal = sv_botminamt < sv_botmaxamt ? sv_botmaxamt : sv_botminamt,
-					balance = clamp(int(numplayers*sv_botbalance), minbal, maxbal);
+				int balance = int(sv_botbalance), minamt = balance;
 				if(m_team(gamemode, mutators))
 				{
-					int nump = numclients(-1, true, true), numt = numteams(gamemode, mutators);
-					balance *= numt;
-					if(numplayers > balance && nump%numt) balance += numt-(nump%numt);
+					balance = max(int(numplayers*2*sv_botbalance), minamt);
+					int numt = numteams(gamemode, mutators), offt = balance%numt;
+					if(offt) balance += numt-offt;
 				}
+				else balance = max(int(numplayers*sv_botbalance), minamt);
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}
@@ -352,22 +351,21 @@ namespace ai
 		}
 	}
 
-	bool hastarget(gameent *d, aistate &b, const vec &from, const vec &to)
+	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
-		if(!rnd(d->skill*10)) return true;
-		else
+		if(!rnd(d->skill*100)) return true; // random margin of error
+		gameent *h = world::intersectclosest(d->muzzle, d->ai->target, d);
+		if(h && (h == d || (m_team(world::gamemode, world::mutators) && h->team == d->team))) return false;
+		vec dir = vec(d->muzzle).sub(d->ai->target).normalize();
+		float targyaw, targpitch, mindist = d->radius*d->radius, dist = d->muzzle.squaredist(d->ai->target);
+		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
+		if(mindist <= dist)
 		{
-			vec dir = vec(from).sub(to).normalize();
-			float targyaw, targpitch, mindist = d->radius*d->radius, dist = from.squaredist(to);
-			if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
-			if(mindist <= dist)
-			{
-				vectoyawpitch(dir, targyaw, targpitch);
-				float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
-						skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
-							cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-				if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew) return true;
-			}
+			vectoyawpitch(dir, targyaw, targpitch);
+			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
+					skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
+						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
+			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew) return true;
 		}
 		return false;
 	}
@@ -660,10 +658,6 @@ namespace ai
 			case AI_S_WAIT:
 			case AI_S_INTEREST:
 			case AI_S_PURSUE:
-			{
-				*pursue = b.defers;
-				return true;
-			}
 			case AI_S_DEFEND:
 			{
 				*pursue = b.defers;
@@ -821,15 +815,12 @@ namespace ai
 				{
 					d->ai->enemy = e->clientnum;
 					d->ai->lastseen = lastmillis;
-					if(d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
+					if(d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
 					{
-						if(hastarget(d, b, pos, ep))
-						{
-							d->attacking = true;
-							d->attacktime = lastmillis;
-						}
-						if(cansee) b.next = lastmillis; // keep going!
+						d->attacking = true;
+						d->attacktime = lastmillis;
 					}
+					if(cansee) b.next = lastmillis; // keep going!
 					return true;
 				}
 			}
