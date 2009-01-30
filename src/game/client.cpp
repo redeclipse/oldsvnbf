@@ -528,6 +528,7 @@ namespace client
 			val[0] = 0;
 			switch(id->type)
 			{
+#if 0
 				case ID_COMMAND:
 				{
 					string s;
@@ -540,6 +541,7 @@ namespace client
 					}
 					return;
 				}
+#endif
 				case ID_VAR:
 				{
 					int ret = atoi(arg);
