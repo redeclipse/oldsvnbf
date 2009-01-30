@@ -76,6 +76,7 @@ extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
 extern const char *searchbind(const char *action, int type);
+extern const char *searchbindlist(const char *action, int type, int limit, const char *sep);
 
 // menus
 extern void newgui(char *name, char *contents, char *initaction = NULL, char *header = NULL);

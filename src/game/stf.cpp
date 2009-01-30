@@ -325,13 +325,14 @@ namespace stf
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
 			float skew = f.hasflag ? 1.f : hud::inventoryskew, fade = hud::inventoryblend*blend,
 				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
-			int size = s, millis = lastmillis-f.lasthad, prevsy = sy;
+			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, delay = lastmillis-world::player1->lastspawn;
 			if(millis < 500)
 			{
 				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
 				if(f.hasflag) skew = hud::inventoryskew+(amt*(1.f-hud::inventoryskew));
 				else skew = 1.f-(amt*(1.f-hud::inventoryskew));
 			}
+			if(delay < 1000) skew *= delay/1000.f;
 			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, fade, skew, "emphasis", blend, "%d%%", int(occupy*100.f));
 			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), fade, skew);
 		}
