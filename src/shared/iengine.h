@@ -288,9 +288,9 @@ struct modelattach
     vec *pos;
     model *m;
 
-    modelattach() : tag(NULL), name(NULL), anim(0), basetime(0), pos(NULL), m(NULL) {}
-    modelattach(const char *tag, const char *name, int anim, int basetime) : tag(tag), name(name), anim(anim), basetime(basetime), pos(NULL), m(NULL) {}
-    modelattach(const char *tag, vec *pos) : tag(tag), name(NULL), anim(0), basetime(0), pos(pos), m(NULL) {}
+    modelattach() : tag(NULL), name(NULL), anim(-1), basetime(0), pos(NULL), m(NULL) {}
+    modelattach(const char *tag, const char *name, int anim = -1, int basetime = 0) : tag(tag), name(name), anim(anim), basetime(basetime), pos(NULL), m(NULL) {}
+    modelattach(const char *tag, vec *pos) : tag(tag), name(NULL), anim(-1), basetime(0), pos(pos), m(NULL) {}
 };
 
 extern void startmodelbatches();
