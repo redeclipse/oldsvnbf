@@ -102,7 +102,7 @@ namespace world
 
 	bool isthirdperson()
 	{
-        if((player1->state == CS_DEAD || player1->state == CS_WAITING) && player1->ragdoll) return true;
+        if(player1->state == CS_DEAD || player1->state == CS_WAITING) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
@@ -1673,7 +1673,7 @@ namespace world
 
     void renderavatar(bool early)
     {
-        if((isthirdperson() || !rendernormally || player1->state == CS_DEAD || player1->state == CS_WAITING) && player1->state != CS_SPECTATOR)
+        if((isthirdperson() || !rendernormally) && player1->state != CS_SPECTATOR)
                 renderplayer(player1, true, showtranslucent(player1, true), early);
         else if(player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
