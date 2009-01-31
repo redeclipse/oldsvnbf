@@ -540,7 +540,7 @@ namespace world
 					"was swiss-cheesed by",
 					"was made the main course by order of chef",
 					"was skewered by",
-					"was laser-scalpeled off by",
+					"was laser-scalpeled by",
 					"was obliterated by",
 					"was tagged out by"
 				}
