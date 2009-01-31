@@ -943,10 +943,10 @@ struct serverstatuses
 };
 #ifdef GAMEWORLD
 serverstatuses serverstatus[] = {
-	{ SSTAT_OPEN,			0xFFFFFF,	"server" },
-	{ SSTAT_LOCKED,			0xFF8800,	"serverlock" },
-	{ SSTAT_PRIVATE,		0x8888FF,	"serverpriv" },
-	{ SSTAT_FULL,			0xFF8888,	"serverfull" },
+	{ SSTAT_OPEN,			0xDDDDDD,	"server" },
+	{ SSTAT_LOCKED,			0xDD8800,	"serverlock" },
+	{ SSTAT_PRIVATE,		0x8888DD,	"serverpriv" },
+	{ SSTAT_FULL,			0xDD8888,	"serverfull" },
 	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
 const char *serverinfotypes[] = {
