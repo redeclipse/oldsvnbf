@@ -1644,7 +1644,7 @@ namespace world
             ai++;
         }
 
-        renderclient(d, third, trans, team, a[0].name ? a : NULL, secondary, animflags, animdelay, lastaction, early);
+        renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	bool showtranslucent(gameent *d, bool third = true)
