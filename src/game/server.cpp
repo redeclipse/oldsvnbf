@@ -2058,7 +2058,7 @@ namespace server
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
 		putint(p, serverclients);		// 5
-		putint(p, m_demo(gamemode) || serverpass[0] ? MM_PRIVATE : mastermode); // 6
+		putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
 		sendstring(smapname, p);
 		sendstring(serverdesc, p);
 		sendqueryreply(p);

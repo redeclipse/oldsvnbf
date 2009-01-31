@@ -1690,6 +1690,7 @@ namespace client
 				return SSTAT_LOCKED;
 			}
 			case MM_PRIVATE:
+            case MM_PASSWORD:
 			{
 				return SSTAT_PRIVATE;
 			}
