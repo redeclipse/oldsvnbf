@@ -568,7 +568,7 @@ VAR(worstfpsdiff, 1, 0, -1);
 int lastautoadjust = 0;
 
 VARP(autoadjust, 0, 1, 1);				// auto performance adjust
-VARP(autoadjustmin, 0, 10, 100);		// lowest level to go to
+VARP(autoadjustmin, 0, 0, 100);		// lowest level to go to
 VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
 VARFP(autoadjustfps, 0, 20, 100,		// aim for this fps or higher
 	autoadjustfps = min(autoadjustfps, maxfps-1));
