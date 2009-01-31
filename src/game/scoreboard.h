@@ -437,7 +437,7 @@ namespace hud
 		void show()
 		{
 			if(scoreson) g3d_addgui(this);
-			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING) { if(scoreson) shownscores = true; }
+			if(world::player1->state == CS_DEAD) { if(scoreson) shownscores = true; }
 			else shownscores = false;
 		}
 	};

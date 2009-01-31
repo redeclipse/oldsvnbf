@@ -91,6 +91,7 @@ namespace world
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
+	ICOMMAND(getintermission, "", (), intret(intermission ? 1 : 0));
 
 	void start()
 	{
@@ -699,7 +700,7 @@ namespace world
     	loopi(n)
     	{
 			loadmodel(teamtype[i].tpmdl, -1, true);
-			loadmodel(teamtype[i].fpmdl, -1, true);
+			if(player1->team == i) loadmodel(teamtype[i].fpmdl, -1, true);
     	}
     	weapons::preload();
 		projs::preload();

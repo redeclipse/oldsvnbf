@@ -1207,15 +1207,14 @@ namespace server
 		}
 		maprequest = mapsending = false;
         stopdemo();
-		ai::clearai();
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
-		gamemillis = 0;
+		if(!m_play(gamemode)) ai::clearai();
+		numplayers = gamemillis = interm = 0;
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
 		gamelimit = sv_timelimit ? minremain*60000 : 0;
-		interm = 0;
 		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
 		sents.setsize(0);
 		setupspawns(false);
@@ -2669,6 +2668,20 @@ namespace server
 						setupspawns(true, np);
 						notgotinfo = false;
 					}
+#if 0
+					else // get their state in check then?
+					{
+						vector<int> gdat;
+						loopvk(sents) if(enttype[sents[k].type].usetype == EU_ITEM || sents[k].type == TRIGGER)
+						{
+							gdat.add(k);
+							if(enttype[sents[k].type].usetype == EU_ITEM) gdat.add(finditem(k, false) ? 1 : 0);
+							else gdat.add(sents[k].spawned ? 1 : 0);
+						}
+						gdat.add(-1);
+						sendf(sender, 1, "riiv", SV_GAMEINFO, gdat.length(), gdat.length()*sizeof(int)/sizeof(int), gdat.getbuf());
+					}
+#endif
 					break;
 				}
 

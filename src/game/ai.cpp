@@ -214,21 +214,24 @@ namespace ai
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(m_play(gamemode) && sv_botbalance > 0.f)
+			if(!notgotinfo)
 			{
-				int balance = int(sv_botbalance), minamt = balance;
-				if(m_team(gamemode, mutators))
+				if(m_play(gamemode) && sv_botbalance > 0.f)
 				{
-					balance = max(int(numplayers*2*sv_botbalance), minamt);
-					int numt = numteams(gamemode, mutators), offt = balance%numt;
-					if(offt) balance += numt-offt;
+					int balance = int(sv_botbalance), minamt = balance;
+					if(m_team(gamemode, mutators))
+					{
+						balance = max(int(numplayers*2*sv_botbalance), minamt);
+						int numt = numteams(gamemode, mutators), offt = balance%numt;
+						if(offt) balance += numt-offt;
+					}
+					else balance = max(int(numplayers*sv_botbalance), minamt);
+					while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
+					while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 				}
-				else balance = max(int(numplayers*sv_botbalance), minamt);
-				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
-				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
+				while(true) if(!reassignai()) break;
+				checksetup();
 			}
-			while(true) if(!reassignai()) break;
-			checksetup();
 		}
 		else clearai();
 	}

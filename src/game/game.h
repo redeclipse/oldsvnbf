@@ -303,7 +303,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
-			56.f,		5.f,
+			32.f,		5.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -422,11 +422,11 @@ gametypes gametype[] = {
 	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"capture-the-flag" },
 }, mutstype[] = {
-	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"multi-sided" },
+	{ G_M_MULTI,		G_M_ALL,				G_M_TEAM|G_M_MULTI,		"multi" },
 	{ G_M_TEAM,			G_M_TEAMS,				G_M_TEAM,				"team" },
-	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"instagib" },
+	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"insta" },
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
-	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man-standing" },
+	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man" },
 	{ G_M_PAINT,		G_M_ALL,				G_M_PAINT,				"paintball" },
 };
 #else
@@ -1136,7 +1136,7 @@ struct projent : dynent
 	vec from, to, norm;
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
-	bool local, beenused, radial, extinguish;
+	bool local, beenused, radial, extinguish, canrender;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int schan, id, weap, colour;
@@ -1165,6 +1165,7 @@ struct projent : dynent
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
 		beenused = radial = extinguish = false;
+		canrender = true;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
@@ -1241,7 +1242,6 @@ namespace entities
 	extern void putitems(ucharbuf &p);
 	extern void execlink(gameent *d, int index, bool local);
 	extern void setspawn(int n, bool on);
-	extern void settrigger(int n, bool on);
 	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false);
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);

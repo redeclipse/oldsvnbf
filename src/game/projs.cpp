@@ -12,6 +12,8 @@ namespace projs
 	vector<projent *> projs;
 
 	VARA(maxprojectiles, 0, 200, INT_MAX-1);
+	VARA(flamertrail, 0, 300, 500);
+	VARA(flamereffect, 0, 65, 100);
 
 	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
 	{
@@ -388,7 +390,7 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.owner) proj.from = proj.owner->muzzle;
-			if(weaptype[proj.weap].fsound >= 0 && !issound(proj.schan))
+			if(proj.canrender && weaptype[proj.weap].fsound >= 0 && !issound(proj.schan))
 				playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, proj.weap == WEAPON_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
 			switch(proj.weap)
 			{
@@ -401,50 +403,51 @@ namespace projs
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-					part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
+					if(proj.canrender)
+					{
+						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
+					}
 					break;
 				}
 				case WEAPON_FLAMER:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					proj.lifesize *= proj.lifesize; // increase the size exponentially over time
-					int steps = clamp(int(proj.vel.magnitude()*(1.f-proj.lifespan)), 0, 5);
-					vec dir = vec(proj.vel).normalize().neg().mul(clamp(28.f*proj.lifesize, 1.f, 15.f)),
-						pos = proj.o;
-					if(!steps || (proj.lifemillis-proj.lifetime > 200 && proj.movement <= 2.f))
+					if(proj.canrender)
 					{
-						dir = vec(0, 0, clamp(10.f*proj.lifesize, 0.5f, 5.f));
-						steps += 4;
-					}
-					loopi(steps) // pull some trickery to simulate a stream
-					{
-						float res = float(steps-i)/float(steps), size = clamp(weaptype[proj.weap].partsize*proj.lifesize*res, 1.5f, 30.f);
-						int col = ((int(200*max((1.f-proj.lifespan)*res,0.3f))<<16)+1)|((int(80*max((1.f-proj.lifespan)*res,0.2f))+1)<<8);
-						part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, 1, pos, col, size);
-						if(pos.dist(proj.from) <= size) break;
-						pos.add(dir);
-						if((proj.movement > 2.f) && proj.o.dist(pos) > proj.movement) break;
+						bool effect = false;
+						float size = weaptype[proj.weap].partsize*proj.lifesize;
+						if(flamertrail && flamereffect && proj.movement > size && lastmillis-proj.lasteffect > (101-flamereffect))
+						{
+							effect = true;
+							proj.lasteffect = lastmillis;
+						}
+						int col = ((int(200*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(80*max((1.f-proj.lifespan),0.2f))+1)<<8),
+							len = effect ? int(flamertrail*(1.1f-proj.lifesize)) : 1;
+						part_create(effect ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, len, proj.o, col, size);
 					}
 					break;
 				}
 				case WEAPON_GL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*weaptype[proj.weap].partsize*proj.lifesize);
-					bool moving = proj.movement > 0.f;
-					if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
+					if(proj.canrender)
 					{
-						part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*weaptype[proj.weap].partsize*(moving ? 0.5f : 1.f));
-						proj.lasteffect = lastmillis;
+						int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
+						part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*weaptype[proj.weap].partsize*proj.lifesize);
+						bool moving = proj.movement > 0.f;
+						if(lastmillis-proj.lasteffect > (moving ? 250 : 500))
+						{
+							part_create(PART_SMOKE_RISE_SLOW, moving ? 250 : 750, proj.o, 0x222222, proj.radius*weaptype[proj.weap].partsize*(moving ? 0.5f : 1.f));
+							proj.lasteffect = lastmillis;
+						}
 					}
 					break;
 				}
 				case WEAPON_SG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
+					if(proj.canrender && proj.movement > 0.f)
 					{
 						float size = clamp(48.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(48.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize();
@@ -458,7 +461,7 @@ namespace projs
 				case WEAPON_CG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
+					if(proj.canrender && proj.movement > 0.f)
 					{
 						float size = clamp(24.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(24.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = vec(proj.vel).normalize();
@@ -472,7 +475,7 @@ namespace projs
 				case WEAPON_CARBINE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
+					if(proj.canrender && proj.movement > 0.f)
 					{
 						float adjust = proj.radius*12.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
@@ -488,7 +491,7 @@ namespace projs
 				case WEAPON_RIFLE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
+					if(proj.canrender && proj.movement > 0.f)
 					{
 						float adjust = proj.radius*96.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > 200 ? min(adjust, proj.movement) : proj.o.dist(proj.from));
@@ -510,14 +513,17 @@ namespace projs
 						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
 					}
-					part_create(part, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
-					part_create(PART_PLASMA_LERP, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize*0.5f);
+					if(proj.canrender)
+					{
+						part_create(part, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(PART_PLASMA_LERP, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize*0.5f);
+					}
 					break;
 				}
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, proj.radius);
+					if(proj.canrender) part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, proj.radius);
 					break;
 				}
 			}
@@ -525,7 +531,7 @@ namespace projs
 		else if(proj.projtype == PRJ_GIBS && !kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			if(lastmillis-proj.lasteffect > 500)
+			if(proj.canrender && lastmillis-proj.lasteffect > 500)
 			{
 				if(!kidmode && !world::noblood) part_create(PART_BLOOD, 5000, proj.o, 0x66FFFF, 2.f);
 				proj.lasteffect = lastmillis;
@@ -535,7 +541,7 @@ namespace projs
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
-			if(steps && proj.movement > 0.f)
+			if(proj.canrender && steps && proj.movement > 0.f)
 			{
 				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.5f), pos = proj.o;
 				loopi(steps)
@@ -575,12 +581,12 @@ namespace projs
 					{ // both basically explosions
 						part_create(proj.weap == WEAPON_FLAMER ? PART_FIREBALL_SOFT_SLENS : PART_PLASMA_SOFT_SLENS, proj.weap == WEAPON_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0xBB4400, weaptype[proj.weap].explode*0.3f); // corona
 						int deviation = int(weaptype[proj.weap].explode*0.5f);
-						loopi(rnd(3)+2)
+						if(proj.canrender) loopi(rnd(3)+(proj.weap == WEAPON_FLAMER ? 2 : 4))
 						{
 							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-							part_create(PART_FIREBALL_SOFT, proj.weap == WEAPON_FLAMER ? 500 : 1000, to, 0x992200, weaptype[proj.weap].explode);
+							part_create(PART_FIREBALL_SOFT, proj.weap == WEAPON_FLAMER ? 500 : 500, to, 0x992200, weaptype[proj.weap].explode);
 						}
-						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.weap == WEAPON_FLAMER ? 500 : 2000, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x444444 : 0x222222, weaptype[proj.weap].explode);
+						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.weap == WEAPON_FLAMER ? 750 : 1500, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x555555 : 0x222222, weaptype[proj.weap].explode);
 						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), proj.weap == WEAPON_FLAMER ? 250 : 1500, 10);
 						if(proj.weap == WEAPON_GL)
 						{
@@ -929,9 +935,31 @@ namespace projs
 		if(numprojs > maxprojectiles)
 		{
 			vector<projent *> canremove;
-			loopvrev(projs)
-				if(projs[i]->ready() && (projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS))
+			loopvrev(projs) if(projs[i]->ready())
+			{
+				if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS)
 					canremove.add(projs[i]);
+				else if(projs[i]->projtype == PRJ_SHOT)
+				{
+#if 0
+					if(projs[i]->weap == WEAPON_FLAMER)
+					{
+						if(projs[i]->canrender)
+						{
+							float asize = max(weaptype[WEAPON_FLAMER].partsize*projs[i]->lifesize, 1.5f)*0.5f;
+							loopj(i) if(projs[j]->projtype == PRJ_SHOT && projs[j]->weap == WEAPON_FLAMER && projs[j]->canrender)
+							{
+								float bsize = max(weaptype[WEAPON_FLAMER].partsize*projs[j]->lifesize, 1.5f)*0.5f;
+								if(projs[i]->o.squaredist(projs[j]->o) <= asize*bsize) // intentional cross multiply
+									projs[j]->canrender = false;
+							}
+						}
+					}
+					else
+#endif
+					projs[i]->canrender = true;
+				}
+			}
 			while(!canremove.empty() && numprojs > maxprojectiles)
 			{
 				int oldest = 0;
@@ -967,6 +995,7 @@ namespace projs
 					else continue;
 				}
 				effect(proj);
+				proj.canrender = true;
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
                     if(!move(proj)) destroy(proj);
