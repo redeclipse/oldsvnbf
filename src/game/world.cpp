@@ -1615,11 +1615,7 @@ namespace world
 		if(shownamesabovehead && third && d != player1) part_text(d->abovehead(), colorname(d, NULL, "@"));
 		if(showweap)
 		{ // we could probably animate the vwep too now..
-			a[ai].name = weaptype[weap].vwep;
-			a[ai].tag = "tag_weapon";
-			a[ai].anim = ANIM_VWEP|ANIM_LOOP;
-			a[ai].basetime = 0;
-			ai++;
+            a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0);
 		}
 		if(third)
 		{
@@ -1627,11 +1623,7 @@ namespace world
 			{
 				loopv(ctf::st.flags) if(ctf::st.flags[i].owner == d && !ctf::st.flags[i].droptime)
 				{
-					a[ai].name = teamtype[ctf::st.flags[i].team].flag;
-					a[ai].tag = "tag_flag";
-					a[ai].anim = ANIM_MAPMODEL|ANIM_LOOP;
-					a[ai].basetime = 0;
-					ai++;
+                    a[ai++] = modelattach("tag_flag", teamtype[ctf::st.flags[i].team].flag, ANIM_MAPMODEL|ANIM_LOOP, 0);
 				}
 			}
 		}
@@ -1639,9 +1631,7 @@ namespace world
         if(rendernormally && (early || d != player1))
         {
             d->muzzle = vec(-1, -1, -1);
-            a[ai].tag = "tag_muzzle";
-            a[ai].pos = &d->muzzle;
-            ai++;
+            a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
 
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
