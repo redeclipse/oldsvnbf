@@ -1711,8 +1711,20 @@ namespace client
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		int ac = 0, bc = 0;
-		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length() && (kidmode < 2 || m_paint(a->attr[1], a->attr[2]))) ac = 1;
-		if(b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length() && (kidmode < 2 || m_paint(b->attr[1], b->attr[2]))) bc = 1;
+
+		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length() && (kidmode < 2 || m_paint(a->attr[1], a->attr[2])))
+		{
+			if(!strcmp(a->sdesc, servermaster)) ac = 3;
+			else if(!strcmp(a->name, "localhost")) ac = 2;
+			else ac = 1;
+		}
+
+		if(b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length() && (kidmode < 2 || m_paint(b->attr[1], b->attr[2])))
+		{
+			if(!strcmp(b->sdesc, servermaster)) bc = 3;
+			else if(!strcmp(b->name, "localhost")) bc = 2;
+			else bc = 1;
+		}
 		if(ac > bc) return -1;
 		if(ac < bc) return 1;
 
@@ -1877,11 +1889,12 @@ namespace client
 		string text; text[0] = 0;
 		bool diff = si->attr[0] != GAMEVERSION;
 		int status = diff ? SSTAT_UNKNOWN : serverstat(si), colour = serverstatus[status].colour;
+		if(status == SSTAT_OPEN && !strcmp(si->sdesc, servermaster)) colour |= 0x222222;
 		switch(i)
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("", colour, serverstatus[status].icon) & G3D_UP)
+				if(g->button("-", colour, serverstatus[status].icon) & G3D_UP)
 					return true;
 				break;
 			}
@@ -1899,7 +1912,7 @@ namespace client
 			}
 			case SINFO_PING:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				s_sprintf(text)("%d", si->ping);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
@@ -1913,7 +1926,7 @@ namespace client
 			}
 			case SINFO_MAXCLIENTS:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 4 && si->attr[4] >= 0)
 					s_sprintf(text)("%d", si->attr[4]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1921,7 +1934,7 @@ namespace client
 			}
 			case SINFO_GAME:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 1)
 					s_sprintf(text)("%s", server::gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
@@ -1929,14 +1942,14 @@ namespace client
 			}
 			case SINFO_MAP:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				s_strncpy(text, si->map, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 3 && si->attr[3] >= 0)
 					s_sprintf(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;

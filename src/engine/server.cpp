@@ -737,6 +737,7 @@ bool serveroption(char *opt)
 int main(int argc, char* argv[])
 {
 	servertype = 3;
+	addpackagedir("data");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	atexit(enet_deinitialize);
