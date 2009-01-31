@@ -575,11 +575,11 @@ struct animmodel : model
 
         bool calcanim(int animpart, int anim, int basetime, int basetime2, dynent *d, int interp, animinfo &info)
         {
-            uint varseed = uint((int)(size_t)d);
+            uint varseed = uint((size_t)d);
             info.anim = anim;
             info.basetime = basetime;
             info.varseed = varseed;
-            info.speed = 100.0f;
+            info.speed = anim&ANIM_SETSPEED ? basetime2 : 100.0f;
             if((anim&ANIM_INDEX)==ANIM_ALL)
             {
                 info.frame = 0;
