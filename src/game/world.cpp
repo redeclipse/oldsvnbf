@@ -1483,7 +1483,7 @@ namespace world
 
         if(third && testanims && d == player1) yaw = 0;
         else yaw += 90;
-        if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/1000.0f, 0.0f);
+        if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/500.0f, 0.0f);
 
         if(d->ragdoll && (!ragdoll || anim!=ANIM_DYING)) cleanragdoll(d);
 
