@@ -1895,7 +1895,7 @@ namespace client
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("-", colour, serverstatus[status].icon) & G3D_UP)
+				if(g->button("", colour, serverstatus[status].icon) & G3D_UP)
 					return true;
 				break;
 			}
