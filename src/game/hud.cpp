@@ -366,7 +366,8 @@ namespace hud
 		if(shownotices)
 		{
 			pushfont("super");
-			int ty = showradar ? int(hudsize*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
+			float roff = radarborder ? 1.f : 0.5f;
+			int ty = showradar ? int(hudsize*radarsize*roff*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
 
 			if(!world::maptime || lastmillis-world::maptime < titlecard)
 			{
@@ -736,7 +737,7 @@ namespace hud
 			{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.2f,	0.2f,	0.6f	},
 			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
 		};
-		int cs = s*(radarborder ? 1 : 2);
+		int cr = radarborder ? 1 : 2, cs = s*cr;
 		if(radarborder && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
 			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
@@ -807,7 +808,7 @@ namespace hud
 	const char *flagtex(int team)
 	{
 		const char *flagtexs[TEAM_MAX] = {
-			neutralflagtex, alphaflagtex, betaflagtex, deltaflagtex, gammaflagtex
+			neutralflagtex, alphaflagtex, betaflagtex, deltaflagtex, gammaflagtex, neutralflagtex
 		};
 		return flagtexs[team];
 	}
@@ -1037,9 +1038,9 @@ namespace hud
 
 	void drawgamehud(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)) : 0,
+		float fade = hudblend, roff = radarborder ? 1.f : 0.5f;
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*roff) : 0,
 			secs = world::maptime ? lastmillis-world::maptime : 0;
-		float fade = hudblend;
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
@@ -1060,7 +1061,8 @@ namespace hud
 
 	void drawhudelements(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*(radarborder ? 1 : 0.5f)*1.5f) : 0,
+		float roff = radarborder ? 1.f : 0.5f;
+		int ox = hudwidth, oy = hudsize, os = showradar ? int(oy*radarsize*roff*1.5f) : 0,
 			is = showinventory ? int(oy*inventorysize) : 0, bx = os+FONTW/4, by = oy-os-(FONTH/3)*2, bs = ox-bx*2-is;
 
 		glLoadIdentity();

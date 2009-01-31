@@ -1289,7 +1289,7 @@ namespace client
 				{
 					int ent = getint(p), st = getint(p);
 					if(!entities::ents.inrange(ent)) break;
-					entities::settrigger(ent, st ? true : false);
+					entities::setspawn(ent, st ? true : false);
 					break;
 				}
 
@@ -1920,7 +1920,7 @@ namespace client
 			}
 			case SINFO_PLAYERS:
 			{
-				if(diff) { g->button("", colour); break; }
+				if(diff) { g->button("-", colour); break; }
 				s_sprintf(text)("%d", si->numplayers);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;

@@ -618,31 +618,28 @@ namespace entities
 		if(ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)ents[n];
-			loopv(projs::projs)
+			if((e.spawned = on) != false) e.lastspawn = lastmillis;
+			if(e.type == TRIGGER)
 			{
-				projent &proj = *projs::projs[i];
-				if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-				world::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
-				proj.beenused = true;
-				proj.state = CS_DEAD;
+				if(e.attr[1] == TR_NONE || e.attr[1] == TR_LINK)
+				{
+					int millis = lastmillis-e.lastemit;
+					if(e.lastemit && millis < TRIGGERTIME) // skew the animation forward
+						e.lastemit = lastmillis-(TRIGGERTIME-millis);
+					else e.lastemit = lastmillis;
+					execlink(NULL, n, false);
+				}
 			}
-			if((e.spawned = on) != false) e.lastspawn = lastmillis;
-		}
-	}
-
-	void settrigger(int n, bool on)
-	{
-		if(ents.inrange(n) && ents[n]->type == TRIGGER)
-		{
-			gameentity &e = *(gameentity *)ents[n];
-			if((e.spawned = on) != false) e.lastspawn = lastmillis;
-			if(e.attr[1] == TR_NONE || e.attr[1] == TR_LINK)
+			else if(enttype[e.type].usetype == EU_ITEM)
 			{
-				int millis = lastmillis-e.lastemit;
-				if(e.lastemit && millis < TRIGGERTIME) // skew the animation forward
-					e.lastemit = lastmillis-(TRIGGERTIME-millis);
-				else e.lastemit = lastmillis;
-				execlink(NULL, n, false);
+				loopv(projs::projs)
+				{
+					projent &proj = *projs::projs[i];
+					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
+					world::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
+					proj.beenused = true;
+					proj.state = CS_DEAD;
+				}
 			}
 		}
 	}
@@ -1519,15 +1516,26 @@ namespace entities
 
     void preload()
     {
+		static bool weapf[WEAPON_MAX];
+		int sweap = m_spawnweapon(world::gamemode, world::mutators);
+		loopi(WEAPON_MAX) weapf[i] = (i == sweap ? true : false);
 		loopv(ents)
 		{
 			extentity &e = *ents[i];
-			const char *mdlname = entmdlname(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-			if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
-			if(e.type == WEAPON)
+			if(e.type == MAPMODEL || e.type == FLAG) continue;
+			else if(e.type == WEAPON)
 			{
-				int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr[0], sweap);
-				if(isweap(attr)) weapons::preload(attr);
+				int attr = weapattr(e.attr[0], sweap);
+				if(isweap(attr) && !weapf[attr])
+				{
+					weapons::preload(attr);
+					weapf[attr] = true;
+				}
+			}
+			else
+			{
+				const char *mdlname = entmdlname(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
 			}
 		}
     }
