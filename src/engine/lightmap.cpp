@@ -52,8 +52,7 @@ void show_calclight_progress()
 	float bar1 = float(progress) / float(allocnodes),
 		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
-	s_sprintfd(text1)("%d%%", int(bar1 * 100));
-	s_sprintfd(text2)("%d textures %d%% utilized", lightmaps.length(), int(bar2 * 100));
+	s_sprintfd(text)("%d textures %d%% utilized", lightmaps.length(), int(bar2 * 100));
 
 	if(LM_PACKW <= hwtexsize && !progresstex)
 	{
@@ -72,7 +71,7 @@ void show_calclight_progress()
 		    break;
 	    }
     }
-	renderprogress(bar1, text1, bar2, text2, progresstexticks ? progresstex : 0);
+	renderprogress(bar1, "computing lightmaps..", bar2, text, progresstexticks ? progresstex : 0);
 }
 
 #define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress)
