@@ -759,7 +759,8 @@ namespace world
 			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 
         // prevent the player from being in the middle of nowhere if he doesn't get spawned
-        entities::spawnplayer(player1, -1, true);
+        entities::spawnplayer(player1, -1, true, false);
+        if(!m_edit(gamemode)) player1->state = CS_WAITING; // expect the server to spawn us
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)

@@ -1133,7 +1133,7 @@ namespace client
 					if(f == world::player1 || f->ai)
 					{
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->weapselect);
-						entities::spawnplayer(f, ent, ent < 0);
+						entities::spawnplayer(f, ent, ent < 0, true);
 						playsound(S_RESPAWN, f->o, f);
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
@@ -1907,7 +1907,7 @@ namespace client
 			case SINFO_DESC:
 			{
 				if(diff) s_sprintf(text)("(v%d != v%d)", si->attr[0], GAMEVERSION);
-				else s_strncpy(text, si->sdesc, 20);
+				else s_strncpy(text, si->sdesc, 24);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1967,9 +1967,19 @@ namespace client
 		if(servers.empty())
 		{
 			g->pushlist();
-			g->text("no servers, press update to see some..", GUI_TEXT_COLOR);
+			g->text("No servers, press UPDATE to see some..", GUI_TEXT_COLOR);
 			g->poplist();
 			return -1;
+		}
+		loopv(servers) if(!strcmp(servers[i]->sdesc, servermaster))
+		{
+			if(servers[i]->attr[0] > GAMEVERSION)
+			{
+				g->pushlist();
+				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fb%s\fS for more information.", GUI_TEXT_COLOR, "info", ENG_URL);
+				g->poplist();
+			}
+			break;
 		}
 		int n = -1;
 		for(int start = 0; start < servers.length();)

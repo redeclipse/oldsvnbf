@@ -1241,7 +1241,7 @@ namespace entities
 	extern void putitems(ucharbuf &p);
 	extern void execlink(gameent *d, int index, bool local);
 	extern void setspawn(int n, bool on);
-	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false);
+	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false, bool suicide = false);
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);
 	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);

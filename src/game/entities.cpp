@@ -797,7 +797,7 @@ namespace entities
 		return physics::entinmap(d, true);
 	}
 
-	bool spawnplayer(gameent *d, int ent, bool recover)
+	bool spawnplayer(gameent *d, int ent, bool recover, bool suicide)
 	{
 		if(ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return true;
 		if(recover)
@@ -817,7 +817,8 @@ namespace entities
 			physics::entinmap(d, true);
 			return true;
 		}
-		else world::suicide(d, HIT_SPAWN);
+		else if(m_play(world::gamemode) && suicide)
+			world::suicide(d, HIT_SPAWN);
 		return false;
 	}
 
