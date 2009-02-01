@@ -84,6 +84,7 @@ void removesound(int c)
 
 void clearsound()
 {
+	musicdone(false);
 	loopv(sounds) removesound(i);
 	mapsounds.setsizenodelete(0);
 }
