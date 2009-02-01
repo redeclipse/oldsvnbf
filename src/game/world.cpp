@@ -91,7 +91,7 @@ namespace world
 	VARP(noblood, 0, 0, 1);
 
     VARP(ragdoll, 0, 1, 1);
-    FVARP(ragdollpush, 0, 1.f, 10000);
+    FVARP(ragdollpush, 0, 1.5f, 10000);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));

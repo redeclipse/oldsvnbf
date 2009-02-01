@@ -275,7 +275,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
-			3.5f,		45.f,
+			3.5f,		60.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -286,7 +286,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
-			0.35f,		35.f,
+			0.35f,		50.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
@@ -297,7 +297,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
-			0.25f,		40.f,
+			0.25f,		50.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
@@ -308,7 +308,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
-			30.f,		5.f,
+			30.f,		10.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -319,7 +319,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
-			0.4f,		100.f,
+			0.4f,		125.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -330,7 +330,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
-			0.6f,		150.f,
+			0.6f,		175.f,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -341,7 +341,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,
-			3.f,		200.f,
+			3.f,		250.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
@@ -352,7 +352,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		 0.f,			0.f,		2.0f,		0.f,
-			2.f,		15.f,
+			2.f,		20.f,
 			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
