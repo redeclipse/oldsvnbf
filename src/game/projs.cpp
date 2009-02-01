@@ -398,7 +398,7 @@ namespace projs
 				case WEAPON_PLASMA:
 				{
 					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < 250) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/250.f, 0.1f, 1.f);
+					if(proj.lifemillis-proj.lifetime < 100) proj.lifesize = (clamp((proj.lifemillis-proj.lifetime)/100.f, 0.f, 1.f)*0.75f)+0.25f;
 					else
 					{
 						part = PART_PLASMA_SOFT;
@@ -407,7 +407,8 @@ namespace projs
 					if(proj.canrender)
 					{
 						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
+						part_create(PART_ELECTRIC, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.65f*proj.lifesize); // electrifying!
+						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.45f*proj.lifesize); // brighter center part
 					}
 					break;
 				}
