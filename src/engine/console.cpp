@@ -214,7 +214,8 @@ void searchbindlist(const char *action, int type, int limit, const char *sep, ve
 {
     enumerate(keyms, keym, km,
     {
-        if(!strcmp(km.actions[type], action))
+    	char *act = ((!km.actions[type] || !*km.actions[type]) && type ? km.actions[keym::ACTION_DEFAULT] : km.actions[type]);
+        if(!strcmp(act, action))
         {
             if(names.length())
             {
@@ -232,7 +233,8 @@ const char *searchbind(const char *action, int type)
 {
     enumerate(keyms, keym, km,
     {
-        if(!strcmp(km.actions[type], action)) return km.name;
+    	char *act = ((!km.actions[type] || !*km.actions[type]) && type ? km.actions[keym::ACTION_DEFAULT] : km.actions[type]);
+        if(!strcmp(act, action)) return km.name;
     });
     return NULL;
 }
@@ -249,7 +251,7 @@ keym *findbind(char *key)
 void getbind(char *key, int type)
 {
     keym *km = findbind(key);
-    result(km ? km->actions[type] : "");
+    result(km ? ((!km->actions[type] || !*km->actions[type]) && type ? km->actions[keym::ACTION_DEFAULT] : km->actions[type]) : "");
 }
 
 int changedkeys = 0;

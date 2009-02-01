@@ -582,10 +582,10 @@ namespace projs
 					case WEAPON_GL:
 					{ // both basically explosions
 						part_create(proj.weap == WEAPON_FLAMER ? PART_FIREBALL_SOFT_SLENS : PART_PLASMA_SOFT_SLENS, proj.weap == WEAPON_FLAMER ? 500 : 1000, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
-						int deviation = int(weaptype[proj.weap].explode*0.5f);
-						if(proj.canrender) loopi(rnd(3)+(proj.weap == WEAPON_FLAMER ? 1 : 3))
+						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.25f : 0.75f));
+						loopi(rnd(3)+(proj.weap == WEAPON_FLAMER ? 1 : 3))
 						{
-							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
+							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
 							part_create(PART_FIREBALL_SOFT, proj.weap == WEAPON_FLAMER ? 350 : 500, to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f));
 						}
 						part_create(PART_SMOKE_RISE_SLOW_SOFT, proj.weap == WEAPON_FLAMER ? 750 : 1500, vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x433333 : 0x222222, weaptype[proj.weap].explode);
@@ -933,46 +933,40 @@ namespace projs
 
 	void update()
 	{
-		int numprojs = projs.length();
-		if(numprojs > maxprojectiles)
+		vector<projent *> canremove;
+		loopvrev(projs) if(projs[i]->ready())
 		{
-			vector<projent *> canremove;
-			loopvrev(projs) if(projs[i]->ready())
+			if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS) canremove.add(projs[i]);
+			else if(projs[i]->projtype == PRJ_SHOT)
 			{
-				if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS)
-					canremove.add(projs[i]);
-				else if(projs[i]->projtype == PRJ_SHOT)
+				if(projs[i]->weap == WEAPON_FLAMER)
 				{
-					if(projs[i]->weap == WEAPON_FLAMER)
+					if(projs[i]->canrender)
 					{
-						if(projs[i]->canrender)
+						float asize = weaptype[WEAPON_FLAMER].partsize*projs[i]->lifesize;
+						loopj(i) if(projs[j]->projtype == PRJ_SHOT && projs[j]->weap == WEAPON_FLAMER && projs[j]->canrender)
 						{
-							float asize = weaptype[WEAPON_FLAMER].partsize*projs[i]->lifesize;
-							loopj(i) if(projs[j]->projtype == PRJ_SHOT && projs[j]->weap == WEAPON_FLAMER && projs[j]->canrender)
-							{
-								float bsize = weaptype[WEAPON_FLAMER].partsize*projs[j]->lifesize;
-								if(projs[i]->o.squaredist(projs[j]->o) <= asize*bsize) // intentional cross multiply
-									projs[j]->canrender = false;
-							}
+							float bsize = weaptype[WEAPON_FLAMER].partsize*projs[j]->lifesize;
+							if(projs[i]->o.squaredist(projs[j]->o) <= asize*bsize) // intentional cross multiply
+								projs[j]->canrender = false;
 						}
 					}
-					else projs[i]->canrender = true;
 				}
+				else projs[i]->canrender = true;
 			}
-			while(!canremove.empty() && numprojs > maxprojectiles)
+		}
+		while(!canremove.empty() && canremove.length() > maxprojectiles)
+		{
+			int oldest = 0;
+			loopv(canremove)
+				if(lastmillis-canremove[i]->addtime > lastmillis-canremove[oldest]->addtime)
+					oldest = i;
+			if(canremove.inrange(oldest))
 			{
-				int oldest = 0;
-				loopv(canremove)
-					if(lastmillis-canremove[i]->addtime > lastmillis-canremove[oldest]->addtime)
-						oldest = i;
-				if(canremove.inrange(oldest))
-				{
-					canremove[oldest]->state = CS_DEAD;
-					canremove.removeunordered(oldest);
-					numprojs--;
-				}
-				else break;
+				canremove[oldest]->state = CS_DEAD;
+				canremove.removeunordered(oldest);
 			}
+			else break;
 		}
 
 		loopv(projs)

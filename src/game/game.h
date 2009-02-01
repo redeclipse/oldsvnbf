@@ -1369,10 +1369,12 @@ namespace world
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, const char *msg, ...);
 	extern void respawn(gameent *d);
-	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, float size = 2.f, int num = 100, int fade = 250, float vel = 15.f);
+	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
 	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);
+	extern void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch);
+	extern void scaleyawpitch(float &yaw, float &pitch, float targyaw, float targpitch, float frame = 1.f, float scale = 1.f);
 	extern bool allowmove(physent *d);
 	extern int mousestyle();
 	extern int deadzone();
@@ -1381,7 +1383,9 @@ namespace world
 	extern bool inzoomswitch();
 	extern int zoomtime();
 	extern bool tvmode();
-	extern void resetstates(int types);
+	extern void resetcamera();
+	extern void resetworld();
+	extern void resetstate();
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor);
 	extern void timeupdate(int timeremain);

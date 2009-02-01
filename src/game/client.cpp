@@ -162,7 +162,7 @@ namespace client
 		if(edit)
 		{
 			world::player1->state = CS_EDITING;
-			world::resetstates(ST_DEFAULT);
+			world::resetstate();
 		}
 		else
 		{
@@ -1138,7 +1138,7 @@ namespace client
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
 					ai::spawned(f);
-					if(f == world::player1) world::resetstates(ST_DEFAULT);
+					if(f == world::player1) world::resetstate();
 					break;
 				}
 

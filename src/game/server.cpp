@@ -122,7 +122,7 @@ namespace server
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
-		servstate() : state(CS_DEAD) {}
+		servstate() : state(CS_DEAD), aireinit(0) {}
 
 		bool isalive(int gamemillis)
 		{
@@ -132,14 +132,11 @@ namespace server
 		void reset()
 		{
 			if(state!=CS_SPECTATOR) state = CS_DEAD;
-			lifesequence = 0;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
-
-			aireinit = timeplayed = 0;
-			effectiveness = 0;
+			timeplayed = 0;
+			lifesequence = effectiveness = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
-
 			respawn(-1, 100);
 		}
 
@@ -255,7 +252,7 @@ namespace server
 		uint ip;
 	};
 
-	namespace ai {
+	namespace aiman {
 		extern int findaiclient(int exclude = -1);
 		extern bool addai(int type, int skill);
 		extern void deleteai(clientinfo *ci);
@@ -345,7 +342,7 @@ namespace server
 	void cleanup()
 	{
 		bannedips.setsize(0);
-		ai::clearai();
+		aiman::clearai();
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
 			{
@@ -1193,10 +1190,10 @@ namespace server
 		}
 	}
 
-	#include "stf.cpp"
-    #include "ctf.cpp"
-	#include "duel.cpp"
-	#include "ai.cpp"
+	#include "stfmode.h"
+    #include "ctfmode.h"
+	#include "duelmut.h"
+	#include "aiman.h"
 
 	void changemap(const char *s, int mode, int muts)
 	{
@@ -1210,7 +1207,7 @@ namespace server
 		gamemode = mode >= 0 ? mode : sv_defaultmode;
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
-		if(!m_play(gamemode)) ai::clearai();
+		if(!m_play(gamemode)) aiman::clearai();
 		numplayers = gamemillis = interm = 0;
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
@@ -1721,7 +1718,7 @@ namespace server
 	void processevent(clientinfo *ci, useevent &e)
 	{
 		servstate &gs = ci->state;
-		if(gs.state!=CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
+		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
 			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
@@ -1975,7 +1972,7 @@ namespace server
 					checkvotes(true);
 				}
 			}
-			else ai::checkai();
+			else aiman::checkai();
 			checkclients();
 		}
 		auth::update();
@@ -2033,13 +2030,13 @@ namespace server
 		    dropitems(ci, true);
 		    sendf(-1, 1, "ri2", SV_CDIS, n);
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
-		    ai::removeai(ci, complete);
+		    aiman::removeai(ci, complete);
 		    clients.removeobj(ci);
         }
         else connects.removeobj(ci);
 		if(complete) cleanup();
 		else checkvotes();
-		ai::refreshai();
+		aiman::refreshai();
 	}
 
 	#include "extinfo.h"
@@ -2266,7 +2263,7 @@ namespace server
                 sendinitc2s(ci);
                 relayf(2, "\fg%s has joined the game", colorname(ci));
 
-                ai::refreshai();
+                aiman::refreshai();
             }
         }
 		else if(chan==2)
@@ -2620,7 +2617,7 @@ namespace server
 						if(smode) smode->changeteam(ci, ci->team, team);
 						mutate(smuts, mut->changeteam(ci, ci->team, team));
 						ci->team = team;
-						ai::refreshai();
+						aiman::refreshai();
 					}
                     sendinitc2s(ci);
 					break;
@@ -2807,7 +2804,7 @@ namespace server
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-                    	ai::refreshai();
+                    	aiman::refreshai();
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -2820,7 +2817,7 @@ namespace server
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						ai::refreshai();
+						aiman::refreshai();
 					}
 					break;
 				}
@@ -2836,7 +2833,7 @@ namespace server
 						if(smode) smode->changeteam(wi, wi->team, team);
 						mutate(smuts, mut->changeteam(wi, wi->team, team));
 						wi->team = team;
-						ai::refreshai();
+						aiman::refreshai();
 					}
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
 					QUEUE_INT(SV_SETTEAM);
@@ -3006,13 +3003,13 @@ namespace server
 
 				case SV_ADDBOT:
 				{
-					ai::reqadd(ci, getint(p));
+					aiman::reqadd(ci, getint(p));
 					break;
 				}
 
 				case SV_DELBOT:
 				{
-					ai::reqdel(ci);
+					aiman::reqdel(ci);
 					break;
 				}
 
