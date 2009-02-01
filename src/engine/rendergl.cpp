@@ -1466,31 +1466,66 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	glEnable(GL_CULL_FACE);
 }
 
-static void bar(float bar, int w, int o, float r, float g, float b)
+void drawslice(float start, float length, float x, float y, float size)
 {
-	int side = 2*FONTH;
-	float x1 = side, x2 = min(bar, 1.0f)*(w*3-2*side)+side;
-	float y1 = o*FONTH;
+    float end = start + length,
+          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
+          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
+    glBegin(GL_TRIANGLE_FAN);
+    glTexCoord2f(0.5f, 0.5f); glVertex2f(x, y);
 
-    glColor3f(0.3f, 0.3f, 0.3f);
-    glBegin(GL_TRIANGLE_STRIP);
-    loopk(10)
-    {
-       float c = 1.2f*cosf(M_PI/2 + k/9.0f*M_PI), s = 1 + 1.2f*sinf(M_PI/2 + k/9.0f*M_PI);
-       glVertex2f(x2 - c*FONTH, y1 + s*FONTH);
-       glVertex2f(x1 + c*FONTH, y1 + s*FONTH);
-    }
+    if(start < 0.125f || start >= 0.875f) { glTexCoord2f(0.5f + 0.5f*sx/sy, 0); glVertex2f(x + sx/sy*size, y - size);  }
+    else if(start < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*sy/sx); glVertex2f(x + size, y - sy/sx*size); }
+    else if(start < 0.625f) { glTexCoord2f(0.5f - 0.5f*sx/sy, 1); glVertex2f(x - sx/sy*size, y + size); }
+    else { glTexCoord2f(0, 0.5f + 0.5f*sy/sx); glVertex2f(x - size, y + sy/sx*size); }
+
+    if(start <= 0.125f && end >= 0.125f) { glTexCoord2f(1, 0); glVertex2f(x + size, y - size); }
+    if(start <= 0.375f && end >= 0.375f) { glTexCoord2f(1, 1); glVertex2f(x + size, y + size); }
+    if(start <= 0.625f && end >= 0.625f) { glTexCoord2f(0, 1); glVertex2f(x - size, y + size); }
+    if(start <= 0.875f && end >= 0.875f) { glTexCoord2f(0, 0); glVertex2f(x - size, y - size); }
+
+    if(end < 0.125f || end >= 0.875f) { glTexCoord2f(0.5f + 0.5f*ex/ey, 0); glVertex2f(x + ex/ey*size, y - size);  }
+    else if(end < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*ey/ex); glVertex2f(x + size, y - ey/ex*size); }
+    else if(end < 0.625f) { glTexCoord2f(0.5f - 0.5f*ex/ey, 1); glVertex2f(x - ex/ey*size, y + size); }
+    else { glTexCoord2f(0, 0.5f + 0.5f*ey/ex); glVertex2f(x - size, y + ey/ex*size); }
     glEnd();
+}
 
-	glColor3f(r, g, b);
-	glBegin(GL_TRIANGLE_STRIP);
-	loopk(10)
-	{
-		float c = cosf(M_PI/2 + k/9.0f*M_PI), s = 1 + sinf(M_PI/2 + k/9.0f*M_PI);
-		glVertex2f(x2 - c*FONTH, y1 + s*FONTH);
-		glVertex2f(x1 + c*FONTH, y1 + s*FONTH);
-	}
-	glEnd();
+void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize)
+{
+    float end = start + length,
+          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
+          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
+
+    #define SLICEVERT(ox, oy) \
+    { \
+        glTexCoord2f(0.5f + (ox)*0.5f, 0.5f + (oy)*0.5f); \
+        glVertex2f(x + (ox)*size, y + (oy)*size); \
+    }
+    #define SLICESPOKE(ox, oy) \
+    { \
+        SLICEVERT((ox)*minsize, (oy)*minsize); \
+        SLICEVERT(ox, oy); \
+    }
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glColor4f(1, 1, 1, alpha);
+    if(start < 0.125f || start >= 0.875f) SLICESPOKE(sx/sy, -1)
+    else if(start < 0.375f) SLICESPOKE(1, -sy/sx)
+    else if(start < 0.625f) SLICESPOKE(-sx/sy, 1)
+    else SLICESPOKE(-1, sy/sx)
+
+    if(start <= 0.125f && end >= 0.125f) { glColor4f(1, 1, 1, alpha - alpha*(0.125f - start)/(end - start)); SLICESPOKE(1, -1) }
+    if(start <= 0.375f && end >= 0.375f) { glColor4f(1, 1, 1, alpha - alpha*(0.375f - start)/(end - start)); SLICESPOKE(1, 1) }
+    if(start <= 0.625f && end >= 0.625f) { glColor4f(1, 1, 1, alpha - alpha*(0.625f - start)/(end - start)); SLICESPOKE(-1, 1) }
+    if(start <= 0.875f && end >= 0.875f) { glColor4f(1, 1, 1, alpha - alpha*(0.875f - start)/(end - start)); SLICESPOKE(-1, -1) }
+
+    glColor4f(1, 1, 1, 0);
+    if(end < 0.125f || end >= 0.875f) SLICESPOKE(ex/ey, -1)
+    else if(end < 0.375f) SLICESPOKE(1, -ey/ex)
+    else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
+    else SLICESPOKE(-1, ey/ex)
+    glEnd();
 }
 
 float loadprogress = 0;
@@ -1525,40 +1560,57 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 	notextureshader->set();
 
-	if(text1)
-	{
-		bar(1, w, 2, 0.1f, 0.1f, 0.1f);
-		if(bar1>0) bar(bar1, w, 2, 0.2f, 0.2f, 0.2f);
-	}
-
-	if(bar2>0)
-	{
-		bar(1, w, 4, 0.1f, 0.1f, 0.1f);
-		bar(bar2, w, 4, 0.2f, 0.2f, 0.2f);
-	}
+	glColor3f(0.f, 0.f, 0.f);
+	glBegin(GL_QUADS);
+	glVertex2f(0,	0);
+	glVertex2f(w*3, 0);
+	glVertex2f(w*3, 2*FONTH);
+	glVertex2f(0,	2*FONTH);
+	glEnd();
 
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
 
-	if(text1) draw_text(text1, 2*FONTH, 2*FONTH + FONTH/2);
-	if(bar2>0) draw_text(text2, 2*FONTH, 4*FONTH + FONTH/2);
+	if(text1)
+	{
+		draw_textx("\fs\fa[\fS\fs\fg%d%%\fS\fs\fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, int(bar1*100), text1);
+		if(text2 && bar2 > 0) draw_textx("%s \fs\fa[\fS\fs\fy%d%%\fS\fs\fa]\fS", w*3-FONTW, FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, text2, int(bar2*100));
+	}
 
 	glDisable(GL_BLEND);
-
 	if(tex)
 	{
+		glPushMatrix();
+		glScalef(3.0f, 3.0f, 1);
+		const int subdiv = 16;
+		float cx = 0.5f*w, cy = 0.5f*h, aw = h*4.0f/3.0f, ah = h;
+		if(aw > w) { aw = w; ah = w*3.0f/4.0f; }
+        float tx1 = 378/1024.f, tx2 = 648/1024.f, txc = cx-aw/2 + aw*(tx1 + tx2)/2, txr = aw*(tx2 - tx1)/2,
+              ty1 = 307/1024.f, ty2 = 658/1024.f, tyc = cy-ah/2 + ah*(ty1 + ty2)/2, tyr = ah*(ty2 - ty1)/2;
+		glColor3f(1, 1, 1);
 		glBindTexture(GL_TEXTURE_2D, tex);
-		int sz = 256, x = (w-sz)/2, y = min(384, h-256);
-		sz *= 3;
-		x *= 3;
-		y *= 3;
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2f(x,	y);
-		glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-		glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
-		glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
-		glEnd();
+        glBegin(GL_TRIANGLE_FAN);
+        loopi(subdiv+1)
+        {
+            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
+            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
+            glVertex2f(txc + txr*rx, tyc + tyr*ry);
+        }
+        glEnd();
+#if 0
+        glBegin(GL_QUAD_STRIP);
+        loopi(subdiv+1)
+        {
+            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
+            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
+            glVertex2f(txc + txr*rx, tyc + tyr*ry);
+            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
+            glVertex2f(txc + txr*rx, tyc + tyr*ry);
+        }
+        glEnd();
+#endif
+		glPopMatrix();
 	}
 
 	glDisable(GL_TEXTURE_2D);
@@ -2246,66 +2298,3 @@ bool rendericon(const char *icon, int x, int y, int xs, int ys)
 	}
 	return false;
 }
-
-void drawslice(float start, float length, float x, float y, float size)
-{
-    float end = start + length,
-          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
-          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
-    glBegin(GL_TRIANGLE_FAN);
-    glTexCoord2f(0.5f, 0.5f); glVertex2f(x, y);
-
-    if(start < 0.125f || start >= 0.875f) { glTexCoord2f(0.5f + 0.5f*sx/sy, 0); glVertex2f(x + sx/sy*size, y - size);  }
-    else if(start < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*sy/sx); glVertex2f(x + size, y - sy/sx*size); }
-    else if(start < 0.625f) { glTexCoord2f(0.5f - 0.5f*sx/sy, 1); glVertex2f(x - sx/sy*size, y + size); }
-    else { glTexCoord2f(0, 0.5f + 0.5f*sy/sx); glVertex2f(x - size, y + sy/sx*size); }
-
-    if(start <= 0.125f && end >= 0.125f) { glTexCoord2f(1, 0); glVertex2f(x + size, y - size); }
-    if(start <= 0.375f && end >= 0.375f) { glTexCoord2f(1, 1); glVertex2f(x + size, y + size); }
-    if(start <= 0.625f && end >= 0.625f) { glTexCoord2f(0, 1); glVertex2f(x - size, y + size); }
-    if(start <= 0.875f && end >= 0.875f) { glTexCoord2f(0, 0); glVertex2f(x - size, y - size); }
-
-    if(end < 0.125f || end >= 0.875f) { glTexCoord2f(0.5f + 0.5f*ex/ey, 0); glVertex2f(x + ex/ey*size, y - size);  }
-    else if(end < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*ey/ex); glVertex2f(x + size, y - ey/ex*size); }
-    else if(end < 0.625f) { glTexCoord2f(0.5f - 0.5f*ex/ey, 1); glVertex2f(x - ex/ey*size, y + size); }
-    else { glTexCoord2f(0, 0.5f + 0.5f*ey/ex); glVertex2f(x - size, y + ey/ex*size); }
-    glEnd();
-}
-
-void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize)
-{
-    float end = start + length,
-          sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
-          ex = cosf((end + 0.25f)*2*M_PI), ey = -sinf((end + 0.25f)*2*M_PI);
-
-    #define SLICEVERT(ox, oy) \
-    { \
-        glTexCoord2f(0.5f + (ox)*0.5f, 0.5f + (oy)*0.5f); \
-        glVertex2f(x + (ox)*size, y + (oy)*size); \
-    }
-    #define SLICESPOKE(ox, oy) \
-    { \
-        SLICEVERT((ox)*minsize, (oy)*minsize); \
-        SLICEVERT(ox, oy); \
-    }
-
-    glBegin(GL_TRIANGLE_STRIP);
-    glColor4f(1, 1, 1, alpha);
-    if(start < 0.125f || start >= 0.875f) SLICESPOKE(sx/sy, -1)
-    else if(start < 0.375f) SLICESPOKE(1, -sy/sx)
-    else if(start < 0.625f) SLICESPOKE(-sx/sy, 1)
-    else SLICESPOKE(-1, sy/sx)
-
-    if(start <= 0.125f && end >= 0.125f) { glColor4f(1, 1, 1, alpha - alpha*(0.125f - start)/(end - start)); SLICESPOKE(1, -1) }
-    if(start <= 0.375f && end >= 0.375f) { glColor4f(1, 1, 1, alpha - alpha*(0.375f - start)/(end - start)); SLICESPOKE(1, 1) }
-    if(start <= 0.625f && end >= 0.625f) { glColor4f(1, 1, 1, alpha - alpha*(0.625f - start)/(end - start)); SLICESPOKE(-1, 1) }
-    if(start <= 0.875f && end >= 0.875f) { glColor4f(1, 1, 1, alpha - alpha*(0.875f - start)/(end - start)); SLICESPOKE(-1, -1) }
-
-    glColor4f(1, 1, 1, 0);
-    if(end < 0.125f || end >= 0.875f) SLICESPOKE(ex/ey, -1)
-    else if(end < 0.375f) SLICESPOKE(1, -ey/ex)
-    else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
-    else SLICESPOKE(-1, ey/ex)
-    glEnd();
-}
-
