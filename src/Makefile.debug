@@ -387,8 +387,8 @@ game/server.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
 game/server.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
 game/server.o: engine/lightmap.h engine/bih.h engine/texture.h engine/model.h
 game/server.o: game/game.h game/ctf.h game/stf.h game/vars.h
-game/server.o: game/scoreboard.h shared/hash.h game/stf.cpp game/ctf.cpp
-game/server.o: game/duel.cpp game/ai.cpp game/auth.h game/extinfo.h
+game/server.o: game/scoreboard.h shared/hash.h game/stfmode.h game/ctfmode.h
+game/server.o: game/duelmut.h game/aiman.h game/auth.h game/extinfo.h
 game/stf.o: shared/pch.h engine/engine.h shared/cube.h shared/tools.h
 game/stf.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
 game/stf.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
