@@ -7,6 +7,11 @@
 #define DNF 100.0f			// for normalized vectors
 #define DVELF 1.0f			// for playerspeed based velocity vectors
 
+#ifdef GAMESERVER
+#define GVAR(name)			(sv_##name)
+#else
+#define GVAR(name)			(name)
+#endif
 enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
@@ -457,17 +462,10 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
-#ifdef GAMESERVER
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? sv_instaspawnweapon : sv_spawnweapon))
-#define m_spawndelay(a,b)	int((m_stf(a) ? sv_stfspawndelay : (m_ctf(a) ? sv_ctfspawndelay : sv_spawndelay))*(m_insta(a, b) ? sv_instaspawnscale : 1)*(m_paint(a, b) ? sv_paintspawnscale : 1)*1000)+(m_paint(a, b) ? sv_paintfreezetime*1000 : 0)
-#define m_noitems(a,b)		(m_paint(a,b) || (sv_itemsallowed < (m_insta(a,b) ? 2 : 1)))
-#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : sv_maxhealth)
-#else
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? instaspawnweapon : spawnweapon))
-#define m_spawndelay(a,b)	int((m_stf(a) ? stfspawndelay : (m_ctf(a) ? ctfspawndelay : spawndelay))*(m_insta(a, b) ? instaspawnscale : 1)*(m_paint(a, b) ? paintspawnscale : 1)*1000)+(m_paint(a, b) ? paintfreezetime*1000 : 0)
-#define m_noitems(a,b)		(m_paint(a,b) || (itemsallowed < (m_insta(a,b) ? 2 : 1)))
-#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : maxhealth)
-#endif
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
+#define m_spawndelay(a,b)	int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)+(m_paint(a, b) ? GVAR(paintfreezetime)*1000 : 0)
+#define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
+#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
 // network messages codes, c2s, c2c, s2c
 enum

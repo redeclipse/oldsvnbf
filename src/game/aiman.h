@@ -48,8 +48,7 @@ namespace aiman
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-					n = sv_botminskill < sv_botmaxskill ? sv_botminskill : sv_botmaxskill;
+				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), GVAR(botmaxskill));
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.aitype = type;
@@ -198,8 +197,7 @@ namespace aiman
 
 	void checksetup()
 	{
-		int m = sv_botmaxskill > sv_botminskill ? sv_botmaxskill : sv_botminskill,
-			n = sv_botmaxskill < sv_botminskill ? sv_botmaxskill : sv_botminskill;
+		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botmaxskill), GVAR(botminskill));
 		loopv(clients) if(clients[i]->state.isai(-1, false))
 		{
 			clientinfo *ci = clients[i];
@@ -227,14 +225,14 @@ namespace aiman
 			{
 				if(m_play(gamemode) && !autooverride)
 				{
-					int balance = int(sv_botbalance), minamt = balance;
+					int balance = int(GVAR(botbalance)), minamt = balance;
 					if(m_team(gamemode, mutators))
 					{
-						balance = max(int(numplayers*2*sv_botbalance), minamt);
+						balance = max(int(numplayers*2*GVAR(botbalance)), minamt);
 						int numt = numteams(gamemode, mutators), offt = balance%numt;
 						if(offt) balance += numt-offt;
 					}
-					else balance = max(int(numplayers*sv_botbalance), minamt);
+					else balance = max(int(numplayers*GVAR(botbalance)), minamt);
 					while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 					while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 				}
