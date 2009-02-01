@@ -496,7 +496,7 @@ namespace entities
 											f.lastuse = f.lastemit = e.lastemit;
 											execlink(d, n, true);
 											execlink(d, t, true);
-											if(d == world::player1) world::resetstates(ST_VIEW);
+											if(d == world::player1) world::resetcamera();
 											teleported = true;
 											break;
 										}

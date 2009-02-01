@@ -798,6 +798,14 @@
 			<Option target="client-dbg" />
 			<Option target="profile" />
 		</Unit>
+		<Unit filename="game\aiman.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+		</Unit>
 		<Unit filename="game\auth.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -824,8 +832,13 @@
 			<Option target="profile" />
 			<Option target="server" />
 		</Unit>
-		<Unit filename="game\duel.cpp">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="game\ctfmode.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
 		</Unit>
 		<Unit filename="game\entities.cpp">
 			<Option target="client" />
@@ -890,6 +903,14 @@
 			<Option target="daemon-dbg" />
 			<Option target="profile" />
 			<Option target="server" />
+		</Unit>
+		<Unit filename="game\stfmode.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
 		</Unit>
 		<Unit filename="game\vars.h">
 			<Option target="client" />

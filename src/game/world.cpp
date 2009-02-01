@@ -50,12 +50,15 @@ namespace world
 	VARP(editdeadzone, 0, 10, 100);
 	VARP(editpanspeed, 1, 20, INT_MAX-1);
 
-	VARP(spectv, 0, 1, 1); // 0 = float, 1 = tv
+	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv, 2 = follow
 	VARP(spectvtime, 0, 30000, INT_MAX-1);
+	//VAR(specfollowing, 0, 0, INT_MAX-1);
 	VARP(specmouse, 0, 0, 2);
 	VARP(specfov, 1, 120, 179);
 	VARP(specdeadzone, 0, 10, 100);
 	VARP(specpanspeed, 1, 20, INT_MAX-1);
+	FVARP(spectvspeed, 0.1f, 2.f, 1000);
+	FVARP(deathcamspeed, 0.1f, 2.f, 1000);
 
 	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
@@ -92,6 +95,17 @@ namespace world
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
 	ICOMMAND(getintermission, "", (), intret(intermission ? 1 : 0));
+
+	ICOMMAND(specmodeswitch, "", (), {
+		switch(specmode)
+		{
+			case 0: specmode = 1; break;
+			case 1: default: specmode = 0; break;
+			//case 2: default: specmode = 0; break;
+		}
+	});
+
+	//ICOMMAND(specfollow, "i", (int *d), specfollower(*d));
 
 	void start()
 	{
@@ -222,8 +236,29 @@ namespace world
 
 	bool tvmode()
 	{
-		return player1->state == CS_SPECTATOR && spectv;
+		return player1->state == CS_SPECTATOR && specmode == 1;
 	}
+
+	/*
+	gameent *following()
+	{
+		if(player1->state == CS_SPECTATOR && specmode == 2)
+		{
+			gameent *d = (gameent *)iterdynents(specfollowing);
+			if(!d || d->state == CS_EDITING || d->state == CS_SPECTATOR || d == player1)
+			{
+				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->state != CS_EDITING && d->state != CS_SPECTATOR)
+				{
+					specfollowing = i;
+					return d;
+				}
+			}
+			else return d;
+			specmode = 1;
+		}
+		return NULL;
+	}
+	*/
 
     bool allowmove(physent *d)
     {
@@ -258,10 +293,10 @@ namespace world
 		}
 	}
 
-	void spawneffect(const vec &o, int colour, int radius, float size, int num, int fade, float vel)
+	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
 		part_create(PART_ELECTRIC_SLENS, fade, o, colour, size);
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, num, fade, o, size, vel);
+		regularshape(PART_ELECTRIC, radius*2, colour, 21, 25, fade, o, size, 20.f);
 		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
 	}
 
@@ -285,28 +320,24 @@ namespace world
 	}
 	ICOMMAND(mode, "ii", (int *val, int *mut), setmode(*val, *mut));
 
-	void resetstates(int types)
+	void resetcamera()
 	{
-		if(types & ST_CAMERA)
-		{
-			lastcamera = 0;
-			zoomset(false, 0);
-		}
-		if(types & ST_CURSOR) resetcursor();
-		if(types & ST_GAME)
-		{
-			if(hud::sb.scoreson) hud::sb.showscores(false);
-			cleargui();
-			lasthit = 0;
-		}
-		if(types & ST_SPAWNS)
-		{
-			projs::reset();
-			// reset perma-state
-			gameent *d;
-			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-				d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
-		}
+		lastcamera = 0;
+		zoomset(false, 0);
+		resetcursor();
+	}
+
+	void resetworld()
+	{
+		if(hud::sb.scoreson) hud::sb.showscores(false);
+		cleargui();
+		lasthit = 0;
+	}
+
+	void resetstate()
+	{
+		resetworld();
+		resetcamera();
 	}
 
 	void heightoffset(gameent *d, bool local)
@@ -718,7 +749,14 @@ namespace world
         preload();
         entities::mapstart();
 		client::mapstart();
-        resetstates(ST_ALL);
+		projs::reset();
+		// reset perma-state
+		resetworld();
+		resetcamera();
+		gameent *d;
+		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
+			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
+
         // prevent the player from being in the middle of nowhere if he doesn't get spawned
         entities::spawnplayer(player1, -1, true);
 	}
@@ -951,25 +989,6 @@ namespace world
 		}
 	}
 
-	void scaleyawpitch(float &yaw, float &pitch, float newyaw, float newpitch, int frame, int speed)
-	{
-		if(speed && frame)
-		{
-			float amt = float(lastmillis-frame)/float(speed),
-				offyaw = newyaw-yaw, offpitch = newpitch-pitch;
-			if(offyaw > 180.f) offyaw -= 360.f;
-			if(offyaw < -180.f) offyaw += 360.f;
-			yaw += offyaw*amt;
-			pitch += offpitch*amt;
-		}
-		else
-		{
-			yaw = newyaw;
-			pitch = newpitch;
-		}
-		fixrange(yaw, pitch);
-	}
-
 	struct camstate
 	{
 		int ent, idx;
@@ -999,33 +1018,40 @@ namespace world
 		return 0;
 	}
 
-	#define scalecameraangle \
-		{ \
-			if(camera1->yaw < yaw-180.0f) camera1->yaw += 360.0f; \
-			if(camera1->yaw > yaw+180.0f) camera1->yaw -= 360.0f; \
-			float amt = float(curtime)/1000.f, offyaw = fabs(yaw-camera1->yaw)*amt, offpitch = fabs(pitch-camera1->pitch)*amt*0.25f; \
-			if(yaw > camera1->yaw) { \
-				camera1->yaw += offyaw; \
-				if(yaw < camera1->yaw) camera1->yaw = yaw; \
-			} \
-			else if(yaw < camera1->yaw) \
-			{ \
-				camera1->yaw -= offyaw; \
-				if(yaw > camera1->yaw) camera1->yaw = yaw; \
-			} \
-			if(pitch > camera1->pitch) \
-			{ \
-				camera1->pitch += offpitch; \
-				if(pitch < camera1->pitch) camera1->pitch = pitch; \
-			} \
-			else if(pitch < camera1->pitch) \
-			{ \
-				camera1->pitch -= offpitch; \
-				if(pitch > camera1->pitch) camera1->pitch = pitch; \
-			} \
-			yaw = camera1->aimyaw = camera1->yaw; \
-			pitch = camera1->aimpitch = camera1->pitch; \
+	void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch)
+	{
+		float dist = from.dist(pos);
+		yaw = -(float)atan2(pos.x-from.x, pos.y-from.y)/PI*180+180;
+		pitch = asin((pos.z-from.z)/dist)/RAD;
+	}
+
+	void scaleyawpitch(float &yaw, float &pitch, float targyaw, float targpitch, float frame, float scale)
+	{
+		if(yaw < targyaw-180.0f) yaw += 360.0f;
+		if(yaw > targyaw+180.0f) yaw -= 360.0f;
+		float offyaw = fabs(targyaw-yaw)*frame, offpitch = fabs(targpitch-pitch)*frame*scale;
+		if(targyaw > yaw)
+		{
+			yaw += offyaw;
+			if(targyaw < yaw) yaw = targyaw;
 		}
+		else if(targyaw < yaw)
+		{
+			yaw -= offyaw;
+			if(targyaw > yaw) yaw = targyaw;
+		}
+		if(targpitch > pitch)
+		{
+			pitch += offpitch;
+			if(targpitch < pitch) pitch = targpitch;
+		}
+		else if(targpitch < pitch)
+		{
+			pitch -= offpitch;
+			if(targpitch > pitch) pitch = targpitch;
+		}
+		fixrange(yaw, pitch);
+	}
 
 	void checkcamera()
 	{
@@ -1179,7 +1205,12 @@ namespace world
 			vec dir = vec(cam->dir).sub(camera1->o).normalize();
 			float yaw = camera1->yaw, pitch = camera1->pitch;
 			vectoyawpitch(dir, yaw, pitch);
-			if(cam == oldcam) { scalecameraangle; }
+			if(cam == oldcam)
+			{
+				scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*spectvspeed, 2.f);
+				camera1->aimyaw = camera1->yaw;
+				camera1->aimpitch = camera1->pitch;
+			}
 			else
 			{
 				camera1->yaw = camera1->aimyaw = yaw;
@@ -1254,7 +1285,9 @@ namespace world
 				vec dir = vec(ragdollcenter(player1)).sub(camera1->o).normalize();
 				float yaw = camera1->yaw, pitch = camera1->pitch;
 				vectoyawpitch(dir, yaw, pitch);
-				scalecameraangle;
+				scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
+				camera1->aimyaw = camera1->yaw;
+				camera1->aimpitch = camera1->pitch;
 			}
 			else if(player1->state == CS_WAITING)
 			{
