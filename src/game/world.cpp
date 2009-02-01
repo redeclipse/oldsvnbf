@@ -73,7 +73,8 @@ namespace world
 	VARP(snipepanspeed, 1, 10, INT_MAX-1);
 	VARP(snipecarbinefov, 45, 45, 150);
 	VARP(sniperiflefov, 20, 20, 150);
-	VARP(snipetime, 1, 300, 10000);
+	VARP(sniperifletime, 1, 250, 10000);
+	VARP(snipecarbinetime, 1, 150, 10000);
 
 	VARP(pronetype, 0, 0, 1);
 	VARP(pronemouse, 0, 0, 2);
@@ -177,7 +178,7 @@ namespace world
 		zoomset(false, 0);
 		return false;
 	}
-	int zoomtime() { return weaptype[player1->weapselect].snipes ? snipetime : pronetime; }
+	int zoomtime() { return weaptype[player1->weapselect].snipes ? (player1->weapselect == WEAPON_RIFLE ? sniperifletime : snipecarbinetime) : pronetime; }
 
 	bool inzoom()
 	{
@@ -899,7 +900,7 @@ namespace world
 		if(inzoom())
 		{
 			int frame = lastmillis-lastzoom, f = pronefov,
-				t = weaptype[player1->weapselect].snipes ? snipetime : pronetime;
+				t = weaptype[player1->weapselect].snipes ? (player1->weapselect == WEAPON_RIFLE ? sniperifletime : snipecarbinetime) : pronetime;
 			if(weaptype[player1->weapselect].snipes) switch(player1->weapselect)
 			{
 				case WEAPON_CARBINE: f = snipecarbinefov; break;

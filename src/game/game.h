@@ -1090,6 +1090,7 @@ struct gameent : dynent, gamestate
 		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
+		weight = 150; // so we can control the 'gravity' feel
 		respawn(-1, 100);
 	}
 	~gameent()

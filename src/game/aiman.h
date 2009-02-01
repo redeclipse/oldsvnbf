@@ -33,12 +33,13 @@ namespace aiman
 		return -1;
 	}
 
-	bool addai(int type, int skill)
+	bool addai(int type, int skill, bool req)
 	{
 		loopv(clients) if(clients[i]->state.aitype == type && (clients[i]->state.ownernum < 0 || clients[i]->state.aireinit < 0))
 		{ // reuse a slot that was going to removed
 			clients[i]->state.ownernum = findaiclient();
 			clients[i]->state.aireinit = 1;
+			if(req) autooverride = true;
 			return true;
 		}
 		int cn = addclient(ST_REMOTE);
@@ -71,6 +72,7 @@ namespace aiman
 				}
 				else sendspawn(ci);
 				ci->online = true;
+				if(req) autooverride = true;
 				return true;
 			}
 			delclient(cn);
@@ -108,11 +110,17 @@ namespace aiman
 		refreshai();
 	}
 
-	bool delai(int type)
+	bool delai(int type, bool req)
 	{
 		loopvrev(clients) if(clients[i]->state.isai(type, false))
 		{
 			deleteai(clients[i]);
+			if(req) autooverride = true;
+			return true;
+		}
+		if(req)
+		{
+			autooverride = false;
 			return true;
 		}
 		return false;
@@ -208,6 +216,7 @@ namespace aiman
 	void clearai()
 	{ // clear and remove all ai immediately
 		loopvrev(clients) if(clients[i]->state.isai()) deleteai(clients[i]);
+		autooverride = false;
 	}
 
 	void checkai()
@@ -216,7 +225,7 @@ namespace aiman
 		{
 			if(!notgotinfo)
 			{
-				if(m_play(gamemode) && sv_botbalance > 0.f)
+				if(m_play(gamemode) && !autooverride)
 				{
 					int balance = int(sv_botbalance), minamt = balance;
 					if(m_team(gamemode, mutators))
@@ -241,17 +250,7 @@ namespace aiman
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else
-			{
-				if(sv_botbalance > 0.f)
-				{
-					setfvar("sv_botbalance", 0.f, true);
-					s_sprintfd(val)("%.f", 0.f);
-					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-				}
-				if(!addai(AI_BOT, skill))
-					srvmsgf(ci->clientnum, "failed to create or assign bot");
-			}
+			else if(!addai(AI_BOT, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
 
@@ -260,17 +259,7 @@ namespace aiman
 		if(haspriv(ci, PRIV_MASTER, true))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else
-			{
-				if(sv_botbalance > 0.f)
-				{
-					setfvar("sv_botbalance", 0.f, true);
-					s_sprintfd(val)("%.f", 0.f);
-					sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, "botbalance", val);
-				}
-				if(!delai(AI_BOT))
-					srvmsgf(ci->clientnum, "failed to remove any bots");
-			}
+			else if(!delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
 		}
 	}
 }
