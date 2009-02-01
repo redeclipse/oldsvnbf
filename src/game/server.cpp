@@ -369,7 +369,7 @@ namespace server
 			}
 		});
 		execfile("servexec.cfg");
-		changemap(sv_defaultmap, sv_defaultmode, sv_defaultmuts);
+		changemap(GVAR(defaultmap), GVAR(defaultmode), GVAR(defaultmuts));
 	}
 
 	void start() { cleanup(); }
@@ -500,17 +500,17 @@ namespace server
 		static string mapchosen;
 		if(suggest && *suggest) s_strcpy(mapchosen, suggest);
 		else *mapchosen = 0;
-		if(sv_maprotate)
+		if(GVAR(maprotate))
 		{
-			const char *maplist = sv_mainmaps;
-			if(m_lobby(gamemode)) maplist = sv_lobbymaps;
-			else if(m_mission(gamemode)) maplist = sv_missionmaps;
-			else if(m_stf(gamemode)) maplist = sv_stfmaps;
-			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? sv_mctfmaps : sv_ctfmaps;
+			const char *maplist = GVAR(mainmaps);
+			if(m_lobby(gamemode)) maplist = GVAR(lobbymaps);
+			else if(m_mission(gamemode)) maplist = GVAR(missionmaps);
+			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
+			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), c = -1;
-				if(sv_maprotate > 1) c = n ? rnd(n) : 0;
+				if(GVAR(maprotate) > 1) c = n ? rnd(n) : 0;
 				else loopi(n)
 				{
 					char *maptxt = indexlist(maplist, i);
@@ -533,7 +533,7 @@ namespace server
 				}
 			}
 		}
-		return *mapchosen ? mapchosen : sv_defaultmap;
+		return *mapchosen ? mapchosen : GVAR(defaultmap);
 	}
 
 	bool canload(char *type)
@@ -547,12 +547,12 @@ namespace server
 	{
 		if(minremain)
 		{
-			if(sv_timelimit != oldtimelimit)
+			if(GVAR(timelimit) != oldtimelimit)
 			{
-				if(sv_timelimit) gamelimit += (sv_timelimit-oldtimelimit)*60000;
-				oldtimelimit = sv_timelimit;
+				if(GVAR(timelimit)) gamelimit += (GVAR(timelimit)-oldtimelimit)*60000;
+				oldtimelimit = GVAR(timelimit);
 			}
-			if(sv_timelimit)
+			if(GVAR(timelimit))
 			{
 				if(gamemillis >= gamelimit) minremain = 0;
 				else minremain = (gamelimit-gamemillis+60000-1)/60000;
@@ -570,7 +570,7 @@ namespace server
 		if(!minremain && !interm)
 		{
 			maprequest = false;
-			interm = gamemillis+(sv_intermlimit*1000);
+			interm = gamemillis+(GVAR(intermlimit)*1000);
 		}
 	}
 
@@ -664,12 +664,12 @@ namespace server
 
 	int pickspawn(clientinfo *ci)
 	{
-		if(totalspawns && sv_spawnrotate)
+		if(totalspawns && GVAR(spawnrotate))
 		{
 			int team = m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 			if(!spawns[team].ents.empty())
 			{
-				switch(sv_spawnrotate)
+				switch(GVAR(spawnrotate))
 				{
 					case 1: default: spawns[team].spawncycle++; break;
 					case 2:
@@ -1063,7 +1063,7 @@ namespace server
 		if(m_team(gamemode, mutators))
 		{
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1;
-			if(sv_teambalance || team < 0)
+			if(GVAR(teambalance) || team < 0)
 			{
 				teamscore teamscores[TEAM_NUM] = {
 					teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
@@ -1087,7 +1087,7 @@ namespace server
 				loopi(numteams(gamemode, mutators))
 				{
 					teamscore &ts = teamscores[i];
-					switch(sv_teambalance)
+					switch(GVAR(teambalance))
 					{
 						case 1: default:
 						{
@@ -1159,14 +1159,14 @@ namespace server
 		servstate &ts = ci->state;
 		vector<droplist> drop;
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!discon && sv_kamikaze && (sv_kamikaze > 2 || (ts.hasweap(WEAPON_GL, sweap) && (sv_kamikaze > 1 || ts.weapselect == WEAPON_GL))))
+		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAPON_GL, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAPON_GL))))
 		{
 			ts.weapshots[WEAPON_GL].add(-1);
 			droplist &d = drop.add();
 			d.weap = WEAPON_GL;
 			d.ent = -1;
 		}
-		if(!m_noitems(gamemode, mutators) && (discon || sv_itemdropping))
+		if(!m_noitems(gamemode, mutators) && (discon || GVAR(itemdropping)))
 		{
 			loopi(WEAPON_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 			{
@@ -1180,7 +1180,7 @@ namespace server
 						d.ent = ts.entid[i];
 					}
 					sents[ts.entid[i]].spawned = false;
-					sents[ts.entid[i]].millis = discon ? gamemillis-(sv_itemspawntime*1000) : gamemillis;
+					sents[ts.entid[i]].millis = discon ? gamemillis-(GVAR(itemspawntime)*1000) : gamemillis;
 				}
 			}
 		}
@@ -1206,16 +1206,16 @@ namespace server
 		}
 		maprequest = mapsending = false;
         stopdemo();
-		gamemode = mode >= 0 ? mode : sv_defaultmode;
-		mutators = muts >= 0 ? muts : sv_defaultmuts;
+		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
+		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
 		if(!m_play(gamemode)) aiman::clearai();
 		else aiman::autooverride = false;
 		numplayers = gamemillis = interm = 0;
-		oldtimelimit = sv_timelimit;
-		minremain = sv_timelimit ? sv_timelimit : -1;
-		gamelimit = sv_timelimit ? minremain*60000 : 0;
-		s_strcpy(smapname, s && *s ? s : sv_defaultmap);
+		oldtimelimit = GVAR(timelimit);
+		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
+		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
+		s_strcpy(smapname, s && *s ? s : GVAR(defaultmap));
 		sents.setsize(0);
 		setupspawns(false);
 		notgotinfo = true;
@@ -1554,26 +1554,26 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		servstate &ts = target->state;
-		int sp = sv_spawnprotecttime*1000, pf = m_paint(gamemode, mutators) ? sv_paintfreezetime*1000 : 0;
+		int sp = GVAR(spawnprotecttime)*1000, pf = m_paint(gamemode, mutators) ? GVAR(paintfreezetime)*1000 : 0;
 		if(ts.spawnprotect(gamemillis, sp, pf) || ts.damageprotect(gamemillis, pf)) return;
 
 		int realdamage = damage, realflags = flags, nodamage = 0;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
-		if(!m_play(gamemode) || (!sv_teamdamage && m_team(gamemode, mutators) && actor->team == target->team && actor != target))
+		if(!m_play(gamemode) || (!GVAR(teamdamage) && m_team(gamemode, mutators) && actor->team == target->team && actor != target))
 			nodamage++;
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
 		if(hithurts(realflags))
 		{
-			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*sv_damagescale);
-			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*sv_damagescale);
-			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*sv_damagescale);
-			else realdamage = int(realdamage*sv_damagescale);
+			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
+			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*GVAR(damagescale));
+			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*GVAR(damagescale));
+			else realdamage = int(realdamage*GVAR(damagescale));
 			ts.dodamage(gamemillis, (ts.health -= realdamage));
 			actor->state.damage += realdamage;
 		}
-		else realdamage = int(realdamage*0.5f*sv_damagescale);
+		else realdamage = int(realdamage*0.5f*GVAR(damagescale));
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
 		else realflags &= ~HIT_KILL;
@@ -1665,13 +1665,13 @@ namespace server
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
 			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 		{
 			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
 			return;
 		}
 		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
@@ -1688,12 +1688,12 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", e.weap);
 			return;
 		}
 		gs.weapswitch(e.weap, e.millis);
@@ -1705,12 +1705,12 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", e.weap);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", e.weap);
 			return;
 		}
 		gs.setweapstate(e.weap, WPSTATE_RELOAD, weaptype[e.weap].rdelay, e.millis);
@@ -1723,13 +1723,13 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
 		if(!gs.canuse(sents[e.ent].type, attr, sents[e.ent].attr[1], sents[e.ent].attr[2], sents[e.ent].attr[3], sents[e.ent].attr[4], sweap, e.millis))
 		{
-			if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", e.ent);
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", e.ent);
 			return;
 		}
 		if(!sents[e.ent].spawned && !(sents[e.ent].attr[1]&WEAPFLAG_FORCED))
@@ -1746,13 +1746,13 @@ namespace server
 			}
 			if(!found)
 			{
-				if(sv_serverdebug) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", e.ent);
+				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", e.ent);
 				return;
 			}
 		}
 
 		int weap = -1, dropped = -1;
-		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= sv_maxcarry) weap = gs.drop(attr, sweap);
+		if(sents[e.ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= GVAR(maxcarry)) weap = gs.drop(attr, sweap);
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
@@ -1873,7 +1873,7 @@ namespace server
 			{
 				if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
 				{
-					if(!finditem(i, true, sv_itemspawntime*1000))
+					if(!finditem(i, true, GVAR(itemspawntime)*1000))
 					{
 						loopvk(clients)
 						{
@@ -1900,13 +1900,13 @@ namespace server
 			if(ci->state.state == CS_ALIVE)
 			{
 				int m = m_maxhealth(gamemode, mutators);
-				if(m_regen(gamemode, mutators) && ci->state.health < m && sv_regenhealth && sv_regendelay && sv_regentime)
+				if(m_regen(gamemode, mutators) && ci->state.health < m && GVAR(regenhealth) && GVAR(regendelay) && GVAR(regentime))
 				{
 					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
-					if((!ci->state.lastregen && lastpain >= sv_regendelay*1000) || (ci->state.lastregen && lastregen >= sv_regentime*1000))
+					if((!ci->state.lastregen && lastpain >= GVAR(regendelay)*1000) || (ci->state.lastregen && lastregen >= GVAR(regentime)*1000))
 					{
-						int health = ci->state.health - (ci->state.health % sv_regenhealth);
-						ci->state.health = min(health + sv_regenhealth, m);
+						int health = ci->state.health - (ci->state.health % GVAR(regenhealth));
+						ci->state.health = min(health + GVAR(regenhealth), m);
 						ci->state.lastregen = gamemillis;
 						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 					}
@@ -1957,17 +1957,17 @@ namespace server
 			}
 
 			if((m_timed(gamemode) && numclients(-1, false, true)) &&
-				((sv_timelimit != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
+				((GVAR(timelimit) != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 					checkintermission();
 
 			if(interm && gamemillis >= interm) // wait then call for next map
 			{
-				if(sv_votelimit && !maprequest)
+				if(GVAR(votelimit) && !maprequest)
 				{
 					if(demorecord) enddemorecord();
 					sendf(-1, 1, "ri", SV_NEWGAME);
 					maprequest = true;
-					interm = gamemillis+(sv_votelimit*1000);
+					interm = gamemillis+(GVAR(votelimit)*1000);
 				}
 				else
 				{
@@ -2392,7 +2392,7 @@ namespace server
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
 					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay);
-					if(wait && sdelay-wait <= min(sdelay, sv_spawndelaywait*1000)) break;
+					if(wait && sdelay-wait <= min(sdelay, GVAR(spawndelaywait)*1000)) break;
 					int nospawn = 0;
 					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
@@ -2654,7 +2654,7 @@ namespace server
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
-								sents[n].millis -= (sv_itemspawntime*1000)-1;
+								sents[n].millis -= (GVAR(itemspawntime)*1000)-1;
 						}
 					}
 					if(notgotinfo)
@@ -2907,7 +2907,7 @@ namespace server
 						sents[n].spawned = false; // wait a bit then load 'em up
 						sents[n].millis = gamemillis;
 						if(enttype[sents[n].type].usetype == EU_ITEM)
-							sents[n].millis -= (sv_itemspawntime*1000)-2000;
+							sents[n].millis -= (GVAR(itemspawntime)*1000)-2000;
 					}
 					break;
 				}

@@ -129,7 +129,7 @@ struct stfservmode : stfstate, servmode
 
 	void endcheck()
 	{
-		int maxscore = sv_stflimit ? sv_stflimit : INT_MAX-1;
+		int maxscore = GVAR(stflimit) ? GVAR(stflimit) : INT_MAX-1;
 		loopi(numteams(gamemode, mutators))
 		{
 			int lastteam = i+TEAM_FIRST;
@@ -140,7 +140,7 @@ struct stfservmode : stfstate, servmode
 				return;
 			}
 		}
-		if(sv_stffinish)
+		if(GVAR(stffinish))
 		{
 			int lastteam = TEAM_NEUTRAL;
 			loopv(flags)
