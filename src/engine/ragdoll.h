@@ -306,7 +306,7 @@ void ragdolldata::constrain()
 FVAR(ragdollwaterfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
-FVAR(ragdollgravity, 0, 1.1f, 1000);
+FVAR(ragdollgravity, 0, 1.f, 1000);
 VAR(ragdollexpireoffset, 0, 1000, 30000);
 VAR(ragdollexpiremillis, 1, 1000, 30000);
 VAR(ragdolltimestepmin, 1, 5, 50);
