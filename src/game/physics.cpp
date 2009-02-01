@@ -107,12 +107,12 @@ namespace physics
 
 	float jumpvelocity(physent *d)
 	{
-		return jumpvel*(d->weight/100.f)*(d->inliquid ? liquidscale : 1.f)*jumpscale;
+		return jumpvel*(d->inliquid ? liquidscale : 1.f)*jumpscale;
 	}
 
 	float impulsevelocity(physent *d)
 	{
-		return impulsevel*(d->weight/100.f)*jumpscale;
+		return impulsevel*jumpscale;
 	}
 
 	float gravityforce(physent *d)
@@ -131,9 +131,9 @@ namespace physics
 	{
 		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
 		{
-			return d->maxspeed*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f)*(float(d->weight)/100.f)*speedscale;
+			return d->maxspeed*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f)*speedscale;
 		}
-		return d->maxspeed*(float(movespeed)/100.f)*(float(d->weight)/100.f)*speedscale;
+		return d->maxspeed*(float(movespeed)/100.f)*speedscale;
 	}
 
 	bool movepitch(physent *d)
@@ -499,6 +499,7 @@ namespace physics
 			pl->lastimpulse = 0;
 			if(world::allowmove(pl) && pl->jumping)
 			{
+				pl->falling = vec(0, 0, 0);
 				pl->vel.z += max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
 				playsound(S_JUMP, pl->o, pl);
@@ -512,6 +513,7 @@ namespace physics
 			vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
 			dir.normalize();
 			dir.mul(impulsevelocity(pl));
+			pl->falling = vec(0, 0, 0);
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
 			pl->jumping = false;

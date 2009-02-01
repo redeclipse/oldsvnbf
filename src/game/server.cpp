@@ -253,10 +253,11 @@ namespace server
 	};
 
 	namespace aiman {
+		bool autooverride = false;
 		extern int findaiclient(int exclude = -1);
-		extern bool addai(int type, int skill);
+		extern bool addai(int type, int skill, bool req = false);
 		extern void deleteai(clientinfo *ci);
-		extern bool delai(int type);
+		extern bool delai(int type, bool req = false);
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void refreshai();
@@ -622,6 +623,7 @@ namespace server
 
 	void setupspawns(bool update, int players = 0)
 	{
+		aiman::autooverride = false;
 		numplayers = totalspawns = 0;
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
@@ -1208,6 +1210,7 @@ namespace server
 		mutators = muts >= 0 ? muts : sv_defaultmuts;
 		modecheck(&gamemode, &mutators);
 		if(!m_play(gamemode)) aiman::clearai();
+		else aiman::autooverride = false;
 		numplayers = gamemillis = interm = 0;
 		oldtimelimit = sv_timelimit;
 		minremain = sv_timelimit ? sv_timelimit : -1;
