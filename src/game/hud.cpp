@@ -562,16 +562,14 @@ namespace hud
 				if(shownotices > 1)
 				{
 					SEARCHBINDCACHE(actkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
-					pushfont("emphasis");
+					pushfont("default");
 					ty += draw_textx("Press [ \fs\fa%s\fS ] to exit", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
-					popfont();
 					if(shownotices > 2)
 					{
 						SEARCHBINDCACHE(actkey)("specmodeswitch", 1, 5, "\fs\fw, or \fS");
-						pushfont("default");
 						ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, world::tvmode() ? "look around" : "observe");
-						popfont();
 					}
+					popfont();
 				}
 			}
 
