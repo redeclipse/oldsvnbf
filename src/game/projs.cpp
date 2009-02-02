@@ -11,10 +11,10 @@ namespace projs
 	vector<hitmsg> hits;
 	vector<projent *> projs;
 
-	VARA(maxprojectiles, 0, 200, INT_MAX-1);
+	VARA(maxprojectiles, 0, 300, INT_MAX-1);
 	VARP(flamertrails, 0, 1, 1);
 	VARP(flamertraildelay, 1, 35, INT_MAX-1);
-	VARP(flamertraillength, 1, 350, INT_MAX-1);
+	VARA(flamertraillength, 1, 350, INT_MAX-1);
 
 	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
 	{
