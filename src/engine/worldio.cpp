@@ -644,7 +644,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.numpvs = 0;
 					newhdr.lightmaps = chdr.lightmaps;
 					newhdr.blendmap = 0;
-					memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*2);
+					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
+                    memcpy(&newhdr.gameid, &chdr.gameid, 4);
 					s_strcpy(oldmaptitle, chdr.maptitle);
 				}
 				else if(newhdr.version <= 32)
@@ -653,7 +654,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					endianswap(&chdr.worldsize, sizeof(int), 6);
 					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*4);
 					newhdr.blendmap = 0;
-					memcpy(&newhdr.gamever, &chdr.gamever, newhdr.headersize-sizeof(binary)-sizeof(int)*4);
+					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
+                    memcpy(&newhdr.gameid, &chdr.gameid, 4);
 					s_strcpy(oldmaptitle, chdr.maptitle);
 				}
 				else if(newhdr.version <= 33)
