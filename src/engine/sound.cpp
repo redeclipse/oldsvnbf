@@ -123,7 +123,7 @@ int findsound(const char *name, int vol, vector<soundslot> &sounds)
 	return -1;
 }
 
-int addsound(const char *name, int vol, int material, int maxrad, int minrad, vector<soundslot> &sounds)
+int addsound(const char *name, int vol, int material, int maxrad, int minrad, bool unique, vector<soundslot> &sounds)
 {
 	soundsample *sample = soundsamples.access(name);
 	if(!sample)
@@ -146,6 +146,10 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, ve
 
 		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
 	}
+    if(unique) 
+    {
+        loopv(sounds) if(sounds[i].sample == sample) return i;
+    }
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
 	slot.vol = vol >= 0 ? min(vol, 255) : 255;
@@ -155,8 +159,8 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, ve
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, gamesounds)));
-ICOMMAND(mapsound, "sisss", (char *n, int *v, char *m, char *w, char *x), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, mapsounds)));
+ICOMMAND(registersound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, gamesounds)));
+ICOMMAND(mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, mapsounds)));
 
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
