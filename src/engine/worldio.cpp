@@ -630,7 +630,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				#define BFGZCOMPAT(ver) \
 					bfgzcompat##ver chdr; \
 					memcpy(&chdr, &newhdr, sizeof(binary)); \
-					if(gzread(f, &chdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary)) \
+					if((size_t)newhdr.headersize > sizeof(chdr) || gzread(f, &chdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary)) \
 					{ \
 						conoutf("\frerror loading %s: malformatted header", mapname); \
 						gzclose(f); \
@@ -668,7 +668,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				}
 				else
 				{
-					if(gzread(f, &newhdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
+					if((size_t)newhdr.headersize > sizeof(newhdr) || gzread(f, &newhdr.worldsize, newhdr.headersize-sizeof(binary))!=newhdr.headersize-(int)sizeof(binary))
 					{
 						conoutf("\frerror loading %s: malformatted header", mapname);
 						gzclose(f);
