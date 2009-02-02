@@ -833,7 +833,7 @@ namespace world
 
     void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass)
     {
-        if(!p->owner || p->owner->type != ENT_PLAYER) return;
+        if(!p || !p->owner || p->owner->type != ENT_PLAYER) return;
 
         switch(type&0xFF)
         {
