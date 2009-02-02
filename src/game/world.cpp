@@ -110,7 +110,6 @@ namespace world
 
 	void start()
 	{
-		s_strcpy(player1->name, "unnamed");
 	}
 
 	char *gametitle() { return server::gamename(gamemode, mutators); }
@@ -1235,6 +1234,7 @@ namespace world
 
         if(connected())
         {
+        	if(!*world::player1->name && !guiactive()) showgui("name");
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING);
