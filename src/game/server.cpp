@@ -2059,7 +2059,21 @@ namespace server
 		putint(p, serverclients);		// 5
 		putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
 		sendstring(smapname, p);
-		sendstring(serverdesc, p);
+		if(*serverdesc) sendstring(serverdesc, p);
+		else
+		{
+			#ifdef STANDALONE
+			sendstring("umanned", p);
+			#else
+			char *ret = executeret("getname");
+			if(ret)
+			{
+				sendstring(ret, p);
+				delete[] ret;
+			}
+			else sendstring("unnamed", p);
+			#endif
+		}
 		sendqueryreply(p);
 	}
 
