@@ -146,16 +146,23 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 
 		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
 	}
+    if(vol < 0 || vol > 255) vol = 255;
+    if(maxrad <= 0) maxrad = -1;
+    if(minrad < 0) minrad = -1;
     if(unique) 
     {
-        loopv(sounds) if(sounds[i].sample == sample) return i;
+        loopv(sounds) 
+        {
+            soundslot &slot = sounds[i];
+            if(slot.sample == sample && slot.vol == vol && slot.material == material && slot.maxrad == maxrad && slot.minrad == minrad) return i;
+        }
     }
 	soundslot &slot = sounds.add();
 	slot.sample = sample;
-	slot.vol = vol >= 0 ? min(vol, 255) : 255;
+	slot.vol = vol;
 	slot.material = material;
-	slot.maxrad = maxrad > 0 ? maxrad : -1; // use these values if none are supplied when playing
-	slot.minrad = minrad >= 0 ? minrad : -1;
+	slot.maxrad = maxrad; // use these values if none are supplied when playing
+	slot.minrad = minrad;
 	return sounds.length()-1;
 }
 
