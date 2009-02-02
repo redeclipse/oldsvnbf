@@ -223,7 +223,7 @@ namespace server
 			events.setsizenodelete(0);
             targets.setsizenodelete(0);
             timesync = false;
-            lastevent = 0;
+            lastevent = gameoffset = 0;
 		}
 
 		void reset()
@@ -1665,7 +1665,7 @@ namespace server
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
 			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1688,7 +1688,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1705,7 +1705,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1723,7 +1723,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
+			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
@@ -1936,7 +1936,7 @@ namespace server
 		{
 			gamemillis += curtime;
 			if(m_demo(gamemode)) readdemo();
-			else if(minremain)
+			else if(!interm)
 			{
 				processevents();
 				checkents();
@@ -2543,6 +2543,7 @@ namespace server
 									sents[ent].spawned = !sents[ent].spawned;
 									commit = true;
 								}
+								else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 							case TR_LINK:
@@ -2553,10 +2554,13 @@ namespace server
 									sents[ent].spawned = true;
 									commit = true;
 								}
+								else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+								break;
 							}
 						}
 						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 					}
+					else if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
 					break;
 				}
 
