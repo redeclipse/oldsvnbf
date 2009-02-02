@@ -592,12 +592,12 @@ static void fixoversizedcubes(cube *c, int size)
 bool load_world(const char *mname, bool temp)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
-	loop(tempfile, 2) if(!temp || tempfile)
+	loop(tempfile, 2) if(tempfile || temp)
 	{
 		loop(format, MAP_MAX)
 		{
 			setnames(mname, format);
-			if(tempfile) loopk(2)
+			if(!tempfile) loopk(2)
 			{
 				s_sprintfd(s)("temp/%s", k ? mapfile : mapname);
 				s_strcpy(k ? mapfile : mapname, s);

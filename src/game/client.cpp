@@ -1031,7 +1031,12 @@ namespace client
 					needsmap = false;
 					changemapserv(hasmap && getit != 1 ? text : NULL, mode, muts, getit == 2);
 					mapchanged = true;
-					if(needsmap && getit != 1) getmap();
+					if(needsmap && !getit)
+					{
+						conoutf("\fcserver requested map change [%d] to %s, and we need it", getit, hasmap && getit != 1 ? text : "<temp>");
+						getmap();
+					}
+					else if(getit == 2) needsmap = false; // we failed sir
 					break;
 				}
 
