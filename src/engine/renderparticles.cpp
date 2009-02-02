@@ -122,7 +122,7 @@ struct partrenderer
 	{
 		vec o, d;
 		int blend, ts;
-		calc(p, blend, ts, o, d);
+		calc(p, blend, ts, o, d, false);
 		if(blend > 0)
 		{
 			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
