@@ -369,6 +369,8 @@ COMMAND(showgui, "s");
 COMMAND(guistayopen, "s");
 COMMAND(guinoautotab, "s");
 
+ICOMMAND(guicount, "", (), intret(guistack.length()));
+
 COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");

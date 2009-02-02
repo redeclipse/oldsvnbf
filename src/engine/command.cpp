@@ -1069,6 +1069,7 @@ char *gettime(char *format)
 	return buf;
 }
 ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
+ICOMMAND(getmillis, "", (), intret(lastmillis));
 
 int gzgetint(gzFile f)
 {
