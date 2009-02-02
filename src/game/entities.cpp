@@ -838,13 +838,14 @@ namespace entities
 
 	void editent(int i)
 	{
-        clearentcache();
-
 		extentity &e = *ents[i];
 		if(e.type == NOTUSED) linkclear(i);
 		fixentity(e);
 		if(m_edit(world::gamemode))
+		{
 			client::addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]); // FIXME
+			clearentcache();
+		}
 	}
 
 	float dropheight(entity &e)
@@ -1055,10 +1056,17 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
+		static bool newnodes = false;
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			if((dropwaypoints || (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000)) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
+			bool autodrop = (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000);
+			if(!dropwaypoints && autodroptime && !autodrop && newnodes)
+			{
+				clearentcache();
+				newnodes = false;
+			}
+			if((dropwaypoints || autodrop) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
 				int curnode = entitynode(v, float(enttype[WAYPOINT].radius));
 				if(!ents.inrange(curnode))
@@ -1067,7 +1075,7 @@ namespace entities
 					if(d->crouching) cmds |= WP_CROUCH;
 					curnode = ents.length();
 					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
-					clearentcache();
+					newnodes = true;
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair);
@@ -1370,7 +1378,6 @@ namespace entities
 	void mapstart()
 	{
 		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : 0;
-		clearentcache();
 	}
 
 	void edittoggled(bool edit)
