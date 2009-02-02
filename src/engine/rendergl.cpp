@@ -1574,8 +1574,11 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 
 	if(text1)
 	{
-		draw_textx("\fs\fa[\fS\fs\fg%d%%\fS\fs\fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, int(bar1*100), text1);
-		if(text2 && bar2 > 0) draw_textx("%s \fs\fa[\fS\fs\fy%d%%\fS\fs\fa]\fS", w*3-FONTW, FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, text2, int(bar2*100));
+		if(bar1 > 0)
+			draw_textx("\fs\fa[\fS\fs \fg%3d%%\fS \fs\fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, int(bar1*100), text1);
+		else draw_textx("\fs\fa[\fS\fs \fcload\fS\fs \fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1);
+		if(text2 && bar2 > 0)
+			draw_textx("%s \fs\fa[\fS\fs \fy%3d%%\fS\fs \fa]\fS", w*3-FONTW, FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, text2, int(bar2*100));
 	}
 
 	glDisable(GL_BLEND);
