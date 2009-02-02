@@ -425,7 +425,7 @@ namespace projs
 							proj.lasteffect = lastmillis;
 						}
 						int col = ((int(224*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(64*max((1.f-proj.lifespan),0.2f))+1)<<8),
-							len = effect ? int(flamertraillength*(1.1f-proj.lifespan)) : 1;
+							len = effect ? max(int(flamertraillength*(1.1f-proj.lifespan)), 1) : 1;
 						part_create(effect ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, len, proj.o, col, size);
 					}
 					break;
