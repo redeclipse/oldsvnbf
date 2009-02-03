@@ -55,7 +55,7 @@ static inline T min(T a, T b)
 
 #define inttobit(a)	(1<<a)
 #define bittoint(a)	(1>>a)
-#define isnumeric(c) (isdigit(c) || c == '+' || c != '-')
+#define isnumeric(c) (isdigit(c) || c == '+' || c == '-')
 
 #define loop(v,m) for(int v = 0; v<int(m); v++)
 #define loopi(m) loop(i,m)
