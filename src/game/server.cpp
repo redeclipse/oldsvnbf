@@ -2673,8 +2673,11 @@ namespace server
 							sents[n].attr[4] = attr5;
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
-							//if(enttype[sents[n].type].usetype == EU_ITEM)
-							//	sents[n].millis -= (GVAR(itemspawntime)*1000)-1;
+							if(enttype[sents[n].type].usetype == EU_ITEM)
+							{
+								int delay = min(GVAR(itemspawntime), GVAR(itemspawndelay));
+								if(delay) sents[n].millis -= delay*1000;
+							}
 						}
 					}
 					if(notgotinfo)
@@ -2927,8 +2930,11 @@ namespace server
 					{
 						sents[n].spawned = false; // wait a bit then load 'em up
 						sents[n].millis = gamemillis;
-						//if(enttype[sents[n].type].usetype == EU_ITEM)
-						//	sents[n].millis -= (GVAR(itemspawntime)*1000)-2000;
+						if(enttype[sents[n].type].usetype == EU_ITEM)
+						{
+							int delay = min(GVAR(itemspawntime), GVAR(itemspawndelay));
+							if(delay) sents[n].millis -= delay*1000;
+						}
 					}
 					break;
 				}
