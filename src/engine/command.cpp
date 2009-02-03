@@ -746,25 +746,32 @@ void writecfg()
     loopv(ids)
     {
         ident &id = *ids[i];
+        bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
-			case ID_FVAR: fprintf(f, "%s %s\n", id.name, floatstr(*id.storage.f)); break;
-			case ID_SVAR: fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
+			case ID_VAR: saved = true; fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
+			case ID_FVAR: saved = true; fprintf(f, "%s %s\n", id.name, floatstr(*id.storage.f)); break;
+			case ID_SVAR: saved = true; fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
 		}
+        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "setcomplete \"%s\" 0\n", id.name);
 	}
 	loopv(ids)
 	{
 		ident &id = *ids[i];
+        bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
 			case ID_ALIAS:
 			{
 				if(id.override==NO_OVERRIDE && id.action[0])
+                {
+                    saved = true;
 					fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
+                }
 				break;
 			}
 		}
+        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "setcomplete \"%s\" 0\n", id.name);
 	}
 	writebinds(f);
 	writecompletions(f);
