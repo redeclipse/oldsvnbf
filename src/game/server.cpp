@@ -1913,12 +1913,12 @@ namespace server
 				}
 			}
 			else if(ci->state.state == CS_WAITING)
-			{
+			{ // duelmut needs rewriting to take advantage of this
 				if(!m_duke(gamemode, mutators) && !ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
-					if(smode && !smode->canspawn(ci, false, true)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(ci, false, true)) { nospawn++; });
+					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
 					if(!nospawn)
 					{
 						ci->state.state = CS_DEAD; // safety
@@ -2378,7 +2378,8 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if(ci->state.state!=(val ? CS_ALIVE : CS_EDITING) || !m_edit(gamemode)) break;
+					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
+					if(val && ci->state.state != CS_ALIVE && ci->state.state != CS_SPECTATOR) break;
 					if(smode)
 					{
 						if(val) smode->leavegame(ci);
@@ -2394,6 +2395,7 @@ namespace server
 						ci->events.setsizenodelete(0);
 						ci->state.dropped.reset();
 						loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
+						ci->state.weapreset(false);
 					}
 					QUEUE_MSG;
 					break;
@@ -2671,8 +2673,8 @@ namespace server
 							sents[n].attr[4] = attr5;
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
-							if(enttype[sents[n].type].usetype == EU_ITEM)
-								sents[n].millis -= (GVAR(itemspawntime)*1000)-1;
+							//if(enttype[sents[n].type].usetype == EU_ITEM)
+							//	sents[n].millis -= (GVAR(itemspawntime)*1000)-1;
 						}
 					}
 					if(notgotinfo)
@@ -2925,8 +2927,8 @@ namespace server
 					{
 						sents[n].spawned = false; // wait a bit then load 'em up
 						sents[n].millis = gamemillis;
-						if(enttype[sents[n].type].usetype == EU_ITEM)
-							sents[n].millis -= (GVAR(itemspawntime)*1000)-2000;
+						//if(enttype[sents[n].type].usetype == EU_ITEM)
+						//	sents[n].millis -= (GVAR(itemspawntime)*1000)-2000;
 					}
 					break;
 				}
