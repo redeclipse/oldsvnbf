@@ -823,8 +823,8 @@ static void show_genpvs_progress(int unique = pvs.length(), int processed = numv
     float bar1 = float(processed) / float(totalviewcells>0 ? totalviewcells : 1),
           bar2 = float(unique) / float(totalviewcells>0 ? totalviewcells : 1);
 
-    s_sprintfd(text1)("%d%% - %d of %d view cells", int(bar1 * 100), processed, totalviewcells);
-    s_sprintfd(text2)("%d unique view cells", unique);
+    s_sprintfd(text1)("%d of %d view cells", processed, totalviewcells);
+    s_sprintfd(text2)("%d unique", unique);
 
     renderprogress(bar1, text1, bar2, text2);
 

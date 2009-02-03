@@ -1557,10 +1557,10 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glColor3f(1, 1, 1);
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(w*3-768, 0);
-    glTexCoord2f(1, 0); glVertex2f(w*3, 0);
-    glTexCoord2f(1, 1); glVertex2f(w*3, 192);
-    glTexCoord2f(0, 1); glVertex2f(w*3-768, 192);
+    glTexCoord2f(0, 0); glVertex2f(w*3-768, 4);
+    glTexCoord2f(1, 0); glVertex2f(w*3, 4);
+    glTexCoord2f(1, 1); glVertex2f(w*3, 196);
+    glTexCoord2f(0, 1); glVertex2f(w*3-768, 196);
     glEnd();
 
     settexture("textures/cube2", 3);
