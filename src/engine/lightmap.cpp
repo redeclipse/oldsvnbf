@@ -52,7 +52,7 @@ void show_calclight_progress()
 	float bar1 = float(progress) / float(allocnodes),
 		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
-	s_sprintfd(text)("%d textures %d%% utilized", lightmaps.length(), int(bar2 * 100));
+	s_sprintfd(text)("%d textures used", lightmaps.length(), int(bar2 * 100));
 
 	if(LM_PACKW <= hwtexsize && !progresstex)
 	{
