@@ -966,7 +966,8 @@ namespace client
 				{
 					int lcn = getint(p), len = getuint(p);
 					ucharbuf q = p.subbuf(len);
-					parsemessages(lcn, world::getclient(lcn), q);
+					gameent *t = world::getclient(lcn);
+					if(t != world::player1 && !t->ai) parsemessages(lcn, t, q);
 					break;
 				}
 
@@ -1018,7 +1019,7 @@ namespace client
 				{
 					int tcn = getint(p), index = getint(p);
 					gameent *t = world::getclient(tcn);
-					if(!t || !d || (t->clientnum != d->clientnum && t->ownernum != d->clientnum)) break;
+					if(!t || !d || (t->clientnum != d->clientnum && t->ownernum != d->clientnum) || t == world::player1 || t->ai) break;
 					entities::execlink(t, index, false);
 					break;
 				}
@@ -1119,11 +1120,15 @@ namespace client
 				{
 					int lcn = getint(p);
 					gameent *f = world::newclient(lcn);
-					f->respawn(lastmillis, 100);
-					parsestate(f, p);
-					f->state = CS_SPAWNING;
-					playsound(S_RESPAWN, f->o, f);
-					world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
+					if(f != world::player1 && !f->ai)
+					{
+						f->respawn(lastmillis, 100);
+						parsestate(f, p);
+						f->state = CS_SPAWNING;
+						playsound(S_RESPAWN, f->o, f);
+						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
+					}
+					else parsestate(NULL, p);
 					break;
 				}
 
@@ -1160,7 +1165,7 @@ namespace client
 						loopk(3) to[k] = getint(p)/DMF;
 					}
 					gameent *s = world::getclient(scn);
-					if(!s || !isweap(weap)) break;
+					if(!s || !isweap(weap) || s == world::player1 || s->ai) break;
 					if(s->muzzle != vec(-1, -1, -1)) from = s->muzzle;
 					s->setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, lastmillis);
 					projs::shootv(weap, power, from, locs, s, false);

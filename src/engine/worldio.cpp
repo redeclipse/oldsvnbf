@@ -773,7 +773,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 				if(!server::canload(hdr.gameid))
 				{
-					conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, server::gameid());
+					if(verbose) conoutf("\frWARNING: loading map from %s game type in %s, ignoring game specific data", hdr.gameid, server::gameid());
 					samegame = false;
 				}
 			}
@@ -865,7 +865,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 				if(!server::canload(hdr.gameid))
 				{
-					conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
+					if(verbose) conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
 					samegame = false;
 				}
 				else if(verbose) conoutf("\fwloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
@@ -960,13 +960,13 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				{
 					if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 					{
-						conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
+						if(verbose) conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 					}
 				}
 				if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 				{
 					e.o.z += e.attr[2];
-					if(e.attr[3]) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr[3]);
+					if(e.attr[3] && verbose) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr[3]);
 					e.attr[2] = e.attr[3] = 0;
 				}
 				if(hdr.version <= 31 && e.type == ET_MAPMODEL)
@@ -1061,7 +1061,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					{
 						extentity &a = *ents[closest];
 						a.links.add(i);
-						conoutf("\frWARNING: auto import linked spotlight %d to light %d", i, closest);
+						if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
 					}
 				}
 				if(e.type == ET_MAPMODEL && e.attr[0] >= 0)

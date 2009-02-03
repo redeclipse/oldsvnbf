@@ -597,7 +597,7 @@ void edgespan2vectorcube(cube &c)
 
 void converttovectorworld()
 {
-	conoutf("\frWARNING: old map, use savecurrentmap");
+	if(verbose) conoutf("\frWARNING: old map, use savecurrentmap");
 	loopi(8) edgespan2vectorcube(worldroot[i]);
 }
 

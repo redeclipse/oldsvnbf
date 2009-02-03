@@ -31,7 +31,7 @@ VARG(paintfreezetime, 0, 3, INT_MAX-1);
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
-VARG(itemspawndelay, 0, 10, INT_MAX-1); // secs after map start items first spawn
+VARG(itemspawndelay, 0, 3, INT_MAX-1); // secs after map start items first spawn
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);

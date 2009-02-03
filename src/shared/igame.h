@@ -115,6 +115,7 @@ namespace server
 	extern void clientdisconnect(int n, bool local = false);
 	extern int clientconnect(int n, uint ip, bool local = false);
     extern bool allowbroadcast(int n);
+    extern int peerowner(int n);
 	extern void recordpacket(int chan, void *data, int len);
 	extern void parsepacket(int sender, int chan, bool reliable, ucharbuf &p);
 	extern bool sendpackets();
