@@ -1295,9 +1295,8 @@ void loadbackground(int w, int h, Texture *t)
 	glColor3f(1, 1, 1);
 
 	settexture(kidmode ? "textures/kidback" : loadback);
-
-    float cx = 0.5f*w, cy = 0.5f*h,
-          aw = h*4.0f/3.0f, ah = h;
+    float cx = 0.5f*w, cy = (0.5f*(h-16))+16, // hacked for renderprogress
+          aw = (h-16)*4.0f/3.0f, ah = (h-16);
     if(aw > w)
     {
         aw = w;
@@ -1369,23 +1368,6 @@ void loadbackground(int w, int h, Texture *t)
         glEnd();
         glColor3f(1, 1, 1);
     }
-
-    int x = w-516, y = h-132;
-    settexture("textures/logo", 3);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(x,    y);
-    glTexCoord2f(1, 0); glVertex2f(x+512, y);
-    glTexCoord2f(1, 1); glVertex2f(x+512, y+128);
-    glTexCoord2f(0, 1); glVertex2f(x,    y+128);
-    glEnd();
-    x = w-396; y = h-58;
-    settexture("textures/cube2", 3);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(x,    y);
-    glTexCoord2f(1, 0); glVertex2f(x+96, y);
-    glTexCoord2f(1, 1); glVertex2f(x+96, y+32);
-    glTexCoord2f(0, 1); glVertex2f(x,    y+32);
-    glEnd();
 }
 
 void computescreen(const char *text, Texture *t, const char *overlaytext)
@@ -1560,25 +1542,59 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 	notextureshader->set();
 
-	glColor3f(0.f, 0.f, 0.f);
+	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
 	glVertex2f(0,	0);
 	glVertex2f(w*3, 0);
-	glVertex2f(w*3, 2*FONTH);
-	glVertex2f(0,	2*FONTH);
+	glVertex2f(w*3, 204);
+	glVertex2f(0,	204);
 	glEnd();
 
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
 
+	glColor3f(1, 1, 1);
+    settexture("textures/logo", 3);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2f(w*3-768, 0);
+    glTexCoord2f(1, 0); glVertex2f(w*3, 0);
+    glTexCoord2f(1, 1); glVertex2f(w*3, 192);
+    glTexCoord2f(0, 1); glVertex2f(w*3-768, 192);
+    glEnd();
+
+    settexture("textures/cube2", 3);
+    glBegin(GL_QUADS); // goes off the edge on purpose
+    glTexCoord2f(0, 0); glVertex2f(w*3-320, 106);
+    glTexCoord2f(1, 0); glVertex2f(w*3-32, 106);
+    glTexCoord2f(1, 1); glVertex2f(w*3-32, 202);
+    glTexCoord2f(0, 1); glVertex2f(w*3-320, 202);
+    glEnd();
+
 	if(text1)
 	{
 		if(bar1 > 0)
-			draw_textx("\fs\fa[\fS\fs \fg%3d%%\fS \fs\fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, int(bar1*100), text1);
-		else draw_textx("\fs\fa[\fS\fs \fcLOAD\fS\fs \fa]\fS %s", FONTW, FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1);
+		{
+			glColor3f(1, 1, 1);
+			settexture("textures/progress", 3);
+			drawslice(0, clamp(bar1, 0.f, 1.f), 96, 96, 96);
+			draw_textx("\fg%d%%", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, int(bar1*100));
+		}
+		else
+		{
+			glColor3f(1, 1, 1);
+			settexture("textures/wait", 3);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0, 0); glVertex2f(0, 0);
+			glTexCoord2f(1, 0); glVertex2f(192, 0);
+			glTexCoord2f(1, 1); glVertex2f(192, 192);
+			glTexCoord2f(0, 1); glVertex2f(0, 192);
+			glEnd();
+			draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
+		}
 		if(text2 && bar2 > 0)
-			draw_textx("%s \fs\fa[\fS\fs \fy%3d%%\fS\fs \fa]\fS", w*3-FONTW, FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, text2, int(bar2*100));
+			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1, text2, int(bar2*100));
+		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1);
 	}
 
 	glDisable(GL_BLEND);

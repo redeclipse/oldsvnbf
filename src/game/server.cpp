@@ -2821,6 +2821,7 @@ namespace server
 
 					if(spinfo->state.state!=CS_SPECTATOR && val)
 					{
+						dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
