@@ -773,17 +773,15 @@ void complete(char *s)
 	else lastcomplete[0] = '\0';
 }
 
-void setcompletion(char *s, bool on)
+void setcompletion(const char *s, bool on)
 {
-	enumerate(*idents, ident, id,
-		if(!strcmp(id.name, s))
-		{
-			if(on && !(id.flags&IDF_COMPLETE)) id.flags |= IDF_COMPLETE;
-			else if(!on && id.flags&IDF_COMPLETE) id.flags &= ~IDF_COMPLETE;
-			return;
-		}
-	);
-	conoutf("\frcompletion of %s failed as it does not exist", s);
+    ident *id = idents->access(s);
+    if(!s) conoutf("\frcompletion of %s failed as it does not exist", s);
+    else
+    {
+	    if(on && !(id->flags&IDF_COMPLETE)) id->flags |= IDF_COMPLETE;
+		else if(!on && id->flags&IDF_COMPLETE) id->flags &= ~IDF_COMPLETE;
+	}
 }
 
 ICOMMAND(setcomplete, "ss", (char *s, char *t), {
