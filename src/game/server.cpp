@@ -2557,7 +2557,7 @@ namespace server
 									sents[ent].spawned = !sents[ent].spawned;
 									commit = true;
 								}
-								else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+								//else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 							case TR_LINK:
@@ -2568,7 +2568,7 @@ namespace server
 									sents[ent].spawned = true;
 									commit = true;
 								}
-								else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+								//else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 						}
