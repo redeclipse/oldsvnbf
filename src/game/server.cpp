@@ -148,7 +148,7 @@ namespace server
 
 		bool isai(int type = -1, bool all = true)
 		{
-			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || (aireinit >= 0 && ownernum >= 0));
+			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0);
 		}
 	};
 
@@ -698,7 +698,7 @@ namespace server
 		servstate &gs = ci->state;
 		spawnstate(ci);
 		int spawn = pickspawn(ci);
-		sendf(ci->state.isai() ? ci->state.ownernum : ci->clientnum, 1, "ri8v",
+		sendf(ci->clientnum, 1, "ri8v",
 			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
@@ -1679,7 +1679,7 @@ namespace server
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			e.weap, e.power, e.from[0], e.from[1], e.from[2],
 					e.shots.length(), e.shots.length()*sizeof(ivec)/sizeof(int), e.shots.getbuf(),
-						ci->state.isai() ? ci->state.ownernum : ci->clientnum);
+						ci->clientnum);
 		gs.shotdamage += weaptype[e.weap].damage*e.weap*e.num;
 	}
 
@@ -1984,7 +1984,14 @@ namespace server
     bool allowbroadcast(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        return ci && ci->connected;
+        return ci && ci->connected && !ci->state.isai();
+    }
+
+    int peerowner(int n)
+    {
+        clientinfo *ci = (clientinfo *)getinfo(n);
+        if(ci) return ci->state.isai() ? ci->state.ownernum : ci->clientnum;
+        return -1;
     }
 
     int reserveclients() { return 3; }
@@ -2194,8 +2201,9 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo &ci = *clients[i];
+			bool owner = (peerowner(i) == i);
 			ENetPacket *packet;
-			if(psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
+			if(owner && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
 			{
 				packet = enet_packet_create(&ws.positions[pkt[i].posoff<0 ? 0 : pkt[i].posoff+ci.position.length()],
 											pkt[i].posoff<0 ? psize : psize-ci.position.length(),
@@ -2206,7 +2214,7 @@ namespace server
 			}
 			ci.position.setsizenodelete(0);
 
-			if(msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
+			if(owner && msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
 			{
 				packet = enet_packet_create(&ws.messages[pkt[i].msgoff<0 ? 0 : pkt[i].msgoff+pkt[i].msglen],
 											pkt[i].msgoff<0 ? msize : msize-pkt[i].msglen,
@@ -2675,8 +2683,8 @@ namespace server
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
 							{
-								int delay = min(GVAR(itemspawntime), GVAR(itemspawndelay));
-								if(delay) sents[n].millis -= delay*1000;
+								sents[n].millis -= GVAR(itemspawntime)*1000; // rewind
+								if(GVAR(itemspawndelay)) sents[n].millis += GVAR(itemspawndelay)*1000;
 							}
 						}
 					}
@@ -2932,8 +2940,9 @@ namespace server
 						sents[n].millis = gamemillis;
 						if(enttype[sents[n].type].usetype == EU_ITEM)
 						{
-							int delay = min(GVAR(itemspawntime), GVAR(itemspawndelay));
-							if(delay) sents[n].millis -= delay*1000;
+							sents[n].millis -= GVAR(itemspawntime)*1000; // rewind
+							if(GVAR(itemspawndelay)) sents[n].millis += GVAR(itemspawndelay)*1000;
+							else sents[n].millis += GVAR(itemspawntime)*500; // half?
 						}
 					}
 					break;

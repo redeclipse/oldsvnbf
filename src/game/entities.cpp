@@ -882,7 +882,7 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
 		{
 			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
-			bool recip = (enttype[e.type].reclink & f.type) || (enttype[f.type].reclink & e.type);
+			bool recip = (enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type));
 			int g = -1, h = -1;
 			if((toggle || !add) && (g = e.links.find(node)) >= 0)
 			{
@@ -892,7 +892,7 @@ namespace entities
 					if(recip) f.links.remove(h);
 					fixentity(e); fixentity(f);
 					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
-					if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
 				else if(toggle && canlink(node, index))
@@ -901,7 +901,7 @@ namespace entities
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
 					fixentity(e); fixentity(f);
 					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
-					if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
@@ -911,7 +911,7 @@ namespace entities
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
 				fixentity(e); fixentity(f);
 				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
-				if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
 			else if(toggle || add)
@@ -920,11 +920,11 @@ namespace entities
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
 				fixentity(e); fixentity(f);
 				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
-				if(verbose >= 3) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
-		if(verbose >= 3)
+		if(verbose > 2)
 			conoutf("\frentity %s (%d) and %s (%d) failed linking", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 		return false;
 	}
@@ -1194,7 +1194,7 @@ namespace entities
 				// 29	ELEVATOR		-	NOTUSED
 				default:
 				{
-					conoutf("\frWARNING: ignoring entity %d type %d", id, f.type);
+					if(verbose) conoutf("\frWARNING: ignoring entity %d type %d", id, f.type);
 					f.type = NOTUSED;
 					break;
 				}
@@ -1234,12 +1234,12 @@ namespace entities
 
 					if(ents.inrange(dest))
 					{
-						conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
+						if(verbose) conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
 						e.type = NOTUSED; // get rid of this guy then
 					}
 					else
 					{
-						conoutf("\frWARNING: modified teledest %d to a teleport", i);
+						if(verbose) conoutf("\frWARNING: modified teledest %d to a teleport", i);
 						dest = i;
 					}
 
@@ -1335,8 +1335,11 @@ namespace entities
 				else if(ents.inrange(e.links[i]))
 				{
 					gameentity &f = *(gameentity *)ents[e.links[i]];
-					if(((enttype[e.type].reclink & f.type) || (enttype[f.type].reclink & e.type)) && f.links.find(j) < 0)
+					if(((enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type))) && f.links.find(j) < 0)
+					{
 						f.links.add(j);
+						if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", j, e.links[i]);
+					}
 				}
 			}
 

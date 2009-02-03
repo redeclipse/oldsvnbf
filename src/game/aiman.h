@@ -35,7 +35,7 @@ namespace aiman
 
 	bool addai(int type, int skill, bool req)
 	{
-		loopv(clients) if(clients[i]->state.aitype == type && (clients[i]->state.ownernum < 0 || clients[i]->state.aireinit < 0))
+		loopv(clients) if(clients[i]->state.aitype == type && clients[i]->state.aireinit < 0)
 		{ // reuse a slot that was going to removed
 			clients[i]->state.ownernum = findaiclient();
 			clients[i]->state.aireinit = 1;

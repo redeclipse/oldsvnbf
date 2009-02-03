@@ -191,14 +191,26 @@ uint getclientip(int n) { return clients.inrange(n) && clients[n]->type==ST_TCPI
 
 void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 {
-	if(n<0)
+	if(n < 0)
 	{
 		server::recordpacket(chan, packet->data, packet->dataLength);
-		loopv(clients) if(i!=exclude && server::allowbroadcast(i)) sendpacket(i, chan, packet);
+		int ex = server::peerowner(exclude);
+		//if(ex != exclude) conoutf("remapped broadcast exclude %d to %d", exclude, ex);
+		loopv(clients) if(i != ex && server::allowbroadcast(i)) sendpacket(i, chan, packet);
 		return;
 	}
 	switch(clients[n]->type)
 	{
+		case ST_REMOTE:
+		{
+			int owner = server::peerowner(n);
+			if(clients.inrange(owner) && owner != n)
+			{
+				//conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
+				sendpacket(owner, chan, packet, exclude);
+			}
+			break;
+		}
 		case ST_TCPIP:
 		{
 			enet_peer_send(clients[n]->peer, chan, packet);
@@ -206,8 +218,10 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			break;
 		}
         case ST_LOCAL:
+        {
             localservertoclient(chan, packet->data, (int)packet->dataLength);
             break;
+        }
 		default: break;
 	}
 }
