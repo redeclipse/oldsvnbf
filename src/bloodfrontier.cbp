@@ -302,7 +302,7 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="All" targets="client;daemon;server;genkey;" />
+			<Add alias="All" targets="client;daemon;server;" />
 		</VirtualTargets>
 		<Unit filename="bloodfrontier.rc">
 			<Option compilerVar="WINDRES" />
@@ -833,6 +833,14 @@
 			<Option target="server" />
 		</Unit>
 		<Unit filename="game\ctfmode.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="daemon" />
+			<Option target="daemon-dbg" />
+			<Option target="server" />
+			<Option target="profile" />
+		</Unit>
+		<Unit filename="game\duelmut.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
