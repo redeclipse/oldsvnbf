@@ -62,8 +62,12 @@ a:hover {
 	font-size: 150%;
 	font-weight: bold;
 }
-#message {
+#video {
 	text-align: center;
+}
+#flash {
+	width: 480px;
+	height: 295px;
 }
 #subtext {
 	text-align: center;

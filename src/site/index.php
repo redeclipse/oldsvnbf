@@ -1,7 +1,7 @@
 <?php
 	$app['sitename'] = "Blood Frontier";
 	$app['siteblurb'] = "It's Bloody Fun!";
-	$app['siteportal'] = "<script type=\"text/javascript\" src=\"http://widgets.clearspring.com/o/46928cc51133af17/4988e5f09a59e6a1/46928cc5584aa23a/be671ae0/-cpid/ac7e911cace45b2f/autostart/false/widget.js\"><!-- Animoto Video --></script>";
+	$app['sitevideo'] = "http://www.youtube.com/v/u8zika049FY&hl=en&fs=1";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitelogo'] = "bits/logo.png";
 	$app['sitecss'] = "bits/site.css";
@@ -139,7 +139,13 @@
 <?php	} else { ?>
 			<div id="portal" align="center">
 				<p id="supertext" align="center"><a href="project"><?php echo $app['sitename']; ?></a>, <i><?php echo $app['siteblurb']; ?></i></p>
-				<p id="message" align="center"><?php echo $app['siteportal']; ?></p>
+				<div id="video" align="center">
+					<object id="flash" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
+						<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
+						<param name="allowscriptaccess" value="always" />
+						<a href="<?php echo $app['sitevideo']; ?>"><img src="<?php echo $app['sitelogo']; ?>" alt="" /></a>
+					</object>
+				</p>
 				<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
 				<p id="footer" align="center"><a href="download">Download</a>, <a href="wiki">Learn More</a>, <a href="forums">Get Help</a>, or <a href="chat">Join In</a> today!</p>
 			</div>
