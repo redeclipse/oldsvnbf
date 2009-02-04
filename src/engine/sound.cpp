@@ -20,7 +20,7 @@ void setmusicvol(int musicvol)
 
 
 VARP(soundvol, 0, 255, 255);
-VARFP(musicvol, 0, 255, 255, setmusicvol(musicvol));
+VARFP(musicvol, 0, 48, 255, setmusicvol(musicvol));
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
@@ -98,19 +98,20 @@ void playmusic(char *name, char *cmd)
 	if(soundvol && musicvol && *name)
 	{
 		if(cmd[0]) musicdonecmd = newstring(cmd);
-		s_sprintfd(sn)("%s", name);
-		const char *file = findfile(sn, "rb");
-
-		if((music = Mix_LoadMUS(file)))
+		const char *exts[] = { "", ".wav", ".ogg" };
+		string buf;
+		loopi(sizeof(exts)/sizeof(exts[0]))
 		{
-            musicfile = newstring(file);
-			Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-			Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+			s_sprintf(buf)("sounds/%s%s", name, exts[i]);
+			const char *file = findfile(buf, "rb");
+			if((music = Mix_LoadMUS(file)))
+			{
+				musicfile = newstring(file);
+				Mix_PlayMusic(music, cmd[0] ? 0 : -1);
+				Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+			}
 		}
-		else
-		{
-			conoutf("\frcould not play music: %s", sn);
-		}
+		if(!music) { conoutf("\frcould not play music: %s", name); return; }
 	}
 }
 
@@ -149,9 +150,9 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
     if(vol < 0 || vol > 255) vol = 255;
     if(maxrad <= 0) maxrad = -1;
     if(minrad < 0) minrad = -1;
-    if(unique) 
+    if(unique)
     {
-        loopv(sounds) 
+        loopv(sounds)
         {
             soundslot &slot = sounds[i];
             if(slot.sample == sample && slot.vol == vol && slot.material == material && slot.maxrad == maxrad && slot.minrad == minrad) return i;
