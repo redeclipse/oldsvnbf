@@ -1,0 +1,75 @@
+body {
+	font-family: sans-serif;
+	font-size: 100%;
+	background-color: #000000;
+	color: #FFFFFF;
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	overflow: none;
+}
+a, a:link, a:visited {
+	color: #FF0000;
+	text-decoration: none;
+}
+a:hover {
+	color: #FF1111;
+	text-decoration: underline;
+}
+#frame {
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	width: 100%;
+	display: none;
+}
+#header, #body {
+	margin: 0px 0px 0px 0px;
+	padding: 0px 0px 0px 0px;
+	width: 100%;
+}
+#tags {
+	text-align: right;
+	float: right;
+	clear: right;
+}
+#flink {
+	padding: 2px 2px 2px 2px;
+}
+#blurb {
+	text-align: right;
+	padding: 4px 16px 8px 4px;
+	font-weight: bold;
+	font-size: 80%;
+}
+#logo {
+	padding: 4px 4px 4px 4px;
+	float: left;
+	clear: left;
+}
+#navbar {
+	padding: 24px 2px 8px 2px;
+	text-align: left;
+	vertical-align: middle;
+	font-size: 90%;
+}
+#portal {
+	padding: 24px 4px 16px 4px;
+	text-align: center;
+	clear: both;
+	width: 460px;
+}
+#supertext {
+	text-align: center;
+	font-size: 150%;
+	font-weight: bold;
+}
+#message {
+	text-align: center;
+}
+#subtext {
+	text-align: center;
+	font-size: 80%;
+}
+#footer {
+	text-align: center;
+	font-size: 100%;
+}
