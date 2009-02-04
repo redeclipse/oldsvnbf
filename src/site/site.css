@@ -52,7 +52,7 @@ a:hover {
 	font-size: 90%;
 }
 #portal {
-	padding: 24px 4px 16px 4px;
+	padding: 16px 4px 16px 4px;
 	text-align: center;
 	clear: both;
 	width: 480px;
@@ -68,7 +68,7 @@ a:hover {
 }
 #flash {
 	width: 480px;
-	height: 295px;
+	height: 360px;
 }
 #subtext {
 	text-align: center;
