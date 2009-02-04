@@ -20,7 +20,7 @@ void setmusicvol(int musicvol)
 
 
 VARP(soundvol, 0, 255, 255);
-VARFP(musicvol, 0, 48, 255, setmusicvol(musicvol));
+VARFP(musicvol, 0, 32, 255, setmusicvol(musicvol));
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
