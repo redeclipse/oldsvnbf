@@ -55,12 +55,13 @@ a:hover {
 	padding: 24px 4px 16px 4px;
 	text-align: center;
 	clear: both;
-	width: 460px;
+	width: 480px;
 }
 #supertext {
 	text-align: center;
 	font-size: 150%;
 	font-weight: bold;
+	width: 480px;
 }
 #video {
 	text-align: center;
@@ -72,8 +73,10 @@ a:hover {
 #subtext {
 	text-align: center;
 	font-size: 80%;
+	width: 480px;
 }
 #footer {
 	text-align: center;
 	font-size: 100%;
+	width: 480px;
 }
