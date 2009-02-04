@@ -145,7 +145,6 @@
 						<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
 						<param name="allowscriptaccess" value="always" />
 						<embed id="flash" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
-						<a href="<?php echo $app['sitevurl']; ?>"><img src="<?php echo $app['sitelogo']; ?>" alt="<?php echo $app['sitename']; ?> Video" /></a>
 					</object>
 				</p>
 				<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
