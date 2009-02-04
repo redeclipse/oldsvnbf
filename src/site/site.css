@@ -31,14 +31,17 @@ a:hover {
 	float: right;
 	clear: right;
 }
-#flink {
+#flink, #flink img {
 	padding: 2px 2px 2px 2px;
+}
+#flink, #flink a, #flink img {
+	display: inline;
 }
 #blurb {
 	text-align: right;
-	padding: 4px 16px 8px 4px;
+	padding: 4px 8px 4px 4px;
 	font-weight: bold;
-	font-size: 80%;
+	font-size: 90%;
 }
 #logo {
 	padding: 4px 4px 4px 4px;
