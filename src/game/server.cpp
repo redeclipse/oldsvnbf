@@ -2598,7 +2598,7 @@ namespace server
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
+						if(t == cp || t->state.isai() || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
 					bool team = m_team(gamemode, mutators) && flags&SAY_TEAM;
