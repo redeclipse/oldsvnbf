@@ -749,20 +749,19 @@ namespace world
 
 	void startmap(const char *name)	// called just after a map load
 	{
+		intermission = false;
+		player1->respawned = player1->suicided = maptime = 0;
+		projs::reset();
+		resetworld();
+		resetcamera();
+
 		if(*name)
 		{
 			const char *title = getmaptitle();
 			if(*title) conoutf("%s", title);
-			intermission = false;
-			player1->respawned = player1->suicided = maptime = 0;
 			preload();
-			entities::mapstart();
-			client::mapstart();
-			projs::reset();
 
 			// reset perma-state
-			resetworld();
-			resetcamera();
 			gameent *d;
 			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
 				d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
@@ -1241,12 +1240,15 @@ namespace world
         if(!maptime)
         {
         	maptime = lastmillis;
+			entities::mapstart();
+			client::mapstart();
 			if(m_lobby(gamemode))
 			{
 				if(!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme")) playmusic("loops/theme", "");
 			}
 			else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
 			else musicdone(false);
+			RUNWORLD("on_start");
         	return;
         }
 
