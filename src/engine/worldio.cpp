@@ -1097,7 +1097,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 			renderprogress(0, "starting world...");
 			world::startmap(mapname);
-			RUNWORLD("on_start");
 			return true;
 		}
 	}
