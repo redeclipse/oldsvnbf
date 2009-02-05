@@ -183,11 +183,8 @@ namespace weapons
     	int g = weap < 0 ? m_spawnweapon(world::gamemode, world::mutators) : weap;
     	if(isweap(g))
         {
-        	string mdl;
-            s_sprintf(mdl)("weapons/%s", weaptype[g].name);
-            loadmodel(mdl, -1, true);
-			s_sprintf(mdl)("weapons/%s/vwep", weaptype[g].name);
-			loadmodel(mdl, -1, true);
+            loadmodel(weaptype[g].item, -1, true);
+			loadmodel(weaptype[g].vwep, -1, true);
         }
     }
 }
