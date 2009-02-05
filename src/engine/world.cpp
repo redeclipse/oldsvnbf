@@ -756,7 +756,7 @@ void clearworldvars(bool msg = false)
 
 ICOMMAND(resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true));
 
-void resetmap()
+void resetmap(bool empty)
 {
 	renderprogress(0, "resetting map...");
 	resetmaterials();
@@ -775,11 +775,7 @@ void resetmap()
 	pruneundos();
     entities::clearents();
 	clearworldvars();
-}
-
-void startmap(const char *name)
-{
-	world::startmap(name);
+	world::resetmap(empty);
 }
 
 bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty world creation routine
@@ -790,7 +786,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 		return false;
 	}
 
-	resetmap();
+	resetmap(nocfg);
 	setnames(mname, MAP_BFGZ);
 	strncpy(hdr.head, "BFGZ", 4);
 
@@ -824,7 +820,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	    persistidents = true;
 	    overrideidents = worldidents = false;
     }
-	startmap("");
+	world::startmap(nocfg ? "" : "maps/untitled");
 	return true;
 }
 

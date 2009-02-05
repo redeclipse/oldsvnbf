@@ -8,19 +8,11 @@ vector<sound> sounds;
 bool nosound = true;
 Mix_Music *music = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
-int soundsatonce = 0, lastsoundmillis = 0;
-
-void setmusicvol(int musicvol)
-{
-	if(!nosound)
-	{
-		if(music) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
-	}
-}
-
+int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 
 VARP(soundvol, 0, 255, 255);
-VARFP(musicvol, 0, 32, 255, setmusicvol(musicvol));
+VARP(musicvol, 0, 32, 255);
+VARP(musicfade, 0, 3300, INT_MAX-1);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
@@ -42,18 +34,15 @@ void initsound()
     initmumble();
 }
 
-void musicdone(bool docmd)
+void stopmusic(bool docmd)
 {
 	if(Mix_PlayingMusic()) Mix_HaltMusic();
-
 	if(music)
 	{
 		Mix_FreeMusic(music);
 		music = NULL;
 	}
-
     DELETEA(musicfile);
-
 	if(musicdonecmd != NULL)
 	{
 		char *cmd = musicdonecmd;
@@ -61,6 +50,13 @@ void musicdone(bool docmd)
 		if(docmd) execute(cmd);
 		delete[] cmd;
 	}
+	musictime = oldmusicvol = -1;
+}
+
+void musicdone(bool docmd)
+{
+	if(musicfade && !docmd && musictime < 0) musictime = lastmillis;
+	else stopmusic(docmd);
 }
 
 void stopsound()
@@ -68,7 +64,7 @@ void stopsound()
 	if(nosound) return;
 	Mix_HaltChannel(-1);
 	nosound = true;
-	musicdone(false);
+	stopmusic(false);
 	clearsound();
 	soundsamples.clear();
 	gamesounds.setsizenodelete(0);
@@ -84,16 +80,15 @@ void removesound(int c)
 
 void clearsound()
 {
-	musicdone(false);
 	loopv(sounds) removesound(i);
 	mapsounds.setsizenodelete(0);
 }
 
-void playmusic(char *name, char *cmd)
+void playmusic(const char *name, const char *cmd)
 {
 	if(nosound || !musicvol)
 
-	musicdone(false);
+	stopmusic(false);
 
 	if(soundvol && musicvol && *name)
 	{
@@ -106,9 +101,10 @@ void playmusic(char *name, char *cmd)
 			const char *file = findfile(buf, "rb");
 			if((music = Mix_LoadMUS(file)))
 			{
-				musicfile = newstring(file);
+				musicfile = newstring(name);
 				Mix_PlayMusic(music, cmd[0] ? 0 : -1);
 				Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+				oldmusicvol = musicvol;
 			}
 		}
 		if(!music) { conoutf("\frcould not play music: %s", name); return; }
@@ -258,7 +254,30 @@ void updatesounds()
 		}
 		else removesound(i);
 	}
-	if(music && !Mix_PlayingMusic()) musicdone(true);
+	if(music || Mix_PlayingMusic())
+	{
+		if(nosound || !musicvol) stopmusic(false);
+		else if(!Mix_PlayingMusic()) musicdone(true);
+		else if(musictime >= 0)
+		{
+			if(!musicfade || lastmillis-musictime >= musicfade) stopmusic(false);
+			else
+			{
+				float fade = clamp(float(lastmillis-musictime)/float(musicfade), 0.f, 1.f);
+				int vol = int(musicvol*(1.f-fade));
+				if(vol != oldmusicvol)
+				{
+					Mix_VolumeMusic((vol*MIX_MAX_VOLUME)/255);
+					oldmusicvol = vol;
+				}
+			}
+		}
+		else if(musicvol != oldmusicvol)
+		{
+			Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+			oldmusicvol = musicvol;
+		}
+	}
 }
 
 int playsound(int n, const vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)

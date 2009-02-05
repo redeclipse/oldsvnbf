@@ -685,7 +685,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
-                resetmap();
+                resetmap(false);
 
 				hdr = newhdr;
 
@@ -816,7 +816,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
-                resetmap();
+                resetmap(false);
 
 				hdr = newhdr;
 
@@ -1096,7 +1096,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 			renderprogress(0, "starting world...");
-			startmap(mapname);
+			world::startmap(mapname);
 			RUNWORLD("on_start");
 			return true;
 		}

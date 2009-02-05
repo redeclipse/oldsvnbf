@@ -20,6 +20,9 @@ enum
 #include "SDL_mixer.h"
 extern bool nosound;
 extern int soundvol;
+extern Mix_Music *music;
+extern char *musicfile, *musicdonecmd;
+extern int soundsatonce, lastsoundmillis;
 
 #define SOUNDMINDIST		16.0f
 #define SOUNDMAXDIST		10000.f
@@ -76,6 +79,8 @@ extern vector<sound> sounds;
 
 extern void initsound();
 extern void stopsound();
+extern void playmusic(const char *name, const char *cmd);
+extern void musicdone(bool docmd);
 extern void updatesounds();
 extern int addsound(const char *name, int vol, int material, int maxrad, int minrad, vector<soundslot> &sounds);
 extern void removesound(int c);
