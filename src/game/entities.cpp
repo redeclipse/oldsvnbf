@@ -1543,11 +1543,13 @@ namespace entities
 					weapf[attr] = true;
 				}
 			}
+#if 0
 			else
 			{
 				const char *mdlname = entmdlname(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 				if(mdlname && *mdlname) loadmodel(mdlname, -1, true);
 			}
+#endif
 		}
     }
 
