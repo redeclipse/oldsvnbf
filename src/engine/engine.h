@@ -644,7 +644,7 @@ extern char *getmaptitle();
 #define RENDERPUSHX			8.0f
 #define RENDERPUSHZ			0.1f
 
-extern int dynentsize, axfps, hidehud, lastmillis, totalmillis;
+extern int dynentsize, axfps, lastmillis, totalmillis;
 extern float hudblend;
 extern int ambient, skylight, watercolour, lavacolour;
 extern float curfov, fovy, aspect;

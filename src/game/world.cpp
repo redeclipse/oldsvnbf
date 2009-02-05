@@ -677,7 +677,7 @@ namespace world
 				player1->stopmoving(true);
 				hud::sb.showscores(true, true);
 				intermission = true;
-				if(!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme")) playmusic("loops/theme", "");
+				smartmusic(true, false);
 			}
 		}
 		else if(timeremain > 0)
@@ -744,7 +744,7 @@ namespace world
 
 	void resetmap(bool empty) // called just before a map load
 	{
-		if(!empty && (!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme"))) playmusic("loops/theme", "");
+		if(!empty) smartmusic(true, false);
 	}
 
 	void startmap(const char *name)	// called just after a map load
@@ -1242,10 +1242,7 @@ namespace world
         	maptime = lastmillis;
 			entities::mapstart();
 			client::mapstart();
-			if(m_lobby(gamemode))
-			{
-				if(!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme")) playmusic("loops/theme", "");
-			}
+			if(m_lobby(gamemode)) smartmusic(true, false);
 			else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
 			else musicdone(false);
 			RUNWORLD("on_start");

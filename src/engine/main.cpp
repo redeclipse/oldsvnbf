@@ -854,7 +854,7 @@ int main(int argc, char **argv)
 
 	conoutf("\fminit: config");
 	rehash(false);
-	playmusic("loops/theme", "");
+	smartmusic(true, false);
 
 	conoutf("\fminit: preload");
     preloadtextures();

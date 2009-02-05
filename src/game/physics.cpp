@@ -22,9 +22,10 @@ namespace physics
 	FVARW(floorz,			0, 0.867f, 1);
 	FVARW(slopez,			0, 0.5f, 1);
 	FVARW(wallz,			0, 0.2f, 1);
-	FVARW(stepspeed,		0.5f, 1.0f, 2);
+	FVARW(stepspeed,		1e-3f, 1.0f, 1000);
+	FVARW(ladderspeed,		1e-3f, 1.0f, 1000);
 
-	FVARP(floatspeed,		1.f, 100.f, 1000.f);
+	FVARP(floatspeed,		1e-3f, 100.f, 1000.f);
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
@@ -120,6 +121,13 @@ namespace physics
 		return m_speedscale(gravity)*(d->weight/100.f)*gravityscale;
 	}
 
+	float upwardforce(physent *d)
+	{
+		if(d->onladder) return ladderspeed;
+		if(d->physstate > PHYS_FALL) return stepspeed;
+		return 1.f;
+	}
+
 	bool canimpulse(physent *d)
 	{
 		int timelen = m_speedtime(impulsetime) ? impulsetime : int(gravityforce(d)*impulsegravity);
@@ -196,10 +204,10 @@ namespace physics
         vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
 		if(d->onladder)
 		{
-			vec laddir = vec(stairdir).add(vec(0, 0, maxstep));
+			vec laddir = vec(stairdir).add(vec(0, 0, maxstep)).mul(0.1f*upwardforce(d));
             loopi(2)
             {
-				d->o.add(vec(laddir).mul(0.1f));
+				d->o.add(laddir);
             	if(collide(d))
 				{
 					if(d->physstate == PHYS_FALL || d->floor != floor)
@@ -224,6 +232,7 @@ namespace physics
             vec checkdir = stairdir;
             checkdir.mul(0.1f);
             checkdir.z += maxstep + 0.1f;
+            checkdir.mul(upwardforce(d));
             d->o.add(checkdir);
             if(!collide(d))
             {
@@ -238,7 +247,7 @@ namespace physics
             d->o = old;
             vec checkdir = stairdir;
             checkdir.z += 1;
-            checkdir.mul(maxstep);
+            checkdir.mul(maxstep*upwardforce(d));
             d->o.add(checkdir);
             if(!collide(d, checkdir))
             {
@@ -250,7 +259,7 @@ namespace physics
             }
 			/* try stepping up half as much as forward */
 			d->o = old;
-			vec smoothdir(dir.x, dir.y, 0);
+			vec smoothdir = vec(dir.x, dir.y, 0).mul(upwardforce(d));
 			float magxy = smoothdir.magnitude();
 			if(magxy > 1e-9f)
 			{
@@ -258,14 +267,14 @@ namespace physics
 				{
 					smoothdir.mul(1/magxy);
 					smoothdir.z = 0.5f;
-					smoothdir.mul(dir.magnitude()*stepspeed/smoothdir.magnitude());
+					smoothdir.mul(dir.magnitude()*upwardforce(d)/smoothdir.magnitude());
 				}
 				else smoothdir.z = dir.z;
 				d->o.add(smoothdir);
-				d->o.z += maxstep + 0.1f;
+				d->o.z += maxstep*upwardforce(d) + 0.1f*upwardforce(d);
 				if(collide(d, smoothdir))
 				{
-					d->o.z -= maxstep + 0.1f;
+					d->o.z -= maxstep*upwardforce(d) + 0.1f*upwardforce(d);
 					if(d->physstate == PHYS_FALL || d->floor != floor)
 					{
 						d->timeinair = 0;
@@ -280,7 +289,7 @@ namespace physics
 
         /* try stepping up */
         d->o = old;
-        d->o.z += dir.magnitude()*stepspeed;
+        d->o.z += dir.magnitude()*upwardforce(d);
         if(collide(d, vec(0, 0, 1)))
         {
             if(d->physstate == PHYS_FALL || d->floor != floor)
