@@ -14,7 +14,7 @@
 #endif
 enum
 {
-	S_JUMP = S_GAMESPECIFIC, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
+	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
 	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE, S_PAINT,
@@ -463,9 +463,11 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
-#define m_spawndelay(a,b)	int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)+(m_paint(a, b) ? GVAR(paintfreezetime)*1000 : 0)
+#define m_spawndelay(a,b)	(int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)+(m_paint(a, b) ? GVAR(paintfreezetime)*1000 : 0))
 #define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
+#define m_speedscale(a)		(float(a)*GVAR(speedscale))
+#define m_speedtime(a)		(int(a*(1.f/GVAR(speedscale))))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -499,7 +501,7 @@ char msgsizelookup(int msg)
 		SV_ANNOUNCE, 0, SV_CDIS, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 6, SV_FRAG, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4, SV_FORCEDEATH, 2,
-		SV_DROP, 4, SV_WEAPSELECT, 0, SV_TAUNT, 2,
+		SV_DROP, 0, SV_WEAPSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
@@ -1069,7 +1071,6 @@ struct aiinfo
 	}
 };
 
-enum { MDIR_FORWARD = 0, MDIR_BACKWARD, MDIR_MAX };
 struct gameent : dynent, gamestate
 {
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
@@ -1080,7 +1081,7 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	aiinfo *ai;
-    vec muzzle, mdir[MDIR_MAX];
+    vec muzzle;
 	bool attacking, reloading, useaction, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 
@@ -1088,7 +1089,8 @@ struct gameent : dynent, gamestate
 		k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
-		weight = 150; // so we can control the 'gravity' feel
+		weight = 200; // so we can control the 'gravity' feel
+		maxspeed = 50; // ditto for movement
 		respawn(-1, 100);
 	}
 	~gameent()
@@ -1271,6 +1273,7 @@ namespace physics
 {
 	extern int smoothmove, smoothdist;
 	extern bool canimpulse(physent *d);
+	extern void movecamera(physent *d);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();
 }

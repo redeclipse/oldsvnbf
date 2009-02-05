@@ -62,7 +62,7 @@ VARG(botmaxskill, 0, 100, 100);
 FVARG(damagescale, 0, 1.f, 1000);
 FVARG(gravityscale, 0, 1.f, 1000);
 FVARG(jumpscale, 0, 1.f, 1000);
-FVARG(speedscale, 0, 1.f, 1000);
+FVARG(speedscale, 1e-3f, 1.f, 1000);
 FVARG(hitpushscale, 0, 1.f, 1000);
 FVARG(deadpushscale, 0, 1.f, 1000);
 FVARG(wavepushscale, 0, 1.f, 1000);

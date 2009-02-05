@@ -5,12 +5,12 @@ namespace physics
 {
 	FVARW(crawlspeed,		0, 30.f, 1000);	// crawl speed
 	FVARW(gravity,			0, 40.f, 1000);	// gravity
-	FVARW(jumpvel,			0, 80.f, 1000);	// extra velocity to add when jumping
+	FVARW(jumpspeed,		0, 50.f, 1000);	// extra velocity to add when jumping
 	FVARW(movespeed,		0, 50.f, 1000);	// speed
 
-	FVARW(impulsevel,		0, 100.f, 1000);	// extra velocity to add when impulsing
-	FVARW(impulsespeed,		0, 100.f, 1000);	// modifier of gravity that determines impulse interval
-	VARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsespeed)
+	FVARW(impulsespeed,		0, 50.f, 1000);	// extra velocity to add when impulsing
+	FVARW(impulsegravity,	0, 100.f, 1000); // modifier of gravity that determines impulse interval
+	VARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsegravity)
 
 	FVARW(liquidfric,		0, 10.f, 100);
 	FVARW(liquidscale,		0, 0.9f, 100);
@@ -107,33 +107,40 @@ namespace physics
 
 	float jumpvelocity(physent *d)
 	{
-		return jumpvel*(d->inliquid ? liquidscale : 1.f)*jumpscale;
+		return m_speedscale(jumpspeed)*(d->weight/100.f)*(d->inliquid ? liquidscale : 1.f)*jumpscale;
 	}
 
 	float impulsevelocity(physent *d)
 	{
-		return impulsevel*jumpscale;
+		return m_speedscale(impulsespeed)*(d->weight/100.f)*jumpscale;
 	}
 
 	float gravityforce(physent *d)
 	{
-		return gravity*(d->weight/100.f)*gravityscale;
+		return m_speedscale(gravity)*(d->weight/100.f)*gravityscale;
 	}
 
 	bool canimpulse(physent *d)
 	{
-		int timelen = impulsetime ? impulsetime : int(gravityforce(d)*impulsespeed);
+		int timelen = m_speedtime(impulsetime) ? impulsetime : int(gravityforce(d)*impulsegravity);
 		if(timelen > 0) return lastmillis-d->lastimpulse > timelen;
 		return false;
 	}
 
-	float maxspeed(physent *d)
+	float movevelocity(physent *d)
 	{
-		if(d->type == ENT_PLAYER && d->state != CS_SPECTATOR && d->state != CS_EDITING)
+		if(d->type == ENT_CAMERA)
 		{
-			return d->maxspeed*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f)*speedscale;
+			if(world::player1->state == CS_WAITING) return m_speedscale(world::player1->maxspeed)*(world::player1->weight/100.f)*(movespeed/100.f);
+			else return d->maxspeed*(d->weight/100.f);
 		}
-		return d->maxspeed*(float(movespeed)/100.f)*speedscale;
+		else if(d->type == ENT_PLAYER)
+		{
+			if(d->state != CS_SPECTATOR && d->state != CS_EDITING)
+				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
+			else return d->maxspeed*(d->weight/100.f);
+		}
+		return m_speedscale(d->maxspeed);
 	}
 
 	bool movepitch(physent *d)
@@ -502,9 +509,12 @@ namespace physics
 				pl->falling = vec(0, 0, 0);
 				pl->vel.z += max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
-				playsound(S_JUMP, pl->o, pl);
 				pl->jumping = false;
-				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+				if(local && pl->type == ENT_PLAYER)
+				{
+					playsound(S_JUMP, pl->o, pl);
+					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+				}
 			}
 		}
 		else if(world::allowmove(pl) && pl->jumping && canimpulse(pl))
@@ -517,7 +527,12 @@ namespace physics
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
 			pl->jumping = false;
-			if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
+			if(local && pl->type == ENT_PLAYER)
+			{
+				playsound(S_IMPULSE, pl->o, pl);
+				world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 200, 1.f);
+				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
+			}
 		}
         if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
 
@@ -535,14 +550,14 @@ namespace physics
 		}
 
 		vec d(m);
-		d.mul(maxspeed(pl));
+		d.mul(movevelocity(pl));
         if(pl->type==ENT_PLAYER)
         {
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
 		float friction = pl->inliquid && !floating ? liquidfric : (pl->physstate >= PHYS_SLOPE || floating ? floorfric : airfric);
-		float fpsfric = max(friction/millis*20.0f, 1.0f);
+		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
         pl->vel.mul(fpsfric-1);
         pl->vel.add(d);
@@ -566,7 +581,7 @@ namespace physics
         if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
         {
             float friction = pl->inliquid ? sinkfric : floorfric,
-                  fpsfric = friction/curtime*20.0f,
+                  fpsfric = friction/curtime*20.0f*(1.f/speedscale),
                   c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
             pl->falling.mul(1 - c/fpsfric);
         }
@@ -580,16 +595,16 @@ namespace physics
 		if(!floating && curmat != oldmat)
 		{
 			uchar mcol[3] = { 255, 255, 255 };
-			#define mattrig(mo,mf,mz,ms,mt,mw) \
+			#define mattrig(mo,mf,ms,mt,mz,mw) \
 			{ \
 				mf; \
 				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
-				world::spawneffect(mo, col, mt, ms); \
+				world::spawneffect(mo, col, mt, m_speedtime(mz), ms); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, getwatercolour(mcol), PART_WATER, 1.f, int(radius), curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), PART_FIREBALL, 2.f, int(radius), S_BURNING);
+				mattrig(bottom, getwatercolour(mcol), 1.f, int(radius), 500, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), 2.f, int(radius), 1000, S_BURNING);
 
 			if(local)
 			{
@@ -696,23 +711,35 @@ namespace physics
         d->o.add(deltapos);
     }
 
+	void movecamera(physent *d)
+	{
+        if(physsteps <= 0 || d->type != ENT_CAMERA) return;
+        vec old(d->o);
+        loopi(physsteps-1) if(!moveplayer(d, 10, true, physframetime))
+        {
+        	d->o = old;
+        	break;
+        }
+        if(!moveplayer(d, 10, true, physframetime)) d->o = old;
+	}
+
 	void move(physent *d, int moveres, bool local)
 	{
         if(physsteps <= 0)
         {
-            if(local && d->type != ENT_CAMERA) interppos(d);
+            if(local) interppos(d);
             return;
         }
 
-        if(local && d->type != ENT_CAMERA)
+        if(local)
         {
             d->o = d->newpos;
             d->o.z += d->height;
         }
         loopi(physsteps-1) moveplayer(d, moveres, local, physframetime);
-        if(local && d->type != ENT_CAMERA) d->deltapos = d->o;
+        if(local) d->deltapos = d->o;
         moveplayer(d, moveres, local, physframetime);
-        if(local && d->type != ENT_CAMERA)
+        if(local)
         {
             d->newpos = d->o;
             d->deltapos.sub(d->newpos);

@@ -2490,10 +2490,26 @@ namespace server
 					ev.shot.num = getint(p);
 					loopj(ev.shot.num)
 					{
-                        if(p.overread() || !isweap(ev.shot.weap) || j >= weaptype[ev.shot.weap].rays) return;
+                        if(p.overread() || !isweap(ev.shot.weap) || j >= weaptype[ev.shot.weap].rays) break;
 						ivec &dest = ev.shot.shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
+					break;
+				}
+
+				case SV_DROP:
+				{
+					int lcn = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
+					int sweap = m_spawnweapon(gamemode, mutators), weap = getint(p);
+					if(!havecn || !isweap(weap) || !cp->state.hasweap(weap, sweap) || m_noitems(gamemode, mutators)) break;
+					if(!sents.inrange(cp->state.entid[weap]) || (sents[cp->state.entid[weap]].attr[1]&WEAPFLAG_FORCED)) break;
+					cp->state.dropped.add(cp->state.entid[weap]);
+					sents[cp->state.entid[weap]].spawned = false;
+					sents[cp->state.entid[weap]].millis = gamemillis;
+					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
+					cp->state.entid[weap] = cp->state.ammo[weap] = -1;
 					break;
 				}
 
@@ -2567,7 +2583,7 @@ namespace server
 									sents[ent].spawned = !sents[ent].spawned;
 									commit = true;
 								}
-								//else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 							case TR_LINK:
@@ -2578,13 +2594,13 @@ namespace server
 									sents[ent].spawned = true;
 									commit = true;
 								}
-								//else sendf(ci->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 						}
 						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 					}
-					else if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
+					else if(GVAR(serverdebug)) srvmsgf(cp->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
 					break;
 				}
 
@@ -2710,7 +2726,7 @@ namespace server
 							else gdat.add(sents[k].spawned ? 1 : 0);
 						}
 						gdat.add(-1);
-						sendf(sender, 1, "riiv", SV_GAMEINFO, gdat.length(), gdat.length()*sizeof(int)/sizeof(int), gdat.getbuf());
+						sendf(sender, 1, "riiv", SV_GAMEINFO, gdat.length(), gdat.length(), gdat.getbuf());
 					}
 #endif
 					break;

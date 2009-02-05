@@ -221,7 +221,7 @@ namespace world
 			swaydir.mul(k);
 			vec vel(d->vel);
 			vel.add(d->falling);
-			swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::maxspeed(d)))));
+			swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
 		}
 		else swaydir = vec(0, 0, 0);
 	}
@@ -295,9 +295,9 @@ namespace world
 
 	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
-		part_create(PART_ELECTRIC_SLENS, fade, o, colour, size);
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, 25, fade, o, size, 20.f);
-		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), fade, fade/3);
+		part_create(PART_ELECTRIC_SLENS, m_speedtime(fade), o, colour, size);
+		regularshape(PART_ELECTRIC, radius*2, colour, 21, 25, m_speedtime(fade), o, size, 20.f);
+		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
 	gameent *pointatplayer()
@@ -473,11 +473,11 @@ namespace world
 		}
 		if(d == player1 || d->ai)
 		{
-			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
+			float force = m_speedscale(float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 			else if(d->health <= 0) force *= ragdollpush*deadpushscale;
 			else force *= hitpushscale;
-			d->vel.add(vec(dir).mul(force));
+			d->vel.add(vec(dir).mul(m_speedscale(force)));
 		}
 	}
 
@@ -923,6 +923,7 @@ namespace world
 	{
 		bool hascursor = UI::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
+		//*(hascursor || (player1->state != CS_ALIVE && player1->state != CS_DEAD) ? 1.f : speedscale)
 		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING))
 		{
 			if(absmouse) // absolute positions, unaccelerated
@@ -1150,7 +1151,7 @@ namespace world
 					vec avg(0, 0, 0);
 					gameent *d;
 					c.reset();
-					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
+					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (intermission || d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
 						vec trg, pos = feetpos(d);
 						float dist = c.pos.dist(pos);
@@ -1296,7 +1297,7 @@ namespace world
 			{
 				camera1->move = player1->move;
 				camera1->strafe = player1->strafe;
-				physics::move(camera1, 10, true);
+				physics::movecamera(camera1);
 			}
 			else if(tvmode()) cameratv();
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
