@@ -1379,6 +1379,7 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         setcaption(caption);
     }
     else setcaption(text);
+    smartmusic(false, true);
     getscreenres(w, h);
 	gettextres(w, h);
 	glEnable(GL_BLEND);
@@ -1515,6 +1516,7 @@ float loadprogress = 0;
 void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
 	if(!inbetweenframes) return;
+    smartmusic(false, true);
 	clientkeepalive();
 
     #ifdef __APPLE__
@@ -1653,8 +1655,8 @@ void readmatrices()
     invmvpmatrix.invert(mvpmatrix);
 }
 
-VARP(hidehud, 0, 0, 1);
-FVARP(hudblend, 0, 0.99f, 1);
+VARP(showhud, 0, 1, 1);
+FVARP(hudblend, 0, 1.f, 1);
 
 float cursorx = 0.5f, cursory = 0.5f, aimx = 0.5f, aimy = 0.5f;
 vec cursordir(0, 0, 0);
@@ -1837,7 +1839,7 @@ void drawnoview()
     loadbackground(w, h);
     glDisable(GL_BLEND);
 
-	if(!hidehud)
+	if(showhud)
 	{
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);
@@ -1951,7 +1953,7 @@ void drawview(int targtype)
 
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
-	if(editmode && !hidehud)
+	if(editmode && showhud)
 	{
         glDepthMask(GL_FALSE);
 
@@ -2012,7 +2014,7 @@ void drawview(int targtype)
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-	if(!hidehud)
+	if(showhud)
 	{
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);

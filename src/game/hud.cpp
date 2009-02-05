@@ -88,7 +88,7 @@ namespace hud
 
 	VARP(showradar, 0, 2, 2);
 	TVAR(radartex, "textures/radar", 3);
-	FVARP(radarblend, 0, 0.25f, 1);
+	FVARP(radarblend, 0, 1.f, 1);
 	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radaritemblend, 0, 0.95f, 1);
 	FVARP(radarnameblend, 0, 1.f, 1);
@@ -107,6 +107,7 @@ namespace hud
 
     VARP(showborder, 0, 1, 2);
 	VARP(borderhealth, 0, 1, 2);
+	FVARP(borderblend, 0, 1.f, 1);
 	FVARP(borderskew, -1, -0.3f, 1);
 
 	bool hastv(int val)
@@ -332,7 +333,7 @@ namespace hud
 	{
         int index = POINTER_NONE;
 		if(UI::hascursor()) index = UI::hascursor(true) ? POINTER_GUI : POINTER_NONE;
-        else if(hidehud || !showcrosshair || world::player1->state == CS_DEAD || !connected()) index = POINTER_NONE;
+        else if(!showcrosshair || world::player1->state == CS_DEAD || !connected()) index = POINTER_NONE;
         else if(world::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(world::player1->state == CS_SPECTATOR || world::player1->state == CS_WAITING) index = POINTER_SPEC;
         else if(world::inzoom() && weaptype[world::player1->weapselect].snipes) index = POINTER_SNIPE;
@@ -766,7 +767,7 @@ namespace hud
 		int cr = hastv(showborder) ? 1 : 2, cs = s*cr;
 		if(hastv(showborder) && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
-			float r = 1.f, g = 1.f, b = 1.f, fade = radarblend*blend;
+			float r = 1.f, g = 1.f, b = 1.f, fade = borderblend*blend;
 			if(borderhealth) switch(world::player1->state)
 			{
 				case CS_ALIVE: healthskew(cs, r, g, b, fade, borderskew, borderhealth > 1); break;
@@ -785,18 +786,18 @@ namespace hud
 				);
 			}
 		}
-		if(hastv(radaritems) || m_edit(world::gamemode)) drawentblips(w, h, cs/2, blend);
+		if(hastv(radaritems) || m_edit(world::gamemode)) drawentblips(w, h, cs/2, blend*radarblend);
 		if(hastv(radarplayers) || m_edit(world::gamemode))
 		{
 			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
-				drawplayerblip(world::players[i], w, h, cs/2, blend);
+				drawplayerblip(world::players[i], w, h, cs/2, blend*radarblend);
 		}
 		if(hastv(radarflags))
 		{
 			if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
-			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend);
+			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend*radarblend);
 		}
-		if(hastv(radarcard) || m_edit(world::gamemode)) drawcardinalblips(w, h, cs/2, blend, m_edit(world::gamemode));
+		if(hastv(radarcard) || m_edit(world::gamemode)) drawcardinalblips(w, h, cs/2, blend*radarblend, m_edit(world::gamemode));
 	}
 
 	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)

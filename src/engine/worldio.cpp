@@ -414,13 +414,14 @@ void save_world(const char *mname, bool nolms)
 
 	setnames(mname, MAP_BFGZ);
 
-	if(autosavemapshot || nolms) save_mapshot(mapname);
-	if(autosaveconfig || nolms) save_config(mapname);
-
 	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision); // x10 so we can do this more
 	gzFile f = opengzfile(mapfile, "wb9");
 	if(!f) { conoutf("\frerror saving %s to %s: file error", mapname, mapfile); return; }
 
+	if(autosavemapshot || nolms) save_mapshot(mapname);
+	if(autosaveconfig || nolms) save_config(mapname);
+
+	computescreen("saving map..");
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);

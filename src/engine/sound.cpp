@@ -5,7 +5,7 @@ hashtable<const char *, soundsample> soundsamples;
 vector<soundslot> gamesounds, mapsounds;
 vector<sound> sounds;
 
-bool nosound = true;
+bool nosound = true, playedmusic = false;
 Mix_Music *music = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
@@ -16,7 +16,7 @@ VARP(musicfade, 0, 3300, INT_MAX-1);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundbufferlen, 0, 4096, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
 void initsound()
 {
@@ -50,12 +50,19 @@ void stopmusic(bool docmd)
 		if(docmd) execute(cmd);
 		delete[] cmd;
 	}
-	musictime = oldmusicvol = -1;
+	musictime = -1;
+	oldmusicvol = musicvol;
+	playedmusic = false;
 }
 
 void musicdone(bool docmd)
 {
-	if(musicfade && !docmd && musictime < 0) musictime = lastmillis;
+	if(musicfade && !docmd)
+	{
+		musictime = lastmillis;
+		oldmusicvol = musicvol;
+		playedmusic = false;
+	}
 	else stopmusic(docmd);
 }
 
@@ -86,7 +93,7 @@ void clearsound()
 
 void playmusic(const char *name, const char *cmd)
 {
-	if(nosound || !musicvol)
+	if(nosound || !musicvol) return;
 
 	stopmusic(false);
 
@@ -112,6 +119,18 @@ void playmusic(const char *name, const char *cmd)
 }
 
 COMMANDN(music, playmusic, "ss");
+
+void smartmusic(bool cond, bool autooff)
+{
+	if(nosound || !musicvol || (!cond && oldmusicvol < 0)) return;
+	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, "loops/theme")))
+	{
+		playmusic("loops/theme", "");
+		playedmusic = autooff;
+		if(!cond) oldmusicvol = -1;
+	}
+}
+ICOMMAND(smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
 
 int findsound(const char *name, int vol, vector<soundslot> &sounds)
 {
@@ -257,6 +276,7 @@ void updatesounds()
 	if(music || Mix_PlayingMusic())
 	{
 		if(nosound || !musicvol) stopmusic(false);
+		else if(playedmusic && oldmusicvol >= 0) musicdone(false);
 		else if(!Mix_PlayingMusic()) musicdone(true);
 		else if(musictime >= 0)
 		{

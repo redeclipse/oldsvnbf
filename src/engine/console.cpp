@@ -3,8 +3,9 @@
 #include "pch.h"
 #include "engine.h"
 
-VARP(contime, 200, 20000, INT_MAX-1);
-FVARP(conblend, 0, 0.99f, 1);
+VARP(showconsole, 0, 1, 1);
+VARP(consoletime, 200, 20000, INT_MAX-1);
+FVARP(consoleblend, 0, 1.f, 1);
 
 vector<cline> conlines;
 
@@ -57,13 +58,13 @@ void conline(const char *sf, int n)
 	}
 }
 
-SVAR(contimefmt, "%c");
+SVAR(consoletimefmt, "%c");
 
 void console(const char *s, ...)
 {
 	s_sprintfdv(sf, s);
 	string osf, psf, fmt;
-	s_sprintf(fmt)(contimefmt);
+	s_sprintf(fmt)(consoletimefmt);
 	filtertext(osf, sf);
 	s_sprintf(psf)("%s %s", gettime(fmt), osf);
 	printf("%s\n", osf);
@@ -134,27 +135,29 @@ VARP(fullconsize, 0, 60, 100);
 
 int renderconsole(int w, int h, int x, int y, int s)
 {
-	vector<char *> refs;
-	refs.setsizenodelete(0);
-
-	int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
-	refs.setsizenodelete(0);
-	if(numl)
+	if(showconsole)
 	{
-		loopv(conlines)
+		vector<char *> refs;
+		refs.setsizenodelete(0);
+
+		int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
+		refs.setsizenodelete(0);
+		if(numl)
 		{
-			if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : fullconsole || lastmillis-conlines[i].outtime<contime)
+			loopv(conlines)
 			{
-				refs.add(conlines[i].cref);
-				if (refs.length() >= numl) break;
+				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : fullconsole || lastmillis-conlines[i].outtime<consoletime)
+				{
+					refs.add(conlines[i].cref);
+					if (refs.length() >= numl) break;
+				}
 			}
 		}
+
+		int z = y;
+		loopvrev(refs)
+			z += draw_textx("%s", x, z, 255, 255, 255, int(255*consoleblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
 	}
-
-	int z = y;
-	loopvrev(refs)
-		z += draw_textx("%s", x, z, 255, 255, 255, int(255*conblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
-
 	return y;
 }
 
