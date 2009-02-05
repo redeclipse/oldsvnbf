@@ -64,7 +64,7 @@ namespace physics
 	extern bool entinmap(physent *d, bool avoidplayers);
 	extern void updatephysstate(physent *d);
 	extern bool droptofloor(vec &o, float radius, float height);
-	extern float maxspeed(physent *d);
+	extern float movevelocity(physent *d);
 	extern bool issolid(physent *d);
 	extern bool iscrouching(physent *d);
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);

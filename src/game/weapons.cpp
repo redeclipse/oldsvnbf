@@ -37,9 +37,21 @@ namespace weapons
 			}
 			else if(a >= 0) break;
 		}
-		playsound(S_DENIED, d->o, d);
+		if(d == world::player1) playsound(S_DENIED, d->o, d);
 	}
-	ICOMMAND(weapon, "ss", (char *a, char *b), weaponswitch(world::player1, a[0] ? atoi(a) : -1, b[0] ? atoi(b) : -1));
+	ICOMMAND(weapon, "ss", (char *a, char *b), weaponswitch(world::player1, *a ? atoi(a) : -1, *b ? atoi(b) : -1));
+
+	void drop(gameent *d, int a = -1)
+	{
+		int weap = isweap(a) ? a : d->weapselect;
+		if(!m_noitems(world::gamemode, world::mutators) && isweap(weap) && entities::ents.inrange(d->entid[weap]) && d->reqswitch < 0)
+		{
+			client::addmsg(SV_DROP, "ri2", d->clientnum, weap);
+			d->reqswitch = lastmillis;
+		}
+		else if(d == world::player1) playsound(S_DENIED, d->o, d);
+	}
+	ICOMMAND(drop, "s", (char *n), drop(world::player1, *n ? atoi(n) : -1));
 
 	bool doautoreload(gameent *d)
 	{
@@ -54,10 +66,10 @@ namespace weapons
 	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(world::gamemode, world::mutators);
-		if(!weaploads(d->weapselect, sweap))
+		if(!weaploads(d->weapselect, sweap) || !d->hasweap(d->weapselect, sweap))
 		{
 			int bestweap = d->bestweap(sweap);
-			if(d->ammo[d->weapselect] <= 0 && d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
+			if(d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
 			{
 				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-world::maptime, bestweap);
 				d->reqswitch = lastmillis;

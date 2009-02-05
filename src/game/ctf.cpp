@@ -5,15 +5,23 @@ namespace ctf
 {
 	ctfstate st;
 
-	void dropflags()
+	void dropflag(gameent *d)
 	{
-		vec dir;
-		vecfromyawpitch(world::player1->aimyaw, world::player1->aimpitch, -world::player1->move, -world::player1->strafe, dir);
-		dir.mul((world::player1->radius*2.f)+enttype[FLAG].radius/2+1.f);
-		vec o(vec(world::player1->o).add(dir).mul(DMF));
-		client::addmsg(SV_DROPFLAG, "ri4", world::player1->clientnum, o.x, o.y, o.z);
+		if(m_ctf(world::gamemode))
+		{
+			loopv(st.flags) if(st.flags[i].owner == d)
+			{
+				vec dir;
+				vecfromyawpitch(d->aimyaw, d->aimpitch, -d->move, -d->strafe, dir);
+				dir.mul((d->radius*2.f)+enttype[FLAG].radius);
+				vec o(vec(d->o).add(dir));
+				client::addmsg(SV_DROPFLAG, "ri4", world::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
+				return;
+			}
+		}
+		if(d == world::player1) playsound(S_DENIED, d->o, d);
 	}
-   	ICOMMAND(dropflags, "", (), dropflags());
+   	ICOMMAND(dropflag, "", (), dropflag(world::player1));
 
     void preload()
     {

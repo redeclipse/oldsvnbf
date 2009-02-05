@@ -977,9 +977,24 @@ namespace client
 					gameent *t = world::getclient(lcn);
 					if(t != world::player1 && !t->ai) switch(st)
 					{
-						case SPHY_JUMP: t->jumptime = lastmillis; break;
-						case SPHY_IMPULSE: t->lastimpulse = lastmillis; break;
-						case SPHY_POWER: t->setweapstate(t->weapselect, WPSTATE_POWER, 0, lastmillis); break;
+						case SPHY_JUMP:
+						{
+							playsound(S_JUMP, t->o, t);
+							t->jumptime = lastmillis;
+							break;
+						}
+						case SPHY_IMPULSE:
+						{
+							playsound(S_IMPULSE, t->o, t);
+							world::spawneffect(world::feetpos(t), 0x111111, int(t->radius), 200, 1.f);
+							t->lastimpulse = lastmillis;
+							break;
+						}
+						case SPHY_POWER:
+						{
+							t->setweapstate(t->weapselect, WPSTATE_POWER, 0, lastmillis);
+							break;
+						}
 						default: break;
 					}
 					break;

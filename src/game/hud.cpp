@@ -456,54 +456,57 @@ namespace hud
 				if(shownotices > 2)
 				{
 					pushfont("default");
-					vector<actitem> actitems;
-					if(entities::collateitems(world::player1, actitems))
+					if(world::player1->requse < 0)
 					{
-						SEARCHBINDCACHE(actkey)("action", 0, 5, "\fs\fw, or \fS");
-						while(!actitems.empty())
+						vector<actitem> actitems;
+						if(entities::collateitems(world::player1, actitems))
 						{
-							actitem &t = actitems.last();
-							int ent = -1;
-							switch(t.type)
+							SEARCHBINDCACHE(actkey)("action", 0, 5, "\fs\fw, or \fS");
+							while(!actitems.empty())
 							{
-								case ITEM_ENT:
+								actitem &t = actitems.last();
+								int ent = -1;
+								switch(t.type)
 								{
-									if(!entities::ents.inrange(t.target)) break;
-									ent = t.target;
-									break;
-								}
-								case ITEM_PROJ:
-								{
-									if(!projs::projs.inrange(t.target)) break;
-									projent &proj = *projs::projs[t.target];
-									ent = proj.id;
-									break;
-								}
-								default: break;
-							}
-							if(entities::ents.inrange(ent))
-							{
-								extentity &e = *entities::ents[ent];
-								if(enttype[e.type].usetype == EU_ITEM)
-								{
-									int drop = -1, sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-									if(e.type == WEAPON && weapcarry(world::player1->weapselect, sweap) && world::player1->ammo[e.attr[0]] < 0 &&
-										weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, e.attr[0]);
-									if(isweap(drop))
+									case ITEM_ENT:
 									{
-										s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
-										ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+										if(!entities::ents.inrange(t.target)) break;
+										ent = t.target;
+										break;
 									}
-									else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
-									break;
+									case ITEM_PROJ:
+									{
+										if(!projs::projs.inrange(t.target)) break;
+										projent &proj = *projs::projs[t.target];
+										ent = proj.id;
+										break;
+									}
+									default: break;
 								}
-								else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
+								if(entities::ents.inrange(ent))
 								{
-									ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
-									break;
+									extentity &e = *entities::ents[ent];
+									if(enttype[e.type].usetype == EU_ITEM)
+									{
+										int drop = -1, sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+										if(e.type == WEAPON && weapcarry(world::player1->weapselect, sweap) && world::player1->ammo[e.attr[0]] < 0 &&
+											weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, e.attr[0]);
+										if(isweap(drop))
+										{
+											s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
+											ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+										}
+										else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+										break;
+									}
+									else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
+									{
+										ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+										break;
+									}
 								}
+								actitems.pop();
 							}
-							actitems.pop();
 						}
 					}
 					if(shownotices > 3)
@@ -518,7 +521,7 @@ namespace hud
 							SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 						}
-						if(world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
+						if(world::player1->reqreload < 0 && world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
 							SEARCHBINDCACHE(actkey)("reload", 0, 5, "\fs\fw, or \fS");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);

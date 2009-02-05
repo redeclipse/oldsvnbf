@@ -782,6 +782,16 @@ namespace ai
 			return true;
 		}
 
+		if(!busy && !m_noitems(world::gamemode, world::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.targtype == AI_T_PLAYER && b.idle)
+		{
+			loopirev(WEAPON_MAX) if(i != weappref && entities::ents.inrange(d->entid[i]))
+			{
+				client::addmsg(SV_DROP, "ri2", d->clientnum, i);
+				d->reqswitch = lastmillis;
+				return true;
+			}
+		}
+
 		return false;
 	}
 
