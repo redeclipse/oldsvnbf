@@ -711,6 +711,18 @@ bool findoctadir(const char *name)
 	return false;
 }
 
+void updatetimer(bool outofloop)
+{
+	int millis = SDL_GetTicks() - clockrealbase;
+	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
+	millis += clockvirtbase;
+	if(millis<totalmillis) millis = totalmillis;
+	if(!outofloop) limitfps(millis, totalmillis);
+	curtime = millis-totalmillis;
+	lastmillis += curtime;
+	totalmillis = millis;
+}
+
 int main(int argc, char **argv)
 {
 	#ifdef WIN32
@@ -842,6 +854,7 @@ int main(int argc, char **argv)
 
 	conoutf("\fminit: config");
 	rehash(false);
+	playmusic("loops/theme", "");
 
 	conoutf("\fminit: preload");
     preloadtextures();
@@ -874,17 +887,7 @@ int main(int argc, char **argv)
 
 	for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
 	{
-		int millis = SDL_GetTicks() - clockrealbase;
-		if(clockfix) millis = int(millis*(double(clockerror)/1000000));
-        millis += clockvirtbase;
-        if(millis<totalmillis) millis = totalmillis;
-
-        limitfps(millis, totalmillis);
-
-		curtime = millis-totalmillis;
-        lastmillis += curtime;
-        totalmillis = millis;
-
+		updatetimer(false);
 		updatefps(frameloops, curtime);
 		checkinput();
 		menuprocess();

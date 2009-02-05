@@ -78,6 +78,7 @@ namespace world
 	extern bool clientoption(char *arg);
 	extern void updateworld();
 	extern void newmap(int size);
+	extern void resetmap(bool empty);
 	extern void startmap(const char *name);
 	extern bool allowmove(physent *d);
 	extern dynent *iterdynents(int i);

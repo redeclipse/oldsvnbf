@@ -18,6 +18,7 @@ namespace world
 
 	VARW(numplayers, 0, 4, MAXCLIENTS/2);
 	VARW(numteamplayers, 0, 3, MAXCLIENTS/2);
+	SVARW(mapmusic, "");
 
 	VARP(invmouse, 0, 0, 1);
 	VARP(absmouse, 0, 0, 1);
@@ -676,6 +677,7 @@ namespace world
 				player1->stopmoving(true);
 				hud::sb.showscores(true, true);
 				intermission = true;
+				if(!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme")) playmusic("loops/theme", "");
 			}
 		}
 		else if(timeremain > 0)
@@ -740,27 +742,36 @@ namespace world
         if(m_edit(gamemode) || m_ctf(gamemode)) ctf::preload();
     }
 
+	void resetmap(bool empty) // called just before a map load
+	{
+		if(!empty && (!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme"))) playmusic("loops/theme", "");
+	}
+
 	void startmap(const char *name)	// called just after a map load
 	{
-		const char *title = getmaptitle();
-		if(*title) conoutf("%s", title);
-		intermission = false;
-        player1->respawned = player1->suicided = maptime = 0;
-        preload();
-        entities::mapstart();
-		client::mapstart();
-		projs::reset();
-		// reset perma-state
-		resetworld();
-		resetcamera();
-		gameent *d;
-		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
+		if(*name)
+		{
+			const char *title = getmaptitle();
+			if(*title) conoutf("%s", title);
+			intermission = false;
+			player1->respawned = player1->suicided = maptime = 0;
+			preload();
+			entities::mapstart();
+			client::mapstart();
+			projs::reset();
 
-        // prevent the player from being in the middle of nowhere if he doesn't get spawned
-        entities::spawnplayer(player1, -1, true, false);
-        if(!m_edit(gamemode) && player1->state != CS_EDITING && player1->state != CS_SPECTATOR)
-			player1->state = CS_WAITING; // expect the server to spawn us
+			// reset perma-state
+			resetworld();
+			resetcamera();
+			gameent *d;
+			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
+				d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
+
+			// prevent the player from being in the middle of nowhere if he doesn't get spawned
+			entities::spawnplayer(player1, -1, true, false);
+			if(!m_edit(gamemode) && player1->state != CS_EDITING && player1->state != CS_SPECTATOR)
+				player1->state = CS_WAITING; // expect the server to spawn us
+		}
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)
@@ -1230,6 +1241,12 @@ namespace world
         if(!maptime)
         {
         	maptime = lastmillis;
+			if(m_lobby(gamemode))
+			{
+				if(!music || !Mix_PlayingMusic() || strcmp(musicfile, "loops/theme")) playmusic("loops/theme", "");
+			}
+			else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
+			else musicdone(false);
         	return;
         }
 
