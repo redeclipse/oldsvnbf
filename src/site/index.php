@@ -37,21 +37,28 @@
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
 	}
 	
-	$app['navbar'] = ''; // cache the navbar
-	foreach ($app['targets'] as $key => $targ) {
-		if ($key != "" && $targ['name'] != "") {
-			if ($app['navbar'] != "") $app['navbar'] .= ' | ';
-			$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a>';
-		}
-	}
-
 	$app['target'] = checkarg("target", $app['deftarg']);
 	if (!isset($app['targets'][$app['target']])) $app['target'] = $app['deftarg'];
 
 	$title = checkarg("title");
-	$app['url'] = $title != "" ? (
-			$app['targets'][$app['target']]['alturl'] != "" ? $app['targets'][$app['target']]['alturl'].$title : $app['targets'][$app['target']]['url'].$title
-	) : $app['targets'][$app['target']]['url'];
+	$redir = checkarg("redir", "");
+	if ($redir != "") {
+		$loc = "http://".$_SERVER['HTTP_HOST']."/".$app['target'];
+		if ($title != "") $loc .= "/".$title;
+		header("Location: ".$loc);
+		exit;
+	}
+	else {
+		$app['url'] = $title != "" ? (
+				$app['targets'][$app['target']]['alturl'] != "" ? $app['targets'][$app['target']]['alturl'].$title : $app['targets'][$app['target']]['url'].$title
+		) : $app['targets'][$app['target']]['url'];
+		$app['navbar'] = ''; // cache the navbar
+		foreach ($app['targets'] as $key => $targ) {
+			if ($key != "" && $targ['name'] != "") {
+				if ($app['navbar'] != "") $app['navbar'] .= ' | ';
+				$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a>';
+			}
+		}
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
@@ -60,7 +67,7 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="shortcut icon" href="<?php echo $app['siteico']; ?>" />
 		<link rel="stylesheet" type="text/css" href="<?php echo $app['sitecss']; ?>" />
-<?php	if ($app['target'] != 'home') { ?>
+<?php if ($app['target'] != 'home') { ?>
 		<script type="text/javascript">
 			function setblurb() {
 				var b = document.getElementById('blurb');
@@ -73,8 +80,8 @@
 			}
 			window.onresize = resizeframe();
 		</script>
-<?php	} 
-		if ($app['sfpiwik'] > 0) { ?>
+<?php } 
+	if ($app['sfpiwik'] > 0) { ?>
 		<script type="text/javascript">
 			var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/" : "http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/");
 			document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
@@ -84,22 +91,22 @@
 			piwik_log(piwik_action_name, piwik_idsite, piwik_url);
 		</script>
 		<object><noscript><p><img src="http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
-<?php	} ?>
+<?php } ?>
 	</head>
 	<body>
 		<div id="header">
 			<div id="tags">
 				<div id="flink">
-<?php				if ($app['sfdonate'] > 0) { ?>
+<?php			if ($app['sfdonate'] > 0) { ?>
 					<a href="/donate">
 						<img id="sfdonate" src="http://images.sourceforge.net/images/project-support.jpg" style="border: none" alt="Support <?php echo $app['sitename']; ?> and Donate" />
 					</a>
-<?php				} 
-					if ($app['sflogo'] > 0) { ?>
+<?php			} 
+				if ($app['sflogo'] > 0) { ?>
 					<a href="/project">
 						<img id="sflogo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&type=<?php echo $app['sflogo']; ?>" style="border: none" alt="Get <?php echo $app['sitename']; ?> at SourceForge" />
 					</a>
-<?php				} ?>
+<?php			} ?>
 				</div>
 				<div id="blurb"><i><?php echo $app['target'] != 'home' ? "Loading Application.." : $app['siteblurb']; ?></i></div>
 			</div>
@@ -129,3 +136,4 @@
 		</div>
 	</body>
 </html>
+<?php } ?>
