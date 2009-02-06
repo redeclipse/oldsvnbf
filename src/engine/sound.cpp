@@ -11,12 +11,14 @@ char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 
 VARP(soundvol, 0, 255, 255);
-VARP(musicvol, 0, 32, 255);
-VARP(musicfade, 0, 3000, INT_MAX-1);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+
+VARP(musicvol, 0, 32, 255);
+VARP(musicfade, 0, 3000, INT_MAX-1);
+SVARP(thememusic, "loops/mitaman/oppforce");
 
 void initsound()
 {
@@ -122,10 +124,10 @@ COMMANDN(music, playmusic, "ss");
 
 void smartmusic(bool cond, bool autooff)
 {
-	if(nosound || !musicvol || (!cond && oldmusicvol < 0)) return;
-	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, "loops/theme")))
+	if(nosound || !musicvol || (!cond && oldmusicvol < 0) || !*thememusic) return;
+	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, thememusic)))
 	{
-		playmusic("loops/theme", "");
+		playmusic(thememusic, "");
 		playedmusic = autooff;
 		if(!cond) oldmusicvol = -1;
 	}
