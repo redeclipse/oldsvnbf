@@ -12,11 +12,11 @@ int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 
 VARP(soundvol, 0, 255, 255);
 VARP(musicvol, 0, 32, 255);
-VARP(musicfade, 0, 3300, INT_MAX-1);
+VARP(musicfade, 0, 3000, INT_MAX-1);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundbufferlen, 0, 4096, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
 void initsound()
 {
@@ -51,7 +51,7 @@ void stopmusic(bool docmd)
 		delete[] cmd;
 	}
 	musictime = -1;
-	oldmusicvol = musicvol;
+	if(oldmusicvol >= 0) oldmusicvol = musicvol;
 	playedmusic = false;
 }
 
@@ -60,7 +60,7 @@ void musicdone(bool docmd)
 	if(musicfade && !docmd)
 	{
 		musictime = lastmillis;
-		oldmusicvol = musicvol;
+		if(oldmusicvol >= 0) oldmusicvol = musicvol;
 		playedmusic = false;
 	}
 	else stopmusic(docmd);
