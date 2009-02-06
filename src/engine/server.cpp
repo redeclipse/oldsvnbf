@@ -194,9 +194,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 	if(n < 0)
 	{
 		server::recordpacket(chan, packet->data, packet->dataLength);
-		int ex = server::peerowner(exclude);
-		if(verbose > 5 && ex != exclude) conoutf("remapped broadcast exclude %d to %d", exclude, ex);
-		loopv(clients) if(i != ex && server::allowbroadcast(i)) sendpacket(i, chan, packet);
+		loopv(clients) if(i != server::peerowner(exclude) && server::allowbroadcast(i)) sendpacket(i, chan, packet, exclude);
 		return;
 	}
 	switch(clients[n]->type)
@@ -204,9 +202,9 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 		case ST_REMOTE:
 		{
 			int owner = server::peerowner(n);
-			if(owner >= 0 && clients.inrange(owner) && owner != n && server::allowbroadcast(owner))
+			if(owner >= 0 && clients.inrange(owner) && owner != n && owner != server::peerowner(exclude))
 			{
-				if(verbose > 5) conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
+				//conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
 				sendpacket(owner, chan, packet, exclude);
 			}
 			break;

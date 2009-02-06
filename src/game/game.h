@@ -682,7 +682,8 @@ struct gamestate
 	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
 	int aitype, ownernum, skill, spree;
 
-	gamestate() : lifesequence(0), aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
+	gamestate() : lastdeath(0), lifesequence(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
+		aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
