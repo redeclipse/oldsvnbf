@@ -1004,8 +1004,10 @@ namespace hud
 		float yaw, pitch;
 		vectoyawpitch(delta, yaw, pitch);
 		yaw -= camera1->yaw;
-		if(yaw < 0) yaw += 360;
-        damagecompassdir &dir = damagecompassdirs[(int(yaw+22.5f)%360)/45];
+		while(yaw < 0.0f) yaw += 360.0f;
+		while(yaw >= 360.0f) yaw -= 360.0f;
+		int d = clamp(((int)floor((yaw+22.5f)/45.0f))&7, 0, 7);
+        damagecompassdir &dir = damagecompassdirs[d];
         dir.damage += max(n, damagecompassmin)/float(damagecompassmax);
         if(dir.damage > 1) dir.damage = 1;
         if(weap == WEAPON_PAINT)
