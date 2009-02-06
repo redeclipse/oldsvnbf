@@ -113,6 +113,7 @@ namespace server
         }
     };
 
+	extern int gamemode, mutators;
 	struct servstate : gamestate
 	{
 		vec o;
@@ -124,9 +125,9 @@ namespace server
 
 		servstate() : state(CS_DEAD), aireinit(0) {}
 
-		bool isalive(int gamemillis)
+		bool isalive(int millis)
 		{
-			return state==CS_ALIVE || (state==CS_DEAD && gamemillis-lastdeath <= DEATHMILLIS);
+			return state==CS_ALIVE || (state==CS_DEAD && millis-lastdeath <= DEATHMILLIS);
 		}
 
 		void reset()
@@ -137,7 +138,7 @@ namespace server
 			timeplayed = 0;
 			lifesequence = effectiveness = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
-			respawn(-1, 100);
+			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
 
 		void respawn(int millis, int heal)
@@ -198,7 +199,7 @@ namespace server
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool connected, local, spectator, timesync, online;
+        bool connected, local, spectator, timesync, online, wantsmap;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent> events;
@@ -232,11 +233,22 @@ namespace server
 			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            connected = local = spectator = online = false;
+            connected = local = spectator = online = wantsmap = false;
             authreq = 0;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
 			mapchange();
+		}
+
+		int getmillis(int millis, int id)
+		{
+			if(!timesync)
+			{
+				timesync = true;
+				gameoffset = millis-id;
+				return millis;
+			}
+			return gameoffset+id;
 		}
 	};
 
@@ -1351,15 +1363,14 @@ namespace server
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
 
-	clientinfo *choosebestclient(clientinfo *ci = NULL)
+	clientinfo *choosebestclient()
 	{
 		clientinfo *best = NULL;
-		loopv(clients) if(clients[i]->name[0] && !clients[i]->state.isai() && (!ci || ci != clients[i]))
+		loopv(clients)
 		{
 			clientinfo *cs = clients[i];
-			if(haspriv(cs, PRIV_MASTER)) { best = cs; break; }
-			if(!best || cs->state.timeplayed > best->state.timeplayed)
-				best = cs;
+			if(cs->state.isai() || !cs->name[0] || !cs->online || !cs->connected || cs->wantsmap) continue;
+			if(!best || cs->state.timeplayed > best->state.timeplayed) best = cs;
 		}
 		return best;
 	}
@@ -1414,7 +1425,8 @@ namespace server
         if(!ci) putint(p, 0);
 		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, true))
 		{
-			clientinfo *best = choosebestclient(ci);
+			ci->wantsmap = true;
+			clientinfo *best = choosebestclient();
 			if(best)
 			{
 				loopi(3) if(mapdata[i])
@@ -1428,8 +1440,12 @@ namespace server
 			}
 			else putint(p, 0);
 		}
-		else if(ci->online) putint(p, 2); // we got a temp map eh?
-		else putint(p, 0);
+		else
+		{
+			ci->wantsmap = false;
+			if(ci->online) putint(p, 2); // we got a temp map eh?
+			else putint(p, 0);
+		}
 		putint(p, gamemode);
 		putint(p, mutators);
 
@@ -1613,7 +1629,7 @@ namespace server
 				mutate(smuts, mut->died(target, actor));
 				ts.state = CS_DEAD;
 				ts.lastdeath = gamemillis;
-				ts.weapreset(false);//true);
+				ts.weapreset(false);
 			}
 		}
 	}
@@ -1632,7 +1648,7 @@ namespace server
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.lastdeath = gamemillis;
-		gs.weapreset(false);//true);
+		gs.weapreset(false);
 	}
 
 	void processevent(clientinfo *ci, destroyevent &e)
@@ -1757,6 +1773,7 @@ namespace server
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
+			gs.setweapstate(weap, WPSTATE_IDLE, 0, e.millis);
 			gs.ammo[weap] = gs.entid[weap] = -1;
 			gs.weapselect = weap;
 		}
@@ -2312,17 +2329,6 @@ namespace server
         #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
 
 		static gameevent dummyevent;
-		#define seteventmillis(event) \
-		{ \
-			if(!cp->timesync) \
-			{ \
-				cp->timesync = true; \
-				cp->gameoffset = gamemillis - event.id; \
-				event.millis = gamemillis; \
-			} \
-			else event.millis = cp->gameoffset + event.id; \
-		}
-
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen)
 		{
@@ -2438,7 +2444,7 @@ namespace server
 					ev.type = GAMEEVENT_SWITCH;
 					ev.weapsel.id = id;
 					ev.weapsel.weap = weap;
-					seteventmillis(ev.weapsel);
+					ev.weapsel.millis = cp->getmillis(gamemillis, ev.weapsel.id);
 					break;
 				}
 
@@ -2483,7 +2489,7 @@ namespace server
 					ev.shot.id = getint(p);
 					ev.shot.weap = getint(p);
 					ev.shot.power = getint(p);
-					if(cp) seteventmillis(ev.shot);
+					if(havecn) ev.shot.millis = cp->getmillis(gamemillis, ev.shot.id);
 					loopk(3) ev.shot.from[k] = getint(p);
 					ev.shot.num = getint(p);
 					loopj(ev.shot.num)
@@ -2507,6 +2513,7 @@ namespace server
 					sents[cp->state.entid[weap]].spawned = false;
 					sents[cp->state.entid[weap]].millis = gamemillis;
 					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
+					cp->state.setweapstate(weap, WPSTATE_IDLE, 0, 0);
 					cp->state.entid[weap] = cp->state.ammo[weap] = -1;
 					break;
 				}
@@ -2521,7 +2528,7 @@ namespace server
 					ev.type = GAMEEVENT_RELOAD;
 					ev.reload.id = id;
 					ev.reload.weap = weap;
-					seteventmillis(ev.reload);
+					ev.reload.millis = cp->getmillis(gamemillis, ev.reload.id);
 					break;
 				}
 
@@ -2533,7 +2540,7 @@ namespace server
 					gameevent &ev = havecn ? cp->addevent() : dummyevent;
 					ev.type = GAMEEVENT_DESTROY;
 					ev.destroy.id = getint(p);
-					if(cp) seteventmillis(ev.destroy); // this is the event millis
+					if(havecn) ev.destroy.millis = cp->getmillis(gamemillis, ev.destroy.id); // this is the event millis
 					ev.destroy.weap = getint(p);
 					ev.destroy.id = getint(p); // this is the actual id
 					ev.destroy.radial = getint(p);
@@ -2559,7 +2566,7 @@ namespace server
 					ev.type = GAMEEVENT_USE;
 					ev.use.id = id;
 					ev.use.ent = ent;
-					seteventmillis(ev.use);
+					ev.use.millis = cp->getmillis(gamemillis, ev.use.id);
 					break;
 				}
 
@@ -3001,30 +3008,30 @@ namespace server
 
 				case SV_GETMAP:
 				{
-					ci->state.timeplayed = 0;
-					ci->state.lasttimeplayed = lastmillis;
-					if(mapdata[2])
+					ci->wantsmap = true;
+					if(!mapsending && mapdata[2])
+					{
+						loopk(3) if(mapdata[k])
+							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
+						sendwelcome(ci);
+					}
+					else
 					{
 						if(!mapsending)
 						{
-							loopk(3) if(mapdata[k])
-								sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
-							sendwelcome(ci);
-						}
-					}
-					else if(!m_edit(gamemode))
-					{
-						clientinfo *best = choosebestclient(ci);
-						if(best)
-						{
-							loopk(3) if(mapdata[k])
+							clientinfo *best = choosebestclient();
+							if(best)
 							{
-								fclose(mapdata[k]);
-								mapdata[k] = NULL;
+								loopk(3) if(mapdata[k])
+								{
+									fclose(mapdata[k]);
+									mapdata[k] = NULL;
+								}
+								mapsending = false;
+								sendf(best->clientnum, 1, "ri", SV_GETMAP);
 							}
-							mapsending = false;
-							sendf(best->clientnum, 1, "ri", SV_GETMAP);
 						}
+						srvmsgf(ci->clientnum, "map is being uploaded, please wait..");
 					}
 					break;
 				}

@@ -37,6 +37,8 @@ namespace aiman
 	{
 		loopv(clients) if(clients[i]->state.aitype == type && clients[i]->state.aireinit < 0)
 		{ // reuse a slot that was going to removed
+			clients[i]->state.dropped.reset();
+            loopk(WEAPON_MAX) clients[i]->state.weapshots[k].reset();
 			clients[i]->state.ownernum = findaiclient();
 			clients[i]->state.aireinit = 1;
 			if(req) autooverride = true;
@@ -145,7 +147,12 @@ namespace aiman
 
 	void shiftai(clientinfo *ci, int reinit = 1, int cn = -1)
 	{
-		if(cn < 0 || reinit < 0 || ci->state.aireinit < 0) ci->state.ownernum = ci->state.aireinit = -1;
+		if(cn < 0 || reinit < 0 || ci->state.aireinit < 0)
+		{
+			ci->state.dropped.reset();
+            loopi(WEAPON_MAX) ci->state.weapshots[i].reset();
+			ci->state.ownernum = ci->state.aireinit = -1;
+		}
 		else
 		{
 			if(ci->state.aireinit < reinit)
@@ -156,6 +163,11 @@ namespace aiman
 					mutate(smuts, mut->leavegame(ci));
 				}
 				ci->state.aireinit = reinit;
+			}
+			if(ci->state.ownernum != cn)
+			{
+				ci->state.dropped.reset();
+				loopi(WEAPON_MAX) ci->state.weapshots[i].reset();
 			}
 			ci->state.ownernum = cn;
 		}
