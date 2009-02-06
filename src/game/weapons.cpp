@@ -66,7 +66,7 @@ namespace weapons
 	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(world::gamemode, world::mutators);
-		if(!weaploads(d->weapselect, sweap) || !d->hasweap(d->weapselect, sweap))
+		if(!d->hasweap(d->weapselect, sweap))
 		{
 			int bestweap = d->bestweap(sweap);
 			if(d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
