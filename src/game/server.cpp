@@ -2202,8 +2202,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo &ci = *clients[i];
-			int peer = peerowner(i);
-			bool owner = peer >= 0 && peer == i;
+			bool owner = !ci.state.isai() && peerowner(i) == i;
 			ENetPacket *packet;
 			if(owner && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
 			{
@@ -3111,7 +3110,7 @@ namespace server
 					break;
 				}
 			}
-			//conoutf("\fy[server] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
+			if(verbose > 5) conoutf("\fy[server] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
 		}
 	}
 

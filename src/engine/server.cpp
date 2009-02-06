@@ -36,9 +36,9 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
-VAR(verbose, 0, 0, 5);
+VAR(verbose, 0, 0, 6);
 #else
-VARP(verbose, 0, 0, 5);
+VARP(verbose, 0, 0, 6);
 #endif
 SVAR(game, "bfa");
 
@@ -195,7 +195,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 	{
 		server::recordpacket(chan, packet->data, packet->dataLength);
 		int ex = server::peerowner(exclude);
-		//if(ex != exclude) conoutf("remapped broadcast exclude %d to %d", exclude, ex);
+		if(verbose > 5 && ex != exclude) conoutf("remapped broadcast exclude %d to %d", exclude, ex);
 		loopv(clients) if(i != ex && server::allowbroadcast(i)) sendpacket(i, chan, packet);
 		return;
 	}
@@ -206,7 +206,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 			int owner = server::peerowner(n);
 			if(owner >= 0 && clients.inrange(owner) && owner != n && server::allowbroadcast(owner))
 			{
-				//conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
+				if(verbose > 5) conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
 				sendpacket(owner, chan, packet, exclude);
 			}
 			break;
