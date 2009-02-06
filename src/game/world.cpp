@@ -755,6 +755,9 @@ namespace world
 		resetworld();
 		resetcamera();
 
+		entities::mapstart();
+		client::mapstart();
+
 		if(*name)
 		{
 			const char *title = getmaptitle();
@@ -1240,8 +1243,6 @@ namespace world
         if(!maptime)
         {
         	maptime = lastmillis;
-			entities::mapstart();
-			client::mapstart();
 			if(m_lobby(gamemode)) smartmusic(true, false);
 			else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
 			else musicdone(false);
