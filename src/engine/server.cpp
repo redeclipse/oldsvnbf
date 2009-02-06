@@ -204,7 +204,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 		case ST_REMOTE:
 		{
 			int owner = server::peerowner(n);
-			if(clients.inrange(owner) && owner != n)
+			if(owner >= 0 && clients.inrange(owner) && owner != n && server::allowbroadcast(owner))
 			{
 				//conoutf("redirect %d packet to %d [%d:%d]", n, owner, exclude, server::peerowner(exclude));
 				sendpacket(owner, chan, packet, exclude);

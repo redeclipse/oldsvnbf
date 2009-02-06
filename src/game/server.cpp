@@ -148,7 +148,7 @@ namespace server
 
 		bool isai(int type = -1, bool all = true)
 		{
-			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0);
+			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0) && (all || ownernum >= 0);
 		}
 	};
 
@@ -2039,6 +2039,7 @@ namespace server
 		    savescore(ci);
 		    dropitems(ci, true);
 		    sendf(-1, 1, "ri2", SV_CDIS, n);
+		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
 		    aiman::removeai(ci, complete);
 		    clients.removeobj(ci);
@@ -2201,7 +2202,8 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo &ci = *clients[i];
-			bool owner = (peerowner(i) == i);
+			int peer = peerowner(i);
+			bool owner = peer >= 0 && peer == i;
 			ENetPacket *packet;
 			if(owner && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
 			{
