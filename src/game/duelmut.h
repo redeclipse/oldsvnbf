@@ -21,7 +21,7 @@ struct duelservmode : servmode
 			{
 				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				ci->state.state = CS_WAITING;
-				ci->state.weapreset(false);
+				ci->state.weapreset(true);
 			}
 			if(msg)
 			{

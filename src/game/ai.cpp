@@ -31,14 +31,19 @@ namespace ai
 		string m;
 		if(o) s_strcpy(m, world::colorname(o));
 		else s_sprintf(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
-
-		if(!d->name[0]) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
-		else if(verbose)
+		bool resetthisguy = false;
+		if(!d->name[0])
 		{
-			if(d->ownernum != on) conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
-			else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
-			else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
+			conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
+			resetthisguy = true;
 		}
+		else if(d->ownernum != on)
+		{
+			conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
+			resetthisguy = true;
+		}
+		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
+		else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
@@ -46,6 +51,7 @@ namespace ai
 		d->skill = sk;
 		d->team = tm;
 
+		if(resetthisguy) projs::remove(d);
 		if(world::player1->clientnum == d->ownernum) create(d);
 		else if(d->ai) destroy(d);
 	}

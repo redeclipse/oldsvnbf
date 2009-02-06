@@ -142,6 +142,7 @@ namespace entities
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
 			{
+				d->setweapstate(g, WPSTATE_IDLE, 0, lastmillis);
 				d->ammo[g] = d->entid[g] = -1;
 				d->weapselect = g;
 			}

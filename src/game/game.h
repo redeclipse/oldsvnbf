@@ -736,12 +736,9 @@ struct gamestate
 	{
 		loopi(WEAPON_MAX)
 		{
-			if(full)
-			{
-				weapstate[i] = WPSTATE_IDLE;
-				weapwait[i] = weaplast[i] = 0;
-				ammo[i] = -1;
-			}
+			weapstate[i] = WPSTATE_IDLE;
+			weapwait[i] = weaplast[i] = 0;
+			if(full) ammo[i] = -1;
 			entid[i] = -1;
 		}
 		if(full) lastweap = weapselect = -1;
@@ -841,14 +838,10 @@ struct gamestate
 	void spawnstate(int sweap, int heal, bool others)
 	{
 		health = heal;
+		weapreset(true);
 		lastweap = weapselect = sweap;
 		loopi(WEAPON_MAX)
-		{
-			weapstate[i] = WPSTATE_IDLE;
-			weapwait[i] = weaplast[i] = 0;
 			ammo[i] = (i == sweap || (others && !weaptype[i].reloads)) ? weaptype[i].add : -1;
-			entid[i] = -1;
-		}
 	}
 
     int respawnwait(int millis, int delay)

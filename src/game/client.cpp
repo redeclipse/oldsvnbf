@@ -5,7 +5,7 @@
 namespace client
 {
 	bool c2sinit = false, sendinfo = false, isready = false, remote = false,
-		demoplayback = false, needsmap = false;
+		demoplayback = false, needsmap = false, gettingmap = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
 
@@ -108,7 +108,7 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		needsmap = remote = isready = false;
+		gettingmap = needsmap = remote = isready = false;
         sessionid = 0;
 		messages.setsize(0);
 		projs::remove(world::player1);
@@ -424,21 +424,15 @@ namespace client
 					conoutf("\frfailed to open map file: %s", mapfext);
 					return;
 				}
+				gettingmap = true;
 				fwrite(data, 1, len, f);
 				fclose(f);
-				needsmap = false;
 				break;
 			}
 		}
 		return;
 	}
-
-	void getmap()
-	{
-		conoutf("\fmgetting map...");
-		addmsg(SV_GETMAP, "r");
-	}
-	ICOMMAND(regetmap, "", (), getmap());
+	ICOMMAND(regetmap, "", (), addmsg(SV_GETMAP, "r"));
 
 	void stopdemo()
 	{
@@ -787,11 +781,13 @@ namespace client
         d->health = getint(p);
         if(resume && d==world::player1)
         {
+        	d->weapreset(false);
             getint(p);
             loopi(WEAPON_MAX) getint(p);
         }
         else
         {
+        	d->weapreset(true);
             d->weapselect = getint(p);
             loopi(WEAPON_MAX) d->ammo[i] = getint(p);
         }
@@ -1044,15 +1040,23 @@ namespace client
 					int hasmap = getint(p);
 					if(hasmap) getstring(text, p);
 					int getit = getint(p), mode = getint(p), muts = getint(p);
-					needsmap = false;
 					changemapserv(hasmap && getit != 1 ? text : NULL, mode, muts, getit == 2);
 					mapchanged = true;
-					if(needsmap && !getit)
+					if(needsmap) switch(getit)
 					{
-						conoutf("\fcserver requested map change [%d] to %s, and we need it", getit, hasmap && getit != 1 ? text : "<temp>");
-						getmap();
+						case 0:
+						{
+							conoutf("\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
+							addmsg(SV_GETMAP, "r");
+							break;
+						}
+						case 2:
+						{
+							conoutf("\fcseem to have failed to get map to %s, try /regetmap", hasmap ? text : "<temp>");
+							needsmap = false; // we failed sir
+							break;
+						}
 					}
-					else if(getit == 2) needsmap = false; // we failed sir
 					break;
 				}
 
@@ -1074,15 +1078,6 @@ namespace client
 				{
 					int n;
 					while((n = getint(p)) != -1) entities::setspawn(n, getint(p) ? true : false);
-					#if 0
-					if(!needsmap && !m_edit(world::gamemode) && ver >= 0 && rev >= 0 &&
-						(ver != getmapversion() || rev != getmaprevision()))
-					{
-						conoutf("map v%d:r%d does not match v%d:r%d, asking for it", getmapversion(), getmaprevision(), ver, rev);
-						needsmap = true;
-						getmap();
-					}
-					#endif
 					break;
 				}
 
@@ -1137,7 +1132,7 @@ namespace client
 					gameent *f = world::newclient(lcn);
 					if(f != world::player1 && !f->ai)
 					{
-						f->respawn(lastmillis, 100);
+						f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p);
 						f->state = CS_SPAWNING;
 						playsound(S_RESPAWN, f->o, f);
@@ -1152,7 +1147,7 @@ namespace client
 					int lcn = getint(p), ent = getint(p);
 					gameent *f = world::newclient(lcn);
 					if(f == world::player1 && editmode) toggleedit();
-					f->respawn(lastmillis, 100);
+					f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 					parsestate(f, p);
 					f->state = CS_ALIVE;
 					if(f == world::player1 || f->ai)
@@ -1288,7 +1283,7 @@ namespace client
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						gameent *f = world::newclient(lcn);
-						if(f!=world::player1) f->respawn(0, 100);
+						if(f!=world::player1) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p, true);
 					}
 					break;
@@ -1507,6 +1502,7 @@ namespace client
 					if(!d) break;
 					if(val) d->state = CS_EDITING;
 					else d->state = CS_ALIVE;
+					projs::remove(d);
 					break;
 				}
 
@@ -1627,23 +1623,27 @@ namespace client
 
 				case SV_GETMAP:
 				{
-					conoutf("\fmserver has requested we send the map..");
-					if(!needsmap) sendmap();
+					conoutf("\fcserver has requested we send the map..");
+					if(!needsmap && !gettingmap) sendmap();
 					else
 					{
-						conoutf("asking for it instead");
-						getmap();
+						if(!gettingmap)
+						{
+							conoutf("\frwe don't have the map though, so asking for it instead");
+							addmsg(SV_GETMAP, "r");
+						}
+						else conoutf("\frbut we're in the process of getting it!");
 					}
 					break;
 				}
 
 				case SV_SENDMAP:
 				{
-					conoutf("\fmmap has been uploaded");
-					if(needsmap)
+					conoutf("\fcmap data has been uploaded");
+					if(needsmap && !gettingmap)
 					{
-						conoutf("map was uploaded and we want it, asking for it");
-						getmap();
+						conoutf("\frwe want the map too, so asking for it");
+						addmsg(SV_GETMAP, "r");
 					}
 					break;
 				}
