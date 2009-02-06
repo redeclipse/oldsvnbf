@@ -939,7 +939,7 @@ namespace client
 		{
 			prevtype = type;
 			type = getint(p);
-			//conoutf("\fo[client] msg: %d, prev: %d", type, prevtype);
+			if(verbose > 5) conoutf("\fo[client] msg: %d, prev: %d", type, prevtype);
 			switch(type)
 			{
 				case SV_INITS2C:					// welcome messsage from the server
@@ -967,7 +967,7 @@ namespace client
 					int lcn = getint(p), len = getuint(p);
 					ucharbuf q = p.subbuf(len);
 					gameent *t = world::getclient(lcn);
-					if(t != world::player1 && !t->ai) parsemessages(lcn, t, q);
+					parsemessages(lcn, t, q);
 					break;
 				}
 
