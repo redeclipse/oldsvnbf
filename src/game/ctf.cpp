@@ -129,8 +129,8 @@ namespace ctf
 			{
 				float dist = world::player1->o.dist(f.spawnloc);
 				int oldy = y-sy;
-				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "emphasis", blend, "\fs%s+\fS %.1f", teamtype[f.team].chat, dist/16.f);
-				hud::drawitemsubtext(x, oldy, skew, "default", blend, "\fs%s-\fS %.1f", teamtype[team].chat, bestdist/16.f);
+				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "default", blend, "\fs%s+\fS %.1f", teamtype[f.team].chat, dist/16.f);
+				hud::drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s-\fS %.1f", teamtype[team].chat, bestdist/16.f);
 			}
 		}
 		return sy;
