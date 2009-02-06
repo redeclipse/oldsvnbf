@@ -253,14 +253,13 @@ namespace server
 	};
 
 	namespace aiman {
-		bool autooverride = false;
+		bool autooverride = false, dorefresh = false;
 		extern int findaiclient(int exclude = -1);
 		extern bool addai(int type, int skill, bool req = false);
 		extern void deleteai(clientinfo *ci);
 		extern bool delai(int type, bool req = false);
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
-		extern void refreshai();
 		extern void checkskills();
 		extern void clearai();
 		extern void checkai();
@@ -391,7 +390,7 @@ namespace server
 	{
 		int n = 0;
 		loopv(clients)
-			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
+			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->connected && clients[i]->clientnum != exclude &&
 				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || !clients[i]->state.isai(-1, false)))
 					n++;
 		return n;
@@ -1433,22 +1432,6 @@ namespace server
 		else putint(p, 0);
 		putint(p, gamemode);
 		putint(p, mutators);
-		if(!ci || (m_timed(gamemode) && numclients(-1, false, true)))
-		{
-			putint(p, SV_TIMEUP);
-			putint(p, minremain);
-		}
-		if(!notgotinfo)
-		{
-			putint(p, SV_GAMEINFO);
-			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
-			{
-				putint(p, i);
-				if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i, false) ? 1 : 0);
-				else putint(p, sents[i].spawned ? 1 : 0);
-			}
-			putint(p, -1);
-		}
 
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
@@ -1483,6 +1466,24 @@ namespace server
 				}
 			}
 		});
+
+		if(!ci || (m_timed(gamemode) && numclients(-1, false, true)))
+		{
+			putint(p, SV_TIMEUP);
+			putint(p, minremain);
+		}
+
+		if(!notgotinfo)
+		{
+			putint(p, SV_GAMEINFO);
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
+			{
+				putint(p, i);
+				if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i, false) ? 1 : 0);
+				else putint(p, sents[i].spawned ? 1 : 0);
+			}
+			putint(p, -1);
+		}
 
         if(ci)
         {
@@ -2047,7 +2048,6 @@ namespace server
         else connects.removeobj(ci);
 		if(complete) cleanup();
 		else checkvotes();
-		aiman::refreshai();
 	}
 
 	#include "extinfo.h"
@@ -2202,9 +2202,8 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo &ci = *clients[i];
-			bool owner = !ci.state.isai() && peerowner(i) == i;
 			ENetPacket *packet;
-			if(owner && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
+			if(!ci.state.isai() && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
 			{
 				packet = enet_packet_create(&ws.positions[pkt[i].posoff<0 ? 0 : pkt[i].posoff+ci.position.length()],
 											pkt[i].posoff<0 ? psize : psize-ci.position.length(),
@@ -2215,7 +2214,7 @@ namespace server
 			}
 			ci.position.setsizenodelete(0);
 
-			if(owner && msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
+			if(!ci.state.isai() && msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
 			{
 				packet = enet_packet_create(&ws.messages[pkt[i].msgoff<0 ? 0 : pkt[i].msgoff+pkt[i].msglen],
 											pkt[i].msgoff<0 ? msize : msize-pkt[i].msglen,
@@ -2288,8 +2287,6 @@ namespace server
                 sendresume(ci);
                 sendinitc2s(ci);
                 relayf(2, "\fg%s has joined the game", colorname(ci));
-
-                aiman::refreshai();
             }
         }
 		else if(chan==2)
@@ -2665,7 +2662,7 @@ namespace server
 						if(smode) smode->changeteam(ci, ci->team, team);
 						mutate(smuts, mut->changeteam(ci, ci->team, team));
 						ci->team = team;
-						aiman::refreshai();
+						aiman::dorefresh = true;
 					}
                     sendinitc2s(ci);
 					break;
@@ -2856,7 +2853,7 @@ namespace server
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-                    	aiman::refreshai();
+                    	aiman::dorefresh = true;
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
@@ -2869,7 +2866,7 @@ namespace server
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						aiman::refreshai();
+						aiman::dorefresh = true;
 					}
 					break;
 				}
@@ -2885,7 +2882,7 @@ namespace server
 						if(smode) smode->changeteam(wi, wi->team, team);
 						mutate(smuts, mut->changeteam(wi, wi->team, team));
 						wi->team = team;
-						aiman::refreshai();
+						aiman::dorefresh = true;
 					}
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
 					QUEUE_INT(SV_SETTEAM);

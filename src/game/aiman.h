@@ -8,7 +8,7 @@ namespace aiman
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
@@ -40,6 +40,7 @@ namespace aiman
 			clients[i]->state.ownernum = findaiclient();
 			clients[i]->state.aireinit = 1;
 			if(req) autooverride = true;
+			dorefresh = true;
 			return true;
 		}
 		int cn = addclient(ST_REMOTE);
@@ -70,8 +71,9 @@ namespace aiman
 					sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
 				}
 				else sendspawn(ci);
-				ci->online = true;
+				ci->online = ci->connected = true;
 				if(req) autooverride = true;
+				dorefresh = true;
 				return true;
 			}
 			delclient(cn);
@@ -106,7 +108,7 @@ namespace aiman
 		sendf(-1, 1, "ri2", SV_CDIS, cn);
 		clients.removeobj(ci);
 		delclient(cn);
-		refreshai();
+		dorefresh = true;
 	}
 
 	bool delai(int type, bool req)
@@ -115,6 +117,7 @@ namespace aiman
 		{
 			deleteai(clients[i]);
 			if(req) autooverride = true;
+			dorefresh = true;
 			return true;
 		}
 		if(req)
@@ -172,7 +175,7 @@ namespace aiman
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.isai() || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
@@ -197,6 +200,11 @@ namespace aiman
 
 	void checksetup()
 	{
+		if(dorefresh)
+		{
+			refreshai();
+			dorefresh = false;
+		}
 		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botmaxskill), GVAR(botminskill));
 		loopv(clients) if(clients[i]->state.isai(-1, false))
 		{
@@ -214,7 +222,7 @@ namespace aiman
 	void clearai()
 	{ // clear and remove all ai immediately
 		loopvrev(clients) if(clients[i]->state.isai()) deleteai(clients[i]);
-		autooverride = false;
+		autooverride = dorefresh = false;
 	}
 
 	void checkai()
