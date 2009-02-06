@@ -1,0 +1,97 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+	<head>
+	      <title>SourceForge.net: Running the game - bloodfrontier</title>
+	</head>
+<body class="mediawiki ns-0 ltr page-Running_the_game">
+
+
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content">
+		<a name="top" id="top"></a>
+				<h1 class="firstHeading">Running the game</h1>
+		<div id="bodyContent">
+			<table id="toc" class="toc" summary="Contents"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1"><a href="Running_the_game.html#Windows"><span class="tocnumber">1</span> <span class="toctext">Windows</span></a></li>
+<li class="toclevel-1"><a href="Running_the_game.html#Linux"><span class="tocnumber">2</span> <span class="toctext">Linux</span></a></li>
+<li class="toclevel-1"><a href="Running_the_game.html#Mac"><span class="tocnumber">3</span> <span class="toctext">Mac</span></a></li>
+<li class="toclevel-1"><a href="Running_the_game.html#Command-line_switches"><span class="tocnumber">4</span> <span class="toctext">Command-line switches</span></a>
+<ul>
+<li class="toclevel-2"><a href="Running_the_game.html#Client"><span class="tocnumber">4.1</span> <span class="toctext">Client</span></a></li>
+<li class="toclevel-2"><a href="Running_the_game.html#Server"><span class="tocnumber">4.2</span> <span class="toctext">Server</span></a></li>
+<li class="toclevel-2"><a href="Running_the_game.html#Master_server"><span class="tocnumber">4.3</span> <span class="toctext">Master server</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table><script type="text/javascript"> if (window.showTocToggle) { var tocShowText = "show"; var tocHideText = "hide"; showTocToggle(); } </script>
+<a name="Windows"></a><h2> <span class="mw-headline">Windows</span></h2>
+<p>Just install and run&nbsp;:)
+</p>
+<a name="Linux"></a><h2> <span class="mw-headline">Linux</span></h2>
+<p>From the command line, change to the bloodfrontier directory and type: 
+<tt>./bloodfrontier.sh</tt>
+</p>
+<a name="Mac"></a><h2> <span class="mw-headline">Mac</span></h2>
+<p>No official mac package yet. Enterprising users should be able to build the game from <a href="SVN.html" title="SVN">SVN</a>.
+</p>
+<a name="Command-line_switches"></a><h2> <span class="mw-headline">Command-line switches</span></h2>
+<a name="Client"></a><h3> <span class="mw-headline">Client</span></h3>
+<ul><li> -dw&lt;number&gt;: sets width to &lt;number&gt;. If height not specified, also sets height to width * 3/4. min is 320
+</li><li> -dh&lt;number&gt;: sets height to &lt;number&gt;. If width not specified, also sets width to height * 4/3. min is 200
+</li><li> -dd&lt;number&gt;: sets colour depth to &lt;number&gt;.
+</li><li> -dc&lt;number&gt;: sets colour bits to &lt;number&gt;. (what's the difference between colour depth and colour bits??)
+</li><li> -da&lt;number&gt;: sets fullscreen antialiasing (FSAA) to &lt;number&gt; samples.
+</li><li> -dv&lt;number&gt;: turns vsync on or off. 0 to disable, 1 to enable. Defaults to 0.
+</li><li> -ds&lt;number&gt;: sets stencilbits to &lt;number&gt;.
+</li><li> -du&lt;number&gt;: set shader quality to &lt;number&gt;. 0 for none, max is 3.
+</li><li> -k&lt;number&gt;: enables or disables kid mode. 0 to disable, 1 to enable.
+</li><li> -g&lt;gametype&gt;: used to start different games. unused.
+</li><li> -h&lt;path&gt;: sets your home directory to &lt;path&gt;. If set, the engine will look for files in your home directory as well as the normal installation directory. However, all files will be written to your home directory, instead of the normal installation directory.
+</li><li> -p&lt;path&gt;: includes the data files found in &lt;path&gt;. Used for adding additional mods. Packages will be loaded in the order specified, or if not found, from the installation path.
+</li><li> -v&lt;number&gt;: sets verbosity to &lt;number&gt;. This affects how much information is printed to the console. 0 is the least verbose, 4 is the most verbose.
+</li><li> -r&lt;filename&gt;: executes contents of that file. if no file specified, executes init.cfg
+</li><li> -x&lt;filename&gt;: sets the init script to &lt;filename&gt;. (what's the difference between these two?)
+</li><li> -o&lt;path&gt;: sets the path to your Sauerbraten directory. If Blood Frontier can find your Sauerbraten directory, you can load and play Sauerbraten maps from withing Blood Frontier!
+</li></ul>
+<a name="Server"></a><h3> <span class="mw-headline">Server</span></h3>
+<ul><li> -su&lt;number&gt;: sets upstream rate to &lt;number&gt;. Do not set this unless you know what you are doing, it should normally be left out. Use -sc to limit your bandwidth use.
+</li><li> -sc&lt;number&gt;: sets the maximum number of clients to &lt;number&gt;.
+</li><li> -si&lt;ip&gt;: binds to the ip address &lt;ip&gt;. Only needed for machines with more than one interface.
+</li><li> -sm&lt;ip&gt;: uses &lt;ip&gt; as the master server.
+</li><li> -sl&lt;something&gt;: sets "load" to &lt;something&gt;. (check this one out)
+</li><li> -ss&lt;number&gt;: sets "servertype" to &lt;number&gt;. (this too)
+</li><li> -sp&lt;number&gt;: sets the server port to &lt;number&gt;. (presumably these two are the game data and information ports for the server.)
+</li><li> -sq&lt;number&gt;: sets the server query port to &lt;number&gt;. (can they be anything? can this be used to run multiple servers off one IP?)
+</li><li> -sa&lt;number&gt;: sets the "servermasterport" to &lt;number&gt;. (is this the port of the masterserver?)
+</li></ul>
+<ul><li> -d&lt;description&gt;: sets the server's description to &lt;description&gt;. This will appear in the server list.
+</li><li> -P&lt;password&gt;: sets the admin password to &lt;password&gt;.
+</li><li> -k&lt;password&gt;: sets the server password to &lt;password&gt;. Players will need the password in order to connect. (verify)
+</li><li> -o&lt;number&gt;: sets the openness of the server to N. N=1 disables mastermodes 2 (locked) and 3 (private), while N=0 (default) enables all mastermodes.
+</li><li> -M&lt;motd&gt;: sets the server MOTD to &lt;motd&gt;. This is what players will see when they first log on to the server.
+</li></ul>
+<a name="Master_server"></a><h3> <span class="mw-headline">Master server</span></h3>
+<p>These are for actually running a masterserver - this is not needed to run a server. Do not use it unless you really know you want your own master server!
+</p>
+<ul><li> -ms&lt;number&gt;: something to do with the masterserver, some kind of mode? (check this out)
+</li><li> -mi&lt;ip&gt;: binds the masterserver to the interface &lt;ip&gt;. Defaults to localhost.
+</li><li> -mp&lt;number&gt;: sets the masterserver to listen on port &lt;number&gt;. Default is 28800.
+</li></ul>
+
+<!-- 
+NewPP limit report
+Preprocessor node count: 9/1000000
+Post-expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Expensive parser function count: 0/100
+-->
+
+
+</div>
+
+
+		<script type="text/javascript">if (window.runOnloadHook) runOnloadHook();</script>
+<!-- Served in 0.138 secs. -->
+</body></html>
