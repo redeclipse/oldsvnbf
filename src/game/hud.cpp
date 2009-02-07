@@ -288,7 +288,7 @@ namespace hud
 				if(world::player1->ammo[weap] < weaptype[weap].max)
 					drawfadedslice(max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo),
 						min(min(maxammo-ammo, ammo), 2) /float(maxammo),
-							x, y, s, fade);
+							x, y, s, fade, r, g, b);
                 break;
 
             default:
@@ -687,8 +687,8 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
-			else drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "radar", fade*radarnameblend);
+			if(hastv(radarplayernames)) drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "sub", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
+			else drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "sub", fade*radarnameblend);
 		}
 	}
 
@@ -742,9 +742,9 @@ namespace hud
 				fade = clamp(fade+((1.f-fade)*(1.f-inspawn)), 0.f, 1.f);
 			}
 			string text; text[0] = 0;
-			if(insel) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend);
+			if(insel) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend, "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend);
 		}
 	}
 
