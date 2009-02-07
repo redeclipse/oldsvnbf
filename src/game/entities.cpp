@@ -984,7 +984,7 @@ namespace entities
 		{
 			loopavoid(obstacles, d,
 			{
-				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == goal || !ents[ent]->links.empty()))
+				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == node || ent == goal || !ents[ent]->links.empty()))
 				{
 					nodes[ent].id = routeid;
 					nodes[ent].curscore = -1.f;
@@ -1015,7 +1015,7 @@ namespace entities
 			loopv(links)
 			{
 				int link = links[i];
-				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == goal || !ents[link]->links.empty()))
+				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()))
 				{
 					linkq &n = nodes[link];
 					float curscore = prevscore + ents[link]->o.dist(ent.o);
@@ -1050,12 +1050,12 @@ namespace entities
 		return !route.empty();
 	}
 
-	int entitynode(const vec &v, float dist)
+	int entitynode(const vec &v, float dist, bool links)
 	{
-        int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64, true);
+        int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64, links);
         if(ents.inrange(n) || dist >= 0.f) return n;
         float mindist = 1e16f;
-        loopv(ents) if(ents[i]->type == WAYPOINT && !ents[i]->links.empty())
+        loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
             float u = ents[i]->o.squaredist(v);
             if(u <= mindist)
@@ -1091,7 +1091,7 @@ namespace entities
 			}
 			if((dropwaypoints || autodrop) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
-				int curnode = entitynode(v, float(enttype[WAYPOINT].radius));
+				int curnode = entitynode(v, float(enttype[WAYPOINT].radius), false);
 				if(!ents.inrange(curnode))
 				{
 					int cmds = WP_NONE;
