@@ -31,9 +31,9 @@ namespace world
 	VARP(thirdpersonaim, 0, 250, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
 	VARP(thirdpersontranslucent, 0, 0, 1);
-	VARP(thirdpersondist, -100, 1, 100);
-	VARP(thirdpersonshift, -100, 4, 100);
-	VARP(thirdpersonangle, 0, 40, 360);
+	VARP(thirdpersondist, -100, 10, 100);
+	VARP(thirdpersonshift, -100, 30, 100);
+	VARP(thirdpersonangle, 0, 0, 360);
 
 	VARP(firstpersonmouse, 0, 0, 2);
 	VARP(firstpersondeadzone, 0, 10, 100);
