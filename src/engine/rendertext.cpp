@@ -116,8 +116,9 @@ SVARP(cyan, "\fc");
 SVARP(violet, "\fv");
 SVARP(purple, "\fp");
 SVARP(brown, "\fn");
+SVARP(defcolour, "\fu");
 
-static void text_color(char c, char *stack, int size, int &sp, bvec color, int a)
+static void text_color(char c, char *stack, int size, int &sp, bvec color, int r, int g, int b, int a)
 {
     if(c=='s') // save color
     {
@@ -143,6 +144,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
             case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
             case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
             case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
+            case 'u': color = bvec(r, g, b); break;	// user colour
 			default: break; // everything else
         }
         glColor4ub(color.x, color.y, color.z, a);
@@ -260,13 +262,13 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
     #define TEXTWHITE(idx)
     #define TEXTLINE(idx) cy += FONTH;
-    #define TEXTCOLOR(idx) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, a);
+    #define TEXTCOLOR(idx) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, r, g, b, a);
     #define TEXTCHAR(idx) x += draw_char(c, left+x, top+y)+1;
     #define TEXTWORD TEXTWORDSKELETON
     char colorstack[10];
     bvec color(r, g, b);
     int colorpos = 0, cx = INT_MIN, cy = 0, left = rleft, top = rtop;
-    loopi(10) colorstack[i] = 'w'; //indicate user color
+    loopi(10) colorstack[i] = 'u'; //indicate user color
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
@@ -288,7 +290,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
 		TEXTSKELETON
 		if(cursor >= 0 && (totalmillis/250)&1)
 		{
-			glColor4ub(r, g, b, a);
+			glColor4ub(color.x, color.y, color.z, a);
 			if(cx == INT_MIN) { cx = x; cy = y; }
 			if(maxwidth != -1 && cx >= maxwidth) { cx = PIXELTAB; cy += FONTH; }
 			draw_char('_', left+cx, top+cy);

@@ -15,10 +15,15 @@ namespace hud
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 2, 2);
 
+	VARP(teamwidgets, 0, 1, 3); // colour based on team
+	VARP(teamindicators, 0, 1, 2);
+	VARP(teamcrosshair, 0, 1, 2);
+	VARP(teamnotices, 0, 0, 1);
+
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 0);
-	FVARP(damageblend, 0, 0.75f, 1);
+	FVARP(damageblend, 0, 0.5f, 1);
 
 	VARP(showdamagecompass, 0, 1, 1);
 	VARP(damagecompassfade, 1, 1000, 10000);
@@ -36,8 +41,8 @@ namespace hud
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.5f, 1);
-	VARP(crosshairhealth, 0, 1, 2);
+	FVARP(crosshairblend, 0, 0.75f, 1);
+	VARP(crosshairhealth, 0, 0, 2);
 	FVARP(crosshairskew, -1, 0.4f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
@@ -48,7 +53,7 @@ namespace hud
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
 	FVARP(snipecrosshairsize, 0, 0.6f, 1000);
-	FVARP(cursorsize, 0, 0.04f, 1000);
+	FVARP(cursorsize, 0, 0.05f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
 	VARP(showinventory, 0, 1, 1);
@@ -59,7 +64,7 @@ namespace hud
 	VARP(inventorythrob, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
-	FVARP(inventoryskew, 0, 0.7f, 1);
+	FVARP(inventoryskew, 0, 0.75f, 1);
 	TVAR(plasmatex, "textures/plasma", 0);
 	TVAR(shotguntex, "textures/shotgun", 0);
 	TVAR(chainguntex, "textures/chaingun", 0);
@@ -77,7 +82,7 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
-	FVARP(clipblend, 0, 0.25f, 1000);
+	FVARP(clipblend, 0, 0.75f, 1000);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -90,8 +95,8 @@ namespace hud
 	VARP(showradar, 0, 2, 2);
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardblend, 0, 0.75f, 1);
-	FVARP(radaritemblend, 0, 0.95f, 1);
+	FVARP(radarcardblend, 0, 1.f, 1);
+	FVARP(radaritemblend, 0, 1.f, 1);
 	FVARP(radarnameblend, 0, 1.f, 1);
 	FVARP(radarblipblend, 0, 1.f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
@@ -164,6 +169,26 @@ namespace hud
 			colourskew(r, g, b, clamp(float(world::player1->health)/float(m), 0.f, 1.f));
 	}
 
+	void skewcolour(float &r, float &g, float &b)
+	{
+		if(m_team(world::gamemode, world::mutators) && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		{
+			r *= (teamtype[world::player1->team].colour>>16)/255.f;
+			g *= ((teamtype[world::player1->team].colour>>8)&0xFF)/255.f;
+			b *= (teamtype[world::player1->team].colour&0xFF)/255.f;
+		}
+	}
+
+	void skewcolour(int &r, int &g, int &b)
+	{
+		if(m_team(world::gamemode, world::mutators) && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		{
+			r = int(r*((teamtype[world::player1->team].colour>>16)/255.f));
+			g = int(g*(((teamtype[world::player1->team].colour>>8)&0xFF)/255.f));
+			b = int(b*((teamtype[world::player1->team].colour&0xFF)/255.f));
+		}
+	}
+
 	enum
 	{
 		POINTER_NONE = 0, POINTER_RELATIVE, POINTER_GUI, POINTER_EDIT, POINTER_SPEC,
@@ -193,6 +218,7 @@ namespace hud
 		else glBlendFunc(GL_ONE, GL_ONE);
 		int millis = lastmillis-world::player1->weaplast[weap];
 		float r = 1.f, g = 1.f, b = 1.f, amt = 0.f;
+		if(teamindicators >= 2) skewcolour(r, g, b);
 		switch(world::player1->weapstate[weap])
 		{
 			case WPSTATE_POWER:
@@ -250,7 +276,9 @@ namespace hud
             case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_CG: s *= 0.8f; break;
             default: break;
         }
-        glColor4f(1.f, 1.f, 1.f, fade);
+        float r = 1.f, g = 1.f, b = 1.f;
+		if(teamindicators) skewcolour(r, g, b);
+        glColor4f(r, g, b, fade);
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
         if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
         else switch(weap)
@@ -285,7 +313,7 @@ namespace hud
 		bool guicursor = index == POINTER_GUI;
 		int cs = int((guicursor ? cursorsize : crosshairsize)*hudsize);
 		float r = 1.f, g = 1.f, b = 1.f, fade = (guicursor ? cursorblend : crosshairblend)*hudblend;
-
+		if(teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(world::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
 			if(index == POINTER_SNIPE)
@@ -376,8 +404,9 @@ namespace hud
 		{
 			pushfont("super");
 			float roff = hastv(showborder) ? 1.f : 0.5f;
-			int ty = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend);
-
+			int ty = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend),
+				tr = 255, tg = 255, tb = 255;
+			if(teamnotices) skewcolour(tr, tg, tb);
 			if(!world::maptime || lastmillis-world::maptime < titlecard)
 			{
 				const char *title = getmaptitle();
@@ -393,31 +422,31 @@ namespace hud
 			{
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->respawnwait(lastmillis, sdelay);
 				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
-				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
+				ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
 					SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
 					if(delay)
 					{
 						pushfont("emphasis");
-						ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+						ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 						popfont();
 						if(world::player1->state != CS_WAITING && shownotices > 2 && sdelay-delay > min(sdelay, spawndelaywait*1000))
 						{
 							pushfont("default");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 							popfont();
 						}
 					}
 					else
 					{
 						pushfont("emphasis");
-						ty += draw_textx("Ready to respawn", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+						ty += draw_textx("Ready to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 						popfont();
 						if(world::player1->state != CS_WAITING && shownotices > 2)
 						{
 							pushfont("default");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 							popfont();
 						}
 					}
@@ -427,17 +456,17 @@ namespace hud
 			{
 				if(m_team(world::gamemode, world::mutators) && numteamkills() >= 3)
 				{
-					ty += draw_textx("Don't shoot team mates!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+					ty += draw_textx("Don't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
 					if(shownotices > 1)
 					{
 						pushfont("emphasis");
 						settexture(flagtex(world::player1->team));
 						glColor4f(1.f, 1.f, 1.f, tf);
 						drawsized(tx-FONTH, ty, FONTH);
-						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
 						popfont();
 						pushfont("default");
-						ty += draw_textx("Shoot anyone not the same colour", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						ty += draw_textx("Shoot anyone not the same colour", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
 						popfont();
 					}
 				}
@@ -446,11 +475,11 @@ namespace hud
 					int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
 					if(delay)
 					{
-						ty += draw_textx("Frozen!", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						ty += draw_textx("Frozen!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
 						if(shownotices > 1)
 						{
 							pushfont("emphasis");
-							ty += draw_textx("Thaw in [ \fs\fy%.2f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+							ty += draw_textx("Thaw in [ \fs\fy%.2f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 							popfont();
 						}
 					}
@@ -496,14 +525,14 @@ namespace hud
 										if(isweap(drop))
 										{
 											s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
-											ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+											ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
 										}
-										else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+										else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
 										break;
 									}
 									else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
 									{
-										ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+										ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 										break;
 									}
 								}
@@ -516,19 +545,19 @@ namespace hud
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
 							SEARCHBINDCACHE(actkey)("zoom", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
 						}
 						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
 							SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 						}
 						if(world::player1->reqreload < 0 && world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
 							SEARCHBINDCACHE(actkey)("reload", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
 							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
-								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
+								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
 						}
 					}
 					popfont();
@@ -769,10 +798,10 @@ namespace hud
 		if(hastv(showborder) && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
 			float r = 1.f, g = 1.f, b = 1.f, fade = borderblend*blend;
+			if(teamwidgets >= (borderhealth ? 3 : 1)) skewcolour(r, g, b);
 			if(borderhealth) switch(world::player1->state)
 			{
 				case CS_ALIVE: healthskew(cs, r, g, b, fade, borderskew, borderhealth > 1); break;
-				case CS_SPECTATOR: case CS_WAITING: r = g = b = 0.5f; break;
 				default: break;
 			}
 			glColor4f(r, g, b, fade);
@@ -803,18 +832,21 @@ namespace hud
 
 	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
 	{
-		float f = fade*skew, s = size*skew;
+		float f = fade*skew, r = f, g = f, b = f, s = size*skew;
+		if(teamwidgets) skewcolour(r, g, b);
 		settexture(tex, 3);
-		glColor4f(f, f, f, f);
+		glColor4f(r, g, b, f);
 		drawsized(x-int(s), y-int(s), int(s));
 		if(text && *text)
 		{
 			glPushMatrix();
 			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
-			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*inventoryblend*blend*skew);
+			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*inventoryblend*blend*skew),
+				tr = 255, tg = 255, tb = 255;
+			if(teamwidgets >= 2) skewcolour(tr, tg, tb);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
+			draw_textx("%s", tx, ty, tr, tg, tb, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
 		}
@@ -949,13 +981,12 @@ namespace hud
 					break;
 				}
             }
-            float off = 1 - step.health, hfade = fade;
+            float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
             if(step.health > health) hfade *= 1 - (step.health - health)/margin;
-            glColor4f(step.r, step.g, step.b, hfade); glTexCoord2f(0, off); glVertex2f(x - size/2, y - size + off*size);
-            glColor4f(step.r, step.g, step.b, hfade); glTexCoord2f(1, off); glVertex2f(x, y - size + off*size);
+            glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(x - size/2, y - size + off*size);
+            glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(x, y - size + off*size);
         }
         glEnd();
-
 		if(inventoryhealth > 1) drawitemsubtext(x, y, skew, "sub", blend, "%d", max(world::player1->health, 0));
 		return size;
 	}

@@ -1231,7 +1231,7 @@ namespace entities
 	};
 
 	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
-	extern int entitynode(const vec &v, float dist = -1.f);
+	extern int entitynode(const vec &v, float dist = -1.f, bool links = true);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
