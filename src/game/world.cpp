@@ -733,7 +733,7 @@ namespace world
     	loopi(n)
     	{
 			loadmodel(teamtype[i].tpmdl, -1, true);
-			if(player1->team == i) loadmodel(teamtype[i].fpmdl, -1, true);
+			loadmodel(teamtype[i].fpmdl, -1, true);
     	}
     	weapons::preload();
 		projs::preload();
