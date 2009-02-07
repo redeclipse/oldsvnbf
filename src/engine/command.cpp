@@ -209,21 +209,21 @@ void setvar(const char *name, int i, bool dofunc)
 	GETVAR(id, name, );
 	*id->storage.i = clamp(i, id->minval, id->maxval);
 	if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("\fw%s set to %d", id->name, *id->storage.i);
+	if(verbose >= 4) conoutf("\fw%s set to %d", id->name, *id->storage.i);
 }
 void setfvar(const char *name, float f, bool dofunc)
 {
 	_GETVAR(id, ID_FVAR, name, );
 	*id->storage.f = clamp(f, id->minvalf, id->maxvalf);
 	if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("\fw%s set to %s", id->name, floatstr(*id->storage.f));
+	if(verbose >= 4) conoutf("\fw%s set to %s", id->name, floatstr(*id->storage.f));
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
 	_GETVAR(id, ID_SVAR, name, );
 	*id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
-	if(verbose >= 2) conoutf("\fw%s set to %s", id->name, *id->storage.s);
+	if(verbose >= 4) conoutf("\fw%s set to %s", id->name, *id->storage.s);
 }
 int getvar(const char *name)
 {

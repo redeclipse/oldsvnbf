@@ -15,7 +15,7 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	VAR(autodropwaypoints, 0, 180, INT_MAX-1); // secs after map start we start and keep dropping waypoints
+	VAR(autodropwaypoints, 0, 120, INT_MAX-1); // secs after map start we start and keep dropping waypoints
 	int autodroptime = 0;
 
 	vector<extentity *> &getents() { return ents; }
@@ -308,7 +308,7 @@ namespace entities
 
     vector<entcachenode *> entcachestack;
 
-    int closestent(int type, const vec &pos, float mindist)
+    int closestent(int type, const vec &pos, float mindist, bool links = false)
     {
         if(entcachedepth<0) buildentcache();
 
@@ -319,7 +319,7 @@ namespace entities
         #define CHECKCLOSEST(branch) do { \
             int n = curnode->childindex(branch); \
             extentity &e = *ents[n]; \
-            if(e.type==type) \
+            if(e.type == type && (!links || !e.links.empty())) \
             { \
                 float dist = e.o.dist(pos); \
                 if(dist < mindist) { closest = n; mindist = dist; } \
@@ -964,13 +964,14 @@ namespace entities
 
 	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry, float *score)
 	{
-        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node) return false;
+        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
+			return false;
 
 		static uint routeid = 1;
 		static vector<linkq> nodes;
 		static vector<linkq *> queue;
 
-		int routestart = verbose > 3 ? SDL_GetTicks() : 0;
+		int routestart = verbose >= 3 ? SDL_GetTicks() : 0;
 
 		if(!routeid)
 		{
@@ -983,7 +984,7 @@ namespace entities
 		{
 			loopavoid(obstacles, d,
 			{
-				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
+				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == goal || !ents[ent]->links.empty()))
 				{
 					nodes[ent].id = routeid;
 					nodes[ent].curscore = -1.f;
@@ -1014,7 +1015,7 @@ namespace entities
 			loopv(links)
 			{
 				int link = links[i];
-				if(ents.inrange(link) && ents[link]->type == ents[node]->type)
+				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == goal || !ents[link]->links.empty()))
 				{
 					linkq &n = nodes[link];
 					float curscore = prevscore + ents[link]->o.dist(ent.o);
@@ -1043,7 +1044,7 @@ namespace entities
 			if(!route.empty() && score) *score = nodes[lowest].score();
 		}
 
-		if(verbose >= 4)
+		if(verbose >= 3)
 			conoutf("\fwroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return !route.empty();
@@ -1051,10 +1052,10 @@ namespace entities
 
 	int entitynode(const vec &v, float dist)
 	{
-        int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64);
-        if(n >= 0 || dist >= 0.f) return n;
+        int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64, true);
+        if(ents.inrange(n) || dist >= 0.f) return n;
         float mindist = 1e16f;
-        loopv(ents) if(ents[i]->type == WAYPOINT)
+        loopv(ents) if(ents[i]->type == WAYPOINT && !ents[i]->links.empty())
         {
             float u = ents[i]->o.squaredist(v);
             if(u <= mindist)
