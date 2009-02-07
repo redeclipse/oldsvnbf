@@ -1474,7 +1474,7 @@ void drawslice(float start, float length, float x, float y, float size)
     glEnd();
 }
 
-void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float minsize)
+void drawfadedslice(float start, float length, float x, float y, float size, float alpha, float r, float g, float b, float minsize)
 {
     float end = start + length,
           sx = cosf((start + 0.25f)*2*M_PI), sy = -sinf((start + 0.25f)*2*M_PI),
@@ -1492,18 +1492,18 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
     }
 
     glBegin(GL_TRIANGLE_STRIP);
-    glColor4f(1, 1, 1, alpha);
+    glColor4f(r, g, b, alpha);
     if(start < 0.125f || start >= 0.875f) SLICESPOKE(sx/sy, -1)
     else if(start < 0.375f) SLICESPOKE(1, -sy/sx)
     else if(start < 0.625f) SLICESPOKE(-sx/sy, 1)
     else SLICESPOKE(-1, sy/sx)
 
-    if(start <= 0.125f && end >= 0.125f) { glColor4f(1, 1, 1, alpha - alpha*(0.125f - start)/(end - start)); SLICESPOKE(1, -1) }
-    if(start <= 0.375f && end >= 0.375f) { glColor4f(1, 1, 1, alpha - alpha*(0.375f - start)/(end - start)); SLICESPOKE(1, 1) }
-    if(start <= 0.625f && end >= 0.625f) { glColor4f(1, 1, 1, alpha - alpha*(0.625f - start)/(end - start)); SLICESPOKE(-1, 1) }
-    if(start <= 0.875f && end >= 0.875f) { glColor4f(1, 1, 1, alpha - alpha*(0.875f - start)/(end - start)); SLICESPOKE(-1, -1) }
+    if(start <= 0.125f && end >= 0.125f) { glColor4f(r, g, b, alpha - alpha*(0.125f - start)/(end - start)); SLICESPOKE(1, -1) }
+    if(start <= 0.375f && end >= 0.375f) { glColor4f(r, g, b, alpha - alpha*(0.375f - start)/(end - start)); SLICESPOKE(1, 1) }
+    if(start <= 0.625f && end >= 0.625f) { glColor4f(r, g, b, alpha - alpha*(0.625f - start)/(end - start)); SLICESPOKE(-1, 1) }
+    if(start <= 0.875f && end >= 0.875f) { glColor4f(r, g, b, alpha - alpha*(0.875f - start)/(end - start)); SLICESPOKE(-1, -1) }
 
-    glColor4f(1, 1, 1, 0);
+    glColor4f(r, g, b, 0);
     if(end < 0.125f || end >= 0.875f) SLICESPOKE(ex/ey, -1)
     else if(end < 0.375f) SLICESPOKE(1, -ey/ex)
     else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
