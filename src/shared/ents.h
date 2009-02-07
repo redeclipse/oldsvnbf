@@ -22,7 +22,6 @@ struct entitylight
     entitylight() : color(1, 1, 1), dir(0, 0, 1), millis(-1) {}
 };
 
-#define TRIGGERTIME 1000
 enum
 {
 	MMT_NONE = 0,

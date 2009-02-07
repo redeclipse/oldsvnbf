@@ -54,6 +54,7 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventoryweapids, 0, 1, 2);
+	VARP(inventoryweapents, 0, 0, 1);
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
@@ -865,7 +866,7 @@ namespace hud
 			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
 			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
 			if(delay < 1000) skew *= delay/1000.f;
-			if(inventoryammo && (instate || inventoryammo > 1))
+			if(inventoryammo && (instate || inventoryammo > 1) && world::player1->hasweap(i, sweap))
 				sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
 			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
             if(inventoryweapids && (instate || inventoryweapids > 1))
@@ -883,7 +884,9 @@ namespace hud
 					}
 					lastweapids = changedkeys;
 				}
-                drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
+                if(inventoryweapents && entities::ents.inrange(world::player1->entid[i]) && world::player1->hasweap(i, sweap))
+					drawitemsubtext(x, oldy, skew, "sub", blend, "[\fs\fa%d\fS] \fs%s%s\fS", world::player1->entid[i], weaptype[i].text, weapids[i]);
+                else drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
             }
 		}
 		return sy;

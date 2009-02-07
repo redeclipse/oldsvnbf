@@ -20,6 +20,17 @@ namespace entities
 
 	vector<extentity *> &getents() { return ents; }
 
+	int triggertime(extentity &e)
+	{
+		switch(e.type)
+		{
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
+				return m_speedtime(1000); break;
+			default: break;
+		}
+		return 0;
+	}
+
 	const char *entinfo(int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool full)
 	{
 		static string entinfostr;
@@ -133,6 +144,11 @@ namespace entities
 				proj.beenused = true;
 				proj.state = CS_DEAD;
 			}
+			gameent *f = NULL;
+			loopi(world::numdynents()) if((f = (gameent *)world::iterdynents(i)) && f->type == ENT_PLAYER)
+			{
+				loopk(WEAPON_MAX) if(f->entid[k] == n) f->entid[k] = -1;
+			}
 			const char *item = entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 			if(item && d != world::player1)
 			{
@@ -142,7 +158,7 @@ namespace entities
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
 			{
-				d->setweapstate(g, WPSTATE_IDLE, 0, lastmillis);
+				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 				d->ammo[g] = d->entid[g] = -1;
 				d->weapselect = g;
 			}
@@ -468,7 +484,7 @@ namespace entities
 					{
 						case TELEPORT:
 						{
-							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							if(lastmillis-e.lastuse >= triggertime(e))
 							{
 								e.lastuse = e.lastemit = lastmillis;
 								static vector<int> teleports;
@@ -485,12 +501,12 @@ namespace entities
 										gameentity &f = *(gameentity *)ents[t];
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
-										d->o = vec(f.o).add(vec(0, 0, d->height/2.f));
+										d->o = vec(f.o).add(vec(0, 0, (d->height*0.5f)-d->aboveeye));
 										if(physics::entinmap(d, false))
 										{
 											d->yaw = f.attr[0];
 											d->pitch = f.attr[1];
-											float mag = max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 100.f);
+											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f)*(d->weight/100.f));
 											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 											d->vel.mul(mag);
 											world::fixfullrange(d->yaw, d->pitch, d->roll, true);
@@ -510,7 +526,7 @@ namespace entities
 						}
 						case PUSHER:
 						{
-							vec dir((int)(char)e.attr[2]*10.f, (int)(char)e.attr[1]*10.f, e.attr[0]*10.f);
+							vec dir = vec((int)(char)e.attr[2]*10.f, (int)(char)e.attr[1]*10.f, e.attr[0]*10.f).mul(m_speedscale(d->weight/100.f));
 							d->timeinair = 0;
 							d->falling = vec(0, 0, 0);
 							loopk(3)
@@ -518,7 +534,7 @@ namespace entities
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 									d->vel.v[k] = dir.v[k];
 							}
-							if(lastmillis-e.lastuse >= TRIGGERTIME)
+							if(lastmillis-e.lastuse >= triggertime(e))
 							{
 								e.lastuse = e.lastemit = lastmillis;
 								execlink(d, n, true);
@@ -527,7 +543,7 @@ namespace entities
 						}
 						case TRIGGER:
 						{
-							if((!e.spawned || e.attr[1] != TR_NONE || e.attr[2] != TA_AUTO) && lastmillis-e.lastuse >= TRIGGERTIME/2)
+							if((!e.spawned || e.attr[1] != TR_NONE || e.attr[2] != TA_AUTO) && lastmillis-e.lastuse >= triggertime(e)/2)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr[1])
@@ -624,9 +640,9 @@ namespace entities
 			{
 				if(e.attr[1] == TR_NONE || e.attr[1] == TR_LINK)
 				{
-					int millis = lastmillis-e.lastemit;
-					if(e.lastemit && millis < TRIGGERTIME) // skew the animation forward
-						e.lastemit = lastmillis-(TRIGGERTIME-millis);
+					int millis = lastmillis-e.lastemit, delay = triggertime(e);
+					if(e.lastemit && millis < delay) // skew the animation forward
+						e.lastemit = lastmillis-(delay-millis);
 					else e.lastemit = lastmillis;
 					execlink(NULL, n, false);
 				}
@@ -640,6 +656,11 @@ namespace entities
 					world::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
 					proj.beenused = true;
 					proj.state = CS_DEAD;
+				}
+				gameent *d = NULL;
+				loopi(world::numdynents()) if((d = (gameent *)world::iterdynents(i)) && d->type == ENT_PLAYER)
+				{
+					loopk(WEAPON_MAX) if(d->entid[k] == n) d->entid[k] = -1;
 				}
 			}
 		}
@@ -1563,7 +1584,7 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && !e.links.length() && lastmillis-e.lastemit >= TRIGGERTIME && mapsounds.inrange(e.attr[0]))
+			if(e.type == MAPSOUND && e.lastemit && lastmillis-e.lastemit >= triggertime(e) && mapsounds.inrange(e.attr[0]))
 			{
 				if(!issound(e.schan))
 				{
@@ -1658,7 +1679,7 @@ namespace entities
 		if(e.type == PARTICLES)
 		{
 			if(idx < 0 || !e.links.length()) makeparticles((entity &)e);
-			else if(lastmillis-e.lastemit < TRIGGERTIME)
+			else if(lastmillis-e.lastemit < triggertime(e))
 				makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 		}
 
