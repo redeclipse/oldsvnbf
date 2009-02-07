@@ -1773,7 +1773,7 @@ namespace server
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
-			gs.setweapstate(weap, WPSTATE_IDLE, 0, e.millis);
+			gs.setweapstate(weap, WPSTATE_SWITCH, WEAPSWITCHDELAY, e.millis);
 			gs.ammo[weap] = gs.entid[weap] = -1;
 			gs.weapselect = weap;
 		}
@@ -1872,6 +1872,17 @@ namespace server
 
 	#include "auth.h"
 
+	int triggertime(int i)
+	{
+		if(sents.inrange(i)) switch(sents[i].type)
+		{
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
+				return m_speedtime(1000); break;
+			default: break;
+		}
+		return 0;
+	}
+
 	void checkents()
 	{
 		bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
@@ -1879,7 +1890,7 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= TRIGGERTIME*2)
+				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= triggertime(i)*2)
 				{
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis;
@@ -2513,7 +2524,7 @@ namespace server
 					sents[cp->state.entid[weap]].spawned = false;
 					sents[cp->state.entid[weap]].millis = gamemillis;
 					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
-					cp->state.setweapstate(weap, WPSTATE_IDLE, 0, 0);
+					cp->state.setweapstate(weap, WPSTATE_SWITCH, 0, 0);
 					cp->state.entid[weap] = cp->state.ammo[weap] = -1;
 					break;
 				}

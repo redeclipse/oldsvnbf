@@ -276,7 +276,7 @@ namespace projs
 			}
 			else if(g == WEAPON_GL) create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
 			d->reqswitch = d->ammo[g] = d->entid[g] = -1;
-			d->setweapstate(g, WPSTATE_PICKUP, 0, lastmillis);
+			d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 		}
 	}
 

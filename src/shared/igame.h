@@ -2,6 +2,7 @@
 #ifndef STANDALONE
 namespace entities
 {
+	extern int triggertime(extentity &e);
 	extern void editent(int i);
 	extern void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e);
 	extern void writeent(gzFile &g, int id, entity &e);
