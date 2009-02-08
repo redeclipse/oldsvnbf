@@ -65,12 +65,13 @@ namespace aiman
 				ci->team = chooseteam(ci);
 				sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 				int nospawn = 0;
-				if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-				mutate(smuts, if(!mut->canspawn(ci, true)) { nospawn++; });
+				if(smode && !smode->canspawn(ci, true, false)) { nospawn++; }
+				mutate(smuts, if(!mut->canspawn(ci, true, false)) { nospawn++; });
 				if(nospawn)
 				{
-					ci->state.state = CS_DEAD;
-					sendf(-1, 1, "ri2", SV_FORCEDEATH, ci->clientnum);
+					ci->state.state = CS_WAITING;
+					ci->state.weapreset(false);
+					sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				}
 				else sendspawn(ci);
 				ci->online = ci->connected = true;

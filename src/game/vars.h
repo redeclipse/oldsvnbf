@@ -37,7 +37,8 @@ VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3
 VARG(timelimit, 0, 10, INT_MAX-1);
 VARG(intermlimit, 0, 10, INT_MAX-1); // secs before vote menu comes up
 VARG(votelimit, 0, 20, INT_MAX-1); // secs before vote passes by default
-VARG(duellimit, 0, 3, INT_MAX-1); // secs before duel goes to next round
+VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round
+VARG(duelitemclear, 0, 0, 1); // clear items in duel
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
 VARG(teambalance, 0, 1, 2); // 0 = off, 1 = by number, 2 = by effectiveness
