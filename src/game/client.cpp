@@ -774,12 +774,12 @@ namespace client
     void parsestate(gameent *d, ucharbuf &p, bool resume = false)
     {
         if(!d) { static gameent dummy; d = &dummy; }
-		if(d==world::player1) getint(p);
+		if(d==world::player1 || d->ai) getint(p);
 		else d->state = getint(p);
 		d->frags = getint(p);
         d->lifesequence = getint(p);
         d->health = getint(p);
-        if(resume && d==world::player1)
+        if(resume && (d==world::player1 || d->ai))
         {
         	d->weapreset(false);
             getint(p);
@@ -1065,7 +1065,7 @@ namespace client
 					int lcn = getint(p);
 					gameent *f = world::newclient(lcn);
 					if(!f) break;
-					if(f==world::player1)
+					if(f==world::player1 || f->ai)
 					{
 						if(editmode) toggleedit();
 					}
@@ -1283,7 +1283,7 @@ namespace client
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						gameent *f = world::newclient(lcn);
-						if(f!=world::player1) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
+						if(f!=world::player1 && !f->ai) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p, true);
 					}
 					break;

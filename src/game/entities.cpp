@@ -1079,26 +1079,19 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
-		static bool newnodes = false;
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
 			bool autodrop = (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000);
-			if(!dropwaypoints && autodroptime && !autodrop && newnodes)
-			{
-				clearentcache();
-				newnodes = false;
-			}
 			if((dropwaypoints || autodrop) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
 				int curnode = entitynode(v, float(enttype[WAYPOINT].radius), false);
 				if(!ents.inrange(curnode))
 				{
 					int cmds = WP_NONE;
-					if(d->crouching) cmds |= WP_CROUCH;
+					if(physics::iscrouching(d)) cmds |= WP_CROUCH;
 					curnode = ents.length();
 					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
-					newnodes = true;
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair);

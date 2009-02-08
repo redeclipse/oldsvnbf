@@ -957,12 +957,9 @@ enum
 	AI_S_WAIT = 0,		// waiting for next command
 	AI_S_DEFEND,		// defend goal target
 	AI_S_PURSUE,		// pursue goal target
-	AI_S_ATTACK,		// attack goal target
 	AI_S_INTEREST,		// interest in goal entity
 	AI_S_MAX
 };
-
-static const int aiframetimes[AI_S_MAX] = { 250, 250, 250, 125, 250 };
 
 enum
 {
@@ -982,33 +979,28 @@ enum
 
 struct interest
 {
-	int state, node, target, targtype, expire;
+	int state, node, target, targtype;
 	float tolerance, score;
-	bool defers;
-	interest() : state(-1), node(-1), target(-1), targtype(-1), expire(0), tolerance(0.f), score(0.f) {}
+	interest() : state(-1), node(-1), target(-1), targtype(-1), tolerance(0.f), score(0.f) {}
 	~interest() {}
 };
 
 struct aistate
 {
-	int type, millis, expire, next, targtype, target, cycle, stuck;
-	bool override, defers, idle, wasidle;
+	int type, millis, next, targtype, target, stuck;
+	bool override, idle, wasidle;
 
-	aistate(int t, int m) : type(t), millis(m)
+	aistate(int m, int t, int r = -1, int v = -1) : type(t), millis(m), targtype(r), target(v)
 	{
 		reset();
 	}
-	~aistate()
-	{
-	}
+	~aistate() {}
 
 	void reset()
 	{
-		expire = cycle = stuck = 0;
+		stuck = 0;
 		next = millis;
-		targtype = target = -1;
 		idle = wasidle = override = false;
-		defers = true;
 	}
 };
 
@@ -1038,28 +1030,28 @@ struct aiinfo
 		tryreset = tryit;
 	}
 
-	aistate &addstate(int t)
+	aistate &addstate(int t, int r = -1, int v = -1)
 	{
-		aistate bs(t, lastmillis);
+		aistate bs(lastmillis, t, r, v);
 		return state.add(bs);
 	}
 
 	void removestate(int index = -1)
 	{
-		if(index < 0) { loopvrev(state) if(state[i].type != AI_S_ATTACK) { state.remove(i); break; } }
+		if(index < 0) state.pop();
 		else if(state.inrange(index)) state.remove(index);
 		if(!state.length()) addstate(AI_S_WAIT);
 	}
 
-	aistate &setstate(int t, bool pop = true)
+	aistate &setstate(int t, int r = 1, int v = -1, bool pop = true)
 	{
 		if(pop) removestate();
-		return addstate(t);
+		return addstate(t, r, v);
 	}
 
 	aistate &getstate(int idx = -1)
 	{
-		if(idx < 0) { loopvrev(state) if(state[i].type != AI_S_ATTACK) return state[i]; }
+		if(idx < 0) state.last();
 		else if(state.inrange(idx)) return state[idx];
 		return state.last();
 	}
