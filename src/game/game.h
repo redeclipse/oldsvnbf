@@ -1299,8 +1299,8 @@ namespace ai
 	const float AIFOVMIN			= 85.f;			// minimum field of view
 	const float AIFOVMAX			= 135.f;		// maximum field of view
 
-	#define AILOSDIST(x)			clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog")+AILOSMIN))
-	#define AIFOVX(x)				clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX))
+	#define AILOSDIST(x)			(x <= 100 ? clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog"))) : float(getvar("fog")))
+	#define AIFOVX(x)				(x <= 100 ? clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX)) : float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
     #define AIMAYTARG(y)			(y->state == CS_ALIVE && physics::issolid(y))
 	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))

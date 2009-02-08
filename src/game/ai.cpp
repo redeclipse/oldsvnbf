@@ -8,7 +8,7 @@ namespace ai
 
 	VAR(aidebug, 0, 0, 5);
 
-	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 100) : -1));
+	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
 
 	void create(gameent *d)
@@ -359,7 +359,7 @@ namespace ai
 		{
 			d->ai->reset();
 			aistate &b = d->ai->getstate();
-			b.next = lastmillis + 500 + rnd((101-d->skill)*10);
+			b.next = lastmillis + 500 + (d->skill <= 100 ? rnd((101-d->skill)*10) : 0);
 		}
 	}
 
@@ -411,7 +411,7 @@ namespace ai
 				return true;
 			}
 			world::suicide(d, HIT_LOST); // bail
-			b.next = lastmillis + 500 + rnd((101-d->skill)*10);
+			b.next = lastmillis + 500 + (d->skill <= 100 ? rnd((101-d->skill)*10) : 0);
 			return true; // recycle and start from beginning
 		}
 		return true; // but don't pop the state
@@ -692,14 +692,15 @@ namespace ai
 
 	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
-		if(!rnd(d->skill*100)) return true; // random margin of error
+		if(d->skill <= 100 && !rnd(d->skill*1000)) return true; // random margin of error
 		gameent *h = world::intersectclosest(d->muzzle, d->ai->target, d);
-		if(h && (h == d || (m_team(world::gamemode, world::mutators) && h->team == d->team))) return false;
-		vec dir = vec(d->muzzle).sub(d->ai->target).normalize();
+		if(h && !AITARG(d, h, true)) return false;
 		float targyaw, targpitch, mindist = d->radius*d->radius, dist = d->muzzle.squaredist(d->ai->target);
 		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
 		if(mindist <= dist)
 		{
+			if(d->skill > 100 && h) return true;
+			vec dir = vec(d->muzzle).sub(world::headpos(e)).normalize();
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
 					skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
@@ -714,8 +715,10 @@ namespace ai
 		int result = 0;
 		float frame = float(lastmillis-d->lastupdate)/float((111-d->skill)*(8+rnd(4)));
 		gameent *e = world::getclient(d->ai->enemy);
+		if(d->skill > 100 && (!e || !AITARG(d, e, true)))
+			e = world::intersectclosest(d->muzzle, d->ai->target, d);
 		vec dp = world::headpos(d);
-		if(e && e->state == CS_ALIVE && AITARG(d, e, true))
+		if(e && AITARG(d, e, true))
 		{
 			vec targ, ep = world::headpos(e);
 			bool cansee = AICANSEE(dp, ep, d);
@@ -725,7 +728,8 @@ namespace ai
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
 				world::fixrange(yaw, pitch);
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, 4.f);
+				if(d->skill > 100) { d->yaw = yaw; d->pitch = pitch; }
+				else world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, 3.f);
 				if(d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
 				{
 					d->attacking = true;
@@ -772,7 +776,11 @@ namespace ai
 		}
 		world::fixrange(d->ai->targyaw, d->ai->targpitch);
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
-		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 6.f);
+		if(!result)
+		{
+			if(d->skill > 100) { d->yaw = d->ai->targyaw; d->pitch = d->ai->targpitch; }
+			else world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 4.f);
+		}
 		if(!b.idle && !d->ai->dontmove)
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -847,7 +855,7 @@ namespace ai
 		loopi(world::numdynents())
 		{
 			gameent *d = (gameent *)world::iterdynents(i);
-			if(!d || d->state != CS_ALIVE) continue;
+			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
 			vec pos = world::feetpos(d);
 			float limit = guessradius+d->radius;
 			limit *= limit; // square it to avoid expensive square roots
