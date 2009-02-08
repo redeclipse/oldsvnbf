@@ -254,7 +254,7 @@ namespace physics
                 if(collide(d, vec(0, 0, -1), slopez))
                 {
                     d->o = old;
-                    if(!d->onladder) return false;
+                    return false;
                 }
             }
 			/* try stepping up half as much as forward */

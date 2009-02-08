@@ -51,12 +51,12 @@ namespace aiman
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), GVAR(botmaxskill));
+				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
-				ci->state.skill = clamp(s, 1, 100);
+				ci->state.skill = clamp(s, 1, 101);
 				ci->state.state = CS_WAITING;
 				ci->state.aireinit = 0;
 				clients.add(ci);
@@ -218,7 +218,7 @@ namespace aiman
 			refreshai();
 			dorefresh = false;
 		}
-		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botmaxskill), GVAR(botminskill));
+		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
 		loopv(clients) if(clients[i]->state.isai(-1, false))
 		{
 			clientinfo *ci = clients[i];

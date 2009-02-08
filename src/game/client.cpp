@@ -1665,7 +1665,7 @@ namespace client
 
 				case SV_INITAI:
 				{
-					int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 100);
+					int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 101);
 					getstring(text, p);
 					int tm = getint(p);
 					gameent *b = world::newclient(bn);
