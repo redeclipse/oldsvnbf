@@ -182,7 +182,8 @@ namespace stf
 		loopvj(st.flags)
 		{
 			stfstate::flag &f = st.flags[j];
-			vector<int> targets; // build a list of others who are interested in this
+			static vector<int> targets; // build a list of others who are interested in this
+			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
@@ -200,8 +201,6 @@ namespace stf
 				n.targtype = AI_T_AFFINITY;
 				n.tolerance = enttype[FLAG].radius*2.f;
 				n.score = pos.squaredist(f.pos)/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
-				n.defers = false;
-				n.expire = 10000;
 			}
 		}
 	}

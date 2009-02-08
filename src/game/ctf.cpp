@@ -351,14 +351,9 @@ namespace ctf
 					goal = i;
 				}
 			}
-
 			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius/2))
 			{
-				aistate &c = d->ai->setstate(AI_S_PURSUE); // replaces current state!
-				c.targtype = AI_T_AFFINITY;
-				c.target = goal;
-				c.defers = false;
-				c.expire = 0; // doesn't until we get it home!
+				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, goal);
 				return true;
 			}
 		}
@@ -367,13 +362,23 @@ namespace ctf
 
 	bool aicheck(gameent *d, aistate &b)
 	{
-		vector<int> hasflags;
+		static vector<int> hasflags, takenflags;
+		hasflags.setsizenodelete(0);
+		takenflags.setsizenodelete(0);
 		loopv(st.flags)
 		{
 			ctfstate::flag &g = st.flags[i];
 			if(g.owner == d) hasflags.add(i);
+			else if(g.team == d->team && (g.owner || g.droptime))
+				takenflags.add(i);
 		}
 		if(!hasflags.empty() && aihomerun(d, b)) return true;
+		if(!takenflags.empty())
+		{
+			int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
+			d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, takenflags[flag]);
+			return true;
+		}
 		return false;
 	}
 
@@ -383,7 +388,8 @@ namespace ctf
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
-			vector<int> targets; // build a list of others who are interested in this
+			static vector<int> targets; // build a list of others who are interested in this
+			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, isctfhome(f, d->team) ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
@@ -414,8 +420,6 @@ namespace ctf
 					n.targtype = AI_T_AFFINITY;
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos())/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
-					n.defers = false;
-					n.expire = 10000;
 				}
 			}
 			else
@@ -429,8 +433,6 @@ namespace ctf
 					n.targtype = AI_T_AFFINITY;
 					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos());
-					n.defers = false;
-					n.expire = 10000;
 				}
 				else
 				{ // help by defending the attacker
@@ -445,8 +447,6 @@ namespace ctf
 						n.targtype = AI_T_PLAYER;
 						n.tolerance = t->radius*2.f;
 						n.score = pos.squaredist(tp);
-						n.defers = false;
-						n.expire = 10000;
 					}
 				}
 			}
@@ -458,10 +458,22 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-			bool walk = false;
+			static vector<int> hasflags;
+			hasflags.setsizenodelete(0);
 			loopv(st.flags)
 			{
+				ctfstate::flag &g = st.flags[i];
+				if(g.owner == d) hasflags.add(i);
+			}
+			if(!hasflags.empty() && aihomerun(d, b)) return true;
+			if(f.owner || f.droptime)
+			{
+				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, b.target);
+				return true;
+			}
+			bool walk = false;
+			loopv(st.flags)
+			{ // get out of the way of the returnee!
 				ctfstate::flag &g = st.flags[i];
 				if(g.owner && g.owner->team == d->team)
 				{
@@ -483,17 +495,22 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfhome(f, d->team))
+			if(f.team == d->team)
 			{
-				static vector<int> hasflags;
-				hasflags.setsizenodelete(0);
-				loopv(st.flags)
+				if(f.owner) return ai::violence(d, b, f.owner, true);
+				else if(f.droptime) return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
+				else if(isctfhome(f, d->team))
 				{
-					ctfstate::flag &g = st.flags[i];
-					if(g.owner == d) hasflags.add(i);
+					static vector<int> hasflags;
+					hasflags.setsizenodelete(0);
+					loopv(st.flags)
+					{
+						ctfstate::flag &g = st.flags[i];
+						if(g.owner == d) hasflags.add(i);
+					}
+					if(hasflags.empty()) return false; // otherwise why are we pursuing home?
+					return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 				}
-				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
-				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 			}
 			else
 			{
