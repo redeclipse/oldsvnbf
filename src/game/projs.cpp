@@ -414,7 +414,7 @@ namespace projs
 				}
 				case WEAPON_FLAMER:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.05f, 1.f);
 					if(proj.canrender)
 					{
 						bool effect = false;
@@ -432,7 +432,7 @@ namespace projs
 				}
 				case WEAPON_GL:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender)
 					{
 						int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
@@ -448,7 +448,7 @@ namespace projs
 				}
 				case WEAPON_SG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						float size = clamp(48.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtime(200) ? min(48.f, proj.movement) : proj.o.dist(proj.from));
@@ -462,7 +462,7 @@ namespace projs
 				}
 				case WEAPON_CG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						float size = clamp(24.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtime(200) ? min(24.f, proj.movement) : proj.o.dist(proj.from));
@@ -476,7 +476,7 @@ namespace projs
 				}
 				case WEAPON_CARBINE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						float adjust = proj.radius*12.f,
@@ -492,7 +492,7 @@ namespace projs
 				}
 				case WEAPON_RIFLE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						float adjust = proj.radius*96.f,
@@ -524,7 +524,7 @@ namespace projs
 				}
 				default:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender) part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, proj.radius);
 					break;
 				}
@@ -532,7 +532,7 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
 		{
-			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+			proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 			if(proj.canrender && lastmillis-proj.lasteffect > m_speedtime(500))
 			{
 				if(!kidmode && !world::noblood) part_create(PART_BLOOD, m_speedtime(5000), proj.o, 0x66FFFF, 2.f);
@@ -541,7 +541,7 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || world::noblood || m_paint(world::gamemode, world::mutators))))
 		{
-			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+			proj.lifesize = clamp(1.f-proj.lifespan, 1e-3f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
 			if(proj.canrender && steps && proj.movement > 0.f)
 			{

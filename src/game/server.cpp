@@ -1510,14 +1510,15 @@ namespace server
 		if(ci && ci->state.state!=CS_SPECTATOR)
 		{
 			int nospawn = 0;
-			if(smode && !smode->canspawn(ci, true)) { nospawn++; }
-			mutate(smuts, if(!mut->canspawn(ci, true)) { nospawn++; });
+			if(smode && !smode->canspawn(ci, true, false)) { nospawn++; }
+			mutate(smuts, if(!mut->canspawn(ci, true, false)) { nospawn++; });
 			if(nospawn)
 			{
-				ci->state.state = CS_DEAD;
-				putint(p, SV_FORCEDEATH);
+				ci->state.state = CS_WAITING;
+				ci->state.weapreset(false);
+				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
-				sendf(-1, 1, "ri2x", SV_FORCEDEATH, ci->clientnum, ci->clientnum);
+				sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
 			}
 			else
 			{
@@ -1885,7 +1886,6 @@ namespace server
 
 	void checkents()
 	{
-		bool allowitems = !m_duke(gamemode, mutators) && !m_noitems(gamemode, mutators);
 		loopv(sents) switch(sents[i].type)
 		{
 			case TRIGGER:
@@ -1900,7 +1900,7 @@ namespace server
 			}
 			default:
 			{
-				if(allowitems && enttype[sents[i].type].usetype == EU_ITEM)
+				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM)
 				{
 					if(!finditem(i, true, GVAR(itemspawntime)*1000))
 					{
@@ -1943,11 +1943,11 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{ // duelmut needs rewriting to take advantage of this
-				if(!m_duke(gamemode, mutators) && !ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
+				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
-					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
+					if(smode && !smode->canspawn(ci, false, false)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(ci, false, false)) { nospawn++; });
 					if(!nospawn)
 					{
 						ci->state.state = CS_DEAD; // safety
@@ -2878,9 +2878,9 @@ namespace server
 						spinfo->state.state = CS_DEAD;
 						spinfo->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						int nospawn = 0;
-						if(smode && !smode->canspawn(spinfo)) { nospawn++; }
+						if(smode && !smode->canspawn(spinfo, false, true)) { nospawn++; }
 						mutate(smuts, {
-							if (!mut->canspawn(spinfo)) { nospawn++; }
+							if (!mut->canspawn(spinfo, false, true)) { nospawn++; }
 						});
 						if (!nospawn) sendspawn(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
