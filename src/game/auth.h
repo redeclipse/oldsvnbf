@@ -5,7 +5,7 @@ namespace auth
     vector<char> output;
     int inputpos = 0, outputpos = 0;
     int lastconnect = 0, lastactivity = 0;
-    uint nextauthreq = 0;
+    uint nextauthreq = 1;
 
 	extern void connect();
 	extern void disconnect();
@@ -76,7 +76,8 @@ namespace auth
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        ci->authreq = 0;
+        ci->authreq = ci->authname[0] = 0;
+		sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "authority request failed, please check your credentials");
     }
 
     void authsucceeded(uint id)
@@ -101,11 +102,17 @@ namespace auth
 			sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
 			return;
 		}
+		else if(ci->authreq)
+		{
+			sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "waiting for previous attempt..");
+			return;
+		}
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, false, 100);
         s_sprintfd(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
+		sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "please wait, requesting credential match");
     }
 
     void answerchallenge(clientinfo *ci, uint id, char *val)
@@ -186,7 +193,11 @@ namespace auth
 				else enet_socket_set_option(socket, ENET_SOCKOPT_NONBLOCK, 1);
 			}
 			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
-			else regserver();
+			else
+			{
+				regserver();
+				loopv(clients) clients[i]->authreq = clients[i]->authname[0] = 0;
+			}
 		}
     }
 

@@ -1679,7 +1679,8 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					if(lastauth && lastmillis - lastauth < 60*1000 && authname[0])
+					conoutf("server is challenging authentication details..");
+					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
 					{
 						ecjacobian answer;
 						answer.parse(text);
