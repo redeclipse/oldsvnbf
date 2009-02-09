@@ -320,8 +320,7 @@ namespace ai
 			}
 			if(proceed && makeroute(d, b, n.node, n.tolerance))
 			{
-				if(override) d->ai->setstate(n.state, n.targtype, n.target);
-				else d->ai->addstate(n.state, n.targtype, n.target);
+				d->ai->setstate(n.state, n.targtype, n.target, override);
 				return true;
 			}
 		}
@@ -580,7 +579,12 @@ namespace ai
 		if(!d->ai->route.empty())
 		{
 			int n = retry ? closenode(d) : d->ai->route.find(d->lastnode)-1;
-			if(n >= 0 && entspot(d, d->ai->route[n])) return true;
+			if(n >= 0 && entspot(d, d->ai->route[n]))
+			{
+				while(d->ai->route.length() > n+1)
+					d->ai->route.pop(); // waka-waka-waka-waka
+				return true;
+			}
 			if(!retry) return hunt(d, true);
 			d->ai->route.setsize(0); // force the next decision
 		}
@@ -908,7 +912,7 @@ namespace ai
 				}
 				if(c.type != AI_S_WAIT && !result)
 				{
-					d->ai->state.remove(i);
+					d->ai->removestate(i);
 					continue; // shouldn't interfere
 				}
 			}
