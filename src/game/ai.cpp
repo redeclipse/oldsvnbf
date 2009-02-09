@@ -98,6 +98,7 @@ namespace ai
 			if(!retry) return makeroute(d, b, node, tolerance, true, true);
 		}
 		d->ai->route.setsize(0);
+		d->ai->lasthunt = -1;
 		return false;
 	}
 
@@ -112,7 +113,7 @@ namespace ai
 		static vector<int> entities;
 		entities.setsizenodelete(0);
 		float r = radius*radius, w = wander*wander;
-		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT && j != d->lastnode && !obstacles.find(j, d))
+		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT && j != d->ai->lastnode && j != d->ai->lasthunt && !obstacles.find(j, d))
 		{
 			float fdist = entities::ents[j]->o.squaredist(from);
 			if(fdist <= w)
@@ -545,8 +546,8 @@ namespace ai
 	{
 		vec pos = world::feetpos(d);
 		int node = -1;
-		float mindist = AIISCLOSE*AIISCLOSE;
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode && !obstacles.find(d->ai->route[i], d))
+		float radius = float(enttype[WAYPOINT].radius*4), mindist = radius*radius;
+		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lasthunt && !obstacles.find(d->ai->route[i], d))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			float dist = e.o.squaredist(pos);
@@ -580,7 +581,7 @@ namespace ai
 		if(!d->ai->route.empty())
 		{
 			int n = retry ? closenode(d) : d->ai->route.find(d->lastnode);
-			if(d->ai->route.inrange(n))
+			if(!retry && d->ai->route.inrange(n))
 			{
 				while(d->ai->route.length() > n+1)
 					d->ai->route.pop(); // waka-waka-waka-waka
@@ -588,15 +589,19 @@ namespace ai
 				{ // this is our goal?
 					if(entities::ents.inrange(d->ai->route[n]))
 						d->ai->spot = entities::ents[d->ai->route[n]]->o;
-					if(!retry) d->ai->dontmove = true;
+					d->ai->dontmove = true;
 					return true;
 				}
-				else if(!retry) n--;
+				else n--;
 			}
 			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n]))
+			{
+				if(retry) d->ai->lasthunt = d->lastnode;
 				return true;
+			}
 			if(!retry) return hunt(d, b, true);
 			d->ai->route.setsize(0); // force the next decision
+			d->ai->lasthunt = -1;
 		}
 		return false;
 	}
@@ -944,6 +949,7 @@ namespace ai
 				if(c.type != AI_S_WAIT && !result)
 				{
 					d->ai->route.setsize(0);
+					d->ai->lasthunt = -1;
 					d->ai->removestate(i);
 					continue; // shouldn't interfere
 				}

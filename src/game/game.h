@@ -1009,7 +1009,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, weappref, lastnode, timeinnode;
+	int enemy, lastseen, weappref, lastnode, lasthunt, timeinnode;
 	float targyaw, targpitch;
 	bool dontmove, tryreset;
 
@@ -1023,7 +1023,7 @@ struct aiinfo
 		addstate(AI_S_WAIT);
 		while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
 		spot = target = vec(0, 0, 0);
-		enemy = lastnode = -1;
+		enemy = lastnode = lasthunt = -1;
 		timeinnode = lastseen = 0;
 		targyaw = targpitch = 0.f;
 		dontmove = false;
