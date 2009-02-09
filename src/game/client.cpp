@@ -704,7 +704,7 @@ namespace client
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) | ((d->crouching ? 1 : 0)<<4) | ((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
-			if(d->conopen) flags |= 0x40;
+			if(d->conopen) flags |= 0x10;
 			putuint(q, flags);
             if(flags&0x20)
             {
@@ -868,7 +868,7 @@ namespace client
 				f >>= 2;
 				bool crouch = d->crouching;
 				d->crouching = f&1 ? true : false;
-				d->conopen = f&0x40 ? true : false;
+				d->conopen = f&0x10 ? true : false;
 				if(crouch != d->crouching) d->crouchtime = lastmillis;
                 vec oldpos(d->o);
                 //if(world::allowmove(d))
