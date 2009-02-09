@@ -1119,7 +1119,7 @@ namespace client
 						freeeditinfo(localedit);
 					}
 					s_strncpy(d->name, text, MAXNAMELEN);
-					d->team = getint(p);
+					d->team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
 					break;
 				}
 
