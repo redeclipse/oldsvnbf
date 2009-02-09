@@ -858,18 +858,16 @@ namespace client
 				gameent *d = world::getclient(lcn);
                 if(!d || seqcolor!=(d->lifesequence&1) || d==world::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
+				d->conopen = f&0x40 ? true : false;
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
 				d->aimyaw = aimyaw;
 				d->aimpitch = aimpitch;
-				d->strafe = (f&3)==3 ? -1 : f&3;
-				f >>= 2;
-				d->move = (f&3)==3 ? -1 : f&3;
-				f >>= 2;
+				d->strafe = (f&3)==3 ? -1 : f&3; f >>= 2;
+				d->move = (f&3)==3 ? -1 : f&3; f >>= 2;
 				bool crouch = d->crouching;
 				d->crouching = f&1 ? true : false;
-				d->conopen = f&0x40 ? true : false;
 				if(crouch != d->crouching) d->crouchtime = lastmillis;
                 vec oldpos(d->o);
                 //if(world::allowmove(d))
