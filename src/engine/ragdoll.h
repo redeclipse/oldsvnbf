@@ -310,7 +310,7 @@ FVAR(ragdollgravity, 0, 1.f, 1000);
 VAR(ragdollexpireoffset, 0, 1000, 30000);
 VAR(ragdollexpiremillis, 1, 1000, 30000);
 VAR(ragdolltimestepmin, 1, 5, 50);
-VAR(ragdolltimestepmax, 1, 15, 50);
+VAR(ragdolltimestepmax, 1, 13, 50);
 
 void ragdolldata::move(dynent *pl, float ts)
 {
