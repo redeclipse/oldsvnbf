@@ -288,9 +288,10 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
 			top = rtop;
 		}
 		TEXTSKELETON
-		if(cursor >= 0 && (totalmillis/250)&1)
+		if(cursor >= 0)
 		{
-			glColor4ub(color.x, color.y, color.z, a);
+			float fade = 1.f-(float(lastmillis%1000)/1000.f);
+			glColor4ub(color.x, color.y, color.z, int(a*fade));
 			if(cx == INT_MIN) { cx = x; cy = y; }
 			if(maxwidth != -1 && cx >= maxwidth) { cx = PIXELTAB; cy += FONTH; }
 			draw_char('_', left+cx, top+cy);

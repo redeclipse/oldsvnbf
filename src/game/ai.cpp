@@ -943,7 +943,7 @@ namespace ai
 				btypes[b.targtype+1], b.target
 			);
 		}
-		part_text(vec(d->abovehead()).add(vec(0, 0, above)), s);
+		part_text(vec(world::abovehead(d)).add(vec(0, 0, above)), s);
 	}
 
 	void drawroute(gameent *d, aistate &b, float amt = 1.f)

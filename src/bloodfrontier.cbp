@@ -100,6 +100,51 @@
 					<Add directory="lib" />
 				</Linker>
 			</Target>
+			<Target title="client-prof">
+				<Option output="..\bin\bfclient.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="..\" />
+				<Option object_output=".objs\client-prof" />
+				<Option deps_output=".deps\debug" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<Option parameters="-hhome -rinit.cfg -du0 -df0 -dw640 -dh480" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Option projectIncludeDirsRelation="1" />
+				<Option projectResourceIncludeDirsRelation="1" />
+				<Option projectLibDirsRelation="1" />
+				<Compiler>
+					<Add option="-Wall" />
+					<Add option="-pg" />
+					<Add option="-fsigned-char" />
+					<Add option="-finline-functions" />
+					<Add option="-fno-strict-aliasing" />
+					<Add option="-DINTERFACE" />
+					<Add option="-DIRC" />
+					<Add directory="shared" />
+					<Add directory="engine" />
+					<Add directory="game" />
+					<Add directory="enet\include" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+					<Add option="-mwindows" />
+					<Add library="mingw32" />
+					<Add library="SDLmain" />
+					<Add library="SDL" />
+					<Add library="SDL_image" />
+					<Add library="SDL_mixer" />
+					<Add library="lib\libpng.lib" />
+					<Add library="z" />
+					<Add library="opengl32" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
+					<Add directory="lib\mingw" />
+					<Add directory="lib" />
+				</Linker>
+			</Target>
 			<Target title="daemon">
 				<Option output="..\bin\bfdaemon.exe" prefix_auto="0" extension_auto="0" />
 				<Option working_dir="..\" />
@@ -209,51 +254,6 @@
 					<Add directory="lib" />
 				</Linker>
 			</Target>
-			<Target title="profile">
-				<Option output="..\bin\bfclient.exe" prefix_auto="0" extension_auto="0" />
-				<Option working_dir="..\" />
-				<Option object_output=".objs\profile" />
-				<Option deps_output=".deps\profile" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Option use_console_runner="0" />
-				<Option parameters="-hhome -rinit.cfg -du0 -df0 -dw640 -dh480" />
-				<Option projectCompilerOptionsRelation="1" />
-				<Option projectLinkerOptionsRelation="1" />
-				<Option projectIncludeDirsRelation="1" />
-				<Option projectResourceIncludeDirsRelation="1" />
-				<Option projectLibDirsRelation="1" />
-				<Compiler>
-					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
-					<Add option="-Wall" />
-					<Add option="-pg" />
-					<Add option="-fsigned-char" />
-					<Add option="-DINTERFACE" />
-					<Add option="-DIRC" />
-					<Add directory="shared" />
-					<Add directory="engine" />
-					<Add directory="game" />
-					<Add directory="enet\include" />
-					<Add directory="include" />
-				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-					<Add option="-mwindows" />
-					<Add library="mingw32" />
-					<Add library="SDLmain" />
-					<Add library="SDL" />
-					<Add library="SDL_image" />
-					<Add library="SDL_mixer" />
-					<Add library="lib\libpng.lib" />
-					<Add library="z" />
-					<Add library="opengl32" />
-					<Add library="ws2_32" />
-					<Add library="winmm" />
-					<Add directory="lib\mingw" />
-					<Add directory="lib" />
-				</Linker>
-			</Target>
 			<Target title="data">
 				<Option output="." prefix_auto="0" extension_auto="0" />
 				<Option type="1" />
@@ -311,11 +311,11 @@
 			<Option compilerVar="WINDRES" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\callbacks.c">
 			<Option compilerVar="CC" />
@@ -324,8 +324,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\host.c">
 			<Option compilerVar="CC" />
@@ -334,61 +334,61 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\callbacks.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\enet.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\list.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\protocol.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\time.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\types.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\unix.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\utility.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\include\enet\win32.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\list.c">
 			<Option compilerVar="CC" />
@@ -397,8 +397,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\packet.c">
 			<Option compilerVar="CC" />
@@ -407,8 +407,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\peer.c">
 			<Option compilerVar="CC" />
@@ -417,8 +417,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\protocol.c">
 			<Option compilerVar="CC" />
@@ -427,8 +427,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\unix.c">
 			<Option compilerVar="CC" />
@@ -437,8 +437,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="enet\win32.c">
 			<Option compilerVar="CC" />
@@ -447,43 +447,43 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\animmodel.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\bih.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\bih.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\blend.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\blob.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\client.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\command.cpp">
 			<Option target="client" />
@@ -491,34 +491,34 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\console.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\decal.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\dynlight.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\engine.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\explosion.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\genkey.cpp">
 			<Option target="genkey" />
@@ -526,12 +526,12 @@
 		<Unit filename="engine\glare.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\grass.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\irc.cpp">
 			<Option target="client" />
@@ -539,6 +539,7 @@
 			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\irc.h">
 			<Option target="client" />
@@ -546,34 +547,35 @@
 			<Option target="server" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\lensflare.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\lightmap.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\lightmap.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\lightning.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\main.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\master.cpp">
 			<Option target="daemon" />
@@ -582,124 +584,124 @@
 		<Unit filename="engine\material.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\md2.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\md3.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\md5.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\menus.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\model.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\normal.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\octa.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\octa.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\octaedit.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\octarender.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\physics.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\pvs.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\ragdoll.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\rendergl.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\rendermodel.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\renderparticles.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\rendersky.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\rendertarget.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\rendertext.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\renderva.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\server.cpp">
 			<Option target="client" />
@@ -707,99 +709,99 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\serverbrowser.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\shader.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\shadowmap.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\skelmodel.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\sound.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\sound.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\textedit.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\texture.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\texture.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\ui.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\vertmodel.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\water.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\world.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\world.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\worldio.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\ai.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\aiman.h">
 			<Option target="client" />
@@ -807,7 +809,7 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\auth.h">
 			<Option target="client" />
@@ -815,25 +817,25 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\client.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\ctf.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\ctf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\ctfmode.h">
 			<Option target="client" />
@@ -841,7 +843,7 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\duelmut.h">
 			<Option target="client" />
@@ -849,50 +851,50 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\entities.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\extinfo.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\game.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\hud.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\physics.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\projs.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\scoreboard.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\server.cpp">
 			<Option target="client" />
@@ -900,20 +902,20 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\stf.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\stf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\stfmode.h">
 			<Option target="client" />
@@ -921,230 +923,230 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\vars.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
-			<Option target="profile" />
 			<Option target="server" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\weapons.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="game\world.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\GL\glext.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_active.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_audio.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_byteorder.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_cdrom.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_config.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_config_macosx.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_config_win32.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_copying.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_cpuinfo.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_endian.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_error.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_events.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_getenv.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_image.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_joystick.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_keyboard.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_keysym.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_loadso.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_main.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_mixer.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_mouse.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_mutex.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_name.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_opengl.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_platform.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_quit.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_rwops.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_stdinc.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_syswm.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_thread.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_timer.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_types.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_version.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_video.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\begin_code.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\close_code.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\wincompat.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\zconf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\zlib.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\command.h">
 			<Option target="client" />
@@ -1152,8 +1154,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\crypto.h">
 			<Option target="client" />
@@ -1161,32 +1163,32 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\cube.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\ents.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\geom.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\geom.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\hash.cpp">
 			<Option target="client" />
@@ -1194,8 +1196,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\hash.h">
 			<Option target="client" />
@@ -1203,32 +1205,32 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\iengine.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\igame.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\pch.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
 			<Option target="data" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\pch.h">
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="profile" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\tools.cpp">
 			<Option target="client" />
@@ -1236,8 +1238,8 @@
 			<Option target="daemon" />
 			<Option target="daemon-dbg" />
 			<Option target="server" />
-			<Option target="profile" />
 			<Option target="genkey" />
+			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\tools.h" />
 		<Extensions>

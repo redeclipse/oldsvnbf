@@ -706,6 +706,7 @@ static partrenderer *parts[] =
 
     new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
     new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 100, DECAL_STAIN),
+
     &texts, &textups, &meters, &metervs,
     &fireballs, &noglarefireballs, &lightnings,
     &flares // must be done last!

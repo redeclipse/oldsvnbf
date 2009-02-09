@@ -304,7 +304,7 @@ namespace ctf
 		if(d!=world::player1)
 		{
 			s_sprintfd(ds)("@CAPTURED!");
-			part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, teamtype[d->team].colour, 3.f);
+			part_text(world::abovehead(d), ds, PART_TEXT_RISE, 5000, teamtype[d->team].colour, 3.f);
 		}
 		world::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: %d)", d==world::player1 ? "you" : world::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score);
     }

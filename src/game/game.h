@@ -1068,11 +1068,11 @@ struct gameent : dynent, gamestate
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	aiinfo *ai;
     vec muzzle;
-	bool attacking, reloading, useaction, k_up, k_down, k_left, k_right;
+	bool attacking, reloading, useaction, conopen, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
-		k_up(false), k_down(false), k_left(false), k_right(false)
+		conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 200; // so we can control the 'gravity' feel
@@ -1329,15 +1329,28 @@ namespace hud
 	extern int hudwidth, hudsize, damageresidue, radarflagnames;
 	extern float radarblipblend, radarnameblend, inventoryblend, inventoryskew;
 	extern vector<int> teamkills;
+	extern bool hastv(int val);
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(float x, float y, float s);
+	extern void colourskew(float &r, float &g, float &b, float skew);
+	extern void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb);
+	extern void skewcolour(float &r, float &g, float &b);
+	extern void skewcolour(int &r, int &g, int &b);
+	extern void drawindicator(int weap, int x, int y, int s);
+	extern void drawclip(int weap, int x, int y, float s);
+	extern void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade);
+	extern void drawpointer(int w, int h, int index);
+	extern int numteamkills();
+	extern float radarrange();
 	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", float fade = -1.f, const char *text = NULL, ...);
-	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
 	extern int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern void drawitemsubtext(int x, int y, float skew, const char *font, float blend, const char *text, ...);
+	extern int drawweapons(int x, int y, int s, float blend);
+	extern int drawhealth(int x, int y, int s, float blend);
+	extern void drawinventory(int w, int h, int edge, float blend);
+	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
 	extern const char *flagtex(int team = TEAM_NEUTRAL);
-	extern float radarrange();
 }
 
 namespace world
