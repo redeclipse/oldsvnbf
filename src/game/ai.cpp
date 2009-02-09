@@ -27,7 +27,7 @@ namespace ai
 
 	void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm)
 	{
-		gameent *o = world::getclient(on);
+		gameent *o = world::newclient(on);
 		string m;
 		if(o) s_strcpy(m, world::colorname(o));
 		else s_sprintf(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
