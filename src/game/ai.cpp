@@ -588,11 +588,6 @@ namespace ai
 			if(!retry) return hunt(d, true);
 			d->ai->route.setsize(0); // force the next decision
 		}
-		if(entities::ents.inrange(d->lastnode)) // brute force our way out
-		{
-			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-			loopv(e.links) if(entspot(d, e.links[i])) break;
-		}
 		return false;
 	}
 
@@ -757,13 +752,11 @@ namespace ai
 		else
 		{
 			b.wasidle = false;
-			if(hunt(d))
-			{
-				vec spot = vec(d->ai->spot).add(vec(0, 0, d->height));
-				world::getyawpitch(dp, spot, d->ai->targyaw, d->ai->targpitch);
-				b.stuck = 0;
-			}
-			else if(lastmillis-b.stuck >= 3000)
+			bool hunted = hunt(d);
+			vec spot = vec(d->ai->spot).add(vec(0, 0, d->height));
+			world::getyawpitch(dp, spot, d->ai->targyaw, d->ai->targpitch);
+			if(hunted) b.stuck = 0;
+			else if(lastmillis-b.stuck >= 1000)
 			{
 				if(b.stuck) // random walk, when all else fails
 				{
@@ -829,8 +822,8 @@ namespace ai
 				if(!b.idle && !d->ai->dontmove && d->lastnode == d->ai->lastnode)
 				{
 					d->ai->timeinnode += curtime;
-					if(d->ai->timeinnode >= 10000 && !d->ai->tryreset) d->ai->reset(true); // maybe we've gone insane, wipe our brain
-					else if(d->ai->timeinnode >= 20000) world::suicide(d, HIT_LOST); // fine, we're better off doing something than nothing
+					if(d->ai->timeinnode >= 2500 && !d->ai->tryreset) d->ai->reset(true); // maybe we've gone insane, wipe our brain
+					else if(d->ai->timeinnode >= 5000) world::suicide(d, HIT_LOST); // fine, we're better off doing something than nothing
 				}
 				else
 				{
