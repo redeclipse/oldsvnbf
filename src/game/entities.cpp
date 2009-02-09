@@ -1053,9 +1053,9 @@ namespace entities
 
 	int entitynode(const vec &v, bool links, bool drop)
 	{
-		if(!drop) return closestent(WAYPOINT, v, float(enttype[WAYPOINT].radius), links);
+		if(!drop) return closestent(WAYPOINT, v, float(enttype[WAYPOINT].radius*4), links);
         int n = -1;
-        float mindist = 1e16f;
+        float mindist = float(enttype[WAYPOINT].radius*(drop ? 1 : 4));
         loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
             float u = ents[i]->o.squaredist(v);
