@@ -581,7 +581,7 @@ namespace ai
 			int n = retry ? closenode(d) : d->ai->route.find(d->lastnode)-1;
 			if(n >= 0 && entspot(d, d->ai->route[n]))
 			{
-				while(d->ai->route.length() > n+1)
+				if(!retry) while(d->ai->route.length() > n)
 					d->ai->route.pop(); // waka-waka-waka-waka
 				return true;
 			}
