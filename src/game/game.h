@@ -1032,8 +1032,7 @@ struct aiinfo
 
 	aistate &addstate(int t, int r = -1, int v = -1)
 	{
-		aistate bs(lastmillis, t, r, v);
-		return state.add(bs);
+		return state.add(aistate(lastmillis, t, r, v));
 	}
 
 	void removestate(int index = -1)
@@ -1051,8 +1050,7 @@ struct aiinfo
 
 	aistate &getstate(int idx = -1)
 	{
-		if(idx < 0) state.last();
-		else if(state.inrange(idx)) return state[idx];
+		if(state.inrange(idx)) return state[idx];
 		return state.last();
 	}
 };
