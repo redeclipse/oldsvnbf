@@ -465,10 +465,10 @@ namespace hud
 						settexture(flagtex(world::player1->team));
 						glColor4f(1.f, 1.f, 1.f, tf);
 						drawsized(tx-FONTH, ty, FONTH);
-						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+						ty += draw_textx("\fs\fcHEY!\fS You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
 						popfont();
 						pushfont("default");
-						ty += draw_textx("Shoot anyone not the same colour", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+						ty += draw_textx("You must shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat);
 						popfont();
 					}
 				}
@@ -832,10 +832,10 @@ namespace hud
 		if(hastv(radarcard) || m_edit(world::gamemode)) drawcardinalblips(w, h, cs/2, blend*radarblend, m_edit(world::gamemode));
 	}
 
-	int drawitem(const char *tex, int x, int y, float size, float fade, float skew, const char *font, float blend, const char *text, ...)
+	int drawitem(const char *tex, int x, int y, float size, bool tcol, float fade, float skew, const char *font, float blend, const char *text, ...)
 	{
-		float f = fade*skew, r = f, g = f, b = f, s = size*skew;
-		if(teamwidgets) skewcolour(r, g, b);
+		float f = fade*skew, r = skew, g = skew, b = skew, s = size*skew;
+		if(tcol && teamwidgets) skewcolour(r, g, b);
 		settexture(tex, 3);
 		glColor4f(r, g, b, f);
 		drawsized(x-int(s), y-int(s), int(s));
@@ -901,8 +901,8 @@ namespace hud
 			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
 			if(delay < 1000) skew *= delay/1000.f;
 			if(inventoryammo && (instate || inventoryammo > 1) && world::player1->hasweap(i, sweap))
-				sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
-			else sy += drawitem(hudtexs[i], x, y-sy, size, fade, skew);
+				sy += drawitem(hudtexs[i], x, y-sy, size, true, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
+			else sy += drawitem(hudtexs[i], x, y-sy, size, true, fade, skew);
             if(inventoryweapids && (instate || inventoryweapids > 1))
             {
 				static string weapids[WEAPON_MAX];

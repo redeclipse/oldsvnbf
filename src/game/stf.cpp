@@ -70,7 +70,16 @@ namespace stf
 		{
 			loopv(st.flags) if(insideflag(st.flags[i], world::player1) && (st.flags[i].owner == world::player1->team || st.flags[i].enemy == world::player1->team))
 			{
-				ty += draw_textx("Securing..", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1);
+				pushfont("emphasis");
+				settexture(hud::flagtex(world::player1->team));
+				glColor4f(1.f, 1.f, 1.f, int(255*hudblend));
+				hud::drawsized(tx-FONTH, ty, FONTH);
+				ty += draw_textx("Team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+				popfont();
+				pushfont("default");
+				int occupy = int((st.flags[i].enemy ? clamp(st.flags[i].converted/float((st.flags[i].owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (st.flags[i].owner ? 1.f : 0.f))*100.f);
+				ty += draw_textx("Securing [ \fs\fc%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1, occupy);
+				popfont();
 				break;
 			}
 		}
@@ -104,8 +113,8 @@ namespace stf
 				else skew = 1.f-(amt*(1.f-hud::inventoryskew));
 			}
 			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, fade, skew, "default", blend, "%d%%", int(occupy*100.f));
-			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), fade, skew);
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, false, fade, skew, "default", blend, "%d%%", int(occupy*100.f));
+			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), false, fade, skew);
 		}
         return sy;
     }

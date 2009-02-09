@@ -67,11 +67,30 @@ namespace ctf
 	{
 		if(world::player1->state == CS_ALIVE)
 		{
-			loopv(st.flags) if(st.flags[i].owner == world::player1)
+			int hasflag = -1;
+			static vector<int> takenflags;
+			takenflags.setsizenodelete(0);
+			loopv(st.flags)
 			{
-				//ctfstate::flag &f = st.flags[i];
-				ty += draw_textx("Return the flag!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1);
-				break;
+				ctfstate::flag &f = st.flags[i];
+				if(f.owner == world::player1) hasflag = f.team;
+				if(isctfflag(f, world::player1->team) && (f.droptime || f.owner))
+					takenflags.add(i);
+			}
+			if(hasflag >= 0 || !takenflags.empty())
+			{
+				pushfont("emphasis");
+				settexture(hud::flagtex(world::player1->team));
+				glColor4f(1.f, 1.f, 1.f, int(255*hudblend));
+				hud::drawsized(tx-FONTH, ty, FONTH);
+				ty += draw_textx("Team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+				popfont();
+				pushfont("default");
+				if(hasflag >= 0)
+					ty += draw_textx("You have the [ \fs%s%s\fS ] flag, return it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
+				if(!takenflags.empty())
+					ty += draw_textx("Flag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1);
+				popfont();
 			}
 		}
 	}
@@ -89,49 +108,17 @@ namespace ctf
 
     int drawinventory(int x, int y, int s, float blend)
     {
-		int sy = 0, home = -1, team = world::player1->team;
-		float bestdist = 1e16f;
-		if(world::player1->state == CS_ALIVE)
-		{
-			loopv(st.flags) if(isctfhome(st.flags[i], world::player1->team))
-			{
-				ctfstate::flag &f = st.flags[i];
-				float dist = world::player1->o.dist(f.spawnloc);
-				if(!st.flags.inrange(home) || dist < bestdist)
-				{
-					home = i;
-					bestdist = dist;
-					team = f.team;
-				}
-			}
-		}
-		loopv(st.flags)
+		int sy = 0;
+		loopv(st.flags) if(st.flags[i].base&BASE_FLAG)
 		{
 			ctfstate::flag &f = st.flags[i];
-			float skew = 0.f, fade = hud::inventoryblend*blend;
+			float skew = 0.75f, fade = hud::inventoryblend*blend;
 			int millis = lastmillis-f.interptime;
-			bool hasflag = false;
-			if(f.owner == world::player1)
-			{
-				skew = millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
-				hasflag = true;
-			}
-			else if(f.wasowner == world::player1)
-			{
-				if(millis < 500)
-				{
-					skew = clamp(float(millis)/500.f, 0.f, 1.f);
-					hasflag = true;
-				}
-				else f.wasowner = NULL;
-			}
-			if(hasflag)
-			{
-				float dist = world::player1->o.dist(f.spawnloc);
-				int oldy = y-sy;
-				sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, fade, skew, "default", blend, "\fs%s+\fS %.1f", teamtype[f.team].chat, dist/16.f);
-				hud::drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s-\fS %.1f", teamtype[team].chat, bestdist/16.f);
-			}
+			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
+			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
+			int oldy = y-sy;
+			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, fade, skew, "default", blend, f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
+			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
     }
@@ -256,13 +243,9 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		f.interptime = lastmillis;
 		st.dropflag(i, droploc, 1);
 		if(!physics::droptofloor(f.droploc, 2, 0))
-		{
 			f.droploc = vec(-1, -1, -1);
-			f.interptime = 0;
-		}
 		world::announce(S_V_FLAGDROP, "\fo%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
     }
 
@@ -278,7 +261,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, f.droploc, f.spawnloc);
-		f.interptime = 0;
+		f.interptime = lastmillis;
 		st.returnflag(i);
 		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
     }
@@ -288,7 +271,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc);
-		f.interptime = 0;
+		f.interptime = lastmillis;
 		st.returnflag(i);
 		world::announce(S_V_FLAGRESET, "\fothe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
     }
@@ -299,7 +282,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[goal], &g = st.flags[relay];
 		flageffect(goal, d->team, st.flags[goal].spawnloc, st.flags[relay].spawnloc);
 		(st.findscore(d->team)).total = score;
-		f.interptime = 0;
+		g.interptime = f.interptime = lastmillis;
 		st.returnflag(relay);
 		if(d!=world::player1)
 		{
@@ -369,7 +352,7 @@ namespace ctf
 		{
 			ctfstate::flag &g = st.flags[i];
 			if(g.owner == d) hasflags.add(i);
-			else if(g.team == d->team && (g.owner || g.droptime))
+			else if(isctfflag(g, d->team) && (g.owner || g.droptime))
 				takenflags.add(i);
 		}
 		if(!hasflags.empty() && aihomerun(d, b)) return true;
@@ -495,26 +478,23 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(f.team == d->team)
-			{
-				if(f.owner) return ai::violence(d, b, f.owner, true);
-				else if(f.droptime) return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
-				else if(isctfhome(f, d->team))
-				{
-					static vector<int> hasflags;
-					hasflags.setsizenodelete(0);
-					loopv(st.flags)
-					{
-						ctfstate::flag &g = st.flags[i];
-						if(g.owner == d) hasflags.add(i);
-					}
-					if(hasflags.empty()) return false; // otherwise why are we pursuing home?
-					return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
-				}
-			}
-			else
+			if(f.owner && isctfflag(f, d->team))
 			{
 				if(f.owner == d) return aihomerun(d, b);
+				else return ai::violence(d, b, f.owner, true);
+			}
+			else if(f.droptime && isctfflag(f, d->team))
+				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
+			else if(isctfhome(f, d->team))
+			{
+				static vector<int> hasflags;
+				hasflags.setsizenodelete(0);
+				loopv(st.flags)
+				{
+					ctfstate::flag &g = st.flags[i];
+					if(g.owner == d) hasflags.add(i);
+				}
+				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
 				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 			}
 		}
