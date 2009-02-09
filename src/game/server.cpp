@@ -1055,15 +1055,11 @@ namespace server
 	struct teamscore
 	{
 		int team;
-		union
-		{
-			int score;
-			float rank;
-		};
+		float score;
 		int clients;
 
-		teamscore(int n) : team(n), rank(0.f), clients(0) {}
-		teamscore(int n, float r) : team(n), rank(r), clients(0) {}
+		teamscore(int n) : team(n), score(0.f), clients(0) {}
+		teamscore(int n, float r) : team(n), score(r), clients(0) {}
 		teamscore(int n, int s) : team(n), score(s), clients(0) {}
 
 		~teamscore() {}
@@ -1088,8 +1084,19 @@ namespace server
 					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
 					{
 						teamscore &ts = teamscores[j];
-						float rank = ci->state.effectiveness/max(ci->state.timeplayed, 1);
-						ts.rank += rank;
+						float rank = 1.f;
+						switch(GVAR(teambalance))
+						{
+							case 1: rank = ci->state.isai() ? 1.f : GVAR(botratio); break;
+							case 2: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
+							case 3: default:
+							{
+								if(who->state.isai()) rank = ci->state.isai() ? 1.f : GVAR(botratio);
+								else rank = ci->state.isai() ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
+								break;
+							}
+						}
+						ts.score += rank;
 						ts.clients++;
 						break;
 					}
@@ -1098,21 +1105,8 @@ namespace server
 				loopi(numteams(gamemode, mutators))
 				{
 					teamscore &ts = teamscores[i];
-					switch(GVAR(teambalance))
-					{
-						case 1: default:
-						{
-							if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.rank < worst->rank))
-								worst = &ts;
-							break;
-						}
-						case 2:
-						{
-							if(ts.rank < worst->rank || (ts.rank == worst->rank && ts.clients < worst->clients))
-								worst = &ts;
-							break;
-						}
-					}
+					if(ts.score < worst->score || (ts.score == worst->score && ts.clients < worst->clients))
+						worst = &ts;
 				}
 				team = worst->team;
 			}

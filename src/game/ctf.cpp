@@ -334,7 +334,7 @@ namespace ctf
 					goal = i;
 				}
 			}
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius/2))
+			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius/2, false))
 			{
 				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, goal);
 				return true;
@@ -497,6 +497,7 @@ namespace ctf
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
 				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 			}
+			else return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
 		}
 		return false;
 	}

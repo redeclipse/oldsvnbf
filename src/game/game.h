@@ -1009,7 +1009,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, weappref, lastnode, prevnode, timeinnode;
+	int enemy, lastseen, weappref, lastnode, timeinnode;
 	float targyaw, targpitch;
 	bool dontmove, tryreset;
 
@@ -1023,8 +1023,8 @@ struct aiinfo
 		addstate(AI_S_WAIT);
 		while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
 		spot = target = vec(0, 0, 0);
-		enemy = lastseen = lastnode = prevnode = -1;
-		timeinnode = 0;
+		enemy = lastnode = -1;
+		timeinnode = lastseen = 0;
 		targyaw = targpitch = 0.f;
 		dontmove = false;
 		tryreset = tryit;
@@ -1219,9 +1219,9 @@ namespace entities
 			return false;
 		}
 	};
-
+	extern void clearentcache();
 	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
-	extern int entitynode(const vec &v, float dist = -1.f, bool links = true);
+	extern int entitynode(const vec &v, bool links = true, bool drop = false);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
@@ -1294,20 +1294,19 @@ namespace ai
 	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
 	const float AILOSMIN			= 128.f;		// minimum line of sight
 	const float AILOSMAX			= 4096.f;		// maximum line of sight
-	const float AIFOVMIN			= 85.f;			// minimum field of view
-	const float AIFOVMAX			= 135.f;		// maximum field of view
+	const float AIFOVMIN			= 70.f;			// minimum field of view
+	const float AIFOVMAX			= 140.f;		// maximum field of view
 
 	#define AILOSDIST(x)			(x <= 100 ? clamp((AILOSMIN+(AILOSMAX-AILOSMIN))/100.f*float(x), float(AILOSMIN), float(getvar("fog"))) : float(getvar("fog")))
 	#define AIFOVX(x)				(x <= 100 ? clamp((AIFOVMIN+(AIFOVMAX-AIFOVMIN))/100.f*float(x), float(AIFOVMIN), float(AIFOVMAX)) : float(AIFOVMAX))
 	#define AIFOVY(x)				AIFOVX(x)*3.f/4.f
-    #define AIMAYTARG(y)			(y->state == CS_ALIVE && physics::issolid(y))
-	#define AITARG(x,y,z)			(y != x && AIMAYTARG(y) && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
+	#define AITARG(x,y,z)			(y != x && y->state == CS_ALIVE && (!z || !m_team(world::gamemode, world::mutators) || (x)->team != (y)->team))
 	#define AICANSEE(x,y,z)			getsight(x, z->yaw, z->pitch, y, targ, AILOSDIST(z->skill), AIFOVX(z->skill), AIFOVY(z->skill))
 
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
-	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool retry = false);
-	extern bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool dist = false);
+	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool changed = true, bool retry = false);
+	extern bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool changed = true);
 	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
