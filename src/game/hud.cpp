@@ -425,7 +425,7 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
-					SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
+					SEARCHBINDCACHE(attackkey)("attack", 0, 5, "\fs\fw, or \fS");
 					if(delay || m_duke(world::gamemode, world::mutators))
 					{
 						pushfont("emphasis");
@@ -436,7 +436,7 @@ namespace hud
 						if(world::player1->state != CS_WAITING && shownotices > 2 && sdelay-delay > min(sdelay, spawndelaywait*1000))
 						{
 							pushfont("default");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, attackkey);
 							popfont();
 						}
 					}
@@ -448,7 +448,7 @@ namespace hud
 						if(world::player1->state != CS_WAITING && shownotices > 2)
 						{
 							pushfont("default");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, attackkey);
 							popfont();
 						}
 					}
@@ -494,7 +494,7 @@ namespace hud
 						vector<actitem> actitems;
 						if(entities::collateitems(world::player1, actitems))
 						{
-							SEARCHBINDCACHE(actkey)("action", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(actionkey)("action", 0, 5, "\fs\fw, or \fS");
 							while(!actitems.empty())
 							{
 								actitem &t = actitems.last();
@@ -527,14 +527,14 @@ namespace hud
 										if(isweap(drop))
 										{
 											s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
-											ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+											ty += draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
 										}
-										else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+										else ty += draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actionkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
 										break;
 									}
 									else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
 									{
-										ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+										ty += draw_textx("Press [ \fs\fa%s\fS ] to interact", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actionkey);
 										break;
 									}
 								}
@@ -546,18 +546,18 @@ namespace hud
 					{
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
-							SEARCHBINDCACHE(actkey)("zoom", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
+							SEARCHBINDCACHE(zoomkey)("zoom", 0, 5, "\fs\fw, or \fS");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, zoomkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
 						}
 						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							SEARCHBINDCACHE(actkey)("attack", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							SEARCHBINDCACHE(attackkey)("attack", 0, 5, "\fs\fw, or \fS");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, attackkey);
 						}
 						if(world::player1->reqreload < 0 && world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							SEARCHBINDCACHE(actkey)("reload", 0, 5, "\fs\fw, or \fS");
-							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+							SEARCHBINDCACHE(reloadkey)("reload", 0, 5, "\fs\fw, or \fS");
+							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, reloadkey);
 							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
 								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
 						}
@@ -597,13 +597,13 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, world::tvmode() ? "SpecTV" : "Specating");
 				if(shownotices > 1)
 				{
-					SEARCHBINDCACHE(actkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
+					SEARCHBINDCACHE(speconkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
 					pushfont("default");
-					ty += draw_textx("Press [ \fs\fa%s\fS ] to exit", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey);
+					ty += draw_textx("Press [ \fs\fa%s\fS ] to exit", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, speconkey);
 					if(shownotices > 2)
 					{
-						SEARCHBINDCACHE(actkey)("specmodeswitch", 1, 5, "\fs\fw, or \fS");
-						ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, actkey, world::tvmode() ? "look around" : "observe");
+						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1, 5, "\fs\fw, or \fS");
+						ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, specmodekey, world::tvmode() ? "look around" : "observe");
 					}
 					popfont();
 				}
