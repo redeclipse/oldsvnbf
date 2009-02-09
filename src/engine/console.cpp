@@ -109,7 +109,7 @@ int rendercommand(int x, int y, int w)
 		glEnd();
 		x += FONTH*5/4;
 	}
-    return draw_text(commandbuf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, (commandpos>=0) ? commandpos+2 : strlen(commandbuf), w);
+    return draw_text(commandbuf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, commandpos >= 0 ? commandpos : strlen(commandbuf), w);
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)

@@ -240,6 +240,18 @@ namespace aiman
 
 	void checkai()
 	{
+		static int oldteambalance;
+		if(oldteambalance != GVAR(teambalance))
+		{
+			dorefresh = true;
+			oldteambalance = GVAR(teambalance);
+		}
+		static float oldbotratio;
+		if(oldbotratio != GVAR(botratio))
+		{
+			dorefresh = true;
+			oldbotratio = GVAR(botratio);
+		}
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
 			if(!notgotinfo)
@@ -260,6 +272,7 @@ namespace aiman
 				while(true) if(!reassignai()) break;
 				checksetup();
 			}
+			else autooverride = dorefresh = false;
 		}
 		else clearai();
 	}

@@ -5,6 +5,8 @@
 namespace entities
 {
 	vector<extentity *> ents;
+	bool autodropped = false;
+	int autodroptime = 0;
 
 	VARP(showentnames, 0, 1, 2);
 	VARP(showentinfo, 0, 1, 5);
@@ -16,7 +18,6 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	VAR(autodropwaypoints, 0, 120, INT_MAX-1); // secs after map start we start and keep dropping waypoints
-	int autodroptime = 0;
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -506,7 +507,7 @@ namespace entities
 										{
 											d->yaw = f.attr[0];
 											d->pitch = f.attr[1];
-											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f)*(d->weight/100.f));
+											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
 											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 											d->vel.mul(mag);
 											world::fixfullrange(d->yaw, d->pitch, d->roll, true);
@@ -526,7 +527,7 @@ namespace entities
 						}
 						case PUSHER:
 						{
-							vec dir = vec((int)(char)e.attr[2]*10.f, (int)(char)e.attr[1]*10.f, e.attr[0]*10.f).mul(m_speedscale(d->weight/100.f));
+							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(m_speedscale(10.f));
 							d->timeinair = 0;
 							d->falling = vec(0, 0, 0);
 							loopk(3)
@@ -1050,10 +1051,10 @@ namespace entities
 		return !route.empty();
 	}
 
-	int entitynode(const vec &v, float dist, bool links)
+	int entitynode(const vec &v, bool links, bool drop)
 	{
-        int n = closestent(WAYPOINT, v, dist >= 0.f ? dist : 64, links);
-        if(ents.inrange(n) || dist >= 0.f) return n;
+		if(!drop) return closestent(WAYPOINT, v, float(enttype[WAYPOINT].radius), links);
+        int n = -1;
         float mindist = 1e16f;
         loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
@@ -1079,19 +1080,25 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
+		bool autodrop = (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000);
+		if(!autodrop && autodropped)
+		{
+			clearentcache();
+			autodropped = false;
+		}
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			bool autodrop = (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000);
 			if((dropwaypoints || autodrop) && ((m_play(world::gamemode) && d->aitype == AI_NONE) || d == world::player1))
 			{
-				int curnode = entitynode(v, float(enttype[WAYPOINT].radius), false);
+				int curnode = entitynode(v, false, true);
 				if(!ents.inrange(curnode))
 				{
 					int cmds = WP_NONE;
 					if(physics::iscrouching(d)) cmds |= WP_CROUCH;
 					curnode = ents.length();
 					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
+					autodropped = true;
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair);
@@ -1396,6 +1403,7 @@ namespace entities
 
 	void mapstart()
 	{
+		autodropped = false;
 		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : 0;
 	}
 

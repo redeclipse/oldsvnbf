@@ -41,7 +41,7 @@ VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round
 VARG(duelitemclear, 0, 0, 1); // clear items in duel
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
-VARG(teambalance, 0, 1, 2); // 0 = off, 1 = by number, 2 = by effectiveness
+VARG(teambalance, 0, 3, 3); // 0 = off, 1 = by number, 2 = by effectiveness, 3 = hybrid (humans by eff, ai by number)
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
@@ -57,6 +57,7 @@ FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in inst
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 
 FVARG(botbalance, 0, 1.f, 1000);
+FVARG(botratio, 0, 3.f, 1000);
 VARG(botminskill, 0, 80, 101);
 VARG(botmaxskill, 0, 100, 101);
 

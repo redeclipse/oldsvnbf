@@ -360,6 +360,7 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
+        else if(d->onladder) d->physstate = PHYS_FLOOR;
 		else d->physstate = PHYS_FALL;
 	}
 
@@ -384,7 +385,12 @@ namespace physics
 		bool found = false;
 		vec moved(d->o);
 		d->o.z -= 0.1f;
-		if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
+		if(d->onladder)
+		{
+			floor = vec(0, 0, 1);
+			found = true;
+		}
+		else if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
 		{
 			floor = wall;
 			found = true;
@@ -395,17 +401,12 @@ namespace physics
 			found = true;
 			slide = false;
 		}
-        else if(d->physstate == PHYS_STEP_UP || d->physstate == PHYS_SLIDE || d->onladder)
+        else if(d->physstate == PHYS_STEP_UP || d->physstate == PHYS_SLIDE)
         {
             if(!collide(d, vec(0, 0, -1)) && wall.z > 0.0f)
             {
                 floor = wall;
                 if(floor.z >= slopez) found = true;
-            }
-            if(d->onladder && !found)
-            {
-				floor = vec(0, 0, 1);
-				found = true;
             }
         }
         else if(d->physstate >= PHYS_SLOPE && d->floor.z < 1.0f)
@@ -461,7 +462,7 @@ namespace physics
             {
                 d->o = old;
                 d->zmargin = 0;
-                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR ? d->floor : vec(wall))) return true;
+                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || d->onladder ? d->floor : vec(wall))) return true;
             }
             else
             {
@@ -477,7 +478,7 @@ namespace physics
             if(!collide(d, vec(0, 0, -1), slopez))
             {
                 d->o = old;
-                if(trystepup(d, dir, vec(0, 0, 1), stairheight, vec(wall))) return true;
+                if(trystepup(d, dir, vec(0, 0, 1), stairheight, d->onladder ? d->floor : vec(wall))) return true;
                 d->o.add(dir);
             }
         }
@@ -543,7 +544,7 @@ namespace physics
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
-        if(pl->physstate == PHYS_FALL) pl->timeinair += curtime;
+        if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += curtime;
 
 		vec m(0.0f, 0.0f, 0.0f);
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
@@ -784,7 +785,7 @@ namespace physics
 
 	void updatephysstate(physent *d)
 	{
-		if(d->physstate == PHYS_FALL) return;
+		if(d->physstate == PHYS_FALL && !d->onladder) return;
 		d->timeinair = 0;
 		vec old(d->o);
 		/* Attempt to reconstruct the floor state.
