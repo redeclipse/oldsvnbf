@@ -14,7 +14,7 @@ struct ctfstate
         int owner;
 #else
         bool pickup;
-        gameent *owner, *wasowner;
+        gameent *owner;
         extentity *ent;
         int interptime;
 #endif
@@ -33,7 +33,7 @@ struct ctfstate
             owner = -1;
 #else
             pickup = false;
-            owner = wasowner = NULL;
+            owner = NULL;
             interptime = 0;
 #endif
             team = TEAM_NEUTRAL;
@@ -86,7 +86,6 @@ struct ctfstate
 		f.owner = owner;
 		f.droptime = 0;
 #ifndef GAMESERVER
-		f.wasowner = f.owner;
 		f.pickup = false;
 #endif
     }
@@ -100,7 +99,6 @@ struct ctfstate
 		f.owner = -1;
 #else
 		f.pickup = false;
-		f.wasowner = f.owner;
 		f.owner = NULL;
 #endif
 	}
@@ -113,7 +111,6 @@ struct ctfstate
 		f.owner = -1;
 #else
 		f.pickup = false;
-		f.wasowner = f.owner;
 		f.owner = NULL;
 #endif
     }
