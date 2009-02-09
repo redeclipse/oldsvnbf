@@ -226,11 +226,11 @@ namespace hud
 				if(millis > weaptype[weap].power)
 				{
 					float skew = clamp(float(millis-weaptype[weap].power)/float(weaptype[weap].time), 0.f, 1.f);
+					colourskew(r, g, b, 1.f-skew);
 					glBindTexture(GL_TEXTURE_2D, t->getframe(skew));
 					glColor4f(r, g, b, indicatorblend);
 					if(t->frames.length() > 1) drawsized(x-s*3/4, y-s*3/4, s*3/2);
 					else drawslice(0, clamp(skew, 0.f, 1.f), x, y, s*3/2);
-					colourskew(r, g, b, 1.f-skew);
 					amt = 1.f;
 				}
 				else amt = clamp(float(millis)/float(weaptype[weap].power), 0.f, 1.f);
@@ -653,7 +653,7 @@ namespace hud
 			break;
 		}
 		const rddir &rd = rddirs[cq];
-		float range = rd.axis ? fovsx : fovsy, skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
+		float range = min(rd.axis ? fovsx : fovsy, 1e-3f), skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
 		if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2;
 		(rd.axis ? cx : cy) += int(((rd.axis ? w : h)-s*2)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
 
@@ -834,6 +834,7 @@ namespace hud
 
 	int drawitem(const char *tex, int x, int y, float size, bool tcol, float fade, float skew, const char *font, float blend, const char *text, ...)
 	{
+		if(skew <= 0.f) return 0;
 		float f = fade*skew, r = skew, g = skew, b = skew, s = size*skew;
 		if(tcol && teamwidgets) skewcolour(r, g, b);
 		settexture(tex, 3);
@@ -857,6 +858,7 @@ namespace hud
 
 	void drawitemsubtext(int x, int y, float skew, const char *font, float blend, const char *text, ...)
 	{
+		if(skew <= 0.f) return;
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
@@ -940,11 +942,16 @@ namespace hud
 				fade *= amt;
 				if(inventorythrob > 1) skew *= amt;
 			}
+			if(skew <= 0.f) return 0;
 		}
 		else if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 		{
 			int delay = lastmillis-world::player1->lastdeath;
-			if(delay < 1000) skew *= 1.f-(delay/1000.f);
+			if(delay < 1000)
+			{
+				skew *= 1.f-(delay/1000.f);
+				if(skew <= 0.f) return 0;
+			}
 			else return 0;
 		}
 		else return 0;
