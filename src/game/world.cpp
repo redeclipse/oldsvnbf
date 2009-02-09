@@ -84,8 +84,12 @@ namespace world
 	VARP(pronefov, 70, 70, 150);
 	VARP(pronetime, 1, 150, 10000);
 
+	VARP(showstatusabovehead, 0, 1, 2);
+	FVARP(statusaboveheadblend, 0.f, 1.f, 1.f);
 	VARP(shownamesabovehead, 0, 1, 2);
-	VARP(showdamageabovehead, 0, 0, 1);
+	VARP(showdamageabovehead, 0, 0, 2);
+	TVAR(conopentex, "textures/conopen", 0);
+
 	VARP(showobituaries, 0, 1, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
 	VARP(playdamagetones, 0, 2, 2);
 
@@ -444,10 +448,10 @@ namespace world
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
-				if(showdamageabovehead)
+				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					s_sprintfd(ds)("@%d", damage);
-					part_text(vec(d->abovehead()).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+					part_text(vec(world::abovehead(d)).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
 				}
 				if(!issound(d->vschan))
 					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -592,7 +596,7 @@ namespace world
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						s_sprintfd(ds)("@\fgCARNAGE");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 10:
@@ -600,7 +604,7 @@ namespace world
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						s_sprintfd(ds)("@\fgSLAUGHTER");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 25:
@@ -608,7 +612,7 @@ namespace world
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						s_sprintfd(ds)("@\fgMASSACRE");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 50:
@@ -616,7 +620,7 @@ namespace world
 						s_strcat(d->obit, noblood || m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						break;
 					}
 					default:
@@ -625,7 +629,7 @@ namespace world
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
-							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+							part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*1000+1000) anc = S_V_OWNED;
 						break;
@@ -867,18 +871,29 @@ namespace world
 	void loadworld(gzFile &f, int maptype) {}
 	void saveworld(gzFile &f) {}
 
+	vec abovehead(physent *d, float off)
+	{
+		static vec apos;
+		apos = d->o;
+		if(off < 1e16f) apos.z += off;
+		else apos.z += d->aboveeye + 2.f;
+		return apos;
+	}
+
 	vec headpos(physent *d, float off)
 	{
-		vec pos(d->o);
-		pos.z -= off;
-		return pos;
+		static vec hpos;
+		hpos = d->o;
+		hpos.z -= off;
+		return hpos;
 	}
 
 	vec feetpos(physent *d, float off)
 	{
- 		vec pos(d->o);
-		if(d->type == ENT_PLAYER) pos.z += off-d->height;
-		return pos;
+		static vec fpos;
+		fpos = d->o;
+		if(d->type == ENT_PLAYER) fpos.z += off-d->height;
+		return fpos;
 	}
 
 	void fixfullrange(float &yaw, float &pitch, float &roll, bool full)
@@ -1253,6 +1268,7 @@ namespace world
         if(connected())
         {
         	if(!*world::player1->name && !guiactive()) showgui("name");
+        	world::player1->conopen = saycommandon || guiactive() || UI::hascursor();
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING);
@@ -1668,7 +1684,45 @@ namespace world
 			}
 		}
 
-		if(shownamesabovehead && third && d != player1) part_text(d->abovehead(), colorname(d, NULL, "@"));
+		if(third && rendermainview && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
+		{
+			vec pos = world::abovehead(d);
+			if(shownamesabovehead > (d != player1 ? 0 : 1))
+			{
+				part_text(pos, colorname(d, NULL, "@"));
+				pos.add(vec(0, 0, 2.f));
+			}
+			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen)
+			{
+				Texture *t = textureload(conopentex, 0, true);
+				glPushMatrix();
+				glEnable(GL_BLEND);
+				glDisable(GL_CULL_FACE);
+				if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				else glBlendFunc(GL_ONE, GL_ONE);
+				glTranslatef(pos.x, pos.y, pos.z);
+				glRotatef(camera1->yaw-180, 0, 0, 1);
+				glRotatef(camera1->pitch, 1, 0, 0);
+				glScalef(2.f, 2.f, 2.f);
+
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, statusaboveheadblend);
+
+				glBegin(GL_QUADS);
+				glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
+				glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
+				glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
+				glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
+				glEnd();
+				xtraverts += 4;
+
+				glEnable(GL_CULL_FACE);
+				glDisable(GL_BLEND);
+				glPopMatrix();
+
+				pos.add(vec(0, 0, 2.f));
+			}
+		}
 		if(showweap)
 		{ // we could probably animate the vwep too now..
             a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0);

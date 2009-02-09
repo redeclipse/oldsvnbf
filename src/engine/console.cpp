@@ -13,7 +13,7 @@ int conskip = 0;
 
 bool saycommandon = false;
 string commandbuf;
-char *commandaction = NULL, *commandprompt = NULL;
+char *commandaction = NULL, *commandicon = NULL;
 int commandpos = -1;
 
 void setconskip(int *n)
@@ -86,15 +86,30 @@ void conoutf(const char *s, ...)
 bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
 COMMAND(toggleconsole, "");
+TVAR(commandtex, "textures/conopen", 0);
 
 int rendercommand(int x, int y, int w)
 {
     if(!saycommandon) return 0;
-    s_sprintfd(s)("%s %s", commandprompt ? commandprompt : ">", commandbuf);
     int width, height;
-    text_bounds(s, width, height, w);
-    y -= height - FONTH;
-    return draw_text(s, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, (commandpos>=0) ? (commandpos+1+(commandprompt?strlen(commandprompt):1)) : strlen(s), w);
+    text_bounds(commandbuf, width, height, w);
+    y -= height-FONTH;
+	Texture *t = textureload(commandicon ? commandicon : commandtex, 0, true);
+	if(t && t != notexture)
+	{
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBindTexture(GL_TEXTURE_2D, t->id);
+		float fade = 1.f-(float(lastmillis%1000)/1000.f);
+		glColor4f(1.f, 1.f, 1.f, fade);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.f, 0.f); glVertex2f(x, y);
+		glTexCoord2f(1.f, 0.f); glVertex2f(x+FONTH, y);
+		glTexCoord2f(1.f, 1.f); glVertex2f(x+FONTH, y+FONTH);
+		glTexCoord2f(0.f, 1.f); glVertex2f(x, y+FONTH);
+		glEnd();
+		x += FONTH*5/4;
+	}
+    return draw_text(commandbuf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, (commandpos>=0) ? commandpos+2 : strlen(commandbuf), w);
 }
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
@@ -290,15 +305,15 @@ void saycommand(char *init)						 // turns input to the command line on or off
 	keyrepeat(saycommandon);
     s_strcpy(commandbuf, init ? init : "");
     DELETEA(commandaction);
-    DELETEA(commandprompt);
+    DELETEA(commandicon);
 	commandpos = -1;
 }
 
-void inputcommand(char *init, char *action, char *prompt)
+void inputcommand(char *init, char *action, char *icon)
 {
     saycommand(init);
     if(action[0]) commandaction = newstring(action);
-    if(prompt[0]) commandprompt = newstring(prompt);
+    if(icon[0]) commandicon = newstring(icon);
 }
 
 COMMAND(saycommand, "C");
@@ -350,14 +365,14 @@ SVAR(commandbuffer, "");
 
 struct hline
 {
-    char *buf, *action, *prompt;
+    char *buf, *action, *icon;
 
-    hline() : buf(NULL), action(NULL), prompt(NULL) {}
+    hline() : buf(NULL), action(NULL), icon(NULL) {}
     ~hline()
     {
         DELETEA(buf);
         DELETEA(action);
-        DELETEA(prompt);
+        DELETEA(icon);
     }
 
     void restore()
@@ -365,23 +380,23 @@ struct hline
         s_strcpy(commandbuf, buf);
         if(commandpos >= (int)strlen(commandbuf)) commandpos = -1;
         DELETEA(commandaction);
-        DELETEA(commandprompt);
+        DELETEA(commandicon);
         if(action) commandaction = newstring(action);
-        if(prompt) commandprompt = newstring(prompt);
+        if(icon) commandicon = newstring(icon);
     }
 
     bool shouldsave()
     {
         return strcmp(commandbuf, buf) ||
                (commandaction ? !action || strcmp(commandaction, action) : action!=NULL) ||
-               (commandprompt ? !prompt || strcmp(commandprompt, prompt) : prompt!=NULL);
+               (commandicon ? !icon || strcmp(commandicon, icon) : icon!=NULL);
     }
 
     void save()
     {
         buf = newstring(commandbuf);
         if(commandaction) action = newstring(commandaction);
-        if(commandprompt) prompt = newstring(commandprompt);
+        if(commandicon) icon = newstring(commandicon);
     }
 
     void run()

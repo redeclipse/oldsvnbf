@@ -153,7 +153,7 @@ namespace entities
 			if(item && d != world::player1)
 			{
 				s_sprintfd(ds)("@%s", item);
-				part_text(d->abovehead(), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
+				part_text(world::abovehead(d), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
 			}
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))

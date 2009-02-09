@@ -188,8 +188,6 @@ struct dynent : physent                         // animated characters, or chara
 #endif
     }
 
-    vec abovehead() { return vec(o).add(vec(0, 0, aboveeye+4)); }
-
     void normalize_yaw(float angle)
     {
         while(yaw<angle-180.0f) yaw += 360.0f;
