@@ -645,7 +645,8 @@ namespace world
 		if(showobituaries)
 		{
 			bool isme = (d == player1 || actor == player1), show = false;
-			switch(showobituaries)
+			if(flags&HIT_LOST) show = true;
+			else switch(showobituaries)
 			{
 				case 1: if(isme) show = true; break;
 				case 2: if(isme || anc >= 0) show = true; break;

@@ -219,7 +219,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/2));
+			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/3), float(enttype[FLAG].radius/3), 0);
 		}
 		return false;
 	}

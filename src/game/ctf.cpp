@@ -468,7 +468,7 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), ai::AIISNEAR, walk);
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2), ai::AIISNEAR, walk ? 2 : 1);
 		}
 		return false;
 	}
