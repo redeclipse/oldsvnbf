@@ -841,7 +841,7 @@ namespace server
 
 		srvoutf("playing demo \"%s\"", file);
 
-		sendf(-1, 1, "rii", SV_DEMOPLAYBACK, 1);
+		sendf(-1, 1, "ri3", SV_DEMOPLAYBACK, 1, -1);
 
 		if(gzread(demoplayback, &nextplayback, sizeof(nextplayback))!=sizeof(nextplayback))
 		{
