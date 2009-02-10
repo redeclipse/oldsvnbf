@@ -987,7 +987,7 @@ struct interest
 
 struct aistate
 {
-	int type, millis, next, targtype, target, stuck;
+	int type, millis, next, targtype, target;
 	bool override, idle, wasidle;
 
 	aistate(int m, int t, int r = -1, int v = -1) : type(t), millis(m), targtype(r), target(v)
@@ -998,7 +998,6 @@ struct aistate
 
 	void reset()
 	{
-		stuck = 0;
 		next = millis;
 		idle = wasidle = override = false;
 	}
@@ -1009,7 +1008,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, weappref, lastnode, lasthunt, timeinnode;
+	int enemy, lastseen, weappref, lastnode, lasthunt, lastaction, jumpseed, propelseed;
 	float targyaw, targpitch;
 	bool dontmove, tryreset;
 
@@ -1021,12 +1020,18 @@ struct aiinfo
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
-		while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
-		spot = target = vec(0, 0, 0);
-		enemy = lastnode = lasthunt = -1;
-		timeinnode = lastseen = 0;
-		targyaw = targpitch = 0.f;
-		dontmove = false;
+		if(!tryit)
+		{
+			while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
+			spot = target = vec(0, 0, 0);
+			enemy = lastnode = -1;
+			lastaction = lasthunt = lastseen = 0;
+			propelseed = jumpseed = lastmillis+3000;
+			dontmove = false;
+		}
+		else lastnode = -1;
+		targyaw = rnd(360);
+		targpitch = 0.f;
 		tryreset = tryit;
 	}
 
@@ -1162,83 +1167,6 @@ struct projent : dynent
 	}
 };
 
-namespace entities
-{
-	extern vector<extentity *> ents;
-
-	struct avoidset
-	{
-		struct obstacle
-		{
-			dynent *ent;
-			int numentities;
-			bool avoid;
-
-			obstacle(dynent *ent) : ent(ent), numentities(0) {}
-		};
-
-		vector<obstacle> obstacles;
-		vector<int> entities;
-
-		void clear()
-		{
-			obstacles.setsizenodelete(0);
-			entities.setsizenodelete(0);
-		}
-
-		void add(dynent *ent, int entity)
-		{
-			if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
-			obstacles.last().numentities++;
-			entities.add(entity);
-		}
-
-		#define loopavoid(v, d, body) \
-			if(!(v).obstacles.empty()) \
-			{ \
-				int cur = 0; \
-				loopv((v).obstacles) \
-				{ \
-					entities::avoidset::obstacle &ob = (v).obstacles[i]; \
-					int next = cur + ob.numentities; \
-					if(ob.ent && ob.ent != (d)) \
-					{ \
-						for(; cur < next; cur++) \
-						{ \
-							int ent = (v).entities[cur]; \
-							body; \
-						} \
-					} \
-					cur = next; \
-				} \
-			}
-
-		bool find(int entity, gameent *d)
-		{
-			loopavoid(*this, d, { if(ent == entity) return true; });
-			return false;
-		}
-	};
-	extern void clearentcache();
-	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
-	extern int entitynode(const vec &v, bool links = true, bool drop = false);
-	extern bool collateitems(gameent *d, vector<actitem> &actitems);
-	extern void checkitems(gameent *d);
-	extern void putitems(ucharbuf &p);
-	extern void execlink(gameent *d, int index, bool local);
-	extern void setspawn(int n, bool on);
-	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false, bool suicide = false);
-	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
-	extern void useeffects(gameent *d, int n, bool s, int g, int r);
-	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
-	extern void preload();
-	extern void mapstart();
-	extern void edittoggled(bool edit);
-	extern const char *findname(int type);
-	extern void adddynlights();
-	extern void render();
-	extern void update();
-}
 
 namespace server
 {
@@ -1292,6 +1220,7 @@ namespace ai
 	const float AIISNEAR			= 64.f;			// is near
 	const float AIISFAR				= 256.f;		// too far
 	const float AIJUMPHEIGHT		= 4.f;			// decides to jump
+	const float AIJUMPMAX			= 24.f;			// max jump
 	const float AILOSMIN			= 128.f;		// minimum line of sight
 	const float AILOSMAX			= 4096.f;		// maximum line of sight
 	const float AIFOVMIN			= 70.f;			// minimum field of view
@@ -1310,8 +1239,8 @@ namespace ai
 	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
-	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, bool walk = false, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float radius = AIISCLOSE, float guard = AIISNEAR, bool walk = false);
+	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, int walk = 1, bool retry = false);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float radius = AIISCLOSE, float guard = AIISNEAR, int walk = 1);
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);
@@ -1387,6 +1316,155 @@ namespace world
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor);
 	extern void timeupdate(int timeremain);
+}
+
+namespace entities
+{
+	extern vector<extentity *> ents;
+	extern void clearentcache();
+	extern int entitynode(const vec &v, bool links = true, bool drop = false);
+	extern bool collateitems(gameent *d, vector<actitem> &actitems);
+	extern void checkitems(gameent *d);
+	extern void putitems(ucharbuf &p);
+	extern void execlink(gameent *d, int index, bool local);
+	extern void setspawn(int n, bool on);
+	extern bool spawnplayer(gameent *d, int ent = -1, bool recover = false, bool suicide = false);
+	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
+	extern void useeffects(gameent *d, int n, bool s, int g, int r);
+	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern void preload();
+	extern void mapstart();
+	extern void edittoggled(bool edit);
+	extern const char *findname(int type);
+	extern void adddynlights();
+	extern void render();
+	extern void update();
+	struct avoidset
+	{
+		struct obstacle
+		{
+			dynent *ent;
+			int numentities;
+			bool avoid;
+
+			obstacle(dynent *ent) : ent(ent), numentities(0) {}
+		};
+
+		vector<obstacle> obstacles;
+		vector<int> entities;
+
+		void clear()
+		{
+			obstacles.setsizenodelete(0);
+			entities.setsizenodelete(0);
+		}
+
+		void add(dynent *ent, int entity)
+		{
+			if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
+			obstacles.last().numentities++;
+			entities.add(entity);
+		}
+
+		#define loopavoid(v, d, body) \
+			if(!(v).obstacles.empty()) \
+			{ \
+				int cur = 0; \
+				loopv((v).obstacles) \
+				{ \
+					entities::avoidset::obstacle &ob = (v).obstacles[i]; \
+					int next = cur + ob.numentities; \
+					if(ob.ent && ob.ent != (d)) \
+					{ \
+						for(; cur < next; cur++) \
+						{ \
+							int ent = (v).entities[cur]; \
+							body; \
+						} \
+					} \
+					cur = next; \
+				} \
+			}
+
+		bool find(int entity, gameent *d)
+		{
+			loopavoid(*this, d, { if(ent == entity) return true; });
+			return false;
+		}
+
+		int remap(gameent *d, int n, vec &pos)
+		{
+			if(!obstacles.empty())
+			{
+				int cur = 0;
+				loopv(obstacles)
+				{
+					obstacle &ob = obstacles[i];
+					int next = cur + ob.numentities;
+					if(ob.ent && ob.ent != d)
+					{
+						for(; cur < next; cur++) if(entities[cur] == n)
+						{
+							vec above = pos;
+							bool result = false;
+							switch(ob.ent->type)
+							{
+								case ENT_PLAYER:
+								{
+									gameent *e = (gameent *)ob.ent;
+									vec head = world::abovehead(e, 1.f);
+									above.z = head.z;
+									result = true;
+									break;
+								}
+								case ENT_PROJ:
+								{
+									projent *p = (projent *)ob.ent;
+									if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
+									{
+										above.z = p->o.z+(weaptype[p->weap].explode*p->lifesize)+1.f;
+										result = true;
+									}
+								}
+							}
+							if(result)
+							{
+								if(above.z-d->o.z >= ai::AIJUMPMAX)
+									return -1; // too much scotty
+								int node = entitynode(above);
+								if(ents.inrange(node) && node != n)
+								{ // try to reroute above their head?
+									if(!find(node, d))
+									{
+										pos = ents[node]->o;
+										return node;
+									}
+									else return -1;
+								}
+								else
+								{
+									vec old = d->o;
+									d->o = vec(above).add(vec(0, 0, d->height));
+									bool col = collide(d, vec(0, 0, 1));
+									d->o = old;
+									if(col)
+									{
+										pos = above;
+										return n;
+									}
+									else return -1;
+								}
+							}
+							else return -1;
+						}
+					}
+					cur = next;
+				}
+			}
+			return n;
+		}
+	};
+	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
 }
 #endif
 #include "ctf.h"
