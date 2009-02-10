@@ -76,7 +76,7 @@ extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);
 extern const char *searchbind(const char *action, int type);
-extern void searchbindlist(const char *action, int type, int limit, const char *sep, vector<char> &names);
+extern void searchbindlist(const char *action, int type, int limit, const char *sep, char sep3, vector<char> &names);
 
 struct bindlist
 {
@@ -85,12 +85,12 @@ struct bindlist
 
     bindlist() : lastsearch(-1) {}
 
-    const char *search(const char *action, int type = 0, int limit = 0, const char *sep = NULL)
+    const char *search(const char *action, int type = 0, int limit = 0, const char *sep = NULL, char sep3 = ',')
     {
         if(names.empty() || lastsearch != changedkeys)
         {
             names.setsize(0);
-            searchbindlist(action, type, limit, sep, names);
+            searchbindlist(action, type, limit, sep, sep3, names);
             lastsearch = changedkeys;
         }
         return names.getbuf();
