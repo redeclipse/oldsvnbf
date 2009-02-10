@@ -1554,7 +1554,7 @@ namespace server
 
 		if(smode) smode->initclient(ci, p, true);
 		mutate(smuts, mut->initclient(ci, p, true));
-		ci->online = true;
+		if(ci) ci->online = true;
 		return 1;
 	}
 
