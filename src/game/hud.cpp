@@ -594,7 +594,7 @@ namespace hud
 			}
 			else if(world::player1->state == CS_SPECTATOR)
 			{
-				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, world::tvmode() ? "SpecTV" : "Specating");
+				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, world::tvmode() ? "SpecTV" : "Spectating");
 				if(shownotices > 1)
 				{
 					SEARCHBINDCACHE(speconkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
