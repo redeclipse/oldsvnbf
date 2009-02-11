@@ -796,7 +796,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					endianswap(&chdr.worldsize, sizeof(int), 7);
 					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 					ohdr.numpvs = 0;
-					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*2);
+					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*3);
 				}
 				else
 				{
