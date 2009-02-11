@@ -980,8 +980,8 @@ enum
 struct interest
 {
 	int state, node, target, targtype;
-	float tolerance, score;
-	interest() : state(-1), node(-1), target(-1), targtype(-1), tolerance(0.f), score(0.f) {}
+	float score;
+	interest() : state(-1), node(-1), target(-1), targtype(-1), score(0.f) {}
 	~interest() {}
 };
 
@@ -1010,16 +1010,22 @@ struct aiinfo
 	vec target, spot;
 	int enemy, lastseen, weappref, lastnode, lasthunt, lastaction, jumpseed, propelseed;
 	float targyaw, targpitch;
-	bool dontmove, tryreset;
+	bool dontmove, tryreset, clear;
 
 	aiinfo() { reset(); }
 	~aiinfo() { state.setsize(0); route.setsize(0); }
 
-	void reset(bool tryit = false)
+	void wipe()
 	{
 		state.setsize(0);
 		route.setsize(0);
 		addstate(AI_S_WAIT);
+		clear = false;
+	}
+
+	void reset(bool tryit = false)
+	{
+		wipe();
 		if(!tryit)
 		{
 			while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
@@ -1234,13 +1240,13 @@ namespace ai
 
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
-	extern bool makeroute(gameent *d, aistate &b, int node, float tolerance = AIISNEAR, bool changed = true, bool retry = false);
-	extern bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance = AIISNEAR, bool changed = true);
-	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius = AIISNEAR, float wander = AIISFAR);
-	extern bool randomnode(gameent *d, aistate &b, float radius = AIISNEAR, float wander = AIISFAR);
+	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, bool retry = false);
+	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true);
+	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float guard = AIISNEAR, float wander = AIISFAR);
+	extern bool randomnode(gameent *d, aistate &b, float guard = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
-	extern bool patrol(gameent *d, aistate &b, const vec &pos, float radius = AIISNEAR, float wander = AIISFAR, int walk = 1, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float radius = AIISCLOSE, float guard = AIISNEAR, int walk = 1);
+	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, float wander = AIISFAR, int walk = 1, bool retry = false);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = AIISCLOSE, float wander = AIISNEAR, int walk = 1);
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);
@@ -1464,7 +1470,7 @@ namespace entities
 			return n;
 		}
 	};
-	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry = false, float *score = NULL);
+	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, bool retry = false, float *score = NULL);
 }
 #endif
 #include "ctf.h"
