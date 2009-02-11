@@ -6,7 +6,7 @@ namespace entities
 {
 	vector<extentity *> ents;
 	bool autodropped = false;
-	int autodroptime = 0;
+	int autodroptime = -1;
 
 	VARP(showentnames, 0, 1, 2);
 	VARP(showentinfo, 0, 1, 5);
@@ -322,7 +322,7 @@ namespace entities
             extentity &e = *ents[n]; \
             if(e.type == type && (!links || !e.links.empty())) \
             { \
-                float dist = e.o.dist(pos); \
+                float dist = e.o.squaredist(pos); \
                 if(dist < mindist) { closest = n; mindist = dist; } \
             } \
         } while(0)
@@ -963,7 +963,7 @@ namespace entities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, float tolerance, bool retry, float *score)
+	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, bool retry, float *score)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
 			return false;
@@ -1026,7 +1026,7 @@ namespace entities
 					if(n.id != routeid)
 					{
 						n.estscore = ents[link]->o.dist(ents[goal]->o);
-						if(n.estscore <= tolerance && (lowest < 0 || n.estscore < nodes[lowest].estscore))
+						if(n.estscore <= float(enttype[ents[link]->type].radius*4) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
 							lowest = link;
 						if(link != goal) queue.add(&n);
 						else queue.setsizenodelete(0);
@@ -1053,9 +1053,9 @@ namespace entities
 
 	int entitynode(const vec &v, bool links, bool drop)
 	{
-		if(!drop) return closestent(WAYPOINT, v, float(enttype[WAYPOINT].radius*4), links);
+        float mindist = float((enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*(drop ? 1.f : 4.f));
+		if(!drop) return closestent(WAYPOINT, v, mindist, links);
         int n = -1;
-        float mindist = float(enttype[WAYPOINT].radius*(drop ? 1 : 4));
         loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
             float u = ents[i]->o.squaredist(v);
@@ -1080,7 +1080,7 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
-		bool autodrop = (autodroptime && lastmillis-autodroptime < autodropwaypoints*1000);
+		bool autodrop = autodroptime >= 0 && lastmillis-autodroptime <= autodropwaypoints*1000;
 		if(!autodrop && autodropped)
 		{
 			clearentcache();
@@ -1397,6 +1397,56 @@ namespace entities
 			fixentity(e);
 		}
 		loopvj(ents) fixentity(*ents[j]);
+		if(mtype == MAP_BFGZ && gver <= 149)
+		{
+			float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)/3.f;
+			int totalmerges = 0, totalpasses = 0;
+			while(true)
+			{
+				int merges = 0;
+				loopvj(ents) if(ents[j]->type == WAYPOINT)
+				{
+					gameentity &e = *(gameentity *)ents[j];
+					vec avg(e.o);
+					loopvk(ents) if(k != j && ents[k]->type == WAYPOINT)
+					{
+						gameentity &f = *(gameentity *)ents[k];
+						if(e.o.squaredist(f.o) <= mindist)
+						{
+							if(verbose >= 2) conoutf("\frWARNING: automatically transposing waypoint %d into %d", k, j);
+							loopv(f.links) if(f.links[i] != j && e.links.find(f.links[i]) < 0)
+							{
+								e.links.add(f.links[i]);
+								if(verbose >= 3) conoutf("\frWARNING: %d received link %d", j, f.links[i]);
+							}
+							loopv(ents) if(i != k)
+							{
+								gameentity &g = *(gameentity *)ents[i];
+								int id = g.links.find(k);
+								if(id >= 0)
+								{
+									g.links.remove(id);
+									if(g.links.find(j) < 0)
+									{
+										g.links.add(j);
+										if(verbose >= 3) conoutf("\frWARNING: %d received link %d from old child %d", i, j, k);
+									}
+								}
+							}
+							f.links.setsize(0);
+							f.type = NOTUSED;
+							e.o.add(f.o).mul(0.5f);
+							merges++;
+						}
+					}
+				}
+				totalpasses++;
+				if(!merges) break;
+				totalmerges += merges;
+				if(verbose >= 2) conoutf("\frWARNING: %d waypoint(s) merged, taking another pass", merges);
+			}
+			if(verbose) conoutf("\frWARNING: transposed %d total waypoint(s) in %d pass(es)", totalmerges, totalpasses);
+		}
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
 	}
@@ -1404,7 +1454,9 @@ namespace entities
 	void mapstart()
 	{
 		autodropped = false;
-		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : 0;
+		autodroptime = autodropwaypoints && m_play(world::gamemode) ? lastmillis : -1;
+		if(autodroptime >= 0 && verbose)
+			conoutf("\faauto-dropping waypoints for %d second(s)..", autodropwaypoints);
 	}
 
 	void edittoggled(bool edit)

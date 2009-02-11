@@ -198,7 +198,7 @@ namespace stf
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
-				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.pos) <= ((enttype[FLAG].radius*enttype[FLAG].radius)*2.f))
+				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.pos) <= (enttype[FLAG].radius*enttype[FLAG].radius))
 					targets.add(e->clientnum);
 			}
 			if(targets.empty() && (f.owner != d->team || f.enemy))
@@ -208,8 +208,7 @@ namespace stf
 				n.node = entities::entitynode(f.pos);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
-				n.tolerance = enttype[FLAG].radius*2.f;
-				n.score = pos.squaredist(f.pos)/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
+				n.score = pos.squaredist(f.pos)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
 			}
 		}
 	}
@@ -219,13 +218,26 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/3), float(enttype[FLAG].radius/3), 0);
+			if(f.enemy || f.owner != d->team)
+			{
+				if(lastmillis-b.millis >= (111-d->skill)*500)
+				{
+					d->ai->clear = true; // re-evaluate
+					return true;
+				}
+				return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius/2), 0);
+			}
 		}
 		return false;
 	}
 
 	bool aipursue(gameent *d, aistate &b)
 	{
+		if(lastmillis-b.millis >= (111-d->skill)*500)
+		{
+			d->ai->clear = true; // re-evaluate
+			return true;
+		}
 		return aidefend(d, b);
 	}
 }

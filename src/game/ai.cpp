@@ -85,33 +85,33 @@ namespace ai
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, aistate &b, int node, float tolerance, bool changed, bool retry)
+	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool retry)
 	{
 		if(node != d->lastnode)
 		{
 			if(changed && !d->ai->route.empty() && d->ai->route[0] == node) return true;
-			if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, tolerance, retry))
+			if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, retry))
 			{
 				b.override = false;
 				return true;
 			}
-			if(!retry) return makeroute(d, b, node, tolerance, true, true);
+			if(!retry) return makeroute(d, b, node, true, true);
 		}
 		d->ai->route.setsize(0);
 		return false;
 	}
 
-	bool makeroute(gameent *d, aistate &b, const vec &pos, float tolerance, bool changed)
+	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed)
 	{
 		int node = entities::entitynode(pos);
-		return makeroute(d, b, node, tolerance, changed);
+		return makeroute(d, b, node, changed);
 	}
 
-	bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float radius, float wander)
+	bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float guard, float wander)
 	{
 		static vector<int> entities;
 		entities.setsizenodelete(0);
-		float r = radius*radius, w = wander*wander;
+		float r = guard*guard, w = wander*wander;
 		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT && j != d->lastnode && j != d->ai->lastnode && !obstacles.find(j, d))
 		{
 			float fdist = entities::ents[j]->o.squaredist(from);
@@ -130,10 +130,10 @@ namespace ai
 		return false;
 	}
 
-	bool randomnode(gameent *d, aistate &b, float radius, float wander)
+	bool randomnode(gameent *d, aistate &b, float guard, float wander)
 	{
 		vec feet = world::feetpos(d);
-		return randomnode(d, b, feet, feet, radius, wander);
+		return randomnode(d, b, feet, feet, guard, wander);
 	}
 
 	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, bool pursue = false)
@@ -165,12 +165,12 @@ namespace ai
 		return false;
 	}
 
-	bool patrol(gameent *d, aistate &b, const vec &pos, float radius, float wander, int walk, bool retry)
+	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
 	{
 		vec feet = world::feetpos(d);
-		if(walk == 2 || (walk && feet.squaredist(pos) <= radius*radius) || !makeroute(d, b, pos, radius))
+		if(walk == 2 || (walk && feet.squaredist(pos) <= guard*guard) || !makeroute(d, b, pos))
 		{ // run away and back to keep ourselves busy
-			if(!b.override && randomnode(d, b, feet, pos, radius, wander))
+			if(!b.override && randomnode(d, b, feet, pos, guard, wander))
 			{
 				b.override = true;
 				return true;
@@ -179,7 +179,7 @@ namespace ai
 			else if(!retry)
 			{
                 b.override = false;
-				return patrol(d, b, pos, radius, wander, walk, true);
+				return patrol(d, b, pos, guard, wander, walk, true);
 			}
 			return false;
 		}
@@ -187,12 +187,12 @@ namespace ai
 		return true;
 	}
 
-	bool defend(gameent *d, aistate &b, const vec &pos, float radius, float guard, int walk)
+	bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
 	{
 		if(walk < 2)
 		{
 			vec feet = world::feetpos(d);
-			if(feet.squaredist(pos) <= guard*guard)
+			if(feet.squaredist(pos) <= wander*wander)
 			{
 				if(!enemy(d, b, pos, guard, walk))
 				{
@@ -203,7 +203,7 @@ namespace ai
 				return true;
 			}
 		}
-		return patrol(d, b, pos, radius, guard, walk);
+		return patrol(d, b, pos, guard, wander, walk);
 	}
 
 	bool violence(gameent *d, aistate &b, gameent *e, bool pursue)
@@ -248,7 +248,6 @@ namespace ai
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.tolerance = e->radius*2.f;
 			n.score = ep.squaredist(dp)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 10.f : 1.f);
 		}
 	}
@@ -272,7 +271,6 @@ namespace ai
 						n.node = entities::entitynode(e.o);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
-						n.tolerance = enttype[e.type].radius+d->radius;
 						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
 					}
 					break;
@@ -298,7 +296,6 @@ namespace ai
 						n.node = entities::entitynode(proj.o);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
-						n.tolerance = enttype[WEAPON].radius+d->radius;
 						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
 					}
 					break;
@@ -332,7 +329,7 @@ namespace ai
 					break;
 				default: break;
 			}
-			if(proceed && makeroute(d, b, n.node, n.tolerance, false))
+			if(proceed && makeroute(d, b, n.node, false))
 			{
 				d->ai->setstate(n.state, n.targtype, n.target, override);
 				return true;
@@ -493,7 +490,7 @@ namespace ai
 							}
 							default: break;
 						}
-						return makeroute(d, b, e.o, enttype[e.type].radius);
+						return makeroute(d, b, e.o);
 					}
 					break;
 				}
@@ -514,7 +511,7 @@ namespace ai
 							}
 							default: break;
 						}
-						return makeroute(d, b, proj.o, enttype[entities::ents[proj.id]->type].radius);
+						return makeroute(d, b, proj.o);
 						break;
 					}
 					break;
@@ -618,8 +615,7 @@ namespace ai
 				case 1:
 				{ // if closenode fails...
 					int node = d->ai->route[0];
-					if(!makeroute(d, b, node, float(enttype[WAYPOINT].radius*4), false))
-						return false;
+					if(!makeroute(d, b, node, false)) return false;
 					break;
 				}
 				case 3:
@@ -798,7 +794,7 @@ namespace ai
 				break;
 			}
 		}
-		if(world::allowmove(d) && busy <= (!d->hasweap(d->ai->weappref, sweap) ? 2 : 1) && !d->useaction && d->requse < 0)
+		if(world::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -982,6 +978,7 @@ namespace ai
 			logic(d, c, run);
 			break;
 		}
+		if(d->ai->clear) d->ai->wipe();
 	}
 
 	void drawstate(gameent *d, aistate &b, bool top, int above)

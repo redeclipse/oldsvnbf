@@ -334,7 +334,7 @@ namespace ctf
 					goal = i;
 				}
 			}
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), enttype[FLAG].radius/2, false))
+			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), false))
 			{
 				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, goal);
 				return true;
@@ -378,17 +378,17 @@ namespace ctf
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
-				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius) || f.owner == e))
+				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius)*2 || f.owner == e))
 					targets.add(e->clientnum);
 			}
 			if(isctfhome(f, d->team))
 			{
 				bool guard = false;
 				if(f.owner || targets.empty()) guard = true;
-				else if(d->weapselect == d->ai->weappref)
+				else if(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
 				{ // see if we can relieve someone who only has a plasma
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && t->weapselect != t->ai->weappref)
+					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && !t->hasweap(t->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
 					{
 						guard = true;
 						break;
@@ -401,8 +401,7 @@ namespace ctf
 					n.node = entities::entitynode(f.pos());
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
-					n.tolerance = enttype[FLAG].radius;
-					n.score = pos.squaredist(f.pos())/(d->weapselect != d->ai->weappref ? 10.f : 100.f);
+					n.score = pos.squaredist(f.pos())/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
 				}
 			}
 			else
@@ -414,7 +413,6 @@ namespace ctf
 					n.node = entities::entitynode(f.pos());
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
-					n.tolerance = enttype[FLAG].radius;
 					n.score = pos.squaredist(f.pos());
 				}
 				else
@@ -428,7 +426,6 @@ namespace ctf
 						n.node = t->lastnode;
 						n.target = t->clientnum;
 						n.targtype = AI_T_PLAYER;
-						n.tolerance = t->radius*2.f;
 						n.score = pos.squaredist(tp);
 					}
 				}
@@ -468,7 +465,12 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/2), ai::AIISNEAR, walk ? 2 : 1);
+			if(!walk && lastmillis-b.millis >= (111-d->skill)*500)
+			{
+				d->ai->clear = true; // re-evaluate
+				return true;
+			}
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*2), walk ? 2 : 1);
 		}
 		return false;
 	}
@@ -483,8 +485,7 @@ namespace ctf
 				if(f.owner == d) return aihomerun(d, b);
 				else return ai::violence(d, b, f.owner, true);
 			}
-			else if(f.droptime && isctfflag(f, d->team))
-				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
+			else if(f.droptime && isctfflag(f, d->team)) return ai::makeroute(d, b, f.pos());
 			else if(isctfhome(f, d->team))
 			{
 				static vector<int> hasflags;
@@ -495,9 +496,14 @@ namespace ctf
 					if(g.owner == d) hasflags.add(i);
 				}
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
-				return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
+				return ai::makeroute(d, b, f.pos());
 			}
-			else return ai::makeroute(d, b, f.pos(), enttype[FLAG].radius/2);
+			else if(lastmillis-b.millis >= (111-d->skill)*500)
+			{
+				d->ai->clear = true; // re-evaluate
+				return true;
+			}
+			return ai::makeroute(d, b, f.pos());
 		}
 		return false;
 	}
