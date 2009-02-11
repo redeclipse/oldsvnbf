@@ -552,12 +552,12 @@ namespace ai
 		vec pos = world::feetpos(d);
 		int node = -1;
 		float radius = float(enttype[WAYPOINT].radius*12), mindist = radius*radius;
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode)// && d->ai->route[i] != d->ai->lastnode)
+		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode)
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, d->ai->route[i], epos);
-			if(entities::ents.inrange(entid))// && (entid == d->ai->route[i] || (entid != d->lastnode && entid != d->ai->lastnode)))
+			if(entities::ents.inrange(entid) && (entid == d->ai->route[i] || entid != d->ai->lastnode))
 			{
 				float dist = epos.squaredist(pos);
 				if(dist < mindist)
@@ -577,7 +577,7 @@ namespace ai
 			gameentity &e = *(gameentity *)entities::ents[n];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, n, epos);
-			if(entities::ents.inrange(entid))// && (entid == n || (entid != d->lastnode && entid != d->ai->lastnode)))
+			if(entities::ents.inrange(entid) && (entid == n || entid != d->ai->lastnode))
 			{
 				d->ai->spot = epos;
 				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
@@ -723,8 +723,14 @@ namespace ai
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
 				world::fixrange(yaw, pitch);
-				if(b.idle) { d->ai->targyaw = yaw; d->ai->targpitch = pitch; }
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, 1.f);
+				if(b.idle)
+				{
+					d->ai->targyaw = yaw;
+					d->ai->targpitch = pitch;
+					if(!cansee) frame /= 4.f;
+				}
+				else if(!cansee) frame /= 2.f;
+				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, cansee ? 1.f : 0.5f);
 				if(cansee)
 				{
 					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
@@ -752,7 +758,7 @@ namespace ai
 
 		world::fixrange(d->ai->targyaw, d->ai->targpitch);
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
-		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
+		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 0.5f);
 
 		if(!b.idle && !d->ai->dontmove)
 		{ // our guys move one way.. but turn another?! :)
@@ -896,7 +902,12 @@ namespace ai
 						}
 					}
 				}
-				if(d->ai->lastnode != d->lastnode) d->ai->lastnode = d->lastnode;
+				if(d->ai->prevnode != d->lastnode)
+				{
+					if(d->ai->lastnode != d->ai->prevnode)
+						d->ai->lastnode = d->ai->prevnode;
+					d->ai->prevnode = d->lastnode;
+				}
 			}
 			entities::checkitems(d);
 		}
@@ -1042,10 +1053,9 @@ namespace ai
 		if(aidebug > 3)
 		{
 			vec pos = world::feetpos(d);
-			if(d->ai->spot != vec(0, 0, 0))
-				renderline(pos, vec(d->ai->spot).sub(vec(0, 0, d->height)), 1.f, 1.f, 0.f, false);
+			if(d->ai->spot != vec(0, 0, 0)) renderline(pos, d->ai->spot, 1.f, 1.f, 1.f, false);
 			if(entities::ents.inrange(d->lastnode))
-				renderline(pos, entities::ents[d->lastnode]->o, 0.f, 1.f, 0.f, false);
+				renderline(pos, entities::ents[d->lastnode]->o, 0.f, 1.f, 1.f, false);
 			if(entities::ents.inrange(d->ai->lastnode))
 				renderline(pos, entities::ents[d->ai->lastnode]->o, 1.f, 0.f, 1.f, false);
 		}
