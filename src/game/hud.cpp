@@ -653,7 +653,7 @@ namespace hud
 			break;
 		}
 		const rddir &rd = rddirs[cq];
-		float range = min(rd.axis ? fovsx : fovsy, 1e-3f), skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
+		float range = max(rd.axis ? fovsx : fovsy, 1e-3f), skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
 		if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2;
 		(rd.axis ? cx : cy) += int(((rd.axis ? w : h)-s*2)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
 

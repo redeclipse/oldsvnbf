@@ -60,7 +60,14 @@ namespace stf
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
+			if(hud::radarflagnames)
+			{
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
+				if(occupy < 1.f)
+					hud::drawblip(w, h, s, fade, 3, dir, r, g, b, "sub", fade*hud::radarnameblend, "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(w, h, s, fade, 3, dir, r, g, b, "sub", fade*hud::radarnameblend, "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
+			}
+			else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
 		}
 	}
 

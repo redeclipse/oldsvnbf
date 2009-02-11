@@ -38,16 +38,15 @@ namespace ctf
         if(blip)
         {
             if(!(f.base&BASE_FLAG) || f.owner == world::player1) return;
-			else if(f.owner) { if(lastmillis%500 >= 250) fade = 1.f; }
-            else if(f.droptime) { if(lastmillis%500 >= 250) fade = 1.f; }
-            else return;
+			else if(f.owner) { if(lastmillis%500 >= 250) fade = 0.f; }
+            else if(f.droptime) { if(lastmillis%500 >= 250) fade = 0.f; }
+            else if(f.base&BASE_HOME) return;
         	dir = f.pos();
         }
         else
         {
         	if(!(f.base&BASE_HOME)) return;
         	dir = f.spawnloc;
-        	r *= 0.5f; g *= 0.5f; b *= 0.5f;
         }
 		dir.sub(camera1->o);
 		if(blip)
@@ -59,7 +58,7 @@ namespace ctf
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
 		if(hud::radarflagnames) hud::drawblip(w, h, s, fade, 3, dir, r, g, b,
-				"sub", fade*hud::radarnameblend, "%s%s %s", teamtype[f.team].chat, teamtype[f.team].name, blip ? "flag" : "base");
+				"sub", fade*hud::radarnameblend, "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
 		else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
     }
 
