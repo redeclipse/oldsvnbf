@@ -644,13 +644,21 @@ namespace server
 				spawns[sents[i].attr[1]].add(i);
 				totalspawns++;
 			}
-			if(totalspawns && m_team(gamemode, mutators))
+			if(totalspawns)
 			{
-				loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
+				if(m_team(gamemode, mutators))
 				{
-					loopj(TEAM_LAST+1) spawns[j].reset();
+					loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
+					{
+						loopj(TEAM_LAST+1) spawns[j].reset();
+						totalspawns = 0;
+						break;
+					}
+				}
+				else if(m_timed(gamemode) && spawns[TEAM_NEUTRAL].ents.length() <= 1)
+				{
+					spawns[TEAM_NEUTRAL].reset();
 					totalspawns = 0;
-					break;
 				}
 			}
 			if(!totalspawns)
