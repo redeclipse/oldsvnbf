@@ -130,13 +130,17 @@ namespace server
 			return state==CS_ALIVE || (state==CS_DEAD && millis-lastdeath <= DEATHMILLIS);
 		}
 
-		void reset()
+		void reset(bool change = false)
 		{
-			if(state!=CS_SPECTATOR) state = CS_DEAD;
+			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
-			timeplayed = 0;
-			lifesequence = effectiveness = 0;
+			if(!change)
+			{
+				timeplayed = 0;
+				lifesequence = effectiveness = 0;
+			}
+			else lifesequence = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
@@ -217,10 +221,10 @@ namespace server
 			return events.add();
 		}
 
-		void mapchange()
+		void mapchange(bool change = true)
 		{
 			mapvote[0] = 0;
-			state.reset();
+			state.reset(change);
 			events.setsizenodelete(0);
             targets.setsizenodelete(0);
             timesync = false;
@@ -237,7 +241,7 @@ namespace server
             authreq = 0;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
-			mapchange();
+			mapchange(false);
 		}
 
 		int getmillis(int millis, int id)
@@ -1087,7 +1091,7 @@ namespace server
 				{
 					clientinfo *ci = clients[i];
 					if(!ci->team || ci == who || ci->state.state == CS_SPECTATOR) continue;
-					ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+					ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
 					ci->state.lasttimeplayed = lastmillis;
 					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
 					{
@@ -1140,7 +1144,7 @@ namespace server
 			    clientinfo *oi = clients[i];
 			    if(oi->clientnum != ci->clientnum && getclientip(oi->clientnum) == ip && !strcmp(oi->name, ci->name))
 			    {
-				    oi->state.timeplayed += lastmillis - oi->state.lasttimeplayed;
+				    oi->state.timeplayed += lastmillis-oi->state.lasttimeplayed;
 				    oi->state.lasttimeplayed = lastmillis;
 				    static savedscore curscore;
 				    curscore.save(oi->state);
@@ -1234,16 +1238,6 @@ namespace server
 		notgotinfo = true;
 		scores.setsize(0);
 
-		if(m_team(gamemode, mutators))
-		{
-			loopv(clients)
-			{
-				clientinfo *ci = clients[i];
-				ci->team = TEAM_NEUTRAL; // to be reset below
-				ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-			}
-		}
-
 		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
 
 		// server modes
@@ -1257,6 +1251,14 @@ namespace server
 		if(smode) smode->reset(false);
 		mutate(smuts, mut->reset(false));
 
+		if(m_team(gamemode, mutators) && GVAR(teambalance))
+		{
+			loopv(clients)
+			{
+				clientinfo *ci = clients[i];
+				ci->team = TEAM_NEUTRAL; // to be reset below
+			}
+		}
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
@@ -1265,10 +1267,8 @@ namespace server
 			if(smode) smode->changeteam(ci, ci->team, team);
 			mutate(smuts, mut->changeteam(ci, ci->team, team));
 			ci->team = team;
-			ci->mapchange();
-            ci->state.lasttimeplayed = lastmillis;
-            if(ci->state.state != CS_SPECTATOR)
-				sendspawn(ci);
+			ci->mapchange(true);
+            if(ci->state.state != CS_SPECTATOR) sendspawn(ci);
 		}
 
 		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -1615,8 +1615,19 @@ namespace server
 			if(fragvalue > 0)
 			{
 				int friends = 0, enemies = 0; // note: friends also includes the fragger
-				if(m_team(gamemode, mutators)) loopv(clients) if(clients[i]->team != actor->team) enemies++; else friends++;
-				else { friends = 1; enemies = clients.length()-1; }
+				if(m_team(gamemode, mutators))
+				{
+					loopv(clients)
+					{
+						if(clients[i]->team != actor->team) enemies++;
+						else friends++;
+					}
+				}
+				else
+				{
+					friends = 1;
+					enemies = clients.length()-1;
+				}
 				actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
 				actor->state.spree++;
 			}

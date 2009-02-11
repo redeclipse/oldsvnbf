@@ -414,7 +414,7 @@ void save_world(const char *mname, bool nolms)
 
 	setnames(mname, MAP_BFGZ);
 
-	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision); // x10 so we can do this more
+	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision);
 	gzFile f = opengzfile(mapfile, "wb9");
 	if(!f) { conoutf("\frerror saving %s to %s: file error", mapname, mapfile); return; }
 
@@ -501,16 +501,13 @@ void save_world(const char *mname, bool nolms)
 			{
 				vector<int> links;
 				int n = 0;
-
 				loopvk(ents)
 				{
 					extentity &f = (extentity &)*ents[k];
-
 					if(f.type != ET_EMPTY)
 					{
 						if(entities::maylink(f.type) && e.links.find(k) >= 0)
 							links.add(n); // align to indices
-
 						n++;
 					}
 				}
@@ -855,7 +852,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
 
 				string gameid;
-				s_strcpy(gameid, "???");
 				if(hdr.version >= 16)
 				{
 					int len = gzgetc(f);
@@ -1061,8 +1057,11 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					if(ents.inrange(closest) && closedist <= 100)
 					{
 						extentity &a = *ents[closest];
-						a.links.add(i);
-						if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
+						if(a.links.find(i) < 0)
+						{
+							a.links.add(i);
+							if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
+						}
 					}
 				}
 				if(e.type == ET_MAPMODEL && e.attr[0] >= 0)
@@ -1084,9 +1083,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			gzclose(f);
 			conoutf("\fwloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
-
-			//if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 28))
-			//	mpremip(true);
 
 			if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
 				fixlightmapnormals();
