@@ -339,7 +339,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
         ray.mul(1.0f / mag);
         float angle = -ray.dot(normal);
         if(angle <= 0) continue;
-		if(light.links.length())
+		if(!light.links.empty())
 		{
 			int slight = -1;
 			const vector<extentity *> &ents = entities::getents();
@@ -1333,7 +1333,7 @@ bool previewblends(cube &c, const ivec &co, int size)
 
     int usefaces[6];
     int vertused = 0;
-    loopi(6) if((usefaces[i] = lookuptexture(c.texture[i], false).layer ? visibletris(c, i, co.x, co.y, co.z, size) : 0)) 
+    loopi(6) if((usefaces[i] = lookuptexture(c.texture[i], false).layer ? visibletris(c, i, co.x, co.y, co.z, size) : 0))
         vertused |= fvmasks[1<<i];
     if(!vertused) return false;
 
@@ -1971,7 +1971,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		if(e.attr[0])
 			intensity -= mag / float(e.attr[0]);
 
-		if(e.links.length())
+		if(!e.links.empty())
 		{
 			int slight = -1;
 			const vector<extentity *> &ents = entities::getents();
@@ -2043,7 +2043,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 		if(e.attr[0])
 			intensity -= mag / float(e.attr[0]);
 
-		if(e.links.length())
+		if(!e.links.empty())
 		{
 			int slight = -1;
 			const vector<extentity *> &ents = entities::getents();

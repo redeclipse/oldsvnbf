@@ -578,7 +578,11 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 	e.inoctanode = false;
     e.light.color = vec(1, 1, 1);
     e.light.dir = vec(0, 0, 1);
-	if(local) entities::fixentity(e);
+	if(local)
+	{
+		int n = entities::getents().find(&e);
+		if(entities::getents().inrange(n)) entities::fixentity(n);
+	}
 	return &e;
 }
 

@@ -400,14 +400,14 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// superhud!
-		if(shownotices)
+		if(shownotices && world::maptime)
 		{
 			pushfont("super");
 			float roff = hastv(showborder) ? 1.f : 0.5f;
 			int ty = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
 			if(teamnotices) skewcolour(tr, tg, tb);
-			if(!world::maptime || lastmillis-world::maptime < titlecard)
+			if(lastmillis-world::maptime < titlecard)
 			{
 				const char *title = getmaptitle();
 				if(!*title) title = getmapname();

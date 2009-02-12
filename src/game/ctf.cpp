@@ -38,8 +38,7 @@ namespace ctf
         if(blip)
         {
             if(!(f.base&BASE_FLAG) || f.owner == world::player1) return;
-			else if(f.owner) { if(lastmillis%500 >= 250) fade = 0.f; }
-            else if(f.droptime) { if(lastmillis%500 >= 250) fade = 0.f; }
+			else if((f.owner || f.droptime) && lastmillis%500 >= 250) return;
             else if(f.base&BASE_HOME) return;
         	dir = f.pos();
         }
@@ -133,7 +132,7 @@ namespace ctf
             vec above(f.pos());
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
             above.z += enttype[FLAG].radius/2;
-            s_sprintfd(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME || !f.droptime ? "base" : "flag");
+            s_sprintfd(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME && !f.droptime && !f.owner ? "base" : "flag");
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
         }
     }
@@ -307,7 +306,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || f.owner || !(f.base&BASE_FLAG) || (f.droptime ? f.droploc.x<0 : f.team == d->team)) continue;
+            if(!f.ent || f.owner || !(f.base&BASE_FLAG) || (!f.droptime && f.team == d->team)) continue;
             if(o.dist(f.pos()) < enttype[FLAG].radius/2)
             {
                 if(f.pickup) continue;
@@ -479,11 +478,8 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(f.owner && isctfflag(f, d->team))
-			{
-				if(f.owner == d) return aihomerun(d, b);
-				else return ai::violence(d, b, f.owner, true);
-			}
+			if(f.owner && f.owner == d) return aihomerun(d, b);
+			else if(f.owner && isctfflag(f, d->team)) return ai::violence(d, b, f.owner, true);
 			else if(f.droptime && isctfflag(f, d->team)) return ai::makeroute(d, b, f.pos());
 			else if(isctfhome(f, d->team))
 			{
