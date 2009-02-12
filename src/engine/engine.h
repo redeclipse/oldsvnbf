@@ -239,7 +239,7 @@ extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void setcolormask(bool r = true, bool g = true, bool b = true);
 
-extern const char *loadback;
+extern const char *loadback, *loadbackinfo;
 extern float loadprogress;
 extern void loadbackground(int w, int h, Texture *t = NULL);
 extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
