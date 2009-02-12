@@ -232,10 +232,11 @@ namespace aiman
 		loopvrev(clients) if(clients[i]->state.isai()) reinitai(clients[i]);
 	}
 
-	void clearai()
+	void clearai(bool override)
 	{ // clear and remove all ai immediately
 		loopvrev(clients) if(clients[i]->state.isai()) deleteai(clients[i]);
-		autooverride = dorefresh = false;
+		autooverride = override;
+		dorefresh = false;
 	}
 
 	void checkai()
