@@ -325,7 +325,7 @@ namespace server
         virtual void leavegame(clientinfo *ci, bool disconnecting = false) {}
 
 		virtual void moved(clientinfo *ci, const vec &oldpos, const vec &newpos) {}
-		virtual bool canspawn(clientinfo *ci, bool connecting = false, bool tryspawn = false) { return true; }
+		virtual bool canspawn(clientinfo *ci, bool tryspawn = false) { return true; }
 		virtual void spawned(clientinfo *ci) {}
         virtual int fragvalue(clientinfo *victim, clientinfo *actor)
         {
@@ -1268,7 +1268,12 @@ namespace server
 			mutate(smuts, mut->changeteam(ci, ci->team, team));
 			ci->team = team;
 			ci->mapchange(true);
-            if(ci->state.state != CS_SPECTATOR) sendspawn(ci);
+			if(ci->state.state != CS_SPECTATOR)
+			{
+				ci->state.state = CS_WAITING;
+				ci->state.weapreset(false);
+				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
+			}
 		}
 
 		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -1508,13 +1513,14 @@ namespace server
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
             putint(p, ci->team);
-        }
-		if(ci && ci->state.state!=CS_SPECTATOR)
-		{
-			int nospawn = 0;
-			if(smode && !smode->canspawn(ci, true, false)) { nospawn++; }
-			mutate(smuts, if(!mut->canspawn(ci, true, false)) { nospawn++; });
-			if(nospawn)
+			if(ci->state.state==CS_SPECTATOR)
+			{
+				putint(p, SV_SPECTATOR);
+				putint(p, ci->clientnum);
+				putint(p, 1);
+				sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
+			}
+			else
 			{
 				ci->state.state = CS_WAITING;
 				ci->state.weapreset(false);
@@ -1522,22 +1528,7 @@ namespace server
 				putint(p, ci->clientnum);
 				sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
 			}
-			else
-			{
-				spawnstate(ci);
-				putint(p, SV_SPAWNSTATE);
-				sendstate(ci, p, pickspawn(ci));
-				ci->state.lastrespawn = ci->state.lastspawn = gamemillis;
-			}
 		}
-		if(ci && ci->state.state==CS_SPECTATOR)
-		{
-			putint(p, SV_SPECTATOR);
-			putint(p, ci->clientnum);
-			putint(p, 1);
-			sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
-		}
-
 		if(clients.length() > 1)
 		{
 			putint(p, SV_RESUME);
@@ -1959,11 +1950,11 @@ namespace server
 				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
-					if(smode && !smode->canspawn(ci, false, false)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(ci, false, false)) { nospawn++; });
+					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
+					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
 					if(!nospawn)
 					{
-						ci->state.state = CS_DEAD; // safety
+						ci->state.state = CS_ALIVE; // safety
 						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						sendspawn(ci);
 					}
@@ -2445,17 +2436,13 @@ namespace server
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
 					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay);
 					if(wait && sdelay-wait <= min(sdelay, GVAR(spawndelaywait)*1000)) break;
-					int nospawn = 0;
-					if(smode && !smode->canspawn(cp, false, true)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(cp, false, true)) { nospawn++; });
-					if(!nospawn)
-					{
-						if(cp->state.lastdeath) flushevents(cp, cp->state.lastdeath + DEATHMILLIS);
-						cleartimedevents(cp);
-						sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
-						cp->state.state = CS_WAITING;
-						cp->state.weapreset(false);
-					}
+					if(smode) smode->canspawn(cp, true);
+					mutate(smuts, mut->canspawn(cp, true));
+					if(cp->state.lastdeath) flushevents(cp, cp->state.lastdeath + DEATHMILLIS);
+					cleartimedevents(cp);
+					sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
+					cp->state.state = CS_WAITING;
+					cp->state.weapreset(false);
 					break;
 				}
 
@@ -2888,14 +2875,9 @@ namespace server
 					}
 					else if(spinfo->state.state==CS_SPECTATOR && !val)
 					{
-						spinfo->state.state = CS_DEAD;
-						spinfo->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
-						int nospawn = 0;
-						if(smode && !smode->canspawn(spinfo, false, true)) { nospawn++; }
-						mutate(smuts, {
-							if (!mut->canspawn(spinfo, false, true)) { nospawn++; }
-						});
-						if (!nospawn) sendspawn(spinfo);
+						sendf(-1, 1, "ri2", SV_WAITING, spinfo->clientnum);
+						spinfo->state.state = CS_WAITING;
+						spinfo->state.weapreset(false);
 	                    spinfo->state.lasttimeplayed = lastmillis;
 						aiman::dorefresh = true;
 					}
