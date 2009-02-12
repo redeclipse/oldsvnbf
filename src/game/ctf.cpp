@@ -450,25 +450,52 @@ namespace ctf
 				return true;
 			}
 			bool walk = false;
-			loopv(st.flags)
-			{ // get out of the way of the returnee!
-				ctfstate::flag &g = st.flags[i];
-				if(g.owner && g.owner->team == d->team)
+			if(lastmillis-b.millis >= (111-d->skill)*100)
+			{
+				static vector<int> targets; // build a list of others who are interested in this
+				targets.setsizenodelete(0);
+				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
+				gameent *e = NULL;
+				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = world::headpos(e);
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius)*2 || f.owner == e))
+						targets.add(e->clientnum);
+				}
+				if(!targets.empty())
 				{
-					vec gp = world::feetpos(g.owner);
-					if(gp.squaredist(f.pos()) <= ai::AIISNEAR*ai::AIISNEAR)
+					d->ai->clear = true; // re-evaluate
+					return true;
+				}
+				else
+				{
+					walk = true;
+					b.millis = lastmillis;
+				}
+			}
+			else
+			{
+				vec pos = world::feetpos(d);
+				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*3);
+				loopv(st.flags) if(isctfflag(st.flags[i], d->team))
+				{ // get out of the way of the returnee!
+					ctfstate::flag &g = st.flags[i];
+					if(pos.squaredist(g.pos()) <= mindist)
 					{
-						walk = true;
-						break;
+						if(g.owner)
+						{
+							if(g.owner->team == d->team) walk = true;
+							else return ai::violence(d, b, g.owner, true);
+						}
+						else if(g.droptime)
+						{
+							d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, i);
+							return true;
+						}
 					}
 				}
 			}
-			if(!walk && lastmillis-b.millis >= (111-d->skill)*500)
-			{
-				d->ai->clear = true; // re-evaluate
-				return true;
-			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*2), walk ? 2 : 1);
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*6), walk ? 2 : 1);
 		}
 		return false;
 	}
@@ -493,7 +520,7 @@ namespace ctf
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
 				return ai::makeroute(d, b, f.pos());
 			}
-			else if(lastmillis-b.millis >= (111-d->skill)*500)
+			else if(lastmillis-b.millis >= (111-d->skill)*6000)
 			{
 				d->ai->clear = true; // re-evaluate
 				return true;

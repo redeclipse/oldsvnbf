@@ -18,7 +18,7 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	VAR(autodropwaypoints, 0, 120, INT_MAX-1); // secs after map start we start and keep dropping waypoints
-	FVARP(waypointmergescale, 1e-3f, 0.25f, 1000);
+	FVARP(waypointmergescale, 1e-3f, 0.35f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -536,11 +536,8 @@ namespace entities
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 									d->vel.v[k] = dir.v[k];
 							}
-							if(lastmillis-e.lastuse >= triggertime(e))
-							{
-								e.lastuse = e.lastemit = lastmillis;
-								execlink(d, n, true);
-							}
+							if(lastmillis-e.lastuse >= triggertime(e)/2) e.lastuse = e.lastemit = lastmillis;
+							execlink(d, n, true);
 							break;
 						}
 						case TRIGGER:
@@ -792,27 +789,29 @@ namespace entities
 							{
 								f.spawned = e.spawned;
 								f.lastemit = e.lastemit;
-								commit = false;
 							}
 							break;
 						}
 						case PARTICLES:
 						{
-							f.lastemit = e.type == TRIGGER ? e.lastemit : lastmillis;
-							commit = d && local;
+							if(e.type == TRIGGER || (!f.lastemit || lastmillis-f.lastemit >= triggertime(f)/2))
+							{
+								f.lastemit = e.lastemit;
+								commit = e.type != TRIGGER && local;
+							}
 							break;
 						}
 						case MAPSOUND:
 						{
 							if(mapsounds.inrange(f.attr[0]) && !issound(f.schan))
 							{
-								f.lastemit = e.type == TRIGGER ? e.lastemit : lastmillis;
+								f.lastemit = e.lastemit;
 								int flags = SND_MAP;
 								if(f.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
 								if(f.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
 								playsound(f.attr[0], both ? f.o : e.o, NULL, flags, f.attr[3], f.attr[1], f.attr[2], &f.schan);
-								commit = d && local;
+								commit = e.type != TRIGGER && local;
 							}
 							break;
 						}
@@ -1436,7 +1435,7 @@ namespace entities
 				default: break;
 			}
 		}
-		mergewaypoints();
+		if(m_play(world::gamemode)) mergewaypoints();
 		loopvj(ents) fixentity(j);
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);

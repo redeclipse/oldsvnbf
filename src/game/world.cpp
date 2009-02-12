@@ -58,7 +58,7 @@ namespace world
 	VARP(specfov, 1, 120, 179);
 	VARP(specdeadzone, 0, 10, 100);
 	VARP(specpanspeed, 1, 20, INT_MAX-1);
-	FVARP(spectvspeed, 0.1f, 1.f, 1000);
+	FVARP(spectvspeed, 0.1f, 0.5f, 1000);
 	FVARP(deathcamspeed, 0.1f, 2.f, 1000);
 
 	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
@@ -1239,7 +1239,7 @@ namespace world
 			vectoyawpitch(dir, yaw, pitch);
 			if(cam == oldcam)
 			{
-				scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*spectvspeed, 1.f);
+				scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
 				camera1->aimyaw = camera1->yaw;
 				camera1->aimpitch = camera1->pitch;
 			}
