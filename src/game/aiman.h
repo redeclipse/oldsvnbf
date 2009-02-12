@@ -64,16 +64,9 @@ namespace aiman
 				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->team = chooseteam(ci);
 				sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-				int nospawn = 0;
-				if(smode && !smode->canspawn(ci, true, false)) { nospawn++; }
-				mutate(smuts, if(!mut->canspawn(ci, true, false)) { nospawn++; });
-				if(nospawn)
-				{
-					ci->state.state = CS_WAITING;
-					ci->state.weapreset(false);
-					sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
-				}
-				else sendspawn(ci);
+				ci->state.state = CS_WAITING;
+				ci->state.weapreset(false);
+				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
 				dorefresh = true;

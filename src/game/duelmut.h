@@ -47,13 +47,9 @@ struct duelservmode : servmode
 		return true;
 	}
 
-	bool canspawn(clientinfo *ci, bool connecting = false, bool tryspawn = false)
+	bool canspawn(clientinfo *ci, bool tryspawn = false)
 	{
-		if((connecting || tryspawn) && ci->state.state != CS_SPECTATOR)
-		{
-			queue(ci, false, false);
-			return tryspawn;
-		}
+		if(ci->state.state != CS_SPECTATOR) queue(ci, false, false);
 		return false; // you spawn when we want you to buddy
 	}
 
