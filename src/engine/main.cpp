@@ -688,10 +688,24 @@ void eastereggs()
 	tm_isdst	1 if daylight savings is on, zero if not,
 	*/
 
-	if((lt->tm_wday == 5 && lt->tm_mday == 13) ||	// Friday the 13th
-		(lt->tm_mon == 9 && lt->tm_mday == 31))		// Halloween
+	if(lt->tm_wday == 5 && lt->tm_mday == 13)		// Friday the 13th
 	{
 		loadback = "textures/spookyback";
+		loadbackinfo = "Friday the 13th";
+	}
+	else if(lt->tm_mon == 9 && lt->tm_mday == 31)	// Halloween
+	{
+		loadback = "textures/spookyback";
+		loadbackinfo = "Halloween";
+	}
+
+	if(lt->tm_mon == 7 && lt->tm_mday == 26)		// Acord's Birthday
+	{
+		loadbackinfo = "Happy Birthday Acord!";
+	}
+	if(lt->tm_mon == 2 && lt->tm_mday == 9)			// Quin's Birthday
+	{
+		loadbackinfo = "Happy Birthday Quin!";
 	}
 }
 

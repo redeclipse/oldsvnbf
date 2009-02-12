@@ -1288,7 +1288,7 @@ void gettextres(int &w, int &h)
 	}
 }
 
-const char *loadback = "textures/loadback";
+const char *loadback = "textures/loadback", *loadbackinfo = "";
 
 void loadbackground(int w, int h, Texture *t)
 {
@@ -1437,8 +1437,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 
 		glPushMatrix();
 		glScalef(1/3.0f, 1/3.0f, 1);
+		if(loadbackinfo && *loadbackinfo)
+			draw_textx("%s", FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, loadbackinfo);
 		draw_textx("v%.2f (%s)", w*3-FONTH, h*3-FONTH*2-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
-		draw_textx("%s", w*3-FONTH, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
+		draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
 		glPopMatrix();
 
 		SDL_GL_SwapBuffers();
