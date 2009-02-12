@@ -467,7 +467,8 @@ extern gametypes gametype[], mutstype[];
 #define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
-#define m_speedtime(a)		(int(a*(1.f/GVAR(speedscale))))
+#define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
+#define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
 
 // network messages codes, c2s, c2c, s2c
 enum

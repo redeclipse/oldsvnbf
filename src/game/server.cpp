@@ -277,7 +277,7 @@ namespace server
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
-		extern void clearai();
+		extern void clearai(bool override = false);
 		extern void checkai();
 		extern void reqadd(clientinfo *ci, int skill);
 		extern void reqdel(clientinfo *ci);
@@ -1018,6 +1018,7 @@ namespace server
 		if(force || gotvotes)
 		{
 			if(demorecord) enddemorecord();
+			aiman::clearai(true);
 			if(gotvotes)
 			{
 				srvoutf("\fcvote passed by majority: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
@@ -1226,8 +1227,7 @@ namespace server
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
-		if(!m_play(gamemode)) aiman::clearai();
-		else aiman::autooverride = false;
+		aiman::clearai();
 		numplayers = gamemillis = interm = 0;
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;

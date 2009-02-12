@@ -639,7 +639,7 @@ namespace ai
 	{
 		int result = 0;
 		vec dp = world::headpos(d);
-		float frame = d->skill <= 100 ? float(lastmillis-d->lastupdate)/float((111-d->skill)*10) : 1.f;
+		float frame = float(lastmillis-d->lastupdate)/float((111-d->skill)*10);
 		if(b.idle)
 		{
 			d->ai->lastaction = lastmillis;

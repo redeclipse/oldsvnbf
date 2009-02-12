@@ -1685,7 +1685,7 @@ namespace world
 			}
 		}
 
-		if(third && rendermainview && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
+		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
 			vec pos = world::abovehead(d);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
@@ -1701,6 +1701,8 @@ namespace world
 				glDisable(GL_CULL_FACE);
 				if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				else glBlendFunc(GL_ONE, GL_ONE);
+				defaultshader->set();
+
 				glTranslatef(pos.x, pos.y, pos.z);
 				glRotatef(camera1->yaw-180, 0, 0, 1);
 				glRotatef(camera1->pitch, 1, 0, 0);

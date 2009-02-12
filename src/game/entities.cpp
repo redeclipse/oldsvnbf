@@ -17,7 +17,7 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	VAR(autodropwaypoints, 0, 120, INT_MAX-1); // secs after map start we start and keep dropping waypoints
+	VAR(autodropwaypoints, 0, 300, INT_MAX-1); // secs after map start we start and keep dropping waypoints
 	FVARP(waypointmergescale, 1e-3f, 0.35f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
@@ -1051,7 +1051,7 @@ namespace entities
 	int entitynode(const vec &v, bool links, bool drop)
 	{
         float mindist = float((enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*(drop ? 1.f : 4.f));
-		if(!drop) return closestent(WAYPOINT, v, mindist, links);
+		if(!drop && !autodropped) return closestent(WAYPOINT, v, mindist, links);
         int n = -1;
         loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
@@ -1078,7 +1078,7 @@ namespace entities
 	void entitycheck(gameent *d)
 	{
 		bool autodrop = autodroptime >= 0 && lastmillis-autodroptime <= autodropwaypoints*1000;
-		if(!autodrop && autodropped)
+		if(!autodrop && !dropwaypoints && autodropped)
 		{
 			clearentcache();
 			autodropped = false;
@@ -1187,14 +1187,14 @@ namespace entities
 
 				// 8	I_SHELLS		8	WEAPON		WEAPON_SG
 				// 9	I_BULLETS		8	WEAPON		WEAPON_CG
-				// 10	I_ROCKETS		8	WEAPON		WEAPON_FLAMER
+				// 10	I_ROCKETS		8	WEAPON		WEAPON_CARBINE
 				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
 				// 12	I_GRENADES		8	WEAPON		WEAPON_GL
 				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PLASMA
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAPON_SG, WEAPON_CG, WEAPON_FLAMER, WEAPON_RIFLE, WEAPON_GL, WEAPON_CARBINE
+						WEAPON_SG, WEAPON_CG, WEAPON_CARBINE, WEAPON_RIFLE, WEAPON_GL, WEAPON_PLASMA
 					};
 
 					if(weap >= 0 && weap <= 5)
@@ -1206,6 +1206,15 @@ namespace entities
 					else f.type = NOTUSED;
 					break;
 				}
+				// 18	I_QUAD			8	WEAPON		WEAPON_FLAMER
+				case 18:
+				{
+					f.type = WEAPON;
+					f.attr[0] = WEAPON_FLAMER;
+					f.attr[1] = 0;
+					break;
+				}
+
 				// 19	TELEPORT		9	TELEPORT
 				// 20	TELEDEST		9	TELEPORT (linked)
 				case 19: case 20:
@@ -1260,7 +1269,6 @@ namespace entities
 				// 15	I_BOOST			-	NOTUSED
 				// 16	I_GREENARMOUR	-	NOTUSED
 				// 17	I_YELLOWARMOUR	-	NOTUSED
-				// 18	I_QUAD			-	NOTUSED
 				// 26	BOX				-	NOTUSED
 				// 27	BARREL			-	NOTUSED
 				// 28	PLATFORM		-	NOTUSED
@@ -1330,7 +1338,26 @@ namespace entities
 						}
 					}
 				}
-
+				if(e.type == WEAPON)
+				{
+					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*3);
+					int weaps[WEAPON_MAX];
+					loopj(WEAPON_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
+					loopvj(ents) if(j != i)
+					{
+						gameentity &f = *(gameentity *)ents[j];
+						if(f.type == WEAPON && e.o.squaredist(f.o) <= mindist && isweap(f.attr[0]))
+						{
+							weaps[f.attr[0]]++;
+							f.type = NOTUSED;
+							if(verbose) conoutf("\frculled tightly packed weapon %d [%d]", j, f.attr[0]);
+						}
+					}
+					int best = e.attr[0];
+					loopj(WEAPON_MAX) if(weaps[j] > weaps[best])
+						best = j;
+					e.attr[0] = best;
+				}
 				if(e.type == FLAG) // replace bases/neutral flags near team flags
 				{
 					if(valteam(e.attr[1], TEAM_FIRST)) teams[e.attr[1]-TEAM_FIRST]++;
@@ -1338,7 +1365,7 @@ namespace entities
 					{
 						int dest = -1;
 
-						loopvj(ents)
+						loopvj(ents) if(j != i)
 						{
 							gameentity &f = *(gameentity *)ents[j];
 
@@ -1647,6 +1674,7 @@ namespace entities
 		glDisable(GL_CULL_FACE);
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
+        defaultshader->set();
 
 		vec dir;
 		vecfromyawpitch((float)e.attr[0], (float)e.attr[1], 1, 0, dir);
@@ -1688,12 +1716,15 @@ namespace entities
             }
 		}
 
-		Texture *t = textureload(teleporttex, 0, true);
-		loopv(ents)
+		if(!shadowmapping && !envmapping)
 		{
-			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == TELEPORT && e.attr[4] && e.o.dist(camera1->o) < maxparticledistance)
-				renderteleport(e, t);
+			Texture *t = textureload(teleporttex, 0, true);
+			loopv(ents)
+			{
+				gameentity &e = *(gameentity *)ents[i];
+				if(e.type == TELEPORT && e.attr[4] && e.o.dist(camera1->o) < maxparticledistance)
+					renderteleport(e, t);
+			}
 		}
 
 		loopv(ents)
