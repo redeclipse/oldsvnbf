@@ -18,7 +18,7 @@ VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT
 
 VARP(musicvol, 0, 32, 255);
 VARP(musicfade, 0, 3000, INT_MAX-1);
-SVARP(thememusic, "loops/mitaman/oppforce");
+SVAR(titlemusic, "loops/title");
 
 void initsound()
 {
@@ -124,10 +124,10 @@ COMMANDN(music, playmusic, "ss");
 
 void smartmusic(bool cond, bool autooff)
 {
-	if(nosound || !musicvol || (!cond && oldmusicvol < 0) || !*thememusic) return;
-	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, thememusic)))
+	if(nosound || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
+	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic)))
 	{
-		playmusic(thememusic, "");
+		playmusic(titlemusic, "");
 		playedmusic = autooff;
 		if(!cond) oldmusicvol = -1;
 	}
