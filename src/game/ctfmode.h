@@ -97,7 +97,7 @@ struct ctfservmode : ctfstate, servmode
         loopv(flags)
         {
             flag &f = flags[i];
-            if(f.base&BASE_FLAG && f.owner < 0 && f.droptime && lastmillis-f.droptime >= RESETFLAGTIME)
+            if(f.owner < 0 && f.droptime && lastmillis-f.droptime >= RESETFLAGTIME)
             {
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);

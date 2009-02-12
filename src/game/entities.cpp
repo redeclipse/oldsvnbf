@@ -18,6 +18,7 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	VAR(autodropwaypoints, 0, 120, INT_MAX-1); // secs after map start we start and keep dropping waypoints
+	FVARP(waypointmergescale, 1e-3f, 0.25f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -57,7 +58,7 @@ namespace entities
 		else if(type == WEAPON)
 		{
 			int sweap = m_spawnweapon(world::gamemode, world::mutators),
-				attr = m_edit(world::gamemode) ? attr1 : weapattr(attr1, sweap);
+				attr = weapattr(attr1, sweap);
 			if(isweap(attr))
 			{
 				s_sprintf(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
@@ -681,20 +682,32 @@ namespace entities
 		return (showentinfo || world::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && world::player1->state == CS_EDITING));
 	}
 
-	void fixsound(extentity &e)
+	void fixentity(int n)
 	{
-		gameentity &f = (gameentity &)e;
-		if(issound(f.schan))
+		gameentity &e = *(gameentity *)ents[n];
+		loopvrev(e.links)
 		{
-			removesound(f.schan);
-			f.schan = -1; // prevent clipping when moving around
-			if(f.type == MAPSOUND) f.lastemit = lastmillis;
+			int ent = e.links[i];
+			if(!canlink(n, ent, verbose >= 2)) e.links.remove(i);
+			else if(ents.inrange(ent))
+			{
+				gameentity &f = *(gameentity *)ents[ent];
+				if(((enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type))) && f.links.find(n) < 0)
+				{
+					f.links.add(n);
+					if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", n, ent);
+				}
+				else continue;
+			}
+			else continue;
+			fixentity(ent);
 		}
-	}
-
-	void fixentity(extentity &e)
-	{
-		fixsound(e);
+		if(issound(e.schan))
+		{
+			removesound(e.schan);
+			e.schan = -1; // prevent clipping when moving around
+			if(e.type == MAPSOUND) e.lastemit = lastmillis;
+		}
 		switch(e.type)
 		{
 			case MAPMODEL:
@@ -785,7 +798,7 @@ namespace entities
 						}
 						case PARTICLES:
 						{
-							f.lastemit = e.lastemit;
+							f.lastemit = e.type == TRIGGER ? e.lastemit : lastmillis;
 							commit = d && local;
 							break;
 						}
@@ -793,7 +806,7 @@ namespace entities
 						{
 							if(mapsounds.inrange(f.attr[0]) && !issound(f.schan))
 							{
-								f.lastemit = e.lastemit;
+								f.lastemit = e.type == TRIGGER ? e.lastemit : lastmillis;
 								int flags = SND_MAP;
 								if(f.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
@@ -845,25 +858,10 @@ namespace entities
 		return false;
 	}
 
-	void linkclear(int n)
-	{
-		loopvj(ents) if(maylink(ents[j]->type))
-		{
-			gameentity &e = *(gameentity *)ents[j];
-
-			loopvrev(e.links) if(e.links[i] == n)
-			{
-				e.links.remove(i);
-				break;
-			}
-		}
-	}
-
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-		if(e.type == NOTUSED) linkclear(i);
-		fixentity(e);
+		fixentity(i);
 		if(m_edit(world::gamemode))
 		{
 			client::addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]); // FIXME
@@ -902,7 +900,7 @@ namespace entities
 
 	bool linkents(int index, int node, bool add, bool local, bool toggle)
 	{
-		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local))
+		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local && verbose))
 		{
 			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
 			bool recip = (enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type));
@@ -913,7 +911,7 @@ namespace entities
 				{
 					e.links.remove(g);
 					if(recip) f.links.remove(h);
-					fixentity(e); fixentity(f);
+					fixentity(index);
 					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
 					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
@@ -922,7 +920,7 @@ namespace entities
 				{
 					f.links.add(index);
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
-					fixentity(e); fixentity(f);
+					fixentity(node);
 					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
 					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
@@ -932,7 +930,7 @@ namespace entities
 			{
 				f.links.remove(g);
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
-				fixentity(e); fixentity(f);
+				fixentity(node);
 				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
 				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
@@ -941,7 +939,7 @@ namespace entities
 			{
 				e.links.add(node);
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
-				fixentity(e); fixentity(f);
+				fixentity(index);
 				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
 				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
@@ -1026,7 +1024,7 @@ namespace entities
 					if(n.id != routeid)
 					{
 						n.estscore = ents[link]->o.dist(ents[goal]->o);
-						if(n.estscore <= float(enttype[ents[link]->type].radius*4) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
+						if((retry || n.estscore <= float(enttype[ents[link]->type].radius*4)) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
 							lowest = link;
 						if(link != goal) queue.add(&n);
 						else queue.setsizenodelete(0);
@@ -1113,6 +1111,59 @@ namespace entities
 		}
 		else d->lastnode = -1;
 	}
+
+	void mergewaypoints()
+	{
+		float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*waypointmergescale;
+		int totalmerges = 0, totalpasses = 0;
+		while(true)
+		{
+			int merges = 0;
+			loopvj(ents) if(ents[j]->type == WAYPOINT)
+			{
+				gameentity &e = *(gameentity *)ents[j];
+				if(verbose) renderprogress(float(j)/float(ents.length()), "merging waypoints...");
+				vec avg(e.o);
+				loopvk(ents) if(k != j && ents[k]->type == WAYPOINT)
+				{
+					gameentity &f = *(gameentity *)ents[k];
+					if(e.o.squaredist(f.o) <= mindist)
+					{
+						if(verbose >= 2) conoutf("\frWARNING: automatically transposing waypoint %d into %d", k, j);
+						loopv(f.links) if(f.links[i] != j && e.links.find(f.links[i]) < 0)
+						{
+							e.links.add(f.links[i]);
+							if(verbose >= 3) conoutf("\frWARNING: %d received link %d", j, f.links[i]);
+						}
+						loopv(ents) if(i != k)
+						{
+							gameentity &g = *(gameentity *)ents[i];
+							int id = g.links.find(k);
+							if(id >= 0)
+							{
+								g.links.remove(id);
+								if(g.links.find(j) < 0)
+								{
+									g.links.add(j);
+									if(verbose >= 3) conoutf("\frWARNING: %d received link %d from old child %d", i, j, k);
+								}
+							}
+						}
+						f.links.setsize(0);
+						f.type = NOTUSED;
+						e.o.add(f.o).mul(0.5f);
+						merges++;
+					}
+				}
+			}
+			totalpasses++;
+			if(!merges) break;
+			totalmerges += merges;
+			if(verbose >= 2) conoutf("\frWARNING: %d waypoint(s) merged, taking another pass", merges);
+		}
+		if(verbose) conoutf("\frWARNING: transposed %d total waypoint(s) in %d pass(es)", totalmerges, totalpasses);
+	}
+	ICOMMAND(mergewaypoints, "", (void), mergewaypoints());
 
 	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
@@ -1231,6 +1282,7 @@ namespace entities
 
 	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)
 	{
+		renderprogress(0, "checking entities...");
 		if(gver <= 49 || mtype == MAP_OCTA)
 		{
 			int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };
@@ -1240,6 +1292,7 @@ namespace entities
 			loopv(ents)
 			{
 				gameentity &e = *(gameentity *)ents[i];
+				if(verbose) renderprogress(float(i)/float(ents.length()), "importing entities...");
 
 				if(e.type == TELEPORT && e.mark) // translate teledest to teleport and link them appropriately
 				{
@@ -1346,26 +1399,14 @@ namespace entities
 				}
 			}
 		}
+		renderprogress(0.25f, "checking entities...");
 
 		physent dummyent;
 		dummyent.height = dummyent.radius = dummyent.xradius = dummyent.yradius = 1;
 		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
-			loopvrev(e.links)
-			{
-				if(!canlink(j, e.links[i], true)) e.links.remove(i);
-				else if(ents.inrange(e.links[i]))
-				{
-					gameentity &f = *(gameentity *)ents[e.links[i]];
-					if(((enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type))) && f.links.find(j) < 0)
-					{
-						f.links.add(j);
-						if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", j, e.links[i]);
-					}
-				}
-			}
-
+			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
 			switch(e.type)
 			{
 				case WEAPON:
@@ -1394,61 +1435,12 @@ namespace entities
 				}
 				default: break;
 			}
-			fixentity(e);
 		}
-		loopvj(ents) fixentity(*ents[j]);
-		if(mtype == MAP_BFGZ && gver <= 149)
-		{
-			float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)/3.f;
-			int totalmerges = 0, totalpasses = 0;
-			while(true)
-			{
-				int merges = 0;
-				loopvj(ents) if(ents[j]->type == WAYPOINT)
-				{
-					gameentity &e = *(gameentity *)ents[j];
-					vec avg(e.o);
-					loopvk(ents) if(k != j && ents[k]->type == WAYPOINT)
-					{
-						gameentity &f = *(gameentity *)ents[k];
-						if(e.o.squaredist(f.o) <= mindist)
-						{
-							if(verbose >= 2) conoutf("\frWARNING: automatically transposing waypoint %d into %d", k, j);
-							loopv(f.links) if(f.links[i] != j && e.links.find(f.links[i]) < 0)
-							{
-								e.links.add(f.links[i]);
-								if(verbose >= 3) conoutf("\frWARNING: %d received link %d", j, f.links[i]);
-							}
-							loopv(ents) if(i != k)
-							{
-								gameentity &g = *(gameentity *)ents[i];
-								int id = g.links.find(k);
-								if(id >= 0)
-								{
-									g.links.remove(id);
-									if(g.links.find(j) < 0)
-									{
-										g.links.add(j);
-										if(verbose >= 3) conoutf("\frWARNING: %d received link %d from old child %d", i, j, k);
-									}
-								}
-							}
-							f.links.setsize(0);
-							f.type = NOTUSED;
-							e.o.add(f.o).mul(0.5f);
-							merges++;
-						}
-					}
-				}
-				totalpasses++;
-				if(!merges) break;
-				totalmerges += merges;
-				if(verbose >= 2) conoutf("\frWARNING: %d waypoint(s) merged, taking another pass", merges);
-			}
-			if(verbose) conoutf("\frWARNING: transposed %d total waypoint(s) in %d pass(es)", totalmerges, totalpasses);
-		}
+		mergewaypoints();
+		loopvj(ents) fixentity(j);
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
+		renderprogress(1.f, "checking entities...");
 	}
 
 	void mapstart()
@@ -1638,17 +1630,13 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && e.lastemit && lastmillis-e.lastemit >= triggertime(e) && mapsounds.inrange(e.attr[0]))
+			if(e.type == MAPSOUND && e.links.empty() && (!e.lastemit || lastmillis-e.lastemit >= triggertime(e)) && mapsounds.inrange(e.attr[0]) && !issound(e.schan))
 			{
-				if(!issound(e.schan))
-				{
-					int flags = SND_MAP|SND_LOOP; // ambient sounds loop
-					if(e.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-					if(e.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
-					if(e.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
-					playsound(e.attr[0], e.o, NULL, flags, e.attr[3], e.attr[1], e.attr[2], &e.schan);
-					e.lastemit = lastmillis; // prevent clipping when moving around
-				}
+				int flags = SND_MAP|SND_LOOP; // ambient sounds loop
+				if(e.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
+				if(e.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
+				if(e.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
+				playsound(e.attr[0], e.o, NULL, flags, e.attr[3], e.attr[1], e.attr[2], &e.schan);
 			}
 		}
 	}
@@ -1732,8 +1720,8 @@ namespace entities
 		if(e.type == NOTUSED || o.dist(camera1->o) > maxparticledistance) return;
 		if(e.type == PARTICLES)
 		{
-			if(idx < 0 || !e.links.length()) makeparticles((entity &)e);
-			else if(lastmillis-e.lastemit < triggertime(e))
+			if(idx < 0 || e.links.empty()) makeparticles((entity &)e);
+			else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
 				makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 		}
 

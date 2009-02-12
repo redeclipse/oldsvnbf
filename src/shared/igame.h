@@ -8,7 +8,7 @@ namespace entities
 	extern void writeent(gzFile &g, int id, entity &e);
 	extern void initents(gzFile &g, int mtype, int mver, char *gid, int gver);
 	extern float dropheight(entity &e);
-	extern void fixentity(extentity &e);
+	extern void fixentity(int n);
 	extern bool cansee(extentity &e);;
 	extern const char *findname(int type);
 	extern int findtype(char *type);
