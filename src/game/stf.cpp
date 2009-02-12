@@ -225,26 +225,23 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			if(f.enemy || f.owner != d->team)
+			if(lastmillis-b.millis >= (111-d->skill)*100)
 			{
-				if(lastmillis-b.millis >= (111-d->skill)*500)
+				if(f.enemy && f.owner == d->team)
 				{
 					d->ai->clear = true; // re-evaluate
 					return true;
 				}
-				return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius/2), 0);
+				else b.millis = lastmillis;
 			}
+			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*4), 0);
 		}
 		return false;
 	}
 
 	bool aipursue(gameent *d, aistate &b)
 	{
-		if(lastmillis-b.millis >= (111-d->skill)*500)
-		{
-			d->ai->clear = true; // re-evaluate
-			return true;
-		}
+		b.type = AI_S_DEFEND;
 		return aidefend(d, b);
 	}
 }

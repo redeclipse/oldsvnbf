@@ -988,7 +988,7 @@ struct interest
 struct aistate
 {
 	int type, millis, next, targtype, target;
-	bool override, idle, wasidle;
+	bool override, idle;
 
 	aistate(int m, int t, int r = -1, int v = -1) : type(t), millis(m), targtype(r), target(v)
 	{
@@ -999,7 +999,7 @@ struct aistate
 	void reset()
 	{
 		next = millis;
-		idle = wasidle = override = false;
+		idle = override = false;
 	}
 };
 
@@ -1243,7 +1243,7 @@ namespace ai
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
 	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, bool retry = false);
 	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true);
-	extern bool randomnode(gameent *d, aistate &b, const vec &from, const vec &to, float guard = AIISNEAR, float wander = AIISFAR);
+	extern bool randomnode(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, float wander = AIISFAR);
 	extern bool randomnode(gameent *d, aistate &b, float guard = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, float wander = AIISFAR, int walk = 1, bool retry = false);
