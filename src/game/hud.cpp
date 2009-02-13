@@ -429,11 +429,11 @@ namespace hud
 					if(delay || m_duke(world::gamemode, world::mutators))
 					{
 						pushfont("emphasis");
-						if(m_duke(world::gamemode, world::mutators))
+						if(m_duke(world::gamemode, world::mutators) || !world::player1->lastdeath)
 							ty += draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
 						else if(delay) ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 						popfont();
-						if(world::player1->state != CS_WAITING && shownotices > 2 && sdelay-delay > min(sdelay, spawndelaywait*1000))
+						if(world::player1->state != CS_WAITING && shownotices > 2 && lastmillis-world::player1->lastdeath > 500)
 						{
 							pushfont("default");
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, attackkey);

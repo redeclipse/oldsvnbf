@@ -287,14 +287,10 @@ namespace world
 
 	void respawn(gameent *d)
 	{
-		if(d->state == CS_DEAD)
+		if(d->state == CS_DEAD && d->respawned < 0 && lastmillis-d->lastdeath > 500)
 		{
-			int sdelay = m_spawndelay(gamemode, mutators), wait = d->respawnwait(lastmillis, sdelay);
-			if(!wait || sdelay-wait > min(sdelay, spawndelaywait*1000))
-			{
-				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
-				d->respawned = d->lifesequence;
-			}
+			client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+			d->respawned = lastmillis;
 		}
 	}
 
@@ -408,6 +404,8 @@ namespace world
 		if(d->reqswitch > 0 && lastmillis-d->reqswitch > WEAPSWITCHDELAY*2) d->reqswitch = -1;
 		if(d->reqreload > 0 && lastmillis-d->reqreload > weaptype[d->weapselect].rdelay*2) d->reqreload = -1;
 		if(d->requse > 0 && lastmillis-d->requse > WEAPSWITCHDELAY*2) d->requse = -1;
+		if(d->respawned > 0 && lastmillis-d->respawned > 3000) d->respawned = -1;
+		if(d->suicided > 0 && lastmillis-d->suicided > 3000) d->respawned = -1;
 	}
 
 
@@ -418,11 +416,7 @@ namespace world
             gameent *d = players[i];
             const int lagtime = lastmillis-d->lastupdate;
             if(d->ai || !lagtime || intermission) continue;
-            else if(lagtime>1000 && d->state==CS_ALIVE)
-			{
-                d->state = CS_LAGGED;
-				continue;
-			}
+            //else if(lagtime > 1000) continue;
 			physics::smoothplayer(d, 1, false);
 		}
 	}
@@ -755,7 +749,7 @@ namespace world
 	void startmap(const char *name)	// called just after a map load
 	{
 		intermission = false;
-		player1->respawned = player1->suicided = maptime = 0;
+		maptime = 0;
 		projs::reset();
 		resetworld();
 		resetcamera();
@@ -833,14 +827,10 @@ namespace world
 
 	void suicide(gameent *d, int flags)
 	{
-		if(d == player1 || d->ai)
+		if((d == player1 || d->ai) && d->state == CS_ALIVE && d->suicided < 0)
 		{
-			if(d->state!=CS_ALIVE) return;
-			if(d->suicided!=d->lifesequence)
-			{
-				client::addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
-				d->suicided = d->lifesequence;
-			}
+			client::addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
+			d->suicided = lastmillis;
 		}
 	}
 	ICOMMAND(kill, "",  (), { suicide(player1, 0); });
@@ -1603,7 +1593,6 @@ namespace world
 			animflags = ANIM_EDIT|ANIM_LOOP;
 			showweap = false;
 		}
-		else if(d->state == CS_LAGGED) animflags = ANIM_LAG|ANIM_LOOP;
 		else if(intermission)
 		{
 			lastaction = lastmillis;
@@ -1768,11 +1757,8 @@ namespace world
 		startmodelbatches();
 
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
-        {
-			if(d->state!=CS_SPECTATOR && d->state!=CS_SPAWNING)
-				renderplayer(d, true, showtranslucent(d, true));
-        }
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state!=CS_SPECTATOR)
+			renderplayer(d, true, showtranslucent(d, true));
 
 		entities::render();
 		projs::render();

@@ -20,7 +20,7 @@ namespace hud
 		vector<gameent *> spectators;
 
 		IVARP(autoshowscores, 0, 1, 1);
-		IVARP(showscoreswait, 0, 0, 1);
+		IVARP(showscoreswait, 0, 0, INT_MAX-1);
 		IVARP(showscoresdelay, 0, 3, INT_MAX-1);
 		IVARP(scoresinfo, 0, 1, 1);
 		IVARP(showclientnum, 0, 1, 1);
@@ -42,7 +42,7 @@ namespace hud
 				if(!showscoresdelay() && !showscoreswait()) return true;
 				else
 				{
-					int delay = showscoreswait() ? min(m_spawndelay(world::gamemode, world::mutators), spawndelaywait*1000) : showscoresdelay()*1000;
+					int delay = showscoreswait() ? showscoreswait() : showscoresdelay()*1000;
 					if(!delay || lastmillis-world::player1->lastdeath >= delay) return true;
 				}
 			}
@@ -317,7 +317,7 @@ namespace hud
 					loopscoregroup(o,
 					{
 						if(o->aitype != AI_NONE) g.textf("\fs%s%d\fS", 0xFFFFFF, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->skill);
-						else if(o->state==CS_LAGGED) g.text("LAG", 0xFFFFFF);
+						else if(lastmillis-o->lastupdate > 1000) g.text("LAG", 0xFFFFFF);
 						else g.textf("%d", 0xFFFFFF, NULL, o->plag);
 					});
 					g.poplist();

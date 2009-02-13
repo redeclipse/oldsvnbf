@@ -898,7 +898,7 @@ namespace physics
 
 	void smoothplayer(gameent *d, int res, bool local)
 	{
-		if(d->state==CS_ALIVE || d->state==CS_EDITING)
+		if(d->state == CS_ALIVE || d->state == CS_EDITING)
 		{
 			if(smoothmove && d->smoothmillis>0) predictplayer(d, true, res, local);
 			else move(d, res, local);
