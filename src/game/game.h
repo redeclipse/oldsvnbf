@@ -680,11 +680,11 @@ struct gamestate
 {
 	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
 	int lastweap, weapselect, weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
-	int lastdeath, lifesequence, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, ownernum, skill, spree;
+	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
+	int sequence, aitype, ownernum, skill, spree;
 
-	gamestate() : lastdeath(0), lifesequence(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
+	gamestate() : lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
+		sequence(0), aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -1123,7 +1123,6 @@ struct gameent : dynent, gamestate
 	{
 		respawn(millis, heal);
 		frags = deaths = totaldamage = totalshots = 0;
-		//if(state != CS_SPECTATOR) state = CS_DEAD;
 	}
 };
 

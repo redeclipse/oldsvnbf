@@ -115,9 +115,8 @@ namespace client
         removetrackedparticles(world::player1);
 		removetrackedsounds(world::player1);
 		world::player1->clientnum = -1;
-		world::player1->lifesequence = 0;
 		world::player1->privilege = PRIV_NONE;
-		world::player1->state = CS_DEAD;
+		world::player1->state = CS_WAITING;
 		loopv(world::players) if(world::players[i]) world::clientdisconnected(i);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_CLIENT) // reset vars
@@ -382,7 +381,7 @@ namespace client
 			needsmap = true;
 		}
 		else needsmap = false;
-		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_DEAD;
+		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_WAITING;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
@@ -695,7 +694,7 @@ namespace client
 			putint(q, (int)(d->vel.x*DVELF));		  // quantize to itself, almost always 1 byte
 			putint(q, (int)(d->vel.y*DVELF));
 			putint(q, (int)(d->vel.z*DVELF));
-            putuint(q, d->physstate | (d->falling.x || d->falling.y ? 0x20 : 0) | (d->falling.z ? 0x10 : 0) | ((((gameent *)d)->lifesequence&1)<<6));
+            putuint(q, d->physstate | (d->falling.x || d->falling.y ? 0x20 : 0) | (d->falling.z ? 0x10 : 0));
             if(d->falling.x || d->falling.y)
             {
                 putint(q, (int)(d->falling.x*DVELF));      // quantize to itself, almost always 1 byte
@@ -776,12 +775,12 @@ namespace client
     void parsestate(gameent *d, ucharbuf &p, bool resume = false)
     {
         if(!d) { static gameent dummy; d = &dummy; }
-		if(d==world::player1 || d->ai) getint(p);
+		if(d == world::player1 || d->ai) getint(p);
 		else d->state = getint(p);
 		d->frags = getint(p);
-        d->lifesequence = getint(p);
+		d->sequence = getint(p); // lifesequence
         d->health = getint(p);
-        if(resume && (d==world::player1 || d->ai))
+        if(resume && (d == world::player1 || d->ai))
         {
         	d->weapreset(false);
             getint(p);
@@ -815,7 +814,7 @@ namespace client
 		int lagtime = lastmillis-d->lastupdate;
 		if(lagtime)
 		{
-            if(d->state!=CS_SPAWNING && d->lastupdate) d->plag = (d->plag*5+lagtime)/6;
+            if(d->lastupdate) d->plag = (d->plag*5+lagtime)/6;
 			d->lastupdate = lastmillis;
 		}
 	}
@@ -848,7 +847,6 @@ namespace client
                     falling.y = getint(p)/DVELF;
                 }
                 if(physstate&0x10) falling.z = getint(p)/DVELF;
-                int seqcolor = (physstate>>6)&1;
 				f = getuint(p);
                 if(f&0x20)
                 {
@@ -856,7 +854,7 @@ namespace client
                     aimpitch = (float)getint(p);
                 }
 				gameent *d = world::getclient(lcn);
-                if(!d || seqcolor!=(d->lifesequence&1) || d==world::player1 || d->ai) continue;
+                if(!d || d==world::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->conopen = f&0x40 ? true : false;
 				d->yaw = yaw;
@@ -916,7 +914,6 @@ namespace client
                     d->smoothmillis = lastmillis;
                 }
                 else d->smoothmillis = 0;
-                if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
 				break;
 			}
 
@@ -1066,11 +1063,8 @@ namespace client
 					int lcn = getint(p);
 					gameent *f = world::newclient(lcn);
 					if(!f) break;
-					if(f==world::player1 || f->ai)
-					{
-						if(editmode) toggleedit();
-					}
-                    else f->resetinterp();
+					if(f == world::player1 && editmode) toggleedit();
+                    else if(!f->ai) f->resetinterp();
 					f->state = CS_DEAD;
 					break;
 				}
@@ -1135,7 +1129,6 @@ namespace client
 					{
 						f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p);
-						f->state = CS_SPAWNING;
 						playsound(S_RESPAWN, f->o, f);
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
 					}
@@ -1153,7 +1146,7 @@ namespace client
 					f->state = CS_ALIVE;
 					if(f == world::player1 || f->ai)
 					{
-						addmsg(SV_SPAWN, "ri3", f->clientnum, f->lifesequence, f->weapselect);
+						addmsg(SV_SPAWN, "ri3", f->clientnum, f->sequence, f->weapselect); // lifesequence
 						entities::spawnplayer(f, ent, ent < 0, true);
 						playsound(S_RESPAWN, f->o, f);
 						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
@@ -1515,13 +1508,13 @@ namespace client
 					if(!s) break;
 					if(val)
 					{
-						if(s==world::player1 && editmode) toggleedit();
+						if(s == world::player1 && editmode) toggleedit();
 						s->state = CS_SPECTATOR;
 					}
-					else if(s->state==CS_SPECTATOR)
+					else if(s->state == CS_SPECTATOR)
 					{
-						s->state = CS_DEAD;
-						if(s!=world::player1) s->resetinterp();
+						s->state = CS_WAITING;
+						if(s != world::player1 && !s->ai) s->resetinterp();
 					}
 					break;
 				}
@@ -1531,11 +1524,12 @@ namespace client
 					int sn = getint(p);
 					gameent *s = world::newclient(sn);
 					if(!s) break;
-					if(s==world::player1)
+					if(s == world::player1)
 					{
 						if(editmode) toggleedit();
 						if(hud::sb.scoreson) hud::sb.showscores(false);
 					}
+					else if(!s->ai) s->resetinterp();
 					s->state = CS_WAITING;
 					break;
 				}

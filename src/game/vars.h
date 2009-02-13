@@ -39,7 +39,7 @@ VARG(timelimit, 0, 10, INT_MAX-1);
 VARG(intermlimit, 0, 10, INT_MAX-1); // secs before vote menu comes up
 VARG(votelimit, 0, 20, INT_MAX-1); // secs before vote passes by default
 VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round
-VARG(duelitemclear, 0, 0, 1); // clear items in duel
+VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
 VARG(teambalance, 0, 3, 3); // 0 = off, 1 = by number, 2 = by effectiveness, 3 = hybrid (humans by eff, ai by number)
@@ -53,7 +53,6 @@ VARG(instaspawnweapon, 0, WEAPON_RIFLE, WEAPON_TOTAL-1);
 VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
 VARG(stfspawndelay, 0, 5, INT_MAX-1); // .. in stf
 VARG(ctfspawndelay, 0, 5, INT_MAX-1); // .. in ctf
-VARG(spawndelaywait, 0, 1, INT_MAX-1); // wait this long before allowing wait state
 FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in instagib
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 

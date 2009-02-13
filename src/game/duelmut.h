@@ -19,12 +19,7 @@ struct duelservmode : servmode
 			}
 			if(wait)
 			{
-				if(ci->state.state != CS_WAITING)
-				{
-					sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
-					ci->state.state = CS_WAITING;
-					ci->state.weapreset(true);
-				}
+				if(ci->state.state != CS_WAITING) waiting(ci, true);
 				if(m_duel(gamemode, mutators) && allowbroadcast(ci->clientnum))
 				{
 					if(n > 1) srvmsgf(ci->clientnum, "you are \fs\fg#%d\fS in the queue", n);
@@ -109,7 +104,7 @@ struct duelservmode : servmode
 				vector<clientinfo *> alive;
 				loopv(clients) if(clients[i]->state.state != CS_SPECTATOR)
 					queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
-				if(m_lms(gamemode, mutators) || GVAR(duelitemclear)) clearitems();
+				if(m_lms(gamemode, mutators) || GVAR(duelclear)) clearitems();
 				loopv(duelqueue)
 				{
 					if(m_duel(gamemode, mutators) && alive.length() >= 2) break;

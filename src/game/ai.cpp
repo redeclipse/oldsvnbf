@@ -387,8 +387,7 @@ namespace ai
 		if(d->state == CS_WAITING) return true; // just wait my precious..
 		else if(d->state == CS_DEAD)
 		{
-			if(d->respawned != d->lifesequence && !d->respawnwait(lastmillis, m_spawndelay(world::gamemode, world::mutators)))
-				world::respawn(d);
+			world::respawn(d);
 			return true;
 		}
 		else if(d->state == CS_ALIVE)

@@ -5,7 +5,7 @@ namespace projs
 {
 	struct hitmsg
 	{
-		int flags, target, lifesequence, info;
+		int flags, target, id, info;
 		ivec dir;
 	};
 	vector<hitmsg> hits;
@@ -31,7 +31,7 @@ namespace projs
 		hitmsg &h = hits.add();
 		h.flags = flags;
 		h.target = d->clientnum;
-		h.lifesequence = d->lifesequence;
+		h.id = d->sequence;
 		h.info = dist;
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;

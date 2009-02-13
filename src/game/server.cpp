@@ -45,7 +45,7 @@ namespace server
 	{
 		int flags;
 		int target;
-		int lifesequence;
+		int id;
 		union
 		{
 			int rays;
@@ -123,24 +123,23 @@ namespace server
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
-		servstate() : state(CS_DEAD), aireinit(0) {}
+		servstate() : state(CS_WAITING), aireinit(0) {}
 
 		bool isalive(int millis)
 		{
-			return state==CS_ALIVE || (state==CS_DEAD && millis-lastdeath <= DEATHMILLIS);
+			return state == CS_ALIVE || (state == CS_DEAD && millis-lastdeath <= DEATHMILLIS);
 		}
 
 		void reset(bool change = false)
 		{
-			if(state != CS_SPECTATOR) state = CS_DEAD;
+			if(state != CS_SPECTATOR) state = CS_WAITING;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
 			if(!change)
 			{
 				timeplayed = 0;
-				lifesequence = effectiveness = 0;
+				effectiveness = 0;
 			}
-			else lifesequence = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
@@ -713,7 +712,6 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), !m_noitems(gamemode, mutators));
-		gs.lifesequence++;
 	}
 
 	void sendspawn(clientinfo *ci)
@@ -722,8 +720,9 @@ namespace server
 		spawnstate(ci);
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v",
-			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.lifesequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
+			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.sequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
+		gs.sequence++;
 	}
 
     void sendstate(clientinfo *ci, ucharbuf &p, int spawn = -2)
@@ -733,7 +732,7 @@ namespace server
         if(spawn >= -1) putint(p, spawn);
         putint(p, gs.state);
         putint(p, gs.frags);
-        putint(p, gs.lifesequence);
+        putint(p, gs.sequence);
         putint(p, gs.health);
         putint(p, gs.weapselect);
         loopi(WEAPON_MAX) putint(p, gs.ammo[i]);
@@ -1210,6 +1209,8 @@ namespace server
 		}
 	}
 
+	extern void waiting(clientinfo *ci, bool reset = true, bool exclude = false);
+
 	#include "stfmode.h"
     #include "ctfmode.h"
 	#include "duelmut.h"
@@ -1268,12 +1269,7 @@ namespace server
 			mutate(smuts, mut->changeteam(ci, ci->team, team));
 			ci->team = team;
 			ci->mapchange(true);
-			if(ci->state.state != CS_SPECTATOR)
-			{
-				ci->state.state = CS_WAITING;
-				ci->state.weapreset(false);
-				sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
-			}
+			if(ci->state.state != CS_SPECTATOR) waiting(ci, false);
 		}
 
 		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -1396,7 +1392,7 @@ namespace server
             servstate &gs = ci->state;
             sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum,
                 gs.state, gs.frags,
-                gs.lifesequence, gs.health,
+                gs.sequence, gs.health,
                 gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
         }
     }
@@ -1522,11 +1518,9 @@ namespace server
 			}
 			else
 			{
-				ci->state.state = CS_WAITING;
-				ci->state.weapreset(false);
+				waiting(ci, false, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
-				sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
 			}
 		}
 		if(clients.length() > 1)
@@ -1673,7 +1667,7 @@ namespace server
 				float size = e.radial ? (h.flags&HIT_WAVE ? e.radial*3 : e.radial) : 0.f,
 					dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
-				if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || (size && (dist<0 || dist>size))) continue;
+				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
 				int damage = e.radial  ? int(weaptype[e.weap].damage*(1.f-dist/EXPLOSIONSCALE/size)) : weaptype[e.weap].damage;
 				dodamage(target, ci, damage, e.weap, h.flags, h.dir);
 			}
@@ -1850,6 +1844,19 @@ namespace server
 			}
 		}
 		ci->events.setsize(keep);
+	}
+
+	void waiting(clientinfo *ci, bool reset, bool exclude)
+	{
+		if(reset)
+		{
+			if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
+			cleartimedevents(ci);
+		}
+		if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
+		else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
+		ci->state.state = CS_WAITING;
+		ci->state.weapreset(false);
 	}
 
 	void hashpassword(int cn, int sessionid, const char *pwd, char *result)
@@ -2433,16 +2440,10 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0) break;
-					int sdelay = m_spawndelay(gamemode, mutators), wait = cp->state.respawnwait(gamemillis, sdelay);
-					if(wait && sdelay-wait <= min(sdelay, GVAR(spawndelaywait)*1000)) break;
+					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || gamemillis-cp->state.lastdeath <= DEATHMILLIS) break;
 					if(smode) smode->canspawn(cp, true);
 					mutate(smuts, mut->canspawn(cp, true));
-					if(cp->state.lastdeath) flushevents(cp, cp->state.lastdeath + DEATHMILLIS);
-					cleartimedevents(cp);
-					sendf(-1, 1, "ri2", SV_WAITING, cp->clientnum);
-					cp->state.state = CS_WAITING;
-					cp->state.weapreset(false);
+					waiting(cp, true);
 					break;
 				}
 
@@ -2461,10 +2462,12 @@ namespace server
 
 				case SV_SPAWN:
 				{
-					int lcn = getint(p), ls = getint(p), weapselect = getint(p);
+					int lcn = getint(p);
+					getint(p); // sequence
+					int weapselect = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD) || ls!=cp->state.lifesequence || cp->state.lastrespawn<0)
+					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD && cp->state.state!=CS_WAITING) || cp->state.lastrespawn < 0)
 						break;
 					cp->state.lastrespawn = -1;
 					cp->state.state = CS_ALIVE;
@@ -2561,7 +2564,7 @@ namespace server
 						hitset &hit = havecn && j < MAXCLIENTS ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
-						hit.lifesequence = getint(p);
+						hit.id = getint(p); // sequence
 						hit.dist = getint(p);
 						loopk(3) hit.dir[k] = getint(p);
 					}
@@ -2862,10 +2865,9 @@ namespace server
 					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
 					if(!spinfo) break;
 
-					sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-
-					if(spinfo->state.state!=CS_SPECTATOR && val)
+					if(spinfo->state.state != CS_SPECTATOR && val)
 					{
+						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
 						dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
@@ -2873,11 +2875,9 @@ namespace server
                     	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
                     	aiman::dorefresh = true;
 					}
-					else if(spinfo->state.state==CS_SPECTATOR && !val)
+					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{
-						sendf(-1, 1, "ri2", SV_WAITING, spinfo->clientnum);
-						spinfo->state.state = CS_WAITING;
-						spinfo->state.weapreset(false);
+						waiting(spinfo, false);
 	                    spinfo->state.lasttimeplayed = lastmillis;
 						aiman::dorefresh = true;
 						if(smode) smode->entergame(spinfo);
