@@ -708,16 +708,10 @@ namespace server
 		return -1;
 	}
 
-	void spawnstate(clientinfo *ci)
-	{
-		servstate &gs = ci->state;
-		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), !m_noitems(gamemode, mutators));
-	}
-
 	void sendspawn(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		spawnstate(ci);
+		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), !m_noitems(gamemode, mutators));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v",
 			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.sequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
@@ -725,11 +719,10 @@ namespace server
 		gs.sequence++;
 	}
 
-    void sendstate(clientinfo *ci, ucharbuf &p, int spawn = -2)
+    void sendstate(clientinfo *ci, ucharbuf &p)
     {
 		servstate &gs = ci->state;
         putint(p, ci->clientnum);
-        if(spawn >= -1) putint(p, spawn);
         putint(p, gs.state);
         putint(p, gs.frags);
         putint(p, gs.sequence);
@@ -1530,7 +1523,7 @@ namespace server
 			{
 				clientinfo *oi = clients[i];
 				if(ci && oi->clientnum == ci->clientnum) continue;
-				sendstate(oi, p, -2);
+				sendstate(oi, p);
 			}
 			putint(p, -1);
 		}
@@ -1680,17 +1673,15 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
-			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
-			return;
-		}
-		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
-		{
-			if(weaptype[e.weap].max && isweap(e.weap)) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
+			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
+		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
+		{
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
+			return;
+		}
 		gs.setweapstate(e.weap, WPSTATE_SHOOT, weaptype[e.weap].adelay, e.millis);
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			e.weap, e.power, e.from[0], e.from[1], e.from[2],
@@ -1704,7 +1695,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1721,7 +1712,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1739,7 +1730,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
-			if(GVAR(serverdebug) > 1) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
+			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
@@ -2477,7 +2468,7 @@ namespace server
 					QUEUE_BUF(100,
 					{
 						putint(buf, SV_SPAWN);
-						sendstate(cp, buf, -2);
+						sendstate(cp, buf);
 					});
 					break;
 				}
