@@ -765,7 +765,7 @@ struct gamestate
 
 	bool weapwaited(int weap, int millis)
 	{
-		return !isweap(weap) || millis-weaplast[weap] >= weapwait[weap];
+		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
 	bool canswitch(int weap, int sweap, int millis)
