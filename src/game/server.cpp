@@ -2880,6 +2880,8 @@ namespace server
 						spinfo->state.weapreset(false);
 	                    spinfo->state.lasttimeplayed = lastmillis;
 						aiman::dorefresh = true;
+						if(smode) smode->entergame(spinfo);
+						mutate(smuts, mut->entergame(spinfo));
 					}
 					break;
 				}
