@@ -274,7 +274,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			20,		20,		250,	1000,	15,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.25f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.35f,		1.0f,		0.f,
 			3.5f,		60.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
@@ -340,7 +340,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			1,		4,		1500,	3000,	200,	250,	1000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
-			1.0f,	0.33f,		0.f,			0.45f,		2.0f,		50.f,
+			1.0f,	0.33f,		0.f,			0.75f,		2.0f,		50.f,
 			3.f,		250.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
