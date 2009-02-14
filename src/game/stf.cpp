@@ -174,8 +174,8 @@ namespace stf
 		}
 		else if(b.owner)
 		{
-			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[b.owner].chat, teamtype[b.owner].name, b.name);
-			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[b.owner].colour, enttype[FLAG].radius/2);
+			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
+			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius/2);
 		}
 		b.owner = owner;
 		b.enemy = enemy;

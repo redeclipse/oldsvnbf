@@ -42,7 +42,7 @@ namespace hud
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.75f, 1);
-	VARP(crosshairhealth, 0, 0, 2);
+	VARP(crosshairhealth, 0, 1, 2);
 	FVARP(crosshairskew, -1, 0.4f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
