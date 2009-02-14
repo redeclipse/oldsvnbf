@@ -1129,6 +1129,7 @@ namespace world
 		{
 			physent d = *player1;
 			d.radius = d.height = 2.f;
+			d.state = CS_ALIVE;
 			loopv(entities::ents) if((k && !enttype[entities::ents[i]->type].noisy) || entities::ents[i]->type == CAMERA)
 			{
 				gameentity &e = *(gameentity *)entities::ents[i];

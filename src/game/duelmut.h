@@ -19,7 +19,7 @@ struct duelservmode : servmode
 			}
 			if(wait)
 			{
-				if(ci->state.state != CS_WAITING) waiting(ci, true);
+				if(ci->state.state != CS_WAITING) waiting(ci);
 				if(m_duel(gamemode, mutators) && allowbroadcast(ci->clientnum))
 				{
 					if(n > 1) srvmsgf(ci->clientnum, "you are \fs\fg#%d\fS in the queue", n);
@@ -49,7 +49,6 @@ struct duelservmode : servmode
 	}
 
 	void died(clientinfo *ci, clientinfo *at) {}
-	void changeteam(clientinfo *ci, int oldteam, int newteam) {}
 
 	void clearitems()
 	{

@@ -200,13 +200,6 @@ struct stfservmode : stfstate, servmode
 		moveflags(ci->team, oldpos, newpos);
 	}
 
-	void changeteam(clientinfo *ci, int oldteam, int newteam)
-	{
-		if(notgotflags) return;
-		leaveflags(oldteam, ci->state.o);
-		enterflags(newteam, ci->state.o);
-	}
-
 	void parseflags(ucharbuf &p)
 	{
 		int x = 0;

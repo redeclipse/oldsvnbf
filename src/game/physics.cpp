@@ -822,7 +822,7 @@ namespace physics
 
 	bool entinmap(physent *d, bool avoidplayers)
 	{
-		d->o.z += d->height;	 // pos specified is at feet
+		if(d->state != CS_ALIVE) return insideworld(d->o);
 		vec orig = d->o;
 		#define inmapchk(x,y) \
 			loopi(x) \
