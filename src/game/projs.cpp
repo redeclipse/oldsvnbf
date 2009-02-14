@@ -287,13 +287,9 @@ namespace projs
 
 		if(weaptype[weap].power)
 		{
-			speed = int(speed*clamp(float(clamp(power, 0, weaptype[weap].power))/float(weaptype[weap].power), 0.f, 1.f));
-			if(power > weaptype[weap].power)
-			{
-				float skew = 1.f-clamp(float(power-weaptype[weap].power)/float(weaptype[weap].time), 0.f, 1.f);
-				life = int(life*skew);
-				if(!life) speed = millis = delay = 1;
-			}
+			float amt = clamp(float(clamp(power, 0, weaptype[weap].power))/float(weaptype[weap].power), 0.f, 1.f);
+			life = int(float(life)*(1.f-amt));
+			if(!life) millis = delay = 1;
 		}
 
 		if(weap == WEAPON_FLAMER)

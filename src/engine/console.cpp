@@ -544,11 +544,11 @@ void consolekey(int code, bool isdown, int cooked)
                 break;
 
             case SDLK_TAB:
-                if(!commandaction)
-                {
+                //if(!commandaction)
+                //{
                     complete(commandbuf);
                     if(commandpos>=0 && commandpos>=(int)strlen(commandbuf)) commandpos = -1;
-                }
+                //}
                 break;
 
             case SDLK_f:

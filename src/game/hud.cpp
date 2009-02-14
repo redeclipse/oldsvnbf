@@ -223,25 +223,11 @@ namespace hud
 		{
 			case WPSTATE_POWER:
 			{
-				if(millis > weaptype[weap].power)
-				{
-					float skew = clamp(float(millis-weaptype[weap].power)/float(weaptype[weap].time), 0.f, 1.f);
-					colourskew(r, g, b, 1.f-skew);
-					glBindTexture(GL_TEXTURE_2D, t->getframe(skew));
-					glColor4f(r, g, b, indicatorblend);
-					if(t->frames.length() > 1) drawsized(x-s*3/4, y-s*3/4, s*3/2);
-					else drawslice(0, clamp(skew, 0.f, 1.f), x, y, s*3/2);
-					amt = 1.f;
-				}
-				else amt = clamp(float(millis)/float(weaptype[weap].power), 0.f, 1.f);
+				amt = clamp(float(millis)/float(weaptype[weap].power), 0.f, 1.f);
+				colourskew(r, g, b, 1.f-amt);
 				break;
 			}
-			default:
-			{
-				float skew = clamp(float(millis)/float(world::player1->weapwait[weap]), 0.f, 1.f);
-				amt *= skew;
-				break;
-			}
+			default: amt = 0.f; break;
 		}
 		glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 		glColor4f(r, g, b, indicatorblend);
