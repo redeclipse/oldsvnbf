@@ -212,10 +212,29 @@ static int getval(char *var)
     }
 }
 
+static int getvardef(char *var)
+{
+	ident *id = getident(var);
+	if(!id) return 0;
+    switch(id->type)
+    {
+        case ID_VAR: return id->def.i;
+        case ID_FVAR: return int(id->def.f);
+        case ID_SVAR: return atoi(id->def.s);
+        case ID_ALIAS: return atoi(id->action);
+        default: return 0;
+    }
+}
+
 void guislider(char *var, int *min, int *max, char *onchange)
 {
 	if(!cgui) return;
 	int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
+	if(vmax >= INT_MAX-1)
+	{ // not a sane value for a slider..
+		int vdef = getvardef(var);
+		vmax = vdef > vmin ? vdef*3 : vmin*4;
+	}
 	cgui->slider(val, vmin, vmax, GUI_TITLE_COLOR);
 	if(val != oldval) updateval(var, val, onchange);
 }

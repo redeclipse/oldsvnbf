@@ -131,7 +131,7 @@ namespace physics
 	bool canimpulse(physent *d)
 	{
 		int timelen = impulsetime ? impulsetime : int(gravity*impulsegravity);
-		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtime(timelen);
+		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtimex(timelen);
 		return false;
 	}
 
@@ -609,7 +609,7 @@ namespace physics
 			{ \
 				mf; \
 				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
-				world::spawneffect(mo, col, mt, m_speedtime(mz), ms); \
+				world::spawneffect(mo, col, mt, m_speedtimex(mz), ms); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
