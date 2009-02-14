@@ -163,11 +163,7 @@ namespace client
 			world::player1->state = CS_EDITING;
 			world::resetstate();
 		}
-		else
-		{
-			world::player1->state = CS_ALIVE;
-			world::player1->o.z -= world::player1->height; // entinmap wants feet pos
-		}
+		else world::player1->state = CS_ALIVE;
 		physics::entinmap(world::player1, false); // find spawn closest to current floating pos
 		if(m_edit(world::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);

@@ -127,7 +127,7 @@ namespace server
 
 		bool isalive(int millis)
 		{
-			return state == CS_ALIVE || (state == CS_DEAD && millis-lastdeath <= DEATHMILLIS);
+			return state == CS_ALIVE || ((state == CS_DEAD || state == CS_WAITING) && millis-lastdeath <= DEATHMILLIS);
 		}
 
 		void reset(bool change = false)
@@ -148,11 +148,6 @@ namespace server
 		{
 			gamestate::respawn(millis, heal);
 			o = vec(-1e10f, -1e10f, -1e10f);
-		}
-
-		bool isai(int type = -1, bool all = true)
-		{
-			return (type < 0 ? aitype != AI_NONE : aitype == type) && (all || aireinit >= 0) && (all || ownernum >= 0);
 		}
 	};
 
@@ -331,7 +326,7 @@ namespace server
             if(victim==actor || victim->team == actor->team) return -1;
             return 1;
         }
-		virtual void died(clientinfo *victim, clientinfo *actor) {}
+		virtual void died(clientinfo *victim, clientinfo *actor = NULL) {}
 		virtual void changeteam(clientinfo *ci, int oldteam, int newteam) {}
 		virtual void initclient(clientinfo *ci, ucharbuf &p, bool connecting) {}
 		virtual void update() {}
@@ -406,7 +401,7 @@ namespace server
 		int n = 0;
 		loopv(clients)
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->connected && clients[i]->clientnum != exclude &&
-				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || !clients[i]->state.isai(-1, false)))
+				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE))
 					n++;
 		return n;
 	}
@@ -432,9 +427,9 @@ namespace server
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
 		s_sprintf(cname)("\fs%s%s", chat, name);
-		if(!name[0] || ci->state.isai() || (dupname && duplicatename(ci, name)))
+		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.isai() ? "\fc" : "\fm", ci->clientnum);
+			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
 			s_strcat(cname, s);
 		}
 		s_strcat(cname, "\fS");
@@ -991,7 +986,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.isai()) continue;
+			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.aitype != AI_NONE) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -1057,6 +1052,18 @@ namespace server
 		}
 	}
 
+	extern void waiting(clientinfo *ci, bool exclude = false);
+
+	void setteam(clientinfo *ci, int team, bool reset = true, bool info = false)
+	{
+		if(ci->team != team)
+		{
+			if(reset) waiting(ci);
+			ci->team = team;
+			if(info) sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
+		}
+	}
+
 	struct teamscore
 	{
 		int team;
@@ -1092,12 +1099,12 @@ namespace server
 						float rank = 1.f;
 						switch(GVAR(teambalance))
 						{
-							case 1: rank = ci->state.isai() ? 1.f : GVAR(botratio); break;
+							case 1: rank = ci->state.aitype != AI_NONE ? 1.f : GVAR(botratio); break;
 							case 2: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
 							case 3: default:
 							{
-								if(who->state.isai()) rank = ci->state.isai() ? 1.f : GVAR(botratio);
-								else rank = ci->state.isai() ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
+								if(who->state.aitype != AI_NONE) rank = ci->state.aitype != AI_NONE ? 1.f : GVAR(botratio);
+								else rank = ci->state.aitype != AI_NONE ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
 								break;
 							}
 						}
@@ -1202,8 +1209,6 @@ namespace server
 		}
 	}
 
-	extern void waiting(clientinfo *ci, bool reset = true, bool exclude = false);
-
 	#include "stfmode.h"
     #include "ctfmode.h"
 	#include "duelmut.h"
@@ -1256,13 +1261,9 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			int team = chooseteam(ci, ci->team);
-			sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
-			if(smode) smode->changeteam(ci, ci->team, team);
-			mutate(smuts, mut->changeteam(ci, ci->team, team));
-			ci->team = team;
+			setteam(ci, chooseteam(ci, ci->team), false, true);
 			ci->mapchange(true);
-			if(ci->state.state != CS_SPECTATOR) waiting(ci, false);
+			if(ci->state.state != CS_SPECTATOR) waiting(ci);
 		}
 
 		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -1365,7 +1366,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *cs = clients[i];
-			if(cs->state.isai() || !cs->name[0] || !cs->online || !cs->connected || cs->wantsmap) continue;
+			if(cs->state.aitype != AI_NONE || !cs->name[0] || !cs->online || !cs->connected || cs->wantsmap) continue;
 			if(!best || cs->state.timeplayed > best->state.timeplayed) best = cs;
 		}
 		return best;
@@ -1511,7 +1512,7 @@ namespace server
 			}
 			else
 			{
-				waiting(ci, false, true);
+				waiting(ci, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
 			}
@@ -1821,6 +1822,7 @@ namespace server
 		}
 	}
 
+#if 0 // don't use this?
 	void cleartimedevents(clientinfo *ci)
 	{
 		int keep = 0;
@@ -1836,13 +1838,16 @@ namespace server
 		}
 		ci->events.setsize(keep);
 	}
+#endif
 
-	void waiting(clientinfo *ci, bool reset, bool exclude)
+	void waiting(clientinfo *ci, bool exclude)
 	{
-		if(reset)
+		if(ci->state.state == CS_ALIVE)
 		{
-			if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
-			cleartimedevents(ci);
+			dropitems(ci);
+			if(smode) smode->died(ci);
+			mutate(smuts, mut->died(ci));
+			ci->state.lastdeath = gamemillis;
 		}
 		if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
 		else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
@@ -1925,7 +1930,7 @@ namespace server
 
 	void checkclients()
 	{
-		loopv(clients)
+		loopv(clients) if(clients[i]->online && clients[i]->connected)
 		{
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
@@ -1945,7 +1950,8 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{ // duelmut needs rewriting to take advantage of this
-				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
+				if((!ci->state.lastdeath || gamemillis-ci->state.lastdeath > DEATHMILLIS) &&
+					!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
 					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
@@ -2015,13 +2021,13 @@ namespace server
     bool allowbroadcast(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        return ci && ci->connected && !ci->state.isai();
+        return ci && ci->connected && ci->state.aitype == AI_NONE;
     }
 
     int peerowner(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        if(ci) return ci->state.isai() ? ci->state.ownernum : ci->clientnum;
+        if(ci) return ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum;
         return -1;
     }
 
@@ -2233,7 +2239,7 @@ namespace server
 		{
 			clientinfo &ci = *clients[i];
 			ENetPacket *packet;
-			if(!ci.state.isai() && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
+			if(ci.state.aitype == AI_NONE && psize && (pkt[i].posoff<0 || psize-ci.position.length()>0))
 			{
 				packet = enet_packet_create(&ws.positions[pkt[i].posoff<0 ? 0 : pkt[i].posoff+ci.position.length()],
 											pkt[i].posoff<0 ? psize : psize-ci.position.length(),
@@ -2244,7 +2250,7 @@ namespace server
 			}
 			ci.position.setsizenodelete(0);
 
-			if(!ci.state.isai() && msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
+			if(ci.state.aitype == AI_NONE && msize && (pkt[i].msgoff<0 || msize-pkt[i].msglen>0))
 			{
 				packet = enet_packet_create(&ws.messages[pkt[i].msgoff<0 ? 0 : pkt[i].msgoff+pkt[i].msglen],
 											pkt[i].msgoff<0 ? msize : msize-pkt[i].msglen,
@@ -2382,7 +2388,7 @@ namespace server
 						cp->position.setsizenodelete(0);
 						while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
 					}
-					if(havecn)
+					if(havecn && cp->state.state==CS_ALIVE)
 					{
 						if(smode) smode->moved(cp, oldpos, cp->state.o);
 						mutate(smuts, mut->moved(cp, oldpos, cp->state.o));
@@ -2434,7 +2440,7 @@ namespace server
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || gamemillis-cp->state.lastdeath <= DEATHMILLIS) break;
 					if(smode) smode->canspawn(cp, true);
 					mutate(smuts, mut->canspawn(cp, true));
-					waiting(cp, true);
+					waiting(cp);
 					break;
 				}
 
@@ -2624,7 +2630,7 @@ namespace server
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || t->state.isai() || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
+						if(t == cp || t->state.aitype != AI_NONE || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
 					bool team = m_team(gamemode, mutators) && flags&SAY_TEAM;
@@ -2671,9 +2677,7 @@ namespace server
 					}
 					if(team != ci->team)
 					{
-						if(smode) smode->changeteam(ci, ci->team, team);
-						mutate(smuts, mut->changeteam(ci, ci->team, team));
-						ci->team = team;
+						setteam(ci, team);
 						aiman::dorefresh = true;
 					}
                     sendinitc2s(ci);
@@ -2868,7 +2872,7 @@ namespace server
 					}
 					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{
-						waiting(spinfo, false);
+						waiting(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
 						aiman::dorefresh = true;
 						if(smode) smode->entergame(spinfo);
@@ -2885,9 +2889,7 @@ namespace server
 					if(!wi || !m_team(gamemode, mutators) || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
 					if(wi->team != team)
 					{
-						if(smode) smode->changeteam(wi, wi->team, team);
-						mutate(smuts, mut->changeteam(wi, wi->team, team));
-						wi->team = team;
+						setteam(wi, team);
 						aiman::dorefresh = true;
 					}
 					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);

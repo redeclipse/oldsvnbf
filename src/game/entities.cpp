@@ -503,7 +503,7 @@ namespace entities
 										gameentity &f = *(gameentity *)ents[t];
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
-										d->o = vec(f.o).add(vec(0, 0, (d->height*0.5f)-d->aboveeye));
+										d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
 										if(physics::entinmap(d, false))
 										{
 											d->yaw = f.attr[0];
@@ -827,7 +827,7 @@ namespace entities
 	{
 		d->yaw = yaw;
 		d->pitch = d->roll = 0;
-		d->o = o;
+		d->o = vec(o).add(vec(0, 0, d->height));
 		world::fixrange(d->yaw, d->pitch);
 		return physics::entinmap(d, true);
 	}
@@ -853,7 +853,10 @@ namespace entities
 			return true;
 		}
 		else if(m_play(world::gamemode) && suicide)
+		{
 			world::suicide(d, HIT_SPAWN);
+			return true;
+		}
 		return false;
 	}
 

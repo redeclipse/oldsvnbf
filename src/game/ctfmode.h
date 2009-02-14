@@ -34,17 +34,6 @@ struct ctfservmode : ctfstate, servmode
         dropflag(ci, ci->state.o);
     }
 
-    bool canchangeteam(clientinfo *ci, int oldteam, int newteam)
-    {
-    	loopi(numteams(gamemode, mutators)) if(newteam == i+TEAM_FIRST) return true;
-    	return false;
-    }
-
-    void changeteam(clientinfo *ci, int oldteam, int newteam)
-    {
-        dropflag(ci, ci->state.o);
-    }
-
 	int addscore(int team)
 	{
 		score &cs = findscore(team);

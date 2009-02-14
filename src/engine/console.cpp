@@ -408,12 +408,12 @@ struct hline
 
     void run()
     {
-        if(action)
+        if(buf[0]=='/') execute(buf+1); // above all else
+		else if(action)
         {
             setsvar("commandbuffer", buf, true);
             execute(action);
         }
-        else if(buf[0]=='/') execute(buf+1);
         else client::toserver(0, buf);
     }
 };
