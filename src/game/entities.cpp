@@ -1479,7 +1479,7 @@ namespace entities
 
 	void edittoggled(bool edit)
 	{
-		if(!edit) clearentcache();
+		clearentcache();
 	}
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
@@ -1530,7 +1530,7 @@ namespace entities
 
 	void renderentshow(gameentity &e, int idx, int level)
 	{
-		if(level != 1 && e.o.dist(camera1->o) > maxparticledistance) return;
+		if(level != 1 && e.o.squaredist(camera1->o) > maxparticledistance*maxparticledistance) return;
 		if(!level || showentradius >= level)
 		{
 			switch(e.type)
@@ -1579,17 +1579,23 @@ namespace entities
 				break;
 			}
 			case TELEPORT:
-			{
-				if(!level || showentdir >= level) renderdir(e.o, e.attr[0], e.attr[1], false);
-				break;
-			}
 			case CAMERA:
 			{
 				if(!level || showentdir >= level) renderdir(e.o, e.attr[0], e.attr[1], false);
 				break;
 			}
-			default:
+			case PUSHER:
+			{
+				if(!level || showentdir >= level)
+				{
+					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]);
+					float yaw = 0.f, pitch = 0.f;
+					vectoyawpitch(dir, yaw, pitch);
+					renderdir(e.o, yaw, pitch, false);
+				}
 				break;
+			}
+			default: break;
 		}
 
 		if(enttype[e.type].links)

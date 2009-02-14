@@ -3,29 +3,29 @@
 #include "game.h"
 namespace physics
 {
-	FVARW(crawlspeed,		0, 30.f, 1000);	// crawl speed
-	FVARW(gravity,			0, 40.f, 1000);	// gravity
-	FVARW(jumpspeed,		0, 50.f, 1000);	// extra velocity to add when jumping
-	FVARW(movespeed,		0, 50.f, 1000);	// speed
+	FVARW(crawlspeed,		0, 30.f, 10000);	// crawl speed
+	FVARW(gravity,			0, 40.f, 10000);	// gravity
+	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
+	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
-	FVARW(impulsespeed,		0, 50.f, 1000);	// extra velocity to add when impulsing
-	FVARW(impulsegravity,	0, 100.f, 1000); // modifier of gravity that determines impulse interval
+	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
+	FVARW(impulsegravity,	0, 100.f, 10000); // modifier of gravity that determines impulse interval
 	VARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsegravity)
 
-	FVARW(liquidfric,		0, 10.f, 100);
-	FVARW(liquidscale,		0, 0.9f, 100);
-	FVARW(sinkfric,			0, 2.f, 100);
-	FVARW(floorfric,		0, 5.f, 100);
-	FVARW(airfric,			0, 25.f, 100);
+	FVARW(liquidfric,		0, 10.f, 10000);
+	FVARW(liquidscale,		0, 0.9f, 10000);
+	FVARW(sinkfric,			0, 2.f, 10000);
+	FVARW(floorfric,		0, 5.f, 10000);
+	FVARW(airfric,			0, 25.f, 10000);
 
-	FVARW(stairheight,		0, 4.1f, 100);
+	FVARW(stairheight,		0, 4.1f, 10000);
 	FVARW(floorz,			0, 0.867f, 1);
 	FVARW(slopez,			0, 0.5f, 1);
 	FVARW(wallz,			0, 0.2f, 1);
-	FVARW(stepspeed,		1e-3f, 1.0f, 1000);
-	FVARW(ladderspeed,		1e-3f, 1.0f, 1000);
+	FVARW(stepspeed,		1e-3f, 1.f, 10000);
+	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
 
-	FVARP(floatspeed,		1e-3f, 100.f, 1000.f);
+	FVARP(floatspeed,		1e-3f, 75.f, 10000);
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 

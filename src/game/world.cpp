@@ -58,7 +58,7 @@ namespace world
 	VARP(specfov, 1, 120, 179);
 	VARP(specdeadzone, 0, 10, 100);
 	VARP(specpanspeed, 1, 20, INT_MAX-1);
-	FVARP(spectvspeed, 0.1f, 0.5f, 1000);
+	FVARP(spectvspeed, 0.1f, 1.f, 1000);
 	FVARP(deathcamspeed, 0.1f, 2.f, 1000);
 
 	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
@@ -297,7 +297,7 @@ namespace world
 	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
 		part_create(PART_ELECTRIC_SLENS, m_speedtime(fade), o, colour, size);
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, 25, m_speedtime(fade), o, size, 20.f);
+		regularshape(PART_ELECTRIC, radius*2, colour, 21, 5, m_speedtime(fade), o, size, 20.f);
 		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
