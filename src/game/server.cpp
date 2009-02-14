@@ -2634,15 +2634,11 @@ namespace server
 						if(t == cp || t->state.aitype != AI_NONE || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					bool team = m_team(gamemode, mutators) && flags&SAY_TEAM;
-					s_sprintfd(m)("%s", colorname(cp));
-					if(team)
+					if(!m_team(gamemode, mutators) || !(flags&SAY_TEAM))
 					{
-						s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[cp->team].chat, teamtype[cp->team].name);
-						s_strcat(m ,t);
+						if(flags&SAY_ACTION) relayf(1, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
+						else relayf(1, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
 					}
-					if(flags&SAY_ACTION) relayf(1, "\fm* \fs%s\fS \fs\fm%s\fS", m, text);
-					else relayf(1, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 					break;
 				}
 
