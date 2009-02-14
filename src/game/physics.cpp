@@ -130,8 +130,8 @@ namespace physics
 
 	bool canimpulse(physent *d)
 	{
-		int timelen = m_speedlerp(impulsetime) ? impulsetime : int(gravityforce(d)*impulsegravity);
-		if(timelen > 0) return lastmillis-d->lastimpulse > timelen;
+		int timelen = impulsetime ? impulsetime : int(gravity*impulsegravity);
+		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtime(timelen);
 		return false;
 	}
 
