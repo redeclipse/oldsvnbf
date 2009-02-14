@@ -23,7 +23,7 @@ void conoutf(const char *s, ...)
 #ifdef IRC
 	string st;
 	filtertext(st, str);
-	ircoutf(2, "%s", st);
+	ircoutf(3, "%s", st);
 #endif
 }
 void servertoclient(int chan, uchar *buf, int len) {}
