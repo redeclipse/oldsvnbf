@@ -468,7 +468,8 @@ extern gametypes gametype[], mutstype[];
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
-#define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
+#define m_speedtimex(a)		(max(int(m_speedlerp(a)), 1))
+#define m_speedtime(a)		(int(m_speedlerp(a)))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -1247,7 +1248,7 @@ namespace ai
 	extern bool randomnode(gameent *d, aistate &b, float guard = AIISNEAR, float wander = AIISFAR);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, float wander = AIISFAR, int walk = 1, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = AIISCLOSE, float wander = AIISNEAR, int walk = 1);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, float wander = AIISFAR, int walk = 1);
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);

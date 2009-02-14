@@ -27,7 +27,7 @@ namespace entities
 		switch(e.type)
 		{
 			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
-				return m_speedtime(1000); break;
+				return m_speedtimex(1000); break;
 			default: break;
 		}
 		return 0;

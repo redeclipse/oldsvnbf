@@ -87,15 +87,27 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool retry)
 	{
-		if(node != d->lastnode)
+		int n = node;
+		if((n == d->lastnode || n == d->ai->lastnode) && entities::ents.inrange(d->lastnode))
 		{
-			if(changed && !d->ai->route.empty() && d->ai->route[0] == node) return true;
-			if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, retry))
+			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
+			static vector<int> noderemap; noderemap.setsizenodelete(0);
+			if(!e.links.empty())
+			{
+				loopv(e.links) if(e.links[i] != d->lastnode && e.links[i] != d->ai->lastnode)
+					noderemap.add(e.links[i]);
+			}
+			if(!noderemap.empty()) n = noderemap[rnd(noderemap.length())];
+		}
+		if(n != d->lastnode)
+		{
+			if(changed && !d->ai->route.empty() && d->ai->route[0] == n) return true;
+			if(entities::route(d, d->lastnode, n, d->ai->route, obstacles, retry))
 			{
 				b.override = false;
 				return true;
 			}
-			if(!retry) return makeroute(d, b, node, true, true);
+			if(!retry) return makeroute(d, b, n, true, true);
 		}
 		d->ai->route.setsize(0);
 		b.override = false;
@@ -195,7 +207,6 @@ namespace ai
 				else
 				{
 					d->ai->spot = pos;
-					b.override = false;
 					b.idle = true;
 					return true;
 				}
@@ -573,24 +584,28 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 			vec dir = vec(e.o).sub(world::feetpos(d));
-			if(d->timeinair || dir.magnitude() <= enttype[WAYPOINT].radius*2 || retry)
+			if(d->timeinair || dir.magnitude() <= enttype[WAYPOINT].radius || retry)
 			{
-				int closest = -1;
+				static vector<int> anyremap; anyremap.setsizenodelete(0);
 				vec dp = world::feetpos(d);
 				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
 					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || e.links[i] != d->ai->lastnode))
-					{
-						gameentity &f = *(gameentity *)entities::ents[e.links[i]];
-						if(!entities::ents.inrange(closest) || f.o.squaredist(dp) < entities::ents[closest]->o.squaredist(dp))
-							closest = e.links[i];
-					}
+						anyremap.add(e.links[i]);
 				}
-				if(entities::ents.inrange(closest) && entspot(d, closest, retry)) return true;
+				while(!anyremap.empty())
+				{
+					int r = rnd(anyremap.length()), t = anyremap[r];
+					if(entspot(d, t, retry)) return true;
+					anyremap.remove(r);
+				}
 			}
-			if(entspot(d, d->lastnode, retry)) return true;
-			if(!retry) anynode(d, b, true);
+			if(!retry)
+			{
+				if(entspot(d, d->lastnode, true)) return true;
+				return anynode(d, b, true);
+			}
 		}
 		return false;
 	}

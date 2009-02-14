@@ -1880,7 +1880,7 @@ namespace server
 		if(sents.inrange(i)) switch(sents[i].type)
 		{
 			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
-				return m_speedtime(1000); break;
+				return m_speedtimex(1000); break;
 			default: break;
 		}
 		return 0;
