@@ -105,7 +105,7 @@ namespace weapons
 		if(!d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 			return;
 
-		int power = force, powertime = weaptype[d->weapselect].power+weaptype[d->weapselect].time;
+		int power = clamp(force, 0, weaptype[d->weapselect].power);
 		if(weaptype[d->weapselect].power)
 		{
 			if(!power)
@@ -120,8 +120,8 @@ namespace weapons
 					else return;
 				}
 
-				power = lastmillis-d->weaplast[d->weapselect];
-				if(world::allowmove(d) && d->attacking && power < powertime) return;
+				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, weaptype[d->weapselect].power);
+				if(world::allowmove(d) && d->attacking && power < weaptype[d->weapselect].power) return;
 			}
 			d->attacking = false;
 		}
@@ -167,8 +167,7 @@ namespace weapons
 			if(weaptype[d->weapselect].spread)
 				offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
-			if(d->weapselect == WEAPON_GL && power < powertime)
-				dest.z += from.dist(dest)/8;
+			if(d->weapselect == WEAPON_GL) dest.z += from.dist(dest)/8;
 			addshot;
 		}
 		projs::shootv(d->weapselect, power, from, vshots, d, true);

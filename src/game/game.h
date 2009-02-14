@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			150
+#define GAMEVERSION			151
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -337,7 +337,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_GL,			ANIM_GRENADES,	-5,    5,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		4,		1500,	3000,	200,	250,	1000,	3000,
+			1,		4,		1500,	3000,	200,	250,	3000,	3000,
 			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
 			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.75f,		2.0f,		50.f,
