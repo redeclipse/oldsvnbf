@@ -40,6 +40,7 @@ namespace aiman
 			clientinfo *ci = clients[i];
 			ci->state.ownernum = findaiclient();
 			ci->state.aireinit = 2;
+			ci->team = chooseteam(ci);
 			if(req) autooverride = true;
 			dorefresh = true;
 			return true;
@@ -56,12 +57,14 @@ namespace aiman
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
 				ci->state.skill = clamp(s, 1, 101);
-				ci->state.state = CS_WAITING;
+				ci->state.state = CS_DEAD;
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
 				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->team = chooseteam(ci);
-				ci->state.aireinit = 3;
+				sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
+				waiting(ci);
+				ci->state.aireinit = 0;
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
 				dorefresh = true;
@@ -117,14 +120,13 @@ namespace aiman
 		if(ci->state.ownernum < 0) deleteai(ci);
 		else if(ci->state.aireinit)
 		{
-			if(ci->state.aireinit == 2) waiting(ci);
 			if(ci->state.aireinit >= 2)
 			{
+				waiting(ci);
 				ci->state.dropped.reset();
 				loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
 			}
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-			if(ci->state.aireinit == 3) waiting(ci);
 			ci->state.aireinit = 0;
 		}
 	}

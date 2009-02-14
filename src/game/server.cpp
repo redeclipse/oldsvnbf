@@ -1256,6 +1256,7 @@ namespace server
 			{
 				clientinfo *ci = clients[i];
 				ci->team = TEAM_NEUTRAL; // to be reset below
+				if(ci->state.state != CS_SPECTATOR) ci->state.state = CS_DEAD;
 			}
 		}
 		loopv(clients)
