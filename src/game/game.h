@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			151
+#define GAMEVERSION			152
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -243,13 +243,14 @@ enum
 
 enum
 {
-	IMPACT_GEOM    = 1<<0,
-	BOUNCE_GEOM    = 1<<1,
-	COLLIDE_GEOM   = IMPACT_GEOM | BOUNCE_GEOM,
-	IMPACT_PLAYER  = 1<<2,
-	BOUNCE_PLAYER  = 1<<3,
-	COLLIDE_PLAYER = IMPACT_PLAYER | BOUNCE_PLAYER,
-	COLLIDE_TRACE  = 1<<4
+	IMPACT_GEOM		= 1<<0,
+	BOUNCE_GEOM		= 1<<1,
+	IMPACT_PLAYER	= 1<<2,
+	BOUNCE_PLAYER	= 1<<3,
+	COLLIDE_TRACE	= 1<<4,
+	COLLIDE_OWNER	= 1<<5,
+	COLLIDE_GEOM	= IMPACT_GEOM | BOUNCE_GEOM,
+	COLLIDE_PLAYER	= IMPACT_PLAYER | BOUNCE_PLAYER,
 };
 
 struct weaptypes
@@ -271,10 +272,10 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		250,	1000,	15,		500,	0,		10000,
+			20,		20,		500,	1000,	25,		500,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.35f,		1.0f,		0.f,
+			1.0f,	0.f,		0.f,			0.5f,		1.0f,		0.f,
 			3.5f,		60.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
@@ -283,7 +284,7 @@ weaptypes weaptype[WEAPON_MAX] =
 		WEAPON_SG,			ANIM_SHOTGUN,	-30,    30,
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
-			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,		true,		false,
 			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
 			0.35f,		50.f,
@@ -294,7 +295,7 @@ weaptypes weaptype[WEAPON_MAX] =
 		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
-			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
 			0.25f,		50.f,
@@ -304,8 +305,8 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_FLAMER,		ANIM_FLAMER,	-1,		 1,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	25,		100,	0,		3000,
-			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER,
+			50,		50,		100, 	2000,	20,		100,	0,		3000,
+			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	true,		true,		false,
 			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
 			30.f,		10.f,
@@ -338,7 +339,7 @@ weaptypes weaptype[WEAPON_MAX] =
 		WEAPON_GL,			ANIM_GRENADES,	-5,    5,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		4,		1500,	3000,	200,	250,	3000,	3000,
-			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER,
+			150,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,		false,		false,
 			1.0f,	0.33f,		0.f,			0.75f,		2.0f,		50.f,
 			3.f,		250.f,
@@ -450,7 +451,7 @@ extern gametypes gametype[], mutstype[];
 
 #define m_play(a)			(a >= G_MISSION)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
-#define m_timed(a)			(a >= G_DEATHMATCH)
+#define m_fight(a)			(a >= G_DEATHMATCH)
 
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))

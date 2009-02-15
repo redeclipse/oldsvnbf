@@ -444,10 +444,10 @@ namespace ctf
 				if(g.owner == d) hasflags.add(i);
 			}
 			if(!hasflags.empty() && aihomerun(d, b)) return true;
-			if(f.owner || f.droptime)
+			if(isctfflag(f, d->team))
 			{
-				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, b.target);
-				return true;
+				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
+				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
 			bool walk = false;
 			if(lastmillis-b.millis >= (111-d->skill)*100)
@@ -482,16 +482,8 @@ namespace ctf
 					ctfstate::flag &g = st.flags[i];
 					if(pos.squaredist(g.pos()) <= mindist)
 					{
-						if(g.owner)
-						{
-							if(g.owner->team == d->team) walk = true;
-							else return ai::violence(d, b, g.owner, true);
-						}
-						else if(g.droptime)
-						{
-							d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, i);
-							return true;
-						}
+						if(g.owner && g.owner->team == d->team) walk = true;
+						if(g.droptime && ai::makeroute(d, b, f.pos())) return true;
 					}
 				}
 			}
@@ -505,10 +497,13 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(f.owner && f.owner == d) return aihomerun(d, b);
-			else if(f.owner && isctfflag(f, d->team)) return ai::violence(d, b, f.owner, true);
-			else if(f.droptime && isctfflag(f, d->team)) return ai::makeroute(d, b, f.pos());
-			else if(isctfhome(f, d->team))
+			if(f.owner && f.owner == d && aihomerun(d, b)) return true;
+			if(isctfflag(f, d->team))
+			{
+				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
+				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
+			}
+			if(isctfhome(f, d->team))
 			{
 				static vector<int> hasflags;
 				hasflags.setsizenodelete(0);
@@ -518,9 +513,9 @@ namespace ctf
 					if(g.owner == d) hasflags.add(i);
 				}
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
-				return ai::makeroute(d, b, f.pos());
+				if(ai::makeroute(d, b, f.pos())) return true;
 			}
-			else if(lastmillis-b.millis >= (111-d->skill)*6000)
+			if(lastmillis-b.millis >= (111-d->skill)*6000)
 			{
 				d->ai->clear = true; // re-evaluate
 				return true;

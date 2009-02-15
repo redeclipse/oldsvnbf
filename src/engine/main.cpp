@@ -699,6 +699,7 @@ void eastereggs()
 		loadbackinfo = "Halloween";
 	}
 
+	if(lt->tm_mon == 2 && lt->tm_mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
 	if(lt->tm_mon == 2 && lt->tm_mday == 9)		loadbackinfo = "Happy Birthday Quin!";
 	if(lt->tm_mon == 4 && lt->tm_mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
 	if(lt->tm_mon == 7 && lt->tm_mday == 26)	loadbackinfo = "Happy Birthday Acord!";

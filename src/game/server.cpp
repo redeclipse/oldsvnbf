@@ -642,9 +642,9 @@ namespace server
 				spawns[sents[i].attr[1]].add(i);
 				totalspawns++;
 			}
-			if(totalspawns)
-			{
-				if(m_team(gamemode, mutators))
+			if(totalspawns && m_fight(gamemode))
+			{ // reset if a team has no spawns, or if we're in dm/stf
+				if(m_team(gamemode, mutators) && !m_stf(gamemode))
 				{
 					loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
 					{
@@ -653,22 +653,22 @@ namespace server
 						break;
 					}
 				}
-				else if(m_timed(gamemode) && spawns[TEAM_NEUTRAL].ents.length() <= 1)
+				else
 				{
-					spawns[TEAM_NEUTRAL].reset();
+					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
 				}
 			}
 			if(!totalspawns)
-			{
+			{ // use all spawns
 				loopv(sents) if(sents[i].type == PLAYERSTART)
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
 			}
-			if(!totalspawns) // we can cheat and use weapons for spawns
-			{
+			if(!totalspawns)
+			{ // we can cheat and use weapons for spawns
 				loopv(sents) if(sents[i].type == WEAPON)
 				{
 					spawns[TEAM_NEUTRAL].add(i);
@@ -683,7 +683,7 @@ namespace server
 	{
 		if(totalspawns && GVAR(spawnrotate))
 		{
-			int team = m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+			int team = m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 			if(!spawns[team].ents.empty())
 			{
 				switch(GVAR(spawnrotate))
@@ -1255,7 +1255,8 @@ namespace server
 			loopv(clients)
 			{
 				clientinfo *ci = clients[i];
-				ci->team = TEAM_NEUTRAL; // to be reset below
+				if(!m_team(gamemode, mutators) || GVAR(teambalance))
+					ci->team = TEAM_NEUTRAL; // to be reset below
 				if(ci->state.state != CS_SPECTATOR) ci->state.state = CS_DEAD;
 			}
 		}
@@ -1267,7 +1268,7 @@ namespace server
 			if(ci->state.state != CS_SPECTATOR) waiting(ci);
 		}
 
-		if(m_timed(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		if(m_fight(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
 		{
@@ -1481,7 +1482,7 @@ namespace server
 			}
 		});
 
-		if(!ci || (m_timed(gamemode) && numclients(-1, false, true)))
+		if(!ci || (m_fight(gamemode) && numclients(-1, false, true)))
 		{
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
@@ -1994,7 +1995,7 @@ namespace server
 				masterupdate = false;
 			}
 
-			if((m_timed(gamemode) && numclients(-1, false, true)) &&
+			if((m_fight(gamemode) && numclients(-1, false, true)) &&
 				((GVAR(timelimit) != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
 					checkintermission();
 
