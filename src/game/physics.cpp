@@ -635,6 +635,7 @@ namespace physics
 		pl->inmaterial = material;
 		pl->inliquid = !floating && isliquid(curmat);
 		pl->onladder = !floating && flagmat == MAT_LADDER;
+        if(pl->onladder && pl->physstate < PHYS_SLIDE) pl->floor = vec(0, 0, 1);
     }
 
     void updatematerial(physent *pl, bool local, bool floating)
