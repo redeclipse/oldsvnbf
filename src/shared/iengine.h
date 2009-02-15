@@ -29,6 +29,8 @@ extern float raycubepos(const vec &o, const vec &ray, vec &hit, float radius = 0
 extern float rayfloor  (const vec &o, vec &floor, int mode = 0, float radius = 0);
 extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 
+struct Texture;
+
 extern void settexture(const char *name, int clamp = 0);
 
 // octaedit
@@ -171,6 +173,7 @@ enum
     PT_LIGHTNING,
     PT_FLARE,
     PT_PORTAL,
+    PT_ICON,
 
     PT_MOD		= 1<<8,
     PT_RND4		= 1<<9,		// uses random image quarters
@@ -185,6 +188,7 @@ enum
 enum
 {
     PART_TELEPORT = 0,
+    PART_ICON,
     PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
     PART_SMOKE, PART_SMOKE_RISE_SLOW, PART_SMOKE_RISE_SLOW_SOFT, PART_SMOKE_RISE_FAST, PART_SMOKE_SINK,
@@ -243,6 +247,7 @@ extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
 extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
+extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int fade = 1, int color = 0xFFFFFF, int type = PART_ICON);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
