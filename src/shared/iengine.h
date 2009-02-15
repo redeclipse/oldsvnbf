@@ -170,6 +170,7 @@ enum
     PT_FIREBALL,
     PT_LIGHTNING,
     PT_FLARE,
+    PT_PORTAL,
 
     PT_MOD		= 1<<8,
     PT_RND4		= 1<<9,		// uses random image quarters
@@ -183,7 +184,8 @@ enum
 
 enum
 {
-    PART_WATER = 0,
+    PART_TELEPORT = 0,
+    PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
     PART_SMOKE, PART_SMOKE_RISE_SLOW, PART_SMOKE_RISE_SLOW_SOFT, PART_SMOKE_RISE_FAST, PART_SMOKE_SINK,
     PART_BLOOD,
@@ -240,6 +242,7 @@ extern void regular_part_fireball(const vec &dest, float maxsize, int type, int 
 extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
+extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;

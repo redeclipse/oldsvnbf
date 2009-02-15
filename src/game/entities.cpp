@@ -1678,41 +1678,6 @@ namespace entities
 		}
 	}
 
-    void renderteleport(gameentity &e, Texture *t)
-    {
-		glPushMatrix();
-		glEnable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else glBlendFunc(GL_ONE, GL_ONE);
-        defaultshader->set();
-
-		vec dir;
-		vecfromyawpitch((float)e.attr[0], (float)e.attr[1], 1, 0, dir);
-		vec o(vec(e.o).add(dir));
-		glTranslatef(o.x, o.y, o.z);
-		glRotatef((float)e.attr[0]-180.f, 0, 0, 1);
-		glRotatef((float)e.attr[1], 1, 0, 0);
-		float radius = (float)(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
-		glScalef(radius, radius, radius);
-
-		glBindTexture(GL_TEXTURE_2D, t->id);
-
-		int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-		glColor3f(r, g, b);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
-		glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
-		glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
-		glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
-		xtraverts += 4;
-		glEnd();
-		glEnable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		glPopMatrix();
-	}
-
 	void render()
 	{
 		if(rendermainview) // important, don't render lines and stuff otherwise!
@@ -1725,17 +1690,6 @@ namespace entities
                 loopv(ents) renderfocus(i, renderentshow(e, i, editing && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
                 renderprimitive(false);
             }
-		}
-
-		if(!shadowmapping && !envmapping)
-		{
-			Texture *t = textureload(teleporttex, 0, true);
-			loopv(ents)
-			{
-				gameentity &e = *(gameentity *)ents[i];
-				if(e.type == TELEPORT && e.attr[4] && e.o.dist(camera1->o) < maxparticledistance)
-					renderteleport(e, t);
-			}
 		}
 
 		int sweap = m_spawnweapon(world::gamemode, world::mutators);
@@ -1758,13 +1712,29 @@ namespace entities
 		}
 	}
 
+    void maketeleport(const gameentity &e)
+    {
+        vec dir;
+        vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
+        vec o = vec(e.o).add(dir);
+        float radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
+        int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
+        part_portal(o, radius, e.attr[0], e.attr[1], PART_TELEPORT, 0, colour);
+    }
+
 	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)
 	{
-		if(e.type == PARTICLES)
-		{
-			if(idx < 0 || e.links.empty()) makeparticles(e);
-			else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
-				makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+        switch(e.type)
+        {
+            case PARTICLES:
+			    if(idx < 0 || e.links.empty()) makeparticles(e);
+			    else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
+				    makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+                break;
+
+            case TELEPORT:
+                if(e.attr[4]) maketeleport(e);
+                break;
 		}
 
 		bool hasent = false, edit = m_edit(world::gamemode) && cansee(e);
@@ -1808,7 +1778,14 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-            if(e.type != PARTICLES && enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
+            switch(e.type)
+            {
+                case PARTICLES: case TELEPORT: 
+                    break;
+                default: 
+                    if(enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
+                    break;
+            }
             if(e.o.squaredist(camera1->o) > maxdist) continue;
 			drawparticle(e, e.o, i, e.spawned);
 		}
