@@ -444,17 +444,17 @@ namespace hud
 			{
 				if(m_team(world::gamemode, world::mutators) && numteamkills() >= 3)
 				{
-					ty += draw_textx("Don't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
+					ty += draw_textx("\fs%sHEY!\fS Don't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy");
 					if(shownotices > 1)
 					{
 						pushfont("emphasis");
 						settexture(flagtex(world::player1->team));
 						glColor4f(1.f, 1.f, 1.f, tf);
 						drawsized(tx-FONTH, ty, FONTH);
-						ty += draw_textx("\fs\fcHEY!\fS You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
 						popfont();
 						pushfont("default");
-						ty += draw_textx("You must shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat);
+						ty += draw_textx("Shoot anyone not the \fs%ssame colour as you\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat);
 						popfont();
 					}
 				}
