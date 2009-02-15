@@ -845,6 +845,7 @@ namespace entities
 			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return true;
 			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return true;
 			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
+            d->o.z += d->height + 1;
 			if(physics::entinmap(d, false)) return true;
 		}
 		if(m_edit(world::gamemode))
