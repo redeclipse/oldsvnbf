@@ -13,6 +13,7 @@ VARA(maxparticledistance, 128, 1024, 4096);
 VARP(maxparticletrail, 1, 256, 8192);
 
 VARP(particletext, 0, 1, 1);
+VARP(maxparticletextdistance, 0, 128, 10000);
 VARP(outlinemeters, 0, 0, 1);
 VARP(particleglare, 0, 1, 100);
 VAR(debugparticles, 0, 0, 1);
@@ -991,7 +992,7 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size)
 {
     if(shadowmapping || renderedgame) return;
-    if(!particletext || camera1->o.dist(s) > 128) return;
+    if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
     if(t[0]=='@') t = newstring(t);
     newparticle(s, vec(0, 0, 1), fade, type, color, size)->text = t;
 }
