@@ -30,7 +30,7 @@ static bool emit_particles()
     return emit;
 }
 
-const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare", "portal" };
+const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare", "portal", "icon" };
 
 struct partvert
 {
@@ -196,9 +196,9 @@ struct listrenderer : partrenderer
     {
         if(!parempty)
         {
-            T *ps = new T[256];
-            loopi(255) ps[i].next = &ps[i+1];
-            ps[255].next = parempty;
+            T *ps = new T[32];
+            loopi(31) ps[i].next = &ps[i+1];
+            ps[31].next = parempty;
             parempty = ps;
         }
         T *p = parempty;
@@ -446,12 +446,12 @@ struct portalrenderer : listrenderer<portal>
         glRotatef(p->pitch, 1, 0, 0);
         glScalef(p->size, p->size, p->size);
 
-        glColor3ubv(color);
+        glColor4ub(color[0], color[1], color[2], blend);
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(-1, 0,  1);
-        glTexCoord2f(1, 0); glVertex3f( 1, 0,  1);
-        glTexCoord2f(1, 1); glVertex3f( 1, 0, -1);
-        glTexCoord2f(0, 1); glVertex3f(-1, 0, -1);
+        glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
+        glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
+        glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
+        glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
         glEnd();
 
         glPopMatrix();
@@ -466,6 +466,68 @@ struct portalrenderer : listrenderer<portal>
     }
 
     // use addportal() instead
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
+};
+
+struct icon : listparticle<icon>
+{
+    Texture *tex;
+    float blend;
+};
+
+struct iconrenderer : listrenderer<icon>
+{
+    Texture *lasttex;
+
+    iconrenderer()
+        : listrenderer<icon>(NULL, PT_ICON|PT_LERP, 0, 0)
+    {}
+
+    void startrender()
+    {
+        lasttex = NULL;
+    }
+
+    void endrender()
+    {
+        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
+    }
+
+    void renderpart(icon *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    {
+        if(p->tex != lasttex)
+        {
+            glBindTexture(GL_TEXTURE_2D, p->tex->id);
+            lasttex = p->tex;
+        }
+
+        glPushMatrix();
+        glTranslatef(o.x, o.y, o.z);
+        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+        glRotatef(camera1->yaw-180, 0, 0, 1);
+        glRotatef(camera1->pitch, 1, 0, 0);
+        glScalef(p->size, p->size, p->size);
+
+        glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
+        glBegin(GL_QUADS);
+        glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
+        glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
+        glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
+        glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
+        glEnd();
+
+        glPopMatrix();
+    }
+
+    icon *addicon(const vec &o, Texture *tex, float blend, int fade, int color, float size)
+    {
+        icon *p = (icon *)listrenderer<icon>::addpart(o, vec(0, 0, 0), fade, color, size);
+        p->tex = tex;
+        p->blend = blend;
+        return p;
+    }
+
+    // use addicon() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
 
@@ -723,6 +785,7 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new portalrenderer("textures/teleport"),
+    new iconrenderer,
 
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
     new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, -10, 0),
@@ -1121,6 +1184,13 @@ void part_portal(const vec &o, float size, float yaw, float pitch, int type, int
     if(shadowmapping || renderedgame) return;
     portalrenderer *p = dynamic_cast<portalrenderer *>(parts[type]);
     if(p) p->addportal(o, fade, color, size, yaw, pitch);
+}
+
+void part_icon(const vec &o, Texture *tex, float blend, float size, int fade, int color, int type)
+{
+    if(shadowmapping || renderedgame) return;
+    iconrenderer *p = dynamic_cast<iconrenderer *>(parts[type]);
+    if(p) p->addicon(o, tex, blend, fade, color, size);
 }
 
 //dir = 0..6 where 0=up

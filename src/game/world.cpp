@@ -1685,34 +1685,7 @@ namespace world
 			}
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen)
 			{
-				Texture *t = textureload(conopentex, 0, true);
-				glPushMatrix();
-				glEnable(GL_BLEND);
-				glDisable(GL_CULL_FACE);
-				if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				else glBlendFunc(GL_ONE, GL_ONE);
-				defaultshader->set();
-
-				glTranslatef(pos.x, pos.y, pos.z);
-				glRotatef(camera1->yaw-180, 0, 0, 1);
-				glRotatef(camera1->pitch, 1, 0, 0);
-				glScalef(2.f, 2.f, 2.f);
-
-				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(1.f, 1.f, 1.f, statusaboveheadblend);
-
-				glBegin(GL_QUADS);
-				glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.f, 0.f, 1.f);
-				glTexCoord2f(1.0f, 0.0f); glVertex3f(1.f, 0.f, 1.f);
-				glTexCoord2f(1.0f, 1.0f); glVertex3f(1.f, 0.f, -1.f);
-				glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.f, 0.f, -1.f);
-				glEnd();
-				xtraverts += 4;
-
-				glEnable(GL_CULL_FACE);
-				glDisable(GL_BLEND);
-				glPopMatrix();
-
+                part_icon(pos, textureload(conopentex, 3, true), statusaboveheadblend, 2);
 				pos.add(vec(0, 0, 2.f));
 			}
 		}
