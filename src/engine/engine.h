@@ -558,8 +558,8 @@ extern void preloadmodelshaders();
 // renderparticles
 extern void particleinit();
 extern void clearparticles();
-extern void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5);
-extern void makeparticles(entity &e);
+extern void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int attr5);
+extern void makeparticles(const entity &e);
 extern void updateparticles();
 
 // decal
