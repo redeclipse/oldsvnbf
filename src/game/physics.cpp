@@ -360,7 +360,12 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
-        else if(d->onladder) d->physstate = PHYS_FLOOR;
+        else if(d->onladder) 
+        {
+            d->timeinair = 0;
+            d->physstate = PHYS_FLOOR;
+            d->floor = vec(0, 0, 1);
+        }
 		else d->physstate = PHYS_FALL;
 	}
 
@@ -792,31 +797,39 @@ namespace physics
 		 * May be inaccurate since movement collisions are not considered.
 		 * If good floor is not found, just keep the old floor and hope it's correct enough.
 		 */
+        bool foundfloor = false;
 		switch(d->physstate)
 		{
 			case PHYS_SLOPE:
 			case PHYS_FLOOR:
 				d->o.z -= 0.15f;
 				if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
+                {
 					d->floor = wall;
-				else if(d->onladder) d->floor = vec(0, 0, 1);
+                    foundfloor = true;
+                }
 				break;
 
 			case PHYS_STEP_UP:
 				d->o.z -= stairheight+0.15f;
 				if(!collide(d, vec(0, 0, -1), slopez))
+                {
 					d->floor = wall;
-				else if(d->onladder) d->floor = vec(0, 0, 1);
+                    foundfloor = true;
+                }
 				break;
 
 			case PHYS_SLIDE:
 				d->o.z -= 0.15f;
 				if(!collide(d, vec(0, 0, -1)) && wall.z < slopez)
+                {
 					d->floor = wall;
-				else if(d->onladder) d->floor = vec(0, 0, 1);
+                    foundfloor = true;
+                }
 				break;
 		}
 		if(d->physstate > PHYS_FALL && d->floor.z <= 0) d->floor = vec(0, 0, 1);
+        else if(d->onladder && !foundfloor) d->floor = vec(0, 0, 1);
 		d->o = old;
 	}
 
