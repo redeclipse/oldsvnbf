@@ -1157,7 +1157,7 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     }
 }
 
-void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
+void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
 {
     switch(attr1)
     {
@@ -1221,7 +1221,7 @@ void makeparticle(vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
     }
 }
 
-void makeparticles(entity &e)
+void makeparticles(const entity &e)
 {
 	makeparticle(e.o, max((int)e.attr[0],0), max((int)e.attr[1],0), max((int)e.attr[2],0), max((int)e.attr[3],0), max((int)e.attr[4],0));
 }

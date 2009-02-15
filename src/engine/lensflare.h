@@ -49,7 +49,7 @@ struct flarerenderer : partrenderer
         numflares = 0;
     }
 
-    void newflare(vec &o,  const vec &center, uchar r, uchar g, uchar b, float mod, float size, bool sun, bool sparkle)
+    void newflare(const vec &o,  const vec &center, uchar r, uchar g, uchar b, float mod, float size, bool sun, bool sparkle)
     {
         if(numflares >= maxflares) return;
         vec target; //occlusion check (neccessary as depth testing is turned off)
@@ -64,7 +64,7 @@ struct flarerenderer : partrenderer
         f.sparkle = sparkle;
     }
 
-    void addflare(vec &o, uchar r, uchar g, uchar b, bool sun, bool sparkle)
+    void addflare(const vec &o, uchar r, uchar g, uchar b, bool sun, bool sparkle)
     {
         //frustrum + fog check
         if(isvisiblesphere(0.0f, o) > (sun?VFC_FOGGED:VFC_FULL_VISIBLE)) return;

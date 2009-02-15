@@ -22,7 +22,7 @@ namespace entities
 
 	vector<extentity *> &getents() { return ents; }
 
-	int triggertime(extentity &e)
+	int triggertime(const extentity &e)
 	{
 		switch(e.type)
 		{
@@ -675,7 +675,7 @@ namespace entities
         while(ents.length()) deleteent(ents.pop());
     }
 
-	bool cansee(extentity &e)
+	bool cansee(const extentity &e)
 	{
 		return (showentinfo || world::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && world::player1->state == CS_EDITING));
 	}
@@ -1758,12 +1758,12 @@ namespace entities
 		}
 	}
 
-	void drawparticle(gameentity &e, vec &o, int idx, bool spawned)
+	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)
 	{
 		if(e.type == NOTUSED || o.dist(camera1->o) > maxparticledistance) return;
 		if(e.type == PARTICLES)
 		{
-			if(idx < 0 || e.links.empty()) makeparticles((entity &)e);
+			if(idx < 0 || e.links.empty()) makeparticles(e);
 			else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
 				makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 		}
