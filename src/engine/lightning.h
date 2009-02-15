@@ -60,10 +60,10 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     glEnd();
 }
 
-struct lightningrenderer : listrenderer
+struct lightningrenderer : sharedlistrenderer
 {
     lightningrenderer()
-        : listrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE, 0, 0)
+        : sharedlistrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE, 0, 0)
     {}
 
     void startrender()
@@ -81,7 +81,7 @@ struct lightningrenderer : listrenderer
         setuplightning();
     }
 
-    void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
     {
         blend = min(blend<<2, 255);
         if(type&PT_MOD) //multiply alpha into color

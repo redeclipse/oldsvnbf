@@ -392,10 +392,10 @@ static void deleteexplosions()
 
 static const float WOBBLE = 1.25f;
 
-struct fireballrenderer : listrenderer
+struct fireballrenderer : sharedlistrenderer
 {
     fireballrenderer(int type)
-        : listrenderer("particles/explosion", type, 0, 0)
+        : sharedlistrenderer("particles/explosion", type, 0, 0)
     {}
 
     void startrender()
@@ -420,7 +420,7 @@ struct fireballrenderer : listrenderer
         e.type = ENT_CAMERA;
 
         int numranges = 0;
-        for(listparticle *p = list; p; p = p->next)
+        for(sharedlistparticle *p = list; p; p = p->next)
         {
             int ts = p->fade <= 5 ? 1 : lastmillis-p->millis;
             float pmax = p->val,
@@ -467,7 +467,7 @@ struct fireballrenderer : listrenderer
         return numranges;
     }
 
-    void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
     {
         float pmax = p->val,
               size = p->fade ? float(ts)/p->fade : 1,

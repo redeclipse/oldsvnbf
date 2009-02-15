@@ -30,7 +30,7 @@ static bool emit_particles()
     return emit;
 }
 
-const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare" };
+const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare", "portal" };
 
 struct partvert
 {
@@ -136,16 +136,19 @@ struct partrenderer
 #include "depthfx.h"
 #include "lensflare.h"
 
+template<class T>
 struct listparticle : particle
 {
-    listparticle *next;
+    T *next;
 };
 
-static listparticle *parempty = NULL;
+struct sharedlistparticle : listparticle<sharedlistparticle> {};
 
+template<class T>
 struct listrenderer : partrenderer
 {
-    listparticle *list;
+    static T *parempty;
+    T *list;
 
     listrenderer(const char *texname, int type, int grav, int collide, int frames = 1)
         : partrenderer(texname, type, grav, collide, frames), list(NULL)
@@ -156,14 +159,14 @@ struct listrenderer : partrenderer
     {
     }
 
-    virtual void cleanup(listparticle *p)
+    virtual void cleanup(T *p)
     {
     }
 
     void reset()
     {
         if(!list) return;
-        listparticle *p = list;
+        T *p = list;
         for(;;)
         {
             cleanup(p);
@@ -177,7 +180,7 @@ struct listrenderer : partrenderer
 
     void resettracked(physent *pl)
     {
-        for(listparticle **prev = &list, *cur = list; cur; cur = *prev)
+        for(T **prev = &list, *cur = list; cur; cur = *prev)
         {
             if(cur->owner == pl)
             {
@@ -193,12 +196,12 @@ struct listrenderer : partrenderer
     {
         if(!parempty)
         {
-            listparticle *ps = new listparticle[256];
+            T *ps = new T[256];
             loopi(255) ps[i].next = &ps[i+1];
             ps[255].next = parempty;
             parempty = ps;
         }
-        listparticle *p = parempty;
+        T *p = parempty;
         parempty = p->next;
         p->next = list;
         list = p;
@@ -215,7 +218,7 @@ struct listrenderer : partrenderer
     int count()
     {
         int num = 0;
-        listparticle *lp;
+        T *lp;
         for(lp = list; lp; lp = lp->next) num++;
         return num;
     }
@@ -227,7 +230,7 @@ struct listrenderer : partrenderer
 
     virtual void startrender() = 0;
     virtual void endrender() = 0;
-    virtual void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color) = 0;
+    virtual void renderpart(T *p, const vec &o, const vec &d, int blend, int ts, uchar *color) = 0;
 
     void render()
     {
@@ -235,7 +238,7 @@ struct listrenderer : partrenderer
         startrender();
 		if(tex) glBindTexture(GL_TEXTURE_2D, tex->id);
         bool lastpass = !reflecting && !refracting;
-        for(listparticle **prev = &list, *p = list; p; p = *prev)
+        for(T **prev = &list, *p = list; p; p = *prev)
         {
             vec o, d;
             int blend, ts;
@@ -262,18 +265,22 @@ struct listrenderer : partrenderer
 
     void makeflares()
     {
-        for(listparticle **prev = &list, *p = list; p; p = *prev)
+        for(T **prev = &list, *p = list; p; p = *prev)
             makeflare(p);
     }
 };
 
+template<class T> T *listrenderer<T>::parempty = NULL;
+
+typedef listrenderer<sharedlistparticle> sharedlistrenderer;
+
 #include "explosion.h"
 #include "lightning.h"
 
-struct meterrenderer : listrenderer
+struct meterrenderer : sharedlistrenderer
 {
     meterrenderer(int type)
-        : listrenderer(NULL, type, 0, 0)
+        : sharedlistrenderer(NULL, type, 0, 0)
     {}
 
     void startrender()
@@ -291,7 +298,7 @@ struct meterrenderer : listrenderer
          particleshader->set();
     }
 
-    void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
     {
         int basetype = type&0xFF;
 
@@ -359,10 +366,10 @@ struct meterrenderer : listrenderer
 };
 static meterrenderer meters(PT_METER|PT_LERP), metervs(PT_METERVS|PT_LERP);
 
-struct textrenderer : listrenderer
+struct textrenderer : sharedlistrenderer
 {
     textrenderer(int type, int grav = 0, int frames = 1)
-        : listrenderer(NULL, type, grav, 0, frames)
+        : sharedlistrenderer(NULL, type, grav, 0, frames)
     {}
 
     void startrender()
@@ -374,12 +381,12 @@ struct textrenderer : listrenderer
         if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
     }
 
-    void cleanup(listparticle *p)
+    void cleanup(sharedlistparticle *p)
     {
         if(p->text && p->text[0]=='@') delete[] p->text;
     }
 
-    void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
     {
         glPushMatrix();
         glTranslatef(o.x, o.y, o.z);
@@ -407,6 +414,60 @@ struct textrenderer : listrenderer
     }
 };
 static textrenderer texts(PT_TEXT|PT_LERP), textups(PT_TEXTUP|PT_LERP, -8);
+
+struct portal : listparticle<portal>
+{
+    float yaw, pitch;
+};
+
+struct portalrenderer : listrenderer<portal>
+{
+    portalrenderer(const char *texname)
+        : listrenderer<portal>(texname, PT_PORTAL|PT_LERP, 0, 0)
+    {}
+
+    void startrender()
+    {
+        glDisable(GL_CULL_FACE);
+    }
+
+    void endrender()
+    {
+        glEnable(GL_CULL_FACE);
+        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
+    }
+
+    void renderpart(portal *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    {
+        glPushMatrix();
+        glTranslatef(o.x, o.y, o.z);
+        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+        glRotatef(p->yaw-180, 0, 0, 1);
+        glRotatef(p->pitch, 1, 0, 0);
+        glScalef(p->size, p->size, p->size);
+
+        glColor3ubv(color);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex3f(-1, 0,  1);
+        glTexCoord2f(1, 0); glVertex3f( 1, 0,  1);
+        glTexCoord2f(1, 1); glVertex3f( 1, 0, -1);
+        glTexCoord2f(0, 1); glVertex3f(-1, 0, -1);
+        glEnd();
+
+        glPopMatrix();
+    }
+
+    portal *addportal(const vec &o, int fade, int color, float size, float yaw, float pitch)
+    {
+        portal *p = (portal *)listrenderer<portal>::addpart(o, vec(0, 0, 0), fade, color, size);
+        p->yaw = yaw;
+        p->pitch = pitch;
+        return p;
+    }
+
+    // use addportal() instead
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
+};
 
 template<int T>
 static inline void modifyblend(const vec &o, int &blend)
@@ -661,6 +722,8 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
+    new portalrenderer("textures/teleport"),
+
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
     new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, -10, 0),
     new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, 0, 0),
@@ -1051,6 +1114,13 @@ void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &
 
         newparticle(from, to, fade, type, color, size, pl);
     }
+}
+
+void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade, int color)
+{
+    if(shadowmapping || renderedgame) return;
+    portalrenderer *p = dynamic_cast<portalrenderer *>(parts[type]);
+    if(p) p->addportal(o, fade, color, size, yaw, pitch);
 }
 
 //dir = 0..6 where 0=up
