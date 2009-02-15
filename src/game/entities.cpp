@@ -289,6 +289,7 @@ namespace entities
         entcachemin = vec(1e16f, 1e16f, 1e16f);
         entcachemax = vec(-1e16f, -1e16f, -1e16f);
     }
+    ICOMMAND(clearentcache, "", (void), clearentcache());
 
     void buildentcache()
     {
@@ -1737,6 +1738,7 @@ namespace entities
 			}
 		}
 
+		int sweap = m_spawnweapon(world::gamemode, world::mutators);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
@@ -1744,7 +1746,8 @@ namespace entities
 			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned;
 			if(m_edit(world::gamemode) || active)
 			{
-				const char *mdlname = entmdlname(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+				const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;

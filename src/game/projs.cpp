@@ -119,13 +119,13 @@ namespace projs
 				{
 					proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
-					proj.elasticity = 0.15f;
+					proj.elasticity = 0.3f;
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
 					proj.weight = 50.f;
 					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
-					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
+					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
 				} // otherwise fall through
 			}
@@ -145,7 +145,7 @@ namespace projs
 				proj.waterfric = 1.7f;
 				proj.weight = 100.f;
 				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(160)-81));
-				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
+				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				break;
 			}
 			case PRJ_ENT:
@@ -228,8 +228,12 @@ namespace projs
                 			proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
             			}
             			else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
-						if(proj.lifemillis) proj.lifetime = 1; // let it effect then die
-						//proj.state = CS_DEAD;
+						if(proj.lifemillis)
+						{ // fastfwd to end
+							proj.lifemillis = proj.lifetime = 1;
+							proj.lifespan = proj.lifesize = 1.f;
+							proj.state = CS_DEAD;
+						}
 						break;
 					}
 				}
@@ -386,7 +390,7 @@ namespace projs
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.owner) proj.from = proj.owner->muzzle;
+			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
 			if(proj.canrender && weaptype[proj.weap].fsound >= 0 && !issound(proj.schan))
 				playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, proj.weap == WEAPON_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
 			switch(proj.weap)
@@ -447,8 +451,9 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						float size = clamp(48.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtimex(200) ? min(48.f, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize();
+						bool iter = proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						float size = clamp(48.f*(1.f-proj.lifesize), 1.f, iter ? min(48.f, proj.movement) : proj.o.dist(proj.from));
+						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
 						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
@@ -461,8 +466,9 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						float size = clamp(24.f*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtimex(200) ? min(24.f, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize();
+						bool iter = proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						float size = clamp(24.f*(1.f-proj.lifesize), 1.f, iter ? min(24.f, proj.movement) : proj.o.dist(proj.from));
+						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
 						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
@@ -475,9 +481,10 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
+						bool iter = proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float adjust = proj.radius*12.f,
-							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtimex(200) ? min(adjust, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize();
+							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
+						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
 						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
@@ -491,9 +498,10 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
+						bool iter = proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float adjust = proj.radius*96.f,
-							size = clamp(adjust*(1.f-proj.lifesize), 1.f, proj.lifemillis-proj.lifetime > m_speedtimex(200) ? min(adjust, proj.movement) : proj.o.dist(proj.from));
-						vec dir = vec(proj.vel).normalize();
+							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
+						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(96*max(1.f-proj.lifesize,0.2f))<<16))|((int(16*max(1.f-proj.lifesize,0.2f)))<<8)|(int(254*max(1.f-proj.lifesize,0.2f)));
 						part_flare(proj.to, proj.o, 1, PART_FFLARE, col, weaptype[proj.weap].partsize);
@@ -759,8 +767,12 @@ namespace projs
 		{
 			if(hitplayer)
 			{
-				proj.hit = hitplayer;
-				proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lifemillis-proj.lifetime > m_speedtimex(100))) || hitplayer != proj.owner)
+				{
+					proj.hit = hitplayer;
+					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+				}
+				else return 1;
 			}
 			else proj.norm = wall;
 
@@ -791,8 +803,12 @@ namespace projs
         {
             if(hitplayer)
             {
-                proj.hit = hitplayer;
-                proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+            	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lifemillis-proj.lifetime > m_speedtimex(100))) || hitplayer != proj.owner)
+            	{
+					proj.hit = hitplayer;
+					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+            	}
+            	else return 1;
             }
             else proj.norm = hitsurface;
 
@@ -1033,20 +1049,22 @@ namespace projs
 					adddynlight(proj.o, weaptype[proj.weap].explode*1.1f*proj.lifesize, col);
 					break;
 				}
+				case WEAPON_SG: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
+				case WEAPON_CG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
 				case WEAPON_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.1f), 0.25f*max(1.f-proj.lifespan,0.05f), 0.00f);
 					adddynlight(proj.o, weaptype[proj.weap].explode*1.1f*proj.lifespan, col);
 					break;
 				}
+				case WEAPON_CARBINE: adddynlight(proj.o, 4, vec(0.075f, 0.075f, 0.075f)); break;
 				case WEAPON_RIFLE:
 				{
-					vec col(0.4f, 0.05f, 1.f), pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
-					adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, col);
+					vec pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
+					adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f));
 					break;
 				}
-				default:
-					break;
+				default: break;
 			}
 		}
 	}

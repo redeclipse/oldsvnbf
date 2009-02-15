@@ -194,7 +194,7 @@ namespace hud
 			int numgroups = groupplayers();
 
 			g.textf("%s", 0xFFFFFF, "info", server::gamename(world::gamemode, world::mutators));
-			if((m_timed(world::gamemode) || client::demoplayback) && world::minremain >= 0)
+			if((m_fight(world::gamemode) || client::demoplayback) && world::minremain >= 0)
 			{
 				if(!world::minremain) g.textf("%s: intermission", 0xFFFFFF, "info", getmapname());
 				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), world::minremain, world::minremain==1 ? "minute" : "minutes");

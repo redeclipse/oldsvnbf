@@ -477,7 +477,8 @@ namespace hud
 					pushfont("default");
 					if(world::player1->requse < 0)
 					{
-						vector<actitem> actitems;
+						static vector<actitem> actitems;
+						actitems.setsizenodelete(0);
 						if(entities::collateitems(world::player1, actitems))
 						{
 							SEARCHBINDCACHE(actionkey)("action", 0, 5, "\fs\fw, or \fS");

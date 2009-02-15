@@ -15,7 +15,7 @@ SVARG(lobbymaps, "overseer eight warehouse tower warground rivals refuge citadel
 SVARG(missionmaps, "mpspbf1 mpspbf2");
 SVARG(mainmaps, "eight warehouse tower smouldering rivals refuge citadel");
 SVARG(ctfmaps, "warehouse tower warground smouldering rivals refuge citadel eight");
-SVARG(mctfmaps, "tower 4square refuge");
+SVARG(mctfmaps, "4square refuge");
 SVARG(stfmaps, "warehouse tower warground smouldering rivals refuge citadel eight");
 VARG(maprotate, 0, 1, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 1, 2); // 0 = let client decide, 1 = sequence, 2 = random

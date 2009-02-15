@@ -167,8 +167,7 @@ namespace ai
 					}
 				}
 			}
-			if(t && violence(d, b, t, pursue && (tooclose || cansee)))
-				return cansee;
+			if(t) return violence(d, b, t, pursue && (tooclose || cansee));
 		}
 		return false;
 	}
@@ -203,13 +202,11 @@ namespace ai
 			vec feet = world::feetpos(d);
 			if(walk < 2 && feet.squaredist(pos) <= guard*guard)
 			{
-				if(enemy(d, b, pos, wander, false)) return patrol(d, b, pos, guard, wander, 2);
-				else
-				{
-					d->ai->spot = pos;
-					b.idle = true;
+				if(enemy(d, b, pos, wander, false) && patrol(d, b, pos, guard, wander, 2))
 					return true;
-				}
+				d->ai->spot = pos;
+				b.idle = true;
+				return true;
 			}
 		}
 		return patrol(d, b, pos, guard, wander, walk);
