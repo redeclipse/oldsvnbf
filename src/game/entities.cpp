@@ -1760,7 +1760,6 @@ namespace entities
 
 	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)
 	{
-		if(e.type == NOTUSED || o.dist(camera1->o) > maxparticledistance) return;
 		if(e.type == PARTICLES)
 		{
 			if(idx < 0 || e.links.empty()) makeparticles(e);
@@ -1804,9 +1803,13 @@ namespace entities
 
 	void drawparticles()
 	{
+        float maxdist = float(maxparticledistance)*float(maxparticledistance);
+        int ignoretypes = m_edit(world::gamemode) ? NOTUSED : MAXENTTYPES;
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
+            if(e.type != PARTICLES && enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
+            if(e.o.squaredist(camera1->o) > maxdist) continue;
 			drawparticle(e, e.o, i, e.spawned);
 		}
 		loopv(projs::projs)
