@@ -822,7 +822,7 @@ namespace physics
 
 	bool entinmap(physent *d, bool avoidplayers)
 	{
-		if(d->state != CS_ALIVE) return insideworld(d->o);
+		if(d->state != CS_ALIVE) { d->resetinterp(); return insideworld(d->o); }
 		vec orig = d->o;
 		#define inmapchk(x,y) \
 			loopi(x) \
