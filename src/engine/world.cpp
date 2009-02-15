@@ -846,6 +846,8 @@ bool enlargemap(bool force)
 
 	if(hdr.worldsize > VVEC_INT_MASK+1) splitocta(worldroot, hdr.worldsize>>1);
 
+    enlargeblendmap();
+
 	allchanged();
 
 	return true;
