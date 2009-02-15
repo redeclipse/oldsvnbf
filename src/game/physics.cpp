@@ -201,7 +201,7 @@ namespace physics
 
     bool trystepup(physent *d, vec &dir, const vec &obstacle, float maxstep, const vec &floor)
     {
-        vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).normalize();
+        vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).rescale(1);
 		if(d->onladder)
 		{
 			vec laddir = vec(stairdir).add(vec(0, 0, maxstep)).mul(0.1f*upwardforce(d));
