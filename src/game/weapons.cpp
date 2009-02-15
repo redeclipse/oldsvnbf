@@ -110,7 +110,7 @@ namespace weapons
 		{
 			if(!power)
 			{
-				if(d->weapstate[d->weapselect] != WPSTATE_POWER) // FIXME: not synched in MP yet!!
+				if(d->weapstate[d->weapselect] != WPSTATE_POWER)
 				{
 					if(d->attacking && world::allowmove(d))
 					{
