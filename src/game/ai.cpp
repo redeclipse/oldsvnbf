@@ -122,14 +122,14 @@ namespace ai
 
 	bool randomnode(gameent *d, aistate &b, const vec &pos, float guard, float wander)
 	{
-		static vector<int> entities;
-		entities.setsizenodelete(0);
-        entities::findentsavoiding(WAYPOINT, pos, guard, wander, d, obstacles, entities);
+		static vector<int> candidates;
+		candidates.setsizenodelete(0);
+        entities::findentswithin(WAYPOINT, pos, guard, wander, candidates);
 
-		while(!entities.empty())
+		while(!candidates.empty())
 		{
-			int w = rnd(entities.length()), n = entities.removeunordered(w);
-			if(n != d->lastnode && n != d->ai->lastnode && makeroute(d, b, n)) return true;
+			int w = rnd(candidates.length()), n = candidates.removeunordered(w);
+			if(n != d->lastnode && n != d->ai->lastnode && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
 		}
 		return false;
 	}

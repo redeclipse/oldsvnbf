@@ -364,7 +364,7 @@ namespace entities
         }
     }
 
-    void findentsavoiding(int type, const vec &pos, float mindist, float maxdist, gameent *d, const avoidset &obstacles, vector<int> &results)
+    void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
     {
         mindist *= mindist;
         maxdist *= maxdist;
@@ -380,7 +380,7 @@ namespace entities
             if(e.type == type) \
             { \
                 float dist = e.o.squaredist(pos); \
-                if(dist > mindist && dist < maxdist && !obstacles.find(n, d)) results.add(n); \
+                if(dist > mindist && dist < maxdist) results.add(n); \
             } \
         } while(0)
         for(;;)

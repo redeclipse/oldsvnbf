@@ -1470,7 +1470,7 @@ namespace entities
 			return n;
 		}
 	};
-    extern void findentsavoiding(int type, const vec &pos, float mindist, float maxdist, gameent *d, const avoidset &obstacles, vector<int> &results);
+    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
 	extern bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool retry = false, float *score = NULL);
 }
 #endif
