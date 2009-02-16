@@ -451,7 +451,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						bool iter = !proj.lastbounce && proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float size = clamp(48.f*(1.f-proj.lifesize), 1.f, iter ? min(48.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
@@ -466,7 +466,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						bool iter = !proj.lastbounce && proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float size = clamp(24.f*(1.f-proj.lifesize), 1.f, iter ? min(24.f, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
@@ -481,7 +481,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						bool iter = !proj.lastbounce && proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float adjust = proj.radius*16.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
@@ -498,7 +498,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
-						bool iter = !proj.lastbounce && proj.lifemillis-proj.lifetime > m_speedtimex(200);
+						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
 						float adjust = proj.radius*96.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
