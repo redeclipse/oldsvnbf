@@ -88,7 +88,7 @@ namespace world
 	FVARP(statusaboveheadblend, 0.f, 1.f, 1.f);
 	VARP(shownamesabovehead, 0, 1, 2);
 	VARP(showdamageabovehead, 0, 0, 2);
-	TVAR(conopentex, "textures/conopen", 0);
+	TVAR(conopentex, "textures/conopen", 3);
 
 	VARP(showobituaries, 0, 1, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
 	VARP(playdamagetones, 0, 2, 2);
