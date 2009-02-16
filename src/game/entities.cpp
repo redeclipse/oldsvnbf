@@ -313,6 +313,8 @@ namespace entities
 
     int closestent(int type, const vec &pos, float mindist, bool links = false)
     {
+        mindist *= mindist;
+
         if(entcachedepth<0) buildentcache();
 
         entcachestack.setsizenodelete(0);
@@ -332,6 +334,8 @@ namespace entities
         {
             int axis = curnode->axis();
             float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+            dist1 *= dist1;
+            dist2 *= dist2;
             if(dist1 >= mindist)
             {
                 if(dist2 < mindist)
@@ -366,8 +370,7 @@ namespace entities
 
     void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
     {
-        mindist *= mindist;
-        maxdist *= maxdist;
+        float mindist2 = mindist*mindist, maxdist2 = maxdist*maxdist;
 
         if(entcachedepth<0) buildentcache();
 
@@ -380,7 +383,7 @@ namespace entities
             if(e.type == type) \
             { \
                 float dist = e.o.squaredist(pos); \
-                if(dist > mindist && dist < maxdist) results.add(n); \
+                if(dist > mindist2 && dist < maxdist2) results.add(n); \
             } \
         } while(0)
         for(;;)
@@ -1110,8 +1113,9 @@ namespace entities
 
 	int entitynode(const vec &v, bool links, bool drop)
 	{
-        float mindist = float((enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*(drop ? 1.f : 4.f));
+        float mindist = enttype[WAYPOINT].radius*(drop ? 1.f : 4.f);
 		if(!drop && !autodropped) return closestent(WAYPOINT, v, mindist, links);
+        mindist *= mindist;
         int n = -1;
         loopv(ents) if(ents[i]->type == WAYPOINT && (!links || !ents[i]->links.empty()))
         {
