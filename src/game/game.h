@@ -1354,9 +1354,9 @@ namespace entities
 		{
 			dynent *ent;
 			int numentities;
-			bool avoid;
+            float above;
 
-			obstacle(dynent *ent) : ent(ent), numentities(0) {}
+			obstacle(dynent *ent) : ent(ent), numentities(0), above(-1) {}
 		};
 
 		vector<obstacle> obstacles;
@@ -1368,9 +1368,30 @@ namespace entities
 			entities.setsizenodelete(0);
 		}
 
+		void add(dynent *ent)
+		{
+			obstacle &ob = obstacles.add(obstacle(ent));
+			switch(ent->type)
+			{
+				case ENT_PLAYER:
+				{
+					gameent *e = (gameent *)ent;
+					ob.above = world::abovehead(e, 1.f).z;
+					break;
+				}
+				case ENT_PROJ:
+				{
+					projent *p = (projent *)ob.ent;
+					if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
+						ob.above = p->o.z+(weaptype[p->weap].explode*p->lifesize)+1.f;
+					break;
+				}
+			}
+		}
+			
 		void add(dynent *ent, int entity)
 		{
-			if(obstacles.empty() || ent!=obstacles.last().ent) obstacles.add(obstacle(ent));
+			if(obstacles.empty() || ent!=obstacles.last().ent) add(ent);
 			obstacles.last().numentities++;
 			entities.add(entity);
 		}
@@ -1414,57 +1435,33 @@ namespace entities
 					{
 						for(; cur < next; cur++) if(entities[cur] == n)
 						{
-							vec above = pos;
-							bool result = false;
-							switch(ob.ent->type)
-							{
-								case ENT_PLAYER:
+							if(ob.above < 0) return -1;
+							vec above(pos.x, pos.y, ob.above);
+							if(above.z-d->o.z >= ai::AIJUMPMAX)
+								return -1; // too much scotty
+							int node = entitynode(above);
+							if(ents.inrange(node) && node != n)
+							{ // try to reroute above their head?
+								if(!find(node, d))
 								{
-									gameent *e = (gameent *)ob.ent;
-									vec head = world::abovehead(e, 1.f);
-									above.z = head.z;
-									result = true;
-									break;
+									pos = ents[node]->o;
+									return node;
 								}
-								case ENT_PROJ:
-								{
-									projent *p = (projent *)ob.ent;
-									if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
-									{
-										above.z = p->o.z+(weaptype[p->weap].explode*p->lifesize)+1.f;
-										result = true;
-									}
-								}
+								else return -1;
 							}
-							if(result)
+							else
 							{
-								if(above.z-d->o.z >= ai::AIJUMPMAX)
-									return -1; // too much scotty
-								int node = entitynode(above);
-								if(ents.inrange(node) && node != n)
-								{ // try to reroute above their head?
-									if(!find(node, d))
-									{
-										pos = ents[node]->o;
-										return node;
-									}
-									else return -1;
-								}
-								else
+								vec old = d->o;
+								d->o = vec(above).add(vec(0, 0, d->height));
+								bool col = collide(d, vec(0, 0, 1));
+								d->o = old;
+								if(col)
 								{
-									vec old = d->o;
-									d->o = vec(above).add(vec(0, 0, d->height));
-									bool col = collide(d, vec(0, 0, 1));
-									d->o = old;
-									if(col)
-									{
-										pos = above;
-										return n;
-									}
-									else return -1;
+									pos = above;
+									return n;
 								}
+								else return -1;
 							}
-							else return -1;
 						}
 					}
 					cur = next;

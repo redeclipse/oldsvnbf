@@ -125,10 +125,10 @@ namespace ai
 		static vector<int> entities;
 		entities.setsizenodelete(0);
 		float r = guard*guard, w = wander*wander;
-		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT && j != d->lastnode && j != d->ai->lastnode && !obstacles.find(j, d))
+		loopvj(entities::ents) if(entities::ents[j]->type == WAYPOINT)
 		{
 			float fdist = entities::ents[j]->o.squaredist(pos);
-			if(fdist > r && fdist < w) entities.add(j);
+			if(fdist > r && fdist < w && j != d->lastnode && j != d->ai->lastnode && !obstacles.find(j, d)) entities.add(j);
 		}
 
 		while(!entities.empty())
