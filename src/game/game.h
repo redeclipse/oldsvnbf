@@ -1402,7 +1402,7 @@ namespace entities
 				int cur = 0; \
 				loopv((v).obstacles) \
 				{ \
-					entities::avoidset::obstacle &ob = (v).obstacles[i]; \
+					const entities::avoidset::obstacle &ob = (v).obstacles[i]; \
 					int next = cur + ob.numentities; \
 					if(ob.ent && ob.ent != (d)) \
 					{ \
@@ -1416,7 +1416,7 @@ namespace entities
 				} \
 			}
 
-		bool find(int entity, gameent *d)
+		bool find(int entity, gameent *d) const
 		{
 			loopavoid(*this, d, { if(ent == entity) return true; });
 			return false;
@@ -1470,7 +1470,8 @@ namespace entities
 			return n;
 		}
 	};
-	extern bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, bool retry = false, float *score = NULL);
+    extern void findentsavoiding(int type, const vec &pos, float mindist, float maxdist, gameent *d, const avoidset &obstacles, vector<int> &results);
+	extern bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool retry = false, float *score = NULL);
 }
 #endif
 #include "ctf.h"

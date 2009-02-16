@@ -364,6 +364,61 @@ namespace entities
         }
     }
 
+    void findentsavoiding(int type, const vec &pos, float mindist, float maxdist, gameent *d, const avoidset &obstacles, vector<int> &results)
+    {
+        mindist *= mindist;
+        maxdist *= maxdist;
+
+        if(entcachedepth<0) buildentcache();
+
+        entcachestack.setsizenodelete(0);
+
+        entcachenode *curnode = &entcache[0];
+        #define CHECKWITHIN(branch) do { \
+            int n = curnode->childindex(branch); \
+            extentity &e = *ents[n]; \
+            if(e.type == type) \
+            { \
+                float dist = e.o.squaredist(pos); \
+                if(dist > mindist && dist < maxdist && !obstacles.find(n, d)) results.add(n); \
+            } \
+        } while(0)
+        for(;;)
+        {
+            int axis = curnode->axis();
+            float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+            if(dist1 >= maxdist)
+            {
+                if(dist2 < maxdist)
+                {
+                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+                    CHECKWITHIN(1);
+                }
+            }
+            else if(curnode->isleaf(0))
+            {
+                CHECKWITHIN(0);
+                if(dist2 < maxdist)
+                {
+                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+                    CHECKWITHIN(1);
+                }
+            }
+            else
+            {
+                if(dist2 < maxdist)
+                {
+                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+                    else CHECKWITHIN(1);
+                }
+                curnode = &entcache[curnode->childindex(0)];
+                continue;
+            }
+            if(entcachestack.empty()) return;
+            curnode = entcachestack.pop();
+        }
+    }
+
     void collateents(const vec &pos, float xyrad, float zrad, vector<actitem> &actitems)
     {
         if(entcachedepth<0) buildentcache();
@@ -965,7 +1020,7 @@ namespace entities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, avoidset &obstacles, bool retry, float *score)
+	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool retry, float *score)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
 			return false;
