@@ -1658,8 +1658,6 @@ namespace entities
 		}
     }
 
-	TVAR(teleporttex, "textures/teleport", 0);
-
  	void update()
 	{
 		entitycheck(world::player1);
