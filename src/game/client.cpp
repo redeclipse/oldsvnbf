@@ -116,7 +116,6 @@ namespace client
 		removetrackedsounds(world::player1);
 		world::player1->clientnum = -1;
 		world::player1->privilege = PRIV_NONE;
-		world::player1->state = CS_WAITING;
 		loopv(world::players) if(world::players[i]) world::clientdisconnected(i);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_CLIENT) // reset vars
@@ -147,6 +146,7 @@ namespace client
 				}
 			}
 		});
+		world::maptime = 0;
 	}
 
 	bool allowedittoggle(bool edit)
@@ -163,7 +163,11 @@ namespace client
 			world::player1->state = CS_EDITING;
 			world::resetstate();
 		}
-		else world::player1->state = CS_ALIVE;
+		else if(world::player1->state != CS_SPECTATOR)
+		{
+			world::player1->state = CS_ALIVE;
+			world::player1->weapreset(true);
+		}
 		physics::entinmap(world::player1, false); // find spawn closest to current floating pos
 		if(m_edit(world::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);
@@ -368,6 +372,7 @@ namespace client
 		server::modecheck(&world::gamemode, &world::mutators);
 		world::nextmode = world::gamemode; world::nextmuts = world::mutators;
 		world::minremain = -1;
+		world::maptime = 0;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
 		if(!name || !*name || !load_world(name, temp))
@@ -377,7 +382,6 @@ namespace client
 			needsmap = true;
 		}
 		else needsmap = false;
-		if(world::player1->state != CS_SPECTATOR) world::player1->state = CS_WAITING;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
@@ -1054,17 +1058,6 @@ namespace client
 					break;
 				}
 
-				case SV_FORCEDEATH:
-				{
-					int lcn = getint(p);
-					gameent *f = world::newclient(lcn);
-					if(!f) break;
-					if(f == world::player1 && editmode) toggleedit();
-                    else if(!f->ai) f->resetinterp();
-					f->state = CS_DEAD;
-					break;
-				}
-
 				case SV_GAMEINFO:
 				{
 					int n;
@@ -1492,7 +1485,11 @@ namespace client
 					int val = getint(p);
 					if(!d) break;
 					if(val) d->state = CS_EDITING;
-					else d->state = CS_ALIVE;
+					else
+					{
+						d->state = CS_ALIVE;
+						d->weapreset(true);
+					}
 					projs::remove(d);
 					break;
 				}
@@ -1510,6 +1507,7 @@ namespace client
 					else if(s->state == CS_SPECTATOR)
 					{
 						s->state = CS_WAITING;
+						s->weapreset(true);
 						if(s != world::player1 && !s->ai) s->resetinterp();
 					}
 					break;
@@ -1527,6 +1525,7 @@ namespace client
 					}
 					else if(!s->ai) s->resetinterp();
 					s->state = CS_WAITING;
+					s->weapreset(true);
 					break;
 				}
 

@@ -8,7 +8,7 @@ struct duelservmode : servmode
 
 	void queue(clientinfo *ci, bool top = false, bool wait = true)
 	{
-		if(ci->name[0] && ci->connected && ci->online)
+		if(ci->name[0] && ci->connected && ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			int n = duelqueue.find(ci->clientnum);
 			if(n < 0)
@@ -44,7 +44,7 @@ struct duelservmode : servmode
 
 	bool canspawn(clientinfo *ci, bool tryspawn = false)
 	{
-		if(ci->state.state != CS_SPECTATOR) queue(ci, false, false);
+		queue(ci, false, false);
 		return false; // you spawn when we want you to buddy
 	}
 
@@ -74,14 +74,13 @@ struct duelservmode : servmode
 	{
 		clearitems();
 		duelqueue.setsize(0);
-		loopv(clients) if(clients[i]->state.state != CS_SPECTATOR)
-			queue(clients[i], false, true);
+		loopv(clients) queue(clients[i], false, true);
 	}
 
 	void cleanup()
 	{
 		loopvrev(duelqueue)
-			if(!clients.inrange(duelqueue[i]) || !clients[duelqueue[i]]->name[0] || clients[duelqueue[i]]->state.state == CS_SPECTATOR || clients[duelqueue[i]]->state.state == CS_ALIVE)
+			if(!clients.inrange(duelqueue[i]) || !clients[duelqueue[i]]->name[0] || (clients[duelqueue[i]]->state.state != CS_DEAD || clients[duelqueue[i]]->state.state != CS_WAITING))
 				duelqueue.remove(i);
 	}
 
@@ -101,8 +100,7 @@ struct duelservmode : servmode
 			if(gamemillis >= dueltime)
 			{
 				vector<clientinfo *> alive;
-				loopv(clients) if(clients[i]->state.state != CS_SPECTATOR)
-					queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
+				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
 				if(m_lms(gamemode, mutators) || GVAR(duelclear)) clearitems();
 				loopv(duelqueue)
 				{
