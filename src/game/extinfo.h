@@ -97,7 +97,7 @@
         loopv(scores)
         {
             sendstring(teamtype[scores[i].team].name, p); //backward compatibility mode
-            putint(p, scores[i].score);
+            putint(p, (int)scores[i].score);
 
             if(m_stf(gamemode))
             {
