@@ -1173,7 +1173,8 @@ namespace entities
 
 	void mergewaypoints()
 	{
-		float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius*(waypointmergescale*waypointmergescale));
+		float mindist = enttype[WAYPOINT].radius*waypointmergescale;
+        mindist *= mindist;
 		int totalmerges = 0, totalpasses = 0;
 		while(true)
 		{
@@ -1398,7 +1399,7 @@ namespace entities
 						}
 					}
 				}
-				if(e.type == WEAPON)
+				else if(e.type == WEAPON)
 				{
 					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
 					int weaps[WEAPON_MAX];
@@ -1418,7 +1419,7 @@ namespace entities
 						best = j;
 					e.attr[0] = best;
 				}
-				if(e.type == FLAG) // replace bases/neutral flags near team flags
+				else if(e.type == FLAG) // replace bases/neutral flags near team flags
 				{
 					if(valteam(e.attr[1], TEAM_FIRST)) teams[e.attr[1]-TEAM_FIRST]++;
 					else if(e.attr[1] == TEAM_NEUTRAL)
