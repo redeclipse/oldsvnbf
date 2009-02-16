@@ -20,7 +20,7 @@ struct ctfservmode : ctfstate, servmode
         {
 			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius ? ci->state.o : o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, p.x, p.y, p.z);
-            ctfstate::dropflag(i, p.tovec().div(DMF), lastmillis);
+            ctfstate::dropflag(i, p.tovec().div(DMF), gamemillis);
         }
     }
 
@@ -82,11 +82,11 @@ struct ctfservmode : ctfstate, servmode
 
     void update()
     {
-        if(minremain<0 || notgotflags) return;
+        if(notgotflags) return;
         loopv(flags)
         {
             flag &f = flags[i];
-            if(f.owner < 0 && f.droptime && lastmillis-f.droptime >= RESETFLAGTIME)
+            if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= RESETFLAGTIME)
             {
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);

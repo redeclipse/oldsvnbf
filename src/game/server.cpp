@@ -282,7 +282,7 @@ namespace server
 	int gamemillis = 0, gamelimit = 0;
 
 	string smapname;
-	int interm = 0, minremain = 15, oldtimelimit = 15;
+	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
 	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
@@ -1112,8 +1112,8 @@ namespace server
 						switch(GVAR(teambalance))
 						{
 							case 1: rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
-							case 2: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
-							case 3: default:
+							case 2: case 3: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
+							case 4: case 5: default:
 							{
 								if(who->state.aitype != AI_NONE) rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
 								else rank = ci->state.aitype != AI_NONE ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
@@ -1129,8 +1129,21 @@ namespace server
 				loopi(numteams(gamemode, mutators))
 				{
 					teamscore &ts = teamscores[i];
-					if(ts.score < worst->score || (ts.score == worst->score && ts.clients < worst->clients))
-						worst = &ts;
+					switch(GVAR(teambalance))
+					{
+						case 2: case 4:
+						{
+							if(ts.score < worst->score || (ts.score == worst->score && ts.clients < worst->clients))
+								worst = &ts;
+							break;
+						}
+						case 1: case 3: case 5: default:
+						{
+							if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.score < worst->score))
+								worst = &ts;
+							break;
+						}
+					}
 				}
 				team = worst->team;
 			}
@@ -2088,12 +2101,12 @@ namespace server
 		bool complete = !numclients(n, false, true);
         if(ci->connected)
         {
+		    if(ci->state.state == CS_ALIVE) dropitems(ci, true);
 		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci));
 		    ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		    savescore(ci);
-		    dropitems(ci, true);
 		    sendf(-1, 1, "ri2", SV_CDIS, n);
 		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
@@ -2437,13 +2450,12 @@ namespace server
 						else mut->entergame(ci);
 					});
 					ci->state.state = val ? CS_EDITING : CS_ALIVE;
-					setteam(ci, TEAM_NEUTRAL, false, true);
 					if(val)
 					{
 						ci->events.setsizenodelete(0);
 						ci->state.dropped.reset();
 						loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
-						ci->state.weapreset(false);
+						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 					}
 					QUEUE_MSG;
 					break;
@@ -2874,7 +2886,7 @@ namespace server
 					if(spinfo->state.state != CS_SPECTATOR && val)
 					{
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-						dropitems(spinfo);
+						if(spinfo->state.state == CS_ALIVE) dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
 						setteam(spinfo, TEAM_NEUTRAL, false, true);
@@ -2883,9 +2895,9 @@ namespace server
 					}
 					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{
-						ci->state.state = CS_DEAD;
-						waiting(spinfo);
+						spinfo->state.state = CS_DEAD;
 	                    spinfo->state.lasttimeplayed = lastmillis;
+						waiting(spinfo);
 						if(smode) smode->entergame(spinfo);
 						mutate(smuts, mut->entergame(spinfo));
 						aiman::dorefresh = true;

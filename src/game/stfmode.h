@@ -27,7 +27,7 @@ struct stfservmode : stfstate, servmode
 
 	void moveflags(int team, const vec &oldpos, const vec &newpos)
 	{
-		if(!team || minremain<0) return;
+		if(!team) return;
 		loopv(flags)
 		{
 			flag &b = flags[i];
