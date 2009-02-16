@@ -376,7 +376,7 @@ namespace ctf
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
-				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius)*2 || f.owner == e))
+				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 					targets.add(e->clientnum);
 			}
 			if(isctfhome(f, d->team))
@@ -459,7 +459,7 @@ namespace ctf
 				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
 					vec ep = world::headpos(e);
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius)*2 || f.owner == e))
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 						targets.add(e->clientnum);
 				}
 				if(!targets.empty())
@@ -476,7 +476,7 @@ namespace ctf
 			else
 			{
 				vec pos = world::feetpos(d);
-				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*3);
+				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6);
 				loopv(st.flags) if(isctfflag(st.flags[i], d->team))
 				{ // get out of the way of the returnee!
 					ctfstate::flag &g = st.flags[i];
