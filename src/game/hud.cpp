@@ -411,7 +411,7 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
-					SEARCHBINDCACHE(attackkey)("attack", 0, 5, "\fs\fw, or \fS");
+					SEARCHBINDCACHE(attackkey)("attack", 0);
 					if(delay || m_duke(world::gamemode, world::mutators))
 					{
 						pushfont("emphasis");
@@ -481,7 +481,7 @@ namespace hud
 						actitems.setsizenodelete(0);
 						if(entities::collateitems(world::player1, actitems))
 						{
-							SEARCHBINDCACHE(actionkey)("action", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(actionkey)("action", 0);
 							while(!actitems.empty())
 							{
 								actitem &t = actitems.last();
@@ -533,17 +533,17 @@ namespace hud
 					{
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
-							SEARCHBINDCACHE(zoomkey)("zoom", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(zoomkey)("zoom", 0);
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, zoomkey, weaptype[world::player1->weapselect].snipes ? "zoom" : "prone");
 						}
 						if(world::player1->canshoot(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							SEARCHBINDCACHE(attackkey)("attack", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(attackkey)("attack", 0);
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to attack", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, attackkey);
 						}
 						if(world::player1->reqreload < 0 && world::player1->canreload(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis))
 						{
-							SEARCHBINDCACHE(reloadkey)("reload", 0, 5, "\fs\fw, or \fS");
+							SEARCHBINDCACHE(reloadkey)("reload", 0);
 							ty += draw_textx("Press [ \fs\fa%s\fS ] to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, reloadkey);
 							if(weapons::autoreload > 1 && lastmillis-world::player1->weaplast[world::player1->weapselect] <= 1000)
 								ty += draw_textx("Automatic reload in [ \fs\fy%.01f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, float(1000-(lastmillis-world::player1->weaplast[world::player1->weapselect]))/1000.f);
@@ -584,12 +584,12 @@ namespace hud
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, world::tvmode() ? "SpecTV" : "Spectating");
 				if(shownotices > 1)
 				{
-					SEARCHBINDCACHE(speconkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
+					SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 					pushfont("default");
 					ty += draw_textx("Press [ \fs\fa%s\fS ] to play", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, speconkey);
 					if(shownotices > 2)
 					{
-						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1, 5, "\fs\fw, or \fS");
+						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
 						ty += draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, specmodekey, world::tvmode() ? "look around" : "observe");
 					}
 					popfont();
