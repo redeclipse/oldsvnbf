@@ -1927,7 +1927,7 @@ void updateentlighting()
 
 void initlights()
 {
-	if(nolights || fullbright || lightmaps.empty())
+	if(nolights || (editmode && fullbright) || lightmaps.empty())
 	{
 		clearlights();
 		return;
@@ -1942,7 +1942,7 @@ void initlights()
 
 void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient)
 {
-	if(nolights || fullbright || lightmaps.empty())
+	if(nolights || (editmode && fullbright) || lightmaps.empty())
 	{
 		color = vec(1, 1, 1);
 		dir = vec(0, 0, 1);

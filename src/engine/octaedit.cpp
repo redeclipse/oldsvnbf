@@ -13,7 +13,7 @@ void boxs(int orient, vec o, const vec &s)
 	int	d = dimension(orient),
 		  dc= dimcoord(orient);
 
-	float f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
+	float f = !outline && !(editmode && fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
 	o[D[d]] += float(dc) * s[D[d]] + f,
 
 	glBegin(GL_POLYGON);
@@ -42,7 +42,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
 		  oy = o[C[d]],
 		  xs = s[R[d]],
 		  ys = s[C[d]],
-		  f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
+		  f = !outline && !(editmode && fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
 
 	o[D[d]] += dc * s[D[d]]*g + f;
 
@@ -127,7 +127,7 @@ void cancelsel()
 
 void toggleedit()
 {
-	if (!client::allowedittoggle(editmode)) return;
+	if(!client::allowedittoggle(editmode)) return;
 	editmode = !editmode;
 	editing = entediting = (editmode ? 1 : 0);
 	client::edittoggled(editmode);

@@ -959,7 +959,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(run && ((!c.idle && (d->ai->route.empty() || !d->ai->route.find(d->lastnode))) || lastmillis >= c.next))
+			if(run || lastmillis >= c.next)
 			{
 				bool result = false;
 				c.idle = false;
