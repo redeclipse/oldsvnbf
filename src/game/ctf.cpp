@@ -476,7 +476,7 @@ namespace ctf
 			else
 			{
 				vec pos = world::feetpos(d);
-				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6);
+				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6.25f);
 				loopv(st.flags) if(isctfflag(st.flags[i], d->team))
 				{ // get out of the way of the returnee!
 					ctfstate::flag &g = st.flags[i];
@@ -487,7 +487,7 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*6), walk ? 2 : 1);
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*4), walk ? 2 : 1);
 		}
 		return false;
 	}
