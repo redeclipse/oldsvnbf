@@ -18,7 +18,7 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	VAR(autodropwaypoints, 0, 300, INT_MAX-1); // secs after map start we start and keep dropping waypoints
-	FVARP(waypointmergescale, 1e-3f, 0.35f, 1000);
+	FVARP(waypointmergescale, 1e-3f, 0.25f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -1173,7 +1173,7 @@ namespace entities
 
 	void mergewaypoints()
 	{
-		float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius)*waypointmergescale;
+		float mindist = (enttype[WAYPOINT].radius*enttype[WAYPOINT].radius*(waypointmergescale*waypointmergescale));
 		int totalmerges = 0, totalpasses = 0;
 		while(true)
 		{
@@ -1400,7 +1400,7 @@ namespace entities
 				}
 				if(e.type == WEAPON)
 				{
-					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*3);
+					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
 					int weaps[WEAPON_MAX];
 					loopj(WEAPON_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
 					loopvj(ents) if(j != i)
