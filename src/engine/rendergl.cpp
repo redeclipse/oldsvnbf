@@ -1921,12 +1921,16 @@ void drawview(int targtype)
 	rendergame();
 	renderavatar(true);
 
+    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 	if(hasFBO)
 	{
 		drawglaretex();
 		drawdepthfxtex();
 		drawreflections();
 	}
+
+    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	renderdecals(curtime);
 	renderwater();
