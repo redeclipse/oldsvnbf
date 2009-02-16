@@ -313,8 +313,6 @@ namespace entities
 
     int closestent(int type, const vec &pos, float mindist, bool links = false)
     {
-        mindist *= mindist;
-
         if(entcachedepth<0) buildentcache();
 
         entcachestack.setsizenodelete(0);
@@ -327,15 +325,13 @@ namespace entities
             if(e.type == type && (!links || !e.links.empty())) \
             { \
                 float dist = e.o.squaredist(pos); \
-                if(dist < mindist) { closest = n; mindist = dist; } \
+                if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
             } \
         } while(0)
         for(;;)
         {
             int axis = curnode->axis();
             float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
-            dist1 *= dist1;
-            dist2 *= dist2;
             if(dist1 >= mindist)
             {
                 if(dist2 < mindist)
