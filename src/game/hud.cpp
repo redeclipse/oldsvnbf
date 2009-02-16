@@ -586,7 +586,7 @@ namespace hud
 				{
 					SEARCHBINDCACHE(speconkey)("spectator 0", 1, 5, "\fs\fw, or \fS");
 					pushfont("default");
-					ty += draw_textx("Press [ \fs\fa%s\fS ] to exit", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, speconkey);
+					ty += draw_textx("Press [ \fs\fa%s\fS ] to play", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, speconkey);
 					if(shownotices > 2)
 					{
 						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1, 5, "\fs\fw, or \fS");
