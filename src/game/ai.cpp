@@ -58,7 +58,7 @@ namespace ai
 
 	void update()
 	{
-		if(lastmillis-avoidmillis > 250) avoid();
+		if(lastmillis-avoidmillis > 100) avoid();
 		bool updating = lastmillis-updatemillis > 40; // fixed rate logic at 25fps
 		loopv(world::players) if(world::players[i] && world::players[i]->ai)
 		{
