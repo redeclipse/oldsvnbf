@@ -123,7 +123,7 @@ namespace server
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
-		servstate() : state(CS_DEAD), aireinit(0) {}
+		servstate() : state(CS_SPECTATOR), aireinit(0) {}
 
 		bool isalive(int millis)
 		{
@@ -1058,9 +1058,21 @@ namespace server
 	{
 		if(ci->team != team)
 		{
+			bool sm = !reset && ci->state.state == CS_ALIVE;
 			if(reset) waiting(ci);
+			else if(sm)
+			{
+				if(smode) smode->leavegame(ci);
+				mutate(smuts, mut->leavegame(ci));
+			}
 			ci->team = team;
 			if(info) sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
+			if(sm)
+			{
+				if(smode) smode->entergame(ci);
+				mutate(smuts, mut->entergame(ci));
+			}
+			aiman::dorefresh = true;
 		}
 	}
 
@@ -1099,11 +1111,11 @@ namespace server
 						float rank = 1.f;
 						switch(GVAR(teambalance))
 						{
-							case 1: rank = ci->state.aitype != AI_NONE ? 1.f : GVAR(botratio); break;
+							case 1: rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
 							case 2: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
 							case 3: default:
 							{
-								if(who->state.aitype != AI_NONE) rank = ci->state.aitype != AI_NONE ? 1.f : GVAR(botratio);
+								if(who->state.aitype != AI_NONE) rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
 								else rank = ci->state.aitype != AI_NONE ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
 								break;
 							}
@@ -1254,7 +1266,11 @@ namespace server
 		{
 			clientinfo *ci = clients[i];
 			ci->mapchange(true);
-			if(m_lobby(gamemode)) waiting(ci);
+			if(m_lobby(gamemode))
+			{
+				ci->state.state = CS_DEAD;
+				waiting(ci);
+			}
 			else
 			{
 				ci->state.state = CS_SPECTATOR;
@@ -1501,6 +1517,7 @@ namespace server
             putint(p, ci->team);
 			if(m_lobby(gamemode))
 			{
+				ci->state.state = CS_DEAD;
 				waiting(ci, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
@@ -2668,14 +2685,11 @@ namespace server
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
 					int team = getint(p);
 					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
-					{
 						team = chooseteam(ci, team);
-						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
-					}
 					if(team != ci->team)
 					{
 						setteam(ci, team);
-						aiman::dorefresh = true;
+						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
                     sendinitc2s(ci);
 					break;
@@ -2725,6 +2739,7 @@ namespace server
 						}
 						setupspawns(true, np);
 						notgotinfo = false;
+						aiman::dorefresh = true;
 					}
 #if 0
 					else // get their state in check then?
@@ -2858,23 +2873,22 @@ namespace server
 					if(!spinfo) break;
 					if(spinfo->state.state != CS_SPECTATOR && val)
 					{
-						setteam(spinfo, TEAM_NEUTRAL, false, true);
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
 						dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
+						setteam(spinfo, TEAM_NEUTRAL, false, true);
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis-spinfo->state.lasttimeplayed;
-                    	aiman::dorefresh = true;
 					}
 					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{
 						ci->state.state = CS_DEAD;
 						waiting(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
-						aiman::dorefresh = true;
 						if(smode) smode->entergame(spinfo);
 						mutate(smuts, mut->entergame(spinfo));
+						aiman::dorefresh = true;
 					}
 					break;
 				}
@@ -2885,15 +2899,7 @@ namespace server
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *wi = (clientinfo *)getinfo(who);
 					if(!wi || !m_team(gamemode, mutators) || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
-					if(wi->team != team)
-					{
-						setteam(wi, team);
-						aiman::dorefresh = true;
-					}
-					sendf(sender, 1, "ri3", SV_SETTEAM, who, team);
-					QUEUE_INT(SV_SETTEAM);
-					QUEUE_INT(who);
-					QUEUE_INT(team);
+					if(wi->team != team) setteam(wi, team, true, true);
 					break;
 				}
 

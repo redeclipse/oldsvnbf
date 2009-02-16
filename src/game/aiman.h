@@ -80,7 +80,7 @@ namespace aiman
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
-			setteam(ci, chooseteam(ci, ci->team));
+			setteam(ci, chooseteam(ci, ci->team), true, true);
 		}
 	}
 
@@ -214,38 +214,35 @@ namespace aiman
 
 	void checkai()
 	{
-		static int oldteambalance;
-		if(oldteambalance != GVAR(teambalance))
+		if(!notgotinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			dorefresh = true;
-			oldteambalance = GVAR(teambalance);
-		}
-		static float oldbotratio;
-		if(oldbotratio != GVAR(botratio))
-		{
-			dorefresh = true;
-			oldbotratio = GVAR(botratio);
-		}
-		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
-		{
-			if(!notgotinfo)
+			static int oldteambalance;
+			if(oldteambalance != GVAR(teambalance))
 			{
-				if(m_play(gamemode) && !autooverride)
-				{
-					int balance = int(GVAR(botbalance)), minamt = balance;
-					if(m_team(gamemode, mutators))
-					{
-						balance = max(int(numplayers*2*GVAR(botbalance)), minamt);
-						int numt = numteams(gamemode, mutators), offt = balance%numt;
-						if(offt) balance += numt-offt;
-					}
-					else balance = max(int(numplayers*GVAR(botbalance)), minamt);
-					while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
-					while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
-				}
-				while(true) if(!reassignai()) break;
-				checksetup();
+				dorefresh = true;
+				oldteambalance = GVAR(teambalance);
 			}
+			static float oldbotratio;
+			if(oldbotratio != GVAR(botratio))
+			{
+				dorefresh = true;
+				oldbotratio = GVAR(botratio);
+			}
+			if(m_play(gamemode) && !autooverride)
+			{
+				int balance = int(GVAR(botbalance)), minamt = balance;
+				if(m_team(gamemode, mutators))
+				{
+					balance = max(int(numplayers*2*GVAR(botbalance)), minamt);
+					int numt = numteams(gamemode, mutators), offt = balance%numt;
+					if(offt) balance += numt-offt;
+				}
+				else balance = max(int(numplayers*GVAR(botbalance)), minamt);
+				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
+				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
+			}
+			while(true) if(!reassignai()) break;
+			checksetup();
 		}
 		else clearai();
 	}
