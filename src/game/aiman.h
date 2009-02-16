@@ -57,10 +57,10 @@ namespace aiman
 				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
 				ci->state.skill = clamp(s, 1, 101);
-				ci->state.state = CS_DEAD;
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
 				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
+				ci->state.state = CS_DEAD;
 				ci->team = chooseteam(ci);
 				sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 				waiting(ci);
@@ -104,7 +104,6 @@ namespace aiman
 		{
 			deleteai(clients[i]);
 			if(req) autooverride = true;
-			dorefresh = true;
 			return true;
 		}
 		if(req)
@@ -122,6 +121,7 @@ namespace aiman
 		{
 			if(ci->state.aireinit >= 2)
 			{
+				ci->state.state = CS_DEAD;
 				waiting(ci);
 				ci->state.dropped.reset();
 				loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
@@ -186,11 +186,6 @@ namespace aiman
 
 	void checksetup()
 	{
-		if(dorefresh)
-		{
-			refreshai();
-			dorefresh = false;
-		}
 		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum >= 0 && !clients[i]->state.aireinit)
 		{
@@ -201,8 +196,12 @@ namespace aiman
 				ci->state.aireinit = 1;
 			}
 		}
-		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
-			reinitai(clients[i]);
+		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
+		if(dorefresh)
+		{
+			refreshai();
+			dorefresh = false;
+		}
 	}
 
 	void clearai(bool override)
@@ -247,7 +246,6 @@ namespace aiman
 				while(true) if(!reassignai()) break;
 				checksetup();
 			}
-			else autooverride = dorefresh = false;
 		}
 		else clearai();
 	}

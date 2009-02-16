@@ -835,7 +835,7 @@ namespace entities
 
 	bool spawnplayer(gameent *d, int ent, bool recover, bool suicide)
 	{
-		if(ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return true;
+		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return true;
 		if(recover)
 		{
 			if(m_team(world::gamemode, world::mutators))
@@ -1778,9 +1778,9 @@ namespace entities
 			gameentity &e = *(gameentity *)ents[i];
             switch(e.type)
             {
-                case PARTICLES: case TELEPORT: 
+                case PARTICLES: case TELEPORT:
                     break;
-                default: 
+                default:
                     if(enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
                     break;
             }

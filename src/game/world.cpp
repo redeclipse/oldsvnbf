@@ -287,7 +287,7 @@ namespace world
 
 	void respawn(gameent *d)
 	{
-		if(d->state == CS_DEAD && d->respawned < 0 && lastmillis-d->lastdeath > 500)
+		if(d->state == CS_DEAD && d->respawned < 0 && (!d->lastdeath || lastmillis-d->lastdeath > 500))
 		{
 			client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 			d->respawned = lastmillis;
@@ -762,17 +762,12 @@ namespace world
 			const char *title = getmaptitle();
 			if(*title) conoutf("%s", title);
 			preload();
-
-			// reset perma-state
-			gameent *d;
-			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-				d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
-
-			// prevent the player from being in the middle of nowhere if he doesn't get spawned
-			entities::spawnplayer(player1, -1, true, false);
-			if(!m_edit(gamemode) && player1->state != CS_EDITING && player1->state != CS_SPECTATOR)
-				player1->state = CS_WAITING; // expect the server to spawn us
 		}
+		// reset perma-state
+		gameent *d;
+		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
+			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
+		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)
@@ -942,7 +937,6 @@ namespace world
 	{
 		bool hascursor = UI::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
-		//*(hascursor || (player1->state != CS_ALIVE && player1->state != CS_DEAD) ? 1.f : speedscale)
 		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING))
 		{
 			if(absmouse) // absolute positions, unaccelerated
@@ -1241,13 +1235,14 @@ namespace world
 			}
 			player1->yaw = player1->aimyaw = camera1->yaw;
 			player1->pitch = player1->aimpitch = camera1->pitch;
+			player1->resetinterp();
 		}
 	}
 
 	void updateworld()		// main game update loop
 	{
 		if(!curtime) return;
-        if(!maptime)
+        if(!maptime && connected())
         {
         	maptime = lastmillis;
 			if(m_lobby(gamemode)) smartmusic(true, false);

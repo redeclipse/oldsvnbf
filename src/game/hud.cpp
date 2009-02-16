@@ -406,8 +406,8 @@ namespace hud
 			}
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
-				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->respawnwait(lastmillis, sdelay);
-				const char *msg = world::player1->state != CS_WAITING ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
+				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->lastdeath ? world::player1->respawnwait(lastmillis, sdelay) : 0;
+				const char *msg = world::player1->state != CS_WAITING && world::player1->lastdeath ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
 				ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, msg);
 				if(shownotices > 1)
 				{
@@ -931,7 +931,7 @@ namespace hud
 			}
 			if(skew <= 0.f) return 0;
 		}
-		else if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
+		else if(world::player1->lastdeath && (world::player1->state == CS_DEAD || world::player1->state == CS_WAITING))
 		{
 			int delay = lastmillis-world::player1->lastdeath;
 			if(delay < 1000)

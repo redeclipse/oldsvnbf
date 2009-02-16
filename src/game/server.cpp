@@ -123,7 +123,7 @@ namespace server
 		int lasttimeplayed, timeplayed, aireinit;
 		float effectiveness;
 
-		servstate() : state(CS_WAITING), aireinit(0) {}
+		servstate() : state(CS_DEAD), aireinit(0) {}
 
 		bool isalive(int millis)
 		{
@@ -132,7 +132,7 @@ namespace server
 
 		void reset(bool change = false)
 		{
-			if(state != CS_SPECTATOR) state = CS_WAITING;
+			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
 			if(!change)
@@ -223,12 +223,12 @@ namespace server
             targets.setsizenodelete(0);
             timesync = false;
             lastevent = gameoffset = 0;
+			team = TEAM_NEUTRAL;
 		}
 
 		void reset()
 		{
 			ping = 0;
-			team = TEAM_NEUTRAL;
 			name[0] = 0;
 			privilege = PRIV_NONE;
             connected = local = spectator = online = wantsmap = false;
@@ -1079,7 +1079,7 @@ namespace server
 
 	int chooseteam(clientinfo *who, int suggest = -1)
 	{
-		if(m_team(gamemode, mutators))
+		if(m_team(gamemode, mutators) && who->state.state != CS_SPECTATOR && who->state.state != CS_EDITING)
 		{
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1;
 			if(GVAR(teambalance) || team < 0)
@@ -1250,22 +1250,16 @@ namespace server
 		if(smode) smode->reset(false);
 		mutate(smuts, mut->reset(false));
 
-		if(m_team(gamemode, mutators) && GVAR(teambalance))
-		{
-			loopv(clients)
-			{
-				clientinfo *ci = clients[i];
-				if(!m_team(gamemode, mutators) || GVAR(teambalance))
-					ci->team = TEAM_NEUTRAL; // to be reset below
-				if(ci->state.state != CS_SPECTATOR) ci->state.state = CS_DEAD;
-			}
-		}
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			setteam(ci, chooseteam(ci, ci->team), false, true);
 			ci->mapchange(true);
-			if(ci->state.state != CS_SPECTATOR) waiting(ci);
+			if(m_lobby(gamemode)) waiting(ci);
+			else
+			{
+				ci->state.state = CS_SPECTATOR;
+				sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
+			}
 		}
 
 		if(m_fight(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -1505,18 +1499,19 @@ namespace server
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
             putint(p, ci->team);
-			if(ci->state.state==CS_SPECTATOR)
-			{
-				putint(p, SV_SPECTATOR);
-				putint(p, ci->clientnum);
-				putint(p, 1);
-				sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
-			}
-			else
+			if(m_lobby(gamemode))
 			{
 				waiting(ci, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
+			}
+			else
+			{
+				ci->state.state = CS_SPECTATOR;
+				putint(p, SV_SPECTATOR);
+				putint(p, ci->clientnum);
+				putint(p, 1);
+				sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
 			}
 		}
 		if(clients.length() > 1)
@@ -1844,17 +1839,22 @@ namespace server
 
 	void waiting(clientinfo *ci, bool exclude)
 	{
-		if(ci->state.state == CS_ALIVE)
+		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			dropitems(ci);
-			if(smode) smode->died(ci);
-			mutate(smuts, mut->died(ci));
-			ci->state.lastdeath = gamemillis;
+			if(ci->state.state == CS_ALIVE)
+			{
+				dropitems(ci);
+				if(smode) smode->died(ci);
+				mutate(smuts, mut->died(ci));
+				ci->state.lastdeath = gamemillis;
+			}
+			if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
+			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
+			ci->state.state = CS_WAITING;
+			ci->state.weapreset(false);
+			if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST))
+				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
-		if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
-		else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
-		ci->state.state = CS_WAITING;
-		ci->state.weapreset(false);
 	}
 
 	void hashpassword(int cn, int sessionid, const char *pwd, char *result)
@@ -1932,7 +1932,7 @@ namespace server
 
 	void checkclients()
 	{
-		loopv(clients) if(clients[i]->online && clients[i]->connected)
+		loopv(clients) if(clients[i]->name[0] && clients[i]->online && clients[i]->connected)
 		{
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
@@ -2178,7 +2178,7 @@ namespace server
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
+		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -2315,11 +2315,8 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
-                if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
                 if(currentmaster>=0) masterupdate = true;
                 ci->state.lasttimeplayed = lastmillis;
-
-                ci->team = chooseteam(ci);
 
                 sendwelcome(ci);
                 sendresume(ci);
@@ -2412,7 +2409,7 @@ namespace server
 				{
 					int val = getint(p);
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
-					if(val && ci->state.state != CS_ALIVE && ci->state.state != CS_SPECTATOR) break;
+					if(val && ci->state.state != CS_ALIVE) break;
 					if(smode)
 					{
 						if(val) smode->leavegame(ci);
@@ -2423,6 +2420,7 @@ namespace server
 						else mut->entergame(ci);
 					});
 					ci->state.state = val ? CS_EDITING : CS_ALIVE;
+					setteam(ci, TEAM_NEUTRAL, false, true);
 					if(val)
 					{
 						ci->events.setsizenodelete(0);
@@ -2442,6 +2440,7 @@ namespace server
 					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || gamemillis-cp->state.lastdeath <= DEATHMILLIS) break;
 					if(smode) smode->canspawn(cp, true);
 					mutate(smuts, mut->canspawn(cp, true));
+					cp->state.state = CS_DEAD;
 					waiting(cp);
 					break;
 				}
@@ -2668,7 +2667,7 @@ namespace server
 					}
 					s_strncpy(ci->name, text, MAXNAMELEN+1);
 					int team = getint(p);
-					if(!isteam(gamemode, mutators, team, TEAM_FIRST))
+					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
 					{
 						team = chooseteam(ci, team);
 						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
@@ -2854,22 +2853,23 @@ namespace server
 				case SV_SPECTATOR:
 				{
 					int spectator = getint(p), val = getint(p);
-					if(((mastermode >= 2 && ci->state.state==CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, true)) break;
+					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, true)) break;
 					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
 					if(!spinfo) break;
-
 					if(spinfo->state.state != CS_SPECTATOR && val)
 					{
+						setteam(spinfo, TEAM_NEUTRAL, false, true);
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
 						dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
 						spinfo->state.state = CS_SPECTATOR;
-                    	spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+                    	spinfo->state.timeplayed += lastmillis-spinfo->state.lasttimeplayed;
                     	aiman::dorefresh = true;
 					}
 					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{
+						ci->state.state = CS_DEAD;
 						waiting(spinfo);
 	                    spinfo->state.lasttimeplayed = lastmillis;
 						aiman::dorefresh = true;
