@@ -86,7 +86,7 @@ void conoutf(const char *s, ...)
 bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
 COMMAND(toggleconsole, "");
-TVAR(inputtex, "textures/menu", 0);
+TVAR(inputtex, "textures/menu", 3);
 
 int rendercommand(int x, int y, int w)
 {
@@ -94,7 +94,7 @@ int rendercommand(int x, int y, int w)
     int width, height;
     text_bounds(commandbuf, width, height, w);
     y -= height-FONTH;
-	Texture *t = textureload(commandicon ? commandicon : inputtex, 0, true);
+	Texture *t = textureload(commandicon ? commandicon : inputtex, 3, true);
 	if(t && t != notexture)
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
