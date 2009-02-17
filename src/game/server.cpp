@@ -637,26 +637,19 @@ namespace server
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
-			loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST))
+			bool teamspawns = m_team(gamemode, mutators) && !m_stf(gamemode);
+			loopv(sents) if(sents[i].type == PLAYERSTART && (!teamspawns || isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)))
 			{
-				spawns[sents[i].attr[1]].add(i);
+				spawns[teamspawns ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
 				totalspawns++;
 			}
-			if(totalspawns && m_fight(gamemode))
+			if(totalspawns && teamspawns)
 			{ // reset if a team has no spawns, or if we're in dm/stf
-				if(m_team(gamemode, mutators) && !m_stf(gamemode))
-				{
-					loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
-					{
-						loopj(TEAM_LAST+1) spawns[j].reset();
-						totalspawns = 0;
-						break;
-					}
-				}
-				else
+				loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
 				{
 					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
+					break;
 				}
 			}
 			if(!totalspawns)
@@ -2440,22 +2433,21 @@ namespace server
 					int val = getint(p);
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
 					if(val && ci->state.state != CS_ALIVE) break;
-					if(smode)
-					{
-						if(val) smode->leavegame(ci);
-						else smode->entergame(ci);
-					}
-					mutate(smuts, {
-						if (val) mut->leavegame(ci);
-						else mut->entergame(ci);
-					});
-					ci->state.state = val ? CS_EDITING : CS_ALIVE;
+					ci->state.dropped.reset();
+					loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
 					if(val)
 					{
+						if(smode) smode->leavegame(ci);
+						mutate(smuts, mut->leavegame(ci));
+						ci->state.state = CS_EDITING;
 						ci->events.setsizenodelete(0);
-						ci->state.dropped.reset();
-						loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
-						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
+					}
+					else
+					{
+						ci->state.state = CS_ALIVE;
+						ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
+						if(smode) smode->entergame(ci);
+						mutate(smuts, mut->entergame(ci));
 					}
 					QUEUE_MSG;
 					break;

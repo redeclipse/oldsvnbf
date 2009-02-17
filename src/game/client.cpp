@@ -151,7 +151,7 @@ namespace client
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = edit || m_edit(world::gamemode);
+		bool allow = edit || (m_edit(world::gamemode) && world::player1->state == CS_ALIVE);
 		if(!allow) conoutf("\fryou must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
@@ -166,8 +166,9 @@ namespace client
 		else if(world::player1->state != CS_SPECTATOR)
 		{
 			world::player1->state = CS_ALIVE;
-			world::player1->weapreset(true);
+			world::player1->editspawn(lastmillis, m_spawnweapon(world::gamemode, world::mutators), m_maxhealth(world::gamemode, world::mutators));
 		}
+		projs::remove(world::player1);
 		physics::entinmap(world::player1, false); // find spawn closest to current floating pos
 		if(m_edit(world::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);
@@ -1488,7 +1489,7 @@ namespace client
 					else
 					{
 						d->state = CS_ALIVE;
-						d->weapreset(true);
+						d->editspawn(lastmillis, m_spawnweapon(world::gamemode, world::mutators), m_maxhealth(world::gamemode, world::mutators));
 					}
 					projs::remove(d);
 					break;
@@ -1507,7 +1508,6 @@ namespace client
 					else if(s->state == CS_SPECTATOR)
 					{
 						s->state = CS_WAITING;
-						s->weapreset(true);
 						if(s != world::player1 && !s->ai) s->resetinterp();
 					}
 					break;
