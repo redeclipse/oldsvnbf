@@ -29,6 +29,8 @@ namespace client
 	ICOMMAND(getname, "", (), result(world::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[world::player1->team].name));
 
+    const char *getname() { return world::player1->name; }
+
 	void switchname(const char *name)
 	{
 		if(name[0])
