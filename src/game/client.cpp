@@ -25,7 +25,7 @@ namespace client
 
 	VARP(colourchat, 0, 1, 1);
 	SVARP(serversort, "");
-	ICOMMAND(mastermode, "i", (int *val), if(remote) addmsg(SV_MASTERMODE, "ri", *val));
+	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
 	ICOMMAND(getname, "", (), result(world::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[world::player1->team].name));
 

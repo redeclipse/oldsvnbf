@@ -400,7 +400,7 @@ namespace server
 	{
 		int n = 0;
 		loopv(clients)
-			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->connected && clients[i]->clientnum != exclude &&
+			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
 				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE))
 					n++;
 		return n;
@@ -1275,15 +1275,16 @@ namespace server
 		{
 			clientinfo *ci = clients[i];
 			ci->mapchange(true);
-			if(m_lobby(gamemode))
+            if(ci->state.state == CS_SPECTATOR) continue;
+            else if(m_play(gamemode))
+            {
+                ci->state.state = CS_SPECTATOR;
+                sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
+            }
+            else 
 			{
 				ci->state.state = CS_DEAD;
 				waiting(ci);
-			}
-			else
-			{
-				ci->state.state = CS_SPECTATOR;
-				sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
 			}
 		}
 
@@ -1387,7 +1388,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *cs = clients[i];
-			if(cs->state.aitype != AI_NONE || !cs->name[0] || !cs->online || !cs->connected || cs->wantsmap) continue;
+			if(cs->state.aitype != AI_NONE || !cs->name[0] || !cs->online || cs->wantsmap) continue;
 			if(!best || cs->state.timeplayed > best->state.timeplayed) best = cs;
 		}
 		return best;
@@ -1524,20 +1525,20 @@ namespace server
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
             putint(p, ci->team);
-			if(m_lobby(gamemode))
+			if(m_play(gamemode) || mastermode>=MM_LOCKED)
+            {
+                ci->state.state = CS_SPECTATOR;
+                putint(p, SV_SPECTATOR);
+                putint(p, ci->clientnum);
+                putint(p, 1);
+                sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
+            }
+            else
 			{
 				ci->state.state = CS_DEAD;
 				waiting(ci, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
-			}
-			else
-			{
-				ci->state.state = CS_SPECTATOR;
-				putint(p, SV_SPECTATOR);
-				putint(p, ci->clientnum);
-				putint(p, 1);
-				sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
 			}
 		}
 		if(clients.length() > 1)
@@ -1959,7 +1960,7 @@ namespace server
 
 	void checkclients()
 	{
-		loopv(clients) if(clients[i]->name[0] && clients[i]->online && clients[i]->connected)
+		loopv(clients) if(clients[i]->name[0] && clients[i]->online)
 		{
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
