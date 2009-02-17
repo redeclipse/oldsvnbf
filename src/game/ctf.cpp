@@ -38,8 +38,7 @@ namespace ctf
         if(blip)
         {
             if(!(f.base&BASE_FLAG) || f.owner == world::player1) return;
-			else if((f.owner || f.droptime) && lastmillis%500 >= 250) return;
-            else if(f.base&BASE_HOME) return;
+			else if((f.owner || f.droptime) && lastmillis%500 >= 350) return;
         	dir = f.pos();
         }
         else
