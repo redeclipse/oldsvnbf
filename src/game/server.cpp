@@ -2178,15 +2178,11 @@ namespace server
 		else
 		{
 			#ifdef STANDALONE
-			sendstring("umanned", p);
+			sendstring("unnamed", p);
 			#else
-			char *ret = executeret("getname");
-			if(ret)
-			{
-				sendstring(ret, p);
-				delete[] ret;
-			}
-			else sendstring("unnamed", p);
+            const char *cname = client::getname();
+            if(!cname || !cname[0]) cname = "unnamed";
+            sendstring(cname, p);
 			#endif
 		}
 		sendqueryreply(p);

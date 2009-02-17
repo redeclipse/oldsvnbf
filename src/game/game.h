@@ -1504,6 +1504,11 @@ namespace entities
     extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
 	extern bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool retry = false, float *score = NULL);
 }
+#elif defined(GAMESERVER)
+namespace client
+{
+    extern const char *getname();
+}
 #endif
 #include "ctf.h"
 #include "stf.h"
