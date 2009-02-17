@@ -24,7 +24,7 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-finline-functions" />
@@ -158,7 +158,7 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-finline-functions" />
@@ -231,7 +231,7 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-finline-functions" />
@@ -280,7 +280,7 @@
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
 					<Add option="-fexpensive-optimizations" />
-					<Add option="-O2" />
+					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-finline-functions" />
