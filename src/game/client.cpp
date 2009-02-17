@@ -197,14 +197,12 @@ namespace client
 
 	void clearbans()
 	{
-        if(!remote) return;
 		addmsg(SV_CLEARBANS, "r");
 	}
 	ICOMMAND(clearbans, "", (char *s), clearbans());
 
 	void kick(const char *arg)
 	{
-		if(!remote) return;
 		int i = parseplayer(arg);
 		if(i>=0 && i!=world::player1->clientnum) addmsg(SV_KICK, "ri", i);
 	}
@@ -212,7 +210,6 @@ namespace client
 
 	void setteam(const char *arg1, const char *arg2)
 	{
-		if(!remote) return;
 		if(m_team(world::gamemode, world::mutators))
 		{
 			int i = parseplayer(arg1);
@@ -228,7 +225,7 @@ namespace client
 
     void hashpwd(const char *pwd)
     {
-        if(!remote || world::player1->clientnum<0) return;
+        if(world::player1->clientnum<0) return;
         string hash;
         server::hashpassword(world::player1->clientnum, sessionid, pwd, hash);
         result(hash);
@@ -237,7 +234,7 @@ namespace client
 
     void setmaster(const char *arg)
     {
-        if(!remote || !arg[0]) return;
+        if(!arg[0]) return;
         int val = 1;
         string hash = "";
         if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
