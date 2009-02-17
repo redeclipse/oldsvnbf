@@ -1093,7 +1093,6 @@ namespace client
 					}
 					else					// new client
 					{
-						c2sinit = false;	// send new players my info again
 						conoutf("\fg%s has joined the game", world::colorname(d, text, "", false));
 						loopv(world::players)	// clear copies since new player doesn't have them
 							if(world::players[i]) freeeditinfo(world::players[i]->edit);
