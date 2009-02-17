@@ -286,7 +286,7 @@ namespace server
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
 	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
-	bool masterupdate = false, mapsending = false;
+	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	FILE *mapdata[3] = { NULL, NULL, NULL };
 
     vector<uint> allowedips;
@@ -953,6 +953,8 @@ namespace server
 
 	void checkvotes(bool force = false)
 	{
+        shouldcheckvotes = false;
+
 		vector<votecount> votes;
 		int maxvotes = 0;
 		loopv(clients)
@@ -1218,7 +1220,7 @@ namespace server
 			fclose(mapdata[i]);
 			mapdata[i] = NULL;
 		}
-		maprequest = mapsending = false;
+		maprequest = mapsending = shouldcheckvotes = false;
         stopdemo();
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
@@ -2081,6 +2083,8 @@ namespace server
 			}
 			else aiman::checkai();
 			checkclients();
+
+            if(shouldcheckvotes) checkvotes();
 		}
 		auth::update();
 	}
@@ -2150,7 +2154,7 @@ namespace server
         }
         else connects.removeobj(ci);
 		if(complete) cleanup();
-		else checkvotes();
+		else shouldcheckvotes = true;
 	}
 
 	#include "extinfo.h"
