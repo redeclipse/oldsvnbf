@@ -1522,6 +1522,7 @@ namespace client
 						if(hud::sb.scoreson) hud::sb.showscores(false);
 					}
 					else if(!s->ai) s->resetinterp();
+					if(s->state == CS_ALIVE) s->lastdeath = lastmillis; // so spawndelay shows properly
 					s->state = CS_WAITING;
 					s->weapreset(true);
 					break;
