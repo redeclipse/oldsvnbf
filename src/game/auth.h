@@ -21,10 +21,12 @@ namespace auth
 			{
 				if(!adminpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
 			}
-            else if(ci->state.state==CS_SPECTATOR && !haspass) return;
+            else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !haspriv(ci, PRIV_MASTER))
+				return;
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
 			{
 				if(haspass) clients[i]->privilege = PRIV_NONE;
+                else if((authname || ci->local) && clients[i]->privilege<=PRIV_MASTER) continue;
 				else return;
 			}
             if(haspass) ci->privilege = PRIV_ADMIN;
