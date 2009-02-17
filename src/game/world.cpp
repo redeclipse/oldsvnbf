@@ -1255,7 +1255,7 @@ namespace world
         if(connected())
         {
         	if(!*world::player1->name && !guiactive()) showgui("name");
-        	world::player1->conopen = saycommandon || guiactive() || UI::hascursor();
+        	world::player1->conopen = saycommandon || UI::hascursor(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING);
@@ -1550,7 +1550,7 @@ namespace world
 
 		int flags = MDL_LIGHT;
 		if(d != player1 && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
-        if(d->type == ENT_PLAYER) 
+        if(d->type == ENT_PLAYER)
         {
             if(!early && third) flags |= MDL_FULLBRIGHT;
         }
