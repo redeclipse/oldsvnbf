@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			152
+#define GAMEVERSION			153
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -272,11 +272,11 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		400,	1000,	20,		500,	0,		10000,
+			20,		20,		400,	1000,	25,		750,	0,		10000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,		true,		false,
 			1.0f,	0.f,		0.f,			0.5f,		1.0f,		0.f,
-			3.5f,		60.f,
+			3.75f,		60.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -294,7 +294,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
-			40,		40,		75,    1500,	12,		1500,	0,		2000,
+			40,		40,		75,    1500,	15,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,		true,		false,
 			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
@@ -316,11 +316,11 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_CARBINE,		ANIM_CARBINE,	-15,	15,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
-			10,		10,		250,    1250,	34,		2000,	0,		10000,
+			10,		10,		250,    1250,	35,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,		true,		true,
 			1.0f,	0.f,		0.f,			0.f,		2.0f,		0.f,
-			0.4f,		125.f,
+			0.45f,		125.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},

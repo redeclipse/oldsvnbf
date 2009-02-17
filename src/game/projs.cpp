@@ -363,7 +363,7 @@ namespace projs
 
 	void radiate(projent &proj)
 	{
-		if(lastmillis-proj.lastradial > m_speedtimex(250)) // for the flamer this results in at most 20 damage per second
+		if(lastmillis-proj.lastradial > m_speedtimex(500)) // for the flamer this results in at most 40 damage per second
 		{
 			int radius = int(weaptype[proj.weap].explode*max(proj.lifesize, 0.1f));
 			if(radius > 0)
@@ -950,6 +950,7 @@ namespace projs
 		loopvrev(projs) if(projs[i]->ready())
 		{
 			if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS) canremove.add(projs[i]);
+#if 0 // quin is not so sure his code here is optimal enough
 			else if(projs[i]->projtype == PRJ_SHOT)
 			{
 				if(projs[i]->weap == WEAPON_FLAMER)
@@ -967,6 +968,7 @@ namespace projs
 				}
 				else projs[i]->canrender = true;
 			}
+#endif
 		}
 		while(!canremove.empty() && canremove.length() > maxprojectiles)
 		{
