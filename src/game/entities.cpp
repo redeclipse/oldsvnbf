@@ -1158,7 +1158,7 @@ namespace entities
 					autodropped = true;
 				}
 				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
-					entitylink(d->lastnode, curnode, !d->timeinair);
+					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
 				d->lastnode = curnode;
 			}
 			else
