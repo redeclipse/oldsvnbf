@@ -829,12 +829,17 @@ struct gamestate
 		}
 	}
 
+	void clearstate()
+	{
+		lastdeath = lastpain = lastregen = spree = 0;
+		lastrespawn = -1;
+	}
+
 	void respawn(int millis, int heal)
 	{
 		health = heal;
-		lastdeath = lastpain = lastregen = spree = 0;
 		lastspawn = millis;
-		lastrespawn = -1;
+		clearstate();
 		weapreset(true);
 	}
 
@@ -845,6 +850,13 @@ struct gamestate
 		lastweap = weapselect = sweap;
 		loopi(WEAPON_MAX)
 			ammo[i] = (i == sweap || (others && !weaptype[i].reloads)) ? weaptype[i].add : -1;
+	}
+
+	void editspawn(int millis, int sweap, int heal)
+	{
+		clearstate();
+		lastspawn = millis;
+		spawnstate(sweap, heal, true);
 	}
 
     int respawnwait(int millis, int delay)
@@ -1111,14 +1123,33 @@ struct gameent : dynent, gamestate
 		attacktime = reloadtime = usetime = 0;
 	}
 
-	void respawn(int millis, int heal)
+	void clearstate()
 	{
-		stopmoving(true);
-		physent::reset();
-		gamestate::respawn(millis, heal);
         lasttaunt = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;
+	}
+
+	void respawn(int millis, int heal)
+	{
+		stopmoving(true);
+		clearstate();
+		physent::reset();
+		gamestate::respawn(millis, heal);
+	}
+
+	void editspawn(int millis, int sweap, int heal)
+	{
+		stopmoving(true);
+		clearstate();
+    	inmaterial = timeinair = jumptime = crouchtime = lastimpulse = 0;
+    	inliquid = onladder = jumping = crouching = false;
+        strafe = move = 0;
+        physstate = PHYS_FALL;
+		vel = falling = vec(0, 0, 0);
+        floor = vec(0, 0, 1);
+        resetinterp();
+		gamestate::editspawn(millis, sweap, heal);
 	}
 
 	void resetstate(int millis, int heal)
@@ -1388,7 +1419,7 @@ namespace entities
 				}
 			}
 		}
-			
+
 		void add(dynent *ent, int entity)
 		{
 			if(obstacles.empty() || ent!=obstacles.last().ent) add(ent);
