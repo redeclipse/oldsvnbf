@@ -911,23 +911,6 @@ namespace server
 		demotmp = NULL;
 	}
 
-    int buildinitc2s(clientinfo *ci, uchar *buf, int bufsize)
-    {
-        ucharbuf q(&buf[16], bufsize-16);
-        putint(q, SV_INITC2S);
-        sendstring(ci->name, q);
-        putint(q, ci->team);
-
-        ucharbuf h(buf, 16);
-        putint(h, SV_CLIENT);
-        putint(h, ci->clientnum);
-        putuint(h, q.len);
-
-        memmove(&buf[h.len], q.buf, q.len);
-
-        return h.len + q.len;
-    }
-
 	void setupdemorecord()
 	{
 		if(m_demo(gamemode) || m_edit(gamemode)) return;
@@ -966,13 +949,6 @@ namespace server
         welcomepacket(p, NULL, packet);
         writedemo(1, p.buf, p.len);
         enet_packet_destroy(packet);
-
-        uchar buf[MAXTRANS];
-		loopv(clients)
-		{
-			clientinfo *ci = clients[i];
-			writedemo(1, buf, buildinitc2s(ci, buf, sizeof(buf)));
-		}
 	}
 
 	void checkvotes(bool force = false)
@@ -1416,7 +1392,20 @@ namespace server
     void sendinitc2s(clientinfo *ci)
     {
         ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        enet_packet_resize(packet, buildinitc2s(ci, packet->data, packet->dataLength));
+
+        ucharbuf h(packet->data, 16), p(&h.buf[h.maxlen], packet->dataLength-h.maxlen);
+
+        putint(p, SV_INITC2S);
+        sendstring(ci->name, p);
+        putint(p, ci->team);
+
+        putint(h, SV_CLIENT);
+        putint(h, ci->clientnum);
+        putuint(h, p.len);
+
+        memmove(&h.buf[h.len], p.buf, p.len);
+
+        enet_packet_resize(packet, h.len + p.len);
         sendpacket(-1, 1, packet, ci->clientnum);
         if(!packet->referenceCount) enet_packet_destroy(packet);
     }
@@ -1431,8 +1420,47 @@ namespace server
         if(!packet->referenceCount) enet_packet_destroy(packet);
     }
 
+    void welcomeinitc2s(ucharbuf &p, ENetPacket *packet, int exclude = -1)
+    {
+        uchar header[16], buf[MAXTRANS];
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(!ci->connected || ci->clientnum == exclude) continue;
+
+            ucharbuf q(buf, sizeof(buf));
+            putint(q, SV_INITC2S);
+            sendstring(ci->name, q);
+            putint(q, ci->team);
+
+            ucharbuf h(header, sizeof(header));
+            putint(h, SV_CLIENT);
+            putint(h, ci->clientnum);
+            putuint(h, q.len);
+
+            if(p.remaining() < h.len + q.len)
+            {
+                enet_packet_resize(packet, packet->dataLength + max(h.len + q.len, MAXTRANS));
+                p.buf = packet->data;
+                p.maxlen = packet->dataLength;
+            }
+
+            p.put(h.buf, h.len);
+            p.put(q.buf, q.len);
+        }
+    }
+
 	int welcomepacket(ucharbuf &p, clientinfo *ci, ENetPacket *packet)
 	{
+        #define CHECKSPACE(n) do { \
+            if(p.remaining() < n) \
+            { \
+                enet_packet_resize(packet, packet->dataLength + max(n, MAXTRANS)); \
+                p.buf = packet->data; \
+                p.maxlen = packet->dataLength; \
+            } \
+        } while(0) 
+
         putint(p, SV_WELCOME);
 		putint(p, SV_MAPCHANGE);
 		if(!smapname[0]) putint(p, 0);
@@ -1496,11 +1524,16 @@ namespace server
 				{
 					putint(p, SV_COMMAND);
 					putint(p, -1);
+                    int space = 2*(strlen(cmd) + strlen(val)) + 2;
+                    CHECKSPACE(space);
 					sendstring(cmd, p);
+                    CHECKSPACE(space);
 					sendstring(val, p);
 				}
 			}
 		});
+
+        CHECKSPACE(256);
 
 		if(!ci || (m_fight(gamemode) && numclients(-1, false, true)))
 		{
@@ -1516,15 +1549,13 @@ namespace server
 				putint(p, i);
 				if(enttype[sents[i].type].usetype == EU_ITEM) putint(p, finditem(i, false) ? 1 : 0);
 				else putint(p, sents[i].spawned ? 1 : 0);
+                CHECKSPACE(256);
 			}
 			putint(p, -1);
 		}
 
         if(ci)
         {
-            putint(p, SV_SETTEAM);
-            putint(p, ci->clientnum);
-            putint(p, ci->team);
 			if(m_play(gamemode) || mastermode>=MM_LOCKED)
             {
                 ci->state.state = CS_SPECTATOR;
@@ -1539,7 +1570,11 @@ namespace server
 				waiting(ci, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
+                if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST)) ci->team = chooseteam(ci);
 			}
+            putint(p, SV_SETTEAM);
+            putint(p, ci->clientnum);
+            putint(p, ci->team);
 		}
 		if(clients.length() > 1)
 		{
@@ -1548,20 +1583,22 @@ namespace server
 			{
 				clientinfo *oi = clients[i];
 				if(ci && oi->clientnum == ci->clientnum) continue;
+                CHECKSPACE(256);
 				sendstate(oi, p);
 			}
 			putint(p, -1);
+            welcomeinitc2s(p, packet, ci ? ci->clientnum : -1);
 		}
 
 		if(*servermotd)
 		{
+            int space = 2*strlen(servermotd) + 2 + 5;
+            CHECKSPACE(space);
 			putint(p, SV_SERVMSG);
 			sendstring(servermotd, p);
 		}
 
-		enet_packet_resize(packet, packet->dataLength + MAXTRANS);
-		p.buf = packet->data;
-        p.maxlen = packet->dataLength;
+        CHECKSPACE(MAXTRANS);
 
 		if(smode) smode->initclient(ci, p, true);
 		mutate(smuts, mut->initclient(ci, p, true));
