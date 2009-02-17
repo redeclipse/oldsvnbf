@@ -729,8 +729,11 @@ namespace server
 
 	void srvmsgf(int cn, const char *s, ...)
 	{
-		s_sprintfdlv(str, s, s);
-		sendf(cn, 1, "ris", SV_SERVMSG, str);
+		if(cn < 0 || allowbroadcast(cn))
+		{
+			s_sprintfdlv(str, s, s);
+			sendf(cn, 1, "ris", SV_SERVMSG, str);
+		}
 	}
 
 	void srvoutf(const char *s, ...)
@@ -1669,7 +1672,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(isweap(e.weap))
 		{
-			if(!gs.weapshots[e.weap].find(e.id) < 0) return;
+			if(gs.weapshots[e.weap].find(e.id) < 0) return;
 			else if(!weaptype[e.weap].radial || !e.radial) // 0 is destroy
 			{
 				gs.weapshots[e.weap].remove(e.id);
@@ -1709,6 +1712,7 @@ namespace server
 					e.shots.length(), e.shots.length()*sizeof(ivec)/sizeof(int), e.shots.getbuf(),
 						ci->clientnum);
 		gs.shotdamage += weaptype[e.weap].damage*e.weap*e.num;
+		loopv(e.shots) gs.weapshots[e.weap].add(e.id);
 	}
 
 	void processevent(clientinfo *ci, switchevent &e)
