@@ -5,7 +5,6 @@ struct stfstate
 {
 	static const int OCCUPYPOINTS = 15;
 	static const int OCCUPYLIMIT = 100;
-	static const int SECURESCORE = 1;
 	static const int SCORESECS = 10;
 
 	struct flag
@@ -13,7 +12,6 @@ struct stfstate
 		vec o;
 		int owner, enemy;
 #ifndef GAMESERVER
-        vec pos;
 		string name, info;
 		extentity *ent;
 		bool hasflag;

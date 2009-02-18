@@ -1592,6 +1592,7 @@ namespace world
 			animflags = ANIM_EDIT|ANIM_LOOP;
 			showweap = false;
 		}
+#if 0
 		else if(intermission)
 		{
 			lastaction = lastmillis;
@@ -1613,6 +1614,7 @@ namespace world
 			animflags = ANIM_TAUNT;
 			animdelay = 1000;
 		}
+#endif
 		else if(third && lastmillis-d->lastpain <= 300)
 		{
 			secondary = third;

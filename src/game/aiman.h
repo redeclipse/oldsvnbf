@@ -1,6 +1,9 @@
 // server-side ai manager
 namespace aiman
 {
+	int oldteambalance = -1;
+	float oldbotratio = 1e-4f; // lower than it can go
+
 	int findaiclient(int exclude)
 	{
 		vector<int> siblings;
@@ -216,13 +219,11 @@ namespace aiman
 	{
 		if(!notgotinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			static int oldteambalance;
 			if(oldteambalance != GVAR(teambalance))
 			{
 				dorefresh = true;
 				oldteambalance = GVAR(teambalance);
 			}
-			static float oldbotratio;
 			if(oldbotratio != GVAR(botratio))
 			{
 				dorefresh = true;

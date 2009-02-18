@@ -1547,11 +1547,11 @@ namespace client
 
 				case SV_FLAGS:
 				{
-					int flag = 0, converted;
-					while((converted = getint(p))>=0)
+					int numflags = getint(p);
+					loopi(numflags)
 					{
-						int owner = getint(p), enemy = getint(p);
-						stf::st.initflag(flag++, owner, enemy, converted);
+						int converted = getint(p), owner = getint(p), enemy = getint(p);
+						stf::st.initflag(i, owner, enemy, converted);
 					}
 					break;
 				}
