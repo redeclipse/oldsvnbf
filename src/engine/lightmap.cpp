@@ -752,7 +752,6 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 
 int preview_lightmap_alpha(float lpu, int y1, int y2, const vec &origin, const vec &ustep, const vec &vstep)
 {
-    extern int fullbrightlevel;
     float tolerance = 0.5 / lpu;
     uchar *dst = &lm[4*lm_w*y1];
     vec v = origin;
@@ -1927,7 +1926,7 @@ void updateentlighting()
 
 void initlights()
 {
-	if(nolights || (editmode && fullbright) || lightmaps.empty())
+	if(nolights || fullbright || lightmaps.empty())
 	{
 		clearlights();
 		return;
@@ -1942,7 +1941,7 @@ void initlights()
 
 void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient)
 {
-	if(nolights || (editmode && fullbright) || lightmaps.empty())
+	if(nolights || fullbright || lightmaps.empty())
 	{
 		color = vec(1, 1, 1);
 		dir = vec(0, 0, 1);

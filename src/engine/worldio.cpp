@@ -587,6 +587,12 @@ static void fixoversizedcubes(cube *c, int size)
     }
 }
 
+static void sanevars()
+{
+	setvar("fullbright", 0, false);
+	setvar("blankgeom", 0, false);
+}
+
 bool load_world(const char *mname, bool temp)		// still supports all map formats that have existed since the earliest cube betas!
 {
 	int loadingstart = SDL_GetTicks();
@@ -693,7 +699,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				maptype = MAP_BFGZ;
 
 				if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
-
 				if(verbose) conoutf("\fwloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
 
 				if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
@@ -768,6 +773,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					overrideidents = worldidents = false;
 					if(verbose) conoutf("\fwloaded %d variables", vars);
 				}
+				sanevars();
 
 				if(!server::canload(hdr.gameid))
 				{
@@ -840,13 +846,13 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					ohdr.lerpsubdiv = 2;
 					ohdr.lerpsubdivsize = 4;
 				}
+
+				sanevars();
 				setvar("lightprecision", ohdr.mapprec ? ohdr.mapprec : 32);
 				setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
 				setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
 				setvar("lightlod", ohdr.mapllod);
 				setvar("ambient", ohdr.ambient);
-				setvar("fullbright", 0, false);
-				setvar("fullbrightlevel", 128, false);
 				setvar("lerpangle", ohdr.lerpangle);
 				setvar("lerpsubdiv", ohdr.lerpsubdiv);
 				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
