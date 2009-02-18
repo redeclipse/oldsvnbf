@@ -199,6 +199,7 @@ namespace hud
 				if(!world::minremain) g.textf("%s: intermission", 0xFFFFFF, "info", getmapname());
 				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), world::minremain, world::minremain==1 ? "minute" : "minutes");
 			}
+            else g.textf("%s", 0xFFFFFF, "info", getmapname());
 
 			if(world::intermission || scoresinfo())
 			{
