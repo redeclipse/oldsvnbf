@@ -1002,8 +1002,8 @@ struct interest
 
 struct aistate
 {
-	int type, millis, next, targtype, target;
-	bool override, idle;
+	int type, millis, next, targtype, target, idle;
+	bool override;
 
 	aistate(int m, int t, int r = -1, int v = -1) : type(t), millis(m), targtype(r), target(v)
 	{
@@ -1014,7 +1014,8 @@ struct aistate
 	void reset()
 	{
 		next = millis;
-		idle = override = false;
+		idle = 0;
+		override = false;
 	}
 };
 

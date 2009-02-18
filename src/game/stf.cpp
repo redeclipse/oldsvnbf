@@ -165,13 +165,13 @@ namespace stf
 			if(b.owner != owner)
 			{
 				world::announce(S_V_FLAGSECURED, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
-				world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius/2);
+				world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
 			}
 		}
 		else if(b.owner)
 		{
 			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
-			world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius/2);
+			world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
 		}
 		b.owner = owner;
 		b.enemy = enemy;
@@ -230,7 +230,7 @@ namespace stf
 				}
 				else b.millis = lastmillis;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*4), 0);
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius*3/4), float(enttype[FLAG].radius*3), 0); // less guard/wander than ctf
 		}
 		return false;
 	}

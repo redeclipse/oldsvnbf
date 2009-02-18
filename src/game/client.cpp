@@ -980,7 +980,7 @@ namespace client
 						case SPHY_IMPULSE:
 						{
 							playsound(S_IMPULSE, t->o, t);
-							world::spawneffect(world::feetpos(t), 0x111111, int(t->radius), 200, 1.f);
+							world::spawneffect(world::feetpos(t), 0x222222, int(t->radius), 250, 1.f);
 							t->lastimpulse = lastmillis;
 							break;
 						}
@@ -1118,7 +1118,7 @@ namespace client
 						f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p);
 						playsound(S_RESPAWN, f->o, f);
-						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
+						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					else parsestate(NULL, p);
 					break;
@@ -1137,7 +1137,7 @@ namespace client
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->sequence, f->weapselect); // lifesequence
 						entities::spawnplayer(f, ent, ent < 0, true);
 						playsound(S_RESPAWN, f->o, f);
-						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->height/2.f));
+						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					ai::spawned(f);
 					if(f == world::player1) world::resetstate();

@@ -88,13 +88,13 @@ namespace ai
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool retry)
 	{
 		int n = node;
-		if((n == d->lastnode || n == d->ai->lastnode) && entities::ents.inrange(d->lastnode))
+		if((n == d->lastnode || n == d->ai->lastnode || n == d->ai->prevnode) && entities::ents.inrange(d->lastnode))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 			static vector<int> noderemap; noderemap.setsizenodelete(0);
 			if(!e.links.empty())
 			{
-				loopv(e.links) if(e.links[i] != d->lastnode && e.links[i] != d->ai->lastnode)
+				loopv(e.links) if(e.links[i] != d->lastnode && e.links[i] != d->ai->lastnode && e.links[i] != d->ai->prevnode)
 					noderemap.add(e.links[i]);
 			}
 			if(!noderemap.empty()) n = noderemap[rnd(noderemap.length())];
@@ -129,7 +129,7 @@ namespace ai
 		while(!candidates.empty())
 		{
 			int w = rnd(candidates.length()), n = candidates.removeunordered(w);
-			if(n != d->lastnode && n != d->ai->lastnode && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
+			if(n != d->lastnode && n != d->ai->lastnode && n != d->ai->prevnode && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
 		}
 		return false;
 	}
@@ -147,10 +147,11 @@ namespace ai
 			gameent *t = NULL, *e = NULL;
 			vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
 			bool cansee = false, tooclose = false;
+			float mindist = guard*guard;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
 			{
 				vec ep = world::headpos(e);
-				bool close = ep.squaredist(pos) < guard*guard;
+				bool close = ep.squaredist(pos) < mindist;
 				if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
 				{
 					bool see = AICANSEE(dp, ep, d);
@@ -162,7 +163,7 @@ namespace ai
 					}
 				}
 			}
-			if(t) return violence(d, b, t, pursue && (tooclose || cansee));
+			if(t && violence(d, b, t, pursue && (tooclose || cansee))) return cansee || tooclose;
 		}
 		return false;
 	}
@@ -197,10 +198,11 @@ namespace ai
 			vec feet = world::feetpos(d);
 			if(walk < 2 && feet.squaredist(pos) <= guard*guard)
 			{
-				if(enemy(d, b, pos, wander, false) && patrol(d, b, pos, guard, wander, 2))
-					return true;
+				bool hasenemy = enemy(d, b, pos, wander, false), danger = d->health < d->skill/3;
+				if((walk || danger) && hasenemy && patrol(d, b, pos, guard, wander, 2)) return true;
+				d->ai->route.setsize(0);
 				d->ai->spot = pos;
-				b.idle = true;
+				b.idle = hasenemy ? 2 : 1;
 				return true;
 			}
 		}
@@ -387,27 +389,17 @@ namespace ai
 
 	bool dowait(gameent *d, aistate &b)
 	{
-		if(d->state == CS_WAITING) return true; // just wait my precious..
-		else if(d->state == CS_DEAD)
+		if(check(d, b)) return true;
+		if(find(d, b)) return true;
+		if(target(d, b, true, true)) return true;
+		if(randomnode(d, b, AIISNEAR, 1e16f))
 		{
-			world::respawn(d);
+			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
 			return true;
 		}
-		else if(d->state == CS_ALIVE)
-		{
-			if(check(d, b)) return true;
-			if(find(d, b)) return true;
-			if(target(d, b, true, true)) return true;
-			if(randomnode(d, b, AIISNEAR, 1e16f))
-			{
-				d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
-				return true;
-			}
-			world::suicide(d, HIT_LOST); // bail
-			d->ai->lastaction = b.next = lastmillis;
-			return true; // recycle and start from beginning
-		}
-		return true; // but don't pop the state
+		world::suicide(d, HIT_LOST); // bail
+		d->ai->lastaction = b.next = lastmillis;
+		return false; // but don't pop the state
 	}
 
 	bool dodefend(gameent *d, aistate &b)
@@ -531,12 +523,12 @@ namespace ai
 		vec pos = world::feetpos(d);
 		int node = -1;
 		float mindist = float(enttype[WAYPOINT].radius*enttype[WAYPOINT].radius*16);
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode)))
+		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode && d->ai->route[i] != d->ai->prevnode)))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, d->ai->route[i], epos);
-			if(entities::ents.inrange(entid) && (force || entid == d->ai->route[i] || entid != d->ai->lastnode))
+			if(entities::ents.inrange(entid) && (force || entid == d->ai->route[i] || (entid != d->ai->lastnode && entid != d->ai->prevnode)))
 			{
 				float dist = epos.squaredist(pos);
 				if(dist < mindist)
@@ -556,7 +548,7 @@ namespace ai
 			gameentity &e = *(gameentity *)entities::ents[n];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, n, epos);
-			if(entities::ents.inrange(entid) && (force || entid == n || entid != d->ai->lastnode))
+			if(entities::ents.inrange(entid) && (force || entid == n || (entid != d->ai->lastnode && entid != d->ai->prevnode)))
 			{
 				d->ai->spot = epos;
 				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
@@ -583,7 +575,7 @@ namespace ai
 				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
-					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || e.links[i] != d->ai->lastnode))
+					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || (e.links[i] != d->ai->lastnode && e.links[i] != d->ai->prevnode)))
 						anyremap.add(e.links[i]);
 				}
 				while(!anyremap.empty())
@@ -606,16 +598,17 @@ namespace ai
 	{
 		if(!d->ai->route.empty())
 		{
-			int n = retries%2 ? closenode(d, retries > 1) : d->ai->route.find(d->lastnode);
-			if(!(retries%2) && d->ai->route.inrange(n))
+			bool alternate = retries%2 ? true : false;
+			int n = alternate ? closenode(d, retries == 3) : d->ai->route.find(d->lastnode);
+			if(!alternate && d->ai->route.inrange(n))
 			{ // waka-waka-waka-waka
-				while(d->ai->route.length() > n+1) d->ai->route.pop();
+				while(d->ai->route.length() > n+2) d->ai->route.pop(); // all but this and the last node
 				if(!n) return anynode(d, b); // this is our goal?
-				else n--;
+				else n--; // otherwise, we want the next in line
 			}
 			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n], retries > 1)) return true;
 			if(retries < 3) return hunt(d, b, retries+1); // try again
-			else d->ai->route.setsize(0);
+			d->ai->route.setsize(0);
 		}
 		b.override = false;
 		return anynode(d, b);
@@ -641,6 +634,44 @@ namespace ai
 		return false;
 	}
 
+	void jumpto(gameent *d, aistate &b, const vec &pos, bool cando = true)
+	{
+		if(lastmillis-d->jumptime >= 300 && (!d->timeinair || (cando && physics::canimpulse(d))))
+		{
+			vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
+			bool jump = off.z >= AIJUMPHEIGHT, propel = cando && dir.magnitude() >= AIJUMPHEIGHT;
+			if(propel)
+			{
+				if((!d->timeinair && lastmillis < d->ai->jumpseed) || (d->timeinair && lastmillis < d->ai->propelseed))
+					propel = false;
+				else jump = true;
+			}
+			if(jump)
+			{
+				vec old = d->o;
+				d->o = vec(pos).add(vec(0, 0, d->height));
+				if(collide(d, vec(0, 0, 1))) jump = true;
+				else
+				{
+					jump = false;
+					if(!d->timeinair && propel) propel = false;
+				}
+				d->o = old;
+			}
+			if(jump || propel)
+			{
+				d->jumping = true;
+				d->jumptime = lastmillis;
+				if(propel)
+				{
+					d->ai->jumpseed = lastmillis+1000+rnd((111-d->skill)*1000);
+					d->ai->propelseed = lastmillis+100+rnd((111-d->skill)*100);
+				}
+				if(jump && !propel) d->ai->dontmove = true; // going up
+			}
+		}
+	}
+
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0;
@@ -650,43 +681,11 @@ namespace ai
 		{
 			d->ai->lastaction = lastmillis;
 			d->ai->dontmove = true;
+			if(b.idle == 2) jumpto(d, b, dp, false); // jump up and down
 		}
 		else if(hunt(d, b))
 		{
-			if(lastmillis-d->jumptime >= 300 && (!d->timeinair || physics::canimpulse(d)))
-			{
-				vec off = vec(d->ai->spot).sub(world::feetpos(d)), dir(off.x, off.y, 0);
-				bool jump = off.z >= AIJUMPHEIGHT, propel = dir.magnitude() >= AIJUMPHEIGHT;
-				if(propel)
-				{
-					if((!d->timeinair && lastmillis < d->ai->jumpseed) || (d->timeinair && lastmillis < d->ai->propelseed))
-						propel = false;
-					else jump = true;
-				}
-				if(jump)
-				{
-					vec old = d->o;
-					d->o = vec(d->ai->spot).add(vec(0, 0, d->height));
-					if(collide(d, vec(0, 0, 1))) jump = true;
-					else
-					{
-						jump = false;
-						if(!d->timeinair && propel) propel = false;
-					}
-					d->o = old;
-				}
-				if(jump || propel)
-				{
-					d->jumping = true;
-					d->jumptime = lastmillis;
-					if(propel)
-					{
-						d->ai->jumpseed = lastmillis+1000+rnd((111-d->skill)*1000);
-						d->ai->propelseed = lastmillis+100+rnd((111-d->skill)*100);
-					}
-					if(jump && !propel) d->ai->dontmove = true; // going up
-				}
-			}
+			jumpto(d, b, d->ai->spot);
 			world::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
 			d->ai->lasthunt = lastmillis;
 		}
@@ -725,19 +724,19 @@ namespace ai
 				else if(hasseen) result = 2;
 				else
 				{
-					if(!target(d, b, false, b.idle)) d->ai->enemy = -1;
+					if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
 					result = 1;
 				}
 			}
 			else
 			{
-				if(!target(d, b, false, b.idle)) d->ai->enemy = -1;
+				if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
 				result = 0;
 			}
 		}
 		else
 		{
-			if(!target(d, b, false, b.idle)) d->ai->enemy = -1;
+			if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
 			result = 0;
 		}
 
@@ -873,8 +872,8 @@ namespace ai
 				if(!b.idle && !d->ai->dontmove && d->ai->lasthunt)
 				{
 					int millis = lastmillis-d->ai->lasthunt;
-					if(millis < 5000) d->ai->tryreset = false;
-					else if(millis < 10000)
+					if(millis < 3000) d->ai->tryreset = false;
+					else if(millis < 6000)
 					{
 						if(!d->ai->tryreset) d->ai->reset(true);
 					}
@@ -959,10 +958,10 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(run || lastmillis >= c.next)
+			if(d->state == CS_ALIVE && run && lastmillis >= c.next)
 			{
 				bool result = false;
-				c.idle = false;
+				c.idle = 0;
 				switch(c.type)
 				{
 					case AI_S_WAIT: result = dowait(d, c); break;

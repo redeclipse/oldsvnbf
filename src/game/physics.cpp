@@ -360,7 +360,7 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
-        else if(d->onladder) 
+        else if(d->onladder)
         {
             d->timeinair = 0;
             d->physstate = PHYS_FLOOR;
@@ -545,7 +545,7 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 200, 1.f);
+				world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 250, 1.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
@@ -618,8 +618,8 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, getwatercolour(mcol), 1.f, int(radius), 500, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), 2.f, int(radius), 1000, S_BURNING);
+				mattrig(bottom, getwatercolour(mcol), 1.f, int(radius), 250, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), 2.f, int(radius), 500, S_BURNING);
 
 			if(local)
 			{
