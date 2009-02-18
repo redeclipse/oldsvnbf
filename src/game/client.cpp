@@ -1158,7 +1158,6 @@ namespace client
 					}
 					gameent *s = world::getclient(scn);
 					if(!s || !isweap(weap) || s == world::player1 || s->ai) break;
-					if(s->muzzle != vec(-1, -1, -1)) from = s->muzzle;
 					s->setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, lastmillis);
 					projs::shootv(weap, power, from, locs, s, false);
 					break;

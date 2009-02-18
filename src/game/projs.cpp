@@ -95,6 +95,8 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
+				if((proj.owner != world::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
+					proj.o = proj.from = proj.owner->muzzle;
 				proj.aboveeye = proj.height = proj.radius = weaptype[proj.weap].offset;
 				proj.elasticity = weaptype[proj.weap].elasticity;
 				proj.reflectivity = weaptype[proj.weap].reflectivity;
@@ -253,18 +255,16 @@ namespace projs
 		proj.local = local;
 		proj.projtype = type;
 		proj.addtime = lastmillis;
-		proj.lifetime = m_speedtime(lifetime);
-		if(lifemillis) proj.lifemillis = m_speedtimex(lifemillis);
-		else proj.lifemillis = m_speedtime(proj.lifetime);
-		proj.waittime = m_speedtime(waittime);
+		proj.lifetime = lifetime ? m_speedtimex(lifetime) : lifetime;
+		proj.lifemillis = lifemillis ? m_speedtimex(lifemillis) : proj.lifetime;
+		proj.waittime = waittime ? m_speedtimex(waittime) : waittime;
 		proj.maxspeed = speed;
-		if(id) proj.id = id;
-		else proj.id = lastmillis;
+		proj.id = id ? id : lastmillis;
         proj.weap = weap;
 		proj.lastradial = lastmillis;
 		proj.movement = 0;
 		proj.owner = d;
-		if(!waittime) init(proj, false);
+		if(!proj.waittime) init(proj, false);
 		projs.add(&proj);
 	}
 
@@ -767,7 +767,7 @@ namespace projs
 		{
 			if(hitplayer)
 			{
-				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lifemillis-proj.lifetime > m_speedtimex(100))) || hitplayer != proj.owner)
+				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(1000))) || hitplayer != proj.owner)
 				{
 					proj.hit = hitplayer;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
@@ -803,7 +803,7 @@ namespace projs
         {
             if(hitplayer)
             {
-            	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lifemillis-proj.lifetime > m_speedtimex(100))) || hitplayer != proj.owner)
+            	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(1000))) || hitplayer != proj.owner)
             	{
 					proj.hit = hitplayer;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
@@ -907,8 +907,8 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
 		{
-			if(proj.pitch < 0.f) { proj.pitch += diff; if(proj.pitch > 0.f) proj.pitch = 0.f; }
-			if(proj.pitch > 0.f) { proj.pitch -= diff; if(proj.pitch < 0.f) proj.pitch = 0.f; }
+			if(proj.pitch < 0.f) { proj.pitch += diff*0.5f; if(proj.pitch > 0.f) proj.pitch = 0.f; }
+			if(proj.pitch > 0.f) { proj.pitch -= diff*0.5f; if(proj.pitch < 0.f) proj.pitch = 0.f; }
 			proj.yaw = proj.roll = 0.f;
 		}
 
