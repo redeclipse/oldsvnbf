@@ -95,12 +95,12 @@ namespace entities
 			if(full)
 			{
 				const char *trignames[2][4] = {
-						{ "toggle", "links", "script", "" },
-						{ "(disabled)", "(proximity)", "(action)" }
+						{ "toggle", "link", "script", "" },
+						{ "disabled", "proximity", "action" }
 				};
 				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
 					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
-				s_sprintf(str)("execute %s %s", trignames[0][tr], trignames[1][ta]);
+				s_sprintf(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
 		}

@@ -1063,9 +1063,9 @@ namespace server
 		~teamscore() {}
 	};
 
-	int chooseteam(clientinfo *who, int suggest = -1)
+	int chooseteam(clientinfo *ci, int suggest = -1)
 	{
-		if(m_team(gamemode, mutators) && who->state.state != CS_SPECTATOR && who->state.state != CS_EDITING)
+		if(m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1;
 			if(GVAR(teambalance) || team < 0)
@@ -1075,22 +1075,22 @@ namespace server
 				};
 				loopv(clients)
 				{
-					clientinfo *ci = clients[i];
-					if(!ci->team || ci == who || ci->state.state == CS_SPECTATOR) continue;
-					ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
-					ci->state.lasttimeplayed = lastmillis;
-					loopj(numteams(gamemode, mutators)) if(ci->team == teamscores[j].team)
+					clientinfo *cp = clients[i];
+					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR) continue;
+					cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
+					cp->state.lasttimeplayed = lastmillis;
+					loopj(numteams(gamemode, mutators)) if(cp->team == teamscores[j].team)
 					{
 						teamscore &ts = teamscores[j];
 						float rank = 1.f;
 						switch(GVAR(teambalance))
 						{
-							case 1: rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
-							case 2: case 3: rank = ci->state.effectiveness/max(ci->state.timeplayed, 1); break;
+							case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
+							case 2: case 3: rank = cp->state.effectiveness/max(cp->state.timeplayed, 1); break;
 							case 4: case 5: default:
 							{
-								if(who->state.aitype != AI_NONE) rank = ci->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
-								else rank = ci->state.aitype != AI_NONE ? 0.f : ci->state.effectiveness/max(ci->state.timeplayed, 1);
+								if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
+								else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.effectiveness/max(cp->state.timeplayed, 1);
 								break;
 							}
 						}
@@ -2944,9 +2944,10 @@ namespace server
 				{
 					int who = getint(p), team = getint(p);
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
-					clientinfo *wi = (clientinfo *)getinfo(who);
-					if(!wi || !m_team(gamemode, mutators) || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
-					if(wi->team != team) setteam(wi, team, true, true);
+					clientinfo *cp = (clientinfo *)getinfo(who);
+					if(!cp || !m_team(gamemode, mutators)) break;
+					if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
+					if(cp->team != team) setteam(cp, team, true, true);
 					break;
 				}
 
