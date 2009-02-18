@@ -18,7 +18,7 @@ namespace entities
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 	VAR(autodropwaypoints, 0, 300, INT_MAX-1); // secs after map start we start and keep dropping waypoints
-	FVARP(waypointmergescale, 1e-3f, 0.25f, 1000);
+	FVAR(waypointmergescale, 1e-3f, 0.875f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
