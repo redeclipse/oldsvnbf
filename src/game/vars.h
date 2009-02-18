@@ -55,7 +55,7 @@ VARG(ctfspawndelay, 0, 5, INT_MAX-1); // .. in ctf
 FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in instagib
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 
-FVARG(botbalance, 0, 1.f, 1000);
+FVARG(botscale, 0, 1.f, 1000);
 FVARG(botratio, 0, 0.5f, 1000);
 VARG(botminskill, 0, 70, 101);
 VARG(botmaxskill, 0, 100, 101);
