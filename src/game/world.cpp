@@ -17,7 +17,7 @@ namespace world
 	dynent fpsmodel;
 
 	VARW(numplayers, 0, 4, MAXCLIENTS/2);
-	VARW(numteamplayers, 0, 3, MAXCLIENTS/2);
+	VARW(numteamplayers, 0, 4, MAXCLIENTS/2);
 	SVARW(mapmusic, "");
 
 	VARP(invmouse, 0, 0, 1);

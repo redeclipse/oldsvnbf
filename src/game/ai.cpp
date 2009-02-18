@@ -958,7 +958,12 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_ALIVE && run && lastmillis >= c.next)
+			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 5000) && (!d->lastdeath || lastmillis-d->lastdeath > 500))
+			{
+				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+				d->respawned = lastmillis;
+			}
+			else if(d->state == CS_ALIVE && run && lastmillis >= c.next)
 			{
 				bool result = false;
 				c.idle = 0;
