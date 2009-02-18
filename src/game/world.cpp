@@ -294,10 +294,11 @@ namespace world
 		}
 	}
 
+	VARA(spawneffectnum, 3, 10, 20);
 	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
 		part_create(PART_ELECTRIC_SLENS, m_speedtimex(fade), o, colour, size);
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, 5, m_speedtimex(fade), o, size, 20.f);
+		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, 20.f);
 		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
 	}
 

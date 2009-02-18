@@ -248,8 +248,8 @@ namespace ctf
 
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
-		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
-		if(to.x >= 0) world::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius/2);
+		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
+		if(to.x >= 0) world::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
 		if(from.x >= 0 && to.x >= 0) part_trail(PART_ELECTRIC, 250, from, to, teamtype[team].colour, 2.f);
     }
 
@@ -293,7 +293,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius/2);
+		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius);
 		f.interptime = lastmillis;
 		st.takeflag(i, d);
 		world::announce(S_V_FLAGPICKUP, "\fo%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
@@ -306,7 +306,7 @@ namespace ctf
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.ent || f.owner || !(f.base&BASE_FLAG) || (!f.droptime && f.team == d->team)) continue;
-            if(o.dist(f.pos()) < enttype[FLAG].radius/2)
+            if(o.dist(f.pos()) <= enttype[FLAG].radius/2)
             {
                 if(f.pickup) continue;
                 client::addmsg(SV_TAKEFLAG, "ri2", d->clientnum, i);

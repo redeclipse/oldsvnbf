@@ -1612,7 +1612,7 @@ namespace entities
 				{
 					float radius = (float)enttype[e.type].radius;
 					renderradius(e.o, radius, radius, radius, false);
-					radius *= 0.5f;
+					radius *= 0.5f; // ctf pickup dist
 					renderradius(e.o, radius, radius, radius, false);
 					break;
 				}

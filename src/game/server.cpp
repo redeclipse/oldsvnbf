@@ -2915,25 +2915,26 @@ namespace server
 				{
 					int spectator = getint(p), val = getint(p);
 					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, true)) break;
-					clientinfo *spinfo = (clientinfo *)getinfo(spectator);
-					if(!spinfo) break;
-					if(spinfo->state.state != CS_SPECTATOR && val)
+					clientinfo *cp = (clientinfo *)getinfo(spectator);
+					if(!cp || cp->state.aitype != AI_NONE) break;
+					if(cp->state.state != CS_SPECTATOR && val)
 					{
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-						if(spinfo->state.state == CS_ALIVE) dropitems(spinfo);
-						if(smode) smode->leavegame(spinfo);
-						mutate(smuts, mut->leavegame(spinfo));
-						spinfo->state.state = CS_SPECTATOR;
-                    	spinfo->state.timeplayed += lastmillis-spinfo->state.lasttimeplayed;
-						setteam(spinfo, TEAM_NEUTRAL, false, true);
+						if(cp->state.state == CS_ALIVE) dropitems(cp);
+						if(smode) smode->leavegame(cp);
+						mutate(smuts, mut->leavegame(cp));
+						cp->state.state = CS_SPECTATOR;
+                    	cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
+						setteam(cp, TEAM_NEUTRAL, false, true);
+						aiman::dorefresh = true;
 					}
-					else if(spinfo->state.state == CS_SPECTATOR && !val)
+					else if(cp->state.state == CS_SPECTATOR && !val)
 					{
-						spinfo->state.state = CS_DEAD;
-	                    spinfo->state.lasttimeplayed = lastmillis;
-						waiting(spinfo);
-						if(smode) smode->entergame(spinfo);
-						mutate(smuts, mut->entergame(spinfo));
+						cp->state.state = CS_DEAD;
+	                    cp->state.lasttimeplayed = lastmillis;
+						waiting(cp);
+						if(smode) smode->entergame(cp);
+						mutate(smuts, mut->entergame(cp));
 						aiman::dorefresh = true;
 					}
 					break;

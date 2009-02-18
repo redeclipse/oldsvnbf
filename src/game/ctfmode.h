@@ -49,7 +49,7 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
 				flag &f = flags[k];
-				if(isctfhome(f, ci->team) && f.owner<0 && !f.droptime && newpos.dist(f.spawnloc) < enttype[FLAG].radius/2)
+				if(isctfhome(f, ci->team) && f.owner<0 && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius/2)
 				{
 					returnflag(i);
 					ci->state.flags++;

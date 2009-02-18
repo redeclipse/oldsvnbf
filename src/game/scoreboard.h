@@ -20,14 +20,17 @@ namespace hud
 		vector<gameent *> spectators;
 
 		IVARP(autoshowscores, 0, 1, 1);
-		IVARP(showscoreswait, 0, 0, INT_MAX-1);
-		IVARP(showscoresdelay, 0, 3, INT_MAX-1);
+		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
+		IVARP(showscoresdelay, 0, 3, INT_MAX-1); // otherwise use a static timespan
 		IVARP(scoresinfo, 0, 1, 1);
-		IVARP(showclientnum, 0, 1, 1);
+		IVARP(highlightscore, 0, 1, 1);
+
 		IVARP(showpj, 0, 0, 1);
 		IVARP(showping, 0, 1, 1);
+		IVARP(showclientnum, 0, 1, 1);
+		IVARP(showskills, 0, 1, 1);
+		IVARP(showownernum, 0, 0, 1);
 		IVARP(showspectators, 0, 1, 1);
-		IVARP(highlightscore, 0, 1, 1);
 		IVARP(showconnecting, 0, 0, 1);
 
 		scoreboard() : scoreson(false), shownscores(false)
@@ -42,7 +45,7 @@ namespace hud
 				if(!showscoresdelay() && !showscoreswait()) return true;
 				else
 				{
-					int delay = showscoreswait() ? showscoreswait() : showscoresdelay()*1000;
+					int delay = showscoreswait() ? m_spawndelay(world::gamemode, world::mutators) : showscoresdelay()*1000;
 					if(!delay || lastmillis-world::player1->lastdeath >= delay) return true;
 				}
 			}
@@ -199,7 +202,7 @@ namespace hud
 				if(!world::minremain) g.textf("%s: intermission", 0xFFFFFF, "info", getmapname());
 				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), world::minremain, world::minremain==1 ? "minute" : "minutes");
 			}
-            else g.textf("%s", 0xFFFFFF, "info", getmapname());
+			else g.textf("%s", 0xFFFFFF, "info", getmapname());
 
 			if(world::intermission || scoresinfo())
 			{
@@ -317,9 +320,7 @@ namespace hud
 					g.text("pj", fgcolor);
 					loopscoregroup(o,
 					{
-						if(o->aitype != AI_NONE) g.textf("\fs%s%d\fS", 0xFFFFFF, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->skill);
-						else if(lastmillis-o->lastupdate > 1000) g.text("LAG", 0xFFFFFF);
-						else g.textf("%d", 0xFFFFFF, NULL, o->plag);
+						g.textf("%s%d", 0xFFFFFF, NULL, lastmillis-o->lastupdate > 1000 ? "\fo" : "", o->plag);
 					});
 					g.poplist();
 				}
@@ -334,7 +335,7 @@ namespace hud
 						if(o->aitype != AI_NONE)
 						{
 							gameent *od = world::getclient(o->ownernum);
-							g.textf("\fs%s%d\fS", 0xFFFFFF, NULL, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", od ? od->ping : 0);
+							g.textf("%s%d", 0xFFFFFF, NULL, o == world::player1 ? "\fg" : "", od ? od->ping : -1);
 						}
 						else g.textf("%d", 0xFFFFFF, NULL, o->ping);
 					});
@@ -353,9 +354,33 @@ namespace hud
 					g.text("cn", fgcolor);
 					loopscoregroup(o,
 					{
-						if(o->aitype != AI_NONE)
-							g.textf("\fw%d [\fs%s%d\fS]", 0xFFFFFF, NULL, o->clientnum, o->ownernum == world::player1->clientnum ? "\fg" : "\fc", o->ownernum);
-						else g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
+						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
+					});
+					g.poplist();
+				}
+
+				if(showskills())
+				{
+					g.space(1);
+					g.pushlist();
+					g.text("sk", fgcolor);
+					loopscoregroup(o,
+					{
+						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->skill);
+						else g.space(1);
+					});
+					g.poplist();
+				}
+
+				if(showownernum())
+				{
+					g.space(1);
+					g.pushlist();
+					g.text("on", fgcolor);
+					loopscoregroup(o,
+					{
+						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->ownernum);
+						else g.space(1);
 					});
 					g.poplist();
 				}
