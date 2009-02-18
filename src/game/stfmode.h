@@ -19,7 +19,7 @@ struct stfservmode : stfstate, servmode
 		loopv(clients)
 		{
 			server::clientinfo *ci = clients[i];
-			if(!ci->spectator && ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
+			if(ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
 				b.enter(ci->team);
 		}
 		sendflag(n);
@@ -59,7 +59,6 @@ struct stfservmode : stfstate, servmode
 
 	void update()
 	{
-		if(minremain < 0) return;
 		endcheck();
 		int t = (gamemillis/1000)-((gamemillis-curtime)/1000);
 		if(t < 1) return;
@@ -68,8 +67,7 @@ struct stfservmode : stfstate, servmode
 			flag &b = flags[i];
 			if(b.enemy)
 			{
-                if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_insta(gamemode, mutators) ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1)
-					addscore(b.owner, SECURESCORE);
+                if(!b.owners || !b.enemies) b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
 				sendflag(i);
 			}
 			else if(b.owner)
@@ -111,6 +109,7 @@ struct stfservmode : stfstate, servmode
 		    }
         }
 		putint(p, SV_FLAGS);
+		putint(p, flags.length());
 		loopv(flags)
 		{
 			flag &b = flags[i];
@@ -118,7 +117,6 @@ struct stfservmode : stfstate, servmode
 			putint(p, b.owner);
 			putint(p, b.enemy);
 		}
-		putint(p, -1);
 	}
 
 	void winner(int team, int score)
@@ -202,11 +200,11 @@ struct stfservmode : stfstate, servmode
 
 	void parseflags(ucharbuf &p)
 	{
-		int x = 0;
-		while((x = getint(p))>=0)
+		int numflags = getint(p);
+		loopi(numflags)
 		{
 			vec o;
-			o.x = x/DMF;
+			o.x = getint(p)/DMF;
 			o.y = getint(p)/DMF;
 			o.z = getint(p)/DMF;
 			if(notgotflags) addflag(o);

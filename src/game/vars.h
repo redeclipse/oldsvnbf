@@ -1,4 +1,4 @@
-VARG(serverdebug, 0, 0, 2);
+VARG(serverdebug, 0, 0, 3);
 
 #ifdef STANDALONE
 SVARG(defaultmap, "eight");

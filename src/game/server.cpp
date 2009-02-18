@@ -197,7 +197,7 @@ namespace server
 		string name, mapvote;
 		int modevote, mutsvote;
 		int privilege;
-        bool connected, local, spectator, timesync, online, wantsmap;
+        bool connected, local, timesync, online, wantsmap;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent> events;
@@ -231,7 +231,7 @@ namespace server
 			ping = 0;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            connected = local = spectator = online = wantsmap = false;
+            connected = local = online = wantsmap = false;
             authreq = 0;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
@@ -1259,7 +1259,7 @@ namespace server
                 ci->state.state = CS_SPECTATOR;
                 sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
             }
-            else 
+            else
 			{
 				ci->state.state = CS_DEAD;
 				waiting(ci);
@@ -1461,7 +1461,7 @@ namespace server
                 p.buf = packet->data; \
                 p.maxlen = packet->dataLength; \
             } \
-        } while(0) 
+        } while(0)
 
         putint(p, SV_WELCOME);
 		putint(p, SV_MAPCHANGE);
@@ -1737,7 +1737,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
@@ -1760,7 +1760,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canswitch(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1777,7 +1777,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(e.weap))
 		{
-			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
+			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", e.weap);
 			return;
 		}
 		if(!gs.canreload(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
@@ -1795,7 +1795,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(e.ent))
 		{
-			if(GVAR(serverdebug) > 2) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
+			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", e.ent);
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[e.ent].type == WEAPON ? weapattr(sents[e.ent].attr[0], sweap) : sents[e.ent].attr[0];
@@ -2027,7 +2027,7 @@ namespace server
 					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
 					if(!nospawn)
 					{
-						ci->state.state = CS_ALIVE; // safety
+						ci->state.state = CS_DEAD; // safety
 						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						sendspawn(ci);
 					}
@@ -2923,9 +2923,9 @@ namespace server
 						if(spinfo->state.state == CS_ALIVE) dropitems(spinfo);
 						if(smode) smode->leavegame(spinfo);
 						mutate(smuts, mut->leavegame(spinfo));
-						setteam(spinfo, TEAM_NEUTRAL, false, true);
 						spinfo->state.state = CS_SPECTATOR;
                     	spinfo->state.timeplayed += lastmillis-spinfo->state.lasttimeplayed;
+						setteam(spinfo, TEAM_NEUTRAL, false, true);
 					}
 					else if(spinfo->state.state == CS_SPECTATOR && !val)
 					{

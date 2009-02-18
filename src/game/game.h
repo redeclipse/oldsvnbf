@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			153
+#define GAMEVERSION			154
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale

@@ -29,7 +29,7 @@ namespace stf
 			if(defend) s_sprintf(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
 			else b.info[0] = '\0';
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
-			vec p = vec(b.pos).add(vec(0, 0, enttype[FLAG].radius*0.75f));
+			vec p = vec(b.o).add(vec(0, 0, enttype[FLAG].radius*0.75f));
 			part_meter(p, occupy, b.enemy && b.owner ? PART_METER_VS : PART_METER, 1, teamtype[attack].colour, teamtype[defend].colour); p.z += 2.f;
 			part_text(p, b.info); p.z += 2.f;
 			s_sprintfd(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 2.f;
@@ -135,21 +135,18 @@ namespace stf
 			if(e->type!=FLAG) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
-            b.pos = b.o;
 			s_sprintfd(alias)("flag_%d", e->attr[0]);
 			const char *name = getalias(alias);
 			if(name[0]) s_strcpy(b.name, name);
 			else s_sprintf(b.name)("flag %d", st.flags.length());
 			b.ent = e;
 		}
-		vec center(0, 0, 0);
-		loopv(st.flags) center.add(st.flags[i].o);
-		center.div(st.flags.length());
 	}
 
 	void sendflags(ucharbuf &p)
 	{
 		putint(p, SV_FLAGS);
+		putint(p, st.flags.length());
 		loopv(st.flags)
 		{
 			stfstate::flag &b = st.flags[i];
@@ -157,7 +154,6 @@ namespace stf
 			putint(p, int(b.o.y*DMF));
 			putint(p, int(b.o.z*DMF));
 		}
-		putint(p, -1);
 	}
 
 	void updateflag(int i, int owner, int enemy, int converted)
@@ -169,13 +165,13 @@ namespace stf
 			if(b.owner != owner)
 			{
 				world::announce(S_V_FLAGSECURED, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
-				world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius/2);
+				world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius/2);
 			}
 		}
 		else if(b.owner)
 		{
 			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
-			world::spawneffect(vec(b.pos).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius/2);
+			world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius/2);
 		}
 		b.owner = owner;
 		b.enemy = enemy;
@@ -205,17 +201,17 @@ namespace stf
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
-				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.pos) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
 					targets.add(e->clientnum);
 			}
 			if(targets.empty() && (f.owner != d->team || f.enemy))
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
-				n.node = entities::entitynode(f.pos);
+				n.node = entities::entitynode(f.o);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
-				n.score = pos.squaredist(f.pos)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
+				n.score = pos.squaredist(f.o)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
 			}
 		}
 	}
@@ -227,14 +223,14 @@ namespace stf
 			stfstate::flag &f = st.flags[b.target];
 			if(lastmillis-b.millis >= (111-d->skill)*100)
 			{
-				if(f.enemy && f.owner == d->team)
+				if(!f.enemy && f.owner == d->team)
 				{
 					d->ai->clear = true; // re-evaluate
 					return true;
 				}
 				else b.millis = lastmillis;
 			}
-			return ai::defend(d, b, f.pos, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*4), 0);
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius/4), float(enttype[FLAG].radius*4), 0);
 		}
 		return false;
 	}
