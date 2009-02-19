@@ -1732,6 +1732,11 @@ namespace server
 		else if(e.weap == -1) gs.dropped.remove(e.id);
 	}
 
+	void takeammo(clientinfo *ci, int weap, int amt = 1)
+	{
+		if(isweap(weap) && weaptype[weap].max) ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0);
+	}
+
 	void processevent(clientinfo *ci, shotevent &e)
 	{
 		servstate &gs = ci->state;
@@ -1740,12 +1745,13 @@ namespace server
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", e.weap);
 			return;
 		}
-		if(weaptype[e.weap].max) gs.ammo[e.weap] = max(gs.ammo[e.weap]-1, 0); // keep synched!
 		if(!gs.canshoot(e.weap, m_spawnweapon(gamemode, mutators), e.millis))
 		{
+			takeammo(ci, e.weap, 1); // keep synched!
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", e.weap);
 			return;
 		}
+		takeammo(ci, e.weap, 1);
 		gs.setweapstate(e.weap, WPSTATE_SHOOT, weaptype[e.weap].adelay, e.millis);
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			e.weap, e.power, e.from[0], e.from[1], e.from[2],
