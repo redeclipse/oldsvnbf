@@ -54,7 +54,7 @@ struct duelservmode : servmode
 	{
 		if(!m_noitems(gamemode, mutators))
 		{
-			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, 0))
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, false))
 			{
 				loopvk(clients)
 				{

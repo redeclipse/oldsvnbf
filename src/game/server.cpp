@@ -591,7 +591,7 @@ namespace server
 		checkintermission();
 	}
 
-	bool finditem(int i, bool spawned = true, int spawntime = 0)
+	bool finditem(int i, bool spawned = true, bool timeit = false)
 	{
 		if(sents[i].spawned) return true;
 		else
@@ -599,11 +599,11 @@ namespace server
 			loopvk(clients)
 			{
 				clientinfo *ci = clients[k];
-				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (spawntime && gamemillis-sents[i].millis <= spawntime)))
+				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
 					return true;
 				else loopj(WEAPON_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
-			if(spawned && spawntime && gamemillis-sents[i].millis <= spawntime)
+			if(spawned && timeit && gamemillis < sents[i].millis)
 				return true;
 		}
 		return false;
@@ -1196,7 +1196,7 @@ namespace server
 						d.ent = ts.entid[i];
 					}
 					sents[ts.entid[i]].spawned = false;
-					sents[ts.entid[i]].millis = discon ? gamemillis-(GVAR(itemspawntime)*1000) : gamemillis;
+					sents[ts.entid[i]].millis = discon ? gamemillis+(GVAR(itemspawntime)*1000) : gamemillis;
 				}
 			}
 		}
@@ -1845,13 +1845,13 @@ namespace server
 			if(!(sents[dropped].attr[1]&WEAPFLAG_FORCED))
 			{
 				sents[dropped].spawned = false;
-				sents[dropped].millis = gamemillis;
+				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 			}
 		}
 		if(!(sents[e.ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			sents[e.ent].spawned = false;
-			sents[e.ent].millis = gamemillis;
+			sents[e.ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
 		}
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, e.ent, sents[e.ent].spawned ? 1 : 0, weap, dropped);
 	}
@@ -1972,10 +1972,10 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis-sents[i].millis >= triggertime(i)*2)
+				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis)
 				{
 					sents[i].spawned = false;
-					sents[i].millis = gamemillis;
+					sents[i].millis = gamemillis+(triggertime(i)*2);
 					sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
 				}
 				break;
@@ -1984,7 +1984,7 @@ namespace server
 			{
 				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM)
 				{
-					if(!finditem(i, true, GVAR(itemspawntime)*1000))
+					if(!finditem(i, true, true))
 					{
 						loopvk(clients)
 						{
@@ -1994,7 +1994,7 @@ namespace server
 								ci->state.entid[j] = -1;
 						}
 						sents[i].spawned = true;
-						sents[i].millis = gamemillis;
+						sents[i].millis = gamemillis+(GVAR(itemspawntime)*1000);
 						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 					}
 				}
@@ -2592,7 +2592,7 @@ namespace server
 					if(!sents.inrange(cp->state.entid[weap]) || (sents[cp->state.entid[weap]].attr[1]&WEAPFLAG_FORCED)) break;
 					cp->state.dropped.add(cp->state.entid[weap]);
 					sents[cp->state.entid[weap]].spawned = false;
-					sents[cp->state.entid[weap]].millis = gamemillis;
+					sents[cp->state.entid[weap]].millis = gamemillis+(GVAR(itemspawntime)*1000);
 					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
 					cp->state.setweapstate(weap, WPSTATE_SWITCH, 0, 0);
 					cp->state.entid[weap] = cp->state.ammo[weap] = -1;
@@ -2665,7 +2665,7 @@ namespace server
 							{
 								if(!sents[ent].spawned || sents[ent].attr[2] != TA_AUTO)
 								{
-									sents[ent].millis = gamemillis;
+									sents[ent].millis = gamemillis+(triggertime(ent)*2);
 									sents[ent].spawned = !sents[ent].spawned;
 									commit = true;
 								}
@@ -2674,7 +2674,7 @@ namespace server
 							}
 							case TR_LINK:
 							{
-								sents[ent].millis = gamemillis;
+								sents[ent].millis = gamemillis+(triggertime(ent)*2);
 								if(!sents[ent].spawned)
 								{
 									sents[ent].spawned = true;
@@ -2775,10 +2775,7 @@ namespace server
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
-							{
-								sents[n].millis -= GVAR(itemspawntime)*1000; // rewind
-								if(GVAR(itemspawndelay)) sents[n].millis += GVAR(itemspawndelay)*1000;
-							}
+								sents[n].millis += GVAR(itemspawndelay)*1000;
 						}
 					}
 					if(notgotinfo)
@@ -2793,20 +2790,6 @@ namespace server
 						notgotinfo = false;
 						aiman::dorefresh = true;
 					}
-#if 0
-					else // get their state in check then?
-					{
-						vector<int> gdat;
-						loopvk(sents) if(enttype[sents[k].type].usetype == EU_ITEM || sents[k].type == TRIGGER)
-						{
-							gdat.add(k);
-							if(enttype[sents[k].type].usetype == EU_ITEM) gdat.add(finditem(k, false) ? 1 : 0);
-							else gdat.add(sents[k].spawned ? 1 : 0);
-						}
-						gdat.add(-1);
-						sendf(sender, 1, "riiv", SV_GAMEINFO, gdat.length(), gdat.length(), gdat.getbuf());
-					}
-#endif
 					break;
 				}
 
@@ -3020,7 +3003,6 @@ namespace server
 						sents[n].millis = gamemillis;
 						if(enttype[sents[n].type].usetype == EU_ITEM)
 						{
-							sents[n].millis -= GVAR(itemspawntime)*1000; // rewind
 							if(GVAR(itemspawndelay)) sents[n].millis += GVAR(itemspawndelay)*1000;
 							else sents[n].millis += GVAR(itemspawntime)*500; // half?
 						}
