@@ -110,7 +110,7 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		gettingmap = needsmap = remote = isready = sendinfo = false;
+		gettingmap = needsmap = remote = isready = c2sinit = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
 		projs::remove(world::player1);
