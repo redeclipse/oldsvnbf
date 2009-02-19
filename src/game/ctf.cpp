@@ -372,7 +372,7 @@ namespace ctf
 			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, isctfhome(f, d->team) ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
 				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
@@ -395,7 +395,7 @@ namespace ctf
 				{ // defend the flag
 					interest &n = interests.add();
 					n.state = AI_S_DEFEND;
-					n.node = entities::closestent(WAYPOINT, f.pos(), enttype[WAYPOINT].radius*4.f, true);
+					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos())/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
@@ -407,7 +407,7 @@ namespace ctf
 				{ // attack the flag
 					interest &n = interests.add();
 					n.state = AI_S_PURSUE;
-					n.node = entities::closestent(WAYPOINT, f.pos(), enttype[WAYPOINT].radius*4.f, true);
+					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos());
@@ -455,7 +455,7 @@ namespace ctf
 				targets.setsizenodelete(0);
 				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
 				gameent *e = NULL;
-				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
 					vec ep = world::headpos(e);
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))

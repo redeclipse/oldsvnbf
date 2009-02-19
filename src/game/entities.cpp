@@ -1015,7 +1015,7 @@ namespace entities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool retry, float *score)
+	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, float obdist)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
 			return false;
@@ -1033,15 +1033,19 @@ namespace entities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
-		if(!retry)
+		if(obdist >= 0.f)
 		{
+			vec pos = world::feetpos(d);
 			loopavoid(obstacles, d,
 			{
 				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == node || ent == goal || !ents[ent]->links.empty()))
 				{
-					nodes[ent].id = routeid;
-					nodes[ent].curscore = -1.f;
-					nodes[ent].estscore = 0.f;
+					if(obdist <= 0.f || ents[ent]->o.dist(pos) <= obdist)
+					{
+						nodes[ent].id = routeid;
+						nodes[ent].curscore = -1.f;
+						nodes[ent].estscore = 0.f;
+					}
 				}
 			});
 		}
@@ -1078,7 +1082,7 @@ namespace entities
 					if(n.id != routeid)
 					{
 						n.estscore = ents[link]->o.dist(ents[goal]->o);
-						if((retry || n.estscore <= float(enttype[ents[link]->type].radius*4)) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
+						if(n.estscore <= float(enttype[ents[link]->type].radius*4) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
 							lowest = link;
 						if(link != goal) queue.add(&n);
 						else queue.setsizenodelete(0);
@@ -1094,7 +1098,6 @@ namespace entities
 		{
 			for(linkq *m = &nodes[lowest]; m != NULL; m = m->prev)
 				route.add(m - &nodes[0]); // just keep it stored backward
-			if(!route.empty() && score) *score = nodes[lowest].score();
 		}
 
 		if(verbose >= 3)
@@ -1135,7 +1138,7 @@ namespace entities
 			}
 			else
 			{
-				int curnode = closestent(WAYPOINT, v, enttype[WAYPOINT].radius*4.f, false);
+				int curnode = closestent(WAYPOINT, v, ai::NEARDIST, false);
 				if(ents.inrange(curnode)) d->lastnode = curnode;
 				else d->lastnode = -1;
 			}
