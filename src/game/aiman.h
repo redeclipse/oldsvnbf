@@ -229,7 +229,7 @@ namespace aiman
 				dorefresh = true;
 				oldbotratio = GVAR(botratio);
 			}
-			if(m_play(gamemode) && !autooverride)
+			if(m_fight(gamemode) && !autooverride)
 			{
 				int balance = int(numplayers*GVAR(botscale));
 				if(m_team(gamemode, mutators))
