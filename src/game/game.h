@@ -1363,7 +1363,7 @@ namespace entities
 {
 	extern vector<extentity *> ents;
 	extern void clearentcache();
-	extern int entitynode(const vec &v, bool links = true, bool drop = false);
+	extern int closestent(int type, const vec &pos, float mindist, bool links = false);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
@@ -1471,7 +1471,7 @@ namespace entities
 							vec above(pos.x, pos.y, ob.above);
 							if(above.z-d->o.z >= ai::AIJUMPMAX)
 								return -1; // too much scotty
-							int node = entitynode(above);
+							int node = closestent(WAYPOINT, above, enttype[WAYPOINT].radius*4.f, true);
 							if(ents.inrange(node) && node != n)
 							{ // try to reroute above their head?
 								if(!find(node, d))

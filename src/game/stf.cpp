@@ -208,7 +208,7 @@ namespace stf
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
-				n.node = entities::entitynode(f.o);
+				n.node = entities::closestent(WAYPOINT, f.o, enttype[WAYPOINT].radius*4.f, false);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
 				n.score = pos.squaredist(f.o)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
