@@ -135,7 +135,7 @@ namespace weapons
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		vec kickback(unitv);
-		kickback.mul(weaptype[d->weapselect].kick*(physics::iscrouching(d) ? 0.1f : 1.f));
+		kickback.mul(m_speedscale(weaptype[d->weapselect].kick*(physics::iscrouching(d) ? 0.1f : 1.f)));
 		d->vel.add(kickback);
 		if(d == world::player1) world::quakewobble += weaptype[d->weapselect].wobble;
 		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);

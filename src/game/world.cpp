@@ -1335,7 +1335,7 @@ namespace world
 	{
 		fixview(w, h);
 		checkcamera();
-		if(connected() && maptime)
+		if(connected() && client::ready() && maptime)
 		{
 			if(!lastcamera)
 			{

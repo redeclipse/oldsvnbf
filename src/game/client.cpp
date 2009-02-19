@@ -375,13 +375,13 @@ namespace client
 		world::maptime = 0;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
+		needsmap = false;
 		if(!name || !*name || !load_world(name, temp))
 		{
 			emptymap(0, true, NULL);
 			setnames(name, MAP_BFGZ);
 			needsmap = true;
 		}
-		else needsmap = false;
 		if(editmode) edittoggled(editmode);
 		if(m_stf(gamemode)) stf::setupflags();
         else if(m_ctf(gamemode)) ctf::setupflags();
@@ -946,10 +946,11 @@ namespace client
 						return;
 					}
                     sessionid = getint(p);
-					world::player1->clientnum = mycn;	  // we are now fully ready
-                    if(getint(p)) conoutf("\frthis server is password protected");
-                    sendintro();
 					isready = true;
+					world::player1->clientnum = mycn;	  // we are now fully ready
+                    if(getint(p)) conoutf("\frthe server is password protected");
+                    else if(verbose) conoutf("\fathe server welcomes us, yay");
+                    sendintro();
 					break;
 				}
 
