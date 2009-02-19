@@ -124,7 +124,6 @@ namespace aiman
 		{
 			if(ci->state.aireinit >= 2)
 			{
-				ci->state.state = CS_DEAD;
 				waiting(ci);
 				ci->state.dropped.reset();
 				loopk(WEAPON_MAX) ci->state.weapshots[k].reset();

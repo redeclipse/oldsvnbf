@@ -6,6 +6,7 @@
 ENetHost *clienthost = NULL;
 ENetPeer *curpeer = NULL, *connpeer = NULL;
 int connmillis = 0, connattempts = 0, discmillis = 0;
+bool connectedlocally = false;
 
 bool multiplayer(bool msg)
 {
@@ -38,7 +39,7 @@ void throttle()
 
 bool connected(bool attempt)
 {
-    return curpeer || (attempt && connpeer) || client::ready();
+    return curpeer || (attempt && connpeer) || connectedlocally;
 }
 
 void abortconnect(bool msg)

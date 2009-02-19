@@ -1026,7 +1026,7 @@ namespace server
 		}
 	}
 
-	extern void waiting(clientinfo *ci, bool exclude = false);
+	extern void waiting(clientinfo *ci, int doteam = 0, bool exclude = false);
 
 	void setteam(clientinfo *ci, int team, bool reset = true, bool info = false)
 	{
@@ -1258,11 +1258,12 @@ namespace server
             {
                 ci->state.state = CS_SPECTATOR;
                 sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
+				setteam(ci, TEAM_NEUTRAL, false, true);
             }
             else
 			{
 				ci->state.state = CS_DEAD;
-				waiting(ci);
+				waiting(ci, 2);
 			}
 		}
 
@@ -1561,6 +1562,7 @@ namespace server
 			if(m_play(gamemode) || mastermode>=MM_LOCKED)
             {
                 ci->state.state = CS_SPECTATOR;
+                ci->team = TEAM_NEUTRAL;
                 putint(p, SV_SPECTATOR);
                 putint(p, ci->clientnum);
                 putint(p, 1);
@@ -1569,7 +1571,7 @@ namespace server
             else
 			{
 				ci->state.state = CS_DEAD;
-				waiting(ci, true);
+				waiting(ci, 0, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
                 if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST)) ci->team = chooseteam(ci);
@@ -1910,7 +1912,7 @@ namespace server
 	}
 #endif
 
-	void waiting(clientinfo *ci, bool exclude)
+	void waiting(clientinfo *ci, int doteam, bool exclude)
 	{
 		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
@@ -1925,7 +1927,7 @@ namespace server
 			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 			ci->state.state = CS_WAITING;
 			ci->state.weapreset(false);
-			if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST))
+			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
 	}
@@ -2236,16 +2238,6 @@ namespace server
 
 	int checktype(int type, clientinfo *ci)
 	{
-#if 0
-        // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
-        // spectators can only connect and talk
-		static int spectypes[] = { SV_INITC2S, SV_POS, SV_TEXT, SV_PING, SV_CLIENTPING, SV_GETMAP, SV_SETMASTER };
-		if(ci && ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER))
-		{
-			loopi(sizeof(spectypes)/sizeof(int)) if(type == spectypes[i]) return type;
-			return -1;
-		}
-#endif
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
@@ -2921,7 +2913,7 @@ namespace server
 					{
 						cp->state.state = CS_DEAD;
 	                    cp->state.lasttimeplayed = lastmillis;
-						waiting(cp);
+						waiting(cp, 2);
 						if(smode) smode->entergame(cp);
 						mutate(smuts, mut->entergame(cp));
 						aiman::dorefresh = true;

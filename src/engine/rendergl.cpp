@@ -1823,6 +1823,7 @@ void drawnoview()
     glDisable(GL_FOG);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
+	glClearColor(0.f, 0.f, 0.f, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     int w = screen->w, h = screen->h;
@@ -2045,113 +2046,111 @@ void drawview(int targtype)
 
 void gl_drawframe(int w, int h)
 {
-    if(!connected(false))
+    if(connected(false) && client::ready())
     {
-        drawnoview();
-        return;
+		fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
+		causticspass = 0.f;
+		if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
+		{
+			float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+			if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+			else fogmat = abovemat;
+			if(caustics && fogmat == MAT_WATER && camera1->o.z < z)
+				causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+
+			float blend = abovemat == MAT_AIR ? fogblend : 1.0f;
+			fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+			aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+		}
+		else fogmat = MAT_AIR;
+
+		farplane = hdr.worldsize*2;
+		project(fovy, aspect, farplane);
+		transplayer();
+		readmatrices();
+		world::project(w, h);
+
+		int copies = 0, oldcurtime = curtime;
+		loopi(VP_MAX) if(needsview(viewtype, i))
+		{
+			drawview(i);
+			if(copyview(viewtype, i))
+			{
+				views[i].copy();
+				copies++;
+			}
+			curtime = 0;
+		}
+		if(needsview(viewtype, VP_CAMERA)) drawview(VP_CAMERA);
+		curtime = oldcurtime;
+
+		if(!copies) return;
+
+		glDisable(GL_FOG);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, 1, 0, 1, -1, 1);
+		glDisable(GL_BLEND);
+		glEnable(GL_TEXTURE_2D);
+		defaultshader->set();
+		glColor3f(1.f, 1.f, 1.f);
+		switch(viewtype)
+		{
+			case VW_MAGIC:
+			{
+				views[VP_LEFT].draw(0, 0, 0.5f, 1);
+				views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1);
+				break;
+			}
+			case VW_STEREO_BLEND:
+			case VW_STEREO_BLEND_REDCYAN:
+			{
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
+				glColor4f(1.f, 1.f, 1.f, stereoblend/100.f); views[VP_RIGHT].draw(0, 0, 1, 1);
+				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+				glDisable(GL_BLEND);
+				break;
+			}
+			case VW_STEREO_AVG:
+			{
+				glEnable(GL_BLEND);
+				if(hasBC)
+				{
+					glBlendFunc(GL_ONE, GL_CONSTANT_COLOR_EXT);
+					glBlendColor_(0.f, 0.5f, 1.f, 1.f);
+				}
+				else
+				{
+					glDisable(GL_TEXTURE_2D);
+					glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+					glColor3f(0.f, 0.5f, 1.f);
+					glBegin(GL_QUADS);
+					glVertex2f(0, 0);
+					glVertex2f(1, 0);
+					glVertex2f(1, 1);
+					glVertex2f(0, 1);
+					glEnd();
+					glEnable(GL_TEXTURE_2D);
+					glBlendFunc(GL_ONE, GL_ONE);
+				}
+				glColor3f(1.f, 0.5f, 0.f);
+				views[VP_LEFT].draw(0, 0, 1, 1);
+				glDisable(GL_BLEND);
+				break;
+			}
+		}
+		glDisable(GL_TEXTURE_2D);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_FOG);
     }
-
-	fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
-	causticspass = 0.f;
-	if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
-	{
-		float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
-		if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
-		else fogmat = abovemat;
-		if(caustics && fogmat == MAT_WATER && camera1->o.z < z)
-			causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
-
-		float blend = abovemat == MAT_AIR ? fogblend : 1.0f;
-		fovy += blend*sinf(lastmillis/1000.0)*2.0f;
-		aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
-	}
-	else fogmat = MAT_AIR;
-
-	farplane = hdr.worldsize*2;
-	project(fovy, aspect, farplane);
-	transplayer();
-	readmatrices();
-	world::project(w, h);
-
-	int copies = 0, oldcurtime = curtime;
-	loopi(VP_MAX) if(needsview(viewtype, i))
-	{
-		drawview(i);
-		if(copyview(viewtype, i))
-		{
-			views[i].copy();
-			copies++;
-		}
-		curtime = 0;
-	}
-	if(needsview(viewtype, VP_CAMERA)) drawview(VP_CAMERA);
-	curtime = oldcurtime;
-
-	if(!copies) return;
-
-	glDisable(GL_FOG);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, 1, 0, 1, -1, 1);
-	glDisable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
-	glColor3f(1.f, 1.f, 1.f);
-	switch(viewtype)
-	{
-		case VW_MAGIC:
-		{
-			views[VP_LEFT].draw(0, 0, 0.5f, 1);
-			views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1);
-			break;
-		}
-		case VW_STEREO_BLEND:
-        case VW_STEREO_BLEND_REDCYAN:
-		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
-			glColor4f(1.f, 1.f, 1.f, stereoblend/100.f); views[VP_RIGHT].draw(0, 0, 1, 1);
-            if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-			glDisable(GL_BLEND);
-			break;
-		}
-        case VW_STEREO_AVG:
-        {
-            glEnable(GL_BLEND);
-            if(hasBC)
-            {
-                glBlendFunc(GL_ONE, GL_CONSTANT_COLOR_EXT);
-                glBlendColor_(0.f, 0.5f, 1.f, 1.f);
-            }
-            else
-            {
-                glDisable(GL_TEXTURE_2D);
-                glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-                glColor3f(0.f, 0.5f, 1.f);
-                glBegin(GL_QUADS);
-                glVertex2f(0, 0);
-                glVertex2f(1, 0);
-                glVertex2f(1, 1);
-                glVertex2f(0, 1);
-                glEnd();
-                glEnable(GL_TEXTURE_2D);
-                glBlendFunc(GL_ONE, GL_ONE);
-            }
-            glColor3f(1.f, 0.5f, 0.f);
-            views[VP_LEFT].draw(0, 0, 1, 1);
-            glDisable(GL_BLEND);
-            break;
-        }
-	}
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_FOG);
+    else drawnoview();
 }
 
 #define rendernearfar(a,b,c,d,e) \

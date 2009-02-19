@@ -348,7 +348,7 @@ namespace hud
 	{
         int index = POINTER_NONE;
 		if(UI::hascursor()) index = UI::hascursor(true) ? POINTER_GUI : POINTER_NONE;
-        else if(!showcrosshair || world::player1->state == CS_DEAD || !connected()) index = POINTER_NONE;
+        else if(!showcrosshair || world::player1->state == CS_DEAD || !connected() || !client::ready()) index = POINTER_NONE;
         else if(world::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(world::player1->state == CS_SPECTATOR || world::player1->state == CS_WAITING) index = POINTER_SPEC;
         else if(world::inzoom() && weaptype[world::player1->weapselect].snipes) index = POINTER_SNIPE;
@@ -1174,7 +1174,7 @@ namespace hud
 				break;
 			default: break;
 		}
-		if(connected() && world::maptime)
+		if(connected() && client::ready() && world::maptime)
 		{
 			if(world::player1->state == CS_EDITING)
 			{
@@ -1198,7 +1198,7 @@ namespace hud
 	{
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		if(world::maptime && connected()) drawgamehud(w, h);
+		if(world::maptime && connected() && client::ready()) drawgamehud(w, h);
 		drawhudelements(w, h);
 		glDisable(GL_BLEND);
 	}

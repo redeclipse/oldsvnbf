@@ -390,6 +390,7 @@ int addclient(int type)
 }
 
 #ifndef STANDALONE
+extern bool connectedlocally;
 void localconnect()
 {
     int cn = addclient(ST_LOCAL);
@@ -399,6 +400,7 @@ void localconnect()
     conoutf("\fglocal client %d connected", c.num);
     client::gameconnect(false);
     server::clientconnect(c.num, 0, true);
+    connectedlocally = true;
 }
 
 void localdisconnect()
@@ -411,6 +413,7 @@ void localdisconnect()
         c.type = ST_EMPTY;
         server::deleteinfo(c.info);
         c.info = NULL;
+		connectedlocally = false;
     }
 }
 #endif
