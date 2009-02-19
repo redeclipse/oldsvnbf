@@ -247,8 +247,7 @@ namespace entities
 
         if(!left || right==numindices)
         {
-            left = numindices/2;
-            right = numindices - left;
+            left = right = numindices/2;
             splitleft = -1e16f;
             splitright = 1e16f;
             loopi(numindices)
@@ -1183,7 +1182,6 @@ namespace entities
 			{
 				gameentity &e = *(gameentity *)ents[j];
 				if(verbose) renderprogress(float(j)/float(ents.length()), "merging waypoints...");
-				vec avg(e.o);
 				loopvk(ents) if(k != j && ents[k]->type == WAYPOINT)
 				{
 					gameentity &f = *(gameentity *)ents[k];
