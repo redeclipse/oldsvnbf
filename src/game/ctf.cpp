@@ -395,7 +395,7 @@ namespace ctf
 				{ // defend the flag
 					interest &n = interests.add();
 					n.state = AI_S_DEFEND;
-					n.node = entities::entitynode(f.pos());
+					n.node = entities::closestent(WAYPOINT, f.pos(), enttype[WAYPOINT].radius*4.f, true);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos())/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
@@ -407,7 +407,7 @@ namespace ctf
 				{ // attack the flag
 					interest &n = interests.add();
 					n.state = AI_S_PURSUE;
-					n.node = entities::entitynode(f.pos());
+					n.node = entities::closestent(WAYPOINT, f.pos(), enttype[WAYPOINT].radius*4.f, true);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos());

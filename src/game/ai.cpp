@@ -116,7 +116,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed)
 	{
-		int node = entities::entitynode(pos);
+		int node = entities::closestent(WAYPOINT, pos, enttype[WAYPOINT].radius*4.f, true);
 		return makeroute(d, b, node, changed);
 	}
 
@@ -271,7 +271,7 @@ namespace ai
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::entitynode(e.o);
+						n.node = entities::closestent(WAYPOINT, e.o, enttype[WAYPOINT].radius*4.f, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
@@ -296,7 +296,7 @@ namespace ai
 						if(proj.owner == d) break;
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::entitynode(proj.o);
+						n.node = entities::closestent(WAYPOINT, proj.o, enttype[WAYPOINT].radius*4.f, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
