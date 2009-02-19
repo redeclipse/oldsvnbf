@@ -10,7 +10,7 @@ namespace world
 	vec swaydir(0, 0, 0);
     int lasthit = 0, lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0;
     bool prevzoom = false, zooming = false;
-	int quakewobble = 0, liquidchan = -1;
+	int quakewobble = 0, liquidchan = -1, fogdist = 0;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -771,6 +771,8 @@ namespace world
 		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
 			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
+
+		fogdist = getvar("fog");
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)

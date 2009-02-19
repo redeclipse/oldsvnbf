@@ -5,11 +5,37 @@ namespace ai
 {
 	entities::avoidset obstacles;
     int avoidmillis = 0, updatemillis = 0;
+    vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 4);
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
+
+	float viewdist(int x)
+	{
+		return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(world::fogdist)) : float(world::fogdist);
+	}
+
+	float viewfieldx(int x)
+	{
+		return x <= 100 ? clamp((VIEWMIN+(VIEWMAX-VIEWMIN))/100.f*float(x), float(VIEWMIN), float(VIEWMAX)) : float(VIEWMAX);
+	}
+
+	float viewfieldy(int x)
+	{
+		return viewfieldx(x)*3.f/4.f;
+	}
+
+	float targetable(gameent *d, gameent *e, bool z)
+	{
+		return d != e && e->state == CS_ALIVE && (!z || !m_team(world::gamemode, world::mutators) || (d)->team != (e)->team);
+	}
+
+	float cansee(gameent *d, vec &x, vec &y, vec &targ)
+	{
+		return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
+	}
 
 	void create(gameent *d)
 	{
@@ -17,6 +43,12 @@ namespace ai
 		{
 			if((d->ai = new aiinfo()) == NULL)
 				fatal("could not create ai");
+			else
+			{ // store some constants we'll always use
+				d->ai->views[0] = viewfieldx(d->skill);
+				d->ai->views[1] = viewfieldy(d->skill);
+				d->ai->views[2] = viewdist(d->skill);
+			}
 		}
 	}
 
@@ -85,7 +117,7 @@ namespace ai
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool retry)
+	bool makeroute(gameent *d, aistate &b, int node, bool changed, float obdist)
 	{
 		int n = node;
 		if((n == d->lastnode || n == d->ai->lastnode || n == d->ai->prevnode) && entities::ents.inrange(d->lastnode))
@@ -102,22 +134,22 @@ namespace ai
 		if(n != d->lastnode)
 		{
 			if(changed && !d->ai->route.empty() && d->ai->route[0] == n) return true;
-			if(entities::route(d, d->lastnode, n, d->ai->route, obstacles, retry))
+			if(entities::route(d, d->lastnode, n, d->ai->route, obstacles, obdist))
 			{
 				b.override = false;
 				return true;
 			}
-			if(!retry) return makeroute(d, b, n, true, true);
+			if(obdist >= 0.f) return makeroute(d, b, n, true, obdist != 0.f ? 0.f : -1.f);
 		}
 		d->ai->route.setsize(0);
 		b.override = false;
 		return false;
 	}
 
-	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed)
+	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, float obdist)
 	{
-		int node = entities::closestent(WAYPOINT, pos, enttype[WAYPOINT].radius*4.f, true);
-		return makeroute(d, b, node, changed);
+		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true);
+		return makeroute(d, b, node, changed, obdist);
 	}
 
 	bool randomnode(gameent *d, aistate &b, const vec &pos, float guard, float wander)
@@ -140,30 +172,30 @@ namespace ai
 		return randomnode(d, b, feet, guard, wander);
 	}
 
-	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = AIISNEAR, bool pursue = false)
+	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, bool pursue = false)
 	{
 		if(world::allowmove(d))
 		{
 			gameent *t = NULL, *e = NULL;
-			vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
-			bool cansee = false, tooclose = false;
+			vec dp = world::headpos(d), tp = vec(0, 0, 0);
+			bool insight = false, tooclose = false;
 			float mindist = guard*guard;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
 			{
 				vec ep = world::headpos(e);
 				bool close = ep.squaredist(pos) < mindist;
 				if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
 				{
-					bool see = AICANSEE(dp, ep, d);
-					if(!cansee || see || close)
+					bool see = cansee(d, dp, ep);
+					if(!insight || see || close)
 					{
 						t = e; tp = ep;
-						if(!cansee && see) cansee = see;
+						if(!insight && see) insight = see;
 						if(!tooclose && close) tooclose = close;
 					}
 				}
 			}
-			if(t && violence(d, b, t, pursue && (tooclose || cansee))) return cansee || tooclose;
+			if(t && violence(d, b, t, pursue && (tooclose || insight))) return insight || tooclose;
 		}
 		return false;
 	}
@@ -211,7 +243,7 @@ namespace ai
 
 	bool violence(gameent *d, aistate &b, gameent *e, bool pursue)
 	{
-		if(AITARG(d, e, true))
+		if(targetable(d, e, true))
 		{
 			if(pursue)
 				d->ai->addstate(AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
@@ -225,11 +257,11 @@ namespace ai
 	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false)
 	{
 		gameent *t = NULL, *e = NULL;
-		vec targ, dp = world::headpos(d), tp = vec(0, 0, 0);
-		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && AITARG(d, e, true))
+		vec dp = world::headpos(d), tp = vec(0, 0, 0);
+		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
 			vec ep = world::headpos(e);
-			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || AICANSEE(dp, ep, d)))
+			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
 			{
 				t = e;
 				tp = ep;
@@ -271,7 +303,7 @@ namespace ai
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::closestent(WAYPOINT, e.o, enttype[WAYPOINT].radius*4.f, true);
+						n.node = entities::closestent(WAYPOINT, e.o, NEARDIST, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
 						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
@@ -296,7 +328,7 @@ namespace ai
 						if(proj.owner == d) break;
 						interest &n = interests.add();
 						n.state = AI_S_INTEREST;
-						n.node = entities::closestent(WAYPOINT, proj.o, enttype[WAYPOINT].radius*4.f, true);
+						n.node = entities::closestent(WAYPOINT, proj.o, NEARDIST, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
 						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
@@ -343,7 +375,7 @@ namespace ai
 
 	void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir)
 	{
-		if(d->ai && world::allowmove(d) && AITARG(d, e, true)) // see if this ai is interested in a grudge
+		if(d->ai && world::allowmove(d) && targetable(d, e, true)) // see if this ai is interested in a grudge
 		{
 			aistate &b = d->ai->getstate();
 			if(violence(d, b, e, false)) return;
@@ -353,7 +385,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && AITARG(t, e, true))
+			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && targetable(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				if(violence(t, c, e, false)) return;
@@ -392,7 +424,7 @@ namespace ai
 		if(check(d, b)) return true;
 		if(find(d, b)) return true;
 		if(target(d, b, true, true)) return true;
-		if(randomnode(d, b, AIISNEAR, 1e16f))
+		if(randomnode(d, b, NEARDIST, 1e16f))
 		{
 			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
 			return true;
@@ -522,7 +554,7 @@ namespace ai
 	{
 		vec pos = world::feetpos(d);
 		int node = -1;
-		float mindist = float(enttype[WAYPOINT].radius*enttype[WAYPOINT].radius*16);
+		float mindist = NEARDISTSQ;
 		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode && d->ai->route[i] != d->ai->prevnode)))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
@@ -568,7 +600,7 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 			vec dir = vec(e.o).sub(world::feetpos(d));
-			if(d->timeinair || dir.magnitude() <= enttype[WAYPOINT].radius || retry)
+			if(d->timeinair || dir.magnitude() <= CLOSEDIST || retry)
 			{
 				static vector<int> anyremap; anyremap.setsizenodelete(0);
 				vec dp = world::feetpos(d);
@@ -618,7 +650,7 @@ namespace ai
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*1000)) return true; // random margin of error
 		gameent *h = world::intersectclosest(d->muzzle, d->ai->target, d);
-		if(h && !AITARG(d, h, true)) return false;
+		if(h && !targetable(d, h, true)) return false;
 		float targyaw, targpitch, mindist = d->radius*d->radius, dist = d->muzzle.squaredist(d->ai->target);
 		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
 		if(mindist <= dist)
@@ -629,7 +661,7 @@ namespace ai
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
 					skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(cyaw <= AIFOVX(d->skill)*skew && cpitch <= AIFOVY(d->skill)*skew) return true;
+			if(cyaw <= d->ai->views[0]*skew && cpitch <= d->ai->views[1]*skew) return true;
 		}
 		return false;
 	}
@@ -639,7 +671,7 @@ namespace ai
 		if(lastmillis-d->jumptime >= 300 && (!d->timeinair || (cando && physics::canimpulse(d))))
 		{
 			vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
-			bool jump = off.z >= AIJUMPHEIGHT, propel = cando && dir.magnitude() >= AIJUMPHEIGHT;
+			bool jump = off.z >= JUMPMIN, propel = cando && dir.magnitude() >= JUMPMIN;
 			if(propel)
 			{
 				if((!d->timeinair && lastmillis < d->ai->jumpseed) || (d->timeinair && lastmillis < d->ai->propelseed))
@@ -692,13 +724,13 @@ namespace ai
 		else d->ai->dontmove = true;
 
 		gameent *e = world::getclient(d->ai->enemy);
-		if(d->skill > 100 && (!e || !AITARG(d, e, true))) e = world::intersectclosest(d->muzzle, d->ai->target, d);
-		if(e && AITARG(d, e, true))
+		if(d->skill > 100 && (!e || !targetable(d, e, true))) e = world::intersectclosest(d->muzzle, d->ai->target, d);
+		if(e && targetable(d, e, true))
 		{
-			vec targ, ep = world::headpos(e);
-			bool cansee = AICANSEE(dp, ep, d), hasseen = d->ai->lastseen && lastmillis-d->ai->lastseen <= (d->skill*100)+1000;
-			if(b.idle || cansee) d->ai->lastseen = lastmillis;
-			if(b.idle || cansee || hasseen)
+			vec ep = world::headpos(e);
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->lastseen && lastmillis-d->ai->lastseen <= (d->skill*100)+1000;
+			if(b.idle || insight) d->ai->lastseen = lastmillis;
+			if(b.idle || insight || hasseen)
 			{
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
@@ -707,11 +739,11 @@ namespace ai
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!cansee) frame /= 3.f;
+					if(!insight) frame /= 3.f;
 				}
-				else if(!cansee) frame /= 2.f;
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, cansee ? 1.f : 0.5f);
-				if(cansee)
+				else if(!insight) frame /= 2.f;
+				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, insight ? 1.f : 0.5f);
+				if(insight)
 				{
 					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
 					{

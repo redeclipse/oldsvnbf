@@ -198,7 +198,7 @@ namespace stf
 			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && AITARG(d, e, false) && !e->ai && d->team == e->team)
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = world::headpos(e);
 				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
@@ -208,7 +208,7 @@ namespace stf
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
-				n.node = entities::closestent(WAYPOINT, f.o, enttype[WAYPOINT].radius*4.f, false);
+				n.node = entities::closestent(WAYPOINT, f.o, ai::NEARDIST, false);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
 				n.score = pos.squaredist(f.o)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
