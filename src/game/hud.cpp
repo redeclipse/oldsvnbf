@@ -458,6 +458,7 @@ namespace hud
 						popfont();
 					}
 				}
+				/* freeze
 				if(m_paint(world::gamemode, world::mutators))
 				{
 					int delay = world::player1->damageprotect(lastmillis, paintfreezetime*1000);
@@ -472,6 +473,7 @@ namespace hud
 						}
 					}
 				}
+				*/
 				if(shownotices > 2)
 				{
 					pushfont("default");
@@ -672,7 +674,7 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int colour = teamtype[d->team].colour, delay = d->spawnprotect(lastmillis, spawnprotecttime*1000, m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0);
+			int colour = teamtype[d->team].colour, delay = d->spawnprotect(lastmillis, spawnprotecttime*1000, /*freeze m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 :*/ 0);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);

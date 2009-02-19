@@ -26,7 +26,7 @@ VARG(regendelay, 0, 3, INT_MAX-1);
 VARG(regentime, 0, 1, INT_MAX-1);
 VARG(regenhealth, 0, 10, INT_MAX-1);
 VARG(spawnprotecttime, 0, 3, INT_MAX-1);
-VARG(paintfreezetime, 0, 3, INT_MAX-1);
+/*freeze VARG(paintfreezetime, 0, 3, INT_MAX-1); */
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes

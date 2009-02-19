@@ -1616,8 +1616,8 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		servstate &ts = target->state;
-		int sp = GVAR(spawnprotecttime)*1000, pf = m_paint(gamemode, mutators) ? GVAR(paintfreezetime)*1000 : 0;
-		if(ts.spawnprotect(gamemillis, sp, pf) || ts.damageprotect(gamemillis, pf)) return;
+		int sp = GVAR(spawnprotecttime)*1000; /*freeze, pf = m_paint(gamemode, mutators) ? GVAR(paintfreezetime)*1000 : 0; */
+		if(ts.spawnprotect(gamemillis, sp, /*freeze pf */ 0) || ts.damageprotect(gamemillis, /*freeze pf */ 0)) return;
 
 		int realdamage = damage, realflags = flags, nodamage = 0;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
