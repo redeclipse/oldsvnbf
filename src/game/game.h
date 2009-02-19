@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			154
+#define GAMEVERSION			155
 #define DEMO_VERSION		GAMEVERSION
 
 // network quantization scale
@@ -464,7 +464,7 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? (int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)+(m_paint(a, b) ? GVAR(paintfreezetime)*1000 : 0)) : 0)
+#define m_spawndelay(a,b)	(!m_duke(a,b) ? (int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)) : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))

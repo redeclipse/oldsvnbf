@@ -278,8 +278,10 @@ namespace world
 			else if(d->state == CS_ALIVE)
 			{
 				if(intermission) return false;
+				/* freeze
 				if(m_paint(gamemode, mutators) && ((gameent *)d)->damageprotect(lastmillis, paintfreezetime*1000))
 					return false;
+				*/
 			}
         }
         return true;
