@@ -1182,30 +1182,24 @@ namespace server
 			d.weap = WEAPON_GL;
 			d.ent = -1;
 		}
-		if(!m_noitems(gamemode, mutators) && (discon || GVAR(itemdropping)))
+		if(!m_noitems(gamemode, mutators))
 		{
 			loopi(WEAPON_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 			{
-				if(!(sents[ts.entid[i]].attr[1]&WEAPFLAG_FORCED))
+				sents[ts.entid[i]].millis = gamemillis;
+				if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAPFLAG_FORCED))
 				{
-					if(!discon)
-					{
-						ts.dropped.add(ts.entid[i]);
-						droplist &d = drop.add();
-						d.weap = i;
-						d.ent = ts.entid[i];
-					}
-					sents[ts.entid[i]].spawned = false;
-					sents[ts.entid[i]].millis = discon ? gamemillis+(GVAR(itemspawntime)*1000) : gamemillis;
+					ts.dropped.add(ts.entid[i]);
+					droplist &d = drop.add();
+					d.weap = i;
+					d.ent = ts.entid[i];
+					sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
 				}
 			}
 		}
-		if(!discon)
-		{
-			ts.weapreset(false);
-			if(!drop.empty())
-				sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
-		}
+		ts.weapreset(false);
+		if(!discon && !drop.empty())
+			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
 	#include "stfmode.h"
@@ -1984,21 +1978,18 @@ namespace server
 			}
 			default:
 			{
-				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM)
+				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true))
 				{
-					if(!finditem(i, true, true))
+					loopvk(clients)
 					{
-						loopvk(clients)
-						{
-							clientinfo *ci = clients[k];
-							ci->state.dropped.remove(i);
-							loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
-								ci->state.entid[j] = -1;
-						}
-						sents[i].spawned = true;
-						sents[i].millis = gamemillis+(GVAR(itemspawntime)*1000);
-						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+						clientinfo *ci = clients[k];
+						ci->state.dropped.remove(i);
+						loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
+							ci->state.entid[j] = -1;
 					}
+					sents[i].spawned = true;
+					sents[i].millis = gamemillis+(GVAR(itemspawntime)*1000);
+					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 				}
 				break;
 			}
@@ -2583,7 +2574,6 @@ namespace server
 					if(!havecn || !isweap(weap) || !cp->state.hasweap(weap, sweap) || m_noitems(gamemode, mutators)) break;
 					if(!sents.inrange(cp->state.entid[weap]) || (sents[cp->state.entid[weap]].attr[1]&WEAPFLAG_FORCED)) break;
 					cp->state.dropped.add(cp->state.entid[weap]);
-					sents[cp->state.entid[weap]].spawned = false;
 					sents[cp->state.entid[weap]].millis = gamemillis+(GVAR(itemspawntime)*1000);
 					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
 					cp->state.setweapstate(weap, WPSTATE_SWITCH, 0, 0);
