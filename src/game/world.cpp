@@ -690,7 +690,7 @@ namespace world
 
 	gameent *newclient(int cn)
 	{
-		if(cn < 0 || cn >= MAXCLIENTS)
+		if(cn < 0 || cn >= MAXPLAYERS)
 		{
 			neterr("clientnum");
 			return NULL;

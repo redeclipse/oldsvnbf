@@ -2,6 +2,9 @@
 #define GAMEVERSION			155
 #define DEMO_VERSION		GAMEVERSION
 
+#define MAXBOTS 100
+#define MAXPLAYERS (MAXCLIENTS + MAXBOTS)
+
 // network quantization scale
 #define DMF 16.0f			// for world locations
 #define DNF 100.0f			// for normalized vectors

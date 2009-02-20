@@ -38,17 +38,22 @@ namespace aiman
 
 	bool addai(int type, int skill, bool req)
 	{
-		loopv(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum < 0)
-		{ // reuse a slot that was going to removed
-			clientinfo *ci = clients[i];
-			ci->state.ownernum = findaiclient();
-			ci->state.aireinit = 2;
-			ci->team = chooseteam(ci);
-			if(req) autooverride = true;
-			dorefresh = true;
-			return true;
+		int numai = 0;
+		loopv(clients) if(clients[i]->state.aitype == type) 
+		{
+			if(clients[i]->state.ownernum < 0)
+			{ // reuse a slot that was going to removed
+				clientinfo *ci = clients[i];
+				ci->state.ownernum = findaiclient();
+				ci->state.aireinit = 2;
+				ci->team = chooseteam(ci);
+				if(req) autooverride = true;
+				dorefresh = true;
+				return true;
+			}
+			numai++;
 		}
-		int cn = addclient(ST_REMOTE);
+		int cn = numai < GVAR(botlimit) ? addclient(ST_REMOTE) : -1;
 		if(cn >= 0)
 		{
 			clientinfo *ci = (clientinfo *)getinfo(cn);
