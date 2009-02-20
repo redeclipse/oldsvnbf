@@ -148,7 +148,6 @@ namespace client
 				}
 			}
 		});
-		world::maptime = 0;
 	}
 
 	bool allowedittoggle(bool edit)

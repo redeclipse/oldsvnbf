@@ -19,6 +19,8 @@ namespace hud
 	VARP(teamindicators, 0, 1, 2);
 	VARP(teamcrosshair, 0, 1, 2);
 	VARP(teamnotices, 0, 0, 1);
+	VARP(teamkillnum, 0, 5, INT_MAX-1);
+	VARP(teamkilltime, 0, 30, INT_MAX-1);
 
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
@@ -370,7 +372,7 @@ namespace hud
 		int numkilled = 0;
 		loopvrev(teamkills)
 		{
-			if(lastmillis-teamkills[i] <= 60000) numkilled++;
+			if(lastmillis-teamkills[i] <= teamkilltime*1000) numkilled++;
 			else teamkills.remove(i);
 		}
 		return numkilled;
@@ -393,17 +395,19 @@ namespace hud
 			int ty = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, tx = hudwidth-ty, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
 			if(teamnotices) skewcolour(tr, tg, tb);
-			if(lastmillis-world::maptime < titlecard)
+			if(lastmillis-world::maptime <= titlecard)
 			{
 				const char *title = getmaptitle();
 				if(!*title) title = getmapname();
-				pushfont("emphasis");
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, title);
-				popfont();
-				pushfont("default");
+				pushfont("emphasis");
 				ty += draw_textx("Playing: %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_JUSTIFY, -1, -1, server::gamename(world::gamemode, world::mutators));
 				popfont();
 			}
+
+			if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty);
+			else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty);
+
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->lastdeath ? world::player1->respawnwait(lastmillis, sdelay) : 0;
@@ -417,7 +421,7 @@ namespace hud
 						pushfont("emphasis");
 						if(m_duke(world::gamemode, world::mutators) || !world::player1->lastdeath)
 							ty += draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1);
-						else if(delay) ty += draw_textx("Down for [ \fs\fy%.2f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+						else if(delay) ty += draw_textx("Down for [ \fs\fy%.1f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 						popfont();
 						if(world::player1->state != CS_WAITING && shownotices > 2 && lastmillis-world::player1->lastdeath > 500)
 						{
@@ -442,9 +446,9 @@ namespace hud
 			}
 			else if(world::player1->state == CS_ALIVE)
 			{
-				if(m_team(world::gamemode, world::mutators) && numteamkills() >= 3)
+				if(teamkillnum && m_team(world::gamemode, world::mutators) && numteamkills() >= teamkillnum)
 				{
-					ty += draw_textx("\fs%sHEY!\fS Don't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy");
+					ty += draw_textx("%sDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy");
 					if(shownotices > 1)
 					{
 						pushfont("emphasis");
@@ -454,7 +458,7 @@ namespace hud
 						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
 						popfont();
 						pushfont("default");
-						ty += draw_textx("Shoot anyone not the \fs%ssame colour as you\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat);
+						ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat);
 						popfont();
 					}
 				}
@@ -468,7 +472,7 @@ namespace hud
 						if(shownotices > 1)
 						{
 							pushfont("emphasis");
-							ty += draw_textx("Thaw in [ \fs\fy%.2f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
+							ty += draw_textx("Thaw in [ \fs\fy%.1f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, delay/1000.f);
 							popfont();
 						}
 					}
@@ -597,9 +601,6 @@ namespace hud
 					popfont();
 				}
 			}
-
-			if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty);
-			else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty);
 
 			popfont();
 		}
