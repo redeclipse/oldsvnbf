@@ -42,13 +42,16 @@ namespace ai
 		if(!d->ai)
 		{
 			if((d->ai = new aiinfo()) == NULL)
+			{
 				fatal("could not create ai");
-			else
-			{ // store some constants we'll always use
-				d->ai->views[0] = viewfieldx(d->skill);
-				d->ai->views[1] = viewfieldy(d->skill);
-				d->ai->views[2] = viewdist(d->skill);
+				return;
 			}
+		}
+		if(d->ai)
+		{
+			d->ai->views[0] = viewfieldx(d->skill);
+			d->ai->views[1] = viewfieldy(d->skill);
+			d->ai->views[2] = viewdist(d->skill);
 		}
 	}
 
@@ -756,19 +759,19 @@ namespace ai
 				else if(hasseen) result = 2;
 				else
 				{
-					if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
+					d->ai->enemy = -1;
 					result = 1;
 				}
 			}
 			else
 			{
-				if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
+				d->ai->enemy = -1;
 				result = 0;
 			}
 		}
 		else
 		{
-			if(!target(d, b, false, b.idle ? true : false)) d->ai->enemy = -1;
+			d->ai->enemy = -1;
 			result = 0;
 		}
 
@@ -897,9 +900,9 @@ namespace ai
 		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
 		if(d->state == CS_ALIVE)
 		{
-			if(allowmove && run)
+			if(allowmove)
 			{
-				if(!request(d, b)) target(d, b);
+				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
 				weapons::shoot(d, d->ai->target);
 				if(!b.idle && !d->ai->dontmove && d->ai->lasthunt)
 				{
