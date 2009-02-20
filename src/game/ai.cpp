@@ -900,7 +900,7 @@ namespace ai
 			if(allowmove && run)
 			{
 				if(!request(d, b)) target(d, b);
-				weapons::shoot(d, d->ai->target, weaptype[d->weapselect].power); // always use full power
+				weapons::shoot(d, d->ai->target);
 				if(!b.idle && !d->ai->dontmove && d->ai->lasthunt)
 				{
 					int millis = lastmillis-d->ai->lasthunt;
