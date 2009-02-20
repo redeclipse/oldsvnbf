@@ -21,7 +21,14 @@ namespace server
 
 	enum { GAMEEVENT_NONE = 0, GAMEEVENT_SHOT, GAMEEVENT_SWITCH, GAMEEVENT_RELOAD, GAMEEVENT_DESTROY, GAMEEVENT_USE, GAMEEVENT_SUICIDE };
 
-	struct shotevent
+    struct gameevent
+    {
+        int type;
+
+        virtual ~gameevent() {}
+    };
+
+	struct shotevent : gameevent
 	{
         int millis, id;
 		int weap, power, num;
@@ -29,19 +36,19 @@ namespace server
 		vector<ivec> shots;
 	};
 
-	struct switchevent
+	struct switchevent : gameevent
 	{
 		int millis, id;
 		int weap;
 	};
 
-	struct reloadevent
+	struct reloadevent : gameevent
 	{
 		int millis, id;
 		int weap;
 	};
 
-	struct hitset
+	struct hitset : gameevent
 	{
 		int flags;
 		int target;
@@ -54,33 +61,22 @@ namespace server
 		ivec dir;
 	};
 
-	struct destroyevent
+	struct destroyevent : gameevent
 	{
         int millis, id;
 		int weap, radial;
 		vector<hitset> hits;
 	};
 
-	struct suicideevent
+	struct suicideevent : gameevent
 	{
-		int type, flags;
+		int flags;
 	};
 
-	struct useevent
+	struct useevent : gameevent
 	{
 		int millis, id;
 		int ent;
-	};
-
-	struct gameevent
-	{
-		int type;
-		shotevent shot;
-		destroyevent destroy;
-		switchevent weapsel;
-		reloadevent reload;
-		suicideevent suicide;
-		useevent use;
 	};
 
     struct projectilestate
@@ -200,7 +196,7 @@ namespace server
         bool connected, local, timesync, online, wantsmap;
         int gameoffset, lastevent;
 		servstate state;
-		vector<gameevent> events;
+		vector<gameevent *> events;
 		vector<uchar> position, messages;
         int posoff, msgoff, msglen;
         vector<clientinfo *> targets;
@@ -208,19 +204,19 @@ namespace server
         string authname;
 
 		clientinfo() { reset(); }
+        ~clientinfo() { events.deletecontentsp(); }
 
-		gameevent &addevent()
+		void addevent(gameevent *e)
 		{
-			static gameevent dummy;
-            if(state.state==CS_SPECTATOR || events.length()>100) return dummy;
-			return events.add();
+            if(state.state==CS_SPECTATOR || events.length()>100) delete e;
+			else events.add(e);
 		}
 
 		void mapchange(bool change = true)
 		{
 			mapvote[0] = 0;
 			state.reset(change);
-			events.setsizenodelete(0);
+			events.deletecontentsp();
             targets.setsizenodelete(0);
             timesync = false;
             lastevent = gameoffset = 0;
@@ -1607,7 +1603,7 @@ namespace server
 
 	void clearevent(clientinfo *ci)
 	{
-		ci->events.remove(0, 1);
+		delete ci->events.remove(0);
 	}
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
@@ -1857,9 +1853,10 @@ namespace server
 	{
 		while(ci->events.length())
 		{
-			gameevent &ev = ci->events[0];
-			#define chkevent(q) \
+			gameevent *ev = ci->events[0];
+			#define chkevent(type) \
 			{ \
+                type &q = (type &)*ev; \
 				if(q.millis > millis) return; \
 				else if(q.millis >= ci->lastevent) \
 				{ \
@@ -1868,14 +1865,14 @@ namespace server
 				} \
 				clearevent(ci); \
 			}
-			switch(ev.type)
+			switch(ev->type)
 			{
-				case GAMEEVENT_SHOT: { chkevent(ev.shot); break; }
-				case GAMEEVENT_SWITCH: { chkevent(ev.weapsel); break; }
-				case GAMEEVENT_RELOAD: { chkevent(ev.reload); break; }
-				case GAMEEVENT_DESTROY: { chkevent(ev.destroy); break; }
-				case GAMEEVENT_USE: { chkevent(ev.use); break; }
-				case GAMEEVENT_SUICIDE: { processevent(ci, ev.suicide); clearevent(ci); break; }
+				case GAMEEVENT_SHOT: { chkevent(shotevent); break; }
+				case GAMEEVENT_SWITCH: { chkevent(switchevent); break; }
+				case GAMEEVENT_RELOAD: { chkevent(reloadevent); break; }
+				case GAMEEVENT_DESTROY: { chkevent(destroyevent); break; }
+				case GAMEEVENT_USE: { chkevent(useevent); break; }
+				case GAMEEVENT_SUICIDE: { processevent(ci, (suicideevent &)*ev); clearevent(ci); break; }
 			}
 		}
 	}
@@ -1889,23 +1886,26 @@ namespace server
 		}
 	}
 
-#if 0 // don't use this?
 	void cleartimedevents(clientinfo *ci)
 	{
 		int keep = 0;
 		loopv(ci->events)
 		{
-			switch(ci->events[i].type)
+			switch(ci->events[i]->type)
 			{
 				case GAMEEVENT_DESTROY:
-					if(keep < i) { ci->events.remove(keep, i - keep); i = keep; }
+					if(keep < i) 
+                    { 
+                        for(int j = keep; j < i; j++) delete ci->events[j];
+                        ci->events.remove(keep, i - keep); 
+                        i = keep; 
+                    }
 					keep = i+1;
 					continue;
 			}
 		}
-		ci->events.setsize(keep);
+        while(ci->events.length() > keep) delete ci->events.pop();
 	}
-#endif
 
 	void waiting(clientinfo *ci, int doteam, bool exclude)
 	{
@@ -2019,14 +2019,15 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{ // duelmut needs rewriting to take advantage of this
-				if((!ci->state.lastdeath || gamemillis-ci->state.lastdeath > DEATHMILLIS) &&
-					!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
+				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
 					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
 					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
 					if(!nospawn)
 					{
+                        if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
+                        cleartimedevents(ci);
 						ci->state.state = CS_DEAD; // safety
 						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
 						sendspawn(ci);
@@ -2471,7 +2472,7 @@ namespace server
 						if(smode) smode->leavegame(ci);
 						mutate(smuts, mut->leavegame(ci));
 						ci->state.state = CS_EDITING;
-						ci->events.setsizenodelete(0);
+						ci->events.deletecontentsp();
 					}
 					else
 					{
@@ -2502,11 +2503,12 @@ namespace server
 					int lcn = getint(p), id = getint(p), weap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &ev = cp->addevent();
-					ev.type = GAMEEVENT_SWITCH;
-					ev.weapsel.id = id;
-					ev.weapsel.weap = weap;
-					ev.weapsel.millis = cp->getmillis(gamemillis, ev.weapsel.id);
+                    switchevent *ev = new switchevent;
+					ev->type = GAMEEVENT_SWITCH;
+					ev->id = id;
+					ev->weap = weap;
+					ev->millis = cp->getmillis(gamemillis, ev->id);
+                    cp->addevent(ev); 
 					break;
 				}
 
@@ -2537,9 +2539,10 @@ namespace server
 					int lcn = getint(p), flags = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &ev = cp->addevent();
-					ev.type = GAMEEVENT_SUICIDE;
-					ev.suicide.flags = flags;
+                    suicideevent *ev = new suicideevent;
+					ev->type = GAMEEVENT_SUICIDE;
+					ev->flags = flags;
+                    cp->addevent(ev);
 					break;
 				}
 
@@ -2548,20 +2551,22 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
-					gameevent &ev = havecn ? cp->addevent() : dummyevent;
-					ev.type = GAMEEVENT_SHOT;
-					ev.shot.id = getint(p);
-					ev.shot.weap = getint(p);
-					ev.shot.power = getint(p);
-					if(havecn) ev.shot.millis = cp->getmillis(gamemillis, ev.shot.id);
-					loopk(3) ev.shot.from[k] = getint(p);
-					ev.shot.num = getint(p);
-					loopj(ev.shot.num)
+                    shotevent *ev = new shotevent;
+					ev->type = GAMEEVENT_SHOT;
+					ev->id = getint(p);
+					ev->weap = getint(p);
+					ev->power = getint(p);
+					if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id);
+					loopk(3) ev->from[k] = getint(p);
+					ev->num = getint(p);
+					loopj(ev->num)
 					{
-                        if(p.overread() || !isweap(ev.shot.weap) || j >= weaptype[ev.shot.weap].rays) break;
-						ivec &dest = ev.shot.shots.add();
+                        if(p.overread() || !isweap(ev->weap) || j >= weaptype[ev->weap].rays) break;
+						ivec &dest = ev->shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
+                    if(havecn) cp->addevent(ev);
+                    else delete ev;
 					break;
 				}
 
@@ -2587,11 +2592,12 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
 						break;
-					gameevent &ev = cp->addevent();
-					ev.type = GAMEEVENT_RELOAD;
-					ev.reload.id = id;
-					ev.reload.weap = weap;
-					ev.reload.millis = cp->getmillis(gamemillis, ev.reload.id);
+                    reloadevent *ev = new reloadevent;
+					ev->type = GAMEEVENT_RELOAD;
+					ev->id = id;
+					ev->weap = weap;
+					ev->millis = cp->getmillis(gamemillis, ev->id);
+                    cp->events.add(ev);
 					break;
 				}
 
@@ -2600,23 +2606,31 @@ namespace server
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
-					gameevent &ev = havecn ? cp->addevent() : dummyevent;
-					ev.type = GAMEEVENT_DESTROY;
-					ev.destroy.id = getint(p);
-					if(havecn) ev.destroy.millis = cp->getmillis(gamemillis, ev.destroy.id); // this is the event millis
-					ev.destroy.weap = getint(p);
-					ev.destroy.id = getint(p); // this is the actual id
-					ev.destroy.radial = getint(p);
+                    destroyevent *ev = new destroyevent;
+					ev->type = GAMEEVENT_DESTROY;
+					ev->id = getint(p);
+					if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
+					ev->weap = getint(p);
+					ev->id = getint(p); // this is the actual id
+					ev->radial = getint(p);
 					int hits = getint(p);
 					loopj(hits)
 					{
-						hitset &hit = havecn && j < MAXPLAYERS ? ev.destroy.hits.add() : dummyevent.destroy.hits.add();
+                        if(p.overread()) break;
+                        if(!havecn || j >= MAXPLAYERS)
+                        {
+                            loopi(7) getint(p);
+                            continue;
+                        }
+						hitset &hit = ev->hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
 						hit.id = getint(p); // sequence
 						hit.dist = getint(p);
 						loopk(3) hit.dir[k] = getint(p);
 					}
+                    if(havecn) cp->events.add(ev);
+                    else delete ev;
 					break;
 				}
 
@@ -2625,11 +2639,12 @@ namespace server
 					int lcn = getint(p), id = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					gameevent &ev = cp->addevent();
-					ev.type = GAMEEVENT_USE;
-					ev.use.id = id;
-					ev.use.ent = ent;
-					ev.use.millis = cp->getmillis(gamemillis, ev.use.id);
+                    useevent *ev = new useevent;
+					ev->type = GAMEEVENT_USE;
+					ev->id = id;
+					ev->ent = ent;
+					ev->millis = cp->getmillis(gamemillis, ev->id);
+                    cp->events.add(ev);
 					break;
 				}
 
