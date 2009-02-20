@@ -70,9 +70,11 @@
 </li><li> -sp&lt;number&gt;: sets the server port to &lt;number&gt;.
 </li><li> -sq&lt;number&gt;: sets the server query port to &lt;number&gt;.
 </li></ul>
-<ul><li> -d&lt;description&gt;: sets the server's description to &lt;description&gt;. This will appear in the server list.
-</li><li> -k&lt;password&gt;: sets the admin password to &lt;password&gt;. 
-</li><li> -o&lt;number&gt;: sets the openness of the server to N. N=1 disables mastermodes 2 (locked) and 3 (private), while N=0 (default) enables all mastermodes.
+<ul><li> -sd&lt;description&gt;: sets the server's description to &lt;description&gt;. This will appear in the server list.
+</li><li> -sP&lt;password&gt;: sets the admin password to &lt;password&gt;. 
+</li><li> -sk&lt;password&gt;: sets the join password to &lt;password&gt;. Users must know the password in order to connect.
+</li><li> -so&lt;number&gt;: sets the openness of the server to N. N=1 disables mastermodes 2 (locked) and 3 (private), while N=0 (default) enables all mastermodes.
+</li><li> -sM&lt;description&gt;: sets the MOTD (message of the day). This will be shown to players when they log on to the server.
 </li></ul>
 <a name="Master_server"></a><h3> <span class="mw-headline">Master server</span></h3>
 <p>These are for actually running a masterserver - this is not needed to run a server. Do not use it unless you really know you want your own master server!
