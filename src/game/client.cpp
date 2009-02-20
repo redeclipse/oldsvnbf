@@ -1114,7 +1114,7 @@ namespace client
 				{
 					int lcn = getint(p);
 					gameent *f = world::newclient(lcn);
-					if(f != world::player1 && !f->ai)
+					if(f && f != world::player1 && !f->ai)
 					{
 						f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p);
@@ -1129,6 +1129,11 @@ namespace client
 				{
 					int lcn = getint(p), ent = getint(p);
 					gameent *f = world::newclient(lcn);
+                    if(!f)
+                    {
+                        parsestate(NULL, p);
+                        break;
+                    }
 					if(f == world::player1 && editmode) toggleedit();
 					f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
 					parsestate(f, p);
@@ -1265,7 +1270,7 @@ namespace client
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						gameent *f = world::newclient(lcn);
-						if(f!=world::player1 && !f->ai) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
+						if(f && f!=world::player1 && !f->ai) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
 						parsestate(f, p, true);
 					}
 					break;
