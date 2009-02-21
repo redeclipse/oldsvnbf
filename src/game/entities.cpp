@@ -1462,7 +1462,7 @@ namespace entities
 		}
 		renderprogress(0.25f, "checking entities...");
 
-		if(mtype != MAP_BFGZ || gver <= 112) loopvj(ents)
+		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
 			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
