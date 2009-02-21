@@ -693,7 +693,7 @@ namespace physics
 
 			d.mul(f);
 			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
-			if(!pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
+			if(pl->type!=ENT_CAMERA && !pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 				playsound(S_LAND, pl->o, pl);
 		}
 
