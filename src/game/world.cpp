@@ -31,8 +31,8 @@ namespace world
 	VARP(thirdpersonaim, 0, 250, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
 	VARP(thirdpersontranslucent, 0, 0, 1);
-	VARP(thirdpersondist, -100, 10, 100);
-	VARP(thirdpersonshift, -100, 30, 100);
+	FVARP(thirdpersondist, -100, 5.0f, 100);
+	FVARP(thirdpersonshift, -100, 7.5f, 100);
 	VARP(thirdpersonangle, 0, 0, 360);
 
 	VARP(firstpersonmouse, 0, 0, 2);
@@ -1322,7 +1322,7 @@ namespace world
 			{
 				camera1->move = player1->move;
 				camera1->strafe = player1->strafe;
-				physics::movecamera(camera1);
+				physics::move(camera1, 10, true);
 			}
 			else if(tvmode()) cameratv();
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
@@ -1357,6 +1357,7 @@ namespace world
 			else
 			{
 				camera1->o = headpos(player1, 0.f);
+                camera1->resetinterp();
 				if(mousestyle() <= 1)
 					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
 				if(isthirdperson())
@@ -1370,7 +1371,7 @@ namespace world
 						{ \
 							camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
 							camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
-							loopi(10) if(!physics::moveplayer(camera1, 10, true, abs(d))) break; \
+							physics::movecamera(camera1, fabs(d), 1.0f); \
 						}
 					cameramove(thirdpersondist, false);
 					cameramove(thirdpersonshift, true);

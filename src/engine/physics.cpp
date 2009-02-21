@@ -636,14 +636,12 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
                 if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
                 {
                     hitplayer = o;
-                    if((d->type==ENT_AI || d->type==ENT_INANIMATE) && wall.z>0) d->onplayer = o;
                     return false;
                 }
             }
             else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
 			{
 				hitplayer = o;
-                if((d->type==ENT_AI || d->type==ENT_INANIMATE) && wall.z>0) d->onplayer = o;
 				return false;
 			}
 		}
@@ -804,7 +802,6 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
             if(c[i].ext) switch(c[i].ext->material&MATF_CLIP)
 			{
                 case MAT_NOCLIP: continue;
-                case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
                 case MAT_CLIP: if(isclipped(c[i].ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
@@ -834,7 +831,6 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     if(c->ext) switch(c->ext->material&MATF_CLIP)
     {
         case MAT_NOCLIP: return true;
-        case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
         case MAT_CLIP: if(isclipped(c->ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
     }
     if(!solid && isempty(*c)) return true;
