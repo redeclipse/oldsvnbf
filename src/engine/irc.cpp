@@ -368,10 +368,6 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			ircprintf(n, w[g+1], "\fo%s (%s@%s) has left", user[0], user[1], user[2]);
 		}
 	}
-	else if(!strcasecmp(w[g], "NICK"))
-	{
-		if(numargs > g+1) ircprintf(n, NULL, "\fm%s (%s@%s) is now known as", user[0], user[1], user[2], w[g+1]);
-	}
 	else if(!strcasecmp(w[g], "QUIT"))
 	{
 		if(numargs > g+1) ircprintf(n, NULL, "\fr%s (%s@%s) has quit: %s", user[0], user[1], user[2], w[g+1]);
@@ -635,7 +631,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 		if(p-word > 0)
 		{
 			char *q = newstring(word, p-word), *r = newstring(*p ? ++p : "");
-			if(!strcasecmp(q, "me"))
+			if(!strcasecmp(q, "ME"))
 			{
 				if(c)
 				{
@@ -644,19 +640,21 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 				}
 				else ircprintf(n, NULL, "\fbYou are not on a channel");
 			}
-			else if(!strcasecmp(q, "join"))
+			else if(!strcasecmp(q, "JOIN"))
 			{
 				ircchan *d = ircfindchan(n, r);
 				if(d) ircjoin(n, d);
 				else ircaddchan(IRCCT_AUTO, n->name, r);
 			}
-			else if(!strcasecmp(q, "part"))
+			else if(!strcasecmp(q, "PART"))
 			{
 				ircchan *d = ircfindchan(n, r);
 				if(d) ircsend(n, "PART %s", d->name);
 				else if(c) ircsend(n, "PART %s", c->name);
 				else ircsend(n, "PART %s", r);
 			}
+			else if(*r) ircsend(n, "%s %s", q, r); // send it raw so we support any command
+			else ircsend(n, "%s", q);
 			DELETEA(q); DELETEA(r);
 			return;
 		}
