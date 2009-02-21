@@ -623,7 +623,7 @@ namespace server
 	bool finditem(int i, bool spawned = true, bool timeit = false)
 	{
 		if(sents[i].spawned) return true;
-		else
+		else if(weapcarry(i, m_spawnweapon(gamemode, mutators)))
 		{
 			loopvk(clients)
 			{
@@ -1222,7 +1222,7 @@ namespace server
 					droplist &d = drop.add();
 					d.weap = i;
 					d.ent = ts.entid[i];
-					if(i != WEAPON_GL)
+					if(weapcarry(i, sweap))
 						sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
 				}
 			}
@@ -1826,7 +1826,7 @@ namespace server
 		int dropped = gs.entid[weap];
 		gs.entid[weap] = gs.ammo[weap] = -1;
 		gs.dropped.add(dropped);
-		if(weap != WEAPON_GL) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 		else dropped = -1;
 		int nweap = gs.bestweap(sweap); // switch to best weapon
 		gs.weapswitch(nweap, millis);
@@ -1900,15 +1900,13 @@ namespace server
 			if(!(sents[dropped].attr[1]&WEAPFLAG_FORCED))
 			{
 				sents[dropped].spawned = false;
-				if(weapattr(sents[dropped].attr[0], sweap) != WEAPON_GL)
-					sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 			}
 		}
 		if(!(sents[ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			sents[ent].spawned = false;
-			if(weapattr(sents[ent].attr[0], sweap) != WEAPON_GL)
-				sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
+			sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
 		}
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
 	}
