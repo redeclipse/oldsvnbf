@@ -161,8 +161,8 @@ struct stfservmode : stfstate, servmode
 			}
 			if(lastteam)
 			{
-				findscore(lastteam).total = maxscore;
-				winner(lastteam, maxscore);
+				findscore(lastteam).total = INT_MAX;
+				winner(lastteam, INT_MAX);
 				return;
 			}
 		}

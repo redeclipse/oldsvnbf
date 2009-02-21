@@ -66,7 +66,10 @@ namespace hud
 					if(m_team(world::gamemode, world::mutators))
 					{
 						bool win = sg.players.find(world::player1) >= 0;
-						world::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fw%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+                        if(m_stf(world::gamemode) && sg.score==INT_MAX)
+                            world::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fw%s team \fs%s%s\fS secured all flags", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name);
+						else
+                            world::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fw%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 					}
 					else
 					{
