@@ -1357,7 +1357,6 @@ namespace world
 			else
 			{
 				camera1->o = headpos(player1, 0.f);
-                camera1->resetinterp();
 				if(mousestyle() <= 1)
 					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
 				if(isthirdperson())
@@ -1381,6 +1380,7 @@ namespace world
 					camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
 					camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
 				}
+                camera1->resetinterp();
 
 				switch(mousestyle())
 				{
