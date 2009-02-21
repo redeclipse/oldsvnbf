@@ -16,6 +16,7 @@ namespace physics
 	FVARW(liquidscale,		0, 0.9f, 10000);
 	FVARW(sinkfric,			0, 2.f, 10000);
 	FVARW(floorfric,		0, 5.f, 10000);
+    FVARW(floatfric,        0, 5.f, 10000);
 	FVARW(airfric,			0, 25.f, 10000);
 
 	FVARW(stairheight,		0, 4.1f, 10000);
@@ -565,7 +566,7 @@ namespace physics
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
-		float friction = pl->inliquid && !floating ? liquidfric : (pl->physstate >= PHYS_SLOPE || floating ? floorfric : airfric);
+		float friction = pl->type!=ENT_PLAYER || floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
 		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
         pl->vel.mul(fpsfric-1);
