@@ -56,6 +56,14 @@ namespace server
         void process(clientinfo *ci);
 	};
 
+	struct dropevent : timedevent
+	{
+		int id;
+		int weap;
+
+        void process(clientinfo *ci);
+	};
+
 	struct reloadevent : timedevent
 	{
 		int id;
@@ -1214,13 +1222,14 @@ namespace server
 					droplist &d = drop.add();
 					d.weap = i;
 					d.ent = ts.entid[i];
-					sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
+					if(i != WEAPON_GL)
+						sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
 				}
 			}
 		}
 		ts.weapreset(false);
 		if(!discon && !drop.empty())
-			sendf(-1, 1, "ri2iv", SV_DROP, ci->clientnum, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
+			sendf(-1, 1, "ri3iv", SV_DROP, ci->clientnum, -1, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
 	#include "stfmode.h"
@@ -1795,6 +1804,35 @@ namespace server
 		sendf(-1, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
 	}
 
+	void dropevent::process(clientinfo *ci)
+	{
+		servstate &gs = ci->state;
+		if(!gs.isalive(gamemillis) || !isweap(weap))
+		{
+			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - unexpected message", weap);
+			return;
+		}
+		int sweap = m_spawnweapon(gamemode, mutators);
+		if(!gs.hasweap(weap, sweap) || m_noitems(gamemode, mutators))
+		{
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
+			return;
+		}
+		if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAPFLAG_FORCED))
+		{
+			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
+			return;
+		}
+		int dropped = gs.entid[weap];
+		gs.entid[weap] = gs.ammo[weap] = -1;
+		gs.dropped.add(dropped);
+		if(weap != WEAPON_GL) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+		else dropped = -1;
+		int nweap = gs.bestweap(sweap); // switch to best weapon
+		gs.weapswitch(nweap, millis);
+		sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);
+	}
+
 	void reloadevent::process(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
@@ -1847,13 +1885,13 @@ namespace server
 		}
 
 		int weap = -1, dropped = -1;
-		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && gs.carry(sweap) >= GVAR(maxcarry)) weap = gs.drop(attr, sweap);
+		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && weapcarry(attr, sweap) && gs.carry(sweap) >= GVAR(maxcarry))
+			weap = gs.drop(sweap, attr);
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
 			gs.setweapstate(weap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
 			gs.ammo[weap] = gs.entid[weap] = -1;
-			gs.weapselect = weap;
 		}
 		gs.useitem(ent, sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis);
 		if(sents.inrange(dropped))
@@ -1862,13 +1900,15 @@ namespace server
 			if(!(sents[dropped].attr[1]&WEAPFLAG_FORCED))
 			{
 				sents[dropped].spawned = false;
-				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+				if(weapattr(sents[dropped].attr[0], sweap) != WEAPON_GL)
+					sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 			}
 		}
 		if(!(sents[ent].attr[1]&WEAPFLAG_FORCED))
 		{
 			sents[ent].spawned = false;
-			sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
+			if(weapattr(sents[ent].attr[0], sweap) != WEAPON_GL)
+				sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
 		}
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
 	}
@@ -1916,11 +1956,11 @@ namespace server
 		{
             if(ci->events[i]->keepable())
 			{
-			    if(keep < i) 
-                { 
+			    if(keep < i)
+                {
                     for(int j = keep; j < i; j++) delete ci->events[j];
-                    ci->events.remove(keep, i - keep); 
-                    i = keep; 
+                    ci->events.remove(keep, i - keep);
+                    i = keep;
                 }
 				keep = i+1;
 				continue;
@@ -2529,7 +2569,7 @@ namespace server
 					ev->id = id;
 					ev->weap = weap;
 					ev->millis = cp->getmillis(gamemillis, ev->id);
-                    cp->addevent(ev); 
+                    cp->addevent(ev);
 					break;
 				}
 
@@ -2590,18 +2630,16 @@ namespace server
 				}
 
 				case SV_DROP:
-				{
-					int lcn = getint(p);
+				{ // gee this looks familiar
+					int lcn = getint(p), id = getint(p), weap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
-					int sweap = m_spawnweapon(gamemode, mutators), weap = getint(p);
-					if(!havecn || !isweap(weap) || !cp->state.hasweap(weap, sweap) || m_noitems(gamemode, mutators)) break;
-					if(!sents.inrange(cp->state.entid[weap]) || (sents[cp->state.entid[weap]].attr[1]&WEAPFLAG_FORCED)) break;
-					cp->state.dropped.add(cp->state.entid[weap]);
-					sents[cp->state.entid[weap]].millis = gamemillis+(GVAR(itemspawntime)*1000);
-					sendf(-1, 1, "ri5", SV_DROP, cp->clientnum, 1, weap, cp->state.entid[weap]);
-					cp->state.setweapstate(weap, WPSTATE_SWITCH, 0, 0);
-					cp->state.entid[weap] = cp->state.ammo[weap] = -1;
+					if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
+						break;
+                    dropevent *ev = new dropevent;
+					ev->id = id;
+					ev->weap = weap;
+					ev->millis = cp->getmillis(gamemillis, ev->id);
+                    cp->events.add(ev);
 					break;
 				}
 

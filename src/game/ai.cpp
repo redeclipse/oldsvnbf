@@ -812,9 +812,9 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(world::gamemode, world::mutators);
 		if(busy <= 1 && !m_noitems(world::gamemode, world::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.idle)
 		{
-			loopirev(WEAPON_MAX) if(i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+			loopirev(WEAPON_MAX) if(i != WEAPON_GL && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
-				client::addmsg(SV_DROP, "ri2", d->clientnum, i);
+				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-world::maptime, i);
 				d->ai->lastaction = d->reqswitch = lastmillis;
 				break;
 			}

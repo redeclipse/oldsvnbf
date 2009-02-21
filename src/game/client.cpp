@@ -1231,13 +1231,19 @@ namespace client
 
 				case SV_DROP:
 				{
-					int trg = getint(p), ds = getint(p);
+					int trg = getint(p), weap = getint(p), ds = getint(p);
 					gameent *target = world::getclient(trg);
 					bool local = target && (target == world::player1 || target->ai);
 					if(ds) loopj(ds)
 					{
 						int gs = getint(p), drop = getint(p);
 						if(target) projs::drop(target, gs, drop, local);
+					}
+					if(isweap(weap) && target)
+					{
+						target->weapswitch(weap, lastmillis);
+						target->reqswitch = -1;
+						playsound(S_SWITCH, target->o, target);
 					}
 					break;
 				}

@@ -682,7 +682,7 @@ void writebinds(FILE *f)
         loopv(binds)
         {
             keym &km = *binds[i];
-            if(*km.actions[j]) fprintf(f, "%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
+            if(*km.actions[j]) fprintf(f, "\t%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
         }
     }
 }
@@ -871,8 +871,8 @@ void writecompletions(FILE *f)
     {
         char *k = cmds[i];
         filesval *v = completions[k];
-        if(v->type==FILES_LIST) fprintf(f, "listcomplete \"%s\" [%s]\n", k, v->dir);
-        else fprintf(f, "complete \"%s\" \"%s\" \"%s\"\n", k, v->dir, v->ext ? v->ext : "*");
+        if(v->type==FILES_LIST) fprintf(f, "\tlistcomplete \"%s\" [%s]\n", k, v->dir);
+        else fprintf(f, "\tcomplete \"%s\" \"%s\" \"%s\"\n", k, v->dir, v->ext ? v->ext : "*");
     }
 }
 

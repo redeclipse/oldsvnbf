@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			155
+#define GAMEVERSION			156
 #define DEMO_VERSION		GAMEVERSION
 
 #define MAXBOTS 100
@@ -708,11 +708,12 @@ struct gamestate
 		return false;
 	}
 
-	int bestweap(int sweap, bool force = true)
+	int bestweap(int sweap)
 	{
 		int best = -1;
-		loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) best = i;
-		if(!isweap(best) && force) loopi(WEAPON_MAX) if(hasweap(i, sweap, 0)) best = i;
+		loopi(WEAPON_MAX) if(hasweap(i, sweap, 3)) best = i; // reloadable first
+		if(!isweap(best)) loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) best = i; // carriable second
+		if(!isweap(best)) loopi(WEAPON_MAX) if(hasweap(i, sweap, 0)) best = i; // any just to bail us out
 		return best;
 	}
 
