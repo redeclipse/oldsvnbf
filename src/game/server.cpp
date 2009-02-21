@@ -623,7 +623,8 @@ namespace server
 	bool finditem(int i, bool spawned = true, bool timeit = false)
 	{
 		if(sents[i].spawned) return true;
-		else if(weapcarry(i, m_spawnweapon(gamemode, mutators)))
+		int sweap = m_spawnweapon(gamemode, mutators);
+		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attr[0], sweap), sweap))
 		{
 			loopvk(clients)
 			{
@@ -632,9 +633,9 @@ namespace server
 					return true;
 				else loopj(WEAPON_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
-			if(spawned && timeit && gamemillis < sents[i].millis)
-				return true;
 		}
+		if(spawned && timeit && gamemillis < sents[i].millis)
+			return true;
 		return false;
 	}
 
