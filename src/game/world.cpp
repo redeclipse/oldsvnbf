@@ -1082,7 +1082,7 @@ namespace world
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
-			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 1;
+			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
 		if(player1->state != CS_WAITING)
 		{
