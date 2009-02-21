@@ -515,8 +515,8 @@ namespace hud
 									if(enttype[e.type].usetype == EU_ITEM)
 									{
 										int drop = -1, sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-										if(e.type == WEAPON && weapcarry(world::player1->weapselect, sweap) && world::player1->ammo[e.attr[0]] < 0 &&
-											weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, e.attr[0]);
+										if(e.type == WEAPON && weapcarry(world::player1->weapselect, sweap) && world::player1->ammo[attr] < 0 &&
+											weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, attr);
 										if(isweap(drop))
 										{
 											s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));

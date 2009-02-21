@@ -739,7 +739,7 @@ void writecfg()
 	FILE *f = openfile("config.cfg", "w");
 	if(!f) return;
 	client::writeclientinfo(f);
-	fprintf(f, "if (&& (= $version %d) (= (gamever) %d)) [\n", ENG_VERSION, server::gamever());
+	fprintf(f, "if (= $version %d) [\n", ENG_VERSION);
     vector<ident *> ids;
     enumerate(*idents, ident, id, ids.add(&id));
     ids.sort(sortidents);
@@ -749,11 +749,11 @@ void writecfg()
         bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: saved = true; fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
-			case ID_FVAR: saved = true; fprintf(f, "%s %s\n", id.name, floatstr(*id.storage.f)); break;
-			case ID_SVAR: saved = true; fprintf(f, "%s [%s]\n", id.name, *id.storage.s); break;
+			case ID_VAR: saved = true; fprintf(f, "\t%s %d\n", id.name, *id.storage.i); break;
+			case ID_FVAR: saved = true; fprintf(f, "\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
+			case ID_SVAR: saved = true; fprintf(f, "\t%s [%s]\n", id.name, *id.storage.s); break;
 		}
-        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "setcomplete \"%s\" 0\n", id.name);
+        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "\tsetcomplete \"%s\" 0\n", id.name);
 	}
 	loopv(ids)
 	{
@@ -766,16 +766,16 @@ void writecfg()
 				if(id.override==NO_OVERRIDE && id.action[0])
                 {
                     saved = true;
-					fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
+					fprintf(f, "\t\"%s\" = [%s]\n", id.name, id.action);
                 }
 				break;
 			}
 		}
-        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "setcomplete \"%s\" 0\n", id.name);
+        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "\tsetcomplete \"%s\" 0\n", id.name);
 	}
 	writebinds(f);
 	writecompletions(f);
-	fprintf(f, "] [ echo \"WARNING: config from different version ignored\" ]\n");
+	fprintf(f, "] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
 	fclose(f);
 #endif
 }

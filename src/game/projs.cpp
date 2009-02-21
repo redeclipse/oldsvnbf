@@ -273,9 +273,9 @@ namespace projs
 		if(isweap(g))
 		{
 			vec from(d->o), to(d->muzzle);
-			if(n >= 0)
+			if(entities::ents.inrange(n))
 			{
-				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && entities::ents.inrange(n) && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
+				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
 			}
 			else if(g == WEAPON_GL) create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
