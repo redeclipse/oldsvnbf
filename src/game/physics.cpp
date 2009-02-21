@@ -449,7 +449,7 @@ namespace physics
 		bool collided = false, slidecollide = false;
 		vec obstacle;
 		d->o.add(dir);
-		if(!collide(d, d->type!=ENT_CAMERA ? dir : vec(0, 0, 0)) || (d->type==ENT_AI && !collide(d)))
+		if(!collide(d, dir))
 		{
             obstacle = wall;
             /* check to see if there is an obstacle that would prevent this one from being used as a floor */
@@ -460,7 +460,6 @@ namespace physics
             }
 
             d->o = old;
-            if(d->type == ENT_CAMERA) return false;
             d->o.z -= stairheight;
             d->zmargin = -stairheight;
             if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate==PHYS_STEP_UP || wall.z>=floorz || d->onladder)))
@@ -493,13 +492,8 @@ namespace physics
         if(slide || (!collided && floor.z > 0 && floor.z < wallz))
         {
             slideagainst(d, dir, slide ? obstacle : floor, found || slidecollide);
-			if(d->type == ENT_AI || d->type == ENT_INANIMATE) d->blocked = true;
 		}
-		if(found)
-		{
-			if(d->type == ENT_CAMERA) return false;
-			landing(d, dir, floor, collided);
-		}
+		if(found) landing(d, dir, floor, collided);
 		else falling(d, dir, floor);
 		return !collided;
 	}
@@ -556,7 +550,7 @@ namespace physics
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
-            if(!floating && pl->physstate >= PHYS_SLOPE)
+            if(pl->type == ENT_PLAYER && !floating && pl->physstate >= PHYS_SLOPE)
 			{ // move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
                 m.z = pl->inliquid ? max(m.z, dz) : dz;
@@ -659,21 +653,19 @@ namespace physics
 		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
 		float secs = millis/1000.f;
 
-		if(pl->type!=ENT_CAMERA) updatematerial(pl, local, floating);
-
-        // apply gravity
-        if(!floating && pl->type!=ENT_CAMERA && !pl->onladder) modifygravity(pl, millis);
+		if(pl->type==ENT_PLAYER)
+        {
+            updatematerial(pl, local, floating);
+            // apply gravity
+            if(!floating && !pl->onladder) modifygravity(pl, millis);
+        }
 		// apply any player generated changes in velocity
 		modifyvelocity(pl, local, floating, millis);
 
-		vec d(pl->vel), oldpos(pl->o);
-        if(!floating && pl->type!=ENT_CAMERA && pl->inliquid) d.mul(0.5f);
+		vec d(pl->vel);
+        if(pl->type==ENT_PLAYER && !floating && pl->inliquid) d.mul(0.5f);
         d.add(pl->falling);
 		d.mul(secs);
-
-		pl->blocked = false;
-		pl->moving = true;
-		pl->onplayer = NULL;
 
 		if(floating)				// just apply velocity
 		{
@@ -692,27 +684,36 @@ namespace physics
 			vec vel(pl->vel);
 
 			d.mul(f);
-			loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
-			if(pl->type!=ENT_CAMERA && !pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
+			loopi(moveres) if(!move(pl, d)) { if(++collisions<5) i--; } // discrete steps collision detection & sliding
+			if(pl->type==ENT_PLAYER && !pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
 				playsound(S_LAND, pl->o, pl);
 		}
 
-		if(pl->type!=ENT_CAMERA && pl->state==CS_ALIVE) updatedynentcache(pl);
-
-		if(!pl->timeinair && pl->physstate >= PHYS_FLOOR && pl->vel.squaredlen() < 1e-4f)
-			pl->moving = false;
-
-		pl->lastmoveattempt = lastmillis;
-		if(pl->o!=oldpos) pl->lastmove = lastmillis;
-
-        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && local && pl->o.z < 0 && pl->state == CS_ALIVE)
+        if(pl->type==ENT_PLAYER && pl->state==CS_ALIVE)
         {
-            world::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
-            return false;
+		    updatedynentcache(pl);
+
+            if(local && pl->o.z < 0)
+            {
+                world::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
+                return false;
+            }
         }
 
 		return true;
 	}
+
+    bool movecamera(physent *pl, float dist, float stepdist)
+    {
+        int steps = (int)ceil(dist/stepdist);
+        if(steps <= 0) return true;
+
+        vec d(0, 0, 0);
+        vecfromyawpitch(pl->aimyaw, pl->aimpitch, pl->move, pl->strafe, d);
+        d.mul(dist/steps);
+        loopi(steps) if(!move(pl, d)) return false;
+        return true;
+    }
 
     void interppos(physent *d)
     {
@@ -726,18 +727,6 @@ namespace physics
         deltapos.mul(min(diff, physframetime)/float(physframetime));
         d->o.add(deltapos);
     }
-
-	void movecamera(physent *d)
-	{
-        if(physsteps <= 0 || d->type != ENT_CAMERA) return;
-        vec old(d->o);
-        loopi(physsteps-1) if(!moveplayer(d, 10, true, physframetime))
-        {
-        	d->o = old;
-        	break;
-        }
-        if(!moveplayer(d, 10, true, physframetime)) d->o = old;
-	}
 
 	void move(physent *d, int moveres, bool local)
 	{
