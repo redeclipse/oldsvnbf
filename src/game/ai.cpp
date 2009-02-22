@@ -731,8 +731,9 @@ namespace ai
 		if(e && targetable(d, e, true))
 		{
 			vec ep = world::headpos(e);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->lastseen && lastmillis-d->ai->lastseen <= (d->skill*100)+1000;
-			if(b.idle || insight) d->ai->lastseen = lastmillis;
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->lastseen && lastmillis-d->ai->lastseen <= (d->skill*100)+1000,
+				quick = d->ai->lastseen && lastmillis-d->ai->lastseen <= ((111-d->skill)*10);
+			if(insight) d->ai->lastseen = lastmillis;
 			if(b.idle || insight || hasseen)
 			{
 				float yaw, pitch;
@@ -745,8 +746,9 @@ namespace ai
 					if(!insight) frame /= 3.f;
 				}
 				else if(!insight) frame /= 2.f;
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, insight ? 1.f : 0.5f);
-				if(insight)
+				float is = insight ? 2.f : (hasseen ? 1.5f : 1.f), js = (insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f;
+				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, is*js);
+				if(insight || quick)
 				{
 					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
 					{
@@ -754,13 +756,12 @@ namespace ai
 						d->ai->lastaction = d->attacktime = lastmillis;
 						result = 4;
 					}
-					else result = 3;
+					else result = insight ? 3 : 2;
 				}
-				else if(hasseen) result = 2;
 				else
 				{
-					d->ai->enemy = -1;
-					result = 1;
+					if(!b.idle) d->ai->enemy = -1;
+					result = hasseen ? 2 : 1;
 				}
 			}
 			else

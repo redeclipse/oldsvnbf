@@ -1819,17 +1819,30 @@ namespace server
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
 		}
-		if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAPFLAG_FORCED))
+		if(weap == WEAPON_GL)
+		{
+			int nweap = -1; // try to keep this weapon
+			gs.entid[weap] = -1;
+			gs.weapshots[WEAPON_GL].add(-1);
+			takeammo(ci, WEAPON_GL, 1);
+			if(!gs.hasweap(weap, sweap))
+			{
+				nweap = gs.bestweap(sweap);
+				gs.weapswitch(nweap, millis);
+			}
+			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
+			return;
+		}
+		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAPFLAG_FORCED))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
 			return;
 		}
 		int dropped = gs.entid[weap];
-		gs.entid[weap] = gs.ammo[weap] = -1;
-		gs.dropped.add(dropped);
-		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
-		else dropped = -1;
+		gs.ammo[weap] = gs.entid[weap] = -1;
 		int nweap = gs.bestweap(sweap); // switch to best weapon
+		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+		gs.dropped.add(dropped);
 		gs.weapswitch(nweap, millis);
 		sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);
 	}
