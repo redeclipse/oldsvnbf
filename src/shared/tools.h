@@ -670,21 +670,5 @@ extern void endianswap(void *, int, int);
 extern void seedMT(uint seed);
 extern uint randomMT(void);
 
-#ifndef STANDALONE
-#include <png.h>
-enum
-{
-	IFMT_NONE = 0,
-	IFMT_BMP,
-	IFMT_PNG,
-	IFMT_MAX,
-};
-extern const char *ifmtexts[IFMT_MAX];
-extern int imageformat;
-extern void savepng(SDL_Surface *s, const char *fname, int compress = Z_BEST_SPEED);
-extern void savesurface(SDL_Surface *s, char *name, int format = IFMT_NONE, int compress = Z_BEST_SPEED, bool skip = false);
-extern SDL_Surface *loadsurface(const char *name);
-#endif
-
 #endif
 

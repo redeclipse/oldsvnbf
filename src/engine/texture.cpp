@@ -617,6 +617,26 @@ Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp, bo
     return t;
 }
 
+SDL_Surface *createsurface(int width, int height, int bpp)
+{
+    switch(bpp)
+    {
+        case 3: return SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 8*bpp, RGBMASKS);
+        case 4: return SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 8*bpp, RGBAMASKS);
+    }
+    return NULL;
+}
+
+SDL_Surface *wrapsurface(void *data, int width, int height, int bpp)
+{
+    switch(bpp)
+    {
+        case 3: return SDL_CreateRGBSurfaceFrom(data, width, height, 8*bpp, bpp*width, RGBMASKS);
+        case 4: return SDL_CreateRGBSurfaceFrom(data, width, height, 8*bpp, bpp*width, RGBAMASKS);
+    }
+    return NULL;
+}
+
 SDL_Surface *creatergbsurface(SDL_Surface *os, bool clear)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 24, RGBMASKS);
@@ -640,6 +660,21 @@ SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear)
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
     if(!ns) fatal("scalesurface");
     scaletexture((uchar *)os->pixels, os->w, os->h, os->format->BytesPerPixel, (uchar *)ns->pixels, w, h);
+    if(clear) SDL_FreeSurface(os);
+    return ns;
+}
+
+SDL_Surface *flipsurface(SDL_Surface *os, bool clear)
+{
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, os->format->BitsPerPixel, os->format->Rmask, os->format->Gmask, os->format->Bmask, os->format->Amask);
+    if(!ns) fatal("flipsurface");
+    uchar *dst = (uchar *)ns->pixels, *src = (uchar *)os->pixels;
+    loopi(os->h)
+    {
+        memcpy(dst, &src[os->pitch*(os->h-i-1)], os->format->BytesPerPixel*os->w);
+        dst += ns->pitch;
+        src += os->pitch;
+    }
     if(clear) SDL_FreeSurface(os);
     return ns;
 }
@@ -1489,70 +1524,6 @@ GLuint lookupenvmap(ushort emid)
 	return tex ? tex : skyenvmap;
 }
 
-void writetgaheader(FILE *f, SDL_Surface *s, int bits)
-{
-    fwrite("\0\0\x02\0\0\0\0\0\0\0\0\0", 1, 12, f);
-    ushort dim[] = { s->w, s->h };
-    endianswap(dim, sizeof(ushort), 2);
-    fwrite(dim, sizeof(short), 2, f);
-    fputc(bits, f);
-    fputc(0, f);
-}
-
-void flipnormalmapy(char *destfile, char *normalfile)           // RGB (jpg/png) -> BGR (tga)
-{
-    SDL_Surface *ns = loadsurface(normalfile);
-    if(!ns) return;
-    FILE *f = openfile(destfile, "wb");
-    if(f)
-    {
-        writetgaheader(f, ns, 24);
-        for(int y = ns->h-1; y>=0; y--) loop(x, ns->w)
-        {
-            uchar *nd = (uchar *)ns->pixels+(x+y*ns->w)*3;
-            fputc(nd[2], f);
-            fputc(255-nd[1], f);
-            fputc(nd[0], f);
-        }
-        fclose(f);
-    }
-    if(ns) SDL_FreeSurface(ns);
-}
-
-void mergenormalmaps(char *heightfile, char *normalfile)    // BGR (tga) -> BGR (tga) (SDL loads TGA as BGR!)
-{
-    SDL_Surface *hs = loadsurface(heightfile);
-    SDL_Surface *ns = loadsurface(normalfile);
-    if(hs && ns)
-    {
-        uchar def_n[] = { 255, 128, 128 };
-        FILE *f = openfile(normalfile, "wb");
-        if(f)
-        {
-            writetgaheader(f, ns, 24);
-            for(int y = ns->h-1; y>=0; y--) loop(x, ns->w)
-            {
-                int off = (x+y*ns->w)*3;
-                uchar *hd = hs ? (uchar *)hs->pixels+off : def_n;
-                uchar *nd = ns ? (uchar *)ns->pixels+off : def_n;
-                #define S(x) x/255.0f*2-1
-                vec n(S(nd[0]), S(nd[1]), S(nd[2]));
-                vec h(S(hd[0]), S(hd[1]), S(hd[2]));
-                n.mul(2).add(h).normalize().add(1).div(2).mul(255);
-                uchar o[3] = { (uchar)n.x, (uchar)n.y, (uchar)n.z };
-                fwrite(o, 3, 1, f);
-                #undef S
-            }
-            fclose(f);
-        }
-    }
-    if(hs) SDL_FreeSurface(hs);
-    if(ns) SDL_FreeSurface(ns);
-}
-
-COMMAND(flipnormalmapy, "ss");
-COMMAND(mergenormalmaps, "sss");
-
 void cleanuptextures()
 {
     clearenvmaps();
@@ -1560,8 +1531,293 @@ void cleanuptextures()
     loopi(MATF_VOLUME+1) materialslots[i].cleanup();
     vector<Texture *> transient;
     enumerate(textures, Texture, tex,
-		cleanuptexture(&tex);
+        cleanuptexture(&tex);
         if(tex.type==Texture::TRANSIENT) transient.add(&tex);
     );
     loopv(transient) textures.remove(transient[i]->name);
 }
+
+void writepngchunk(FILE *f, const char *type, uchar *data = NULL, uint len = 0)
+{
+    uint clen = SDL_SwapBE32(len);
+    fwrite(&clen, 1, sizeof(clen), f);
+    fwrite(type, 1, 4, f);
+    fwrite(data, 1, len, f);
+
+    uint crc = crc32(0, Z_NULL, 0);
+    crc = crc32(crc, (const Bytef *)type, 4);
+    if(data) crc = crc32(crc, data, len);
+    crc = SDL_SwapBE32(crc);
+    fwrite(&crc, 1, 4, f);
+}
+
+void savepng(const char *filename, SDL_Surface *image, int compress, bool flip)
+{
+    uchar ctype = 0;
+    switch(image->format->BytesPerPixel)
+    {
+        case 1: ctype = 0; break;
+        case 2: ctype = 4; break;
+        case 3: ctype = 2; break;
+        case 4: ctype = 6; break;
+        default: conoutf("\frfailed saving png to %s", filename); return;
+    }
+    FILE *f = openfile(filename, "wb");
+    if(!f) { conoutf("\frcould not write to %s", filename); return; }
+
+    uchar signature[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+    fwrite(signature, 1, sizeof(signature), f);
+
+    uchar ihdr[] = { 0, 0, 0, 0, 0, 0, 0, 0, 8, ctype, 0, 0, 0 };
+    *(uint *)ihdr = SDL_SwapBE32(image->w);
+    *(uint *)(ihdr + 4) = SDL_SwapBE32(image->h);
+    writepngchunk(f, "IHDR", ihdr, sizeof(ihdr));
+
+    int idat = ftell(f);
+    uint len = 0;
+    fwrite("\0\0\0\0IDAT", 1, 8, f);
+    uint crc = crc32(0, Z_NULL, 0);
+    crc = crc32(crc, (const Bytef *)"IDAT", 4);
+
+    z_stream z;
+    z.zalloc = NULL;
+    z.zfree = NULL;
+    z.opaque = NULL;
+
+    if(deflateInit(&z, compress) != Z_OK)
+        goto error;
+
+    uchar buf[1<<12];
+    z.next_out = (Bytef *)buf;
+    z.avail_out = sizeof(buf);
+
+    loopi(image->h)
+    {
+        uchar filter = 0;
+        loopj(2)
+        {
+            z.next_in = j ? (Bytef *)image->pixels + (flip ? image->h-i-1 : i)*image->pitch : (Bytef *)&filter;
+            z.avail_in = j ? image->w*image->format->BytesPerPixel : 1;
+            while(z.avail_in > 0)
+            {
+                if(deflate(&z, Z_NO_FLUSH) != Z_OK) goto cleanuperror;
+                #define FLUSHZ do { \
+                    int flush = sizeof(buf) - z.avail_out; \
+                    crc = crc32(crc, buf, flush); \
+                    len += flush; \
+                    fwrite(buf, 1, flush, f); \
+                    z.next_out = (Bytef *)buf; \
+                    z.avail_out = sizeof(buf); \
+                } while(0)
+                FLUSHZ;
+            }
+        }
+    }
+
+    for(;;)
+    {
+        int err = deflate(&z, Z_FINISH);
+        if(err != Z_OK && err != Z_STREAM_END) goto cleanuperror;
+        FLUSHZ;
+        if(err == Z_STREAM_END) break;
+    }
+
+    deflateEnd(&z);
+
+    fseek(f, idat, SEEK_SET);
+    len = SDL_SwapBE32(len);
+    fwrite(&len, 1, 4, f);
+    crc = SDL_SwapBE32(crc);
+    fseek(f, 0, SEEK_END);
+    fwrite(&crc, 1, 4, f);
+
+    writepngchunk(f, "IEND");
+
+    fclose(f);
+    return;
+
+cleanuperror:
+    deflateEnd(&z);
+
+error:
+    fclose(f);
+
+    conoutf("\frfailed saving png to %s", filename);
+}
+
+struct tgaheader
+{
+    uchar  identsize;
+    uchar  cmaptype;
+    uchar  imagetype;
+    uchar  cmaporigin[2];
+    uchar  cmapsize[2];
+    uchar  cmapentrysize;
+    uchar  xorigin[2];
+    uchar  yorigin[2];
+    uchar  width[2];
+    uchar  height[2];
+    uchar  pixelsize;
+    uchar  descbyte;
+};
+
+void savetga(const char *filename, SDL_Surface *image, int compress, bool flip)
+{
+    switch(image->format->BytesPerPixel)
+    {
+        case 3: case 4: break;
+        default: conoutf("\frfailed saving tga to %s", filename); return;
+    }
+
+    FILE *f = openfile(filename, "wb");
+    if(!f) { conoutf("\frcould not write to %s", filename); return; }
+
+    tgaheader hdr;
+    memset(&hdr, 0, sizeof(hdr));
+    hdr.pixelsize = image->format->BitsPerPixel;
+    hdr.width[0] = image->w&0xFF;
+    hdr.width[1] = (image->w>>8)&0xFF;
+    hdr.height[0] = image->h&0xFF;
+    hdr.height[1] = (image->h>>8)&0xFF;
+    hdr.imagetype = compress ? 10 : 2;
+    fwrite(&hdr, 1, sizeof(hdr), f);
+
+    uchar buf[128*4];
+    loopi(image->h)
+    {
+        uchar *src = (uchar *)image->pixels + (flip ? i : image->h - i - 1)*image->pitch;
+        for(int remaining = image->w; remaining > 0;)
+        {
+            int raw = 1;
+            if(compress)
+            {
+                int run = 1;
+                for(uchar *scan = src; run < min(remaining, 128); run++)
+                {
+                    scan += image->format->BytesPerPixel;
+                    if(src[0]!=scan[0] || src[1]!=scan[1] || src[2]!=scan[2] || (image->format->BytesPerPixel==4 && src[3]!=scan[3])) break;
+                }
+                if(run > 1)
+                {
+                    fputc(0x80 | (run-1), f);
+                    fputc(src[2], f); fputc(src[1], f); fputc(src[0], f);
+                    if(image->format->BytesPerPixel==4) fputc(src[3], f);
+                    src += run*image->format->BytesPerPixel;
+                    remaining -= run;
+                    if(remaining <= 0) break;
+                }
+                for(uchar *scan = src; raw < min(remaining, 128); raw++)
+                {
+                    scan += image->format->BytesPerPixel;
+                    if(src[0]==scan[0] && src[1]==scan[1] && src[2]==scan[2] && (image->format->BytesPerPixel!=4 || src[3]==scan[3])) break;
+                }
+                fputc(raw - 1, f);
+            }
+            else raw = min(remaining, 128);
+            uchar *dst = buf;
+            loopj(raw)
+            {
+                dst[0] = src[2];
+                dst[1] = src[1];
+                dst[2] = src[0];
+                if(image->format->BytesPerPixel==4) dst[3] = src[3];
+                dst += image->format->BytesPerPixel;
+                src += image->format->BytesPerPixel;
+            }
+            fwrite(buf, image->format->BytesPerPixel, raw, f);
+            remaining -= raw;
+        }
+    }
+
+    fclose(f);
+}
+
+const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png", ".tga" };
+
+void savesurface(SDL_Surface *s, const char *fname, int format, int compress, bool flip, bool skip)
+{
+    if(!s) return;
+    int f = format > IFMT_NONE && format < IFMT_MAX ? format : IFMT_PNG;
+    const char *filename = makefile(fname, ifmtexts[f], 0, 1, skip);
+    switch(f)
+    {
+        case IFMT_PNG: savepng(filename, s, compress, flip); break;
+        case IFMT_TGA: savetga(filename, s, compress, flip); break;
+        case IFMT_BMP:
+        {
+            const char *name = findfile(filename, "wb");
+            if(!name) name = filename;
+            SDL_Surface *flipped = flip ? flipsurface(s, false) : s;
+            SDL_SaveBMP(flipped, name);
+            if(flip) SDL_FreeSurface(flipped);
+            break;
+        }
+        default: break;
+    }
+}
+
+SDL_Surface *loadsurface(const char *name)
+{
+    const char *exts[] = { "", ".png", ".tga", ".jpg", ".bmp" }; // bmp is a last resort!
+    loopi(sizeof(exts)/sizeof(exts[0]))
+    {
+        s_sprintfd(buf)("%s%s", name, exts[i]);
+        SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
+        if(s) return s;
+    }
+    return NULL;
+}
+
+void flipnormalmapy(char *destfile, char *normalfile) // jpg/png -> png
+{
+    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
+    if(!ns) return;
+    SDL_Surface *ds = SDL_CreateRGBSurface(SDL_SWSURFACE, ns->w, ns->h, 24, RGBMASKS);
+    if(!ds) { SDL_FreeSurface(ns); return; }
+    uchar *dst = (uchar *)ds->pixels, *src = (uchar *)ns->pixels;
+    loopi(ds->w*ds->h)
+    {
+        dst[0] = src[0];
+        dst[1] = 255 - src[1];
+        dst[2] = src[2];
+        dst += ds->format->BytesPerPixel;
+        src += ns->format->BytesPerPixel;
+    }
+    savepng(destfile, ds);
+    SDL_FreeSurface(ds);
+    SDL_FreeSurface(ns);
+}
+
+void mergenormalmaps(char *heightfile, char *normalfile) // jpg/png + png -> png
+{
+    SDL_Surface *hs = IMG_Load(findfile(path(heightfile), "rb"));
+    SDL_Surface *ns = IMG_Load(findfile(path(normalfile), "rb"));
+    SDL_Surface *ds = SDL_CreateRGBSurface(SDL_SWSURFACE, ns->w, ns->h, 24, RGBMASKS);
+    if(hs && ns && ds && hs->w == ns->w && hs->h == ns->h)
+    {
+        uchar *dst = (uchar *)ds->pixels,
+              *srch = (uchar *)hs->pixels,
+              *srcn = (uchar *)ns->pixels;
+        loopi(ds->w*ds->h)
+        {
+            #define S(x) x/255.0f*2-1 
+            vec n(S(srcn[0]), S(srcn[1]), S(srcn[2]));
+            vec h(S(srch[0]), S(srch[1]), S(srch[2]));
+            n.mul(2).add(h).normalize().add(1).div(2).mul(255);
+            dst[0] = uchar(n.x);
+            dst[1] = uchar(n.y);
+            dst[2] = uchar(n.z);
+            dst += ds->format->BytesPerPixel;
+            srch += hs->format->BytesPerPixel;
+            srcn += ns->format->BytesPerPixel;
+        }
+        savepng(normalfile, ds);
+    }
+    if(hs) SDL_FreeSurface(hs);
+    if(ns) SDL_FreeSurface(ns);
+    if(ds) SDL_FreeSurface(ds);
+}
+
+COMMAND(flipnormalmapy, "ss");
+COMMAND(mergenormalmaps, "sss");
+
