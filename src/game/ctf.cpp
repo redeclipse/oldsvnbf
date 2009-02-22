@@ -254,7 +254,7 @@ namespace ctf
             st.dropflag(i, f.owner->o, 1);
         }
     }
-            
+
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
 		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
@@ -362,7 +362,7 @@ namespace ctf
 				takenflags.add(i);
 		}
 		if(!hasflags.empty() && aihomerun(d, b)) return true;
-		if(!takenflags.empty())
+		if(!ai::badhealth(d) && !takenflags.empty())
 		{
 			int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
 			d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, takenflags[flag]);
@@ -373,6 +373,7 @@ namespace ctf
 
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
+		if(ai::badhealth(d)) return;
 		vec pos = world::headpos(d);
 		loopvj(st.flags)
 		{

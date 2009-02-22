@@ -1019,7 +1019,7 @@ struct aiinfo
 	vector<aistate> state;
 	vector<int> route;
 	vec target, spot;
-	int enemy, lastseen, weappref, lastnode, prevnode,
+	int enemy, enemyseen, enemymillis, weappref, lastnode, prevnode,
 		lasthunt, lastaction, jumpseed, propelseed;
 	float targyaw, targpitch, views[3];
 	bool dontmove, tryreset, clear;
@@ -1047,7 +1047,7 @@ struct aiinfo
 			while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
 			spot = target = vec(0, 0, 0);
 			enemy = lastnode = prevnode = -1;
-			lastaction = lasthunt = lastseen = 0;
+			lastaction = lasthunt = enemyseen = enemymillis = 0;
 			propelseed = jumpseed = lastmillis+3000;
 			dontmove = false;
 		}
@@ -1277,6 +1277,7 @@ namespace ai
 
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 
+	extern bool badhealth(gameent *d);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
 	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, float obdist = NEARDIST);
 	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true, float obdist = NEARDIST);
@@ -1285,6 +1286,7 @@ namespace ai
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1, bool retry = false);
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1);
+
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
 	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);
