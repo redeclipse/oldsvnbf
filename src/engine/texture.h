@@ -329,6 +329,7 @@ extern SDL_Surface *wrapsurface(void *data, int width, int height, int bpp);
 extern SDL_Surface *flipsurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *creatergbsurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
+extern SDL_Surface *fixsurfaceformat(SDL_Surface *s);
 extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
 extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL);
 
