@@ -329,7 +329,7 @@ namespace client
 		s_sprintfd(m)("%s", world::colorname(d));
 		if(team)
 		{
-			s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[team].name);
+			s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
 			s_strcat(m, t);
 		}
 		if(flags&SAY_ACTION) s_sprintf(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
