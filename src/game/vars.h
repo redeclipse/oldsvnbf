@@ -26,7 +26,6 @@ VARG(regendelay, 0, 3, INT_MAX-1);
 VARG(regentime, 0, 1, INT_MAX-1);
 VARG(regenhealth, 0, 10, INT_MAX-1);
 VARG(spawnprotecttime, 0, 3, INT_MAX-1);
-/*freeze VARG(paintfreezetime, 0, 3, INT_MAX-1); */
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
@@ -57,7 +56,7 @@ FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paint
 
 FVARG(botscale, 0, 1.f, 1000);
 FVARG(botratio, 0, 0.5f, 1000);
-VARG(botminskill, 0, 70, 101);
+VARG(botminskill, 0, 50, 101);
 VARG(botmaxskill, 0, 100, 101);
 VARG(botlimit, 0, MAXBOTS, MAXBOTS);
 

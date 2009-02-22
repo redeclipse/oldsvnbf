@@ -94,8 +94,7 @@ namespace physics
 			if(d->type == ENT_PLAYER)
 			{
 				gameent *o = (gameent *)d;
-				int sp = spawnprotecttime*1000; /*freeze, pf = m_paint(world::gamemode, world::mutators) ? paintfreezetime*1000 : 0; */
-				if(o->spawnprotect(lastmillis, sp, /*freeze pf */ 0) || o->damageprotect(lastmillis, /*freeze pf */ 0)) return false;
+				if(o->protect(lastmillis, spawnprotecttime*1000)) return false;
 			}
 			return true;
 		}
