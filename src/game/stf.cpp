@@ -240,4 +240,8 @@ namespace stf
 		b.type = AI_S_DEFEND;
 		return aidefend(d, b);
 	}
+
+    void removeplayer(gameent *d)
+    {
+    }
 }
