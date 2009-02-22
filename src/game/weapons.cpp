@@ -58,8 +58,6 @@ namespace weapons
 		if(autoreload && !d->ammo[d->weapselect]) return true;
 		if(autoreload > 1 && lastmillis-d->weaplast[d->weapselect] > weaptype[d->weapselect].rdelay*autoreload)
 			return true;
-		if(m_paint(world::gamemode, world::mutators) && d->damageprotect(lastmillis, /*freeze paintfreezetime*1000 */ 0) >= weaptype[d->weapselect].rdelay)
-			return true; // auto reload when frozen
 		return false;
 	}
 

@@ -274,15 +274,8 @@ namespace world
         		if(UI::hascursor(true)) return false;
 				if(tvmode()) return false;
         	}
-			if(d->state == CS_DEAD || d->state == CS_WAITING) return false;
-			else if(d->state == CS_ALIVE)
-			{
-				if(intermission) return false;
-				/* freeze
-				if(m_paint(gamemode, mutators) && ((gameent *)d)->damageprotect(lastmillis, paintfreezetime*1000))
-					return false;
-				*/
-			}
+			if(d->state == CS_DEAD || d->state == CS_WAITING || intermission)
+				return false;
         }
         return true;
     }
@@ -628,7 +621,8 @@ namespace world
 							s_sprintfd(ds)("@\fgHEADSHOT");
 							part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
 						}
-						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*1000+1000) anc = S_V_OWNED;
+						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
+							anc = S_V_OWNED;
 						break;
 					}
 				}

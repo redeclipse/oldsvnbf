@@ -876,19 +876,10 @@ struct gamestate
 		health = heal;
 	}
 
-	int damageprotect(int millis, int delay)
-	{
-		int amt = 0;
-		if(lastpain && delay && millis-lastpain <= delay) amt = delay-(millis-lastpain);
-		return amt;
-	}
-
-	int spawnprotect(int millis, int delay, int after)
+	int protect(int millis, int delay)
 	{
 		int amt = 0;
 		if(lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
-		if(!amt && lastpain && delay && after && millis-lastpain >= after && millis-(lastpain+after) <= delay)
-			amt = delay-(millis-(lastpain+after));
 		return amt;
 	}
 };
