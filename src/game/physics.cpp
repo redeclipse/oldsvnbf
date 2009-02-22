@@ -933,7 +933,12 @@ namespace physics
 		d.radius = radius;
 		d.height = height;
 		d.aboveeye = radius;
-        return !movecamera(&d, vec(0, 0, -1), hdr.worldsize, 1); 
+        if(!movecamera(&d, vec(0, 0, -1), hdr.worldsize, 1))
+        {
+            o = d.o;
+            return true;
+        }
+        return false;
 	}
 
 	void update()
