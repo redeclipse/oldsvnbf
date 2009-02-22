@@ -703,15 +703,23 @@ namespace physics
 		return true;
 	}
 
-    bool movecamera(physent *pl, float dist, float stepdist)
+    bool movecamera(physent *pl, const vec &dir, float dist, float stepdist)
     {
         int steps = (int)ceil(dist/stepdist);
         if(steps <= 0) return true;
 
-        vec d(0, 0, 0);
-        vecfromyawpitch(pl->aimyaw, pl->aimpitch, pl->move, pl->strafe, d);
+        vec d(dir);
         d.mul(dist/steps);
-        loopi(steps) if(!move(pl, d)) return false;
+        loopi(steps) 
+        {
+            vec oldpos(pl->o);
+            pl->o.add(d);
+            if(!collide(pl, vec(0, 0, 0), 0, false))
+            {
+                pl->o = oldpos;
+                return false;
+            }
+        }
         return true;
     }
 
@@ -920,18 +928,12 @@ namespace physics
 		v.normalize();
 		if(raycube(o, v, hdr.worldsize) >= hdr.worldsize) return false;
 		physent d;
-		d.type = ENT_CAMERA;
+		d.type = ENT_PROJ;
 		d.o = o;
-		d.vel = vec(0, 0, -1);
 		d.radius = radius;
 		d.height = height;
 		d.aboveeye = radius;
-		loopi(hdr.worldsize) if(!move(&d, v))
-		{
-			o = d.o;
-			return true;
-		}
-		return false;
+        return !movecamera(&d, vec(0, 0, -1), hdr.worldsize, 1); 
 	}
 
 	void update()

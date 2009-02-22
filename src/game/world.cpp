@@ -1362,9 +1362,9 @@ namespace world
 					#define cameramove(d,s) \
 						if(d) \
 						{ \
-							camera1->move = !s ? (d > 0 ? -1 : 1) : 0; \
-							camera1->strafe = s ? (d > 0 ? -1 : 1) : 0; \
-							physics::movecamera(camera1, fabs(d), 1.0f); \
+                            vec dir; \
+                            vecfromyawpitch(camera1->aimyaw, camera1->aimpitch, !s ? (d > 0 ? -1 : 1) : 0, s ? (d > 0 ? -1 : 1) : 0, dir); \
+							physics::movecamera(camera1, dir, fabs(d), 1.0f); \
 						}
 					cameramove(thirdpersondist, false);
 					cameramove(thirdpersonshift, true);

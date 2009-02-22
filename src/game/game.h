@@ -1225,8 +1225,7 @@ namespace physics
 {
 	extern int smoothmove, smoothdist;
 	extern bool canimpulse(physent *d);
-    extern bool movecamera(physent *pl, float dist, float stepdist);
-	extern void movecamera(physent *d);
+    extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();
 }
