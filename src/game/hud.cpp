@@ -24,7 +24,7 @@ namespace hud
 
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
-	TVAR(damagetex, "textures/damage", 0);
+	TVAR(damagetex, "textures/damage", 3);
 	FVARP(damageblend, 0, 0.5f, 1);
 
 	VARP(showdamagecompass, 0, 1, 1);
@@ -38,7 +38,7 @@ namespace hud
 	FVARP(indicatorsize, 0, 0.04f, 1000);
 	FVARP(indicatorblend, 0, 1.f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
-	TVAR(snipetex, "textures/snipe", 0);
+	TVAR(snipetex, "textures/snipe", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
@@ -67,20 +67,20 @@ namespace hud
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.75f, 1);
-	TVAR(plasmatex, "textures/plasma", 0);
-	TVAR(shotguntex, "textures/shotgun", 0);
-	TVAR(chainguntex, "textures/chaingun", 0);
-	TVAR(grenadestex, "textures/grenades", 0);
-	TVAR(flamertex, "textures/flamer", 0);
-	TVAR(carbinetex, "textures/carbine", 0);
-	TVAR(rifletex, "textures/rifle", 0);
-	TVAR(paintguntex, "textures/paintgun", 0);
-	TVAR(healthtex, "textures/health", 0);
-	TVAR(neutralflagtex, "textures/team", 0);
-	TVAR(alphaflagtex, "textures/teamalpha", 0);
-	TVAR(betaflagtex, "textures/teambeta", 0);
-	TVAR(deltaflagtex, "textures/teamdelta", 0);
-	TVAR(gammaflagtex, "textures/teamgamma", 0);
+	TVAR(plasmatex, "textures/plasma", 3);
+	TVAR(shotguntex, "textures/shotgun", 3);
+	TVAR(chainguntex, "textures/chaingun", 3);
+	TVAR(grenadestex, "textures/grenades", 3);
+	TVAR(flamertex, "textures/flamer", 3);
+	TVAR(carbinetex, "textures/carbine", 3);
+	TVAR(rifletex, "textures/rifle", 3);
+	TVAR(paintguntex, "textures/paintgun", 3);
+	TVAR(healthtex, "textures/health", 3);
+	TVAR(neutralflagtex, "textures/team", 3);
+	TVAR(alphaflagtex, "textures/teamalpha", 3);
+	TVAR(betaflagtex, "textures/teambeta", 3);
+	TVAR(deltaflagtex, "textures/teamdelta", 3);
+	TVAR(gammaflagtex, "textures/teamgamma", 3);
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
@@ -287,7 +287,7 @@ namespace hud
 
 	void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade)
 	{
-		Texture *t = textureload(getpointer(index), 3, true);
+		Texture *t = textureload(getpointer(index), 3);
 		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		glColor4f(r, g, b, fade);
@@ -452,7 +452,7 @@ namespace hud
 					if(shownotices > 1)
 					{
 						pushfont("emphasis");
-						settexture(flagtex(world::player1->team));
+						settexture(flagtex(world::player1->team), 3);
 						glColor4f(1.f, 1.f, 1.f, tf);
 						drawsized(tx-FONTH, ty, FONTH);
 						ty += draw_textx("You are on team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
@@ -999,7 +999,7 @@ namespace hud
 
 		if(pc > 0.f)
 		{
-			Texture *t = textureload(damagetex);
+			Texture *t = textureload(damagetex, 3);
 			glBindTexture(GL_TEXTURE_2D, t->id);
 			glColor4f(1.f, 1.f, 1.f, pc*blend*damageblend);
 			drawtex(0, 0, w, h);
@@ -1076,7 +1076,7 @@ namespace hud
 
 	void drawsniper(int w, int h, int s, float blend)
 	{
-		Texture *t = textureload(snipetex);
+		Texture *t = textureload(snipetex, 3);
 		int frame = lastmillis-world::lastzoom;
 		float pc = frame < world::zoomtime() ? float(frame)/float(world::zoomtime()) : 1.f;
 		if(!world::zooming) pc = 1.f-pc;
