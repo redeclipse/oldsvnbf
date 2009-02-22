@@ -44,7 +44,7 @@ struct duelservmode : servmode
 
 	bool canspawn(clientinfo *ci, bool tryspawn = false)
 	{
-		queue(ci, false, false);
+		if(tryspawn) queue(ci, false, false);
 		return false; // you spawn when we want you to buddy
 	}
 
@@ -80,7 +80,7 @@ struct duelservmode : servmode
 	void cleanup()
 	{
 		loopvrev(duelqueue)
-			if(!clients.inrange(duelqueue[i]) || !clients[duelqueue[i]]->name[0] || (clients[duelqueue[i]]->state.state != CS_DEAD || clients[duelqueue[i]]->state.state != CS_WAITING))
+			if(!clients.inrange(duelqueue[i]) || (clients[duelqueue[i]]->state.state != CS_DEAD && clients[duelqueue[i]]->state.state != CS_WAITING))
 				duelqueue.remove(i);
 	}
 
