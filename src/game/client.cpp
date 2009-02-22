@@ -28,6 +28,7 @@ namespace client
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
 	ICOMMAND(getname, "", (), result(world::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[world::player1->team].name));
+    ICOMMAND(getteamicon, "", (), result(teamtype[world::player1->team].icon));
 
     const char *getname() { return world::player1->name; }
 
