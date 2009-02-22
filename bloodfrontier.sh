@@ -26,7 +26,7 @@ else
 			echo "Build complete, please try running the script again."
 		else
 			echo "Please follow the following steps to build:"
-			echo "1) Ensure you have the SDL, SDL image, SDL mixer, libpng, zlib, and OpenGL *DEVELOPMENT* libraries installed."
+			echo "1) Ensure you have the SDL, SDL image, SDL mixer, zlib, and OpenGL *DEVELOPMENT* libraries installed."
 			echo "2) Change directory to src/ and type \"make clean install\" or \"gmake clean install\"."
 			echo "3) If the build succeeds, return to this directory and run this script again."
 			exit 1
