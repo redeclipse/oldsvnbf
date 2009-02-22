@@ -175,6 +175,12 @@ namespace ai
 		return randomnode(d, b, feet, guard, wander);
 	}
 
+	bool badhealth(gameent *d)
+	{
+		if(d->skill <= 100) return d->health <= (111-d->skill)/3;
+		return false;
+	}
+
 	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, bool pursue = false)
 	{
 		if(world::allowmove(d))
@@ -201,6 +207,12 @@ namespace ai
 			if(t && violence(d, b, t, pursue && (tooclose || insight))) return insight || tooclose;
 		}
 		return false;
+	}
+
+	void noenemy(gameent *d)
+	{
+		d->ai->enemy = -1;
+		d->ai->enemymillis = 0;
 	}
 
 	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
@@ -233,8 +245,8 @@ namespace ai
 			vec feet = world::feetpos(d);
 			if(walk < 2 && feet.squaredist(pos) <= guard*guard)
 			{
-				bool hasenemy = enemy(d, b, pos, wander, false), danger = d->health < d->skill/3;
-				if((walk || danger) && hasenemy && patrol(d, b, pos, guard, wander, 2)) return true;
+				bool hasenemy = enemy(d, b, pos, wander, false);
+				if((walk || badhealth(d)) && hasenemy && patrol(d, b, pos, guard, wander, 2)) return true;
 				d->ai->route.setsize(0);
 				d->ai->spot = pos;
 				b.idle = hasenemy ? 2 : 1;
@@ -250,8 +262,11 @@ namespace ai
 		{
 			if(pursue)
 				d->ai->addstate(AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
-			d->ai->lastseen = lastmillis;
+			d->ai->enemyseen = lastmillis;
+			vec dp = world::headpos(d), ep = world::headpos(e);
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+1; // so we don't "quick"
 			return true;
 		}
 		return false;
@@ -388,7 +403,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && targetable(t, e, true))
+			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && !badhealth(d) && targetable(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				if(violence(t, c, e, false)) return;
@@ -426,7 +441,7 @@ namespace ai
 	{
 		if(check(d, b)) return true;
 		if(find(d, b)) return true;
-		if(target(d, b, true, true)) return true;
+		if(target(d, b, true, !badhealth(d))) return true;
 		if(randomnode(d, b, NEARDIST, 1e16f))
 		{
 			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
@@ -543,8 +558,11 @@ namespace ai
 
 				case AI_T_PLAYER:
 				{
-					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e));
+					if(!badhealth(d))
+					{
+						gameent *e = world::getclient(b.target);
+						if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e));
+					}
 					break;
 				}
 				default: break;
@@ -651,7 +669,7 @@ namespace ai
 
 	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
-		if(d->skill <= 100 && !rnd(d->skill*1000)) return true; // random margin of error
+		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		gameent *h = world::intersectclosest(d->muzzle, d->ai->target, d);
 		if(h && !targetable(d, h, true)) return false;
 		float targyaw, targpitch, mindist = d->radius*d->radius, dist = d->muzzle.squaredist(d->ai->target);
@@ -662,7 +680,7 @@ namespace ai
 			vec dir = vec(d->muzzle).sub(world::headpos(e)).normalize();
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
-					skew = clamp(float(lastmillis-b.millis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
+					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= d->ai->views[0]*skew && cpitch <= d->ai->views[1]*skew) return true;
 		}
@@ -699,8 +717,8 @@ namespace ai
 				d->jumptime = lastmillis;
 				if(propel)
 				{
-					d->ai->jumpseed = lastmillis+1000+rnd((111-d->skill)*1000);
-					d->ai->propelseed = lastmillis+100+rnd((111-d->skill)*100);
+					d->ai->jumpseed = lastmillis+2000+rnd((111-d->skill)*2000);
+					d->ai->propelseed = lastmillis+200+rnd((111-d->skill)*200);
 				}
 				if(jump && !propel) d->ai->dontmove = true; // going up
 			}
@@ -709,14 +727,15 @@ namespace ai
 
 	int process(gameent *d, aistate &b)
 	{
-		int result = 0;
+		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*100) : 0, skmod = (111-d->skill)*10;
 		vec dp = world::headpos(d);
-		float frame = float(lastmillis-d->lastupdate)/float((111-d->skill)*10);
-		if(b.idle)
+		float frame = float(lastmillis-d->lastupdate)/float(skmod);
+		if(b.idle || (stupify && stupify <= skmod))
 		{
-			d->ai->lastaction = lastmillis;
+			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
-			if(b.idle == 2) jumpto(d, b, dp, false); // jump up and down
+			if(b.idle == 2 || (stupify && stupify <= skmod/4))
+				jumpto(d, b, dp, false); // jump up and down
 		}
 		else if(hunt(d, b))
 		{
@@ -727,13 +746,13 @@ namespace ai
 		else d->ai->dontmove = true;
 
 		gameent *e = world::getclient(d->ai->enemy);
-		if(d->skill > 100 && (!e || !targetable(d, e, true))) e = world::intersectclosest(d->muzzle, d->ai->target, d);
+		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = world::intersectclosest(d->muzzle, d->ai->target, d);
 		if(e && targetable(d, e, true))
 		{
 			vec ep = world::headpos(e);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->lastseen && lastmillis-d->ai->lastseen <= (d->skill*100)+1000,
-				quick = d->ai->lastseen && lastmillis-d->ai->lastseen <= ((111-d->skill)*10);
-			if(insight) d->ai->lastseen = lastmillis;
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
+				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
+			if(insight) d->ai->enemyseen = lastmillis;
 			if(b.idle || insight || hasseen)
 			{
 				float yaw, pitch;
@@ -746,7 +765,7 @@ namespace ai
 					if(!insight) frame /= 3.f;
 				}
 				else if(!insight) frame /= 2.f;
-				float is = insight ? 2.f : (hasseen ? 1.5f : 1.f), js = (insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f;
+				float is = insight ? 2.f : (hasseen ? 1.f : 0.5f), js = (insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f;
 				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, is*js);
 				if(insight || quick)
 				{
@@ -760,19 +779,19 @@ namespace ai
 				}
 				else
 				{
-					if(!b.idle) d->ai->enemy = -1;
+					if(!b.idle) noenemy(d);
 					result = hasseen ? 2 : 1;
 				}
 			}
 			else
 			{
-				d->ai->enemy = -1;
+				noenemy(d);
 				result = 0;
 			}
 		}
 		else
 		{
-			d->ai->enemy = -1;
+			noenemy(d);
 			result = 0;
 		}
 
@@ -903,9 +922,9 @@ namespace ai
 		{
 			if(allowmove)
 			{
-				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
+				if(!request(d, b)) target(d, b, false, b.idle && !badhealth(d) ? true : false);
 				weapons::shoot(d, d->ai->target);
-				if(!b.idle && !d->ai->dontmove && d->ai->lasthunt)
+				if(d->ai->lasthunt)
 				{
 					int millis = lastmillis-d->ai->lasthunt;
 					if(millis < 3000) d->ai->tryreset = false;

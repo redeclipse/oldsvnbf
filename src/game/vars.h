@@ -56,7 +56,7 @@ FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paint
 
 FVARG(botscale, 0, 1.f, 1000);
 FVARG(botratio, 0, 0.5f, 1000);
-VARG(botminskill, 0, 50, 101);
+VARG(botminskill, 0, 1, 101);
 VARG(botmaxskill, 0, 100, 101);
 VARG(botlimit, 0, MAXBOTS, MAXBOTS);
 
