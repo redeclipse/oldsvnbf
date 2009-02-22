@@ -192,5 +192,6 @@ namespace stf
 	extern bool aicheck(gameent *d, aistate &b);
 	extern bool aidefend(gameent *d, aistate &b);
 	extern bool aipursue(gameent *d, aistate &b);
+    extern void removeplayer(gameent *d);
 }
 #endif

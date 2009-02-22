@@ -246,6 +246,15 @@ namespace ctf
 		world::announce(S_V_FLAGDROP, "\fo%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
     }
 
+    void removeplayer(gameent *d)
+    {
+        loopv(st.flags) if(st.flags[i].owner == d)
+        {
+            ctfstate::flag &f = st.flags[i];
+            st.dropflag(i, f.owner->o, 1);
+        }
+    }
+            
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
 		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);

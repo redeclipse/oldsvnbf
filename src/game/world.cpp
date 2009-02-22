@@ -718,6 +718,8 @@ namespace world
 		if(!d) return;
 		if(d->name[0]) conoutf("\fo%s left the game", colorname(d));
 		projs::remove(d);
+        if(m_ctf(gamemode)) ctf::removeplayer(d);
+        if(m_stf(gamemode)) stf::removeplayer(d);
 		DELETEP(players[cn]);
 		players[cn] = NULL;
 		cleardynentcache();
