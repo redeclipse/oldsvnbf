@@ -46,7 +46,6 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="lib\libpng.lib" />
 					<Add library="z" />
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
@@ -91,7 +90,6 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="lib\libpng.lib" />
 					<Add library="z" />
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
@@ -136,7 +134,6 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="lib\libpng.lib" />
 					<Add library="z" />
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
