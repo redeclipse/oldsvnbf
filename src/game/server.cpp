@@ -522,6 +522,7 @@ namespace server
 			}
 		}
 		else *muts = G_M_NONE;
+        *muts |= gametype[*mode].implied;
 		if(kidmode > 1 && !(*muts&G_M_PAINT)) *muts |= G_M_PAINT;
     }
 
