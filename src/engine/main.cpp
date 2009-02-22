@@ -150,27 +150,18 @@ void writeinitcfg()
 	fclose(f);
 }
 
-VARP(compresslevel, Z_NO_COMPRESSION, Z_BEST_SPEED, Z_BEST_COMPRESSION);
+VARP(compresslevel, 0, 9, 9);
 VARP(imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
 
 void screenshot(char *sname)
 {
-	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
-	if(image)
+    SDL_Surface *image = createsurface(screen->w, screen->h, 3);
+    if(image)
 	{
-		uchar *tmp = new uchar[screen->w*screen->h*3];
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, tmp);
-		uchar *dst = (uchar *)image->pixels;
-		loopi(screen->h)
-		{
-			memcpy(dst, &tmp[3*screen->w*(screen->h-i-1)], 3*screen->w);
-			endianswap(dst, 3, screen->w);
-			dst += image->pitch;
-		}
-		delete[] tmp;
+		glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
 		s_sprintfd(fname)("%s", *sname ? sname : getmapname());
-		savesurface(image, fname, imageformat, compresslevel, true);
+		savesurface(image, fname, imageformat, compresslevel, true, true);
 		SDL_FreeSurface(image);
 	}
 }

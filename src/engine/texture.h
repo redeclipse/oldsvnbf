@@ -324,10 +324,29 @@ extern SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool cle
 extern SDL_Surface *texcopy(SDL_Surface *s, bool clear = true);
 extern SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true);
 extern SDL_Surface *texdecal(SDL_Surface *s, bool clear = true);
+extern SDL_Surface *createsurface(int width, int height, int bpp);
+extern SDL_Surface *wrapsurface(void *data, int width, int height, int bpp);
+extern SDL_Surface *flipsurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *creatergbsurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
 extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
 extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL);
+
+enum
+{
+    IFMT_NONE = 0,
+    IFMT_BMP,
+    IFMT_PNG,
+    IFMT_TGA,
+    IFMT_MAX,
+};
+extern const char *ifmtexts[IFMT_MAX];
+extern int imageformat;
+
+extern void savepng(const char *filename, SDL_Surface *image, int compress = 9, bool flip = false);
+extern void savetga(const char *filename, SDL_Surface *image, int compress = 1, bool flip = false);
+extern SDL_Surface *loadsurface(const char *name);
+extern void savesurface(SDL_Surface *s, const char *name, int format = IFMT_NONE, int compress = 9, bool flip = false, bool skip = false);
 
 extern Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL);
 extern Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg);
