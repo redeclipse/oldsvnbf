@@ -1687,7 +1687,7 @@ namespace world
 			}
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen)
 			{
-                part_icon(pos, textureload(conopentex, 3, true), statusaboveheadblend, 2);
+                part_icon(pos, textureload(conopentex, 3), statusaboveheadblend, 2);
 				pos.add(vec(0, 0, 2.f));
 			}
 		}

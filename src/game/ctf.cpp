@@ -77,7 +77,7 @@ namespace ctf
 			if(hasflag >= 0 || !takenflags.empty())
 			{
 				pushfont("emphasis");
-				settexture(hud::flagtex(world::player1->team));
+				settexture(hud::flagtex(world::player1->team), 3);
 				glColor4f(1.f, 1.f, 1.f, int(255*hudblend));
 				hud::drawsized(tx-FONTH, ty, FONTH);
 				ty += draw_textx("Team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
