@@ -1495,13 +1495,13 @@ namespace server
             ucharbuf q(buf, sizeof(buf));
             if(ci->state.aitype != AI_NONE)
             {
-				putint(p, SV_INITAI);
-				putint(p, ci->clientnum);
-				putint(p, ci->state.ownernum);
-				putint(p, ci->state.aitype);
-				putint(p, ci->state.skill);
-				sendstring(ci->name, p);
-				putint(p, ci->team);
+				putint(q, SV_INITAI);
+				putint(q, ci->clientnum);
+				putint(q, ci->state.ownernum);
+				putint(q, ci->state.aitype);
+				putint(q, ci->state.skill);
+				sendstring(ci->name, q);
+				putint(q, ci->team);
             }
             else
             {
