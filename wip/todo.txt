@@ -1,6 +1,0 @@
-Non-definitive todo / wanted feature list, read at own peril.
-
-* Player
-	- pitching causes torso to enter legs
-	- tag_ironsight?
-	- when crouching, roll grenades along the ground instead?
