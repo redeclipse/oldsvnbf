@@ -462,7 +462,6 @@ namespace world
 					if(!issound(actor->dschan))
 						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
 				}
-				if(actor == player1) lasthit = lastmillis;
 			}
 			ai::damaged(d, actor, weap, flags, damage, health, millis, dir);
 		}
