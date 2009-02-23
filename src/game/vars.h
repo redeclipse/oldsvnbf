@@ -40,7 +40,7 @@ VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round
 VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
-VARG(teambalance, 0, 5, 5); // 0 = off, 2 = by effectiveness, 4 = ai number, humans eff (+1 = but force balance too)
+VARG(teambalance, 0, 5, 6); // 0 = off, 2 = by effectiveness, 4 = ai number, humans eff (+1 = but force balance too), 6 = humans vs. bots
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
@@ -56,8 +56,8 @@ FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paint
 
 FVARG(botscale, 0, 1.f, 1000);
 FVARG(botratio, 0, 0.5f, 1000);
-VARG(botminskill, 0, 1, 101);
-VARG(botmaxskill, 0, 100, 101);
+VARG(botminskill, 1, 1, 101);
+VARG(botmaxskill, 1, 100, 101);
 VARG(botlimit, 0, MAXBOTS, MAXBOTS);
 
 FVARG(damagescale, 0, 1.f, 1000);

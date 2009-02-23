@@ -222,7 +222,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			if(lastmillis-b.millis >= (111-d->skill)*100)
+			if(lastmillis-b.millis >= (201-d->skill)*250)
 			{
 				if(!f.enemy && f.owner == d->team)
 				{

@@ -1118,12 +1118,13 @@ namespace server
 						{
 							case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
 							case 2: case 3: rank = cp->state.effectiveness/max(cp->state.timeplayed, 1); break;
-							case 4: case 5: default:
+							case 4: case 5:
 							{
 								if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
 								else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.effectiveness/max(cp->state.timeplayed, 1);
 								break;
 							}
+							case 6: default: break;
 						}
 						ts.score += rank;
 						ts.clients++;
@@ -1131,22 +1132,33 @@ namespace server
 					}
 				}
 				teamscore *worst = &teamscores[0];
-				loopi(numteams(gamemode, mutators))
+				if(GVAR(teambalance) != 6 || ci->state.aitype != AI_NONE)
 				{
-					teamscore &ts = teamscores[i];
-					switch(GVAR(teambalance))
+					loopi(numteams(gamemode, mutators))
 					{
-						case 2: case 4:
+						teamscore &ts = teamscores[i];
+						switch(GVAR(teambalance))
 						{
-							if(ts.score < worst->score || (ts.score == worst->score && ts.clients < worst->clients))
-								worst = &ts;
-							break;
-						}
-						case 1: case 3: case 5: default:
-						{
-							if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.score < worst->score))
-								worst = &ts;
-							break;
+							case 2: case 4:
+							{
+								if(ts.score < worst->score || (ts.score == worst->score && ts.clients < worst->clients))
+									worst = &ts;
+								break;
+							}
+							case 6: default:
+							{
+								if(!i)
+								{
+									worst = &teamscores[1];
+									break; // don't use team alpha for bots in this case
+								}
+							} // fall through
+							case 1: case 3: case 5:
+							{
+								if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.score < worst->score))
+									worst = &ts;
+								break;
+							}
 						}
 					}
 				}

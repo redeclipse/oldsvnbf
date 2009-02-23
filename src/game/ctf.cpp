@@ -459,7 +459,7 @@ namespace ctf
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
 			bool walk = false;
-			if(lastmillis-b.millis >= (111-d->skill)*100)
+			if(lastmillis-b.millis >= (201-d->skill)*500)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -524,7 +524,7 @@ namespace ctf
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
 				if(ai::makeroute(d, b, f.pos())) return true;
 			}
-			if(lastmillis-b.millis >= (111-d->skill)*6000)
+			if(lastmillis-b.millis >= (201-d->skill)*5000)
 			{
 				d->ai->clear = true; // re-evaluate
 				return true;
