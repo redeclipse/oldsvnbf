@@ -378,10 +378,9 @@ namespace server
 	ICOMMAND(gameid, "", (), result(gameid()));
 	ICOMMAND(gamever, "", (), intret(gamever()));
 
-	void cleanup()
+	void resetgamevars(bool invoked)
 	{
-		bannedips.setsize(0);
-		aiman::clearai();
+		string val;
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
 			{
@@ -390,22 +389,35 @@ namespace server
 					case ID_VAR:
 					{
 						setvar(id.name, id.def.i, true);
+                        if(invoked) s_sprintf(val)("%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
 						setfvar(id.name, id.def.f, true);
+                        if(invoked) s_sprintf(val)("%f", *id.storage.f);
 						break;
 					}
 					case ID_SVAR:
 					{
 						setsvar(id.name, *id.def.s ? id.def.s : "", true);
+                        if(invoked) s_sprintf(val)("%s", *id.storage.s);
 						break;
 					}
 					default: break;
 				}
+				if(invoked) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, id.name, val);
 			}
 		});
+		if(invoked) srvoutf("\fmgame variables have been reset");
+	}
+	ICOMMANDG(resetvars, "", (), resetgamevars(true));
+
+	void cleanup()
+	{
+		bannedips.setsize(0);
+		aiman::clearai();
+		if(GVAR(resetvarsonend)) resetgamevars(false);
 		execfile("servexec.cfg");
 		changemap(GVAR(defaultmap), GVAR(defaultmode), GVAR(defaultmuts));
 	}
@@ -1010,7 +1022,6 @@ namespace server
 		if(force || gotvotes)
 		{
 			if(demorecord) enddemorecord();
-			aiman::clearai(true);
 			if(gotvotes)
 			{
 				srvoutf("\fcvote passed by majority: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
@@ -1260,10 +1271,11 @@ namespace server
 		}
 		maprequest = mapsending = shouldcheckvotes = false;
         stopdemo();
+		aiman::clearai();
+		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
-		aiman::clearai();
 		numplayers = gamemillis = interm = 0;
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
@@ -1326,7 +1338,6 @@ namespace server
 				val[0] = 0;
 				switch(id->type)
 				{
-#if 0
 					case ID_COMMAND:
 					{
 						string s;
@@ -1335,12 +1346,11 @@ namespace server
 						char *ret = executeret(s);
 						if(ret)
 						{
-							srvoutf("\fm%s: %s returned %s", colorname(ci), cmd, ret);
+							if(*ret) srvoutf("\fm%s: %s returned %s", colorname(ci), cmd, ret);
 							delete[] ret;
 						}
 						return;
 					}
-#endif
 					case ID_VAR:
 					{
 						if(nargs <= 1 || !arg)
@@ -1436,9 +1446,22 @@ namespace server
 
         ucharbuf h(packet->data, 16), p(&h.buf[h.maxlen], packet->dataLength-h.maxlen);
 
-        putint(p, SV_INITC2S);
-        sendstring(ci->name, p);
-        putint(p, ci->team);
+        if(ci->state.aitype != AI_NONE)
+        {
+			putint(p, SV_INITAI);
+			putint(p, ci->clientnum);
+			putint(p, ci->state.ownernum);
+			putint(p, ci->state.aitype);
+			putint(p, ci->state.skill);
+			sendstring(ci->name, p);
+			putint(p, ci->team);
+        }
+        else
+        {
+			putint(p, SV_INITC2S);
+			sendstring(ci->name, p);
+			putint(p, ci->team);
+        }
 
         putint(h, SV_CLIENT);
         putint(h, ci->clientnum);
@@ -1470,9 +1493,22 @@ namespace server
             if(!ci->connected || ci->clientnum == exclude) continue;
 
             ucharbuf q(buf, sizeof(buf));
-            putint(q, SV_INITC2S);
-            sendstring(ci->name, q);
-            putint(q, ci->team);
+            if(ci->state.aitype != AI_NONE)
+            {
+				putint(p, SV_INITAI);
+				putint(p, ci->clientnum);
+				putint(p, ci->state.ownernum);
+				putint(p, ci->state.aitype);
+				putint(p, ci->state.skill);
+				sendstring(ci->name, p);
+				putint(p, ci->team);
+            }
+            else
+            {
+				putint(q, SV_INITC2S);
+				sendstring(ci->name, q);
+				putint(q, ci->team);
+            }
 
             ucharbuf h(header, sizeof(header));
             putint(h, SV_CLIENT);
@@ -1842,6 +1878,7 @@ namespace server
 				nweap = gs.bestweap(sweap);
 				gs.weapswitch(nweap, millis);
 			}
+			else gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
@@ -2792,9 +2829,9 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					string cmd;
 					getstring(cmd, p);
-					if(nargs > 1) getstring(text, p);
+					getstring(text, p);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					parsecommand(cp, nargs, cmd, nargs > 1 ? text : NULL);
+					parsecommand(cp, nargs, cmd, text);
 					break;
 				}
 
@@ -3189,6 +3226,7 @@ namespace server
 					break;
 				}
 
+#if 0 // i don't think we need this anymore
 				case SV_INITAI:
 				{
 					int lcn = getint(p);
@@ -3200,6 +3238,7 @@ namespace server
                     QUEUE_MSG;
 					break;
 				}
+#endif
 
 				case SV_AUTHTRY:
 				{

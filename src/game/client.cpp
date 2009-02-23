@@ -140,11 +140,6 @@ namespace client
 						setsvar(id.name, *id.def.s ? id.def.s : "", true);
 						break;
 					}
-					case ID_ALIAS:
-					{
-						worldalias(id.name, "");
-						break;
-					}
 					default: break;
 				}
 			}
@@ -357,7 +352,7 @@ namespace client
 
 	bool sendcmd(int nargs, char *cmd, char *arg)
 	{
-		if(isready && nargs > 1)
+		if(isready)
 		{
 			addmsg(SV_COMMAND, "ri2ss", world::player1->clientnum, nargs, cmd, arg);
 			return true;
@@ -561,7 +556,7 @@ namespace client
 				}
 				default: return;
 			}
-			if(d || verbose)
+			if(d || verbose >= 2)
 				conoutf("\fm%s set %s to %s", d ? world::colorname(d) : "the server", cmd, val);
 		}
 		else conoutf("\fr%s sent unknown command: %s", d ? world::colorname(d) : "the server", cmd);
@@ -741,6 +736,7 @@ namespace client
 			putint(p, SV_INITC2S);
 			sendstring(world::player1->name, p);
 			putint(p, world::player1->team);
+#if 0 // i don't think we need this anymore
 			loopv(world::players) if(world::players[i] && world::players[i]->ai)
 			{
 				gameent *f = world::players[i];
@@ -752,6 +748,7 @@ namespace client
 				sendstring(f->name, p);
 				putint(p, f->team);
 			}
+#endif
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames

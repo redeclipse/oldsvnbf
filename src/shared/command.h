@@ -190,19 +190,19 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARFW(name, cur, body) _SVARF(name, name, cur, body, IDF_WORLD|IDF_COMPLETE)
 
 // new style macros, have the body inline, and allow binds to happen anywhere, even inside class constructors, and access the surrounding class
-#define _COMMAND(idtype, tv, n, m, g, proto, b) \
+#define _COMMAND(idtype, tv, n, m, g, proto, b, f) \
     struct cmd_##m : ident \
     { \
-        cmd_##m(void *self = NULL) : ident(idtype, #n, g, (void *)run, self) \
+        cmd_##m(void *self = NULL) : ident(idtype, #n, g, (void *)run, self, f) \
         { \
             addident(name, this); \
         } \
         static void run proto { b; } \
     } icom_##m tv
-#define ICOMMAND(n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b)
-#define ICOMMANDN(n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b)
-#define CCOMMAND(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, b)
-#define CCOMMANDN(n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b)
+#define ICOMMAND(n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b, IDF_COMPLETE)
+#define ICOMMANDN(n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b, IDF_COMPLETE)
+#define CCOMMAND(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, b, IDF_COMPLETE)
+#define CCOMMANDN(n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b, IDF_COMPLETE)
 
 #define _IVAR(n, m, c, x, b, p) \
 	struct var_##n : ident \
@@ -266,6 +266,10 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 // game world controlling stuff
 #define RUNWORLD(n) { ident *wid = idents->access(n); if(wid && wid->action && wid->flags&IDF_WORLD) { execute(wid->action); }; }
 #if defined(GAMEWORLD)
+#define ICOMMANDG(n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
+#define ICOMMANDNG(n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
+#define CCOMMANDG(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
+#define CCOMMANDNG(n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
 #define VARNG(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define VARG(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
@@ -276,6 +280,10 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define SVARG(name, cur) _SVAR(name, name, cur, IDF_CLIENT|IDF_COMPLETE)
 #define SVARFG(name, cur, svbody, ccbody) _SVARF(name, name, cur, ccbody, IDF_CLIENT|IDF_COMPLETE)
 #elif defined(GAMESERVER)
+#define ICOMMANDG(n, g, proto, b) _COMMAND(ID_COMMAND, , sv_##n, sv_##n, g, proto, b, IDF_SERVER)
+#define ICOMMANDNG(n, name, g, proto, b) _COMMAND(ID_COMMAND, , sv_##n, sv_##name, g, proto, b, IDF_SERVER)
+#define CCOMMANDG(n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), sv_##n, sv_##n, g, proto, b, IDF_SERVER)
+#define CCOMMANDNG(n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), sv_##n, sv_##name, g, proto, b, IDF_SERVER)
 #define VARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER)
 #define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER)
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER)
