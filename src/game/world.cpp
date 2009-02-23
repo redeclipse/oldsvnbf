@@ -1684,7 +1684,7 @@ namespace world
 				part_text(pos, colorname(d, NULL, "@"));
 				pos.add(vec(0, 0, 2.f));
 			}
-			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen)
+			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
 			{
                 part_icon(pos, textureload(conopentex, 3), statusaboveheadblend, 2);
 				pos.add(vec(0, 0, 2.f));

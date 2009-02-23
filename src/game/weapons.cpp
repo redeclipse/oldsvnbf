@@ -44,7 +44,7 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(!m_noitems(world::gamemode, world::mutators) && isweap(weap) && (weap == WEAPON_GL || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
+		if(!m_noitems(world::gamemode, world::mutators) && isweap(weap) && ((weap == WEAPON_GL && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-world::maptime, weap);
 			d->reqswitch = lastmillis;

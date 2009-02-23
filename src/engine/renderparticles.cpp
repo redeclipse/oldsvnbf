@@ -91,18 +91,18 @@ struct partrenderer
         else
         {
             ts = lastmillis-p->millis;
-			if(ts > p->fade) ts = p->fade;
-			float secs = ts/1000.f;
-			vec v = vec(d).mul(secs);
-            blend = max(255 - (ts<<8)/p->fade, 0);
+			blend = max(255 - (ts<<8)/p->fade, 0);
             if(grav)
             {
+				if(ts > p->fade) ts = p->fade;
+				float secs = ts/1000.f;
+				vec v = vec(d).mul(secs);
             	physent dummy;
             	dummy.weight = grav;
 				v.z -= physics::gravityforce(&dummy)*secs;
+				v.mul(secs);
+				o.add(v);
             }
-            v.mul(secs);
-			o.add(v);
             if(collide && o.z < p->val && lastpass)
             {
                 vec surface;
@@ -1250,10 +1250,9 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     if(!emit_particles()) return;
 
     int basetype = parts[type]->type&0xFF;
-    bool flare = (basetype == PT_TAPE) || (basetype == PT_LIGHTNING);
-
-    bool inv = (dir >= 32);
-    dir = dir&0x1F;
+    bool flare = (basetype == PT_TAPE) || (basetype == PT_LIGHTNING),
+         inv = (dir&0x20)!=0, taper = (dir&0x40)!=0;
+    dir &= 0x1F;
     loopi(num)
     {
         vec to, from;
@@ -1309,6 +1308,18 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
             to = vec(PI2*float(rnd(1000))/1000.0, PI*float(rnd(1000)-500)/1000.0).mul(radius);
             to.add(p);
             from = p;
+        }
+
+        if(taper)
+        {
+            vec o = inv ? to : from;
+            o.sub(camera1->o);
+            float dist = clamp(sqrtf(o.x*o.x + o.y*o.y)/maxparticledistance, 0.0f, 1.0f);
+            if(dist > 0.2f)
+            {
+                dist = 1 - (dist - 0.2f)/0.8f;
+                if(rnd(0x10000) > dist*dist*0xFFFF) continue;
+            }
         }
 
         if(flare)
