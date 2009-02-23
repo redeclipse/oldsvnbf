@@ -2230,7 +2230,7 @@ namespace server
 		    if(ci->state.state == CS_ALIVE) dropitems(ci, true);
 		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);
-		    mutate(smuts, mut->leavegame(ci));
+		    mutate(smuts, mut->leavegame(ci, true));
 		    ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		    savescore(ci);
 		    sendf(-1, 1, "ri2", SV_CDIS, n);

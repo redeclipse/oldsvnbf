@@ -96,7 +96,7 @@ namespace aiman
 	{
 		int cn = ci->clientnum;
 		if(smode) smode->leavegame(ci, true);
-		mutate(smuts, mut->leavegame(ci));
+		mutate(smuts, mut->leavegame(ci, true));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		dropitems(ci, true);
