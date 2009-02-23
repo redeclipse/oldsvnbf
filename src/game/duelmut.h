@@ -109,6 +109,7 @@ struct duelservmode : servmode
 				vector<clientinfo *> alive;
 				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
 				if(m_lms(gamemode, mutators) || GVAR(duelclear)) clearitems();
+                allowed.setsize(0);
 				loopv(duelqueue)
 				{
 					if(m_duel(gamemode, mutators) && alive.length() >= 2) break;
