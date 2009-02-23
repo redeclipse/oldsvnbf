@@ -30,7 +30,7 @@ struct duelservmode : servmode
 	}
 
 	void entergame(clientinfo *ci) { queue(ci, false, true); }
-	void leavegame(clientinfo *ci)
+	void leavegame(clientinfo *ci, bool disconnecting = false)
 	{
 		duelqueue.removeobj(ci);
 		allowed.removeobj(ci);
