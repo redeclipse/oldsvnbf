@@ -2104,7 +2104,7 @@ namespace server
 				}
 			}
 			else if(ci->state.state == CS_WAITING)
-			{ // duelmut needs rewriting to take advantage of this
+			{
 				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
 				{
 					int nospawn = 0;
