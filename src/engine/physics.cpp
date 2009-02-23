@@ -790,7 +790,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
 {
 	loopoctabox(cor, size, bo, bs)
 	{
-        if(c[i].ext && c[i].ext->ents) if(!mmcollide(d, dir, *c[i].ext->ents)) return false;
+        if(d->type != ENT_CAMERA && c[i].ext && c[i].ext->ents) if(!mmcollide(d, dir, *c[i].ext->ents)) return false;
 		ivec o(i, cor.x, cor.y, cor.z, size);
 		if(c[i].children)
 		{
@@ -818,12 +818,12 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     if(diff&~((1<<scale)-1) || uint(bo.x|bo.y|bo.z|(bo.x+bs.x)|(bo.y+bs.y)|(bo.z+bs.z)) >= uint(hdr.worldsize))
        return octacollide(d, dir, cutoff, bo, bs, worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
     cube *c = &worldroot[octastep(bo.x, bo.y, bo.z, scale)];
-    if(c->ext && c->ext->ents && !mmcollide(d, dir, *c->ext->ents)) return false;
+    if(d->type != ENT_CAMERA && c->ext && c->ext->ents && !mmcollide(d, dir, *c->ext->ents)) return false;
     scale--;
     while(c->children && !(diff&(1<<scale)))
     {
         c = &c->children[octastep(bo.x, bo.y, bo.z, scale)];
-        if(c->ext && c->ext->ents && !mmcollide(d, dir, *c->ext->ents)) return false;
+        if(d->type != ENT_CAMERA && c->ext && c->ext->ents && !mmcollide(d, dir, *c->ext->ents)) return false;
         scale--;
     }
     if(c->children) return octacollide(d, dir, cutoff, bo, bs, c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale);

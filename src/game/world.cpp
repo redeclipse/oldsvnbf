@@ -1215,8 +1215,13 @@ namespace world
 			if(renew)
 			{
 				cameras.sort(camerasort);
+				if(!cameras[0].cansee.empty()) cam = &cameras[0];
+				else if(!lastspec || (spectvtime && lastmillis-lastspec >= spectvtime))
+				{
+					int idx = rnd(cameras.length());
+					cam = &cameras[idx];
+				}
 				lastspec = lastmillis;
-				cam = &cameras[0];
 			}
 			player1->o = camera1->o = cam->pos;
 			vec dir = vec(cam->dir).sub(camera1->o).normalize();
