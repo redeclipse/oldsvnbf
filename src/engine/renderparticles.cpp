@@ -97,7 +97,7 @@ struct partrenderer
 				if(ts > p->fade) ts = p->fade;
 				float secs = ts/1000.f;
 				vec v = vec(d).mul(secs);
-            	physent dummy;
+            	static physent dummy;
             	dummy.weight = grav;
 				v.z -= physics::gravityforce(&dummy)*secs;
 				v.mul(secs);
