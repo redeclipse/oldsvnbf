@@ -184,6 +184,7 @@ struct keym
         ACTION_DEFAULT = 0,
         ACTION_SPECTATOR,
         ACTION_EDITING,
+        ACTION_WAITING,
         NUMACTIONS
     };
 
@@ -337,12 +338,15 @@ void bindkey(char *key, char *action, int state, const char *cmd)
 ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
 ICOMMAND(specbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_SPECTATOR, "specbind"));
 ICOMMAND(editbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_EDITING, "editbind"));
+ICOMMAND(waitbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_WAITING, "waitbind"));
 ICOMMAND(getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
 ICOMMAND(getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
 ICOMMAND(geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
+ICOMMAND(getwaitbind, "s", (char *key), getbind(key, keym::ACTION_WAITING));
 ICOMMAND(searchbinds,     "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 
 void saycommand(char *init)						 // turns input to the command line on or off
 {
@@ -508,7 +512,15 @@ void execbind(keym &k, bool isdown)
     }
     if(isdown)
     {
-        int state = editmode ? keym::ACTION_EDITING : (client::state() == CS_SPECTATOR ? keym::ACTION_SPECTATOR : keym::ACTION_DEFAULT);
+
+        int state = keym::ACTION_DEFAULT;
+        switch(client::state())
+        {
+        	case CS_ALIVE: case CS_DEAD: default: break;
+        	case CS_SPECTATOR: state = keym::ACTION_SPECTATOR; break;
+        	case CS_EDITING: state = keym::ACTION_EDITING; break;
+        	case CS_WAITING: state = keym::ACTION_WAITING; break;
+        }
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;
@@ -673,11 +685,11 @@ static int sortbinds(keym **x, keym **y)
 
 void writebinds(FILE *f)
 {
-    static const char *cmds[3] = { "bind", "specbind", "editbind" };
+    static const char *cmds[4] = { "bind", "specbind", "editbind", "waitbind" };
     vector<keym *> binds;
     enumerate(keyms, keym, km, binds.add(&km));
     binds.sort(sortbinds);
-    loopj(3)
+    loopj(4)
     {
         loopv(binds)
         {

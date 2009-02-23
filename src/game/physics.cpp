@@ -14,6 +14,7 @@ namespace physics
 
 	FVARW(liquidfric,		0, 10.f, 10000);
 	FVARW(liquidscale,		0, 0.9f, 10000);
+	FVARW(liquiddampen,		0, 0.5f, 10000);
 	FVARW(sinkfric,			0, 2.f, 10000);
 	FVARW(floorfric,		0, 5.f, 10000);
     FVARW(floatfric,        0, 5.f, 10000);
@@ -565,7 +566,7 @@ namespace physics
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
-		float friction = pl->type!=ENT_PLAYER || floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
+		float friction = floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
 		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
         pl->vel.mul(fpsfric-1);
@@ -650,7 +651,7 @@ namespace physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
+		bool floating = (pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR)) || pl->type == ENT_CAMERA;
 		float secs = millis/1000.f;
 
 		if(pl->type==ENT_PLAYER)
@@ -663,7 +664,7 @@ namespace physics
 		modifyvelocity(pl, local, floating, millis);
 
 		vec d(pl->vel);
-        if(pl->type==ENT_PLAYER && !floating && pl->inliquid) d.mul(0.5f);
+        if(pl->type==ENT_PLAYER && !floating && pl->inliquid) d.mul(liquiddampen);
         d.add(pl->falling);
 		d.mul(secs);
 
@@ -710,7 +711,7 @@ namespace physics
 
         vec d(dir);
         d.mul(dist/steps);
-        loopi(steps) 
+        loopi(steps)
         {
             vec oldpos(pl->o);
             pl->o.add(d);
