@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+	<head>
+	      <title>Blood Frontier: Texture blending</title>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<link rel="shortcut icon" href="favicon.ico" />
+		<link rel="stylesheet" type="text/css" href="site.css" />
+	</head>
+<body class="mediawiki ns-0 ltr page-Texture_blending">
+
+
+	<div id="globalWrapper">
+		<div id="column-content">
+	<div id="content">
+		<a name="top" id="top"></a>
+				<h1 class="firstHeading">Texture blending</h1>
+		<div id="bodyContent">
+			<table id="toc" class="toc" summary="Contents"><tr><td><div id="toctitle"><h2>Contents</h2></div>
+<ul>
+<li class="toclevel-1"><a href="Texture_blending.html#Texture_Blending_in_Maps"><span class="tocnumber">1</span> <span class="toctext">Texture Blending in Maps</span></a>
+<ul>
+<li class="toclevel-2"><a href="Texture_blending.html#Defining_Blended_Textures:"><span class="tocnumber">1.1</span> <span class="toctext">Defining Blended Textures:</span></a></li>
+<li class="toclevel-2"><a href="Texture_blending.html#Brushes"><span class="tocnumber">1.2</span> <span class="toctext">Brushes</span></a>
+<ul>
+<li class="toclevel-3"><a href="Texture_blending.html#Adding_a_New_Brush"><span class="tocnumber">1.2.1</span> <span class="toctext">Adding a New Brush</span></a></li>
+<li class="toclevel-3"><a href="Texture_blending.html#Loading_a_Brush"><span class="tocnumber">1.2.2</span> <span class="toctext">Loading a Brush</span></a></li>
+</ul>
+</li>
+<li class="toclevel-2"><a href="Texture_blending.html#Start_Painting_Already.21"><span class="tocnumber">1.3</span> <span class="toctext">Start Painting Already!</span></a></li>
+<li class="toclevel-2"><a href="Texture_blending.html#Oops_-_I_Screwed_Up.21"><span class="tocnumber">1.4</span> <span class="toctext">Oops - I Screwed Up!</span></a></li>
+<li class="toclevel-2"><a href="Texture_blending.html#Hints_and_Tips"><span class="tocnumber">1.5</span> <span class="toctext">Hints and Tips</span></a></li>
+<li class="toclevel-2"><a href="Texture_blending.html#Thanks"><span class="tocnumber">1.6</span> <span class="toctext">Thanks</span></a></li>
+</ul>
+</li>
+</ul>
+</td></tr></table><script type="text/javascript"> if (window.showTocToggle) { var tocShowText = "show"; var tocHideText = "hide"; showTocToggle(); } </script>
+<a name="Texture_Blending_in_Maps"></a><h2> <span class="mw-headline">Texture Blending in Maps</span></h2>
+<p>Two textures can be smoothly blended together to create variations on architecture and terrain.
+</p><p><br />
+</p>
+<a name="Defining_Blended_Textures:"></a><h3> <span class="mw-headline">Defining Blended Textures:</span></h3>
+<p>If you are using the default package.cfg for editing maps in <a href="Blood_Frontier.html" class="mw-redirect" title="Blood Frontier">Blood Frontier</a>, several textures and combinations will already be set up for you. Texture thumbnails that have an additional texture layer to blend will have the texture they are set to blend with in one of the corners in the texture browser (f2).
+</p><p><br />
+If you are not using the default package, you will need to set your own textures up. Texture blending can use any two textures that are already set in your map.cfg, but you need to define the textures normally first. 
+</p><p><br />
+Next, in order to set up textures to blend, in your map cfg, under the texture that you want to have a second texture layer, you would add
+</p><p><br />
+</p>
+<blockquote>texlayer N</blockquote>
+<p><br />
+where <b>N</b> is the slot taken by the second texture you want to add. Keep in mind that in <a href="Blood_Frontier.html" class="mw-redirect" title="Blood Frontier">Blood Frontier</a> <b>the first *7* slots are taken by default textures</b> such as sky, water, and the six basic architectural textures.
+</p><p><br />
+So, if you have defined 50 new textures, and the 51st texture is something that you want to paint with, then under any texture you want to blend it with, you would enter
+</p><p><br />
+</p>
+<blockquote>texlayer 58</blockquote>
+<p><br />
+</p>
+<a name="Brushes"></a><h3> <span class="mw-headline">Brushes</span></h3>
+<p>There will be a number of brushes already included and set up in the default <a href="Blood_Frontier.html" class="mw-redirect" title="Blood Frontier">Blood Frontier</a> package.cfg. If you want to set up your own brush, simple create a gray scale PNG file to use as a pattern. Keep in mind that the size of the brushes are relatively large, and not meant for super detailed work. So a 16 x 16 size image will make a brush that covers a very large patch of architecture.
+</p><p><br />
+</p>
+<a name="Adding_a_New_Brush"></a><h4> <span class="mw-headline">Adding a New Brush</span></h4>
+<p>In your map.cfg, add
+</p><p><br />
+</p>
+<blockquote>addblendbrush N F</blockquote>
+<p><br />
+Where <b>N</b> is the name of your brush, that you will use later to load the brush, and <b>F</b> is the file name, relative to the <b>data</b> directory. So if you have a directory in data called "mydir", you have put yuor brushes into a sub-directory called "brushes", and the brush you want to add is called "crack.png", then you would add the following line to your map.cfg file:
+</p><p><br />
+</p>
+<blockquote>addblendbrush crack "mydir/brushes/crack.png"</blockquote>
+<p><br />
+</p>
+<a name="Loading_a_Brush"></a><h4> <span class="mw-headline">Loading a Brush</span></h4>
+<p>Enter editing mode by pressing <b>f1</b>. If you see hands in front of you, press <b>f1</b> again. Open the console with the tilde key and type
+</p><p><br />
+</p>
+<blockquote>/setblendbrush N</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+Where <b>N</b> is the name of your brush that you defined in the cfg, or the name of an existing brush. So to set the brush to the one that was defined above, you would open the console with the tilde key and type
+</p><p><br />
+</p>
+<blockquote>/setblendbrush crack</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+</p>
+<a name="Start_Painting_Already.21"></a><h3> <span class="mw-headline">Start Painting Already!</span></h3>
+<p>First, select a texture that you have defined a secondary texture for.
+</p><p><br />
+Second, you will need to be in editing mode, on a NEW map. Keep in mind that the texture blending is not set up in older map.cfg files, because the capability did not exist yet.
+</p><p><br />
+Third, texture the surfaces that you will want to paint with the textures that have had an extra texture layer defined for them in your map.cfg. <b>You can only paint on textures that have had a second layer defined in the cfg.</b>
+</p><p><br />
+Now, you need to turn on painting mode. Press tilde to enter the console and type
+</p><p><br />
+</p>
+<blockquote>/blendpaintmode N</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+Where <b>N</b> is a number from 0 to 5, which defines how the painting will be done. Setting it to <b>0</b> turns paint mode off.
+</p>
+<ul><li>0 - off
+</li><li>1 - set
+</li><li>2 - min(destination, source)
+</li><li>3 - max(destination, source)
+</li><li>4 - destination - source
+</li><li>5 - destination + source
+</li></ul>
+<p><br />
+Experiment with the numbers to understand what they do.
+</p><p><br />
+Finally, in order to paint on to the surface, you would open the console and type
+</p><p><br />
+</p>
+<blockquote>/paintblendmap</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+If you've done everything right, you should see your first blended textures. If not, check out the IRC forum. Most of the community members there are willing to offer help.
+</p><p><br />
+</p>
+<a name="Oops_-_I_Screwed_Up.21"></a><h3> <span class="mw-headline">Oops - I Screwed Up!</span></h3>
+<p>There is <b>NO UNDO</b> for texture blending. If you've screwed something up, you can do one of two things. Open the console with the tilde key and type
+</p><p><br />
+</p>
+<blockquote>/clearblendmap</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+This will delete ALL of the texture blending for the ENTIRE level.
+</p><p><br />
+</p>
+<blockquote>/clearblendmapsel</blockquote> <i>remember that the slash automatically appears by default when you enter the console.</i>
+<p><br />
+This will clear the texture blending on the selected geometry.
+</p><p><br />
+</p>
+<a name="Hints_and_Tips"></a><h3> <span class="mw-headline">Hints and Tips</span></h3>
+<ul><li>The amount of rendering passes the engine is required to make doubles on areas where the textures have been blended.
+</li></ul>
+<ul><li><b>DON'T</b> start working with blended textures until you are happy with the architecture in the level. They are still new and may cause unforeseen <a href="http://apps.sourceforge.net/mediawiki/bloodfrontier/index.php?title=Issues&amp;action=edit&amp;redlink=1" class="new" title="Issues (not yet written)">Issues</a>.
+</li></ul>
+<ul><li>SAVE OFTEN. You are working with a new feature, after all.
+</li></ul>
+<p><br />
+</p>
+<a name="Thanks"></a><h3> <span class="mw-headline">Thanks</span></h3>
+<p>Big thanks go out to <a href="Eihrul.html" class="new" title="Eihrul (not yet written)">Eihrul</a> for coding this sweet ass feature in the first place!
+</p>
+<!-- 
+NewPP limit report
+Preprocessor node count: 20/1000000
+Post-expand include size: 0/2097152 bytes
+Template argument size: 0/2097152 bytes
+Expensive parser function count: 0/100
+-->
+
+
+</div>
+
+
+		<script type="text/javascript">if (window.runOnloadHook) runOnloadHook();</script>
+<!-- Served in 0.134 secs. -->
+</body></html>
