@@ -727,15 +727,15 @@ namespace ai
 
 	int process(gameent *d, aistate &b)
 	{
-		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*100) : 0, skmod = (111-d->skill)*10;
+		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*1000) : 0, skmod = (111-d->skill)*10;
 		vec dp = world::headpos(d);
 		float frame = float(lastmillis-d->lastupdate)/float(skmod);
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
-			if(b.idle == 2 || (stupify && stupify <= skmod/4))
-				jumpto(d, b, dp, false); // jump up and down
+			if(b.idle == 2 || (stupify && stupify <= skmod/6))
+				jumpto(d, b, dp, !rnd(d->skill+1)); // jump up and down
 		}
 		else if(hunt(d, b))
 		{
