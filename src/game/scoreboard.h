@@ -260,7 +260,7 @@ namespace hud
 				g.pushlist(); // vertical
 				g.pushlist(); // horizontal
 
-				#define loopscoregroup(o, b) \
+				#define loopscoregroup(b) \
 					loopv(sg.players) \
 					{ \
 						gameent *o = sg.players[i]; \
@@ -279,8 +279,7 @@ namespace hud
 				g.background(0xFFFFFF, numgroups>1 ? 3 : 5);
 				g.text("", 0, "server");
 				g.poplist();
-				loopscoregroup(o,
-				{
+				loopscoregroup({
 					g.pushlist();
 					bool highlight = o==world::player1 && highlightscore();
 					int status = highlight ? 0xDDDDDD : 0xAAAAAA;
@@ -312,7 +311,7 @@ namespace hud
 					g.pushlist();
 					g.strut(7);
 					g.text(m_paint(world::gamemode, world::mutators) ? "tags" : "frags", fgcolor);
-					loopscoregroup(o, g.textf("%d", 0xFFFFFF, NULL, o->frags));
+					loopscoregroup(g.textf("%d", 0xFFFFFF, NULL, o->frags));
 					g.poplist();
 				}
 
@@ -321,8 +320,7 @@ namespace hud
 					g.pushlist();
 					g.strut(6);
 					g.text("pj", fgcolor);
-					loopscoregroup(o,
-					{
+					loopscoregroup({
 						g.textf("%s%d", 0xFFFFFF, NULL, lastmillis-o->lastupdate > 1000 ? "\fo" : "", o->plag);
 					});
 					g.poplist();
@@ -333,12 +331,11 @@ namespace hud
 					g.pushlist();
 					g.text("ping", fgcolor);
 					g.strut(6);
-					loopscoregroup(o,
-					{
+					loopscoregroup({
 						if(o->aitype != AI_NONE)
 						{
 							gameent *od = world::getclient(o->ownernum);
-							g.textf("%s%d", 0xFFFFFF, NULL, o == world::player1 ? "\fg" : "", od ? od->ping : -1);
+							g.textf("%d", 0xFFFFFF, NULL, od ? od->ping : -1);
 						}
 						else g.textf("%d", 0xFFFFFF, NULL, o->ping);
 					});
@@ -347,7 +344,7 @@ namespace hud
 
 				g.pushlist();
 				g.text("name", fgcolor);
-				loopscoregroup(o, { g.text(world::colorname(o, NULL, "", false), 0xFFFFFF); });
+				loopscoregroup(g.text(world::colorname(o, NULL, "", false), 0xFFFFFF));
 				g.poplist();
 
 				if(showclientnum() || world::player1->privilege>=PRIV_MASTER)
@@ -355,8 +352,7 @@ namespace hud
 					g.space(1);
 					g.pushlist();
 					g.text("cn", fgcolor);
-					loopscoregroup(o,
-					{
+					loopscoregroup({
 						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
 					});
 					g.poplist();
@@ -367,8 +363,7 @@ namespace hud
 					g.space(1);
 					g.pushlist();
 					g.text("sk", fgcolor);
-					loopscoregroup(o,
-					{
+					loopscoregroup({
 						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->skill);
 						else g.space(1);
 					});
@@ -380,8 +375,7 @@ namespace hud
 					g.space(1);
 					g.pushlist();
 					g.text("on", fgcolor);
-					loopscoregroup(o,
-					{
+					loopscoregroup({
 						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->ownernum);
 						else g.space(1);
 					});

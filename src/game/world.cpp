@@ -441,7 +441,7 @@ namespace world
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					s_sprintfd(ds)("@%d", damage);
-					part_text(vec(world::abovehead(d)).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 3000, 0xFFFFFF, 3.f);
+					part_text(vec(world::abovehead(d)).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 				}
 				if(!issound(d->vschan))
 					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -585,7 +585,7 @@ namespace world
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						s_sprintfd(ds)("@\fgCARNAGE");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 10:
@@ -593,7 +593,7 @@ namespace world
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						s_sprintfd(ds)("@\fgSLAUGHTER");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 25:
@@ -601,7 +601,7 @@ namespace world
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						s_sprintfd(ds)("@\fgMASSACRE");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 50:
@@ -609,7 +609,7 @@ namespace world
 						s_strcat(d->obit, noblood || m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					default:
@@ -618,7 +618,7 @@ namespace world
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
-							part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 4.f);
+							part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
 							anc = S_V_OWNED;
