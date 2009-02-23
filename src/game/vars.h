@@ -67,3 +67,5 @@ FVARG(speedscale, 1e-3f, 1.f, 1000);
 FVARG(hitpushscale, 0, 1.f, 1000);
 FVARG(deadpushscale, 0, 1.f, 1000);
 FVARG(wavepushscale, 0, 1.f, 1000);
+
+VARG(resetvarsonend, 0, 2, 2); // reset variables on end (1: just when empty, 2: when matches end)

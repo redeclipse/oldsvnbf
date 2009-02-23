@@ -508,14 +508,14 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 		else
 		{
 			ident *id = idents->access(c);
-			if(!id || (id->flags&IDF_CLIENT && numargs > 1))
+			if(!id || id->flags&IDF_CLIENT)
 			{
-				if(!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1])))
+				if((id && (id->type == ID_COMMAND || id->type == ID_CCOMMAND)) || (!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1]))))
 				{
 #ifndef STANDALONE
 					string arg;
 					arg[0] = 0;
-					if(numargs > 1) loopk(numargs-1) if(w[k])
+					if(numargs > 1) loopk(numargs-1) if(w[k+1])
 					{
 						if(k) s_strcat(arg, " ");
 						s_strcat(arg, w[k+1]);

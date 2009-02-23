@@ -16,6 +16,8 @@ namespace world
 	vector<gameent *> players;
 	dynent fpsmodel;
 
+	ICOMMANDG(resetvars, "", (), return); // server side
+
 	VARW(numplayers, 0, 4, MAXCLIENTS/2);
 	VARW(numteamplayers, 0, 4, MAXCLIENTS/2);
 	SVARW(mapmusic, "");
@@ -1661,13 +1663,13 @@ namespace world
 					}
 					case WPSTATE_SHOOT:
 					{
-						if(weaptype[weap].power) showweap = false;
+						if(weap == WEAPON_GL && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
 						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
-						if(weaptype[weap].power) showweap = false;
+						if(weap == WEAPON_GL && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
 						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}

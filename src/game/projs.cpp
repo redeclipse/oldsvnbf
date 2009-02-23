@@ -279,10 +279,21 @@ namespace projs
 			{
 				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
+				d->ammo[g] = -1;
+				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 			}
-			else if(g == WEAPON_GL) create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
-			d->reqswitch = d->ammo[g] = d->entid[g] = -1;
-			d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
+			else if(g == WEAPON_GL)
+			{
+				create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
+				d->ammo[g] = max(d->ammo[g]-1, 0);
+				d->setweapstate(g, WPSTATE_SHOOT, weaptype[g].adelay, lastmillis);
+			}
+			else
+			{
+				d->ammo[g] = -1;
+				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
+			}
+			d->reqswitch = d->entid[g] = -1;
 		}
 	}
 
