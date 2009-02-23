@@ -2,13 +2,13 @@
 struct duelservmode : servmode
 {
 	int duelround, dueltime;
-	vector<int> duelqueue;
+	vector<int> duelqueue, allowed;
 
 	duelservmode() {}
 
 	void queue(clientinfo *ci, bool top = false, bool wait = true)
 	{
-		if(ci->name[0] && ci->connected && ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
+		if(ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			int n = duelqueue.find(ci->clientnum);
 			if(n < 0)
@@ -32,8 +32,8 @@ struct duelservmode : servmode
 	void entergame(clientinfo *ci) { queue(ci, false, true); }
 	void leavegame(clientinfo *ci)
 	{
-		int n = duelqueue.find(ci->clientnum);
-		if(n >= 0) duelqueue.remove(n);
+        duelqueue.removeobj(ci->clientnum);
+        allowed.removeobj(ci->clientnum);
 	}
 
 	bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
@@ -44,9 +44,15 @@ struct duelservmode : servmode
 
 	bool canspawn(clientinfo *ci, bool tryspawn = false)
 	{
+        if(allowed.find(ci->clientnum) >= 0) return true;
 		if(tryspawn) queue(ci, false, false);
 		return false; // you spawn when we want you to buddy
 	}
+
+    void spawned(clientinfo *ci)
+    {
+        allowed.removeobj(ci->clientnum);
+    }
 
 	void died(clientinfo *ci, clientinfo *at) {}
 
@@ -75,6 +81,7 @@ struct duelservmode : servmode
 		clearitems();
 		duelqueue.setsize(0);
 		loopv(clients) queue(clients[i], false, true);
+        allowed.setsize(0);
 	}
 
 	void cleanup()
@@ -110,9 +117,8 @@ struct duelservmode : servmode
 						clientinfo *ci = clients[duelqueue[i]];
 						if(ci->state.state != CS_ALIVE)
 						{
-							ci->state.state = CS_ALIVE;
-							ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
-							sendspawn(ci);
+                            if(allowed.find(ci->clientnum) < 0) allowed.add(ci->clientnum);
+                            if(ci->state.state != CS_WAITING) waiting(ci);
 						}
 						else
 						{
@@ -140,10 +146,10 @@ struct duelservmode : servmode
 				dueltime = 0;
 			}
 		}
-		else
+		else if(allowed.empty())
 		{
 			vector<clientinfo *> alive;
-			loopv(clients) if(clients[i]->name[0] && clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
+			loopv(clients) if(clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
 			switch(alive.length())
 			{
 				case 0:
@@ -169,6 +175,7 @@ struct duelservmode : servmode
 	{
 		duelround = 0;
 		dueltime = -1;
+        allowed.setsize(0);
 	}
 } duelmutator;
 #endif
