@@ -656,7 +656,16 @@ namespace ai
 			if(!alternate && d->ai->route.inrange(n))
 			{ // waka-waka-waka-waka
 				while(d->ai->route.length() > n+2) d->ai->route.pop(); // all but this and the last node
-				if(!n) return anynode(d, b); // this is our goal?
+				if(!n)
+				{
+					if(entspot(d, d->ai->route[n], retries > 1))
+					{
+						if(vec(d->ai->spot).sub(world::feetpos(d)).magnitude() <= CLOSEDIST)
+							d->ai->dontmove = true;
+						return true; // this is our goal?
+					}
+					else return anynode(d, b);
+				}
 				else n--; // otherwise, we want the next in line
 			}
 			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n], retries > 1)) return true;
@@ -717,8 +726,8 @@ namespace ai
 				d->jumptime = lastmillis;
 				if(propel)
 				{
-					d->ai->jumpseed = lastmillis+2000+rnd((111-d->skill)*2000);
-					d->ai->propelseed = lastmillis+200+rnd((111-d->skill)*200);
+					d->ai->jumpseed = lastmillis+3000+rnd((111-d->skill)*3000);
+					d->ai->propelseed = lastmillis+300+rnd((111-d->skill)*300);
 				}
 				if(jump && !propel) d->ai->dontmove = true; // going up
 			}
@@ -727,14 +736,14 @@ namespace ai
 
 	int process(gameent *d, aistate &b)
 	{
-		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*1000) : 0, skmod = (111-d->skill)*10;
+		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
 		vec dp = world::headpos(d);
 		float frame = float(lastmillis-d->lastupdate)/float(skmod);
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
-			if(b.idle == 2 || (stupify && stupify <= skmod/6))
+			if(b.idle == 2 || (stupify && stupify <= skmod/8))
 				jumpto(d, b, dp, !rnd(d->skill+1)); // jump up and down
 		}
 		else if(hunt(d, b))
@@ -758,6 +767,7 @@ namespace ai
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
 				world::fixrange(yaw, pitch);
+				float sskew = (insight ? 1.25f : (hasseen ? 0.75f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.25f : 1.f);
 				if(b.idle)
 				{
 					d->ai->targyaw = yaw;
@@ -765,8 +775,7 @@ namespace ai
 					if(!insight) frame /= 3.f;
 				}
 				else if(!insight) frame /= 2.f;
-				float is = insight ? 2.f : (hasseen ? 1.f : 0.5f), js = (insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f;
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, is*js);
+				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
 					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))

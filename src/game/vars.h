@@ -33,7 +33,7 @@ VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
 VARG(itemspawndelay, 0, 3, INT_MAX-1); // secs after map start items first spawn
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenades, 3 = always
 
-VARG(timelimit, 0, 10, INT_MAX-1);
+VARG(timelimit, 0, 15, INT_MAX-1);
 VARG(intermlimit, 0, 10, INT_MAX-1); // secs before vote menu comes up
 VARG(votelimit, 0, 20, INT_MAX-1); // secs before vote passes by default
 VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round

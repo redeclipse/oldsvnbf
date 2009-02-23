@@ -338,7 +338,7 @@ namespace client
 		if(d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(ds)("@%s", &s);
-			part_text(world::abovehead(d), ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
+			part_text(world::abovehead(d), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 		}
 
 		conoutf("%s", s);
@@ -1292,7 +1292,7 @@ namespace client
 					if(item)
 					{
 						s_sprintfd(ds)("@%s", item);
-						part_text(entities::ents[ent]->o, ds, PART_TEXT_RISE, 5000, 0xFFFFFF, 3.f);
+						part_text(entities::ents[ent]->o, ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 					}
 					world::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
 					break;
