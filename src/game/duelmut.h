@@ -2,7 +2,7 @@
 struct duelservmode : servmode
 {
 	int duelround, dueltime;
-	vector<int> duelqueue, allowed;
+	vector<clientinfo *> duelqueue, allowed;
 
 	duelservmode() {}
 
@@ -10,12 +10,12 @@ struct duelservmode : servmode
 	{
 		if(ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			int n = duelqueue.find(ci->clientnum);
+			int n = duelqueue.find(ci);
 			if(n < 0)
 			{
-				if(top) duelqueue.insert(0, ci->clientnum);
-				else duelqueue.add(ci->clientnum);
-				n = duelqueue.find(ci->clientnum);
+				if(top) duelqueue.insert(0, ci);
+				else duelqueue.add(ci);
+				n = duelqueue.find(ci);
 			}
 			if(wait)
 			{
@@ -32,8 +32,8 @@ struct duelservmode : servmode
 	void entergame(clientinfo *ci) { queue(ci, false, true); }
 	void leavegame(clientinfo *ci)
 	{
-        duelqueue.removeobj(ci->clientnum);
-        allowed.removeobj(ci->clientnum);
+		duelqueue.removeobj(ci);
+		allowed.removeobj(ci);
 	}
 
 	bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
@@ -44,15 +44,15 @@ struct duelservmode : servmode
 
 	bool canspawn(clientinfo *ci, bool tryspawn = false)
 	{
-        if(allowed.find(ci->clientnum) >= 0) return true;
+		if(allowed.find(ci) >= 0) return true;
 		if(tryspawn) queue(ci, false, false);
 		return false; // you spawn when we want you to buddy
 	}
 
-    void spawned(clientinfo *ci)
-    {
-        allowed.removeobj(ci->clientnum);
-    }
+	void spawned(clientinfo *ci)
+	{
+		allowed.removeobj(ci);
+	}
 
 	void died(clientinfo *ci, clientinfo *at) {}
 
@@ -81,13 +81,13 @@ struct duelservmode : servmode
 		clearitems();
 		duelqueue.setsize(0);
 		loopv(clients) queue(clients[i], false, true);
-        allowed.setsize(0);
+		allowed.setsize(0);
 	}
 
 	void cleanup()
 	{
 		loopvrev(duelqueue)
-			if(!clients.inrange(duelqueue[i]) || (clients[duelqueue[i]]->state.state != CS_DEAD && clients[duelqueue[i]]->state.state != CS_WAITING))
+			if(duelqueue[i]->state.state != CS_DEAD && duelqueue[i]->state.state != CS_WAITING)
 				duelqueue.remove(i);
 	}
 
@@ -109,26 +109,23 @@ struct duelservmode : servmode
 				vector<clientinfo *> alive;
 				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
 				if(m_lms(gamemode, mutators) || GVAR(duelclear)) clearitems();
-                allowed.setsize(0);
+				allowed.setsize(0);
 				loopv(duelqueue)
 				{
 					if(m_duel(gamemode, mutators) && alive.length() >= 2) break;
-					if(clients.inrange(duelqueue[i]))
+					clientinfo *ci = duelqueue[i];
+					if(ci->state.state != CS_ALIVE)
 					{
-						clientinfo *ci = clients[duelqueue[i]];
-						if(ci->state.state != CS_ALIVE)
-						{
-                            if(allowed.find(ci->clientnum) < 0) allowed.add(ci->clientnum);
-                            if(ci->state.state != CS_WAITING) waiting(ci);
-						}
-						else
-						{
-							ci->state.health = m_maxhealth(gamemode, mutators);
-							ci->state.lastregen = gamemillis;
-							sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
-						}
-						alive.add(ci);
+						if(allowed.find(ci) < 0) allowed.add(ci);
+						if(ci->state.state != CS_WAITING) waiting(ci);
 					}
+					else
+					{
+						ci->state.health = m_maxhealth(gamemode, mutators);
+						ci->state.lastregen = gamemillis;
+						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
+					}
+					alive.add(ci);
 				}
 				cleanup();
 				duelround++;
@@ -176,7 +173,8 @@ struct duelservmode : servmode
 	{
 		duelround = 0;
 		dueltime = -1;
-        allowed.setsize(0);
+		allowed.setsize(0);
+		duelqueue.setsize(0);
 	}
 } duelmutator;
 #endif
