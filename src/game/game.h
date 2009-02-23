@@ -710,7 +710,7 @@ struct gamestate
 
 	int bestweap(int sweap)
 	{
-		int best = -1;
+		int best = weapselect;
 		loopi(WEAPON_MAX) if(hasweap(i, sweap, 3)) best = i; // reloadable first
 		if(!isweap(best)) loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) best = i; // carriable second
 		if(!isweap(best)) loopi(WEAPON_MAX) if(hasweap(i, sweap, 0)) best = i; // any just to bail us out

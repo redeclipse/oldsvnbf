@@ -1826,7 +1826,7 @@ namespace server
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!gs.hasweap(weap, sweap) || m_noitems(gamemode, mutators))
+		if(!gs.hasweap(weap, sweap, weap == WEAPON_GL ? 2 : 0) || m_noitems(gamemode, mutators))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
