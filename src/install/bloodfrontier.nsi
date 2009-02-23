@@ -43,7 +43,7 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$INSTDIR\BloodFrontier.lnk"                "$INSTDIR\bloodfrontier.bat" "" "$INSTDIR\bloodfrontier.bat" 0
   CreateShortCut "$SMPROGRAMS\BloodFrontier\BloodFrontier.lnk" "$INSTDIR\bloodfrontier.bat" "" "$INSTDIR\bloodfrontier.bat" 0
   CreateShortCut "$SMPROGRAMS\BloodFrontier\Uninstall.lnk"   "$INSTDIR\uninstall.exe"   "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\BloodFrontier\README.lnk"      "$INSTDIR\readme.txt"     "" "$INSTDIR\readme.txt" 0
+  CreateShortCut "$SMPROGRAMS\BloodFrontier\README.lnk"      "$INSTDIR\readme.html"     "" "$INSTDIR\readme.html" 0
   
 SectionEnd
 
