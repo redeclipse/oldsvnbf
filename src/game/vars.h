@@ -41,6 +41,8 @@ VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(teamdamage, 0, 1, 1); // damage team mates
 VARG(teambalance, 0, 5, 6); // 0 = off, 2 = by effectiveness, 4 = ai number, humans eff (+1 = but force balance too), 6 = humans vs. bots
+
+VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
@@ -68,4 +70,5 @@ FVARG(hitpushscale, 0, 1.f, 1000);
 FVARG(deadpushscale, 0, 1.f, 1000);
 FVARG(wavepushscale, 0, 1.f, 1000);
 
+VARG(scoringstyle, 0, 0, INT_MAX-1); // count hits as frags instead, when really fragged multiply by this
 VARG(resetvarsonend, 0, 2, 2); // reset variables on end (1: just when empty, 2: when matches end)

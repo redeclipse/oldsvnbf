@@ -56,12 +56,12 @@ namespace projs
 		float dist = middle.dist(proj.o, dir);
 		dir.div(dist);
 		if(dist < 0) dist = 0;
-		if(dist < radius)
+		if(dist <= radius)
 		{
 			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
 			hitpush(d, proj, flags, int(dist*DMF));
 		}
-		else if(explode && dist < radius*3) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
+		else if(explode && dist <= radius*4) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
 	}
 
 	void remove(gameent *owner)
