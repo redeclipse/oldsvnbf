@@ -690,7 +690,6 @@ SDL_Surface *flipsurface(SDL_Surface *os, bool clear)
     {
         memcpy(dst, &src[os->pitch*(os->h-i-1)], os->format->BytesPerPixel*os->w);
         dst += ns->pitch;
-        src += os->pitch;
     }
     if(clear) SDL_FreeSurface(os);
     return ns;
