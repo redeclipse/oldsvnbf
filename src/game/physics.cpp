@@ -561,10 +561,14 @@ namespace physics
 
 		vec d(m);
 		d.mul(movevelocity(pl));
-        if(pl->type==ENT_PLAYER || pl->type==ENT_CAMERA)
+        if(pl->type==ENT_PLAYER)
         {
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+        }
+        else if(pl->type==ENT_CAMERA) 
+        {
+            if(local) d.mul(floatspeed/100.0f);
         }
 
 		float friction = floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
@@ -652,7 +656,7 @@ namespace physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = (pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR)) || pl->type == ENT_CAMERA;
+		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
 		float secs = millis/1000.f;
 
 		if(pl->type==ENT_PLAYER)
