@@ -130,11 +130,11 @@ void ircaddnet(int type, const char *name, const char *serv, int port, const cha
 	conoutf("added irc %s %s (%s:%d) [%s]", type == IRCT_RELAY ? "relay" : "client", name, serv, port, nick);
 }
 
-ICOMMAND(addircclient, "ssiss", (const char *n, const char *s, int *p, const char *c, const char *z), {
-	ircaddnet(IRCT_CLIENT, n, s, *p, c, z);
+ICOMMAND(addircclient, "ssisss", (const char *n, const char *s, int *p, const char *c, const char *h, const char *z), {
+	ircaddnet(IRCT_CLIENT, n, s, *p, c, h, z);
 });
-ICOMMAND(addircrelay, "ssiss", (const char *n, const char *s, int *p, const char *c, const char *z), {
-	ircaddnet(IRCT_RELAY, n, s, *p, c, z);
+ICOMMAND(addircrelay, "ssisss", (const char *n, const char *s, int *p, const char *c, const char *h, const char *z), {
+	ircaddnet(IRCT_RELAY, n, s, *p, c, h, z);
 });
 ICOMMAND(connectirc, "s", (const char *name), {
 	ircnet *n = ircfind(name);
