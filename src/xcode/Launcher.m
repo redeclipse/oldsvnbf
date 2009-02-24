@@ -322,6 +322,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
             NSRange r; // more flexible to do this manually rather than via NSScanner...
             int j = 0;
             while(j < [line length] && [line characterAtIndex:j] <= ' ') j++; //skip white
+            if(j != 0) continue; // shouldn't be indented
             r.location = j;
             while(j < [line length] && [line characterAtIndex:j] > ' ') j++; //until white
             r.length = j - r.location;
@@ -338,6 +339,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
                 while(j < [line length] && [line characterAtIndex:j] > ' ') j++; //until white
                 r.length = j - r.location;
             }
+            if(r.location+r.length >= [line length]) continue; //missing value
             NSString *value = [line substringWithRange:r];
             
             while(j < [line length] && [line characterAtIndex:j] <= ' ') j++; //skip white
