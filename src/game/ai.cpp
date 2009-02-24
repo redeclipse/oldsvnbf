@@ -4,7 +4,7 @@
 namespace ai
 {
 	entities::avoidset obstacles;
-    int avoidmillis = 0, updatemillis = 0;
+    int updatemillis = 0;
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 4);
@@ -93,8 +93,8 @@ namespace ai
 
 	void update()
 	{
-		if(lastmillis-avoidmillis > 100) avoid();
-		bool updating = lastmillis-updatemillis > 40; // fixed rate logic at 25fps
+		bool updating = lastmillis-updatemillis > 100; // fixed rate logic at 10fps
+		if(updating) avoid();
 		loopv(world::players) if(world::players[i] && world::players[i]->ai)
 		{
 			if(!world::intermission) think(world::players[i], updating);
@@ -936,8 +936,8 @@ namespace ai
 				if(d->ai->lasthunt)
 				{
 					int millis = lastmillis-d->ai->lasthunt;
-					if(millis < 3000) d->ai->tryreset = false;
-					else if(millis < 6000)
+					if(millis < 5000) d->ai->tryreset = false;
+					else if(millis < 10000)
 					{
 						if(!d->ai->tryreset) d->ai->reset(true);
 					}
@@ -1003,7 +1003,6 @@ namespace ai
 				}
 			}
 		}
-		avoidmillis = lastmillis;
 	}
 
 	void think(gameent *d, bool run)
