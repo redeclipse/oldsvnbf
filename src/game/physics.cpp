@@ -571,7 +571,7 @@ namespace physics
             if(local) d.mul(floatspeed/100.0f);
         }
 
-		float friction = floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
+		float friction = floating || pl->type==ENT_CAMERA ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
 		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
         pl->vel.mul(fpsfric-1);
