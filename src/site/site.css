@@ -49,22 +49,28 @@ a:hover {
 	clear: left;
 }
 #navbar {
-	padding: 24px 2px 8px 2px;
+	padding: 20px 2px 2px 2px;
 	text-align: left;
 	vertical-align: middle;
 	font-size: 90%;
+}
+#version {
+	padding: 4px 2px 2px 2px;
+	text-align: left;
+	vertical-align: middle;
+	font-size: 90%;
+	font-weight: bold;
 }
 #portal {
 	padding: 16px 4px 16px 4px;
 	text-align: center;
 	clear: both;
-	width: 600px;
+	width: 80%;
 }
 #supertext {
 	text-align: center;
 	font-size: 150%;
 	font-weight: bold;
-	width: 600px;
 }
 #video {
 	text-align: center;
@@ -76,16 +82,13 @@ a:hover {
 #noticetext {
 	text-align: center;
 	font-size: 90%;
-	width: 600px;
 	font-weight: bold;
 }
 #subtext {
 	text-align: center;
 	font-size: 80%;
-	width: 600px;
 }
 #footer {
 	text-align: center;
 	font-size: 100%;
-	width: 600px;
 }

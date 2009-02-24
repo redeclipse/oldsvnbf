@@ -1,8 +1,9 @@
 <?php
 	$app['sitename'] = "Blood Frontier";
 	$app['siteblurb'] = "It's Bloody Fun!";
+	$app['siteversion'] = "v0.80 (Beta 1)";
 	$app['sitevideo'] = "http://www.youtube.com/v/u8zika049FY&amp;color1=0x000000&amp;color2=0x000000&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;feature=PlayList&amp;p=E7D81AC7DED5E1E3&amp;index=0&amp;playnext=0";
-	$app['sitenotice'] = "The video below is only a sample of what is in Blood Frontier, and we're looking to create <i>NEW</i> and <i>BETTER</i> one. Think you have what it takes to help make a real commercial advertisement for an open source project? Come <a href=\"/chat\">chat</a> to us on IRC or visit our <a href=\"/forums\">forums</a> and leave a message!";
+	$app['sitenotice'] = "We need your <i>HELP</i> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves toils away for up to 18 hours a day, <i>every</i> day, working on the project. He has been struggling with ancient hardware for a long time due to financial difficulties. Please <i>DONATE</i> to make sure he can keep doing this important job!<br /><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></a>";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitelogo'] = "/bits/logo.png";
 	$app['sitecss'] = "/bits/site.css";
@@ -11,7 +12,6 @@
 	$app['sfproject'] = "bloodfrontier";
 	$app['sfgroupid'] = 198419;
 	$app['sflogo'] = 11;
-	$app['sfdonate'] = 1; // use SF's project donation service
 	$app['sfpiwik'] = 1; // use SF's piwik with idsite=N
 
 	$app['ircnetwork'] = "irc.freenode.net";
@@ -29,7 +29,6 @@
 	$app['targets']['chat'] = array('name' => 'Chat', 'url' => 'http://embed.mibbit.com/?server='.$app['ircnetwork'].'&amp;channel=%23'.$app['ircchannel'].'&amp;settings='.$app['ircsetup'].'&amp;forcePrompt=true', 'alturl' => '');
 	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/index.php?g2_itemId=');
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '');
-	if ($app['sfdonate'] > 0) $app['targets']['donate'] = array('name' => 'Donate', 'url' => 'http://sourceforge.net/donate/index.php?group_id='.$app['sfgroupid'], 'alturl' => '');
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/?view=rev&amp;rev=');
 	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+');
 	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+');
@@ -98,12 +97,7 @@
 		<div id="header">
 			<div id="tags">
 				<div id="flink">
-<?php			if ($app['sfdonate'] > 0) { ?>
-					<a href="/donate">
-						<img id="sfdonate" src="http://images.sourceforge.net/images/project-support.jpg" style="border: none" alt="Support <?php echo $app['sitename']; ?> and Donate" />
-					</a>
-<?php			} 
-				if ($app['sflogo'] > 0) { ?>
+<?php			if ($app['sflogo'] > 0) { ?>
 					<a href="/project">
 						<img id="sflogo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" style="border: none" alt="Get <?php echo $app['sitename']; ?> at SourceForge" />
 					</a>
@@ -113,6 +107,7 @@
 			</div>
 			<div id="logo"><a href="/home"><img id="sitelogo" src="<?php echo $app['sitelogo']; ?>" alt="<?php echo $app['sitename']; ?>" style="border: none" /></a></div>
 			<div id="navbar"><?php echo $app['navbar']; ?></div>
+			<div id="version">Current Release: <i><a href="/download"><?php echo $app['siteversion']; ?></a></i></div>
 		</div>
 		<div id="body" align="center">
 <?php	if ($app['target'] != 'home') { ?>
