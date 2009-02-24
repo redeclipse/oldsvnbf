@@ -266,7 +266,7 @@ namespace ai
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
 			vec dp = world::headpos(d), ep = world::headpos(e);
-			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+1; // so we don't "quick"
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
 			return true;
 		}
 		return false;
@@ -795,7 +795,7 @@ namespace ai
 				}
 				else
 				{
-					if(!b.idle) noenemy(d);
+					if(!b.idle && !hasseen) noenemy(d);
 					result = hasseen ? 2 : 1;
 				}
 			}
