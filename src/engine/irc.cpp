@@ -566,7 +566,6 @@ void ircslice()
 			{
 				case IRC_ATTEMPT:
 				{
-					if(*n->passkey) ircsend(n, "PASS %s", n->passkey);
 					ircsend(n, "NICK %s", n->nick);
 					ircsend(n, "USER %s +iw %s :%s", n->nick, n->nick, n->nick);
 					n->state = IRC_CONN;
@@ -580,6 +579,7 @@ void ircslice()
 				}
 				case IRC_ONLINE:
 				{
+					if(*n->passkey) ircsend(n, "PRIVMSG NickServ :IDENTIFY %s", n->passkey);
 					loopvj(n->channels)
 					{
 						ircchan *c = &n->channels[j];
