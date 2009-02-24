@@ -420,13 +420,20 @@ namespace ai
 		}
 	}
 
+	void setup(gameent *d)
+	{
+		aistate &b = d->ai->getstate();
+		d->ai->lastaction = b.next = lastmillis;
+		if(!m_noitems(world::gamemode, world::mutators) || m_duke(world::gamemode, world::mutators))
+			d->ai->weappref = m_spawnweapon(world::gamemode, world::mutators);
+	}
+
 	void killed(gameent *d, gameent *e, int weap, int flags, int damage)
 	{
 		if(d->ai)
 		{
 			d->ai->reset();
-			aistate &b = d->ai->getstate();
-			d->ai->lastaction = b.next = lastmillis;
+			setup(d);
 		}
 	}
 
@@ -939,7 +946,11 @@ namespace ai
 					if(millis < 5000) d->ai->tryreset = false;
 					else if(millis < 10000)
 					{
-						if(!d->ai->tryreset) d->ai->reset(true);
+						if(!d->ai->tryreset)
+						{
+							d->ai->reset(true);
+							setup(d);
+						}
 					}
 					else
 					{
@@ -947,6 +958,7 @@ namespace ai
 						{
 							world::suicide(d, HIT_LOST); // better off doing something than nothing
 							d->ai->reset(false);
+							setup(d);
 						}
 					}
 				}
@@ -1010,7 +1022,11 @@ namespace ai
 		// the state stack works like a chain of commands, certain commands simply replace each other
 		// others spawn new commands to the stack the ai reads the top command from the stack and executes
 		// it or pops the stack and goes back along the history until it finds a suitable command to execute
-		if(d->ai->state.empty()) d->ai->reset();
+		if(d->ai->state.empty())
+		{
+			d->ai->reset();
+			setup(d);
+		}
 		bool cleannext = false;
 		loopvrev(d->ai->state)
 		{
