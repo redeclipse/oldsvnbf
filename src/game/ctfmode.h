@@ -55,7 +55,11 @@ struct ctfservmode : ctfstate, servmode
 					ci->state.flags++;
 					int score = addscore(ci->team);
 					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
-					if(GVAR(ctflimit) && score >= GVAR(ctflimit)) startintermission();
+					if(GVAR(ctflimit) && score >= GVAR(ctflimit))
+					{
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fccpature limit has been reached!");
+						startintermission();
+					}
 				}
             }
         }

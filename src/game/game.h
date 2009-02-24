@@ -1,5 +1,5 @@
 #define GAMEID				"bfa"
-#define GAMEVERSION			156
+#define GAMEVERSION			157
 #define DEMO_VERSION		GAMEVERSION
 
 #define MAXBOTS 100
@@ -341,11 +341,11 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_GL,			ANIM_GRENADES,	-5,    5,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		4,		1500,	3000,	200,	350,	3000,	3000,
+			1,		4,		1500,	1500,	200,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,		false,		false,
 			1.0f,	0.35f,		0.f,			1.0f,		2.0f,		50.f,
-			2.f,		200.f,
+			2.f,		300.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},

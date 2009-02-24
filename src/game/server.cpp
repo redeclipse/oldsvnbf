@@ -406,7 +406,7 @@ namespace server
 					}
 					default: break;
 				}
-				if(invoked) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, id.name, val);
+				if(invoked) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id.name[3], val);
 			}
 		});
 		if(invoked) srvoutf("\fmgame variables have been reset");
@@ -594,43 +594,80 @@ namespace server
 		return false;
 	}
 
-	void checkintermission()
-	{
-		if(minremain)
-		{
-			if(GVAR(timelimit) != oldtimelimit)
-			{
-				if(GVAR(timelimit)) gamelimit += (GVAR(timelimit)-oldtimelimit)*60000;
-				oldtimelimit = GVAR(timelimit);
-			}
-			if(GVAR(timelimit))
-			{
-				if(gamemillis >= gamelimit) minremain = 0;
-				else minremain = (gamelimit-gamemillis+60000-1)/60000;
-			}
-			else minremain = -1;
-			sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-			if(!minremain)
-			{
-				if(smode) smode->intermission();
-				mutate(smuts, mut->intermission());
-			}
-			else if(minremain == 1)
-				sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "only one minute left of play!");
-		}
-		if(!minremain && !interm)
-		{
-			maprequest = false;
-			interm = gamemillis+(GVAR(intermlimit)*1000);
-		}
-	}
-
 	void startintermission()
 	{
 		minremain = 0;
 		gamelimit = min(gamelimit, gamemillis);
-		sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-		checkintermission();
+		if(smode) smode->intermission();
+		mutate(smuts, mut->intermission());
+		maprequest = false;
+		interm = gamemillis+(GVAR(intermlimit)*1000);
+		sendf(-1, 1, "ri2", SV_TIMEUP, 0);
+	}
+
+	void checklimits()
+	{
+		if(m_fight(gamemode))
+		{
+			if(GVAR(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000))
+			{
+				if(GVAR(timelimit) != oldtimelimit)
+				{
+					if(GVAR(timelimit)) gamelimit += (GVAR(timelimit)-oldtimelimit)*60000;
+					oldtimelimit = GVAR(timelimit);
+				}
+				if(minremain)
+				{
+					if(GVAR(timelimit))
+					{
+						if(gamemillis >= gamelimit) minremain = 0;
+						else minremain = (gamelimit-gamemillis+60000-1)/60000;
+					}
+					else minremain = -1;
+					if(!minremain)
+					{
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fctime limit has been reached!");
+						startintermission();
+						return; // bail
+					}
+					else
+					{
+						sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+						if(minremain == 1) sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "\fconly one minute left of play!");
+					}
+				}
+			}
+			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode))
+			{
+				if(m_team(gamemode, mutators))
+				{
+					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 };
+					loopv(clients) if(isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+						teamscores[clients[i]->team-TEAM_FIRST] += clients[i]->state.frags;
+					int best = -1;
+					loopi(TEAM_NUM) if(best < 0 || teamscores[i] > teamscores[best])
+						best = i;
+					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
+					{
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fcfrag limit has been reached!");
+						startintermission();
+						return; // bail
+					}
+				}
+				else
+				{
+					int best = -1;
+					loopv(clients) if(best < 0 || clients[i]->state.frags > clients[best]->state.frags)
+						best = i;
+					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
+					{
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fcfrag limit has been reached!");
+						startintermission();
+						return; // bail
+					}
+				}
+			}
+		}
 	}
 
 	bool finditem(int i, bool spawned = true, bool timeit = false)
@@ -994,6 +1031,12 @@ namespace server
         enet_packet_destroy(packet);
 	}
 
+	void endmatch()
+	{
+		if(demorecord) enddemorecord();
+		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
+	}
+
 	void checkvotes(bool force = false)
 	{
         shouldcheckvotes = false;
@@ -1021,7 +1064,7 @@ namespace server
 		bool gotvotes = best && best->count >= min(max(maxvotes/2, force ? 1 : 2), force ? 1 : maxvotes);
 		if(force || gotvotes)
 		{
-			if(demorecord) enddemorecord();
+			endmatch();
 			if(gotvotes)
 			{
 				srvoutf("\fcvote passed by majority: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
@@ -1056,7 +1099,7 @@ namespace server
 
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
 		{
-			if(demorecord) enddemorecord();
+			endmatch();
 			srvoutf("\fc%s [%s] forced: \fs\fw%s on map %s\fS", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
@@ -1272,7 +1315,6 @@ namespace server
 		maprequest = mapsending = shouldcheckvotes = false;
         stopdemo();
 		aiman::clearai();
-		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
@@ -1402,8 +1444,8 @@ namespace server
 					}
 					default: return;
 				}
-				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, cmd, val);
-				relayf(2, "\fm%s set %s to %s", colorname(ci), cmd, val);
+				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, &id->name[3], val);
+				relayf(2, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
 			}
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
@@ -1577,7 +1619,6 @@ namespace server
 			if(id.flags&IDF_SERVER) // reset vars
 			{
 				string val; val[0] = 0;
-				s_sprintfd(cmd)("%s", &id.name[3]);
 				switch(id.type)
 				{
 					case ID_VAR:
@@ -1597,16 +1638,13 @@ namespace server
 					}
 					default: break;
 				}
-				if(cmd[0])
-				{
-					putint(p, SV_COMMAND);
-					putint(p, -1);
-                    int space = 2*(strlen(cmd) + strlen(val)) + 2;
-                    CHECKSPACE(space);
-					sendstring(cmd, p);
-                    CHECKSPACE(space);
-					sendstring(val, p);
-				}
+				putint(p, SV_COMMAND);
+				putint(p, -1);
+				int space = 2*(strlen(&id.name[3]) + strlen(val)) + 2;
+				CHECKSPACE(space);
+				sendstring(&id.name[3], p);
+				CHECKSPACE(space);
+				sendstring(val, p);
 			}
 		});
 
@@ -1701,23 +1739,25 @@ namespace server
 			nodamage++;
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
+		else if((realflags&HIT_FULL) && weap != WEAPON_PAINT && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor))
+			realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
-			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
+			if(realflags&HIT_FULL || realflags&HIT_HEAD || realflags&HIT_FALL) realdamage = int(realdamage*GVAR(damagescale));
 			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*GVAR(damagescale));
 			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*GVAR(damagescale));
-			else realdamage = int(realdamage*GVAR(damagescale));
+			else realdamage = 0;
 			ts.dodamage(gamemillis, (ts.health -= realdamage));
 			actor->state.damage += realdamage;
 		}
-		else realdamage = int(realdamage*0.5f*GVAR(damagescale));
+		else realdamage = int(realdamage*GVAR(damagescale));
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
 		else realflags &= ~HIT_KILL;
 
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 
-		if(realflags&HIT_KILL || m_paint(gamemode, mutators))
+		if(realflags&HIT_KILL || GVAR(scoringstyle))
 		{
             if(realflags&HIT_KILL)
             {
@@ -1726,7 +1766,7 @@ namespace server
             }
 
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
-            if(m_paint(gamemode, mutators) && !m_insta(gamemode, mutators) && realflags&HIT_KILL) fragvalue *= 2;
+            if(GVAR(scoringstyle) && realflags&HIT_KILL) fragvalue *= GVAR(scoringstyle);
             actor->state.frags += fragvalue;
 
 			if(fragvalue > 0)
@@ -2170,6 +2210,9 @@ namespace server
 			{
 				processevents();
 				checkents();
+				checklimits();
+				checkclients();
+				aiman::checkai();
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
@@ -2186,10 +2229,6 @@ namespace server
 				masterupdate = false;
 			}
 
-			if((m_fight(gamemode) && numclients(-1, false, true)) &&
-				((GVAR(timelimit) != oldtimelimit) || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000)))
-					checkintermission();
-
 			if(interm && gamemillis >= interm) // wait then call for next map
 			{
 				if(GVAR(votelimit) && !maprequest)
@@ -2205,9 +2244,6 @@ namespace server
 					checkvotes(true);
 				}
 			}
-			else aiman::checkai();
-			checkclients();
-
             if(shouldcheckvotes) checkvotes();
 		}
 		auth::update();
