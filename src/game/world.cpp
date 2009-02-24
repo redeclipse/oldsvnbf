@@ -92,7 +92,7 @@ namespace world
 	VARP(showdamageabovehead, 0, 0, 2);
 	TVAR(conopentex, "textures/conopen", 3);
 
-	VARP(showobituaries, 0, 1, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
+	VARP(showobituaries, 0, 3, 4); // 0 = off, 1 = only me, 2 = me & announcements, 3 = all but bots, 4 = all
 	VARP(playdamagetones, 0, 2, 2);
 
 	VARP(noblood, 0, 0, 1);
@@ -642,7 +642,7 @@ namespace world
 			{
 				case 1: if(isme) show = true; break;
 				case 2: if(isme || anc >= 0) show = true; break;
-				case 3: if(d->aitype != AI_NONE || anc >= 0) show = true; break;
+				case 3: if(d->aitype == AI_NONE || anc >= 0) show = true; break;
 				case 4: default: show = true; break;
 			}
 			if(show)
