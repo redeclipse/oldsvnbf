@@ -561,11 +561,12 @@ namespace physics
 
 		vec d(m);
 		d.mul(movevelocity(pl));
-        if(pl->type==ENT_PLAYER)
+        if(pl->type==ENT_PLAYER || pl->type==ENT_CAMERA)
         {
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
+
 		float friction = floating ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
 		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
