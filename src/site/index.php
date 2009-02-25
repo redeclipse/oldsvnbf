@@ -20,7 +20,7 @@
 	$app['ircsetup'] = "bloodfrontier";
 
 	$app['deftarg'] = "home";
-	$app['defsearch'] = "Blood+Frontier";
+	$app['defsearch'] = "(Blood+Frontier)";
 
 	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => ''));
 	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=');
