@@ -70,21 +70,7 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="shortcut icon" href="<?php echo $app['siteico']; ?>" />
 		<link rel="stylesheet" type="text/css" href="<?php echo $app['sitecss']; ?>" />
-<?php if ($app['target'] != 'home') { ?>
-		<script type="text/javascript"><!--
-			function setblurb() {
-				var b = document.getElementById('blurb');
-				b.innerHTML = "<i><?php echo $app['siteblurb']; ?></i>";
-			}
-			function resizeframe() {
-				var c = document.getElementById('frame');
-				c.style.display = 'inline';
-				c.height = document.documentElement.clientHeight - c.offsetTop;
-			}
-			window.onresize = resizeframe();
-		--></script>
-<?php } 
-	if ($app['sfpiwik'] > 0) { ?>
+<?php if ($app['sfpiwik'] > 0) { ?>
 		<script type="text/javascript"><!--
 			var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/" : "http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/");
 			document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
@@ -106,18 +92,13 @@
 					</a>
 <?php			} ?>
 				</div>
-				<div id="blurb"><i><?php echo $app['target'] != 'home' ? "Loading Application.." : $app['siteblurb']; ?></i></div>
+				<div id="blurb"><i><?php echo $app['siteblurb']; ?></i></div>
 			</div>
 			<div id="logo"><a href="/home"><img id="sitelogo" src="<?php echo $app['sitelogo']; ?>" alt="<?php echo $app['sitename']; ?>" style="border: none" /></a></div>
 			<div id="navbar"><?php echo $app['navbar']; ?></div>
 			<div id="version"><b>Current Version:</b> <a href="/download"><?php echo $app['siterelver']; ?></a> released <i><?php echo $app['sitereldate']; ?></i></div>
 		</div>
 		<div id="body" align="center">
-<?php	if ($app['target'] != 'home') { ?>
-			<iframe id="frame" frameborder="0" scrolling="yes" marginheight="0" marginwidth="0" onload="resizeframe();setblurb();" src="<?php echo $app['url']; ?>">
-				<p>Your browser does not support this feature, to continue visit: <a href="<?php echo $app['url']; ?>"><?php echo $app['targets'][$app['target']]['name']; ?></a></p>
-			</iframe>
-<?php	} else { ?>
 			<div id="portal" align="center">
 				<p id="supertext" align="center"><a href="/project"><?php echo $app['sitename']; ?></a>, <i><?php echo $app['siteblurb']; ?></i></p>
 				<p id="noticetext" align="center"><?php echo $app['sitenotice']; ?></p>
@@ -132,7 +113,6 @@
 				<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
 				<p id="footer" align="center"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</p>
 			</div>
-<?php	} ?>
 		</div>
 	</body>
 </html>
