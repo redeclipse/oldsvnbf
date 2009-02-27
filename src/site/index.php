@@ -44,9 +44,11 @@
 	$title = checkarg("title");
 	$redir = checkarg("redir", "");
 	if ($redir != "") {
-		$loc = "http://".$_SERVER['HTTP_HOST']."/".$app['target'];
-		if ($title != "") $loc .= "/".$title;
-		header("Location: ".$loc);
+		$app['url'] = $title != "" ? (
+				$app['targets'][$app['target']]['alturl'] != "" ? $app['targets'][$app['target']]['alturl'].$title : $app['targets'][$app['target']]['url'].$title
+		) : $app['targets'][$app['target']]['url'];
+		header("Location: ".$app['url']);
+		//echo $app['url'];
 		exit;
 	}
 	else {
