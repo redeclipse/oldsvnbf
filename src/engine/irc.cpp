@@ -422,12 +422,9 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			if(s[0]) s_strcat(s, " ");
 			s_strcat(s, w[i]);
 		}
-		if(s[0]) ircprintf(n, targ, "\fw%s %s", w[g], s);
-		else ircprintf(n, targ, "\fw%s", w[g]);
 		if(numeric) switch(numeric)
 		{
-			case 376:
-			case 422:
+			case 001:
 			{
 				if(n->state == IRC_CONN)
 				{
@@ -457,6 +454,8 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			}
 			default: break;
 		}
+		if(s[0]) ircprintf(n, targ, "\fw%s %s", w[g], s);
+		else ircprintf(n, targ, "\fw%s", w[g]);
 	}
 }
 
@@ -574,7 +573,7 @@ void ircslice()
 					{
 						ircchan *c = &n->channels[j];
 						c->state = IRCC_NONE;
-						c->lastjoin = 0;
+						c->lastjoin = lastmillis;
 					}
 					break;
 				}
