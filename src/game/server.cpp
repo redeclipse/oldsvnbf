@@ -410,6 +410,7 @@ namespace server
 			}
 		});
 		if(invoked) srvoutf("\fmgame variables have been reset");
+		execfile("servexec.cfg");
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
 
@@ -418,7 +419,6 @@ namespace server
 		bannedips.setsize(0);
 		aiman::clearai();
 		if(GVAR(resetvarsonend)) resetgamevars(false);
-		execfile("servexec.cfg");
 		changemap(GVAR(defaultmap), GVAR(defaultmode), GVAR(defaultmuts));
 	}
 
