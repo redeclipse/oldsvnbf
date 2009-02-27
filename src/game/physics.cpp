@@ -50,7 +50,7 @@ namespace physics
 	#define iput(x,y,t,z,a) \
 		void do##x(bool down) \
 		{ \
-			if(world::player1->state == CS_ALIVE) \
+			if(z || world::allowmove(world::player1)) \
 			{ \
 				if(a) \
 				{ \
@@ -566,7 +566,7 @@ namespace physics
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
         }
-        else if(pl->type==ENT_CAMERA) 
+        else if(pl->type==ENT_CAMERA)
         {
             if(local) d.mul(floatspeed/100.0f);
         }
