@@ -50,7 +50,7 @@ namespace physics
 	#define iput(x,y,t,z,a) \
 		void do##x(bool down) \
 		{ \
-			if(z || world::allowmove(world::player1)) \
+			if(world::allowmove(world::player1)) \
 			{ \
 				if(a) \
 				{ \
