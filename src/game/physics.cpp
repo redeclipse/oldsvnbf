@@ -99,7 +99,7 @@ namespace physics
 			}
 			return true;
 		}
-        return d->state == CS_DEAD || d->state == CS_WAITING;
+        return d->state == CS_DEAD || d->state == CS_WAITING || d->state == CS_SPECTATOR;
 	}
 
 	bool iscrouching(physent *d)
@@ -140,7 +140,7 @@ namespace physics
 	{
 		if(d->type == ENT_CAMERA)
 		{
-			if(world::player1->state == CS_WAITING) return m_speedscale(world::player1->maxspeed)*(world::player1->weight/100.f)*(movespeed/100.f);
+			if(world::player1->state == CS_WAITING) return m_speedscale(world::player1->maxspeed)*(world::player1->weight/100.f);
 			else return d->maxspeed*(d->weight/100.f);
 		}
 		else if(d->type == ENT_PLAYER)
