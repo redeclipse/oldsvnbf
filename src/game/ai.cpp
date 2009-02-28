@@ -29,12 +29,31 @@ namespace ai
 
 	float targetable(gameent *d, gameent *e, bool z)
 	{
-		return d != e && e->state == CS_ALIVE && (!z || !m_team(world::gamemode, world::mutators) || (d)->team != (e)->team);
+		aistate &b = d->ai->getstate();
+		if(d != e && world::allowmove(d) && b.type != AI_S_WAIT)
+			return e->state == CS_ALIVE && (!z || !m_team(world::gamemode, world::mutators) || (d)->team != (e)->team);
+		return false;
 	}
 
 	float cansee(gameent *d, vec &x, vec &y, vec &targ)
 	{
-		return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
+		aistate &b = d->ai->getstate();
+		if(world::allowmove(d) && b.type != AI_S_WAIT)
+			return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
+		return false;
+	}
+
+
+	vec getaimpos(gameent *d, gameent *e)
+	{
+		if(d->skill <= 100)
+		{
+			static vec apos;
+			apos = world::headpos(e);
+			apos.z -= e->height*(1.f/float(d->skill));
+			return apos;
+		}
+		return world::headpos(e);
 	}
 
 	void create(gameent *d)
@@ -186,12 +205,12 @@ namespace ai
 		if(world::allowmove(d))
 		{
 			gameent *t = NULL, *e = NULL;
-			vec dp = world::headpos(d), tp = vec(0, 0, 0);
+			vec dp = world::headpos(d), tp(0, 0, 0);
 			bool insight = false, tooclose = false;
 			float mindist = guard*guard;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
 			{
-				vec ep = world::headpos(e);
+				vec ep = getaimpos(d, e);
 				bool close = ep.squaredist(pos) < mindist;
 				if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
 				{
@@ -265,7 +284,7 @@ namespace ai
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
-			vec dp = world::headpos(d), ep = world::headpos(e);
+			vec dp = world::headpos(d), ep = getaimpos(d, e);
 			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
 			return true;
 		}
@@ -275,10 +294,10 @@ namespace ai
 	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false)
 	{
 		gameent *t = NULL, *e = NULL;
-		vec dp = world::headpos(d), tp = vec(0, 0, 0);
+		vec dp = world::headpos(d), tp(0, 0, 0);
 		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
-			vec ep = world::headpos(e);
+			vec ep = getaimpos(d, e);
 			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
 			{
 				t = e;
@@ -292,22 +311,20 @@ namespace ai
 	void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
 	{
 		gameent *e = NULL;
-		vec dp = world::headpos(d);
 		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && (all || e->aitype == AI_NONE) && d->team == e->team)
 		{
-			vec ep = world::headpos(e);
 			interest &n = interests.add();
 			n.state = AI_S_DEFEND;
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = ep.squaredist(dp)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 10.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 10.f : 1.f);
 		}
 	}
 
 	void items(gameent *d, aistate &b, vector<interest> &interests, bool force = false)
 	{
-		vec pos = world::headpos(d);
+		vec pos = world::feetpos(d);
 		loopvj(entities::ents)
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
@@ -411,30 +428,23 @@ namespace ai
 		}
 	}
 
-	void spawned(gameent *d)
+	void setup(gameent *d, bool tryreset = false)
 	{
-		if(d->ai)
-		{
-			aistate &b = d->ai->getstate();
-			d->ai->lastaction = b.next = lastmillis;
-		}
-	}
-
-	void setup(gameent *d)
-	{
+		d->ai->reset(tryreset);
 		aistate &b = d->ai->getstate();
-		d->ai->lastaction = b.next = lastmillis;
+		b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
 		if(!m_noitems(world::gamemode, world::mutators) || m_duke(world::gamemode, world::mutators))
 			d->ai->weappref = m_spawnweapon(world::gamemode, world::mutators);
 	}
 
+	void spawned(gameent *d)
+	{
+		if(d->ai) setup(d, false);
+	}
+
 	void killed(gameent *d, gameent *e, int weap, int flags, int damage)
 	{
-		if(d->ai)
-		{
-			d->ai->reset();
-			setup(d);
-		}
+		if(d->ai) d->ai->reset();
 	}
 
 	bool check(gameent *d, aistate &b)
@@ -631,7 +641,6 @@ namespace ai
 			if(d->timeinair || dir.magnitude() <= CLOSEDIST || retry)
 			{
 				static vector<int> anyremap; anyremap.setsizenodelete(0);
-				vec dp = world::feetpos(d);
 				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
@@ -686,14 +695,15 @@ namespace ai
 	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-		gameent *h = world::intersectclosest(d->muzzle, d->ai->target, d);
+		vec dp = world::headpos(d), ep = getaimpos(d, e);
+		gameent *h = world::intersectclosest(dp, d->ai->target, d);
 		if(h && !targetable(d, h, true)) return false;
-		float targyaw, targpitch, mindist = d->radius*d->radius, dist = d->muzzle.squaredist(d->ai->target);
+		float targyaw, targpitch, mindist = d->radius*d->radius, dist = dp.squaredist(ep);
 		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
 		if(mindist <= dist)
 		{
 			if(d->skill > 100 && h) return true;
-			vec dir = vec(d->muzzle).sub(world::headpos(e)).normalize();
+			vec dir = vec(dp).sub(ep).normalize();
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
 					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
@@ -744,8 +754,8 @@ namespace ai
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
-		vec dp = world::headpos(d);
 		float frame = float(lastmillis-d->lastupdate)/float(skmod);
+		vec dp = world::headpos(d);
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
@@ -762,10 +772,10 @@ namespace ai
 		else d->ai->dontmove = true;
 
 		gameent *e = world::getclient(d->ai->enemy);
-		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = world::intersectclosest(d->muzzle, d->ai->target, d);
+		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = world::intersectclosest(dp, d->ai->target, d);
 		if(e && targetable(d, e, true))
 		{
-			vec ep = world::headpos(e);
+			vec ep = getaimpos(d, e);
 			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
 				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
 			if(insight) d->ai->enemyseen = lastmillis;
@@ -930,9 +940,9 @@ namespace ai
 
 	void logic(gameent *d, aistate &b, bool run)
 	{
-		vec pos = world::headpos(d);
-		findorientation(pos, d->yaw, d->pitch, d->ai->target);
-		bool allowmove = world::allowmove(d);
+		vec dp = world::headpos(d);
+		findorientation(dp, d->yaw, d->pitch, d->ai->target);
+		bool allowmove = world::allowmove(d) && b.type != AI_S_WAIT;
 		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
 		if(d->state == CS_ALIVE)
 		{
@@ -946,11 +956,7 @@ namespace ai
 					if(millis < 5000) d->ai->tryreset = false;
 					else if(millis < 10000)
 					{
-						if(!d->ai->tryreset)
-						{
-							d->ai->reset(true);
-							setup(d);
-						}
+						if(!d->ai->tryreset) setup(d, true);
 					}
 					else
 					{
@@ -958,7 +964,6 @@ namespace ai
 						{
 							world::suicide(d, HIT_LOST); // better off doing something than nothing
 							d->ai->reset(false);
-							setup(d);
 						}
 					}
 				}
@@ -1022,11 +1027,7 @@ namespace ai
 		// the state stack works like a chain of commands, certain commands simply replace each other
 		// others spawn new commands to the stack the ai reads the top command from the stack and executes
 		// it or pops the stack and goes back along the history until it finds a suitable command to execute
-		if(d->ai->state.empty())
-		{
-			d->ai->reset();
-			setup(d);
-		}
+		if(d->ai->state.empty()) setup(d);
 		bool cleannext = false;
 		loopvrev(d->ai->state)
 		{

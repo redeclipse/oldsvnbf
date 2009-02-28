@@ -5,7 +5,7 @@ namespace projs
 {
 	struct hitmsg
 	{
-		int flags, target, id, info;
+		int flags, target, id, dist;
 		ivec dir;
 	};
 	vector<hitmsg> hits;
@@ -34,7 +34,7 @@ namespace projs
 		h.flags = flags;
 		h.target = d->clientnum;
 		h.id = d->sequence;
-		h.info = dist;
+		h.dist = dist;
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
 		dir = vec(middle).sub(proj.o).normalize();
@@ -61,7 +61,7 @@ namespace projs
 			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
 			hitpush(d, proj, flags, int(dist*DMF));
 		}
-		else if(explode && dist <= radius*4) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
+		else if(explode && dist <= radius*4.f) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
 	}
 
 	void remove(gameent *owner)
@@ -77,7 +77,7 @@ namespace projs
     {
         projs.deletecontentsp();
         projs.setsize(0);
-    }
+    };
 
 	void preload()
 	{
@@ -99,7 +99,7 @@ namespace projs
 			{
 				if((proj.owner != world::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
 					proj.o = proj.from = proj.owner->muzzle;
-				proj.aboveeye = proj.height = proj.radius = weaptype[proj.weap].offset;
+				proj.aboveeye = proj.height = proj.radius = 0.1f;
 				proj.elasticity = weaptype[proj.weap].elasticity;
 				proj.reflectivity = weaptype[proj.weap].reflectivity;
 				proj.relativity = weaptype[proj.weap].relativity;
@@ -197,7 +197,7 @@ namespace projs
 
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode*0.01f;
+			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode*0.1f;
 			if(proj.projcollide)
 			{
 				vec ray(proj.vel);
@@ -242,7 +242,7 @@ namespace projs
 					}
 				}
 			}
-			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].offset;
+			if(proj.radial) proj.height = proj.radius = 1.f;
 		}
         proj.resetinterp();
 	}
@@ -376,9 +376,9 @@ namespace projs
 
 	void radiate(projent &proj)
 	{
-		if(lastmillis-proj.lastradial > m_speedtimex(500)) // for the flamer this results in at most 40 damage per second
-		{
-			int radius = int(weaptype[proj.weap].explode*max(proj.lifesize, 0.1f));
+		if(!proj.lastradial || (lastmillis-proj.lastradial > m_speedtimex(500)))
+		{ // for the flamer this results in at most 40 damage per second
+			int radius = int(weaptype[proj.weap].explode*proj.radius);
 			if(radius > 0)
 			{
 				hits.setsizenodelete(0);
@@ -410,18 +410,19 @@ namespace projs
 			{
 				case WEAPON_PLASMA:
 				{
-					int part = PART_PLASMA;
-					if(proj.lifemillis-proj.lifetime < m_speedtimex(100)) proj.lifesize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtimex(100)), 0.f, 1.f)*0.75f)+0.25f;
-					else
+					int part = PART_PLASMA_SOFT;
+					float resize = 1.f;
+					resize = proj.lifesize = 1.f-clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.05f, 1.f);
+					if(proj.lifemillis-proj.lifetime < m_speedtimex(100))
 					{
-						part = PART_PLASMA_SOFT;
-						proj.lifesize = 1.f;
+						resize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtimex(100)), 0.f, 1.f)*0.75f)+0.25f;
+						part = PART_PLASMA;
 					}
 					if(proj.canrender)
 					{
-						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-						part_create(PART_ELECTRIC, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.65f*proj.lifesize); // electrifying!
-						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.45f*proj.lifesize); // brighter center part
+						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*resize);
+						part_create(PART_ELECTRIC, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.65f*resize); // electrifying!
+						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.45f*resize); // brighter center part
 					}
 					break;
 				}
@@ -449,11 +450,11 @@ namespace projs
 					if(proj.canrender)
 					{
 						int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
-						part_create(PART_PLASMA_SOFT, 1, proj.o, col, proj.radius*weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize*proj.lifesize);
 						bool moving = proj.movement > 0.f;
 						if(lastmillis-proj.lasteffect > m_speedtimex(moving ? 250 : 500))
 						{
-							part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(moving ? 250 : 750), proj.o, 0x222222, proj.radius*weaptype[proj.weap].partsize*(moving ? 0.5f : 1.f));
+							part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(moving ? 250 : 750), proj.o, 0x222222, weaptype[proj.weap].partsize*(moving ? 0.5f : 1.f));
 							proj.lasteffect = lastmillis;
 						}
 					}
@@ -495,7 +496,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
-						float adjust = proj.radius*16.f,
+						float adjust = 16.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
@@ -512,7 +513,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime > m_speedtimex(200);
-						float adjust = proj.radius*96.f,
+						float adjust = 96.f,
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : proj.o.dist(proj.from));
 						vec dir = iter ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
@@ -542,10 +543,11 @@ namespace projs
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
-					if(proj.canrender) part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, proj.radius);
+					if(proj.canrender) part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, proj.colour, 1.f);
 					break;
 				}
 			}
+			if(weaptype[proj.weap].radial || weaptype[proj.weap].taper) proj.radius = max(proj.lifesize, 0.1f);
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
 		{
@@ -578,7 +580,6 @@ namespace projs
 
 	void destroy(projent &proj)
 	{
-		proj.state = CS_DEAD;
 		switch(proj.projtype)
 		{
 			case PRJ_SHOT:
@@ -658,6 +659,7 @@ namespace projs
 				}
 				if(proj.local)
 				{
+					int radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
 					hits.setsizenodelete(0);
 					if(weaptype[proj.weap].explode)
 					{
@@ -665,14 +667,14 @@ namespace projs
 						{
 							gameent *f = (gameent *)world::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-							radialeffect(f, proj, proj.weap == WEAPON_GL, weaptype[proj.weap].explode);
+							radialeffect(f, proj, proj.weap == WEAPON_GL, radius);
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
 						hitproj((gameent *)proj.hit, proj);
 
 					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.weap, proj.id >= 0 ? proj.id-world::maptime : proj.id,
-							0, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+							-radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 				}
 				break;
 			}
@@ -998,8 +1000,7 @@ namespace projs
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
-			if(!proj.owner || proj.state == CS_DEAD) destroy(proj);
-			else
+			if(proj.owner && proj.state != CS_DEAD)
 			{
 				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
 					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4]);
@@ -1016,7 +1017,7 @@ namespace projs
 				effect(proj);
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
-                    if(!move(proj)) destroy(proj);
+                    if(!move(proj)) proj.state = CS_DEAD;
 				}
 				else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
 				{
@@ -1025,14 +1026,17 @@ namespace projs
 
 					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || !move(proj, qtime))
 					{
-						destroy(proj);
+						proj.state = CS_DEAD;
  						break;
 					}
 				}
 				if(proj.state != CS_DEAD && proj.radial && proj.local) radiate(proj);
 			}
+			else proj.state = CS_DEAD;
+
 			if(proj.state == CS_DEAD)
 			{
+				destroy(proj);
 				delete &proj;
 				projs.removeunordered(i--);
 			}
