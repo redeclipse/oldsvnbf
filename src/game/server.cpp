@@ -374,6 +374,8 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
+	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set default mode and higher (+1 locked completely)
+	VAR(varslock, 0, 1, 2); // 0 = off, 1 = admin only, 2 = nobody
 
 	ICOMMAND(gameid, "", (), result(gameid()));
 	ICOMMAND(gamever, "", (), intret(gamever()));
@@ -433,6 +435,7 @@ namespace server
 		{
 			case PRIV_ADMIN: return "admin";
 			case PRIV_MASTER: return "master";
+			case PRIV_MAX: return "local";
 			default: return "alone";
 		}
 	}
@@ -449,9 +452,9 @@ namespace server
 
 	bool haspriv(clientinfo *ci, int flag, bool msg = false)
 	{
-		if(flag <= PRIV_MASTER && !numclients(ci->clientnum, false, true)) return true;
+		if(flag <= (ci->local ? PRIV_ADMIN : PRIV_MASTER) && !numclients(ci->clientnum, false, true)) return true;
 		else if(ci->local || ci->privilege >= flag) return true;
-		else if(msg) srvmsgf(ci->clientnum, "\fraccess denied, you need %s", privname(flag));
+		else if(msg) srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s", privname(flag));
 		return false;
 	}
 
@@ -1046,7 +1049,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if((oi->state.state==CS_SPECTATOR && !haspriv(oi, PRIV_MASTER, false)) || oi->state.aitype != AI_NONE) continue;
+			if(!haspriv(oi, PRIV_MASTER, false) || oi->state.aitype != AI_NONE) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -1084,11 +1087,27 @@ namespace server
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || (ci->state.state==CS_SPECTATOR && !haspriv(ci, PRIV_MASTER, true)) || !m_game(reqmode)) return;
+        if(!ci || !m_game(reqmode)) return;
 		if(reqmode < G_LOBBY && !ci->local)
 		{
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
 			return;
+		}
+		switch(modelock)
+		{
+			case 0: default: break;
+			case 1: case 2:
+			{
+				if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, true))
+					return;
+				break;
+			}
+			case 3: case 4:
+			{
+				if(reqmode < GVAR(defaultmode) && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, true))
+					return;
+				break;
+			}
 		}
 
 		s_strcpy(ci->mapvote, map);
@@ -1161,7 +1180,7 @@ namespace server
 				loopv(clients)
 				{
 					clientinfo *cp = clients[i];
-					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR) continue;
+					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
 					cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 					cp->state.lasttimeplayed = lastmillis;
 					loopj(numteams(gamemode, mutators)) if(cp->team == teamscores[j].team)
@@ -1374,7 +1393,8 @@ namespace server
 		ident *id = idents->access(cmdname);
 		if(id && id->flags&IDF_SERVER)
 		{
-			if(haspriv(ci, PRIV_MASTER, true))
+			if(varslock >= 2) srvmsgf(ci->clientnum, "\frvariables on this server are locked");
+			else if(haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true))
 			{
 				string val;
 				val[0] = 0;
