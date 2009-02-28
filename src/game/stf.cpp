@@ -191,7 +191,7 @@ namespace stf
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
 		if(ai::badhealth(d)) return;
-		vec pos = world::headpos(d);
+		vec pos = world::feetpos(d);
 		loopvj(st.flags)
 		{
 			stfstate::flag &f = st.flags[j];
@@ -201,7 +201,7 @@ namespace stf
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
-				vec ep = world::headpos(e);
+				vec ep = world::feetpos(e);
 				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
 					targets.add(e->clientnum);
 			}
@@ -222,7 +222,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			if(lastmillis-b.millis >= (201-d->skill)*250)
+			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
 			{
 				if(!f.enemy && f.owner == d->team)
 				{

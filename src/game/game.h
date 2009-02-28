@@ -262,9 +262,8 @@ struct weaptypes
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
-	bool	radial,	extinguish,	reloads,	snipes;
-	float	offset,	elasticity,	reflectivity,	relativity,	waterfric,	weight,
-			partsize,	hitpush;
+	bool	radial,	taper,	extinguish,	reloads,	snipes;
+	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	hitpush;
 	const char
 			*name, 		*text,	*item,						*vwep,
 			*proj;
@@ -275,11 +274,10 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		400,	1000,	25,		1000,	0,		10000,
+			20,		20,		400,	1000,	25,		1000,	0,		1000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,		true,		false,
-			1.0f,	0.f,		0.f,			0.5f,		1.0f,		0.f,
-			4.f,		50.f,
+			false,	true,	true,		true,		false,
+			0.f,		0.f,			0.5f,		1.0f,		0.f,	4.f,		50.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
@@ -288,9 +286,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
-			false,	false,		true,		false,
-			1.0f,	0.5f,		50.f,			0.05f,		2.0f,		30.f,
-			0.35f,		50.f,
+			false,	false,	false,		true,		false,
+			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		50.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
@@ -299,9 +296,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
-			false,	false,		true,		false,
-			1.0f,	0.75f,		30.f,			0.05f,		2.0f,		0.f,
-			0.25f,		50.f,
+			false,	false,	false,		true,		false,
+			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		50.f,
 			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
 			""
 	},
@@ -310,9 +306,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	20,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
-			true,	true,		true,		false,
-			0.5f,	0.15f,		45.f,			0.25f,		1.5f,		50.f,
-			30.f,		10.f,
+			true,	false,	true,		true,		false,
+			0.15f,		45.f,			0.25f,		1.5f,		50.f,	30.f,		10.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
@@ -321,9 +316,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		250,    1250,	35,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,		true,
-			1.0f,	0.f,		0.f,			0.01f,		2.0f,		0.f,
-			0.45f,		120.f,
+			false,	false,	false,		true,		true,
+			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		120.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},
@@ -332,9 +326,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
 			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.01f,		2.0f,		0.f,
-			0.6f,		150.f,
+			false,	false,	false,		true,		true,
+			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -343,9 +336,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		4,		1500,	1500,	200,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
-			false,	false,		false,		false,
-			1.0f,	0.35f,		0.f,			1.0f,		2.0f,		50.f,
-			2.f,		300.f,
+			false,	false,	false,		false,		false,
+			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		300.f,
 			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
 			"projectiles/grenade"
 	},
@@ -354,9 +346,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,		true,		true,
-			1.0f,	0.f,		 0.f,			0.05f,		2.0f,		0.f,
-			2.f,		20.f,
+			false,	false,	false,		true,		true,
+			0.f,		 0.f,			0.05f,		2.0f,		0.f,	2.f,		20.f,
 			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
 	},

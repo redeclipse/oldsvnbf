@@ -1828,19 +1828,20 @@ namespace server
 		if(isweap(weap))
 		{
 			if(gs.weapshots[weap].find(id) < 0) return;
-			else if(!weaptype[weap].radial || !radial) // 0 is destroy
+			else if(!weaptype[weap].radial || radial <= 0 || weaptype[weap].taper) // destroy
 			{
 				gs.weapshots[weap].remove(id);
-				radial = weaptype[weap].explode;
+				radial = weaptype[weap].taper ? (radial < 0 ? -radial :
+					max(int((weaptype[weap].explode*(gs.aitype != AI_NONE ? 0.1f : 0.5f))), 1)) // FIXME: hack
+				: weaptype[weap].explode;
 			}
 			loopv(hits)
 			{
 				hitset &h = hits[i];
-				float size = radial ? (h.flags&HIT_WAVE ? radial*3 : radial) : 0.f,
-					dist = float(h.dist)/DMF;
+				float size = radial ? (h.flags&HIT_WAVE ? radial*4.f : radial) : 0.f, dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
-				int damage = radial  ? int(weaptype[weap].damage*(1.f-dist/EXPLOSIONSCALE/size)) : weaptype[weap].damage;
+				int damage = radial ? int(weaptype[weap].damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage;
 				dodamage(target, ci, damage, weap, h.flags, h.dir);
 			}
 		}

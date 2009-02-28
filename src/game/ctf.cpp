@@ -327,7 +327,7 @@ namespace ctf
 
 	bool aihomerun(gameent *d, aistate &b)
 	{
-		vec pos = world::headpos(d);
+		vec pos = world::feetpos(d);
 		loopk(2)
 		{
 			int goal = -1;
@@ -374,7 +374,7 @@ namespace ctf
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
 		if(ai::badhealth(d)) return;
-		vec pos = world::headpos(d);
+		vec pos = world::feetpos(d);
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
@@ -384,7 +384,7 @@ namespace ctf
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
-				vec ep = world::headpos(e);
+				vec ep = world::feetpos(e);
 				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 					targets.add(e->clientnum);
 			}
@@ -428,12 +428,11 @@ namespace ctf
 					loopvk(targets) if((t = world::getclient(targets[k])))
 					{
 						interest &n = interests.add();
-						vec tp = world::headpos(t);
 						n.state = AI_S_DEFEND;
 						n.node = t->lastnode;
 						n.target = t->clientnum;
 						n.targtype = AI_T_PLAYER;
-						n.score = pos.squaredist(tp);
+						n.score = d->o.squaredist(t->o);
 					}
 				}
 			}
@@ -459,7 +458,7 @@ namespace ctf
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
 			bool walk = false;
-			if(lastmillis-b.millis >= (201-d->skill)*500)
+			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -467,7 +466,7 @@ namespace ctf
 				gameent *e = NULL;
 				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
-					vec ep = world::headpos(e);
+					vec ep = world::feetpos(e);
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 						targets.add(e->clientnum);
 				}
@@ -524,7 +523,7 @@ namespace ctf
 				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
 				if(ai::makeroute(d, b, f.pos())) return true;
 			}
-			if(lastmillis-b.millis >= (201-d->skill)*5000)
+			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
 			{
 				d->ai->clear = true; // re-evaluate
 				return true;
