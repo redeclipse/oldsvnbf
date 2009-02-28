@@ -209,7 +209,7 @@ enum
     ANIM_MAX
 };
 
-#define WEAPSWITCHDELAY	800
+#define WEAPSWITCHDELAY	750
 #define PLAYERHEIGHT	15.f
 #define EXPLOSIONSCALE	16.f
 
@@ -742,9 +742,9 @@ struct gamestate
 		if(full) lastweap = weapselect = -1;
 	}
 
-	void setweapstate(int weap, int state, int delay, int millis)
+	void setweapstate(int weap, int state, int delay, int millis, bool skew = false)
 	{
-		if(isweap(weap))
+		if(isweap(weap) && (!skew || !weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER || millis-weaplast[weap] <= delay))
 		{
 			weapstate[weap] = state;
 			weapwait[weap] = delay;
@@ -755,19 +755,21 @@ struct gamestate
 	void weapswitch(int weap, int millis, int state = WPSTATE_SWITCH)
 	{
 		lastweap = weapselect;
-		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
+		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis, true);
 		weapselect = weap;
-		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
+		setweapstate(weap, state, WEAPSWITCHDELAY, millis, true);
 	}
 
-	bool weapwaited(int weap, int millis)
+	bool weapwaited(int weap, int millis, bool skip = false)
 	{
+		if(!weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER) return true;
+		if(skip && (weapstate[weap] == WPSTATE_SHOOT || weapstate[weap] == WPSTATE_RELOAD || weapstate[weap] == WPSTATE_PICKUP)) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
 	bool canswitch(int weap, int sweap, int millis)
 	{
-		if(weap != weapselect && weapwaited(weapselect, millis) && hasweap(weap, sweap) && weapwaited(weap, millis))
+		if(weap != weapselect && weapwaited(weapselect, millis, true) && hasweap(weap, sweap) && weapwaited(weap, millis, true))
 			return true;
 		return false;
 	}
