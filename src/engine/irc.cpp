@@ -238,6 +238,8 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 				DELETEA(s);
 			}
 			c->lines.add(newstring(str));
+			if(n->type == IRCT_RELAY && c->relay)
+				server::srvmsgf(-1, "%s %s", s, str);
 		}
 		else
 		{
@@ -260,8 +262,6 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		}
 		n->lines.add(newstring(str));
 	}
-	if(n->type == IRCT_RELAY)
-		server::srvmsgf(-1, "%s %s", s, str);
 	console("%s %s", s, str); // console is not used to relay
 }
 
@@ -399,6 +399,12 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 		{
 			ircprintf(n, NULL, "%s PING %s", user[0], w[g+1]);
 			ircsend(n, "PONG %s", w[g+1]);
+		}
+		else
+		{
+			int t = time(NULL);
+			ircprintf(n, NULL, "%s PING (empty)", user[0], w[g+1]);
+			ircsend(n, "PONG %d", t);
 		}
 	}
 	else
@@ -582,11 +588,8 @@ void ircslice()
 					loopvj(n->channels)
 					{
 						ircchan *c = &n->channels[j];
-						if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && (!c->lastjoin || lastmillis-c->lastjoin >= 5000))
-						{
-							if(c->state != IRCC_BANNED || !c->lastjoin || lastmillis-c->lastjoin >= 300000)
-								ircjoin(n, c);
-						}
+						if(c->type == IRCCT_AUTO && c->state != IRCC_JOINED && (!c->lastjoin || lastmillis-c->lastjoin >= (c->state != IRCC_BANNED ? 5000 : 300000)))
+							ircjoin(n, c);
 					}
 					// fall through
 				}
