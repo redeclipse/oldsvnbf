@@ -403,7 +403,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 		else
 		{
 			int t = time(NULL);
-			ircprintf(n, NULL, "%s PING (empty)", user[0], w[g+1]);
+			ircprintf(n, NULL, "%s PING (empty)", user[0]);
 			ircsend(n, "PONG %d", t);
 		}
 	}
@@ -472,6 +472,7 @@ void ircparse(ircnet *n, char *reply)
 	loopi(MAXWORDS) w[i] = NULL;
 	while(p && *p)
 	{
+		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++; // eat up all the crap
 		const char *start = p;
 		bool line = false;
 		int numargs = 0, g = *p == ':' ? 1 : 0;
@@ -482,7 +483,7 @@ void ircparse(ircnet *n, char *reply)
 			if(!p || !*p) break;
 			const char *word = p;
 			if(*p == ':') full = true; // uses the rest of the input line then
-			p += strcspn(p, full ? "\r\n\0" : " \r\n\0");
+			p += strcspn(p, full ? "\r\n" : " \r\n");
 
 			char *s = NULL;
 			if(p-word > (full ? 1 : 0))
@@ -495,7 +496,7 @@ void ircparse(ircnet *n, char *reply)
 			numargs++;
 
 			if(*p == '\n' || *p == '\r') line = true;
-			if(*p) p++;
+			if(*p) p++; else break;
 			if(line) break;
 		}
 		if(line && numargs)
@@ -525,16 +526,11 @@ void ircparse(ircnet *n, char *reply)
 		loopi(MAXWORDS) DELETEA(w[i]);
 		if(!line)
 		{
-			if(start && *start)
-			{
-				char *s = newstring(start);
-				s_strcpy(reply, s);
-				DELETEA(s);
-			}
-			else *reply = 0;
+			char *s = newstring(start); // can't copy a buffer into itself so dupe it first
+			s_strcpy(reply, s);
+			DELETEA(s);
 			return;
 		}
-		while(p && (*p == '\n' || *p == '\r' || *p == ' ')) p++;
 	}
 	*reply = 0;
 }
