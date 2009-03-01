@@ -1063,21 +1063,41 @@ namespace server
 		}
 
 		votecount *best = NULL;
-		loopv(votes) if(!best || votes[i].count > best->count) best = &votes[i];
+		int morethanone = 0;
+		loopv(votes) if(!best || votes[i].count >= best->count)
+		{
+			if(best && votes[i].count == best->count)
+				morethanone++;
+			else morethanone = 0;
+			best = &votes[i];
+		}
 		bool gotvotes = best && best->count >= min(max(maxvotes/2, force ? 1 : 2), force ? 1 : maxvotes);
+		if(force && gotvotes && morethanone)
+		{
+			int c = best->count, r = rnd(morethanone), n = 0;
+			loopv(votes) if(votes[i].count == c)
+			{
+				if(n != r) n++;
+				else
+				{
+					best = &votes[i];
+					break;
+				}
+			}
+		}
 		if(force || gotvotes)
 		{
 			endmatch();
 			if(gotvotes)
 			{
-				srvoutf("\fcvote passed by majority: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
+				srvoutf("\fcvote passed: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else
 			{
 				const char *map = choosemap(smapname);
-				srvoutf("\fcvote defaulted, server chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
+				srvoutf("\fcserver chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
