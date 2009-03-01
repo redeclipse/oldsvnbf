@@ -1712,7 +1712,7 @@ namespace server
             putint(p, ci->clientnum);
             putint(p, ci->team);
 		}
-		if(clients.length() > 1)
+		if(!ci || clients.length() > 1)
 		{
 			putint(p, SV_RESUME);
 			loopv(clients)
