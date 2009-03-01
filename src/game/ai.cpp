@@ -196,7 +196,7 @@ namespace ai
 
 	bool badhealth(gameent *d)
 	{
-		if(d->skill <= 100) return d->health <= (111-d->skill)/3;
+		if(d->skill <= 100) return d->health <= (111-d->skill)/4;
 		return false;
 	}
 
@@ -420,7 +420,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && !badhealth(d) && targetable(t, e, true))
+			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && targetable(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				if(violence(t, c, e, false)) return;
@@ -458,7 +458,7 @@ namespace ai
 	{
 		if(check(d, b)) return true;
 		if(find(d, b)) return true;
-		if(target(d, b, true, !badhealth(d))) return true;
+		if(target(d, b, true, true)) return true;
 		if(randomnode(d, b, NEARDIST, 1e16f))
 		{
 			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
@@ -575,11 +575,8 @@ namespace ai
 
 				case AI_T_PLAYER:
 				{
-					if(!badhealth(d))
-					{
-						gameent *e = world::getclient(b.target);
-						if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e));
-					}
+					gameent *e = world::getclient(b.target);
+					if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e));
 					break;
 				}
 				default: break;
@@ -948,7 +945,7 @@ namespace ai
 		{
 			if(allowmove)
 			{
-				if(!request(d, b)) target(d, b, false, b.idle && !badhealth(d) ? true : false);
+				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
 				weapons::shoot(d, d->ai->target);
 				if(d->ai->lasthunt)
 				{
