@@ -1037,7 +1037,7 @@ struct aiinfo
 		wipe();
 		if(!tryit)
 		{
-			while((weappref = rnd(WEAPON_TOTAL)) == WEAPON_GL) if(!rnd(3)) break;
+			weappref = WEAPON_CG;
 			spot = target = vec(0, 0, 0);
 			enemy = lastnode = prevnode = -1;
 			lastaction = lasthunt = enemyseen = enemymillis = 0;

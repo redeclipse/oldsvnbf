@@ -15,7 +15,7 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	FVAR(waypointmergescale, 1e-3f, 0.875f, 1000);
+	FVAR(waypointmergescale, 1e-3f, 1.f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -1121,27 +1121,24 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			if((m_play(world::gamemode) || dropwaypoints) && d->aitype == AI_NONE)
+			bool shoulddrop = m_play(world::gamemode) || dropwaypoints;
+			float dist = float(shoulddrop ? enttype[WAYPOINT].radius*(dropwaypoints ? 1 : 2) : ai::NEARDIST);
+			int curnode = closestent(WAYPOINT, v, dist, false);
+			if(!ents.inrange(curnode) && shoulddrop)
 			{
-				int curnode = closestent(WAYPOINT, v, enttype[WAYPOINT].radius, false);
-				if(!ents.inrange(curnode))
-				{
-					int cmds = WP_NONE;
-					if(physics::iscrouching(d)) cmds |= WP_CROUCH;
-					curnode = ents.length();
-					newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
-					clearentcache();
-				}
-				if(ents.inrange(d->lastnode) && d->lastnode != curnode)
+				int cmds = WP_NONE;
+				if(physics::iscrouching(d)) cmds |= WP_CROUCH;
+				curnode = ents.length();
+				newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
+				clearentcache();
+			}
+			if(ents.inrange(curnode))
+			{
+				if(shoulddrop && ents.inrange(d->lastnode) && d->lastnode != curnode)
 					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
 				d->lastnode = curnode;
 			}
-			else
-			{
-				int curnode = closestent(WAYPOINT, v, ai::NEARDIST, false);
-				if(ents.inrange(curnode)) d->lastnode = curnode;
-				else d->lastnode = -1;
-			}
+			else d->lastnode = -1;
 		}
 		else d->lastnode = -1;
 	}
