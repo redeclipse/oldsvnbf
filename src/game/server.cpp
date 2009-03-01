@@ -452,7 +452,7 @@ namespace server
 
 	bool haspriv(clientinfo *ci, int flag, bool msg = false)
 	{
-		if(flag <= (ci->local ? PRIV_ADMIN : PRIV_MASTER) && !numclients(ci->clientnum, false, true)) return true;
+		if(flag <= (ci->local ? PRIV_MAX : PRIV_MASTER) && !numclients(ci->clientnum, false, true)) return true;
 		else if(ci->local || ci->privilege >= flag) return true;
 		else if(msg) srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s", privname(flag));
 		return false;
@@ -1049,7 +1049,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if(!haspriv(oi, PRIV_MASTER, false) || oi->state.aitype != AI_NONE) continue;
+			if(oi->state.aitype != AI_NONE) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;

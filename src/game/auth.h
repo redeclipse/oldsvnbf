@@ -40,8 +40,9 @@ namespace auth
                 if(authname)
                 {
                     loopv(clients) if(ci!=clients[i] && clients[i]->privilege<=PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
+					ci->privilege = PRIV_ADMIN;
                 }
-                ci->privilege = PRIV_MASTER;
+                else ci->privilege = PRIV_MASTER;
             }
             name = privname(ci->privilege);
 		}
