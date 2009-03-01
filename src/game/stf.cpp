@@ -190,7 +190,6 @@ namespace stf
 
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
-		if(ai::badhealth(d)) return;
 		vec pos = world::feetpos(d);
 		loopvj(st.flags)
 		{
