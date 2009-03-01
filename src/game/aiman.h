@@ -238,13 +238,14 @@ namespace aiman
 				int balance = int(numplayers*GVAR(botscale));
 				if(m_team(gamemode, mutators))
 				{ // skew this if teams are unbalanced
-					int numt = numteams(gamemode, mutators);
+					int nump = numclients(-1, true, true), numt = numteams(gamemode, mutators);
 					if(GVAR(teambalance) < 6)
 					{
+						if(nump > balance) balance = nump;
 						int offt = balance%numt;
 						if(offt) balance += numt-offt;
 					}
-					else balance = max(numclients(-1, true, true)*numt, numt-1); // humans vs. bots, just directly balance
+					else balance = max(nump*numt, numt-1); // humans vs. bots, just directly balance
 				}
 				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
