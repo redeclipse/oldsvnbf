@@ -329,11 +329,12 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr[0], sweap);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators);
 			switch(e.type)
 			{
 				case WEAPON:
 				{
+					int attr = weapattr(e.attr[0], sweap);
 					if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
@@ -341,7 +342,7 @@ namespace ai
 						n.node = entities::closestent(WAYPOINT, e.o, NEARDIST, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
-						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
+						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 100.f : 1.f);
 					}
 					break;
 				}
@@ -353,11 +354,12 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators);
 			switch(entities::ents[proj.id]->type)
 			{
 				case WEAPON:
 				{
+					int attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
 					if(isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						if(proj.owner == d) break;
@@ -366,7 +368,7 @@ namespace ai
 						n.node = entities::closestent(WAYPOINT, proj.o, NEARDIST, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
-						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 10.f : 1.f);
+						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 100.f : 1.f);
 					}
 					break;
 				}
@@ -379,11 +381,11 @@ namespace ai
 	{
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
+		if(!d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
+			items(d, b, interests);
 		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
 		if(m_team(world::gamemode, world::mutators)) assist(d, b, interests);
-		if(!d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
-			items(d, b, interests, false);
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -433,8 +435,13 @@ namespace ai
 		d->ai->reset(tryreset);
 		aistate &b = d->ai->getstate();
 		b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
-		if(!m_noitems(world::gamemode, world::mutators) || m_duke(world::gamemode, world::mutators))
+		if(m_noitems(world::gamemode, world::mutators))
 			d->ai->weappref = m_spawnweapon(world::gamemode, world::mutators);
+		else while(true)
+		{
+			d->ai->weappref = rnd(WEAPON_TOTAL);
+			if(d->ai->weappref != WEAPON_PLASMA || !rnd(d->skill)) break;
+		}
 	}
 
 	void spawned(gameent *d)
@@ -454,22 +461,20 @@ namespace ai
 		return false;
 	}
 
-	bool dowait(gameent *d, aistate &b)
+	int dowait(gameent *d, aistate &b)
 	{
-		if(check(d, b)) return true;
-		if(find(d, b)) return true;
-		if(target(d, b, true, true)) return true;
+		if(check(d, b)) return 1;
+		if(find(d, b)) return 1;
+		if(target(d, b, true, true)) return 1;
 		if(randomnode(d, b, NEARDIST, 1e16f))
 		{
 			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
-			return true;
+			return 1;
 		}
-		world::suicide(d, HIT_LOST); // bail
-		d->ai->lastaction = b.next = lastmillis;
-		return false; // but don't pop the state
+		return 0; // but don't pop the state
 	}
 
-	bool dodefend(gameent *d, aistate &b)
+	int dodefend(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
@@ -478,78 +483,83 @@ namespace ai
 				case AI_T_NODE:
 				case AI_T_ENTITY:
 				{
-					if(check(d, b)) return true;
+					if(check(d, b)) return 1;
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
-						return defend(d, b, e.o);
+						return defend(d, b, e.o) ? 1 : 0;
 					}
 					break;
 				}
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b);
-					if(m_stf(world::gamemode)) return stf::aidefend(d, b);
+					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
+					if(m_stf(world::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
 					break;
 				}
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return defend(d, b, world::feetpos(e));
+					if(e && e->state == CS_ALIVE) return defend(d, b, world::feetpos(e)) ? 1 : 0;
 					break;
 				}
 				default: break;
 			}
 		}
-		return false;
+		return 0;
 	}
 
-	bool dointerest(gameent *d, aistate &b)
+	int dointerest(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
 			int sweap = m_spawnweapon(world::gamemode, world::mutators);
 			switch(b.targtype)
 			{
+				case AI_T_NODE:
+				{
+					return !d->ai->route.empty() ? 1 : 0;
+					break;
+				}
 				case AI_T_ENTITY:
 				{
-					if(d->hasweap(d->ai->weappref, sweap)) return false;
+					if(d->hasweap(d->ai->weappref, sweap)) return 0;
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
-						if(enttype[e.type].usetype != EU_ITEM) return false;
+						if(enttype[e.type].usetype != EU_ITEM) return 0;
 						int attr = weapattr(e.attr[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
 							{
-								if(!e.spawned || d->hasweap(attr, sweap)) return false;
+								if(!e.spawned || d->hasweap(attr, sweap)) return 0;
 								break;
 							}
 							default: break;
 						}
-						return makeroute(d, b, e.o);
+						return makeroute(d, b, e.o) ? 1 : 0;
 					}
 					break;
 				}
 				case AI_T_DROP:
 				{
-					if(d->hasweap(d->ai->weappref, sweap)) return false;
+					if(d->hasweap(d->ai->weappref, sweap)) return 0;
 					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
 						projent &proj = *projs::projs[j];
-						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return false;
+						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return 0;
 						int attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
 						switch(entities::ents[proj.id]->type)
 						{
 							case WEAPON:
 							{
-								if(d->hasweap(attr, sweap) || proj.owner == d) return false;
+								if(d->hasweap(attr, sweap) || proj.owner == d) return 0;
 								break;
 							}
 							default: break;
 						}
-						return makeroute(d, b, proj.o);
+						return makeroute(d, b, proj.o) ? 1 : 0;
 						break;
 					}
 					break;
@@ -557,10 +567,10 @@ namespace ai
 				default: break;
 			}
 		}
-		return false;
+		return 0;
 	}
 
-	bool dopursue(gameent *d, aistate &b)
+	int dopursue(gameent *d, aistate &b)
 	{
 		if(d->state == CS_ALIVE)
 		{
@@ -568,21 +578,21 @@ namespace ai
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) return ctf::aipursue(d, b);
-					if(m_stf(world::gamemode)) return stf::aipursue(d, b);
+					if(m_ctf(world::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
+					if(m_stf(world::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
 					break;
 				}
 
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e));
+					if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e)) ? 1 : 0;
 					break;
 				}
 				default: break;
 			}
 		}
-		return false;
+		return 0;
 	}
 
 	int closenode(gameent *d, bool force = false)
@@ -674,7 +684,10 @@ namespace ai
 					if(entspot(d, d->ai->route[n], retries > 1))
 					{
 						if(vec(d->ai->spot).sub(world::feetpos(d)).magnitude() <= CLOSEDIST)
+						{
 							d->ai->dontmove = true;
+							d->ai->route.setsize(0);
+						}
 						return true; // this is our goal?
 					}
 					else return anynode(d, b);
@@ -756,7 +769,7 @@ namespace ai
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
-			d->ai->dontmove = true;
+			d->ai->dontmove = b.idle || (stupify && rnd(stupify) <= stupify/4);
 			if(b.idle == 2 || (stupify && stupify <= skmod/8))
 				jumpto(d, b, dp, !rnd(d->skill+1)); // jump up and down
 		}
@@ -1042,7 +1055,7 @@ namespace ai
 			}
 			else if(d->state == CS_ALIVE && run && lastmillis >= c.next)
 			{
-				bool result = false;
+				int result = 0;
 				c.idle = 0;
 				switch(c.type)
 				{
@@ -1052,13 +1065,22 @@ namespace ai
 					case AI_S_INTEREST: result = dointerest(d, c); break;
 					default: result = 0; break;
 				}
-				if(!result)
+				if(result <= 0)
 				{
 					d->ai->route.setsize(0);
 					if(c.type != AI_S_WAIT)
 					{
 						d->ai->removestate(i);
-						cleannext = true;
+						switch(result)
+						{
+							case 0: default: cleannext = true; break;
+							case -1: i = d->ai->state.length()-1; break;
+						}
+					}
+					else
+					{
+						c.next = lastmillis+1000;
+						d->ai->dontmove = true;
 					}
 					continue; // shouldn't interfere
 				}
