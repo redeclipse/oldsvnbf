@@ -1202,26 +1202,22 @@ namespace server
 					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
 					cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 					cp->state.lasttimeplayed = lastmillis;
-					loopj(numteams(gamemode, mutators)) if(cp->team == teamscores[j].team)
+					teamscore &ts = teamscores[cp->team-TEAM_FIRST];
+					float rank = 1.f;
+					switch(GVAR(teambalance))
 					{
-						teamscore &ts = teamscores[j];
-						float rank = 1.f;
-						switch(GVAR(teambalance))
+						case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
+						case 2: case 3: rank = cp->state.effectiveness/max(cp->state.timeplayed, 1); break;
+						case 4: case 5:
 						{
-							case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
-							case 2: case 3: rank = cp->state.effectiveness/max(cp->state.timeplayed, 1); break;
-							case 4: case 5:
-							{
-								if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
-								else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.effectiveness/max(cp->state.timeplayed, 1);
-								break;
-							}
-							case 6: default: break;
+							if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
+							else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.effectiveness/max(cp->state.timeplayed, 1);
+							break;
 						}
-						ts.score += rank;
-						ts.clients++;
-						break;
+						case 6: default: break;
 					}
+					ts.score += rank;
+					ts.clients++;
 				}
 				teamscore *worst = &teamscores[0];
 				if(GVAR(teambalance) != 6 || ci->state.aitype != AI_NONE)
@@ -1237,7 +1233,7 @@ namespace server
 									worst = &ts;
 								break;
 							}
-							case 6: default:
+							case 6:
 							{
 								if(!i)
 								{
@@ -1245,7 +1241,7 @@ namespace server
 									break; // don't use team alpha for bots in this case
 								}
 							} // fall through
-							case 1: case 3: case 5:
+							case 1: case 3: case 5: default:
 							{
 								if(ts.clients < worst->clients || (ts.clients == worst->clients && ts.score < worst->score))
 									worst = &ts;

@@ -22,7 +22,7 @@
 #define AUTH_LIMIT 100
 #define DUP_LIMIT 16
 
-VAR(masterserver, 0, 1, 1);
+VAR(masterserver, 0, 0, 1);
 VAR(masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(masterip, "");
 
@@ -59,18 +59,21 @@ time_t starttime;
 
 void setupmaster()
 {
-	conoutf("init: master (%s:%d)", *masterip ? masterip : "*", masterport);
-	ENetAddress address = { ENET_HOST_ANY,  masterport };
-	if(*masterip && enet_address_set_host(&address, masterip) < 0) fatal("failed to resolve master address: %s", masterip);
-	if((mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM)) == ENET_SOCKET_NULL) fatal("failed to create master server socket");
-	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_REUSEADDR, 1) < 0) fatal("failed to set master server socket option");
-	if(enet_socket_bind(mastersocket, &address) < 0) fatal("failed to bind master server socket");
-	if(enet_socket_listen(mastersocket, -1) < 0) fatal("failed to listen on master server socket");
-	if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1) < 0) fatal("failed to make master server socket non-blocking");
-    starttime = time(NULL);
-    char *ct = ctime(&starttime);
-    if(strchr(ct, '\n')) *strchr(ct, '\n') = '\0';
-	conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
+	if(masterserver)
+	{
+		conoutf("init: master (%s:%d)", *masterip ? masterip : "*", masterport);
+		ENetAddress address = { ENET_HOST_ANY,  masterport };
+		if(*masterip && enet_address_set_host(&address, masterip) < 0) fatal("failed to resolve master address: %s", masterip);
+		if((mastersocket = enet_socket_create(ENET_SOCKET_TYPE_STREAM)) == ENET_SOCKET_NULL) fatal("failed to create master server socket");
+		if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_REUSEADDR, 1) < 0) fatal("failed to set master server socket option");
+		if(enet_socket_bind(mastersocket, &address) < 0) fatal("failed to bind master server socket");
+		if(enet_socket_listen(mastersocket, -1) < 0) fatal("failed to listen on master server socket");
+		if(enet_socket_set_option(mastersocket, ENET_SOCKOPT_NONBLOCK, 1) < 0) fatal("failed to make master server socket non-blocking");
+		starttime = time(NULL);
+		char *ct = ctime(&starttime);
+		if(strchr(ct, '\n')) *strchr(ct, '\n') = '\0';
+		conoutf("master server started on %s:[%d]", *masterip ? masterip : "localhost", masterport);
+	}
 }
 
 void masterout(masterclient &c, const char *msg, int len = 0)

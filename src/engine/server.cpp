@@ -619,9 +619,9 @@ void serverloop()
 		lastmillis = totalmillis = (int)enet_time_get();
 		curtime = lastmillis-_lastmillis;
 
-		#ifdef MASTERSERVER
+#ifdef MASTERSERVER
 		checkmaster();
-		#endif
+#endif
 		serverslice();
 #ifdef IRC
 		ircslice();
@@ -646,7 +646,7 @@ void setupserver()
     if(!servertype) return;
 
 #ifdef MASTERSERVER
-    if(masterserver) setupmaster();
+    setupmaster();
 #endif
 
 	conoutf("\fminit: server (%s:%d)", *serverip ? serverip : "*", serverport);

@@ -1784,11 +1784,6 @@ namespace client
 					retsw(serverstat(aa), serverstat(ab), true);
 					break;
 				}
-				case SINFO_HOST:
-				{
-					retcp(strcmp(aa->name, ab->name));
-					break;
-				}
 				case SINFO_DESC:
 				{
 					retcp(strcmp(aa->sdesc, ab->sdesc));
@@ -1921,11 +1916,6 @@ namespace client
 			{
 				if(g->button("", colour, serverstatus[status].icon) & G3D_UP)
 					return true;
-				break;
-			}
-			case SINFO_HOST:
-			{
-				if(g->buttonf("%s:%d ", colour, NULL, si->name, si->port) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_DESC:

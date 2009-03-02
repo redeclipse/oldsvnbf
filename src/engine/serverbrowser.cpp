@@ -412,7 +412,7 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
-VARP(serverupdateinterval, 0, 5, 60);
+VARP(serverupdateinterval, 0, 30, INT_MAX-1);
 
 void refreshservers()
 {
