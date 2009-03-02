@@ -54,8 +54,8 @@ namespace auth
 		}
 		mastermode = MM_OPEN;
         allowedips.setsize(0);
-        if(val && authname) srvoutf("%s claimed %s as '\fs\fc%s\fS'", colorname(ci), name, authname);
-        else srvoutf("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
+        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), name, authname);
+        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
 		currentmaster = val ? ci->clientnum : -1;
 		masterupdate = true;
 	}

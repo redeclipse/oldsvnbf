@@ -411,7 +411,6 @@ namespace server
 				if(invoked) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id.name[3], val);
 			}
 		});
-		if(invoked) srvoutf("\fmgame variables have been reset");
 		execfile("servexec.cfg");
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
@@ -819,11 +818,11 @@ namespace server
 		}
 	}
 
-	void srvoutf(const char *s, ...)
+	void srvoutf(int r, const char *s, ...)
 	{
 		s_sprintfdlv(str, s, s);
 		srvmsgf(-1, "%s", str);
-		relayf(2, "%s", str);
+		relayf(r, "%s", str);
 	}
 
 	void writedemo(int chan, void *data, int len)
@@ -859,13 +858,13 @@ namespace server
 		{
 			loopv(demos) delete[] demos[i].data;
 			demos.setsize(0);
-			srvoutf("cleared all demos");
+			srvoutf(4, "cleared all demos");
 		}
 		else if(demos.inrange(n-1))
 		{
 			delete[] demos[n-1].data;
 			demos.remove(n-1);
-			srvoutf("cleared demo %d", n);
+			srvoutf(4, "cleared demo %d", n);
 		}
 	}
 
@@ -888,7 +887,7 @@ namespace server
 
 		loopv(clients) sendf(clients[i]->clientnum, 1, "ri3", SV_DEMOPLAYBACK, 0, clients[i]->clientnum);
 
-		srvoutf("demo playback finished");
+		srvoutf(4, "demo playback finished");
 
 		loopv(clients) sendwelcome(clients[i]);
 	}
@@ -913,11 +912,11 @@ namespace server
 		if(msg[0])
 		{
 			if(demoplayback) { gzclose(demoplayback); demoplayback = NULL; }
-			srvoutf("%s", msg);
+			srvoutf(4, "%s", msg);
 			return;
 		}
 
-		srvoutf("playing demo \"%s\"", file);
+		srvoutf(4, "playing demo \"%s\"", file);
 
 		sendf(-1, 1, "ri3", SV_DEMOPLAYBACK, 1, -1);
 
@@ -986,7 +985,7 @@ namespace server
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
 		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
-		srvoutf("demo \"%s\" recorded", d.info);
+		srvoutf(4, "demo \"%s\" recorded", d.info);
 		d.data = new uchar[len];
 		d.len = len;
 		fread(d.data, 1, len, demotmp);
@@ -1015,7 +1014,7 @@ namespace server
 		}
 #endif
 
-        srvoutf("recording demo");
+        srvoutf(4, "recording demo");
 
         demorecord = f;
 
@@ -1090,14 +1089,14 @@ namespace server
 			endmatch();
 			if(gotvotes)
 			{
-				srvoutf("\fcvote passed: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
+				srvoutf(3, "\fcvote passed: \fs\fw%s on map %s\fS", gamename(best->mode, best->muts), best->map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
 			else
 			{
 				const char *map = choosemap(smapname);
-				srvoutf("\fcserver chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
+				srvoutf(3, "\fcserver chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
@@ -1139,13 +1138,13 @@ namespace server
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
 		{
 			endmatch();
-			srvoutf("\fc%s [%s] forced: \fs\fw%s on map %s\fS", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(3, "\fc%s [%s] forced: \fs\fw%s on map %s\fS", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 		}
 		else
 		{
-			srvoutf("\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(3, "\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
 			checkvotes();
 		}
 	}
@@ -1428,7 +1427,7 @@ namespace server
 						char *ret = executeret(s);
 						if(ret)
 						{
-							if(*ret) srvoutf("\fm%s: %s returned %s", colorname(ci), cmd, ret);
+							if(*ret) srvoutf(3, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
 							delete[] ret;
 						}
 						return;
@@ -1485,7 +1484,7 @@ namespace server
 					default: return;
 				}
 				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, &id->name[3], val);
-				relayf(2, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
+				relayf(3, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
 			}
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
@@ -3055,7 +3054,7 @@ namespace server
                             {
                                 loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
                             }
-							srvoutf("mastermode is now %d", mastermode);
+							srvoutf(3, "mastermode is now %d", mastermode);
 						}
 						else
 						{
@@ -3070,7 +3069,7 @@ namespace server
 					if(haspriv(ci, PRIV_MASTER, true))
 					{
 						bannedips.setsize(0);
-						srvoutf("cleared all bans");
+						srvoutf(3, "cleared all bans");
 					}
 					break;
 				}
@@ -3134,7 +3133,7 @@ namespace server
 					int val = getint(p);
 					if(!haspriv(ci, PRIV_ADMIN, true)) break;
 					demonextmatch = val!=0;
-					srvoutf("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
+					srvoutf(4, "demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
 					break;
 				}
 
@@ -3211,14 +3210,14 @@ namespace server
 						case ID_VAR:
 						{
 							int val = getint(p);
-							relayf(2, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
+							relayf(3, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
 							QUEUE_INT(val);
 							break;
 						}
 						case ID_FVAR:
 						{
 							float val = getfloat(p);
-							relayf(2, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
+							relayf(3, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
 							QUEUE_FLT(val);
 							break;
 						}
@@ -3227,7 +3226,7 @@ namespace server
 						{
 							string val;
 							getstring(val, p);
-							relayf(2, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
+							relayf(3, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
 							QUEUE_STR(val);
 							break;
 						}

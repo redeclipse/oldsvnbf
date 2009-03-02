@@ -79,7 +79,7 @@ void conoutf(const char *s, ...)
 #ifdef IRC
 	string osf;
 	filtertext(osf, sf);
-	ircoutf(3, "%s", osf);
+	ircoutf(4, "%s", osf);
 #endif
 }
 
