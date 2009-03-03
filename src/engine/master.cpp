@@ -329,7 +329,7 @@ fd_set readset, writeset;
 
 void checkmaster()
 {
-	if(mastersocket)
+	if(mastersocket != ENET_SOCKET_NULL)
 	{
 		fd_set readset, writeset;
 		int nfds = mastersocket;
@@ -423,5 +423,5 @@ void checkmaster()
 
 void cleanupmaster()
 {
-	if(mastersocket) enet_socket_destroy(mastersocket);
+	if(mastersocket != ENET_SOCKET_NULL) enet_socket_destroy(mastersocket);
 }
