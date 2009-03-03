@@ -1,5 +1,5 @@
 #define GAMEWORLD 1
-#include "pch.h"
+#include "cube.h"
 #include "engine.h"
 #include "game.h"
 namespace world

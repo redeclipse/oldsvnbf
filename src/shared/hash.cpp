@@ -3,8 +3,7 @@
  * http://www.cs.technion.ac.il/~biham/Reports/Tiger/
  */
 
-#include "pch.h"
-#include "tools.h"
+#include "cube.h"
 #include "hash.h"
 
 namespace tiger

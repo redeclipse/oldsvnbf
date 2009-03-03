@@ -2,7 +2,7 @@
 // runs dedicated or as client coroutine
 #define MAINCPP
 
-#include "pch.h"
+#include "cube.h"
 #include "engine.h"
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
