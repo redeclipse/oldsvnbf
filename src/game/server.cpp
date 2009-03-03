@@ -300,7 +300,7 @@ namespace server
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
-		extern void clearai(bool override = false);
+		extern void clearai();
 		extern void checkai();
 		extern void reqadd(clientinfo *ci, int skill);
 		extern void reqdel(clientinfo *ci);
@@ -444,7 +444,8 @@ namespace server
 		int n = 0;
 		loopv(clients)
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
-				(!nospec || clients[i]->state.state != CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE))
+				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
+					((!noai && (clients[i]->state.aitype == AI_NONE || clients[i]->state.ownernum >= 0)) || clients[i]->state.aitype == AI_NONE))
 					n++;
 		return n;
 	}
@@ -714,7 +715,6 @@ namespace server
 
 	void setupspawns(bool update, int players = 0)
 	{
-		aiman::autooverride = false;
 		numplayers = totalspawns = 0;
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
