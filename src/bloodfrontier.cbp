@@ -265,6 +265,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="z" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
