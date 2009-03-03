@@ -48,9 +48,9 @@
 					<Add library="SDL_mixer" />
 					<Add library="z" />
 					<Add library="opengl32" />
+					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -93,9 +93,9 @@
 					<Add library="SDL_mixer" />
 					<Add library="z" />
 					<Add library="opengl32" />
+					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -138,9 +138,9 @@
 					<Add library="SDL_mixer" />
 					<Add library="z" />
 					<Add library="opengl32" />
+					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -177,10 +177,10 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="ws2_32" />
-					<Add library="winmm" />
 					<Add library="z" />
 					<Add library="enet" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -215,10 +215,10 @@
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
-					<Add library="ws2_32" />
-					<Add library="winmm" />
 					<Add library="z" />
 					<Add library="enet" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
