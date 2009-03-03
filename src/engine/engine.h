@@ -16,10 +16,6 @@
 #define ENG_MASTER_PORT		28800
 #define ENG_MASTER_HOST		"play.bloodfrontier.com"
 
-#include "cube.h"
-#include "iengine.h"
-#include "igame.h"
-
 #ifdef IRC
 #include "irc.h"
 #endif

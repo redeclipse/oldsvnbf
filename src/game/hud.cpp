@@ -1,5 +1,4 @@
-#include "pch.h"
-#include "pch.h"
+#include "cube.h"
 #include "engine.h"
 #include "game.h"
 namespace hud

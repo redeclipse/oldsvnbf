@@ -1,6 +1,6 @@
 // console.cpp: the console buffer, its display, and command line control
 
-#include "pch.h"
+#include "cube.h"
 #include "engine.h"
 
 VARP(showconsole, 0, 1, 1);

@@ -1,6 +1,6 @@
 // serverbrowser.cpp: eihrul's concurrent resolver, and server browser window management
 
-#include "pch.h"
+#include "cube.h"
 #include "engine.h"
 #include "SDL_thread.h"
 
@@ -280,11 +280,7 @@ int lastinfo = 0;
 
 static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, uint ip = ENET_HOST_ANY)
 {
-    serverinfo *si = new serverinfo;
-    si->address.host = ip;
-    si->address.port = si->qport = qport;
-    si->port = port;
-    if(ip!=ENET_HOST_ANY) si->resolved = serverinfo::RESOLVED;
+    serverinfo *si = new serverinfo(ip, port, qport);
 
     if(name) s_strcpy(si->name, name);
     else if(ip==ENET_HOST_ANY || enet_address_get_host_ip(&si->address, si->name, sizeof(si->name)) < 0)

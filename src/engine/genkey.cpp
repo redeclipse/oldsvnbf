@@ -4,8 +4,7 @@
 #include <errno.h>
 #include <signal.h>
 
-#include "pch.h"
-#include "tools.h"
+#include "cube.h"
 #include "crypto.h"
 #include "hash.h"
 #include <enet/time.h>

@@ -356,10 +356,12 @@ struct serverinfo
     vector<int> attr;
     ENetAddress address;
 
-    serverinfo()
-     : numplayers(0), ping(999), resolved(UNRESOLVED), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT)
+    serverinfo(uint ip, int port, int qport)
+     : numplayers(0), ping(999), resolved(ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED), port(port), qport(qport)
     {
         name[0] = map[0] = sdesc[0] = '\0';
+        address.host = ip;
+        address.port = qport;
     }
 };
 extern vector<serverinfo *> servers;
