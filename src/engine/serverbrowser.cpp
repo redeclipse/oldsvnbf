@@ -310,11 +310,7 @@ void pingservers()
     if(pingsock == ENET_SOCKET_NULL)
     {
         pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-        if(pingsock == ENET_SOCKET_NULL)
-        {
-            lastinfo = totalmillis;
-            return;
-        }
+        if(pingsock == ENET_SOCKET_NULL) return;
         enet_socket_set_option(pingsock, ENET_SOCKOPT_NONBLOCK, 1);
         enet_socket_set_option(pingsock, ENET_SOCKOPT_BROADCAST, 1);
     }
@@ -408,7 +404,7 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
-VARP(serverupdateinterval, 0, 30, INT_MAX-1);
+VARP(serverupdateinterval, 0, 15, INT_MAX-1);
 
 void refreshservers()
 {
@@ -418,7 +414,7 @@ void refreshservers()
 
 	checkresolver();
 	checkpings();
-	if(serverupdateinterval && totalmillis-lastinfo >= serverupdateinterval*1000)
+	if(serverupdateinterval && (!lastinfo || totalmillis-lastinfo >= serverupdateinterval*1000))
 		pingservers();
 }
 
@@ -435,6 +431,7 @@ void clearservers()
     servers.deletecontentsp();
 	if(servertype)
 		addserver("localhost", serverport, serverqueryport);
+	lastinfo = 0;
 }
 
 void updatefrommaster()

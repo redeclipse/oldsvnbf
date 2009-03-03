@@ -329,88 +329,95 @@ fd_set readset, writeset;
 
 void checkmaster()
 {
-	fd_set readset, writeset;
-	int nfds = mastersocket;
-	FD_ZERO(&readset);
-	FD_ZERO(&writeset);
-	FD_SET(mastersocket, &readset);
-	loopv(masterclients)
+	if(mastersocket)
 	{
-		masterclient &c = *masterclients[i];
-		if(c.outputpos < c.output.length()) FD_SET(c.socket, &writeset);
-		else FD_SET(c.socket, &readset);
-		nfds = max(nfds, (int)c.socket);
-	}
-	timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
-
-	if(FD_ISSET(mastersocket, &readset))
-	{
-		ENetAddress address;
-		ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
-		if(masterclients.length() >= MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
-		else if(masterclientsocket!=ENET_SOCKET_NULL)
+		fd_set readset, writeset;
+		int nfds = mastersocket;
+		FD_ZERO(&readset);
+		FD_ZERO(&writeset);
+		FD_SET(mastersocket, &readset);
+		loopv(masterclients)
 		{
-			int dups = 0, oldest = -1;
-			loopv(masterclients) if(masterclients[i]->address.host == address.host)
-			{
-				dups++;
-				if(oldest<0 || masterclients[i]->lastactivity < masterclients[oldest]->lastactivity) oldest = i;
-			}
-			if(dups >= DUP_LIMIT) purgemasterclient(oldest);
-			masterclient *c = new masterclient;
-			c->address = address;
-			c->socket = masterclientsocket;
-			c->lastactivity = lastmillis;
-			masterclients.add(c);
-			enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
-			conoutf("master peer %s connected", c->name);
+			masterclient &c = *masterclients[i];
+			if(c.outputpos < c.output.length()) FD_SET(c.socket, &writeset);
+			else FD_SET(c.socket, &readset);
+			nfds = max(nfds, (int)c.socket);
 		}
-	}
+		timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 0;
+		if(select(nfds+1, &readset, &writeset, NULL, &tv)<=0) return;
 
-	loopv(masterclients)
-	{
-		masterclient &c = *masterclients[i];
-		if(c.outputpos < c.output.length() && FD_ISSET(c.socket, &writeset))
+		if(FD_ISSET(mastersocket, &readset))
 		{
-			ENetBuffer buf;
-			buf.data = (void *)&c.output[c.outputpos];
-			buf.dataLength = c.output.length()-c.outputpos;
-			int res = enet_socket_send(c.socket, NULL, &buf, 1);
-			if(res>=0)
+			ENetAddress address;
+			ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
+			if(masterclients.length() >= MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
+			else if(masterclientsocket!=ENET_SOCKET_NULL)
 			{
-				c.outputpos += res;
-				if(c.outputpos>=c.output.length())
+				int dups = 0, oldest = -1;
+				loopv(masterclients) if(masterclients[i]->address.host == address.host)
 				{
-					c.output.setsizenodelete(0);
-					c.outputpos = 0;
-					if(!c.isserver) { purgemasterclient(i--); continue; }
+					dups++;
+					if(oldest<0 || masterclients[i]->lastactivity < masterclients[oldest]->lastactivity) oldest = i;
 				}
+				if(dups >= DUP_LIMIT) purgemasterclient(oldest);
+				masterclient *c = new masterclient;
+				c->address = address;
+				c->socket = masterclientsocket;
+				c->lastactivity = lastmillis;
+				masterclients.add(c);
+				enet_address_get_host_ip(&c->address, c->name, sizeof(c->name));
+				conoutf("master peer %s connected", c->name);
 			}
-			else { purgemasterclient(i--); continue; }
 		}
-		if(FD_ISSET(c.socket, &readset))
+
+		loopv(masterclients)
 		{
-			ENetBuffer buf;
-			buf.data = &c.input[c.inputpos];
-			buf.dataLength = sizeof(c.input) - c.inputpos;
-			int res = enet_socket_receive(c.socket, NULL, &buf, 1);
-			if(res>0)
+			masterclient &c = *masterclients[i];
+			if(c.outputpos < c.output.length() && FD_ISSET(c.socket, &writeset))
 			{
-				c.inputpos += res;
-				c.input[min(c.inputpos, (int)sizeof(c.input)-1)] = '\0';
-				if(!checkmasterclientinput(c)) { purgemasterclient(i--); continue; }
+				ENetBuffer buf;
+				buf.data = (void *)&c.output[c.outputpos];
+				buf.dataLength = c.output.length()-c.outputpos;
+				int res = enet_socket_send(c.socket, NULL, &buf, 1);
+				if(res>=0)
+				{
+					c.outputpos += res;
+					if(c.outputpos>=c.output.length())
+					{
+						c.output.setsizenodelete(0);
+						c.outputpos = 0;
+						if(!c.isserver) { purgemasterclient(i--); continue; }
+					}
+				}
+				else { purgemasterclient(i--); continue; }
 			}
-			else { purgemasterclient(i--); continue; }
+			if(FD_ISSET(c.socket, &readset))
+			{
+				ENetBuffer buf;
+				buf.data = &c.input[c.inputpos];
+				buf.dataLength = sizeof(c.input) - c.inputpos;
+				int res = enet_socket_receive(c.socket, NULL, &buf, 1);
+				if(res>0)
+				{
+					c.inputpos += res;
+					c.input[min(c.inputpos, (int)sizeof(c.input)-1)] = '\0';
+					if(!checkmasterclientinput(c)) { purgemasterclient(i--); continue; }
+				}
+				else { purgemasterclient(i--); continue; }
+			}
+			/* if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; } */
+			if(lastmillis - c.lastactivity >= (c.isserver ? SERVER_TIME : CLIENT_TIME))
+			{
+				purgemasterclient(i--);
+				continue;
+			}
 		}
-		/* if(c.output.length() > OUTPUT_LIMIT) { purgemasterclient(i--); continue; } */
-        if(lastmillis - c.lastactivity >= (c.isserver ? SERVER_TIME : CLIENT_TIME))
-        {
-        	purgemasterclient(i--);
-        	continue;
-		}
+	}
+	else if(!masterclients.empty())
+	{
+		loopv(masterclients) purgemasterclient(i--);
 	}
 }
 

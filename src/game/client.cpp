@@ -1,4 +1,4 @@
-#include "cube.h"
+#include "pch.h"
 #include "engine.h"
 #include "crypto.h"
 #include "game.h"
@@ -2012,6 +2012,8 @@ namespace client
 					{
 						if(serverentry(g, i, si)) n = j;
 					}
+					else if(i == SINFO_STATUS)
+						g->button("", 0x999999, serverstatus[SSTAT_UNKNOWN].icon);
 					else g->button("-", 0x999999);
 				}
 				serverendcolumn(g, i);
