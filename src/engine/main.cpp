@@ -198,7 +198,7 @@ void screenres(int *w, int *h)
 #else
 		return;
 	}
-	SDL_Surface *surf = SDL_SetVideoMode(*w, *h, 0, SDL_OPENGL|SDL_RESIZABLE|(screen->flags&SDL_FULLSCREEN));
+    SDL_Surface *surf = SDL_SetVideoMode(*w, *h, 0, SDL_OPENGL|(screen->flags&SDL_FULLSCREEN ? SDL_FULLSCREEN : SDL_RESIZABLE));
 	if(!surf) return;
 	screen = surf;
 	scr_w = screen->w;
