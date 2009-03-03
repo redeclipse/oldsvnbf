@@ -95,7 +95,9 @@ clean-server:
 %-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
-client:	libenet $(CLIENT_PCH) $(CLIENT_OBJS)
+$(CLIENT_OBJS): $(CLIENT_PCH)
+
+client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
 	strip bfclient
 
