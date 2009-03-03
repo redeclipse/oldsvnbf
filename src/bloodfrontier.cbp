@@ -50,6 +50,7 @@
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
+					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -94,6 +95,7 @@
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
+					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -138,6 +140,7 @@
 					<Add library="opengl32" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
+					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -177,6 +180,7 @@
 					<Add library="ws2_32" />
 					<Add library="winmm" />
 					<Add library="z" />
+					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -214,6 +218,7 @@
 					<Add library="ws2_32" />
 					<Add library="winmm" />
 					<Add library="z" />
+					<Add library="enet" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -260,9 +265,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="ws2_32" />
-					<Add library="winmm" />
-					<Add library="z" />
 					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
@@ -277,131 +279,6 @@
 			<Option target="client-dbg" />
 			<Option target="server" />
 			<Option target="genkey" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\callbacks.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\host.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\include\enet\callbacks.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\enet.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\list.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\protocol.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\time.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\types.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\unix.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\utility.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\include\enet\win32.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="enet\list.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\packet.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\peer.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\protocol.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\unix.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="enet\win32.c">
-			<Option compilerVar="CC" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="data" />
 			<Option target="client-prof" />
 			<Option target="server-dbg" />
 		</Unit>
@@ -1103,10 +980,12 @@
 			<Option target="server-dbg" />
 		</Unit>
 		<Unit filename="shared\cube.h">
-			<Option target="data" />
+			<Option compile="1" />
+			<Option weight="0" />
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
+			<Option target="data" />
 		</Unit>
 		<Unit filename="shared\ents.h">
 			<Option target="data" />
