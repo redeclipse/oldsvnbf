@@ -1040,12 +1040,6 @@
 			<Option target="data" />
 			<Option target="client-prof" />
 		</Unit>
-		<Unit filename="shared\pch.h">
-			<Option target="data" />
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
 		<Unit filename="shared\tools.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
