@@ -946,7 +946,7 @@ serverstatuses serverstatus[] = {
 	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
 const char *serverinfotypes[] = {
-	"",	"host", "desc", "ping", "pl", "max", "game", "map", "time"
+	"",	"desc", "ping", "pl", "max", "game", "map", "time"
 };
 #else
 extern serverstatuses serverstatus[];
