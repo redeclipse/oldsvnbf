@@ -966,11 +966,7 @@ void g3d_render()
 		glPushMatrix();
 		glLoadIdentity();
 
-		glDisable(GL_DEPTH_TEST);
-
 		loopvrev(gui2ds) gui2ds[i].cb->gui(gui2ds[i], false);
-
-        glEnable(GL_DEPTH_TEST);
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
