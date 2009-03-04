@@ -5,36 +5,67 @@ body {
 	color: #FFFFFF;
 	margin: 0px 0px 0px 0px;
 	padding: 0px 0px 0px 0px;
-	overflow: none;
+	background-image: url('stars.png');
+	background-attachment: fixed;
 }
 a, a:link, a:visited {
-	color: #FF0000;
+	color: #CC0000;
 	text-decoration: none;
 }
 a:hover {
 	color: #FF1111;
 	text-decoration: underline;
 }
-#frame {
-	margin: 0px 0px 0px 0px;
-	padding: 0px 0px 0px 0px;
-	width: 100%;
-	display: none;
+#wrapper {
+	min-width: 620px;
+	width: 90%;
+	margin: 6px auto;
+	border: 1px solid #222222;
+	background: #000000;
 }
 #header, #body {
 	margin: 0px 0px 0px 0px;
 	padding: 0px 0px 0px 0px;
 	width: 100%;
 }
+#header {
+	height: 64px;
+	border-bottom: 1px solid #222222;
+	padding-bottom: 4px;
+}
+#navbar {
+	text-align: center;
+	font-size: 90%;
+	border-bottom: 1px solid #222222;
+	padding: 4px 0px 4px 0px;
+}
+ul.nav-list {
+	display: inline;
+	padding: 0px;
+}
+ul.nav-list li {
+	display: inline-block;
+}
+ul.nav-list li a {
+	padding-left: 18px;
+	padding-right: 10px;
+}
+ul.nav-list li a:hover {
+	background-image: url('splat.png');
+	background-repeat: no-repeat;
+}
+#logo {
+	text-align: left;
+	float: left;
+	clear: left;
+}
 #tags {
 	text-align: right;
 	float: right;
 	clear: right;
 }
-#flink, #flink img {
+#logo img, #tags img {
 	padding: 2px 2px 2px 2px;
-}
-#flink, #flink a, #flink img {
 	display: inline;
 }
 #blurb {
@@ -43,51 +74,33 @@ a:hover {
 	font-weight: bold;
 	font-size: 90%;
 }
-#logo {
-	padding: 4px 4px 4px 4px;
-	float: left;
-	clear: left;
-}
-#navbar {
-	padding: 20px 2px 2px 2px;
-	text-align: left;
-	vertical-align: middle;
-	font-size: 90%;
-}
 #version {
-	padding: 4px 2px 2px 2px;
-	text-align: left;
+	padding: 2px 2px 2px 2px;
+	text-align: center;
 	vertical-align: middle;
 	font-size: 90%;
+	border-bottom: 1px solid #222;
+	background: #171717;
 }
 #portal {
-	padding: 16px 4px 16px 4px;
-	text-align: center;
 	clear: both;
-	width: 80%;
+	width: 90%;
 }
 #supertext {
-	text-align: center;
-	font-size: 150%;
+	font-size: 140%;
 	font-weight: bold;
-}
-#video {
-	text-align: center;
 }
 #flash {
 	width: 480px;
 	height: 360px;
 }
 #noticetext {
-	text-align: center;
 	font-size: 90%;
 	font-weight: bold;
 }
 #subtext {
-	text-align: center;
 	font-size: 80%;
 }
 #footer {
-	text-align: center;
 	font-size: 100%;
 }
