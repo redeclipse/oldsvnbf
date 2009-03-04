@@ -382,7 +382,6 @@ namespace hud
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, hudwidth, hudsize, 0, -1, 1);
-		glDisable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -591,7 +590,6 @@ namespace hud
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
 		glDisable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
 	}
 
 	float radarrange()
