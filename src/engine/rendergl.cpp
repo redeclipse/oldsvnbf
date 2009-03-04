@@ -496,21 +496,18 @@ COMMAND(glext, "s");
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
-	#define fogvalues 0.5f, 0.6f, 0.7f, 1.0f
-
 	glViewport(0, 0, w, h);
-	glClearColor(fogvalues);
+	glClearColor(0, 0, 0, 0);
 	glClearDepth(1);
 	glDepthFunc(GL_LESS);
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glShadeModel(GL_SMOOTH);
 
 
-	glEnable(GL_FOG);
+	glDisable(GL_FOG);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glFogf(GL_FOG_DENSITY, 0.25f);
 	glHint(GL_FOG_HINT, GL_NICEST);
-	GLfloat fogcolor[4] = { fogvalues };
+	GLfloat fogcolor[4] = { 0, 0, 0, 0 };
 	glFogfv(GL_FOG_COLOR, fogcolor);
 
 
@@ -518,7 +515,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
 	glCullFace(GL_FRONT);
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 
     extern int useshaders;
     if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasVP || !hasFP)
@@ -912,8 +909,6 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
 
 void drawfogoverlay(int fogmat, float fogblend, int abovemat)
 {
-    glDisable(GL_DEPTH_TEST);
-
     notextureshader->set();
     glDisable(GL_TEXTURE_2D);
 
@@ -948,8 +943,6 @@ void drawfogoverlay(int fogmat, float fogblend, int abovemat)
 
     glEnable(GL_TEXTURE_2D);
     defaultshader->set();
-
-    glEnable(GL_DEPTH_TEST);
 }
 
 bool renderedgame = false, renderedavatar = false;
@@ -1189,9 +1182,10 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     project(fovy, aspect, farplane, flipx, flipy, swapxy);
 	transplayer();
 
-	glEnable(GL_TEXTURE_2D);
-
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_FOG);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
@@ -1241,14 +1235,13 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 		rendermaterials();
 		render_particles(0);
+    }
 
-		glDisable(GL_FOG);
-		glDisable(GL_CULL_FACE);
+	glDisable(GL_FOG);
+	glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
 
-	    addglare();
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_FOG);
-	}
+	if(level >= 2) addglare();
 
 	glDisable(GL_TEXTURE_2D);
 
@@ -1384,8 +1377,6 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	gettextres(w, h);
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 	glClearColor(0.f, 0.f, 0.f, 1);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glMatrixMode(GL_PROJECTION);
@@ -1447,8 +1438,6 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 	}
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
 }
 
 void drawslice(float start, float length, float x, float y, float size)
@@ -1535,7 +1524,6 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
     getscreenres(w, h);
 	gettextres(w, h);
 
-	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
@@ -1640,7 +1628,6 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
 	SDL_GL_SwapBuffers();
 }
 
@@ -1820,9 +1807,6 @@ void drawnoview()
 {
     xtravertsva = xtraverts = glde = gbatches = 0;
 
-    glDisable(GL_FOG);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
 	glClearColor(0.f, 0.f, 0.f, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -1850,10 +1834,6 @@ void drawnoview()
 	}
 
     glDisable(GL_TEXTURE_2D);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_FOG);
 }
 
 void drawview(int targtype)
@@ -1883,6 +1863,9 @@ void drawview(int targtype)
 
 	readmatrices();
 
+    glEnable(GL_FOG);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
@@ -1952,6 +1935,7 @@ void drawview(int targtype)
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
 
 	addglare();
     if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
@@ -1961,6 +1945,7 @@ void drawview(int targtype)
 	notextureshader->set();
 	if(editmode && showhud)
 	{
+        glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
 
         renderblendbrush();
@@ -1970,9 +1955,9 @@ void drawview(int targtype)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glDepthMask(GL_TRUE);
+        glDisable(GL_DEPTH_TEST);
 	}
 
-	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	int w = screen->w, h = screen->h;
@@ -2029,9 +2014,6 @@ void drawview(int targtype)
 	}
 	glDisable(GL_TEXTURE_2D);
 
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_FOG);
 	renderedgame = false;
 
     if(targtype == VP_LEFT || targtype == VP_RIGHT)
@@ -2086,9 +2068,6 @@ void gl_drawframe(int w, int h)
 
 		if(!copies) return;
 
-		glDisable(GL_FOG);
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_DEPTH_TEST);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glMatrixMode(GL_PROJECTION);
@@ -2146,9 +2125,6 @@ void gl_drawframe(int w, int h)
 			}
 		}
 		glDisable(GL_TEXTURE_2D);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_FOG);
     }
     else drawnoview();
 }
