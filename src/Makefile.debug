@@ -90,7 +90,8 @@ clean-server:
 	@rm -fv $(SERVER_OBJS) bfserver
 
 %.h.gch:
-	$(CXX) $(CXXFLAGS) -o $@ $(subst .h.gch,.h,$@)
+	$(CXX) $(CXXFLAGS) -o $@.tmp $(subst .h.gch,.h,$@)
+	mv $@.tmp $@
 
 %-standalone.o:
 	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
