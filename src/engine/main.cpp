@@ -227,11 +227,18 @@ void resetgamma()
     SDL_SetGamma(f, f, f);
 }
 
+static int moderatio(int w, int h)
+{
+    w *= 3*4*5;
+    return w%h ? 0 : w/h;
+}
+
 static int moderatio(SDL_Rect *mode)
 {
-    int ratio = mode->w*3*4*5*7;
-    return ratio%mode->h ? 0 : ratio/mode->h;
+    return moderatio(mode->w, mode->h);
 }
+
+int desktopw = 0, desktoph = 0;
 
 void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
 {
@@ -249,7 +256,7 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
             if(widest < 0 || modes[i]->w > modes[widest]->w || (modes[i]->w == modes[widest]->w && modes[i]->h > modes[widest]->h))
                 widest = i;
         }
-        int ratio = moderatio(modes[widest]);
+        int ratio = desktopw > 0 && desktoph > 0 ? moderatio(desktopw, desktoph) : moderatio(modes[widest]);
         if(ratio > 0)
         {
             for(int i = 0; modes[i]; i++) if(moderatio(modes[i]) == ratio)
@@ -268,13 +275,13 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         }
         if(flags&SDL_FULLSCREEN)
         {
-            int mode = best >= 0 ? best : widest;
-            scr_w = modes[mode]->w;
-            scr_h = modes[mode]->h;
+            if(best >= 0) { scr_w = modes[best]->w; scr_h = modes[best]->h; }
+            else if(desktopw > 0 && desktoph > 0) { scr_w = desktopw; scr_h = desktoph; }
+            else if(widest >= 0) { scr_w = modes[widest]->w; scr_h = modes[widest]->h; }
         }
         else if(best < 0)
-        { 
-            scr_w = min(scr_w, (int)modes[widest]->w); 
+        {
+            scr_w = min(scr_w, (int)modes[widest]->w);
             scr_h = min(scr_h, (int)modes[widest]->h);
         }
     }
@@ -855,6 +862,12 @@ int main(int argc, char **argv)
 	ignoremouse += 3;
 
 	conoutf("\fminit: video mode");
+    const SDL_VideoInfo *video = SDL_GetVideoInfo();
+    if(video)
+    {
+        desktopw = video->current_w;
+        desktoph = video->current_h;
+    }
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
