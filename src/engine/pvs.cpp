@@ -820,13 +820,11 @@ static int totalviewcells = 0;
 
 static void show_genpvs_progress(int unique = pvs.length(), int processed = numviewcells)
 {
-    float bar1 = float(processed) / float(totalviewcells>0 ? totalviewcells : 1),
-          bar2 = float(unique) / float(totalviewcells>0 ? totalviewcells : 1);
+    float bar1 = float(processed) / float(totalviewcells>0 ? totalviewcells : 1);
 
-    s_sprintfd(text1)("%d of %d view cells", processed, totalviewcells);
-    s_sprintfd(text2)("%d unique", unique);
+    s_sprintfd(text1)("%d of %d view cells (%d unique)", processed, totalviewcells, unique);
 
-    renderprogress(bar1, text1, bar2, text2);
+    renderprogress(bar1, text1);
 
     if(interceptkey(SDLK_ESCAPE)) genpvs_canceled = true;
     check_genpvs_progress = false;
@@ -1082,7 +1080,7 @@ void genpvs(int *viewcellsize)
         return;
     }
 
-    computescreen("generating PVS (esc to abort)");
+    renderbackground("generating PVS (esc to abort)");
     genpvs_canceled = false;
     Uint32 start = SDL_GetTicks();
     renderprogress(0, "finding view cells");
