@@ -1363,15 +1363,27 @@ void loadbackground(int w, int h, Texture *t)
     }
 }
 
-void computescreen(const char *text, Texture *t, const char *overlaytext)
+string backgroundcaption = "";
+Texture *backgroundmapshot = NULL;
+string backgroundmapname = "";
+
+void restorebackground()
 {
+    if(renderedframe) return;
+    renderbackground(backgroundcaption[0] ? backgroundcaption : NULL, backgroundmapshot, backgroundmapname[0] ? backgroundmapname : NULL, true);
+}
+
+void renderbackground(const char *caption, Texture *mapshot, const char *mapname, bool restore)
+{
+    if(!inbetweenframes) return;
+
 	int w = screen->w, h = screen->h;
-	if(overlaytext && text)
+	if(caption && mapname)
     {
-        s_sprintfd(caption)("%s - %s", overlaytext, text);
-        setcaption(caption);
+        s_sprintfd(mapcaption)("%s - %s", mapname, caption);
+        setcaption(mapcaption);
     }
-    else setcaption(text);
+    else setcaption(caption);
     smartmusic(false, true);
     getscreenres(w, h);
 	gettextres(w, h);
@@ -1385,17 +1397,17 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     defaultshader->set();
-	loopi(2)
+	loopi(restore ? 1 : 2)
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		loadbackground(w, h, t);
+		loadbackground(w, h, mapshot);
 
-        if(text)
+        if(caption)
         {
             glPushMatrix();
             glScalef(1/3.0f, 1/3.0f, 1);
-            draw_text(text, 70, FONTH/2);
+            draw_text(caption, 70, FONTH/2);
             glPopMatrix();
         }
 #if 0
@@ -1418,11 +1430,11 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 			glEnd();
 		}
 #endif
-        if(overlaytext)
+        if(mapname)
         {
             glPushMatrix();
             glScalef(1/3.0f, 1/3.0f, 1);
-			draw_textx("%s", (w/2)*3, (h/2)*3+FONTH, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, overlaytext);
+			draw_textx("%s", (w/2)*3, (h/2)*3+FONTH, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, mapname);
             glPopMatrix();
         }
 
@@ -1434,10 +1446,18 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 		draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
 		glPopMatrix();
 
-		SDL_GL_SwapBuffers();
+		if(!restore) SDL_GL_SwapBuffers();
 	}
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
+
+    if(!restore)
+    {
+        renderedframe = false;
+        s_strcpy(backgroundcaption, caption ? caption : "");
+        backgroundmapshot = mapshot;
+        s_strcpy(backgroundmapname, mapname ? mapname : "");
+    }
 }
 
 void drawslice(float start, float length, float x, float y, float size)

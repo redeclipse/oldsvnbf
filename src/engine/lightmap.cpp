@@ -52,7 +52,7 @@ void show_calclight_progress()
 	float bar1 = float(progress) / float(allocnodes),
 		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
-	s_sprintfd(text)("%d textures used", lightmaps.length(), int(bar2 * 100));
+	s_sprintfd(text)("%d textures used", lightmaps.length());
 
 	if(LM_PACKW <= hwtexsize && !progresstex)
 	{
@@ -1540,7 +1540,7 @@ void calclight(int quality)
 		conoutf("\frvalid range for calclight quality is 0..3");
 		return;
 	}
-	computescreen("computing lightmaps... (esc to abort)");
+	renderbackground("computing lightmaps... (esc to abort)");
     mpremip(true);
     optimizeblendmap();
 	resetlightmaps();
@@ -1568,7 +1568,7 @@ void calclight(int quality)
 	}
 	if(!editmode) compressed.clear();
 	initlights();
-	computescreen("lighting done...");
+	renderbackground("lighting done...");
 	allchanged();
 	if(calclight_canceled)
 		conoutf("\frcalclight aborted");
@@ -1592,7 +1592,7 @@ void patchlight(int quality)
 		conoutf("\frvalid range for patchlight quality is 0..3");
 		return;
 	}
-	computescreen("patching lightmaps... (esc to abort)");
+	renderbackground("patching lightmaps... (esc to abort)");
     cleanuplightmaps();
 	progress = 0;
 	progresstexticks = 0;
@@ -1620,7 +1620,7 @@ void patchlight(int quality)
 		lumels += lightmaps[i].lumels;
 	}
 	initlights();
-	computescreen("lighting done...");
+	renderbackground("lighting done...");
 	allchanged();
 	if(calclight_canceled)
 		conoutf("\frpatchlight aborted");

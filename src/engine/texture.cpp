@@ -1491,11 +1491,19 @@ void genenvmaps()
 {
 	if(envmaps.empty()) return;
 	renderprogress(0, "generating environment maps...");
+    int lastprogress = SDL_GetTicks();
 	loopv(envmaps)
 	{
 		envmap &em = envmaps[i];
-		renderprogress(float(i)/float(envmaps.length()), "generating environment maps...");
 		em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
+        if(renderedframe) continue;
+        int millis = SDL_GetTicks();
+        if(millis - lastprogress >= 250)
+        {
+            restorebackground();
+            renderprogress(float(i+1)/envmaps.length(), "generating environment maps...");
+            lastprogress = millis;
+        }
 	}
 }
 

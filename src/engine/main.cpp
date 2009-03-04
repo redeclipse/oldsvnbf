@@ -343,7 +343,7 @@ void resetgl()
 {
     clearchanges(CHANGE_GFX);
 
-    computescreen("resetting OpenGL");
+    renderbackground("resetting OpenGL");
 
     extern void cleanupva();
     extern void cleanupparticles();
@@ -389,7 +389,7 @@ void resetgl()
 			fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
-    computescreen("initializing...");
+    renderbackground("initializing...");
     resetgamma();
     reloadshaders();
     reloadtextures();
@@ -661,7 +661,7 @@ void updatefps(int frames, int millis)
 	autoadjustcheck(frames);
 }
 
-bool inbetweenframes = false;
+bool inbetweenframes = false, renderedframe = true;
 
 static bool findarg(int argc, char **argv, const char *str)
 {
@@ -881,8 +881,8 @@ int main(int argc, char **argv)
 	if(!setfont("default")) fatal("no default font specified");
 
     conoutf("\fminit: gl effects");
-	computescreen("loading...");
 	inbetweenframes = true;
+    renderbackground("loading...");
     loadshaders();
 	UI::setup();
 
@@ -948,8 +948,12 @@ int main(int argc, char **argv)
 			updateparticles();
 			updatesounds();
 			UI::update();
-			inbetweenframes = false;
-			if(frameloops > 2) gl_drawframe(screen->w, screen->h);
+			inbetweenframes = renderedframe = false;
+			if(frameloops > 2) 
+            {
+                gl_drawframe(screen->w, screen->h);
+                renderedframe = true;
+            }
 			SDL_GL_SwapBuffers();
 			inbetweenframes = true;
 			s_sprintfd(cap)("%s - %s", world::gametitle(), world::gametext());

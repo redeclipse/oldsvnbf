@@ -109,7 +109,7 @@ extern const ivec cubecoords[8];
 extern const ushort fv[6][4];
 extern const uchar fvmasks[64];
 extern const uchar faceedgesidx[6][4];
-extern bool inbetweenframes;
+extern bool inbetweenframes, renderedframe;
 
 extern int curtime, lastmillis, totalmillis;
 extern SDL_Surface *screen;
@@ -238,7 +238,8 @@ extern void setcolormask(bool r = true, bool g = true, bool b = true);
 extern const char *loadback, *loadbackinfo;
 extern float loadprogress;
 extern void loadbackground(int w, int h, Texture *t = NULL);
-extern void computescreen(const char *text = NULL, Texture *t = NULL, const char *overlaytext = NULL);
+extern void renderbackground(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, bool restore = false);
+extern void restorebackground();
 extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 // renderextras

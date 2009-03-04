@@ -421,7 +421,7 @@ void save_world(const char *mname, bool nolms)
 	if(autosavemapshot || nolms) save_mapshot(mapname);
 	if(autosaveconfig || nolms) save_config(mapname);
 
-	computescreen("saving map..");
+	renderbackground("saving map..");
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
@@ -694,7 +694,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
-				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
+				renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 
 				maptype = MAP_BFGZ;
 
@@ -825,7 +825,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr = newhdr;
 
 				mapshot = textureload(mapname, 0, true, false);
-				computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
+				renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 
 				maptype = MAP_OCTA;
 
@@ -1097,7 +1097,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			initlights();
 			allchanged(true);
 
-			computescreen("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
+			renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 			renderprogress(0, "starting world...");
 			world::startmap(mapname);
 			return true;
