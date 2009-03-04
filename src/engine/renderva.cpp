@@ -1810,7 +1810,7 @@ VARFP(caustics, 0, 1, 1, loadcaustics());
 
 void cleanupva()
 {
-    vaclearc(worldroot);
+    clearvas(worldroot);
     clearqueries();
     if(fogtex) { glDeleteTextures(1, &fogtex); fogtex = 0; }
     if(attenxytex) { glDeleteTextures(1, &attenxytex); attenxytex = 0; }

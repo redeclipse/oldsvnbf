@@ -334,7 +334,7 @@ extern editinfo *localedit;
 // octarender
 extern void octarender();
 extern void allchanged(bool load = false);
-extern void vaclearc(cube *c);
+extern void clearvas(cube *c);
 extern vtxarray *newva(int x, int y, int z, int size);
 extern void destroyva(vtxarray *va, bool reparent = true);
 extern bool readva(vtxarray *va, ushort *&edata, uchar *&vdata);
