@@ -323,7 +323,10 @@ void save_config(char *mname)
 			if(s.scrollS != 0.f || s.scrollT != 0.f) \
 				fprintf(h, "texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f); \
             if(s.layer != 0) \
-                fprintf(h, "texlayer %d\n", s.layer); \
+			{ \
+                if(s.layermaskname) fprintf(h, "texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale); \
+				else fprintf(h, "texlayer %d\n", s.layer); \
+			} \
 			if(s.autograss) fprintf(h, "autograss \"%s\"\n", s.autograss); \
 		} \
 		fprintf(h, "\n");
