@@ -2,11 +2,17 @@
 CXXFLAGS= -O3 -fomit-frame-pointer
 override CXXFLAGS+= -Wall -fsigned-char
 
+PLATFORM= $(shell uname -s)
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include
 
-CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL
-ifeq ($(shell uname -s),Linux)
+ifneq (,$(findstring MINGW,$(PLATFORM)))
+CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -Iinclude
+CLIENT_LIBS= -mwindows -Llib -lSDLmain -lSDL -lSDL_image -lSDL_mixer -lzdll -lopengl32 -lenet -lws2_32 -lwinmm
+else
+CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -I/usr/X11R6/include `sdl-config --cflags`
+CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL
+endif
+ifeq ($(PLATFORM),Linux)
 CLIENT_LIBS+= -lrt
 endif
 CLIENT_OBJS= \
@@ -63,8 +69,13 @@ CLIENT_OBJS= \
 	game/world.o
 CLIENT_PCH= shared/cube.h.gch
 
+ifneq (,$(findstring MINGW,$(PLATFORM)))
+SERVER_INCLUDES= -DSTANDALONE -DMASTERSERVER -DIRC $(INCLUDES) -Iinclude
+SERVER_LIBS= -mwindows -Llib -lzdll -lenet -lws2_32 -lwinmm
+else
 SERVER_INCLUDES= -DSTANDALONE -DMASTERSERVER -DIRC $(INCLUDES)
-SERVER_LIBS=-Lenet -lenet -lz
+SERVER_LIBS= -Lenet -lenet -lz
+endif
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	shared/hash-standalone.o \
@@ -104,7 +115,24 @@ $(CLIENT_OBJS): CXXFLAGS += $(CLIENT_INCLUDES)
 $(CLIENT_OBJS): $(CLIENT_PCH)
 
 $(SERVER_OBJS): CXXFLAGS += $(SERVER_INCLUDES)
- 
+
+ifneq (,$(findstring MINGW,$(PLATFORM)))
+client: $(CLIENT_OBJS)
+    $(CXX) $(CXXFLAGS) -o ../bin/bfclient.exe $(CLIENT_OBJS) $(CLIENT_LIBS)
+
+server: $(SERVER_OBJS)
+    $(CXX) $(CXXFLAGS) -o ../bin/bfserver.exe $(SERVER_OBJS) $(SERVER_LIBS)
+
+install-client: client
+ifeq (,$(findstring -g,$(CXXFLAGS)))
+	strip ../bin/bfclient.exe
+endif
+
+install-server: server
+ifeq (,$(findstring -g,$(CXXFLAGS)))
+	strip ../bin/bfserver.exe
+endif
+else
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
 ifeq (,$(findstring -g,$(CXXFLAGS)))
@@ -124,6 +152,7 @@ install-client: client
 install-server: server
 	cp -v bfserver ../bin/bfserver
 	chmod +x ../bin/bfserver
+endif
 
 install: install-client install-server
 
