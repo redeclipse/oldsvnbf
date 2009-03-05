@@ -1279,7 +1279,7 @@ void loadlayermasks()
     loopv(slots)
     {
         Slot &slot = slots[i];
-        if(slot.layermaskname && !slot.layermask) slot.layermask = texturedata(slot.layermaskname);
+        if(slot.loaded && slot.layermaskname && !slot.layermask) slot.layermask = texturedata(slot.layermaskname);
     }
 }
 
