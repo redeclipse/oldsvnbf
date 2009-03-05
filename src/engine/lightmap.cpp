@@ -1524,6 +1524,7 @@ static bool previewblends(cube *c, const ivec &co, int size, const ivec &bo, con
 
 void previewblends(const ivec &bo, const ivec &bs)
 {
+    loadlayermasks();
     if(previewblends(worldroot, ivec(0, 0, 0), hdr.worldsize/2, bo, bs))
         commitchanges(true);
 }
