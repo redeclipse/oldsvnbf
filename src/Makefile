@@ -1,3 +1,4 @@
+#CXXOPTFLAGS= -ggdb3
 CXXOPTFLAGS= -O3 -fomit-frame-pointer
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CXXFLAGS= -Wall -fsigned-char -DINTERFACE -DIRC $(CXXOPTFLAGS) $(INCLUDES)
@@ -100,11 +101,15 @@ $(CLIENT_OBJS): $(CLIENT_PCH)
 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
+ifeq (,$(findstring -g,$(CXXFLAGS)))
 	strip bfclient
+endif
 
 server:	libenet $(SERVER_OBJS)
 	$(CXX) $(SCXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
+ifeq (,$(findstring -g,$(SCXXFLAGS)))
 	strip bfserver
+endif
 
 install-client: client
 	cp -v bfclient ../bin/bfclient
