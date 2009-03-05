@@ -1,8 +1,10 @@
-#CXXOPTFLAGS= -ggdb3
-CXXOPTFLAGS= -O3 -fomit-frame-pointer
-INCLUDES= -Ishared -Iengine -Igame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
-CXXFLAGS= -Wall -fsigned-char -DINTERFACE -DIRC $(CXXOPTFLAGS) $(INCLUDES)
+#CXXFLAGS= -ggdb3
+CXXFLAGS= -O3 -fomit-frame-pointer
+override CXXFLAGS+= -Wall -fsigned-char
 
+INCLUDES= -Ishared -Iengine -Igame -Ienet/include
+
+CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -I/usr/X11R6/include `sdl-config --cflags` -Iinclude
 CLIENT_LIBS=-Lenet -lenet -L/usr/X11R6/lib `sdl-config --libs` -lSDL_image -lSDL_mixer -lz -lGL
 ifeq ($(shell uname -s),Linux)
 CLIENT_LIBS+= -lrt
@@ -61,9 +63,7 @@ CLIENT_OBJS= \
 	game/world.o
 CLIENT_PCH= shared/cube.h.gch
 
-SINCLUDES= -Ishared -Iengine -Igame -Ienet/include
-SCXXFLAGS= -Wall -fsigned-char -DSTANDALONE -DMASTERSERVER -DIRC $(CXXOPTFLAGS) $(SINCLUDES)
-
+SERVER_INCLUDES= -DSTANDALONE -DMASTERSERVER -DIRC $(INCLUDES)
 SERVER_LIBS=-Lenet -lenet -lz
 SERVER_OBJS= \
 	shared/tools-standalone.o \
@@ -82,7 +82,10 @@ enet/Makefile:
 libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
-clean: clean-client clean-server enet/Makefile
+clean-enet: enet/Makefile
+	$(MAKE) -C enet/ clean
+
+clean: clean-client clean-server
 
 clean-client:
 	@rm -fv $(CLIENT_PCH) $(CLIENT_OBJS) bfclient
@@ -95,10 +98,13 @@ clean-server:
 	mv $@.tmp $@
 
 %-standalone.o:
-	$(CXX) $(SCXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
+$(CLIENT_OBJS): CXXFLAGS += $(CLIENT_INCLUDES)
 $(CLIENT_OBJS): $(CLIENT_PCH)
 
+$(SERVER_OBJS): CXXFLAGS += $(SERVER_INCLUDES)
+ 
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
 ifeq (,$(findstring -g,$(CXXFLAGS)))
