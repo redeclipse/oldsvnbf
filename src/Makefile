@@ -112,8 +112,8 @@ ifeq (,$(findstring -g,$(CXXFLAGS)))
 endif
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(SCXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
-ifeq (,$(findstring -g,$(SCXXFLAGS)))
+	$(CXX) $(CXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
+ifeq (,$(findstring -g,$(CXXFLAGS)))
 	strip bfserver
 endif
 
