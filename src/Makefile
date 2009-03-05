@@ -6,6 +6,7 @@ PLATFORM= $(shell uname -s)
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
+WINDRES= windres
 CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -Iinclude
 CLIENT_LIBS= -mwindows -lmingw32 -Llib -lSDLmain -lSDL -lSDL_image -lSDL_mixer -lzdll -lopengl32 -lenet -lws2_32 -lwinmm
 else
@@ -118,7 +119,8 @@ $(SERVER_OBJS): CXXFLAGS += $(SERVER_INCLUDES)
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 client: $(CLIENT_OBJS)
-	$(CXX) $(CXXFLAGS) -o ../bin/bfclient.exe $(CLIENT_OBJS) $(CLIENT_LIBS)
+	$(WINDRES) -i bloodfrontier.rc -J rc -o bloodfrontier.res -O coff 
+	$(CXX) $(CXXFLAGS) -o ../bin/bfclient.exe bloodfrontier.res $(CLIENT_OBJS) $(CLIENT_LIBS)
 
 server: $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o ../bin/bfserver.exe $(SERVER_OBJS) $(SERVER_LIBS)
