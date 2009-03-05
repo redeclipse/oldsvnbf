@@ -84,7 +84,7 @@ libenet: enet/Makefile
 clean: clean-client clean-server enet/Makefile
 
 clean-client:
-	@rm -fv $(CLIENT_OBJS) bfclient
+	@rm -fv $(CLIENT_PCH) $(CLIENT_OBJS) bfclient
 
 clean-server:
 	@rm -fv $(SERVER_OBJS) bfserver
