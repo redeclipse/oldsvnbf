@@ -23,13 +23,10 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
 					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DINTERFACE" />
 					<Add option="-DIRC" />
 					<Add directory="shared" />
@@ -73,9 +70,6 @@
 					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
-					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DINTERFACE" />
 					<Add option="-DIRC" />
 					<Add directory="shared" />
@@ -119,7 +113,6 @@
 					<Add option="-pg" />
 					<Add option="-fsigned-char" />
 					<Add option="-finline-functions" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DINTERFACE" />
 					<Add option="-DIRC" />
 					<Add directory="shared" />
@@ -159,13 +152,10 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
 					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DSTANDALONE" />
 					<Add option="-DMASTERSERVER" />
 					<Add option="-DIRC" />
@@ -202,9 +192,7 @@
 					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
 					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DSTANDALONE" />
 					<Add option="-DMASTERSERVER" />
 					<Add option="-DIRC" />
@@ -248,13 +236,10 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-fexpensive-optimizations" />
 					<Add option="-O3" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
-					<Add option="-finline-functions" />
 					<Add option="-fomit-frame-pointer" />
-					<Add option="-fno-strict-aliasing" />
 					<Add option="-DSTANDALONE" />
 					<Add option="-DGENKEY" />
 					<Add directory="shared" />
