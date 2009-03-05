@@ -4,7 +4,7 @@
 	<Project>
 		<Option title="bloodfrontier" />
 		<Option platforms="Windows;" />
-		<Option pch_mode="0" />
+		<Option pch_mode="2" />
 		<Option default_target="client" />
 		<Option compiler="gcc" />
 		<Build>
@@ -43,12 +43,11 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="z" />
+					<Add library="zdll" />
 					<Add library="opengl32" />
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
@@ -85,12 +84,11 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="z" />
+					<Add library="zdll" />
 					<Add library="opengl32" />
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
@@ -129,12 +127,11 @@
 					<Add library="SDL" />
 					<Add library="SDL_image" />
 					<Add library="SDL_mixer" />
-					<Add library="z" />
+					<Add library="zdll" />
 					<Add library="opengl32" />
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
@@ -167,11 +164,10 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="z" />
+					<Add library="zdll" />
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
@@ -203,11 +199,10 @@
 					<Add directory="include" />
 				</Compiler>
 				<Linker>
-					<Add library="z" />
+					<Add library="zdll" />
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="lib\mingw" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
@@ -250,8 +245,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add library="z" />
-					<Add directory="lib\mingw" />
+					<Add library="zdll" />
 					<Add directory="lib" />
 				</Linker>
 			</Target>
