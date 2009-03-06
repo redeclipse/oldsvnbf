@@ -5,7 +5,7 @@ namespace entities
 {
 	vector<extentity *> ents;
 
-	VARP(showentnames, 0, 1, 2);
+	VARP(showentdesc, 0, 1, 2);
 	VARP(showentinfo, 0, 1, 5);
 	VARP(showentnoisy, 0, 0, 2);
 	VARP(showentdir, 0, 1, 3);
@@ -147,11 +147,23 @@ namespace entities
 			{
 				loopk(WEAPON_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
-			const char *item = entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-			if(item && d != world::player1)
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+			if(showentdesc)
 			{
-				s_sprintfd(ds)("@%s", item);
-				part_text(world::abovehead(d), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+				const char *texname = hud::itemtex(e.type, attr);
+				vec above = vec(world::abovehead(d)).add(vec(0, 0, 2));
+				if(texname && *texname)
+					part_icon(above, textureload(texname, 3), 1, 2.f, 3000, colour, PART_ICON_RISE);
+				else
+				{
+					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
+					if(item && *item)
+					{
+						s_sprintfd(ds)("@%s", item);
+						part_text(above, ds, PART_TEXT_RISE, 3000, colour, 2);
+					}
+				}
 			}
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
@@ -160,7 +172,6 @@ namespace entities
 				d->ammo[g] = d->entid[g] = -1;
 				d->weapselect = g;
 			}
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(e.attr[0], sweap);
 			d->useitem(n, e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
@@ -877,7 +888,7 @@ namespace entities
 	{
 		d->yaw = yaw;
 		d->pitch = d->roll = 0;
-		d->o = vec(o).add(vec(0, 0, d->height));
+		d->o = vec(o).add(vec(0, 0, d->height+1));
 		world::fixrange(d->yaw, d->pitch);
 		return physics::entinmap(d, true);
 	}
@@ -894,20 +905,16 @@ namespace entities
 			}
 			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return true;
 			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return true;
-			d->o.x = d->o.y = d->o.z = 0.5f*getworldsize();
-            d->o.z += d->height + 1;
+			d->o.x = d->o.y = d->o.z = getworldsize();
+			d->o.x *= 0.5f; d->o.y *= 0.5f;
 			if(physics::entinmap(d, false)) return true;
 		}
-		if(m_edit(world::gamemode))
-		{
-			physics::entinmap(d, true);
-			return true;
-		}
-		else if(m_play(world::gamemode) && suicide)
+		if(!m_edit(world::gamemode) && m_play(world::gamemode) && suicide)
 		{
 			world::suicide(d, HIT_SPAWN);
 			return true;
 		}
+		else return true;
 		return false;
 	}
 
@@ -1539,13 +1546,8 @@ namespace entities
 						}
 					}
 				}
-#if 0
-				part_flare(vec(e.o).add(vec(0, 0, RENDERPUSHZ)),
-					vec(f.o).add(vec(0, 0, RENDERPUSHZ)),
-						10, PART_LINE, both ? 0xFF8822 : 0xFF2222, 0.2f);
-#else
 				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))), dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
-				vec col(0.75f, both ? 0.5f : 0.0f, 0.f);
+				vec col(1.f, both ? 1.f : 0.0f, 0.f);
 				renderline(fr, dr, col.x, col.y, col.z, false);
 				dr.sub(fr);
 				dr.normalize();
@@ -1553,8 +1555,7 @@ namespace entities
 				vectoyawpitch(dr, yaw, pitch);
 				dr.mul(RENDERPUSHX);
 				dr.add(fr);
-				rendertris(dr, yaw, pitch, 2.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
-#endif
+				rendertris(dr, yaw, pitch, 3.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
 			}
 		}
 	}
@@ -1786,12 +1787,23 @@ namespace entities
 				}
 			}
 		}
-		bool item = showentnames && enttype[e.type].usetype == EU_ITEM && spawned,
+		bool item = showentdesc && enttype[e.type].usetype == EU_ITEM && spawned,
 			notitem = (edit && (showentinfo >= 4 || hasent));
 		if(item || notitem)
 		{
-			s_sprintfd(s)("@%s%s", notitem ? (hasent ? "\fw" : "\fa") : "", entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], notitem && (showentinfo >= 5 || hasent)));
-			part_text(pos.add(off), s);
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
+				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+			if(item)
+			{
+				const char *itext = hud::itemtex(e.type, attr);
+				if(itext && *itext)
+					part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour);
+			}
+			if(notitem)
+			{
+				s_sprintfd(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], notitem && (showentinfo >= 5 || hasent)));
+				part_text(pos.add(off), ds, PART_TEXT, 1, colour);
+			}
 		}
 	}
 

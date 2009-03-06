@@ -258,7 +258,7 @@ enum
 
 struct weaptypes
 {
-	int	info, 				anim,			kick,	wobble,
+	int	info, 				anim,			kick,	wobble,		colour,
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
@@ -272,7 +272,7 @@ struct weaptypes
 weaptypes weaptype[WEAPON_MAX] =
 {
 	{
-		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,
+		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		400,	1000,	25,		1000,	0,		1000,
 			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
@@ -282,7 +282,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_SG,			ANIM_SHOTGUN,	-30,    30,
+		WEAPON_SG,			ANIM_SHOTGUN,	-30,    30,			0xFFFF22,
 			S_SG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	10,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -292,7 +292,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,
+		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,			0xFF9922,
 			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -302,7 +302,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_FLAMER,		ANIM_FLAMER,	-1,		 1,
+		WEAPON_FLAMER,		ANIM_FLAMER,	-1,		 1,			0xFF2222,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	20,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
@@ -312,7 +312,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_CARBINE,		ANIM_CARBINE,	-15,	15,
+		WEAPON_CARBINE,		ANIM_CARBINE,	-15,	15,			0xAAAAAA,
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		250,    1250,	35,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -322,7 +322,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,
+		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,			0x8822FF,
 			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
 			1,		5,		750,	1250,	100,	3000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -332,7 +332,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_GL,			ANIM_GRENADES,	-5,    5,
+		WEAPON_GL,			ANIM_GRENADES,	-5,    5,			0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		4,		1500,	1500,	200,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
@@ -342,7 +342,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_CARBINE,		-5,  	5,
+		WEAPON_PAINT,		ANIM_CARBINE,		-5,  	5,		0xFF22AA,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -1315,6 +1315,7 @@ namespace hud
 	extern void drawinventory(int w, int h, int edge, float blend = 1.f);
 	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
 	extern const char *flagtex(int team = TEAM_NEUTRAL);
+	extern const char *itemtex(int type, int stype);
 }
 
 namespace world
@@ -1358,6 +1359,7 @@ namespace world
 
 namespace entities
 {
+	extern int showentdesc;
 	extern vector<extentity *> ents;
 	extern void clearentcache();
 	extern int closestent(int type, const vec &pos, float mindist, bool links = false);
