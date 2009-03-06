@@ -736,6 +736,7 @@ void eastereggs()
 	if(month == 7 && mday == 26)	loadbackinfo = "Happy Birthday Acord!";
 	if(month == 7 && mday == 2)		loadbackinfo = "Happy Birthday c0rdawg!";
 	if(month == 9 && mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
+	if(month == 11 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
 }
 
 bool findoctadir(const char *name)
