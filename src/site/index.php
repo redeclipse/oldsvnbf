@@ -4,7 +4,7 @@
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
-	$app['sitenotice'] = "We need your <i>HELP</i> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves toils away for up to 18 hours a day, <i>every</i> day, working on the project. He has been struggling with ancient hardware for a long time due to financial difficulties. Please <i>DONATE</i> to make sure he can keep doing this important job!<br /><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></a>";
+	$app['sitenotice'] = "<div id=\"right\"><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></div>We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves has been struggling with chronic illness and failing hardware for many years, your <u>donation</u> can improve the quality of his life. Please consider being generous, and make sure he can keep doing this important task!";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitelogo'] = "/bits/logo.png";
 	$app['sitecss'] = "/bits/site.css";
@@ -100,21 +100,19 @@
 					<?php echo $app['navbar']; ?>
 				</ul>
 			</div>
+			<div id="notice" align="center"><?php echo $app['sitenotice']; ?></div>
 			<div id="body" align="center">
-				<div id="portal" align="center">
-					<p id="supertext" align="center"><a href="/project"><?php echo $app['sitename']; ?></a>, <i><?php echo $app['siteblurb']; ?></i></p>
-					<p id="noticetext" align="center"><?php echo $app['sitenotice']; ?></p>
-					<p id="video" align="center">
-						<object id="flash" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
-							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
-							<param name="allowscriptaccess" value="always" />
-							<param name="allowFullScreen" value="true" />
-							<embed id="flash" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
-						</object>
-					</p>
-					<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
-					<p id="footer" align="center"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</p>
-				</div>
+				<p id="supertext" align="center"><a href="/project"><?php echo $app['sitename']; ?></a>, <i><?php echo $app['siteblurb']; ?></i></p>
+				<p id="video" align="center">
+					<object id="flash" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
+						<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
+						<param name="allowscriptaccess" value="always" />
+						<param name="allowFullScreen" value="true" />
+						<embed id="flash" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
+					</object>
+				</p>
+				<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
+				<p id="footer" align="center"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</p>
 			</div>
 		</div>
 	</body>
