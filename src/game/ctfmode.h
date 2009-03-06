@@ -78,7 +78,7 @@ struct ctfservmode : ctfstate, servmode
 		else
 		{
 			if(f.owner >= 0) return;
-			loopv(flags) if(flags[i].owner == ci->clientnum) return;
+			loopvj(flags) if(flags[j].owner == ci->clientnum) return;
 			ctfstate::takeflag(i, ci->clientnum);
 			sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
 		}
