@@ -2239,7 +2239,6 @@ void rendergeom(float causticspass, bool fogpass)
         {
             glPopMatrix();
             glPushMatrix();
-            pushshadowmap();
             resetorigin();
         }
         if(foggedvas.empty()) glDepthFunc(GL_LEQUAL);
