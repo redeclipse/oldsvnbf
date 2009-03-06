@@ -326,9 +326,10 @@ int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, 
         {
             case TEXT_CENTERED: left -= width/2; break;
             case TEXT_RIGHT_JUSTIFY: left -= width; break;
+            default: break;
         }
     }
-
+    if(flags&TEXT_UPWARD) top -= FONTH;
 	return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
 }
 

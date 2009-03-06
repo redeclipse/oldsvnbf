@@ -123,13 +123,18 @@ extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray, *m
 
 enum
 {
-    TEXT_SHADOW    = 1<<0,
-    TEXT_NO_INDENT = 1<<1,
+    TEXT_SHADOW			= 1<<0,
+    TEXT_NO_INDENT		= 1<<1,
+    TEXT_UPWARD			= 1<<2,
 
-    TEXT_ALIGN         = 3<<8,
-    TEXT_LEFT_JUSTIFY  = 0<<8,
-    TEXT_CENTERED      = 1<<8,
-    TEXT_RIGHT_JUSTIFY = 2<<8,
+    TEXT_ALIGN			= 3<<8,
+    TEXT_LEFT_JUSTIFY	= 0<<8,
+    TEXT_CENTERED		= 1<<8,
+    TEXT_RIGHT_JUSTIFY	= 2<<8,
+
+    TEXT_LEFT_UP		= TEXT_UPWARD|TEXT_LEFT_JUSTIFY,
+    TEXT_CENTER_UP		= TEXT_UPWARD|TEXT_CENTERED,
+    TEXT_RIGHT_UP		= TEXT_UPWARD|TEXT_RIGHT_JUSTIFY,
 };
 
 extern bool setfont(const char *name);
@@ -188,7 +193,7 @@ enum
 enum
 {
     PART_TELEPORT = 0,
-    PART_ICON,
+    PART_ICON, PART_ICON_RISE,
     PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
     PART_SMOKE, PART_SMOKE_RISE_SLOW, PART_SMOKE_RISE_SLOW_SOFT, PART_SMOKE_RISE_FAST, PART_SMOKE_SINK,

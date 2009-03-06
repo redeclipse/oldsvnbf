@@ -2215,30 +2215,23 @@ void rendertris(vec &fr, float yaw, float pitch, float size, float r, float g, f
 	{
 		vec to;
 		float ty;
-
 		glBegin(GL_TRIANGLES);
 		glPolygonMode(GL_FRONT_AND_BACK, fill ? GL_FILL : GL_LINE);
-
 		glVertex3f(fr.x, fr.y, fr.z);
-
 		ty = yaw - 45.f;
 		if (ty < 0.f) ty += 360.f;
 		else if (ty >= 360.f) ty -= 360.f;
-
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
 		to.add(fr);
 		glVertex3f(to.x, to.y, to.z);
-
 		ty = yaw + 45.f;
 		if (ty < 0.f) ty += 360.f;
 		else if (ty >= 360.f) ty -= 360.f;
-
 		vecfromyawpitch(ty, pitch, -1, 0, to);
 		to.mul(size);
 		to.add(fr);
 		glVertex3f(to.x, to.y, to.z);
-
 		glEnd();
 		xtraverts += 3;
 	});
@@ -2279,20 +2272,16 @@ void renderlineloop(vec &o, float xradius, float yradius, float zradius, float z
 void renderdir(vec &o, float yaw, float pitch, bool nf)
 {
 	vec fr = o, to, dr;
-
 	vecfromyawpitch(yaw, pitch, 1, 0, dr);
-
 	to = dr;
 	to.mul(RENDERPUSHX);
 	to.add(fr);
 	fr.z += RENDERPUSHZ;
 	to.z += RENDERPUSHZ;
-
 	renderline(fr, to, 0.f, 0.f, 1.f, nf);
-
 	dr.mul(0.5f);
 	to.add(dr);
-	rendertris(to, yaw, pitch, 2.f, 0.f, 0.f, 0.5f, true, nf);
+	rendertris(to, yaw, pitch, 3.f, 0.f, 0.f, 1.f, true, nf);
 }
 
 void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf)

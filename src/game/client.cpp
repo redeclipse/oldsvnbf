@@ -1285,11 +1285,25 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, true);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attr[0], entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
-					if(item)
+					if(entities::showentdesc)
 					{
-						s_sprintfd(ds)("@%s", item);
-						part_text(entities::ents[ent]->o, ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+						vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
+						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
+							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+						const char *texname = hud::itemtex(entities::ents[ent]->type, attr);
+						if(texname && *texname)
+						{
+							part_icon(pos, textureload(texname, 3), 1, 1.5f, 3000, colour, PART_ICON_RISE);
+						}
+						else
+						{
+							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
+							if(item && *item)
+							{
+								s_sprintfd(ds)("@%s", item);
+								part_text(pos, ds, PART_TEXT_RISE, 3000, colour, 2);
+							}
+						}
 					}
 					world::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
 					break;

@@ -413,7 +413,7 @@ struct textrenderer : sharedlistrenderer
         glPopMatrix();
     }
 };
-static textrenderer texts(PT_TEXT|PT_LERP), textups(PT_TEXTUP|PT_LERP, -8);
+static textrenderer texts(PT_TEXT|PT_LERP), textups(PT_TEXTUP|PT_LERP, -5);
 
 struct portal : listparticle<portal>
 {
@@ -479,8 +479,8 @@ struct iconrenderer : listrenderer<icon>
 {
     Texture *lasttex;
 
-    iconrenderer()
-        : listrenderer<icon>(NULL, PT_ICON|PT_LERP, 0, 0)
+    iconrenderer(int type, int grav = 0, int frames = 1)
+        : listrenderer<icon>(NULL, type, grav, 0, frames)
     {}
 
     void startrender()
@@ -530,6 +530,7 @@ struct iconrenderer : listrenderer<icon>
     // use addicon() instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
+static iconrenderer icons(PT_ICON|PT_LERP), iconups(PT_ICON|PT_LERP, -5);
 
 template<int T>
 static inline void modifyblend(const vec &o, int &blend)
@@ -816,7 +817,7 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new portalrenderer("textures/teleport"),
-    new iconrenderer,
+    &icons, &iconups,
 
     new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
     new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, -10, 0),

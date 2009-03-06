@@ -719,24 +719,23 @@ void eastereggs()
 	tm_yday		days since January 1st (0-365)
 	tm_isdst	1 if daylight savings is on, zero if not,
 	*/
-
-	if(lt->tm_wday == 5 && lt->tm_mday == 13)
+	int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
+	if(day == 6 && mday == 13)
 	{
 		loadback = "textures/spookyback";
 		loadbackinfo = "Friday the 13th";
 	}
-	else if(lt->tm_mon == 9 && lt->tm_mday == 31)
+	else if(month == 10 && mday == 31)
 	{
 		loadback = "textures/spookyback";
 		loadbackinfo = "Halloween";
 	}
-
-	if(lt->tm_mon == 2 && lt->tm_mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
-	if(lt->tm_mon == 2 && lt->tm_mday == 9)		loadbackinfo = "Happy Birthday Quin!";
-	if(lt->tm_mon == 4 && lt->tm_mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
-	if(lt->tm_mon == 7 && lt->tm_mday == 26)	loadbackinfo = "Happy Birthday Acord!";
-	if(lt->tm_mon == 7 && lt->tm_mday == 2)		loadbackinfo = "Happy Birthday c0rdawg!";
-	if(lt->tm_mon == 9 && lt->tm_mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
+	if(month == 2 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
+	if(month == 2 && mday == 9)		loadbackinfo = "Happy Birthday Quin!";
+	if(month == 4 && mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
+	if(month == 7 && mday == 26)	loadbackinfo = "Happy Birthday Acord!";
+	if(month == 7 && mday == 2)		loadbackinfo = "Happy Birthday c0rdawg!";
+	if(month == 9 && mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
 }
 
 bool findoctadir(const char *name)
@@ -962,7 +961,7 @@ int main(int argc, char **argv)
 			updatesounds();
 			UI::update();
 			inbetweenframes = renderedframe = false;
-			if(frameloops > 2) 
+			if(frameloops > 2)
             {
                 gl_drawframe(screen->w, screen->h);
                 renderedframe = true;
