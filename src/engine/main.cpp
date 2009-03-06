@@ -730,13 +730,13 @@ void eastereggs()
 		loadback = "textures/spookyback";
 		loadbackinfo = "Halloween";
 	}
-	if(month == 1 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
+	if(month == 2 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
 	if(month == 2 && mday == 9)		loadbackinfo = "Happy Birthday Quin!";
 	if(month == 4 && mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
 	if(month == 7 && mday == 26)	loadbackinfo = "Happy Birthday Acord!";
 	if(month == 7 && mday == 2)		loadbackinfo = "Happy Birthday c0rdawg!";
 	if(month == 9 && mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
-	if(month == 11 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
+	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
 }
 
 bool findoctadir(const char *name)
