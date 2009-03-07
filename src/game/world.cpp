@@ -521,9 +521,9 @@ namespace world
 				};
         		s_strcat(d->obit, suicidenames[weap]);
         	}
-        	else if(m_paint(gamemode, mutators)) s_strcat(d->obit, "was taken out of the game");
         	else if(flags&HIT_EXPLODE) s_strcat(d->obit, "was obliterated");
         	else if(flags&HIT_BURN) s_strcat(d->obit, "burnt up");
+        	else if(m_paint(gamemode, mutators)) s_strcat(d->obit, "gave up");
         	else s_strcat(d->obit, "suicided");
         }
 		else
