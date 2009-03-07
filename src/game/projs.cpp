@@ -342,7 +342,7 @@ namespace projs
 			}
 			case WEAPON_FLAMER:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x444444, 2.f);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x303030, 2.f);
 				part_create(PART_FIREBALL_SLENS, 75, from, 0xFF2200, 2.f, d);
 				adddynlight(from, 48, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
@@ -431,7 +431,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.05f, 1.f);
 					if(proj.canrender)
 					{
-						bool effect = false, moving = proj.movement > 0.f;
+						bool effect = false;
 						float size = weaptype[proj.weap].partsize*proj.lifesize;
 						if(flamertrails && lastmillis-proj.lasteffect > m_speedtimex(flamertraildelay))
 						{
@@ -442,7 +442,7 @@ namespace projs
 							len = effect ? max(int(m_speedtimex(flamertraillength)*(1.1f-proj.lifespan)), 1) : 1;
 						part_create(effect ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, len, proj.o, col, size);
 						if(effect)
-							part_create(PART_SMOKE_RISE_FAST, m_speedtimex(moving ? 250 : 500), vec(proj.o).add(vec(0, 0, size*(moving ? 0.45f : 0.7f))), 0x444444, size*(moving ? 0.5f : 0.75f));
+							part_create(PART_SMOKE_RISE_FAST, m_speedtimex(300), vec(proj.o).add(vec(0, 0, size*0.125f)), 0x303030, size*0.5f);
 					}
 					break;
 				}
@@ -609,7 +609,7 @@ namespace projs
 							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
 							part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f));
 						}
-						part_create(PART_SMOKE_RISE_SLOW_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x333333 : 0x222222, weaptype[proj.weap].explode);
+						part_create(PART_SMOKE_RISE_SLOW_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x303030 : 0x222222, weaptype[proj.weap].explode);
 						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
 						if(proj.weap == WEAPON_GL)
 						{
