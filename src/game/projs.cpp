@@ -321,49 +321,49 @@ namespace projs
 		{
 			case WEAPON_PLASMA:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(250), from, 0x88AABB, 0.6f);
-				part_create(PART_PLASMA_SLENS, m_speedtimex(75), from, 0x226688, 1.2f, d);
-				adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), m_speedtimex(75), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x88AABB, 0.6f);
+				part_create(PART_PLASMA_SLENS, 75, from, 0x226688, 1.2f, d);
+				adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_SG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(500), from, 0x666666, 4.f);
-				part_create(PART_MUZZLE_FLASH_SLENS, m_speedtimex(100), from, 0xFFAA00, 4.f, d);
-				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), m_speedtimex(100), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_SLOW, 500, from, 0x666666, 4.f);
+				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFAA00, 4.f, d);
+				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_CG:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(100), from, 0x999999, 1.5f);
-				part_create(PART_MUZZLE_FLASH, m_speedtimex(25), from, 0xFFAA00, 3.f, d);
-                adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), m_speedtimex(50), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_SLOW, 100, from, 0x999999, 1.5f);
+				part_create(PART_MUZZLE_FLASH, 25, from, 0xFFAA00, 3.f, d);
+                adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_FLAMER:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(250), from, 0x444444, 2.f);
-				part_create(PART_FIREBALL_SLENS, m_speedtimex(75), from, 0xFF2200, 2.f, d);
-				adddynlight(from, 48, vec(1.1f, 0.33f, 0.01f), m_speedtimex(100), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x444444, 2.f);
+				part_create(PART_FIREBALL_SLENS, 75, from, 0xFF2200, 2.f, d);
+				adddynlight(from, 48, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_CARBINE:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(200), from, 0xAAAAAA, 1.f);
-				part_create(PART_MUZZLE_FLASH_SLENS, m_speedtimex(100), from, 0xFFCC22, 2.f, d);
-                adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), m_speedtimex(50), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_SLOW, 200, from, 0xAAAAAA, 1.f);
+				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFCC22, 2.f, d);
+                adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_RIFLE:
 			{
-				part_create(PART_SMOKE_RISE_FAST, m_speedtimex(200), from, 0x444444, 0.8f);
-				part_create(PART_PLASMA_SLENS, m_speedtimex(75), from, 0x6611FF, 1.5f, d);
-                adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), m_speedtimex(75), 0, DL_FLASH);
+				part_create(PART_SMOKE_RISE_FAST, 200, from, 0x444444, 0.8f);
+				part_create(PART_PLASMA_SLENS, 75, from, 0x6611FF, 1.5f, d);
+                adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
 				break;
 			}
 			case WEAPON_PAINT:
 			{
-				part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(250), from, 0x999999, 0.5f);
+				part_create(PART_SMOKE_RISE_SLOW, 250, from, 0x999999, 0.5f);
 				break;
 			}
 		}
@@ -431,7 +431,7 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.05f, 1.f);
 					if(proj.canrender)
 					{
-						bool effect = false;
+						bool effect = false, moving = proj.movement > 0.f;
 						float size = weaptype[proj.weap].partsize*proj.lifesize;
 						if(flamertrails && lastmillis-proj.lasteffect > m_speedtimex(flamertraildelay))
 						{
@@ -441,6 +441,8 @@ namespace projs
 						int col = ((int(224*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(64*max((1.f-proj.lifespan),0.2f))+1)<<8),
 							len = effect ? max(int(m_speedtimex(flamertraillength)*(1.1f-proj.lifespan)), 1) : 1;
 						part_create(effect ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, len, proj.o, col, size);
+						if(effect)
+							part_create(PART_SMOKE_RISE_FAST, m_speedtimex(moving ? 250 : 500), vec(proj.o).add(vec(0, 0, size*(moving ? 0.45f : 0.7f))), 0x444444, size*(moving ? 0.5f : 0.75f));
 					}
 					break;
 				}
@@ -590,9 +592,9 @@ namespace projs
 				{
 					case WEAPON_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-						part_create(PART_PLASMA_SLENS, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
-						part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(250), proj.o, 0x88AABB, 2.4f);
+						part_create(PART_PLASMA_SOFT, m_speedtimex(100), proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(PART_PLASMA_SLENS, m_speedtimex(100), proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
+						part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(250), proj.o, 0x8899AA, 2.4f);
 						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(0.1f, 0.4f, 0.6f), m_speedtimex(200), 10);
 						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
 						break;
@@ -607,7 +609,7 @@ namespace projs
 							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
 							part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f));
 						}
-						part_create(PART_SMOKE_RISE_SLOW_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x433333 : 0x222222, weaptype[proj.weap].explode);
+						part_create(PART_SMOKE_RISE_SLOW_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x333333 : 0x222222, weaptype[proj.weap].explode);
 						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
 						if(proj.weap == WEAPON_GL)
 						{
@@ -634,7 +636,7 @@ namespace projs
 					case WEAPON_CARBINE:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
-						part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(200), proj.o, 0xAAAAAA, weaptype[proj.weap].partsize);
+						part_create(PART_SMOKE_RISE_SLOW, m_speedtimex(200), proj.o, 0x999999, weaptype[proj.weap].partsize);
 						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
 					}

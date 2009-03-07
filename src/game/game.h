@@ -1359,7 +1359,7 @@ namespace world
 
 namespace entities
 {
-	extern int showentdesc;
+	extern int showentdescs;
 	extern vector<extentity *> ents;
 	extern void clearentcache();
 	extern int closestent(int type, const vec &pos, float mindist, bool links = false);
