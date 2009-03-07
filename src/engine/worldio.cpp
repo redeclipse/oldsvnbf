@@ -516,7 +516,7 @@ void save_world(const char *mname, bool nolms)
 				}
 
 				gzputint(f, links.length());
-				loopv(links) gzputint(f, links[i]); // aligned index
+				loopvj(links) gzputint(f, links[j]); // aligned index
 				if(verbose >= 2) conoutf("\fwentity %s (%d) saved %d links", entities::findname(e.type), i, links.length());
 			}
 			count++;
