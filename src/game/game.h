@@ -1079,7 +1079,7 @@ struct gameent : dynent, gamestate
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
 		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
 			totalshots, smoothmillis, lastnode, respawned, suicided, vschan, dschan, wschan,
-				reqswitch, reqreload, requse;
+				reqswitch, reqreload, requse, lasthit, lastkill;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
@@ -1117,7 +1117,7 @@ struct gameent : dynent, gamestate
 
 	void clearstate()
 	{
-        lasttaunt = 0;
+        lasttaunt = lasthit = lastkill = 0;
 		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
 		obit[0] = 0;
 	}
@@ -1321,7 +1321,7 @@ namespace hud
 namespace world
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, lasthit, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim,
+			quakewobble, lastzoom, lastspec, spectvtime, thirdpersonaim, firstpersonaim,
 				noblood, fogdist;
 	extern bool intermission, zooming;
 

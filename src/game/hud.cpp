@@ -14,6 +14,9 @@ namespace hud
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 1, 3);
 
+	VARP(obitnotices, 0, 2, 2);
+	VARP(obitnoticetime, 0, 3000, INT_MAX-1);
+
 	VARP(teamwidgets, 0, 1, 3); // colour based on team
 	VARP(teamindicators, 0, 1, 2);
 	VARP(teamcrosshair, 0, 1, 2);
@@ -353,7 +356,7 @@ namespace hud
         else if(world::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(world::player1->state == CS_SPECTATOR || world::player1->state == CS_WAITING) index = POINTER_SPEC;
         else if(world::inzoom() && weaptype[world::player1->weapselect].snipes) index = POINTER_SNIPE;
-        else if(lastmillis-world::lasthit <= crosshairhitspeed) index = POINTER_HIT;
+        else if(lastmillis-world::player1->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(world::gamemode, world::mutators))
         {
             vec pos = world::headpos(world::player1, 0.f);
@@ -412,7 +415,7 @@ namespace hud
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->lastdeath ? world::player1->respawnwait(lastmillis, sdelay) : 0;
 				const char *msg = world::player1->state != CS_WAITING && world::player1->lastdeath ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
 				ty -= draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, msg);
-				if(world::player1->lastdeath && *world::player1->obit)
+				if(obitnotices && world::player1->lastdeath && *world::player1->obit)
 				{
 					pushfont("default");
 					ty -= draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, world::player1->obit);
@@ -466,6 +469,12 @@ namespace hud
 						ty -= draw_textx("Shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, teamtype[world::player1->team].chat);
 						popfont();
 					}
+				}
+				if(obitnotices && lastmillis-world::player1->lastkill <= obitnoticetime && *world::player1->obit)
+				{
+					pushfont("default");
+					ty -= draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, world::player1->obit);
+					popfont();
 				}
 				if(shownotices >= 3)
 				{

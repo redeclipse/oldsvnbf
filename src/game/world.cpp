@@ -8,7 +8,7 @@ namespace world
 	bool intermission = false;
 	int maptime = 0, minremain = 0, swaymillis = 0;
 	vec swaydir(0, 0, 0);
-    int lasthit = 0, lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0;
+    int lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0;
     bool prevzoom = false, zooming = false;
 	int quakewobble = 0, liquidchan = -1, fogdist = 0;
 
@@ -330,7 +330,6 @@ namespace world
 	{
 		if(hud::sb.scoreson) hud::sb.showscores(false);
 		cleargui();
-		lasthit = 0;
 	}
 
 	void resetstate()
@@ -475,6 +474,8 @@ namespace world
 			else force *= hitpushscale;
 			d->vel.add(vec(dir).mul(m_speedscale(force)));
 		}
+        if(d != actor && actor != world::player1)
+			actor->lasthit = lastmillis;
 	}
 
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor)
@@ -511,14 +512,13 @@ namespace world
         	// d->move = d->strafe = 0;
             d->resetinterp();
         }
-
-		s_strcpy(d->obit, "rests in pieces");
+		s_sprintf(d->obit)("%s ", colorname(d));
         if(d == actor)
         {
-        	if(flags&HIT_MELT) s_strcpy(d->obit, "melted");
-			else if(flags&HIT_FALL) s_strcpy(d->obit, "thought they could fly");
-			else if(flags&HIT_SPAWN) s_strcpy(d->obit, "tried to spawn inside solid matter");
-			else if(flags&HIT_LOST) s_strcpy(d->obit, "got very, very lost");
+        	if(flags&HIT_MELT) s_strcat(d->obit, "melted");
+			else if(flags&HIT_FALL) s_strcat(d->obit, "thought they could fly");
+			else if(flags&HIT_SPAWN) s_strcat(d->obit, "tried to spawn inside solid matter");
+			else if(flags&HIT_LOST) s_strcat(d->obit, "got very, very lost");
         	else if(flags && isweap(weap))
         	{
 				static const char *suicidenames[WEAPON_MAX] = {
@@ -531,12 +531,12 @@ namespace world
 					"decided to kick it, kamikaze style",
 					"ate paint"
 				};
-        		s_strcpy(d->obit, suicidenames[weap]);
+        		s_strcat(d->obit, suicidenames[weap]);
         	}
-        	else if(m_paint(gamemode, mutators)) s_strcpy(d->obit, "was taken out of the game");
-        	else if(flags&HIT_EXPLODE) s_strcpy(d->obit, "was obliterated");
-        	else if(flags&HIT_BURN) s_strcpy(d->obit, "burnt up");
-        	else s_strcpy(d->obit, "suicided");
+        	else if(m_paint(gamemode, mutators)) s_strcat(d->obit, "was taken out of the game");
+        	else if(flags&HIT_EXPLODE) s_strcat(d->obit, "was obliterated");
+        	else if(flags&HIT_BURN) s_strcat(d->obit, "burnt up");
+        	else s_strcat(d->obit, "suicided");
         }
 		else
 		{
@@ -574,12 +574,15 @@ namespace world
 			};
 
 			int o = obliterated ? 2 : (flags&HIT_HEAD && !weaptype[weap].explode ? 1 : 0);
-			const char *oname = isweap(weap) ? obitnames[o][weap] : "was killed by";
+			s_strcat(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
 			if(m_team(gamemode, mutators) && d->team == actor->team)
-				s_sprintf(d->obit)("%s teammate %s", oname, colorname(actor));
+			{
+				s_strcat(d->obit, " teammate ");
+				s_strcat(d->obit, colorname(actor));
+			}
 			else
 			{
-				s_sprintf(d->obit)("%s %s", oname, colorname(actor));
+				s_strcat(d->obit, colorname(actor));
 				if(!kidmode) switch(actor->spree)
 				{
 					case 5:
@@ -629,6 +632,11 @@ namespace world
 				}
 			}
 		}
+		if(d != actor)
+		{
+			if(actor->state == CS_ALIVE) s_strcpy(actor->obit, d->obit);
+			actor->lastkill = lastmillis;
+		}
 		if(dth >= 0)
 		{
 			if(issound(d->vschan)) removesound(d->vschan);
@@ -648,8 +656,8 @@ namespace world
 			}
 			if(show)
 			{
-				if(isme) announce(anc, "\fa%s %s", colorname(d), d->obit);
-				else conoutf("\fa%s %s", colorname(d), d->obit);
+				if(isme) announce(anc, "\fa%s", d->obit);
+				else conoutf("\fa%s", d->obit);
 			}
 		}
 		if(!kidmode && !noblood && !m_paint(gamemode, mutators))

@@ -28,8 +28,8 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
-        if(d != proj.owner && proj.owner == world::player1) world::lasthit = lastmillis;
-
+        if(d != proj.owner && proj.owner == world::player1)
+			world::player1->lasthit = lastmillis;
 		hitmsg &h = hits.add();
 		h.flags = flags;
 		h.target = d->clientnum;
