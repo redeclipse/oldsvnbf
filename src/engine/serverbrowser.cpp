@@ -404,7 +404,7 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
-VARP(serverupdateinterval, 0, 15, INT_MAX-1);
+VARP(serverupdateinterval, 0, 10, INT_MAX-1);
 
 void refreshservers()
 {
