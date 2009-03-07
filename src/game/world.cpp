@@ -498,20 +498,8 @@ namespace world
 			else dth = S_DIE1+rnd(2);
 		}
 
-		if(d == player1)
-		{
-			anc = S_V_FRAGGED;
-			/*
-			d->stopmoving();
-			d->pitch = 0;
-			d->roll = 0;
-			*/
-		}
-		else
-        {
-        	// d->move = d->strafe = 0;
-            d->resetinterp();
-        }
+		if(d == player1) anc = S_V_FRAGGED;
+		else d->resetinterp();
 		s_sprintf(d->obit)("%s ", colorname(d));
         if(d == actor)
         {
@@ -573,7 +561,7 @@ namespace world
 				}
 			};
 
-			int o = obliterated ? 2 : (flags&HIT_HEAD && !weaptype[weap].explode ? 1 : 0);
+			int o = obliterated ? 2 : ((flags&HIT_PROJ) && (flags&HIT_HEAD) ? 1 : 0);
 			s_strcat(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 			{
@@ -582,6 +570,7 @@ namespace world
 			}
 			else
 			{
+				s_strcat(d->obit, " ");
 				s_strcat(d->obit, colorname(actor));
 				if(!kidmode) switch(actor->spree)
 				{
