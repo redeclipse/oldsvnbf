@@ -9,7 +9,7 @@ namespace hud
 
 	VARP(hudsize, 0, 2048, INT_MAX-1);
 
-	VARP(shownotices, 0, 3, 4);
+	VARP(shownotices, 0, 4, 4);
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 1, 3);
@@ -412,7 +412,7 @@ namespace hud
 				int sdelay = m_spawndelay(world::gamemode, world::mutators), delay = world::player1->lastdeath ? world::player1->respawnwait(lastmillis, sdelay) : 0;
 				const char *msg = world::player1->state != CS_WAITING && world::player1->lastdeath ? (m_paint(world::gamemode, world::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
 				ty -= draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, msg);
-				if(shownotices > 1)
+				if(shownotices >= 2)
 				{
 					SEARCHBINDCACHE(attackkey)("attack", 0);
 					if(delay || m_duke(world::gamemode, world::mutators))
@@ -422,7 +422,7 @@ namespace hud
 							ty -= draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1);
 						else if(delay) ty -= draw_textx("Down for [ \fs\fy%.1f\fS ] second(s)", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, delay/1000.f);
 						popfont();
-						if(world::player1->state != CS_WAITING && shownotices > 2 && lastmillis-world::player1->lastdeath > 500)
+						if(world::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-world::player1->lastdeath > 500)
 						{
 							pushfont("default");
 							ty -= draw_textx("Press [ \fs\fa%s\fS ] to look around", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, attackkey);
@@ -434,7 +434,7 @@ namespace hud
 						pushfont("emphasis");
 						ty -= draw_textx("Ready to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1);
 						popfont();
-						if(world::player1->state != CS_WAITING && shownotices > 2)
+						if(world::player1->state != CS_WAITING && shownotices >= 3)
 						{
 							pushfont("default");
 							ty -= draw_textx("Press [ \fs\fa%s\fS ] to respawn", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, attackkey);
@@ -448,7 +448,7 @@ namespace hud
 				if(teamkillnum && m_team(world::gamemode, world::mutators) && numteamkills() >= teamkillnum)
 				{
 					ty -= draw_textx("%sDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy");
-					if(shownotices > 1)
+					if(shownotices >= 2)
 					{
 						pushfont("emphasis");
 						settexture(flagtex(world::player1->team), 3);
@@ -461,7 +461,7 @@ namespace hud
 						popfont();
 					}
 				}
-				if(shownotices > 2)
+				if(shownotices >= 3)
 				{
 					pushfont("default");
 					if(world::player1->requse < 0)
@@ -518,7 +518,7 @@ namespace hud
 							}
 						}
 					}
-					if(shownotices > 3)
+					if(shownotices >= 4)
 					{
 						if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 						{
@@ -571,12 +571,12 @@ namespace hud
 			else if(world::player1->state == CS_SPECTATOR)
 			{
 				ty -= draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_UP, -1, -1, world::tvmode() ? "SpecTV" : "Spectating");
-				if(shownotices > 1)
+				if(shownotices >= 2)
 				{
 					SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 					pushfont("default");
 					ty -= draw_textx("Press [ \fs\fa%s\fS ] to play", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_UP, -1, -1, speconkey);
-					if(shownotices > 2)
+					if(shownotices >= 3)
 					{
 						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
 						ty -= draw_textx("Press [ \fs\fa%s\fS ] to %s", tx, ty, 255, 255, 255, tf, TEXT_RIGHT_UP, -1, -1, specmodekey, world::tvmode() ? "look around" : "observe");
