@@ -393,7 +393,8 @@ namespace hud
 		{
 			pushfont("super");
 			float roff = hastv(showborder) ? 1.f : 0.5f;
-			int off = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, iff = showinventory ? int(hudsize*inventorysize*1.5f) : 0,
+			bool hasinventory = showinventory && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING;
+			int off = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, iff = hasinventory ? int(hudsize*inventorysize*1.5f) : 0,
 				ty = hudsize-off, tx = hudwidth-off-iff, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
 			if(teamnotices) skewcolour(tr, tg, tb);
