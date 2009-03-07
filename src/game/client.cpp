@@ -1285,16 +1285,14 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, true);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					if(entities::showentdesc)
+					if(entities::showentdescs)
 					{
 						vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
 						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
 							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-						const char *texname = hud::itemtex(entities::ents[ent]->type, attr);
+						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
 						if(texname && *texname)
-						{
-							part_icon(pos, textureload(texname, 3), 1, 1.5f, 3000, colour, PART_ICON_RISE);
-						}
+							part_icon(pos, textureload(texname, 3), 1, 2, 3000, colour, PART_ICON_RISE);
 						else
 						{
 							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);

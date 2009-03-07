@@ -5,7 +5,7 @@ namespace entities
 {
 	vector<extentity *> ents;
 
-	VARP(showentdesc, 0, 1, 2);
+	VARP(showentdescs, 0, 2, 3);
 	VARP(showentinfo, 0, 1, 5);
 	VARP(showentnoisy, 0, 0, 2);
 	VARP(showentdir, 0, 1, 3);
@@ -148,13 +148,13 @@ namespace entities
 				loopk(WEAPON_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
 			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-			if(showentdesc)
+			if(showentdescs)
 			{
 				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-				const char *texname = hud::itemtex(e.type, attr);
+				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
 				vec above = vec(world::abovehead(d)).add(vec(0, 0, 2));
 				if(texname && *texname)
-					part_icon(above, textureload(texname, 3), 1, 2.f, 3000, colour, PART_ICON_RISE);
+					part_icon(above, textureload(texname, 3), 1, 2, 3000, colour, PART_ICON_RISE);
 				else
 				{
 					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
@@ -1787,19 +1787,15 @@ namespace entities
 				}
 			}
 		}
-		bool item = showentdesc && enttype[e.type].usetype == EU_ITEM && spawned,
-			notitem = (edit && (showentinfo >= 4 || hasent));
+		bool item = showentdescs && enttype[e.type].usetype == EU_ITEM && spawned, notitem = (edit && (showentinfo >= 4 || hasent));
 		if(item || notitem)
 		{
 			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-			if(item)
-			{
-				const char *itext = hud::itemtex(e.type, attr);
-				if(itext && *itext)
-					part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour);
-			}
-			if(notitem)
+			const char *itext = item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
+			if(itext && *itext)
+				part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
+			else
 			{
 				s_sprintfd(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], notitem && (showentinfo >= 5 || hasent)));
 				part_text(pos.add(off), ds, PART_TEXT, 1, colour);
