@@ -15,7 +15,7 @@ namespace hud
 	VARP(showfps, 0, 1, 3);
 
 	VARP(obitnotices, 0, 2, 2);
-	VARP(obitnoticetime, 0, 3000, INT_MAX-1);
+	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
 
 	VARP(teamwidgets, 0, 1, 3); // colour based on team
 	VARP(teamindicators, 0, 1, 2);
