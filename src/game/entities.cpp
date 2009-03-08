@@ -14,7 +14,7 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	FVAR(waypointmergescale, 1e-3f, 1.f, 1000);
+	FVAR(waypointmergescale, 1e-3f, 0.5f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -1127,7 +1127,7 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v(world::feetpos(d, 0.f));
-			bool shoulddrop = m_play(world::gamemode) || dropwaypoints;
+			bool shoulddrop = (m_play(world::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius*(dropwaypoints ? 1 : 2) : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 			if(!ents.inrange(curnode) && shoulddrop)
