@@ -223,7 +223,7 @@ namespace server
 	{
 		int clientnum, connectmillis, sessionid, ping, team;
 		string name, mapvote;
-		int modevote, mutsvote;
+		int modevote, mutsvote, lastvote;
 		int privilege;
         bool connected, local, timesync, online, wantsmap;
         int gameoffset, lastevent;
@@ -251,7 +251,7 @@ namespace server
 			events.deletecontentsp();
             targets.setsizenodelete(0);
             timesync = false;
-            lastevent = gameoffset = 0;
+            lastevent = gameoffset = lastvote = 0;
 			team = TEAM_NEUTRAL;
 		}
 
@@ -374,8 +374,9 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set default mode and higher (+1 locked completely)
-	VAR(varslock, 0, 1, 2); // 0 = off, 1 = admin only, 2 = nobody
+	VAR(modelock, 0, 0, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set default mode and higher (+1 locked completely)
+	VAR(varslock, 0, 0, 2); // 0 = off, 1 = admin only, 2 = nobody
+	VAR(votewait, 0, 5000, INT_MAX-1);
 
 	ICOMMAND(gameid, "", (), result(gameid()));
 	ICOMMAND(gamever, "", (), intret(gamever()));
@@ -386,6 +387,7 @@ namespace server
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
 			{
+				val[0] = 0;
 				switch(id.type)
 				{
 					case ID_VAR:
@@ -1106,7 +1108,9 @@ namespace server
 	void vote(char *map, int reqmode, int reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || !m_game(reqmode)) return;
+		modecheck(&reqmode, &reqmuts);
+        if(!ci || !m_game(reqmode) || !map || !*map || (ci->lastvote && lastmillis-ci->lastvote <= votewait)) return;
+        if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, map)) return;
 		if(reqmode < G_LOBBY && !ci->local)
 		{
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
@@ -1128,13 +1132,9 @@ namespace server
 				break;
 			}
 		}
-
 		s_strcpy(ci->mapvote, map);
-		if(!ci->mapvote[0]) return;
-
-		ci->modevote = reqmode; ci->mutsvote = reqmuts;
-		modecheck(&ci->modevote, &ci->mutsvote);
-
+		ci->modevote = reqmode;
+		ci->mutsvote = reqmuts;
 		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
 		{
 			endmatch();
