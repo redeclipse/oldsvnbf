@@ -1402,8 +1402,86 @@ namespace server
 		}
 	}
 
+	bool servcmd(int nargs, char *cmd, char *arg)
+	{ // incoming command from scripts
+		ident *id = idents->access(cmd);
+		if(id && id->flags&IDF_SERVER)
+		{
+			string val; val[0] = 0;
+			switch(id->type)
+			{
+				case ID_COMMAND:
+				{
+					string s;
+					if(nargs <= 1 || !arg) s_sprintf(s)("%s", cmd);
+					else s_sprintf(s)("%s %s", cmd, arg);
+					char *ret = executeret(s);
+					if(ret)
+					{
+						if(*ret) conoutf("\fm%s returned %s", cmd, ret);
+						delete[] ret;
+					}
+					return true;
+				}
+				case ID_VAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						conoutf("\fm%s = %d", cmd, *id->storage.i);
+						return true;
+					}
+					if(id->maxval < id->minval)
+					{
+						conoutf("\frcannot override variable: %s", cmd);
+						return true;
+					}
+					int ret = atoi(arg);
+					if(ret < id->minval || ret > id->maxval)
+					{
+						conoutf("\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+						return true;
+					}
+					*id->storage.i = ret;
+					id->changed();
+					s_sprintf(val)("%d", *id->storage.i);
+					break;
+				}
+				case ID_FVAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						conoutf("\fm%s = %f", cmd, *id->storage.f);
+						return true;
+					}
+					float ret = atof(arg);
+					*id->storage.f = ret;
+					id->changed();
+					s_sprintf(val)("%f", *id->storage.f);
+					break;
+				}
+				case ID_SVAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						conoutf(strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
+						return true;
+					}
+					delete[] *id->storage.s;
+					*id->storage.s = newstring(arg);
+					id->changed();
+					s_sprintf(val)("%s", *id->storage.s);
+					break;
+				}
+				default: return false;
+			}
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id->name[3], val);
+			return true;
+		}
+		return false; // parse will spit out "unknown command" in this case
+	}
+
 	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
-	{
+	{ // incoming commands from clients
 		s_sprintfd(cmdname)("sv_%s", cmd);
 		ident *id = idents->access(cmdname);
 		if(id && id->flags&IDF_SERVER)
@@ -1411,8 +1489,7 @@ namespace server
 			if(varslock >= 2) srvmsgf(ci->clientnum, "\frvariables on this server are locked");
 			else if(haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true))
 			{
-				string val;
-				val[0] = 0;
+				string val; val[0] = 0;
 				switch(id->type)
 				{
 					case ID_COMMAND:

@@ -132,4 +132,5 @@ namespace server
 	extern const char *choosemap(const char *suggest);
 	extern bool canload(char *type);
 	extern void start();
+	extern bool servcmd(int nargs, char *cmd, char *arg);
 }

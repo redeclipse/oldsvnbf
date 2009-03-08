@@ -508,11 +508,10 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 		else
 		{
 			ident *id = idents->access(c);
-			if(!id || id->flags&IDF_CLIENT)
+			if(!id || id->flags&IDF_SERVER || id->flags&IDF_CLIENT)
 			{
 				if((id && (id->type == ID_COMMAND || id->type == ID_CCOMMAND)) || (!isdigit(*c) && ((*c!='+' && *c!='-' && *c!='.') || !isdigit(c[1]))))
 				{
-#ifndef STANDALONE
 					string arg;
 					arg[0] = 0;
 					if(numargs > 1) loopk(numargs-1) if(w[k+1])
@@ -520,18 +519,24 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						if(k) s_strcat(arg, " ");
 						s_strcat(arg, w[k+1]);
 					}
-					if(!client::sendcmd(numargs, c, arg))
+					bool found = false;
+					if(id)
+					{
+						if(id->flags&IDF_SERVER) found = server::servcmd(numargs, c, arg);
+#ifndef STANDALONE
+						else if(id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, arg);
 #endif
-						conoutf("\frunknown command: %s", c);
+					}
+					if(!found) conoutf("\frunknown command: %s", c);
 				}
-				if(id && id->flags&IDF_CLIENT)
+				if(id && (id->flags&IDF_SERVER || id->flags&IDF_CLIENT))
 				{
 					string val; val[0] = 0;
 					switch(id->type)
 					{
 						case ID_VAR: s_sprintf(val)("%d", *id->storage.i); break;
-						case ID_FVAR: s_sprintf(val)("%d", *id->storage.i); break;
-						case ID_SVAR: s_sprintf(val)("%d", *id->storage.i); break;
+						case ID_FVAR: s_sprintf(val)("%f", *id->storage.f); break;
+						case ID_SVAR: s_sprintf(val)("%s", *id->storage.s); break;
 						default: break;
 					}
 					setretval(newstring(val[0] ? val : c));
