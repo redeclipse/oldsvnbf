@@ -273,7 +273,7 @@ extern void adddecal(int type, const vec &center, const vec &surface, float radi
 // worldio
 extern void setnames(const char *fname, int type);
 extern bool load_world(const char *mname, bool temp = false);
-extern void save_world(const char *mname, bool nolms = false);
+extern void save_world(const char *mname, bool nodata = false, bool forcesave = false);
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
