@@ -5,7 +5,7 @@
 namespace client
 {
 	bool c2sinit = false, sendinfo = false, isready = false, remote = false,
-		demoplayback = false, needsmap = false, gettingmap = false;
+		demoplayback = false, needsmap = false, gettingmap = false, donesave = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
 
@@ -111,7 +111,7 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		gettingmap = needsmap = remote = isready = c2sinit = sendinfo = false;
+		gettingmap = needsmap = donesave = remote = isready = c2sinit = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
 		projs::remove(world::player1);
@@ -370,7 +370,7 @@ namespace client
 		world::maptime = 0;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		needsmap = false;
+		donesave = needsmap = false;
 		if(!name || !*name || !load_world(name, temp))
 		{
 			emptymap(0, true, NULL);
@@ -477,7 +477,8 @@ namespace client
 		conoutf("\fmsending map...");
 		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
-		s_sprintfd(mapfile)("%s%s", m_edit(world::gamemode) ? "temp/" : "", mapname);
+		bool edit = m_edit(world::gamemode);
+		s_sprintfd(mapfile)("temp/%s", mapname);
 		loopi(3)
 		{
 			string mapfext;
@@ -487,10 +488,11 @@ namespace client
 				case 1: s_sprintf(mapfext)("%s.png", mapfile); break;
 				case 0: default:
 					s_sprintf(mapfext)("%s.bgz", mapfile);
-					if(m_edit(world::gamemode))
+					if(edit || !donesave)
 					{
-						save_world(mapfile, true);
+						save_world(mapfile, edit, true);
 						setnames(mapname, MAP_BFGZ);
+						donesave = true;
 					}
 					break;
 			}
@@ -736,19 +738,6 @@ namespace client
 			putint(p, SV_INITC2S);
 			sendstring(world::player1->name, p);
 			putint(p, world::player1->team);
-#if 0 // i don't think we need this anymore
-			loopv(world::players) if(world::players[i] && world::players[i]->ai)
-			{
-				gameent *f = world::players[i];
-				putint(p, SV_INITAI);
-				putint(p, f->clientnum);
-				putint(p, f->ownernum);
-				putint(p, f->aitype);
-				putint(p, f->skill);
-				sendstring(f->name, p);
-				putint(p, f->team);
-			}
-#endif
 		}
 		int i = 0;
 		while(i < messages.length()) // send messages collected during the previous frames
@@ -1663,7 +1652,7 @@ namespace client
 					int size = getint(p);
 					if(size>=0) emptymap(size, true);
 					else enlargemap(true);
-					needsmap = false;
+					donesave = needsmap = false;
 					if(d && d!=world::player1)
 					{
 						int newsize = 0;

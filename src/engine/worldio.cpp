@@ -411,7 +411,7 @@ ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname)
 VARP(autosaveconfig, 0, 1, 1);
 VARP(autosavemapshot, 0, 1, 1);
 
-void save_world(const char *mname, bool nolms)
+void save_world(const char *mname, bool nodata, bool forcesave)
 {
 	int savingstart = SDL_GetTicks();
 
@@ -421,8 +421,8 @@ void save_world(const char *mname, bool nolms)
 	gzFile f = opengzfile(mapfile, "wb9");
 	if(!f) { conoutf("\frerror saving %s to %s: file error", mapname, mapfile); return; }
 
-	if(autosavemapshot || nolms) save_mapshot(mapname);
-	if(autosaveconfig || nolms) save_config(mapname);
+	if(autosavemapshot || forcesave) save_mapshot(mapname);
+	if(autosaveconfig || forcesave) save_config(mapname);
 
 	renderbackground("saving map..");
 	strncpy(hdr.head, "BFGZ", 4);
@@ -442,9 +442,9 @@ void save_world(const char *mname, bool nolms)
 		}
 	}
 
-    hdr.numpvs = nolms ? 0 : getnumviewcells();
-    hdr.blendmap = nolms ? 0 : shouldsaveblendmap();
-	hdr.lightmaps = nolms ? 0 : lightmaps.length();
+    hdr.numpvs = nodata ? 0 : getnumviewcells();
+    hdr.blendmap = nodata ? 0 : shouldsaveblendmap();
+	hdr.lightmaps = nodata ? 0 : lightmaps.length();
 
 	bfgz tmp = hdr;
 	endianswap(&tmp.version, sizeof(int), 7);
@@ -524,8 +524,8 @@ void save_world(const char *mname, bool nolms)
 	}
 	if(verbose) conoutf("\fwsaved %d entities", count);
 
-	savec(worldroot, f, nolms);
-    if(!nolms)
+	savec(worldroot, f, nodata);
+    if(!nodata)
     {
         loopv(lightmaps)
         {
@@ -561,8 +561,8 @@ void save_world(const char *mname, bool nolms)
 	conoutf("\fwsaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
 }
 
-ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname, false));
-ICOMMAND(savecurrentmap, "", (), save_world(mapname, false));
+ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname));
+ICOMMAND(savecurrentmap, "", (), save_world(mapname));
 
 void swapXZ(cube *c)
 {
