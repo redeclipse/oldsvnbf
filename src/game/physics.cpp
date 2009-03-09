@@ -544,7 +544,7 @@ namespace physics
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
-        if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += curtime;
+        if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
 		vec m(0.0f, 0.0f, 0.0f);
         bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
@@ -571,12 +571,9 @@ namespace physics
             if(local) d.mul(floatspeed/100.0f);
         }
 
-		float friction = floating || pl->type==ENT_CAMERA ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
-		float fpsfric = max(friction/millis*20.0f*(1.f/speedscale), 1.0f);
 
-        pl->vel.mul(fpsfric-1);
-        pl->vel.add(d);
-        pl->vel.div(fpsfric);
+		float fric = floating || pl->type==ENT_CAMERA ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
+        pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 	}
 
     void modifygravity(physent *pl, int curtime)
@@ -595,10 +592,9 @@ namespace physics
 
         if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
         {
-            float friction = pl->inliquid ? sinkfric : floorfric,
-                  fpsfric = friction/curtime*20.0f*(1.f/speedscale),
+            float fric = pl->inliquid ? sinkfric : floorfric,
                   c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
-            pl->falling.mul(1 - c/fpsfric);
+            pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f*speedscale)); 
         }
     }
 
