@@ -30,7 +30,6 @@ namespace world
 	VARP(thirdpersonmouse, 0, 0, 2);
 	VARP(thirdpersondeadzone, 0, 10, 100);
 	VARP(thirdpersonpanspeed, 1, 30, INT_MAX-1);
-	VARP(thirdpersonaim, 0, 250, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
 	VARP(thirdpersontranslucent, 0, 0, 1);
 	FVARP(thirdpersondist, -100, 5.0f, 100);
@@ -41,7 +40,6 @@ namespace world
 	VARP(firstpersondeadzone, 0, 10, 100);
 	VARP(firstpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(firstpersonfov, 90, 100, 150);
-	VARP(firstpersonaim, 0, 0, INT_MAX-1);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
 	VARP(firstpersontranslucent, 0, 0, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
@@ -982,27 +980,7 @@ namespace world
 			resetcursor();
 			lastmousetype = style;
 		}
-		if(style >= 0)
-		{
-			int aim = isthirdperson() ? thirdpersonaim : firstpersonaim;
-			if(aim)
-			{
-				float ax, ay, az;
-				vectocursor(worldpos, ax, ay, az);
-				float amt = float(curtime)/float(aim),
-					  offx = ax-aimx, offy = ay-aimy;
-				aimx += offx*amt;
-				aimy += offy*amt;
-			}
-			else
-			{
-				aimx = cursorx;
-				aimy = cursory;
-			}
-			float vx = mousestyle() <= 1 ? aimx : cursorx,
-				vy = mousestyle() <= 1 ? aimy : cursory;
-			vecfromcursor(vx, vy, 1.f, cursordir);
-		}
+		if(style >= 0) vecfromcursor(cursorx, cursory, 1.f, cursordir);
 	}
 
 	struct camstate
@@ -1387,8 +1365,19 @@ namespace world
 					case 0:
 					case 1:
 					{
-						camera1->yaw = player1->yaw;
-						camera1->pitch = player1->pitch;
+						if(isthirdperson())
+						{
+							vec dir(worldpos);
+							dir.sub(camera1->o);
+							dir.normalize();
+							vectoyawpitch(dir, camera1->yaw, camera1->pitch);
+							fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
+						}
+						else
+						{
+							camera1->yaw = player1->yaw;
+							camera1->pitch = player1->pitch;
+						}
 						if(mousestyle())
 						{
 							camera1->aimyaw = camera1->yaw;
@@ -1402,6 +1391,21 @@ namespace world
 						vectoyawpitch(cursordir, yaw, pitch);
 						fixrange(yaw, pitch);
 						findorientation(camera1->o, yaw, pitch, worldpos);
+						if(allowmove(player1))
+						{
+							if(isthirdperson())
+							{
+								vec dir(worldpos);
+								dir.sub(camera1->o);
+								dir.normalize();
+								vectoyawpitch(dir, player1->yaw, player1->pitch);
+							}
+							else
+							{
+								player1->yaw = yaw;
+								player1->pitch = pitch;
+							}
+						}
 						break;
 					}
 				}

@@ -1666,7 +1666,7 @@ void readmatrices()
 VARP(showhud, 0, 1, 1);
 FVARP(hudblend, 0, 1.f, 1);
 
-float cursorx = 0.5f, cursory = 0.5f, aimx = 0.5f, aimy = 0.5f;
+float cursorx = 0.5f, cursory = 0.5f;
 vec cursordir(0, 0, 0);
 
 struct framebuffercopy

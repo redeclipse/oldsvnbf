@@ -199,7 +199,7 @@ extern int hasstencil;
 extern bool envmapping, renderedgame;
 extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
 
-extern float cursorx, cursory, aimx, aimy;
+extern float cursorx, cursory;
 extern vec cursordir;
 
 extern GLenum colormask[3];
