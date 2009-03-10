@@ -319,32 +319,21 @@ namespace hud
 			}
 			if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
-
-		float x = aimx, y = aimy;
-		if(index < POINTER_EDIT || world::mousestyle() == 2)
-		{
-			x = cursorx;
-			y = cursory;
-		}
-		else if(world::isthirdperson() ? world::thirdpersonaim : world::firstpersonaim)
-			x = y = 0.5f;
-
-		int cx = int(hudwidth*x), cy = int(hudsize*y);
-		drawpointerindex(index, cx, cy, cs, r, g, b, fade);
+		int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
+		drawpointerindex(index, world::mousestyle() != 1 ? cx : nx, world::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
 			if(world::player1->state == CS_ALIVE)
 			{
 				if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 				{
-					if(showclip) drawclip(world::player1->weapselect, cx, cy, clipsize*hudsize);
+					if(showclip) drawclip(world::player1->weapselect, nx, ny, clipsize*hudsize);
 					if(showindicator && weaptype[world::player1->weapselect].power && world::player1->weapstate[world::player1->weapselect] == WPSTATE_POWER)
-						drawindicator(world::player1->weapselect, cx, cy, int(indicatorsize*hudsize));
+						drawindicator(world::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 				}
 			}
-
 			if(world::mousestyle() >= 1) // renders differently
-				drawpointerindex(POINTER_RELATIVE, int(hudwidth*(world::mousestyle()==1?cursorx:0.5f)), int(hudsize*(world::mousestyle()==1?cursory:0.5f)), int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend);
+				drawpointerindex(POINTER_RELATIVE, world::mousestyle() != 1 ? nx : cx, world::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend);
 		}
 	}
 

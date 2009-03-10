@@ -442,7 +442,7 @@ void resetcursor(bool warp, bool reset)
 		SDL_WarpMouse(screen->w/2, screen->h/2);
 		warpmouse = true;
 	}
-	if(reset) cursorx = cursory = aimx = aimy = 0.5f;
+	if(reset) cursorx = cursory = 0.5f;
 }
 
 void checkinput()
