@@ -831,6 +831,12 @@ static partrenderer *parts[] =
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, -20, 0),
     new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP, 10, 0),
 
+    new quadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP, 0, 0),
+    new quadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP, -10, 0),
+    new softquadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP, -10, 0),
+    new quadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP, -20, 0),
+    new quadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP, 10, 0),
+
     new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 50, DECAL_BLOOD),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE, 0, 0),
 
@@ -1346,10 +1352,10 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
     {
         case 0: //fire
             regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f);
-            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
+            regularsplash(PART_SMOKE_LERP_SRISE, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, 3);
             break;
         case 1: //smoke vent - <dir>
-            regularsplash(PART_SMOKE_RISE_SLOW, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
+            regularsplash(PART_SMOKE_LERP_SRISE, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f);
             break;
         case 2: //water fountain - <dir>
         {
@@ -1371,7 +1377,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
         case 12: //snow
         case 13: //sparks
         {
-            const int typemap[]   = { PART_SFLARE, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_RISE_SLOW, PART_WATER, PART_PLASMA, PART_SNOW, PART_SPARK };
+            const int typemap[]   = { PART_SFLARE, -1,  -1,  PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_LERP_SRISE, PART_WATER, PART_PLASMA, PART_SNOW, PART_SPARK };
             const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f };
             const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   200,  40, 200 };
             int type = typemap[attr1-4];
