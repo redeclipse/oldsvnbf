@@ -1574,7 +1574,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
     glTexCoord2f(0, 1); glVertex2f(w*3-768, 196);
     glEnd();
 
-    settexture("textures/cube2", 3);
+    settexture("textures/cube2badge", 3);
     glBegin(GL_QUADS); // goes off the edge on purpose
     glTexCoord2f(0, 0); glVertex2f(w*3-320, 106);
     glTexCoord2f(1, 0); glVertex2f(w*3-32, 106);
