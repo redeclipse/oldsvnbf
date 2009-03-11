@@ -96,7 +96,11 @@ namespace world
 
 	VARP(noblood, 0, 0, 1);
 
-    VARP(ragdoll, 0, 1, 1);
+	VARP(nogibs, 0, 0, 1);
+	FVARP(gibscale, 0, 1.f, 1000);
+	VARP(gibexpire, 0, 5000, INT_MAX-1);
+
+    VARP(ragdolls, 0, 1, 1);
     FVARP(ragdollpush, 0, 1.5f, 10000);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
@@ -649,16 +653,15 @@ namespace world
 				else conoutf("\fa%s", d->obit);
 			}
 		}
-		if(!kidmode && !noblood && !m_paint(gamemode, mutators))
+		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
 		{
 			vec pos = headpos(d);
-			int gdiv = obliterated ? 1 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 25);
-			loopi(rnd(gibs)+gibs)
-				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, rnd(3000)+1000, 0, rnd(250)+1, 50);
+			int gdiv = obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20), amt = int((rnd(gibs)+gibs)*gibscale);
+			loopi(amt)
+				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire) : 0)+1000, 0, rnd(300)+1, 50);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
 			hud::teamkills.add(lastmillis);
-
 		ai::killed(d, actor, weap, flags, damage);
 	}
 
@@ -1556,7 +1559,7 @@ namespace world
         else yaw += 90;
         if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/500.0f, 0.0f);
 
-        if(d->ragdoll && (!ragdoll || anim!=ANIM_DYING)) cleanragdoll(d);
+        if(d->ragdoll && (!ragdolls || anim!=ANIM_DYING)) cleanragdoll(d);
 
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
@@ -1588,7 +1591,7 @@ namespace world
 			showweap = false;
 			animflags = ANIM_DYING;
 			lastaction = d->lastpain;
-            if(ragdoll)
+            if(ragdolls)
             {
                 if(!validragdoll(d, lastaction)) animflags |= ANIM_RAGDOLL;
             }
