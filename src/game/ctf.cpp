@@ -240,10 +240,20 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
+		bool denied = false;
+		loopvk(st.flags) if(isctfhome(st.flags[k], d->team))
+		{
+            ctfstate::flag &g = st.flags[k];
+            if(!g.ent || g.owner || !(g.base&BASE_FLAG) || g.droptime || g.team == d->team) continue;
+			if(d->o.dist(g.pos()) <= enttype[FLAG].radius*3)
+			{
+				denied = true;
+				break;
+			}
+		}
 		st.dropflag(i, droploc, 1);
-		if(!physics::droptofloor(f.droploc, 2, 0))
-			f.droploc = vec(-1, -1, -1);
-		world::announce(S_V_FLAGDROP, "\fo%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		if(!physics::droptofloor(f.droploc, 2, 0)) f.droploc = vec(-1, -1, -1);
+		world::announce(denied ? S_V_DENIED : S_V_FLAGDROP, "\fo%s%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
     }
 
     void removeplayer(gameent *d)

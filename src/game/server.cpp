@@ -1944,7 +1944,7 @@ namespace server
 			{
 				gs.weapshots[weap].remove(id);
 				radial = weaptype[weap].taper ? (radial < 0 ? -radial :
-					max(int((weaptype[weap].explode*(gs.aitype != AI_NONE ? 0.5f : 0.75f))), 1)) // FIXME: hack
+					max(int((weaptype[weap].explode*(gs.aitype != AI_NONE ? 0.5f : 0.75f))), 1)) // PATCHED: hacked until next release
 				: weaptype[weap].explode;
 			}
 			loopv(hits)

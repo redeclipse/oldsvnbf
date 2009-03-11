@@ -8,7 +8,7 @@ namespace world
 	bool intermission = false;
 	int maptime = 0, minremain = 0, swaymillis = 0;
 	vec swaydir(0, 0, 0);
-    int lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0;
+    int lastcamera = 0, lastspec = 0, lastzoom = 0, lastmousetype = 0, lastannounce = 0;
     bool prevzoom = false, zooming = false;
 	int quakewobble = 0, liquidchan = -1, fogdist = 0;
 
@@ -92,6 +92,7 @@ namespace world
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(playdamagetones, 0, 2, 2);
+	VARP(announcedelay, 0, 0, INT_MAX-1); // in case you wanna clip announcements to not overlap
 
 	VARP(noblood, 0, 0, 1);
 
@@ -235,7 +236,8 @@ namespace world
 	{
 		s_sprintfdlv(text, msg, msg);
 		conoutf("%s", text);
-		playsound(idx, camera1->o, camera1, SND_FORCED);
+		if(!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay)
+			playsound(idx, camera1->o, camera1, SND_FORCED);
 	}
 	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
 
