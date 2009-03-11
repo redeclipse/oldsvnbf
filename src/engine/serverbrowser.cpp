@@ -404,7 +404,7 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
-VARP(serverupdateinterval, 0, 10, INT_MAX-1);
+VARP(serverupdateinterval, 0, 5, INT_MAX-1);
 
 void refreshservers()
 {
@@ -455,7 +455,6 @@ void writeservercfg()
 {
 	FILE *f = openfile("servers.cfg", "w");
 	if(!f) return;
-	fprintf(f, "// servers connected to are added here automatically\n\n");
 	loopvrev(servers) fprintf(f, "addserver %s %d %d\n", servers[i]->name, servers[i]->port, servers[i]->qport);
 	fclose(f);
 }
