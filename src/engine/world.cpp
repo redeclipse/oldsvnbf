@@ -337,7 +337,7 @@ void entselectionbox(const entity &e, vec &eo, vec &es)
 	es.mul(2);
 }
 
-VAR(entselsnap, 0, 0, 1);
+VAR(entselsnap, 0, 1, 1);
 VAR(entmovingshadow, 0, 1, 1);
 
 extern void boxs(int orient, vec o, const vec &s);

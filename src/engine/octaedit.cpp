@@ -4,7 +4,7 @@
 extern int outline, blankgeom;
 editinfo *localedit = NULL;
 
-VAR(showpastegrid, 0, 1, 1);
+VAR(showpastegrid, 0, 0, 1);
 VAR(showcursorgrid, 0, 0, 1);
 VAR(showselgrid, 0, 0, 1);
 
@@ -669,7 +669,7 @@ struct undolist
 };
 
 undolist undos, redos;
-VARP(undomegs, 0, 5, 100);                              // bounded by n megs
+VARP(undomegs, 0, 8, 100);                              // bounded by n megs
 int totalundos = 0;
 
 void pruneundos(int maxremain)                          // bound memory
