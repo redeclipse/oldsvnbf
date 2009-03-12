@@ -185,6 +185,95 @@ struct Shader
         name##shader->set(); \
     } while(0)
 
+struct ImageData
+{
+    int w, h, bpp, levels, align, pitch;
+    GLenum compressed;
+    uchar *data;
+    void *owner;
+    void (*freefunc)(void *);
+
+    ImageData()
+        : data(NULL), owner(NULL), freefunc(NULL)
+    {}
+
+
+    ImageData(int nw, int nh, int nbpp, int nlevels = 1, int nalign = 0, GLenum ncompressed = GL_FALSE)
+    {
+        setdata(NULL, nw, nh, nbpp, nlevels, nalign, ncompressed);
+    }
+
+    ImageData(int nw, int nh, int nbpp, uchar *data)
+        : owner(NULL), freefunc(NULL)
+    {
+        setdata(data, nw, nh, nbpp);
+    }
+
+    ImageData(SDL_Surface *s) { wrap(s); }
+    ~ImageData() { cleanup(); }
+
+    void setdata(uchar *ndata, int nw, int nh, int nbpp, int nlevels = 1, int nalign = 0, GLenum ncompressed = GL_FALSE)
+    {
+        w = nw;
+        h = nh;
+        bpp = nbpp;
+        levels = nlevels;
+        align = nalign;
+        pitch = align ? 0 : w*bpp;
+        compressed = ncompressed;
+        data = ndata ? ndata : new uchar[calcsize()];
+        if(!ndata) { owner = this; freefunc = NULL; }
+    }
+
+    int calclevelsize(int level) const { return ((max(w>>level, 1)+align-1)/align)*((max(h>>level, 1)+align-1)/align)*bpp; }
+
+    int calcsize() const
+    {
+        if(!align) return w*h*bpp;
+        int lw = w, lh = h,
+            size = 0;
+        loopi(levels)
+        {
+            if(lw<=0) lw = 1;
+            if(lh<=0) lh = 1;
+            size += ((lw+align-1)/align)*((lh+align-1)/align)*bpp;
+            if(lw*lh==1) break;
+            lw >>= 1;
+            lh >>= 1;
+        }
+        return size;
+    }
+
+    void disown()
+    {
+        data = NULL;
+        owner = NULL;
+        freefunc = NULL;
+    }
+
+    void cleanup()
+    {
+        if(owner==this) delete[] data;
+        else if(freefunc) (*freefunc)(owner);
+        disown();
+    }
+
+    void replace(ImageData &d)
+    {
+        cleanup();
+        *this = d;
+        d.disown();
+    }
+
+    void wrap(SDL_Surface *s)
+    {
+        setdata((uchar *)s->pixels, s->w, s->h, s->format->BytesPerPixel);
+        pitch = s->pitch;
+        owner = s;
+        freefunc = (void (*)(void *))SDL_FreeSurface;
+    }
+};
+
 // management of texture slots
 // each texture slot can have multiple texture frames, of which currently only the first is used
 // additional frames can be used for various shaders
@@ -201,10 +290,13 @@ struct Texture
 {
     enum
     {
-        STUB,
-        TRANSIENT,
-        IMAGE,
-        CUBEMAP
+        IMAGE     = 0,
+        CUBEMAP   = 1,
+        TYPE      = 0xFF,
+
+        STUB      = 1<<8,
+        TRANSIENT = 1<<9,
+        FLAGS     = 0xF0
     };
 
     char *name;
@@ -281,7 +373,7 @@ struct Slot
     char *layermaskname;
     int layermaskmode;
     float layermaskscale;
-    SDL_Surface *layermask;
+    ImageData *layermask;
 
     Slot() : autograss(NULL), layermaskname(NULL), layermask(NULL) { reset(); }
 
@@ -305,7 +397,7 @@ struct Slot
         DELETEA(layermaskname);
         layermaskmode = 0;
         layermaskscale = 1;
-        if(layermask) { SDL_FreeSurface(layermask); layermask = NULL; }
+        if(layermask) DELETEP(layermask);
 	}
 
     void cleanup()
@@ -325,21 +417,7 @@ struct Slot
 extern vector<Slot> slots;
 extern Slot materialslots[MATF_VOLUME+1];
 
-extern SDL_Surface *texreorient(SDL_Surface *s, bool flipx, bool flipy, bool swapxy, int type = TEX_DIFFUSE, bool clear = true);
-extern SDL_Surface *texrotate(SDL_Surface *s, int numrots, int type = TEX_DIFFUSE);
-extern SDL_Surface *texoffset(SDL_Surface *s, int xoffset, int yoffset, bool clear = true);
-extern SDL_Surface *texcrop(SDL_Surface *s, int x, int y, int w, int h, bool clear = true);
-extern SDL_Surface *texcopy(SDL_Surface *s, bool clear = true);
-extern SDL_Surface *texffmask(SDL_Surface *s, int minval, bool clear = true);
-extern SDL_Surface *texdecal(SDL_Surface *s, bool clear = true);
-extern SDL_Surface *createsurface(int width, int height, int bpp);
-extern SDL_Surface *wrapsurface(void *data, int width, int height, int bpp);
-extern SDL_Surface *flipsurface(SDL_Surface *os, bool clear = true);
-extern SDL_Surface *creatergbsurface(SDL_Surface *os, bool clear = true);
-extern SDL_Surface *creatergbasurface(SDL_Surface *os, bool clear = true);
-extern SDL_Surface *fixsurfaceformat(SDL_Surface *s);
-extern SDL_Surface *scalesurface(SDL_Surface *os, int w, int h, bool clear = true);
-extern SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool msg = true, bool *compress = NULL, TextureAnim *anim = NULL);
+extern void scaleimage(ImageData &s, int w, int h);
 
 enum
 {
@@ -352,13 +430,12 @@ enum
 extern const char *ifmtexts[IFMT_MAX];
 extern int imageformat;
 
-extern void savepng(const char *filename, SDL_Surface *image, int compress = 9, bool flip = false);
-extern void savetga(const char *filename, SDL_Surface *image, int compress = 1, bool flip = false);
+extern void savepng(const char *filename, ImageData &image, int compress = 9, bool flip = false);
+extern void savetga(const char *filename, ImageData &image, int compress = 1, bool flip = false);
+extern void saveimage(const char *name, ImageData &image, int format = IFMT_NONE, int compress = 9, bool flip = false, bool skip = false);
 extern SDL_Surface *loadsurface(const char *name);
-extern void savesurface(SDL_Surface *s, const char *name, int format = IFMT_NONE, int compress = 9, bool flip = false, bool skip = false);
-
-extern Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int clamp = 0, bool mipit = true, bool canreduce = false, bool transient = false, bool compress = false, bool clear = true, TextureAnim *anim = NULL);
-extern Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg);
+extern bool loadimage(const char *name, ImageData &image);
+extern bool loaddds(const char *filename, ImageData &image);
 
 extern void resetmaterials();
 extern void resettextures();

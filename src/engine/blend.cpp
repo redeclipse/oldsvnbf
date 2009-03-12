@@ -416,7 +416,7 @@ struct BlendBrush
             *dst++ = 0;
         }
         memset(dst, 0, 2*(w+2));
-        createtexture(tex, w+2, h+2, buf, 3, false, GL_LUMINANCE_ALPHA);
+        createtexture(tex, w+2, h+2, buf, 3, 1, GL_LUMINANCE_ALPHA);
         delete[] buf;
     }
     
@@ -473,24 +473,22 @@ void addblendbrush(const char *name, const char *imgname)
 {
     delblendbrush(name);
 
-    SDL_Surface *s = loadsurface(imgname);
-    if(!s) { conoutf("\frcould not load blend brush image %s", imgname); return; }
-    if(max(s->w, s->h) > (1<<12))
+    ImageData s;
+    if(!loadimage(imgname, s)) { conoutf("\frcould not load blend brush image %s", imgname); return; }
+    if(max(s.w, s.h) > (1<<12))
     {
-        SDL_FreeSurface(s);
         conoutf("\frblend brush image size exceeded %dx%d pixels: %s", 1<<12, 1<<12, imgname);
         return;
     }
     
-    BlendBrush *brush = new BlendBrush(name, s->w, s->h);
+    BlendBrush *brush = new BlendBrush(name, s.w, s.h);
 
-    uchar *dst = brush->data, *src = (uchar *)s->pixels;
-    loopi(s->w*s->h)
+    uchar *dst = brush->data, *src = s.data;
+    loopi(s.w*s.h)
     {
         *dst++ = src[0];
-        src += s->format->BytesPerPixel;
+        src += s.bpp;
     }
-    SDL_FreeSurface(s);
 
     brushes.add(brush);
     if(curbrush < 0) curbrush = 0;

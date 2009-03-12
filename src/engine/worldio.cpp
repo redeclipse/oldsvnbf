@@ -380,30 +380,16 @@ void save_mapshot(char *mname)
 	glGenTextures(1, &tex);
 	glViewport(0, 0, mapshotsize, mapshotsize);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    uchar *pixels = new uchar[3*mapshotsize*mapshotsize];
-	memset(pixels, 0, 3*mapshotsize*mapshotsize);
+    ImageData image(mapshotsize, mapshotsize, 3);
+	memset(image.data, 0, 3*mapshotsize*mapshotsize);
 	glFrontFace(GL_CCW);
 	drawcubemap(mapshotsize, 2, camera1->o, camera1->yaw, camera1->pitch, false, false, false);
-	glReadPixels(0, 0, mapshotsize, mapshotsize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	glReadPixels(0, 0, mapshotsize, mapshotsize, GL_RGB, GL_UNSIGNED_BYTE, image.data);
 
-	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, mapshotsize, mapshotsize, 24, 0x0000FF, 0x00FF00, 0xFF0000, 0);
-	if(image)
-	{
-		uchar *dst = (uchar *)image->pixels;
-		loopi(mapshotsize)
-		{
-			memcpy(dst, &pixels[3*mapshotsize*(mapshotsize-i-1)], 3*mapshotsize);
-			endianswap(dst, 3, mapshotsize);
-			dst += image->pitch;
-		}
-
-		savesurface(image, mname, imageformat, compresslevel);
-		SDL_FreeSurface(image);
-	}
+	saveimage(mname, image, imageformat, compresslevel, true);
 
 	glDeleteTextures(1, &tex);
     glFrontFace(GL_CCW);
-    delete[] pixels;
 	glViewport(0, 0, screen->w, screen->h);
 }
 ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));

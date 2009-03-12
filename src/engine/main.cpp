@@ -155,15 +155,11 @@ VARP(imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
 
 void screenshot(char *sname)
 {
-    SDL_Surface *image = createsurface(screen->w, screen->h, 3);
-    if(image)
-	{
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
-		s_sprintfd(fname)("%s", *sname ? sname : getmapname());
-		savesurface(image, fname, imageformat, compresslevel, true, true);
-		SDL_FreeSurface(image);
-	}
+    ImageData image(screen->w, screen->h, 3);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image.data);
+	s_sprintfd(fname)("%s", *sname ? sname : getmapname());
+	saveimage(fname, image, imageformat, compresslevel, true, true);
 }
 
 COMMAND(screenshot, "s");
