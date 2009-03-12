@@ -873,39 +873,37 @@ void brushvert(int *x, int *y, int *v)
 
 void brushimport(char *name)
 {
-	SDL_Surface *s;
-	if((s = loadsurface(name)) != NULL)
+    ImageData s;
+	if(loadimage(name, s))
 	{
-		if(s->w > MAXBRUSH || s->h > MAXBRUSH) // only use max size
-			s = scalesurface(s, MAXBRUSH, MAXBRUSH, true);
+		if(s.w > MAXBRUSH || s.h > MAXBRUSH) // only use max size
+            scaleimage(s, MAXBRUSH, MAXBRUSH);
 
-		uchar *pixel = (uchar *)s->pixels;
+		uchar *pixel = s.data;
 		int value, x, y;
 
 		clearbrush();
 		brushx = brushy = MAXBRUSH2; // set real coords to 0,0
 
-		loopi(s->w)
+		loopi(s.w)
 		{
 			x = i;
-			loopj(s->h)
+			loopj(s.h)
 			{
 				y = j;
 				value = 0;
 
-				loopk(s->format->BytesPerPixel) // add the entire pixel together
+				loopk(s.bpp) // add the entire pixel together
 				{
 					value += pixel[0];
 					pixel++;
 				}
 
-				value /= s->format->BytesPerPixel; // average the entire pixel
+				value /= s.bpp; // average the entire pixel
 				value /= 32; // scale to cube shapes (256 / 8)
 				brushvert(&x, &y, &value);
 			}
 		}
-
-		SDL_FreeSurface(s);
 	}
 	else conoutf("\frcould not load: %s", name);
 }

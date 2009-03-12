@@ -218,7 +218,7 @@ namespace hud
 	void drawindicator(int weap, int x, int y, int s)
 	{
 		Texture *t = textureload(indicatortex, 3);
-		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		int millis = lastmillis-world::player1->weaplast[weap];
 		float r = 1.f, g = 1.f, b = 1.f, amt = 0.f;
@@ -248,7 +248,7 @@ namespace hud
         };
         Texture *t = textureload(cliptexs[weap], 3);
         int ammo = world::player1->ammo[weap], maxammo = weaptype[weap].max;
-		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
 		float fade = clipblend;
@@ -290,7 +290,7 @@ namespace hud
 	void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade)
 	{
 		Texture *t = textureload(getpointer(index), 3);
-		if(t->bpp == 32) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		glColor4f(r, g, b, fade);
 		glBindTexture(GL_TEXTURE_2D, t->id);
