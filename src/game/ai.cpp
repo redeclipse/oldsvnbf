@@ -7,7 +7,7 @@ namespace ai
     int updatemillis = 0;
     vec aitarget(0, 0, 0);
 
-	VAR(aidebug, 0, 0, 4);
+	VAR(aidebug, 0, 0, 5);
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
@@ -88,16 +88,20 @@ namespace ai
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
-			conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
+			if(aidebug) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
+			else conoutf("\fg%s joined the game", world::colorname(d, name), m, sk);
 			resetthisguy = true;
 		}
-		else if(d->ownernum != on)
+		else
 		{
-			conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
-			resetthisguy = true;
+			if(d->ownernum != on)
+			{
+				if(aidebug) conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
+				resetthisguy = true;
+			}
+			if(d->skill != sk && aidebug) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
 		}
-		else if(d->skill != sk) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
-		else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
+		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
 		s_strncpy(d->name, name, MAXNAMELEN);
 		d->aitype = at;
@@ -1149,7 +1153,7 @@ namespace ai
 			}
 			last = i;
 		}
-		if(aidebug > 3)
+		if(aidebug > 4)
 		{
 			vec pos = world::feetpos(d);
 			if(d->ai->spot != vec(0, 0, 0)) renderline(pos, d->ai->spot, 1.f, 1.f, 1.f, false);
@@ -1163,7 +1167,7 @@ namespace ai
 
 	void render()
 	{
-		if(aidebug)
+		if(aidebug > 1)
 		{
 			int amt[2] = { 0, 0 };
 			loopv(world::players) if(world::players[i] && world::players[i]->ai) amt[0]++;
@@ -1177,11 +1181,11 @@ namespace ai
 				{
 					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
-					if(aidebug > 2 && top && rendernormally && b.type != AI_S_WAIT)
+					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT)
 						drawroute(d, b, float(amt[1])/float(amt[0]));
 					if(top)
 					{
-						if(aidebug > 1) top = false;
+						if(aidebug > 2) top = false;
 						else break;
 					}
 				}

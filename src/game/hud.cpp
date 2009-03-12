@@ -4,6 +4,7 @@
 namespace hud
 {
 	int damageresidue = 0, hudwidth = 0;
+	bool hasinventory = false;
 	vector<int> teamkills;
 	scoreboard sb;
 
@@ -103,20 +104,24 @@ namespace hud
 	FVARP(radaritemblend, 0, 1.f, 1);
 	FVARP(radarnameblend, 0, 1.f, 1);
 	FVARP(radarblipblend, 0, 1.f, 1);
-	FVARP(radarsize, 0, 0.025f, 1000);
-	VARP(radardist, 0, 128, INT_MAX-1);
+	FVARP(radarsize, 0, 0.02f, 1000);
+	FVARP(radaroffset, 0, 0.0515f, 1000);
+	VARP(radardist, 0, 256, INT_MAX-1);
 	VARP(radarcard, 0, 1, 2);
-	VARP(radaritems, 0, 1, 2);
+	VARP(radaritems, 0, 2, 2);
+	VARP(radaritemspawn, 0, 1, 1);
+	VARP(radaritemtime, 0, 3000, INT_MAX-1);
 	VARP(radaritemnames, 0, 0, 2);
 	VARP(radarplayers, 0, 1, 2);
-	VARP(radarplayernames, 0, 1, 2);
+	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
-	VARP(radarflagnames, 0, 1, 1);
-	VARP(editradardist, 0, 128, INT_MAX-1);
+	VARP(radarflagnames, 0, 0, 1);
+	VARP(editradardist, 0, 512, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
     VARP(showborder, 0, 1, 2);
 	VARP(borderhealth, 0, 1, 2);
+	FVARP(bordersize, 0, 0.04f, 1000);
 	FVARP(borderblend, 0, 1.f, 1);
 	FVARP(borderskew, -1, -0.3f, 1);
 
@@ -381,9 +386,8 @@ namespace hud
 		if(shownotices && world::maptime)
 		{
 			pushfont("super");
-			float roff = hastv(showborder) ? 1.f : 0.5f;
-			bool hasinventory = showinventory && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING;
-			int off = hastv(showradar) ? int(hudsize*radarsize*roff*1.5f) : 0, iff = hasinventory ? int(hudsize*inventorysize*1.5f) : 0,
+			int off = int(hudsize*bordersize*(hastv(showborder) ? 1.f : 0.5f)*1.5f),
+				iff = hasinventory ? int(hudsize*inventorysize*1.5f) : 0,
 				ty = hudsize-off, tx = hudwidth-off-iff, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
 			if(teamnotices) skewcolour(tr, tg, tb);
@@ -607,48 +611,35 @@ namespace hud
 
 	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *font, float fade, const char *text, ...)
 	{
-		const struct rddir { bool axis, swap; float x, y, up, down; } rddirs[8] =
+		float fx = 0.f, fy = 0.f, fw = 1.f, fh = 1.f;
+		int tx = w/2, ty = h/2, ts = int(s*radarsize), tr = int(s*radaroffset);
+		if(idx < 0)
 		{
-			{ true,		false,	 1.f,	0.f,	0.5f,	0.5f	},
-			{ false,	true,	 1.f,	1.f,	0.f,	0.5f 	},
-			{ false,	true,	 1.f,	2.f,	0.5f,	0.5f 	},
-			{ true,		true,	 2.f,	2.f,	1.f,	-0.5f	},
-			{ true,		true,	 3.f,	2.f,	0.5f,	-0.5f	},
-			{ false,	false,	 3.f,	3.f,	1.f,	-0.5f	},
-			{ false,	false,	 3.f,	4.f,	0.5f,	-0.5f	},
-			{ true,		false,	 4.f,	4.f,	0.f,	0.5f	}
-		};
-
-		int cx = s/2, cy = s/2;
-		float yaw = 0.f, pitch = 0.f;
-		vectoyawpitch(dir, yaw, pitch);
-		float fovsx = curfov*0.5f, fovsy = (360.f-(curfov*2.f))*0.25f;
-		int cq = 7;
-		for(int cr = 0; cr < 8; cr++) if(yaw < (fovsx*rddirs[cr].x)+(fovsy*rddirs[cr].y))
-		{
-			cq = cr;
-			break;
+			int blip = clamp(-idx-1, 0, 3);
+			const float rdblip[4][2] = { // player entity flag card
+				 { 0.25f, 0.25f }, { 0.25f, 0.5f }, { 0.5f, 0.25f }, { 0.5f, 0.5f }
+			};
+			fx = rdblip[blip][0];
+			fy = rdblip[blip][1];
+			fw = fh = 0.25f;
+			settexture(radartex, 3);
+			if(blip) tr += ts*blip;
+			if(blip < 2) ts = ts*2/3;
 		}
-		const rddir &rd = rddirs[cq];
-		float range = max(rd.axis ? fovsx : fovsy, 1e-3f), skew = (yaw-(((fovsx*rd.x)+(fovsy*rd.y))-range))/range;
-		if(rd.swap) (rd.axis ? cy : cx) += (rd.axis ? h : w)-s*2;
-		(rd.axis ? cx : cy) += int(((rd.axis ? w : h)-s*2)*clamp(rd.up+(rd.down*skew), 0.f, 1.f));
-
-		settexture(radartex, 3);
+		else if(isweap(idx))
+		{
+			settexture(hud::itemtex(WEAPON, idx), 3);
+			tr += ts; // sit in the entity zone
+		}
+		else return;
+		int tq = ts/2, cx = int(tx+(tr*dir.x)-tq), cy = int(ty+(tr*dir.y)-tq);
 		glColor4f(r, g, b, blend);
-		const float rdblip[4][2] = { // blip dark darker flag
-			 { 0.25f, 0.25f }, { 0.25f, 0.5f }, { 0.5f, 0.5f }, { 0.5f, 0.25f }
-		};
-		drawtex(cx, cy, s, s, rdblip[idx][0], rdblip[idx][1], 0.25f, 0.25f);
+		drawtex(cx, cy, ts, ts, fx, fy, fw, fh);
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
-			int tx = rd.axis ? int(cx+s*0.5f) : (rd.swap ? int(cx-s) : int(cx+s*2.f)),
-				ty = rd.axis ? (rd.swap ? int(cy-s-FONTH) : int(cy+s*2.f)) : int(cy+s*0.5f-FONTH*0.5f),
-				ta = rd.axis ? TEXT_CENTERED|TEXT_NO_INDENT : (rd.swap ? TEXT_RIGHT_JUSTIFY|TEXT_NO_INDENT : TEXT_LEFT_JUSTIFY),
-				tf = int((fade >= 0.f ? fade : blend)*255.f);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, 255, 255, 255, tf, ta, -1, -1, str);
+			draw_textx("%s", cx+tq, cy+(idx > -4 ? ts : ts/2-FONTH/2), 255, 255, 255, int((fade >= 0.f ? fade : blend)*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -666,8 +657,8 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "sub", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
-			else drawblip(w, h, s, fade*radarblipblend, 0, dir, r, g, b, "sub", fade*radarnameblend);
+			if(hastv(radarplayernames)) drawblip(w, h, s, fade*radarblipblend, -1, dir, r, g, b, "radar", fade*radarnameblend, "%s", world::colorname(d, NULL, "", false));
+			else drawblip(w, h, s, fade*radarblipblend, -1, dir, r, g, b, "radar", fade*radarnameblend);
 		}
 	}
 
@@ -688,7 +679,7 @@ namespace hud
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			drawblip(w, h, s, blend*radarblipblend, 2, dir, 1.f, 1.f, 1.f, "default", blend*radarcardblend, "%s", card);
+			drawblip(w, h, s, blend*radarblipblend, -4, dir, 1.f, 1.f, 1.f, "radar", blend*radarcardblend, "%s", card);
 		}
 	}
 
@@ -696,8 +687,10 @@ namespace hud
 	{
 		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || world::player1->state == CS_EDITING))
 		{
-			float inspawn = spawned && lastspawn && lastmillis-lastspawn <= 1000 ? float(lastmillis-lastspawn)/1000.f : 0.f;
+			float inspawn = radaritemtime && spawned && lastspawn && lastmillis-lastspawn <= radaritemtime ? float(lastmillis-lastspawn)/float(radaritemtime) : 0.f;
 			if(enttype[type].noisy && (world::player1->state != CS_EDITING || !editradarnoisy || (editradarnoisy < 2 && !insel)))
+				return;
+			if(world::player1->state != CS_EDITING && radaritemspawn && (enttype[type].usetype != EU_ITEM || inspawn <= 0.f))
 				return;
 			vec dir(o);
 			dir.sub(camera1->o);
@@ -709,21 +702,20 @@ namespace hud
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int cp = 1;
-			float r = 0.2f, g = 0.1f, b = 0.7f, fade = clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
-			if(insel) { cp = 0; fade = 1.f; r = 0.6f; g = 0.4f; b = 1.f; }
-			else if(inspawn > 0.f)
+			int cp = type == WEAPON ? weapattr(attr1, m_spawnweapon(world::gamemode, world::mutators)) : -2;
+			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
+			if(cp >= 0)
 			{
-				cp = 0;
-				r = 1.f-(inspawn*0.8f);
-				g = 1.f-(inspawn*0.9f);
-				b = 1.f-(inspawn*0.3f);
-				fade = clamp(fade+((1.f-fade)*(1.f-inspawn)), 0.f, 1.f);
+				r = (weaptype[cp].colour>>16)/255.f;
+				g = ((weaptype[cp].colour>>8)&0xFF)/255.f;
+				b = (weaptype[cp].colour&0xFF)/255.f;
 			}
+			if(world::player1->state != CS_EDITING && !insel && inspawn > 0.f)
+				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
 			string text; text[0] = 0;
-			if(insel) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend, "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "sub", fade*radaritemblend);
+			if(insel) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend, "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(w, h, s, fade*radarblipblend, cp, dir, r, g, b, "radar", fade*radaritemblend);
 		}
 	}
 
@@ -758,55 +750,60 @@ namespace hud
 		}
 	}
 
-	void drawradar(int w, int h, int s, float blend)
+	const struct borderpatch {
+		int xw, xs, yh, ys, ww, ws, hh, hs; float tx, ty, tw, th;
+	} borderpatches[8] =
 	{
-		const struct rdpat {
-			int xw, xs, yh, ys, ww, ws, hh, hs; float tx, ty, tw, th;
-		} rdpats[8] =
-		{
-			{	0,	1,	0,	1,	0,	1,	0,	1,	0.f,	0.f,	0.2f,	0.2f	},
-			{	1,	-2,	0,	1,	0,	1,	0,	1,	0.8f,	0.f,	0.2f,	0.2f	},
-			{	0,	1,	1,	-2,	0,	1,	0,	1,	0.f,	0.8f,	0.2f,	0.2f	},
-			{	1,	-2,	1,	-2,	0,	1,	0,	1,	0.8f,	0.8f,	0.2f,	0.2f	},
-			{	0,	2,	0,	1,	1,	-4,	0,	1,	0.2f,	0.f,	0.6f,	0.2f	},
-			{	0,	2,	1,	-2,	1,	-4,	0,	1,	0.2f,	0.8f,	0.6f,	0.2f	},
-			{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.2f,	0.2f,	0.6f	},
-			{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
-		};
-		int cr = hastv(showborder) ? 1 : 2, cs = s*cr;
+		{	0,	1,	0,	1,	0,	1,	0,	1,	0.f,	0.f,	0.2f,	0.2f	},
+		{	1,	-2,	0,	1,	0,	1,	0,	1,	0.8f,	0.f,	0.2f,	0.2f	},
+		{	0,	1,	1,	-2,	0,	1,	0,	1,	0.f,	0.8f,	0.2f,	0.2f	},
+		{	1,	-2,	1,	-2,	0,	1,	0,	1,	0.8f,	0.8f,	0.2f,	0.2f	},
+		{	0,	2,	0,	1,	1,	-4,	0,	1,	0.2f,	0.f,	0.6f,	0.2f	},
+		{	0,	2,	1,	-2,	1,	-4,	0,	1,	0.2f,	0.8f,	0.6f,	0.2f	},
+		{	0,	1,	0,	2,	0,	1,	1,	-4,	0.f,	0.2f,	0.2f,	0.6f	},
+		{	1,	-2,	0,	2,	0,	1,	1,	-4,	0.8f,	0.2f,	0.2f,	0.6f	}
+	};
+
+	void drawborder(int w, int h, int s, float blend)
+	{
 		if(hastv(showborder) && world::player1->state != CS_DEAD) // damage overlay goes full in this case
 		{
 			float r = 1.f, g = 1.f, b = 1.f, fade = borderblend*blend;
 			if(teamwidgets >= (borderhealth ? 3 : 1)) skewcolour(r, g, b);
 			if(borderhealth) switch(world::player1->state)
 			{
-				case CS_ALIVE: healthskew(cs, r, g, b, fade, borderskew, borderhealth > 1); break;
+				case CS_ALIVE: healthskew(s, r, g, b, fade, borderskew, borderhealth > 1); break;
 				default: break;
 			}
 			glColor4f(r, g, b, fade);
 			settexture(radartex, 3);
 			loopi(8)
 			{
-				const rdpat &rd = rdpats[i];
+				const borderpatch &rd = borderpatches[i];
 				drawtex(
-					(rd.xw*w)+(rd.xs*cs), (rd.yh*h)+(rd.ys*cs),
-					(rd.ww*w)+(rd.ws*cs), (rd.hh*h)+(rd.hs*cs),
+					(rd.xw*w)+(rd.xs*s), (rd.yh*h)+(rd.ys*s),
+					(rd.ww*w)+(rd.ws*s), (rd.hh*h)+(rd.hs*s),
 					rd.tx, rd.ty, rd.tw, rd.th
 				);
 			}
 		}
-		if(hastv(radaritems) || m_edit(world::gamemode)) drawentblips(w, h, cs/2, blend*radarblend);
+	}
+
+	void drawradar(int w, int h, float blend)
+	{
+		int s = max(w, h)/2;
+		if(hastv(radarcard) || m_edit(world::gamemode)) drawcardinalblips(w, h, s, blend*radarblend, m_edit(world::gamemode));
 		if(hastv(radarplayers) || m_edit(world::gamemode))
 		{
 			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE)
-				drawplayerblip(world::players[i], w, h, cs/2, blend*radarblend);
+				drawplayerblip(world::players[i], w, h, s, blend*radarblend);
 		}
+		if(hastv(radaritems) || m_edit(world::gamemode)) drawentblips(w, h, s, blend*radarblend);
 		if(hastv(radarflags))
 		{
-			if(m_stf(world::gamemode)) stf::drawblips(w, h, cs/2, blend);
-			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, cs/2, blend*radarblend);
+			if(m_stf(world::gamemode)) stf::drawblips(w, h, s, blend);
+			else if(m_ctf(world::gamemode)) ctf::drawblips(w, h, s, blend*radarblend);
 		}
-		if(hastv(radarcard) || m_edit(world::gamemode)) drawcardinalblips(w, h, cs/2, blend*radarblend, m_edit(world::gamemode));
 	}
 
 	int drawitem(const char *tex, int x, int y, float size, bool tcol, float fade, float skew, const char *font, float blend, const char *text, ...)
@@ -998,11 +995,12 @@ namespace hud
 	void drawinventory(int w, int h, int edge, float blend)
 	{
 		int cx = int(w-edge*1.5f), cy = int(h-edge*1.5f), cs = int(inventorysize*w),
-			cr = cs/4, cc = 0;
+			cr = cs/4, cc = 0, oldpos = cy;
 		if(inventoryhealth && (cc = drawhealth(cx, cy, cs, blend)) > 0) cy -= cc+cr;
 		if((inventoryammo || inventoryweapids) && world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
 		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
+		hasinventory = oldpos != cy;
 	}
 
 	void drawdamage(int w, int h, int s, float blend)
@@ -1108,8 +1106,8 @@ namespace hud
 
 	void drawgamehud(int w, int h)
 	{
-		float fade = hudblend, roff = hastv(showborder) ? 1.f : 0.5f;
-		int ox = hudwidth, oy = hudsize, os = hastv(showradar) ? int(oy*radarsize*roff) : 0,
+		float fade = hudblend;
+		int ox = hudwidth, oy = hudsize, os = int(oy*bordersize*(hastv(showborder) ? 1.f : 0.5f)),
 			secs = world::maptime ? lastmillis-world::maptime : 0;
 
 		glLoadIdentity();
@@ -1123,17 +1121,18 @@ namespace hud
 
 		if(world::player1->state == CS_ALIVE && world::inzoom() && weaptype[world::player1->weapselect].snipes)
 			drawsniper(ox, oy, os, fade);
+		if(hastv(showborder)) drawborder(ox, oy, os, fade);
 		if(showdamage && !kidmode && !world::noblood) drawdamage(ox, oy, os, fade);
         if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
-		if(hastv(showradar)) drawradar(ox, oy, os, fade);
+		if(hastv(showradar)) drawradar(ox, oy, fade);
 		if(showinventory) drawinventory(ox, oy, os, fade);
+		else hasinventory = false;
 	}
 
 	void drawhudelements(int w, int h)
 	{
-		float roff = hastv(showborder) ? 1.f : 0.5f;
-		int ox = hudwidth, oy = hudsize, os = hastv(showradar) ? int(oy*radarsize*roff*1.5f) : 0,
-			is = showinventory ? int(oy*inventorysize) : 0, bx = os+FONTW/4, by = oy-os-(FONTH/3)*2, bs = ox-bx*2-is;
+		int ox = hudwidth, oy = hudsize, os = int(oy*bordersize*(hastv(showborder) ? 1.f : 0.5f)*1.5f),
+			is = hasinventory ? int(oy*inventorysize) : 0, bx = os+FONTW/4, by = oy-os-(FONTH/3)*2, bs = ox-bx*2-is;
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
