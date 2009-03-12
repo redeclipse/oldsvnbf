@@ -56,7 +56,7 @@ namespace stf
 			{
 				float dist = dir.magnitude(),
 					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-				fade *= 0.5f+(diff*0.5f);
+				fade *= 0.25f+(diff*0.5f);
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
@@ -64,10 +64,10 @@ namespace stf
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				if(occupy < 1.f)
-					hud::drawblip(w, h, s, fade, 3, dir, r, g, b, "sub", fade*hud::radarnameblend, "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
-				else hud::drawblip(w, h, s, fade, 3, dir, r, g, b, "sub", fade*hud::radarnameblend, "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
+					hud::drawblip(w, h, s, fade, -3, dir, r, g, b, "radar", fade*hud::radarnameblend, "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(w, h, s, fade, -3, dir, r, g, b, "radar", fade*hud::radarnameblend, "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
 			}
-			else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
+			else hud::drawblip(w, h, s, fade, -3, dir, r, g, b);
 		}
 	}
 

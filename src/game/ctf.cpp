@@ -37,8 +37,8 @@ namespace ctf
 			fade = hud::radarblipblend*blend;
         if(blip)
         {
-            if(!(f.base&BASE_FLAG) || f.owner == world::player1) return;
-			else if((f.owner || f.droptime) && lastmillis%500 >= 350) return;
+            if(!(f.base&BASE_FLAG) || f.owner == world::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400)
+				return;
         	dir = f.pos();
         }
         else
@@ -47,17 +47,20 @@ namespace ctf
         	dir = f.spawnloc;
         }
 		dir.sub(camera1->o);
-		if(blip)
+		if(!blip)
 		{
-			float dist = dir.magnitude(),
-				diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-			fade *= 0.5f+(diff*0.5f);
+			if(!(f.base&BASE_FLAG) || f.owner || f.droptime)
+			{
+				float dist = dir.magnitude(),
+					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
+				fade *= 0.25f+(diff*0.5f);
+			}
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		if(hud::radarflagnames) hud::drawblip(w, h, s, fade, 3, dir, r, g, b,
-				"sub", fade*hud::radarnameblend, "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
-		else hud::drawblip(w, h, s, fade, 3, dir, r, g, b);
+		if(hud::radarflagnames) hud::drawblip(w, h, s, fade, -3, dir, r, g, b,
+				"radar", fade*hud::radarnameblend, "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
+		else hud::drawblip(w, h, s, fade, -3, dir, r, g, b);
     }
 
 	void drawlast(int w, int h, int &tx, int &ty)
@@ -115,7 +118,7 @@ namespace ctf
 			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
 			int oldy = y-sy;
 			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, fade, skew, "default", blend, f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
+			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "radar", blend, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
     }
