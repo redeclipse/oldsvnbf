@@ -879,6 +879,7 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
 	string tname;
 	s_strcpy(tname, name);
+    path(tname);
 	Texture *t = textures.access(tname);
 	if(!t)
 	{
