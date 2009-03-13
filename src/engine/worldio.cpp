@@ -251,6 +251,52 @@ cube *loadchildren(gzFile f)
 	return c;
 }
 
+void saveslotconfig(FILE *h, Slot &s, int index)
+{
+    if(index >= 0)
+    {
+        if(s.shader)
+        {
+            fprintf(h, "setshader %s\n", s.shader->name);
+        }
+        loopvj(s.params)
+        {
+            fprintf(h, "set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+            if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) fprintf(h, " \"%s\"", s.params[j].name);
+            else fprintf(h, " %d", s.params[j].index);
+            loopk(4) fprintf(h, " %f", s.params[j].val[k]);
+            fprintf(h, "\n");
+        }
+    }
+    loopvj(s.sts)
+    {
+        fprintf(h, "texture");
+        if(index >= 0) fprintf(h, " %s", findtexturename(s.sts[j].type));
+        else if(!j) fprintf(h, " %s", findmaterialname(index));
+        else fprintf(h, " 1");
+        fprintf(h, " \"%s\"", s.sts[j].lname);
+        if(!j)
+        {
+            fprintf(h, " %d %d %d %f",
+                s.rotation, s.xoffset, s.yoffset, s.scale);
+            if(index >= 0) fprintf(h, " // %d", index);
+        }
+        fprintf(h, "\n");
+    }
+    if(index >= 0)
+    {
+        if(s.scrollS != 0.f || s.scrollT != 0.f)
+            fprintf(h, "texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f);
+        if(s.layer != 0)
+        {
+            if(s.layermaskname) fprintf(h, "texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
+            else fprintf(h, "texlayer %d\n", s.layer);
+        }
+        if(s.autograss) fprintf(h, "autograss \"%s\"\n", s.autograss);
+    }
+    fprintf(h, "\n");
+}
+
 void save_config(char *mname)
 {
 	backup(mname, ".cfg", hdr.revision);
@@ -287,57 +333,13 @@ void save_config(char *mname)
 	if(verbose >= 2) conoutf("\fwsaved %d aliases", aliases);
 
 	// texture slots
-	#define saveslot(s,b) \
-		if(b) \
-		{ \
-			if(s.shader) \
-			{ \
-				fprintf(h, "setshader %s\n", s.shader->name); \
-			} \
-			loopvj(s.params) \
-			{ \
-				fprintf(h, "set%sparam", s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")); \
-				if(s.params[j].type == SHPARAM_UNIFORM) fprintf(h, " \"%s\"", s.params[j].name); \
-				else fprintf(h, " %d", s.params[j].index);\
-				loopk(4) fprintf(h, " %f", s.params[j].val[k]); \
-				fprintf(h, "\n"); \
-			} \
-		} \
-		loopvj(s.sts) \
-		{ \
-			fprintf(h, "texture"); \
-			if(b) fprintf(h, " %s", findtexturename(s.sts[j].type)); \
-			else if(!j) fprintf(h, " %s", findmaterialname(i)); \
-			else fprintf(h, " 1"); \
-			fprintf(h, " \"%s\"", s.sts[j].lname); \
-			if(!j) \
-			{ \
-				fprintf(h, " %d %d %d %f", \
-					s.rotation, s.xoffset, s.yoffset, s.scale); \
-				if(b) fprintf(h, " // %d", i); \
-			} \
-            fprintf(h, "\n"); \
-		} \
-		if(b) \
-		{ \
-			if(s.scrollS != 0.f || s.scrollT != 0.f) \
-				fprintf(h, "texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f); \
-            if(s.layer != 0) \
-			{ \
-                if(s.layermaskname) fprintf(h, "texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale); \
-				else fprintf(h, "texlayer %d\n", s.layer); \
-			} \
-			if(s.autograss) fprintf(h, "autograss \"%s\"\n", s.autograss); \
-		} \
-		fprintf(h, "\n");
-
 	loopi(MAT_EDIT)
 	{
 		if(verbose) renderprogress(float(i)/float(MAT_EDIT), "saving material slots...");
 
 		if(i == MAT_WATER || i == MAT_LAVA)
 		{
-			saveslot(materialslots[i], false);
+			saveslotconfig(h, materialslots[i], -i);
 		}
 	}
 	if(verbose) conoutf("\fwsaved %d material slots", MAT_EDIT);
@@ -345,7 +347,7 @@ void save_config(char *mname)
 	loopv(slots)
 	{
 		if(verbose) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
-		saveslot(slots[i], true);
+		saveslotconfig(h, slots[i], i);
 	}
 	if(verbose) conoutf("\fwsaved %d texture slots", slots.length());
 
