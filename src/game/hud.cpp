@@ -116,7 +116,8 @@ namespace hud
 	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 0, 1);
-	VARP(editradardist, 0, 512, INT_MAX-1);
+	VARP(showeditradar, 0, 1, 1);
+	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
     VARP(showborder, 0, 1, 2);
@@ -383,7 +384,7 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// superhud!
-		if(shownotices && world::maptime)
+		if(shownotices && world::maptime && !world::player1->conopen)
 		{
 			pushfont("super");
 			int off = int(hudsize*bordersize*(hastv(showborder) ? 1.f : 0.5f)*1.5f),
@@ -670,10 +671,10 @@ namespace hud
 			vec dir(camera1->o);
 			switch(i)
 			{
-				case 0: dir.sub(vec(0, 1, 0)); card = altcard ? "0'" : "N"; break;
-				case 1: dir.add(vec(1, 0, 0)); card = altcard ? "90'" : "E"; break;
-				case 2: dir.add(vec(0, 1, 0)); card = altcard ? "180'" : "S"; break;
-				case 3: dir.sub(vec(1, 0, 0)); card = altcard ? "270'" : "W"; break;
+				case 0: dir.sub(vec(0, 1, 0)); card = altcard ? "0" : "N"; break;
+				case 1: dir.add(vec(1, 0, 0)); card = altcard ? "90" : "E"; break;
+				case 2: dir.add(vec(0, 1, 0)); card = altcard ? "180" : "S"; break;
+				case 3: dir.sub(vec(1, 0, 0)); card = altcard ? "270" : "W"; break;
 				default: break;
 			}
 			dir.sub(camera1->o);
@@ -1123,7 +1124,8 @@ namespace hud
 		if(hastv(showborder)) drawborder(ox, oy, os, fade);
 		if(showdamage && !kidmode && !world::noblood) drawdamage(ox, oy, os, fade);
         if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
-		if(hastv(showradar)) drawradar(ox, oy, fade);
+        bool hasradar = world::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar);
+		if(hasradar) drawradar(ox, oy, fade);
 		if(showinventory) drawinventory(ox, oy, os, fade);
 		else hasinventory = false;
 	}

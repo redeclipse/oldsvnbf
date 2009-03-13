@@ -41,10 +41,11 @@ namespace aiman
 		int numai = 0;
 		loopv(clients) if(clients[i]->state.aitype == type)
 		{
-			if(clients[i]->state.ownernum < 0)
+			if(clients[i]->state.ownernum < 0 || clients[i]->state.aireinit == 3)
 			{ // reuse a slot that was going to removed
 				clientinfo *ci = clients[i];
-				ci->state.ownernum = findaiclient();
+				if(clients[i]->state.ownernum < 0 || clients[i]->state.aireinit <= 2)
+					ci->state.ownernum = findaiclient();
 				ci->state.aireinit = 2;
 				ci->team = chooseteam(ci);
 				if(req) autooverride = true;
@@ -70,8 +71,6 @@ namespace aiman
 				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->state.state = CS_DEAD;
 				ci->team = chooseteam(ci);
-				//sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
-				//waiting(ci);
 				ci->state.aireinit = 2;
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
@@ -99,7 +98,7 @@ namespace aiman
 
 	bool delai(int type, bool req)
 	{
-		loopvrev(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum >= 0)
+		loopvrev(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum >= 0 && clients[i]->state.aireinit <= 2)
 		{
 			deleteai(clients[i]);
 			if(req) autooverride = true;
@@ -116,10 +115,10 @@ namespace aiman
 
 	void reinitai(clientinfo *ci)
 	{
-		if(ci->state.ownernum < 0) deleteai(ci);
-		else if(ci->state.aireinit)
+		if(ci->state.ownernum < 0 || ci->state.aireinit == 3) deleteai(ci);
+		else if(ci->state.aireinit >= 1)
 		{
-			if(ci->state.aireinit >= 2)
+			if(ci->state.aireinit == 2)
 			{
 				waiting(ci);
 				ci->state.dropped.reset();
@@ -130,15 +129,19 @@ namespace aiman
 		}
 	}
 
-	void shiftai(clientinfo *ci, int cn = -1)
+	void shiftai(clientinfo *ci, int cn = -1, bool reset = true)
 	{
 		if(cn < 0)
 		{
-			ci->state.dropped.reset();
-            loopi(WEAPON_MAX) ci->state.weapshots[i].reset();
-			ci->state.ownernum = -1;
-			ci->state.aireinit = 0;
 			ci->team = TEAM_NEUTRAL;
+			if(reset)
+			{
+				ci->state.dropped.reset();
+				loopi(WEAPON_MAX) ci->state.weapshots[i].reset();
+				ci->state.ownernum = -1;
+				ci->state.aireinit = 0;
+			}
+			else ci->state.aireinit = 3;
 		}
 		else
 		{
@@ -198,43 +201,40 @@ namespace aiman
 		}
 		if(dorefresh)
 		{
-			//conoutf("refreshing ai..");
-			if(m_fight(gamemode) && !autooverride)
+			if(m_fight(gamemode) && (GVAR(teambalance) >= 5 || !autooverride))
 			{
 				int balance = int(numplayers*GVAR(botscale));
-				//conoutf("balance is primarily %d", balance);
 				if(m_team(gamemode, mutators) && GVAR(teambalance))
 				{ // skew this if teams are unbalanced
 					int numt = numteams(gamemode, mutators);
 					loopvrev(clients)
 					{
 						clientinfo *ci = clients[i];
-						if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
+						if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0 && ci->state.aireinit <= 2)
 						{
-							if(numclients(-1, true, false) > balance) shiftai(ci);
+							if(numclients(-1, true, false) > balance) shiftai(ci, -1, false); // temporarily remove and cleanup later
 							else setteam(ci, chooseteam(ci, ci->team), true, true);
 						}
 					}
 					if(GVAR(teambalance) != 6)
 					{ // balance so all teams have even counts
-						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = TEAM_NEUTRAL, numbots = 0;
+						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
 						loopv(clients)
 						{
 							clientinfo *cp = clients[i];
 							if(!cp->team || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
 							int idx = cp->team-TEAM_FIRST;
 							teamcount[idx]++;
-							if(cp->state.aitype == AI_BOT) numbots++;
-							if(!highest || teamcount[idx] > teamcount[highest])
-								highest = idx;
+							if(highest < 0 || teamcount[idx] > teamcount[highest]) highest = idx;
 						}
-						loopi(numt) if(teamcount[highest] > teamcount[i])
+						if(highest >= 0)
 						{
-							int offset = teamcount[highest]-teamcount[i];
-							balance += offset;
-							//conoutf("team %d [%d] is lower than %d [%d], offset by %d", i+1, teamcount[i], highest+1, teamcount[highest], offset);
+							loopi(numt) if(teamcount[highest] > teamcount[i])
+							{
+								int offset = teamcount[highest]-teamcount[i];
+								balance += offset;
+							}
 						}
-						//conoutf("balance after check is %d", balance);
 					}
 					else balance = max(numclients(-1, true, true)*numt, numt-1); // humans vs. bots, just directly balance
 				}
@@ -250,28 +250,30 @@ namespace aiman
 	{ // clear and remove all ai immediately
 		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
 			deleteai(clients[i]);
-		autooverride = false;
-		dorefresh = false;
+		dorefresh = autooverride = false;
 	}
 
 	void checkai()
 	{
-		if(!notgotinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
+		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(oldteambalance != GVAR(teambalance))
+			if(!notgotinfo)
 			{
-				dorefresh = true;
-				oldteambalance = GVAR(teambalance);
+				if(oldteambalance != GVAR(teambalance))
+				{
+					dorefresh = true;
+					oldteambalance = GVAR(teambalance);
+				}
+				if(oldbotratio != GVAR(botratio))
+				{
+					dorefresh = true;
+					oldbotratio = GVAR(botratio);
+				}
+				while(true) if(!reassignai()) break;
+				checksetup();
 			}
-			if(oldbotratio != GVAR(botratio))
-			{
-				dorefresh = true;
-				oldbotratio = GVAR(botratio);
-			}
-			while(true) if(!reassignai()) break;
-			checksetup();
 		}
-		//else clearai();
+		else clearai();
 	}
 
 	void reqadd(clientinfo *ci, int skill)
