@@ -445,10 +445,12 @@ namespace server
 	{
 		int n = 0;
 		loopv(clients)
+		{
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
 				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
-					((!noai && (clients[i]->state.aitype == AI_NONE || clients[i]->state.ownernum >= 0)) || clients[i]->state.aitype == AI_NONE))
-					n++;
+					(clients[i]->state.aitype == AI_NONE || (!noai && (clients[i]->state.ownernum >= 0 && clients[i]->state.aireinit <= 2))))
+						n++;
+		}
 		return n;
 	}
 
@@ -631,7 +633,7 @@ namespace server
 					else minremain = -1;
 					if(!minremain)
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fctime limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fctime limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -654,7 +656,7 @@ namespace server
 						best = i;
 					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -666,7 +668,7 @@ namespace server
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_CHAT, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -1169,7 +1171,8 @@ namespace server
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}
-			aiman::dorefresh = true;
+			if(ci->state.aitype == AI_NONE)
+				aiman::dorefresh = true; // get the ai to reorganise
 		}
 	}
 
@@ -1822,7 +1825,8 @@ namespace server
 		{
             int space = 2*strlen(servermotd) + 2 + 5;
             CHECKSPACE(space);
-			putint(p, SV_SERVMSG);
+			putint(p, SV_ANNOUNCE);
+			putint(p, S_GUIACT);
 			sendstring(servermotd, p);
 		}
 
@@ -1957,7 +1961,12 @@ namespace server
 				dodamage(target, ci, damage, weap, h.flags, h.dir);
 			}
 		}
-		else if(weap == -1) gs.dropped.remove(id);
+		else if(weap == -1)
+		{
+			gs.dropped.remove(id);
+			if(sents.inrange(id) && !finditem(id, false))
+				sents[id].millis = gamemillis;
+		}
 	}
 
 	void takeammo(clientinfo *ci, int weap, int amt = 1)
@@ -3197,7 +3206,7 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(who);
 					if(!cp || !m_team(gamemode, mutators)) break;
 					if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
-					if(cp->team != team) setteam(cp, team, true, true);
+					setteam(cp, team, true, true);
 					break;
 				}
 

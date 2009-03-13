@@ -16,7 +16,7 @@ void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, 
 		f->name = name;
 	}
 
-	f->tex = textureload(tex);
+	f->tex = textureload(tex, 3);
 	f->chars.setsize(0);
 	f->defaultw = *defaultw;
 	f->defaulth = *defaulth;
