@@ -112,13 +112,13 @@ namespace ctf
 		loopv(st.flags) if(st.flags[i].base&BASE_FLAG)
 		{
 			ctfstate::flag &f = st.flags[i];
-			float skew = 0.75f, fade = hud::inventoryblend*blend;
+			float skew = 0.5f, fade = hud::inventoryblend*blend;
 			int millis = lastmillis-f.interptime;
-			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
-			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
+			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.5f : 0.5f);
+			else if(millis < 500) skew += 0.5f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.5f);
 			int oldy = y-sy;
-			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, fade, skew, "default", blend, f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "radar", blend, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
+			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, 1.f, 1.f, 1.f, fade, skew, "sub", blend, f.owner ? "\frTaken" : (f.droptime ? "\fyDropped" : "\fgSafe"));
+			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
     }

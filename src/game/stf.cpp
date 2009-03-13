@@ -120,8 +120,8 @@ namespace stf
 				else skew = 1.f-(amt*(1.f-hud::inventoryskew));
 			}
 			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, false, fade, skew, "default", blend, "%d%%", int(occupy*100.f));
-			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), false, fade, skew);
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, 1.f, 1.f, 1.f, fade, skew, "default", blend, "%d%%", int(occupy*100.f));
+			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), 1.f, 1.f, 1.f, fade, skew);
 		}
         return sy;
     }

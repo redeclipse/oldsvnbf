@@ -811,6 +811,7 @@ namespace server
 		string st;
 		filtertext(st, str);
 		ircoutf(r, "%s", st);
+		console("%s", st);
 	}
 
 	void srvmsgf(int cn, const char *s, ...)
