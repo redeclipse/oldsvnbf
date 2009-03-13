@@ -67,6 +67,7 @@ namespace hud
 	VARP(inventoryweapents, 0, 0, 1);
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 2);
+	VARP(inventorycolour, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.75f, 1);
 	FVARP(inventoryskew, 0, 0.75f, 1);
@@ -122,7 +123,7 @@ namespace hud
 
     VARP(showborder, 0, 1, 2);
 	VARP(borderhealth, 0, 1, 2);
-	FVARP(bordersize, 0, 0.04f, 1000);
+	FVARP(bordersize, 0, 0.025f, 1000);
 	FVARP(borderblend, 0, 1.f, 1);
 	FVARP(borderskew, -1, -0.3f, 1);
 
@@ -387,7 +388,7 @@ namespace hud
 		if(shownotices && world::maptime && !world::player1->conopen)
 		{
 			pushfont("super");
-			int off = int(hudsize*bordersize*(hastv(showborder) ? 1.f : 0.5f)*1.5f),
+			int off = int(hudsize*bordersize*(hastv(showborder) ? 1.5f : 0.5f)*1.5f),
 				iff = hasinventory ? int(hudsize*inventorysize*1.5f) : 0,
 				ty = hudsize-off, tx = hudwidth-off-iff, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
@@ -806,24 +807,21 @@ namespace hud
 		}
 	}
 
-	int drawitem(const char *tex, int x, int y, float size, bool tcol, float fade, float skew, const char *font, float blend, const char *text, ...)
+	int drawitem(const char *tex, int x, int y, float size, float r, float g, float b, float fade, float skew, const char *font, float blend, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
-		float f = fade*skew, r = skew, g = skew, b = skew, s = size*skew;
-		if(tcol && teamwidgets) skewcolour(r, g, b);
+		float f = fade*skew, cr = r*skew, cg = g*skew, cb = b*skew, s = size*skew;
 		settexture(tex, 3);
-		glColor4f(r, g, b, f);
+		glColor4f(cr, cg, cb, f);
 		drawsized(x-int(s), y-int(s), int(s));
 		if(text && *text)
 		{
 			glPushMatrix();
 			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
-			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*inventoryblend*blend*skew),
-				tr = 255, tg = 255, tb = 255;
-			if(teamwidgets >= 2) skewcolour(tr, tg, tb);
+			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*inventoryblend*blend*skew);
 			s_sprintfdlv(str, text, text);
-			draw_textx("%s", tx, ty, tr, tg, tb, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
+			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
 		}
@@ -894,9 +892,17 @@ namespace hud
 			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
 			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
 			if(delay < 1000) skew *= delay/1000.f;
+			float r = 1.f, g = 1.f, b = 1.f;
+			if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
+			else
+			{
+				r = (weaptype[i].colour>>16)/255.f;
+				g = ((weaptype[i].colour>>8)&0xFF)/255.f;
+				b = (weaptype[i].colour&0xFF)/255.f;
+			}
 			if(inventoryammo && (instate || inventoryammo > 1) && world::player1->hasweap(i, sweap))
-				sy += drawitem(hudtexs[i], x, y-sy, size, true, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
-			else sy += drawitem(hudtexs[i], x, y-sy, size, true, fade, skew);
+				sy += drawitem(hudtexs[i], x, y-sy, size, r, g, b, fade, skew, "default", blend, "%d", world::player1->ammo[i]);
+			else sy += drawitem(hudtexs[i], x, y-sy, size, r, g, b, fade, skew);
             if(inventoryweapids && (instate || inventoryweapids > 1))
             {
 				static string weapids[WEAPON_MAX];
@@ -913,8 +919,8 @@ namespace hud
 					lastweapids = changedkeys;
 				}
                 if(inventoryweapents && entities::ents.inrange(world::player1->entid[i]) && world::player1->hasweap(i, sweap))
-					drawitemsubtext(x, oldy, skew, "sub", blend, "[\fs\fa%d\fS] \fs%s%s\fS", world::player1->entid[i], weaptype[i].text, weapids[i]);
-                else drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", weaptype[i].text, weapids[i]);
+					drawitemsubtext(x, oldy, skew, "sub", blend, "[\fs\fa%d\fS] \fs%s%s\fS", world::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+                else drawitemsubtext(x, oldy, skew, "sub", blend, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
             }
 		}
 		return sy;

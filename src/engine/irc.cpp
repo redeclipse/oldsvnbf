@@ -48,7 +48,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 	if(!n) return;
 	s_sprintfdlv(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
-	console("[%s] >>> %s", n->name, str);
+	if(verbose >= 2) console("[%s] >>> %s", n->name, str);
 	s_strcat(str, "\n");
 	ENetBuffer buf;
 	buf.data = str;

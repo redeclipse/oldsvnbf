@@ -1308,7 +1308,7 @@ namespace hud
 	extern int numteamkills();
 	extern float radarrange();
 	extern void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", float fade = -1.f, const char *text = NULL, ...);
-	extern int drawitem(const char *tex, int x, int y, float size, bool tcol = true, float fade = 1.f, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
+	extern int drawitem(const char *tex, int x, int y, float size, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern void drawitemsubtext(int x, int y, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);
 	extern int drawhealth(int x, int y, int s, float blend = 1.f);
