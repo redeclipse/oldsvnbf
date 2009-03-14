@@ -2293,7 +2293,7 @@ namespace server
 			{
 				if(m_regen(gamemode, mutators))
 				{
-					int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regendelay) : GVAR(regentime);
+					int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
 					if(smode) smode->regen(ci, total, amt, delay);
 					if(total && amt && delay && ci->state.health < total &&
 						gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay*1000)
