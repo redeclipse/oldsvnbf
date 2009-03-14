@@ -1,7 +1,7 @@
 // server-side ai manager
 namespace aiman
 {
-	int oldteambalance = -1;
+	int oldteambalance = -1, oldbotscale = -1;
 	float oldbotratio = 1e-4f; // lower than it can go
 
 	int findaiclient(int exclude)
@@ -49,7 +49,6 @@ namespace aiman
 				ci->state.aireinit = 2;
 				ci->team = chooseteam(ci);
 				if(req) autooverride = true;
-				dorefresh = true;
 				return true;
 			}
 			numai++;
@@ -74,7 +73,6 @@ namespace aiman
 				ci->state.aireinit = 2;
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
-				dorefresh = true;
 				return true;
 			}
 			delclient(cn);
@@ -107,7 +105,6 @@ namespace aiman
 		if(req)
 		{
 			autooverride = false;
-			dorefresh = true;
 			return true;
 		}
 		return false;
@@ -201,7 +198,7 @@ namespace aiman
 		}
 		if(dorefresh)
 		{
-			if(m_fight(gamemode) && (GVAR(teambalance) >= 5 || !autooverride))
+			if(m_fight(gamemode) && !autooverride)
 			{
 				int balance = int(numplayers*GVAR(botscale));
 				if(m_team(gamemode, mutators) && GVAR(teambalance))
@@ -235,6 +232,7 @@ namespace aiman
 								balance += offset;
 							}
 						}
+						balance -= balance%numt; // just to ensure it is correctly aligned
 					}
 					else balance = max(numclients(-1, true, true)*numt, numt-1); // humans vs. bots, just directly balance
 				}
@@ -255,23 +253,25 @@ namespace aiman
 
 	void checkai()
 	{
-		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
+		if(!notgotinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(!notgotinfo)
+			if(oldteambalance != GVAR(teambalance))
 			{
-				if(oldteambalance != GVAR(teambalance))
-				{
-					dorefresh = true;
-					oldteambalance = GVAR(teambalance);
-				}
-				if(oldbotratio != GVAR(botratio))
-				{
-					dorefresh = true;
-					oldbotratio = GVAR(botratio);
-				}
-				while(true) if(!reassignai()) break;
-				checksetup();
+				dorefresh = true;
+				oldteambalance = GVAR(teambalance);
 			}
+			if(oldbotratio != GVAR(botratio))
+			{
+				dorefresh = true;
+				oldbotratio = GVAR(botratio);
+			}
+			if(oldbotscale != GVAR(botscale))
+			{
+				dorefresh = true;
+				oldbotscale = GVAR(botscale);
+			}
+			checksetup();
+			while(true) if(!reassignai()) break;
 		}
 		else clearai();
 	}
