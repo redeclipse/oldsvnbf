@@ -362,7 +362,7 @@ namespace server
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
 		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
-		virtual int regen(clientinfo *ci) { return GVAR(regenhealth); }
+		virtual void regen(clientinfo *ci, int &total, int &amt, int &delay) {}
 	};
 
 	vector<srventity> sents;
@@ -2291,19 +2291,16 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				int total = m_maxhealth(gamemode, mutators);
-				if(m_regen(gamemode, mutators) && ci->state.health < total && GVAR(regendelay) && GVAR(regentime))
+				if(m_regen(gamemode, mutators))
 				{
-					int lastpain = gamemillis-ci->state.lastpain, lastregen = gamemillis-ci->state.lastregen;
-					if((!ci->state.lastregen && lastpain >= GVAR(regendelay)*1000) || (ci->state.lastregen && lastregen >= GVAR(regentime)*1000))
+					int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regendelay) : GVAR(regentime);
+					if(smode) smode->regen(ci, total, amt, delay);
+					if(total && amt && delay && ci->state.health < total &&
+						gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay*1000)
 					{
-						int amt = smode ? smode->regen(ci) : GVAR(regenhealth);
-						if(amt)
-						{
-							ci->state.health = min(ci->state.health + amt, total);
-							ci->state.lastregen = gamemillis;
-							sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
-						}
+						ci->state.health = min(ci->state.health + amt, total);
+						ci->state.lastregen = gamemillis;
+						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 					}
 				}
 			}

@@ -200,15 +200,19 @@ struct stfservmode : stfstate, servmode
 		moveflags(ci->team, oldpos, newpos);
 	}
 
-	int regen(clientinfo *ci)
+	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(!notgotflags && GVAR(regenstfflag)) loopv(flags)
+		if(!notgotflags) loopv(flags)
 		{
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o))
-				return GVAR(regenstfflag);
+			{
+				if(GVAR(overstfhealth)) total = GVAR(overstfhealth);
+				if(ci->state.lastregen && GVAR(regenstfguard)) delay = GVAR(regenstfguard);
+				if(GVAR(regenstfflag)) amt = GVAR(regenstfflag);
+				return;
+			}
 		}
-		return GVAR(regenhealth);
 	}
 
 	void parseflags(ucharbuf &p)
