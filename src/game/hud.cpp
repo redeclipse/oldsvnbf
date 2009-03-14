@@ -130,7 +130,7 @@ namespace hud
 
 	bool hastv(int val)
 	{
-		if(val) return val == 2 || world::tvmode();
+		if(val == 2 || (val && world::tvmode())) return true;
 		return false;
 	}
 
@@ -394,7 +394,7 @@ namespace hud
 		if(shownotices && world::maptime && !world::player1->conopen)
 		{
 			pushfont("super");
-			int ofy = int(hudsize*bordersize), ofx = int(ofy*(hastv(showborder) ? 2 : 1)),
+			int ofy = int(hudsize*bordersize*(hastv(showborder) ? 1.5f : 1.f)), ofx = int(ofy*(hastv(showborder) ? 1.5f : 1.f)),
 				inv = hasinventory ? int(hudsize*inventorysize*1.5f) : 0,
 				ty = hudsize-ofy, tx = hudwidth-ofx-inv, tf = int(255*hudblend),
 				tr = 255, tg = 255, tb = 255;
@@ -896,13 +896,13 @@ namespace hud
 				float amt = clamp(float(lastmillis-world::player1->weaplast[i])/float(world::player1->weapwait[i]), 0.f, 1.f);
 				skew = (i != world::player1->weapselect ?
 					(
-						world::player1->hasweap(i, sweap) ? 1.f-(amt*(0.5f)) : 1.f-amt
+						world::player1->hasweap(i, sweap) ? 1.f-(amt*(0.3f)) : 1.f-amt
 					) : (
-						world::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.5f+(amt*(1.f-0.5f))
+						world::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.7f+(amt*(0.3f))
 					)
 				);
 			}
-			else if(i != world::player1->weapselect) skew = 0.5f;
+			else if(i != world::player1->weapselect) skew = 0.7f;
 			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
 			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
 			if(delay < 1000) skew *= delay/1000.f;

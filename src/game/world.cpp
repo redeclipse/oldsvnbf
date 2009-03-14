@@ -656,9 +656,9 @@ namespace world
 		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
 		{
 			vec pos = headpos(d);
-			int gdiv = obliterated ? 2 : 4, gibs = clamp((damage+gdiv)/gdiv, 1, 20), amt = int((rnd(gibs)+gibs)*gibscale);
+			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs)*gibscale);
 			loopi(amt)
-				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire) : 0)+1000, 0, rnd(300)+1, 50);
+				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
 			hud::teamkills.add(lastmillis);

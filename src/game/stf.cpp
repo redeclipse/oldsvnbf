@@ -115,8 +115,8 @@ namespace stf
 			if(millis < 500)
 			{
 				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
-				if(f.hasflag) skew = 0.5f+(amt*(1.f-0.5f));
-				else skew = 1.f-(amt*(1.f-0.5f));
+				if(f.hasflag) skew = 0.5f+(amt*0.5f);
+				else skew = 1.f-(amt*0.5f);
 			}
 			if(delay < 1000) skew *= delay/1000.f;
 			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, 1.f, 1.f, 1.f, fade, skew, "default", "%d%%", int(occupy*100.f));
