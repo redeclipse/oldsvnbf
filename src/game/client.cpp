@@ -961,6 +961,7 @@ namespace client
 						case SPHY_JUMP:
 						{
 							playsound(S_JUMP, t->o, t);
+							world::spawneffect(world::feetpos(t), 0x222222, int(t->radius), 250, 1.f);
 							t->jumptime = lastmillis;
 							break;
 						}

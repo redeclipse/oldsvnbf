@@ -523,6 +523,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER)
 				{
 					playsound(S_JUMP, pl->o, pl);
+					world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 250, 1.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
@@ -540,7 +541,7 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 250, 1.f);
+				world::spawneffect(world::feetpos(pl), 0x222222, int(pl->radius), 250, 1.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
@@ -594,7 +595,7 @@ namespace physics
         {
             float fric = pl->inliquid ? sinkfric : floorfric,
                   c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
-            pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f*speedscale)); 
+            pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f*speedscale));
         }
     }
 

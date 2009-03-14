@@ -516,11 +516,6 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(f.owner && f.owner == d && aihomerun(d, b)) return true;
-			if(isctfflag(f, d->team))
-			{
-				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
-			}
 			if(isctfhome(f, d->team))
 			{
 				static vector<int> hasflags;
@@ -530,8 +525,13 @@ namespace ctf
 					ctfstate::flag &g = st.flags[i];
 					if(g.owner == d) hasflags.add(i);
 				}
-				if(hasflags.empty()) return false; // otherwise why are we pursuing home?
-				if(ai::makeroute(d, b, f.pos())) return true;
+				if(ai::makeroute(d, b, f.spawnloc)) return true;
+			}
+			if(isctfflag(f, d->team))
+			{
+				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
+				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
+				else return false;
 			}
 			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
 			{
