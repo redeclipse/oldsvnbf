@@ -1647,9 +1647,10 @@ bool reloadtexture(const char *name)
 {
     string tname;
     s_strcpy(tname, name);
+    path(tname);
     Texture *t = textures.access(tname);
     if(t) return reloadtexture(t);
-    return false;
+    return true;
 }
 
 bool reloadtexture(Texture *t)
