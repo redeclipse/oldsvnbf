@@ -22,9 +22,12 @@ VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(maxcarry, 0, 2, WEAPON_MAX-1);
 
-VARG(regendelay, 0, 3, INT_MAX-1);
+VARG(regendelay, 0, 1, INT_MAX-1);
 VARG(regentime, 0, 1, INT_MAX-1);
 VARG(regenhealth, 0, 10, INT_MAX-1);
+VARG(regenstfflag, 0, 20, INT_MAX-1);
+VARG(regenctfflag, 0, 20, INT_MAX-1);
+VARG(regenhealthflag, 0, 10, INT_MAX-1);
 VARG(spawnprotecttime, 0, 3, INT_MAX-1);
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
