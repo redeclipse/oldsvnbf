@@ -131,6 +131,17 @@ struct ctfservmode : ctfstate, servmode
         }
     }
 
+	int regen(clientinfo *ci)
+	{
+		if(!notgotflags && GVAR(regenctfflag)) loopv(flags)
+        {
+            flag &f = flags[i];
+            if(f.owner == ci->clientnum || (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius))
+				return GVAR(regenctfflag);
+		}
+		return GVAR(regenhealth);
+	}
+
     void parseflags(ucharbuf &p)
     {
     	int numflags = getint(p);
