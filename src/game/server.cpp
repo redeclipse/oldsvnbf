@@ -2433,6 +2433,7 @@ namespace server
 		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
 		    aiman::removeai(ci, complete);
+		    if(!complete) aiman::dorefresh = true;
 		    clients.removeobj(ci);
         }
         else connects.removeobj(ci);
