@@ -229,7 +229,7 @@ namespace stf
 				}
 				else b.millis = lastmillis;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius*3/4), float(enttype[FLAG].radius*3), 0); // less guard/wander than ctf
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*2), 0); // less wander than ctf
 		}
 		return false;
 	}

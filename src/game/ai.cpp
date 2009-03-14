@@ -729,45 +729,40 @@ namespace ai
 
 	void jumpto(gameent *d, aistate &b, const vec &pos, bool cando = true)
 	{
-		if(lastmillis-d->jumptime >= 300 && (!d->timeinair || (cando && physics::canimpulse(d))))
+		vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
+		bool offground = (d->timeinair && !d->inliquid && !d->onladder), jumper = off.z >= JUMPMIN,
+			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
+			propeller = dir.magnitude() >= JUMPMIN, propel = jumper || propeller;
+		if(propel && (!offground || !cando || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
+			propel = false;
+		if(jump)
 		{
-			vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
-			bool jump = off.z >= JUMPMIN, propel = cando && dir.magnitude() >= JUMPMIN;
-			if(propel)
-			{
-				if((!d->timeinair && lastmillis < d->ai->jumpseed) || (d->timeinair && lastmillis < d->ai->propelseed))
-					propel = false;
-				else jump = true;
-			}
-			if(jump)
+			if(offground || lastmillis < d->ai->jumpseed) jump = false;
+			else
 			{
 				vec old = d->o;
 				d->o = vec(pos).add(vec(0, 0, d->height));
-				if(collide(d, vec(0, 0, 1))) jump = true;
-				else
-				{
-					jump = false;
-					if(!d->timeinair && propel) propel = false;
-				}
+				if(!collide(d, vec(0, 0, 1))) jump = false;
 				d->o = old;
 			}
-			if(jump || propel)
-			{
-				d->jumping = true;
-				d->jumptime = lastmillis;
-				if(propel)
-				{
-					d->ai->jumpseed = lastmillis+3000+rnd((111-d->skill)*3000);
-					d->ai->propelseed = lastmillis+300+rnd((111-d->skill)*300);
-				}
-				if(jump && !propel) d->ai->dontmove = true; // going up
-			}
+		}
+		if(jump || propel)
+		{
+			d->jumping = true;
+			d->jumptime = lastmillis;
+			if(jump && !d->onladder && !propeller) d->ai->dontmove = true; // going up
+			int seed = 111-d->skill;
+			if(!d->onladder) seed *= 10;
+			d->ai->propelseed = lastmillis+seed+rnd(seed);
+			if(jump) d->ai->jumpseed = d->ai->propelseed;
+			if(!d->onladder) seed *= 10;
+			d->ai->jumprand = lastmillis+seed+rnd(seed*10);
 		}
 	}
 
 	int process(gameent *d, aistate &b)
 	{
-		int result = 0, stupify = d->skill <= 50+rnd(25) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
+		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
 		float frame = float(lastmillis-d->lastupdate)/float(skmod);
 		vec dp = world::headpos(d);
 		if(b.idle || (stupify && stupify <= skmod))
@@ -775,7 +770,7 @@ namespace ai
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = b.idle || (stupify && rnd(stupify) <= stupify/4);
 			if(b.idle == 2 || (stupify && stupify <= skmod/8))
-				jumpto(d, b, dp, !rnd(d->skill+1)); // jump up and down
+				jumpto(d, b, dp, !rnd(d->skill*10)); // jump up and down
 		}
 		else if(hunt(d, b))
 		{
@@ -783,7 +778,7 @@ namespace ai
 			world::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
 			d->ai->lasthunt = lastmillis;
 		}
-		else d->ai->dontmove = true;
+		else if(d->ai->route.empty()) d->ai->dontmove = true;
 
 		gameent *e = world::getclient(d->ai->enemy);
 		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = world::intersectclosest(dp, d->ai->target, d);

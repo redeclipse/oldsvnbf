@@ -1527,8 +1527,8 @@ namespace world
 			{
 				if(d->inliquid && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->lastimpulse; }
 				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->jumptime; }
+				else if(d->timeinair && d->lastimpulse && lastmillis-d->lastimpulse <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->lastimpulse; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->crouching || d->crouchtime<0)
 				{
