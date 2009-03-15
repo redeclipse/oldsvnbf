@@ -117,10 +117,14 @@ bool initwarning(const char *desc, int level, int type)
     return false;
 }
 
+#define SCR_MINW 320
+#define SCR_MINH 200
+#define SCR_MAXW 10000
+#define SCR_MAXH 10000
 #define SCR_DEFAULTW 1024
 #define SCR_DEFAULTH 768
-VARF(scr_w, 320, -1, 10000, initwarning("screen resolution"));
-VARF(scr_h, 200, -1, 10000, initwarning("screen resolution"));
+VARF(scr_w, SCR_MINW, -1, SCR_MAXW, initwarning("screen resolution"));
+VARF(scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 VARF(colorbits, 0, 0, 32, initwarning("color depth"));
 VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
 VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
@@ -189,14 +193,14 @@ void screenres(int *w, int *h)
     if(initing >= INIT_RESET)
 	{
 #endif
-		scr_w = *w;
-		scr_h = *h;
+		scr_w = clamp(*w, SCR_MINW, SCR_MAXW);
+		scr_h = clamp(*h, SCR_MINH, SCR_MAXH);
 #if defined(WIN32) || defined(__APPLE__)
 		initwarning("screen resolution");
 #else
 		return;
 	}
-    SDL_Surface *surf = SDL_SetVideoMode(*w, *h, 0, SDL_OPENGL|(screen->flags&SDL_FULLSCREEN ? SDL_FULLSCREEN : SDL_RESIZABLE));
+    SDL_Surface *surf = SDL_SetVideoMode(clamp(*w, SCR_MINW, SCR_MAXW), clamp(*h, SCR_MINH, SCR_MAXH), 0, SDL_OPENGL|(screen->flags&SDL_FULLSCREEN ? SDL_FULLSCREEN : SDL_RESIZABLE));
 	if(!surf) return;
 	screen = surf;
 	scr_w = screen->w;
@@ -800,8 +804,8 @@ int main(int argc, char **argv)
 			{
 				switch(argv[i][2])
 				{
-					case 'w': scr_w = max(320, atoi(&argv[i][3])); if(!findarg(argc, argv, "-dh")) scr_h = -1; break;
-					case 'h': scr_h = max(200, atoi(&argv[i][3])); if(!findarg(argc, argv, "-dw")) scr_w = -1; break;
+                    case 'w': scr_w = clamp(atoi(&argv[i][3]), SCR_MINW, SCR_MAXW); if(!findarg(argc, argv, "-dh")) scr_h = -1; break;
+                    case 'h': scr_h = clamp(atoi(&argv[i][3]), SCR_MINH, SCR_MAXH); if(!findarg(argc, argv, "-dw")) scr_w = -1; break;
 					case 'd': depthbits = atoi(&argv[i][3]); break;
 					case 'c': colorbits = atoi(&argv[i][3]); break;
 					case 'a': fsaa = atoi(&argv[i][3]); break;
