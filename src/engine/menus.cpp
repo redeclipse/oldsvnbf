@@ -452,7 +452,7 @@ void addchange(const char *desc, int type)
     loopv(needsapply) if(!strcmp(needsapply[i].desc, desc)) return;
     needsapply.add(change(type, desc));
     if(needsapply.length() && guistack.find(&applymenu) < 0)
-        pushgui(&applymenu, 0);
+        pushgui(&applymenu, max(guistack.length()-1, 0));
 }
 
 void clearchanges(int type)
