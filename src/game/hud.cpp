@@ -47,8 +47,8 @@ namespace hud
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
-	VARP(crosshairhealth, 0, 1, 2);
-	FVARP(crosshairskew, -1, 0.4f, 1);
+	VARP(crosshairhealth, 0, 2, 2);
+	FVARP(crosshairskew, -1, 0.3f, 1);
 	TVAR(relativecursortex, "textures/cursordot", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
 	TVAR(editcursortex, "textures/cursordot", 3);
@@ -148,21 +148,24 @@ namespace hud
 
 	void colourskew(float &r, float &g, float &b, float skew)
 	{
-		if(skew > 0.75f)
-		{ // fade to orange
-			float off = (skew-0.75f)*4.f;
-			g *= 0.5f+(off*0.5f);
-			b *= off;
+		if(skew >= 2.f)
+		{ // fully overcharged to green
+			r = b = 0.f;
 		}
-		else if(skew > 0.25f)
-		{ // fade to red
-			g *= skew-0.25f;
-			b = 0.f;
+		else if(skew >= 1.f)
+		{ // overcharge to yellow
+			b *= 1.f-(skew-1.f);
+		}
+		else if(skew >= 0.5f)
+		{ // fade to orange
+			float off = skew-0.5f;
+			g *= 0.5f+off;
+			b *= off*2.f;
 		}
 		else
-		{ // fade out
-			r *= 0.5f+(skew*2.f);
-			g = b = 0.f;
+		{ // fade to red
+			g *= skew;
+			b = 0.f;
 		}
 	}
 
@@ -172,13 +175,20 @@ namespace hud
 		{
 			float skew = clamp((lastmillis-world::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
 			if(skew > 0.5f) skew = 1.f-skew;
-			fade += (1.f-fade)*skew;
+			fade *= 1.f-skew;
 			s += int(s*ss*skew);
 		}
-
-		int m = m_maxhealth(world::gamemode, world::mutators);
-		if(world::player1->health < m)
-			colourskew(r, g, b, clamp(float(world::player1->health)/float(m), 0.f, 1.f));
+		int total = m_maxhealth(world::gamemode, world::mutators);
+		bool full = world::player1->health >= total;
+		if(full)
+		{
+			int over = total;
+			if(m_ctf(world::gamemode)) over = max(overctfhealth, total);
+			if(m_stf(world::gamemode)) over = max(overstfhealth, total);
+			if(over > total)
+				colourskew(r, g, b, 1.f+clamp(float(world::player1->health-total)/float(over-total), 0.f, 1.f));
+		}
+		else colourskew(r, g, b, clamp(float(world::player1->health)/float(total), 0.f, 1.f));
 	}
 
 	void skewcolour(float &r, float &g, float &b)
