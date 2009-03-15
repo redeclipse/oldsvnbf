@@ -531,7 +531,6 @@ namespace ctf
 			{
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
-				else return false;
 			}
 			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
 			{

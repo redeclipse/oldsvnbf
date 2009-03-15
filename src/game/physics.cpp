@@ -537,7 +537,6 @@ namespace physics
 			pl->falling = vec(0, 0, 0);
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
-			pl->jumping = false;
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
