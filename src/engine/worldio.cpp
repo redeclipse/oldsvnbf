@@ -272,7 +272,7 @@ void saveslotconfig(FILE *h, Slot &s, int index)
     {
         fprintf(h, "texture");
         if(index >= 0) fprintf(h, " %s", findtexturename(s.sts[j].type));
-        else if(!j) fprintf(h, " %s", findmaterialname(index));
+        else if(!j) fprintf(h, " %s", findmaterialname(-index));
         else fprintf(h, " 1");
         fprintf(h, " \"%s\"", s.sts[j].lname);
         if(!j)
