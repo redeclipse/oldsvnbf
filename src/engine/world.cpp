@@ -742,7 +742,7 @@ void clearworldvars(bool msg = false)
 				}
 				case ID_SVAR:
 				{
-					setsvar(id.name, *id.def.s ? id.def.s : "", true);
+					setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true);
 					break;
 				}
 				case ID_ALIAS:

@@ -405,7 +405,7 @@ namespace server
 					}
 					case ID_SVAR:
 					{
-						setsvar(id.name, *id.def.s ? id.def.s : "", true);
+						setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true);
                         if(invoked) s_sprintf(val)("%s", *id.storage.s);
 						break;
 					}
