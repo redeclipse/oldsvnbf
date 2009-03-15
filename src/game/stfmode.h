@@ -207,7 +207,7 @@ struct stfservmode : stfstate, servmode
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o))
 			{
-				if(GVAR(overstfhealth)) total = GVAR(overstfhealth);
+				if(GVAR(overstfhealth)) total = max(GVAR(overstfhealth), total);
 				if(ci->state.lastregen && GVAR(regenstfguard)) delay = GVAR(regenstfguard);
 				if(GVAR(regenstfflag)) amt = GVAR(regenstfflag);
 				return;

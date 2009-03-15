@@ -372,7 +372,11 @@ namespace ctf
 			else if(isctfflag(g, d->team) && (g.owner || g.droptime))
 				takenflags.add(i);
 		}
-		if(!hasflags.empty() && aihomerun(d, b)) return true;
+		if(!hasflags.empty())
+		{
+			aihomerun(d, b);
+			return true;
+		}
 		if(!ai::badhealth(d) && !takenflags.empty())
 		{
 			int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
@@ -390,18 +394,22 @@ namespace ctf
 			ctfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			ai::checkothers(targets, d, isctfhome(f, d->team) ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
-			gameent *e = NULL;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-			{ // try to guess what non ai are doing
-				vec ep = world::feetpos(e);
-				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-					targets.add(e->clientnum);
+			bool home = isctfhome(f, d->team), regen = !overctfhealth || d->health >= overctfhealth;
+			if(!home || regen)
+			{
+				ai::checkothers(targets, d, home ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
+				gameent *e = NULL;
+				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = world::feetpos(e);
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+						targets.add(e->clientnum);
+				}
 			}
-			if(isctfhome(f, d->team))
+			if(home)
 			{
 				bool guard = false;
-				if(f.owner || targets.empty()) guard = true;
+				if(f.owner || regen || targets.empty()) guard = true;
 				else if(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
 				{ // see if we can relieve someone who only has a plasma
 					gameent *t;
@@ -418,7 +426,7 @@ namespace ctf
 					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
 					n.targtype = AI_T_AFFINITY;
-					n.score = pos.squaredist(f.pos())/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
+					n.score = pos.squaredist(f.pos())/(!regen ? 100.f : 1.f);
 				}
 			}
 			else
@@ -461,14 +469,18 @@ namespace ctf
 				ctfstate::flag &g = st.flags[i];
 				if(g.owner == d) hasflags.add(i);
 			}
-			if(!hasflags.empty() && aihomerun(d, b)) return true;
+			if(!hasflags.empty())
+			{
+				aihomerun(d, b);
+				return true;
+			}
 			if(isctfflag(f, d->team))
 			{
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			bool walk = false;
-			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
+			bool walk = false, regen = !overctfhealth || d->health >= overctfhealth;
+			if(regen && lastmillis-b.millis >= (201-d->skill)*100)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -482,10 +494,10 @@ namespace ctf
 				}
 				if(!targets.empty())
 				{
-					d->ai->clear = true; // re-evaluate
+					d->ai->clear = true; // re-evaluate so as not to herd
 					return true;
 				}
-				else
+				else if(regen)
 				{
 					walk = true;
 					b.millis = lastmillis;
@@ -515,7 +527,11 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(f.owner && f.owner == d && aihomerun(d, b)) return true;
+			if(f.owner && f.owner == d)
+			{
+				aihomerun(d, b);
+				return true;
+			}
 			if(isctfhome(f, d->team))
 			{
 				static vector<int> hasflags;
@@ -525,17 +541,17 @@ namespace ctf
 					ctfstate::flag &g = st.flags[i];
 					if(g.owner == d) hasflags.add(i);
 				}
-				if(ai::makeroute(d, b, f.spawnloc)) return true;
+				if(!hasflags.empty())
+				{
+					ai::makeroute(d, b, f.spawnloc);
+					return true;
+				}
+				else return false;
 			}
-			if(isctfflag(f, d->team))
+			else if(isctfflag(f, d->team))
 			{
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
-			}
-			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
-			{
-				d->ai->clear = true; // re-evaluate
-				return true;
 			}
 			return ai::makeroute(d, b, f.pos());
 		}

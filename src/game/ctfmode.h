@@ -141,10 +141,10 @@ struct ctfservmode : ctfstate, servmode
             {
             	if(insidehome)
 				{
-					if(GVAR(overctfhealth)) total = GVAR(overctfhealth);
+					if(GVAR(overctfhealth)) total = max(GVAR(overctfhealth), total);
 					if(ci->state.lastregen && GVAR(regenctfguard)) delay = GVAR(regenctfguard);
 				}
-				amt = GVAR(regenctfflag);
+				if(GVAR(regenctfflag)) amt = GVAR(regenctfflag);
 				return;
             }
 		}

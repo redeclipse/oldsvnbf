@@ -83,8 +83,9 @@ namespace stf
 				hud::drawsized(tx-FONTH, ty, FONTH);
 				popfont();
 				pushfont("default");
-				int occupy = int((st.flags[i].enemy ? clamp(st.flags[i].converted/float((st.flags[i].owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (st.flags[i].owner ? 1.f : 0.f))*100.f);
-				ty -= draw_textx("Securing [ \fs\fc%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, occupy);
+				int occupy = int((st.flags[i].enemy ? clamp(st.flags[i].converted/float((st.flags[i].owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (st.flags[i].owner ? 1.f : 0.f))*50.f);
+				bool owner = st.flags[i].owner == world::player1->team;
+				ty -= draw_textx("%s [ \fs%s%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, owner ? "Secure" : "Overthrow", owner ? (occupy < 50 ? "\fy" : "\fg") : "\fy", occupy+(owner ? 50 : 0));
 				popfont();
 				break;
 			}
@@ -195,22 +196,26 @@ namespace stf
 			stfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
-			gameent *e = NULL;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-			{ // try to guess what non ai are doing
-				vec ep = world::feetpos(e);
-				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
-					targets.add(e->clientnum);
+			bool regen = !overctfhealth || d->health >= overctfhealth;
+			if(regen)
+			{
+				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
+				gameent *e = NULL;
+				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = world::feetpos(e);
+					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+						targets.add(e->clientnum);
+				}
 			}
-			if(targets.empty() && (f.owner != d->team || f.enemy))
+			if(regen || (targets.empty() && (f.owner != d->team || f.enemy)))
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
 				n.node = entities::closestent(WAYPOINT, f.o, ai::NEARDIST, false);
 				n.target = j;
 				n.targtype = AI_T_AFFINITY;
-				n.score = pos.squaredist(f.o)/(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 100.f : 1.f);
+				n.score = pos.squaredist(f.o)/(!regen ? 100.f : 1.f);
 			}
 		}
 	}
@@ -220,14 +225,11 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			if(lastmillis-b.millis >= 10000+((201-d->skill)*100))
+			bool regen = !overctfhealth || d->health >= overctfhealth;
+			if(regen && !f.enemy && f.owner == d->team)
 			{
-				if(!f.enemy && f.owner == d->team)
-				{
-					d->ai->clear = true; // re-evaluate
-					return true;
-				}
-				else b.millis = lastmillis;
+				d->ai->clear = true; // re-evaluate
+				return true;
 			}
 			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*2), 0); // less wander than ctf
 		}
