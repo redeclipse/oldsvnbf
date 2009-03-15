@@ -658,7 +658,8 @@ namespace hud
 			fade *= radaritemblend;
 		}
 		else return;
-		int tq = ts/2, cx = int(tx+(tr*dir.x)-tq), cy = int(ty+(tr*dir.y)-tq);
+		float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
+		int tq = ts/2, cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
 		glColor4f(r, g, b, blend);
 		drawtex(cx, cy, ts, ts, fx, fy, fw, fh);
 		if(text && *text)
