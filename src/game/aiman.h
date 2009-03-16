@@ -1,8 +1,8 @@
 // server-side ai manager
 namespace aiman
 {
-	int oldteambalance = -1, oldbotscale = -1;
-	float oldbotratio = 1e-4f; // lower than it can go
+	int oldteambalance = -1;
+	float oldbotratio = -1.f, oldbotscale = -1.f; // lower than it can go
 
 	int findaiclient(int exclude)
 	{
