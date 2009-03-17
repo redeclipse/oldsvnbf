@@ -169,10 +169,10 @@ namespace physics
         }
     }
 
-    void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor)
+    void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor, bool slidecollide)
     {
         vec wall(obstacle);
-        if(foundfloor && wall.z > 0)
+        if(foundfloor ? wall.z > 0 : slidecollide)
         {
             wall.z = 0;
             if(!wall.iszero()) wall.normalize();
@@ -492,7 +492,7 @@ namespace physics
 		bool slide = collided, found = findfloor(d, collided, obstacle, slide, floor);
         if(slide || (!collided && floor.z > 0 && floor.z < wallz))
         {
-            slideagainst(d, dir, slide ? obstacle : floor, found || slidecollide);
+            slideagainst(d, dir, slide ? obstacle : floor, found, slidecollide);
 		}
 		if(found) landing(d, dir, floor, collided);
 		else falling(d, dir, floor);
