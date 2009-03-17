@@ -120,6 +120,18 @@ struct vec
     }
 };
 
+static inline bool htcmp(const vec &x, const vec &y)
+{
+    return x == y;
+}
+
+static inline uint hthash(const vec &k)
+{
+    union { int i; float f; } x, y, z;
+    x.f = k.x; y.f = k.y; z.f = k.z;
+    return x.i^y.i^z.i;
+}
+
 struct vec4
 {
     union
@@ -155,6 +167,7 @@ struct vec4
     vec4 &mul3(float f)       { x *= f; y *= f; z *= f; return *this; }
     vec4 &mul(float f)       { mul3(f); w *= f; return *this; }
     vec4 &add(const vec4 &o) { x += o.x; y += o.y; z += o.z; w += o.w; return *this; }
+    vec4 &sub(const vec4 &o) { x -= o.x; y -= o.y; z -= o.z; w -= o.w; return *this; }
     vec4 &neg3()             { x = -x; y = -y; z = -z; return *this; }
     vec4 &neg()              { neg3(); w = -w; return *this; }
 };
@@ -178,10 +191,11 @@ struct quat : vec4
     }
     explicit quat(const matrix3x3 &m) { convertmatrix(m); }
     explicit quat(const matrix3x4 &m) { convertmatrix(m); }
- 
-    void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
 
+    void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
+    
     void add(const vec4 &o) { vec4::add(o); }
+    void sub(const vec4 &o) { vec4::sub(o); }
     void mul(float k) { vec4::mul(k); }
 
     void mul(const quat &p, const quat &o)
@@ -386,8 +400,16 @@ struct dualquat
 
     void accumulate(const dualquat &d, float k)
     {
-        real.add(vec4(d.real).mul(k));
-        dual.add(vec4(d.dual).mul(k));
+        if(real.dot(d.real) < 0)
+        {
+            real.sub(vec4(d.real).mul(k));
+            dual.sub(vec4(d.dual).mul(k));
+        }
+        else
+        {
+            real.add(vec4(d.real).mul(k));
+            dual.add(vec4(d.dual).mul(k));
+        }
     }
 
     vec transform(const vec &v) const
