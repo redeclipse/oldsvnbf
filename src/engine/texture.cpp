@@ -548,8 +548,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
     }
 
 	bool hasanim = anim && anim->count;
-
-	t->bpp = s.bpp;
+    t->bpp = s.compressed ? formatsize(uncompressedformat(s.compressed)) : s.bpp;
 	t->delay = hasanim ? anim->delay : 0;
 
 	t->w = t->xs = hasanim ? anim->w : s.w;
@@ -1412,7 +1411,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
         t = &textures[key];
         t->name = key;
     }
-    t->bpp = surface[0].bpp;
+    t->bpp = surface[0].compressed ? formatsize(uncompressedformat(format)) : surface[0].bpp;
     t->mipmap = mipit;
     t->clamp = 3;
     t->type = Texture::CUBEMAP | (transient ? Texture::TRANSIENT : 0);
