@@ -1245,28 +1245,38 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 
 Slot dummyslot;
 
+static Slot &loadslot(Slot &s, bool forceload)
+{
+    linkslotshader(s);
+    loopv(s.sts)
+    {
+        Slot::Tex &t = s.sts[i];
+        if(t.combined>=0) continue;
+        switch(t.type)
+        {
+            case TEX_ENVMAP:
+                if(hasCM && (renderpath!=R_FIXEDFUNCTION || forceload)) t.t = cubemapload(t.name);
+                break;
+
+            default:
+                texcombine(s, i, t, forceload);
+                break;
+        }
+    }
+    s.loaded = true;
+    return s;
+}
+
+Slot &lookupmaterialslot(int slot, bool load)
+{
+    Slot &s = materialslots[slot];
+    return s.loaded || !load ? s : loadslot(s, true);
+}
+
 Slot &lookuptexture(int slot, bool load)
 {
-    Slot &s = slot<0 && slot>=-MATF_VOLUME ? materialslots[-slot] : (slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]));
-	if(s.loaded || !load) return s;
-    linkslotshader(s);
-	loopv(s.sts)
-	{
-		Slot::Tex &t = s.sts[i];
-		if(t.combined>=0) continue;
-		switch(t.type)
-		{
-			case TEX_ENVMAP:
-                if(hasCM && (renderpath!=R_FIXEDFUNCTION || (slot<0 && slot>=-MATF_VOLUME))) t.t = cubemapload(t.name);
-				break;
-
-			default:
-                texcombine(s, i, t, slot<0 && slot>=-MATF_VOLUME);
-				break;
-		}
-	}
-	s.loaded = true;
-	return s;
+    Slot &s = slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]);
+    return s.loaded || !load ? s : loadslot(s, false);
 }
 
 void linkslotshaders()
