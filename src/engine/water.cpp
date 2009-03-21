@@ -315,7 +315,7 @@ void setuprefractTMUs()
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glEnable(waterreflect ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP_ARB);
-        if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookuptexture(-MAT_WATER)));
+        if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookupmaterialslot(MAT_WATER)));
 
         setuptmu(1, "P , T @ C~a");
 
@@ -335,7 +335,7 @@ void setupreflectTMUs()
     {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookuptexture(-MAT_WATER)));
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookupmaterialslot(MAT_WATER)));
     }
 }
 
@@ -529,7 +529,7 @@ void renderwater()
 	uchar wcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
 	glColor3ubv(wcol);
 
-	Slot &s = lookuptexture(-MAT_WATER);
+	Slot &s = lookupmaterialslot(MAT_WATER);
 
 	glActiveTexture_(GL_TEXTURE1_ARB);
 	glEnable(GL_TEXTURE_2D);
