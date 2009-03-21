@@ -375,7 +375,8 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-	VAR(modelock, 0, 0, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set default mode and higher (+1 locked completely)
+	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
+	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
 	VAR(varslock, 0, 0, 2); // 0 = off, 1 = admin only, 2 = nobody
 	VAR(votewait, 0, 5000, INT_MAX-1);
 
@@ -1131,7 +1132,7 @@ namespace server
 			}
 			case 3: case 4:
 			{
-				if(reqmode < GVAR(defaultmode) && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, true))
+				if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, true))
 					return;
 				break;
 			}
