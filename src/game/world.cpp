@@ -668,19 +668,12 @@ namespace world
 	void timeupdate(int timeremain)
 	{
 		minremain = timeremain;
-		if(!timeremain)
+		if(!timeremain && !intermission)
 		{
-			if(!intermission)
-			{
-				player1->stopmoving(true);
-				hud::sb.showscores(true, true);
-				intermission = true;
-				smartmusic(true, false);
-			}
-		}
-		else if(timeremain > 0)
-		{
-			conoutf("\fctime remaining: %d %s", timeremain, timeremain==1 ? "minute" : "minutes");
+			player1->stopmoving(true);
+			hud::sb.showscores(true, true);
+			intermission = true;
+			smartmusic(true, false);
 		}
 	}
 
