@@ -182,12 +182,15 @@ enum
 
     PT_MOD		= 1<<8,
     PT_RND4		= 1<<9,		// uses random image quarters
-    PT_FLIP		= 1<<10,	// uses random flipping
-    PT_LERP		= 1<<11,	// use very sparingly - order of blending issues
-    PT_GLARE	= 1<<12,	// use glare when available
-    PT_SOFT		= 1<<13,	// use soft quad rendering when available
-    PT_LENS		= 1<<14,	// add a lens flare effect too
-    PT_SPARKLE	= 1<<15		// add a sparkle to lens flare
+    PT_HFLIP	= 1<<10,	// uses random horizontal flipping
+	PT_VFLIP	= 1<<11,	// uses random vertical flipping
+	PT_ROT		= 1<<12,	// uses random rotation
+    PT_LERP		= 1<<13,	// use very sparingly - order of blending issues
+    PT_GLARE	= 1<<14,	// use glare when available
+    PT_SOFT		= 1<<15,	// use soft quad rendering when available
+    PT_LENS		= 1<<16,	// add a lens flare effect too
+    PT_SPARKLE	= 1<<17,	// add a sparkle to lens flare
+	PT_FLIP		= PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
 enum

@@ -613,12 +613,16 @@ struct varenderer : partrenderer
 {
     partvert *verts;
     particle *parts;
-    int maxparts, numparts, lastupdate;
+    int maxparts, numparts, lastupdate, rndmask;
 
     varenderer(const char *texname, int type, int grav, int collide, int frames = 1)
         : partrenderer(texname, type, grav, collide, frames),
-          verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1)
+          verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1), rndmask(0)
     {
+        if(type & PT_HFLIP) rndmask |= 0x01;
+        if(type & PT_VFLIP) rndmask |= 0x02;
+        if(type & PT_ROT) rndmask |= 0x1F<<2;
+        if(type & PT_RND4) rndmask |= 0x03<<5;
     }
 
     void init(int n)
@@ -670,7 +674,7 @@ struct varenderer : partrenderer
         p->color = bvec(color>>16, (color>>8)&0xFF, color&0xFF);
         p->size = size;
         p->owner = pl;
-        p->flags = 0x80 | (type&(PT_RND4 | PT_FLIP) ? rnd(0x80) : 0);
+        p->flags = 0x80 | (rndmask ? rnd(0x80) & rndmask : 0);
         if(frames > 1) p->frame = rnd(frames);
         lastupdate = -1;
         return p;
@@ -696,13 +700,13 @@ struct varenderer : partrenderer
                 if(p->flags&0x01) swap(u1, u2); \
                 if(p->flags&0x02) swap(v1, v2); \
                 vs[0].u = u1; \
-                vs[0].v = v2; \
+                vs[0].v = v1; \
                 vs[1].u = u2; \
-                vs[1].v = v2; \
+                vs[1].v = v1; \
                 vs[2].u = u2; \
-                vs[2].v = v1; \
+                vs[2].v = v2; \
                 vs[3].u = u1; \
-                vs[3].v = v1; \
+                vs[3].v = v2; \
             }
             float piece = 1.f, off = 0.f;
             if(frames > 1)
@@ -730,7 +734,7 @@ struct varenderer : partrenderer
         else if(type&PT_MOD) SETMODCOLOR;
         else loopi(4) vs[i].alpha = blend;
 
-        if(type&PT_FLIP) genrotpos<T>(o, d, p->size, ts, grav, vs, (p->flags>>2)&0x1F);
+        if(type&PT_ROT) genrotpos<T>(o, d, p->size, ts, grav, vs, (p->flags>>2)&0x1F);
         else genpos<T>(o, d, p->size, ts, grav, vs);
     }
 
