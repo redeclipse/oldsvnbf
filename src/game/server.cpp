@@ -450,7 +450,7 @@ namespace server
 		{
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
 				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
-					(clients[i]->state.aitype == AI_NONE || (!noai && (clients[i]->state.ownernum >= 0 && clients[i]->state.aireinit <= 2))))
+					(clients[i]->state.aitype == AI_NONE || (!noai && clients[i]->state.ownernum >= 0)))
 						n++;
 		}
 		return n;
@@ -1206,6 +1206,7 @@ namespace server
 				{
 					clientinfo *cp = clients[i];
 					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
+					if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
 					cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 					cp->state.lasttimeplayed = lastmillis;
 					teamscore &ts = teamscores[cp->team-TEAM_FIRST];
