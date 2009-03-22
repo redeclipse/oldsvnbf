@@ -1059,7 +1059,7 @@ namespace server
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
-			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote==votes[j].mode && oi->mutsvote==votes[j].muts)
+			loopvj(votes) if(!strcmp(oi->mapvote, votes[j].map) && oi->modevote == votes[j].mode && oi->mutsvote == votes[j].muts)
 			{
 				vc = &votes[j];
 				break;
@@ -1114,8 +1114,13 @@ namespace server
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender);
 		modecheck(&reqmode, &reqmuts);
-        if(!ci || !m_game(reqmode) || !map || !*map || (ci->lastvote && lastmillis-ci->lastvote <= votewait)) return;
-        if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, map)) return;
+        if(!ci || !m_game(reqmode) || !map || !*map) return;
+        bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true));
+        if(!hasveto)
+        {
+        	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return;
+        	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, map)) return;
+        }
 		if(reqmode < G_LOBBY && !ci->local)
 		{
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
@@ -1140,7 +1145,7 @@ namespace server
 		s_strcpy(ci->mapvote, map);
 		ci->modevote = reqmode;
 		ci->mutsvote = reqmuts;
-		if(haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true)))
+		if(hasveto)
 		{
 			endmatch();
 			srvoutf(3, "\fc%s [%s] forced: \fs\fw%s on map %s\fS", colorname(ci), privname(ci->privilege), gamename(ci->modevote, ci->mutsvote), map);
