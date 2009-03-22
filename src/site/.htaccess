@@ -1,23 +1,23 @@
 RewriteEngine On
 Options +FollowSymLinks -Multiviews
 
-RewriteRule ^download/default$ /bits/index.php?target=download&title=13226&redir=1 [QSA,L,NC]
-RewriteRule ^download/windows$ /bits/index.php?target=download&title=13227&redir=1 [QSA,L,NC]
-RewriteRule ^download/linux$ /bits/index.php?target=download&title=13228&redir=1 [QSA,L,NC]
-RewriteRule ^download/macosx$ /bits/index.php?target=download&title=13887&redir=1 [QSA,L,NC]
-RewriteRule ^(blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube)/(.+)$ /bits/index.php?target=$1&title=$2&redir=1 [QSA,L,NC]
-RewriteRule ^(download|blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube)$ /bits/index.php?target=$1&redir=1 [QSA,L,NC]
+RewriteRule ^download/default$ /bits/index.php?target=download&title=13226 [QSA,L,NC]
+RewriteRule ^download/windows$ /bits/index.php?target=download&title=13227 [QSA,L,NC]
+RewriteRule ^download/linux$ /bits/index.php?target=download&title=13228 [QSA,L,NC]
+RewriteRule ^download/macosx$ /bits/index.php?target=download&title=13887 [QSA,L,NC]
+RewriteRule ^(blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube)/(.+)$ /bits/index.php?target=$1&title=$2 [QSA,L,NC]
+RewriteRule ^(download|blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube)$ /bits/index.php?target=$1 [QSA,L,NC]
 RewriteRule ^(home)$ /bits/index.php?target=$1 [QSA,L,NC]
-RewriteRule ^(community|forum)$ /bits/index.php?target=forums&redir=1 [QSA,L,NC]
-RewriteRule ^(screenshots)$ /bits/index.php?target=gallery&redir=1 [QSA,L,NC]
-RewriteRule ^(irc)$ /bits/index.php?target=chat&redir=1 [QSA,L,NC]
+RewriteRule ^(community|forum)$ /bits/index.php?target=forums [QSA,L,NC]
+RewriteRule ^(screenshots)$ /bits/index.php?target=gallery [QSA,L,NC]
+RewriteRule ^(irc)$ /bits/index.php?target=chat [QSA,L,NC]
 
 RewriteCond %{REQUEST_URI} !^/bits/(.+) [NC]
 RewriteCond %{REQUEST_URI} !^/cgi-bin/(.+) [NC]
 RewriteCond %{REQUEST_URI} !^/favicon.ico [NC]
 RewriteCond %{REQUEST_URI} !^/(community|forum|screenshots|irc|home|blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube) [NC]
 RewriteCond %{REQUEST_URI} !^/(community|forum|screenshots|irc|home|blog|wiki|gallery|forums|chat|svn|project|donate|google|youtube)/(.+) [NC]
-RewriteRule ^(.+)$ /bits/index.php?target=wiki&title=$1&redir=1 [QSA,L,NC]
+RewriteRule ^(.+)$ /bits/index.php?target=wiki&title=$1 [QSA,L,NC]
 
 RewriteRule ^favicon.ico$ /bits/favicon.ico [QSA,L,NC]
 RewriteRule ^$ /bits/index.php [QSA,L,NC]

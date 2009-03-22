@@ -73,6 +73,7 @@ a:hover {
 	font-size: 90%;
 	border-bottom: 1px solid #222222;
 	padding: 4px 4px 4px 4px;
+	font-weight: bold;
 }
 ul.nav-list {
 	display: inline;
@@ -90,11 +91,11 @@ ul.nav-list li a:hover {
 	background-repeat: no-repeat;
 }
 #notice {
+	border-bottom: 1px solid #222222;
+	padding: 4px 4px 4px 4px;
 	text-align: center;
 	font-size: 90%;
 	font-weight: bold;
-	border-bottom: 1px solid #222222;
-	padding: 4px 4px 4px 4px;
 }
 #supertext {
 	font-size: 140%;
