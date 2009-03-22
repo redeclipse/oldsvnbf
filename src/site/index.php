@@ -3,8 +3,9 @@
 	$app['siteblurb'] = "It's Bloody Fun!";
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
+	$app['sitedonate'] = "<div id=\"right\"><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></div>";
+	$app['sitenotice'] = "We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves has been struggling with chronic illness and failing hardware for many years, your <u>donation</u> can improve the quality of his life. Please consider being generous, and make sure he can keep doing this important task!";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
-	$app['sitenotice'] = "<div id=\"right\"><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></div>We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves has been struggling with chronic illness and failing hardware for many years, your <u>donation</u> can improve the quality of his life. Please consider being generous, and make sure he can keep doing this important task!";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitelogo'] = "/bits/logo.png";
 	$app['sitecss'] = "/bits/site.css";
@@ -22,17 +23,17 @@
 	$app['deftarg'] = "home";
 	$app['defsearch'] = "(Blood+Frontier)";
 
-	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => ''));
-	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=');
-	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/');
-	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/index.php?title=');
-	$app['targets']['forums'] = array('name' => 'Forums', 'url' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/viewforum.php?f=');
-	$app['targets']['chat'] = array('name' => 'Chat', 'url' => 'http://embed.mibbit.com/?server='.$app['ircnetwork'].'&amp;channel=%23'.$app['ircchannel'].'&amp;settings='.$app['ircsetup'].'&amp;forcePrompt=true', 'alturl' => '');
-	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/index.php?g2_itemId=');
-	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '');
-	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/?view=rev&amp;rev=');
-	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+');
-	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+');
+	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'redir' => 0));
+	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'redir' => 1);
+	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/', 'redir' => 1);
+	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/index.php?title=', 'redir' => 1);
+	$app['targets']['forums'] = array('name' => 'Forums', 'url' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/viewforum.php?f=', 'redir' => 1);
+	$app['targets']['chat'] = array('name' => 'Chat', 'url' => 'http://embed.mibbit.com/?server='.$app['ircnetwork'].'&amp;channel=%23'.$app['ircchannel'].'&amp;settings='.$app['ircsetup'].'&amp;forcePrompt=true', 'alturl' => '', 'redir' => 1);
+	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/index.php?g2_itemId=', 'redir' => 1);
+	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'redir' => 1);
+	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/?view=rev&amp;rev=', 'redir' => 1);
+	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'redir' => 1);
+	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -42,13 +43,11 @@
 	if (!isset($app['targets'][$app['target']])) $app['target'] = $app['deftarg'];
 
 	$title = checkarg("title");
-	$redir = checkarg("redir", "");
-	if ($redir != "") {
+	if ($app['targets'][$app['target']]['redir']) {
 		$app['url'] = $title != "" ? (
 				$app['targets'][$app['target']]['alturl'] != "" ? $app['targets'][$app['target']]['alturl'].$title : $app['targets'][$app['target']]['url'].$title
 		) : $app['targets'][$app['target']]['url'];
 		header("Location: ".$app['url']);
-		//echo $app['url'];
 		exit;
 	}
 	else {
@@ -100,19 +99,11 @@
 					<?php echo $app['navbar']; ?>
 				</ul>
 			</div>
-			<div id="notice" align="center"><?php echo $app['sitenotice']; ?></div>
+			<div id="notice" align="center">
+<?php 			echo $app['sitedonate'] . $app['sitenotice']; ?>
+			</div>
 			<div id="body" align="center">
-				<p id="supertext" align="center"><a href="/project"><?php echo $app['sitename']; ?></a>, <i><?php echo $app['siteblurb']; ?></i></p>
-				<p id="video" align="center">
-					<object id="flash" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
-						<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
-						<param name="allowscriptaccess" value="always" />
-						<param name="allowFullScreen" value="true" />
-						<embed id="flash" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
-					</object>
-				</p>
-				<p id="subtext" align="center"><?php echo $app['siteinfo']; ?></p>
-				<p id="footer" align="center"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</p>
+<?php			include_once($app['target'].'.php'); ?>
 			</div>
 		</div>
 	</body>
