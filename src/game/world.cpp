@@ -402,11 +402,11 @@ namespace world
 				d->setweapstate(i, WPSTATE_IDLE, 0, lastmillis);
 		}
 
-		if(d->reqswitch > 0 && lastmillis-d->reqswitch > WEAPSWITCHDELAY*2) d->reqswitch = -1;
-		if(d->reqreload > 0 && lastmillis-d->reqreload > weaptype[d->weapselect].rdelay*2) d->reqreload = -1;
-		if(d->requse > 0 && lastmillis-d->requse > WEAPSWITCHDELAY*2) d->requse = -1;
-		if(d->respawned > 0 && lastmillis-d->respawned > 3000) d->respawned = -1;
-		if(d->suicided > 0 && lastmillis-d->suicided > 3000) d->respawned = -1;
+		if(d->reqswitch > 0 && lastmillis-d->reqswitch >= WEAPSWITCHDELAY) d->reqswitch = -1;
+		if(d->reqreload > 0 && lastmillis-d->reqreload >= weaptype[d->weapselect].rdelay) d->reqreload = -1;
+		if(d->requse > 0 && lastmillis-d->requse >= WEAPSWITCHDELAY) d->requse = -1;
+		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
+		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->respawned = -1;
 	}
 
 
