@@ -466,7 +466,7 @@ char *conc(char **w, int n, bool space)
 
 VARN(numargs, _numargs, 0, 0, 25);
 
-static inline bool isnumber(char *c)
+static inline bool isinteger(char *c)
 {
     return isdigit(c[0]) || ((c[0]=='+' || c[0]=='-' || c[0]=='.') && isdigit(c[1]));
 }
@@ -515,7 +515,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 			ident *id = idents->access(c);
 			if(!id || id->flags&IDF_SERVER || id->flags&IDF_CLIENT)
 			{
-				if((id && (id->type == ID_COMMAND || id->type == ID_CCOMMAND)) || !isnumber(c))
+				if((id && (id->type == ID_COMMAND || id->type == ID_CCOMMAND)) || !isinteger(c))
 				{
 					string arg;
 					arg[0] = 0;
@@ -811,7 +811,7 @@ void floatret(float v)
 	commandret = newstring(floatstr(v));
 }
 
-ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0] && (!isnumber(cond) || parseint(cond)) ? t : f));
+ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
 ICOMMAND(loop, "sis", (char *var, int *n, char *body),
 {
 	if(*n<=0) return;
