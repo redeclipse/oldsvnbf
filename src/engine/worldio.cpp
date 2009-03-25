@@ -950,12 +950,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					}
 					if(verbose >= 2) conoutf("\fwentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
 				}
-				if(!insideworld(e.o))
+				if(maptype == MAP_OCTA && e.type == ET_PARTICLES && e.attr[0] >= 11)
 				{
-					if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
-					{
-						if(verbose) conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
-					}
+					if(e.attr[0] <= 12) e.attr[0] += 3;
+					else e.attr[0] = 0; // bork it up
 				}
 				if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 				{
@@ -970,6 +968,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					e.attr[1] = angle;
 					e.attr[2] = e.attr[3] = e.attr[4] = 0;
 				}
+				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
+					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
 			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 			if(verbose) conoutf("\fwloaded %d entities", hdr.numents);

@@ -211,6 +211,7 @@ enum
     PART_PLASMA_SOFT_LENS, PART_PLASMA_LENS,
     PART_PLASMA_SOFT_SLENS, PART_PLASMA_SLENS,
     PART_ELECTRIC, PART_ELECTRIC_LENS, PART_ELECTRIC_SLENS,
+    PART_FLAME, PART_FLAME_LENS, PART_FLAME_SLENS,
     PART_SFLARE, PART_FFLARE,
     PART_MUZZLE_FLASH, PART_MUZZLE_FLASH_LENS, PART_MUZZLE_FLASH_SLENS,
     PART_LINE,
@@ -262,6 +263,8 @@ extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
 void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, float vel = 1.f);
+void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2.0f, float vel = 1.f);
+
 // decal
 enum
 {
