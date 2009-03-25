@@ -787,7 +787,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						gzclose(f);
 						return false;
 					}
-					endianswap(&chdr.worldsize, sizeof(int), 7);
+					endianswap(&chdr.worldsize, sizeof(int), 5);
 					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 					ohdr.numpvs = 0;
 					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*3);
@@ -800,8 +800,17 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						gzclose(f);
 						return false;
 					}
-					endianswap(&ohdr.worldsize, sizeof(int), 7);
+					endianswap(&ohdr.worldsize, sizeof(int), 5);
 				}
+                endianswap(&ohdr.waterfog, sizeof(ushort), 3);
+                if(ohdr.version <= 28)
+                {
+                    int lightprecision = ohdr.fog, lighterror = ohdr.waterfog, lightlod = ohdr.lightprecision, ambient = ohdr.ambient[2];
+                    ohdr.lightprecision = lightprecision;
+                    ohdr.lighterror = lighterror;
+                    ohdr.lightlod = lightlod;
+                    memset(ohdr.ambient, ambient, sizeof(ohdr.ambient));
+                }
 				s_strcpy(oldmaptitle, ohdr.maptitle);
 
 				if(ohdr.version > OCTAVERSION)
@@ -830,7 +839,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr.revision = 1;
 
 				if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-				if(!ohdr.ambient) ohdr.ambient = 25;
+				if(!ohdr.ambient) memset(ohdr.ambient, 25, sizeof(ohdr.ambient));
 				if(!ohdr.lerpsubdivsize)
 				{
 					if(!ohdr.lerpangle) ohdr.lerpangle = 44;
@@ -839,11 +848,22 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				}
 
 				sanevars();
-				setvar("lightprecision", ohdr.mapprec ? ohdr.mapprec : 32);
-				setvar("lighterror", ohdr.maple ? ohdr.maple : 8);
-				setvar("bumperror", ohdr.mapbe ? ohdr.mapbe : 3);
-				setvar("lightlod", ohdr.mapllod);
-				setvar("ambient", ohdr.ambient);
+				if(ohdr.lightprecision) setvar("lightprecision", ohdr.lightprecision);
+                if(ohdr.lighterror) setvar("lighterror", ohdr.lighterror);
+				if(ohdr.bumperror) setvar("bumperror", ohdr.bumperror);
+				setvar("lightlod", ohdr.lightlod);
+                if(ohdr.ambient[0] || ohdr.ambient[1] || ohdr.ambient[2]) setvar("ambient", (int(ohdr.ambient[0])<<16) | (int(ohdr.ambient[1])<<8) | int(ohdr.ambient[2]), true);
+                if(ohdr.version > 28)
+                {
+                    setvar("skylight", (int(ohdr.skylight[0])<<16) | (int(ohdr.skylight[1])<<8) | int(ohdr.skylight[2]), true);
+                    if(ohdr.watercolour[0] || ohdr.watercolour[1] || ohdr.watercolour[2]) setvar("watercolour", (int(ohdr.watercolour[0])<<16) | (int(ohdr.watercolour[1])<<8) | int(ohdr.watercolour[2]));
+                    if(ohdr.waterfallcolour[0] || ohdr.waterfallcolour[1] || ohdr.waterfallcolour[2]) setvar("waterfallcolour", (int(ohdr.waterfallcolour[0])<<16) | (int(ohdr.waterfallcolour[1])<<8) | int(ohdr.waterfallcolour[2]));
+                    if(ohdr.lavacolour[0] || ohdr.lavacolour[1] || ohdr.lavacolour[2]) setvar("lavacolour", (int(ohdr.lavacolour[0])<<16) | (int(ohdr.lavacolour[1])<<8) | int(ohdr.lavacolour[2]));
+                    setvar("fog", ohdr.fog);
+                    setvar("fogcolour", (int(ohdr.fogcolour[0])<<16) | (int(ohdr.fogcolour[1])<<8) | int(ohdr.fogcolour[2]));
+                    setvar("waterfog", ohdr.waterfog);
+                    setvar("lavafog", ohdr.lavafog);
+                }
 				setvar("lerpangle", ohdr.lerpangle);
 				setvar("lerpsubdiv", ohdr.lerpsubdiv);
 				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);

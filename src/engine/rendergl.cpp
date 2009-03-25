@@ -610,7 +610,7 @@ int farplane;
 int xtraverts, xtravertsva;
 
 VARW(fog, 16, 4000, INT_MAX-1);
-VARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
+HVARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
@@ -863,18 +863,15 @@ static float findsurface(int fogmat, const vec &v, int &abovemat)
 
 static void blendfog(int fogmat, float blend, float logblend, float &start, float &end, float *fogc)
 {
-    uchar col[3];
     switch(fogmat)
     {
         case MAT_WATER:
-            getwatercolour(col);
-            loopk(3) fogc[k] += blend*col[k]/255.0f;
+            loopk(3) fogc[k] += blend*watercolor[k]/255.0f;
             end += logblend*min(fog, max(waterfog*4, 32));
             break;
 
         case MAT_LAVA:
-            getlavacolour(col);
-            loopk(3) fogc[k] += blend*col[k]/255.0f;
+            loopk(3) fogc[k] += blend*lavacolor[k]/255.0f;
             end += logblend*min(fog, max(lavafog*4, 32));
             break;
 
@@ -914,20 +911,17 @@ void invalidatepostfx()
 
 static void blendfogoverlay(int fogmat, float blend, float *overlay)
 {
-    uchar col[3];
     float maxc;
     switch(fogmat)
     {
         case MAT_WATER:
-            getwatercolour(col);
-            maxc = max(col[0], max(col[1], col[2]));
-            loopk(3) overlay[k] += blend*max(0.4f, col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
+            maxc = max(watercolor[0], max(watercolor[1], watercolor[2]));
+            loopk(3) overlay[k] += blend*max(0.4f, watercolor[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         case MAT_LAVA:
-            getlavacolour(col);
-            maxc = max(col[0], max(col[1], col[2]));
-            loopk(3) overlay[k] += blend*max(0.4f, col[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
+            maxc = max(lavacolor[0], max(lavacolor[1], lavacolor[2]));
+            loopk(3) overlay[k] += blend*max(0.4f, lavacolor[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         default:
@@ -1039,9 +1033,7 @@ VARP(reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
-	uchar wcol[3];
-	getwatercolour(wcol);
-	float fogc[4] = { wcol[0]/256.0f, wcol[1]/256.0f, wcol[2]/256.0f, 1.0f };
+	float fogc[4] = { watercolor[0]/256.0f, watercolor[1]/256.0f, watercolor[2]/256.0f, 1.0f };
 
 	if(refract && !waterfog)
 	{

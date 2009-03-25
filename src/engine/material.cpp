@@ -565,10 +565,9 @@ void rendermaterials()
 	glDisable(GL_CULL_FACE);
 
 	Slot &wslot = lookupmaterialslot(MAT_WATER), &lslot = lookupmaterialslot(MAT_LAVA);
-    uchar wcol[4], wfcol[4];
-    getwatercolour(wcol);
-    getwaterfallcolour(wfcol);
-    wcol[3] = wfcol[3] = 192;
+    uchar wcol[4] = { watercolor[0], watercolor[1], watercolor[2], 192 }, 
+          wfcol[4] = { waterfallcolor[0], waterfallcolor[1], waterfallcolor[2], 192 };
+    if(!wfcol[0] && !wfcol[2] && !wfcol[2]) memcpy(wfcol, wcol, 3);
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
     bool begin = false, depth = true, blended = false, overbright = false, usedcamera = false, usedwaterfall = false;

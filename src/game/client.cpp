@@ -1331,8 +1331,9 @@ namespace client
 							{
 								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
 									commit = false;
-								setvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %d", world::colorname(d), id->name, *id->storage.i);
+								setvar(text, val, true); 
+                                s_sprintfd(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, str);
 							}
 							break;
 						}

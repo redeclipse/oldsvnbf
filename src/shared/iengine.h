@@ -474,8 +474,6 @@ extern int addclient(int type = ST_EMPTY);
 extern ENetHost *serverhost;
 
 // world
-extern void getwatercolour(uchar *wcol);
-extern void getlavacolour(uchar *lcol);
 
 extern bool inside;
 extern physent *hitplayer;
