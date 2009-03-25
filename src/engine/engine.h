@@ -412,15 +412,13 @@ extern int refracting;
 extern bool reflecting, fading, fogging;
 extern float reflectz;
 extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
+extern bvec watercolor, waterfallcolor, lavacolor;
 
 extern void cleanreflections();
 extern void queryreflections();
 extern void drawreflections();
 extern void renderwater();
 extern void renderlava(materialsurface &m, Texture *tex, float scale);
-extern void getwatercolour(uchar *wcol);
-extern void getwaterfallcolour(uchar *fcol);
-extern void getlavacolour(uchar *lcol);
 extern void loadcaustics(bool force = false);
 extern void preloadwatershaders(bool force = false);
 
@@ -655,7 +653,8 @@ extern char *getmaptitle();
 
 extern int dynentsize, axfps, lastmillis, totalmillis;
 extern float hudblend;
-extern int ambient, skylight, watercolour, lavacolour;
+extern int watercolour, lavacolour;
+extern bvec ambientcolor, skylightcolor;
 extern float curfov, fovy, aspect;
 
 extern void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false, float zscale = 1);

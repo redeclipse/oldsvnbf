@@ -12,7 +12,7 @@ VARP(ffshadowmapdist, 128, 1024, 4096);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-VARW(shadowmapambient, 0, 0, 0xFFFFFF);
+HVARW(shadowmapambient, 0, 0, 0xFFFFFF);
 VARP(shadowmapintensity, 0, 40, 100);
 
 VARP(blurshadowmap, 0, 1, 3);
@@ -459,14 +459,18 @@ void pushshadowmap()
     float r, g, b;
     if(!shadowmapambient)
     {
-        int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-        if(sky[0] || sky[1] || sky[2])
+        if(skylightcolor[0] || skylightcolor[1] || skylightcolor[2])
         {
-            r = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[0]));
-            g = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[1]));
-            b = max(25.0f, 0.4f*ambient + 0.6f*max(ambient, sky[2]));
+            r = max(25.0f, 0.4f*ambientcolor[0] + 0.6f*max(ambientcolor[0], skylightcolor[0]));
+            g = max(25.0f, 0.4f*ambientcolor[1] + 0.6f*max(ambientcolor[1], skylightcolor[1]));
+            b = max(25.0f, 0.4f*ambientcolor[2] + 0.6f*max(ambientcolor[2], skylightcolor[2]));
         }
-        else r = g = b = max(25.0f, 2.0f*ambient);
+        else
+        {
+            r = max(25.0f, 2.0f*ambientcolor[0]);
+            g = max(25.0f, 2.0f*ambientcolor[1]);
+            b = max(25.0f, 2.0f*ambientcolor[2]);
+        }
     }
     else { r = shadowmapambient>>16; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);

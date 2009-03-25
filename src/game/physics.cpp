@@ -605,17 +605,15 @@ namespace physics
 
 		if(!floating && curmat != oldmat)
 		{
-			uchar mcol[3] = { 255, 255, 255 };
-			#define mattrig(mo,mf,ms,mt,mz,mw) \
+			#define mattrig(mo,mcol,ms,mt,mz,mw) \
 			{ \
-				mf; \
-				int col = (mcol[2] + (mcol[1] << 8) + (mcol[0] << 16)); \
+				int col = (int(mcol[2]) + (int(mcol[1]) << 8) + (int(mcol[0]) << 16)); \
 				world::spawneffect(mo, col, mt, m_speedtimex(mz), ms); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, getwatercolour(mcol), 1.f, int(radius), 250, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), getlavacolour(mcol), 2.f, int(radius), 500, S_BURNING);
+				mattrig(bottom, watercolor, 1.f, int(radius), 250, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, S_BURNING);
 
 			if(local)
 			{

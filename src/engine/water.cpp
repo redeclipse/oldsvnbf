@@ -278,27 +278,27 @@ Reflection *findreflection(int height);
 
 VARA(reflectdist, 0, 2000, 10000);
 VARW(waterfog, 0, 150, 10000);
-VARW(watercolour, 0, 0x103060, 0xFFFFFF);
-VARW(waterfallcolour, 0, 0, 0xFFFFFF);
-void getwatercolour(uchar *wcol)
+bvec watercolor(0x10, 0x30, 0x60), waterfallcolor(0, 0, 0);
+HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
 {
-	uchar gcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
-	memcpy(wcol, gcol, 3);
-}
-void getwaterfallcolour(uchar *fcol)
+    watercolor[0] = (watercolour>>16)&0xFF;
+    watercolor[1] = (watercolour>>8)&0xFF;
+    watercolor[2] = watercolour&0xFF;
+});
+HVARFW(waterfallcolour, 0, 0, 0xFFFFFF,
 {
-    int colour = waterfallcolour;
-    if(!colour) colour = watercolour;
-    uchar gcol[3] = { colour>>16, (colour>>8)&0xFF, colour&0xFF };
-    memcpy(fcol, gcol, 3);
-}
+    waterfallcolor[0] = (waterfallcolour>>16)&0xFF;
+    waterfallcolor[1] = (waterfallcolour>>8)&0xFF;
+    waterfallcolor[2] = waterfallcolour&0xFF;
+});
 VARW(lavafog, 0, 50, 10000);
-VARW(lavacolour, 0, 0xFF4400, 0xFFFFFF);
-void getlavacolour(uchar *lcol)
+bvec lavacolor(0xFF, 0x44, 0x00);
+HVARFW(lavacolour, 0, 0xFF4400, 0xFFFFFF,
 {
-	uchar gcol[3] = { lavacolour>>16, (lavacolour>>8)&0xFF, lavacolour&0xFF };
-	memcpy(lcol, gcol, 3);
-}
+    lavacolor[0] = (lavacolour>>16)&0xFF;
+    lavacolor[1] = (lavacolour>>8)&0xFF;
+    lavacolor[2] = lavacolour&0xFF;
+});
 
 void setprojtexmatrix(Reflection &ref, bool init = true)
 {
@@ -394,9 +394,7 @@ void renderwaterff()
 
     float offset = -WATER_OFFSET;
 
-	uchar wcolub[3];
-	getwatercolour(wcolub);
-	loopi(3) wcol[i] = wcolub[i]/255.0f;
+	loopi(3) wcol[i] = watercolor[i]/255.0f;
 
     bool wasbelow = false;
 	loopi(MAXREFLECTIONS)
@@ -608,8 +606,7 @@ void renderwater()
         if(waterreflect || waterrefract) glMatrixMode(GL_TEXTURE);
     }
 
-	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-	vec amb(max(sky[0], ambient), max(sky[1], ambient), max(sky[2], ambient));
+	vec amb(max(skylightcolor[0], ambientcolor[0]), max(skylightcolor[1], ambientcolor[1]), max(skylightcolor[2], ambientcolor[2]));
     float offset = -WATER_OFFSET;
 	loopi(MAXREFLECTIONS)
 	{

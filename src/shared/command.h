@@ -5,7 +5,7 @@ enum { ID_VAR, ID_FVAR, ID_SVAR, ID_COMMAND, ID_CCOMMAND, ID_ALIAS };
 
 enum { NO_OVERRIDE = INT_MAX, OVERRIDDEN = 0 };
 
-enum { IDF_PERSIST = 1<<0, IDF_OVERRIDE = 1<<1, IDF_WORLD = 1<<2, IDF_COMPLETE = 1<<3, IDF_TEXTURE = 1<<4, IDF_CLIENT = 1<<5, IDF_SERVER = 1<<6, IDF_AUTO = 1<<7 };
+enum { IDF_PERSIST = 1<<0, IDF_OVERRIDE = 1<<1, IDF_WORLD = 1<<2, IDF_COMPLETE = 1<<3, IDF_TEXTURE = 1<<4, IDF_CLIENT = 1<<5, IDF_SERVER = 1<<6, IDF_AUTO = 1<<7, IDF_HEX = 1<<8 };
 
 struct identstack
 {
@@ -156,6 +156,25 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
 #define VARFW(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
 #define VARFA(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
+
+#define _HVAR(name, global, min, cur, max, persist)  int global = variable(#name, min, cur, max, &global, NULL, persist | IDF_HEX)
+#define HVARN(name, global, min, cur, max) _HVAR(name, global, min, cur, max, IDF_COMPLETE)
+#define HVARNP(name, global, min, cur, max) _HVAR(name, global, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
+#define HVARNR(name, global, min, cur, max) _HVAR(name, global, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
+#define HVARNW(name, global, min, cur, max) _HVAR(name, global, min, cur, max, IDF_WORLD|IDF_COMPLETE)
+#define HVARNA(name, global, min, cur, max) _HVAR(name, global, min, cur, max, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
+#define HVAR(name, min, cur, max) _HVAR(name, name, min, cur, max, IDF_COMPLETE)
+#define HVARP(name, min, cur, max) _HVAR(name, name, min, cur, max, IDF_PERSIST|IDF_COMPLETE)
+#define HVARR(name, min, cur, max) _HVAR(name, name, min, cur, max, IDF_OVERRIDE|IDF_COMPLETE)
+#define HVARW(name, min, cur, max) _HVAR(name, name, min, cur, max, IDF_WORLD|IDF_COMPLETE)
+#define HVARA(name, min, cur, max) _HVAR(name, name, min, cur, max, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
+#define _HVARF(name, global, min, cur, max, body, persist)  void var_##name(); int global = variable(#name, min, cur, max, &global, var_##name, persist | IDF_HEX); void var_##name() { body; }
+#define HVARFN(name, global, min, cur, max, body) _HVARF(name, global, min, cur, max, body, IDF_COMPLETE)
+#define HVARF(name, min, cur, max, body) _HVARF(name, name, min, cur, max, body, IDF_COMPLETE)
+#define HVARFP(name, min, cur, max, body) _HVARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_COMPLETE)
+#define HVARFR(name, min, cur, max, body) _HVARF(name, name, min, cur, max, body, IDF_OVERRIDE|IDF_COMPLETE)
+#define HVARFW(name, min, cur, max, body) _HVARF(name, name, min, cur, max, body, IDF_WORLD|IDF_COMPLETE)
+#define HVARFA(name, min, cur, max, body) _HVARF(name, name, min, cur, max, body, IDF_PERSIST|IDF_AUTO|IDF_COMPLETE)
 
 #define _FVAR(name, global, min, cur, max, persist) float global = fvariable(#name, min, cur, max, &global, NULL, persist)
 #define FVARN(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_COMPLETE)

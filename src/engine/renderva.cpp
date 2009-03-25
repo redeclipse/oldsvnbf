@@ -581,7 +581,7 @@ static void disabletexgen(int dims = 2)
     }
 }
 
-VAR(outline, 0, 0, 0xFFFFFF);
+HVAR(outline, 0, 0, 0xFFFFFF);
 VAR(dtoutline, 0, 1, 1);
 
 void renderoutline()
@@ -642,7 +642,7 @@ void renderoutline()
 	defaultshader->set();
 }
 
-VAR(blendbrushcolor, 0, 0x0000C0, 0xFFFFFF);
+HVAR(blendbrushcolor, 0, 0x0000C0, 0xFFFFFF);
 
 void renderblendbrush(GLuint tex, float x, float y, float w, float h)
 {
@@ -1601,9 +1601,7 @@ void renderfoggedvas(renderstate &cur, bool doquery = false)
 
     glDisable(GL_TEXTURE_2D);
 
-    uchar wcol[3];
-    getwatercolour(wcol);
-    glColor3ubv(wcol);
+    glColor3ubv(watercolor.v);
 
     loopv(foggedvas)
     {
@@ -1913,9 +1911,7 @@ void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
             setuptmu(cur.fogtmu, "C , P @ Ta", "= Pa");
             if(!fogtex) createfogtex();
             glBindTexture(GL_TEXTURE_1D, fogtex);
-            uchar wcol[3];
-            getwatercolour(wcol);
-            loopk(3) cur.color[k] = wcol[k]/255.0f;
+            loopk(3) cur.color[k] = watercolor[k]/255.0f;
         }
         if(cur.causticstmu>=0) setupcaustics(cur.causticstmu, causticspass, cur.color);
 	}
@@ -1926,7 +1922,7 @@ void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
 		glEnableClientState(GL_COLOR_ARRAY);
 		loopi(8-2) { glActiveTexture_(GL_TEXTURE2_ARB+i); glEnable(GL_TEXTURE_2D); }
 		glActiveTexture_(GL_TEXTURE0_ARB);
-		setenvparamf("ambient", SHPARAM_PIXEL, 5, ambient/255.0f, ambient/255.0f, ambient/255.0f);
+		setenvparamf("ambient", SHPARAM_PIXEL, 5, ambientcolor[0]/255.0f, ambientcolor[1]/255.0f, ambientcolor[2]/255.0f);
 		setenvparamf("millis", SHPARAM_VERTEX, 6, lastmillis/1000.0f, lastmillis/1000.0f, lastmillis/1000.0f);
 	}
 
@@ -2449,9 +2445,7 @@ void rendergeom(float causticspass, bool fogpass)
             if(!fogtex) createfogtex();
             glBindTexture(GL_TEXTURE_1D, fogtex);
             setuptexgen(1);
-            uchar wcol[3];
-            getwatercolour(wcol);
-            glColor3ubv(wcol);
+            glColor3ubv(watercolor.v);
             rendergeommultipass(cur, RENDERPASS_FOG, fogpass);
             disabletexgen(1);
             glDisable(GL_TEXTURE_1D);

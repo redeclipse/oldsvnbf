@@ -7,8 +7,17 @@ VARW(lightprecision, 1, 32, 256);
 VARW(lighterror, 1, 8, 16);
 VARW(bumperror, 1, 3, 16);
 VARW(lightlod, 0, 0, 10);
-VARW(ambient, 0, 25, 64);
-VARW(skylight, 0, 0, 0xFFFFFF);
+bvec ambientcolor(25, 25, 25), skylightcolor(0, 0, 0);
+HVARFW(ambient, 0, 0x191919, 0xFFFFFF, 
+{
+    if(ambient <= 255) ambient |= (ambient<<8) | (ambient<<16);
+    ambientcolor = bvec((ambient>>16)&0xFF, (ambient>>8)&0xFF, ambient&0xFF);
+});
+HVARFW(skylight, 0, 0, 0xFFFFFF,
+{
+    if(skylight <= 255) skylight |= (skylight<<8) | (skylight<<16);
+    skylightcolor = bvec((skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF);
+});
 VARW(lmshadows, 0, 1, 1);
 VARW(mmshadows, 0, 2, 2);
 
@@ -144,7 +153,7 @@ void insert_unlit(int i)
         return;
     }
     ushort x, y;
-    uchar unlit[4] = { ambient, ambient, ambient, 255 };
+    uchar unlit[4] = { ambientcolor[0], ambientcolor[1], ambientcolor[2], 255 };
     if(l.insert(x, y, unlit, 1, 1))
     {
         if((l.type&LM_TYPE) == LM_BUMPMAP0)
@@ -396,16 +405,16 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
             lm_ray[y*lm_w+x].add(vec(S.dot(avgray), T.dot(avgray), normal.dot(avgray)));
 			break;
 	}
-    sample.x = min(255.0f, max(r, float(ambient)));
-    sample.y = min(255.0f, max(g, float(ambient)));
-    sample.z = min(255.0f, max(b, float(ambient)));
+    sample.x = min(255.0f, max(r, float(ambientcolor[0])));
+    sample.y = min(255.0f, max(g, float(ambientcolor[1])));
+    sample.z = min(255.0f, max(b, float(ambientcolor[2])));
 }
 
 bool lumel_sample(const vec &sample, int aasample, int stride)
 {
-	if(sample.x >= ambient+1 || sample.y >= ambient+1 || sample.z >= ambient+1) return true;
+	if(sample.x >= ambientcolor[0]+1 || sample.y >= ambientcolor[1]+1 || sample.z >= ambientcolor[2]+1) return true;
 #define NCHECK(n) \
-	if((n).x >= ambient+1 || (n).y >= ambient+1 || (n).z >= ambient+1) \
+	if((n).x >= ambientcolor[0]+1 || (n).y >= ambientcolor[1]+1 || (n).z >= ambientcolor[2]+1) \
 		return true;
 	const vec *n = &sample - stride - aasample;
 	NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
@@ -451,8 +460,12 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t)>1e15f) hit++;
 	}
 
-	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-	loopk(3) slight[k] = uchar(ambient + (max(sky[k], ambient) - ambient)*hit/17.0f);
+	loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
+}
+
+static inline bool hasskylight()
+{
+    return skylightcolor[0]>ambientcolor[0] || skylightcolor[1]>ambientcolor[1] || skylightcolor[2]>ambientcolor[2];
 }
 
 VARW(blurlms, 0, 0, 2);
@@ -578,7 +591,6 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 	uchar *slight = &lm[lmbpp*lm_w*y1];
 	lerpbounds start, end;
 	initlerpbounds(lv, numv, start, end);
-	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
 	for(int y = y1; y < y2; ++y, v.add(vstep))
 	{
 		vec normal, nstep;
@@ -589,13 +601,13 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		{
             CHECK_PROGRESS(return NO_SURFACE);
             generate_lumel(tolerance, lights, u, vec(normal).normalize(), *sample, x, y);
-            if(sky[0]>ambient || sky[1]>ambient || sky[2]>ambient)
+            if(hasskylight())
             {
-                if((lmtype&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<sky[0] || sample->y<sky[1] || sample->z<sky[2])
+                if((lmtype&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<skylightcolor[0] || sample->y<skylightcolor[1] || sample->z<skylightcolor[2])
                     calcskylight(u, normal, tolerance, slight, mmshadows);
-                else loopk(3) slight[k] = max(int(sky[k]), ambient);
+                else loopk(3) slight[k] = max(skylightcolor[k], ambientcolor[k]);
             }
-            else loopk(3) slight[k] = ambient;
+            else loopk(3) slight[k] = ambientcolor[k];
             if(lmtype&LM_ALPHA) generate_alpha(tolerance, u, slight[3]);
             sample += aasample;
 		}
@@ -668,7 +680,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 			}
 		}
 
-		if(sky[0]>ambient || sky[1]>ambient || sky[2]>ambient)
+		if(hasskylight())
 		{
 			if(blurskylight && (lm_w>1 || lm_h>1)) blurlightmap(blurskylight);
 		}
@@ -747,9 +759,9 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
         {
             uchar color[3];
             loopk(3) color[k] = (int(maxcolor[k]) + int(mincolor[k])) / 2;
-            if(color[0] <= ambient + lighterror &&
-               color[1] <= ambient + lighterror &&
-               color[2] <= ambient + lighterror &&
+            if(color[0] <= int(ambientcolor[0]) + lighterror &&
+               color[1] <= int(ambientcolor[1]) + lighterror &&
+               color[2] <= int(ambientcolor[2]) + lighterror &&
                (maxcolor[3]==0 || mincolor[3]==255))
                 return mincolor[3]==255 ? SURFACE_AMBIENT_TOP : SURFACE_AMBIENT_BOTTOM;
             if((lmtype&LM_TYPE) != LM_BUMPMAP0 ||
@@ -970,8 +982,7 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
         }
     }
     if(slot.layer && (setblendmaporigin(ivec(cx, cy, cz), size) || slot.layermask)) return true;
-	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-	return lights1.length() || lights2.length() || sky[0]>ambient || sky[1]>ambient || sky[2]>ambient;
+	return lights1.length() || lights2.length() || hasskylight();
 }
 
 int setup_surface(plane planes[2], const vec *p, const vec *n, const vec *n2, uchar texcoords[8], bool preview = false)
@@ -1250,8 +1261,7 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
             cn[i].normals[2] = bvec(n[2]);
             cn[i].normals[3] = bvec(numplanes < 2 ? n[3] : n2[2]);
         }
-        int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-        if(lights1.empty() && lights2.empty() && (!layer || (!hasblendmap() && !slot.layermask)) && sky[0]<=ambient && sky[1]<=ambient && sky[2]<=ambient) continue;
+        if(lights1.empty() && lights2.empty() && (!layer || (!hasblendmap() && !slot.layermask)) && !hasskylight()) continue;
 
         uchar texcoords[8];
 
@@ -1741,9 +1751,9 @@ static void convertlightmap(LightMap &lmc, LightMap &lmlv, uchar *dst, size_t st
                 r = (int(c[0]) * z) / 255,
                 g = (int(c[1]) * z) / 255,
                 b = (int(c[2]) * z) / 255;
-            dstrow[0] = max(r, ambient);
-            dstrow[1] = max(g, ambient);
-            dstrow[2] = max(b, ambient);
+            dstrow[0] = max(r, int(ambientcolor[0]));
+            dstrow[1] = max(g, int(ambientcolor[1]));
+            dstrow[2] = max(b, int(ambientcolor[2]));
             if(lmc.bpp==4) dstrow[3] = c[3];
             c += lmc.bpp;
             lv++;
@@ -1774,7 +1784,7 @@ void genreservedlightmaptexs()
         tex.type = renderpath != R_FIXEDFUNCTION && lightmaptexs.length()&1 ? LM_DIFFUSE : LM_BUMPMAP1;
         glGenTextures(1, &tex.id);
     }
-    uchar unlit[3] = { ambient, ambient, ambient };
+    uchar unlit[3] = { ambientcolor[0], ambientcolor[1], ambientcolor[2] };
     createtexture(lightmaptexs[LMID_AMBIENT].id, 1, 1, unlit, 0, 1);
     bvec front(128, 128, 255);
     createtexture(lightmaptexs[LMID_AMBIENT1].id, 1, 1, &front, 0, 1);
@@ -1800,13 +1810,13 @@ static void findunlit(int i)
     {
         if(!data[0] && !data[1] && !data[2])
         {
-            data[0] = data[1] = data[2] = ambient;
+            memcpy(data, ambientcolor.v, 3);
             if((lm.type&LM_TYPE)==LM_BUMPMAP0) ((bvec *)lightmaps[i+1].data)[y*LM_PACKW + x] = bvec(128, 128, 255);
             lm.unlitx = x;
             lm.unlity = y;
             return;
         }
-        if(data[0]==ambient && data[1]==ambient && data[2]==ambient)
+        if(data[0]==ambientcolor[0] && data[1]==ambientcolor[1] && data[2]==ambientcolor[2])
         {
             if((lm.type&LM_TYPE)!=LM_BUMPMAP0 || ((bvec *)lightmaps[i+1].data)[y*LM_PACKW + x] == bvec(128, 128, 255))
             {
@@ -1938,7 +1948,7 @@ void clearlights()
 void lightent(extentity &e, float height)
 {
 	if(e.type==ET_LIGHT) return;
-	float amb = ambient/255.0f;
+	float amb = 0.0f;
 	if(e.type==ET_MAPMODEL)
 	{
 		model *m = loadmodel(NULL, e.attr[0]);
@@ -2032,8 +2042,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
 	}
 
-	int sky[3] = { skylight>>16, (skylight>>8)&0xFF, skylight&0xFF };
-	if(t && (sky[0]>ambient || sky[1]>ambient || sky[2]>ambient))
+	if(t && hasskylight())
 	{
 		uchar slight[3];
 		calcskylight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
@@ -2041,7 +2050,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	}
 	else loopk(3)
 	{
-		float slight = 0.75f*max(sky[k]/255.0f, ambient) + 0.25f*ambient;
+        float slight = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
 		color[k] = min(1.5f, max(slight, color[k]));
 	}
 	if(dir.iszero()) dir = vec(0, 0, 1);

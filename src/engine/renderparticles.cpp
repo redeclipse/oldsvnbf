@@ -1378,9 +1378,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			break;
 		case 2: //water fountain - <dir>
 		{
-			uchar col[3];
-			getwatercolour(col);
-			int color = (col[0]<<16) | (col[1]<<8) | col[2];
+			int color = (int(watercolor[0])<<16) | (int(watercolor[1])<<8) | int(watercolor[2]);
 			regularsplash(PART_WATER, color, 10, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f);
 			break;
 		}

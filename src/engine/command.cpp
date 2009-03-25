@@ -594,7 +594,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 				}
 
 				case ID_VAR:						// game defined variables
-					if(numargs <= 1) conoutf("\fw%s = %d", c, *id->storage.i);	  // var with no value just prints its current value
+                    if(numargs <= 1) conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fw%s = 0x%.6X" : "\fw%s = 0x%X") : "\fw%s = %d", c, *id->storage.i);      // var with no value just prints its current value
 					else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
@@ -628,10 +628,20 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 #endif
 						OVERRIDEVAR(id->overrideval.i = *id->storage.i, , )
 						int i1 = parseint(w[1]);
+                        if(id->flags&IDF_HEX && numargs > 2)
+                        {
+                            i1 <<= 16;
+                            i1 |= parseint(w[2])<<8;
+                            i1 |= parseint(w[3]);
+                        }
 						if(i1<id->minval || i1>id->maxval)
 						{
 							i1 = i1<id->minval ? id->minval : id->maxval;				// clamp to valid range
-							conoutf("\frvalid range for %s is %d..%d", id->name, id->minval, id->maxval);
+                            conoutf(
+                                id->flags&IDF_HEX ?
+                                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
+                                    "\frvalid range for %s is %d..%d",
+                                id->name, id->minval, id->maxval);
 						}
 						*id->storage.i = i1;
 						id->changed();											 // call trigger function if available
