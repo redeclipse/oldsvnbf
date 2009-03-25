@@ -288,7 +288,7 @@ int formatsize(GLenum format)
 
 VARFP(hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
 
-void resizetexture(int w, int h, bool mipmap, GLenum target, int compress, int &tw, int &th)
+void resizetexture(int w, int h, bool mipmap, bool canreduce, GLenum target, int compress, int &tw, int &th)
 {
     int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
         sizelimit = mipmap && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
@@ -296,6 +296,11 @@ void resizetexture(int w, int h, bool mipmap, GLenum target, int compress, int &
     {
         w = max(w/compress, 1);
         h = max(h/compress, 1);
+    }
+    if(canreduce && texreduce)
+    {
+        w = max(w>>texreduce, 1);
+        h = max(h>>texreduce, 1);
     }
     w = min(w, sizelimit);
     h = min(h, sizelimit);
@@ -459,7 +464,7 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, int filter, 
     bool mipmap = filter > 1 && pixels;
     if(resize && pixels)
     {
-        resizetexture(w, h, mipmap, target, 0, tw, th);
+        resizetexture(w, h, mipmap, false, target, 0, tw, th);
         if(mipmap) component = compressedformat(component, tw, th);
     }
     uploadtexture(subtarget, component, tw, th, format, type, pixels, pw, ph, mipmap);
@@ -580,12 +585,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
     }
 	else 
     {
-        if(canreduce) loopi(texreduce)
-        {
-            if(t->w > 1) t->w /= 2;
-            if(t->h > 1) t->h /= 2;
-        }
-        resizetexture(t->w, t->h, mipit, GL_TEXTURE_2D, compress, t->w, t->h);
+        resizetexture(t->w, t->h, mipit, canreduce, GL_TEXTURE_2D, compress, t->w, t->h);
         GLenum format = compressedformat(texformat(t->bpp), t->w, t->h, compress);
 
         loopi(hasanim ? anim->count : 1)
@@ -1427,7 +1427,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
     t->type = Texture::CUBEMAP | (transient ? Texture::TRANSIENT : 0);
     t->xs = t->ys = tsize;
     t->w = t->h = min(1<<envmapsize, tsize);
-    resizetexture(t->w, t->h, mipit, GL_TEXTURE_CUBE_MAP_ARB, compress, t->w, t->h);
+    resizetexture(t->w, t->h, mipit, false, GL_TEXTURE_CUBE_MAP_ARB, compress, t->w, t->h);
     format = compressedformat(format, t->w, t->h, compress);
     switch(format)
     {
