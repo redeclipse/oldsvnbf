@@ -292,6 +292,9 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARNG(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define VARG(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
+#define HVARNG(name, global, min, cur, max) _VAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE|IDF_HEX)
+#define HVARG(name, min, cur, max) _VAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE|IDF_HEX)
+#define HVARFG(name, min, cur, max, svbody, ccbody) _VARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE|IDF_HEX)
 #define FVARNG(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define FVARG(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_CLIENT|IDF_COMPLETE)
 #define FVARFG(name, min, cur, max, svbody, ccbody) _FVARF(name, name, min, cur, max, ccbody, IDF_CLIENT|IDF_COMPLETE)
@@ -306,6 +309,9 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER)
 #define VARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER)
 #define VARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER)
+#define HVARNG(name, global, min, cur, max) _VAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER|IDF_HEX)
+#define HVARG(name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER|IDF_HEX)
+#define HVARFG(name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER|IDF_HEX)
 #define FVARNG(name, global, min, cur, max) _FVAR(sv_##name, sv_##global, min, cur, max, IDF_SERVER)
 #define FVARG(name, min, cur, max) _FVAR(sv_##name, sv_##name, min, cur, max, IDF_SERVER)
 #define FVARFG(name, min, cur, max, svbody, ccbody) _FVARF(sv_##name, sv_##name, min, cur, max, svbody, IDF_SERVER)
@@ -316,6 +322,9 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define VARNG(name, global, min, cur, max) extern int name
 #define VARG(name, min, cur, max) extern int name
 #define VARFG(name, min, cur, max, svbody, ccbody) extern int name
+#define HVARNG(name, global, min, cur, max) extern int name
+#define HVARG(name, min, cur, max) extern int name
+#define HVARFG(name, min, cur, max, svbody, ccbody) extern int name
 #define FVARNG(name, global, min, cur, max) extern float name
 #define FVARG(name, min, cur, max) extern float name
 #define FVARFG(name, min, cur, max, svbody, ccbody) extern float name

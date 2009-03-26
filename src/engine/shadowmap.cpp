@@ -12,7 +12,10 @@ VARP(ffshadowmapdist, 128, 1024, 4096);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-HVARW(shadowmapambient, 0, 0, 0xFFFFFF);
+bvec shadowmapambientcolor(25, 25, 25);
+HVARFW(shadowmapambient, 0, 0, 0xFFFFFF, {
+    shadowmapambientcolor = bvec((shadowmapambient>>16)&0xFF, (shadowmapambient>>8)&0xFF, shadowmapambient&0xFF);
+});
 VARP(shadowmapintensity, 0, 40, 100);
 
 VARP(blurshadowmap, 0, 1, 3);
@@ -472,7 +475,7 @@ void pushshadowmap()
             b = max(25.0f, 2.0f*ambientcolor[2]);
         }
     }
-    else { r = shadowmapambient>>16; g = (shadowmapambient>>8)&0xFF; b = shadowmapambient&0xFF; }
+    else { r = shadowmapambientcolor[0]; g = shadowmapambientcolor[1]; b = shadowmapambientcolor[2]; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
 

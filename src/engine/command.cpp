@@ -371,7 +371,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
 	ident *id = idents->access(n+1);
 	if(id) switch(id->type)
 	{
-		case ID_VAR: { s_sprintfd(t)("%d", *id->storage.i); return exchangestr(n, t); }
+		case ID_VAR: { s_sprintfd(t)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); return exchangestr(n, t); }
 		case ID_FVAR: return exchangestr(n, floatstr(*id->storage.f));
 		case ID_SVAR: return exchangestr(n, *id->storage.s);
 		case ID_ALIAS: return exchangestr(n, id->action);
@@ -539,8 +539,8 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					string val; val[0] = 0;
 					switch(id->type)
 					{
-						case ID_VAR: s_sprintf(val)("%d", *id->storage.i); break;
-						case ID_FVAR: s_sprintf(val)("%f", *id->storage.f); break;
+						case ID_VAR: s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); break;
+						case ID_FVAR: s_sprintf(val)("%s", floatstr(*id->storage.f)); break;
 						case ID_SVAR: s_sprintf(val)("%s", *id->storage.s); break;
 						default: break;
 					}
@@ -769,7 +769,7 @@ void writecfg()
         bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: saved = true; fprintf(f, "\t%s %d\n", id.name, *id.storage.i); break;
+			case ID_VAR: saved = true; fprintf(f, (id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); break;
 			case ID_FVAR: saved = true; fprintf(f, "\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
 			case ID_SVAR: saved = true; fprintf(f, "\t%s [%s]\n", id.name, *id.storage.s); break;
 		}
