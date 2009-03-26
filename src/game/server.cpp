@@ -395,7 +395,7 @@ namespace server
 					case ID_VAR:
 					{
 						setvar(id.name, id.def.i, true);
-                        if(invoked) s_sprintf(val)("%d", *id.storage.i);
+                        if(invoked) s_sprintf(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
@@ -1439,7 +1439,7 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						conoutf("\fm%s = %d", cmd, *id->storage.i);
+						conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
 						return true;
 					}
 					if(id->maxval < id->minval)
@@ -1450,25 +1450,33 @@ namespace server
 					int ret = atoi(arg);
 					if(ret < id->minval || ret > id->maxval)
 					{
-						conoutf("\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+						conoutf(
+							id->flags&IDF_HEX ?
+                                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
+                                    "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
 						return true;
 					}
 					*id->storage.i = ret;
 					id->changed();
-					s_sprintf(val)("%d", *id->storage.i);
+					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
 				{
 					if(nargs <= 1 || !arg)
 					{
-						conoutf("\fm%s = %f", cmd, *id->storage.f);
+						conoutf("\fm%s = %s", cmd, floatstr(*id->storage.f));
 						return true;
 					}
 					float ret = atof(arg);
+					if(ret < id->minvalf || ret > id->maxvalf)
+					{
+						conoutf("\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
+						return true;
+					}
 					*id->storage.f = ret;
 					id->changed();
-					s_sprintf(val)("%f", *id->storage.f);
+					s_sprintf(val)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -1521,7 +1529,7 @@ namespace server
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvmsgf(ci->clientnum, "\fm%s = %d", cmd, *id->storage.i);
+							srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
 							return;
 						}
 						if(id->maxval < id->minval)
@@ -1532,25 +1540,33 @@ namespace server
 						int ret = atoi(arg);
 						if(ret < id->minval || ret > id->maxval)
 						{
-							srvmsgf(ci->clientnum, "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+							srvmsgf(ci->clientnum,
+								id->flags&IDF_HEX ?
+                                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
+                                    "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
 							return;
 						}
                         *id->storage.i = ret;
                         id->changed();
-                        s_sprintf(val)("%d", *id->storage.i);
+                        s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
 						if(nargs <= 1 || !arg)
 						{
-							srvmsgf(ci->clientnum, "\fm%s = %f", cmd, *id->storage.f);
+							srvmsgf(ci->clientnum, "\fm%s = %s", cmd, floatstr(*id->storage.f));
 							return;
 						}
 						float ret = atof(arg);
+						if(ret < id->minvalf || ret > id->maxvalf)
+						{
+							srvmsgf(ci->clientnum, "\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
+							return;
+						}
                         *id->storage.f = ret;
                         id->changed();
-                        s_sprintf(val)("%f", *id->storage.f);
+                        s_sprintf(val)("%s", floatstr(*id->storage.f));
 						break;
 					}
 					case ID_SVAR:
@@ -1747,12 +1763,12 @@ namespace server
 				{
 					case ID_VAR:
 					{
-						s_sprintf(val)("%d", *id.storage.i);
+						s_sprintf(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
-						s_sprintf(val)("%f", *id.storage.f);
+						s_sprintf(val)("%s", floatstr(*id.storage.f));
 						break;
 					}
 					case ID_SVAR:
@@ -3309,7 +3325,7 @@ namespace server
 						case ID_FVAR:
 						{
 							float val = getfloat(p);
-							relayf(3, "\fm%s set worldvar %s to %f", colorname(ci), text, val);
+							relayf(3, "\fm%s set worldvar %s to %s", colorname(ci), text, floatstr(val));
 							QUEUE_FLT(val);
 							break;
 						}

@@ -537,7 +537,7 @@ namespace client
 					int ret = atoi(arg);
 					*id->storage.i = ret;
 					id->changed();
-					s_sprintf(val)("%d", *id->storage.i);
+					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
@@ -545,7 +545,7 @@ namespace client
 					float ret = atof(arg);
 					*id->storage.f = ret;
 					id->changed();
-					s_sprintf(val)("%f", *id->storage.f);
+					s_sprintf(val)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -1329,9 +1329,9 @@ namespace client
 							int val = getint(p);
 							if(commit)
 							{
-								if(id->minval > id->maxval || val < id->minval || val > id->maxval)
-									commit = false;
-								setvar(text, val, true); 
+								if(val > id->maxval) val = id->maxval;
+								else if(val < id->minval) val = id->minval;
+								setvar(text, val, true);
                                 s_sprintfd(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, str);
 							}
@@ -1342,8 +1342,10 @@ namespace client
 							float val = getfloat(p);
 							if(commit)
 							{
+								if(val > id->maxvalf) val = id->maxvalf;
+								else if(val < id->minvalf) val = id->minvalf;
 								setfvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %f", world::colorname(d), id->name, *id->storage.f);
+								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, floatstr(*id->storage.f));
 							}
 							break;
 						}
