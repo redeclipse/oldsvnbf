@@ -428,7 +428,15 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 	else if(!strcasecmp(w[g], "MODE"))
 	{
 		if(numargs > g+2)
-			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], w[g+2]);
+		{
+			string modestr;
+			loopi(numargs-g-2)
+			{
+				if(i) s_strcat(modestr, " ");
+				s_strcat(modestr, w[g+2+i]);
+			}
+			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], modestr);
+		}
 		else if(numargs > g+1)
 			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s", user[0], user[1], user[2], w[g+1]);
 	}
@@ -558,7 +566,12 @@ void ircparse(ircnet *n, char *reply)
 				}
 				else user[0] = newstring(t);
 			}
-			else user[0] = newstring(n->serv);
+			else
+			{
+				user[0] = newstring("*");
+				user[1] = newstring("*");
+				user[2] = newstring(n->serv);
+			}
 			if(numargs > g) ircprocess(n, user, g, numargs, w);
 			loopi(3) DELETEA(user[i]);
 		}
