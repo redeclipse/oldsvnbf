@@ -1309,8 +1309,8 @@ void loadbackground(int w, int h, Texture *t)
 	glColor3f(1, 1, 1);
 
 	settexture(kidmode ? "textures/kidback" : loadback);
-    float cx = 0.5f*w, cy = (0.5f*(h-16))+16, // hacked for renderprogress
-          aw = (h-16)*4.0f/3.0f, ah = (h-16);
+    float cx = 0.5f*w, cy = (0.5f*(h-32))+32, // hacked for renderprogress
+          aw = (h-32)*4.0f/3.0f, ah = (h-32);
     if(aw > w)
     {
         aw = w;
