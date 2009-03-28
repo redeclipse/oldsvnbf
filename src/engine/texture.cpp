@@ -1776,15 +1776,15 @@ VAR(dbgdds, 0, 0, 1);
 
 bool loaddds(const char *filename, ImageData &image)
 {
-    FILE *f = openfile(filename, "rb");
+    stream *f = openfile(filename, "rb");
     if(!f) return false;
     GLenum format = GL_FALSE;
     uchar magic[4];
-    if(fread(magic, 1, 4, f) != 4 || memcmp(magic, "DDS ", 4)) { fclose(f); return false; }
+    if(f->read(magic, 4) != 4 || memcmp(magic, "DDS ", 4)) { delete f; return false; }
     DDSURFACEDESC2 d;
-    if(fread(&d, 1, sizeof(d), f) != sizeof(d)) { fclose(f); return false; }
-    endianswap(&d, sizeof(uint), sizeof(d)/sizeof(uint));
-    if(d.dwSize != sizeof(DDSURFACEDESC2) || d.ddpfPixelFormat.dwSize != sizeof(DDPIXELFORMAT)) { fclose(f); return false; }
+    if(f->read(&d, sizeof(d)) != sizeof(d)) { delete f; return false; }
+    lilswap((uint *)&d, sizeof(d)/sizeof(uint));
+    if(d.dwSize != sizeof(DDSURFACEDESC2) || d.ddpfPixelFormat.dwSize != sizeof(DDPIXELFORMAT)) { delete f; return false; }
     if(d.ddpfPixelFormat.dwFlags & DDPF_FOURCC)
     {
         switch(d.ddpfPixelFormat.dwFourCC)
@@ -1794,7 +1794,7 @@ bool loaddds(const char *filename, ImageData &image)
             case FOURCC_DXT5: format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; break;
         }
     }
-    if(!format) { fclose(f); return false; }
+    if(!format) { delete f; return false; }
     if(dbgdds) conoutf("%s: format 0x%X, %d x %d, %d mipmaps", filename, format, d.dwWidth, d.dwHeight, d.dwMipMapCount);
     int bpp = 0;
     switch(format)
@@ -1806,8 +1806,8 @@ bool loaddds(const char *filename, ImageData &image)
     }
     image.setdata(NULL, d.dwWidth, d.dwHeight, bpp, d.dwMipMapCount, 4, format);
     int size = image.calcsize();
-    if((int)fread(image.data, 1, size, f) != size) { fclose(f); image.cleanup(); return false; }
-    fclose(f);
+    if(f->read(image.data, size) != size) { delete f; image.cleanup(); return false; }
+    delete f;
     return true;
 }
 
@@ -1854,7 +1854,7 @@ void gendds(char *infile, char *outfile)
         outfile = buf;
     }
 
-    FILE *f = openfile(outfile, "wb");
+    stream *f = openfile(outfile, "wb");
     if(!f) { conoutf("\frfailed writing to %s", outfile); return; }
 
     int csize = 0;
@@ -1892,12 +1892,12 @@ void gendds(char *infile, char *outfile)
         if(lh > 1) lh /= 2;
     }
 
-    endianswap(&d, sizeof(uint), sizeof(d)/sizeof(uint));
+    lilswap((uint *)&d, sizeof(d)/sizeof(uint));
 
-    fwrite("DDS ", 1, 4, f);
-    fwrite(&d, 1, sizeof(d), f);
-    fwrite(data, 1, csize, f);
-    fclose(f);
+    f->write("DDS ", 4);
+    f->write(&d, sizeof(d));
+    f->write(data, csize);
+    delete f;
 
     delete[] data;
 
@@ -1907,18 +1907,16 @@ void gendds(char *infile, char *outfile)
 }
 COMMAND(gendds, "ss");
 
-void writepngchunk(FILE *f, const char *type, uchar *data = NULL, uint len = 0)
+void writepngchunk(stream *f, const char *type, uchar *data = NULL, uint len = 0)
 {
-    uint clen = SDL_SwapBE32(len);
-    fwrite(&clen, 1, sizeof(clen), f);
-    fwrite(type, 1, 4, f);
-    fwrite(data, 1, len, f);
+    f->putbig<uint>(len);
+    f->write(type, 4);
+    f->write(data, len);
 
     uint crc = crc32(0, Z_NULL, 0);
     crc = crc32(crc, (const Bytef *)type, 4);
     if(data) crc = crc32(crc, data, len);
-    crc = SDL_SwapBE32(crc);
-    fwrite(&crc, 1, 4, f);
+    f->putbig<uint>(crc);
 }
 
 void savepng(const char *filename, ImageData &image, int compress, bool flip)
@@ -1932,20 +1930,20 @@ void savepng(const char *filename, ImageData &image, int compress, bool flip)
         case 4: ctype = 6; break;
         default: conoutf("\frfailed saving png to %s", filename); return;
     }
-    FILE *f = openfile(filename, "wb");
+    stream *f = openfile(filename, "wb");
     if(!f) { conoutf("\frcould not write to %s", filename); return; }
 
     uchar signature[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
-    fwrite(signature, 1, sizeof(signature), f);
+    f->write(signature, sizeof(signature));
 
     uchar ihdr[] = { 0, 0, 0, 0, 0, 0, 0, 0, 8, ctype, 0, 0, 0 };
-    *(uint *)ihdr = SDL_SwapBE32(image.w);
-    *(uint *)(ihdr + 4) = SDL_SwapBE32(image.h);
+    *(uint *)ihdr = bigswap<uint>(image.w);
+    *(uint *)(ihdr + 4) = bigswap<uint>(image.h);
     writepngchunk(f, "IHDR", ihdr, sizeof(ihdr));
 
-    int idat = ftell(f);
+    int idat = f->tell();
     uint len = 0;
-    fwrite("\0\0\0\0IDAT", 1, 8, f);
+    f->write("\0\0\0\0IDAT", 8);
     uint crc = crc32(0, Z_NULL, 0);
     crc = crc32(crc, (const Bytef *)"IDAT", 4);
 
@@ -1975,7 +1973,7 @@ void savepng(const char *filename, ImageData &image, int compress, bool flip)
                     int flush = sizeof(buf) - z.avail_out; \
                     crc = crc32(crc, buf, flush); \
                     len += flush; \
-                    fwrite(buf, 1, flush, f); \
+                    f->write(buf, flush); \
                     z.next_out = (Bytef *)buf; \
                     z.avail_out = sizeof(buf); \
                 } while(0)
@@ -1994,23 +1992,21 @@ void savepng(const char *filename, ImageData &image, int compress, bool flip)
 
     deflateEnd(&z);
 
-    fseek(f, idat, SEEK_SET);
-    len = SDL_SwapBE32(len);
-    fwrite(&len, 1, 4, f);
-    crc = SDL_SwapBE32(crc);
-    fseek(f, 0, SEEK_END);
-    fwrite(&crc, 1, 4, f);
+    f->seek(idat, SEEK_SET);
+    f->putbig<uint>(len);
+    f->seek(0, SEEK_END);
+    f->putbig<uint>(crc);
 
     writepngchunk(f, "IEND");
 
-    fclose(f);
+    delete f;
     return;
 
 cleanuperror:
     deflateEnd(&z);
 
 error:
-    fclose(f);
+    delete f;
 
     conoutf("\frfailed saving png to %s", filename);
 }
@@ -2039,7 +2035,7 @@ void savetga(const char *filename, ImageData &image, int compress, bool flip)
         default: conoutf("\frfailed saving tga to %s", filename); return;
     }
 
-    FILE *f = openfile(filename, "wb");
+    stream *f = openfile(filename, "wb");
     if(!f) { conoutf("\frcould not write to %s", filename); return; }
 
     tgaheader hdr;
@@ -2050,7 +2046,7 @@ void savetga(const char *filename, ImageData &image, int compress, bool flip)
     hdr.height[0] = image.h&0xFF;
     hdr.height[1] = (image.h>>8)&0xFF;
     hdr.imagetype = compress ? 10 : 2;
-    fwrite(&hdr, 1, sizeof(hdr), f);
+    f->write(&hdr, sizeof(hdr));
 
     uchar buf[128*4];
     loopi(image.h)
@@ -2069,9 +2065,9 @@ void savetga(const char *filename, ImageData &image, int compress, bool flip)
                 }
                 if(run > 1)
                 {
-                    fputc(0x80 | (run-1), f);
-                    fputc(src[2], f); fputc(src[1], f); fputc(src[0], f);
-                    if(image.bpp==4) fputc(src[3], f);
+                    f->putchar(0x80 | (run-1));
+                    f->putchar(src[2]); f->putchar(src[1]); f->putchar(src[0]);
+                    if(image.bpp==4) f->putchar(src[3]);
                     src += run*image.bpp;
                     remaining -= run;
                     if(remaining <= 0) break;
@@ -2081,7 +2077,7 @@ void savetga(const char *filename, ImageData &image, int compress, bool flip)
                     scan += image.bpp;
                     if(src[0]==scan[0] && src[1]==scan[1] && src[2]==scan[2] && (image.bpp!=4 || src[3]==scan[3])) break;
                 }
-                fputc(raw - 1, f);
+                f->putchar(raw - 1);
             }
             else raw = min(remaining, 128);
             uchar *dst = buf;
@@ -2094,12 +2090,12 @@ void savetga(const char *filename, ImageData &image, int compress, bool flip)
                 dst += image.bpp;
                 src += image.bpp;
             }
-            fwrite(buf, image.bpp, raw, f);
+            f->write(buf, raw*image.bpp);
             remaining -= raw;
         }
     }
 
-    fclose(f);
+    delete f;
 }
 
 const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png", ".tga" };
@@ -2136,7 +2132,19 @@ SDL_Surface *loadsurface(const char *name)
     loopi(sizeof(exts)/sizeof(exts[0]))
     {
         s_sprintfd(buf)("%s%s", name, exts[i]);
-        SDL_Surface *s = IMG_Load(findfile(buf, "rb"));
+        SDL_Surface *s = NULL;
+        stream *z = openzipfile(buf, "rb");
+        if(z)
+        {
+            SDL_RWops *rw = z->rwops();
+            if(rw)
+            {
+                s = IMG_Load_RW(rw, 0);
+                SDL_FreeRW(rw);
+            }
+            delete z;
+        }
+        if(!s) s = IMG_Load(findfile(buf, "rb"));
         if(s) return fixsurfaceformat(s);
     }
     return NULL;

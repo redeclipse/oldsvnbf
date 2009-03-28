@@ -453,9 +453,9 @@ COMMAND(updatefrommaster, "");
 
 void writeservercfg()
 {
-	FILE *f = openfile("servers.cfg", "w");
+	stream *f = openfile("servers.cfg", "w");
 	if(!f) return;
-	loopvrev(servers) fprintf(f, "addserver %s %d %d\n", servers[i]->name, servers[i]->port, servers[i]->qport);
-	fclose(f);
+	loopvrev(servers) f->printf("addserver %s %d %d\n", servers[i]->name, servers[i]->port, servers[i]->qport);
+    delete f;
 }
 

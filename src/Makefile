@@ -17,9 +17,11 @@ ifeq ($(PLATFORM),Linux)
 CLIENT_LIBS+= -lrt
 endif
 CLIENT_OBJS= \
-	shared/tools.o \
-	shared/hash.o \
+	shared/crypto.o \
 	shared/geom.o \
+	shared/stream.o \
+	shared/tools.o \
+	shared/zip.o \
 	engine/bih.o \
 	engine/blend.o \
 	engine/blob.o \
@@ -78,8 +80,9 @@ SERVER_INCLUDES= -DSTANDALONE -DMASTERSERVER -DIRC $(INCLUDES)
 SERVER_LIBS= -Lenet -lenet -lz
 endif
 SERVER_OBJS= \
-	shared/tools-standalone.o \
-	shared/hash-standalone.o \
+    shared/crypto-standalone.o \
+    shared/stream-standalone.o \
+    shared/tools-standalone.o \
 	engine/command-standalone.o \
 	engine/irc-standalone.o	\
 	engine/master-standalone.o \
@@ -166,12 +169,17 @@ depend:
 all: client server
 # DO NOT DELETE
 
-shared/tools.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
-shared/tools.o: shared/ents.h shared/iengine.h shared/igame.h
-shared/hash.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
-shared/hash.o: shared/ents.h shared/iengine.h shared/igame.h shared/hash.h
+shared/crypto.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
+shared/crypto.o: shared/ents.h shared/iengine.h shared/igame.h
+shared/crypto.o: shared/crypto.h
 shared/geom.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 shared/geom.o: shared/ents.h shared/iengine.h shared/igame.h
+shared/stream.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
+shared/stream.o: shared/ents.h shared/iengine.h shared/igame.h
+shared/tools.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
+shared/tools.o: shared/ents.h shared/iengine.h shared/igame.h
+shared/zip.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
+shared/zip.o: shared/ents.h shared/iengine.h shared/igame.h
 engine/bih.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 engine/bih.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 engine/bih.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
@@ -388,7 +396,7 @@ game/server.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 game/server.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
 game/server.o: engine/bih.h engine/texture.h engine/model.h game/game.h
 game/server.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
-game/server.o: shared/hash.h game/stfmode.h game/ctfmode.h game/duelmut.h
+game/server.o: shared/crypto.h game/stfmode.h game/ctfmode.h game/duelmut.h
 game/server.o: game/aiman.h game/auth.h game/extinfo.h
 game/stf.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 game/stf.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
@@ -406,12 +414,15 @@ game/world.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
 game/world.o: engine/bih.h engine/texture.h engine/model.h game/game.h
 game/world.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 
+shared/crypto-standalone.o: shared/cube.h shared/tools.h shared/command.h
+shared/crypto-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
+shared/crypto-standalone.o: shared/igame.h shared/crypto.h
+shared/stream-standalone.o: shared/cube.h shared/tools.h shared/command.h
+shared/stream-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
+shared/stream-standalone.o: shared/igame.h
 shared/tools-standalone.o: shared/cube.h shared/tools.h shared/command.h
 shared/tools-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 shared/tools-standalone.o: shared/igame.h
-shared/hash-standalone.o: shared/cube.h shared/tools.h shared/command.h
-shared/hash-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
-shared/hash-standalone.o: shared/igame.h shared/hash.h
 engine/command-standalone.o: shared/cube.h shared/tools.h shared/command.h
 engine/command-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 engine/command-standalone.o: shared/igame.h engine/engine.h engine/sound.h
@@ -422,7 +433,7 @@ engine/master-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 engine/master-standalone.o: shared/igame.h engine/engine.h engine/sound.h
 engine/master-standalone.o: engine/world.h engine/octa.h engine/lightmap.h
 engine/master-standalone.o: engine/bih.h engine/texture.h engine/model.h
-engine/master-standalone.o: shared/crypto.h shared/hash.h
+engine/master-standalone.o: shared/crypto.h
 engine/server-standalone.o: shared/cube.h shared/tools.h shared/command.h
 engine/server-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 engine/server-standalone.o: shared/igame.h engine/engine.h engine/sound.h
@@ -434,7 +445,7 @@ game/server-standalone.o: shared/igame.h engine/engine.h engine/sound.h
 game/server-standalone.o: engine/world.h engine/octa.h engine/lightmap.h
 game/server-standalone.o: engine/bih.h engine/texture.h engine/model.h
 game/server-standalone.o: game/game.h game/ctf.h game/stf.h game/vars.h
-game/server-standalone.o: shared/hash.h game/stfmode.h game/ctfmode.h
+game/server-standalone.o: shared/crypto.h game/stfmode.h game/ctfmode.h
 game/server-standalone.o: game/duelmut.h game/aiman.h game/auth.h
 game/server-standalone.o: game/extinfo.h
 

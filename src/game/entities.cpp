@@ -1202,7 +1202,7 @@ namespace entities
 	}
 	ICOMMAND(mergewaypoints, "", (void), mergewaypoints());
 
-	void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e)
+	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		gameentity &f = (gameentity &)e;
 		f.mark = false;
@@ -1321,7 +1321,7 @@ namespace entities
 		}
 	}
 
-	void writeent(gzFile &g, int id, entity &e)
+	void writeent(stream *g, int id, entity &e)
 	{
 	}
 
@@ -1498,7 +1498,7 @@ namespace entities
 		}
 	}
 
-	void initents(gzFile &g, int mtype, int mver, char *gid, int gver)
+	void initents(stream *g, int mtype, int mver, char *gid, int gver)
 	{
 		renderprogress(0, "checking entities...");
 		if(gver <= 49 || mtype == MAP_OCTA) importentities(mtype, gver);

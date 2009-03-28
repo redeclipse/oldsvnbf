@@ -111,18 +111,15 @@ int getuint(ucharbuf &p)
 
 void putfloat(ucharbuf &p, float f)
 {
-    uchar *c = (uchar *)&f;
-    endianswap(c, sizeof(float), 1);
-    loopi(sizeof(float)) p.put(c[i]);
+    lilswap(&f, 1);
+    p.put((uchar *)&f, sizeof(float));
 }
 
 float getfloat(ucharbuf &p)
 {
     float f;
-    uchar *c = (uchar *)&f;
-    loopi(sizeof(float)) c[i] = p.get();
-    endianswap(c, sizeof(float), 1);
-    return f;
+    p.get((uchar *)&f, sizeof(float));
+    return lilswap(f);
 }
 
 void sendstring(const char *t, ucharbuf &p)
@@ -279,7 +276,7 @@ void sendf(int cn, int chan, const char *format, ...)
 	if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-void sendfile(int cn, int chan, FILE *file, const char *format, ...)
+void sendfile(int cn, int chan, stream *file, const char *format, ...)
 {
     if(cn < 0)
     {
@@ -289,12 +286,12 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
     }
     else if(!clients.inrange(cn)) return;
 
-    fseek(file, 0, SEEK_END);
-    int len = ftell(file);
+    int len = file->size();
+    if(len <= 0) return;
+
     bool reliable = false;
     if(*format=='r') { reliable = true; ++format; }
     ENetPacket *packet = enet_packet_create(NULL, MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
-    rewind(file);
 
     ucharbuf p(packet->data, packet->dataLength);
     va_list args;
@@ -313,7 +310,8 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
     va_end(args);
     enet_packet_resize(packet, p.length()+len);
 
-    fread(&packet->data[p.length()], 1, len, file);
+    file->seek(0, SEEK_SET);
+    file->read(&packet->data[p.length()], len);
     enet_packet_resize(packet, p.length()+len);
 
     if(cn >= 0)

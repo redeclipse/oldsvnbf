@@ -7,6 +7,8 @@ vector<sound> sounds;
 
 bool nosound = true, playedmusic = false;
 Mix_Music *music = NULL;
+SDL_RWops *musicrw = NULL;
+stream *musicstream = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 
@@ -44,6 +46,8 @@ void stopmusic(bool docmd)
 		Mix_FreeMusic(music);
 		music = NULL;
 	}
+    if(musicrw) { SDL_FreeRW(musicrw); musicrw = NULL; }
+    DELETEP(musicstream);
     DELETEA(musicfile);
 	if(musicdonecmd != NULL)
 	{
@@ -93,6 +97,24 @@ void clearsound()
 	mapsounds.setsizenodelete(0);
 }
 
+Mix_Music *loadmusic(const char *name)
+{
+    if(!musicstream) musicstream = openzipfile(name, "rb");
+    if(musicstream)
+    {
+        if(!musicrw) musicrw = musicstream->rwops();
+        if(!musicrw) DELETEP(musicstream);
+    }
+    if(musicrw) music = Mix_LoadMUS_RW(musicrw);
+    else music = Mix_LoadMUS(findfile(name, "rb"));
+    if(!music)
+    {
+        if(musicrw) { SDL_FreeRW(musicrw); musicrw = NULL; }
+        DELETEP(musicstream);
+    }
+    return music;
+}
+
 void playmusic(const char *name, const char *cmd)
 {
 	if(nosound || !musicvol) return;
@@ -101,19 +123,21 @@ void playmusic(const char *name, const char *cmd)
 
 	if(soundvol && musicvol && *name)
 	{
-		if(cmd[0]) musicdonecmd = newstring(cmd);
 		const char *exts[] = { "", ".wav", ".ogg" };
 		string buf;
 		loopi(sizeof(exts)/sizeof(exts[0]))
 		{
 			s_sprintf(buf)("sounds/%s%s", name, exts[i]);
-			const char *file = findfile(buf, "rb");
-			if((music = Mix_LoadMUS(file)))
+			if(loadmusic(buf))
 			{
+                DELETEA(musicfile);
+                DELETEA(musicdonecmd);
 				musicfile = newstring(name);
+                if(cmd[0]) musicdonecmd = newstring(cmd);
 				Mix_PlayMusic(music, cmd[0] ? 0 : -1);
 				Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
 				oldmusicvol = musicvol;
+                break;
 			}
 		}
 		if(!music) { conoutf("\frcould not play music: %s", name); return; }
@@ -141,6 +165,24 @@ int findsound(const char *name, int vol, vector<soundslot> &sounds)
 	return -1;
 }
 
+static Mix_Chunk *loadwav(const char *name)
+{
+    Mix_Chunk *c = NULL;
+    stream *z = openzipfile(name, "rb");
+    if(z)
+    {
+        SDL_RWops *rw = z->rwops();
+        if(rw)
+        {
+            c = Mix_LoadWAV_RW(rw, 0);
+            SDL_FreeRW(rw);
+        }
+        delete z;
+    }
+    if(!c) c = Mix_LoadWAV(findfile(name, "rb"));
+    return c;
+}
+
 int addsound(const char *name, int vol, int material, int maxrad, int minrad, bool unique, vector<soundslot> &sounds)
 {
 	soundsample *sample = soundsamples.access(name);
@@ -158,8 +200,8 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 		loopi(sizeof(exts)/sizeof(exts[0]))
 		{
 			s_sprintf(buf)("sounds/%s%s", sample->name, exts[i]);
-			const char *file = findfile(buf, "rb");
-			if((sample->sound = Mix_LoadWAV(file)) != NULL) break;
+            sample->sound = loadwav(buf);
+            if(sample->sound) break;
 		}
 
 		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
@@ -413,6 +455,7 @@ void resetsound()
             Mix_HaltMusic();
             Mix_FreeMusic(music);
         }
+        if(musicstream) musicstream->seek(0, SEEK_SET);
         Mix_CloseAudio();
     }
     initsound();
@@ -426,10 +469,15 @@ void resetsound()
         soundsamples.clear();
         return;
     }
-    if(music && (music = Mix_LoadMUS(musicfile)))
+    if(music && loadmusic(musicfile))
     {
-        Mix_PlayMusic(music, musicdonecmd[0] ? 0 : -1);
+        Mix_PlayMusic(music, musicdonecmd ? 0 : -1);
         Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+    }
+    else
+    {
+        DELETEA(musicfile);
+        DELETEA(musicdonecmd);
     }
 }
 

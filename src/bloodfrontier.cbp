@@ -951,6 +951,14 @@
 			<Option target="client-prof" />
 			<Option target="server-dbg" />
 		</Unit>
+		<Unit filename="shared\crypto.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="server" />
+			<Option target="genkey" />
+			<Option target="client-prof" />
+			<Option target="server-dbg" />
+		</Unit>
 		<Unit filename="shared\crypto.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -985,22 +993,6 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
-		<Unit filename="shared\hash.cpp">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="genkey" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
-		<Unit filename="shared\hash.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="genkey" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
 		<Unit filename="shared\iengine.h">
 			<Option target="data" />
 			<Option target="client" />
@@ -1019,6 +1011,14 @@
 			<Option target="data" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="shared\stream.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="server" />
+			<Option target="genkey" />
+			<Option target="client-prof" />
+			<Option target="server-dbg" />
+		</Unit>
 		<Unit filename="shared\tools.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -1028,6 +1028,11 @@
 			<Option target="server-dbg" />
 		</Unit>
 		<Unit filename="shared\tools.h" />
+		<Unit filename="shared\zip.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

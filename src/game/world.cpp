@@ -850,8 +850,8 @@ namespace world
 		client::addmsg(SV_NEWMAP, "ri", size);
 	}
 
-	void loadworld(gzFile &f, int maptype) {}
-	void saveworld(gzFile &f) {}
+	void loadworld(stream *f, int maptype) {}
+	void saveworld(stream *f) {}
 
 	vec abovehead(physent *d, float off)
 	{

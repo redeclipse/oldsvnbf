@@ -756,10 +756,10 @@ static int sortidents(ident **x, ident **y)
 void writecfg()
 {
 #ifndef STANDALONE
-	FILE *f = openfile("config.cfg", "w");
+	stream *f = openfile("config.cfg", "w");
 	if(!f) return;
 	client::writeclientinfo(f);
-	fprintf(f, "if (= $version %d) [\n", ENG_VERSION);
+	f->printf("if (= $version %d) [\n", ENG_VERSION);
     vector<ident *> ids;
     enumerate(*idents, ident, id, ids.add(&id));
     ids.sort(sortidents);
@@ -769,11 +769,11 @@ void writecfg()
         bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: saved = true; fprintf(f, (id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); break;
-			case ID_FVAR: saved = true; fprintf(f, "\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
-			case ID_SVAR: saved = true; fprintf(f, "\t%s [%s]\n", id.name, *id.storage.s); break;
+			case ID_VAR: saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); break;
+			case ID_FVAR: saved = true; f->printf("\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
+			case ID_SVAR: saved = true; f->printf("\t%s [%s]\n", id.name, *id.storage.s); break;
 		}
-        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "\tsetcomplete \"%s\" 0\n", id.name);
+        if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
 	}
 	loopv(ids)
 	{
@@ -786,17 +786,17 @@ void writecfg()
 				if(id.override==NO_OVERRIDE && id.action[0])
                 {
                     saved = true;
-					fprintf(f, "\t\"%s\" = [%s]\n", id.name, id.action);
+					f->printf("\t\"%s\" = [%s]\n", id.name, id.action);
                 }
 				break;
 			}
 		}
-        if(saved && !(id.flags&IDF_COMPLETE)) fprintf(f, "\tsetcomplete \"%s\" 0\n", id.name);
+        if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
 	}
 	writebinds(f);
 	writecompletions(f);
-	fprintf(f, "] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
-	fclose(f);
+	f->printf("] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
+	delete f;
 #endif
 }
 
@@ -1122,32 +1122,3 @@ char *gettime(char *format)
 ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
 ICOMMAND(getmillis, "", (), intret(lastmillis));
 
-int gzgetint(gzFile f)
-{
-	int t;
-	gzread(f, &t, sizeof(int));
-	endianswap(&t, sizeof(int), 1);
-	return t;
-}
-
-void gzputint(gzFile f, int x)
-{
-	int t = (int)x;
-	endianswap(&t, sizeof(int), 1);
-	gzwrite(f, &t, sizeof(int));
-}
-
-float gzgetfloat(gzFile f)
-{
-	float t;
-	gzread(f, &t, sizeof(float));
-	endianswap(&t, sizeof(float), 1);
-	return t;
-}
-
-void gzputfloat(gzFile f, float x)
-{
-	float t = (float)x;
-	endianswap(&t, sizeof(float), 1);
-	gzwrite(f, &t, sizeof(float));
-}
