@@ -134,26 +134,26 @@ VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 void writeinitcfg()
 {
     if(!restoredinits) return;
-	FILE *f = openfile("init.cfg", "w");
+	stream *f = openfile("init.cfg", "w");
 	if(!f) return;
-	fprintf(f, "// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
+	f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
-    fprintf(f, "fullscreen %d\n", fullscreen);
-	fprintf(f, "scr_w %d\n", scr_w);
-	fprintf(f, "scr_h %d\n", scr_h);
-	fprintf(f, "colorbits %d\n", colorbits);
-	fprintf(f, "depthbits %d\n", depthbits);
-	fprintf(f, "stencilbits %d\n", stencilbits);
-	fprintf(f, "fsaa %d\n", fsaa);
-	fprintf(f, "vsync %d\n", vsync);
-	fprintf(f, "shaders %d\n", useshaders);
-	fprintf(f, "shaderprecision %d\n", shaderprecision);
-	fprintf(f, "soundmono %d\n", soundmono);
-	fprintf(f, "soundchans %d\n", soundchans);
-	fprintf(f, "soundbufferlen %d\n", soundbufferlen);
-	fprintf(f, "soundfreq %d\n", soundfreq);
-	fprintf(f, "verbose %d\n", verbose);
-	fclose(f);
+    f->printf("fullscreen %d\n", fullscreen);
+	f->printf("scr_w %d\n", scr_w);
+	f->printf("scr_h %d\n", scr_h);
+	f->printf("colorbits %d\n", colorbits);
+	f->printf("depthbits %d\n", depthbits);
+	f->printf("stencilbits %d\n", stencilbits);
+	f->printf("fsaa %d\n", fsaa);
+	f->printf("vsync %d\n", vsync);
+	f->printf("shaders %d\n", useshaders);
+	f->printf("shaderprecision %d\n", shaderprecision);
+	f->printf("soundmono %d\n", soundmono);
+	f->printf("soundchans %d\n", soundchans);
+	f->printf("soundbufferlen %d\n", soundbufferlen);
+	f->printf("soundfreq %d\n", soundfreq);
+	f->printf("verbose %d\n", verbose);
+    delete f;
 }
 
 VARP(compresslevel, 0, 9, 9);

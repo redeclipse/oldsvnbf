@@ -337,7 +337,7 @@ enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_
 
 extern void *getinfo(int i);
 extern void sendf(int cn, int chan, const char *format, ...);
-extern void sendfile(int cn, int chan, FILE *file, const char *format = "", ...);
+extern void sendfile(int cn, int chan, stream *file, const char *format = "", ...);
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern int getnumclients();
 extern uint getclientip(int n);
@@ -479,11 +479,6 @@ extern bool inside;
 extern physent *hitplayer;
 extern vec wall, hitsurface;
 extern float walldistance;
-
-extern int gzgetint(gzFile f);
-extern void gzputint(gzFile f, int x);
-extern float gzgetfloat(gzFile f);
-extern void gzputfloat(gzFile f, float x);
 
 enum
 {

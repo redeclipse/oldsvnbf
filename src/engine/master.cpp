@@ -1,7 +1,6 @@
 #include "cube.h"
 #include "engine.h"
 #include "crypto.h"
-#include "hash.h"
 
 #include <sys/types.h>
 #include <enet/time.h>

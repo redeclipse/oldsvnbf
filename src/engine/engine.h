@@ -194,8 +194,8 @@ extern void clearpvs();
 extern bool pvsoccluded(const ivec &bborigin, const ivec &bbsize);
 extern bool waterpvsoccluded(int height);
 extern void setviewcell(const vec &p);
-extern void savepvs(gzFile f);
-extern void loadpvs(gzFile f);
+extern void savepvs(stream *f);
+extern void loadpvs(stream *f);
 extern int getnumviewcells();
 
 static inline bool pvsoccluded(const ivec &bborigin, int size)
@@ -462,8 +462,8 @@ extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
 
 // console
-extern void writebinds(FILE *f);
-extern void writecompletions(FILE *f);
+extern void writebinds(stream *f);
+extern void writecompletions(stream *f);
 extern const char *addreleaseaction(const char *s);
 extern const char *getkeyname(int code);
 
@@ -689,8 +689,8 @@ extern void enlargeblendmap();
 extern void optimizeblendmap();
 extern void renderblendbrush(GLuint tex, float x, float y, float w, float h);
 extern void renderblendbrush();
-extern bool loadblendmap(gzFile f);
-extern void saveblendmap(gzFile f);
+extern bool loadblendmap(stream *f);
+extern void saveblendmap(stream *f);
 extern uchar shouldsaveblendmap();
 
 #endif // STANDALONE

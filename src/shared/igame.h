@@ -4,9 +4,9 @@ namespace entities
 {
 	extern int triggertime(const extentity &e);
 	extern void editent(int i);
-	extern void readent(gzFile &g, int mtype, int mver, char *gid, int gver, int id, entity &e);
-	extern void writeent(gzFile &g, int id, entity &e);
-	extern void initents(gzFile &g, int mtype, int mver, char *gid, int gver);
+	extern void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e);
+	extern void writeent(stream *g, int id, entity &e);
+	extern void initents(stream *g, int mtype, int mver, char *gid, int gver);
 	extern float dropheight(entity &e);
 	extern void fixentity(int n);
 	extern bool cansee(const extentity &e);;
@@ -30,7 +30,7 @@ namespace client
 	extern void gameconnect(bool _remote);
 	extern bool allowedittoggle(bool edit);
 	extern void edittoggled(bool edit);
-	extern void writeclientinfo(FILE *f);
+	extern void writeclientinfo(stream *f);
 	extern void toserver(int flags, char *text);
 	extern bool sendcmd(int nargs, char *cmd, char *arg);
 	extern void editvar(ident *id, bool local);
@@ -93,8 +93,8 @@ namespace world
 	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
 	extern void project(int w, int h);
 	extern void recomputecamera(int w, int h);
-	extern void loadworld(gzFile &f, int maptype);
-	extern void saveworld(gzFile &f);
+	extern void loadworld(stream *f, int maptype);
+	extern void saveworld(stream *f);
 	extern int localplayers();
 	extern char *gametitle();
 	extern char *gametext();

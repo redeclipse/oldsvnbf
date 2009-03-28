@@ -87,9 +87,9 @@ namespace client
 
 	void mapstart() { sendinfo = true; }
 
-	void writeclientinfo(FILE *f)
+	void writeclientinfo(stream *f)
 	{
-		fprintf(f, "name \"%s\"\n\n", world::player1->name);
+		f->printf("name \"%s\"\n\n", world::player1->name);
 	}
 
     void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address)
@@ -393,11 +393,11 @@ namespace client
 			case SV_SENDDEMO:
 			{
 				s_sprintfd(fname)("%d.dmo", lastmillis);
-				FILE *demo = openfile(fname, "wb");
+				stream *demo = openfile(fname, "wb");
 				if(!demo) return;
 				conoutf("\fmreceived demo \"%s\"", fname);
-				fwrite(data, 1, len, demo);
-				fclose(demo);
+				demo->write(data, len);
+                delete demo;
 				break;
 			}
 
@@ -412,15 +412,15 @@ namespace client
 				if(!mapname || !*mapname) mapname = "maps/untitled";
 				s_sprintfd(mapfile)(strstr(mapname, "temp/")==mapname || strstr(mapname, "temp\\")==mapname ? "%s" : "temp/%s", mapname);
 				s_sprintfd(mapfext)("%s.%s", mapfile, mapext);
-				FILE *f = openfile(mapfext, "wb");
+				stream *f = openfile(mapfext, "wb");
 				if(!f)
 				{
 					conoutf("\frfailed to open map file: %s", mapfext);
 					return;
 				}
 				gettingmap = true;
-				fwrite(data, 1, len, f);
-				fclose(f);
+				f->write(data, len);
+                delete f;
 				break;
 			}
 		}
@@ -496,13 +496,12 @@ namespace client
 					}
 					break;
 			}
-			FILE *f = openfile(mapfext, "rb");
+			stream *f = openfile(mapfext, "rb");
 			if(f)
 			{
 				conoutf("\fgtransmitting file: %s", mapfext);
-				fseek(f, 0, SEEK_END);
 				sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
-				fclose(f);
+                delete f;
 			}
 			else conoutf("\frfailed to open map file: %s", mapfext);
 		}
