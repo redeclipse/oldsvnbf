@@ -1,6 +1,5 @@
 #include "cube.h"
 #include "engine.h"
-#include "crypto.h"
 
 #include <sys/types.h>
 #include <enet/time.h>
@@ -29,13 +28,13 @@ struct authreq
 {
     enet_uint32 reqtime;
     uint id;
-    gfint answer;
+    void *answer;
 };
 
 struct authuser
 {
     char *name;
-    ecjacobian pubkey;
+    void *pubkey;
 };
 
 struct masterclient
@@ -98,13 +97,13 @@ void addauth(char *name, char *pubkey)
 	name = newstring(name);
 	authuser &u = authusers[name];
 	u.name = name;
-	u.pubkey.parse(pubkey);
+    u.pubkey = parsepubkey(pubkey);
 }
 COMMAND(addauth, "ss");
 
 void clearauth()
 {
-	enumerate(authusers, authuser, u, delete[] u.name);
+	enumerate(authusers, authuser, u, { delete[] u.name; freepubkey(u.pubkey); });
 	authusers.clear();
 }
 COMMAND(clearauth, "");
@@ -117,6 +116,7 @@ void purgeauths(masterclient &c)
 		if(ENET_TIME_DIFFERENCE(lastmillis, c.authreqs[i].reqtime) >= AUTH_TIME)
 		{
 			masteroutf(c, "failauth %u\n", c.authreqs[i].id);
+            freechallenge(c.authreqs[i].answer);
 			expired = i + 1;
 		}
 		else break;
@@ -149,6 +149,7 @@ void reqauth(masterclient &c, uint id, char *name)
 	if(c.authreqs.length() >= AUTH_LIMIT)
 	{
 		masteroutf(c, "failauth %u\n", c.authreqs[0].id);
+        freechallenge(c.authreqs[0].answer);
 		c.authreqs.remove(0);
 	}
 
@@ -156,30 +157,9 @@ void reqauth(masterclient &c, uint id, char *name)
 	a.reqtime = lastmillis;
 	a.id = id;
 	uint seed[3] = { starttime, lastmillis, randomMT() };
-	tiger::hashval hash;
-	tiger::hash((uchar *)seed, sizeof(seed), hash);
-	gfint challenge;
-	memcpy(challenge.digits, hash.bytes, sizeof(challenge.digits));
-	challenge.len = 8*sizeof(hash.bytes)/BI_DIGIT_BITS;
-	challenge.shrink();
-
-	ecjacobian answer(u->pubkey);
-	answer.mul(challenge);
-	answer.normalize();
-	a.answer = answer.x;
-
-	//printf("expecting %u for user %s to be ", id, u->name);
-	//a.answer.print(stdout);
-	//printf(" given secret ");
-
-	ecjacobian secret(ecjacobian::base);
-	secret.mul(challenge);
-	secret.normalize();
-
-	static vector<char> buf;
-	buf.setsizenodelete(0);
-	secret.print(buf);
-	buf.add('\0');
+    static vector<char> buf;
+    buf.setsizenodelete(0);
+    a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf); 
 
 	//printf("%s\n", buf.getbuf());
 
@@ -192,10 +172,9 @@ void confauth(masterclient &c, uint id, const char *val)
 
 	loopv(c.authreqs) if(c.authreqs[i].id == id)
 	{
-		gfint answer(val);
 		string ip;
 		if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) s_strcpy(ip, "-");
-		if(answer == c.authreqs[i].answer)
+		if(checkchallenge(val, c.authreqs[i].answer))
 		{
 			masteroutf(c, "succauth %u\n", id);
 			conoutf("succeeded %u from %s\n", id, ip);
@@ -205,6 +184,7 @@ void confauth(masterclient &c, uint id, const char *val)
 			masteroutf(c, "failauth %u\n", id);
 			conoutf("failed %u from %s\n", id, ip);
 		}
+        freechallenge(c.authreqs[i].answer);
 		c.authreqs.remove(i--);
 		return;
 	}

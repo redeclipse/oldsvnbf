@@ -1,6 +1,5 @@
 #include "cube.h"
 #include "engine.h"
-#include "crypto.h"
 #include "game.h"
 namespace client
 {
@@ -10,13 +9,12 @@ namespace client
     string connectpass = "";
 
     int lastauth = 0;
-    string authname = "";
-    gfint authkey;
+    string authname = "", authkey = "";
 
     void setauthkey(const char *name, const char *key)
     {
         s_strcpy(authname, name);
-        authkey.parse(key);
+        s_strcpy(authkey, key);
     }
     ICOMMAND(authkey, "ss", (char *name, char *key), setauthkey(name, key));
 
@@ -1683,13 +1681,8 @@ namespace client
 					conoutf("server is challenging authentication details..");
 					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
 					{
-						ecjacobian answer;
-						answer.parse(text);
-						answer.mul(authkey);
-						answer.normalize();
 						vector<char> buf;
-						answer.x.printdigits(buf);
-						buf.add('\0');
+                        answerchallenge(authkey, text, buf); 
 						//conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
 						addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
 					}

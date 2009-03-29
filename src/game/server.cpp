@@ -2,7 +2,6 @@
 #include "cube.h"
 #include "engine.h"
 #include "game.h"
-#include "crypto.h"
 
 namespace server
 {
@@ -2206,26 +2205,18 @@ namespace server
 		}
 	}
 
-	void hashpassword(int cn, int sessionid, const char *pwd, char *result)
+	void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen)
 	{
 		char buf[2*sizeof(string)];
 		s_sprintf(buf)("%d %d ", cn, sessionid);
 		s_strcpy(&buf[strlen(buf)], pwd);
-		tiger::hashval hv;
-		tiger::hash((uchar *)buf, strlen(buf), hv);
-		loopi(sizeof(hv.bytes))
-		{
-			uchar c = hv.bytes[i];
-			*result++ = "0123456789abcdef"[c&0xF];
-			*result++ = "0123456789abcdef"[c>>4];
-		}
-		*result = '\0';
+        if(!hashstring(buf, result, maxlen)) *result = '\0';
 	}
 
 	bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
 	{
 		string hash;
-		hashpassword(ci->clientnum, ci->sessionid, wanted, hash);
+		hashpassword(ci->clientnum, ci->sessionid, wanted, hash, sizeof(string));
 		return !strcmp(hash, given);
     }
 
