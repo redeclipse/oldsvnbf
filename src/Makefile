@@ -171,7 +171,6 @@ all: client server
 
 shared/crypto.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 shared/crypto.o: shared/ents.h shared/iengine.h shared/igame.h
-shared/crypto.o: shared/crypto.h
 shared/geom.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 shared/geom.o: shared/ents.h shared/iengine.h shared/igame.h
 shared/stream.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
@@ -362,9 +361,8 @@ game/ai.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 game/client.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 game/client.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 game/client.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
-game/client.o: engine/bih.h engine/texture.h engine/model.h shared/crypto.h
-game/client.o: game/game.h game/ctf.h game/stf.h game/vars.h
-game/client.o: game/scoreboard.h
+game/client.o: engine/bih.h engine/texture.h engine/model.h game/game.h
+game/client.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 game/ctf.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 game/ctf.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 game/ctf.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
@@ -396,8 +394,8 @@ game/server.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 game/server.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
 game/server.o: engine/bih.h engine/texture.h engine/model.h game/game.h
 game/server.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
-game/server.o: shared/crypto.h game/stfmode.h game/ctfmode.h game/duelmut.h
-game/server.o: game/aiman.h game/auth.h game/extinfo.h
+game/server.o: game/stfmode.h game/ctfmode.h game/duelmut.h game/aiman.h
+game/server.o: game/auth.h game/extinfo.h
 game/stf.o: shared/cube.h shared/tools.h shared/command.h shared/geom.h
 game/stf.o: shared/ents.h shared/iengine.h shared/igame.h engine/engine.h
 game/stf.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h
@@ -416,7 +414,7 @@ game/world.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 
 shared/crypto-standalone.o: shared/cube.h shared/tools.h shared/command.h
 shared/crypto-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
-shared/crypto-standalone.o: shared/igame.h shared/crypto.h
+shared/crypto-standalone.o: shared/igame.h
 shared/stream-standalone.o: shared/cube.h shared/tools.h shared/command.h
 shared/stream-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 shared/stream-standalone.o: shared/igame.h
@@ -433,7 +431,6 @@ engine/master-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 engine/master-standalone.o: shared/igame.h engine/engine.h engine/sound.h
 engine/master-standalone.o: engine/world.h engine/octa.h engine/lightmap.h
 engine/master-standalone.o: engine/bih.h engine/texture.h engine/model.h
-engine/master-standalone.o: shared/crypto.h
 engine/server-standalone.o: shared/cube.h shared/tools.h shared/command.h
 engine/server-standalone.o: shared/geom.h shared/ents.h shared/iengine.h
 engine/server-standalone.o: shared/igame.h engine/engine.h engine/sound.h
@@ -445,9 +442,8 @@ game/server-standalone.o: shared/igame.h engine/engine.h engine/sound.h
 game/server-standalone.o: engine/world.h engine/octa.h engine/lightmap.h
 game/server-standalone.o: engine/bih.h engine/texture.h engine/model.h
 game/server-standalone.o: game/game.h game/ctf.h game/stf.h game/vars.h
-game/server-standalone.o: shared/crypto.h game/stfmode.h game/ctfmode.h
-game/server-standalone.o: game/duelmut.h game/aiman.h game/auth.h
-game/server-standalone.o: game/extinfo.h
+game/server-standalone.o: game/stfmode.h game/ctfmode.h game/duelmut.h
+game/server-standalone.o: game/aiman.h game/auth.h game/extinfo.h
 
 shared/cube.h.gch: shared/tools.h shared/command.h shared/geom.h
 shared/cube.h.gch: shared/ents.h shared/iengine.h shared/igame.h

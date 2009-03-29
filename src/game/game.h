@@ -1204,7 +1204,7 @@ struct projent : dynent
 namespace server
 {
 	extern void stopdemo();
-    extern void hashpassword(int cn, int sessionid, const char *pwd, char *result);
+    extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
 }
 
 namespace client
