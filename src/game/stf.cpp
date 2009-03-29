@@ -84,8 +84,8 @@ namespace stf
 				popfont();
 				pushfont("default");
 				int occupy = int((st.flags[i].enemy ? clamp(st.flags[i].converted/float((st.flags[i].owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (st.flags[i].owner ? 1.f : 0.f))*50.f);
-				bool owner = st.flags[i].owner == world::player1->team;
-				ty -= draw_textx("%s [ \fs%s%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, owner ? "Secure" : "Overthrow", owner ? (occupy < 50 ? "\fy" : "\fg") : "\fy", occupy+(owner ? 50 : 0));
+				bool overthrow = st.flags[i].owner != world::player1->team;
+				ty -= draw_textx("%s [ \fs%s%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0.f : 50.f));
 				popfont();
 				break;
 			}
