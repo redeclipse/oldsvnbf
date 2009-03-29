@@ -765,7 +765,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			}
 			else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 			{
-				octa ohdr;
+				octacompat28 ohdr;
 				memcpy(&ohdr, &newhdr, sizeof(binary));
 
 				if(ohdr.version <= 25)
@@ -774,34 +774,25 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					memcpy(&chdr, &ohdr, sizeof(binary));
 					if(f->read(&chdr.worldsize, sizeof(octacompat25)-sizeof(binary))!=sizeof(octacompat25)-(int)sizeof(binary))
 					{
-						conoutf("\frerror loading %s: malformatted header", mapname);
-						delete f;
-						return false;
+					    conoutf("\frerror loading %s: malformatted header", mapname);
+					    delete f;
+					    return false;
 					}
-					lilswap(&chdr.worldsize, 5);
+					lilswap(&chdr.worldsize, 8);
 					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 					ohdr.numpvs = 0;
 					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*3);
 				}
 				else
 				{
-					if(f->read(&ohdr.worldsize, sizeof(octa)-sizeof(binary))!=sizeof(octa)-(int)sizeof(binary))
+					if(f->read(&ohdr.worldsize, sizeof(octacompat28)-sizeof(binary))!=sizeof(octacompat28)-(int)sizeof(binary))
 					{
 						conoutf("\frerror loading %s: malformatted header", mapname);
 						delete f;
 						return false;
 					}
-					lilswap(&ohdr.worldsize, 5);
+					lilswap(&ohdr.worldsize, 8);
 				}
-                lilswap(&ohdr.waterfog, 3);
-                if(ohdr.version <= 28)
-                {
-                    int lightprecision = ohdr.fog, lighterror = ohdr.waterfog, lightlod = ohdr.lightprecision, ambient = ohdr.ambient[2];
-                    ohdr.lightprecision = lightprecision;
-                    ohdr.lighterror = lighterror;
-                    ohdr.lightlod = lightlod;
-                    memset(ohdr.ambient, ambient, sizeof(ohdr.ambient));
-                }
 				s_strcpy(oldmaptitle, ohdr.maptitle);
 
 				if(ohdr.version > OCTAVERSION)
@@ -830,7 +821,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr.revision = 1;
 
 				if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-				if(!ohdr.ambient) memset(ohdr.ambient, 25, sizeof(ohdr.ambient));
+				if(!ohdr.ambient) ohdr.ambient = 25;
 				if(!ohdr.lerpsubdivsize)
 				{
 					if(!ohdr.lerpangle) ohdr.lerpangle = 44;
@@ -843,18 +834,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
                 if(ohdr.lighterror) setvar("lighterror", ohdr.lighterror);
 				if(ohdr.bumperror) setvar("bumperror", ohdr.bumperror);
 				setvar("lightlod", ohdr.lightlod);
-                if(ohdr.ambient[0] || ohdr.ambient[1] || ohdr.ambient[2]) setvar("ambient", (int(ohdr.ambient[0])<<16) | (int(ohdr.ambient[1])<<8) | int(ohdr.ambient[2]), true);
-                if(ohdr.version > 28)
-                {
-                    setvar("skylight", (int(ohdr.skylight[0])<<16) | (int(ohdr.skylight[1])<<8) | int(ohdr.skylight[2]), true);
-                    if(ohdr.watercolour[0] || ohdr.watercolour[1] || ohdr.watercolour[2]) setvar("watercolour", (int(ohdr.watercolour[0])<<16) | (int(ohdr.watercolour[1])<<8) | int(ohdr.watercolour[2]));
-                    if(ohdr.waterfallcolour[0] || ohdr.waterfallcolour[1] || ohdr.waterfallcolour[2]) setvar("waterfallcolour", (int(ohdr.waterfallcolour[0])<<16) | (int(ohdr.waterfallcolour[1])<<8) | int(ohdr.waterfallcolour[2]));
-                    if(ohdr.lavacolour[0] || ohdr.lavacolour[1] || ohdr.lavacolour[2]) setvar("lavacolour", (int(ohdr.lavacolour[0])<<16) | (int(ohdr.lavacolour[1])<<8) | int(ohdr.lavacolour[2]));
-                    setvar("fog", ohdr.fog);
-                    setvar("fogcolour", (int(ohdr.fogcolour[0])<<16) | (int(ohdr.fogcolour[1])<<8) | int(ohdr.fogcolour[2]));
-                    setvar("waterfog", ohdr.waterfog);
-                    setvar("lavafog", ohdr.lavafog);
-                }
+                setvar("ambient", ohdr.ambient);
 				setvar("lerpangle", ohdr.lerpangle);
 				setvar("lerpsubdiv", ohdr.lerpsubdiv);
 				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
