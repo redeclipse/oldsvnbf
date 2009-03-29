@@ -14,7 +14,7 @@ namespace entities
 	VARP(showlighting, 0, 1, 1);
 
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	FVAR(waypointmergescale, 1e-3f, 0.5f, 1000);
+	FVAR(waypointmergescale, 1e-3f, 0.75f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
