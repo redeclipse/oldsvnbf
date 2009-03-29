@@ -38,14 +38,14 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.04f, 1000);
+	FVARP(indicatorsize, 0, 0.025f, 1000);
 	FVARP(indicatorblend, 0, 1.f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
-	VARP(crosshairhitspeed, 0, 450, INT_MAX-1);
+	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);

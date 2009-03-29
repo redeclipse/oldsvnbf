@@ -168,10 +168,10 @@ struct stfstate
 		return dist;
 	}
 
-	bool insideflag(const flag &b, const vec &o)
+	bool insideflag(const flag &b, const vec &o, float scale = 1.f)
 	{
 		float dx = (b.o.x-o.x), dy = (b.o.y-o.y), dz = (b.o.z-o.z);
-		return dx*dx + dy*dy <= enttype[FLAG].radius*enttype[FLAG].radius && fabs(dz) <= enttype[FLAG].radius;
+		return dx*dx + dy*dy <= (enttype[FLAG].radius*enttype[FLAG].radius)*scale && fabs(dz) <= enttype[FLAG].radius*scale;
 	}
 };
 
