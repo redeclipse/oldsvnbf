@@ -9,8 +9,8 @@ namespace physics
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
 	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
-	FVARW(impulsegravity,	0, 100.f, 10000); // modifier of gravity that determines impulse interval
-	VARW(impulsetime,		-1, 0, INT_MAX-1); // overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsegravity)
+	FVARW(impulsegravity,	0, 62.5f, 10000);	// modifier of gravity that determines impulse interval
+	VARW(impulsetime,		-1, 0, INT_MAX-1);	// overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsegravity)
 
 	FVARW(liquidfric,		0, 10.f, 10000);
 	FVARW(liquidscale,		0, 0.9f, 10000);
