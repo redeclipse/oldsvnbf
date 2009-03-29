@@ -12,8 +12,10 @@ VARP(ffshadowmapdist, 128, 1024, 4096);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-bvec shadowmapambientcolor(25, 25, 25);
-HVARFW(shadowmapambient, 0, 0, 0xFFFFFF, {
+bvec shadowmapambientcolor(0, 0, 0);
+HVARFW(shadowmapambient, 0, 0, 0xFFFFFF, 
+{
+    if(shadowmapambient <= 255) shadowmapambient |= (shadowmapambient<<8) | (shadowmapambient<<16);
     shadowmapambientcolor = bvec((shadowmapambient>>16)&0xFF, (shadowmapambient>>8)&0xFF, shadowmapambient&0xFF);
 });
 VARP(shadowmapintensity, 0, 40, 100);
