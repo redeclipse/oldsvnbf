@@ -136,7 +136,7 @@ struct ctfservmode : ctfstate, servmode
 		if(!notgotflags) loopv(flags)
         {
             flag &f = flags[i];
-            bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius);
+            bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius*2.f);
             if(insidehome || f.owner == ci->clientnum)
             {
             	if(insidehome)
