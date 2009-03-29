@@ -281,23 +281,17 @@ VARW(waterfog, 0, 150, 10000);
 bvec watercolor(0x10, 0x30, 0x60), waterfallcolor(0, 0, 0);
 HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
 {
-    watercolor[0] = (watercolour>>16)&0xFF;
-    watercolor[1] = (watercolour>>8)&0xFF;
-    watercolor[2] = watercolour&0xFF;
+    watercolor = bvec((watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF);
 });
 HVARFW(waterfallcolour, 0, 0, 0xFFFFFF,
 {
-    waterfallcolor[0] = (waterfallcolour>>16)&0xFF;
-    waterfallcolor[1] = (waterfallcolour>>8)&0xFF;
-    waterfallcolor[2] = waterfallcolour&0xFF;
+    waterfallcolor = bvec((waterfallcolour>>16)&0xFF, (waterfallcolour>>8)&0xFF, waterfallcolour&0xFF);
 });
 VARW(lavafog, 0, 50, 10000);
 bvec lavacolor(0xFF, 0x44, 0x00);
 HVARFW(lavacolour, 0, 0xFF4400, 0xFFFFFF,
 {
-    lavacolor[0] = (lavacolour>>16)&0xFF;
-    lavacolor[1] = (lavacolour>>8)&0xFF;
-    lavacolor[2] = lavacolour&0xFF;
+    lavacolor = bvec((lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF);
 });
 
 void setprojtexmatrix(Reflection &ref, bool init = true)
