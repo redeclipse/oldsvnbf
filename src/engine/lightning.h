@@ -96,9 +96,7 @@ struct lightningrenderer : sharedlistrenderer
             ty = 0.5f*((i>>1)&1);
             tsz = 0.5f;
         }
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
         renderlightning(o, d, p->size, tx, ty, tsz);
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
     }
 };
 static lightningrenderer lightnings;
