@@ -422,6 +422,56 @@ namespace entities
         }
     }
 
+    void avoidset::avoidnear(dynent *d, const vec &pos, float limit)
+    {
+        float limit2 = limit*limit;
+
+        if(entcachedepth<0) buildentcache();
+
+        entcachestack.setsizenodelete(0);
+
+        entcachenode *curnode = &entcache[0];
+        #define CHECKNEAR(branch) do { \
+            int n = curnode->childindex(branch); \
+            extentity &e = *ents[n]; \
+            if(e.type == WAYPOINT && e.o.squaredist(pos) < limit2) add(d, n); \
+        } while(0)
+        for(;;)
+        {
+            int axis = curnode->axis();
+            float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+            if(dist1 >= limit)
+            {
+                if(dist2 < limit)
+                {
+                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+                    CHECKNEAR(1);
+                }
+            }
+            else if(curnode->isleaf(0))
+            {
+                CHECKNEAR(0);
+                if(dist2 < limit)
+                {
+                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+                    CHECKNEAR(1);
+                }
+            }
+            else
+            {
+                if(dist2 < limit)
+                {
+                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+                    else CHECKNEAR(1);
+                }
+                curnode = &entcache[curnode->childindex(0)];
+                continue;
+            }
+            if(entcachestack.empty()) return;
+            curnode = entcachestack.pop();
+        }
+    }
+
     void collateents(const vec &pos, float xyrad, float zrad, vector<actitem> &actitems)
     {
         if(entcachedepth<0) buildentcache();
