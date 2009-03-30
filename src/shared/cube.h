@@ -1,3 +1,6 @@
+#ifndef __CUBE_H__
+#define __CUBE_H__
+
 #ifdef __GNUC__
 #define gamma __gamma
 #endif
@@ -77,4 +80,6 @@
 
 #include "iengine.h"
 #include "igame.h"
+
+#endif
 
