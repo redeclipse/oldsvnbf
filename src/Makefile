@@ -108,7 +108,7 @@ clean-client:
 clean-server:
 	@rm -fv $(SERVER_OBJS) bfserver
 
-%.h.gch:
+%.h.gch: %.h
 	$(CXX) $(CXXFLAGS) -o $@.tmp $(subst .h.gch,.h,$@)
 	mv $@.tmp $@
 
@@ -116,7 +116,9 @@ clean-server:
 	$(CXX) $(CXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
 $(CLIENT_OBJS): CXXFLAGS += $(CLIENT_INCLUDES)
-$(CLIENT_OBJS): $(CLIENT_PCH)
+$(filter shared/%,$(CLIENT_OBJS)): $(filter shared/%,$(CLIENT_PCH))
+$(filter engine/%,$(CLIENT_OBJS)): $(filter engine/%,$(CLIENT_PCH))
+$(filter game/%,$(CLIENT_OBJS)): $(filter game/%,$(CLIENT_PCH))
 
 $(SERVER_OBJS): CXXFLAGS += $(SERVER_INCLUDES)
 
