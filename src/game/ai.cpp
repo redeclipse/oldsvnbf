@@ -1004,13 +1004,7 @@ namespace ai
 			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
 			vec pos = world::feetpos(d);
 			float limit = guessradius+d->radius;
-			limit *= limit; // square it to avoid expensive square roots
-			loopvk(entities::ents)
-			{
-				gameentity &e = *(gameentity *)entities::ents[k];
-				if(e.type == WAYPOINT && e.o.squaredist(pos) <= limit)
-					obstacles.add(d, k);
-			}
+            obstacles.avoidnear(d, pos, limit);
 		}
 		loopv(projs::projs)
 		{
@@ -1018,13 +1012,7 @@ namespace ai
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
 			{
 				float limit = guessradius+(weaptype[p->weap].explode*p->lifesize);
-				limit *= limit; // square it to avoid expensive square roots
-				loopvk(entities::ents)
-				{
-					gameentity &e = *(gameentity *)entities::ents[k];
-					if(e.type == WAYPOINT && e.o.squaredist(p->o) <= limit)
-						obstacles.add(p, k);
-				}
+                obstacles.avoidnear(p, p->o, limit);
 			}
 		}
 	}

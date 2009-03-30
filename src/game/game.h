@@ -1432,6 +1432,8 @@ namespace entities
 			entities.add(entity);
 		}
 
+        void avoidnear(dynent *d, const vec &pos, float limit);
+
 		#define loopavoid(v, d, body) \
 			if(!(v).obstacles.empty()) \
 			{ \
