@@ -313,6 +313,7 @@ struct meterrenderer : sharedlistrenderer
 
 		float right = 8*FONTH, left = p->progress/100.0f*right;
 		glTranslatef(-right/2.0f, 0, 0);
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 
 		if(outlinemeters)
 		{
@@ -360,7 +361,7 @@ struct meterrenderer : sharedlistrenderer
 		}
 		glEnd();
 
-
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 };
@@ -407,13 +408,15 @@ struct textrenderer : sharedlistrenderer
 		float yoff = 0;
 		if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); } //@TODO instead in worldspace beforehand?
 		glTranslatef(xoff, yoff, 50);
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 
 		draw_text(text, 0, 0, color[0], color[1], color[2], blend);
 
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 };
-static textrenderer texts(PT_TEXT|PT_LERP), textups(PT_TEXTUP|PT_LERP, -5);
+static textrenderer texts(PT_TEXT|PT_LERP), textups(PT_TEXTUP|PT_LERP, -5), textontop(PT_TEXT|PT_LERP|PT_ONTOP);
 
 struct portal : listparticle<portal>
 {
@@ -447,6 +450,7 @@ struct portalrenderer : listrenderer<portal>
 		glScalef(p->size, p->size, p->size);
 
 		glColor4ub(color[0], color[1], color[2], blend);
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glBegin(GL_QUADS);
 		glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
 		glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
@@ -454,6 +458,7 @@ struct portalrenderer : listrenderer<portal>
 		glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
 		glEnd();
 
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 
@@ -509,6 +514,7 @@ struct iconrenderer : listrenderer<icon>
 		glScalef(p->size, p->size, p->size);
 
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glBegin(GL_QUADS);
 		glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
 		glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
@@ -516,6 +522,7 @@ struct iconrenderer : listrenderer<icon>
 		glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
 		glEnd();
 
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 
@@ -778,7 +785,9 @@ struct varenderer : partrenderer
 		glVertexPointer(3, GL_FLOAT, sizeof(partvert), &verts->pos);
 		glTexCoordPointer(2, GL_FLOAT, sizeof(partvert), &verts->u);
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(partvert), &verts->color);
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glDrawArrays(GL_QUADS, 0, numparts*4);
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 	}
 };
 
@@ -843,6 +852,7 @@ static partrenderer *parts[] =
 
 	new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP, 50, DECAL_BLOOD),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE, 0, 0),
+	new quadrenderer("particles/entity", PT_PART|PT_GLARE|PT_ONTOP, 0, 0),
 
 	new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP, 10, 0),
 	new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_LENS, 10, 0),
@@ -880,7 +890,7 @@ static partrenderer *parts[] =
 	new taperenderer("particles/line", PT_TAPE|PT_GLARE, 0, 0),
 	new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP, 100, DECAL_STAIN),
 
-	&texts, &textups, &meters, &metervs,
+	&texts, &textups, &textontop, &meters, &metervs,
 	&fireballs, &noglarefireballs, &lightnings,
 	&flares // must be done last!
 };
@@ -967,6 +977,7 @@ void render_particles(int time)
 			if(type&PT_MOD) s_strcat(info, "m,");
 			if(type&PT_RND4) s_strcat(info, "r,");
 			if(type&PT_FLIP) s_strcat(info, "f,");
+			if(type&PT_ONTOP) s_strcat(info, "o,");
 			if(parts[i]->collide) s_strcat(info, "c,");
 			s_sprintfd(ds)("%d\t%s(%s%d) %s", parts[i]->count(), partnames[type&0xFF], info, parts[i]->grav, (title?title:""));
 			draw_text(ds, FONTH, (i+n/2)*FONTH);

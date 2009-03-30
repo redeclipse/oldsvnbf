@@ -1768,11 +1768,11 @@ namespace entities
 		if(edit)
 		{
 			hasent = world::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
-			part_create(PART_EDIT, 1, o, hasent ? 0x8822FF : 0x6611EE, hasent ? 3.0f : 1.5f);
+			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
 			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
 				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
-				part_text(pos.add(off), s);
+				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				if(showentinfo >= 3 || hasent)
 				{
 					loopk(5)
@@ -1780,7 +1780,7 @@ namespace entities
 						if(*enttype[e.type].attrs[k])
 						{
 							s_sprintf(s)("@%s%s:%d", hasent ? "\fw" : "\fa", enttype[e.type].attrs[k], e.attr[k]);
-							part_text(pos.add(off), s);
+							part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 						}
 						else break;
 					}
@@ -1792,13 +1792,13 @@ namespace entities
 		{
 			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-			const char *itext = item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
+			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
 			if(itext && *itext)
 				part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
 			else
 			{
-				s_sprintfd(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], notitem && (showentinfo >= 5 || hasent)));
-				part_text(pos.add(off), ds, PART_TEXT, 1, colour);
+				s_sprintfd(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent));
+				part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
 			}
 		}
 	}
