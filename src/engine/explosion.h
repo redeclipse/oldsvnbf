@@ -522,8 +522,10 @@ struct fireballrenderer : sharedlistrenderer
 
         glRotatef(lastmillis/7.0f, -rotdir.x, rotdir.y, -rotdir.z);
         glScalef(-psize, psize, -psize);
+		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
         drawexplosion(inside, color[0], color[1], color[2], blend);
 
+		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
         glPopMatrix();
     }
 };
