@@ -1,5 +1,3 @@
-#include "cube.h"
-#include "engine.h"
 #include "game.h"
 namespace client
 {

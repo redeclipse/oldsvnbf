@@ -1,7 +1,6 @@
 // command.cpp: implements the parsing and execution of a tiny script language which
 // is largely backwards compatible with the quake console language.
 
-#include "cube.h"
 #include "engine.h"
 
 void itoa(char *s, int i) { s_sprintf(s)("%d", i); }

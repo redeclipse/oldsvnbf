@@ -1,6 +1,5 @@
 // main.cpp: initialisation & main loop
 
-#include "cube.h"
 #include "engine.h"
 
 SDL_Surface *screen = NULL;

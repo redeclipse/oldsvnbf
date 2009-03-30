@@ -1,9 +1,7 @@
-// engine defs
-#ifdef MAINCPP
-#define EXTERN
-#else
-#define EXTERN extern
-#endif
+#ifndef __ENGINE_H__
+#define __ENGINE_H__
+
+#include "cube.h"
 
 #define ENG_VERSION			80
 #define ENG_NAME			"Blood Frontier"
@@ -694,3 +692,6 @@ extern void saveblendmap(stream *f);
 extern uchar shouldsaveblendmap();
 
 #endif // STANDALONE
+
+#endif
+

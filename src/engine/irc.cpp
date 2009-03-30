@@ -1,5 +1,4 @@
 #ifdef IRC
-#include "cube.h"
 #include "engine.h"
 
 vector<ircnet> ircnets;

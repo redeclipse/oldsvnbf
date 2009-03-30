@@ -1,3 +1,8 @@
+#ifndef __GAME_H__
+#define __GAME_H__
+
+#include "engine.h"
+
 #define GAMEID				"bfa"
 #define GAMEVERSION			157
 #define DEMO_VERSION		GAMEVERSION
@@ -1516,3 +1521,6 @@ namespace client
 #ifndef GAMESERVER
 #include "scoreboard.h"
 #endif
+
+#endif
+

@@ -321,6 +321,8 @@
 			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\engine.h">
+			<Option compile="1" />
+			<Option weight="0" />
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -669,6 +671,8 @@
 			<Option target="server-dbg" />
 		</Unit>
 		<Unit filename="game\game.h">
+			<Option compile="1" />
+			<Option weight="0" />
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="server" />
@@ -1003,12 +1007,6 @@
 			<Option target="data" />
 			<Option target="client" />
 			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="shared\pch.cpp">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="data" />
 			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="shared\stream.cpp">

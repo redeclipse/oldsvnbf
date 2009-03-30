@@ -1,8 +1,6 @@
 // server.cpp: little more than enhanced multicaster
 // runs dedicated or as client coroutine
-#define MAINCPP
 
-#include "cube.h"
 #include "engine.h"
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
@@ -762,4 +760,3 @@ int main(int argc, char* argv[])
 }
 #endif
 
-#undef MAINCPP

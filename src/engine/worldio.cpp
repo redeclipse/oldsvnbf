@@ -1,6 +1,5 @@
 // worldio.cpp: loading & saving of maps and savegames
 
-#include "cube.h"
 #include "engine.h"
 
 sometype mapexts[] = {
