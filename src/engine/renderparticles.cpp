@@ -313,7 +313,6 @@ struct meterrenderer : sharedlistrenderer
 
 		float right = 8*FONTH, left = p->progress/100.0f*right;
 		glTranslatef(-right/2.0f, 0, 0);
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 
 		if(outlinemeters)
 		{
@@ -361,7 +360,6 @@ struct meterrenderer : sharedlistrenderer
 		}
 		glEnd();
 
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 };
@@ -408,11 +406,9 @@ struct textrenderer : sharedlistrenderer
 		float yoff = 0;
 		if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); } //@TODO instead in worldspace beforehand?
 		glTranslatef(xoff, yoff, 50);
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 
 		draw_text(text, 0, 0, color[0], color[1], color[2], blend);
 
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 };
@@ -450,7 +446,6 @@ struct portalrenderer : listrenderer<portal>
 		glScalef(p->size, p->size, p->size);
 
 		glColor4ub(color[0], color[1], color[2], blend);
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glBegin(GL_QUADS);
 		glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
 		glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
@@ -458,7 +453,6 @@ struct portalrenderer : listrenderer<portal>
 		glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
 		glEnd();
 
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 
@@ -514,7 +508,6 @@ struct iconrenderer : listrenderer<icon>
 		glScalef(p->size, p->size, p->size);
 
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glBegin(GL_QUADS);
 		glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
 		glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
@@ -522,7 +515,6 @@ struct iconrenderer : listrenderer<icon>
 		glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
 		glEnd();
 
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 	}
 
@@ -785,9 +777,7 @@ struct varenderer : partrenderer
 		glVertexPointer(3, GL_FLOAT, sizeof(partvert), &verts->pos);
 		glTexCoordPointer(2, GL_FLOAT, sizeof(partvert), &verts->u);
 		glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(partvert), &verts->color);
-		if(type&PT_ONTOP) glDisable(GL_DEPTH_TEST);
 		glDrawArrays(GL_QUADS, 0, numparts*4);
-		if(type&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 	}
 };
 
@@ -1001,7 +991,7 @@ void render_particles(int time)
 	static float zerofog[4] = { 0, 0, 0, 1 };
 	float oldfogc[4];
 	bool rendered = false;
-	uint lastflags = PT_LERP, flagmask = PT_LERP|PT_MOD;
+	uint lastflags = PT_LERP, flagmask = PT_LERP|PT_MOD|PT_ONTOP;
 
 	if(binddepthfxtex()) flagmask |= PT_SOFT;
 
@@ -1071,6 +1061,11 @@ void render_particles(int time)
 				}
 				else particleshader->set();
 			}
+            if(changedbits&PT_ONTOP)
+            {
+                if(flags&PT_ONTOP) glDisable(GL_DEPTH_TEST);
+                else glEnable(GL_DEPTH_TEST);
+            }
 			lastflags = flags;
 		}
 		p->render();
@@ -1086,6 +1081,7 @@ void render_particles(int time)
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 			glDisableClientState(GL_COLOR_ARRAY);
 		}
+        if(lastflags&PT_ONTOP) glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glDepthMask(GL_TRUE);
 	}
