@@ -5,6 +5,13 @@ override CXXFLAGS+= -Wall -fsigned-char
 PLATFORM= $(shell uname -s)
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include
 
+STRIP=
+ifeq (,$(findstring -g,$(CXXFLAGS)))
+ifeq (,$(findstring -pg,$(CXXFLAGS)))
+  STRIP=strip
+endif
+endif
+
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 WINDRES= windres
 CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -Iinclude
@@ -131,25 +138,25 @@ server: $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o ../bin/bfserver.exe $(SERVER_OBJS) $(SERVER_LIBS)
 
 install-client: client
-ifeq (,$(findstring -g,$(CXXFLAGS)))
-	strip ../bin/bfclient.exe
+ifneq (,$(STRIP))
+	$(STRIP) ../bin/bfclient.exe
 endif
 
 install-server: server
-ifeq (,$(findstring -g,$(CXXFLAGS)))
-	strip ../bin/bfserver.exe
+ifneq (,$(STRIP))
+	$(STRIP) ../bin/bfserver.exe
 endif
 else
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
-ifeq (,$(findstring -g,$(CXXFLAGS)))
-	strip bfclient
+ifneq (,$(STRIP))
+	$(STRIP) bfclient
 endif
 
 server:	libenet $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
-ifeq (,$(findstring -g,$(CXXFLAGS)))
-	strip bfserver
+ifneq (,$(STRIP))
+	$(STRIP) bfserver
 endif
 
 install-client: client
