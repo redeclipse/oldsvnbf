@@ -427,6 +427,11 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="engine\movie.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="engine\normal.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
