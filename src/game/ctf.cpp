@@ -544,14 +544,14 @@ namespace ctf
 					ai::makeroute(d, b, f.spawnloc);
 					return true;
 				}
-				else return false;
+				else if(!isctfflag(f, d->team)) return false;
 			}
-			else if(isctfflag(f, d->team))
+			if(isctfflag(f, d->team))
 			{
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			return ai::makeroute(d, b, f.pos());
+			//return ai::makeroute(d, b, f.pos());
 		}
 		return false;
 	}
