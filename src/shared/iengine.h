@@ -378,8 +378,8 @@ struct serverinfo
     }
 };
 extern vector<serverinfo *> servers;
-extern void c2sinfo(int rate = 33);
-extern void sendpackettoserv(ENetPacket *packet, int chan);
+extern void sendclientpacket(ENetPacket *packet, int chan);
+extern void flushclient();
 extern void disconnect(int onlyclean = 0, int async = 0);
 extern bool multiplayer(bool msg = true);
 extern void neterr(const char *s);
