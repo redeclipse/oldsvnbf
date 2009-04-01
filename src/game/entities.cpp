@@ -1105,9 +1105,9 @@ namespace entities
 		}
 
 		nodes[node].id = routeid;
-		nodes[goal].curscore = nodes[node].curscore = 0.f;
-		nodes[goal].estscore = nodes[node].estscore = 0.f;
-		nodes[goal].prev = nodes[node].prev = NULL;
+		nodes[node].curscore = 0.f;
+		nodes[node].estscore = 0.f;
+		nodes[node].prev = NULL;
 		queue.setsizenodelete(0);
 		queue.add(&nodes[node]);
 		route.setsizenodelete(0);
@@ -1138,13 +1138,14 @@ namespace entities
 						n.estscore = ents[link]->o.dist(ents[goal]->o);
 						if(n.estscore <= float(enttype[ents[link]->type].radius*4) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
 							lowest = link;
-						if(link != goal) queue.add(&n);
-						else queue.setsizenodelete(0);
 						n.id = routeid;
+                        if(link == goal) goto foundgoal;
+                        queue.add(&n);
 					}
 				}
 			}
 		}
+        foundgoal:
 
         routeid++;
 
