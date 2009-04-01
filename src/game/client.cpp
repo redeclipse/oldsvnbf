@@ -18,6 +18,7 @@ namespace client
 
 	// collect c2s messages conveniently
 	vector<uchar> messages;
+    bool messagereliable = false;
 
 	VARP(colourchat, 0, 1, 1);
 	SVARP(serversort, "");
@@ -110,6 +111,7 @@ namespace client
 		gettingmap = needsmap = donesave = remote = isready = c2sinit = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
+        messagereliable = false;
 		projs::remove(world::player1);
         removetrackedparticles(world::player1);
 		removetrackedsounds(world::player1);
@@ -306,10 +308,8 @@ namespace client
 		}
 		int num = nums?0:numi, msgsize = msgsizelookup(type);
         if(msgsize && num!=msgsize) { s_sprintfd(s)("inconsistent msg size for %d (%d != %d)", type, num, msgsize); fatal(s); }
-		int len = p.length();
-		messages.add(len&0xFF);
-		messages.add((len>>8)|(reliable ? 0x80 : 0));
-		loopi(len) messages.add(buf[i]);
+        if(reliable) messagereliable = true;
+        messages.put(buf, p.length());
 	}
 
 	void saytext(gameent *d, int flags, char *text)
@@ -665,7 +665,7 @@ namespace client
         }
         sendstring(hash, p);
         enet_packet_resize(packet, p.length());
-        sendpackettoserv(packet, 1);
+        sendclientpacket(packet, 1);
     }
 
 	void updateposition(gameent *d)
@@ -704,20 +704,28 @@ namespace client
                 putint(q, (int)d->aimpitch);
             }
 			enet_packet_resize(packet, q.length());
-			sendpackettoserv(packet, 0);
+			sendclientpacket(packet, 0);
 		}
 	}
 
-	int sendpacketclient(ucharbuf &p, bool &reliable)
-	{
-		updateposition(world::player1);
-		loopv(world::players)
-			if(world::players[i] && world::players[i]->ai)
-				updateposition(world::players[i]);
+    void sendmessages(gameent *d)
+    {
+        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
+        ucharbuf p(packet->data, packet->dataLength);
+
+        #define CHECKSPACE(n) do { \
+            int space = (n); \
+            if(p.remaining() < space) \
+            { \
+                enet_packet_resize(packet, packet->dataLength + max(MAXTRANS, space - p.remaining())); \
+                p.buf = (uchar *)packet->data; \
+                p.maxlen = packet->dataLength; \
+            } \
+        } while(0)
 
 		if(sendinfo && !needsmap)
 		{
-			reliable = true;
+            packet->flags |= ENET_PACKET_FLAG_RELIABLE;
 			putint(p, SV_GAMEINFO);
 			putint(p, m_team(world::gamemode, world::mutators) && world::numteamplayers ? world::numteamplayers : world::numplayers);
 			entities::putitems(p);
@@ -728,30 +736,43 @@ namespace client
 		}
 		if(!c2sinit)	// tell other clients who I am
 		{
-			reliable = true;
+			packet->flags |= ENET_PACKET_FLAG_RELIABLE;
 			c2sinit = true;
+            CHECKSPACE(10 + 2*(strlen(d->name) + 1));
 			putint(p, SV_INITC2S);
-			sendstring(world::player1->name, p);
-			putint(p, world::player1->team);
+			sendstring(d->name, p);
+			putint(p, d->team);
 		}
-		int i = 0;
-		while(i < messages.length()) // send messages collected during the previous frames
+        if(messages.length())
+        {
+            CHECKSPACE(messages.length());
+            p.put(messages.getbuf(), messages.length());
+            messages.setsizenodelete(0);
+            if(messagereliable) packet->flags |= ENET_PACKET_FLAG_RELIABLE;
+            messagereliable = false;
+        }
+		if(lastmillis-lastping>250)
 		{
-			int len = messages[i] | ((messages[i+1]&0x7F)<<8);
-			if(p.remaining() < len) break;
-			if(messages[i+1]&0x80) reliable = true;
-			p.put(&messages[i+2], len);
-			i += 2 + len;
-		}
-		messages.remove(0, i);
-		if(p.remaining()>=10 && lastmillis-lastping>250)
-		{
+            CHECKSPACE(10);
 			putint(p, SV_PING);
 			putint(p, lastmillis);
 			lastping = lastmillis;
 		}
-		return 1;
+
+        enet_packet_resize(packet, p.length());
+        sendclientpacket(packet, 1);
 	}
+
+    void c2sinfo() // send update to the server
+    {
+        static int lastupdate = -1000;
+        if(totalmillis - lastupdate < 40) return;    // don't update faster than 25fps
+        lastupdate = totalmillis;
+        updateposition(world::player1);
+        loopv(world::players) if(world::players[i] && world::players[i]->ai) updateposition(world::players[i]);
+        sendmessages(world::player1);
+        flushclient();
+    }
 
     void parsestate(gameent *d, ucharbuf &p, bool resume = false)
     {

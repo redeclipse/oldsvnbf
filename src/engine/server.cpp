@@ -318,7 +318,7 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
         if(!packet->referenceCount) enet_packet_destroy(packet);
     }
 #ifndef STANDALONE
-    else sendpackettoserv(packet, chan);
+    else sendclientpacket(packet, chan);
 #endif
 }
 

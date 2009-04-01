@@ -1302,7 +1302,7 @@ namespace world
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
 		}
 
-		if(player1->clientnum >= 0) c2sinfo(40);
+		if(player1->clientnum >= 0) client::c2sinfo();
 	}
 
 	void recomputecamera(int w, int h)

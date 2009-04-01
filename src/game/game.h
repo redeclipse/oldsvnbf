@@ -1217,6 +1217,7 @@ namespace client
 	extern bool demoplayback;
 	extern void addmsg(int type, const char *fmt = NULL, ...);
 	extern void mapstart();
+    extern void c2sinfo();
 }
 
 namespace physics

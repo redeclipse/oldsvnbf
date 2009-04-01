@@ -26,7 +26,6 @@ namespace client
 {
 	extern void gamedisconnect(int clean);
 	extern void parsepacketclient(int chan, ucharbuf &p);
-	extern int sendpacketclient(ucharbuf &p, bool &reliable);
 	extern void gameconnect(bool _remote);
 	extern bool allowedittoggle(bool edit);
 	extern void edittoggled(bool edit);
