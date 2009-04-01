@@ -725,13 +725,13 @@ namespace ai
 		return false;
 	}
 
-	void jumpto(gameent *d, aistate &b, const vec &pos, bool cando = true)
+	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
 		vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
 		bool offground = (d->timeinair && !d->inliquid && !d->onladder), jumper = off.z >= JUMPMIN,
 			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
 			propeller = dir.magnitude() >= JUMPMIN, propel = jumper || propeller;
-		if(propel && (!offground || !cando || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
+		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
 			propel = false;
 		if(jump)
 		{
@@ -761,14 +761,14 @@ namespace ai
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
-		float frame = float(lastmillis-d->ai->lastrun)/float(skmod);
+		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2);
 		vec dp = world::headpos(d);
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = b.idle || (stupify && rnd(stupify) <= stupify/10);
 			if(b.idle == 2 || (stupify && stupify <= skmod/10))
-				jumpto(d, b, dp, !rnd(d->skill*10)); // jump up and down
+				jumpto(d, b, dp); // jump up and down
 		}
 		else if(hunt(d, b))
 		{
@@ -791,7 +791,7 @@ namespace ai
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
 				world::fixrange(yaw, pitch);
-				float sskew = (insight ? 1.5f : (hasseen ? 1.f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.25f : 1.f);
+				float sskew = (insight ? 2.f : (hasseen ? 1.f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f);
 				if(b.idle)
 				{
 					d->ai->targyaw = yaw;
@@ -820,17 +820,19 @@ namespace ai
 			{
 				noenemy(d);
 				result = 0;
+				frame /= 2.f;
 			}
 		}
 		else
 		{
 			noenemy(d);
 			result = 0;
+			frame /= 2.f;
 		}
 
 		world::fixrange(d->ai->targyaw, d->ai->targpitch);
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
-		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 0.5f);
+		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
 		if(!d->ai->dontmove)
 		{ // our guys move one way.. but turn another?! :)
@@ -1086,7 +1088,7 @@ namespace ai
 		string s;
 		if(top)
 		{
-			s_sprintf(s)("@\fg%s (%d[%d]) goal: %s:%d (%d[%d])",
+			s_sprintf(s)("@\fg%s (%d[%d]) %s:%d (%d[%d])",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target,
@@ -1096,7 +1098,7 @@ namespace ai
 		}
 		else
 		{
-			s_sprintf(s)("@\fy%s (%d[%d]) goal: %s:%d",
+			s_sprintf(s)("@\fy%s (%d[%d]) %s:%d",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target
