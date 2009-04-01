@@ -565,21 +565,32 @@ namespace server
 			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 			if(maplist && *maplist)
 			{
-				int n = listlen(maplist), c = -1;
-				if(GVAR(maprotate) > 1) c = n ? rnd(n) : 0;
-				else loopi(n)
+				int n = listlen(maplist), p = -1, c = -1;
+				if(*mapchosen)
 				{
-					char *maptxt = indexlist(maplist, i);
-					if(maptxt)
+					loopi(n)
 					{
-						string maploc;
-						if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
-						else s_sprintf(maploc)("maps/%s", maptxt);
-						if(*mapchosen && (!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc)))
-							c = i >= 0 && i < n-1 ? i+1 : 0;
-						DELETEP(maptxt);
+						char *maptxt = indexlist(maplist, i);
+						if(maptxt)
+						{
+							string maploc;
+							if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
+							else s_sprintf(maploc)("maps/%s", maptxt);
+							if(!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc))
+							{
+								p = i;
+								if(GVAR(maprotate) == 1)
+									c = i >= 0 && i < n-1 ? i+1 : 0;
+							}
+							DELETEP(maptxt);
+						}
+						if(p >= 0) break;
 					}
-					if(c >= 0) break;
+				}
+				if(c < 0)
+				{
+					c = n ? rnd(n) : 0;
+					if(c == p) c = p >= 0 && p < n-1 ? p+1 : 0;
 				}
 				char *mapidx = c >= 0 ? indexlist(maplist, c) : NULL;
 				if(mapidx)
@@ -994,7 +1005,7 @@ namespace server
 
         demotmp = opentempfile("w+b");
         stream *f = opengzfile(NULL, "wb", demotmp);
-        if(!f) { DELETEP(demotmp); return; } 
+        if(!f) { DELETEP(demotmp); return; }
 
         srvoutf(4, "recording demo");
 
