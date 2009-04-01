@@ -1017,7 +1017,7 @@ struct aiinfo
 	vector<int> route;
 	vec target, spot;
 	int enemy, enemyseen, enemymillis, weappref, lastnode, prevnode,
-		lasthunt, lastaction, jumpseed, jumprand, propelseed;
+		lastrun, lasthunt, lastaction, jumpseed, jumprand, propelseed;
 	float targyaw, targpitch, views[3];
 	bool dontmove, tryreset, clear;
 
@@ -1045,7 +1045,7 @@ struct aiinfo
 			spot = target = vec(0, 0, 0);
 			enemy = lastnode = prevnode = -1;
 			lastaction = lasthunt = enemyseen = enemymillis = 0;
-			propelseed = jumpseed = lastmillis;
+			lastrun = propelseed = jumpseed = lastmillis;
 			jumprand = lastmillis+5000;
 			dontmove = false;
 		}
