@@ -2,6 +2,9 @@
 
 #include "engine.h"
 
+extern void glswapbuffers();
+namespace recorder { extern void stop(); }
+
 SDL_Surface *screen = NULL;
 SDL_Cursor *scursor = NULL, *ncursor = NULL;
 
@@ -57,6 +60,7 @@ VARP(autograbinput, 0, 1, 1);
 
 void cleanup()
 {
+    recorder::stop();
 	cleanupserver();
 	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
@@ -978,7 +982,7 @@ int main(int argc, char **argv)
                 gl_drawframe(screen->w, screen->h);
                 renderedframe = true;
             }
-			SDL_GL_SwapBuffers();
+			glswapbuffers();
 			inbetweenframes = true;
 			s_sprintfd(cap)("%s - %s", world::gametitle(), world::gametext());
 			setcaption(cap);
