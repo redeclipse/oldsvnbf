@@ -344,12 +344,12 @@ namespace ctf
 			{
 				ctfstate::flag &g = st.flags[i];
 				if(isctfhome(g, d->team) && (k || (!g.owner && !g.droptime)) &&
-					(!st.flags.inrange(goal) || g.pos().squaredist(pos) < st.flags[goal].pos().squaredist(pos)))
+					(!st.flags.inrange(goal) || g.spawnloc.squaredist(pos) < st.flags[goal].spawnloc.squaredist(pos)))
 				{
 					goal = i;
 				}
 			}
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].pos(), false))
+			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc, false))
 			{
 				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, goal);
 				return true;
@@ -495,24 +495,21 @@ namespace ctf
 					d->ai->clear = true; // re-evaluate so as not to herd
 					return true;
 				}
-				else if(regen)
+				else
 				{
 					walk = true;
 					b.millis = lastmillis;
 				}
 			}
-			else
-			{
-				vec pos = world::feetpos(d);
-				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6.25f);
-				loopv(st.flags) if(isctfflag(st.flags[i], d->team))
-				{ // get out of the way of the returnee!
-					ctfstate::flag &g = st.flags[i];
-					if(pos.squaredist(g.pos()) <= mindist)
-					{
-						if(g.owner && g.owner->team == d->team) walk = true;
-						if(g.droptime && ai::makeroute(d, b, f.pos())) return true;
-					}
+			vec pos = world::feetpos(d);
+			float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6.25f);
+			loopv(st.flags)
+			{ // get out of the way of the returnee!
+				ctfstate::flag &g = st.flags[i];
+				if(pos.squaredist(g.pos()) <= mindist)
+				{
+					if(g.owner && g.owner->team == d->team) walk = true;
+					if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
 				}
 			}
 			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*4), walk ? 2 : 1);
@@ -551,7 +548,7 @@ namespace ctf
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			//return ai::makeroute(d, b, f.pos());
+			else return ai::makeroute(d, b, f.pos());
 		}
 		return false;
 	}
