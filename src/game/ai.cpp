@@ -761,13 +761,13 @@ namespace ai
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
-		float frame = float(lastmillis-d->lastupdate)/float(skmod);
+		float frame = float(lastmillis-d->ai->lastrun)/float(skmod);
 		vec dp = world::headpos(d);
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
-			d->ai->dontmove = b.idle || (stupify && rnd(stupify) <= stupify/4);
-			if(b.idle == 2 || (stupify && stupify <= skmod/8))
+			d->ai->dontmove = b.idle || (stupify && rnd(stupify) <= stupify/10);
+			if(b.idle == 2 || (stupify && stupify <= skmod/10))
 				jumpto(d, b, dp, !rnd(d->skill*10)); // jump up and down
 		}
 		else if(hunt(d, b))
@@ -791,7 +791,7 @@ namespace ai
 				float yaw, pitch;
 				world::getyawpitch(dp, ep, yaw, pitch);
 				world::fixrange(yaw, pitch);
-				float sskew = (insight ? 1.25f : (hasseen ? 0.75f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.25f : 1.f);
+				float sskew = (insight ? 1.5f : (hasseen ? 1.f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.25f : 1.f);
 				if(b.idle)
 				{
 					d->ai->targyaw = yaw;
@@ -857,6 +857,7 @@ namespace ai
 		}
 		else d->move = d->strafe = 0;
 		d->ai->dontmove = false;
+		d->ai->lastrun = lastmillis;
 		return result;
 	}
 
@@ -990,7 +991,6 @@ namespace ai
             physics::move(d, 1, true);
         }
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
-		if(run) d->lastupdate = lastmillis;
 	}
 
 	void avoid()
