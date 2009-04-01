@@ -2,6 +2,8 @@
 
 #include "engine.h"
 
+extern void glswapbuffers();
+
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false;
 int hasstencil = 0;
 
@@ -1466,7 +1468,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 		draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
 		glPopMatrix();
 
-		if(!restore) SDL_GL_SwapBuffers();
+		if(!restore) glswapbuffers();
 	}
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
@@ -1668,7 +1670,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	SDL_GL_SwapBuffers();
+	glswapbuffers();
 }
 
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
