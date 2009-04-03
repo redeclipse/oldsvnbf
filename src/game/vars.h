@@ -10,12 +10,12 @@ VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 #endif
 
-SVARG(lobbymaps, "eight citadel gladiator refuge rivals smouldering tower warehouse warground vertigo overseer 4square siege exoticbase");
+SVARG(lobbymaps, "eight citadel gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo overseer 4square siege exoticbase");
 SVARG(missionmaps, "mpspbf1 mpspbf2");
-SVARG(mainmaps, "eight citadel gladiator refuge rivals smouldering tower warehouse warground vertigo");
-SVARG(ctfmaps, "citadel gladiator refuge rivals smouldering tower warehouse warground");
+SVARG(mainmaps, "eight citadel gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo");
+SVARG(ctfmaps, "citadel gladiator refuge nova panic rivals smouldering tower warehouse warground");
 SVARG(mctfmaps, "refuge");
-SVARG(stfmaps, "citadel gladiator refuge rivals smouldering tower warehouse warground vertigo");
+SVARG(stfmaps, "citadel gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
