@@ -407,14 +407,17 @@ namespace ctf
 			if(home)
 			{
 				bool guard = false;
-				if(f.owner || regen || targets.empty()) guard = true;
+				if(f.owner || f.droptime || regen || targets.empty()) guard = true;
 				else if(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
-				{ // see if we can relieve someone who only has a plasma
+				{ // see if we can relieve someone who only has a piece of crap
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])) && t->ai && !t->hasweap(t->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
+					loopvk(targets) if((t = world::getclient(targets[k])))
 					{
-						guard = true;
-						break;
+						if((t->ai && !t->hasweap(t->ai->weappref, m_spawnweapon(world::gamemode, world::mutators))) || (!t->ai && t->weapselect == WEAPON_PLASMA))
+						{
+							guard = true;
+							break;
+						}
 					}
 				}
 				if(guard)
