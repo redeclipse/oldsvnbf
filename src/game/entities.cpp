@@ -1576,35 +1576,16 @@ namespace entities
 		loopv(e.links)
 		{
 			int index = e.links[i];
-
 			if(ents.inrange(index))
 			{
 				gameentity &f = *(gameentity *)ents[index];
 				bool both = false;
-
-				loopvj(f.links)
+				loopvj(f.links) if(f.links[j] == idx)
 				{
-					int g = f.links[j];
-					if(ents.inrange(g) && g > idx) // smaller dual links are done already?
-					{
-						gameentity &h = *(gameentity *)ents[g];
-						if(&h == &e)
-						{
-							both = true;
-							break;
-						}
-					}
+					both = true;
+					break;
 				}
-				vec fr(vec(e.o).add(vec(0, 0, RENDERPUSHZ))), dr(vec(f.o).add(vec(0, 0, RENDERPUSHZ)));
-				vec col(1.f, both ? 1.f : 0.0f, 0.f);
-				renderline(fr, dr, col.x, col.y, col.z, false);
-				dr.sub(fr);
-				dr.normalize();
-				float yaw, pitch;
-				vectoyawpitch(dr, yaw, pitch);
-				dr.mul(RENDERPUSHX);
-				dr.add(fr);
-				rendertris(dr, yaw, pitch, 3.f, col.x*2.f, col.y*2.f, col.z*2.f, true, false);
+				part_trace(e.o, f.o, 1.f, 1, both ? 0x888888 : 0x444444);
 			}
 		}
 	}
@@ -1618,22 +1599,22 @@ namespace entities
 			{
 				case MAPSOUND:
 				{
-					renderradius(e.o, e.attr[1], e.attr[1], e.attr[1], false);
-					renderradius(e.o, e.attr[2], e.attr[2], e.attr[2], false);
+					part_radius(e.o, vec(e.attr[1], e.attr[1], e.attr[1]));
+					part_radius(e.o, vec(e.attr[2], e.attr[2], e.attr[2]));
 					break;
 				}
 				case LIGHT:
 				{
 					int s = e.attr[0] ? e.attr[0] : hdr.worldsize;
-					renderradius(e.o, s, s, s, false);
+					part_radius(e.o, vec(s, s, s));
 					break;
 				}
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
-					renderradius(e.o, radius, radius, radius, false);
+					part_radius(e.o, vec(radius, radius, radius));
 					radius *= 0.5f; // ctf pickup dist
-					renderradius(e.o, radius, radius, radius, false);
+					part_radius(e.o, vec(radius, radius, radius));
 					break;
 				}
 				default:
@@ -1641,7 +1622,7 @@ namespace entities
 					float radius = (float)enttype[e.type].radius;
 					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3])
 						radius = (float)e.attr[3];
-					if(radius > 0.f) renderradius(e.o, radius, radius, radius, false);
+					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius));
 					break;
 				}
 			}
@@ -1651,18 +1632,18 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(!level || showentdir >= level) renderdir(e.o, e.attr[0], 0.f, false);
+				if(!level || showentdir >= level) part_dir(e.o, e.attr[0], 0.f, 8.f);
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(!level || showentdir >= level) renderdir(e.o, e.attr[1], e.attr[2], false);
+				if(!level || showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
 				break;
 			}
 			case TELEPORT:
 			case CAMERA:
 			{
-				if(!level || showentdir >= level) renderdir(e.o, e.attr[0], e.attr[1], false);
+				if(!level || showentdir >= level) part_dir(e.o, e.attr[0], e.attr[1], 8.f);
 				break;
 			}
 			case PUSHER:
@@ -1670,9 +1651,10 @@ namespace entities
 				if(!level || showentdir >= level)
 				{
 					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]);
+					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
 					vectoyawpitch(dir, yaw, pitch);
-					renderdir(e.o, yaw, pitch, false);
+					part_dir(e.o, yaw, pitch, 8.f+mag);
 				}
 				break;
 			}
@@ -1680,7 +1662,7 @@ namespace entities
 		}
 
 		if(enttype[e.type].links)
-			if(!level || showentlinks >= level || (e.type == WAYPOINT && dropwaypoints))
+			if(!level || showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6)))
 				renderlinked(e, idx);
 	}
 
@@ -1756,13 +1738,15 @@ namespace entities
 	{
 		if(rendermainview) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(world::gamemode) ? 2 : ((showentdir==3 || showentradius==3 || showentlinks==3) ? 3 : 0));
+			int level = (m_edit(world::gamemode) ? 2 : ((showentdir == 3  || showentradius == 3 || showentlinks == 3 || dropwaypoints || ai::aidebug >= 6) ? 3 : 0));
 			if(level)
             {
             	bool editing = world::player1->state == CS_EDITING;
-                renderprimitive(true);
-                loopv(ents) renderfocus(i, renderentshow(e, i, editing && (entgroup.find(i) >= 0 || enthover == i) ? 1 : level));
-                renderprimitive(false);
+                loopv(ents)
+                {
+                	int lvl = (editing && (entgroup.find(i) >= 0 || enthover == i)) ? 1 : level;
+                	renderfocus(i, renderentshow(e, i, lvl));
+                }
             }
 		}
 

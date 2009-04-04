@@ -743,7 +743,13 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
     else if(showboundingbox && !shadowmapping)
 	{
-		renderprimitive(true);
+		glPushMatrix();
+		notextureshader->set();
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+
 		if(d && showboundingbox==1)
 		{
 			render3dbox(d->o, d->height, d->aboveeye, d->radius);
@@ -758,7 +764,12 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 			center.add(o);
 			render3dbox(center, radius.z, radius.z, radius.x, radius.y);
 		}
-		renderprimitive(false);
+
+		defaultshader->set();
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glPopMatrix();
 	}
 
     vec lightcolor(1, 1, 1), lightdir(0, 0, 1);

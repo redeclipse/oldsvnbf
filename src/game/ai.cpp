@@ -5,7 +5,7 @@ namespace ai
     int updatemillis = 0;
     vec aitarget(0, 0, 0);
 
-	VAR(aidebug, 0, 0, 5);
+	VAR(aidebug, 0, 0, 6);
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
@@ -685,7 +685,7 @@ namespace ai
 				{
 					if(entspot(d, d->ai->route[n], retries > 1))
 					{
-						if(vec(d->ai->spot).sub(world::feetpos(d)).magnitude() <= CLOSEDIST)
+						if(vec(d->ai->spot).sub(world::feetpos(d)).magnitude() <= CLOSEDIST/2.f)
 						{
 							d->ai->dontmove = true;
 							d->ai->route.setsize(0);
@@ -749,8 +749,7 @@ namespace ai
 			d->jumping = true;
 			d->jumptime = lastmillis;
 			if(jump && !d->onladder && !propeller) d->ai->dontmove = true; // going up
-			int seed = 111-d->skill;
-			if(!d->onladder) seed *= 10;
+			int seed = (111-d->skill)*(d->onladder ? 3 : 10);
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed;
 			if(!d->onladder) seed *= 10;
@@ -1107,12 +1106,16 @@ namespace ai
 		part_text(vec(world::abovehead(d)).add(vec(0, 0, above)), s);
 	}
 
-	void drawroute(gameent *d, aistate &b, float amt = 1.f)
+	void drawroute(gameent *d, aistate &b, float amt)
 	{
-		renderprimitive(true);
 		int colour = teamtype[d->team].colour, last = -1;
-		float cr = (colour>>16)/255.f, cg = ((colour>>8)&0xFF)/255.f, cb = (colour&0xFF)/255.f;
-
+		if(aidebug > 4)
+		{
+			vec pos = vec(world::feetpos(d)).add(vec(0, 0, 0.1f));
+			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x00FFFF);
+			if(entities::ents.inrange(d->lastnode)) part_trace(pos, vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0xFF00FF);
+			if(entities::ents.inrange(d->ai->lastnode)) part_trace(pos, vec(entities::ents[d->ai->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0x880088);
+		}
 		loopvrev(d->ai->route)
 		{
 			if(d->ai->route.inrange(last))
@@ -1120,32 +1123,14 @@ namespace ai
 				int index = d->ai->route[i], prev = d->ai->route[last];
 				if(entities::ents.inrange(index) && entities::ents.inrange(prev))
 				{
-					gameentity &e = *(gameentity *)entities::ents[index],
-						&f = *(gameentity *)entities::ents[prev];
-					vec fr(vec(f.o).add(vec(0, 0, 4.f*amt))),
-						dr(vec(e.o).add(vec(0, 0, 4.f*amt)));
-					renderline(fr, dr, cr, cg, cb, false);
-					dr.sub(fr);
-					dr.normalize();
-					float yaw, pitch;
-					vectoyawpitch(dr, yaw, pitch);
-					dr.mul(RENDERPUSHX);
-					dr.add(fr);
-					rendertris(dr, yaw, pitch, 2.f, cr, cg, cb, true, false);
+					gameentity &e = *(gameentity *)entities::ents[index], &f = *(gameentity *)entities::ents[prev];
+					vec fr = f.o, dr = e.o;
+					fr.z += amt; dr.z += amt;
+					part_trace(fr, dr, 1.f, 1, colour);
 				}
 			}
 			last = i;
 		}
-		if(aidebug > 4)
-		{
-			vec pos = world::feetpos(d);
-			if(d->ai->spot != vec(0, 0, 0)) renderline(pos, d->ai->spot, 1.f, 1.f, 1.f, false);
-			if(entities::ents.inrange(d->lastnode))
-				renderline(pos, entities::ents[d->lastnode]->o, 0.f, 1.f, 1.f, false);
-			if(entities::ents.inrange(d->ai->lastnode))
-				renderline(pos, entities::ents[d->ai->lastnode]->o, 1.f, 0.f, 1.f, false);
-		}
-		renderprimitive(false);
 	}
 
 	void render()
@@ -1165,7 +1150,7 @@ namespace ai
 					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
 					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT)
-						drawroute(d, b, float(amt[1])/float(amt[0]));
+						drawroute(d, b, 4.f*(float(amt[1])/float(amt[0])));
 					if(top)
 					{
 						if(aidebug > 2) top = false;
