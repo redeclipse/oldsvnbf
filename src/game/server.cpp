@@ -2674,7 +2674,6 @@ namespace server
         #define QUEUE_FLT(n) QUEUE_BUF(4, putfloat(buf, n))
         #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
 
-		static gameevent dummyevent;
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen)
 		{
