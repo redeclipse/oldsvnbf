@@ -179,6 +179,9 @@ enum
     PT_FLARE,
     PT_PORTAL,
     PT_ICON,
+    PT_LINE,
+    PT_TRIANGLE,
+    PT_ELLIPSE,
 
     PT_MOD		= 1<<8,
     PT_RND4		= 1<<9,		// uses random image quarters
@@ -198,6 +201,7 @@ enum
 {
     PART_TELEPORT = 0,
     PART_ICON, PART_ICON_RISE,
+    PART_LINE, PART_TRIANGLE, PART_ELLIPSE,
     PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
     PART_SMOKE_LERP, PART_SMOKE_LERP_SRISE, PART_SMOKE_LERP_SRISE_SOFT, PART_SMOKE_LERP_FRISE, PART_SMOKE_LERP_SINK,
@@ -215,7 +219,6 @@ enum
     PART_FLAME, PART_FLAME_LENS, PART_FLAME_SLENS,
     PART_SFLARE, PART_FFLARE,
     PART_MUZZLE_FLASH, PART_MUZZLE_FLASH_LENS, PART_MUZZLE_FLASH_SLENS,
-    PART_LINE,
     PART_SNOW,
     PART_TEXT, PART_TEXT_RISE, PART_TEXT_ONTOP,
     PART_METER, PART_METER_VS,
@@ -259,6 +262,12 @@ extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt 
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
 extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
 extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int fade = 1, int color = 0xFFFFFF, int type = PART_ICON);
+extern void part_line(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int type = PART_LINE);
+extern void part_triangle(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true, int type = PART_TRIANGLE);
+extern void part_dir(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0x0000FF, bool fill = true);
+extern void part_trace(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true);
+extern void part_ellipse(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int axis = 0, bool fill = false, int type = PART_ELLIPSE);
+extern void part_radius(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0x00FFFF, bool fill = false);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;

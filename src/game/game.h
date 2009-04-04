@@ -1267,6 +1267,7 @@ namespace ai
 	const float VIEWMAX			= 150.f;							// maximum field of view
 
 	extern vec aitarget;
+	extern int aidebug;
 
 	extern float viewdist(int x = 101);
 	extern float viewfieldx(int x = 101);

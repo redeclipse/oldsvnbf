@@ -647,9 +647,6 @@ extern int getmaprevision();
 extern char *getmaptitle();
 
 // rendergl
-#define RENDERPUSHX			8.0f
-#define RENDERPUSHZ			0.1f
-
 extern int dynentsize, axfps, lastmillis, totalmillis;
 extern float hudblend;
 extern int watercolour, lavacolour;
@@ -660,14 +657,7 @@ extern void project(float fovy, float aspect, int farplane, bool flipx = false, 
 extern void transplayer();
 
 extern void usetexturing(bool on);
-extern void renderprimitive(bool on);
-extern void renderline(vec &fr, vec &to, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
-extern void rendertris(vec &fr, float yaw, float pitch, float size = 1.f, float r = 255.f, float g = 255.f, float b = 255.f, bool fill = true, bool nf = false);
-extern void renderlineloop(vec &o, float xradius, float yradius, float zradius, float z = 0.f, int type = 0, float r = 255.f, float g = 255.f, float b = 255.f, bool nf = false);
-extern void renderdir(vec &o, float yaw, float pitch, bool nf = true);
-extern void renderradius(vec &o, float xradius, float yradius, float zradius, bool nf = true);
 
-extern bool rendericon(const char *icon, int x, int y, int xs = 120, int ys = 120);
 #define rendermainview (!shadowmapping && !envmapping && !reflecting && !refracting)
 #define renderatopview (glaring)
 #define rendernormally (rendermainview || renderatopview)
