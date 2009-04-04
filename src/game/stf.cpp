@@ -194,19 +194,16 @@ namespace stf
 			stfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = !overctfhealth || d->health >= overctfhealth;
-			if(regen)
-			{
-				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
-				gameent *e = NULL;
-				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-				{ // try to guess what non ai are doing
-					vec ep = world::feetpos(e);
-					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
-						targets.add(e->clientnum);
-				}
+			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
+			gameent *e = NULL;
+			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+			{ // try to guess what non ai are doing
+				vec ep = world::feetpos(e);
+				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+					targets.add(e->clientnum);
 			}
-			if(regen || (targets.empty() && (f.owner != d->team || f.enemy)))
+			if((!regen && f.owner == d->team) || (targets.empty() && (f.owner != d->team || f.enemy)))
 			{
 				interest &n = interests.add();
 				n.state = AI_S_DEFEND;
@@ -223,7 +220,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			bool regen = !overctfhealth || d->health >= overctfhealth;
+			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
 			if(regen && !f.enemy && f.owner == d->team)
 			{
 				d->ai->clear = true; // re-evaluate
