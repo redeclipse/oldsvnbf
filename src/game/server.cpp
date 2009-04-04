@@ -228,7 +228,6 @@ namespace server
 		vector<gameevent *> events;
 		vector<uchar> position, messages;
         int posoff, msgoff, msglen;
-        vector<clientinfo *> targets;
         uint authreq;
         string authname;
 
@@ -246,7 +245,6 @@ namespace server
 			mapvote[0] = 0;
 			state.reset(change);
 			events.deletecontentsp();
-            targets.setsizenodelete(0);
             timesync = false;
             lastevent = gameoffset = lastvote = 0;
 			team = TEAM_NEUTRAL;
