@@ -968,14 +968,6 @@
 			<Option target="client-prof" />
 			<Option target="server-dbg" />
 		</Unit>
-		<Unit filename="shared\crypto.h">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="server" />
-			<Option target="genkey" />
-			<Option target="client-prof" />
-			<Option target="server-dbg" />
-		</Unit>
 		<Unit filename="shared\cube.h">
 			<Option compile="1" />
 			<Option weight="0" />

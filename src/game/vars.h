@@ -67,7 +67,7 @@ FVARG(botscale, 0, 1.f, 1000);
 FVARG(botratio, 0, 1.f, 1000);
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 100, 101);
-VARG(botlimit, 0, MAXBOTS, MAXBOTS);
+VARG(botlimit, 0, 16, MAXBOTS);
 
 FVARG(damagescale, 0, 1.f, 1000);
 FVARG(gravityscale, 0, 1.f, 1000);
