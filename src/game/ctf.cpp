@@ -392,22 +392,19 @@ namespace ctf
 			ctfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool home = isctfhome(f, d->team), regen = !overctfhealth || d->health >= overctfhealth;
-			if(!home || regen)
-			{
-				ai::checkothers(targets, d, home ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
-				gameent *e = NULL;
-				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-				{ // try to guess what non ai are doing
-					vec ep = world::feetpos(e);
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-						targets.add(e->clientnum);
-				}
+			bool home = isctfhome(f, d->team), regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			ai::checkothers(targets, d, home ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
+			gameent *e = NULL;
+			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+			{ // try to guess what non ai are doing
+				vec ep = world::feetpos(e);
+				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+					targets.add(e->clientnum);
 			}
 			if(home)
 			{
 				bool guard = false;
-				if(f.owner || f.droptime || regen || targets.empty()) guard = true;
+				if(f.owner || f.droptime || targets.empty()) guard = true;
 				else if(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
 				{ // see if we can relieve someone who only has a piece of crap
 					gameent *t;
@@ -480,7 +477,7 @@ namespace ctf
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			bool walk = false, regen = !overctfhealth || d->health >= overctfhealth;
+			bool walk = false, regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
 			if(regen && lastmillis-b.millis >= (201-d->skill)*100)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
