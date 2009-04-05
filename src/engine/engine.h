@@ -76,6 +76,16 @@ extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC	glFramebufferTexture2D_;
 extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_;
 extern PFNGLGENERATEMIPMAPEXTPROC		  glGenerateMipmap_;
 
+// GL_EXT_framebuffer_blit
+#ifndef GL_EXT_framebuffer_blit
+#define GL_READ_FRAMEBUFFER_EXT           0x8CA8
+#define GL_DRAW_FRAMEBUFFER_EXT           0x8CA9
+#define GL_DRAW_FRAMEBUFFER_BINDING_EXT   0x8CA6
+#define GL_READ_FRAMEBUFFER_BINDING_EXT   0x8CAA
+typedef void (APIENTRYP PFNGLBLITFRAMEBUFFEREXTPROC) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
+#endif
+extern PFNGLBLITFRAMEBUFFEREXTPROC         glBlitFramebuffer_;
+
 // GL_EXT_draw_range_elements
 extern PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_;
 
@@ -203,7 +213,7 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB;
 extern int hasstencil;
 
 extern bool envmapping, renderedgame;
@@ -489,6 +499,7 @@ extern int compresslevel, imageformat;
 extern void pushevent(const SDL_Event &e);
 extern bool interceptkey(int sym);
 extern void getfps(int &fps, int &bestdiff, int &worstdiff);
+extern void swapbuffers();
 
 // menu
 #define GUI_TITLE_COLOR  0xFFDD88
@@ -682,6 +693,12 @@ extern bool loadblendmap(stream *f);
 extern void saveblendmap(stream *f);
 extern uchar shouldsaveblendmap();
 
+// recorder
+namespace recorder
+{
+    void stop();
+    void capture();
+}
 #endif // STANDALONE
 
 #endif

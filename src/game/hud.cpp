@@ -23,6 +23,11 @@ namespace hud
 	VARP(teamkillnum, 0, 5, INT_MAX-1);
 	VARP(teamkilltime, 0, 30, INT_MAX-1);
 
+	TVAR(underlaytex, "", 3);
+	FVARP(underlayblend, 0, 0.5f, 1);
+	TVAR(overlaytex, "", 3);
+	FVARP(overlayblend, 0, 0.5f, 1);
+
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
@@ -613,6 +618,14 @@ namespace hud
 			popfont();
 		}
 
+		Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
+		if(t != notexture)
+		{
+			glBindTexture(GL_TEXTURE_2D, t->id);
+			glColor4f(1.f, 1.f, 1.f, overlayblend*hudblend);
+			drawtex(0, 0, hudwidth, hudsize);
+		}
+
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
 		glDisable(GL_BLEND);
@@ -1047,10 +1060,13 @@ namespace hud
 
 		if(pc > 0.f)
 		{
-			Texture *t = textureload(damagetex, 3);
-			glBindTexture(GL_TEXTURE_2D, t->id);
-			glColor4f(1.f, 1.f, 1.f, pc*blend*damageblend);
-			drawtex(0, 0, w, h);
+			Texture *t = *damagetex ? textureload(damagetex, 3) : notexture;
+			if(t != notexture)
+			{
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, pc*blend*damageblend);
+				drawtex(0, 0, w, h);
+			}
 		}
 	}
 
@@ -1141,6 +1157,14 @@ namespace hud
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
+
+		Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
+		if(t != notexture)
+		{
+			glBindTexture(GL_TEXTURE_2D, t->id);
+			glColor4f(1.f, 1.f, 1.f, underlayblend*hudblend);
+			drawtex(0, 0, ox, oy);
+		}
 
 		if(secs < titlecard)
 		{

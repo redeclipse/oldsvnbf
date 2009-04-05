@@ -2,14 +2,12 @@
 
 #include "engine.h"
 
-extern void glswapbuffers();
-
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false;
 int hasstencil = 0;
 
 VAR(renderpath, 1, 0, 0);
 
-// GL_ARB_vertex_buffer_object
+// GL_ARB_vertex_buffer_object, GL_ARB_pixel_buffer_object
 PFNGLGENBUFFERSARBPROC       glGenBuffers_       = NULL;
 PFNGLBINDBUFFERARBPROC       glBindBuffer_       = NULL;
 PFNGLMAPBUFFERARBPROC        glMapBuffer_        = NULL;
@@ -64,6 +62,9 @@ PFNGLFRAMEBUFFERTEXTURE2DEXTPROC	glFramebufferTexture2D_	= NULL;
 PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_ = NULL;
 PFNGLGENERATEMIPMAPEXTPROC		  glGenerateMipmap_		  = NULL;
 
+// GL_EXT_framebuffer_blit
+PFNGLBLITFRAMEBUFFEREXTPROC         glBlitFramebuffer_         = NULL;
+
 // GL_ARB_shading_language_100, GL_ARB_shader_objects, GL_ARB_fragment_shader, GL_ARB_vertex_shader
 PFNGLCREATEPROGRAMOBJECTARBPROC		glCreateProgramObject_	  = NULL;
 PFNGLDELETEOBJECTARBPROC			  glDeleteObject_			 = NULL;
@@ -111,11 +112,13 @@ VAR(ati_texgen_bug, 0, 0, 1);
 VAR(ati_oq_bug, 0, 0, 1);
 VAR(ati_minmax_bug, 0, 0, 1);
 VAR(ati_dph_bug, 0, 0, 1);
+VAR(ati_fboblit_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(nvidia_scissor_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
 VAR(apple_ff_bug, 0, 0, 1);
 VAR(apple_vp_bug, 0, 0, 1);
+VAR(sdl_backingstore_bug, -1, 0, 1);
 VAR(intel_quadric_bug, 0, 0, 1);
 VAR(mesa_program_bug, 0, 0, 1);
 VAR(avoidshaders, 1, 0, 0);
@@ -145,12 +148,13 @@ void gl_checkextensions()
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
     const char *version = (const char *)glGetString(GL_VERSION);
-    conoutf("\fmrenderer: %s (%s)", renderer, vendor);
-    conoutf("\fmdriver: %s", version);
+    conoutf("\fmRenderer: %s (%s)", renderer, vendor);
+    conoutf("\fmDriver: %s", version);
 
 #ifdef __APPLE__
     extern int mac_osversion();
     int osversion = mac_osversion();  /* 0x1050 = 10.5 (Leopard) */
+    sdl_backingstore_bug = -1;
 #endif
 
     //extern int shaderprecision;
@@ -182,6 +186,19 @@ void gl_checkextensions()
 
     if(strstr(exts, "GL_ARB_vertex_buffer_object"))
     {
+        hasVBO = true;
+        if(dbgexts) conoutf("\frUsing GL_ARB_vertex_buffer_object extension.");
+    }
+    else conoutf("\frWARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
+
+    if(strstr(exts, "GL_ARB_pixel_buffer_object"))
+    {
+        hasPBO = true;
+        if(dbgexts) conoutf("\frUsing GL_ARB_pixel_buffer_object extension.");
+    }
+
+    if(hasVBO || hasPBO)
+    {
         glGenBuffers_       = (PFNGLGENBUFFERSARBPROC)      getprocaddress("glGenBuffersARB");
         glBindBuffer_       = (PFNGLBINDBUFFERARBPROC)      getprocaddress("glBindBufferARB");
         glMapBuffer_        = (PFNGLMAPBUFFERARBPROC)       getprocaddress("glMapBufferARB");
@@ -190,10 +207,7 @@ void gl_checkextensions()
         glBufferSubData_    = (PFNGLBUFFERSUBDATAARBPROC)   getprocaddress("glBufferSubDataARB");
         glDeleteBuffers_    = (PFNGLDELETEBUFFERSARBPROC)   getprocaddress("glDeleteBuffersARB");
         glGetBufferSubData_ = (PFNGLGETBUFFERSUBDATAARBPROC)getprocaddress("glGetBufferSubDataARB");
-        hasVBO = true;
-        if(dbgexts) conoutf("\frUsing GL_ARB_vertex_buffer_object extension.");
     }
-    else conoutf("\frWARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
 
     if(strstr(exts, "GL_EXT_draw_range_elements"))
     {
@@ -223,7 +237,11 @@ void gl_checkextensions()
         smoothshadowmappeel = 1;
     }
 
-    if(strstr(exts, "GL_NV_float_buffer")) hasNVFB = true;
+    if(strstr(exts, "GL_NV_float_buffer")) 
+    {
+        hasNVFB = true;
+        if(dbgexts) conoutf("\frUsing GL_NV_float_buffer extension.");
+    }
 
     if(strstr(exts, "GL_EXT_framebuffer_object"))
     {
@@ -240,6 +258,14 @@ void gl_checkextensions()
         glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
         hasFBO = true;
         if(dbgexts) conoutf("\frUsing GL_EXT_framebuffer_object extension.");
+
+        if(strstr(exts, "GL_EXT_framebuffer_blit"))
+        {
+            glBlitFramebuffer_     = (PFNGLBLITFRAMEBUFFEREXTPROC)        getprocaddress("glBlitFramebufferEXT");
+            hasFBB = true;
+			if(strstr(vendor, "ATI")) ati_fboblit_bug = 1;
+            if(dbgexts) conoutf("\frUsing GL_EXT_framebuffer_blit extension.");
+        }
     }
     else conoutf("\frWARNING: No framebuffer object support. (reflective water may be slow)");
 
@@ -547,6 +573,19 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 	glCullFace(GL_FRONT);
 	glDisable(GL_CULL_FACE);
 
+#ifdef __APPLE__
+    if(sdl_backingstore_bug)
+    {
+        if(fsaa)
+        {
+            sdl_backingstore_bug = 1;
+            // since SDL doesn't add kCGLPFABackingStore to the pixelformat and so it isn't guaranteed to be preserved - only manifests when using fsaa?
+            //conoutf(CON_WARN, "WARNING: Using SDL backingstore workaround. (use \"/sdl_backingstore_bug 0\" to disable if unnecessary)");
+        }
+        else sdl_backingstore_bug = -1;
+    }
+#endif
+
     extern int useshaders;
     if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasVP || !hasFP)
     {
@@ -633,14 +672,16 @@ void vectocursor(vec &v, float &x, float &y, float &z)
 	z = screenpos.z/screenpos.w*0.5f + 0.5f;
 }
 
+FVAR(nearplane, 1e-3f, 0.54f, 1e3f);
+
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy, float zscale)
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if(swapxy) glRotatef(90, 0, 0, 1);
     if(flipx || flipy!=swapxy || zscale!=1) glScalef(flipx ? -1 : 1, flipy!=swapxy ? -1 : 1, zscale);
-    GLdouble ydist = 0.54 * tan(fovy/2*RAD), xdist = ydist * aspect;
-    glFrustum(-xdist, xdist, -ydist, ydist, 0.54, farplane);
+    GLdouble ydist = nearplane * tan(fovy/2*RAD), xdist = ydist * aspect;
+    glFrustum(-xdist, xdist, -ydist, ydist, nearplane, farplane);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -985,6 +1026,7 @@ void renderavatar(bool early)
 extern void viewproject(float zscale = 1);
 
 VARP(skyboxglare, 0, 1, 1);
+FVAR(firstpersondepth, 0, 0.5f, 1);
 
 void drawglare()
 {
@@ -1017,7 +1059,7 @@ void drawglare()
     if(world::isthirdperson()) renderavatar(false);
     else
     {
-        viewproject(0.5f);
+        viewproject(firstpersondepth);
         renderavatar(false);
         viewproject();
     }
@@ -1468,7 +1510,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 		draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
 		glPopMatrix();
 
-		if(!restore) glswapbuffers();
+		if(!restore) swapbuffers();
 	}
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
@@ -1670,7 +1712,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	glswapbuffers();
+	swapbuffers();
 }
 
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;

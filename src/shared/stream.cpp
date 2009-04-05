@@ -332,7 +332,7 @@ SDL_RWops *stream::rwops()
 
 long stream::size()
 {
-    int pos = tell(), endpos;
+    long pos = tell(), endpos;
     if(pos < 0 || !seek(0, SEEK_END)) return -1;
     endpos = tell();
     return pos == endpos || seek(pos, SEEK_SET) ? endpos : -1;

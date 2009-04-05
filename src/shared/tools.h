@@ -103,7 +103,7 @@ static inline T min(T a, T b)
 #define MAXSTRLEN 512 // must be at least 512 bytes to comply with rfc1459
 typedef char string[MAXSTRLEN];
 
-inline void formatstring(char *d, const char *fmt, va_list v) { _vsnprintf(d, MAXSTRLEN, fmt, v); d[MAXSTRLEN-1] = 0; }
+inline void formatstring(char *d, const char *fmt, va_list v, int len = MAXSTRLEN) { _vsnprintf(d, len, fmt, v); d[len-1] = 0; }
 inline char *s_strncpy(char *d, const char *s, size_t m) { strncpy(d,s,m); d[m-1] = 0; return d; }
 inline char *s_strcpy(char *d, const char *s) { return s_strncpy(d,s,MAXSTRLEN); }
 inline char *s_strcat(char *d, const char *s) { size_t n = strlen(d); return s_strncpy(d+n,s,MAXSTRLEN-n); }
@@ -605,10 +605,9 @@ template <class T, int SIZE> struct ringbuf
 
     T &add(const T &e)
     {
-        T &t = data[index];
-        t = e;
+        T &t = (data[index] = e);
         index++;
-        if(index>=SIZE) index = 0;
+        if(index >= SIZE) index -= SIZE;
         if(len<SIZE) len++;
         return t;
     }
@@ -617,20 +616,52 @@ template <class T, int SIZE> struct ringbuf
 
     T &operator[](int i)
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
     }
 
     const T &operator[](int i) const
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
+    }
+};
+
+template <class T, int SIZE> struct queue
+{
+    int head, tail, len;
+    T data[SIZE];
+    
+    queue() { clear(); }
+    
+    void clear() { head = tail = len = 0; }
+
+    int length() const { return len; }
+    bool empty() const { return !len; }
+    bool full() const { return len == SIZE; }
+
+    T &added() { return data[tail > 0 ? tail-1 : SIZE-1]; }
+    T &added(int offset) { return data[tail-offset > 0 ? tail-offset-1 : tail-offset-1 + SIZE]; }
+    T &adding() { return data[tail]; }
+    T &adding(int offset) { return data[tail+offset >= SIZE ? tail+offset - SIZE : tail+offset]; }
+    T &add()
+    {
+        ASSERT(len < SIZE);    
+        T &t = data[tail];
+        tail = (tail + 1)%SIZE;
+        len++;
+        return t;
+    }
+
+    T &removing() { return data[head]; }
+    T &removing(int offset) { return data[head+offset >= SIZE ? head+offset - SIZE : head+offset]; }
+    T &remove()
+    {
+        ASSERT(len > 0);
+        T &t = data[head];
+        head = (head + 1)%SIZE;
+        len--;
+        return t;
     }
 };
 
