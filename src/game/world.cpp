@@ -1685,21 +1685,11 @@ namespace world
 		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
 			vec pos = world::abovehead(d);
-			if(shownamesabovehead > (d != player1 ? 0 : 1))
-			{
-				part_text(pos, colorname(d, NULL, "@"));
-				pos.add(vec(0, 0, 2.f));
-			}
+			if(shownamesabovehead > (d != player1 ? 0 : 1)) part_text(pos, colorname(d, NULL, "@"));
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
-			{
-                part_icon(pos, textureload(conopentex, 3), statusaboveheadblend, 2);
-				pos.add(vec(0, 0, 2.f));
-			}
+                part_icon(pos.add(vec(0, 0, 2.f)), textureload(conopentex, 3), statusaboveheadblend, 2);
 		}
-		if(showweap)
-		{ // we could probably animate the vwep too now..
-            a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0);
-		}
+		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
 		if(third)
 		{
 			if(m_ctf(gamemode))
