@@ -601,11 +601,15 @@ void consolekey(int code, bool isdown, int cooked)
                 break;
 
             case SDLK_f:
-                if(SDL_GetModState()&MOD_KEYS) { cooked = '\f'; return; }
+                if(SDL_GetModState()&MOD_KEYS) cooked = '\f';
                 // fall through
 
             case SDLK_v:
-                if(SDL_GetModState()&MOD_KEYS) { pasteconsole(); return; }
+                if(SDL_GetModState()&MOD_KEYS)
+                {
+                	pasteconsole();
+                	break;
+				}
                 // fall through
 
             default:
