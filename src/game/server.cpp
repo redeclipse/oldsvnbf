@@ -818,7 +818,9 @@ namespace server
 		string st;
 		filtertext(st, str);
 		ircoutf(r, "%s", st);
-		console("%s", st);
+#ifdef STANDALONE
+		printf("%s\n", st);
+#endif
 	}
 
 	void srvmsgf(int cn, const char *s, ...)
