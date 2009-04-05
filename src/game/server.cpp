@@ -1485,87 +1485,91 @@ namespace server
 		ident *id = idents->access(cmdname);
 		if(id && id->flags&IDF_SERVER)
 		{
-			if(varslock >= 2) srvmsgf(ci->clientnum, "\frvariables on this server are locked");
-			else if(haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true))
+			string val; val[0] = 0;
+			switch(id->type)
 			{
-				string val; val[0] = 0;
-				switch(id->type)
+				case ID_COMMAND:
 				{
-					case ID_COMMAND:
+					if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					string s;
+					if(nargs <= 1 || !arg) s_sprintf(s)("sv_%s", cmd);
+					else s_sprintf(s)("sv_%s %s", cmd, arg);
+					char *ret = executeret(s);
+					if(ret)
 					{
-						string s;
-						if(nargs <= 1 || !arg) s_sprintf(s)("sv_%s", cmd);
-						else s_sprintf(s)("sv_%s %s", cmd, arg);
-						char *ret = executeret(s);
-						if(ret)
-						{
-							if(*ret) srvoutf(3, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
-							delete[] ret;
-						}
+						if(*ret) srvoutf(3, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
+						delete[] ret;
+					}
+					return;
+				}
+				case ID_VAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
 						return;
 					}
-					case ID_VAR:
+					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					if(id->maxval < id->minval)
 					{
-						if(nargs <= 1 || !arg)
-						{
-							srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
-							return;
-						}
-						if(id->maxval < id->minval)
-						{
-							srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
-							return;
-						}
-						int ret = atoi(arg);
-						if(ret < id->minval || ret > id->maxval)
-						{
-							srvmsgf(ci->clientnum,
-								id->flags&IDF_HEX ?
-                                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
-                                    "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
-							return;
-						}
-                        *id->storage.i = ret;
-                        id->changed();
-                        s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
-						break;
+						srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
+						return;
 					}
-					case ID_FVAR:
+					int ret = atoi(arg);
+					if(ret < id->minval || ret > id->maxval)
 					{
-						if(nargs <= 1 || !arg)
-						{
-							srvmsgf(ci->clientnum, "\fm%s = %s", cmd, floatstr(*id->storage.f));
-							return;
-						}
-						float ret = atof(arg);
-						if(ret < id->minvalf || ret > id->maxvalf)
-						{
-							srvmsgf(ci->clientnum, "\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
-							return;
-						}
-                        *id->storage.f = ret;
-                        id->changed();
-                        s_sprintf(val)("%s", floatstr(*id->storage.f));
-						break;
+						srvmsgf(ci->clientnum,
+							id->flags&IDF_HEX ?
+								(id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
+								"\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
+						return;
 					}
-					case ID_SVAR:
-					{
-						if(nargs <= 1 || !arg)
-						{
-							srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
-							return;
-						}
-						delete[] *id->storage.s;
-                        *id->storage.s = newstring(arg);
-                        id->changed();
-                        s_sprintf(val)("%s", *id->storage.s);
-						break;
-					}
-					default: return;
+					*id->storage.i = ret;
+					id->changed();
+					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					break;
 				}
-				sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, &id->name[3], val);
-				relayf(3, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
+				case ID_FVAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						srvmsgf(ci->clientnum, "\fm%s = %s", cmd, floatstr(*id->storage.f));
+						return;
+					}
+					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					float ret = atof(arg);
+					if(ret < id->minvalf || ret > id->maxvalf)
+					{
+						srvmsgf(ci->clientnum, "\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
+						return;
+					}
+					*id->storage.f = ret;
+					id->changed();
+					s_sprintf(val)("%s", floatstr(*id->storage.f));
+					break;
+				}
+				case ID_SVAR:
+				{
+					if(nargs <= 1 || !arg)
+					{
+						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
+						return;
+					}
+					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					delete[] *id->storage.s;
+					*id->storage.s = newstring(arg);
+					id->changed();
+					s_sprintf(val)("%s", *id->storage.s);
+					break;
+				}
+				default: return;
 			}
+			sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, &id->name[3], val);
+			relayf(3, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
