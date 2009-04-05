@@ -24,8 +24,10 @@ namespace hud
 	VARP(teamkilltime, 0, 30, INT_MAX-1);
 
 	TVAR(underlaytex, "", 3);
+	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
 	FVARP(underlayblend, 0, 0.5f, 1);
 	TVAR(overlaytex, "", 3);
+	VARP(overlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
 	FVARP(overlayblend, 0, 0.5f, 1);
 
 	VARP(titlecard, 0, 5000, 10000);
@@ -618,12 +620,15 @@ namespace hud
 			popfont();
 		}
 
-		Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
-		if(t != notexture)
+		if(overlaydisplay >= 2 || (world::player1->state == CS_ALIVE && (overlaydisplay || !world::isthirdperson())))
 		{
-			glBindTexture(GL_TEXTURE_2D, t->id);
-			glColor4f(1.f, 1.f, 1.f, overlayblend*hudblend);
-			drawtex(0, 0, hudwidth, hudsize);
+			Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
+			if(t != notexture)
+			{
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, overlayblend*hudblend);
+				drawtex(0, 0, hudwidth, hudsize);
+			}
 		}
 
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
@@ -1158,12 +1163,15 @@ namespace hud
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
-		Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
-		if(t != notexture)
+		if(underlaydisplay >= 2 || (world::player1->state == CS_ALIVE && (underlaydisplay || !world::isthirdperson())))
 		{
-			glBindTexture(GL_TEXTURE_2D, t->id);
-			glColor4f(1.f, 1.f, 1.f, underlayblend*hudblend);
-			drawtex(0, 0, ox, oy);
+			Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
+			if(t != notexture)
+			{
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, underlayblend*hudblend);
+				drawtex(0, 0, ox, oy);
+			}
 		}
 
 		if(secs < titlecard)
