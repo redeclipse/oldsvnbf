@@ -132,6 +132,7 @@ namespace world
 		if(inzoom()) return false;
 		return true;
 	}
+	ICOMMAND(inthirdperson, "", (), intret(isthirdperson() ? 1 : 0));
 
 	int mousestyle()
 	{
