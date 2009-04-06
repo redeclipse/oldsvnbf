@@ -145,8 +145,24 @@ void texcopy(ImageData &s, ImageData &d)
     texcrop(s, d, 0, 0, s.w, s.h);
 }
 
+void forcergbimage(ImageData &s)
+{
+    if(s.bpp >= 3) return;
+    ImageData d(s.w, s.h, 3);
+    uchar *src = s.data, *dst = d.data;
+    loopi(s.w*s.h)
+    {
+        loopk(s.bpp) *dst++ = *src++;
+        loopk(3-s.bpp) *dst++ = src[-1];
+    }
+    s.replace(d);
+}
+
 void texmad(ImageData &s, const vec &mul, const vec &add)
 {
+    if(s.bpp < 3 && (mul.x!=mul.y || mul.x!=mul.z || add.x!=add.y || add.x!=add.z))
+        forcergbimage(s);
+
     int maxk = min(int(s.bpp), 3);
     uchar *src = s.data;
     loopi(s.h*s.w)
