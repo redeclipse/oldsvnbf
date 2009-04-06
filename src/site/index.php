@@ -4,7 +4,7 @@
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitedonate'] = "<div id=\"right\"><form action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\"><input type=\"hidden\" name=\"cmd\" value=\"_s-xclick\"><input type=\"hidden\" name=\"hosted_button_id\" value=\"212900\"><input type=\"image\" src=\"https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif\" name=\"submit\" alt=\"Donate to Quin\"></form></div>";
-	$app['sitenotice'] = "We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves has been struggling with chronic illness and failing hardware for many years, your <u>donation</u> can improve the quality of his life. Please consider being generous, and make sure he can keep doing this important task!";
+	$app['sitenotice'] = "We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves is unemployed and struggles with chronic illness, despite this he continues to work effortlessly on this project. Your <u>donation</u> can improve the quality of his life; please consider being generous, and make sure he can keep doing this important task!";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitelogo'] = "/bits/logo.png";
@@ -21,7 +21,7 @@
 	$app['ircsetup'] = "bloodfrontier";
 
 	$app['deftarg'] = "home";
-	$app['defsearch'] = "(Blood+Frontier)";
+	$app['defsearch'] = "%22Blood%20Frontier%22";
 
 	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'nav' => 0, 'redir' => 0));
 	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'nav' => 1, 'redir' => 1);
