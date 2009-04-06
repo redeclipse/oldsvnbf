@@ -44,14 +44,9 @@ namespace ai
 
 	vec getaimpos(gameent *d, gameent *e)
 	{
-		if(d->skill <= 100)
-		{
-			static vec apos;
-			apos = world::headpos(e);
-			apos.z -= e->height*(1.f/float(d->skill));
-			return apos;
-		}
-		return world::headpos(e);
+		vec o = world::headpos(e);
+		if(d->skill <= 100) o.z -= e->height*(1.f/float(d->skill));
+		return o;
 	}
 
 	void create(gameent *d)
@@ -412,7 +407,7 @@ namespace ai
 		return false;
 	}
 
-	void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir)
+	void damaged(gameent *d, gameent *e)
 	{
 		if(d->ai && world::allowmove(d) && targetable(d, e, true)) // see if this ai is interested in a grudge
 		{
@@ -451,7 +446,7 @@ namespace ai
 		if(d->ai) setup(d, false);
 	}
 
-	void killed(gameent *d, gameent *e, int weap, int flags, int damage)
+	void killed(gameent *d, gameent *e)
 	{
 		if(d->ai) d->ai->reset();
 	}

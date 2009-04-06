@@ -467,7 +467,7 @@ namespace world
 						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
 				}
 			}
-			ai::damaged(d, actor, weap, flags, damage, health, millis, dir);
+			ai::damaged(d, actor);
 		}
 		if(d == player1 || d->ai)
 		{
@@ -661,7 +661,7 @@ namespace world
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
 			hud::teamkills.add(lastmillis);
-		ai::killed(d, actor, weap, flags, damage);
+		ai::killed(d, actor);
 	}
 
 	void timeupdate(int timeremain)
