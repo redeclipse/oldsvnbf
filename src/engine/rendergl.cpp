@@ -112,7 +112,6 @@ VAR(ati_texgen_bug, 0, 0, 1);
 VAR(ati_oq_bug, 0, 0, 1);
 VAR(ati_minmax_bug, 0, 0, 1);
 VAR(ati_dph_bug, 0, 0, 1);
-VAR(ati_fboblit_bug, 0, 0, 1);
 VAR(nvidia_texgen_bug, 0, 0, 1);
 VAR(nvidia_scissor_bug, 0, 0, 1);
 VAR(apple_glsldepth_bug, 0, 0, 1);
@@ -263,7 +262,6 @@ void gl_checkextensions()
         {
             glBlitFramebuffer_     = (PFNGLBLITFRAMEBUFFEREXTPROC)        getprocaddress("glBlitFramebufferEXT");
             hasFBB = true;
-			if(strstr(vendor, "ATI")) ati_fboblit_bug = 1;
             if(dbgexts) conoutf("\frUsing GL_EXT_framebuffer_blit extension.");
         }
     }
