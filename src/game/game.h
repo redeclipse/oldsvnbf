@@ -407,11 +407,12 @@ enum
 	G_M_DUEL	= 1<<3,
 	G_M_LMS		= 1<<4,
 	G_M_PAINT	= 1<<5,
-	G_M_DM		= G_M_INSTA|G_M_PAINT,
-	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT,
-	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_DUEL|G_M_LMS,
+	G_M_VAMP	= 1<<6,
+	G_M_DM		= G_M_INSTA|G_M_PAINT|G_M_VAMP,
+	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_VAMP,
+	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_PAINT|G_M_VAMP,
 };
-#define G_M_NUM 6
+#define G_M_NUM 7
 
 struct gametypes
 {
@@ -433,6 +434,7 @@ gametypes gametype[] = {
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man" },
 	{ G_M_PAINT,		G_M_ALL,				G_M_PAINT,				"paintball" },
+	{ G_M_VAMP,			G_M_ALL,				G_M_VAMP,				"vampire" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -458,6 +460,7 @@ extern gametypes gametype[], mutstype[];
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
 #define m_paint(a,b)		((b & G_M_PAINT) || (gametype[a].implied & G_M_PAINT))
+#define m_vamp(a,b)			((b & G_M_VAMP) || (gametype[a].implied & G_M_VAMP))
 
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
