@@ -40,7 +40,11 @@ VARP(verbose, 0, 0, 6);
 #endif
 SVAR(game, "bfa");
 
+#ifdef STANDALONE
+int servertype = 3;
+#else
 VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
+#endif
 VAR(serveruprate, 0, 0, INT_MAX-1);
 VAR(serverclients, 1, 6, MAXCLIENTS);
 VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
@@ -657,7 +661,9 @@ void setupserver()
 	if(!serverhost)
 	{
 		conoutf("\frcould not create server socket");
+#ifndef STANDALONE
 		setvar("servertype", 0);
+#endif
 		return;
 	}
 	loopi(serverclients) serverhost->peers[i].data = NULL;
@@ -672,8 +678,10 @@ void setupserver()
 	if(pongsock == ENET_SOCKET_NULL)
 	{
 		conoutf("\frcould not create server info socket, publicity disabled");
+#ifndef STANDALONE
 		setvar("servertype", 1);
-	}
+#endif
+		}
 	else
 	{
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
@@ -722,7 +730,9 @@ bool serveroption(char *opt)
 				case 'i': setsvar("serverip", opt+3); return true;
 				case 'm': setsvar("servermaster", opt+3); return true;
 				case 'l': load = opt+3; return true;
+#ifndef STANDALONE
 				case 's': setvar("servertype", atoi(opt+3)); return true;
+#endif
 				case 'p': setvar("serverport", atoi(opt+3)); return true;
 				case 'q': setvar("serverqueryport", atoi(opt+3)); return true;
 				case 'a': setvar("servermasterport", atoi(opt+3)); return true;
@@ -749,7 +759,6 @@ bool serveroption(char *opt)
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
-	servertype = 3;
 	addpackagedir("data");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
