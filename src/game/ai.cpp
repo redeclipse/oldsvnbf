@@ -2,10 +2,11 @@
 namespace ai
 {
 	entities::avoidset obstacles;
-    int updatemillis = 0;
+    int updatemillis = 0, forcegun = -1;
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
+    VAR(aiforcegun, -1, -1, WEAPON_TOTAL-1);
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
@@ -110,7 +111,11 @@ namespace ai
 	void update()
 	{
 		bool updating = lastmillis-updatemillis > 100; // fixed rate logic at 10fps
-		if(updating) avoid();
+        if(updating)
+        {
+        	avoid();
+        	forcegun = multiplayer(false) ? -1 : aiforcegun;
+        }
 		loopv(world::players) if(world::players[i] && world::players[i]->ai)
 		{
 			if(!world::intermission) think(world::players[i], updating);
@@ -434,6 +439,7 @@ namespace ai
 		b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
 		if(m_noitems(world::gamemode, world::mutators))
 			d->ai->weappref = m_spawnweapon(world::gamemode, world::mutators);
+		else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->ai->weappref = forcegun;
 		else while(true)
 		{
 			d->ai->weappref = rnd(WEAPON_TOTAL);
