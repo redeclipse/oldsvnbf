@@ -1878,6 +1878,17 @@ namespace server
 		else realflags &= ~HIT_KILL;
 
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
+		if(m_vamp(gamemode, mutators) && actor->state.state == CS_ALIVE)
+		{
+			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0;
+			if(smode) smode->regen(actor, total, amt, delay);
+			if(total && actor->state.health < total)
+			{
+				actor->state.health = min(actor->state.health + realdamage, total);
+				actor->state.lastregen = gamemillis;
+				sendf(-1, 1, "ri3", SV_REGEN, actor->clientnum, actor->state.health);
+			}
+		}
 
 		if(realflags&HIT_KILL || GVAR(scoringstyle))
 		{

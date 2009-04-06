@@ -1206,9 +1206,10 @@ namespace client
 					int trg = getint(p), amt = getint(p);
 					gameent *target = world::getclient(trg);
 					if(!target) break;
+					if(!target->lastregen || lastmillis-target->lastregen >= 500)
+						playsound(S_REGEN, target->o, target); // maybe only player1?
 					target->health = amt;
 					target->lastregen = lastmillis;
-					playsound(S_REGEN, target->o, target); // maybe only player1?
 					break;
 				}
 
@@ -1701,7 +1702,7 @@ namespace client
 					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
 					{
 						vector<char> buf;
-                        answerchallenge(authkey, text, buf); 
+                        answerchallenge(authkey, text, buf);
 						//conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
 						addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
 					}
