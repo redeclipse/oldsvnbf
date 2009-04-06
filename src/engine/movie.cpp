@@ -612,11 +612,10 @@ struct aviwriter
 
 };
 
+VAR(movieaccelblit, 0, 0, 1);
 VAR(movieaccelyuv, 0, 1, 1);
 VARP(movieaccel, 0, 1, 1);
 VARP(moviesync, 0, 0, 1);
-
-extern int ati_fboblit_bug;
 
 namespace recorder
 {
@@ -904,7 +903,7 @@ namespace recorder
         if (usefbo)
         {
             uint tw = screen->w, th = screen->h;
-            if (hasFBB && !ati_fboblit_bug)
+            if (hasFBB && movieaccelblit)
             {
                 tw = max(tw/2, m.w);
                 th = max(th/2, m.h);
