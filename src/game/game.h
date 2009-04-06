@@ -1041,7 +1041,7 @@ struct aiinfo
 		wipe();
 		if(!tryit)
 		{
-			weappref = WEAPON_CG;
+			weappref = WEAPON_PLASMA;
 			spot = target = vec(0, 0, 0);
 			enemy = lastnode = prevnode = -1;
 			lastaction = lasthunt = enemyseen = enemymillis = 0;
@@ -1288,8 +1288,8 @@ namespace ai
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1);
 
 	extern void spawned(gameent *d);
-	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage, int health, int millis, vec &dir);
-	extern void killed(gameent *d, gameent *e, int weap, int flags, int damage);
+	extern void damaged(gameent *d, gameent *e);
+	extern void killed(gameent *d, gameent *e);
 	extern void update();
 	extern void avoid();
 	extern void think(gameent *d, bool run);
