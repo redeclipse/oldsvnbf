@@ -1595,9 +1595,10 @@ bool checksync()
 		{ // time the buffer swap to get an idea of the refresh interval
 			loopi(2) SDL_GL_SwapBuffers();
 			int ticker = SDL_GetTicks();
-			timeoutofloop = (ticker-tick)/2; // it doesn't need to be accurate, just close
+			timeoutofloop = int(ceil(float(ticker-tick)/3.f)); // doesn't need to be accurate, just close
 			tick = ticker;
 			conoutf("\frvsync interval estimate is: %d", timeoutofloop);
+			return false; // because we just flipped twice, don't block more
 		}
 		else if(lastoutofloop && tick-lastoutofloop <= timeoutofloop) return false;
 		lastoutofloop = tick;
