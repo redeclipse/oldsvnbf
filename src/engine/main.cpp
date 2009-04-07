@@ -129,6 +129,7 @@ VARF(colorbits, 0, 0, 32, initwarning("color depth"));
 VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
 VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
 VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
+int actualvsync = -1;
 VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 
 void writeinitcfg()
@@ -348,6 +349,10 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(depthbits && (config&1)==0) conoutf("\fr%d bit z-buffer not supported - disabling", depthbits);
         if(stencilbits && (config&2)==0) conoutf("\frStencil buffer not supported - disabling");
         if(fsaa>0 && (config&4)==0) conoutf("\fr%dx anti-aliasing not supported - disabling", fsaa);
+#if SDL_VERSION_ATLEAST(1, 2, 11)
+		SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync); // could be forced on
+		if(vsync != actualvsync) conoutf("\fractual value of vsync is: %s", actualvsync ? "enabled" : "disabled");
+#endif
     }
 
     scr_w = screen->w;
