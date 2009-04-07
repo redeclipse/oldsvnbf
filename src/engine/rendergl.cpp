@@ -236,7 +236,7 @@ void gl_checkextensions()
         smoothshadowmappeel = 1;
     }
 
-    if(strstr(exts, "GL_NV_float_buffer")) 
+    if(strstr(exts, "GL_NV_float_buffer"))
     {
         hasNVFB = true;
         if(dbgexts) conoutf("\frUsing GL_NV_float_buffer extension.");
@@ -1584,11 +1584,31 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
     glEnd();
 }
 
-float loadprogress = 0;
+extern int actualvsync;
+int lastoutofloop = 0, timeoutofloop = 0;
+bool checksync()
+{
+	if(actualvsync > 0)
+	{ // try a best guess at the time it takes to swap the buffer
+		int tick = SDL_GetTicks();
+		if(!timeoutofloop)
+		{ // time the buffer swap to get an idea of the refresh interval
+			loopi(2) SDL_GL_SwapBuffers();
+			int ticker = SDL_GetTicks();
+			timeoutofloop = (ticker-tick)/2; // it doesn't need to be accurate, just close
+			tick = ticker;
+			conoutf("\frvsync interval estimate is: %d", timeoutofloop);
+		}
+		else if(lastoutofloop && tick-lastoutofloop <= timeoutofloop) return false;
+		lastoutofloop = tick;
+	}
+	return inbetweenframes;
+}
 
+float loadprogress = 0;
 void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
-	if(!inbetweenframes) return;
+	if(!checksync()) return;
 	clientkeepalive();
 
     #ifdef __APPLE__
