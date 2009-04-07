@@ -685,8 +685,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					renderprogress(0, "loading variables...");
 					loopi(numvars)
 					{
-						vars++;
-						if(verbose) renderprogress(float(i)/float(vars), "loading variables...");
+						if(verbose) renderprogress(float(i)/float(numvars), "loading variables...");
 						int len = hdr.version >= 25 ? f->getlil<int>() : f->getchar();
 						if(len)
 						{
@@ -746,8 +745,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 									break;
 								}
 							}
-							if(!proceed && verbose)
-								conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+							if(!proceed) conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+							else vars++;
 						}
 					}
 					persistidents = true;
