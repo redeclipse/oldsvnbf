@@ -1442,7 +1442,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 	int w = screen->w, h = screen->h;
 	if(caption && mapname)
     {
-        s_sprintfd(mapcaption)("%s - %s", mapname, caption);
+        defformatstring(mapcaption)("%s - %s", mapname, caption);
         setcaption(mapcaption);
     }
     else setcaption(caption);
@@ -1516,9 +1516,9 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     if(!restore)
     {
         renderedframe = false;
-        s_strcpy(backgroundcaption, caption ? caption : "");
+        copystring(backgroundcaption, caption ? caption : "");
         backgroundmapshot = mapshot;
-        s_strcpy(backgroundmapname, mapname ? mapname : "");
+        copystring(backgroundmapname, mapname ? mapname : "");
     }
 }
 

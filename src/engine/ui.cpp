@@ -100,7 +100,7 @@ struct gui : g3d_gui
 		if(!name)
 		{
 			static string title;
-			s_sprintf(title)("%d", tpos);
+			formatstring(title)("%d", tpos);
 			name = title;
 		}
 		int w = text_width(name) - 2*INSERT;
@@ -252,7 +252,7 @@ struct gui : g3d_gui
 			if(!label)
 			{
 				static string s;
-				s_sprintf(s)("%d", val);
+				formatstring(s)("%d", val);
 				label = s;
 			}
 			int w = text_width(label);
@@ -613,7 +613,7 @@ struct gui : g3d_gui
 
 			if(icon)
 			{
-				s_sprintfd(tname)("textures/%s", icon);
+				defformatstring(tname)("textures/%s", icon);
 				icon_(textureload(tname, 3), false, false, x, cury, ICON_SIZE, clickable && hit);
 				x += ICON_SIZE;
 			}

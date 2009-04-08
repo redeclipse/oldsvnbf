@@ -56,7 +56,7 @@ struct attr_bool : attr
 
 	char *strval(bool v)
 	{
-		s_sprintfd(s)("%s", v ? "true" : "false");
+		defformatstring(s)("%s", v ? "true" : "false");
 		return newstring(s); // must delete yourself!
 	}
 
@@ -104,7 +104,7 @@ struct attr_int : attr
 
 	char *strval(int v)
 	{
-		s_sprintfd(s)("%d", v);
+		defformatstring(s)("%d", v);
 		return newstring(s); // must delete yourself!
 	}
 
@@ -160,7 +160,7 @@ struct attr_float : attr
 
 	char *strval(float v)
 	{
-		s_sprintfd(s)("%f", v);
+		defformatstring(s)("%f", v);
 		return newstring(s); // must delete yourself!
 	}
 
@@ -227,14 +227,14 @@ struct attr_string : attr
 		{
 			minval = atoi(x);
 			if (minstr) DELETEA(minstr);
-			s_sprintfd(s)("%d", minval);
+			defformatstring(s)("%d", minval);
 			minstr = newstring(s);
 		}
 		if (*y)
 		{
 			maxval = atoi(y);
 			if (maxstr) DELETEA(maxstr);
-			s_sprintfd(s)("%d", maxval);
+			defformatstring(s)("%d", maxval);
 			maxstr = newstring(s);
 		}
 	}
@@ -287,7 +287,7 @@ struct attr_vec : attr
 
 	char *strval(vec &v)
 	{
-		s_sprintfd(s)("%f,%f,%f", v.x, v.y, v.z);
+		defformatstring(s)("%f,%f,%f", v.x, v.y, v.z);
 		return newstring(s); // must delete yourself!
 	}
 
@@ -359,7 +359,7 @@ struct attr_ivec : attr
 
 	char *strval(ivec &v)
 	{
-		s_sprintfd(s)("%f,%f,%f", v.x, v.y, v.z);
+		defformatstring(s)("%f,%f,%f", v.x, v.y, v.z);
 		return newstring(s); // must delete yourself!
 	}
 

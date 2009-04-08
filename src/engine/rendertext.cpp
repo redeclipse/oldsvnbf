@@ -46,7 +46,7 @@ bool setfont(const char *name)
 	font *f = fonts.access(name);
 	if(!f)
 	{
-		s_sprintfd(n)("fonts/%s.cfg", name);
+		defformatstring(n)("fonts/%s.cfg", name);
 		if(!execfile(n) || !(f = fonts.access(name)))
 			return false;
 	}
@@ -78,7 +78,7 @@ COMMAND(tabify, "si");
 
 int draw_textf(const char *fstr, int left, int top, ...)
 {
-	s_sprintfdlv(str, top, fstr);
+	defvformatstring(str, top, fstr);
 	return draw_text(str, left, top);
 }
 
@@ -316,7 +316,7 @@ void reloadfonts()
 
 int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, int flags, int cursor, int maxwidth, ...)
 {
-	s_sprintfdlv(str, maxwidth, fstr);
+	defvformatstring(str, maxwidth, fstr);
 
     if(flags&TEXT_ALIGN)
     {

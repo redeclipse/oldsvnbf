@@ -45,10 +45,10 @@ void ircestablish(ircnet *n)
 void ircsend(ircnet *n, const char *msg, ...)
 {
 	if(!n) return;
-	s_sprintfdlv(str, msg, msg);
+	defvformatstring(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
 	if(verbose >= 2) console("[%s] >>> %s", n->name, str);
-	s_strcat(str, "\n");
+	concatstring(str, "\n");
 	ENetBuffer buf;
 	buf.data = str;
 	buf.dataLength = strlen((char *)buf.data);
@@ -57,7 +57,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 
 void ircoutf(int relay, const char *msg, ...)
 {
-	s_sprintfdlv(str, msg, msg);
+	defvformatstring(str, msg, msg);
 	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].type == IRCT_RELAY && ircnets[i].state == IRC_ONLINE)
 	{
 		ircnet *n = &ircnets[i];
@@ -66,8 +66,8 @@ void ircoutf(int relay, const char *msg, ...)
 		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED && n->channels[j].relay >= relay)
 		{
 			ircchan *c = &n->channels[j];
-			if(s[0]) s_strcat(s, ",");
-			s_strcat(s, c->name);
+			if(s[0]) concatstring(s, ",");
+			concatstring(s, c->name);
 		}
 		if(s[0]) ircsend(n, "PRIVMSG %s :%s", s, str);
 #else
@@ -118,11 +118,11 @@ void ircnewnet(int type, const char *name, const char *serv, int port, const cha
 	n.sock = ENET_SOCKET_NULL;
 	n.port = port;
 	n.lastattempt = 0;
-	s_strcpy(n.name, name);
-	s_strcpy(n.serv, serv);
-	s_strcpy(n.nick, nick);
-	s_strcpy(n.ip, ip);
-	s_strcpy(n.passkey, passkey);
+	copystring(n.name, name);
+	copystring(n.serv, serv);
+	copystring(n.nick, nick);
+	copystring(n.ip, ip);
+	copystring(n.passkey, passkey);
 	n.address.host = ENET_HOST_ANY;
 	n.address.port = n.port;
 	n.input[0] = 0;
@@ -139,7 +139,7 @@ ICOMMAND(ircserv, "ss", (const char *name, const char *s), {
 	ircnet *n = ircfind(name);
 	if(!n) { conoutf("no such ircnet: %s", name); return; }
 	if(!s || !*s) { conoutf("%s current server is: %s", n->name, n->serv); return; }
-	s_strcpy(n->serv, s);
+	copystring(n->serv, s);
 });
 ICOMMAND(ircport, "ss", (const char *name, const char *s), {
 	ircnet *n = ircfind(name);
@@ -151,19 +151,19 @@ ICOMMAND(ircnick, "ss", (const char *name, const char *s), {
 	ircnet *n = ircfind(name);
 	if(!n) { conoutf("no such ircnet: %s", name); return; }
 	if(!s || !*s) { conoutf("%s current nickname is: %s", n->name, n->nick); return; }
-	s_strcpy(n->nick, s);
+	copystring(n->nick, s);
 });
 ICOMMAND(ircbind, "ss", (const char *name, const char *s), {
 	ircnet *n = ircfind(name);
 	if(!n) { conoutf("no such ircnet: %s", name); return; }
 	if(!s || !*s) { conoutf("%s currently bound to: %s", n->name, n->ip); return; }
-	s_strcpy(n->ip, s);
+	copystring(n->ip, s);
 });
 ICOMMAND(ircpass, "ss", (const char *name, const char *s), {
 	ircnet *n = ircfind(name);
 	if(!n) { conoutf("no such ircnet: %s", name); return; }
 	if(!s || !*s) { conoutf("%s current password is: %s", n->name, n->passkey && *n->passkey ? "<set>" : "<not set>"); return; }
-	s_strcpy(n->passkey, s);
+	copystring(n->passkey, s);
 });
 ICOMMAND(ircconnect, "s", (const char *name), {
 	ircnet *n = ircfind(name);
@@ -229,8 +229,8 @@ bool ircnewchan(int type, const char *name, const char *channel, const char *pas
 	d.type = type;
 	d.relay = clamp(relay, 0, 4);
 	d.lastjoin = 0;
-	s_strcpy(d.name, channel);
-	s_strcpy(d.passkey, passkey);
+	copystring(d.name, channel);
+	copystring(d.passkey, passkey);
 	if(n->state != IRC_DISC) ircjoin(n, &d);
 	conoutf("%s added channel %s", n->name, d.name);
 	return true;
@@ -248,7 +248,7 @@ ICOMMAND(ircpasschan, "sss", (const char *name, const char *chan, const char *s)
 	ircchan *c = ircfindchan(n, chan);
 	if(!c) { conoutf("no such %s channel: %s", n->name, chan); return; }
 	if(!s || !*s) { conoutf("%s channel %s current password is: %s", n->name, c->name, c->passkey && *c->passkey ? "<set>" : "<not set>"); return; }
-	s_strcpy(c->passkey, s);
+	copystring(c->passkey, s);
 });
 ICOMMAND(ircrelaychan, "sss", (const char *name, const char *chan, const char *s), {
 	ircnet *n = ircfind(name);
@@ -261,7 +261,7 @@ ICOMMAND(ircrelaychan, "sss", (const char *name, const char *chan, const char *s
 
 void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 {
-	s_sprintfdlv(str, msg, msg);
+	defvformatstring(str, msg, msg);
 	string st, s;
 	filtertext(st, str);
 	if(target && *target && strcasecmp(target, n->nick))
@@ -269,7 +269,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		ircchan *c = ircfindchan(n, target);
 		if(c)
 		{
-			s_sprintf(s)("\fs\fa[%s]:%s\fS", n->name, c->name);
+			formatstring(s)("\fs\fa[%s]:%s\fS", n->name, c->name);
 			while(c->lines.length() >= 1000)
 			{
 				char *s = c->lines.remove(0);
@@ -281,7 +281,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		}
 		else
 		{
-			s_sprintf(s)("\fs\fa[%s]:%s\fS", n->name, target);
+			formatstring(s)("\fs\fa[%s]:%s\fS", n->name, target);
 			while(n->lines.length() >= 1000)
 			{
 				char *s = n->lines.remove(0);
@@ -292,7 +292,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 	}
 	else
 	{
-		s_sprintf(s)("\fs\fa[%s]\fS", n->name);
+		formatstring(s)("\fs\fa[%s]\fS", n->name);
 		while(n->lines.length() >= 1000)
 		{
 			char *s = n->lines.remove(0);
@@ -376,7 +376,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 	{
 		if(numargs > g+1)
 		{
-			if(!strcasecmp(user[0], n->nick)) s_strcpy(n->nick, w[g+1]);
+			if(!strcasecmp(user[0], n->nick)) copystring(n->nick, w[g+1]);
 			ircprintf(n, NULL, "\fm%s (%s@%s) is now known as %s", user[0], user[1], user[2], w[g+1]);
 		}
 	}
@@ -431,8 +431,8 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			string modestr;
 			loopi(numargs-g-2)
 			{
-				if(i) s_strcat(modestr, " ");
-				s_strcat(modestr, w[g+2+i]);
+				if(i) concatstring(modestr, " ");
+				concatstring(modestr, w[g+2+i]);
 			}
 			ircprintf(n, w[g+1], "\fr%s (%s@%s) sets mode: %s %s", user[0], user[1], user[2], w[g+1], modestr);
 		}
@@ -468,11 +468,11 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				off++;
 			}
 		}
-		else s_strcat(s, user[0]);
+		else concatstring(s, user[0]);
 		for(int i = g+off+1; numargs > i && w[i]; i++)
 		{
-			if(s[0]) s_strcat(s, " ");
-			s_strcat(s, w[i]);
+			if(s[0]) concatstring(s, " ");
+			concatstring(s, w[i]);
 		}
 		if(numeric) switch(numeric)
 		{
@@ -489,7 +489,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			{
 				if(n->state == IRC_CONN)
 				{
-					s_strcat(n->nick, "_");
+					concatstring(n->nick, "_");
 					ircsend(n, "NICK %s", n->nick);
 				}
 			}
@@ -578,7 +578,7 @@ void ircparse(ircnet *n, char *reply)
 		if(!line)
 		{
 			char *s = newstring(start); // can't copy a buffer into itself so dupe it first
-			s_strcpy(reply, s);
+			copystring(reply, s);
 			DELETEA(s);
 			return;
 		}
@@ -724,13 +724,13 @@ bool ircchangui(g3d_gui *g, ircnet *n, ircchan *c, bool tab)
 {
 	if(tab) g->tab(c->name, GUI_TITLE_COLOR);
 
-	s_sprintfd(cwindow)("%s_%s_window", n->name, c->name);
+	defformatstring(cwindow)("%s_%s_window", n->name, c->name);
 	g->fieldclear(cwindow);
 	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
 	g->field(cwindow, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
 	g->fieldscroll(cwindow);
 
-	s_sprintfd(cinput)("%s_%s_input", n->name, c->name);
+	defformatstring(cinput)("%s_%s_input", n->name, c->name);
 	char *v = g->field(cinput, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
 	if(v && *v)
 	{
@@ -745,13 +745,13 @@ bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
 {
 	if(tab) g->tab(n->name, GUI_TITLE_COLOR);
 
-	s_sprintfd(window)("%s_window", n->name);
+	defformatstring(window)("%s_window", n->name);
 	g->fieldclear(window);
 	loopvk(n->lines) g->fieldline(window, n->lines[k]);
 	g->field(window, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
 	g->fieldscroll(window);
 
-	s_sprintfd(input)("%s_input", n->name);
+	defformatstring(input)("%s_input", n->name);
 	char *w = g->field(input, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
 	if(w && *w)
 	{

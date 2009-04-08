@@ -77,8 +77,8 @@ namespace ai
 	{
 		gameent *o = world::newclient(on);
 		string m;
-		if(o) s_strcpy(m, world::colorname(o));
-		else s_sprintf(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
+		if(o) copystring(m, world::colorname(o));
+		else formatstring(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
@@ -97,7 +97,7 @@ namespace ai
 		}
 		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
-		s_strncpy(d->name, name, MAXNAMELEN);
+		copystring(d->name, name, MAXNAMELEN);
 		d->aitype = at;
 		d->ownernum = on;
 		d->skill = sk;
@@ -1087,7 +1087,7 @@ namespace ai
 		string s;
 		if(top)
 		{
-			s_sprintf(s)("@\fg%s (%d[%d]) %s:%d (%d[%d])",
+			formatstring(s)("@\fg%s (%d[%d]) %s:%d (%d[%d])",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target,
@@ -1097,7 +1097,7 @@ namespace ai
 		}
 		else
 		{
-			s_sprintf(s)("@\fy%s (%d[%d]) %s:%d",
+			formatstring(s)("@\fy%s (%d[%d]) %s:%d",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target

@@ -7,7 +7,7 @@ void loadsky(const char *basename, Texture *texs[6])
 	loopi(6)
 	{
         const char *side = cubemapsides[i].name;
-		s_sprintfd(name)("%s_%s", basename, side);
+		defformatstring(name)("%s_%s", basename, side);
 		if((texs[i] = textureload(name, 3, true, false))==notexture)
 			conoutf("\frcould not load sky texture %s_%s", basename, side);
 	}

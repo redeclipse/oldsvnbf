@@ -11,8 +11,8 @@ namespace client
 
     void setauthkey(const char *name, const char *key)
     {
-        s_strcpy(authname, name);
-        s_strcpy(authkey, key);
+        copystring(authname, name);
+        copystring(authkey, key);
     }
     ICOMMAND(authkey, "ss", (char *name, char *key), setauthkey(name, key));
 
@@ -34,7 +34,7 @@ namespace client
 		if(name[0])
 		{
 			c2sinit = false;
-			s_strncpy(world::player1->name, name, MAXNAMELEN);
+			copystring(world::player1->name, name, MAXNAMELEN);
 		}
 		else conoutf("\fmyour name is: %s", world::colorname(world::player1));
 	}
@@ -91,7 +91,7 @@ namespace client
 
     void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address)
     {
-        s_strcpy(connectpass, password);
+        copystring(connectpass, password);
     }
 
     void connectfail()
@@ -307,7 +307,7 @@ namespace client
 			va_end(args);
 		}
 		int num = nums?0:numi, msgsize = msgsizelookup(type);
-        if(msgsize && num!=msgsize) { s_sprintfd(s)("inconsistent msg size for %d (%d != %d)", type, num, msgsize); fatal(s); }
+        if(msgsize && num!=msgsize) { defformatstring(s)("inconsistent msg size for %d (%d != %d)", type, num, msgsize); fatal(s); }
         if(reliable) messagereliable = true;
         messages.put(buf, p.length());
 	}
@@ -317,18 +317,18 @@ namespace client
 		if(!colourchat) filtertext(text, text);
 		string s;
 		bool team = m_team(world::gamemode, world::mutators) && flags&SAY_TEAM;
-		s_sprintfd(m)("%s", world::colorname(d));
+		defformatstring(m)("%s", world::colorname(d));
 		if(team)
 		{
-			s_sprintfd(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
-			s_strcat(m, t);
+			defformatstring(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
+			concatstring(m, t);
 		}
-		if(flags&SAY_ACTION) s_sprintf(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
-		else s_sprintf(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
+		if(flags&SAY_ACTION) formatstring(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
+		else formatstring(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
 		if(d->state != CS_SPECTATOR)
 		{
-			s_sprintfd(ds)("@%s", &s);
+			defformatstring(ds)("@%s", &s);
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 		}
 
@@ -388,7 +388,7 @@ namespace client
 		{
 			case SV_SENDDEMO:
 			{
-				s_sprintfd(fname)("%d.dmo", lastmillis);
+				defformatstring(fname)("%d.dmo", lastmillis);
 				stream *demo = openfile(fname, "wb");
 				if(!demo) return;
 				conoutf("\fmreceived demo \"%s\"", fname);
@@ -406,8 +406,8 @@ namespace client
 				else if(type == SV_SENDMAPSHOT) mapext = "png";
 				else if(type == SV_SENDMAPFILE) mapext = "bgz";
 				if(!mapname || !*mapname) mapname = "maps/untitled";
-				s_sprintfd(mapfile)(strstr(mapname, "temp/")==mapname || strstr(mapname, "temp\\")==mapname ? "%s" : "temp/%s", mapname);
-				s_sprintfd(mapfext)("%s.%s", mapfile, mapext);
+				defformatstring(mapfile)(strstr(mapname, "temp/")==mapname || strstr(mapname, "temp\\")==mapname ? "%s" : "temp/%s", mapname);
+				defformatstring(mapfext)("%s.%s", mapfile, mapext);
 				stream *f = openfile(mapfext, "wb");
 				if(!f)
 				{
@@ -463,7 +463,7 @@ namespace client
         int nextmode = world::nextmode, nextmuts = world::nextmuts; // in case stopdemo clobbers these
         if(!remote) stopdemo();
         string mapfile;
-		s_strcpy(mapfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
+		copystring(mapfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
         addmsg(SV_MAPVOTE, "rsi2", mapfile, nextmode, nextmuts);
 	}
 	ICOMMAND(map, "s", (char *s), changemap(s));
@@ -474,16 +474,16 @@ namespace client
 		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
 		bool edit = m_edit(world::gamemode);
-		s_sprintfd(mapfile)("temp/%s", mapname);
+		defformatstring(mapfile)("temp/%s", mapname);
 		loopi(3)
 		{
 			string mapfext;
 			switch(i)
 			{
-				case 2: s_sprintf(mapfext)("%s.cfg", mapfile); break;
-				case 1: s_sprintf(mapfext)("%s.png", mapfile); break;
+				case 2: formatstring(mapfext)("%s.cfg", mapfile); break;
+				case 1: formatstring(mapfext)("%s.png", mapfile); break;
 				case 0: default:
-					s_sprintf(mapfext)("%s.bgz", mapfile);
+					formatstring(mapfext)("%s.bgz", mapfile);
 					if(edit || !donesave)
 					{
 						save_world(mapfile, edit, true);
@@ -517,7 +517,7 @@ namespace client
 				case ID_COMMAND:
 				{
 					string s;
-					s_sprintf(s)("%s %s", cmd, arg);
+					formatstring(s)("%s %s", cmd, arg);
 					char *ret = executeret(s);
 					if(ret)
 					{
@@ -532,7 +532,7 @@ namespace client
 					int ret = atoi(arg);
 					*id->storage.i = ret;
 					id->changed();
-					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
@@ -540,7 +540,7 @@ namespace client
 					float ret = atof(arg);
 					*id->storage.f = ret;
 					id->changed();
-					s_sprintf(val)("%s", floatstr(*id->storage.f));
+					formatstring(val)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -548,7 +548,7 @@ namespace client
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
-					s_sprintf(val)("%s", *id->storage.s);
+					formatstring(val)("%s", *id->storage.s);
 					break;
 				}
 				default: return;
@@ -1086,14 +1086,14 @@ namespace client
 						break;
 					}
 					getstring(text, p);
-					if(!text[0]) s_strcpy(text, "unnamed");
+					if(!text[0]) copystring(text, "unnamed");
 					if(d->name[0])		  // already connected
 					{
 						if(strcmp(d->name, text))
 						{
 							string oldname, newname;
-							s_strcpy(oldname, world::colorname(d, NULL, "", false));
-							s_strcpy(newname, world::colorname(d, text));
+							copystring(oldname, world::colorname(d, NULL, "", false));
+							copystring(newname, world::colorname(d, text));
 							conoutf("\fm%s is now known as %s", oldname, newname);
 						}
 					}
@@ -1104,7 +1104,7 @@ namespace client
 							if(world::players[i]) freeeditinfo(world::players[i]->edit);
 						freeeditinfo(localedit);
 					}
-					s_strncpy(d->name, text, MAXNAMELEN);
+					copystring(d->name, text, MAXNAMELEN);
 					d->team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
 					break;
 				}
@@ -1305,7 +1305,7 @@ namespace client
 							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
 							if(item && *item)
 							{
-								s_sprintfd(ds)("@%s", item);
+								defformatstring(ds)("@%s", item);
 								part_text(pos, ds, PART_TEXT_RISE, 3000, colour, 2);
 							}
 						}
@@ -1349,7 +1349,7 @@ namespace client
 								if(val > id->maxval) val = id->maxval;
 								else if(val < id->minval) val = id->minval;
 								setvar(text, val, true);
-                                s_sprintfd(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+                                defformatstring(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, str);
 							}
 							break;
@@ -1745,7 +1745,7 @@ namespace client
 
 	void resetserversort()
 	{
-		s_sprintfd(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
+		defformatstring(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
 		execute(u);
 	}
 	ICOMMAND(serversortreset, "", (), resetserversort());
@@ -1782,7 +1782,7 @@ namespace client
 
 		loopi(len)
 		{
-			s_sprintfd(s)("at $serversort %d", i);
+			defformatstring(s)("at $serversort %d", i);
 
 			int style = execute(s);
 			serverinfo *aa = a, *ab = b;
@@ -1897,17 +1897,17 @@ namespace client
 			int len = execute("listlen $serversort");
 			loopk(len)
 			{
-				s_sprintfd(s)("at $serversort %d", k);
+				defformatstring(s)("at $serversort %d", k);
 
 				int n = execute(s);
 				if(abs(n) != i)
 				{
-					s_sprintfd(t)("%s%d", st[0] ? " " : "", n);
-					s_sprintf(st)("%s%s", st[0] ? st : "", t);
+					defformatstring(t)("%s%d", st[0] ? " " : "", n);
+					formatstring(st)("%s%s", st[0] ? st : "", t);
 				}
 				else if(!k) invert = true;
 			}
-			s_sprintfd(u)("serversort [%d%s%s]",
+			defformatstring(u)("serversort [%d%s%s]",
 				invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
 			execute(u);
 		}
@@ -1937,22 +1937,22 @@ namespace client
 			}
 			case SINFO_DESC:
 			{
-				if(diff) s_sprintf(text)("(v%d != v%d)", si->attr[0], GAMEVERSION);
-				else s_strncpy(text, si->sdesc, 24);
+				if(diff) formatstring(text)("(v%d != v%d)", si->attr[0], GAMEVERSION);
+				else copystring(text, si->sdesc, 24);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
 				if(diff) { g->button("-", colour); break; }
-				s_sprintf(text)("%d", si->ping);
+				formatstring(text)("%d", si->ping);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
 				if(diff) { g->button("-", colour); break; }
-				s_sprintf(text)("%d", si->numplayers);
+				formatstring(text)("%d", si->numplayers);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1960,7 +1960,7 @@ namespace client
 			{
 				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 4 && si->attr[4] >= 0)
-					s_sprintf(text)("%d", si->attr[4]);
+					formatstring(text)("%d", si->attr[4]);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1968,14 +1968,14 @@ namespace client
 			{
 				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 1)
-					s_sprintf(text)("%s", server::gamename(si->attr[1], si->attr[2]));
+					formatstring(text)("%s", server::gamename(si->attr[1], si->attr[2]));
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
 				if(diff) { g->button("-", colour); break; }
-				s_strncpy(text, si->map, 18);
+				copystring(text, si->map, 18);
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}
@@ -1983,7 +1983,7 @@ namespace client
 			{
 				if(diff) { g->button("-", colour); break; }
 				if(si->attr.length() > 3 && si->attr[3] >= 0)
-					s_sprintf(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
+					formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
 				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
 				break;
 			}

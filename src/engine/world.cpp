@@ -687,7 +687,7 @@ ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
 ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
 ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
 ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget,    "",  (), entfocus(efocus, s_sprintfd(s)("%s %d %d %d %d %d", entities::findname(e.type), e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);  result(s)));
+ICOMMAND(entget,    "",  (), entfocus(efocus, defformatstring(s)("%s %d %d %d %d %d", entities::findname(e.type), e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);  result(s)));
 ICOMMAND(entindex,  "",  (), intret(efocus));
 COMMAND(entset, "siiiii");
 
@@ -804,7 +804,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     hdr.blendmap = 0;
 	hdr.lightmaps = 0;
 
-	s_strncpy(hdr.gameid, server::gameid(), 4);
+	copystring(hdr.gameid, server::gameid(), 4);
 
 	texmru.setsize(0);
 	freeocta(worldroot);

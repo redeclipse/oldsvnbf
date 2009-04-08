@@ -424,12 +424,12 @@ struct md5 : skelmodel
         const char *fname = loadname + strlen(loadname);
         do --fname; while(fname >= loadname && *fname!='/' && *fname!='\\');
         fname++;
-        s_sprintfd(meshname)("models/%s/%s.md5mesh", loadname, fname);
+        defformatstring(meshname)("models/%s/%s.md5mesh", loadname, fname);
         mdl.meshes = sharemeshes(path(meshname), NULL);
         if(!mdl.meshes) return false;
         mdl.initanimparts();
         mdl.initskins();
-        s_sprintfd(animname)("models/%s/%s.md5anim", loadname, fname);
+        defformatstring(animname)("models/%s/%s.md5anim", loadname, fname);
         ((md5meshgroup *)mdl.meshes)->loadmd5anim(path(animname));
         return true;
     }
@@ -437,8 +437,8 @@ struct md5 : skelmodel
     bool load()
     {
         if(loaded) return true;
-        s_sprintf(md5dir)("models/%s", loadname);
-        s_sprintfd(cfgname)("models/%s/md5.cfg", loadname);
+        formatstring(md5dir)("models/%s", loadname);
+        defformatstring(cfgname)("models/%s/md5.cfg", loadname);
 
         loadingmd5 = this;
         persistidents = false;
@@ -474,13 +474,13 @@ struct md5 : skelmodel
 void setmd5dir(char *name)
 {
     if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
-    s_sprintf(md5dir)("models/%s", name);
+    formatstring(md5dir)("models/%s", name);
 }
 
 void md5load(char *meshfile, char *skelname)
 {
     if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
-    s_sprintfd(filename)("%s/%s", md5dir, meshfile);
+    defformatstring(filename)("%s/%s", md5dir, meshfile);
     md5::skelpart &mdl = *new md5::skelpart;
     loadingmd5->parts.add(&mdl);
     mdl.model = loadingmd5;
@@ -668,7 +668,7 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     {
         md5::part *p = loadingmd5->parts.last();
         if(!p->meshes) return;
-        s_sprintfd(filename)("%s/%s", md5dir, animfile);
+        defformatstring(filename)("%s/%s", md5dir, animfile);
         md5::skelanimspec *sa = ((md5::md5meshgroup *)p->meshes)->loadmd5anim(path(filename));
         if(!sa) conoutf("\frcould not load md5anim file %s", filename);
         else loopv(anims)

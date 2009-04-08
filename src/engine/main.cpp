@@ -29,10 +29,10 @@ void showcursor(bool show)
 void setcaption(const char *text)
 {
     static string caption = "";
-	s_sprintfd(newcaption)("%s v%.2f (%s)%s%s - %s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "", ENG_URL);
+	defformatstring(newcaption)("%s v%.2f (%s)%s%s - %s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "", ENG_URL);
     if(strcmp(caption, newcaption))
     {
-        s_strcpy(caption, newcaption);
+        copystring(caption, newcaption);
 	    SDL_WM_SetCaption(caption, NULL);
     }
 }
@@ -88,7 +88,7 @@ void fatal(const char *s, ...)    // failure exit
 
     if(errors <= 2) // print up to one extra recursive error
     {
-        s_sprintfdlv(msg,s,s);
+        defvformatstring(msg,s,s);
         printf("%s\n", msg);
 
         if(errors <= 1) // avoid recursion
@@ -165,7 +165,7 @@ void screenshot(char *sname)
     ImageData image(screen->w, screen->h, 3);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image.data);
-	s_sprintfd(fname)("%s", *sname ? sname : getmapname());
+	defformatstring(fname)("%s", *sname ? sname : getmapname());
 	saveimage(fname, image, imageformat, compresslevel, true, true);
 }
 
@@ -563,7 +563,7 @@ void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 	EXCEPTION_RECORD *er = ep->ExceptionRecord;
 	CONTEXT *context = ep->ContextRecord;
 	string out, t;
-	s_sprintf(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
+	formatstring(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
 	STACKFRAME sf = {{context->Eip, 0, AddrModeFlat}, {}, {context->Ebp, 0, AddrModeFlat}, {context->Esp, 0, AddrModeFlat}, 0};
 	SymInitialize(GetCurrentProcess(), NULL, TRUE);
 
@@ -575,8 +575,8 @@ void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 		if(SymGetSymFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &si.sym) && SymGetLineFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &li))
 		{
 			char *del = strrchr(li.FileName, '\\');
-			s_sprintf(t)("%s - %s [%d]\n", si.sym.Name, del ? del + 1 : li.FileName, li.LineNumber);
-			s_strcat(out, t);
+			formatstring(t)("%s - %s [%d]\n", si.sym.Name, del ? del + 1 : li.FileName, li.LineNumber);
+			concatstring(out, t);
 		}
 	}
 	fatal(out);
@@ -763,12 +763,12 @@ void eastereggs()
 
 bool findoctadir(const char *name)
 {
-	s_sprintfd(octalogo)("%s/data/default_map_settings.cfg", name);
+	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
 	if(fileexists(findfile(octalogo, "r"), "r"))
 	{
 		conoutf("\fgfound OCTA directory: %s", name);
-		s_sprintfd(octadata)("%s/data", name);
-		s_sprintfd(octapaks)("%s/packages", name);
+		defformatstring(octadata)("%s/data", name);
+		defformatstring(octapaks)("%s/packages", name);
 		addpackagedir(name);
 		addpackagedir(octadata);
 		addpackagedir(octapaks);
@@ -843,7 +843,7 @@ int main(int argc, char **argv)
 				#endif
 				#endif
 				#ifdef putenv
-				s_sprintfd(octaenv)("OCTA_DIR=\"%s\"", &argv[i][2]);
+				defformatstring(octaenv)("OCTA_DIR=\"%s\"", &argv[i][2]);
 				putenv(octaenv);
 				conoutf("\fgset OCTA_DIR to: %s", &argv[i][2]);
 				#else
@@ -991,7 +991,7 @@ int main(int argc, char **argv)
             }
 			swapbuffers();
 			inbetweenframes = true;
-			s_sprintfd(cap)("%s - %s", world::gametitle(), world::gametext());
+			defformatstring(cap)("%s - %s", world::gametitle(), world::gametext());
 			setcaption(cap);
 		}
 	}

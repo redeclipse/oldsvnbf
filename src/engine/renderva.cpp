@@ -1786,7 +1786,7 @@ void loadcaustic(const char *name)
 {
 	if(*name)
 	{
-		s_sprintfd(s)("%s%s", renderpath==R_FIXEDFUNCTION ? "<mad:0.6,0.4>" : "<mad:-0.6,0.6>", name);
+		defformatstring(s)("%s%s", renderpath==R_FIXEDFUNCTION ? "<mad:0.6,0.4>" : "<mad:-0.6,0.6>", name);
 		caustic = textureload(s);
 	}
 	else caustic = notexture;

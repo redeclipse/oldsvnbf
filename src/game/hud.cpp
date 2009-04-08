@@ -534,7 +534,7 @@ namespace hud
 											weapcarry(attr, sweap) && world::player1->carry(sweap) >= maxcarry) drop = world::player1->drop(sweap, attr);
 										if(isweap(drop))
 										{
-											s_sprintfd(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
+											defformatstring(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
 											ty -= draw_textx("Press [ \fs\fa%s\fS ] to swap [ \fs%s\fS ] for [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
 										}
 										else ty -= draw_textx("Press [ \fs\fa%s\fS ] to pickup [ \fs%s\fS ]", tx, ty, tr, tg, tb, tf, TEXT_RIGHT_UP, -1, -1, actionkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
@@ -681,7 +681,7 @@ namespace hud
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
-			s_sprintfdlv(str, text, text);
+			defvformatstring(str, text, text);
 			draw_textx("%s", cx+tq, cy+(idx > -4 ? ts : ts/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
@@ -861,7 +861,7 @@ namespace hud
 			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
 			int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y-s)*(1.f/skew))+FONTH/4, ti = int(255.f*f);
-			s_sprintfdlv(str, text, text);
+			defvformatstring(str, text, text);
 			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
@@ -876,7 +876,7 @@ namespace hud
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
 		int tx = int(float(x)*(1.f/skew))-FONTW/4, ty = int(float(y)*(1.f/skew))-FONTH-FONTH/4, ti = int(255.f*inventoryblend*blend*skew);
-		s_sprintfdlv(str, text, text);
+		defvformatstring(str, text, text);
 		draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
@@ -952,10 +952,10 @@ namespace hud
 				{
 					loopj(WEAPON_MAX)
 					{
-						s_sprintfd(action)("weapon %d", j);
+						defformatstring(action)("weapon %d", j);
 						const char *actkey = searchbind(action, 0);
-						if(actkey && *actkey) s_strcpy(weapids[j], actkey);
-						else s_sprintf(weapids[j])("%d", j+1);
+						if(actkey && *actkey) copystring(weapids[j], actkey);
+						else formatstring(weapids[j])("%d", j+1);
 					}
 					lastweapids = changedkeys;
 				}

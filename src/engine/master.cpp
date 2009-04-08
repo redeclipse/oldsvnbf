@@ -84,7 +84,7 @@ void masteroutf(masterclient &c, const char *fmt, ...)
 	string msg;
 	va_list args;
 	va_start(args, fmt);
-	formatstring(msg, fmt, args);
+	vformatstring(msg, fmt, args);
 	va_end(args);
 	masterout(c, msg);
 }
@@ -135,7 +135,7 @@ void reqauth(masterclient &c, uint id, char *name)
 		if(newline) *newline = '\0';
 	}
 	string ip;
-	if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) s_strcpy(ip, "-");
+	if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) copystring(ip, "-");
 	conoutf("%s: attempting \"%s\" as %u from %s\n", ct ? ct : "-", name, id, ip);
 
 	authuser *u = authusers.access(name);
@@ -172,7 +172,7 @@ void confauth(masterclient &c, uint id, const char *val)
 	loopv(c.authreqs) if(c.authreqs[i].id == id)
 	{
 		string ip;
-		if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) s_strcpy(ip, "-");
+		if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) copystring(ip, "-");
 		if(checkchallenge(val, c.authreqs[i].answer))
 		{
 			masteroutf(c, "succauth %u\n", id);
