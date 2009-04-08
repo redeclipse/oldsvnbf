@@ -7,9 +7,13 @@
 	$app['sitenotice'] = "We need your <u>help</u> to keep making this game as awesome as possible; the Lead Developer, Quinton \"Quin\" Reeves is unemployed and struggles with chronic illness, despite this he continues to work effortlessly on this project. Your <u>donation</u> can improve the quality of his life; please consider being generous, and make sure he can keep doing this important task!";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
-	$app['sitelogo'] = "/bits/logo.png";
+	$app['sitemainlogo'] = "/bits/logo.png";
 	$app['sitecss'] = "/bits/site.css";
 	$app['siteico'] = "/bits/favicon.ico";
+
+	$app['siteaddname'] = "Built on Cube Engine 2";
+	$app['siteaddurl'] = "http://www.cubeengine.com/";
+	$app['siteaddlogo'] = "/bits/cube2.png";
 
 	$app['sfproject'] = "bloodfrontier";
 	$app['sfgroupid'] = 198419;
@@ -85,7 +89,10 @@
 	<body>
 		<div id="wrapper" align="center">
 			<div id="header">
-				<div id="logo"><a href="/home"><img id="sitelogo" src="<?php echo $app['sitelogo']; ?>" alt="<?php echo $app['sitename']; ?>" style="border: none" /></a></div>
+				<div id="logo">
+					<a href="/home"><img id="sitelogo" src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" style="border: none" /></a>
+					<a href="<?php echo $app['siteaddurl']; ?>"><img id="sitelogo" src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" style="border: none" /></a>
+				</div>
 				<div id="tags">
 <?php			if ($app['sflogo'] > 0) { ?>
 					<a href="/project">
