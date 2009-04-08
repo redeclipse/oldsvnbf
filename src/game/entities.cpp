@@ -150,7 +150,7 @@ namespace entities
 			{
 				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
-				vec above = vec(world::abovehead(d)).add(vec(0, 0, 2));
+				vec above = vec(d->abovehead()).add(vec(0, 0, 2));
 				if(texname && *texname)
 					part_icon(above, textureload(texname, 3), 1, 2, 3000, colour, PART_ICON_RISE);
 				else
@@ -1089,7 +1089,7 @@ namespace entities
 
 		if(obdist >= 0.f)
 		{
-			vec pos = world::feetpos(d);
+			vec pos = d->feetpos();
 			loopavoid(obstacles, d,
 			{
 				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == node || ent == goal || !ents[ent]->links.empty()))
@@ -1175,7 +1175,7 @@ namespace entities
 	{
 		if(d->state == CS_ALIVE)
 		{
-			vec v(world::feetpos(d, 0.f));
+			vec v = d->feetpos();
 			bool shoulddrop = (m_play(world::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius*(dropwaypoints ? 1 : 2) : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);

@@ -109,6 +109,10 @@ struct physent                                  // base entity type, can be affe
         floor = vec(0, 0, 1);
         resetinterp();
     }
+
+    vec abovehead(float offset = 2) const { return vec(o).add(vec(0, 0, aboveeye+offset)); }
+    vec feetpos(float offset = 0) const { return vec(o).add(vec(0, 0, offset-height)); }
+    vec headpos(float offset = 0) const { return vec(o).add(vec(0, 0, offset)); }
 };
 
 enum

@@ -86,9 +86,6 @@ namespace world
 	extern void lighteffects(dynent *d, vec &color, vec &dir);
 	extern void adddynlights();
 	extern void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass);
-	extern vec abovehead(physent *d, float off = 1e16f);
-	extern vec headpos(physent *d, float off = 0.f);
-	extern vec feetpos(physent *d, float off = 0.f);
 	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
 	extern void project(int w, int h);
 	extern void recomputecamera(int w, int h);

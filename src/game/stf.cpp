@@ -5,7 +5,7 @@ namespace stf
 
     bool insideflag(const stfstate::flag &b, gameent *d)
     {
-        return st.insideflag(b, world::feetpos(d));
+        return st.insideflag(b, d->feetpos());
     }
 
     void preload()
@@ -189,7 +189,7 @@ namespace stf
 
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
-		vec pos = world::feetpos(d);
+		vec pos = d->feetpos();
 		loopvj(st.flags)
 		{
 			stfstate::flag &f = st.flags[j];
@@ -200,7 +200,7 @@ namespace stf
 			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
-				vec ep = world::feetpos(e);
+				vec ep = e->feetpos();
 				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
 					targets.add(e->clientnum);
 			}

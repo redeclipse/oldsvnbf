@@ -244,7 +244,7 @@ namespace ctf
 		{
             ctfstate::flag &g = st.flags[k];
             if(!g.ent || g.owner || !(g.base&BASE_FLAG) || g.droptime || g.team == d->team) continue;
-			if(d->o.dist(g.pos()) <= enttype[FLAG].radius*3)
+			if(d->o.dist(g.pos()) <= enttype[FLAG].radius*4)
 			{
 				denied = true;
 				break;
@@ -302,7 +302,7 @@ namespace ctf
 		if(d!=world::player1)
 		{
 			s_sprintfd(ds)("@CAPTURED!");
-			part_text(world::abovehead(d), ds, PART_TEXT_RISE, 2500, teamtype[d->team].colour, 3.f);
+			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, teamtype[d->team].colour, 3.f);
 		}
 		world::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: %d)", d==world::player1 ? "you" : world::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score);
     }
@@ -319,7 +319,7 @@ namespace ctf
 
     void checkflags(gameent *d)
     {
-        vec o = world::feetpos(d);
+        vec o = d->feetpos();
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
@@ -336,7 +336,7 @@ namespace ctf
 
 	bool aihomerun(gameent *d, aistate &b)
 	{
-		vec pos = world::feetpos(d);
+		vec pos = d->feetpos();
 		loopk(2)
 		{
 			int goal = -1;
@@ -386,7 +386,7 @@ namespace ctf
 
 	void aifind(gameent *d, aistate &b, vector<interest> &interests)
 	{
-		vec pos = world::feetpos(d);
+		vec pos = d->feetpos();
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
@@ -397,7 +397,7 @@ namespace ctf
 			gameent *e = NULL;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
-				vec ep = world::feetpos(e);
+				vec ep = e->feetpos();
 				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 					targets.add(e->clientnum);
 			}
@@ -486,7 +486,7 @@ namespace ctf
 				gameent *e = NULL;
 				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
-					vec ep = world::feetpos(e);
+					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
 						targets.add(e->clientnum);
 				}
@@ -501,7 +501,7 @@ namespace ctf
 					b.millis = lastmillis;
 				}
 			}
-			vec pos = world::feetpos(d);
+			vec pos = d->feetpos();
 			float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6.25f);
 			loopv(st.flags)
 			{ // get out of the way of the returnee!

@@ -45,7 +45,7 @@ namespace ai
 
 	vec getaimpos(gameent *d, gameent *e)
 	{
-		vec o = world::headpos(e);
+		vec o = e->headpos();
 		if(d->skill <= 100) o.z -= e->height*(1.f/float(d->skill));
 		return o;
 	}
@@ -192,8 +192,7 @@ namespace ai
 
 	bool randomnode(gameent *d, aistate &b, float guard, float wander)
 	{
-		vec feet = world::feetpos(d);
-		return randomnode(d, b, feet, guard, wander);
+		return randomnode(d, b, d->feetpos(), guard, wander);
 	}
 
 	bool badhealth(gameent *d)
@@ -207,7 +206,7 @@ namespace ai
 		if(world::allowmove(d))
 		{
 			gameent *t = NULL, *e = NULL;
-			vec dp = world::headpos(d), tp(0, 0, 0);
+			vec dp = d->headpos(), tp(0, 0, 0);
 			bool insight = false, tooclose = false;
 			float mindist = guard*guard;
 			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
@@ -238,7 +237,7 @@ namespace ai
 
 	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
 	{
-		vec feet = world::feetpos(d);
+		vec feet = d->feetpos();
 		if(walk == 2 || b.override || (walk && feet.squaredist(pos) <= guard*guard) || !makeroute(d, b, pos))
 		{ // run away and back to keep ourselves busy
 			if(!b.override && randomnode(d, b, pos, guard, wander))
@@ -263,7 +262,7 @@ namespace ai
 	{
 		if(!b.override)
 		{
-			vec feet = world::feetpos(d);
+			vec feet = d->feetpos();
 			if(walk < 2 && feet.squaredist(pos) <= guard*guard)
 			{
 				bool hasenemy = enemy(d, b, pos, wander, false);
@@ -286,7 +285,7 @@ namespace ai
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
-			vec dp = world::headpos(d), ep = getaimpos(d, e);
+			vec dp = d->headpos(), ep = getaimpos(d, e);
 			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
 			return true;
 		}
@@ -296,7 +295,7 @@ namespace ai
 	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false)
 	{
 		gameent *t = NULL, *e = NULL;
-		vec dp = world::headpos(d), tp(0, 0, 0);
+		vec dp = d->headpos(), tp(0, 0, 0);
 		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
 			vec ep = getaimpos(d, e);
@@ -326,7 +325,7 @@ namespace ai
 
 	void items(gameent *d, aistate &b, vector<interest> &interests, bool force = false)
 	{
-		vec pos = world::feetpos(d);
+		vec pos = d->feetpos();
 		loopvj(entities::ents)
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
@@ -503,7 +502,7 @@ namespace ai
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return defend(d, b, world::feetpos(e)) ? 1 : 0;
+					if(e && e->state == CS_ALIVE) return defend(d, b, e->feetpos()) ? 1 : 0;
 					break;
 				}
 				default: break;
@@ -589,7 +588,7 @@ namespace ai
 				case AI_T_PLAYER:
 				{
 					gameent *e = world::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return patrol(d, b, world::feetpos(e)) ? 1 : 0;
+					if(e && e->state == CS_ALIVE) return patrol(d, b, e->feetpos()) ? 1 : 0;
 					break;
 				}
 				default: break;
@@ -600,7 +599,7 @@ namespace ai
 
 	int closenode(gameent *d, bool force = false)
 	{
-		vec pos = world::feetpos(d);
+		vec pos = d->feetpos();
 		int node = -1;
 		float mindist = NEARDISTSQ;
 		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode && d->ai->route[i] != d->ai->prevnode)))
@@ -647,7 +646,7 @@ namespace ai
 		if(entities::ents.inrange(d->lastnode))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-			vec dir = vec(e.o).sub(world::feetpos(d));
+			vec dir = vec(e.o).sub(d->feetpos());
 			if(d->timeinair || dir.magnitude() <= CLOSEDIST || retry)
 			{
 				static vector<int> anyremap; anyremap.setsizenodelete(0);
@@ -686,7 +685,7 @@ namespace ai
 				{
 					if(entspot(d, d->ai->route[n], retries > 1))
 					{
-						if(vec(d->ai->spot).sub(world::feetpos(d)).magnitude() <= CLOSEDIST/2.f)
+						if(vec(d->ai->spot).sub(d->feetpos()).magnitude() <= CLOSEDIST/2.f)
 						{
 							d->ai->dontmove = true;
 							d->ai->route.setsize(0);
@@ -708,7 +707,7 @@ namespace ai
 	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-		vec dp = world::headpos(d), ep = getaimpos(d, e);
+		vec dp = d->headpos(), ep = getaimpos(d, e);
 		gameent *h = world::intersectclosest(dp, d->ai->target, d);
 		if(h && !targetable(d, h, true)) return false;
 		float targyaw, targpitch, mindist = d->radius*d->radius, dist = dp.squaredist(ep);
@@ -728,7 +727,7 @@ namespace ai
 
 	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
-		vec off = vec(pos).sub(world::feetpos(d)), dir(off.x, off.y, 0);
+		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		bool offground = (d->timeinair && !d->inliquid && !d->onladder), jumper = off.z >= JUMPMIN,
 			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
 			propeller = dir.magnitude() >= JUMPMIN, propel = jumper || propeller;
@@ -762,7 +761,7 @@ namespace ai
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
 		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2);
-		vec dp = world::headpos(d);
+		vec dp = d->headpos();
 		if(b.idle || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
@@ -950,7 +949,7 @@ namespace ai
 
 	void logic(gameent *d, aistate &b, bool run)
 	{
-		vec dp = world::headpos(d);
+		vec dp = d->headpos();
 		findorientation(dp, d->yaw, d->pitch, d->ai->target);
 		bool allowmove = world::allowmove(d) && b.type != AI_S_WAIT;
 		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
@@ -1004,7 +1003,7 @@ namespace ai
 		{
 			gameent *d = (gameent *)world::iterdynents(i);
 			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
-			vec pos = world::feetpos(d);
+			vec pos = d->feetpos();
 			float limit = guessradius+d->radius;
             obstacles.avoidnear(d, pos, limit);
 		}
@@ -1104,7 +1103,7 @@ namespace ai
 				btypes[b.targtype+1], b.target
 			);
 		}
-		part_text(vec(world::abovehead(d)).add(vec(0, 0, above)), s);
+		part_text(vec(d->abovehead()).add(vec(0, 0, above)), s);
 	}
 
 	void drawroute(gameent *d, aistate &b, float amt)
@@ -1112,7 +1111,7 @@ namespace ai
 		int colour = teamtype[d->team].colour, last = -1;
 		if(aidebug > 4)
 		{
-			vec pos = vec(world::feetpos(d)).add(vec(0, 0, 0.1f));
+			vec pos = vec(d->feetpos()).add(vec(0, 0, 0.1f));
 			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x00FFFF);
 			if(entities::ents.inrange(d->lastnode)) part_trace(pos, vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0xFF00FF);
 			if(entities::ents.inrange(d->ai->lastnode)) part_trace(pos, vec(entities::ents[d->ai->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0x880088);
