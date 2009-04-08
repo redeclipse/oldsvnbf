@@ -126,7 +126,7 @@ void playmusic(const char *name, const char *cmd)
 		string buf;
 		loopi(sizeof(exts)/sizeof(exts[0]))
 		{
-			s_sprintf(buf)("sounds/%s%s", name, exts[i]);
+			formatstring(buf)("sounds/%s%s", name, exts[i]);
 			if(loadmusic(buf))
 			{
                 DELETEA(musicfile);
@@ -198,7 +198,7 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 		string buf;
 		loopi(sizeof(exts)/sizeof(exts[0]))
 		{
-			s_sprintf(buf)("sounds/%s%s", sample->name, exts[i]);
+			formatstring(buf)("sounds/%s%s", sample->name, exts[i]);
             sample->sound = loadwav(buf);
             if(sample->sound) break;
 		}
@@ -539,7 +539,7 @@ void initmumble()
             if(mumbleinfo) wcsncpy(mumbleinfo->name, L"BloodFrontier", 256);
         }
     #elif defined(_POSIX_SHARED_MEMORY_OBJECTS)
-        s_sprintfd(shmname)("/MumbleLink.%d", getuid());
+        defformatstring(shmname)("/MumbleLink.%d", getuid());
         mumblelink = shm_open(shmname, O_RDWR, 0);
         if(mumblelink >= 0)
         {

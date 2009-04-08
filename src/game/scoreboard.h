@@ -237,11 +237,11 @@ namespace hud
 					if(pen)
 						g.textf("penalty for missed shots: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
 
-					s_sprintfd(aname)("bestscore_%s", getmapname());
+					defformatstring(aname)("bestscore_%s", getmapname());
 					const char *bestsc = getalias(aname);
 					int bestscore = *bestsc ? atoi(bestsc) : score;
 					if(score<bestscore) bestscore = score;
-					s_sprintfd(nscore)("%d", bestscore);
+					defformatstring(nscore)("%d", bestscore);
 					alias(aname, nscore);
 					g.textf("SCORE: \fs\f0%d\fS second(s), best: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
 				}

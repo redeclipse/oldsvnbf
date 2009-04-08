@@ -1152,15 +1152,15 @@ void render_particles(int time)
 			int type = parts[i]->type;
 			const char *title = parts[i]->texname ? strrchr(parts[i]->texname, '/')+1 : NULL;
 			string info = "";
-			if(type&PT_GLARE) s_strcat(info, "g,");
-			if(type&PT_SOFT) s_strcat(info, "s,");
-			if(type&PT_LERP) s_strcat(info, "l,");
-			if(type&PT_MOD) s_strcat(info, "m,");
-			if(type&PT_RND4) s_strcat(info, "r,");
-			if(type&PT_FLIP) s_strcat(info, "f,");
-			if(type&PT_ONTOP) s_strcat(info, "o,");
-			if(parts[i]->collide) s_strcat(info, "c,");
-			s_sprintfd(ds)("%d\t%s(%s%d) %s", parts[i]->count(), partnames[type&0xFF], info, parts[i]->grav, (title?title:""));
+			if(type&PT_GLARE) concatstring(info, "g,");
+			if(type&PT_SOFT) concatstring(info, "s,");
+			if(type&PT_LERP) concatstring(info, "l,");
+			if(type&PT_MOD) concatstring(info, "m,");
+			if(type&PT_RND4) concatstring(info, "r,");
+			if(type&PT_FLIP) concatstring(info, "f,");
+			if(type&PT_ONTOP) concatstring(info, "o,");
+			if(parts[i]->collide) concatstring(info, "c,");
+			defformatstring(ds)("%d\t%s(%s%d) %s", parts[i]->count(), partnames[type&0xFF], info, parts[i]->grav, (title?title:""));
 			draw_text(ds, FONTH, (i+n/2)*FONTH);
 		}
 		glDisable(GL_BLEND);
@@ -1680,7 +1680,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			flares.addflare(o, attr2, attr3, attr4, (attr1&0x02)!=0, (attr1&0x01)!=0);
 			break;
 		default:
-			s_sprintfd(ds)("@%d?", attr1);
+			defformatstring(ds)("@%d?", attr1);
 			part_text(o, ds);
 			break;
 	}

@@ -21,13 +21,13 @@ void setnames(const char *fname, int type)
 	maptype = type >= 0 || type <= MAP_MAX-1 ? type : MAP_BFGZ;
 
 	string fn;
-	if(fname != NULL) s_sprintf(fn)("%s", fname);
-	else s_sprintf(fn)("%s/untitled", mapdirs[maptype].name);
+	if(fname != NULL) formatstring(fn)("%s", fname);
+	else formatstring(fn)("%s/untitled", mapdirs[maptype].name);
 
-	if(strpbrk(fn, "/\\")) s_strcpy(mapname, fn);
-	else s_sprintf(mapname)("%s/%s", mapdirs[maptype].name, fn);
+	if(strpbrk(fn, "/\\")) copystring(mapname, fn);
+	else formatstring(mapname)("%s/%s", mapdirs[maptype].name, fn);
 
-	s_sprintf(mapfile)("%s%s", mapname, mapexts[maptype].name);
+	formatstring(mapfile)("%s%s", mapname, mapexts[maptype].name);
 }
 
 enum { OCTSAV_CHILDREN = 0, OCTSAV_EMPTY, OCTSAV_SOLID, OCTSAV_NORMAL, OCTSAV_LODCUBE };
@@ -285,7 +285,7 @@ void saveslotconfig(stream *h, Slot &s, int index)
 void save_config(char *mname)
 {
 	backup(mname, ".cfg", hdr.revision);
-	s_sprintfd(fname)("%s.cfg", mname);
+	defformatstring(fname)("%s.cfg", mname);
 	stream *h = openfile(fname, "w");
 	if(!h) { conoutf("\frcould not write config to %s", fname); return; }
 
@@ -579,8 +579,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			setnames(mname, format);
 			if(!tempfile) loopk(2)
 			{
-				s_sprintfd(s)("temp/%s", k ? mapfile : mapname);
-				s_strcpy(k ? mapfile : mapname, s);
+				defformatstring(s)("temp/%s", k ? mapfile : mapname);
+				copystring(k ? mapfile : mapname, s);
 			}
 
 			stream *f = opengzfile(mapfile, "rb");
@@ -626,7 +626,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					s_strcpy(oldmaptitle, chdr.maptitle);
+					copystring(oldmaptitle, chdr.maptitle);
 				}
 				else if(newhdr.version <= 32)
 				{
@@ -636,7 +636,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					s_strcpy(oldmaptitle, chdr.maptitle);
+					copystring(oldmaptitle, chdr.maptitle);
 				}
 				else if(newhdr.version <= 33)
 				{
@@ -644,7 +644,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					lilswap(&chdr.worldsize, 7);
 					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*7);
 					memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					s_strcpy(oldmaptitle, chdr.maptitle);
+					copystring(oldmaptitle, chdr.maptitle);
 				}
 				else
 				{
@@ -674,7 +674,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 				maptype = MAP_BFGZ;
 
-				if(hdr.version <= 24) s_strncpy(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
+				if(hdr.version <= 24) copystring(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
 				if(verbose) conoutf("\fwloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
 
 				if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
@@ -791,7 +791,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					}
 					lilswap(&ohdr.worldsize, 8);
 				}
-				s_strcpy(oldmaptitle, ohdr.maptitle);
+				copystring(oldmaptitle, ohdr.maptitle);
 
 				if(ohdr.version > OCTAVERSION)
 				{
@@ -843,7 +843,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					int len = f->getchar();
 					f->read(gameid, len+1);
 				}
-				else s_strcpy(gameid, "fps");
+				else copystring(gameid, "fps");
 				strncpy(hdr.gameid, gameid, 4);
 
 				if(!server::canload(hdr.gameid))
@@ -1011,7 +1011,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			overrideidents = worldidents = true;
 			persistidents = false;
-			s_sprintfd(cfgname)("%s.cfg", mapname);
+			defformatstring(cfgname)("%s.cfg", mapname);
 			if(maptype == MAP_OCTA)
 			{
 				exec("octa.cfg"); // for use with -pSAUER_DIR
@@ -1089,7 +1089,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 void writeobj(char *name)
 {
-    s_sprintfd(fname)("%s.obj", name);
+    defformatstring(fname)("%s.obj", name);
     stream *f = openfile(fname, "w");
     if(!f) return;
     f->printf("# obj file of sauerbraten level\n");

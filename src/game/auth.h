@@ -113,7 +113,7 @@ namespace auth
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, false, 100);
-        s_sprintfd(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
+        defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
 		sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "please wait, requesting credential match");
     }
@@ -125,7 +125,7 @@ namespace auth
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
-        s_sprintfd(buf)("confauth %u %s\n", id, val);
+        defformatstring(buf)("confauth %u %s\n", id, val);
         addoutput(buf);
     }
 
@@ -170,7 +170,7 @@ namespace auth
 	void regserver()
 	{
 		conoutf("updating authentication server");
-		s_sprintfd(msg)("server %d %d\n", serverport, serverqueryport);
+		defformatstring(msg)("server %d %d\n", serverport, serverqueryport);
 		addoutput(msg);
 		lastactivity = lastmillis;
 	}

@@ -36,10 +36,10 @@ void conline(const char *sf, int n)
 	{
 		addcref(' ');
 		addcref(' ');
-		s_strcat(cl.cref, sf);
+		concatstring(cl.cref, sf);
 	}
 	addcref(0);
-	s_strcat(cl.cref, sf);
+	concatstring(cl.cref, sf);
 
 	if(n)
 	{
@@ -49,9 +49,9 @@ void conline(const char *sf, int n)
 			int off = n+j;
 			if(conlines.inrange(off))
 			{
-				if(j) s_sprintf(sd)("%s\fs", conlines[off].cref);
-				else s_sprintf(sd)("\fS%s", conlines[off].cref);
-				s_strcpy(conlines[off].cref, sd);
+				if(j) formatstring(sd)("%s\fs", conlines[off].cref);
+				else formatstring(sd)("\fS%s", conlines[off].cref);
+				copystring(conlines[off].cref, sd);
 			}
 		}
 	}
@@ -61,11 +61,11 @@ SVAR(consoletimefmt, "%c");
 
 void console(const char *s, ...)
 {
-	s_sprintfdv(sf, s);
+	defvformatstring(sf, s, s);
 	string osf, psf, fmt;
-	s_sprintf(fmt)(consoletimefmt);
+	formatstring(fmt)(consoletimefmt);
 	filtertext(osf, sf);
-	s_sprintf(psf)("%s %s", gettime(fmt), osf);
+	formatstring(psf)("%s %s", gettime(fmt), osf);
 	printf("%s\n", osf);
 	fflush(stdout);
 	conline(sf, 0);
@@ -73,7 +73,7 @@ void console(const char *s, ...)
 
 void conoutf(const char *s, ...)
 {
-	s_sprintfdv(sf, s);
+	defvformatstring(sf, s, s);
 	console("%s", sf);
 #ifdef IRC
 	string osf;
@@ -351,7 +351,7 @@ void saycommand(char *init)						 // turns input to the command line on or off
 {
 	SDL_EnableUNICODE(saycommandon = (init!=NULL));
 	keyrepeat(saycommandon);
-    s_strcpy(commandbuf, init ? init : "");
+    copystring(commandbuf, init ? init : "");
     DELETEA(commandaction);
     DELETEA(commandicon);
 	commandpos = -1;
@@ -378,7 +378,7 @@ void pasteconsole()
 	if(!IsClipboardFormatAvailable(CF_TEXT)) return;
 	if(!OpenClipboard(NULL)) return;
 	char *cb = (char *)GlobalLock(GetClipboardData(CF_TEXT));
-	s_strcat(commandbuf, cb);
+	concatstring(commandbuf, cb);
 	GlobalUnlock(cb);
 	CloseClipboard();
 	#elif defined(__APPLE__)
@@ -425,7 +425,7 @@ struct hline
 
     void restore()
     {
-        s_strcpy(commandbuf, buf);
+        copystring(commandbuf, buf);
         if(commandpos >= (int)strlen(commandbuf)) commandpos = -1;
         DELETEA(commandaction);
         DELETEA(commandicon);
@@ -799,9 +799,9 @@ void complete(char *s)
 	if(*s!='/')
 	{
 		string t;
-		s_strcpy(t, s);
-		s_strcpy(s, "/");
-		s_strcat(s, t);
+		copystring(t, s);
+		copystring(s, "/");
+		concatstring(s, t);
 	}
 	if(!s[1]) return;
 	if(!completesize) { completesize = (int)strlen(s)-1; lastcomplete[0] = '\0'; }
@@ -813,7 +813,7 @@ void complete(char *s)
 		if(end)
 		{
 			string command;
-			s_strncpy(command, s+1, min(size_t(end-s), sizeof(command)));
+			copystring(command, s+1, min(size_t(end-s), sizeof(command)));
 			filesval **hasfiles = completions.access(command);
 			if(hasfiles) f = *hasfiles;
 		}
@@ -821,11 +821,11 @@ void complete(char *s)
 
     const char *nextcomplete = NULL;
 	string prefix;
-	s_strcpy(prefix, "/");
+	copystring(prefix, "/");
 	if(f) // complete using filenames
 	{
 		int commandsize = strchr(s, ' ')+1-s;
-		s_strncpy(prefix, s, min(size_t(commandsize+1), sizeof(prefix)));
+		copystring(prefix, s, min(size_t(commandsize+1), sizeof(prefix)));
         if(f->type==FILES_DIR && f->files.empty()) listfiles(f->dir, f->ext, f->files);
 		loopi(f->files.length())
 		{
@@ -844,9 +844,9 @@ void complete(char *s)
 	}
 	if(nextcomplete)
 	{
-		s_strcpy(s, prefix);
-		s_strcat(s, nextcomplete);
-		s_strcpy(lastcomplete, nextcomplete);
+		copystring(s, prefix);
+		concatstring(s, nextcomplete);
+		copystring(lastcomplete, nextcomplete);
 	}
 	else lastcomplete[0] = '\0';
 }

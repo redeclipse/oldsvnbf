@@ -3,7 +3,7 @@
 
 #include "engine.h"
 
-void itoa(char *s, int i) { s_sprintf(s)("%d", i); }
+void itoa(char *s, int i) { formatstring(s)("%d", i); }
 char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
@@ -370,7 +370,7 @@ char *lookup(char *n)							// find value of ident referenced with $ in exp
 	ident *id = idents->access(n+1);
 	if(id) switch(id->type)
 	{
-		case ID_VAR: { s_sprintfd(t)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); return exchangestr(n, t); }
+		case ID_VAR: { defformatstring(t)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); return exchangestr(n, t); }
 		case ID_FVAR: return exchangestr(n, floatstr(*id->storage.f));
 		case ID_SVAR: return exchangestr(n, *id->storage.s);
 		case ID_ALIAS: return exchangestr(n, id->action);
@@ -520,8 +520,8 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					arg[0] = 0;
 					if(numargs > 1) loopk(numargs-1) if(w[k+1])
 					{
-						if(k) s_strcat(arg, " ");
-						s_strcat(arg, w[k+1]);
+						if(k) concatstring(arg, " ");
+						concatstring(arg, w[k+1]);
 					}
 					bool found = false;
 					if(id)
@@ -538,9 +538,9 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					string val; val[0] = 0;
 					switch(id->type)
 					{
-						case ID_VAR: s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); break;
-						case ID_FVAR: s_sprintf(val)("%s", floatstr(*id->storage.f)); break;
-						case ID_SVAR: s_sprintf(val)("%s", *id->storage.s); break;
+						case ID_VAR: formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); break;
+						case ID_FVAR: formatstring(val)("%s", floatstr(*id->storage.f)); break;
+						case ID_SVAR: formatstring(val)("%s", *id->storage.s); break;
 						default: break;
 					}
 					setretval(newstring(val[0] ? val : c));
@@ -696,7 +696,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					{
 						if(i > argids.length())
 						{
-							s_sprintfd(argname)("arg%d", i);
+							defformatstring(argname)("arg%d", i);
 							argids.add(newident(argname));
 						}
 						pushident(*argids[i-1], w[i]); // set any arguments as (global) arg values so functions can access them
@@ -731,7 +731,7 @@ int execute(const char *p)
 bool execfile(const char *cfgfile)
 {
 	string s;
-	s_strcpy(s, cfgfile);
+	copystring(s, cfgfile);
 	char *buf = loadfile(s, NULL);
 	if(!buf) return false;
 	execute(buf);
@@ -804,14 +804,14 @@ COMMAND(writecfg, "");
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
 
-void intret(int v) { s_sprintfd(b)("%d", v); commandret = newstring(b); }
+void intret(int v) { defformatstring(b)("%d", v); commandret = newstring(b); }
 
 const char *floatstr(float v)
 {
 	static int n = 0;
 	static string t[3];
 	n = (n + 1)%3;
-	s_sprintf(t[n])(v==int(v) ? "%.1f" : "%.7g", v);
+	formatstring(t[n])(v==int(v) ? "%.1f" : "%.7g", v);
 	return t[n];
 }
 

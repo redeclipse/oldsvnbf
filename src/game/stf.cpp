@@ -23,14 +23,14 @@ namespace stf
             rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
-				s_sprintf(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
-			if(defend) s_sprintf(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
+				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
+			if(defend) formatstring(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
 			else b.info[0] = '\0';
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
 			vec p = vec(b.o).add(vec(0, 0, enttype[FLAG].radius*0.75f));
 			part_meter(p, occupy, b.enemy && b.owner ? PART_METER_VS : PART_METER, 1, teamtype[attack].colour, teamtype[defend].colour); p.z += 2.f;
 			part_text(p, b.info); p.z += 2.f;
-			s_sprintfd(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 2.f;
+			defformatstring(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 2.f;
 		}
 	}
 
@@ -134,10 +134,10 @@ namespace stf
 			if(e->type!=FLAG) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
-			s_sprintfd(alias)("flag_%d", e->attr[0]);
+			defformatstring(alias)("flag_%d", e->attr[0]);
 			const char *name = getalias(alias);
-			if(name[0]) s_strcpy(b.name, name);
-			else s_sprintf(b.name)("flag %d", st.flags.length());
+			if(name[0]) copystring(b.name, name);
+			else formatstring(b.name)("flag %d", st.flags.length());
 			b.ent = e;
 		}
 	}

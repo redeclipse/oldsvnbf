@@ -15,49 +15,49 @@ vector<char *> packagedirs;
 char *makefile(const char *s, const char *e, int revision, int start, bool skip)
 {
     static string o;
-    s_strcpy(o, s);
+    copystring(o, s);
 
     string m, f;
-    s_strcpy(m, o);
+    copystring(m, o);
 
     int d = start;
     char *t = strpbrk(m, ".");
     if(t) // try to detect extension and revision
     {
-        s_strncpy(o, m, t-m+1);
+        copystring(o, m, t-m+1);
         char *q = t+1;
         if(isnumeric(*q)) d = min(atoi(q), 1);
     }
-    else { s_strcpy(o, m); }
-    s_strcpy(f, o);
+    else { copystring(o, m); }
+    copystring(f, o);
 
     for(bool tryrev = false;; skip = false)
     {
-        s_sprintf(m)("%s%s", f, *e ? e : "");
+        formatstring(m)("%s%s", f, *e ? e : "");
         if(skip || fileexists(findfile(m, "w"), "r"))
         {
             if(revision)
             {
                 if(!tryrev)
                 {
-                    s_sprintf(f)("%s.r%.4d", o, revision);
+                    formatstring(f)("%s.r%.4d", o, revision);
                     tryrev = true;
                 }
-                else s_sprintf(f)("%s.r%.4d.%.4d", o, revision, d++);
+                else formatstring(f)("%s.r%.4d.%.4d", o, revision, d++);
             }
-            else s_sprintf(f)("%s.%.4d", o, d++);
+            else formatstring(f)("%s.%.4d", o, d++);
         }
         else break;
     }
 
-    s_strcpy(o, m);
+    copystring(o, m);
     return o;
 }
 
 void backup(const char *fname, const char *ext, int revision, int start)
 {
-    s_sprintfd(tname)("%s%s", fname, ext);
-    s_sprintfd(aname)("%s", findfile(tname, "w"));
+    defformatstring(tname)("%s%s", fname, ext);
+    defformatstring(aname)("%s", findfile(tname, "w"));
     if(fileexists(aname, "r"))
     {
         const char *newname = findfile(makefile(fname, ext, revision, start), "w");
@@ -68,7 +68,7 @@ void backup(const char *fname, const char *ext, int revision, int start)
 char *makerelpath(const char *dir, const char *file, const char *prefix, const char *cmd)
 {
     static string tmp;
-    if(prefix) s_strcpy(tmp, prefix);
+    if(prefix) copystring(tmp, prefix);
     else tmp[0] = '\0';
     if(file[0]=='<')
     {
@@ -76,13 +76,13 @@ char *makerelpath(const char *dir, const char *file, const char *prefix, const c
         if(end)
         {
             size_t len = strlen(tmp);
-            s_strncpy(&tmp[len], file, min(sizeof(tmp)-len, size_t(end+2-file)));
+            copystring(&tmp[len], file, min(sizeof(tmp)-len, size_t(end+2-file)));
             file = end+1;
         }
     }
-    if(cmd) s_strcat(tmp, cmd);
-    s_sprintfd(pname)("%s/%s", dir, file);
-    s_strcat(tmp, pname);
+    if(cmd) concatstring(tmp, cmd);
+    defformatstring(pname)("%s/%s", dir, file);
+    concatstring(tmp, pname);
     return tmp;
 }
 
@@ -129,7 +129,7 @@ char *path(char *s)
 char *path(const char *s, bool copy)
 {
     static string tmp;
-    s_strcpy(tmp, s);
+    copystring(tmp, s);
     path(tmp);
     return tmp;
 }
@@ -140,7 +140,7 @@ const char *parentdir(const char *directory)
     while(p > directory && *p != '/' && *p != '\\') p--;
     static string parent;
     size_t len = p-directory+1;
-    s_strncpy(parent, directory, len);
+    copystring(parent, directory, len);
     return parent;
 }
 
@@ -162,7 +162,7 @@ bool createdir(const char *path)
     if(path[len-1]==PATHDIV)
     {
         static string strip;
-        path = s_strncpy(strip, path, len);
+        path = copystring(strip, path, len);
     }
 #ifdef WIN32
     return CreateDirectory(path, NULL)!=0;
@@ -184,7 +184,7 @@ static void fixdir(char *dir)
 
 void sethomedir(const char *dir)
 {
-    fixdir(s_strcpy(homedir, dir));
+    fixdir(copystring(homedir, dir));
 }
 
 void addpackagedir(const char *dir)
@@ -197,13 +197,13 @@ const char *findfile(const char *filename, const char *mode)
     static string s;
     if(homedir[0])
     {
-        s_sprintf(s)("%s%s", homedir, filename);
+        formatstring(s)("%s%s", homedir, filename);
         path(s);
         if(fileexists(s, mode)) return s;
         if(mode[0]=='w' || mode[0]=='a')
         {
             string dirs;
-            s_strcpy(dirs, s);
+            copystring(dirs, s);
             path(dirs);
             char *dir = strchr(dirs[0]==PATHDIV ? dirs+1 : dirs, PATHDIV);
             while(dir)
@@ -218,17 +218,17 @@ const char *findfile(const char *filename, const char *mode)
     }
     if(mode[0]=='w' || mode[0]=='a')
     {
-        s_strcpy(s, filename);
+        copystring(s, filename);
         path(s);
         return s;
     }
     loopv(packagedirs)
     {
-        s_sprintf(s)("%s%s", packagedirs[i], filename);
+        formatstring(s)("%s%s", packagedirs[i], filename);
         path(s);
         if(fileexists(s, mode)) return s;
     }
-    s_strcpy(s, filename);
+    copystring(s, filename);
     path(s);
     return s;
 }
@@ -237,7 +237,7 @@ bool listdir(const char *dir, const char *ext, vector<char *> &files)
 {
     int extsize = ext ? (int)strlen(ext)+1 : 0;
     #if defined(WIN32)
-    s_sprintfd(pathname)("%s\\*.%s", dir, ext ? ext : "*");
+    defformatstring(pathname)("%s\\*.%s", dir, ext ? ext : "*");
     WIN32_FIND_DATA FindFileData;
     HANDLE Find = FindFirstFile(path(pathname), &FindFileData);
     if(Find != INVALID_HANDLE_VALUE)
@@ -249,7 +249,7 @@ bool listdir(const char *dir, const char *ext, vector<char *> &files)
     }
     #else
     string pathname;
-    s_strcpy(pathname, dir);
+    copystring(pathname, dir);
     DIR *d = opendir(path(pathname));
     if(d)
     {
@@ -278,12 +278,12 @@ int listfiles(const char *dir, const char *ext, vector<char *> &files)
     string s;
     if(homedir[0])
     {
-        s_sprintf(s)("%s%s", homedir, dir);
+        formatstring(s)("%s%s", homedir, dir);
         if(listdir(s, ext, files)) dirs++;
     }
     loopv(packagedirs)
     {
-        s_sprintf(s)("%s%s", packagedirs[i], dir);
+        formatstring(s)("%s%s", packagedirs[i], dir);
         if(listdir(s, ext, files)) dirs++;
     }
 #ifndef STANDALONE

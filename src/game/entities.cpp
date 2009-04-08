@@ -33,19 +33,19 @@ namespace entities
 		string str;
 		entinfostr[0] = 0;
 		#define addentinfo(s) { \
-			if(entinfostr[0]) s_strcat(entinfostr, ", "); \
-			s_strcat(entinfostr, s); \
+			if(entinfostr[0]) concatstring(entinfostr, ", "); \
+			concatstring(entinfostr, s); \
 		}
 		if(type == PLAYERSTART || type == FLAG)
 		{
 			if(valteam(attr2, TEAM_FIRST))
 			{
-				s_sprintf(str)("team %s", teamtype[attr2].name);
+				formatstring(str)("team %s", teamtype[attr2].name);
 				addentinfo(str);
 			}
 			else if(attr2 < TEAM_MAX)
 			{
-				s_sprintf(str)("%s", teamtype[attr2].name);
+				formatstring(str)("%s", teamtype[attr2].name);
 				addentinfo(str);
 			}
 		}
@@ -55,7 +55,7 @@ namespace entities
 				attr = weapattr(attr1, sweap);
 			if(isweap(attr))
 			{
-				s_sprintf(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
+				formatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
 				addentinfo(str);
 				if(full)
 				{
@@ -94,7 +94,7 @@ namespace entities
 				};
 				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
 					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
-				s_sprintf(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
+				formatstring(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
 		}
@@ -158,7 +158,7 @@ namespace entities
 					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
 					if(item && *item)
 					{
-						s_sprintfd(ds)("@%s", item);
+						defformatstring(ds)("@%s", item);
 						part_text(above, ds, PART_TEXT_RISE, 3000, colour, 2);
 					}
 				}
@@ -665,7 +665,7 @@ namespace entities
 									{
 										if(d == world::player1)
 										{
-											s_sprintfd(s)("on_trigger_%d", e.attr[0]);
+											defformatstring(s)("on_trigger_%d", e.attr[0]);
 											RUNWORLD(s);
 										}
 										break;
@@ -1804,7 +1804,7 @@ namespace entities
 			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
 			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
 			{
-				s_sprintfd(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+				defformatstring(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				if(showentinfo >= 3 || hasent)
 				{
@@ -1812,7 +1812,7 @@ namespace entities
 					{
 						if(*enttype[e.type].attrs[k])
 						{
-							s_sprintf(s)("@%s%s:%d", hasent ? "\fw" : "\fa", enttype[e.type].attrs[k], e.attr[k]);
+							formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fa", enttype[e.type].attrs[k], e.attr[k]);
 							part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 						}
 						else break;
@@ -1830,7 +1830,7 @@ namespace entities
 				part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
 			else
 			{
-				s_sprintfd(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent));
+				defformatstring(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent));
 				part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
 			}
 		}

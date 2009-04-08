@@ -131,14 +131,14 @@ struct duelservmode : servmode
 				duelround++;
 				if(m_duel(gamemode, mutators))
 				{
-					s_sprintfd(namea)("%s", colorname(alive[0]));
-					s_sprintfd(nameb)("%s", colorname(alive[1]));
-					s_sprintfd(fight)("\fyduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
+					defformatstring(namea)("%s", colorname(alive[0]));
+					defformatstring(nameb)("%s", colorname(alive[1]));
+					defformatstring(fight)("\fyduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 				}
 				else if(m_lms(gamemode, mutators))
 				{
-					s_sprintfd(fight)("\fylast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
+					defformatstring(fight)("\fylast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
 					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
 				}
 				dueltime = 0;

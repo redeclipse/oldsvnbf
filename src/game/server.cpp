@@ -389,19 +389,19 @@ namespace server
 					case ID_VAR:
 					{
 						setvar(id.name, id.def.i, true);
-                        if(invoked) s_sprintf(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
+                        if(invoked) formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
 						setfvar(id.name, id.def.f, true);
-                        if(invoked) s_sprintf(val)("%f", *id.storage.f);
+                        if(invoked) formatstring(val)("%f", *id.storage.f);
 						break;
 					}
 					case ID_SVAR:
 					{
 						setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true);
-                        if(invoked) s_sprintf(val)("%s", *id.storage.s);
+                        if(invoked) formatstring(val)("%s", *id.storage.s);
 						break;
 					}
 					default: break;
@@ -470,13 +470,13 @@ namespace server
 		if(!name) name = ci->name;
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
-		s_sprintf(cname)("\fs%s%s", chat, name);
+		formatstring(cname)("\fs%s%s", chat, name);
 		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
-			s_strcat(cname, s);
+			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
+			concatstring(cname, s);
 		}
-		s_strcat(cname, "\fS");
+		concatstring(cname, "\fS");
 		return cname;
 	}
 
@@ -491,12 +491,12 @@ namespace server
 			if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type) &&
 				(!gametype[mode].implied || !(gametype[mode].implied & mutstype[i].type)))
 			{
-				s_sprintfd(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
-				s_strcpy(gname, name);
+				defformatstring(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
+				copystring(gname, name);
 			}
 		}
-		s_sprintfd(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
-		s_strcpy(gname, mname);
+		defformatstring(mname)("%s%s%s", *gname ? gname : "", *gname ? " " : "", gametype[mode].name);
+		copystring(gname, mname);
 		return gname;
     }
 	ICOMMAND(gamename, "iii", (int *g, int *m), result(gamename(*g, *m)));
@@ -552,7 +552,7 @@ namespace server
 	const char *choosemap(const char *suggest)
 	{
 		static string mapchosen;
-		if(suggest && *suggest) s_strcpy(mapchosen, suggest);
+		if(suggest && *suggest) copystring(mapchosen, suggest);
 		else *mapchosen = 0;
 		if(GVAR(maprotate))
 		{
@@ -572,8 +572,8 @@ namespace server
 						if(maptxt)
 						{
 							string maploc;
-							if(strpbrk(maptxt, "/\\")) s_strcpy(maploc, maptxt);
-							else s_sprintf(maploc)("maps/%s", maptxt);
+							if(strpbrk(maptxt, "/\\")) copystring(maploc, maptxt);
+							else formatstring(maploc)("maps/%s", maptxt);
 							if(!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc))
 							{
 								p = i;
@@ -593,7 +593,7 @@ namespace server
 				char *mapidx = c >= 0 ? indexlist(maplist, c) : NULL;
 				if(mapidx)
 				{
-					s_strcpy(mapchosen, mapidx);
+					copystring(mapchosen, mapidx);
 					DELETEP(mapidx);
 				}
 			}
@@ -814,7 +814,7 @@ namespace server
 
 	void relayf(int r, const char *s, ...)
 	{
-		s_sprintfdlv(str, s, s);
+		defvformatstring(str, s, s);
 		string st;
 		filtertext(st, str);
 		ircoutf(r, "%s", st);
@@ -827,14 +827,14 @@ namespace server
 	{
 		if(cn < 0 || allowbroadcast(cn))
 		{
-			s_sprintfdlv(str, s, s);
+			defvformatstring(str, s, s);
 			sendf(cn, 1, "ris", SV_SERVMSG, str);
 		}
 	}
 
 	void srvoutf(int r, const char *s, ...)
 	{
-		s_sprintfdlv(str, s, s);
+		defvformatstring(str, s, s);
 		srvmsgf(-1, "%s", str);
 		relayf(r, "%s", str);
 	}
@@ -910,16 +910,16 @@ namespace server
 		demoheader hdr;
 		string msg;
 		msg[0] = '\0';
-		s_sprintfd(file)("%s.dmo", smapname);
+		defformatstring(file)("%s.dmo", smapname);
 		demoplayback = opengzfile(file, "rb");
-		if(!demoplayback) s_sprintf(msg)("could not read demo \"%s\"", file);
+		if(!demoplayback) formatstring(msg)("could not read demo \"%s\"", file);
 		else if(demoplayback->read(&hdr, sizeof(demoheader))!=sizeof(demoheader) || memcmp(hdr.magic, DEMO_MAGIC, sizeof(hdr.magic)))
-			s_sprintf(msg)("\"%s\" is not a demo file", file);
+			formatstring(msg)("\"%s\" is not a demo file", file);
 		else
 		{
             lilswap(&hdr.version, 2);
-			if(hdr.version!=DEMO_VERSION) s_sprintf(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.version<DEMO_VERSION ? "older" : "newer");
-			else if(hdr.gamever!=GAMEVERSION) s_sprintf(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.gamever<GAMEVERSION ? "older" : "newer");
+			if(hdr.version!=DEMO_VERSION) formatstring(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.version<DEMO_VERSION ? "older" : "newer");
+			else if(hdr.gamever!=GAMEVERSION) formatstring(msg)("demo \"%s\" requires an %s version of Blood Frontier", file, hdr.gamever<GAMEVERSION ? "older" : "newer");
 		}
 		if(msg[0])
 		{
@@ -990,7 +990,7 @@ namespace server
 		time_t t = time(NULL);
 		char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
 		while(trim>timestr && isspace(*--trim)) *trim = '\0';
-		s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
+		formatstring(d.info)("%s: %s, %s, %.2f%s", timestr, gamename(gamemode, mutators), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
 		srvoutf(4, "demo \"%s\" recorded", d.info);
 		d.data = new uchar[len];
 		d.len = len;
@@ -1127,7 +1127,7 @@ namespace server
 				break;
 			}
 		}
-		s_strcpy(ci->mapvote, map);
+		copystring(ci->mapvote, map);
 		ci->modevote = reqmode;
 		ci->mutsvote = reqmuts;
 		if(hasveto)
@@ -1287,7 +1287,7 @@ namespace server
 		if(!insert) return *(savedscore *)0;
 		savedscore &sc = scores.add();
 		sc.ip = ip;
-		s_strcpy(sc.name, ci->name);
+		copystring(sc.name, ci->name);
 		return sc;
 	}
 
@@ -1349,7 +1349,7 @@ namespace server
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
-		s_strcpy(smapname, s && *s ? s : GVAR(defaultmap));
+		copystring(smapname, s && *s ? s : GVAR(defaultmap));
 		sents.setsize(0);
 		setupspawns(false);
 		notgotinfo = true;
@@ -1406,8 +1406,8 @@ namespace server
 				case ID_COMMAND:
 				{
 					string s;
-					if(nargs <= 1 || !arg) s_sprintf(s)("%s", cmd);
-					else s_sprintf(s)("%s %s", cmd, arg);
+					if(nargs <= 1 || !arg) formatstring(s)("%s", cmd);
+					else formatstring(s)("%s %s", cmd, arg);
 					char *ret = executeret(s);
 					if(ret)
 					{
@@ -1439,7 +1439,7 @@ namespace server
 					}
 					*id->storage.i = ret;
 					id->changed();
-					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
@@ -1457,7 +1457,7 @@ namespace server
 					}
 					*id->storage.f = ret;
 					id->changed();
-					s_sprintf(val)("%s", floatstr(*id->storage.f));
+					formatstring(val)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -1470,7 +1470,7 @@ namespace server
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
-					s_sprintf(val)("%s", *id->storage.s);
+					formatstring(val)("%s", *id->storage.s);
 					break;
 				}
 				default: return false;
@@ -1483,7 +1483,7 @@ namespace server
 
 	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
 	{ // incoming commands from clients
-		s_sprintfd(cmdname)("sv_%s", cmd);
+		defformatstring(cmdname)("sv_%s", cmd);
 		ident *id = idents->access(cmdname);
 		if(id && id->flags&IDF_SERVER)
 		{
@@ -1495,8 +1495,8 @@ namespace server
 					if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
 					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
 					string s;
-					if(nargs <= 1 || !arg) s_sprintf(s)("sv_%s", cmd);
-					else s_sprintf(s)("sv_%s %s", cmd, arg);
+					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
+					else formatstring(s)("sv_%s %s", cmd, arg);
 					char *ret = executeret(s);
 					if(ret)
 					{
@@ -1530,7 +1530,7 @@ namespace server
 					}
 					*id->storage.i = ret;
 					id->changed();
-					s_sprintf(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
@@ -1550,7 +1550,7 @@ namespace server
 					}
 					*id->storage.f = ret;
 					id->changed();
-					s_sprintf(val)("%s", floatstr(*id->storage.f));
+					formatstring(val)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -1565,7 +1565,7 @@ namespace server
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
-					s_sprintf(val)("%s", *id->storage.s);
+					formatstring(val)("%s", *id->storage.s);
 					break;
 				}
 				default: return;
@@ -1744,17 +1744,17 @@ namespace server
 				{
 					case ID_VAR:
 					{
-						s_sprintf(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
+						formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
-						s_sprintf(val)("%s", floatstr(*id.storage.f));
+						formatstring(val)("%s", floatstr(*id.storage.f));
 						break;
 					}
 					case ID_SVAR:
 					{
-						s_sprintf(val)("%s", *id.storage.s);
+						formatstring(val)("%s", *id.storage.s);
 						break;
 					}
 					default: break;
@@ -2232,8 +2232,8 @@ namespace server
 	void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen)
 	{
 		char buf[2*sizeof(string)];
-		s_sprintf(buf)("%d %d ", cn, sessionid);
-		s_strcpy(&buf[strlen(buf)], pwd);
+		formatstring(buf)("%d %d ", cn, sessionid);
+		copystring(&buf[strlen(buf)], pwd);
         if(!hashstring(buf, result, maxlen)) *result = '\0';
 	}
 
@@ -2645,8 +2645,8 @@ namespace server
             {
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
-                if(!text[0]) s_strcpy(text, "unnamed");
-                s_strncpy(ci->name, text, MAXNAMELEN+1);
+                if(!text[0]) copystring(text, "unnamed");
+                copystring(ci->name, text, MAXNAMELEN+1);
 
                 getstring(text, p);
                 int disc = allowconnect(ci, text);
@@ -3004,15 +3004,15 @@ namespace server
 				case SV_INITC2S:
 				{
 					getstring(text, p);
-					if(!text[0]) s_strcpy(text, "unnamed");
+					if(!text[0]) copystring(text, "unnamed");
 				    if(strcmp(ci->name, text))
 					{
 						string oldname, newname;
-						s_strcpy(oldname, colorname(ci));
-						s_strcpy(newname, colorname(ci, text));
+						copystring(oldname, colorname(ci));
+						copystring(newname, colorname(ci, text));
 						relayf(2, "\fm%s is now known as %s", oldname, newname);
 					}
-					s_strncpy(ci->name, text, MAXNAMELEN+1);
+					copystring(ci->name, text, MAXNAMELEN+1);
 					int team = getint(p);
 					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
 						team = chooseteam(ci, team);

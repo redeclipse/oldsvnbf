@@ -61,7 +61,7 @@ void show_calclight_progress()
 	float bar1 = float(progress) / float(allocnodes),
 		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
-	s_sprintfd(text)("%d textures used", lightmaps.length());
+	defformatstring(text)("%d textures used", lightmaps.length());
 
 	if(LM_PACKW <= hwtexsize && !progresstex)
 	{
@@ -2148,7 +2148,7 @@ void dumplms()
     loopv(lightmaps)
     {
         ImageData temp(LM_PACKW, LM_PACKH, lightmaps[i].bpp, lightmaps[i].data);
-        s_sprintfd(fname)("%s.lm%.4d", getmapname(), i);
+        defformatstring(fname)("%s.lm%.4d", getmapname(), i);
         saveimage(fname, temp, imageformat, compresslevel, true);
     }
 }

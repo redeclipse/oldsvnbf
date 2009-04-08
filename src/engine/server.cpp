@@ -9,14 +9,14 @@ ICOMMAND(getkidmode, "", (void), intret(kidmode));
 #ifdef STANDALONE
 void console(const char *s, ...)
 {
-	s_sprintfdv(str, s);
+	defvformatstring(str, s, s);
 	string st;
 	filtertext(st, str);
 	printf("%s\n", st);
 }
 void conoutf(const char *s, ...)
 {
-	s_sprintfdv(str, s);
+	defvformatstring(str, s, s);
 	console("%s", str);
 #ifdef IRC
 	string st;
@@ -30,7 +30,7 @@ void fatal(const char *s, ...)
 {
     void cleanupserver();
     cleanupserver();
-    s_sprintfdlv(msg,s,s);
+    defvformatstring(msg,s,s);
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
@@ -337,7 +337,7 @@ void disconnect_client(int n, int reason)
 	clients[n]->peer->data = NULL;
 	server::deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
-	s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
+	defformatstring(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
 	conoutf("\fr%s", s);
 	server::srvmsgf(-1, "%s", s);
 }
@@ -398,7 +398,7 @@ void localconnect()
     int cn = addclient(ST_LOCAL);
     clientdata &c = *clients[cn];
     c.peer = NULL;
-    s_strcpy(c.hostname, "<local>");
+    copystring(c.hostname, "<local>");
     conoutf("\fglocal client %d connected", c.num);
     client::gameconnect(false);
     server::clientconnect(c.num, 0, true);
@@ -482,7 +482,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 		return ENET_SOCKET_NULL;
 	}
 	ENetBuffer buf;
-	s_sprintfd(mget)("%s\n", req);
+	defformatstring(mget)("%s\n", req);
 	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
 	conoutf("\fwsending request to %s:[%d]", hostname, remoteaddress.port);
@@ -517,7 +517,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	ENetSocket sock = mastersend(address, servermaster, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
-	s_sprintfd(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, address.port);
+	defformatstring(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, address.port);
 	renderprogress(0, text);
 
 	ENetBuffer eb;
@@ -576,7 +576,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				c.peer = event.peer;
 				c.peer->data = &c;
 				char hn[1024];
-				s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
+				copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
 				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = server::clientconnect(c.num, c.peer->address.host);
 				if(reason) disconnect_client(c.num, reason);

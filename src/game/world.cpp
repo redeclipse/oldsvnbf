@@ -234,7 +234,7 @@ namespace world
 
 	void announce(int idx, const char *msg, ...)
 	{
-		s_sprintfdlv(text, msg, msg);
+		defvformatstring(text, msg, msg);
 		conoutf("%s", text);
 		if(!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay)
 			playsound(idx, camera1->o, camera1, SND_FORCED);
@@ -441,7 +441,7 @@ namespace world
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
-					s_sprintfd(ds)("@%d", damage);
+					defformatstring(ds)("@%d", damage);
 					part_text(d->abovehead(4), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 				}
 				if(!issound(d->vschan))
@@ -500,13 +500,13 @@ namespace world
 
 		if(d == player1) anc = S_V_FRAGGED;
 		else d->resetinterp();
-		s_sprintf(d->obit)("%s ", colorname(d));
+		formatstring(d->obit)("%s ", colorname(d));
         if(d == actor)
         {
-        	if(flags&HIT_MELT) s_strcat(d->obit, "melted");
-			else if(flags&HIT_FALL) s_strcat(d->obit, "thought they could fly");
-			else if(flags&HIT_SPAWN) s_strcat(d->obit, "tried to spawn inside solid matter");
-			else if(flags&HIT_LOST) s_strcat(d->obit, "got very, very lost");
+        	if(flags&HIT_MELT) concatstring(d->obit, "melted");
+			else if(flags&HIT_FALL) concatstring(d->obit, "thought they could fly");
+			else if(flags&HIT_SPAWN) concatstring(d->obit, "tried to spawn inside solid matter");
+			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
         	else if(flags && isweap(weap))
         	{
 				static const char *suicidenames[WEAPON_MAX] = {
@@ -519,12 +519,12 @@ namespace world
 					"decided to kick it, kamikaze style",
 					"ate paint"
 				};
-        		s_strcat(d->obit, suicidenames[weap]);
+        		concatstring(d->obit, suicidenames[weap]);
         	}
-        	else if(flags&HIT_EXPLODE) s_strcat(d->obit, "was obliterated");
-        	else if(flags&HIT_BURN) s_strcat(d->obit, "burnt up");
-        	else if(m_paint(gamemode, mutators)) s_strcat(d->obit, "gave up");
-        	else s_strcat(d->obit, "suicided");
+        	else if(flags&HIT_EXPLODE) concatstring(d->obit, "was obliterated");
+        	else if(flags&HIT_BURN) concatstring(d->obit, "burnt up");
+        	else if(m_paint(gamemode, mutators)) concatstring(d->obit, "gave up");
+        	else concatstring(d->obit, "suicided");
         }
 		else
 		{
@@ -562,55 +562,55 @@ namespace world
 			};
 
 			int o = obliterated ? 2 : ((flags&HIT_PROJ) && (flags&HIT_HEAD) ? 1 : 0);
-			s_strcat(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
+			concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 			{
-				s_strcat(d->obit, " teammate ");
-				s_strcat(d->obit, colorname(actor));
+				concatstring(d->obit, " teammate ");
+				concatstring(d->obit, colorname(actor));
 			}
 			else
 			{
-				s_strcat(d->obit, " ");
-				s_strcat(d->obit, colorname(actor));
+				concatstring(d->obit, " ");
+				concatstring(d->obit, colorname(actor));
 				if(!kidmode) switch(actor->spree)
 				{
 					case 5:
 					{
-						s_strcat(d->obit, " in total carnage!");
+						concatstring(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
-						s_sprintfd(ds)("@\fgCARNAGE");
+						defformatstring(ds)("@\fgCARNAGE");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 10:
 					{
-						s_strcat(d->obit, " who is slaughtering!");
+						concatstring(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
-						s_sprintfd(ds)("@\fgSLAUGHTER");
+						defformatstring(ds)("@\fgSLAUGHTER");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 25:
 					{
-						s_strcat(d->obit, " going on a massacre!");
+						concatstring(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
-						s_sprintfd(ds)("@\fgMASSACRE");
+						defformatstring(ds)("@\fgMASSACRE");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 50:
 					{
-						s_strcat(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
+						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
-						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
+						defformatstring(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 100:
 					{
-						s_strcat(d->obit, " who seems unstoppable!");
+						concatstring(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
-						s_sprintfd(ds)("@\fgUNSTOPPABLE");
+						defformatstring(ds)("@\fgUNSTOPPABLE");
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
@@ -619,7 +619,7 @@ namespace world
 						if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 						{
 							anc = S_V_HEADSHOT;
-							s_sprintfd(ds)("@\fgHEADSHOT");
+							defformatstring(ds)("@\fgHEADSHOT");
 							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
@@ -631,7 +631,7 @@ namespace world
 		}
 		if(d != actor)
 		{
-			if(actor->state == CS_ALIVE) s_strcpy(actor->obit, d->obit);
+			if(actor->state == CS_ALIVE) copystring(actor->obit, d->obit);
 			actor->lastkill = lastmillis;
 		}
 		if(dth >= 0)
@@ -810,13 +810,13 @@ namespace world
 		if(!name) name = d->name;
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat;
-		s_sprintf(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
+		formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
 		if(!name[0] || d->aitype != AI_NONE || (dupname && duplicatename(d, name)))
 		{
-			s_sprintfd(s)(" [\fs%s%d\fS]", d->aitype != AI_NONE ? "\fc" : "\fm", d->clientnum);
-			s_strcat(cname, s);
+			defformatstring(s)(" [\fs%s%d\fS]", d->aitype != AI_NONE ? "\fc" : "\fm", d->clientnum);
+			concatstring(cname, s);
 		}
-		s_strcat(cname, "\fS");
+		concatstring(cname, "\fS");
 		return cname;
 	}
 
@@ -1445,8 +1445,8 @@ namespace world
 	void renderclient(gameent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		string mdl;
-		if(third) s_strcpy(mdl, teamtype[team].tpmdl);
-		else s_strcpy(mdl, teamtype[team].fpmdl);
+		if(third) copystring(mdl, teamtype[team].tpmdl);
+		else copystring(mdl, teamtype[team].fpmdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? d->feetpos() : d->headpos());

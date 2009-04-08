@@ -291,7 +291,7 @@ vector<mapmodelinfo> mapmodels;
 void mmodel(char *name)
 {
 	mapmodelinfo &mmi = mapmodels.add();
-	s_strcpy(mmi.name, name);
+	copystring(mmi.name, name);
 	mmi.m = NULL;
 }
 
@@ -336,7 +336,7 @@ model *loadmodel(const char *name, int i, bool msg)
 	{
 		if(msg)
 		{
-			s_sprintfd(filename)("models/%s", name);
+			defformatstring(filename)("models/%s", name);
 			renderprogress(loadprogress, filename);
 		}
 		m = new md5(name);
@@ -914,9 +914,9 @@ bool matchanim(const char *name, const char *pattern)
 void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks) // model skin sharing
 {
 	string dirs[3];
-    s_sprintf(dirs[0])("models/%s/", dir);
-    s_sprintf(dirs[1])("models/%s/", altdir);
-    s_sprintf(dirs[2])("textures/");
+    formatstring(dirs[0])("models/%s/", dir);
+    formatstring(dirs[1])("models/%s/", altdir);
+    formatstring(dirs[2])("textures/");
     masks = notexture;
 
 	#define tryload(tex, cmd, path) loopi(4) { if((tex = textureload(makerelpath(i < 3 ? dirs[i] : "", path, NULL, cmd), 0, true, false)) != NULL) break; }

@@ -70,7 +70,7 @@ namespace aiman
 				ci->state.skill = clamp(s, 1, 101);
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
-				s_strncpy(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
+				copystring(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->state.state = CS_DEAD;
 				ci->team = TEAM_NEUTRAL;
 				ci->state.aireinit = 2;
