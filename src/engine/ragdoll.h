@@ -306,12 +306,12 @@ void ragdolldata::constrain()
 
 FVAR(ragdollbodyfric, 0, 0.95f, 1);
 FVAR(ragdollbodyfricscale, 0, 2, 10);
-FVAR(ragdollwaterfric, 0, 0.85f, 1);
+FVAR(ragdollliquidfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollgravity, 0, 1.f, 1000);
 VAR(ragdollexpireoffset, 0, 1000, 30000);
-VAR(ragdollwaterexpireoffset, 0, 3000, 30000);
+VAR(ragdollliquidexpireoffset, 0, 3000, 30000);
 VAR(ragdollexpiremillis, 1, 1000, 30000);
 VAR(ragdolltimestepmin, 1, 5, 50);
 VAR(ragdolltimestepmax, 1, 13, 50);
@@ -334,7 +334,7 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec curpos = v.pos, dpos = vec(v.pos).sub(v.oldpos);
-        dpos.mul(pow((pl->inliquid ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
+        dpos.mul(pow((pl->inliquid ? ragdollliquidfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
         v.pos.z -= gravity*ts*ts;
         if(pl->inliquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
         v.pos.add(dpos);
@@ -355,7 +355,7 @@ void ragdolldata::move(dynent *pl, float ts)
     if(collisions)
     {
         floating = 0;
-        if(!collidemillis) collidemillis = lastmillis + (water ? ragdollwaterexpireoffset : ragdollexpireoffset);
+        if(!collidemillis) collidemillis = lastmillis + (pl->inliquid ? ragdollliquidexpireoffset : ragdollexpireoffset);
     }
     else if(++floating > 1 && lastmillis < collidemillis + ragdollexpiremillis) collidemillis = 0;
 

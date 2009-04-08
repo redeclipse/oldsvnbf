@@ -603,9 +603,17 @@ namespace world
 					}
 					case 50:
 					{
-						s_strcat(d->obit, noblood || m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
+						s_strcat(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
+						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						break;
+					}
+					case 100:
+					{
+						s_strcat(d->obit, " who seems unstoppable!");
+						anc = S_V_SPREE4;
+						s_sprintfd(ds)("@\fgUNSTOPPABLE");
 						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
