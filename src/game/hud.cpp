@@ -376,7 +376,7 @@ namespace hud
         else if(lastmillis-world::player1->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(world::gamemode, world::mutators))
         {
-            vec pos = world::headpos(world::player1, 0.f);
+            vec pos = world::player1->headpos();
             gameent *d = world::intersectclosest(pos, worldpos, world::player1);
             if(d && d->type == ENT_PLAYER && d->team == world::player1->team)
 				index = POINTER_TEAM;
@@ -689,7 +689,7 @@ namespace hud
 
 	void drawplayerblip(gameent *d, int w, int h, int s, float blend)
 	{
-		vec dir = world::headpos(d);
+		vec dir = d->headpos();
 		dir.sub(camera1->o);
 		float dist = dir.magnitude();
 		if(dist < radarrange())

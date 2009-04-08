@@ -1418,7 +1418,7 @@ namespace entities
 				case ENT_PLAYER:
 				{
 					gameent *e = (gameent *)ent;
-					ob.above = world::abovehead(e, 1.f).z;
+					ob.above = e->abovehead().z;
 					break;
 				}
 				case ENT_PROJ:

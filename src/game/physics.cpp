@@ -521,7 +521,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER)
 				{
 					playsound(S_JUMP, pl->o, pl);
-					world::spawneffect(world::feetpos(pl), 0x111111, int(pl->radius), 250, 1.f);
+					world::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 250, 1.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
@@ -538,7 +538,7 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				world::spawneffect(world::feetpos(pl), 0x222222, int(pl->radius), 250, 1.f);
+				world::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 250, 1.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
@@ -632,7 +632,7 @@ namespace physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-        updatematerial(pl, pl->o, pl->height/2.f, pl->type == ENT_PLAYER ? world::feetpos(pl, 1.f) : pl->o, local, floating);
+        updatematerial(pl, pl->o, pl->height/2.f, pl->type == ENT_PLAYER ? pl->feetpos(1) : pl->o, local, floating);
     }
 
     void updateragdoll(dynent *d, const vec &center, float radius)

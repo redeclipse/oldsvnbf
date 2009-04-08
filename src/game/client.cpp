@@ -329,7 +329,7 @@ namespace client
 		if(d->state != CS_SPECTATOR)
 		{
 			s_sprintfd(ds)("@%s", &s);
-			part_text(world::abovehead(d), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 		}
 
 		conoutf("%s", s);
@@ -977,14 +977,14 @@ namespace client
 						case SPHY_JUMP:
 						{
 							playsound(S_JUMP, t->o, t);
-							world::spawneffect(world::feetpos(t), 0x222222, int(t->radius), 250, 1.f);
+							world::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
 							t->jumptime = lastmillis;
 							break;
 						}
 						case SPHY_IMPULSE:
 						{
 							playsound(S_IMPULSE, t->o, t);
-							world::spawneffect(world::feetpos(t), 0x222222, int(t->radius), 250, 1.f);
+							world::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
 							t->lastimpulse = lastmillis;
 							break;
 						}

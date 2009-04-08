@@ -225,12 +225,9 @@ namespace world
 		if(firstpersonsway)
 		{
 			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
-
 			float k = pow(0.7f, curtime/10.0f);
-			swaydir.mul(k);
-			vec vel(d->vel);
-			vel.add(d->falling);
-			swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
+			vec vel = vec(d->vel).sub(d->falling);
+			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
 		}
 		else swaydir = vec(0, 0, 0);
 	}
@@ -308,7 +305,7 @@ namespace world
 		{
 			gameent *o = players[i];
 			if(!o) continue;
-			vec pos = headpos(player1, 0.f);
+			vec pos = player1->headpos();
             float dist;
 			if(intersect(o, pos, worldpos, dist)) return o;
 		}
@@ -438,14 +435,14 @@ namespace world
 
 			if(d->type == ENT_PLAYER)
 			{
-				vec p = headpos(d);
+				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					s_sprintfd(ds)("@%d", damage);
-					part_text(vec(world::abovehead(d)).sub(vec(0, 0, 3)), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+					part_text(d->abovehead(4), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 				}
 				if(!issound(d->vschan))
 					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -582,7 +579,7 @@ namespace world
 						s_strcat(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						s_sprintfd(ds)("@\fgCARNAGE");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 10:
@@ -590,7 +587,7 @@ namespace world
 						s_strcat(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						s_sprintfd(ds)("@\fgSLAUGHTER");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 25:
@@ -598,7 +595,7 @@ namespace world
 						s_strcat(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						s_sprintfd(ds)("@\fgMASSACRE");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 50:
@@ -606,7 +603,7 @@ namespace world
 						s_strcat(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					case 100:
@@ -614,7 +611,7 @@ namespace world
 						s_strcat(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
 						s_sprintfd(ds)("@\fgUNSTOPPABLE");
-						part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
 					default:
@@ -623,7 +620,7 @@ namespace world
 						{
 							anc = S_V_HEADSHOT;
 							s_sprintfd(ds)("@\fgHEADSHOT");
-							part_text(world::abovehead(actor), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
 							anc = S_V_OWNED;
@@ -662,7 +659,7 @@ namespace world
 		}
 		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
 		{
-			vec pos = headpos(d);
+			vec pos = d->headpos();
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs)*gibscale);
 			loopi(amt)
 				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
@@ -859,31 +856,6 @@ namespace world
 
 	void loadworld(stream *f, int maptype) {}
 	void saveworld(stream *f) {}
-
-	vec abovehead(physent *d, float off)
-	{
-		static vec apos;
-		apos = d->o;
-		if(off < 1e16f) apos.z += off;
-		else apos.z += d->aboveeye + 2.f;
-		return apos;
-	}
-
-	vec headpos(physent *d, float off)
-	{
-		static vec hpos;
-		hpos = d->o;
-		hpos.z -= off;
-		return hpos;
-	}
-
-	vec feetpos(physent *d, float off)
-	{
-		static vec fpos;
-		fpos = d->o;
-		if(d->type == ENT_PLAYER) fpos.z += off-d->height;
-		return fpos;
-	}
 
 	void fixfullrange(float &yaw, float &pitch, float &roll, bool full)
 	{
@@ -1150,7 +1122,7 @@ namespace world
 					c.reset();
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (intermission || d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
-						vec trg, pos = feetpos(d);
+						vec trg, pos = d->feetpos();
 						float dist = c.pos.dist(pos);
 						if((k || dist >= c.mindist) && dist <= c.maxdist && raycubelos(c.pos, pos, trg))
 						{
@@ -1170,7 +1142,7 @@ namespace world
 					updatecamorient;
 					loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
 					{
-						vec trg, pos = feetpos(d);
+						vec trg, pos = d->feetpos();
 						if(getsight(c.pos, yaw, pitch, pos, trg, c.maxdist, curfov, fovy))
 						{
 							c.dir.add(pos);
@@ -1339,7 +1311,7 @@ namespace world
 			}
 			else
 			{
-				camera1->o = headpos(player1, 0.f);
+				camera1->o = player1->headpos();
 				if(mousestyle() <= 1)
 					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
 				if(isthirdperson())
@@ -1477,7 +1449,7 @@ namespace world
 		else s_strcpy(mdl, teamtype[team].fpmdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
-		vec o = vec(third ? feetpos(d) : headpos(d));
+		vec o = vec(third ? d->feetpos() : d->headpos());
 		if(!third)
 		{
 			vec dir;
@@ -1692,10 +1664,10 @@ namespace world
 
 		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
-			vec pos = world::abovehead(d);
+			vec pos = d->abovehead();
 			if(shownamesabovehead > (d != player1 ? 0 : 1)) part_text(pos, colorname(d, NULL, "@"));
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
-                part_icon(pos.add(vec(0, 0, 2.f)), textureload(conopentex, 3), statusaboveheadblend, 2);
+                part_icon(pos.add(vec(0, 0, 2)), textureload(conopentex, 3), statusaboveheadblend, 2);
 		}
 		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
 		if(third)

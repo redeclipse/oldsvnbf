@@ -858,15 +858,15 @@ int main(int argc, char **argv)
 
 	initing = NOT_INITING;
 
-	conoutf("\fminit: enet");
+	conoutf("\fmloading enet..");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
 
-	conoutf("\fminit: game");
+	conoutf("\fmloading game..");
 	initgame();
 
-	conoutf("\fminit: sdl");
+	conoutf("\fmloading sdl..");
     int par = 0;
 	#ifdef _DEBUG
 	par = SDL_INIT_NOPARACHUTE;
@@ -883,7 +883,7 @@ int main(int argc, char **argv)
 	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 	ignoremouse += 3;
 
-	conoutf("\fminit: video mode");
+	conoutf("\fmloading video mode..");
     const SDL_VideoInfo *video = SDL_GetVideoInfo();
     if(video)
     {
@@ -893,42 +893,42 @@ int main(int argc, char **argv)
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-	conoutf("\fminit: video misc");
+	conoutf("\fmloading video misc..");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	keyrepeat(false);
 	setcaption("loading..");
 	eastereggs();
 
-	conoutf("\fminit: gl");
+	conoutf("\fmloading gl..");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     if(!(notexture = textureload("textures/notexture")) ||
 		!(blanktexture = textureload("textures/blank")))
 		fatal("could not find core textures");
 
-	conoutf("\fminit: sound");
+	conoutf("\fmloading sound..");
 	initsound();
 
-	conoutf("\fminit: defaults");
+	conoutf("\fmloading defaults..");
 	persistidents = false;
 	if(!execfile("stdlib.cfg")) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 
-    conoutf("\fminit: gl effects");
+    conoutf("\fmloading gl effects..");
 	inbetweenframes = true;
     renderbackground("loading...");
     loadshaders();
 	UI::setup();
 
-	conoutf("\fminit: world");
+	conoutf("\fmloading world..");
 	emptymap(0, true, NULL, true);
 
-	conoutf("\fminit: config");
+	conoutf("\fmloading config..");
 	rehash(false);
 	smartmusic(true, false);
 
-	conoutf("\fminit: preload");
+	conoutf("\fmloading required data..");
     preloadtextures();
 	particleinit();
     initdecals();
@@ -950,7 +950,7 @@ int main(int argc, char **argv)
 		loopi(4) if(findoctadir(tryoctadirs[i])) break;
 	}
 
-	conoutf("\fminit: main");
+	conoutf("\fmloading main..");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
     if(!connected()) localconnect();
