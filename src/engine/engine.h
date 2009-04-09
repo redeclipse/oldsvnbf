@@ -476,7 +476,7 @@ extern void writecompletions(stream *f);
 extern const char *addreleaseaction(const char *s);
 extern const char *getkeyname(int code);
 
-extern bool saycommandon;
+extern int commandmillis;
 
 // main
 enum
