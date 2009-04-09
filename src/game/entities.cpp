@@ -1193,7 +1193,7 @@ namespace entities
 					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
 				d->lastnode = curnode;
 			}
-			else d->lastnode = -1;
+			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false);
 		}
 		else d->lastnode = -1;
 	}

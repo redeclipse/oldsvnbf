@@ -222,12 +222,31 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[b.target];
 			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			int walk = 0;
 			if(regen && !f.enemy && f.owner == d->team)
 			{
-				d->ai->clear = true; // re-evaluate
-				return true;
+				static vector<int> targets; // build a list of others who are interested in this
+				targets.setsizenodelete(0);
+				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
+				gameent *e = NULL;
+				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = e->feetpos();
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
+						targets.add(e->clientnum);
+				}
+				if(!targets.empty())
+				{
+					if(lastmillis-b.millis >= (201-d->skill)*100)
+					{
+						d->ai->clear = true; // re-evaluate so as not to herd
+						return true;
+					}
+					else walk = 2;
+				}
+				else walk = 1;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*2), 0); // less wander than ctf
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*2), walk); // less wander than ctf
 		}
 		return false;
 	}
