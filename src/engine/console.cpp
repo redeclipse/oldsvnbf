@@ -10,7 +10,7 @@ vector<cline> conlines;
 
 int conskip = 0;
 
-bool saycommandon = false;
+int commandmillis = -1;
 string commandbuf;
 char *commandaction = NULL, *commandicon = NULL;
 int commandpos = -1;
@@ -89,7 +89,7 @@ TVAR(inputtex, "textures/menu", 3);
 
 int rendercommand(int x, int y, int w)
 {
-    if(!saycommandon) return 0;
+    if(commandmillis < 0) return 0;
     int width, height;
     text_bounds(commandbuf, width, height, w);
     y -= height-FONTH;
@@ -347,24 +347,20 @@ ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector
 ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 ICOMMAND(searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 
-void saycommand(char *init)						 // turns input to the command line on or off
+void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns input to the command line on or off
 {
-	SDL_EnableUNICODE(saycommandon = (init!=NULL));
-	keyrepeat(saycommandon);
+    commandmillis = init ? totalmillis : -1;
+    SDL_EnableUNICODE(commandmillis >= 0 ? 1 : 0);
+    keyrepeat(commandmillis >= 0);
     copystring(commandbuf, init ? init : "");
     DELETEA(commandaction);
     DELETEA(commandicon);
-	commandpos = -1;
+    commandpos = -1;
+    if(action && action[0]) commandaction = newstring(action);
+    if(icon && icon[0]) commandicon = newstring(icon);
 }
 
-void inputcommand(char *init, char *action, char *icon)
-{
-    saycommand(init);
-    if(action[0]) commandaction = newstring(action);
-    if(icon[0]) commandicon = newstring(icon);
-}
-
-COMMAND(saycommand, "C");
+ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
 COMMAND(inputcommand, "sss");
 
 #if !defined(WIN32) && !defined(__APPLE__)
@@ -643,7 +639,7 @@ void consolekey(int code, bool isdown, int cooked)
                 else h = history.last();
             }
             histpos = history.length();
-            saycommand(NULL);
+            inputcommand(NULL);
             if(h)
             {
             	interactive = true;
@@ -654,7 +650,7 @@ void consolekey(int code, bool isdown, int cooked)
         else if(code==SDLK_ESCAPE)
         {
             histpos = history.length();
-            saycommand(NULL);
+            inputcommand(NULL);
         }
     }
 }
@@ -666,14 +662,14 @@ void keypress(int code, bool isdown, int cooked)
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
     else if(!UI::keypress(code, isdown, alpha)) // 3D GUI mouse button intercept
     {
-        if(saycommandon) consolekey(code, isdown, alpha);
+        if(commandmillis >= 0) consolekey(code, isdown, alpha);
         else if(haskey) execbind(*haskey, isdown);
     }
 }
 
 char *getcurcommand()
 {
-	return saycommandon ? commandbuf : (char *)NULL;
+	return commandmillis >= 0 ? commandbuf : (char *)NULL;
 }
 
 void clear_console()
@@ -720,9 +716,22 @@ struct filesval
     int type;
 	char *dir, *ext;
 	vector<char *> files;
+    int millis;
 
-    filesval(int type, const char *dir, const char *ext) : type(type), dir(newstring(dir)), ext(ext && ext[0] ? newstring(ext) : NULL) {}
+    filesval(int type, const char *dir, const char *ext) : type(type), dir(newstring(dir)), ext(ext && ext[0] ? newstring(ext) : NULL), millis(-1) {}
 	~filesval() { DELETEA(dir); DELETEA(ext); loopv(files) DELETEA(files[i]); files.setsize(0); }
+
+    static int comparefiles(char **x, char **y) { return strcmp(*x, *y); }
+
+    void update()
+    {
+        if(type!=FILES_DIR || millis >= commandmillis) return;
+        files.deletecontentsa();
+        listfiles(dir, ext, files);
+        files.sort(comparefiles);
+        loopv(files) if(i && !strcmp(files[i], files[i-1])) delete[] files.remove(i--);
+        millis = totalmillis;
+    }
 };
 
 static inline bool htcmp(const fileskey &x, const fileskey &y)
@@ -826,7 +835,7 @@ void complete(char *s)
 	{
 		int commandsize = strchr(s, ' ')+1-s;
 		copystring(prefix, s, min(size_t(commandsize+1), sizeof(prefix)));
-        if(f->type==FILES_DIR && f->files.empty()) listfiles(f->dir, f->ext, f->files);
+		f->update();
 		loopi(f->files.length())
 		{
 			if(strncmp(f->files[i], s+commandsize, completesize+1-commandsize)==0 &&
