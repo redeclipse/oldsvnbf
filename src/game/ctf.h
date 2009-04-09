@@ -90,11 +90,11 @@ struct ctfstate
 #endif
     }
 
-    void dropflag(int i, const vec &o, int droptime)
+    void dropflag(int i, const vec &o, int t)
     {
 		flag &f = flags[i];
 		f.droploc = o;
-		f.droptime = droptime;
+		f.droptime = t;
 #ifdef GAMESERVER
 		f.owner = -1;
 #else

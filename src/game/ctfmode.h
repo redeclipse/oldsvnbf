@@ -10,7 +10,7 @@ struct ctfservmode : ctfstate, servmode
     void reset(bool empty)
     {
         ctfstate::reset();
-        notgotflags = !empty;
+        notgotflags = true;
     }
 
     void dropflag(clientinfo *ci, const vec &o)
@@ -120,7 +120,7 @@ struct ctfservmode : ctfstate, servmode
             putint(p, f.owner);
             if(f.owner<0)
             {
-                putint(p, f.droptime ? 1 : 0);
+                putint(p, f.droptime);
                 if(f.droptime)
                 {
                     putint(p, int(f.droploc.x*DMF));

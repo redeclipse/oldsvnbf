@@ -10,7 +10,7 @@ struct stfservmode : stfstate, servmode
 	{
 		stfstate::reset();
 		scoresec = 0;
-		notgotflags = !empty;
+		notgotflags = true;
 	}
 
 	void stealflag(int n, int team)
