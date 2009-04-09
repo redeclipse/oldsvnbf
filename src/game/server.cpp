@@ -1338,7 +1338,27 @@ namespace server
 
 	void changemap(const char *s, int mode, int muts)
 	{
-		loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
+		loopi(3) if(mapdata[i])
+		{
+			DELETEP(mapdata[i]);
+			if(s && *s)
+			{
+				const char *mapext = "xxx";
+				switch(i)
+				{
+					case 2: mapext = "cfg"; break;
+					case 1: mapext = "png"; break;
+					default: case 0: mapext = "bgz"; break;
+				}
+				defformatstring(mapfile)(strstr(s, "maps/")==s || strstr(s, "maps\\")==s ? "%s" : "maps/%s", s);
+				defformatstring(mapfext)("%s.%s", mapfile, mapext);
+				if(!(mapdata[i] = openfile(mapfext, "wb")))
+				{
+					loopk(3) DELETEP(mapdata[k]);
+					break;
+				}
+			}
+		}
 		maprequest = mapsending = shouldcheckvotes = false;
         stopdemo();
 		aiman::clearai();
