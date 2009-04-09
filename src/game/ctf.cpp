@@ -182,9 +182,6 @@ namespace ctf
             if(!added && isteam(world::gamemode, world::mutators, e->attr[1], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
         }
-        vec center(0, 0, 0);
-        loopv(st.flags) center.add(st.flags[i].spawnloc);
-        center.div(st.flags.length());
     }
 
     void sendflags(ucharbuf &p)
@@ -226,11 +223,7 @@ namespace ctf
                 f.droptime = dropped;
                 f.droploc = dropped ? droploc : f.spawnloc;
                 f.interptime = 0;
-
-                if(dropped)
-                {
-                    if(!physics::droptofloor(f.droploc, 2, 0)) f.droploc = vec(-1, -1, -1);
-                }
+                if(dropped) physics::droptofloor(f.droploc, 2, 0);
             }
         }
     }
