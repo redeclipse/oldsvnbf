@@ -1596,9 +1596,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 		if(!timeoutofloop)
 		{ // time the buffer swap to get an idea of the refresh interval
 			loopi(2) SDL_GL_SwapBuffers();
-			int ticker = SDL_GetTicks();
-			timeoutofloop = ticker-tick; // doesn't need to be accurate, just close
-			tick = ticker;
+			timeoutofloop = SDL_GetTicks()-tick; // doesn't need to be accurate, just close
 			conoutf("\fgvsync interval estimate is: %d", timeoutofloop);
 			return; // because we just flipped twice, don't block more
 		}
