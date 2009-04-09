@@ -363,7 +363,7 @@ char *parseexp(const char *&p, int right)		  // parse any nested set of () or []
             {
                 wordbuf.add(c);
                 const char *end = parsestring(p);
-                wordbuf.advance(escapestring(wordbuf.reserve(end - p).buf, p, end));
+                wordbuf.put(p, end - p);
                 p = end;
                 if(*p=='\"') wordbuf.add(*p++);
                 continue;
