@@ -1177,7 +1177,7 @@ namespace entities
 		{
 			vec v = d->feetpos();
 			bool shoulddrop = (m_play(world::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
-			float dist = float(shoulddrop ? enttype[WAYPOINT].radius*(dropwaypoints ? 1 : 2) : ai::NEARDIST);
+			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 			if(!ents.inrange(curnode) && shoulddrop)
 			{
