@@ -158,7 +158,7 @@ void reqauth(masterclient &c, uint id, char *name)
 	uint seed[3] = { starttime, lastmillis, randomMT() };
     static vector<char> buf;
     buf.setsizenodelete(0);
-    a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf); 
+    a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
 
 	//printf("%s\n", buf.getbuf());
 
@@ -287,13 +287,13 @@ bool checkmasterclientinput(masterclient &c)
 				else if(w[0])
 				{
 					masteroutf(c, "error \"unknown command %s\"\n", w[0]);
-					conoutf("master peer %s (server) sent unknown command: %s", w[0]);
+					conoutf("master peer %s (server) sent unknown command: %s",  c.name, w[0]);
 				}
 			}
 			else if(w[0])
 			{
 				masteroutf(c, "error \"unknown command %s\"\n", w[0]);
-				conoutf("master peer %s (client) sent unknown command: %s", w[0]);
+				conoutf("master peer %s (client) sent unknown command: %s",  c.name, w[0]);
 			}
 		}
 		loopj(numargs) if(w[j]) delete[] w[j];
