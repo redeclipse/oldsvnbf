@@ -237,7 +237,7 @@ namespace stf
 				}
 				if(!targets.empty())
 				{
-					if(lastmillis-b.millis >= (201-d->skill)*100)
+					if(lastmillis-b.millis >= (201-d->skill)*33)
 					{
 						d->ai->clear = true; // re-evaluate so as not to herd
 						return true;
@@ -246,7 +246,7 @@ namespace stf
 				}
 				else walk = 1;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*2), walk); // less wander than ctf
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*(2+walk)), walk);
 		}
 		return false;
 	}

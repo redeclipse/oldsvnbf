@@ -1,14 +1,8 @@
 VARG(serverdebug, 0, 0, 3);
 
-#ifdef STANDALONE
-SVARG(defaultmap, "eight");
-VARG(defaultmode, G_LOBBY, G_DEATHMATCH, G_MAX-1);
+SVARG(defaultmap, "bath");
+VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
-#else
-SVARG(defaultmap, "overseer");
-VARG(defaultmode, G_LOBBY, G_LOBBY, G_MAX-1);
-VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
-#endif
 
 SVARG(lobbymaps, "bath citadel dualstar eight gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo overseer 4square siege exoticbase");
 SVARG(missionmaps, "mpspbf1 mpspbf2");

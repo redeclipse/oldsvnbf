@@ -470,8 +470,8 @@ namespace ctf
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			bool walk = false, regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
-			if(regen && lastmillis-b.millis >= (201-d->skill)*100)
+			int walk = 0, regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			if(regen && lastmillis-b.millis >= (201-d->skill)*33)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -490,22 +490,22 @@ namespace ctf
 				}
 				else
 				{
-					walk = true;
+					walk = 2;
 					b.millis = lastmillis;
 				}
 			}
 			vec pos = d->feetpos();
-			float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*6.25f);
+			float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*8);
 			loopv(st.flags)
 			{ // get out of the way of the returnee!
 				ctfstate::flag &g = st.flags[i];
 				if(pos.squaredist(g.pos()) <= mindist)
 				{
-					if(g.owner && g.owner->team == d->team) walk = true;
+					if(g.owner && g.owner->team == d->team) walk = 1;
 					if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*4), walk ? 2 : 1);
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*(4+walk)), walk);
 		}
 		return false;
 	}
