@@ -33,7 +33,7 @@ namespace hud
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.5f, 1);
+	FVARP(damageblend, 0, 0.75f, 1);
 
 	VARP(showdamagecompass, 0, 1, 1);
 	VARP(damagecompassfade, 1, 1000, 10000);
@@ -74,7 +74,7 @@ namespace hud
 	VARP(inventorythrob, 0, 1, 2);
 	VARP(inventorycolour, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
-	FVARP(inventoryblend, 0, 0.5f, 1);
+	FVARP(inventoryblend, 0, 0.75f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(chainguntex, "textures/chaingun", 3);
@@ -92,8 +92,8 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
-	FVARP(clipblend, 0, 0.5f, 1000);
-	VARP(clipcolour, 0, 1, 1);
+	FVARP(clipblend, 0, 0.7f, 1000);
+	FVARP(clipcolour, 0.f, 0.75f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -106,11 +106,11 @@ namespace hud
 	VARP(showradar, 0, 2, 2);
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardblend, 0, 1.f, 1);
+	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
-	FVARP(radarblipblend, 0, 0.5f, 1);
+	FVARP(radarblipblend, 0, 0.75f, 1);
 	FVARP(radarflagblend, 0, 1.f, 1);
-	FVARP(radaritemblend, 0, 0.5f, 1);
+	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radarsize, 0, 0.02f, 1000);
 	FVARP(radaroffset, 0, 0.0515f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
@@ -288,13 +288,13 @@ namespace hud
             case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_CG: s *= 0.8f; break;
             default: break;
         }
-        float r = 1.f, g = 1.f, b = 1.f;
-		if(teamclips >= (clipcolour ? 2 : 1)) skewcolour(r, g, b);
-		else if(clipcolour)
+        float r = clipcolour, g = clipcolour, b = clipcolour;
+		if(teamclips >= (clipcolour > 0 ? 2 : 1)) skewcolour(r, g, b);
+		else if(clipcolour > 0)
 		{
-			r = (weaptype[weap].colour>>16)/255.f;
-			g = ((weaptype[weap].colour>>8)&0xFF)/255.f;
-			b = (weaptype[weap].colour&0xFF)/255.f;
+			r = ((weaptype[weap].colour>>16)/255.f)*clipcolour;
+			g = (((weaptype[weap].colour>>8)&0xFF)/255.f)*clipcolour;
+			b = ((weaptype[weap].colour&0xFF)/255.f)*clipcolour;
 		}
         glColor4f(r, g, b, fade);
         glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
