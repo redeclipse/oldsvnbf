@@ -220,9 +220,10 @@ namespace ctf
 				f.team = team;
                 f.base = base;
                 f.owner = owner >= 0 ? world::newclient(owner) : NULL;
+                if(f.owner) { if(!f.taketime) f.taketime = lastmillis; }
+                else if(!dropped) f.taketime = 0;
                 f.droptime = dropped;
                 f.droploc = dropped ? droploc : f.spawnloc;
-                f.interptime = 0;
                 if(dropped) physics::droptofloor(f.droploc, 2, 0);
             }
         }
@@ -271,7 +272,8 @@ namespace ctf
 		flageffect(i, d->team, f.droploc, f.spawnloc);
 		f.interptime = lastmillis;
 		st.returnflag(i);
-		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name);
+		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
+		f.taketime = 0;
     }
 
     void resetflag(int i)
@@ -280,6 +282,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc);
 		f.interptime = lastmillis;
+		f.taketime = 0;
 		st.returnflag(i);
 		world::announce(S_V_FLAGRESET, "\fothe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
     }
@@ -297,7 +300,8 @@ namespace ctf
 			defformatstring(ds)("@CAPTURED!");
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, teamtype[d->team].colour, 3.f);
 		}
-		world::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: %d)", d==world::player1 ? "you" : world::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score);
+		world::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==world::player1 ? "you" : world::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-g.taketime)/1000.f);
+		g.taketime = 0;
     }
 
     void takeflag(gameent *d, int i)
@@ -306,6 +310,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[i];
 		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius);
 		f.interptime = lastmillis;
+		if(!f.droptime) f.taketime = lastmillis;
 		st.takeflag(i, d);
 		world::announce(S_V_FLAGPICKUP, "\fo%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
     }

@@ -16,7 +16,7 @@ struct ctfstate
         bool pickup;
         gameent *owner;
         extentity *ent;
-        int interptime;
+        int interptime, taketime;
 #endif
 
         flag()
@@ -34,7 +34,7 @@ struct ctfstate
 #else
             pickup = false;
             owner = NULL;
-            interptime = 0;
+            interptime = taketime = 0;
 #endif
             team = TEAM_NEUTRAL;
             droptime = 0;
