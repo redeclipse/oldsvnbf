@@ -272,7 +272,7 @@ namespace ctf
 		flageffect(i, d->team, f.droploc, f.spawnloc);
 		f.interptime = lastmillis;
 		st.returnflag(i);
-		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
+		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
 		f.taketime = 0;
     }
 
