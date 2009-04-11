@@ -675,8 +675,10 @@ SDL_Surface *creatergbasurface(SDL_Surface *os)
 
 SDL_Surface *fixsurfaceformat(SDL_Surface *s)
 {
+    if(!s) return NULL;
+    if(!s->pixels || min(s->w, s->h) <= 0) { SDL_FreeSurface(s); return NULL; }
     static const uint rgbmasks[] = { RGBMASKS }, rgbamasks[] = { RGBAMASKS };
-    if(s) switch(s->format->BytesPerPixel)
+    switch(s->format->BytesPerPixel)
     {
         case 3:
             if(s->format->Rmask != rgbmasks[0] || s->format->Gmask != rgbmasks[1] || s->format->Bmask != rgbmasks[2])
