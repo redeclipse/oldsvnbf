@@ -553,40 +553,27 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 		else
 		{
 			ident *id = idents->access(c);
-			if(!id || id->flags&IDF_SERVER || id->flags&IDF_CLIENT)
+			if(!id || (id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) || id->flags&IDF_CLIENT)
 			{
-				if((id && (id->type == ID_COMMAND || id->type == ID_CCOMMAND)) || !isinteger(c))
+				if(!isinteger(c))
 				{
-					string arg;
-					arg[0] = 0;
-					if(numargs > 1) loopk(numargs-1) if(w[k+1])
+					string arg; arg[0] = 0;
+					if(numargs > 1)
 					{
-						if(k) concatstring(arg, " ");
-						concatstring(arg, w[k+1]);
+						loopk(numargs-1) if(w[k+1])
+						{
+							if(k) concatstring(arg, " ");
+							concatstring(arg, w[k+1]);
+						}
 					}
 					bool found = false;
-					if(id)
-					{
-						if(id->flags&IDF_SERVER) found = server::servcmd(numargs, c, arg);
+					if(id && id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) found = server::servcmd(numargs, c, arg);
 #ifndef STANDALONE
-						else if(id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, arg);
+					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, arg);
 #endif
-					}
-					if(!found) conoutf("\frunknown command: %s", c);
+					else conoutf("\frunknown command: %s", c);
 				}
-				if(id && (id->flags&IDF_SERVER || id->flags&IDF_CLIENT))
-				{
-					string val; val[0] = 0;
-					switch(id->type)
-					{
-						case ID_VAR: formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i); break;
-						case ID_FVAR: formatstring(val)("%s", floatstr(*id->storage.f)); break;
-						case ID_SVAR: formatstring(val)("%s", *id->storage.s); break;
-						default: break;
-					}
-					setretval(newstring(val[0] ? val : c));
-				}
-				else setretval(newstring(c));
+				setretval(newstring(c));
 			}
 			else switch(id->type)
 			{

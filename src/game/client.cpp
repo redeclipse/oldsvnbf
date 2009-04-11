@@ -513,7 +513,8 @@ namespace client
 			val[0] = 0;
 			switch(id->type)
 			{
-#if 0
+#if 0 // these shouldn't get here
+				case ID_COMMAND:
 				case ID_COMMAND:
 				{
 					string s;
