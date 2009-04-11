@@ -1133,6 +1133,8 @@ static int findtextype(Slot &s, int type, int last = -1)
 
 static void addbump(ImageData &c, ImageData &n)
 {
+    if(n.bpp < 3) return;
+    if(c.bpp < 3) forcergbimage(c);
     writetex(c,
         sourcetex(n);
         loopk(3) dst[k] = int(dst[k])*(int(src[2])*2-255)/255;
@@ -1149,6 +1151,8 @@ static void addglow(ImageData &c, ImageData &g, const vec &glowcolor)
 
 static void blenddecal(ImageData &c, ImageData &d)
 {
+    if(d.bpp < 4) return;
+    if(c.bpp < 3) forcergbimage(c);
     writetex(c,
         sourcetex(d);
         uchar a = src[3];
