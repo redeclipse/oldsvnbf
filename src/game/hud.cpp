@@ -644,11 +644,11 @@ namespace hud
 		{
 			int blip = clamp(-idx-1, 0, 3);
 			const float rdblip[4][2] = { // player entity flag card
-				 { 0.25f, 0.25f }, { 0.25f, 0.5f }, { 0.5f, 0.25f }, { 0.5f, 0.5f }
+				 { 0.f, 0.f }, { 0.f, 0.5f }, { 0.5f, 0.f }, { 0.5f, 0.5f }
 			};
 			fx = rdblip[blip][0];
 			fy = rdblip[blip][1];
-			fw = fh = 0.25f;
+			fw = fh = 0.5f;
 			settexture(radartex, 3);
 			if(blip) tr += ts*blip;
 			if(blip < 2) ts = ts*2/3;
@@ -926,24 +926,17 @@ namespace hud
 		float fade = inventoryblend*blend, skew = 1.f;
 		if(world::player1->state == CS_ALIVE)
 		{
-			int delay = lastmillis-world::player1->lastspawn;
-			if(delay < 1000) skew *= delay/1000.f;
+			if(world::player1->lastspawn && lastmillis-world::player1->lastspawn < 1000) skew = (lastmillis-world::player1->lastspawn)/1000.f;
 			if(inventorythrob && regentime && world::player1->lastregen && lastmillis-world::player1->lastregen < regentime*1000)
 			{
 				float amt = clamp((lastmillis-world::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
 				if(amt < 0.5f) amt = 1.f-amt;
-				fade *= amt;
+				fade *= amt*1.5f;
 			}
-			if(skew <= 0.f) return 0;
 		}
 		else if(world::player1->lastdeath && (world::player1->state == CS_DEAD || world::player1->state == CS_WAITING))
 		{
-			int delay = lastmillis-world::player1->lastdeath;
-			if(delay < 1000)
-			{
-				skew *= 1.f-(delay/1000.f);
-				if(skew <= 0.f) return 0;
-			}
+			if(world::player1->lastdeath && lastmillis-world::player1->lastdeath) skew = 1.f-((lastmillis-world::player1->lastdeath)/1000.f);
 			else return 0;
 		}
 		else return 0;
@@ -954,7 +947,7 @@ namespace hud
         } steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
         settexture(healthtex, 3);
         glBegin(GL_QUAD_STRIP);
-        int size = int(1.5f*s*skew);
+        int size = int(s*2*skew);
         float health = clamp(world::player1->health/float(m_maxhealth(world::gamemode, world::mutators)), 0.0f, 1.0f);
         const float margin = 0.1f;
         loopi(4)
@@ -988,7 +981,7 @@ namespace hud
             glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(x, y - size + off*size);
         }
         glEnd();
-		if(inventoryhealth > 1) drawitemsubtext(x, y, s*0.75f, false, skew, "sub", fade, "%d", max(world::player1->health, 0));
+		if(inventoryhealth > 1) drawitemsubtext(x, y, s, false, skew, "sub", fade, "%d", max(world::player1->health, 0));
 		return size;
 	}
 

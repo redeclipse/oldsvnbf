@@ -10,9 +10,7 @@ namespace entities
 	VARP(showentradius, 0, 1, 3);
 	VARP(showentlinks, 0, 1, 3);
 	VARP(showlighting, 0, 1, 1);
-
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
-	FVAR(waypointmergescale, 1e-3f, 0.75f, 1000);
 
 	vector<extentity *> &getents() { return ents; }
 
@@ -1198,59 +1196,6 @@ namespace entities
 		else d->lastnode = -1;
 	}
 
-	void mergewaypoints()
-	{
-		float mindist = enttype[WAYPOINT].radius*waypointmergescale;
-        mindist *= mindist;
-		int totalmerges = 0, totalpasses = 0;
-		while(true)
-		{
-			int merges = 0;
-			loopvj(ents) if(ents[j]->type == WAYPOINT)
-			{
-				gameentity &e = *(gameentity *)ents[j];
-				if(verbose) renderprogress(float(j)/float(ents.length()), "merging waypoints...");
-				loopvk(ents) if(k != j && ents[k]->type == WAYPOINT)
-				{
-					gameentity &f = *(gameentity *)ents[k];
-					if(e.o.squaredist(f.o) <= mindist)
-					{
-						if(verbose >= 2) conoutf("\frWARNING: automatically transposing waypoint %d into %d", k, j);
-						loopv(f.links) if(f.links[i] != j && e.links.find(f.links[i]) < 0)
-						{
-							e.links.add(f.links[i]);
-							if(verbose >= 3) conoutf("\frWARNING: %d received link %d", j, f.links[i]);
-						}
-						loopv(ents) if(i != k)
-						{
-							gameentity &g = *(gameentity *)ents[i];
-							int id = g.links.find(k);
-							if(id >= 0)
-							{
-								g.links.remove(id);
-								if(g.links.find(j) < 0)
-								{
-									g.links.add(j);
-									if(verbose >= 3) conoutf("\frWARNING: %d received link %d from old child %d", i, j, k);
-								}
-							}
-						}
-						f.links.setsize(0);
-						f.type = NOTUSED;
-						e.o.add(f.o).mul(0.5f);
-						merges++;
-					}
-				}
-			}
-			totalpasses++;
-			if(!merges) break;
-			totalmerges += merges;
-			if(verbose >= 2) conoutf("\frWARNING: %d waypoint(s) merged, taking another pass", merges);
-		}
-		if(verbose) conoutf("\frWARNING: transposed %d total waypoint(s) in %d pass(es)", totalmerges, totalpasses);
-	}
-	ICOMMAND(mergewaypoints, "", (void), mergewaypoints());
-
 	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		gameentity &f = (gameentity &)e;
@@ -1553,7 +1498,6 @@ namespace entities
 		if(gver <= 49 || mtype == MAP_OCTA) importentities(mtype, gver);
 		renderprogress(0.25f, "checking entities...");
 		if(mtype != MAP_BFGZ || gver <= 112) updateoldentities(mtype, gver);
-		if(m_play(world::gamemode)) mergewaypoints();
 		loopvj(ents) fixentity(j);
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
@@ -1585,7 +1529,7 @@ namespace entities
 					both = true;
 					break;
 				}
-				part_trace(e.o, f.o, 1.f, 1, both ? 0x888888 : 0x444444);
+				part_trace(e.o, f.o, 1.f, 1, both ? 0xAA44CC : 0x660088);
 			}
 		}
 	}
