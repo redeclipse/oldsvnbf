@@ -4,11 +4,10 @@ VARFP(waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
-VARP(refractfog, 0, 1, 1);
 
-/* vertex water */
-VARP(watersubdiv, 0, 2, 3);
-VARP(waterlod, 0, 1, 3);
+VARW(refractfog, 0, 1, 1);
+VARW(watersubdiv, 0, 3, 3);
+VARW(waterlod, 0, 1, 3);
 
 static int wx1, wy1, wx2, wy2, wsize;
 float wcol[4];
@@ -243,7 +242,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
 	}
 }
 
-VARFP(vertwater, 0, 1, 1, allchanged());
+VARFW(vertwater, 0, 1, 1, if(!worldidents) allchanged());
 
 void renderlava(materialsurface &m, Texture *tex, float scale)
 {
@@ -1073,7 +1072,7 @@ static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxy
     loopi(8)
     {
         vec4 &p = v[i];
-        mvpmatrix.transform(vec(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, (i&4 ? bbmax.z + WATER_AMPLITUDE : bbmin.z - WATER_AMPLITUDE) - WATER_OFFSET), p); 
+        mvpmatrix.transform(vec(i&1 ? bbmax.x : bbmin.x, i&2 ? bbmax.y : bbmin.y, (i&4 ? bbmax.z + WATER_AMPLITUDE : bbmin.z - WATER_AMPLITUDE) - WATER_OFFSET), p);
         if(p.z >= 0)
         {
             float x = p.x / p.w, y = p.y / p.w;
