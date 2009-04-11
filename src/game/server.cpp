@@ -377,7 +377,7 @@ namespace server
 	ICOMMAND(gameid, "", (), result(gameid()));
 	ICOMMAND(gamever, "", (), intret(gamever()));
 
-	void resetgamevars(bool invoked)
+	void resetgamevars(bool flush)
 	{
 		string val;
 		enumerate(*idents, ident, id, {
@@ -389,24 +389,24 @@ namespace server
 					case ID_VAR:
 					{
 						setvar(id.name, id.def.i, true);
-                        if(invoked) formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
+                        if(flush) formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
 						break;
 					}
 					case ID_FVAR:
 					{
 						setfvar(id.name, id.def.f, true);
-                        if(invoked) formatstring(val)("%f", *id.storage.f);
+                        if(flush) formatstring(val)("%f", *id.storage.f);
 						break;
 					}
 					case ID_SVAR:
 					{
 						setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true);
-                        if(invoked) formatstring(val)("%s", *id.storage.s);
+                        if(flush) formatstring(val)("%s", *id.storage.s);
 						break;
 					}
 					default: break;
 				}
-				if(invoked) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id.name[3], val);
+				if(flush) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id.name[3], val);
 			}
 		});
 		execfile("servexec.cfg");
@@ -417,7 +417,7 @@ namespace server
 	{
 		bannedips.setsize(0);
 		aiman::clearai();
-		if(GVAR(resetvarsonend)) resetgamevars(false);
+		if(GVAR(resetvarsonend)) resetgamevars(true);
 		changemap(GVAR(defaultmap), GVAR(defaultmode), GVAR(defaultmuts));
 	}
 
@@ -1423,6 +1423,8 @@ namespace server
 			string val; val[0] = 0;
 			switch(id->type)
 			{
+#if 0 // these shouldn't get here
+				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
 					string s;
@@ -1436,6 +1438,7 @@ namespace server
 					}
 					return true;
 				}
+#endif
 				case ID_VAR:
 				{
 					if(nargs <= 1 || !arg)
@@ -1510,6 +1513,7 @@ namespace server
 			string val; val[0] = 0;
 			switch(id->type)
 			{
+				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
 					if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
@@ -1518,11 +1522,9 @@ namespace server
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
 					char *ret = executeret(s);
-					if(ret)
-					{
-						if(*ret) srvoutf(3, "\fm%s: %s returned %s", colorname(ci), cmd, ret);
-						delete[] ret;
-					}
+					if(ret && *ret) srvoutf(3, "\fm%s executed %s (returned: %s)", colorname(ci), cmd, ret);
+					else srvoutf(3, "\fm%s executed %s", colorname(ci), cmd);
+					if(ret) delete[] ret;
 					return;
 				}
 				case ID_VAR:
