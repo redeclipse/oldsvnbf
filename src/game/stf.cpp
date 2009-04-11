@@ -53,7 +53,7 @@ namespace stf
 			{
 				float dist = dir.magnitude(),
 					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-				fade *= 0.25f+(diff*0.5f);
+				fade *= 0.5f+(diff*0.5f);
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
@@ -76,15 +76,9 @@ namespace stf
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("emphasis");
-				ty -= draw_textx("Team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
-				settexture(hud::flagtex(world::player1->team), 3);
-				glColor4f(1.f, 1.f, 1.f, int(255*hudblend));
-				hud::drawsized(tx-FONTH, ty, FONTH);
-				popfont();
-				pushfont("default");
 				int occupy = int((f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f))*50.f);
-				bool overthrow = f.owner != world::player1->team;
-				ty -= draw_textx("%s [ \fs%s%d%%\fS ] complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
+				bool overthrow = f.owner && f.enemy == world::player1->team;
+				ty += draw_textx("%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
 				popfont();
 				break;
 			}
@@ -109,18 +103,18 @@ namespace stf
 			bool hasflag = world::player1->state == CS_ALIVE &&
 				insideflag(f, world::player1) && (f.owner == world::player1->team || f.enemy == world::player1->team);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
-			float skew = f.hasflag ? 1.f : 0.5f, fade = blend,
+			float skew = f.hasflag ? 1.f : 0.75f, fade = blend,
 				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
 			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, delay = lastmillis-world::player1->lastspawn;
 			if(millis < 500)
 			{
 				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
-				if(f.hasflag) skew = 0.5f+(amt*0.5f);
-				else skew = 1.f-(amt*0.5f);
+				if(f.hasflag) skew = 0.75f+(amt*0.25f);
+				else skew = 1.f-(amt*0.25f);
 			}
 			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, 1.f, 1.f, 1.f, fade, skew, "default", "%d%%", int(occupy*100.f));
-			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), 1.f, 1.f, 1.f, fade, skew);
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, true, 1.f, 1.f, 1.f, fade, skew, "default", "%d%%", int(occupy*100.f));
+			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), true, 1.f, 1.f, 1.f, fade, skew);
 		}
         return sy;
     }
@@ -246,7 +240,7 @@ namespace stf
 				}
 				else walk = 1;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*(2+walk)), walk);
+			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*(2+(walk*2))), walk);
 		}
 		return false;
 	}

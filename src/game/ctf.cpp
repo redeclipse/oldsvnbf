@@ -76,16 +76,10 @@ namespace ctf
 			if(hasflag >= 0 || !takenflags.empty())
 			{
 				pushfont("emphasis");
-				ty -= draw_textx("Team [ \fs%s%s\fS ]", tx-FONTH-FONTH/2, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
-				settexture(hud::flagtex(world::player1->team), 3);
-				glColor4f(1.f, 1.f, 1.f, int(255*hudblend));
-				hud::drawsized(tx-FONTH, ty, FONTH);
-				popfont();
-				pushfont("default");
 				if(hasflag >= 0)
-					ty -= draw_textx("You have the [ \fs%s%s\fS ] flag, return it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
+					ty += draw_textx("You have the \fs%s%s\fS flag, return it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
 				if(!takenflags.empty())
-					ty -= draw_textx("Flag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_UP, -1, -1);
+					ty += draw_textx("The flag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
 				popfont();
 			}
 		}
@@ -113,8 +107,8 @@ namespace ctf
 			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
 			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
 			int oldy = y-sy;
-			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
+			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, true, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
+			if(f.owner) hud::drawitemsubtext(x, oldy, s, true, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
     }
@@ -293,7 +287,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[goal], &g = st.flags[relay];
 		flageffect(goal, d->team, st.flags[goal].spawnloc, st.flags[relay].spawnloc);
 		(st.findscore(d->team)).total = score;
-		g.interptime = f.interptime = lastmillis;
+		f.interptime = lastmillis;
 		st.returnflag(relay);
 		if(d!=world::player1)
 		{
@@ -510,7 +504,7 @@ namespace ctf
 					if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius), float(enttype[FLAG].radius*(4+walk)), walk);
+			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius*2), float(enttype[FLAG].radius*(2+(walk*2))), walk);
 		}
 		return false;
 	}
