@@ -658,8 +658,7 @@ SDL_Surface *wrapsurface(void *data, int width, int height, int bpp)
 SDL_Surface *creatergbsurface(SDL_Surface *os)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 24, RGBMASKS);
-    if(!ns) fatal("creatergbsurface");
-    SDL_BlitSurface(os, NULL, ns, NULL);
+    if(ns) SDL_BlitSurface(os, NULL, ns, NULL);
     SDL_FreeSurface(os);
     return ns;
 }
@@ -667,19 +666,37 @@ SDL_Surface *creatergbsurface(SDL_Surface *os)
 SDL_Surface *creatergbasurface(SDL_Surface *os)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RGBAMASKS);
-    if(!ns) fatal("creatergbasurface");
-    SDL_BlitSurface(os, NULL, ns, NULL);
+    if(ns) SDL_BlitSurface(os, NULL, ns, NULL);
     SDL_FreeSurface(os);
     return ns;
+}
+
+bool checkgrayscale(SDL_Surface *s)
+{
+    // gray scale images have 256 levels, no colorkey, and the palette is a ramp
+    if(s->format->palette)
+    {
+        if(s->format->palette->ncolors != 256 || s->format->colorkey) return false;
+        const SDL_Color *colors = s->format->palette->colors;
+        loopi(256) if(colors[i].r != i || colors[i].g != i || colors[i].b != i) return false;
+    }
+    return true;
 }
 
 SDL_Surface *fixsurfaceformat(SDL_Surface *s)
 {
     if(!s) return NULL;
-    if(!s->pixels || min(s->w, s->h) <= 0 || s->format->BytesPerPixel <= 0) { SDL_FreeSurface(s); return NULL; }
+    if(!s->pixels || min(s->w, s->h) <= 0 || s->format->BytesPerPixel <= 0 || s->pitch != s->w*s->format->BytesPerPixel) 
+    { 
+        SDL_FreeSurface(s); 
+        return NULL; 
+    }
     static const uint rgbmasks[] = { RGBMASKS }, rgbamasks[] = { RGBAMASKS };
     switch(s->format->BytesPerPixel)
     {
+        case 1:
+            if(!checkgrayscale(s)) return s->format->colorkey ? creatergbasurface(s) : creatergbsurface(s);
+            break;
         case 3:
             if(s->format->Rmask != rgbmasks[0] || s->format->Gmask != rgbmasks[1] || s->format->Bmask != rgbmasks[2])
                 return creatergbsurface(s);
