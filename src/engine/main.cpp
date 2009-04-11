@@ -621,14 +621,14 @@ VAR(worstfpsdiff, 1, 0, -1);
 
 int lastautoadjust = 0;
 
-VARFP(minfps, 0, 15, 100,		// aim for this fps or higher
+VARFP(minfps, 0, 30, 100,		// aim for this fps or higher
 	minfps = min(minfps, maxfps-1));
 
 VARP(autoadjust, 0, 1, 1);				// auto performance adjust
-VARP(autoadjustmin, 0, 0, 100);		// lowest level to go to
+VARP(autoadjustmin, 0, 1, 100);			// lowest level to go to
 VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
-VARP(autoadjustrate, 0, 500, 10000);	// only adjust this often
-VARFP(autoadjustlimit, 0, 0, 100,		// going below this automatically scales to minimum
+VARP(autoadjustrate, 0, 250, 10000);	// only adjust this often
+VARFP(autoadjustlimit, 0, 10, 100,		// going below this automatically scales to minimum
 	autoadjustlimit = min(autoadjustlimit, minfps-1));
 
 void autoadjustset(int level)
