@@ -1542,11 +1542,12 @@ namespace world
             if(!early && third) flags |= MDL_FULLBRIGHT;
         }
 		else flags |= MDL_CULL_DIST;
+        float fade = 1;
         if(early) flags |= MDL_NORENDER;
-		else if(trans) flags |= MDL_TRANSLUCENT;
+		else if(trans) fade = 0.5f;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
-		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2);
+		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, fade);
 	}
 
 	void renderplayer(gameent *d, bool third, bool trans, bool early = false)
