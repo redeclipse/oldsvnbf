@@ -417,6 +417,9 @@ void gl_checkextensions()
             conoutf("\frWARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
         }
 #endif
+
+        extern int matskel;
+        if(!avoidshaders) matskel = 0;
     }
 
     if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
