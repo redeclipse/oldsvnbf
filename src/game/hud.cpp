@@ -73,8 +73,8 @@ namespace hud
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 1);
 	VARP(inventorycolour, 0, 1, 2);
-	FVARP(inventorysize, 0, 0.05f, 1000);
-	FVARP(inventoryblend, 0, 0.75f, 1);
+	FVARP(inventorysize, 0, 0.055f, 1000);
+	FVARP(inventoryblend, 0, 1.f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(chainguntex, "textures/chaingun", 3);
@@ -921,78 +921,86 @@ namespace hud
 		return sy;
 	}
 
-	int drawhealth(int x, int y, int s, float blend)
+	int drawhealth(int x, int y, int s, int edge, float blend)
 	{
-		float fade = inventoryblend*blend, skew = 1.f;
-		if(world::player1->state == CS_ALIVE)
+        int size = s*3/2, glow = edge/6;
+		float fade = inventoryblend*blend, r = 1.f, g = 1.f, b = 1.f;
+		if(teamwidgets) skewcolour(r, g, b);
+        settexture(healthtex, 3);
+        glColor4f(r*0.5f, g*0.5f, b*0.5f, fade);
+        drawtex(x-glow, y-size-glow, s+glow*2, size+glow*2);
+		if(inventoryhealth && world::player1->state == CS_ALIVE)
 		{
-			if(world::player1->lastspawn && lastmillis-world::player1->lastspawn < 1000) skew = (lastmillis-world::player1->lastspawn)/1000.f;
-			if(inventorythrob && regentime && world::player1->lastregen && lastmillis-world::player1->lastregen < regentime*1000)
+			if(world::player1->lastspawn && lastmillis-world::player1->lastspawn < 1000) fade *= (lastmillis-world::player1->lastspawn)/1000.f;
+			else if(inventorythrob && regentime && world::player1->lastregen && lastmillis-world::player1->lastregen < regentime*1000)
 			{
 				float amt = clamp((lastmillis-world::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
 				if(amt < 0.5f) amt = 1.f-amt;
-				fade *= amt*1.5f;
+				fade *= amt;
 			}
+			const struct healthbarstep
+			{
+				float health, r, g, b;
+			} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
+			glBegin(GL_QUAD_STRIP);
+			float health = clamp(world::player1->health/float(m_maxhealth(world::gamemode, world::mutators)), 0.0f, 1.0f);
+			const float margin = 0.1f;
+			loopi(4)
+			{
+				const healthbarstep &step = steps[i];
+				if(i > 0)
+				{
+					if(step.health > health && steps[i-1].health <= health)
+					{
+						float hoff = 1 - health, hlerp = (health - steps[i-1].health) / (step.health - steps[i-1].health),
+							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
+							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
+							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
+						glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(x, y - size + hoff*size);
+						glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(x + s, y - size + hoff*size);
+					}
+					if(step.health > health + margin)
+					{
+						float hoff = 1 - (health + margin), hlerp = (health + margin - steps[i-1].health) / (step.health - steps[i-1].health),
+							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
+							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
+							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
+						glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(x, y - size + hoff*size);
+						glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(x + s, y - size + hoff*size);
+						break;
+					}
+				}
+				float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
+				if(step.health > health) hfade *= 1 - (step.health - health)/margin;
+				glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(x, y - size + off*size);
+				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(x + s, y - size + off*size);
+			}
+			glEnd();
+			if(inventoryhealth > 1) drawitemsubtext(x, y, s, true, 1.f, "default", fade, "%d", max(world::player1->health, 0));
 		}
-		else if(world::player1->lastdeath && (world::player1->state == CS_DEAD || world::player1->state == CS_WAITING))
+		else
 		{
-			if(world::player1->lastdeath && lastmillis-world::player1->lastdeath) skew = 1.f-((lastmillis-world::player1->lastdeath)/1000.f);
-			else return 0;
+			const char *state = "ALIVE";
+			switch(world::player1->state)
+			{
+				case CS_EDITING: state = "EDIT"; break;
+				case CS_WAITING: state = "WAIT"; break;
+				case CS_SPECTATOR: state = "SPEC"; break;
+				case CS_DEAD: default: state = "DEAD"; break;
+			}
+			drawitemsubtext(x, y, s, true, 1.f, "sub", fade, "%s", state);
 		}
-		else return 0;
-
-        const struct healthbarstep
-        {
-            float health, r, g, b;
-        } steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
-        settexture(healthtex, 3);
-        glBegin(GL_QUAD_STRIP);
-        int size = int(s*2*skew);
-        float health = clamp(world::player1->health/float(m_maxhealth(world::gamemode, world::mutators)), 0.0f, 1.0f);
-        const float margin = 0.1f;
-        loopi(4)
-        {
-            const healthbarstep &step = steps[i];
-            if(i > 0)
-            {
-				if(step.health > health && steps[i-1].health <= health)
-				{
-					float hoff = 1 - health, hlerp = (health - steps[i-1].health) / (step.health - steps[i-1].health),
-						  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
-						  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
-						  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-					glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size);
-					glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(x, y - size + hoff*size);
-				}
-				if(step.health > health + margin)
-				{
-					float hoff = 1 - (health + margin), hlerp = (health + margin - steps[i-1].health) / (step.health - steps[i-1].health),
-						  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
-						  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
-						  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-					glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(x - size/2, y - size + hoff*size);
-					glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(x, y - size + hoff*size);
-					break;
-				}
-            }
-            float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
-            if(step.health > health) hfade *= 1 - (step.health - health)/margin;
-            glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(x - size/2, y - size + off*size);
-            glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(x, y - size + off*size);
-        }
-        glEnd();
-		if(inventoryhealth > 1) drawitemsubtext(x, y, s, false, skew, "sub", fade, "%d", max(world::player1->health, 0));
 		return size;
 	}
 
 	void drawinventory(int w, int h, int edge, float blend)
 	{
-		int cx = w-edge, cy = h-edge, cs = int(inventorysize*w), cr = cs/4, cc = 0;
-		if(inventoryhealth && (cc = drawhealth(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		if((inventoryammo || inventoryweapids) && world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		cx = edge; cy = h-edge;
+		int cx = edge, cy = h-edge, cs = int(inventorysize*w), cr = cs/4, cc = 0;
+		if((cc = drawhealth(cx, cy, cs, edge, blend)) > 0) cy -= cc+cr;
 		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
+		cx = w-edge; cy = h-edge;
+		if((inventoryammo || inventoryweapids) && world::player1->state == CS_ALIVE && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
 	}
 
 	void drawdamage(int w, int h, int s, float blend)
