@@ -78,7 +78,7 @@ namespace stf
 				pushfont("emphasis");
 				int occupy = int((f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f))*50.f);
 				bool overthrow = f.owner && f.enemy == world::player1->team;
-				ty += draw_textx("%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
+				ty += draw_textx("Secure \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
 				popfont();
 				break;
 			}
@@ -113,8 +113,8 @@ namespace stf
 				else skew = 1.f-(amt*0.25f);
 			}
 			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, true, 1.f, 1.f, 1.f, fade, skew, "default", "%d%%", int(occupy*100.f));
-			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), true, 1.f, 1.f, 1.f, fade, skew);
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s%d%%", hasflag ? (f.owner && f.enemy == world::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 		}
         return sy;
     }

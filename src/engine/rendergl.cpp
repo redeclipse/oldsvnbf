@@ -1931,7 +1931,7 @@ void drawnoview()
 	{
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);
-		UI::render();
+		if(commandmillis<0) UI::render();
 		hud::drawlast(w, h);
 	}
 
@@ -2112,7 +2112,7 @@ void drawview(int targtype)
 	{
 		hud::drawhud(w, h);
 		render_texture_panel(w, h);
-		UI::render();
+		if(commandmillis<0) UI::render();
 		hud::drawlast(w, h);
 	}
 	glDisable(GL_TEXTURE_2D);
