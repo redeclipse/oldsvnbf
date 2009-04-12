@@ -1707,8 +1707,9 @@ namespace entities
 				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-					if(!active) flags |= MDL_TRANSLUCENT;
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags);
+                    float fade = 1;
+					if(!active) fade = 0.5f;
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags, NULL, NULL, 0, 0, fade);
 				}
 			}
 		}
