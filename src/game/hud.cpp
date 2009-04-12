@@ -404,7 +404,7 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// superhud!
-		if(shownotices && world::maptime && !UI::hascursor(false))
+		if(!UI::hascursor(false))
 		{
 			pushfont("super");
 			int ty = (hudsize/2)+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
@@ -422,7 +422,7 @@ namespace hud
 				}
 				ty += draw_textx(commandbuf, tx, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
 			}
-			else
+			else if(shownotices && world::maptime)
 			{
 				if(teamnotices) skewcolour(tr, tg, tb);
 				if(lastmillis-world::maptime <= titlecard)
