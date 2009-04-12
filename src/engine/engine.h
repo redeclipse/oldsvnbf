@@ -584,7 +584,7 @@ extern void renderparticles(bool mainpass = false);
 // decal
 extern void initdecals();
 extern void cleardecals();
-extern void renderdecals();
+extern void renderdecals(bool mainpass = false);
 
 // blob
 

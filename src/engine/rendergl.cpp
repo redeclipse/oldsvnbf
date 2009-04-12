@@ -2003,7 +2003,7 @@ void drawview(int targtype)
 
 	if(!limitsky()) drawskybox(farplane, false);
 
-    renderdecals();
+    renderdecals(true);
 
 	rendermapmodels();
 	rendergame();
