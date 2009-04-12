@@ -578,13 +578,13 @@ extern void clearparticles();
 extern void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int attr5);
 extern void makeparticles(const entity &e);
 extern void updateparticles();
-extern void renderparticles(int time);
+extern void renderparticles(bool mainpass = false);
 
 
 // decal
 extern void initdecals();
 extern void cleardecals();
-extern void renderdecals(int time);
+extern void renderdecals();
 
 // blob
 
