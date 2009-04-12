@@ -109,8 +109,8 @@ namespace ctf
 			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
 			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
 			int oldy = y-sy;
-			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, true, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, s, true, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
+			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
+			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
     }
