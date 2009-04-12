@@ -64,22 +64,24 @@ namespace ctf
 		if(world::player1->state == CS_ALIVE)
 		{
 			int hasflag = -1;
-			static vector<int> takenflags;
-			takenflags.setsizenodelete(0);
+			static vector<int> takenflags, droppedflags;
+			takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
 			loopv(st.flags)
 			{
 				ctfstate::flag &f = st.flags[i];
 				if(f.owner == world::player1) hasflag = f.team;
-				if(isctfflag(f, world::player1->team) && (f.droptime || f.owner))
-					takenflags.add(i);
+				if(isctfflag(f, world::player1->team))
+				{
+					if(f.owner && f.owner->team != world::player1->team) takenflags.add(i);
+					else if(f.droptime) droppedflags.add(i);
+				}
 			}
 			if(hasflag >= 0 || !takenflags.empty())
 			{
 				pushfont("emphasis");
-				if(hasflag >= 0)
-					ty += draw_textx("You have the \fs%s%s\fS flag, return it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
-				if(!takenflags.empty())
-					ty += draw_textx("The flag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
+				if(hasflag >= 0) ty += draw_textx("You have the \fs%s%s\fS flag!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
+				if(!takenflags.empty()) ty += draw_textx("Flag has been taken!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
+				if(!droppedflags.empty()) ty += draw_textx("Flag has been dropped!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
 				popfont();
 			}
 		}
