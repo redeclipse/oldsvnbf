@@ -85,31 +85,6 @@ void conoutf(const char *s, ...)
 bool fullconsole = false;
 void toggleconsole() { fullconsole = !fullconsole; }
 COMMAND(toggleconsole, "");
-TVAR(inputtex, "textures/menu", 3);
-
-int rendercommand(int x, int y, int w)
-{
-    if(commandmillis < 0) return 0;
-    int width, height;
-    text_bounds(commandbuf, width, height, w);
-    y -= height-FONTH;
-	Texture *t = textureload(commandicon ? commandicon : inputtex, 3, true);
-	if(t && t != notexture)
-	{
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glBindTexture(GL_TEXTURE_2D, t->id);
-		float fade = 1.f-(float(lastmillis%1000)/1000.f);
-		glColor4f(1.f, 1.f, 1.f, fade);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.f, 0.f); glVertex2f(x, y);
-		glTexCoord2f(1.f, 0.f); glVertex2f(x+FONTH, y);
-		glTexCoord2f(1.f, 1.f); glVertex2f(x+FONTH, y+FONTH);
-		glTexCoord2f(0.f, 1.f); glVertex2f(x, y+FONTH);
-		glEnd();
-		x += FONTH*5/4;
-	}
-    return draw_text(commandbuf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, TEXT_SHADOW, commandpos >= 0 ? commandpos : strlen(commandbuf), w);
-}
 
 void blendbox(int x1, int y1, int x2, int y2, bool border)
 {

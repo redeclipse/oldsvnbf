@@ -179,7 +179,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
                     if(w + cw >= maxwidth) break;\
                     w += cw;\
                 }\
-                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = flags&TEXT_NO_INDENT ? 0 : PIXELTAB; y += FONTH; }\
+                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = 0; y += FONTH; }\
                 TEXTWORD\
             }\
             else\
@@ -243,7 +243,7 @@ void text_bounds(const char *str, int &width, int &height, int maxwidth, int fla
     #define TEXTLINE(idx) if(x > width) width = x;
     #define TEXTCOLOR(idx)
     #define TEXTCHAR(idx) x += curfont->chars[c-33].w + 1;
-    #define TEXTWORD x += w + 1;
+    #define TEXTWORD TEXTWORDSKELETON
     width = 0;
     TEXTSKELETON
     height = y + FONTH;
@@ -292,7 +292,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
 			float fade = 1.f-(float(lastmillis%1000)/1000.f);
 			glColor4ub(color.x, color.y, color.z, int(a*fade));
 			if(cx == INT_MIN) { cx = x; cy = y; }
-			if(maxwidth != -1 && cx >= maxwidth) { cx = PIXELTAB; cy += FONTH; }
+			if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
 			draw_char('_', left+cx, top+cy);
 		}
 	}
@@ -320,7 +320,8 @@ int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, 
 
     if(flags&TEXT_ALIGN)
     {
-        int width = text_width(str, flags);
+        int width = 0, height = 0;
+		text_bounds(str, width, height, maxwidth, flags);
         switch(flags&TEXT_ALIGN)
         {
             case TEXT_CENTERED: left -= width/2; break;
