@@ -1684,12 +1684,7 @@ namespace world
 			}
 		}
 
-        if(rendernormally && (early || d != player1))
-        {
-            d->muzzle = vec(-1, -1, -1);
-            a[ai++] = modelattach("tag_muzzle", &d->muzzle);
-        }
-
+        if(rendernormally && (early || d != player1)) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
@@ -1709,10 +1704,12 @@ namespace world
 		}
 
 		startmodelbatches();
-
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state!=CS_SPECTATOR)
+        {
+        	if(rendernormally) d->muzzle = vec(-1, -1, -1);
 			renderplayer(d, true, showtranslucent(d, true));
+        }
 
 		entities::render();
 		projs::render();
@@ -1725,6 +1722,7 @@ namespace world
 
     void renderavatar(bool early)
     {
+    	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
         if(((isthirdperson() && thirdpersonmodel) || !rendernormally) && player1->state != CS_SPECTATOR)
                 renderplayer(player1, true, showtranslucent(player1, true), early);
         else if(!isthirdperson() && firstpersonmodel && player1->state == CS_ALIVE)
