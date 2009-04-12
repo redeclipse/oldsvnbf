@@ -1648,8 +1648,8 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 100, 0, 0, 200, 200, 200, 200, 200, 40, 200 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4];
-			if(attr2 >= 256) regularshape(type, 1+attr3, colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, vel);
-			else newparticle(o, offsetvec(o, attr2, 1+attr3), attr5 > 0 ? attr5 : 1, type, colorfromattr(attr4), size);
+			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, vel);
+			else newparticle(o, offsetvec(o, attr2, max(1+attr3, 0)), attr5 > 0 ? attr5 : 1, type, colorfromattr(attr4), size);
 			break;
 		}
 		case 14: // flames <radius> <height> <rgb>
