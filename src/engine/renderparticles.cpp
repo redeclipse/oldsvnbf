@@ -1131,7 +1131,7 @@ void removetrackedparticles(physent *pl)
 	loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->resettracked(pl);
 }
 
-void render_particles(int time)
+void renderparticles(int time)
 {
 	//want to debug BEFORE the lastpass render (that would delete particles)
 	if(debugparticles && !glaring && !reflecting && !refracting)

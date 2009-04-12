@@ -1052,7 +1052,7 @@ void drawglare()
 
     renderwater();
     rendermaterials();
-    render_particles(0);
+    renderparticles(0);
 
     if(world::isthirdperson()) renderavatar(false);
     else
@@ -1158,14 +1158,16 @@ void drawreflection(float z, bool refract, bool clear)
     }
     else if(fading) glColorMask(COLORMASK, GL_FALSE);
 
+    if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, z);
+    renderdecals(0);
+
     if(reflectmms) renderreflectedmapmodels();
     rendergame();
 
     if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, z);
     if(refracting) rendergrass();
-    renderdecals(0);
     rendermaterials();
-    render_particles(0);
+    renderparticles(0);
 
     if(world::isthirdperson() || reflecting) renderavatar(false);
 
@@ -1278,6 +1280,8 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
     if(!limitsky()) drawskybox(farplane, false);
 
+    if(level >= 2) renderdecals(0);
+
 	rendermapmodels();
 
 	if(level >= 2)
@@ -1291,12 +1295,11 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	        drawreflections();
 	    }
 
-		renderdecals(0);
 	    renderwater();
         rendergrass();
 
 		rendermaterials();
-		render_particles(0);
+		renderparticles(0);
     }
 
 	glDisable(GL_FOG);
@@ -2017,7 +2020,7 @@ void drawview(int targtype)
     rendergrass();
 
 	rendermaterials();
-	render_particles(curtime);
+	renderparticles(curtime);
 
     if(world::isthirdperson()) renderavatar(false);
     else
