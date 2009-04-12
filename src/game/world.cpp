@@ -25,6 +25,7 @@ namespace world
 
 	VARP(thirdperson, 0, 0, 1);
 
+	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonmouse, 0, 0, 2);
 	VARP(thirdpersondeadzone, 0, 10, 100);
 	VARP(thirdpersonpanspeed, 1, 30, INT_MAX-1);
@@ -34,6 +35,7 @@ namespace world
 	FVARP(thirdpersonshift, -100, 7.5f, 100);
 	VARP(thirdpersonangle, 0, 0, 360);
 
+	VARP(firstpersonmodel, 0, 1, 1);
 	VARP(firstpersonmouse, 0, 0, 2);
 	VARP(firstpersondeadzone, 0, 10, 100);
 	VARP(firstpersonpanspeed, 1, 30, INT_MAX-1);
@@ -1723,9 +1725,9 @@ namespace world
 
     void renderavatar(bool early)
     {
-        if((isthirdperson() || !rendernormally) && player1->state != CS_SPECTATOR)
+        if(((isthirdperson() && thirdpersonmodel) || !rendernormally) && player1->state != CS_SPECTATOR)
                 renderplayer(player1, true, showtranslucent(player1, true), early);
-        else if(player1->state == CS_ALIVE)
+        else if(!isthirdperson() && firstpersonmodel && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
 
