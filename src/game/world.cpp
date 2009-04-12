@@ -1680,19 +1680,17 @@ namespace world
 				loopv(ctf::st.flags) if(ctf::st.flags[i].owner == d && !ctf::st.flags[i].droptime)
 				{
                     a[ai++] = modelattach("tag_flag", teamtype[ctf::st.flags[i].team].flag, ANIM_MAPMODEL|ANIM_LOOP, 0);
+                    break;
 				}
 			}
 		}
-
         if(rendernormally && (early || d != player1)) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	bool showtranslucent(gameent *d, bool third = true)
 	{
-		if(!physics::issolid(d)) return true;
-		if(d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent)) return true;
-		return false;
+		return !physics::issolid(d) || (d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent));
 	}
 
 	void render()
@@ -1716,7 +1714,6 @@ namespace world
 		if(m_stf(gamemode)) stf::render();
         else if(m_ctf(gamemode)) ctf::render();
         ai::render();
-
 		endmodelbatches();
 	}
 
@@ -1724,7 +1721,7 @@ namespace world
     {
     	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
         if(((isthirdperson() && thirdpersonmodel) || !rendernormally) && player1->state != CS_SPECTATOR)
-                renderplayer(player1, true, showtranslucent(player1, true), early);
+			renderplayer(player1, true, showtranslucent(player1, true), early);
         else if(!isthirdperson() && firstpersonmodel && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
