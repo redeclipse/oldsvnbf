@@ -1228,11 +1228,12 @@ namespace world
 
             physics::update();
             projs::update();
-            entities::update();
-            ai::update();
-
-            if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
-
+            if(!intermission)
+            {
+				entities::update();
+				ai::update();
+				if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
+            }
             otherplayers();
         }
 
@@ -1249,21 +1250,24 @@ namespace world
 
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
-                if(player1->ragdoll) moveragdoll(player1, true);
+				if(player1->ragdoll) moveragdoll(player1, true);
 				else if(lastmillis-player1->lastpain < 2000)
 					physics::move(player1, 10, false);
 			}
 			else
             {
                 if(player1->ragdoll) cleanragdoll(player1);
-                if(player1->state == CS_ALIVE)
-			    {
-				    physics::move(player1, 10, true);
-				    addsway(player1);
-				    entities::checkitems(player1);
-				    weapons::reload(player1);
-			    }
-			    else if(!tvmode()) physics::move(player1, 10, true);
+				if(!intermission)
+				{
+					if(player1->state == CS_ALIVE)
+					{
+						physics::move(player1, 10, true);
+						addsway(player1);
+						entities::checkitems(player1);
+						weapons::reload(player1);
+					}
+					else if(!tvmode()) physics::move(player1, 10, true);
+				}
             }
 			checkcamera();
 			if(player1->state == CS_DEAD)
