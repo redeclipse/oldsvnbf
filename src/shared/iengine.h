@@ -247,7 +247,6 @@ struct particle
 	physent *owner;
 };
 
-extern void render_particles(int time);
 extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL, int delay = 0);
 extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
 extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int radius = 150, int delay = 0);
