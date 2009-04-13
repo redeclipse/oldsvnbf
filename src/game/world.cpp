@@ -24,6 +24,7 @@ namespace world
 	VARP(absmouse, 0, 0, 1);
 
 	VARP(thirdperson, 0, 0, 1);
+	VARP(usedynamicglow, 0, 2, 3);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonmouse, 0, 0, 2);
@@ -1429,8 +1430,26 @@ namespace world
 
 	void adddynlights()
 	{
-		projs::adddynlights();
-		entities::adddynlights();
+		if(usedynamicglow)
+		{
+			projs::adddynlights();
+			entities::adddynlights();
+			if(usedynamicglow > 1)
+			{
+				if(m_ctf(gamemode)) ctf::adddynlights();
+				if(m_stf(gamemode)) stf::adddynlights();
+				if(usedynamicglow > 2 || m_team(gamemode, mutators))
+				{
+					gameent *d;
+					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && d->state == CS_ALIVE)
+					{
+						vec colour = vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f),
+							pos = vec(d->feetpos()).add(vec(0, 0, d->height/2));
+						adddynlight(pos, d->height*1.5f, colour);
+					}
+				}
+			}
+		}
 	}
 
 	vector<gameent *> bestplayers;

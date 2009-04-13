@@ -130,6 +130,18 @@ namespace ctf
         }
     }
 
+    void adddynlights()
+    {
+        loopv(st.flags)
+        {
+            ctfstate::flag &f = st.flags[i];
+            if(!f.ent) continue;
+			vec colour = vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f),
+				pos = vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2));
+			adddynlight(pos, enttype[FLAG].radius*1.5f, colour);
+        }
+    }
+
     void setupflags()
     {
         st.reset();
