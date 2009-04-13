@@ -332,7 +332,7 @@ namespace client
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
 		}
 
-		conoutf("%s", s);
+		conoutft(CON_CHAT, "%s", s);
 		playsound(S_CHAT, camera1->o, camera1, SND_FORCED);
 	}
 

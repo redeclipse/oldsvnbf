@@ -1130,22 +1130,6 @@ void clearsleep(bool clearoverrides, bool clearworlds)
 }
 
 ICOMMAND(clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideidents, *b!=0 || worldidents));
-
 ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
-
-char *gettime(char *format)
-{
-	time_t ltime;
-	struct tm *t;
-
-	ltime = time (NULL);
-	t = localtime (&ltime);
-
-	static string buf;
-	strftime (buf, sizeof (buf) - 1, format, t);
-
-	return buf;
-}
-ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
 ICOMMAND(getmillis, "", (), intret(lastmillis));
 

@@ -1299,7 +1299,7 @@ namespace ai
 	extern void think(gameent *d, bool run);
 	extern void render();
 }
-
+enum { CON_CHAT = CON_GAMESPECIFIC, CON_MAX };
 namespace hud
 {
 	extern int hudwidth, hudsize, damageresidue, radarflagnames;

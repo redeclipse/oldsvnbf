@@ -4,8 +4,9 @@ extern int kidmode, verbose, curtime, lastmillis, totalmillis;
 extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
+extern void console(int type, const char *s, ...);
+extern void conoutft(int type, const char *s, ...);
 extern void conoutf(const char *s, ...);
-extern void console(const char *s, ...);
 
 #ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);
@@ -72,7 +73,6 @@ extern void mpremip(bool local);
 extern int changedkeys;
 
 extern void keypress(int code, bool isdown, int cooked);
-extern int renderconsole(int w, int h, int x, int y, int s);
 extern char *getcurcommand();
 extern void resetcomplete();
 extern void complete(char *s);

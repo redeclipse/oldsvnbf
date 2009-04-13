@@ -47,7 +47,7 @@ void ircsend(ircnet *n, const char *msg, ...)
 	if(!n) return;
 	defvformatstring(str, msg, msg);
 	if(n->sock == ENET_SOCKET_NULL) return;
-	if(verbose >= 2) console("[%s] >>> %s", n->name, str);
+	if(verbose >= 2) console(0, "[%s] >>> %s", n->name, str);
 	concatstring(str, "\n");
 	ENetBuffer buf;
 	buf.data = str;
@@ -300,7 +300,7 @@ void ircprintf(ircnet *n, const char *target, const char *msg, ...)
 		}
 		n->lines.add(newstring(str));
 	}
-	console("%s %s", s, str); // console is not used to relay
+	console(0, "%s %s", s, str); // console is not used to relay
 }
 
 void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])

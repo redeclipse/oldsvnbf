@@ -7,12 +7,35 @@ namespace hud
 
 	VARP(hudsize, 0, 2048, INT_MAX-1);
 
+	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 4, 4);
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
 	VARP(showfps, 0, 1, 3);
 
+	bool fullconsole = false;
+	void toggleconsole() { fullconsole = !fullconsole; }
+	COMMAND(toggleconsole, "");
+
+	int conskip = 0;
+	void setconskip(int *n)
+	{
+		conskip += *n;
+		if(conskip<0) conskip = 0;
+	}
+	COMMANDN(conskip, setconskip, "i");
+
+	VARP(consize, 0, 5, 100);
+	VARP(contime, 0, 15000, INT_MAX-1);
+	FVARP(conblend, 0, 0.75f, 1);
+	VARP(chatconsize, 0, 5, 100);
+	VARP(chatcontime, 0, 30000, INT_MAX-1);
+	FVARP(chatconblend, 0, 0.75f, 1);
+	FVARP(fullconblend, 0, 1.f, 1);
+	VARP(fullconsize, 0, 15, 100);
+
 	FVARP(noticeoffset, 0.f, 0.25f, 1.f);
+	FVARP(noticeblend, 0.f, 0.75f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
 	TVAR(inputtex, "textures/menu", 3);
@@ -44,26 +67,29 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.025f, 1000);
+	FVARP(indicatorsize, 0, 0.05f, 1000);
 	FVARP(indicatorblend, 0, 1.f, 1);
+	VARP(teamindicator, 0, 1, 1);
+	FVARP(teamindicatorsize, 0, 0.1f, 1000);
+	FVARP(teamindicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.05f, 1000);
+	FVARP(crosshairsize, 0, 0.07f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.5f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
-	TVAR(relativecursortex, "textures/cursordot", 3);
+	TVAR(relativecursortex, "textures/dotcrosshair", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
-	TVAR(editcursortex, "textures/cursordot", 3);
-	TVAR(speccursortex, "textures/cursordot", 3);
+	TVAR(editcursortex, "textures/dotcrosshair", 3);
+	TVAR(speccursortex, "textures/dotcrosshair", 3);
 	TVAR(crosshairtex, "textures/crosshair", 3);
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	FVARP(snipecrosshairsize, 0, 0.6f, 1000);
+	FVARP(snipecrosshairsize, 0, 0.5f, 1000);
 	FVARP(cursorsize, 0, 0.05f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
@@ -76,9 +102,9 @@ namespace hud
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 1);
 	VARP(inventorycolour, 0, 1, 2);
-	FVARP(inventorysize, 0, 0.055f, 1000);
-	FVARP(inventoryblend, 0, 1.f, 1);
-	FVARP(inventoryglow, 0, 0.05f, 1);
+	FVARP(inventorysize, 0, 0.05f, 1000);
+	FVARP(inventoryblend, 0, 0.75f, 1);
+	FVARP(inventoryglow, 0, 0.055f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(chainguntex, "textures/chaingun", 3);
@@ -100,7 +126,7 @@ namespace hud
 	TVAR(inventorychattex, "textures/conopen", 3);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.05f, 1000);
+	FVARP(clipsize, 0, 0.075f, 1000);
 	FVARP(clipblend, 0, 0.75f, 1000);
 	FVARP(clipcolour, 0.f, 0.75f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
@@ -266,7 +292,7 @@ namespace hud
 			default: amt = 0.f; break;
 		}
 		glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-		glColor4f(r, g, b, indicatorblend);
+		glColor4f(r, g, b, indicatorblend*hudblend);
 		if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
 		else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
 	}
@@ -283,7 +309,7 @@ namespace hud
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
-		float fade = clipblend;
+		float fade = clipblend*hudblend;
 		if(lastmillis-world::player1->weaplast[weap] < world::player1->weapwait[weap]) switch(world::player1->weapstate[weap])
 		{
 			case WPSTATE_RELOAD: case WPSTATE_PICKUP: case WPSTATE_SWITCH:
@@ -364,11 +390,25 @@ namespace hud
 			if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
 		int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
-		drawpointerindex(index, world::mousestyle() != 1 ? cx : nx, world::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
 			if(world::player1->state == CS_ALIVE)
 			{
+				if(teamindicator && world::player1->team)
+				{
+					Texture *t = textureload(indicatortex, 3);
+					if(t != notexture)
+					{
+						if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+						else glBlendFunc(GL_ONE, GL_ONE);
+						float tr = 1.f, tg = 1.f, tb = 1.f;
+						skewcolour(tr, tg, tb);
+						glColor4f(tr, tg, tb, teamindicatorblend*hudblend);
+						glBindTexture(GL_TEXTURE_2D, t->id);
+						int size = int(teamindicatorsize*hudsize);
+						drawsized(nx-size/2, ny-size/2, size);
+					}
+				}
 				if(world::player1->hasweap(world::player1->weapselect, m_spawnweapon(world::gamemode, world::mutators)))
 				{
 					if(showclip) drawclip(world::player1->weapselect, nx, ny, clipsize*hudsize);
@@ -377,8 +417,9 @@ namespace hud
 				}
 			}
 			if(world::mousestyle() >= 1) // renders differently
-				drawpointerindex(POINTER_RELATIVE, world::mousestyle() != 1 ? nx : cx, world::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend);
+				drawpointerindex(POINTER_RELATIVE, world::mousestyle() != 1 ? nx : cx, world::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend*hudblend);
 		}
+		drawpointerindex(index, world::mousestyle() != 1 ? cx : nx, world::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 	}
 
 	void drawpointers(int w, int h)
@@ -428,6 +469,7 @@ namespace hud
 			ty += draw_textx(commandbuf, tx, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
 		else if(shownotices && world::maptime && !UI::hascursor(false))
 		{
+			tf = int(tf*noticeblend);
 			if(teamnotices) skewcolour(tr, tg, tb);
 			if(lastmillis-world::maptime <= titlecard)
 			{
@@ -620,6 +662,48 @@ namespace hud
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
 		glDisable(GL_BLEND);
+	}
+
+	void drawconsole(int type, int w, int h, int x, int y, int s)
+	{
+		static vector<char *> refs; refs.setsizenodelete(0);
+		int numl = 0;
+		bool full = fullconsole || commandmillis >= 0;
+		if(full) numl = fullconsize;
+		else numl = consize;
+		if(type)
+		{
+			numl = chatconsize;
+			if(numl) loopv(conlines) if(conlines[i].type == CON_CHAT)
+			{
+				if(full || lastmillis-conlines[i].outtime < chatcontime)
+				{
+					refs.add(conlines[i].cref);
+					if(refs.length() >= numl) break;
+				}
+			}
+			pushfont("hud");
+			int z = y;
+			loopv(refs)
+				z -= draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			popfont();
+		}
+		else
+		{
+			if(numl) loopv(conlines) if(conlines[i].type == CON_INFO || showconsole == 1)
+			{
+				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].outtime < contime)
+				{
+					refs.add(conlines[i].cref);
+					if(refs.length() >= numl) break;
+				}
+			}
+			pushfont("sub");
+			int z = y;
+			loopvrev(refs)
+				z += draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), TEXT_CENTERED, -1, s, refs[i]);
+			popfont();
+		}
 	}
 
 	float radarrange()
@@ -961,7 +1045,7 @@ namespace hud
 		float fade = inventoryblend*blend, r = 1.f, g = 1.f, b = 1.f;
 		if(teamwidgets) skewcolour(r, g, b);
         settexture(healthtex, 3);
-        glColor4f(r, g, b, fade);
+        glColor4f(r*0.5f, g*0.5f, b*0.5f, fade*0.5f);
         drawtex(x, y-size, width, size);
 		if(inventoryhealth && world::player1->state == CS_ALIVE)
 		{
@@ -1150,11 +1234,12 @@ namespace hud
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
-		int br = os+is+os*3, bs = ox-br*2, bx = ox-br, by = oy-os*3;
-
-		pushfont("hud");
-		renderconsole(ox, oy, os, os, bs+os+is);
-		popfont();
+		int br = os+is+os*3, bs = (ox-br*2)/2, bx = ox-br, by = oy-os*3;
+		if(showconsole)
+		{
+			drawconsole(0, ox, oy, ox/2, os, bs*2);
+			if(showconsole >= 2) drawconsole(1, ox, oy, br, by, bs);
+		}
 
 		pushfont("sub");
 		static int laststats = 0, prevstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };

@@ -4,28 +4,18 @@
 
 VARP(showconsole, 0, 1, 1);
 VARP(consoletime, 200, 20000, INT_MAX-1);
-FVARP(consoleblend, 0, 1.f, 1);
 
 vector<cline> conlines;
-
-int conskip = 0;
 
 int commandmillis = -1;
 string commandbuf;
 char *commandaction = NULL, *commandicon = NULL;
 int commandpos = -1;
 
-void setconskip(int *n)
-{
-	conskip += *n;
-	if(conskip<0) conskip = 0;
-}
-
-COMMANDN(conskip, setconskip, "i");
-
-void conline(const char *sf, int n)
+void conline(int type, const char *sf, int n)
 {
 	cline cl;
+	cl.type = type;
 	cl.cref = conlines.length()>100 ? conlines.pop().cref : newstringbuf("");
 	cl.outtime = lastmillis;
 	conlines.insert(n, cl);
@@ -55,99 +45,6 @@ void conline(const char *sf, int n)
 			}
 		}
 	}
-}
-
-SVAR(consoletimefmt, "%c");
-
-void console(const char *s, ...)
-{
-	defvformatstring(sf, s, s);
-	string osf, psf, fmt;
-	formatstring(fmt)(consoletimefmt);
-	filtertext(osf, sf);
-	formatstring(psf)("%s %s", gettime(fmt), osf);
-	printf("%s\n", osf);
-	fflush(stdout);
-	conline(sf, 0);
-}
-
-void conoutf(const char *s, ...)
-{
-	defvformatstring(sf, s, s);
-	console("%s", sf);
-#ifdef IRC
-	string osf;
-	filtertext(osf, sf);
-	ircoutf(4, "%s", osf);
-#endif
-}
-
-bool fullconsole = false;
-void toggleconsole() { fullconsole = !fullconsole; }
-COMMAND(toggleconsole, "");
-
-void blendbox(int x1, int y1, int x2, int y2, bool border)
-{
-	notextureshader->set();
-
-	glDepthMask(GL_FALSE);
-	glDisable(GL_TEXTURE_2D);
-	glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-	glBegin(GL_QUADS);
-	if(border) glColor3d(0.5, 0.1, 0.1);
-	else glColor3d(1.0, 1.0, 1.0);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y1);
-    glVertex2f(x2, y2);
-    glVertex2f(x1, y2);
-	glEnd();
-	glDisable(GL_BLEND);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_QUADS);
-	glColor3d(0.7, 0.1, 0.1);
-	glVertex2f(x1, y1);
-	glVertex2f(x2, y1);
-	glVertex2f(x2, y2);
-	glVertex2f(x1, y2);
-	glEnd();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	xtraverts += 8;
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glDepthMask(GL_TRUE);
-
-	defaultshader->set();
-}
-
-VARP(consize, 0, 20, 100);
-VARP(fullconsize, 0, 60, 100);
-
-int renderconsole(int w, int h, int x, int y, int s)
-{
-	if(showconsole)
-	{
-		vector<char *> refs;
-		refs.setsizenodelete(0);
-
-		int numl = min(h*(fullconsole ? fullconsize : consize)/100, h-FONTH/3*2)/FONTH;
-		refs.setsizenodelete(0);
-		if(numl)
-		{
-			loopv(conlines)
-			{
-				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : fullconsole || lastmillis-conlines[i].outtime<consoletime)
-				{
-					refs.add(conlines[i].cref);
-					if (refs.length() >= numl) break;
-				}
-			}
-		}
-
-		int z = y;
-		loopvrev(refs)
-			z += draw_textx("%s", x, z, 255, 255, 255, int(255*consoleblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
-	}
-	return y;
 }
 
 // keymap is defined externally in keymap.cfg
