@@ -466,7 +466,7 @@ namespace hud
 		pushfont("super");
 		int ty = (hudsize/2)+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
-			ty += draw_textx(commandbuf, tx, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
+			ty += draw_textx(commandbuf, tx-FONTW/2, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
 		else if(shownotices && world::maptime && !UI::hascursor(false))
 		{
 			tf = int(tf*noticeblend);
