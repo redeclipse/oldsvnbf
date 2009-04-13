@@ -115,7 +115,6 @@ namespace ctf
 		return sy;
     }
 
-
     void render()
     {
         loopv(st.flags)

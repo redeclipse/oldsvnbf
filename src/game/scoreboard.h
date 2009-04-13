@@ -463,6 +463,49 @@ namespace hud
 			if(world::player1->state == CS_DEAD) { if(scoreson) shownscores = true; }
 			else shownscores = false;
 		}
+
+		int drawinventoryitem(int x, int y, int s, float skew, float fade, int pos, int team, int score, const char *name)
+		{
+			const char *colour = "\fa";
+			switch(pos)
+			{
+				case 0: colour = "\fg"; break;
+				case 1: colour = "\fy"; break;
+				case 2: colour = "\fo"; break;
+				case 3: colour = "\fr"; break;
+				default: break;
+			}
+			int sy = hud::drawitem(hud::flagtex(team), x, y, s, true, 1.f, 1.f, 1.f, fade, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
+			hud::drawitemsubtext(x, y, s, true, skew, "sub", fade, "%s%s", team ? teamtype[team].chat : "\fw", name);
+			return sy;
+		}
+
+		int drawinventory(int x, int y, int s, float blend)
+		{
+			int sy = 0, numgroups = groupplayers(), numout = 0;
+			loopi(2) loopk(numgroups)
+			{
+				scoregroup &sg = *groups[k];
+				if(m_team(world::gamemode, world::mutators))
+				{
+					if(!sg.team || ((sg.team != world::player1->team) == !i)) continue;
+					sy += drawinventoryitem(x, y-sy, s, 1.25f-float(numout+1)*0.25f, blend, k, sg.team, sg.score, teamtype[sg.team].name);
+					if((numout += 1) > 3) return sy;
+				}
+				else
+				{
+					if(sg.team) continue;
+					loopvj(sg.players)
+					{
+						gameent *d = sg.players[j];
+						if((d != world::player1) == !i) continue;
+						sy += drawinventoryitem(x, y-sy, s, 1.25f-float(numout+1)*0.25f, blend, j, sg.team, d->frags, world::colorname(d, NULL, "", false));
+						if((numout += 1) > 3) return sy;
+					}
+				}
+			}
+			return sy;
+		}
 	};
 	extern scoreboard sb;
 }
