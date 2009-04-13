@@ -1228,10 +1228,10 @@ namespace world
 
             physics::update();
             projs::update();
+			ai::update();
             if(!intermission)
             {
 				entities::update();
-				ai::update();
 				if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
             }
             otherplayers();

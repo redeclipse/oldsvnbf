@@ -974,13 +974,21 @@ namespace ai
 					d->ai->prevnode = d->lastnode;
 				}
 			}
-			entities::checkitems(d);
 		}
-        if((d->state == CS_DEAD || d->state == CS_WAITING) && d->ragdoll) moveragdoll(d, false);
+        if(d->state == CS_DEAD || d->state == CS_WAITING)
+        {
+        	if(d->ragdoll) moveragdoll(d, false);
+			else if(lastmillis-d->lastpain < 2000)
+				physics::move(d, 1, false);
+        }
 		else
         {
             if(d->ragdoll) cleanragdoll(d);
-            physics::move(d, 1, true);
+            if(d->state == CS_ALIVE && !world::intermission)
+            {
+				physics::move(d, 1, true);
+				entities::checkitems(d);
+            }
         }
 		d->attacking = d->jumping = d->reloading = d->useaction = false;
 	}
