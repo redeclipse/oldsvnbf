@@ -1182,12 +1182,12 @@ namespace hud
 		if(showfps) switch(showfps)
 		{
 			case 3:
-				if(autoadjust) by -= draw_textx("(min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%) fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
-				else by -= draw_textx("(max:%d range:+%d-%d) fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10], curstats[8]);
+				if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%% fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
+				else by -= draw_textx("max:%d range:+%d-%d fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10], curstats[8]);
 				break;
 			case 2:
-				if(autoadjust) by -= draw_textx("(min:%d max:%d, bal:\fs%s%d\fS%%) fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
-				else by -= draw_textx("(max:%d) fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[8]);
+				if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
+				else by -= draw_textx("max:%d fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[8]);
 				break;
             case 1:
                 draw_textx("fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, curstats[8]);
