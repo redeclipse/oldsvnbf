@@ -489,7 +489,7 @@ namespace hud
 				if(m_team(world::gamemode, world::mutators))
 				{
 					if(!sg.team || ((sg.team != world::player1->team) == !i)) continue;
-					sy += drawinventoryitem(x, y-sy, s, 1.25f-float(numout+1)*0.25f, blend, k, sg.team, sg.score, teamtype[sg.team].name);
+					sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, k, sg.team, sg.score, teamtype[sg.team].name);
 					if((numout += 1) > 3) return sy;
 				}
 				else
@@ -499,7 +499,7 @@ namespace hud
 					{
 						gameent *d = sg.players[j];
 						if((d != world::player1) == !i) continue;
-						sy += drawinventoryitem(x, y-sy, s, 1.25f-float(numout+1)*0.25f, blend, j, sg.team, d->frags, world::colorname(d, NULL, "", false));
+						sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, j, sg.team, d->frags, world::colorname(d, NULL, "", false));
 						if((numout += 1) > 3) return sy;
 					}
 				}
