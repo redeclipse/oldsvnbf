@@ -477,7 +477,7 @@ namespace hud
 				if(!*title) title = getmapname();
 				ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, title);
 				pushfont("emphasis");
-				ty += draw_textx("Playing: %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(world::gamemode, world::mutators));
+				ty += draw_textx("[ %s ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(world::gamemode, world::mutators));
 				popfont();
 			}
 
