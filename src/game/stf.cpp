@@ -34,6 +34,19 @@ namespace stf
 		}
 	}
 
+
+    void adddynlights()
+    {
+        loopv(st.flags)
+        {
+            stfstate::flag &f = st.flags[i];
+            if(!f.ent) continue;
+			vec colour = vec((teamtype[f.owner].colour>>16), ((teamtype[f.owner].colour>>8)&0xFF), (teamtype[f.owner].colour&0xFF)).div(255.f),
+				pos = vec(f.o).add(vec(0, 0, enttype[FLAG].radius/2));
+			adddynlight(pos, enttype[FLAG].radius*1.5f, colour);
+        }
+    }
+
 	void drawblip(int w, int h, int s, float blend, int type, bool skipenemy = false)
 	{
 		loopv(st.flags)

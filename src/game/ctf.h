@@ -148,6 +148,7 @@ namespace ctf
 	extern int drawinventory(int x, int y, int s, float blend);
 	extern void preload();
 	extern void render();
+	extern void adddynlights();
 	extern void aifind(gameent *d, aistate &b, vector<interest> &interests);
 	extern bool aicheck(gameent *d, aistate &b);
 	extern bool aidefend(gameent *d, aistate &b);
