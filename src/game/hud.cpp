@@ -70,12 +70,13 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventoryedit, 0, 1, 1);
+	VARP(inventoryscores, 0, 1, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventoryweapents, 0, 0, 1);
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 1);
 	VARP(inventorycolour, 0, 1, 2);
-	FVARP(inventorysize, 0, 0.075f, 1000);
+	FVARP(inventorysize, 0, 0.055f, 1000);
 	FVARP(inventoryblend, 0, 1.f, 1);
 	FVARP(inventoryglow, 0, 0.05f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
@@ -803,9 +804,9 @@ namespace hud
 			glPushMatrix();
 			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
-			int tx = int((left ? x : (x-s))*(1.f/skew)), ty = int((y-s)*(1.f/skew)), ti = int(255.f*f);
+			int tx = int((left ? (x+s) : (x-s))*(1.f/skew)), ty = int((y-s)*(1.f/skew)), ti = int(255.f*f);
 			defvformatstring(str, text, text);
-			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_LEFT_JUSTIFY, -1, -1, str);
+			draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_RIGHT_JUSTIFY : TEXT_LEFT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
 			glPopMatrix();
 		}
@@ -853,59 +854,69 @@ namespace hud
 
 	int drawweapons(int x, int y, int s, float blend)
 	{
-		const char *hudtexs[WEAPON_MAX] = {
-			plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex,
-			paintguntex
-		};
-		int sy = 0, sweap = m_spawnweapon(world::gamemode, world::mutators);
-		loopi(WEAPON_MAX) if(world::player1->hasweap(i, sweap) || lastmillis-world::player1->weaplast[i] < world::player1->weapwait[i])
+		int sy = 0;
+		if(world::player1->state == CS_ALIVE && inventoryammo)
 		{
-			float fade = blend, size = s, skew = 1.f;
-			if(world::player1->weapstate[i] == WPSTATE_SWITCH || world::player1->weapstate[i] == WPSTATE_PICKUP)
+			const char *hudtexs[WEAPON_MAX] = {
+				plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex,
+				paintguntex
+			};
+			int sweap = m_spawnweapon(world::gamemode, world::mutators);
+			loopi(WEAPON_MAX) if(world::player1->hasweap(i, sweap) || lastmillis-world::player1->weaplast[i] < world::player1->weapwait[i])
 			{
-				float amt = clamp(float(lastmillis-world::player1->weaplast[i])/float(world::player1->weapwait[i]), 0.f, 1.f);
-				skew = (i != world::player1->weapselect ?
-					(
-						world::player1->hasweap(i, sweap) ? 1.f-(amt*(0.25f)) : 1.f-amt
-					) : (
-						world::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.75f+(amt*(0.25f))
-					)
-				);
-			}
-			else if(i != world::player1->weapselect) skew = 0.75f;
-			bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
-			int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
-			if(delay < 1000) skew *= delay/1000.f;
-			float r = 1.f, g = 1.f, b = 1.f;
-			if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
-			else if(inventorycolour)
-			{
-				r = (weaptype[i].colour>>16)/255.f;
-				g = ((weaptype[i].colour>>8)&0xFF)/255.f;
-				b = (weaptype[i].colour&0xFF)/255.f;
-			}
-			if(inventoryammo && (instate || inventoryammo > 1) && world::player1->hasweap(i, sweap))
-				sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "default", "%d", world::player1->ammo[i]);
-			else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
-            if(inventoryweapids && (instate || inventoryweapids > 1))
-            {
-				static string weapids[WEAPON_MAX];
-				static int lastweapids = -1;
-				if(lastweapids != changedkeys)
+				float fade = blend, size = s, skew = 1.f;
+				if(world::player1->weapstate[i] == WPSTATE_SWITCH || world::player1->weapstate[i] == WPSTATE_PICKUP)
 				{
-					loopj(WEAPON_MAX)
-					{
-						defformatstring(action)("weapon %d", j);
-						const char *actkey = searchbind(action, 0);
-						if(actkey && *actkey) copystring(weapids[j], actkey);
-						else formatstring(weapids[j])("%d", j+1);
-					}
-					lastweapids = changedkeys;
+					float amt = clamp(float(lastmillis-world::player1->weaplast[i])/float(world::player1->weapwait[i]), 0.f, 1.f);
+					skew = (i != world::player1->weapselect ?
+						(
+							world::player1->hasweap(i, sweap) ? 1.f-(amt*(0.25f)) : 1.f-amt
+						) : (
+							world::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.75f+(amt*(0.25f))
+						)
+					);
 				}
-                if(inventoryweapents && entities::ents.inrange(world::player1->entid[i]) && world::player1->hasweap(i, sweap))
-					drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "[\fs\fa%d\fS] \fs%s%s\fS", world::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
-                else drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
-            }
+				else if(i != world::player1->weapselect) skew = 0.75f;
+				bool instate = (i == world::player1->weapselect || world::player1->weapstate[i] != WPSTATE_PICKUP);
+				int oldy = y-sy, delay = lastmillis-world::player1->lastspawn;
+				if(delay < 1000) skew *= delay/1000.f;
+				float r = 1.f, g = 1.f, b = 1.f;
+				if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
+				else if(inventorycolour)
+				{
+					r = (weaptype[i].colour>>16)/255.f;
+					g = ((weaptype[i].colour>>8)&0xFF)/255.f;
+					b = (weaptype[i].colour&0xFF)/255.f;
+				}
+				if(inventoryammo && (instate || inventoryammo > 1) && world::player1->hasweap(i, sweap))
+					sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "default", "%d", world::player1->ammo[i]);
+				else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
+				if(inventoryweapids && (instate || inventoryweapids > 1))
+				{
+					static string weapids[WEAPON_MAX];
+					static int lastweapids = -1;
+					if(lastweapids != changedkeys)
+					{
+						loopj(WEAPON_MAX)
+						{
+							defformatstring(action)("weapon %d", j);
+							const char *actkey = searchbind(action, 0);
+							if(actkey && *actkey) copystring(weapids[j], actkey);
+							else formatstring(weapids[j])("%d", j+1);
+						}
+						lastweapids = changedkeys;
+					}
+					if(inventoryweapents && entities::ents.inrange(world::player1->entid[i]) && world::player1->hasweap(i, sweap))
+						drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "[\fs\fa%d\fS] \fs%s%s\fS", world::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+					else drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+				}
+			}
+		}
+		else
+		{
+			float r = 1.f, g = 1.f, b = 1.f;
+			if(teamwidgets) skewcolour(r, g, b);
+			sy += drawitem("textures/wait", x, y-sy, s, false, r, g, b, blend, 1.f);
 		}
 		return sy;
 	}
@@ -915,8 +926,8 @@ namespace hud
 		if(entities::ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
-			int ty = drawitem(inventoryenttex, x, y, s, true, 1.f, 1.f, 1.f, fade, skew, "sub", "%s (%d)", enttype[e.type].name, n);
-			drawitemsubtext(x, y, s, true, skew, "gui", fade, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+			int ty = drawitem(inventoryenttex, x+s*2, y, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", "%s (%d)", enttype[e.type].name, n);
+			drawitemsubtext(x, y, s, true, skew, "sub", fade, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 			return ty;
 		}
 		return 0;
@@ -933,7 +944,7 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s*3/2, width = size/2, glow = int(width*inventoryglow);
+        int size = s*2, width = s, glow = int(width*inventoryglow);
 		float fade = inventoryblend*blend, r = 1.f, g = 1.f, b = 1.f;
 		if(teamwidgets) skewcolour(r, g, b);
         settexture(healthtex, 3);
@@ -1008,17 +1019,12 @@ namespace hud
 	{
 		int cx = edge, cy = h-edge, cs = int(inventorysize*w), cr = cs/4, cc = 0;
 		if((cc = drawhealth(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		if(world::player1->state == CS_EDITING)
-		{
-			if(inventoryedit && (cc = drawentsel(cx, cy, cs*2/3, blend)) > 0) cy -= cc+cr;
-		}
+		if(m_edit(world::gamemode)) { if(world::player1->state == CS_EDITING && inventoryedit && (cc = drawentsel(cx, cy, cs, blend)) > 0) cy -= cc+cr; }
+		else if(inventoryscores && ((cc = sb.drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 		cx = w-edge; cy = h-edge;
-		if(world::player1->state == CS_ALIVE)
-		{
-			if(inventoryammo && (cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		}
-		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs*2/3, blend)) > 0)) cy -= cc+cr;
-		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs*2/3, blend)) > 0)) cy -= cc+cr;
+		if((cc = drawweapons(cx, cy, cs, blend)) > 0) cy -= cc+cr;
+		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
+		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
 	}
 
 	void drawdamage(int w, int h, int s, float blend)
