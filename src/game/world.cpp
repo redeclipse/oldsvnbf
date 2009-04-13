@@ -32,8 +32,8 @@ namespace world
 	VARP(thirdpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
 	VARP(thirdpersontranslucent, 0, 0, 1);
-	FVARP(thirdpersondist, -100, 5.0f, 100);
-	FVARP(thirdpersonshift, -100, 7.5f, 100);
+	FVARP(thirdpersondist, -100, 1.f, 100);
+	FVARP(thirdpersonshift, -100, -8.f, 100);
 	VARP(thirdpersonangle, 0, 0, 360);
 
 	VARP(firstpersonmodel, 0, 1, 1);

@@ -6,24 +6,57 @@
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 int kidmode = 0;
 ICOMMAND(getkidmode, "", (void), intret(kidmode));
-#ifdef STANDALONE
-void console(const char *s, ...)
+SVAR(consoletimefmt, "%c");
+char *gettime(char *format)
 {
-	defvformatstring(str, s, s);
-	string st;
-	filtertext(st, str);
-	printf("%s\n", st);
+	time_t ltime;
+	struct tm *t;
+
+	ltime = time (NULL);
+	t = localtime (&ltime);
+
+	static string buf;
+	strftime (buf, sizeof (buf) - 1, format, t);
+
+	return buf;
 }
-void conoutf(const char *s, ...)
+ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
+
+void console(int type, const char *s, ...)
 {
-	defvformatstring(str, s, s);
-	console("%s", str);
-#ifdef IRC
-	string st;
-	filtertext(st, str);
-	ircoutf(4, "%s", st);
+	defvformatstring(sf, s, s);
+	string osf, psf, fmt;
+	formatstring(fmt)(consoletimefmt);
+	filtertext(osf, sf);
+	formatstring(psf)("%s %s", gettime(fmt), osf);
+	printf("%s\n", osf);
+	fflush(stdout);
+#ifndef STANDALONE
+	conline(type, sf, 0);
 #endif
 }
+
+void conoutft(int type, const char *s, ...)
+{
+	defvformatstring(sf, s, s);
+	console(type, "%s", sf);
+#ifdef IRC
+	string osf;
+	filtertext(osf, sf);
+	ircoutf(4, "%s", osf);
+#endif
+}
+
+void conoutf(const char *s, ...)
+{
+	defvformatstring(sf, s, s);
+	conoutft(0, "%s", sf);
+}
+
+VARP(verbose, 0, 0, 6);
+SVAR(game, "bfa");
+
+#ifdef STANDALONE
 void servertoclient(int chan, uchar *buf, int len) {}
 void localservertoclient(int chan, uchar *buf, int len) {}
 void fatal(const char *s, ...)
@@ -34,13 +67,6 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
-VAR(verbose, 0, 0, 6);
-#else
-VARP(verbose, 0, 0, 6);
-#endif
-SVAR(game, "bfa");
-
-#ifdef STANDALONE
 int servertype = 3;
 #else
 VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated

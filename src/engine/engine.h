@@ -632,9 +632,10 @@ extern void setcaption(const char *text);
 extern int grabinput, colorpos, curfps, bestfps, worstfps, bestfpsdiff, worstfpsdiff, maxfps, minfps,
 	autoadjust, autoadjustlevel, autoadjustmin, autoadjustmax, autoadjustrate;
 extern char colorstack[10];
-extern int getmatvec(vec v);
+extern void rehash(bool reload = true);
 
 // editing
+extern int getmatvec(vec v);
 extern int fullbright, fullbrightlevel;
 extern vector<int> entgroup;
 
@@ -642,17 +643,13 @@ extern void newentity(int type, int a1, int a2, int a3, int a4, int a5);
 extern void newentity(vec &v, int type, int a1, int a2, int a3, int a4, int a5);
 
 // menu
-enum
-{
-	MN_BACK = 0,
-	MN_INPUT,
-	MN_MAX
-};
+enum { MN_BACK = 0, MN_INPUT, MN_MAX };
 
 // console
-struct cline { char *cref; int outtime; };
+enum { CON_INFO = 0, CON_GAMESPECIFIC };
+struct cline { char *cref; int type, outtime; };
 extern vector<cline> conlines;
-extern void rehash(bool reload = true);
+extern void conline(int type, const char *sf, int n);
 
 // command
 extern char *gettime(char *format);
