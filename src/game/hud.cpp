@@ -534,10 +534,7 @@ namespace hud
 					if(shownotices >= 2)
 					{
 						pushfont("emphasis");
-						ty += draw_textx("You are on team \fs%s%s\fS", tx-FONTH-FONTH/2, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
-						settexture(flagtex(world::player1->team), 3);
-						glColor4f(1.f, 1.f, 1.f, tf);
-						drawsized(tx-FONTH, ty, FONTH);
+						ty += draw_textx("You are on team \fs%s%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
 						popfont();
 						pushfont("default");
 						ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[world::player1->team].chat);
@@ -646,8 +643,9 @@ namespace hud
 					popfont();
 				}
 			}
-			popfont();
 		}
+		popfont();
+
 		if(overlaydisplay >= 2 || (world::player1->state == CS_ALIVE && (overlaydisplay || !world::isthirdperson())))
 		{
 			Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
@@ -658,7 +656,6 @@ namespace hud
 				drawtex(0, 0, hudwidth, hudsize);
 			}
 		}
-
 		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
 		glDisable(GL_BLEND);
