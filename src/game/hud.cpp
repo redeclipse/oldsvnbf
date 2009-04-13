@@ -68,17 +68,17 @@ namespace hud
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.05f, 1000);
-	FVARP(indicatorblend, 0, 1.f, 1);
+	FVARP(indicatorblend, 0, 0.75f, 1);
 	VARP(teamindicator, 0, 1, 1);
 	FVARP(teamindicatorsize, 0, 0.1f, 1000);
-	FVARP(teamindicatorblend, 0, 0.5f, 1);
+	FVARP(teamindicatorblend, 0, 0.25f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.07f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.5f, 1);
+	FVARP(crosshairblend, 0, 0.75f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
 	TVAR(relativecursortex, "textures/dotcrosshair", 3);
@@ -128,7 +128,7 @@ namespace hud
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.075f, 1000);
 	FVARP(clipblend, 0, 0.75f, 1000);
-	FVARP(clipcolour, 0.f, 0.75f, 1.f);
+	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(chainguncliptex, "textures/chaingunclip", 3);
@@ -162,7 +162,7 @@ namespace hud
 	VARP(editradarcard, 0, 0, 1);
 	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
-	FVARP(bordersize, 0, 0.015f, 1000);
+	FVARP(bordersize, 0, 0.0125f, 1000);
 
 	bool hastv(int val)
 	{
@@ -684,8 +684,7 @@ namespace hud
 			}
 			pushfont("hud");
 			int z = y;
-			loopv(refs)
-				z -= draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			loopv(refs) z -= draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
 			popfont();
 		}
 		else
@@ -700,8 +699,7 @@ namespace hud
 			}
 			pushfont("sub");
 			int z = y;
-			loopvrev(refs)
-				z += draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), TEXT_CENTERED, -1, s, refs[i]);
+			loopvrev(refs) z += draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), TEXT_CENTERED, -1, s, refs[i]);
 			popfont();
 		}
 	}
