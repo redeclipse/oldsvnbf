@@ -1768,7 +1768,7 @@ namespace entities
 		bool item = showentdescs && enttype[e.type].usetype == EU_ITEM && spawned, notitem = (edit && (showentinfo >= 4 || hasent));
 		if(item || notitem)
 		{
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
+			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attr[0], sweap) : e.attr[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
 			if(itext && *itext)
