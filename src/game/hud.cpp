@@ -241,6 +241,12 @@ namespace hud
 			r *= (teamtype[world::player1->team].colour>>16)/255.f;
 			g *= ((teamtype[world::player1->team].colour>>8)&0xFF)/255.f;
 			b *= (teamtype[world::player1->team].colour&0xFF)/255.f;
+			if(!world::player1->team)
+			{
+				r *= 0.25f;
+				g *= 0.25f;
+				b *= 0.25f;
+			}
 		}
 	}
 
@@ -251,6 +257,12 @@ namespace hud
 			r = int(r*((teamtype[world::player1->team].colour>>16)/255.f));
 			g = int(g*(((teamtype[world::player1->team].colour>>8)&0xFF)/255.f));
 			b = int(b*((teamtype[world::player1->team].colour&0xFF)/255.f));
+			if(!world::player1->team)
+			{
+				r = int(r*0.25f);
+				g = int(g*0.25f);
+				b = int(b*0.25f);
+			}
 		}
 	}
 
@@ -687,8 +699,8 @@ namespace hud
 				}
 			}
 			pushfont("hud");
-			int r = x+FONTW, z = y-FONTH;
-			loopv(refs) z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			int r = x+FONTW, z = y;
+			loopv(refs) z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_UP, -1, s, refs[i]);
 			popfont();
 		}
 		else
