@@ -9,8 +9,11 @@ namespace hud
 
 	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 4, 4);
+
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
+	FVARP(statblend, 0, 0.75f, 1);
+
 	VARP(showfps, 0, 1, 3);
 
 	bool fullconsole = false;
@@ -27,10 +30,10 @@ namespace hud
 
 	VARP(consize, 0, 5, 100);
 	VARP(contime, 0, 15000, INT_MAX-1);
-	FVARP(conblend, 0, 0.75f, 1);
+	FVARP(conblend, 0, 0.85f, 1);
 	VARP(chatconsize, 0, 5, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
-	FVARP(chatconblend, 0, 0.75f, 1);
+	FVARP(chatconblend, 0, 0.85f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
@@ -67,11 +70,11 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.05f, 1000);
+	FVARP(indicatorsize, 0, 0.0375f, 1000);
 	FVARP(indicatorblend, 0, 0.75f, 1);
 	VARP(teamindicator, 0, 1, 1);
 	FVARP(teamindicatorsize, 0, 0.1f, 1000);
-	FVARP(teamindicatorblend, 0, 0.25f, 1);
+	FVARP(teamindicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 3);
 
@@ -103,7 +106,7 @@ namespace hud
 	VARP(inventorythrob, 0, 1, 1);
 	VARP(inventorycolour, 0, 1, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
-	FVARP(inventoryblend, 0, 0.75f, 1);
+	FVARP(inventoryblend, 0, 0.5f, 1);
 	FVARP(inventoryglow, 0, 0.055f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
@@ -127,7 +130,7 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.075f, 1000);
-	FVARP(clipblend, 0, 0.75f, 1000);
+	FVARP(clipblend, 0, 0.5f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -162,7 +165,11 @@ namespace hud
 	VARP(editradarcard, 0, 0, 1);
 	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
-	FVARP(bordersize, 0, 0.0125f, 1000);
+
+	VARP(showborder, 0, 2, 2);
+	FVARP(borderblend, 0, 0.5f, 1);
+	FVARP(bordersize, 0, 0.01f, 1000);
+	TVAR(hudtex, "textures/hud", 3);
 
 	bool hastv(int val)
 	{
@@ -229,7 +236,7 @@ namespace hud
 
 	void skewcolour(float &r, float &g, float &b)
 	{
-		if(m_team(world::gamemode, world::mutators) && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		if(world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
 		{
 			r *= (teamtype[world::player1->team].colour>>16)/255.f;
 			g *= ((teamtype[world::player1->team].colour>>8)&0xFF)/255.f;
@@ -239,7 +246,7 @@ namespace hud
 
 	void skewcolour(int &r, int &g, int &b)
 	{
-		if(m_team(world::gamemode, world::mutators) && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		if(world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
 		{
 			r = int(r*((teamtype[world::player1->team].colour>>16)/255.f));
 			g = int(g*(((teamtype[world::player1->team].colour>>8)&0xFF)/255.f));
@@ -481,8 +488,8 @@ namespace hud
 				popfont();
 			}
 
-			if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty);
-			else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty);
+			if(m_ctf(world::gamemode)) ctf::drawlast(w, h, tx, ty, tf/255.f);
+			else if(m_stf(world::gamemode)) stf::drawlast(w, h, tx, ty, tf/255.f);
 
 			if(world::player1->state == CS_DEAD || world::player1->state == CS_WAITING)
 			{
@@ -680,8 +687,8 @@ namespace hud
 				}
 			}
 			pushfont("hud");
-			int z = y;
-			loopv(refs) z -= draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			int r = x+FONTW, z = y-FONTH;
+			loopv(refs) z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
 			popfont();
 		}
 		else
@@ -949,12 +956,12 @@ namespace hud
 
 	int drawselection(int x, int y, int s, float blend)
 	{
-		int sy = s/2;
+		int sy = s;
 		if(world::player1->state == CS_ALIVE)
 		{
 			if(world::player1->team)
-				sy += drawitem(flagtex(world::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f, "sub", "%s%s", teamtype[world::player1->team].chat, teamtype[world::player1->team].name) + s/2;
-			else sy += drawitem(flagtex(world::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/2;
+				sy += drawitem(flagtex(world::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f, "sub", "%s%s", teamtype[world::player1->team].chat, teamtype[world::player1->team].name) + s/8;
+			else sy += drawitem(flagtex(world::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
@@ -1019,17 +1026,18 @@ namespace hud
 			if(teamwidgets) skewcolour(r, g, b);
 			if(world::player1->state == CS_EDITING)
 			{
-				sy += drawitem(inventoryedittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/2;
+				sy += drawitem(inventoryedittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
 				if(inventoryedit)
 				{
 					int stop = hudsize-s*3;
 					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend);
 					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend)) >= stop) break;
+					sy += s/8;
 				}
 			}
-			else if(world::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/2;
-			else if(world::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/2;
-			else sy += drawitem(inventorychattex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/2;
+			else if(world::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
+			else if(world::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
+			else sy += drawitem(inventorychattex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
 		}
 		return sy;
 	}
@@ -1040,7 +1048,7 @@ namespace hud
 		float fade = inventoryblend*blend, r = 1.f, g = 1.f, b = 1.f;
 		if(teamwidgets) skewcolour(r, g, b);
         settexture(healthtex, 3);
-        glColor4f(r*0.5f, g*0.5f, b*0.5f, fade*0.5f);
+        glColor4f(r, g, b, fade*(world::player1->state == CS_ALIVE ? 0.5f : 1.f));
         drawtex(x, y-size, width, size);
 		if(inventoryhealth && world::player1->state == CS_ALIVE)
 		{
@@ -1107,15 +1115,103 @@ namespace hud
 		return size;
 	}
 
+	enum
+	{
+		HP_TOP_CORNER = 0, HP_SIDE_RUN, HP_BOTTOM_CORNER, HP_TOP_RUN, HP_BOTTOM_RUN,
+		HP_TOP_INTERSECT, HP_MIDDLE_RUN, HP_MIDDLE_INTERSECT, HP_BOTTOM_INTERSECT,
+		HP_EDGE_INTERSECT, HP_EDGE_RUN, HP_EDGE_CORNER, HP_MAX
+	};
+	const struct hudpats
+	{
+		int type; 		float	x,		y;
+	} hudpat[HP_MAX] = {
+		{ HP_TOP_CORNER,		0.f,	0.f		},
+		{ HP_SIDE_RUN,			0.f,	0.25f	},
+		{ HP_BOTTOM_CORNER,		0.f,	0.875f	},
+		{ HP_TOP_RUN,			0.125f,	0.f		},
+		{ HP_BOTTOM_RUN,		0.125f,	0.875f	},
+		{ HP_TOP_INTERSECT,		0.375f,	0.f		},
+		{ HP_MIDDLE_RUN,		0.375f,	0.25f	},
+		{ HP_MIDDLE_INTERSECT,	0.375f,	0.5f	},
+		{ HP_BOTTOM_INTERSECT,	0.375f,	0.875f	},
+		{ HP_EDGE_INTERSECT,	0.625f,	0.5f	},
+		{ HP_EDGE_RUN,			0.625f,	0.625f	},
+		{ HP_EDGE_CORNER,		0.625f,	0.875f	}
+	};
+
+	void drawhudpat(int x, int y, int w, int h, int type, bool flipx = false)
+	{
+		const hudpats &t = hudpat[type];
+		drawquad(x, y, w, h, t.x+(flipx ? 0.125f : 0.f), t.y, t.x+(flipx ? 0.f : 0.125f), t.y+0.125f);
+	}
+
 	void drawinventory(int w, int h, int edge, float blend)
 	{
-		int cx = edge, cy = h-edge, cs = int(inventorysize*w), cr = cs/4, cc = 0;
-		if((cc = drawhealth(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		if(!m_edit(world::gamemode) && inventoryscores && ((cc = sb.drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
-		cx = w-edge; cy = h-edge;
-		if((cc = drawselection(cx, cy, cs, blend)) > 0) cy -= cc+cr;
-		if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
-		if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx, cy, cs, blend)) > 0)) cy -= cc+cr;
+		int cx[2] = { edge, w-edge }, cy[2] = { h-edge, h-edge }, cs = int(inventorysize*w), cr = cs/8, cc = 0;
+		if(showinventory) loopi(2)
+		{
+			switch(i)
+			{
+				case 0: default:
+				{
+					if((cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+					if(!m_edit(world::gamemode) && inventoryscores && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					break;
+				}
+				case 1:
+				{
+					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+					if(m_ctf(world::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					if(m_stf(world::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					break;
+				}
+			}
+		}
+		if(showborder)
+		{
+			int s = edge/2;
+			float r = 1.f, g = 1.f, b = 1.f;
+			skewcolour(r, g, b);
+			settexture(hudtex, 3);
+			glColor4f(r, g, b, borderblend*hudblend);
+
+			drawhudpat(0, 0, s, s, HP_TOP_CORNER);
+			drawhudpat(0, h-s, s, s, HP_BOTTOM_CORNER);
+			drawhudpat(s, 0, w-s*2, s, HP_TOP_RUN);
+			drawhudpat(w-s, 0, s, s, HP_TOP_CORNER, true);
+			drawhudpat(w-s, h-s, s, s, HP_BOTTOM_CORNER, true);
+
+			if(showborder >= 2)
+			{
+				drawhudpat(0, s, s, cy[0]-s, HP_SIDE_RUN);
+				drawhudpat(0, cy[0], s, s, HP_MIDDLE_INTERSECT);
+				drawhudpat(s, cy[0], cs+s, s, HP_TOP_RUN);
+				drawhudpat(0, cy[0]+s, s, h-cy[0]-s*2, HP_SIDE_RUN);
+
+				drawhudpat(w-s, s, s, cy[1]-s, HP_SIDE_RUN, true);
+				drawhudpat(w-s, cy[1], s, s, HP_MIDDLE_INTERSECT, true);
+				drawhudpat(w-s*2-cs, cy[1], cs+s, s, HP_TOP_RUN, true);
+				drawhudpat(w-s, cy[1]+s, s, h-cy[1]-s*2, HP_SIDE_RUN, true);
+
+				drawhudpat(s, h-s, cs+s, s, HP_BOTTOM_RUN);
+				drawhudpat(s*2+cs, h-s, s, s, HP_BOTTOM_INTERSECT);
+				drawhudpat(s*2+cs, cy[0]+s, s, h-cy[0]-s*2, HP_MIDDLE_RUN);
+				drawhudpat(s*2+cs, cy[0], s, s, HP_EDGE_INTERSECT);
+
+				drawhudpat(s*3+cs, h-s, w-s*6-cs*2, s, HP_BOTTOM_RUN);
+
+				drawhudpat(w-s*3-cs, h-s, s, s, HP_BOTTOM_INTERSECT);
+				drawhudpat(w-s*3-cs, cy[1]+s, s, h-cy[1]-s*2, HP_MIDDLE_RUN, true);
+				drawhudpat(w-s*3-cs, cy[1], s, s, HP_EDGE_INTERSECT, true);
+				drawhudpat(w-s*2-cs, h-s, cs+s, s, HP_BOTTOM_RUN);
+			}
+			else
+			{
+				drawhudpat(0, s, s, h-s*2, HP_SIDE_RUN);
+				drawhudpat(w-s, s, s, h-s*2, HP_SIDE_RUN, true);
+				drawhudpat(s, h-s, w-s*2, s, HP_BOTTOM_RUN);
+			}
+		}
 	}
 
 	void drawdamage(int w, int h, int s, float blend)
@@ -1229,7 +1325,7 @@ namespace hud
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
 
-		int br = os+is+os*3, bs = (ox-br*2)/2, bx = ox-br, by = oy-os*3;
+		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
 		if(showconsole)
 		{
 			drawconsole(0, ox, oy, ox/2, os, bs*2);
@@ -1237,6 +1333,9 @@ namespace hud
 		}
 
 		pushfont("sub");
+		int bf = int(255*hudblend*statblend);
+		bx -= FONTW;
+		by -= FONTH;
 		static int laststats = 0, prevstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		if(totalmillis-laststats >= statrate)
 		{
@@ -1259,37 +1358,39 @@ namespace hud
 			autoadjustlevel
 		};
 		loopi(12) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
-		if(showfps) switch(showfps)
+		if(showfps)
 		{
-			case 3:
-				if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%% fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
-				else by -= draw_textx("max:%d range:+%d-%d fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10], curstats[8]);
-				break;
-			case 2:
-				if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11], curstats[8]);
-				else by -= draw_textx("max:%d fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[8]);
-				break;
-            case 1:
-                draw_textx("fps:%d", bx+br-os, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, curstats[8]);
-                break;
-			default: break;
+			draw_textx("%d", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+			draw_textx("fps", ox-os*2-is/2, by, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+			switch(showfps)
+			{
+				case 3:
+					if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+					else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10]);
+					break;
+				case 2:
+					if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+					else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps);
+					break;
+				default: break;
+			}
 		}
 		if(showstats > (m_edit(world::gamemode) ? 0 : 1))
 		{
-			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
 		}
 		if(connected() && client::ready() && world::maptime)
 		{
 			if(world::player1->state == CS_EDITING)
 			{
-				by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs,
+				by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
 						selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length(),
 								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs,
+				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
 						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
 							sel.cx, sel.cxs, sel.cy, sel.cys);
-				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, int(255*hudblend), TEXT_RIGHT_JUSTIFY, -1, bs,
+				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
 						(int)world::player1->o.x, (int)world::player1->o.y, (int)world::player1->o.z,
 						(int)world::player1->yaw, (int)world::player1->pitch);
 			}
@@ -1323,7 +1424,7 @@ namespace hud
 			if(showdamage && !kidmode && !world::noblood) drawdamage(ox, oy, os, fade);
 			if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
 			if(world::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
-			if(showinventory) drawinventory(ox, oy, os, fade);
+			drawinventory(ox, oy, os, fade);
 		}
 		drawhudelements(w, h);
 		glDisable(GL_BLEND);

@@ -59,7 +59,7 @@ namespace ctf
 		else hud::drawblip(w, h, s, fade, -3, dir, r, g, b);
     }
 
-	void drawlast(int w, int h, int &tx, int &ty)
+	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
 		if(world::player1->state == CS_ALIVE)
 		{
@@ -79,9 +79,9 @@ namespace ctf
 			if(hasflag >= 0 || !takenflags.empty())
 			{
 				pushfont("emphasis");
-				if(hasflag >= 0) ty += draw_textx("You have the \fs%s%s\fS flag!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
-				if(!takenflags.empty()) ty += draw_textx("Flag has been taken!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
-				if(!droppedflags.empty()) ty += draw_textx("Flag has been dropped!", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1);
+				if(hasflag >= 0) ty += draw_textx("You have the \fs%s%s\fS flag!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
+				if(!takenflags.empty()) ty += draw_textx("Flag has been taken!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
+				if(!droppedflags.empty()) ty += draw_textx("Flag has been dropped!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 				popfont();
 			}
 		}
@@ -109,7 +109,7 @@ namespace ctf
 			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
 			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
 			int oldy = y-sy;
-			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydropped" : "\fgsafe"));
+			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydrop" : "\fgsafe"));
 			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
 		}
 		return sy;
