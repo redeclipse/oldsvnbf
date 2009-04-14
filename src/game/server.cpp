@@ -1158,15 +1158,14 @@ namespace server
 				mutate(smuts, mut->leavegame(ci));
 			}
 			ci->team = team;
-			if(info) sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, team);
 			if(sm)
 			{
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}
-			if(ci->state.aitype == AI_NONE)
-				aiman::dorefresh = true; // get the ai to reorganise
+			if(ci->state.aitype == AI_NONE) aiman::dorefresh = true; // get the ai to reorganise
 		}
+		if(info) sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, ci->team);
 	}
 
 	struct teamscore
@@ -3035,13 +3034,13 @@ namespace server
 						relayf(2, "\fm%s is now known as %s", oldname, newname);
 					}
 					copystring(ci->name, text, MAXNAMELEN+1);
-					int team = getint(p);
+					int team = getint(p), newteam = team;
 					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
-						team = chooseteam(ci, team);
-					if(team != ci->team)
+						newteam = chooseteam(ci, team);
+					if(team != newteam)
 					{
-						setteam(ci, team);
-						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
+						setteam(ci, newteam);
+						sendf(sender, 1, "ri3", SV_SETTEAM, sender, newteam);
 					}
                     sendinitc2s(ci);
 					break;

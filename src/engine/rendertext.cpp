@@ -318,18 +318,15 @@ int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, 
 {
 	defvformatstring(str, maxwidth, fstr);
 
-    if(flags&TEXT_ALIGN)
-    {
-        int width = 0, height = 0;
-		text_bounds(str, width, height, maxwidth, flags);
-        switch(flags&TEXT_ALIGN)
-        {
-            case TEXT_CENTERED: left -= width/2; break;
-            case TEXT_RIGHT_JUSTIFY: left -= width; break;
-            default: break;
-        }
-    }
-    if(flags&TEXT_UPWARD) top -= FONTH;
+	int width = 0, height = 0;
+	text_bounds(str, width, height, maxwidth, flags);
+    if(flags&TEXT_ALIGN) switch(flags&TEXT_ALIGN)
+	{
+		case TEXT_CENTERED: left -= width/2; break;
+		case TEXT_RIGHT_JUSTIFY: left -= width; break;
+		default: break;
+	}
+    if(flags&TEXT_UPWARD) top -= height;
 	return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
 }
 
