@@ -1289,6 +1289,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 	if(level >= 2)
 	{
+#if 0
 		rendergame();
 
 	    if(hasFBO)
@@ -1299,9 +1300,9 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	    }
 
 	    renderwater();
+#endif
         rendergrass();
-
-		rendermaterials();
+		//rendermaterials();
 		renderparticles();
     }
 
