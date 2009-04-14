@@ -553,9 +553,9 @@ struct teamtypes
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
 	{
-		TEAM_NEUTRAL,	0xAAAAAA,			"neutral",
+		TEAM_NEUTRAL,	0x888888,			"neutral",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fw"
+		"flag",			"team",				"\fa"
 	},
 	{
 		TEAM_ALPHA,		0x2222AA,			"alpha",
@@ -578,9 +578,9 @@ teamtypes teamtype[] = {
 		"flag/gamma",	"teamgamma",		"\fg"
 	},
 	{
-		TEAM_ENEMY,		0xAAAAAA,			"enemy",
+		TEAM_ENEMY,		0x22AAAA,			"enemy",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fa"
+		"flag",			"team",				"\fc"
 	}
 };
 #else

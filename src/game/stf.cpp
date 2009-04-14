@@ -81,7 +81,7 @@ namespace stf
 		}
 	}
 
-	void drawlast(int w, int h, int &tx, int &ty)
+	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
 		if(world::player1->state == CS_ALIVE)
 		{
@@ -91,7 +91,7 @@ namespace stf
 				pushfont("emphasis");
 				int occupy = int((f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f))*50.f);
 				bool overthrow = f.owner && f.enemy == world::player1->team;
-				ty += draw_textx("Secure \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*hudblend), TEXT_CENTERED, -1, -1, overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
+				ty += draw_textx("Secure \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
 				popfont();
 				break;
 			}

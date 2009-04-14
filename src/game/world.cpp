@@ -24,7 +24,7 @@ namespace world
 	VARP(absmouse, 0, 0, 1);
 
 	VARP(thirdperson, 0, 0, 1);
-	VARP(usedynamicglow, 0, 2, 3);
+	VARP(usedynamicglow, 0, 3, 3);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonmouse, 0, 0, 2);
