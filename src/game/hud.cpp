@@ -70,16 +70,16 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.0375f, 1000);
+	FVARP(indicatorsize, 0, 0.025f, 1000);
 	FVARP(indicatorblend, 0, 0.75f, 1);
 	VARP(teamindicator, 0, 1, 1);
-	FVARP(teamindicatorsize, 0, 0.1f, 1000);
+	FVARP(teamindicatorsize, 0, 0.0575f, 1000);
 	FVARP(teamindicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(snipetex, "textures/snipe", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.07f, 1000);
+	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.75f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
@@ -92,7 +92,7 @@ namespace hud
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	FVARP(snipecrosshairsize, 0, 0.5f, 1000);
+	FVARP(snipecrosshairsize, 0, 0.575f, 1000);
 	FVARP(cursorsize, 0, 0.05f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
@@ -129,7 +129,7 @@ namespace hud
 	TVAR(inventorychattex, "textures/conopen", 3);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.075f, 1000);
+	FVARP(clipsize, 0, 0.05f, 1000);
 	FVARP(clipblend, 0, 0.5f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
@@ -168,7 +168,7 @@ namespace hud
 
 	VARP(showborder, 0, 2, 2);
 	FVARP(borderblend, 0, 0.5f, 1);
-	FVARP(bordersize, 0, 0.01f, 1000);
+	FVARP(bordersize, 0, 0.0075f, 1000);
 	TVAR(hudtex, "textures/hud", 3);
 
 	bool hastv(int val)
