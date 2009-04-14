@@ -1310,8 +1310,8 @@ namespace hud
 	extern void drawsized(float x, float y, float s);
 	extern void colourskew(float &r, float &g, float &b, float skew = 1.f);
 	extern void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb = 1.f);
-	extern void skewcolour(float &r, float &g, float &b);
-	extern void skewcolour(int &r, int &g, int &b);
+	extern void skewcolour(float &r, float &g, float &b, bool t = false);
+	extern void skewcolour(int &r, int &g, int &b, bool t = false);
 	extern void drawindicator(int weap, int x, int y, int s);
 	extern void drawclip(int weap, int x, int y, float s);
 	extern void drawpointerindex(int index, int x, int y, int s, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f);

@@ -234,35 +234,33 @@ namespace hud
 		else colourskew(r, g, b, clamp(float(world::player1->health)/float(total), 0.f, 1.f));
 	}
 
-	void skewcolour(float &r, float &g, float &b)
+	void skewcolour(float &r, float &g, float &b, bool t)
 	{
-		if(world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		int team = world::player1->team;
+		r *= (teamtype[team].colour>>16)/255.f;
+		g *= ((teamtype[team].colour>>8)&0xFF)/255.f;
+		b *= (teamtype[team].colour&0xFF)/255.f;
+		if(!team && t)
 		{
-			r *= (teamtype[world::player1->team].colour>>16)/255.f;
-			g *= ((teamtype[world::player1->team].colour>>8)&0xFF)/255.f;
-			b *= (teamtype[world::player1->team].colour&0xFF)/255.f;
-			if(!world::player1->team)
-			{
-				r *= 0.25f;
-				g *= 0.25f;
-				b *= 0.25f;
-			}
+			float f = world::player1->state == CS_SPECTATOR || world::player1->state == CS_EDITING ? 0.25f : 0.375f;
+			r *= f;
+			g *= f;
+			b *= f;
 		}
 	}
 
-	void skewcolour(int &r, int &g, int &b)
+	void skewcolour(int &r, int &g, int &b, bool t)
 	{
-		if(world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		int team = world::player1->team;
+		r = int(r*((teamtype[team].colour>>16)/255.f));
+		g = int(g*(((teamtype[team].colour>>8)&0xFF)/255.f));
+		b = int(b*((teamtype[team].colour&0xFF)/255.f));
+		if(!team && t)
 		{
-			r = int(r*((teamtype[world::player1->team].colour>>16)/255.f));
-			g = int(g*(((teamtype[world::player1->team].colour>>8)&0xFF)/255.f));
-			b = int(b*((teamtype[world::player1->team].colour&0xFF)/255.f));
-			if(!world::player1->team)
-			{
-				r = int(r*0.25f);
-				g = int(g*0.25f);
-				b = int(b*0.25f);
-			}
+			float f = world::player1->state == CS_SPECTATOR || world::player1->state == CS_EDITING ? 0.25f : 0.375f;
+			r = int(r*f);
+			g = int(g*f);
+			b = int(b*f);
 		}
 	}
 
@@ -1034,11 +1032,9 @@ namespace hud
 		}
 		else
 		{
-			float r = 1.f, g = 1.f, b = 1.f;
-			if(teamwidgets) skewcolour(r, g, b);
 			if(world::player1->state == CS_EDITING)
 			{
-				sy += drawitem(inventoryedittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
+				sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
 				if(inventoryedit)
 				{
 					int stop = hudsize-s*3;
@@ -1047,9 +1043,9 @@ namespace hud
 					sy += s/8;
 				}
 			}
-			else if(world::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
-			else if(world::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
-			else sy += drawitem(inventorychattex, x, y-sy, s, false, r, g, b, blend, 1.f) + s/8;
+			else if(world::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+			else if(world::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f) + s/8;
+			else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
 		}
 		return sy;
 	}
@@ -1183,7 +1179,7 @@ namespace hud
 		{
 			int s = edge/2;
 			float r = 1.f, g = 1.f, b = 1.f;
-			skewcolour(r, g, b);
+			skewcolour(r, g, b, true);
 			settexture(hudtex, 3);
 			glColor4f(r, g, b, borderblend*hudblend);
 
