@@ -151,7 +151,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
 }
 
 #define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
-
+#define TEXTALIGN { x = (!(flags&TEXT_RIGHT_JUSTIFY)?TEXTTAB(0):0); { if(!y && (flags&TEXT_RIGHT_JUSTIFY)) maxwidth -= PIXELTAB; }; y += FONTH; }
 #define TEXTSKELETON \
     int y = 0, x = 0;\
     int i;\
@@ -161,7 +161,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
         int c = str[i];\
         if(c=='\t')      { x = TEXTTAB(x); TEXTWHITE(i) }\
         else if(c==' ')  { x += curfont->defaultw; TEXTWHITE(i) }\
-        else if(c=='\n') { TEXTLINE(i) x = 0; y += FONTH; }\
+        else if(c=='\n') { TEXTLINE(i) TEXTALIGN }\
         else if(c=='\f') { if(str[i+1]) { i++; TEXTCOLOR(i) }}\
         else if(curfont->chars.inrange(c-33))\
         {\
@@ -179,7 +179,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
                     if(w + cw >= maxwidth) break;\
                     w += cw;\
                 }\
-                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) x = 0; y += FONTH; }\
+                if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) TEXTALIGN }\
                 TEXTWORD\
             }\
             else\
@@ -272,29 +272,17 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
     glBegin(GL_QUADS);
-	loopk(flags&TEXT_SHADOW ? 2 : 1)
+	glColor4ub(color.x, color.y, color.z, a);
+	left = rleft;
+	top = rtop;
+	TEXTSKELETON
+	if(cursor >= 0)
 	{
-		if(flags&TEXT_SHADOW && !k)
-		{
-			glColor4ub(0, 0, 0, a);
-			left = rleft+2;
-			top = rtop+2;
-		}
-		else
-		{
-			glColor4ub(color.x, color.y, color.z, a);
-			left = rleft;
-			top = rtop;
-		}
-		TEXTSKELETON
-		if(cursor >= 0)
-		{
-			float fade = 1.f-(float(lastmillis%1000)/1000.f);
-			glColor4ub(color.x, color.y, color.z, int(a*fade));
-			if(cx == INT_MIN) { cx = x; cy = y; }
-			if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
-			draw_char('_', left+cx, top+cy);
-		}
+		float fade = 1.f-(float(lastmillis%1000)/1000.f);
+		glColor4ub(color.x, color.y, color.z, int(a*fade));
+		if(cx == INT_MIN) { cx = x; cy = y; }
+		if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
+		draw_char('_', left+cx, top+cy);
 	}
     glEnd();
     #undef TEXTINDEX
@@ -327,6 +315,7 @@ int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, 
 		default: break;
 	}
     if(flags&TEXT_UPWARD) top -= height;
+    if(flags&TEXT_SHADOW) draw_text(str, left-2, top-2, 0, 0, 0, a, flags, cursor, maxwidth);
 	return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
 }
 
