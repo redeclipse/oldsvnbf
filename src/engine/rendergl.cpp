@@ -1289,18 +1289,16 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 	if(level >= 2)
 	{
-#if 0
+		/*
 		rendergame();
-
 	    if(hasFBO)
 	    {
 	        drawglaretex();
 	        drawdepthfxtex();
 	        drawreflections();
 	    }
-
 	    renderwater();
-#endif
+		*/
         rendergrass();
 		//rendermaterials();
 		renderparticles();
@@ -2069,23 +2067,8 @@ void drawview(int targtype)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, w, h, 0, -1, 1);
-
-	vec colour;
-	if(hud::getcolour(colour))
-	{
-        glEnable(GL_BLEND);
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		glColor3f(colour.x, colour.y, colour.z);
-		glBegin(GL_QUADS);
-		glVertex2f(0, 0);
-		glVertex2f(w, 0);
-		glVertex2f(w, h);
-		glVertex2f(0, h);
-		glEnd();
-        glDisable(GL_BLEND);
-	}
-
 	glColor3f(1, 1, 1);
+
 	extern int debugsm;
 	if(debugsm)
 	{
