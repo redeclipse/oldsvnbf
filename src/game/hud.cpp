@@ -415,25 +415,26 @@ namespace hud
 			if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
 		int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
+		if(index > POINTER_GUI && teamindicator && game::player1->team)
+		{
+			Texture *t = textureload(indicatortex, 3);
+			if(t != notexture)
+			{
+				if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				else glBlendFunc(GL_ONE, GL_ONE);
+				float tr = 1.f, tg = 1.f, tb = 1.f;
+				skewcolour(tr, tg, tb);
+				glColor4f(tr, tg, tb, teamindicatorblend*hudblend);
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				int size = int(teamindicatorsize*hudsize);
+				drawsized(nx-size/2, ny-size/2, size);
+			}
+		}
+		drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
 			if(game::player1->state == CS_ALIVE)
 			{
-				if(teamindicator && game::player1->team)
-				{
-					Texture *t = textureload(indicatortex, 3);
-					if(t != notexture)
-					{
-						if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-						else glBlendFunc(GL_ONE, GL_ONE);
-						float tr = 1.f, tg = 1.f, tb = 1.f;
-						skewcolour(tr, tg, tb);
-						glColor4f(tr, tg, tb, teamindicatorblend*hudblend);
-						glBindTexture(GL_TEXTURE_2D, t->id);
-						int size = int(teamindicatorsize*hudsize);
-						drawsized(nx-size/2, ny-size/2, size);
-					}
-				}
 				if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
 				{
 					if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
@@ -444,7 +445,6 @@ namespace hud
 			if(game::mousestyle() >= 1) // renders differently
 				drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend*hudblend);
 		}
-		drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 	}
 
 	void drawpointers(int w, int h)
