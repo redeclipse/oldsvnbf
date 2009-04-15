@@ -433,14 +433,11 @@ namespace hud
 		drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
-			if(game::player1->state == CS_ALIVE)
+			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
 			{
-				if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
-				{
-					if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
-					if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WPSTATE_POWER)
-						drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
-				}
+				if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
+				if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WPSTATE_POWER)
+					drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
 			if(game::mousestyle() >= 1) // renders differently
 				drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend*hudblend);
