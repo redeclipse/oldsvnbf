@@ -6,6 +6,7 @@ namespace hud
 	scoreboard sb;
 
 	VARP(hudsize, 0, 2048, INT_MAX-1);
+	FVARP(gapsize, 0, 0.01f, 1000);
 
 	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 4, 4);
@@ -165,11 +166,6 @@ namespace hud
 	VARP(editradarcard, 0, 0, 1);
 	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
-
-	VARP(textureborder, 0, 0, 2);
-	FVARP(borderblend, 0, 0.5f, 1);
-	FVARP(bordersize, 0, 0.0075f, 1000);
-	TVAR(hudtex, "textures/hud", 3);
 
 	bool hastv(int val)
 	{
@@ -1138,42 +1134,12 @@ namespace hud
 		return size;
 	}
 
-	enum
-	{
-		HP_TOP_CORNER = 0, HP_SIDE_RUN, HP_BOTTOM_CORNER, HP_TOP_RUN, HP_BOTTOM_RUN,
-		HP_TOP_INTERSECT, HP_MIDDLE_RUN, HP_MIDDLE_INTERSECT, HP_BOTTOM_INTERSECT,
-		HP_EDGE_INTERSECT, HP_EDGE_RUN, HP_EDGE_CORNER, HP_MAX
-	};
-	const struct hudpats
-	{
-		int type; 		float	x,		y;
-	} hudpat[HP_MAX] = {
-		{ HP_TOP_CORNER,		0.f,	0.f		},
-		{ HP_SIDE_RUN,			0.f,	0.25f	},
-		{ HP_BOTTOM_CORNER,		0.f,	0.875f	},
-		{ HP_TOP_RUN,			0.125f,	0.f		},
-		{ HP_BOTTOM_RUN,		0.125f,	0.875f	},
-		{ HP_TOP_INTERSECT,		0.375f,	0.f		},
-		{ HP_MIDDLE_RUN,		0.375f,	0.25f	},
-		{ HP_MIDDLE_INTERSECT,	0.375f,	0.5f	},
-		{ HP_BOTTOM_INTERSECT,	0.375f,	0.875f	},
-		{ HP_EDGE_INTERSECT,	0.625f,	0.5f	},
-		{ HP_EDGE_RUN,			0.625f,	0.625f	},
-		{ HP_EDGE_CORNER,		0.625f,	0.875f	}
-	};
-
-	void drawhudpat(int x, int y, int w, int h, int type, bool flipx = false)
-	{
-		const hudpats &t = hudpat[type];
-		drawquad(x, y, w, h, t.x+(flipx ? 0.125f : 0.f), t.y, t.x+(flipx ? 0.f : 0.125f), t.y+0.125f);
-	}
-
 	void drawinventory(int w, int h, int edge, float blend)
 	{
-		int cx[2] = { edge, w-edge }, cy[2] = { h-edge, h-edge }, cs = int(inventorysize*w), cr = cs/8, cc = 0;
-		if(showinventory) loopi(2)
+		if(showinventory)
 		{
-			switch(i)
+			int cx[2] = { edge, w-edge }, cy[2] = { h-edge, h-edge }, cs = int(inventorysize*w), cr = cs/8, cc = 0;
+			loopi(2) switch(i)
 			{
 				case 0: default:
 				{
@@ -1188,51 +1154,6 @@ namespace hud
 					if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 					break;
 				}
-			}
-		}
-		if(textureborder)
-		{
-			int s = edge/2;
-			float r = 1.f, g = 1.f, b = 1.f;
-			skewcolour(r, g, b, true);
-			settexture(hudtex, 3);
-			glColor4f(r, g, b, borderblend*blend);
-
-			drawhudpat(0, 0, s, s, HP_TOP_CORNER);
-			drawhudpat(0, h-s, s, s, HP_BOTTOM_CORNER);
-			drawhudpat(s, 0, w-s*2, s, HP_TOP_RUN);
-			drawhudpat(w-s, 0, s, s, HP_TOP_CORNER, true);
-			drawhudpat(w-s, h-s, s, s, HP_BOTTOM_CORNER, true);
-
-			if(textureborder >= 2)
-			{
-				drawhudpat(0, s, s, cy[0]-s, HP_SIDE_RUN);
-				drawhudpat(0, cy[0], s, s, HP_MIDDLE_INTERSECT);
-				drawhudpat(s, cy[0], cs+s, s, HP_TOP_RUN);
-				drawhudpat(0, cy[0]+s, s, h-cy[0]-s*2, HP_SIDE_RUN);
-
-				drawhudpat(w-s, s, s, cy[1]-s, HP_SIDE_RUN, true);
-				drawhudpat(w-s, cy[1], s, s, HP_MIDDLE_INTERSECT, true);
-				drawhudpat(w-s*2-cs, cy[1], cs+s, s, HP_TOP_RUN, true);
-				drawhudpat(w-s, cy[1]+s, s, h-cy[1]-s*2, HP_SIDE_RUN, true);
-
-				drawhudpat(s, h-s, cs+s, s, HP_BOTTOM_RUN);
-				drawhudpat(s*2+cs, h-s, s, s, HP_BOTTOM_INTERSECT);
-				drawhudpat(s*2+cs, cy[0]+s, s, h-cy[0]-s*2, HP_MIDDLE_RUN);
-				drawhudpat(s*2+cs, cy[0], s, s, HP_EDGE_INTERSECT);
-
-				drawhudpat(s*3+cs, h-s, w-s*6-cs*2, s, HP_BOTTOM_RUN);
-
-				drawhudpat(w-s*3-cs, h-s, s, s, HP_BOTTOM_INTERSECT);
-				drawhudpat(w-s*3-cs, cy[1]+s, s, h-cy[1]-s*2, HP_MIDDLE_RUN, true);
-				drawhudpat(w-s*3-cs, cy[1], s, s, HP_EDGE_INTERSECT, true);
-				drawhudpat(w-s*2-cs, h-s, cs+s, s, HP_BOTTOM_RUN);
-			}
-			else
-			{
-				drawhudpat(0, s, s, h-s*2, HP_SIDE_RUN);
-				drawhudpat(w-s, s, s, h-s*2, HP_SIDE_RUN, true);
-				drawhudpat(s, h-s, w-s*2, s, HP_BOTTOM_RUN);
 			}
 		}
 	}
@@ -1343,7 +1264,7 @@ namespace hud
 
 	void drawhudelements(int w, int h)
 	{
-		int ox = hudwidth, oy = hudsize, os = int(oy*bordersize), is = int(oy*inventorysize);
+		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
 
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
@@ -1469,7 +1390,7 @@ namespace hud
 				}
 				else
 				{
-					amt = amt-1.f;
+					amt -= 1.f;
 					r += (1.f-r)*amt;
 					g += (1.f-g)*amt;
 					b += (1.f-b)*amt;
@@ -1483,7 +1404,7 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if(game::maptime && connected() && client::ready())
 		{
-			int ox = hudwidth, oy = hudsize, os = int(oy*bordersize), secs = game::maptime ? lastmillis-game::maptime : 0;
+			int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), secs = game::maptime ? lastmillis-game::maptime : 0;
 			glLoadIdentity();
 			glOrtho(0, ox, oy, 0, -1, 1);
 			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::isthirdperson())))
