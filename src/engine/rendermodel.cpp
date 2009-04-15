@@ -789,7 +789,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
                 }
                 lightreaching(pos, light->color, light->dir);
                 dynlightreaching(pos, light->color, light->dir);
-                world::lighteffects(d, light->color, light->dir);
+                game::lighteffects(d, light->color, light->dir);
                 light->millis = lastmillis;
             }
         }

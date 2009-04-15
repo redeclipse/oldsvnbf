@@ -27,8 +27,8 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
-        if(d != proj.owner && proj.owner == world::player1)
-			world::player1->lasthit = lastmillis;
+        if(d != proj.owner && proj.owner == game::player1)
+			game::player1->lasthit = lastmillis;
 		hitmsg &h = hits.add();
 		h.flags = flags;
 		h.target = d->clientnum;
@@ -96,7 +96,7 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if((proj.owner != world::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
+				if((proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
 					proj.o = proj.from = proj.owner->muzzle;
 				proj.aboveeye = proj.height = proj.radius = 0.1f;
 				proj.elasticity = weaptype[proj.weap].elasticity;
@@ -110,7 +110,7 @@ namespace projs
 				proj.mdl = weaptype[proj.weap].proj;
 				if(proj.weap == WEAPON_PAINT)
 				{
-					if(m_team(world::gamemode, world::mutators) && proj.owner)
+					if(m_team(game::gamemode, game::mutators) && proj.owner)
 						proj.colour = paintcolours[proj.owner->team];
 					else proj.colour = paintcolours[rnd(10)];
 				}
@@ -118,7 +118,7 @@ namespace projs
 			}
 			case PRJ_GIBS:
 			{
-				if(!kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
+				if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 				{
 					proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
@@ -276,7 +276,7 @@ namespace projs
 			vec from(d->o), to(d->muzzle);
 			if(entities::ents.inrange(n))
 			{
-				if(!m_noitems(world::gamemode, world::mutators) && itemdropping && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
+				if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attr[1]&WEAPFLAG_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
 				d->ammo[g] = -1;
 				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
@@ -381,15 +381,15 @@ namespace projs
 			if(radius > 0)
 			{
 				hits.setsizenodelete(0);
-				loopi(world::numdynents())
+				loopi(game::numdynents())
 				{
-					gameent *f = (gameent *)world::iterdynents(i);
+					gameent *f = (gameent *)game::iterdynents(i);
 					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
 					radialeffect(f, proj, false, radius);
 				}
 				if(!hits.empty())
 				{
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.weap, proj.id >= 0 ? proj.id-world::maptime : proj.id,
+					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
 							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 					proj.lastradial = lastmillis;
 				}
@@ -551,16 +551,16 @@ namespace projs
 			}
 			if(weaptype[proj.weap].radial || weaptype[proj.weap].taper) proj.radius = max(proj.lifesize, 0.1f);
 		}
-		else if(proj.projtype == PRJ_GIBS && !kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
+		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 		{
 			proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtimex(500))
 			{
-				if(!kidmode && !world::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x66FFFF, 2.f);
+				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x66FFFF, 2.f);
 				proj.lasteffect = lastmillis;
 			}
 		}
-		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || world::noblood || m_paint(world::gamemode, world::mutators))))
+		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood || m_paint(game::gamemode, game::mutators))))
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 1e-3f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
@@ -614,8 +614,8 @@ namespace projs
 						if(proj.weap == WEAPON_GL)
 						{
 							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
-							if(proj.weap == m_spawnweapon(world::gamemode, world::mutators)) wobble *= 0.25f;
-							world::quakewobble = clamp(world::quakewobble + max(int(wobble), 1), 0, 1000);
+							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
+							game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
 							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.15f), PART_EXPLOSION, m_speedtimex(500), 0xAA3300, 1.f);
 							loopi(rnd(25)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(2500)+1500, 0, rnd(1000), rnd(125)+25);
@@ -665,9 +665,9 @@ namespace projs
 					hits.setsizenodelete(0);
 					if(weaptype[proj.weap].explode)
 					{
-						loopi(world::numdynents())
+						loopi(game::numdynents())
 						{
-							gameent *f = (gameent *)world::iterdynents(i);
+							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
 							radialeffect(f, proj, proj.weap == WEAPON_GL, radius);
 						}
@@ -675,7 +675,7 @@ namespace projs
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
 						hitproj((gameent *)proj.hit, proj);
 
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-world::maptime, proj.weap, proj.id >= 0 ? proj.id-world::maptime : proj.id,
+					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
 							-radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 				}
 				break;
@@ -684,8 +684,8 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					if(entities::ents.inrange(proj.id)) world::spawneffect(proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
-					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-world::maptime, -1, proj.id, 0, 0);
+					if(entities::ents.inrange(proj.id)) game::spawneffect(proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
+					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-game::maptime, -1, proj.id, 0, 0);
 				}
 				break;
 			}
@@ -760,7 +760,7 @@ namespace projs
             }
             case PRJ_GIBS:
             {
-            	if(!kidmode && !world::noblood && !m_paint(world::gamemode, world::mutators))
+            	if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
             	{
 					if(!proj.lastbounce)
 						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));

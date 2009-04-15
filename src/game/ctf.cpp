@@ -5,7 +5,7 @@ namespace ctf
 
 	void dropflag(gameent *d)
 	{
-		if(m_ctf(world::gamemode))
+		if(m_ctf(game::gamemode))
 		{
 			loopv(st.flags) if(st.flags[i].owner == d)
 			{
@@ -13,17 +13,17 @@ namespace ctf
 				vecfromyawpitch(d->aimyaw, d->aimpitch, -d->move, -d->strafe, dir);
 				dir.mul((d->radius*2.f)+enttype[FLAG].radius);
 				vec o(vec(d->o).add(dir));
-				client::addmsg(SV_DROPFLAG, "ri4", world::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
+				client::addmsg(SV_DROPFLAG, "ri4", game::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
 				return;
 			}
 		}
-		if(d == world::player1) playsound(S_DENIED, d->o, d);
+		if(d == game::player1) playsound(S_DENIED, d->o, d);
 	}
-   	ICOMMAND(dropflag, "", (), dropflag(world::player1));
+   	ICOMMAND(dropflag, "", (), dropflag(game::player1));
 
     void preload()
     {
-        loopi(numteams(world::gamemode, world::mutators)+TEAM_FIRST) loadmodel(teamtype[i].flag, -1, true);
+        loopi(numteams(game::gamemode, game::mutators)+TEAM_FIRST) loadmodel(teamtype[i].flag, -1, true);
     }
 
     void drawblip(int w, int h, int s, float blend, int i, bool blip)
@@ -34,7 +34,7 @@ namespace ctf
 		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend;
         if(blip)
         {
-            if(!(f.base&BASE_FLAG) || f.owner == world::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400)
+            if(!(f.base&BASE_FLAG) || f.owner == game::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400)
 				return;
         	dir = f.pos();
         }
@@ -61,7 +61,7 @@ namespace ctf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(world::player1->state == CS_ALIVE)
+		if(game::player1->state == CS_ALIVE)
 		{
 			int hasflag = -1;
 			static vector<int> takenflags, droppedflags;
@@ -69,10 +69,10 @@ namespace ctf
 			loopv(st.flags)
 			{
 				ctfstate::flag &f = st.flags[i];
-				if(f.owner == world::player1) hasflag = f.team;
-				if(isctfflag(f, world::player1->team))
+				if(f.owner == game::player1) hasflag = f.team;
+				if(isctfflag(f, game::player1->team))
 				{
-					if(f.owner && f.owner->team != world::player1->team) takenflags.add(i);
+					if(f.owner && f.owner->team != game::player1->team) takenflags.add(i);
 					else if(f.droptime) droppedflags.add(i);
 				}
 			}
@@ -153,7 +153,7 @@ namespace ctf
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !isteam(world::gamemode, world::mutators, a->attr[1], TEAM_NEUTRAL)) continue; \
+			if(a->type != FLAG || !isteam(game::gamemode, game::mutators, a->attr[1], TEAM_NEUTRAL)) continue; \
 			else \
 			{ \
 				int already = -1; \
@@ -186,7 +186,7 @@ namespace ctf
 				setupaddflag(g, BASE_FLAG); // add link as flag
 				setuphomeflag;
 			}
-            if(!added && isteam(world::gamemode, world::mutators, e->attr[1], TEAM_FIRST)) // not linked and is a team flag
+            if(!added && isteam(game::gamemode, game::mutators, e->attr[1], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
         }
     }
@@ -226,7 +226,7 @@ namespace ctf
 				ctfstate::flag &f = st.flags[i];
 				f.team = team;
                 f.base = base;
-                f.owner = owner >= 0 ? world::newclient(owner) : NULL;
+                f.owner = owner >= 0 ? game::newclient(owner) : NULL;
                 if(f.owner) { if(!f.taketime) f.taketime = lastmillis; }
                 else if(!dropped) f.taketime = 0;
                 f.droptime = dropped;
@@ -253,7 +253,7 @@ namespace ctf
 		}
 		st.dropflag(i, droploc, 1);
 		if(!physics::droptofloor(f.droploc, 2, 0)) f.droploc = vec(-1, -1, -1);
-		world::announce(denied ? S_V_DENIED : S_V_FLAGDROP, "\fo%s%s dropped the the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, "\fo%s%s dropped the the \fs%s%s\fS flag", d==game::player1 ? "you" : game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
     }
 
     void removeplayer(gameent *d)
@@ -267,8 +267,8 @@ namespace ctf
 
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
-		if(from.x >= 0) world::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
-		if(to.x >= 0) world::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
+		if(from.x >= 0) game::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
+		if(to.x >= 0) game::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[team].colour, enttype[FLAG].radius);
 		if(from.x >= 0 && to.x >= 0) part_trail(PART_ELECTRIC, 250, from, to, teamtype[team].colour, 2.f);
     }
 
@@ -279,7 +279,7 @@ namespace ctf
 		flageffect(i, d->team, f.droploc, f.spawnloc);
 		f.interptime = lastmillis;
 		st.returnflag(i);
-		world::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", d==world::player1 ? "you" : world::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
+		game::announce(S_V_FLAGRETURN, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
 		f.taketime = 0;
     }
 
@@ -291,7 +291,7 @@ namespace ctf
 		f.interptime = lastmillis;
 		f.taketime = 0;
 		st.returnflag(i);
-		world::announce(S_V_FLAGRESET, "\fothe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(S_V_FLAGRESET, "\fothe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
     }
 
     void scoreflag(gameent *d, int relay, int goal, int score)
@@ -302,12 +302,12 @@ namespace ctf
 		(st.findscore(d->team)).total = score;
 		f.interptime = lastmillis;
 		st.returnflag(relay);
-		if(d!=world::player1)
+		if(d!=game::player1)
 		{
 			defformatstring(ds)("@CAPTURED!");
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, teamtype[d->team].colour, 3.f);
 		}
-		world::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==world::player1 ? "you" : world::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-g.taketime)/1000.f);
+		game::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-g.taketime)/1000.f);
 		g.taketime = 0;
     }
 
@@ -315,11 +315,11 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		world::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius);
+		game::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[d->team].colour, enttype[FLAG].radius);
 		f.interptime = lastmillis;
 		if(!f.droptime) f.taketime = lastmillis;
 		st.takeflag(i, d);
-		world::announce(S_V_FLAGPICKUP, "\fo%s %s the \fs%s%s\fS flag", d==world::player1 ? "you" : world::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(S_V_FLAGPICKUP, "\fo%s %s the \fs%s%s\fS flag", d==game::player1 ? "you" : game::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
     }
 
     void checkflags(gameent *d)
@@ -397,10 +397,10 @@ namespace ctf
 			ctfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool home = isctfhome(f, d->team), regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool home = isctfhome(f, d->team), regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			ai::checkothers(targets, d, home ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = e->feetpos();
 				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
@@ -410,12 +410,12 @@ namespace ctf
 			{
 				bool guard = false;
 				if(f.owner || f.droptime || targets.empty()) guard = true;
-				else if(d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
+				else if(d->hasweap(d->ai->weappref, m_spawnweapon(game::gamemode, game::mutators)))
 				{ // see if we can relieve someone who only has a piece of crap
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])))
+					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						if((t->ai && !t->hasweap(t->ai->weappref, m_spawnweapon(world::gamemode, world::mutators))) || (!t->ai && t->weapselect == WEAPON_PLASMA))
+						if((t->ai && !t->hasweap(t->ai->weappref, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect == WEAPON_PLASMA))
 						{
 							guard = true;
 							break;
@@ -446,7 +446,7 @@ namespace ctf
 				else
 				{ // help by defending the attacker
 					gameent *t;
-					loopvk(targets) if((t = world::getclient(targets[k])))
+					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
 						interest &n = interests.add();
 						n.state = AI_S_DEFEND;
@@ -482,14 +482,14 @@ namespace ctf
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
 			}
-			int walk = 0, regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			if(regen && lastmillis-b.millis >= (201-d->skill)*33)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
 				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
 				gameent *e = NULL;
-				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))

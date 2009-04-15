@@ -23,32 +23,32 @@ namespace client
 	VARP(colourchat, 0, 1, 1);
 	SVARP(serversort, "");
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
-	ICOMMAND(getname, "", (), result(world::player1->name));
-	ICOMMAND(getteam, "", (), result(teamtype[world::player1->team].name));
-    ICOMMAND(getteamicon, "", (), result(teamtype[world::player1->team].icon));
+	ICOMMAND(getname, "", (), result(game::player1->name));
+	ICOMMAND(getteam, "", (), result(teamtype[game::player1->team].name));
+    ICOMMAND(getteamicon, "", (), result(teamtype[game::player1->team].icon));
 
-    const char *getname() { return world::player1->name; }
+    const char *getname() { return game::player1->name; }
 
 	void switchname(const char *name)
 	{
 		if(name[0])
 		{
 			c2sinit = false;
-			copystring(world::player1->name, name, MAXNAMELEN);
+			copystring(game::player1->name, name, MAXNAMELEN);
 		}
-		else conoutf("\fmyour name is: %s", world::colorname(world::player1));
+		else conoutf("\fmyour name is: %s", game::colorname(game::player1));
 	}
 	ICOMMAND(name, "s", (char *s), switchname(s));
 
 	int teamname(const char *team)
 	{
-		if(m_team(world::gamemode, world::mutators))
+		if(m_team(game::gamemode, game::mutators))
 		{
 			if(team[0])
 			{
 				int t = atoi(team);
 
-				loopi(numteams(world::gamemode, world::mutators))
+				loopi(numteams(game::gamemode, game::mutators))
 				{
 					if((t && t == i+TEAM_FIRST) || !strcasecmp(teamtype[i+TEAM_FIRST].name, team))
 					{
@@ -63,18 +63,18 @@ namespace client
 
 	void switchteam(const char *team)
 	{
-		if(m_team(world::gamemode, world::mutators) && world::player1->state != CS_SPECTATOR && world::player1->state != CS_EDITING)
+		if(m_team(game::gamemode, game::mutators) && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING)
 		{
 			if(team[0])
 			{
 				int t = teamname(team);
-				if(t != world::player1->team)
+				if(t != game::player1->team)
 				{
 					c2sinit = false;
-					world::player1->team = t;
+					game::player1->team = t;
 				}
 			}
-			else conoutf("\fs\fmyour team is:\fS \fs%s%s\fS", teamtype[world::player1->team].chat, teamtype[world::player1->team].name);
+			else conoutf("\fs\fmyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 		}
 		else conoutf("\frcan only change teams when actually playing in team games");
 	}
@@ -86,7 +86,7 @@ namespace client
 
 	void writeclientinfo(stream *f)
 	{
-		f->printf("name \"%s\"\n\n", world::player1->name);
+		f->printf("name \"%s\"\n\n", game::player1->name);
 	}
 
     void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address)
@@ -112,12 +112,12 @@ namespace client
         sessionid = 0;
 		messages.setsize(0);
         messagereliable = false;
-		projs::remove(world::player1);
-        removetrackedparticles(world::player1);
-		removetrackedsounds(world::player1);
-		world::player1->clientnum = -1;
-		world::player1->privilege = PRIV_NONE;
-		loopv(world::players) if(world::players[i]) world::clientdisconnected(i);
+		projs::remove(game::player1);
+        removetrackedparticles(game::player1);
+		removetrackedsounds(game::player1);
+		game::player1->clientnum = -1;
+		game::player1->privilege = PRIV_NONE;
+		loopv(game::players) if(game::players[i]) game::clientdisconnected(i);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_CLIENT) // reset vars
 			{
@@ -146,7 +146,7 @@ namespace client
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = edit || (m_edit(world::gamemode) && world::player1->state == CS_ALIVE);
+		bool allow = edit || (m_edit(game::gamemode) && game::player1->state == CS_ALIVE);
 		if(!allow) conoutf("\fryou must be both alive and in coopedit to enter editmode");
 		return allow;
 	}
@@ -155,17 +155,17 @@ namespace client
 	{
 		if(edit)
 		{
-			world::player1->state = CS_EDITING;
-			world::resetstate();
+			game::player1->state = CS_EDITING;
+			game::resetstate();
 		}
-		else if(world::player1->state != CS_SPECTATOR)
+		else if(game::player1->state != CS_SPECTATOR)
 		{
-			world::player1->state = CS_ALIVE;
-			world::player1->editspawn(lastmillis, m_spawnweapon(world::gamemode, world::mutators), m_maxhealth(world::gamemode, world::mutators));
+			game::player1->state = CS_ALIVE;
+			game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
 		}
-		projs::remove(world::player1);
-		physics::entinmap(world::player1, false); // find spawn closest to current floating pos
-		if(m_edit(world::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
+		projs::remove(game::player1);
+		physics::entinmap(game::player1, false); // find spawn closest to current floating pos
+		if(m_edit(game::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);
 	}
 
@@ -173,18 +173,18 @@ namespace client
 	{
 		char *end;
 		int n = strtol(arg, &end, 10);
-		if(!world::players.inrange(n)) return -1;
+		if(!game::players.inrange(n)) return -1;
 		if(*arg && !*end) return n;
 		// try case sensitive first
-		loopi(world::numdynents())
+		loopi(game::numdynents())
 		{
-			gameent *o = (gameent *)world::iterdynents(i);
+			gameent *o = (gameent *)game::iterdynents(i);
 			if(o && !strcmp(arg, o->name)) return o->clientnum;
 		}
 		// nothing found, try case insensitive
-		loopi(world::numdynents())
+		loopi(game::numdynents())
 		{
-			gameent *o = (gameent *)world::iterdynents(i);
+			gameent *o = (gameent *)game::iterdynents(i);
 			if(o && !strcasecmp(arg, o->name)) return o->clientnum;
 		}
 		return -1;
@@ -199,16 +199,16 @@ namespace client
 	void kick(const char *arg)
 	{
 		int i = parseplayer(arg);
-		if(i>=0 && i!=world::player1->clientnum) addmsg(SV_KICK, "ri", i);
+		if(i>=0 && i!=game::player1->clientnum) addmsg(SV_KICK, "ri", i);
 	}
 	ICOMMAND(kick, "s", (char *s), kick(s));
 
 	void setteam(const char *arg1, const char *arg2)
 	{
-		if(m_team(world::gamemode, world::mutators))
+		if(m_team(game::gamemode, game::mutators))
 		{
 			int i = parseplayer(arg1);
-			if(i>=0 && i!=world::player1->clientnum)
+			if(i>=0 && i!=game::player1->clientnum)
 			{
 				int t = teamname(arg2);
 				if(t) addmsg(SV_SETTEAM, "ri2", i, t);
@@ -220,9 +220,9 @@ namespace client
 
     void hashpwd(const char *pwd)
     {
-        if(world::player1->clientnum<0) return;
+        if(game::player1->clientnum<0) return;
         string hash;
-        server::hashpassword(world::player1->clientnum, sessionid, pwd, hash);
+        server::hashpassword(game::player1->clientnum, sessionid, pwd, hash);
         result(hash);
     }
     COMMAND(hashpwd, "s");
@@ -233,7 +233,7 @@ namespace client
         int val = 1;
         string hash = "";
         if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
-        else server::hashpassword(world::player1->clientnum, sessionid, arg, hash);
+        else server::hashpassword(game::player1->clientnum, sessionid, arg, hash);
         addmsg(SV_SETMASTER, "ris", val, hash);
     }
 	COMMAND(setmaster, "s");
@@ -248,7 +248,7 @@ namespace client
 
     void togglespectator(int val, const char *who)
 	{
-        int i = who[0] ? parseplayer(who) : world::player1->clientnum;
+        int i = who[0] ? parseplayer(who) : game::player1->clientnum;
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}
 	ICOMMAND(spectator, "is", (int *val, char *who), togglespectator(*val, who));
@@ -256,7 +256,7 @@ namespace client
 	void addmsg(int type, const char *fmt, ...)
 	{
 		/*
-		if(remote && spectator && (!world::player1->privilege || type<SV_MASTERMODE))
+		if(remote && spectator && (!game::player1->privilege || type<SV_MASTERMODE))
 		{
 			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER, SV_AUTHTRY, SV_AUTHANS };
 			bool allowed = false;
@@ -316,8 +316,8 @@ namespace client
 	{
 		if(!colourchat) filtertext(text, text);
 		string s;
-		bool team = m_team(world::gamemode, world::mutators) && flags&SAY_TEAM;
-		defformatstring(m)("%s", world::colorname(d));
+		bool team = m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
+		defformatstring(m)("%s", game::colorname(d));
 		if(team)
 		{
 			defformatstring(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
@@ -338,8 +338,8 @@ namespace client
 
 	void toserver(int flags, char *text)
 	{
-		saytext(world::player1, flags, text);
-		addmsg(SV_TEXT, "ri2s", world::player1->clientnum, flags, text);
+		saytext(game::player1, flags, text);
+		addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
 	}
 	ICOMMAND(say, "C", (char *s), toserver(SAY_NONE, s));
 	ICOMMAND(me, "C", (char *s), toserver(SAY_ACTION, s));
@@ -350,7 +350,7 @@ namespace client
 	{
 		if(isready)
 		{
-			addmsg(SV_COMMAND, "ri2ss", world::player1->clientnum, nargs, cmd, arg);
+			addmsg(SV_COMMAND, "ri2ss", game::player1->clientnum, nargs, cmd, arg);
 			return true;
 		}
 		return false;
@@ -359,11 +359,11 @@ namespace client
 	void changemapserv(char *name, int gamemode, int mutators, bool temp)
 	{
 		if(editmode) toggleedit();
-		world::gamemode = gamemode; world::mutators = mutators;
-		server::modecheck(&world::gamemode, &world::mutators);
-		world::nextmode = world::gamemode; world::nextmuts = world::mutators;
-		world::minremain = -1;
-		world::maptime = 0;
+		game::gamemode = gamemode; game::mutators = mutators;
+		server::modecheck(&game::gamemode, &game::mutators);
+		game::nextmode = game::gamemode; game::nextmuts = game::mutators;
+		game::minremain = -1;
+		game::maptime = 0;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
 		donesave = needsmap = false;
@@ -460,7 +460,7 @@ namespace client
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
-        int nextmode = world::nextmode, nextmuts = world::nextmuts; // in case stopdemo clobbers these
+        int nextmode = game::nextmode, nextmuts = game::nextmuts; // in case stopdemo clobbers these
         if(!remote) stopdemo();
         string mapfile;
 		copystring(mapfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
@@ -473,7 +473,7 @@ namespace client
 		conoutf("\fmsending map...");
 		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
-		bool edit = m_edit(world::gamemode);
+		bool edit = m_edit(game::gamemode);
 		defformatstring(mapfile)("temp/%s", mapname);
 		loopi(3)
 		{
@@ -555,24 +555,24 @@ namespace client
 				default: return;
 			}
 			if(d || verbose >= 2)
-				conoutf("\fm%s set %s to %s", d ? world::colorname(d) : "the server", cmd, val);
+				conoutf("\fm%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
 		}
-		else conoutf("\fr%s sent unknown command: %s", d ? world::colorname(d) : "the server", cmd);
+		else conoutf("\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
 
 	void gotoplayer(const char *arg)
 	{
-		if(world::player1->state!=CS_SPECTATOR && world::player1->state!=CS_EDITING) return;
+		if(game::player1->state!=CS_SPECTATOR && game::player1->state!=CS_EDITING) return;
 		int i = parseplayer(arg);
-		if(i>=0 && i!=world::player1->clientnum)
+		if(i>=0 && i!=game::player1->clientnum)
 		{
-			gameent *d = world::getclient(i);
+			gameent *d = game::getclient(i);
 			if(!d) return;
-			world::player1->o = d->o;
+			game::player1->o = d->o;
 			vec dir;
-			vecfromyawpitch(world::player1->yaw, world::player1->pitch, 1, 0, dir);
-			world::player1->o.add(dir.mul(-32));
-            world::player1->resetinterp();
+			vecfromyawpitch(game::player1->yaw, game::player1->pitch, 1, 0, dir);
+			game::player1->o.add(dir.mul(-32));
+            game::player1->resetinterp();
 		}
 	}
 	ICOMMAND(goto, "s", (char *s), gotoplayer(s));
@@ -580,17 +580,17 @@ namespace client
 	bool ready() { return isready; }
 	ICOMMAND(ready, "", (), intret(ready()));
 
-	int state() { return world::player1->state; }
+	int state() { return game::player1->state; }
 	int otherclients()
 	{
 		int n = 0; // ai don't count
-		loopv(world::players) if(world::players[i] && world::players[i]->aitype == AI_NONE) n++;
+		loopv(game::players) if(game::players[i] && game::players[i]->aitype == AI_NONE) n++;
 		return n;
 	}
 
 	void editvar(ident *id, bool local)
 	{
-        if(id && id->flags&IDF_WORLD && local && m_edit(world::gamemode))
+        if(id && id->flags&IDF_WORLD && local && m_edit(game::gamemode))
         {
         	switch(id->type)
         	{
@@ -613,7 +613,7 @@ namespace client
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
 	{
-        if(m_edit(world::gamemode)) switch(op)
+        if(m_edit(game::gamemode)) switch(op)
 		{
 			case EDIT_FLIP:
 			case EDIT_COPY:
@@ -657,11 +657,11 @@ namespace client
         ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         ucharbuf p(packet->data, packet->dataLength);
         putint(p, SV_CONNECT);
-        sendstring(world::player1->name, p);
+        sendstring(game::player1->name, p);
         string hash = "";
         if(connectpass[0])
         {
-            server::hashpassword(world::player1->clientnum, sessionid, connectpass, hash);
+            server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
             memset(connectpass, 0, sizeof(connectpass));
         }
         sendstring(hash, p);
@@ -728,11 +728,11 @@ namespace client
 		{
             packet->flags |= ENET_PACKET_FLAG_RELIABLE;
 			putint(p, SV_GAMEINFO);
-			putint(p, m_team(world::gamemode, world::mutators) && world::numteamplayers ? world::numteamplayers : world::numplayers);
+			putint(p, m_team(game::gamemode, game::mutators) && game::numteamplayers ? game::numteamplayers : game::numplayers);
 			entities::putitems(p);
 			putint(p, -1);
-			if(m_stf(world::gamemode)) stf::sendflags(p);
-            else if(m_ctf(world::gamemode)) ctf::sendflags(p);
+			if(m_stf(game::gamemode)) stf::sendflags(p);
+            else if(m_ctf(game::gamemode)) ctf::sendflags(p);
 			sendinfo = false;
 		}
 		if(!c2sinit)	// tell other clients who I am
@@ -769,21 +769,21 @@ namespace client
         static int lastupdate = -1000;
         if(totalmillis - lastupdate < 40) return;    // don't update faster than 25fps
         lastupdate = totalmillis;
-        updateposition(world::player1);
-        loopv(world::players) if(world::players[i] && world::players[i]->ai) updateposition(world::players[i]);
-        sendmessages(world::player1);
+        updateposition(game::player1);
+        loopv(game::players) if(game::players[i] && game::players[i]->ai) updateposition(game::players[i]);
+        sendmessages(game::player1);
         flushclient();
     }
 
     void parsestate(gameent *d, ucharbuf &p, bool resume = false)
     {
         if(!d) { static gameent dummy; d = &dummy; }
-		if(d == world::player1 || d->ai) getint(p);
+		if(d == game::player1 || d->ai) getint(p);
 		else d->state = getint(p);
 		d->frags = getint(p);
 		d->sequence = getint(p); // lifesequence
         d->health = getint(p);
-        if(resume && (d == world::player1 || d->ai))
+        if(resume && (d == game::player1 || d->ai))
         {
         	d->weapreset(false);
             getint(p);
@@ -803,11 +803,11 @@ namespace client
 		// don't care if he's in the scenery or other players,
 		// just don't overlap with our client
 
-		const float r = world::player1->radius+d->radius;
-		const float dx = world::player1->o.x-d->o.x;
-		const float dy = world::player1->o.y-d->o.y;
-		const float dz = world::player1->o.z-d->o.z;
-		const float rz = world::player1->aboveeye+world::player1->height;
+		const float r = game::player1->radius+d->radius;
+		const float dx = game::player1->o.x-d->o.x;
+		const float dy = game::player1->o.y-d->o.y;
+		const float dz = game::player1->o.z-d->o.z;
+		const float rz = game::player1->aboveeye+game::player1->height;
 		const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
 		if(fx<r && fy<r && fz<rz && d->state!=CS_SPECTATOR && d->state!=CS_WAITING && d->state!=CS_DEAD)
 		{
@@ -856,8 +856,8 @@ namespace client
                     aimyaw = (float)getuint(p);
                     aimpitch = (float)getint(p);
                 }
-				gameent *d = world::getclient(lcn);
-                if(!d || d==world::player1 || d->ai) continue;
+				gameent *d = game::getclient(lcn);
+                if(!d || d==game::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
 				d->conopen = f&0x40 ? true : false;
 				d->yaw = yaw;
@@ -871,7 +871,7 @@ namespace client
 				d->crouching = f&1 ? true : false;
 				if(crouch != d->crouching) d->crouchtime = lastmillis;
                 vec oldpos(d->o);
-                //if(world::allowmove(d))
+                //if(game::allowmove(d))
                 //{
                     d->o = o;
                     d->o.z += d->height;
@@ -950,7 +950,7 @@ namespace client
 					}
                     sessionid = getint(p);
 					isready = true;
-					world::player1->clientnum = mycn;	  // we are now fully ready
+					game::player1->clientnum = mycn;	  // we are now fully ready
                     if(getint(p)) conoutf("\frthe server is password protected");
                     else if(verbose) conoutf("\fathe server welcomes us, yay");
                     sendintro();
@@ -964,7 +964,7 @@ namespace client
 				{
 					int lcn = getint(p), len = getuint(p);
 					ucharbuf q = p.subbuf(len);
-					gameent *t = world::getclient(lcn);
+					gameent *t = game::getclient(lcn);
 					parsemessages(lcn, t, q);
 					break;
 				}
@@ -972,20 +972,20 @@ namespace client
 				case SV_PHYS: // simple phys events
 				{
 					int lcn = getint(p), st = getint(p);
-					gameent *t = world::getclient(lcn);
-					if(t && t != world::player1 && !t->ai) switch(st)
+					gameent *t = game::getclient(lcn);
+					if(t && t != game::player1 && !t->ai) switch(st)
 					{
 						case SPHY_JUMP:
 						{
 							playsound(S_JUMP, t->o, t);
-							world::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
+							game::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
 							t->jumptime = lastmillis;
 							break;
 						}
 						case SPHY_IMPULSE:
 						{
 							playsound(S_IMPULSE, t->o, t);
-							world::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
+							game::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
 							t->lastimpulse = lastmillis;
 							break;
 						}
@@ -1003,14 +1003,14 @@ namespace client
 				{
 					int snd = getint(p);
 					getstring(text, p);
-					world::announce(snd, "%s", text);
+					game::announce(snd, "%s", text);
 					break;
 				}
 
 				case SV_TEXT:
 				{
 					int tcn = getint(p);
-					gameent *t = world::getclient(tcn);
+					gameent *t = game::getclient(tcn);
 					int flags = getint(p);
 					getstring(text, p);
 					if(!t) break;
@@ -1021,7 +1021,7 @@ namespace client
 				case SV_COMMAND:
 				{
 					int lcn = getint(p);
-					gameent *f = world::getclient(lcn);
+					gameent *f = game::getclient(lcn);
 					string cmd;
 					getstring(cmd, p);
 					getstring(text, p);
@@ -1032,8 +1032,8 @@ namespace client
 				case SV_EXECLINK:
 				{
 					int tcn = getint(p), index = getint(p);
-					gameent *t = world::getclient(tcn);
-					if(!t || !d || (t->clientnum != d->clientnum && t->ownernum != d->clientnum) || t == world::player1 || t->ai) break;
+					gameent *t = game::getclient(tcn);
+					if(!t || !d || (t->clientnum != d->clientnum && t->ownernum != d->clientnum) || t == game::player1 || t->ai) break;
 					entities::execlink(t, index, false);
 					break;
 				}
@@ -1079,7 +1079,7 @@ namespace client
 
 				case SV_INITC2S: // another client either connected or changed name/team
 				{
-					d = world::newclient(cn);
+					d = game::newclient(cn);
 					if(!d)
 					{
 						getstring(text, p);
@@ -1093,16 +1093,16 @@ namespace client
 						if(strcmp(d->name, text))
 						{
 							string oldname, newname;
-							copystring(oldname, world::colorname(d, NULL, "", false));
-							copystring(newname, world::colorname(d, text));
+							copystring(oldname, game::colorname(d, NULL, "", false));
+							copystring(newname, game::colorname(d, text));
 							conoutf("\fm%s is now known as %s", oldname, newname);
 						}
 					}
 					else					// new client
 					{
-						conoutf("\fg%s has joined the game", world::colorname(d, text, "", false));
-						loopv(world::players)	// clear copies since new player doesn't have them
-							if(world::players[i]) freeeditinfo(world::players[i]->edit);
+						conoutf("\fg%s has joined the game", game::colorname(d, text, "", false));
+						loopv(game::players)	// clear copies since new player doesn't have them
+							if(game::players[i]) freeeditinfo(game::players[i]->edit);
 						freeeditinfo(localedit);
 					}
 					copystring(d->name, text, MAXNAMELEN);
@@ -1111,19 +1111,19 @@ namespace client
 				}
 
 				case SV_CDIS:
-					world::clientdisconnected(getint(p));
+					game::clientdisconnected(getint(p));
 					break;
 
 				case SV_SPAWN:
 				{
 					int lcn = getint(p);
-					gameent *f = world::newclient(lcn);
-					if(f && f != world::player1 && !f->ai)
+					gameent *f = game::newclient(lcn);
+					if(f && f != game::player1 && !f->ai)
 					{
-						f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
+						f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
 						parsestate(f, p);
 						playsound(S_RESPAWN, f->o, f);
-						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					else parsestate(NULL, p);
 					break;
@@ -1132,25 +1132,25 @@ namespace client
 				case SV_SPAWNSTATE:
 				{
 					int lcn = getint(p), ent = getint(p);
-					gameent *f = world::newclient(lcn);
+					gameent *f = game::newclient(lcn);
                     if(!f)
                     {
                         parsestate(NULL, p);
                         break;
                     }
-					if(f == world::player1 && editmode) toggleedit();
-					f->respawn(lastmillis, m_maxhealth(world::gamemode, world::mutators));
+					if(f == game::player1 && editmode) toggleedit();
+					f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
 					parsestate(f, p);
 					f->state = CS_ALIVE;
-					if(f == world::player1 || f->ai)
+					if(f == game::player1 || f->ai)
 					{
 						addmsg(SV_SPAWN, "ri3", f->clientnum, f->sequence, f->weapselect); // lifesequence
 						entities::spawnplayer(f, ent, ent < 0, true);
 						playsound(S_RESPAWN, f->o, f);
-						world::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					ai::spawned(f);
-					if(f == world::player1) world::resetstate();
+					if(f == game::player1) game::resetstate();
 					break;
 				}
 
@@ -1166,8 +1166,8 @@ namespace client
 						vec &to = locs.add();
 						loopk(3) to[k] = getint(p)/DMF;
 					}
-					gameent *s = world::getclient(scn);
-					if(!s || !isweap(weap) || s == world::player1 || s->ai) break;
+					gameent *s = game::getclient(scn);
+					if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
 					s->setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, lastmillis);
 					projs::shootv(weap, power, from, locs, s, false);
 					break;
@@ -1184,16 +1184,16 @@ namespace client
 					vec dir;
 					loopk(3) dir[k] = getint(p)/DNF;
 					dir.normalize();
-					gameent *target = world::getclient(tcn), *actor = world::getclient(acn);
+					gameent *target = game::getclient(tcn), *actor = game::getclient(acn);
 					if(!target || !actor) break;
-					world::damaged(weap, flags, damage, health, target, actor, lastmillis, dir);
+					game::damaged(weap, flags, damage, health, target, actor, lastmillis, dir);
 					break;
 				}
 
 				case SV_RELOAD:
 				{
 					int trg = getint(p), weap = getint(p), amt = getint(p);
-					gameent *target = world::getclient(trg);
+					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
 					target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
 					target->ammo[weap] = amt;
@@ -1205,7 +1205,7 @@ namespace client
 				case SV_REGEN:
 				{
 					int trg = getint(p), amt = getint(p);
-					gameent *target = world::getclient(trg);
+					gameent *target = game::getclient(trg);
 					if(!target) break;
 					if(!target->lastregen || lastmillis-target->lastregen >= 500)
 						playsound(S_REGEN, target->o, target); // maybe only player1?
@@ -1217,9 +1217,9 @@ namespace client
 				case SV_DIED:
 				{
 					int vcn = getint(p), acn = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
-					gameent *victim = world::getclient(vcn), *actor = world::getclient(acn);
+					gameent *victim = game::getclient(vcn), *actor = game::getclient(acn);
 					if(!actor || !victim) break;
-					world::killed(weap, flags, damage, victim, actor);
+					game::killed(weap, flags, damage, victim, actor);
 					victim->lastdeath = lastmillis;
 					victim->weapreset(true);
 					break;
@@ -1228,7 +1228,7 @@ namespace client
 				case SV_FRAG:
 				{
 					int acn = getint(p), frags = getint(p), spree = getint(p);
-					gameent *actor = world::getclient(acn);
+					gameent *actor = game::getclient(acn);
 					if(!actor) break;
 					actor->frags = frags;
 					actor->spree = spree;
@@ -1238,8 +1238,8 @@ namespace client
 				case SV_DROP:
 				{
 					int trg = getint(p), weap = getint(p), ds = getint(p);
-					gameent *target = world::getclient(trg);
-					bool local = target && (target == world::player1 || target->ai);
+					gameent *target = game::getclient(trg);
+					bool local = target && (target == game::player1 || target->ai);
 					if(ds) loopj(ds)
 					{
 						int gs = getint(p), drop = getint(p);
@@ -1257,7 +1257,7 @@ namespace client
 				case SV_WEAPSELECT:
 				{
 					int trg = getint(p), weap = getint(p);
-					gameent *target = world::getclient(trg);
+					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
 					target->weapswitch(weap, lastmillis);
 					target->reqswitch = -1;
@@ -1268,7 +1268,7 @@ namespace client
 				case SV_TAUNT:
 				{
 					int lcn = getint(p);
-					gameent *f = world::getclient(lcn);
+					gameent *f = game::getclient(lcn);
 					if(!f) break;
 					f->lasttaunt = lastmillis;
 					break;
@@ -1280,8 +1280,8 @@ namespace client
 					{
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
-						gameent *f = world::newclient(lcn);
-						if(f && f!=world::player1 && !f->ai) f->respawn(0, m_maxhealth(world::gamemode, world::mutators));
+						gameent *f = game::newclient(lcn);
+						if(f && f!=game::player1 && !f->ai) f->respawn(0, m_maxhealth(game::gamemode, game::mutators));
 						parsestate(f, p, true);
 					}
 					break;
@@ -1296,7 +1296,7 @@ namespace client
 					if(entities::showentdescs)
 					{
 						vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
-						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
+						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
 							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
 						if(texname && *texname)
@@ -1311,7 +1311,7 @@ namespace client
 							}
 						}
 					}
-					world::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
+					game::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
 					break;
 				}
 
@@ -1326,7 +1326,7 @@ namespace client
 				case SV_ITEMACC:
 				{ // uses a specific drop so the client knows what to replace
 					int lcn = getint(p), ent = getint(p), spawn = getint(p), weap = getint(p), drop = getint(p);
-					gameent *target = world::getclient(lcn);
+					gameent *target = game::getclient(lcn);
 					if(!target) break;
 					entities::useeffects(target, ent, spawn, weap, drop);
 					target->requse = -1;
@@ -1351,7 +1351,7 @@ namespace client
 								else if(val < id->minval) val = id->minval;
 								setvar(text, val, true);
                                 defformatstring(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
-								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, str);
+								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, str);
 							}
 							break;
 						}
@@ -1363,7 +1363,7 @@ namespace client
 								if(val > id->maxvalf) val = id->maxvalf;
 								else if(val < id->minvalf) val = id->minvalf;
 								setfvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, floatstr(*id->storage.f));
+								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, floatstr(*id->storage.f));
 							}
 							break;
 						}
@@ -1374,7 +1374,7 @@ namespace client
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %s", world::colorname(d), id->name, *id->storage.s);
+								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1385,7 +1385,7 @@ namespace client
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutf("\fm%s set worldalias %s to %s", world::colorname(d), text, val);
+								conoutf("\fm%s set worldalias %s to %s", game::colorname(d), text, val);
 							}
 							break;
 						}
@@ -1430,7 +1430,7 @@ namespace client
 				case SV_REMIP:
 				{
 					if(!d) return;
-					conoutf("\fm%s remipped", world::colorname(d));
+					conoutf("\fm%s remipped", game::colorname(d));
 					mpremip(false);
 					break;
 				}
@@ -1455,7 +1455,7 @@ namespace client
 				}
 
 				case SV_PONG:
-					addmsg(SV_CLIENTPING, "i", world::player1->ping = (world::player1->ping*5+lastmillis-getint(p))/6);
+					addmsg(SV_CLIENTPING, "i", game::player1->ping = (game::player1->ping*5+lastmillis-getint(p))/6);
 					break;
 
 				case SV_CLIENTPING:
@@ -1464,7 +1464,7 @@ namespace client
 					break;
 
 				case SV_TIMEUP:
-					world::timeupdate(getint(p));
+					game::timeupdate(getint(p));
 					break;
 
 				case SV_SERVMSG:
@@ -1487,24 +1487,24 @@ namespace client
 				case SV_DEMOPLAYBACK:
 				{
 					int on = getint(p);
-					if(on) world::player1->state = CS_SPECTATOR;
+					if(on) game::player1->state = CS_SPECTATOR;
 					else
                     {
-                        loopv(world::players) if(world::players[i]) world::clientdisconnected(i);
+                        loopv(game::players) if(game::players[i]) game::clientdisconnected(i);
                     }
 					demoplayback = on!=0;
-                    world::player1->clientnum = getint(p);
+                    game::player1->clientnum = getint(p);
 					break;
 				}
 
 				case SV_CURRENTMASTER:
 				{
 					int mn = getint(p), priv = getint(p);
-					world::player1->privilege = PRIV_NONE;
-					loopv(world::players) if(world::players[i]) world::players[i]->privilege = PRIV_NONE;
+					game::player1->privilege = PRIV_NONE;
+					loopv(game::players) if(game::players[i]) game::players[i]->privilege = PRIV_NONE;
 					if(mn>=0)
 					{
-						gameent *m = world::getclient(mn);
+						gameent *m = game::getclient(mn);
 						if(m) m->privilege = priv;
 					}
 					break;
@@ -1518,7 +1518,7 @@ namespace client
 					else
 					{
 						d->state = CS_ALIVE;
-						d->editspawn(lastmillis, m_spawnweapon(world::gamemode, world::mutators), m_maxhealth(world::gamemode, world::mutators));
+						d->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
 					}
 					projs::remove(d);
 					break;
@@ -1527,17 +1527,17 @@ namespace client
 				case SV_SPECTATOR:
 				{
 					int sn = getint(p), val = getint(p);
-					gameent *s = world::newclient(sn);
+					gameent *s = game::newclient(sn);
 					if(!s) break;
 					if(val)
 					{
-						if(s == world::player1 && editmode) toggleedit();
+						if(s == game::player1 && editmode) toggleedit();
 						s->state = CS_SPECTATOR;
 					}
 					else if(s->state == CS_SPECTATOR)
 					{
 						s->state = CS_WAITING;
-						if(s != world::player1 && !s->ai) s->resetinterp();
+						if(s != game::player1 && !s->ai) s->resetinterp();
 					}
 					break;
 				}
@@ -1545,9 +1545,9 @@ namespace client
 				case SV_WAITING:
 				{
 					int sn = getint(p);
-					gameent *s = world::newclient(sn);
+					gameent *s = game::newclient(sn);
 					if(!s) break;
-					if(s == world::player1)
+					if(s == game::player1)
 					{
 						if(editmode) toggleedit();
 						if(hud::sb.scoreson) hud::sb.showscores(false);
@@ -1562,7 +1562,7 @@ namespace client
 				case SV_SETTEAM:
 				{
 					int wn = getint(p), tn = getint(p);
-					gameent *w = world::getclient(wn);
+					gameent *w = game::getclient(wn);
 					if(!w) return;
 					w->team = tn;
 					break;
@@ -1572,7 +1572,7 @@ namespace client
 				{
 					int flag = getint(p), converted = getint(p),
 							owner = getint(p), enemy = getint(p);
-					if(m_stf(world::gamemode)) stf::updateflag(flag, owner, enemy, converted);
+					if(m_stf(game::gamemode)) stf::updateflag(flag, owner, enemy, converted);
 					break;
 				}
 
@@ -1590,14 +1590,14 @@ namespace client
 				case SV_TEAMSCORE:
 				{
 					int team = getint(p), total = getint(p);
-					if(m_ctf(world::gamemode)) ctf::setscore(team, total);
-					if(m_stf(world::gamemode)) stf::setscore(team, total);
+					if(m_ctf(game::gamemode)) ctf::setscore(team, total);
+					if(m_stf(game::gamemode)) stf::setscore(team, total);
 					break;
 				}
 
 				case SV_INITFLAGS:
 				{
-					ctf::parseflags(p, m_ctf(world::gamemode));
+					ctf::parseflags(p, m_ctf(game::gamemode));
 					break;
 				}
 
@@ -1606,39 +1606,39 @@ namespace client
 					int ocn = getint(p), flag = getint(p);
 					vec droploc;
 					loopk(3) droploc[k] = getint(p)/DMF;
-					gameent *o = world::newclient(ocn);
-					if(o && m_ctf(world::gamemode)) ctf::dropflag(o, flag, droploc);
+					gameent *o = game::newclient(ocn);
+					if(o && m_ctf(game::gamemode)) ctf::dropflag(o, flag, droploc);
 					break;
 				}
 
 				case SV_SCOREFLAG:
 				{
 					int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
-					gameent *o = world::newclient(ocn);
-					if(o && m_ctf(world::gamemode)) ctf::scoreflag(o, relayflag, goalflag, score);
+					gameent *o = game::newclient(ocn);
+					if(o && m_ctf(game::gamemode)) ctf::scoreflag(o, relayflag, goalflag, score);
 					break;
 				}
 
 				case SV_RETURNFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					gameent *o = world::newclient(ocn);
-					if(o && m_ctf(world::gamemode)) ctf::returnflag(o, flag);
+					gameent *o = game::newclient(ocn);
+					if(o && m_ctf(game::gamemode)) ctf::returnflag(o, flag);
 					break;
 				}
 
 				case SV_TAKEFLAG:
 				{
 					int ocn = getint(p), flag = getint(p);
-					gameent *o = world::newclient(ocn);
-					if(o && m_ctf(world::gamemode)) ctf::takeflag(o, flag);
+					gameent *o = game::newclient(ocn);
+					if(o && m_ctf(game::gamemode)) ctf::takeflag(o, flag);
 					break;
 				}
 
 				case SV_RESETFLAG:
 				{
 					int flag = getint(p);
-					if(m_ctf(world::gamemode)) ctf::resetflag(flag);
+					if(m_ctf(game::gamemode)) ctf::resetflag(flag);
 					break;
 				}
 
@@ -1675,11 +1675,11 @@ namespace client
 					if(size>=0) emptymap(size, true);
 					else enlargemap(true);
 					donesave = needsmap = false;
-					if(d && d!=world::player1)
+					if(d && d!=game::player1)
 					{
 						int newsize = 0;
 						while(1<<newsize < getworldsize()) newsize++;
-						conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", world::colorname(d), newsize);
+						conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", game::colorname(d), newsize);
 					}
 					break;
 				}
@@ -1689,7 +1689,7 @@ namespace client
 					int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 101);
 					getstring(text, p);
 					int tm = getint(p);
-					gameent *b = world::newclient(bn);
+					gameent *b = game::newclient(bn);
 					if(!b) break;
 					ai::init(b, at, on, sk, bn, text, tm);
 					break;

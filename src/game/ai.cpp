@@ -13,7 +13,7 @@ namespace ai
 
 	float viewdist(int x)
 	{
-		return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(world::fogdist)) : float(world::fogdist);
+		return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist);
 	}
 
 	float viewfieldx(int x)
@@ -29,15 +29,15 @@ namespace ai
 	float targetable(gameent *d, gameent *e, bool z)
 	{
 		aistate &b = d->ai->getstate();
-		if(d != e && world::allowmove(d) && b.type != AI_S_WAIT)
-			return e->state == CS_ALIVE && (!z || !m_team(world::gamemode, world::mutators) || (d)->team != (e)->team);
+		if(d != e && game::allowmove(d) && b.type != AI_S_WAIT)
+			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || (d)->team != (e)->team);
 		return false;
 	}
 
 	float cansee(gameent *d, vec &x, vec &y, vec &targ)
 	{
 		aistate &b = d->ai->getstate();
-		if(world::allowmove(d) && b.type != AI_S_WAIT)
+		if(game::allowmove(d) && b.type != AI_S_WAIT)
 			return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
 		return false;
 	}
@@ -75,27 +75,27 @@ namespace ai
 
 	void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm)
 	{
-		gameent *o = world::newclient(on);
+		gameent *o = game::newclient(on);
 		string m;
-		if(o) copystring(m, world::colorname(o));
+		if(o) copystring(m, game::colorname(o));
 		else formatstring(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
-			if(aidebug) conoutf("\fg%s assigned to %s at skill %d", world::colorname(d, name), m, sk);
-			else conoutf("\fg%s joined the game", world::colorname(d, name), m, sk);
+			if(aidebug) conoutf("\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
+			else conoutf("\fg%s joined the game", game::colorname(d, name), m, sk);
 			resetthisguy = true;
 		}
 		else
 		{
 			if(d->ownernum != on)
 			{
-				if(aidebug) conoutf("\fg%s reassigned to %s", world::colorname(d, name), m);
+				if(aidebug) conoutf("\fg%s reassigned to %s", game::colorname(d, name), m);
 				resetthisguy = true;
 			}
-			if(d->skill != sk && aidebug) conoutf("\fg%s changed skill to %d", world::colorname(d, name), sk);
+			if(d->skill != sk && aidebug) conoutf("\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
-		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", world::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
+		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", game::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
 		copystring(d->name, name, MAXNAMELEN);
 		d->aitype = at;
@@ -104,7 +104,7 @@ namespace ai
 		d->team = tm;
 
 		if(resetthisguy) projs::remove(d);
-		if(world::player1->clientnum == d->ownernum) create(d);
+		if(game::player1->clientnum == d->ownernum) create(d);
 		else if(d->ai) destroy(d);
 	}
 
@@ -116,10 +116,10 @@ namespace ai
         	avoid();
         	forcegun = multiplayer(false) ? -1 : aiforcegun;
         }
-		loopv(world::players) if(world::players[i] && world::players[i]->ai)
+		loopv(game::players) if(game::players[i] && game::players[i]->ai)
 		{
-			if(!world::intermission) think(world::players[i], updating);
-			else world::players[i]->stopmoving(true);
+			if(!game::intermission) think(game::players[i], updating);
+			else game::players[i]->stopmoving(true);
 		}
 		if(updating) updatemillis = lastmillis;
 	}
@@ -128,10 +128,10 @@ namespace ai
 	{ // checks the states of other ai for a match
 		targets.setsize(0);
 		gameent *e = NULL;
-		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE)
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE)
 		{
 			if(targets.find(e->clientnum) >= 0) continue;
-			if(teams && m_team(world::gamemode, world::mutators) && d && d->team != e->team) continue;
+			if(teams && m_team(game::gamemode, game::mutators) && d && d->team != e->team) continue;
 			aistate &b = e->ai->getstate();
 			if(state >= 0 && b.type != state) continue;
 			if(target >= 0 && b.target != target) continue;
@@ -203,13 +203,13 @@ namespace ai
 
 	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, bool pursue = false)
 	{
-		if(world::allowmove(d))
+		if(game::allowmove(d))
 		{
 			gameent *t = NULL, *e = NULL;
 			vec dp = d->headpos(), tp(0, 0, 0);
 			bool insight = false, tooclose = false;
 			float mindist = guard*guard;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
+			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 			{
 				vec ep = getaimpos(d, e);
 				bool close = ep.squaredist(pos) < mindist;
@@ -289,7 +289,7 @@ namespace ai
 	{
 		gameent *t = NULL, *e = NULL;
 		vec dp = d->headpos(), tp(0, 0, 0);
-		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && targetable(d, e, true))
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
 			vec ep = getaimpos(d, e);
 			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
@@ -305,14 +305,14 @@ namespace ai
 	void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
 	{
 		gameent *e = NULL;
-		loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && e != d && (all || e->aitype == AI_NONE) && d->team == e->team)
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype == AI_NONE) && d->team == e->team)
 		{
 			interest &n = interests.add();
 			n.state = AI_S_DEFEND;
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)) ? 10.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
 		}
 	}
 
@@ -323,7 +323,7 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[j];
 			if(enttype[e.type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators);
+			int sweap = m_spawnweapon(game::gamemode, game::mutators);
 			switch(e.type)
 			{
 				case WEAPON:
@@ -348,7 +348,7 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
-			int sweap = m_spawnweapon(world::gamemode, world::mutators);
+			int sweap = m_spawnweapon(game::gamemode, game::mutators);
 			switch(entities::ents[proj.id]->type)
 			{
 				case WEAPON:
@@ -375,11 +375,11 @@ namespace ai
 	{
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
-		if(!d->hasweap(d->ai->weappref, m_spawnweapon(world::gamemode, world::mutators)))
+		if(!d->hasweap(d->ai->weappref, m_spawnweapon(game::gamemode, game::mutators)))
 			items(d, b, interests);
-		if(m_ctf(world::gamemode)) ctf::aifind(d, b, interests);
-		if(m_stf(world::gamemode)) stf::aifind(d, b, interests);
-		if(m_team(world::gamemode, world::mutators)) assist(d, b, interests);
+		if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
+		if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
+		if(m_team(game::gamemode, game::mutators)) assist(d, b, interests);
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -406,7 +406,7 @@ namespace ai
 
 	void damaged(gameent *d, gameent *e)
 	{
-		if(d->ai && world::allowmove(d) && targetable(d, e, true)) // see if this ai is interested in a grudge
+		if(d->ai && game::allowmove(d) && targetable(d, e, true)) // see if this ai is interested in a grudge
 		{
 			aistate &b = d->ai->getstate();
 			if(violence(d, b, e, false)) return;
@@ -416,7 +416,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = world::getclient(targets[i])) && t->ai && world::allowmove(t) && targetable(t, e, true))
+			loopv(targets) if((t = game::getclient(targets[i])) && t->ai && game::allowmove(t) && targetable(t, e, true))
 			{
 				aistate &c = t->ai->getstate();
 				if(violence(t, c, e, false)) return;
@@ -429,8 +429,8 @@ namespace ai
 		d->ai->reset(tryreset);
 		aistate &b = d->ai->getstate();
 		b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
-		if(m_noitems(world::gamemode, world::mutators))
-			d->ai->weappref = m_spawnweapon(world::gamemode, world::mutators);
+		if(m_noitems(game::gamemode, game::mutators))
+			d->ai->weappref = m_spawnweapon(game::gamemode, game::mutators);
 		else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->ai->weappref = forcegun;
 		else while(true)
 		{
@@ -451,8 +451,8 @@ namespace ai
 
 	bool check(gameent *d, aistate &b)
 	{
-		if(m_ctf(world::gamemode) && ctf::aicheck(d, b)) return true;
-		if(m_stf(world::gamemode) && stf::aicheck(d, b)) return true;
+		if(m_ctf(game::gamemode) && ctf::aicheck(d, b)) return true;
+		if(m_stf(game::gamemode) && stf::aicheck(d, b)) return true;
 		return false;
 	}
 
@@ -488,13 +488,13 @@ namespace ai
 				}
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
-					if(m_stf(world::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
+					if(m_ctf(game::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
+					if(m_stf(game::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
 					break;
 				}
 				case AI_T_PLAYER:
 				{
-					gameent *e = world::getclient(b.target);
+					gameent *e = game::getclient(b.target);
 					if(e && e->state == CS_ALIVE) return defend(d, b, e->feetpos()) ? 1 : 0;
 					break;
 				}
@@ -508,7 +508,7 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE)
 		{
-			int sweap = m_spawnweapon(world::gamemode, world::mutators);
+			int sweap = m_spawnweapon(game::gamemode, game::mutators);
 			switch(b.targtype)
 			{
 				case AI_T_NODE:
@@ -573,14 +573,14 @@ namespace ai
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(world::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
-					if(m_stf(world::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
+					if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
+					if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
 					break;
 				}
 
 				case AI_T_PLAYER:
 				{
-					gameent *e = world::getclient(b.target);
+					gameent *e = game::getclient(b.target);
 					if(e && e->state == CS_ALIVE) return patrol(d, b, e->feetpos()) ? 1 : 0;
 					break;
 				}
@@ -701,7 +701,7 @@ namespace ai
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		vec dp = d->headpos(), ep = getaimpos(d, e);
-		gameent *h = world::intersectclosest(dp, d->ai->target, d);
+		gameent *h = game::intersectclosest(dp, d->ai->target, d);
 		if(h && !targetable(d, h, true)) return false;
 		float targyaw, targpitch, mindist = d->radius*d->radius, dist = dp.squaredist(ep);
 		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
@@ -762,14 +762,14 @@ namespace ai
 		}
 		else if(hunt(d, b))
 		{
-			world::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
+			game::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
 			d->ai->lasthunt = lastmillis;
 		}
 		else d->ai->dontmove = true;
 		if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 
-		gameent *e = world::getclient(d->ai->enemy);
-		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = world::intersectclosest(dp, d->ai->target, d);
+		gameent *e = game::getclient(d->ai->enemy);
+		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = game::intersectclosest(dp, d->ai->target, d);
 		if(e && targetable(d, e, true))
 		{
 			vec ep = getaimpos(d, e);
@@ -779,8 +779,8 @@ namespace ai
 			if(b.idle || insight || hasseen)
 			{
 				float yaw, pitch;
-				world::getyawpitch(dp, ep, yaw, pitch);
-				world::fixrange(yaw, pitch);
+				game::getyawpitch(dp, ep, yaw, pitch);
+				game::fixrange(yaw, pitch);
 				float sskew = (insight ? 2.f : (hasseen ? 1.f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f);
 				if(b.idle == 1)
 				{
@@ -789,10 +789,10 @@ namespace ai
 					if(!insight) frame /= 3.f;
 				}
 				else if(!insight) frame /= 2.f;
-				world::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
+				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(world::gamemode, world::mutators), lastmillis) && hastarget(d, b, e))
+					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis) && hastarget(d, b, e))
 					{
 						d->attacking = true;
 						d->ai->lastaction = d->attacktime = lastmillis;
@@ -820,9 +820,9 @@ namespace ai
 			frame /= 2.f;
 		}
 
-		world::fixrange(d->ai->targyaw, d->ai->targpitch);
+		game::fixrange(d->ai->targyaw, d->ai->targpitch);
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
-		if(!result) world::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
+		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
 		if(!d->ai->dontmove)
 		{ // our guys move one way.. but turn another?! :)
@@ -845,7 +845,7 @@ namespace ai
 			d->move = ad.move;
 			d->strafe = ad.strafe;
 			d->aimyaw -= ad.offset;
-			world::fixrange(d->aimyaw, d->aimpitch);
+			game::fixrange(d->aimyaw, d->aimpitch);
 		}
 		else d->move = d->strafe = 0;
 		d->ai->dontmove = false;
@@ -855,17 +855,17 @@ namespace ai
 
 	bool request(gameent *d, aistate &b)
 	{
-		int busy = process(d, b), sweap = m_spawnweapon(world::gamemode, world::mutators);
-		if(busy <= 1 && !m_noitems(world::gamemode, world::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.idle)
+		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
+		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.idle)
 		{
 			loopirev(WEAPON_MAX) if(i != WEAPON_GL && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
-				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-world::maptime, i);
+				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
 				d->ai->lastaction = d->reqswitch = lastmillis;
 				break;
 			}
 		}
-		if(world::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->requse < 0)
+		if(game::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->requse < 0)
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -922,7 +922,7 @@ namespace ai
 			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
 			if(weap != d->weapselect && d->canswitch(weap, sweap, lastmillis))
 			{
-				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-world::maptime, weap);
+				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 				d->ai->lastaction = d->reqswitch = lastmillis;
 				return true;
 			}
@@ -930,7 +930,7 @@ namespace ai
 
 		if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1) && d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0)
 		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-world::maptime, d->weapselect);
+			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, d->weapselect);
 			d->ai->lastaction = d->reqreload = lastmillis;
 			return true;
 		}
@@ -942,7 +942,7 @@ namespace ai
 	{
 		vec dp = d->headpos();
 		findorientation(dp, d->yaw, d->pitch, d->ai->target);
-		bool allowmove = world::allowmove(d) && b.type != AI_S_WAIT;
+		bool allowmove = game::allowmove(d) && b.type != AI_S_WAIT;
 		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
 		if(d->state == CS_ALIVE)
 		{
@@ -962,7 +962,7 @@ namespace ai
 					{
 						if(d->ai->tryreset)
 						{
-							world::suicide(d, HIT_LOST); // better off doing something than nothing
+							game::suicide(d, HIT_LOST); // better off doing something than nothing
 							d->ai->reset(false);
 						}
 					}
@@ -984,7 +984,7 @@ namespace ai
 		else
         {
             if(d->ragdoll) cleanragdoll(d);
-            if(d->state == CS_ALIVE && !world::intermission)
+            if(d->state == CS_ALIVE && !game::intermission)
             {
 				physics::move(d, 1, true);
 				entities::checkitems(d);
@@ -996,11 +996,11 @@ namespace ai
 	void avoid()
 	{
 		// guess as to the radius of ai and other critters relying on the avoid set for now
-		float guessradius = world::player1->radius;
+		float guessradius = game::player1->radius;
 		obstacles.clear();
-		loopi(world::numdynents())
+		loopi(game::numdynents())
 		{
-			gameent *d = (gameent *)world::iterdynents(i);
+			gameent *d = (gameent *)game::iterdynents(i);
 			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
 			vec pos = d->feetpos();
 			float limit = guessradius+d->radius;
@@ -1137,10 +1137,10 @@ namespace ai
 		if(aidebug > 1)
 		{
 			int amt[2] = { 0, 0 };
-			loopv(world::players) if(world::players[i] && world::players[i]->ai) amt[0]++;
-			loopv(world::players) if(world::players[i] && world::players[i]->state == CS_ALIVE && world::players[i]->ai)
+			loopv(game::players) if(game::players[i] && game::players[i]->ai) amt[0]++;
+			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE && game::players[i]->ai)
 			{
-				gameent *d = world::players[i];
+				gameent *d = game::players[i];
 				bool top = true;
 				int above = 0;
 				amt[1]++;

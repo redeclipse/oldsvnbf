@@ -53,11 +53,11 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[i];
 			if(skipenemy && f.enemy) continue;
-			if(type == 0 && (!f.owner || f.owner != world::player1->team)) continue;
+			if(type == 0 && (!f.owner || f.owner != game::player1->team)) continue;
 			if(type == 1 && f.owner) continue;
-			if(type == 2 && (!f.owner || f.owner == world::player1->team)) continue;
-			if(type == 3 && (!f.enemy || f.enemy == world::player1->team)) continue;
-			bool blip = f.owner != world::player1->team && f.enemy != world::player1->team;
+			if(type == 2 && (!f.owner || f.owner == game::player1->team)) continue;
+			if(type == 3 && (!f.enemy || f.enemy == game::player1->team)) continue;
+			bool blip = f.owner != game::player1->team && f.enemy != game::player1->team;
 			vec dir(f.o);
 			dir.sub(camera1->o);
 			int colour = teamtype[f.owner].colour;
@@ -83,14 +83,14 @@ namespace stf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(world::player1->state == CS_ALIVE)
+		if(game::player1->state == CS_ALIVE)
 		{
-			loopv(st.flags) if(insideflag(st.flags[i], world::player1) && (st.flags[i].owner == world::player1->team || st.flags[i].enemy == world::player1->team))
+			loopv(st.flags) if(insideflag(st.flags[i], game::player1) && (st.flags[i].owner == game::player1->team || st.flags[i].enemy == game::player1->team))
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("emphasis");
 				int occupy = int((f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f))*50.f);
-				bool overthrow = f.owner && f.enemy == world::player1->team;
+				bool overthrow = f.owner && f.enemy == game::player1->team;
 				ty += draw_textx("Secure \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
 				popfont();
 				break;
@@ -113,12 +113,12 @@ namespace stf
 		loopv(st.flags)
 		{
 			stfstate::flag &f = st.flags[i];
-			bool hasflag = world::player1->state == CS_ALIVE &&
-				insideflag(f, world::player1) && (f.owner == world::player1->team || f.enemy == world::player1->team);
+			bool hasflag = game::player1->state == CS_ALIVE &&
+				insideflag(f, game::player1) && (f.owner == game::player1->team || f.enemy == game::player1->team);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
 			float skew = f.hasflag ? 1.f : 0.75f, fade = blend,
 				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
-			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, delay = lastmillis-world::player1->lastspawn;
+			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, delay = lastmillis-game::player1->lastspawn;
 			if(millis < 500)
 			{
 				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
@@ -126,7 +126,7 @@ namespace stf
 				else skew = 1.f-(amt*0.25f);
 			}
 			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s%d%%", hasflag ? (f.owner && f.enemy == world::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+			sy += hud::drawitem(hud::flagtex(f.owner), x, y-sy, size, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 			if(f.enemy) hud::drawitem(hud::flagtex(f.enemy), x, y-prevsy, int(size*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 		}
         return sy;
@@ -170,14 +170,14 @@ namespace stf
 		{
 			if(b.owner != owner)
 			{
-				world::announce(S_V_FLAGSECURED, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
-				world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
+				game::announce(S_V_FLAGSECURED, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
+				game::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
 			}
 		}
 		else if(b.owner)
 		{
-			world::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
-			world::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
+			game::announce(S_V_FLAGOVERTHROWN, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
+			game::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
 		}
 		b.owner = owner;
 		b.enemy = enemy;
@@ -204,8 +204,8 @@ namespace stf
 			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
-			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
-			loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = e->feetpos();
 				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
@@ -228,7 +228,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			bool regen = !m_regen(world::gamemode, world::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			int walk = 0;
 			if(regen && !f.enemy && f.owner == d->team)
 			{
@@ -236,7 +236,7 @@ namespace stf
 				targets.setsizenodelete(0);
 				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
 				gameent *e = NULL;
-				loopi(world::numdynents()) if((e = (gameent *)world::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))

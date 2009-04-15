@@ -83,7 +83,7 @@ void cleardynlights()
 void updatedynlights()
 {
     cleardynlights();
-    world::adddynlights();
+    game::adddynlights();
 
     loopv(dynlights)
     {

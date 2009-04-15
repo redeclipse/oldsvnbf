@@ -81,7 +81,7 @@ struct partrenderer
 	{
 		o = p->o;
 		d = p->d;
-		world::particletrack(p, type, ts, o, d, lastpass);
+		game::particletrack(p, type, ts, o, d, lastpass);
 		if(p->fade <= 5)
 		{
 			ts = 1;
