@@ -818,6 +818,6 @@ void guiirc(const char *s)
 		if(!ircgui(cgui, s) && shouldclearmenu) clearlater = true;
 	}
 }
-COMMAND(ircgui, "s");
+ICOMMAND(ircgui, "s", (char *s), guiirc(s));
 #endif
 #endif
