@@ -396,7 +396,7 @@ namespace hud
 		{
 			fade = float(lastmillis%1000)/1000.f;
 			if(fade < 0.5f) fade = 1.f-fade;
-			cs = int(max(crosshairsize, clipsize)*hudsize);
+			cs = int(max(crosshairsize, cursorsize)*hudsize);
 		}
 		else if(teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
@@ -1136,24 +1136,21 @@ namespace hud
 
 	void drawinventory(int w, int h, int edge, float blend)
 	{
-		if(showinventory)
+		int cx[2] = { edge, w-edge }, cy[2] = { h-edge, h-edge }, cs = int(inventorysize*w), cr = cs/8, cc = 0;
+		loopi(2) switch(i)
 		{
-			int cx[2] = { edge, w-edge }, cy[2] = { h-edge, h-edge }, cs = int(inventorysize*w), cr = cs/8, cc = 0;
-			loopi(2) switch(i)
+			case 0: default:
 			{
-				case 0: default:
-				{
-					if((cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-					if(!m_edit(game::gamemode) && inventoryscores && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-					break;
-				}
-				case 1:
-				{
-					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-					if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-					if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-					break;
-				}
+				if((cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+				if(!m_edit(game::gamemode) && inventoryscores && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				break;
+			}
+			case 1:
+			{
+				if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+				if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				break;
 			}
 		}
 	}
@@ -1404,7 +1401,7 @@ namespace hud
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if(game::maptime && connected() && client::ready())
 		{
-			int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), secs = game::maptime ? lastmillis-game::maptime : 0;
+			int ox = hudwidth, oy = hudsize, os = int(oy*gapsize);
 			glLoadIdentity();
 			glOrtho(0, ox, oy, 0, -1, 1);
 			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::isthirdperson())))
@@ -1417,13 +1414,12 @@ namespace hud
 					drawtex(0, 0, ox, oy);
 				}
 			}
-			if(secs < titlecard) fade *= clamp(float(secs)/float(titlecard), 0.f, 1.f);
 			if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].snipes)
 				drawsniper(ox, oy, os, fade);
 			if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
 			if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
 			if(game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
-			drawinventory(ox, oy, os, fade);
+			if(showinventory) drawinventory(ox, oy, os, fade);
 		}
 		drawhudelements(w, h);
 		glDisable(GL_BLEND);
