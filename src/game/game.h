@@ -1329,7 +1329,7 @@ namespace hud
 	extern const char *itemtex(int type, int stype);
 }
 
-namespace world
+namespace game
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
 			quakewobble, lastzoom, lastspec, spectvtime,

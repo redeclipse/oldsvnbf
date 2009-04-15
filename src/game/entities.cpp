@@ -49,7 +49,7 @@ namespace entities
 		}
 		else if(type == WEAPON)
 		{
-			int sweap = m_spawnweapon(world::gamemode, world::mutators),
+			int sweap = m_spawnweapon(game::gamemode, game::mutators),
 				attr = weapattr(attr1, sweap);
 			if(isweap(attr))
 			{
@@ -112,7 +112,7 @@ namespace entities
 		{
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = weapattr(attr1, sweap);
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
 				return weaptype[attr].item;
 			}
 			case FLAG: return teamtype[attr2].flag;
@@ -139,11 +139,11 @@ namespace entities
 				proj.state = CS_DEAD;
 			}
 			gameent *f = NULL;
-			loopi(world::numdynents()) if((f = (gameent *)world::iterdynents(i)) && f->type == ENT_PLAYER)
+			loopi(game::numdynents()) if((f = (gameent *)game::iterdynents(i)) && f->type == ENT_PLAYER)
 			{
 				loopk(WEAPON_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 			if(showentdescs)
 			{
 				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
@@ -173,9 +173,9 @@ namespace entities
 			{
 				gameentity &f = *(gameentity *)ents[r];
 				attr = weapattr(f.attr[0], sweap);
-				if(isweap(attr)) projs::drop(d, attr, r, d == world::player1 || d->ai);
+				if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 			}
-			world::spawneffect(pos, 0x6666FF, enttype[e.type].radius);
+			game::spawneffect(pos, 0x6666FF, enttype[e.type].radius);
 			e.spawned = s;
 		}
 	}
@@ -570,12 +570,12 @@ namespace entities
 			{
 				if(d->useaction)
 				{
-					if(world::allowmove(d) && d->requse < 0)
+					if(game::allowmove(d) && d->requse < 0)
 					{
-						int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 						if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis))
 						{
-							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-world::maptime, n);
+							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 							d->requse = lastmillis;
 							d->useaction = false;
 						}
@@ -587,7 +587,7 @@ namespace entities
 			}
 			case EU_AUTO:
 			{
-				if(e.type != TRIGGER || ((e.attr[2] == TA_ACT && d->useaction && d == world::player1) || e.attr[2] == TA_AUTO))
+				if(e.type != TRIGGER || ((e.attr[2] == TA_ACT && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO))
 				{
 					switch(e.type)
 					{
@@ -618,17 +618,17 @@ namespace entities
 											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
 											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 											d->vel.mul(mag);
-											world::fixfullrange(d->yaw, d->pitch, d->roll, true);
+											game::fixfullrange(d->yaw, d->pitch, d->roll, true);
 											f.lastuse = f.lastemit = e.lastemit;
 											execlink(d, n, true);
 											execlink(d, t, true);
-											if(d == world::player1) world::resetcamera();
+											if(d == game::player1) game::resetcamera();
 											teleported = true;
 											break;
 										}
 										teleports.remove(r); // must've really sucked, try another one
 									}
-									if(!teleported) world::suicide(d, HIT_SPAWN);
+									if(!teleported) game::suicide(d, HIT_SPAWN);
 								}
 							}
 							break;
@@ -661,7 +661,7 @@ namespace entities
 									}
 									case TR_SCRIPT:
 									{
-										if(d == world::player1)
+										if(d == game::player1)
 										{
 											defformatstring(s)("on_trigger_%d", e.attr[0]);
 											RUNWORLD(s);
@@ -712,13 +712,13 @@ namespace entities
 				if(ents.inrange(ent)) execitem(ent, d, tried);
 				actitems.pop();
 			}
-			if(tried && d->useaction && d == world::player1)
+			if(tried && d->useaction && d == game::player1)
 			{
 				playsound(S_DENIED, d->o, d);
 				d->useaction = false;
 			}
 		}
-		if(m_ctf(world::gamemode)) ctf::checkflags(d);
+		if(m_ctf(game::gamemode)) ctf::checkflags(d);
 	}
 
 	void putitems(ucharbuf &p)
@@ -759,12 +759,12 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					world::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
+					game::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
 					proj.beenused = true;
 					proj.state = CS_DEAD;
 				}
 				gameent *d = NULL;
-				loopi(world::numdynents()) if((d = (gameent *)world::iterdynents(i)) && d->type == ENT_PLAYER)
+				loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)) && d->type == ENT_PLAYER)
 				{
 					loopk(WEAPON_MAX) if(d->entid[k] == n) d->entid[k] = -1;
 				}
@@ -783,7 +783,7 @@ namespace entities
 
 	bool cansee(const extentity &e)
 	{
-		return (showentinfo || world::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && world::player1->state == CS_EDITING));
+		return (showentinfo || game::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && game::player1->state == CS_EDITING));
 	}
 
 	void fixentity(int n)
@@ -935,7 +935,7 @@ namespace entities
 		d->yaw = yaw;
 		d->pitch = d->roll = 0;
 		d->o = vec(o).add(vec(0, 0, d->height+1));
-		world::fixrange(d->yaw, d->pitch);
+		game::fixrange(d->yaw, d->pitch);
 		return physics::entinmap(d, true);
 	}
 
@@ -944,7 +944,7 @@ namespace entities
 		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return true;
 		if(recover)
 		{
-			if(m_team(world::gamemode, world::mutators))
+			if(m_team(game::gamemode, game::mutators))
 			{
 				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[1] == d->team && tryspawn(d, ents[i]->o, float(ents[i]->attr[0])))
 					return true;
@@ -955,9 +955,9 @@ namespace entities
 			d->o.x *= 0.5f; d->o.y *= 0.5f;
 			if(physics::entinmap(d, false)) return true;
 		}
-		if(!m_edit(world::gamemode) && m_play(world::gamemode) && suicide)
+		if(!m_edit(game::gamemode) && m_play(game::gamemode) && suicide)
 		{
-			world::suicide(d, HIT_SPAWN);
+			game::suicide(d, HIT_SPAWN);
 			return true;
 		}
 		else return true;
@@ -968,7 +968,7 @@ namespace entities
 	{
 		extentity &e = *ents[i];
 		fixentity(i);
-		if(m_edit(world::gamemode))
+		if(m_edit(game::gamemode))
 		{
 			client::addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]); // FIXME
 			clearentcache();
@@ -1018,7 +1018,7 @@ namespace entities
 					e.links.remove(g);
 					if(recip) f.links.remove(h);
 					fixentity(index);
-					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
+					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
 					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
@@ -1027,7 +1027,7 @@ namespace entities
 					f.links.add(index);
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
 					fixentity(node);
-					if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
+					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
 					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
@@ -1037,7 +1037,7 @@ namespace entities
 				f.links.remove(g);
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
 				fixentity(node);
-				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
+				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
 				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
@@ -1046,7 +1046,7 @@ namespace entities
 				e.links.add(node);
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
 				fixentity(index);
-				if(local && m_edit(world::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
+				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
 				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
@@ -1174,7 +1174,7 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v = d->feetpos();
-			bool shoulddrop = (m_play(world::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
+			bool shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 			if(!ents.inrange(curnode) && shoulddrop)
@@ -1428,7 +1428,7 @@ namespace entities
 					e.attr[1] = e.attr[3] = 0; // not set in octa
 					e.attr[2] = 100; // give a push
 					e.attr[4] = 0x11A; // give it a pretty blueish teleport like sauer's
-					e.o.z += world::player1->height/2; // teleport in BF is at middle
+					e.o.z += game::player1->height/2; // teleport in BF is at middle
 					e.mark = false;
 					break;
 				}
@@ -1618,7 +1618,7 @@ namespace entities
 
 	void adddynlights()
 	{
-		if(world::player1->state == CS_EDITING && showlighting)
+		if(game::player1->state == CS_EDITING && showlighting)
 		{
 			#define islightable(q) ((q)->type == LIGHT && (q)->attr[0] > 0)
             loopv(entgroup)
@@ -1635,7 +1635,7 @@ namespace entities
     void preload()
     {
 		static bool weapf[WEAPON_MAX];
-		int sweap = m_spawnweapon(world::gamemode, world::mutators);
+		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		loopi(WEAPON_MAX) weapf[i] = (i == sweap ? true : false);
 		loopv(ents)
 		{
@@ -1662,8 +1662,8 @@ namespace entities
 
  	void update()
 	{
-		entitycheck(world::player1);
-		loopv(world::players) if(world::players[i]) entitycheck(world::players[i]);
+		entitycheck(game::player1);
+		loopv(game::players) if(game::players[i]) entitycheck(game::players[i]);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
@@ -1682,10 +1682,10 @@ namespace entities
 	{
 		if(rendermainview) // important, don't render lines and stuff otherwise!
 		{
-			int level = (m_edit(world::gamemode) ? 2 : ((showentdir == 3  || showentradius == 3 || showentlinks == 3 || dropwaypoints || ai::aidebug >= 6) ? 3 : 0));
+			int level = (m_edit(game::gamemode) ? 2 : ((showentdir == 3  || showentradius == 3 || showentlinks == 3 || dropwaypoints || ai::aidebug >= 6) ? 3 : 0));
 			if(level)
             {
-            	bool editing = world::player1->state == CS_EDITING;
+            	bool editing = game::player1->state == CS_EDITING;
                 loopv(ents)
                 {
                 	int lvl = (editing && (entgroup.find(i) >= 0 || enthover == i)) ? 1 : level;
@@ -1694,13 +1694,13 @@ namespace entities
             }
 		}
 
-		int sweap = m_spawnweapon(world::gamemode, world::mutators);
+		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
 			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned;
-			if(m_edit(world::gamemode) || active)
+			if(m_edit(game::gamemode) || active)
 			{
 				int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 				const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
@@ -1740,14 +1740,14 @@ namespace entities
                 break;
 		}
 
-		bool hasent = false, edit = m_edit(world::gamemode) && cansee(e);
+		bool hasent = false, edit = m_edit(game::gamemode) && cansee(e);
 		vec off(0, 0, 2.f), pos(o);
 		if(enttype[e.type].usetype == EU_ITEM) pos.add(off);
 		if(edit)
 		{
-			hasent = world::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+			hasent = game::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
-			if(showentinfo >= 2 || world::player1->state == CS_EDITING)
+			if(showentinfo >= 2 || game::player1->state == CS_EDITING)
 			{
 				defformatstring(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
@@ -1768,7 +1768,7 @@ namespace entities
 		bool item = showentdescs && enttype[e.type].usetype == EU_ITEM && spawned, notitem = (edit && (showentinfo >= 4 || hasent));
 		if(item || notitem)
 		{
-			int sweap = m_spawnweapon(world::gamemode, world::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attr[0], sweap) : e.attr[0],
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attr[0], sweap) : e.attr[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
 			if(itext && *itext)
@@ -1784,7 +1784,7 @@ namespace entities
 	void drawparticles()
 	{
         float maxdist = float(maxparticledistance)*float(maxparticledistance);
-        int ignoretypes = m_edit(world::gamemode) ? NOTUSED : MAXENTTYPES;
+        int ignoretypes = m_edit(game::gamemode) ? NOTUSED : MAXENTTYPES;
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];

@@ -451,7 +451,7 @@ void entpush(int *dir)
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
 	{
-		physent *player = (physent *)world::iterdynents(0);
+		physent *player = (physent *)game::iterdynents(0);
 		if(!player) player = camera1;
 		player->o[d] += s*sel.grid;
 	}
@@ -462,7 +462,7 @@ void entautoview(int *dir)
 {
 	if(!haveselent()) return;
 	static int s = 0;
-	physent *player = (physent *)world::iterdynents(0);
+	physent *player = (physent *)game::iterdynents(0);
 	if(!player) player = camera1;
 	vec v(player->o);
 	v.sub(worldpos);
@@ -779,7 +779,7 @@ void resetmap(bool empty)
 	pruneundos();
     entities::clearents();
 	clearworldvars();
-	world::resetmap(empty);
+	game::resetmap(empty);
 }
 
 bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty world creation routine
@@ -824,7 +824,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	    persistidents = true;
 	    overrideidents = worldidents = false;
     }
-	world::startmap(nocfg ? "" : "maps/untitled");
+	game::startmap(nocfg ? "" : "maps/untitled");
 	return true;
 }
 
@@ -853,8 +853,8 @@ bool enlargemap(bool force)
 	return true;
 }
 
-ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) world::newmap(::max(*i, 0)));
-ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) world::newmap(-1));
+ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) game::newmap(::max(*i, 0)));
+ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) game::newmap(-1));
 ICOMMAND(mapsize, "", (void),
 {
     int size = 0;

@@ -85,7 +85,7 @@ struct md3 : vertmodel
                 md3meshheader mheader;
                 f->seek(mesh_offset, SEEK_SET);
                 f->read(&mheader, sizeof(md3meshheader));
-                lilswap(&mheader.flags, 10); 
+                lilswap(&mheader.flags, 10);
 
                 m.name = newstring(mheader.name);
 
@@ -102,12 +102,12 @@ struct md3 : vertmodel
 
                 m.numverts = mheader.numvertices;
                 m.tcverts = new tcvert[m.numverts];
-                f->seek(mesh_offset + mheader.ofs_uv , SEEK_SET); 
+                f->seek(mesh_offset + mheader.ofs_uv , SEEK_SET);
                 f->read(m.tcverts, m.numverts*2*sizeof(float)); // read the UV data
                 lilswap(&m.tcverts[0].u, 2*m.numverts);
 
                 m.verts = new vert[numframes*m.numverts];
-                f->seek(mesh_offset + mheader.ofs_vertices, SEEK_SET); 
+                f->seek(mesh_offset + mheader.ofs_vertices, SEEK_SET);
                 loopj(numframes*m.numverts)
                 {
                     md3vertex v;
@@ -367,7 +367,7 @@ void md3anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
     if(!loadingmd3 || loadingmd3->parts.empty()) { conoutf("\frnot loading an md3"); return; }
     vector<int> anims;
-    world::findanims(anim, anims);
+    game::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd3->loadname);
     else loopv(anims)
     {

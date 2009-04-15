@@ -448,10 +448,10 @@ struct md5 : skelmodel
             loadingmd5 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
-        else // md5 without configuration, try default tris and skin 
+        else // md5 without configuration, try default tris and skin
         {
             persistidents = true;
-            if(!loaddefaultparts()) 
+            if(!loaddefaultparts())
             {
                 loadingmd5 = NULL;
                 return false;
@@ -464,7 +464,7 @@ struct md5 : skelmodel
         {
             skelpart *p = (skelpart *)parts[i];
             p->endanimparts();
-            p->meshes->shared++;    
+            p->meshes->shared++;
         }
         preloadshaders();
         return loaded = true;
@@ -657,7 +657,7 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     if(!loadingmd5 || loadingmd5->parts.empty()) { conoutf("\frnot loading an md5"); return; }
 
     vector<int> anims;
-    world::findanims(anim, anims);
+    game::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd5->loadname);
     else
     {

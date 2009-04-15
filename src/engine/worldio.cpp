@@ -528,7 +528,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
     }
 
 	renderprogress(0, "saving world...");
-	world::saveworld(f);
+	game::saveworld(f);
 	delete f;
 
 	conoutf("\fwsaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
@@ -1007,7 +1007,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			if(verbose) conoutf("\fwloaded %d lightmaps", hdr.lightmaps);
 
 			renderprogress(0, "loading world...");
-			world::loadworld(f, maptype);
+			game::loadworld(f, maptype);
 
 			overrideidents = worldidents = true;
 			persistidents = false;
@@ -1079,7 +1079,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
 			renderprogress(0, "starting world...");
-			world::startmap(mapname);
+			game::startmap(mapname);
 			return true;
 		}
 	}

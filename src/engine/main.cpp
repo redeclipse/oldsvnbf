@@ -508,7 +508,7 @@ void checkinput()
 					//conoutf("mouse: %d %d, %d %d [%s, %d]", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, warpmouse ? "true" : "false", ignoremouse);
 					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2) warpmouse = false;
 					else if(ignoremouse) ignoremouse--;
-					else if(world::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
+					else if(game::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
 						resetcursor(true, false); // game controls engine cursor
 				}
 				break;
@@ -967,7 +967,7 @@ int main(int argc, char **argv)
         if(frameloops)
         {
             RUNWORLD("on_update");
-            world::updateworld();
+            game::updateworld();
         }
 
 		checksleep(lastmillis);
@@ -977,7 +977,7 @@ int main(int argc, char **argv)
 #endif
 		if(frameloops)
 		{
-			world::recomputecamera(screen->w, screen->h);
+			game::recomputecamera(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();
 			updateparticles();
@@ -991,7 +991,7 @@ int main(int argc, char **argv)
             }
 			swapbuffers();
 			inbetweenframes = true;
-			defformatstring(cap)("%s - %s", world::gametitle(), world::gametext());
+			defformatstring(cap)("%s - %s", game::gametitle(), game::gametext());
 			setcaption(cap);
 		}
 	}

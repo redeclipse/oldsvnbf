@@ -148,7 +148,7 @@ struct md2 : vertmodel
             meshes.add(&m);
 
             int *glcommands = new int[header.numglcommands];
-            file->seek(header.offsetglcommands, SEEK_SET); 
+            file->seek(header.offsetglcommands, SEEK_SET);
             int numglcommands = file->read(glcommands, header.numglcommands*sizeof(int))/sizeof(int);
             lilswap(glcommands, numglcommands);
             if(numglcommands < header.numglcommands) memset(&glcommands[numglcommands], 0, (header.numglcommands-numglcommands)*sizeof(int));
@@ -269,7 +269,7 @@ void md2anim(char *anim, int *frame, int *range, float *speed, int *priority)
 {
     if(!loadingmd2 || loadingmd2->parts.empty()) { conoutf("\frnot loading an md2"); return; }
     vector<int> anims;
-    world::findanims(anim, anims);
+    game::findanims(anim, anims);
     if(anims.empty()) conoutf("\frcould not find animation %s in %s", anim, loadingmd2->loadname);
     else loopv(anims)
     {

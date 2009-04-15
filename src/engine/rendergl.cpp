@@ -1015,13 +1015,13 @@ bool renderedgame = false, renderedavatar = false;
 
 void rendergame()
 {
-    world::render();
+    game::render();
     if(!shadowmapping) renderedgame = true;
 }
 
 void renderavatar(bool early)
 {
-    world::renderavatar(early);
+    game::renderavatar(early);
 }
 
 extern void viewproject(float zscale = 1);
@@ -1057,7 +1057,7 @@ void drawglare()
     rendermaterials();
     renderparticles();
 
-    if(world::isthirdperson()) renderavatar(false);
+    if(game::isthirdperson()) renderavatar(false);
     else
     {
         viewproject(firstpersondepth);
@@ -1172,7 +1172,7 @@ void drawreflection(float z, bool refract, bool clear)
     rendermaterials();
     renderparticles();
 
-    if(world::isthirdperson() || reflecting) renderavatar(false);
+    if(game::isthirdperson() || reflecting) renderavatar(false);
 
     if(fading) glColorMask(COLORMASK, GL_TRUE);
 
@@ -2027,7 +2027,7 @@ void drawview(int targtype)
 	rendermaterials();
 	renderparticles(true);
 
-    if(world::isthirdperson()) renderavatar(false);
+    if(game::isthirdperson()) renderavatar(false);
     else
     {
         viewproject(0.5f);
@@ -2154,7 +2154,7 @@ void gl_drawframe(int w, int h)
 		project(fovy, aspect, farplane);
 		transplayer();
 		readmatrices();
-		world::project(w, h);
+		game::project(w, h);
 
 		int copies = 0, oldcurtime = curtime;
 		loopi(VP_MAX) if(needsview(viewtype, i))

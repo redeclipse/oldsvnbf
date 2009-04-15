@@ -804,7 +804,7 @@ struct animmodel : model
                 conoutf("invalid frame %d, range %d in model %s", frame, range, model->loadname);
                 return;
             }
-            if(!anims[animpart]) anims[animpart] = new vector<animspec>[world::numanims()];
+            if(!anims[animpart]) anims[animpart] = new vector<animspec>[game::numanims()];
             animspec &spec = anims[animpart][num].add();
             spec.frame = frame;
             spec.range = range;

@@ -54,7 +54,6 @@ void conoutf(const char *s, ...)
 }
 
 VARP(verbose, 0, 0, 6);
-SVAR(game, "bfa");
 
 #ifdef STANDALONE
 void servertoclient(int chan, uchar *buf, int len) {}
@@ -713,7 +712,7 @@ void setupserver()
 		enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
 	}
 
-	if(verbose) conoutf("\fggame server for %s started", game);
+	if(verbose) conoutf("\fggame server started");
 
 #ifndef STANDALONE
 	if(servertype >= 3) serverloop();
@@ -724,12 +723,12 @@ void initgame()
 {
 	server::start();
 #ifndef STANDALONE
-	world::start();
+	game::start();
 #endif
 	loopv(gameargs)
 	{
 #ifndef STANDALONE
-		if(world::clientoption(gameargs[i])) continue;
+		if(game::clientoption(gameargs[i])) continue;
 #endif
 		if(server::serveroption(gameargs[i])) continue;
 		conoutf("\frunknown command-line option: %s", gameargs[i]);
@@ -743,7 +742,6 @@ bool serveroption(char *opt)
 	switch(opt[1])
 	{
 		case 'k': kidmode = atoi(opt+2); return true;
-		case 'g': setsvar("game", opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;

@@ -34,8 +34,8 @@ namespace physics
 	#define imov(name,v,d,s,os) \
 		void do##name(bool down) \
 		{ \
-			world::player1->s = down; \
-			world::player1->v = world::player1->s ? d : (world::player1->os ? -(d) : 0); \
+			game::player1->s = down; \
+			game::player1->v = game::player1->s ? d : (game::player1->os ? -(d) : 0); \
 		} \
 		ICOMMAND(name, "D", (int *down), { do##name(*down!=0); });
 
@@ -48,25 +48,25 @@ namespace physics
 	#define iput(x,y,t,z,a) \
 		void do##x(bool down) \
 		{ \
-			if(world::allowmove(world::player1)) \
+			if(game::allowmove(game::player1)) \
 			{ \
 				if(a) \
 				{ \
-					if(world::player1->y != down) \
+					if(game::player1->y != down) \
 					{ \
-						if(world::player1->t >= 0) world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
-						else if(down) world::player1->t = -world::player1->t; \
+						if(game::player1->t >= 0) game::player1->t = lastmillis-max(a-(lastmillis-game::player1->t), 0); \
+						else if(down) game::player1->t = -game::player1->t; \
 					} \
 				} \
-				else if(down) world::player1->t = lastmillis; \
-				world::player1->y = down; \
+				else if(down) game::player1->t = lastmillis; \
+				game::player1->y = down; \
 			} \
 			else \
 			{ \
-				if(a && world::player1->y && world::player1->t >= 0) \
-					world::player1->t = lastmillis-max(a-(lastmillis-world::player1->t), 0); \
-				world::player1->y = false; \
-				if(z && down) world::respawn(world::player1); \
+				if(a && game::player1->y && game::player1->t >= 0) \
+					game::player1->t = lastmillis-max(a-(lastmillis-game::player1->t), 0); \
+				game::player1->y = false; \
+				if(z && down) game::respawn(game::player1); \
 			} \
 		} \
 		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
@@ -84,7 +84,7 @@ namespace physics
 		d->lasttaunt = lastmillis;
 		client::addmsg(SV_TAUNT, "ri", d->clientnum);
 	}
-	ICOMMAND(taunt, "", (), { taunt(world::player1); });
+	ICOMMAND(taunt, "", (), { taunt(game::player1); });
 
 	bool issolid(physent *d)
 	{
@@ -138,7 +138,7 @@ namespace physics
 	{
 		if(d->type == ENT_CAMERA)
 		{
-			if(world::player1->state == CS_WAITING) return m_speedscale(world::player1->maxspeed)*(world::player1->weight/100.f);
+			if(game::player1->state == CS_WAITING) return m_speedscale(game::player1->maxspeed)*(game::player1->weight/100.f);
 			else return d->maxspeed*(d->weight/100.f);
 		}
 		else if(d->type == ENT_PLAYER)
@@ -502,7 +502,7 @@ namespace physics
 		if(floating)
 		{
 			pl->lastimpulse = 0;
-			if(world::allowmove(pl) && pl->jumping)
+			if(game::allowmove(pl) && pl->jumping)
 			{
 				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
 				pl->jumping = false;
@@ -512,7 +512,7 @@ namespace physics
         else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
 		{
 			pl->lastimpulse = 0;
-			if(world::allowmove(pl) && pl->jumping)
+			if(game::allowmove(pl) && pl->jumping)
 			{
 				pl->falling = vec(0, 0, 0);
 				pl->vel.z += max(pl->vel.z, 0.f) + jumpvelocity(pl);
@@ -521,12 +521,12 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER)
 				{
 					playsound(S_JUMP, pl->o, pl);
-					world::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 250, 1.f);
+					game::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 250, 1.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
 		}
-		else if(world::allowmove(pl) && pl->jumping && canimpulse(pl))
+		else if(game::allowmove(pl) && pl->jumping && canimpulse(pl))
 		{
 			vec dir;
 			vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
@@ -538,14 +538,14 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				world::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 250, 1.f);
+				game::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 250, 1.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
 		vec m(0.0f, 0.0f, 0.0f);
-        bool wantsmove = world::allowmove(pl) && (pl->move || pl->strafe);
+        bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
 		if(m.iszero() && wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
@@ -606,7 +606,7 @@ namespace physics
 			#define mattrig(mo,mcol,ms,mt,mz,mw) \
 			{ \
 				int col = (int(mcol[2]) + (int(mcol[1]) << 8) + (int(mcol[0]) << 16)); \
-				world::spawneffect(mo, col, mt, m_speedtimex(mz), ms); \
+				game::spawneffect(mo, col, mt, m_speedtimex(mz), ms); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
@@ -621,7 +621,7 @@ namespace physics
 					pl->vel.mul(liquidscale);
 
 				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
-					world::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
+					game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 			}
 		}
 		pl->inmaterial = material;
@@ -693,7 +693,7 @@ namespace physics
 
             if(local && pl->o.z < 0)
             {
-                world::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
+                game::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
                 return false;
             }
         }

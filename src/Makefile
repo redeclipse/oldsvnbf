@@ -71,13 +71,13 @@ CLIENT_OBJS= \
 	game/client.o \
 	game/ctf.o \
 	game/entities.o \
+	game/game.o
 	game/hud.o \
 	game/physics.o \
 	game/projs.o \
 	game/server.o \
 	game/stf.o \
 	game/weapons.o \
-	game/world.o
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
@@ -388,6 +388,11 @@ game/entities.o: shared/iengine.h shared/igame.h engine/sound.h
 game/entities.o: engine/world.h engine/octa.h engine/lightmap.h engine/bih.h
 game/entities.o: engine/texture.h engine/model.h game/ctf.h game/stf.h
 game/entities.o: game/vars.h game/scoreboard.h
+game/game.o: game/game.h engine/engine.h shared/cube.h shared/tools.h
+game/game.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
+game/game.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
+game/game.o: engine/lightmap.h engine/bih.h engine/texture.h engine/model.h
+game/game.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 game/hud.o: game/game.h engine/engine.h shared/cube.h shared/tools.h
 game/hud.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
 game/hud.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
@@ -422,11 +427,6 @@ game/weapons.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
 game/weapons.o: engine/lightmap.h engine/bih.h engine/texture.h
 game/weapons.o: engine/model.h game/ctf.h game/stf.h game/vars.h
 game/weapons.o: game/scoreboard.h
-game/world.o: game/game.h engine/engine.h shared/cube.h shared/tools.h
-game/world.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
-game/world.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
-game/world.o: engine/lightmap.h engine/bih.h engine/texture.h engine/model.h
-game/world.o: game/ctf.h game/stf.h game/vars.h game/scoreboard.h
 
 shared/crypto-standalone.o: shared/cube.h shared/tools.h shared/command.h
 shared/crypto-standalone.o: shared/geom.h shared/ents.h shared/iengine.h

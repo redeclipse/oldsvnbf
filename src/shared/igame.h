@@ -73,7 +73,7 @@ namespace physics
     extern void updateragdoll(dynent *d, const vec &center, float radius);
 }
 
-namespace world
+namespace game
 {
 	extern bool clientoption(char *arg);
 	extern void updateworld();
