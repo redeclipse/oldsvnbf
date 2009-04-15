@@ -70,7 +70,7 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.025f, 1000);
+	FVARP(indicatorsize, 0, 0.021f, 1000);
 	FVARP(indicatorblend, 0, 0.75f, 1);
 	VARP(teamindicator, 0, 1, 1);
 	FVARP(teamindicatorsize, 0, 0.0575f, 1000);
