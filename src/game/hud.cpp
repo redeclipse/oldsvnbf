@@ -166,7 +166,7 @@ namespace hud
 	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
 
-	VARP(showborder, 0, 2, 2);
+	VARP(textureborder, 0, 0, 2);
 	FVARP(borderblend, 0, 0.5f, 1);
 	FVARP(bordersize, 0, 0.0075f, 1000);
 	TVAR(hudtex, "textures/hud", 3);
@@ -188,6 +188,18 @@ namespace hud
 	}
 	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
 	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
+
+	void drawblend(int x, int y, int w, int h, float r, float g, float b)
+	{
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+		glColor3f(r, g, b);
+		glBegin(GL_QUADS);
+		glVertex2f(x, y); glVertex2f(w, y);
+		glVertex2f(w, h); glVertex2f(x, h);
+		glEnd();
+        glDisable(GL_BLEND);
+	}
 
 	void colourskew(float &r, float &g, float &b, float skew)
 	{
@@ -1178,13 +1190,13 @@ namespace hud
 				}
 			}
 		}
-		if(showborder)
+		if(textureborder)
 		{
 			int s = edge/2;
 			float r = 1.f, g = 1.f, b = 1.f;
 			skewcolour(r, g, b, true);
 			settexture(hudtex, 3);
-			glColor4f(r, g, b, borderblend*hudblend);
+			glColor4f(r, g, b, borderblend*blend);
 
 			drawhudpat(0, 0, s, s, HP_TOP_CORNER);
 			drawhudpat(0, h-s, s, s, HP_BOTTOM_CORNER);
@@ -1192,7 +1204,7 @@ namespace hud
 			drawhudpat(w-s, 0, s, s, HP_TOP_CORNER, true);
 			drawhudpat(w-s, h-s, s, s, HP_BOTTOM_CORNER, true);
 
-			if(showborder >= 2)
+			if(textureborder >= 2)
 			{
 				drawhudpat(0, s, s, cy[0]-s, HP_SIDE_RUN);
 				drawhudpat(0, cy[0], s, s, HP_MIDDLE_INTERSECT);
@@ -1409,13 +1421,68 @@ namespace hud
 		popfont();
 	}
 
+	bool drawblendcolour()
+	{
+		return false;
+	}
+
 	void drawhud(int w, int h)
 	{
+		float fade = hudblend;
+		bool texturing = true;
+		if(!game::maptime || lastmillis-game::maptime < titlecard)
+		{
+			float amt = game::maptime ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
+			if(amt < 1.f)
+			{
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, amt, amt, amt);
+				fade *= amt;
+			}
+		}
+		else if(game::tvmode())
+		{
+			float amt = 1.f;
+			int millis = game::spectvtime ? min(game::spectvtime/10, 500) : 500, interval = lastmillis-game::lastspec;
+			if(!game::lastspec || interval < millis) amt = game::lastspec ? float(interval)/float(millis) : 0.f;
+			else if(game::spectvtime && interval > game::spectvtime-millis) amt = float(game::spectvtime-interval)/float(millis);
+			if(amt < 1.f)
+			{
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, amt, amt, amt);
+				fade *= amt;
+			}
+		}
+		else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
+		{
+			float amt = (lastmillis-game::player1->lastspawn)/500.f;
+			if(amt < 2.f)
+			{
+				float r = 1.f, g = 1.f, b = 1.f;
+				skewcolour(r, g, b, true);
+				fade *= amt*0.5f;
+				if(amt < 1.f)
+				{
+					r *= amt;
+					g *= amt;
+					b *= amt;
+				}
+				else
+				{
+					amt = amt-1.f;
+					r += (1.f-r)*amt;
+					g += (1.f-g)*amt;
+					b += (1.f-b)*amt;
+				}
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, r, g, b);
+			}
+		}
+		if(!texturing) usetexturing(true);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		if(game::maptime && connected() && client::ready())
 		{
-			float fade = hudblend;
 			int ox = hudwidth, oy = hudsize, os = int(oy*bordersize), secs = game::maptime ? lastmillis-game::maptime : 0;
 			glLoadIdentity();
 			glOrtho(0, ox, oy, 0, -1, 1);
@@ -1441,32 +1508,5 @@ namespace hud
 		glDisable(GL_BLEND);
 	}
 
-	bool getcolour(vec &colour)
-	{
-		if(!game::maptime || lastmillis-game::maptime < titlecard)
-		{
-			float fade = game::maptime ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
-			if(fade < 1.f)
-			{
-				colour = vec(fade, fade, fade);
-				return true;
-			}
-		}
-		if(game::tvmode())
-		{
-			float fade = 1.f;
-			int millis = game::spectvtime ? min(game::spectvtime/10, 500) : 500, interval = lastmillis-game::lastspec;
-			if(!game::lastspec || interval < millis)
-				fade = game::lastspec ? float(interval)/float(millis) : 0.f;
-			else if(game::spectvtime && interval > game::spectvtime-millis)
-				fade = float(game::spectvtime-interval)/float(millis);
-			if(fade < 1.f)
-			{
-				colour = vec(fade, fade, fade);
-				return true;
-			}
-		}
-		return false;
-	}
 	void gamemenus() { sb.show(); }
 }

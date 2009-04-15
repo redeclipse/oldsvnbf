@@ -3034,13 +3034,13 @@ namespace server
 						relayf(2, "\fm%s is now known as %s", oldname, newname);
 					}
 					copystring(ci->name, text, MAXNAMELEN+1);
-					int team = getint(p), newteam = team;
+					int team = getint(p);
 					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
-						newteam = chooseteam(ci, team);
-					if(team != newteam)
+						team = chooseteam(ci, team);
+					if(ci->team != team)
 					{
-						setteam(ci, newteam);
-						sendf(sender, 1, "ri3", SV_SETTEAM, sender, newteam);
+						setteam(ci, team);
+						sendf(sender, 1, "ri3", SV_SETTEAM, sender, team);
 					}
                     sendinitc2s(ci);
 					break;
