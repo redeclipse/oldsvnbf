@@ -71,13 +71,14 @@ CLIENT_OBJS= \
 	game/client.o \
 	game/ctf.o \
 	game/entities.o \
-	game/game.o
+	game/game.o \
 	game/hud.o \
 	game/physics.o \
 	game/projs.o \
 	game/server.o \
 	game/stf.o \
-	game/weapons.o \
+	game/weapons.o
+	
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
