@@ -852,6 +852,10 @@ namespace game
         }
     }
 
+    void dynlighttrack(physent *owner, vec &o)
+    {
+    }
+
 	void newmap(int size)
 	{
 		client::addmsg(SV_NEWMAP, "ri", size);
