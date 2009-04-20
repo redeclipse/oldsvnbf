@@ -61,7 +61,7 @@ struct vec
         rescale(sqrtf(max(m - k*k, 0.0f)));
         return *this;
     }
-    void lerp(const vec &a, const vec &b, float t) { x = a.x*(1-t)+b.x*t; y = a.y*(1-t)+b.y*t; z = a.z*(1-t)+b.z*t; }
+    void lerp(const vec &a, const vec &b, float t) { x = a.x + (b.x-a.x)*t; y = a.y + (b.y-a.y)*t; z = a.z + (b.z-a.z)*t; }
 
     vec &rescale(float k)
     {
@@ -156,15 +156,15 @@ struct vec4
     float magnitude3() const { return sqrtf(dot3(*this)); }
     vec4 &normalize() { mul(1/magnitude()); return *this; }
 
-    void lerp(const vec4 &a, const vec4 &b, float t) 
-    { 
-        x = a.x*(1-t)+b.x*t; 
-        y = a.y*(1-t)+b.y*t; 
-        z = a.z*(1-t)+b.z*t;
-        w = a.w*(1-t)+b.w*t;
+    void lerp(const vec4 &a, const vec4 &b, float t)
+    {
+        x = a.x+(b.x-a.x)*t;
+        y = a.y+(b.y-a.y)*t;
+        z = a.z+(b.z-a.z)*t;
+        w = a.w+(b.w-b.w)*t;
     }
 
-    vec4 &mul3(float f)       { x *= f; y *= f; z *= f; return *this; }
+    vec4 &mul3(float f)      { x *= f; y *= f; z *= f; return *this; }
     vec4 &mul(float f)       { mul3(f); w *= f; return *this; }
     vec4 &add(const vec4 &o) { x += o.x; y += o.y; z += o.z; w += o.w; return *this; }
     vec4 &addw(float f)      { w += f; return *this; }
@@ -236,7 +236,7 @@ struct quat : vec4
     void slerp(const quat &from, const quat &to, float t)
     {
         float cosomega = from.dot(to), fromk, tok = 1;
-        if(cosomega<0) { cosomega = -cosomega; tok = -1; }
+        if(cosomega < 0) { cosomega = -cosomega; tok = -1; }
 
         if(cosomega > 1 - 1e-6) { fromk = 1-t; tok *= t; }
         else
@@ -591,9 +591,9 @@ struct matrix3x4
     {
         loopi(4)
         {
-            a[i] += to.a[i]*t + from.a[i]*(1-t);
-            b[i] += to.b[i]*t + from.b[i]*(1-t);
-            c[i] += to.c[i]*t + from.c[i]*(1-t);
+            a[i] += from.a[i] + (to.a[i]-from.a[i])*t;
+            b[i] += from.b[i] + (to.b[i]-from.b[i])*t;
+            c[i] += from.c[i] + (to.c[i]-from.c[i])*t;
         }
     }
 
