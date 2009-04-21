@@ -112,6 +112,7 @@ extern int getvarmax(const char *name);
 extern bool identexists(const char *name);
 extern ident *getident(const char *name);
 extern bool addcommand(const char *name, void (*fun)(), const char *narg);
+
 extern int execute(const char *p);
 extern char *executeret(const char *p);
 extern void exec(const char *cfgfile);
@@ -124,12 +125,15 @@ extern bool overrideidents, persistidents, worldidents, interactive;
 
 extern char *parseword(const char *&p, int arg, int &infix);
 extern char *parsetext(const char *&p);
+extern void writeescapedstring(stream *f, const char *s);
 extern void explodelist(const char *s, vector<char *> &elems);
 extern int listlen(const char *s);
 extern char *indexlist(const char *s, int pos);
 
 extern void clearoverrides();
+#ifndef STANDALONE
 extern void writecfg();
+#endif
 
 extern void checksleep(int millis);
 extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);

@@ -282,6 +282,11 @@ void saveslotconfig(stream *h, Slot &s, int index)
     h->printf("\n");
 }
 
+static int sortidents(ident **x, ident **y) // not sure if there's a way to extern this when it needs to be static? --quin
+{
+    return strcmp((*x)->name, (*y)->name);
+}
+
 void save_config(char *mname)
 {
 	backup(mname, ".cfg", hdr.revision);
@@ -294,26 +299,33 @@ void save_config(char *mname)
 
 	int vars = 0;
 	h->printf("// Variables stored in map file, may be uncommented here, or changed from editmode.\n");
-	enumerate(*idents, ident, id, {
+    vector<ident *> ids;
+    enumerate(*idents, ident, id, ids.add(&id));
+    ids.sort(sortidents);
+    loopv(ids)
+    {
+        ident &id = *ids[i];
 		if(id.flags&IDF_WORLD) switch(id.type)
 		{
             case ID_VAR: h->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "// %s 0x%.6X\n" : "// %s 0x%X\n") : "// %s %d\n"), id.name, *id.storage.i); vars++;break;
             case ID_FVAR: h->printf("// %s %s\n", id.name, floatstr(*id.storage.f)); vars++; break;
-            case ID_SVAR: h->printf("// %s [%s]\n", id.name, *id.storage.s); vars++;break;
+            case ID_SVAR: h->printf("%s ", id.name); writeescapedstring(h, *id.storage.s); h->putchar('\n'); vars++; break;
 			default: break;
 		}
-	});
+	}
 	if(vars) h->printf("\n");
 	if(verbose >= 2) conoutf("\fwwrote %d variable values", vars);
 
 	int aliases = 0;
-	enumerate(*idents, ident, id, {
+    loopv(ids)
+    {
+        ident &id = *ids[i];
 		if(id.type == ID_ALIAS && id.flags&IDF_WORLD && strlen(id.name) && strlen(id.action))
 		{
 			aliases++;
             h->printf("\"%s\" = [%s]\n", id.name, id.action);
 		}
-	});
+	}
 	if(aliases) h->printf("\n");
 	if(verbose >= 2) conoutf("\fwsaved %d aliases", aliases);
 
