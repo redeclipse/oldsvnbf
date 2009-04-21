@@ -1165,7 +1165,7 @@ void autograss(char *name)
 {
 	Slot &s = slots.last();
 	DELETEA(s.autograss);
-	s.autograss = newstring(name[0] ? name : "textures/grass");
+	s.autograss = name[0] ? newstring(name) : NULL;
 }
 COMMAND(autograss, "s");
 
