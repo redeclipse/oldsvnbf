@@ -675,6 +675,11 @@
 			<Option target="client-prof" />
 			<Option target="server-dbg" />
 		</Unit>
+		<Unit filename="game\game.cpp">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="game\game.h">
 			<Option compile="1" />
 			<Option weight="0" />
@@ -738,11 +743,6 @@
 			<Option target="server-dbg" />
 		</Unit>
 		<Unit filename="game\weapons.cpp">
-			<Option target="client" />
-			<Option target="client-dbg" />
-			<Option target="client-prof" />
-		</Unit>
-		<Unit filename="game\world.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="client-prof" />

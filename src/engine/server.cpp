@@ -201,9 +201,6 @@ void cleanupserver()
 #ifdef IRC
 	irccleanup();
 #endif
-#ifdef STANDALONE
-	writecfg();
-#endif
 }
 
 void process(ENetPacket *packet, int sender, int chan);

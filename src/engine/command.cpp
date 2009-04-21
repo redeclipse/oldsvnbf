@@ -29,36 +29,38 @@ void clear_command()
 	if(idents) idents->clear();
 }
 
+void clearoverride(ident &i)
+{
+    if(i.override==NO_OVERRIDE) return;
+	switch(i.type)
+	{
+		case ID_ALIAS:
+			if(i.action[0])
+			{
+				if(i.action != i.isexecuting) delete[] i.action;
+				i.action = newstring("");
+			}
+			break;
+		case ID_VAR:
+			*i.storage.i = i.overrideval.i;
+			i.changed();
+			break;
+		case ID_FVAR:
+			*i.storage.f = i.overrideval.f;
+			i.changed();
+			break;
+		case ID_SVAR:
+			delete[] *i.storage.s;
+			*i.storage.s = i.overrideval.s;
+			i.changed();
+			break;
+	}
+	i.override = NO_OVERRIDE;
+}
+
 void clearoverrides()
 {
-	enumerate(*idents, ident, i,
-		if(i.override!=NO_OVERRIDE)
-		{
-			switch(i.type)
-			{
-				case ID_ALIAS:
-					if(i.action[0])
-					{
-						if(i.action != i.isexecuting) delete[] i.action;
-						i.action = newstring("");
-					}
-					break;
-				case ID_VAR:
-					*i.storage.i = i.overrideval.i;
-					i.changed();
-					break;
-				case ID_FVAR:
-					*i.storage.f = i.overrideval.f;
-					i.changed();
-					break;
-				case ID_SVAR:
-					delete[] *i.storage.s;
-					*i.storage.s = i.overrideval.s;
-					i.changed();
-					break;
-			}
-			i.override = NO_OVERRIDE;
-		});
+    enumerate(*idents, ident, i, clearoverride(i));
 }
 
 void pushident(ident &id, char *val)
@@ -111,8 +113,18 @@ void pop(char *name)
 	if(id) popident(*id);
 }
 
+void resetvar(char *name)
+{
+    ident *id = idents->access(name);
+    if(!id) return;
+    //if(id->flags&IDF_READONLY) conoutf("variable %s is read-only", id->name);
+    //else
+    clearoverride(*id);
+}
+
 COMMAND(push, "ss");
 COMMAND(pop, "s");
+COMMAND(resetvar, "s");
 
 void aliasa(const char *name, char *action)
 {
@@ -778,12 +790,25 @@ static int sortidents(ident **x, ident **y)
 {
     return strcmp((*x)->name, (*y)->name);
 }
-#endif
+
+void writeescapedstring(stream *f, const char *s)
+{
+    f->putchar('"');
+    for(; *s; s++) switch(*s)
+    {
+        case '\n': f->write("^n", 2); break;
+        case '\t': f->write("^t", 2); break;
+        case '\f': f->write("^f", 2); break;
+        case '"': f->write("^\"", 2); break;
+        default: f->putchar(*s); break;
+    }
+    f->putchar('"');
+}
 
 void writecfg()
 {
-#ifndef STANDALONE
 	stream *f = openfile("config.cfg", "w");
+
 	if(!f) return;
 	client::writeclientinfo(f);
 	f->printf("if (= $version %d) [\n", ENG_VERSION);
@@ -798,7 +823,7 @@ void writecfg()
 		{
 			case ID_VAR: saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); break;
 			case ID_FVAR: saved = true; f->printf("\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
-			case ID_SVAR: saved = true; f->printf("\t%s [%s]\n", id.name, *id.storage.s); break;
+			case ID_SVAR: saved = true; f->printf("\t%s ", id.name); writeescapedstring(f, *id.storage.s); f->putchar('\n'); break;
 		}
         if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
 	}
@@ -824,10 +849,10 @@ void writecfg()
 	writecompletions(f);
 	f->printf("] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
 	delete f;
-#endif
 }
 
 COMMAND(writecfg, "");
+#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
@@ -933,6 +958,32 @@ int listlen(const char *s)
 	return n;
 }
 
+void at(char *s, int *pos)
+{
+	commandret = indexlist(s, *pos);
+}
+
+void substr(char *s, int *start, int *count)
+{
+	int len = strlen(s), offset = clamp(*start, 0, len);
+	commandret = newstring(&s[offset], *count <= 0 ? len - offset : min(*count, len - offset));
+}
+
+void getalias_(char *s)
+{
+	result(getalias(s));
+}
+
+COMMAND(exec, "s");
+COMMAND(concat, "C");
+COMMAND(result, "s");
+COMMAND(concatword, "V");
+COMMAND(format, "V");
+COMMAND(at, "si");
+COMMAND(substr, "sii");
+ICOMMAND(listlen, "s", (char *s), intret(listlen(s)));
+COMMANDN(getalias, getalias_, "s");
+
 void looplist(const char *var, const char *list, const char *body, bool search)
 {
     ident *id = newident(var);
@@ -953,9 +1004,6 @@ void looplist(const char *var, const char *list, const char *body, bool search)
     }
     if(n) popident(*id);
 }
-
-ICOMMAND(listfind, "sss", (char *var, char *list, char *body), looplist(var, list, body, true));
-ICOMMAND(looplist, "sss", (char *var, char *list, char *body), looplist(var, list, body, false));
 
 void prettylist(const char *s, const char *conj)
 {
@@ -981,33 +1029,28 @@ void prettylist(const char *s, const char *conj)
 	p.add('\0');
 	result(p.getbuf());
 }
-
-void at(char *s, int *pos)
-{
-	commandret = indexlist(s, *pos);
-}
-
-void substr(char *s, int *start, int *count)
-{
-	int len = strlen(s), offset = clamp(*start, 0, len);
-	commandret = newstring(&s[offset], *count <= 0 ? len - offset : min(*count, len - offset));
-}
-
-void getalias_(char *s)
-{
-	result(getalias(s));
-}
-
-COMMAND(exec, "s");
-COMMAND(concat, "C");
-COMMAND(result, "s");
-COMMAND(concatword, "V");
-COMMAND(format, "V");
-COMMAND(at, "si");
-COMMAND(substr, "sii");
-ICOMMAND(listlen, "s", (char *s), intret(listlen(s)));
 COMMAND(prettylist, "ss");
-COMMANDN(getalias, getalias_, "s");
+
+ICOMMAND(listfind, "sss", (char *var, char *list, char *body), looplist(var, list, body, true));
+ICOMMAND(looplist, "sss", (char *var, char *list, char *body), looplist(var, list, body, false));
+ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
+{
+    ident *id = newident(var);
+    if(id->type!=ID_ALIAS) return;
+    vector<char *> files;
+    listfiles(dir, ext[0] ? ext : NULL, files);
+    loopv(files)
+    {
+        char *file = files[i];
+        bool redundant = false;
+        loopj(i) if(!strcmp(files[j], file)) { redundant = true; break; }
+        if(redundant) { delete[] file; continue; }
+        if(i) aliasa(id->name, file);
+        else pushident(*id, file);
+        execute(body);
+    }
+    if(files.length()) popident(*id);
+});
 
 ICOMMANDN(+, add, "ii", (int *a, int *b), intret(*a + *b));
 ICOMMANDN(*, mul, "ii", (int *a, int *b), intret(*a * *b));
@@ -1031,6 +1074,10 @@ ICOMMANDN(^, xora, "ii", (int *a, int *b), intret(*a ^ *b));
 ICOMMANDN(!, anda, "i", (int *a), intret(*a == 0));
 ICOMMANDN(&, bita, "ii", (int *a, int *b), intret(*a & *b));
 ICOMMANDN(|, orba, "ii", (int *a, int *b), intret(*a | *b));
+ICOMMANDN(~, nota, "i", (int *a), intret(~*a));
+ICOMMANDN(^~, notx, "ii", (int *a, int *b), intret(*a ^ ~*b));
+ICOMMANDN(&~, notb, "ii", (int *a, int *b), intret(*a & ~*b));
+ICOMMANDN(|~, noto, "ii", (int *a, int *b), intret(*a | ~*b));
 ICOMMANDN(<<, lsft, "ii", (int *a, int *b), intret(*a << *b));
 ICOMMANDN(>>, rsft, "ii", (int *a, int *b), intret(*a >> *b));
 ICOMMANDN(&&, and, "ss", (char *a, char *b), intret(execute(a)!=0 && execute(b)!=0));
@@ -1042,8 +1089,10 @@ ICOMMAND(divf, "ff", (float *a, float *b), floatret(*b ? *a / *b : 0));
 ICOMMAND(modf, "ff", (float *a, float *b), floatret(*b ? fmod(*a, *b) : 0));
 ICOMMAND(min, "ii", (int *a, int *b), intret(min(*a, *b)));
 ICOMMAND(max, "ii", (int *a, int *b), intret(max(*a, *b)));
+ICOMMAND(minf, "ff", (float *a, float *b), floatret(min(*a, *b)));
+ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
-ICOMMAND(rnd, "i", (int *a), intret(*a>0 ? rnd(*a) : 0));
+ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
 ICOMMAND(echo, "C", (char *s), conoutf("\fw%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
