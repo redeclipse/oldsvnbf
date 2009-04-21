@@ -693,7 +693,7 @@ namespace hud
 		bool full = fullconsole || commandmillis >= 0;
 		if(full) numl = fullconsize;
 		else numl = consize;
-		if(type)
+		if(type == CON_CHAT)
 		{
 			numl = chatconsize;
 			if(numl) loopv(conlines) if(conlines[i].type == CON_CHAT)
@@ -711,7 +711,7 @@ namespace hud
 		}
 		else
 		{
-			if(numl) loopv(conlines) if(conlines[i].type == CON_INFO || showconsole == 1)
+			if(numl) loopv(conlines) if(conlines[i].type == CON_INFO || type < 0)
 			{
 				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].outtime < contime)
 				{
@@ -1266,8 +1266,8 @@ namespace hud
 		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
 		if(showconsole)
 		{
-			drawconsole(0, ox, oy, ox/2, os, bs*2);
-			if(showconsole >= 2) drawconsole(1, ox, oy, br, by, bs);
+			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, ox/2, os, bs*2);
+			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, bs);
 		}
 
 		pushfont("sub");

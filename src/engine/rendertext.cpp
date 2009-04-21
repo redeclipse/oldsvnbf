@@ -151,7 +151,10 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
 }
 
 #define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
-#define TEXTALIGN { x = (!(flags&TEXT_RIGHT_JUSTIFY)?TEXTTAB(0):0); { if(!y && (flags&TEXT_RIGHT_JUSTIFY)) maxwidth -= PIXELTAB; }; y += FONTH; }
+#define TEXTALIGN \
+	x = (!(flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT) ? TEXTTAB(0) : 0); \
+	if(!y && (flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT)) maxwidth -= PIXELTAB; \
+	y += FONTH;
 #define TEXTSKELETON \
     int y = 0, x = 0;\
     int i;\
