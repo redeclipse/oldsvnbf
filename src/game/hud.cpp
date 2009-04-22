@@ -1,7 +1,8 @@
 #include "game.h"
 namespace hud
 {
-	int damageresidue = 0, hudwidth = 0;
+	const int NUMSTATS = 12;
+	int damageresidue = 0, hudwidth = 0, laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	vector<int> teamkills;
 	scoreboard sb;
 
@@ -38,7 +39,9 @@ namespace hud
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
-	FVARP(noticeoffset, 0.f, 0.25f, 1.f);
+	FVARP(commandoffset, 0.f, 0.35f, 1.f);
+
+	FVARP(noticeoffset, 0.f, 0.33f, 1.f);
 	FVARP(noticeblend, 0.f, 0.75f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
@@ -486,11 +489,12 @@ namespace hud
 
 		// superhud!
 		pushfont("super");
-		int ty = (hudsize/2)+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
+		int ty = (hudsize/2)-FONTH, tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
-			ty += draw_textx(commandbuf, tx-FONTW/2, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
+			ty += draw_textx(commandbuf, tx-FONTW/2, ty+int(hudsize/2*commandoffset), 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
 		else if(shownotices && game::maptime && !UI::hascursor(false))
 		{
+			ty += int(hudsize/2*noticeoffset);
 			tf = int(tf*noticeblend);
 			if(teamnotices) skewcolour(tr, tg, tb);
 			if(lastmillis-game::maptime <= titlecard)
@@ -1256,91 +1260,6 @@ namespace hud
 		drawtex(0, 0, w, h);
 	}
 
-	void drawhudelements(int w, int h)
-	{
-		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
-
-		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
-
-		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
-		if(showconsole)
-		{
-			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, ox/2, os, bs*2);
-			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, bs);
-		}
-
-		pushfont("sub");
-		int bf = int(255*hudblend*statblend);
-		bx -= FONTW;
-		by -= FONTH;
-		static int laststats = 0, prevstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		if(totalmillis-laststats >= statrate)
-		{
-			memcpy(prevstats, curstats, sizeof(prevstats));
-			laststats = totalmillis-(totalmillis%statrate);
-		}
-		int nextstats[12] =
-		{
-			vtris*100/max(wtris, 1),
-			vverts*100/max(wverts, 1),
-			xtraverts/1024,
-			xtravertsva/1024,
-			glde,
-			gbatches,
-			getnumqueries(),
-			rplanes,
-			curfps,
-			bestfpsdiff,
-			worstfpsdiff,
-			autoadjustlevel
-		};
-		loopi(12) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
-		if(showfps)
-		{
-			draw_textx("%d", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
-			draw_textx("fps", ox-os*2-is/2, by, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
-			switch(showfps)
-			{
-				case 3:
-					if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-					else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10]);
-					break;
-				case 2:
-					if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-					else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps);
-					break;
-				default: break;
-			}
-		}
-		if(showstats > (m_edit(game::gamemode) ? 0 : 1))
-		{
-			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
-		}
-		if(connected() && client::ready() && game::maptime)
-		{
-			if(game::player1->state == CS_EDITING)
-			{
-				by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length(),
-								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
-							sel.cx, sel.cxs, sel.cy, sel.cys);
-				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
-						(int)game::player1->yaw, (int)game::player1->pitch);
-			}
-		}
-		popfont();
-	}
-
-	bool drawblendcolour()
-	{
-		return false;
-	}
-
 	void drawhud(int w, int h)
 	{
 		float fade = hudblend;
@@ -1396,11 +1315,11 @@ namespace hud
 		if(!texturing) usetexturing(true);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
 		if(game::maptime && connected() && client::ready())
 		{
-			int ox = hudwidth, oy = hudsize, os = int(oy*gapsize);
-			glLoadIdentity();
-			glOrtho(0, ox, oy, 0, -1, 1);
 			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::isthirdperson())))
 			{
 				Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
@@ -1418,7 +1337,64 @@ namespace hud
 			if(game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
 			if(showinventory) drawinventory(ox, oy, os, fade);
 		}
-		drawhudelements(w, h);
+
+		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
+		if(showconsole)
+		{
+			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, ox/2, os, bs*2);
+			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, bs);
+		}
+
+		pushfont("sub");
+		bx -= FONTW; by -= FONTH;
+		if(totalmillis-laststats >= statrate)
+		{
+			memcpy(prevstats, curstats, sizeof(prevstats));
+			laststats = totalmillis-(totalmillis%statrate);
+		}
+		int nextstats[NUMSTATS] = {
+			vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
+		};
+		loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
+		if(showfps)
+		{
+			draw_textx("%d", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+			draw_textx("fps", ox-os*2-is/2, by, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+			switch(showfps)
+			{
+				case 3:
+					if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+					else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10]);
+					break;
+				case 2:
+					if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+					else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps);
+					break;
+				default: break;
+			}
+		}
+		if(showstats > (m_edit(game::gamemode) ? 0 : 1))
+		{
+			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+		}
+		if(connected() && client::ready() && game::maptime)
+		{
+			if(game::player1->state == CS_EDITING)
+			{
+				by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+						selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length(),
+								sel.corner, sel.orient, sel.grid);
+				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
+							sel.cx, sel.cxs, sel.cy, sel.cys);
+				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+						(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
+						(int)game::player1->yaw, (int)game::player1->pitch);
+			}
+		}
+		popfont();
+
 		glDisable(GL_BLEND);
 	}
 
