@@ -234,8 +234,7 @@ void drawskybox(int farplane, bool limited)
     }
     else defaultshader->set();
 
-    bool fog = glIsEnabled(GL_FOG)==GL_TRUE;
-    if(fog) glDisable(GL_FOG);
+    if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
 
     if(limited)
     {
@@ -316,7 +315,7 @@ void drawskybox(int farplane, bool limited)
     }
     else glDepthFunc(GL_LESS);
 
-    if(fog) glEnable(GL_FOG);
+    if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
 }
 
 VARNW(skytexture, useskytexture, 0, 1, 1);
