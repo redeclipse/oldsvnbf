@@ -22,11 +22,12 @@ namespace hud
 		IVARP(autoshowscores, 0, 1, 1);
 		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
 		IVARP(showscoresdelay, 0, 3, INT_MAX-1); // otherwise use a static timespan
-		IVARP(scoresinfo, 0, 1, 1);
+		IVARP(showscoresinfo, 0, 1, 1);
 		IVARP(highlightscore, 0, 1, 1);
 
 		IVARP(showpj, 0, 0, 1);
 		IVARP(showping, 0, 1, 1);
+		IVARP(showfrags, 0, 2, 2);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showskills, 0, 1, 1);
 		IVARP(showownernum, 0, 0, 1);
@@ -199,24 +200,26 @@ namespace hud
 			g.start(menustart, 0.03f, NULL, false);
 			int numgroups = groupplayers();
 
-			g.textf("%s", 0xFFFFFF, "info", server::gamename(game::gamemode, game::mutators));
+			g.textf("%s (%s)", 0xFFFFFF, NULL, getmaptitle(), getmapname());
+			g.pushlist();
+			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
 			if((m_fight(game::gamemode) || client::demoplayback) && game::minremain >= 0)
 			{
-				if(!game::minremain) g.textf("%s: intermission", 0xFFFFFF, "info", getmapname());
-				else g.textf("%s: %d %s remain", 0xFFFFFF, "info", getmapname(), game::minremain, game::minremain==1 ? "minute" : "minutes");
+				if(!game::minremain) g.textf(", intermission", 0xFFFFFF, NULL);
+				else g.textf(", %d %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "minute" : "minutes");
 			}
-			else g.textf("%s", 0xFFFFFF, "info", getmapname());
+			g.poplist();
 
-			if(game::intermission || scoresinfo())
+			if(game::intermission || showscoresinfo())
 			{
 				int accuracy = game::player1->totaldamage*100/max(game::player1->totalshots, 1);
 
 				g.separator();
 
-				g.textf("%s: \fs\f0%d\fS %s(s), \fs\f0%d\fS %s(s)", 0xFFFFFF, "player", game::player1->name,
+				g.textf("%s: \fs\f0%d\fS %s(s), \fs\f0%d\fS %s(s)", 0xFFFFFF, NULL, game::player1->name,
 					game::player1->frags, m_paint(game::gamemode, game::mutators) ? "tag" : "frag",
 					game::player1->deaths, m_paint(game::gamemode, game::mutators) ? "out" : "death");
-				g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, "info", game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+				g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
 
 				if(m_mission(game::gamemode))
 				{
@@ -253,7 +256,6 @@ namespace hud
 				if((k%2)==0) g.pushlist(); // horizontal
 
 				scoregroup &sg = *groups[k];
-				const char *icon = sg.team && m_team(game::gamemode, game::mutators) ? teamtype[sg.team].icon : "player";
 				int bgcolor = sg.team && m_team(game::gamemode, game::mutators) ? teamtype[sg.team].colour : 0,
 					fgcolor = 0xFFFFFF;
 
@@ -272,26 +274,22 @@ namespace hud
 				{
 					g.pushlist();
 					g.background(bgcolor, numgroups>1 ? 3 : 5);
-					g.strut(1);
+					g.text("", 0, teamtype[sg.team].icon);
 					g.poplist();
 				}
 				g.pushlist();
-				g.background(0xFFFFFF, numgroups>1 ? 3 : 5);
-				g.text("", 0, "server");
+				g.strut(1);
 				g.poplist();
 				loopscoregroup({
-					g.pushlist();
-					bool highlight = o==game::player1 && highlightscore();
-					int status = highlight ? 0xDDDDDD : 0xAAAAAA;
-					if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
-					else if(o->privilege)
+					const char *status = o->state==CS_DEAD || o->state==CS_WAITING ? "exit" : "player";
+					if(o->privilege)
 					{
-						if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
-						else status = highlight ? 0x44FF88 : 0x33AA66;
+						if(o->privilege >= PRIV_ADMIN) status = "serverfull";
+						else status = "serverlock";
 					}
-					if(status) g.background(status, numgroups>1 ? 3 : 5);
-					const char *oicon = icon;
-					g.text("", 0, oicon);
+					g.pushlist();
+					if(o==game::player1 && highlightscore()) g.background(0x888888, 3);
+					g.text("", 0, status);
 					g.poplist();
 				});
 				g.poplist();
@@ -299,14 +297,19 @@ namespace hud
 				if(sg.team && m_team(game::gamemode, game::mutators))
 				{
 					g.pushlist(); // vertical
-
 					if(m_stf(game::gamemode) && stflimit && sg.score >= stflimit) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
 					else g.textf("%s: %d", fgcolor, NULL, teamtype[sg.team].name, sg.score);
-
 					g.pushlist(); // horizontal
 				}
 
-				if(!m_stf(game::gamemode) && !m_ctf(game::gamemode))
+				g.pushlist();
+				g.pushlist();
+				g.text("name ", fgcolor);
+				g.poplist();
+				loopscoregroup(g.textf("%s ", 0xFFFFFF, NULL, game::colorname(o, NULL, "", false)));
+				g.poplist();
+
+				if(showfrags() && (showfrags() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
 				{
 					g.pushlist();
 					g.strut(7);
@@ -341,11 +344,6 @@ namespace hud
 					});
 					g.poplist();
 				}
-
-				g.pushlist();
-				g.text("name", fgcolor);
-				loopscoregroup(g.text(game::colorname(o, NULL, "", false), 0xFFFFFF));
-				g.poplist();
 
 				if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 				{
@@ -397,62 +395,28 @@ namespace hud
 
 			if(showspectators() && spectators.length())
 			{
-				if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
+				g.separator();
+				g.pushlist();
+				loopv(spectators)
 				{
-					g.pushlist();
-					g.pushlist();
-					g.text("spectator", 0xFFFFFF, "server");
-					loopv(spectators)
+					gameent *o = spectators[i];
+					const char *status = "conopen";
+					if(o->privilege)
 					{
-						gameent *o = spectators[i];
-						g.pushlist();
-						bool highlight = o==game::player1 && highlightscore();
-						int status = highlight ? 0xDDDDDD : 0xAAAAAA;
-						if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
-						else if(o->privilege)
-						{
-							if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
-							else status = highlight ? 0x44FF88 : 0x33AA66;
-						}
-						if(status) g.background(status, 3);
-						g.textf("%s", 0xFFFFFF, "player", game::colorname(o, NULL, "", false));
-						g.poplist();
+						if(o->privilege >= PRIV_ADMIN) status = "serverfull";
+						else status = "serverlock";
 					}
-					g.poplist();
-					g.space(1);
+					if((i%3)==0) g.pushlist();
 					g.pushlist();
-					g.text("cn", 0xFFFFFF);
-					loopv(spectators)
-					{
-						gameent *o = spectators[i];
-						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
-					}
+					if(o==game::player1 && highlightscore()) g.background(0x888888, 3);
+					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
+						g.textf("%s (%d)", 0xFFFFFF, status, game::colorname(o, NULL, "", false), o->clientnum);
+					else g.textf("%s", 0xFFFFFF, status, game::colorname(o, NULL, "", false));
 					g.poplist();
-					g.poplist();
+					if(i+1<spectators.length() && (i+1)%3) g.space(1);
+					else g.poplist();
 				}
-				else
-				{
-					g.textf("%d spectator%s", 0xFFFFFF, "server", spectators.length(), spectators.length()!=1 ? "s" : "");
-					loopv(spectators)
-					{
-						if((i%3)==0) g.pushlist();
-						gameent *o = spectators[i];
-						g.pushlist();
-						bool highlight = o==game::player1 && highlightscore();
-						int status = highlight ? 0xDDDDDD : 0xAAAAAA;
-						if(o->state==CS_DEAD || o->state==CS_WAITING) status = highlight ? 0x888888 : 0x666666;
-						else if(o->privilege)
-						{
-							if(o->privilege >= PRIV_ADMIN) status = highlight ? 0xFF8800 : 0xAA6600;
-							else status = highlight ? 0x44FF88 : 0x33AA66;
-						}
-						if(status) g.background(status);
-						g.textf("%s", 0xFFFFFF, (i%3)==0 ? "player" : NULL, game::colorname(o, NULL, "", false));
-						g.poplist();
-						if(i+1<spectators.length() && (i+1)%3) g.space(1);
-						else g.poplist();
-					}
-				}
+				g.poplist();
 			}
 			g.end();
 		}

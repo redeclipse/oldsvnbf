@@ -1333,8 +1333,11 @@ namespace hud
 			if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].snipes)
 				drawsniper(ox, oy, os, fade);
 			if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
-			if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
-			if(game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
+			if(!UI::hascursor())
+			{
+				if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
+				if(game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
+			}
 			if(showinventory) drawinventory(ox, oy, os, fade);
 		}
 
