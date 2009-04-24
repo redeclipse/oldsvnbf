@@ -26,7 +26,7 @@ namespace ai
 		return viewfieldx(x)*3.f/4.f;
 	}
 
-	float targetable(gameent *d, gameent *e, bool z)
+	bool targetable(gameent *d, gameent *e, bool z)
 	{
 		aistate &b = d->ai->getstate();
 		if(d != e && game::allowmove(d) && b.type != AI_S_WAIT)
@@ -34,7 +34,7 @@ namespace ai
 		return false;
 	}
 
-	float cansee(gameent *d, vec &x, vec &y, vec &targ)
+	bool cansee(gameent *d, vec &x, vec &y, vec &targ)
 	{
 		aistate &b = d->ai->getstate();
 		if(game::allowmove(d) && b.type != AI_S_WAIT)
@@ -426,28 +426,24 @@ namespace ai
 
 	void setup(gameent *d, bool tryreset = false)
 	{
-		d->ai->reset(tryreset);
-		aistate &b = d->ai->getstate();
-		b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
-		if(m_noitems(game::gamemode, game::mutators))
-			d->ai->weappref = m_spawnweapon(game::gamemode, game::mutators);
-		else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->ai->weappref = forcegun;
-		else while(true)
+		if(d->ai)
 		{
-			d->ai->weappref = rnd(WEAPON_TOTAL);
-			if(d->ai->weappref != WEAPON_PLASMA || !rnd(d->skill)) break;
+			d->ai->reset(tryreset);
+			aistate &b = d->ai->getstate();
+			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
+			if(m_noitems(game::gamemode, game::mutators))
+				d->ai->weappref = m_spawnweapon(game::gamemode, game::mutators);
+			else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->ai->weappref = forcegun;
+			else while(true)
+			{
+				d->ai->weappref = rnd(WEAPON_TOTAL);
+				if(d->ai->weappref != WEAPON_PLASMA || !rnd(d->skill)) break;
+			}
 		}
 	}
 
-	void spawned(gameent *d)
-	{
-		if(d->ai) setup(d, false);
-	}
-
-	void killed(gameent *d, gameent *e)
-	{
-		if(d->ai) d->ai->reset();
-	}
+	void spawned(gameent *d) { setup(d, false); }
+	void killed(gameent *d, gameent *e) { if(d->ai) d->ai->reset(); }
 
 	bool check(gameent *d, aistate &b)
 	{
