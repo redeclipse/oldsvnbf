@@ -409,7 +409,7 @@ namespace server
 				if(flush) sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id.name[3], val);
 			}
 		});
-		execfile("servexec.cfg");
+		execfile("servexec.cfg", false);
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
 

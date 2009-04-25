@@ -820,7 +820,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     {
 	    overrideidents = worldidents = true;
 	    persistidents = false;
-	    exec("map.cfg");
+	    execfile("map.cfg");
 	    persistidents = true;
 	    overrideidents = worldidents = false;
     }

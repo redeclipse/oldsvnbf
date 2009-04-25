@@ -35,7 +35,7 @@ void loadshaders()
 
     initshaders = true;
     standardshader = true;
-    exec("stdshader.cfg");
+    execfile("stdshader.cfg");
     standardshader = false;
     initshaders = false;
 
