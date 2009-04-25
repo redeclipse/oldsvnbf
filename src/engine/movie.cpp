@@ -311,7 +311,7 @@ struct aviwriter
 
         listchunk("LIST", "INFO");
 
-        const char *software = "Cube 2: Sauerbraten";
+        const char *software = "Blood Frontier";
         writechunk("ISFT", software, strlen(software)+1);
 
         endchunk(); // LIST INFO
