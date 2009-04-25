@@ -713,14 +713,14 @@ void rehash(bool reload)
 
 	persistidents = false;
 
-	exec("defaults.cfg");
-	execfile("servers.cfg");
+	execfile("defaults.cfg");
+	execfile("servers.cfg", false);
 
 	persistidents = true;
 
     initing = INIT_LOAD;
-	execfile("config.cfg");
-	execfile("autoexec.cfg");
+	execfile("config.cfg", false);
+	execfile("autoexec.cfg", false);
     initing = NOT_INITING;
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
@@ -809,7 +809,7 @@ int main(int argc, char **argv)
 	{
 		if(argv[i][0]=='-') switch(argv[i][1])
 		{
-			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg"); restoredinits = true; break;
+			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg", false); restoredinits = true; break;
 			case 'd':
 			{
 				switch(argv[i][2])
@@ -912,7 +912,7 @@ int main(int argc, char **argv)
 
 	conoutf("\fmloading defaults..");
 	persistidents = false;
-	if(!execfile("stdlib.cfg")) fatal("cannot find data files");
+	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 
     conoutf("\fmloading gl effects..");

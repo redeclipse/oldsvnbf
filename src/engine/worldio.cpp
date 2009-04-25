@@ -1026,10 +1026,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			defformatstring(cfgname)("%s.cfg", mapname);
 			if(maptype == MAP_OCTA)
 			{
-				exec("octa.cfg"); // for use with -pSAUER_DIR
-				exec(cfgname);
+				execfile("octa.cfg"); // for use with -pSAUER_DIR
+				execfile(cfgname);
 			}
-			else if(!execfile(cfgname)) exec("map.cfg");
+			else if(!execfile(cfgname, false)) execfile("map.cfg");
 			persistidents = true;
 			overrideidents = worldidents = false;
 

@@ -730,7 +730,7 @@ void initgame()
 		if(server::serveroption(gameargs[i])) continue;
 		conoutf("\frunknown command-line option: %s", gameargs[i]);
 	}
-	execfile("autoserv.cfg");
+	execfile("autoserv.cfg", false);
     setupserver();
 }
 

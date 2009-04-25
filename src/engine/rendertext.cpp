@@ -47,7 +47,7 @@ bool setfont(const char *name)
 	if(!f)
 	{
 		defformatstring(n)("fonts/%s.cfg", name);
-		if(!execfile(n) || !(f = fonts.access(name)))
+		if(!execfile(n, false) || !(f = fonts.access(name)))
 			return false;
 	}
 	curfont = f;
