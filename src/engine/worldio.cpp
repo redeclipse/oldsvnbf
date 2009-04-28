@@ -309,7 +309,7 @@ void save_config(char *mname)
 		{
             case ID_VAR: h->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "// %s 0x%.6X\n" : "// %s 0x%X\n") : "// %s %d\n"), id.name, *id.storage.i); vars++;break;
             case ID_FVAR: h->printf("// %s %s\n", id.name, floatstr(*id.storage.f)); vars++; break;
-            case ID_SVAR: h->printf("%s ", id.name); writeescapedstring(h, *id.storage.s); h->putchar('\n'); vars++; break;
+            case ID_SVAR: h->printf("// %s ", id.name); writeescapedstring(h, *id.storage.s); h->putchar('\n'); vars++; break;
 			default: break;
 		}
 	}
