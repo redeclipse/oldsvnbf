@@ -1857,4 +1857,5 @@ void render_texture_panel(int w, int h)
 
         defaultshader->set();
 	}
+	else texpaneltimer = 0;
 }
