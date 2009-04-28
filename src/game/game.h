@@ -122,7 +122,7 @@ enttypes enttype[] = {
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"sound",
-			{ "id",		"minrad",	"maxrad",	"volume",	"flags" }
+			{ "id",		"maxrad",	"minrad",	"volume",	"flags" }
 	},
 	{
 		SPOTLIGHT,		59,		0,		EU_NONE,

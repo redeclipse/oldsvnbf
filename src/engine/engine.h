@@ -346,6 +346,7 @@ extern void pasteundoents(undoblock *u);
 
 // octaedit
 extern selinfo sel;
+extern int texpaneltimer;
 extern void cancelsel();
 extern void render_texture_panel(int w, int h);
 extern void addundo(undoblock *u);

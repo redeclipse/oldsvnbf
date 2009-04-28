@@ -1045,21 +1045,25 @@ namespace client
 					int getit = getint(p), mode = getint(p), muts = getint(p);
 					changemapserv(hasmap && getit != 1 ? text : NULL, mode, muts, getit == 2);
 					mapchanged = true;
-					if(needsmap) switch(getit)
+					if(needsmap && multiplayer(false))
 					{
-						case 0:
+						switch(getit)
 						{
-							conoutf("\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
-							addmsg(SV_GETMAP, "r");
-							break;
-						}
-						case 2:
-						{
-							conoutf("\fcseem to have failed to get map to %s, try /regetmap", hasmap ? text : "<temp>");
-							needsmap = false; // we failed sir
-							break;
+							case 0:
+							{
+								conoutf("\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
+								addmsg(SV_GETMAP, "r");
+								break;
+							}
+							case 2:
+							{
+								conoutf("\fcseem to have failed to get map to %s, try /regetmap", hasmap ? text : "<temp>");
+								needsmap = false; // we failed sir
+								break;
+							}
 						}
 					}
+					else needsmap = false; // assume empty map
 					break;
 				}
 

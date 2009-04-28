@@ -492,7 +492,7 @@ namespace hud
 		int ty = (hudsize/2)-FONTH, tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
 			ty += draw_textx(commandbuf, tx-FONTW/2, ty+int(hudsize/2*commandoffset), 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
-		else if(shownotices && game::maptime && !UI::hascursor(false))
+		else if(shownotices && game::maptime && !UI::hascursor(false) && !texpaneltimer)
 		{
 			ty += int(hudsize/2*noticeoffset);
 			tf = int(tf*noticeblend);
@@ -969,7 +969,7 @@ namespace hud
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
 			const char *itext = itemtex(e.type, e.attr[0]);
-			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s (%d)\n%d %d %d %d %d", enttype[e.type].name, n, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s (%d)", enttype[e.type].name, n);
 			drawitemsubtext(x, y, s, false, skew, "sub", fade, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
 			return ty;
 		}
@@ -978,7 +978,7 @@ namespace hud
 
 	int drawselection(int x, int y, int s, float blend)
 	{
-		int sy = s;
+		int sy = showfps ? s/2+s/4 : s/16;
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(game::player1->team)
@@ -1052,12 +1052,11 @@ namespace hud
 					int stop = hudsize-s*3;
 					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend);
 					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend)) >= stop) break;
-					sy += s/8;
 				}
 			}
-			else if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
-			else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f) + s/8;
-			else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+			else if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
+			else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f);
+			else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
 		}
 		return sy;
 	}
@@ -1148,9 +1147,12 @@ namespace hud
 			}
 			case 1:
 			{
-				if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-				if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-				if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				if(!texpaneltimer)
+				{
+					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+					if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				}
 				break;
 			}
 		}
@@ -1348,56 +1350,58 @@ namespace hud
 			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, bs);
 		}
 
-		pushfont("sub");
-		bx -= FONTW; by -= FONTH;
-		if(totalmillis-laststats >= statrate)
+		if(!texpaneltimer)
 		{
-			memcpy(prevstats, curstats, sizeof(prevstats));
-			laststats = totalmillis-(totalmillis%statrate);
-		}
-		int nextstats[NUMSTATS] = {
-			vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
-		};
-		loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
-		if(showfps)
-		{
-			draw_textx("%d", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
-			draw_textx("fps", ox-os*2-is/2, by, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
-			switch(showfps)
+			pushfont("sub");
+			bx -= FONTW; by -= FONTH;
+			if(totalmillis-laststats >= statrate)
 			{
-				case 3:
-					if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-					else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10]);
-					break;
-				case 2:
-					if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-					else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps);
-					break;
-				default: break;
+				memcpy(prevstats, curstats, sizeof(prevstats));
+				laststats = totalmillis-(totalmillis%statrate);
 			}
-		}
-		if(showstats > (m_edit(game::gamemode) ? 0 : 1))
-		{
-			by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
-			by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
-		}
-		if(connected() && client::ready() && game::maptime)
-		{
-			if(game::player1->state == CS_EDITING)
+			int nextstats[NUMSTATS] = {
+				vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
+			};
+			loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
+			if(showfps)
 			{
-				by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length(),
-								sel.corner, sel.orient, sel.grid);
-				by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
-							sel.cx, sel.cxs, sel.cy, sel.cys);
-				by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
-						(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
-						(int)game::player1->yaw, (int)game::player1->pitch);
+				draw_textx("%d", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+				draw_textx("fps", ox-os*2-is/2, by, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+				switch(showfps)
+				{
+					case 3:
+						if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+						else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps, curstats[9], curstats[10]);
+						break;
+					case 2:
+						if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+						else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, maxfps);
+						break;
+					default: break;
+				}
 			}
+			if(showstats > (m_edit(game::gamemode) ? 0 : 1))
+			{
+				by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+				by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+			}
+			if(connected() && client::ready() && game::maptime)
+			{
+				if(game::player1->state == CS_EDITING)
+				{
+					by -= draw_textx("cube:%s%d ents:%d[%d] corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+							selchildcount<0 ? "1/" : "", abs(selchildcount), entities::ents.length(), entgroup.length(),
+									sel.corner, sel.orient, sel.grid);
+					by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+							sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
+								sel.cx, sel.cxs, sel.cy, sel.cys);
+					by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_JUSTIFY, -1, bs,
+							(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
+							(int)game::player1->yaw, (int)game::player1->pitch);
+				}
+			}
+			popfont();
 		}
-		popfont();
-
 		glDisable(GL_BLEND);
 	}
 
