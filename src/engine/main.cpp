@@ -61,6 +61,8 @@ void cleanup()
 	cleanupserver();
 	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
+    SDL_WM_GrabInput(SDL_GRAB_OFF);
+    SDL_SetGamma(1, 1, 1);
 	freeocta(worldroot);
 	extern void clear_command();	clear_command();
 	extern void clear_console();	clear_console();
@@ -94,6 +96,8 @@ void fatal(const char *s, ...)    // failure exit
         if(errors <= 1) // avoid recursion
         {
             showcursor(true);
+            SDL_WM_GrabInput(SDL_GRAB_OFF);
+            SDL_SetGamma(1, 1, 1);
             #ifdef WIN32
                 MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
