@@ -1432,6 +1432,28 @@ namespace game
 		}
 	}
 
+	float showtranslucent(gameent *d, bool third = true)
+	{
+		float def = (d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent)) ? 0.5f : 1.f;
+		if(d->state == CS_ALIVE)
+		{
+			int len = spawnprotecttime*1000, millis = d->protect(lastmillis, len); // protect returns time left
+			if(millis) return clamp(1.f-(float(millis)/float(len)), 0.f, def);
+		}
+		if(d->state == CS_DEAD || d->state == CS_WAITING)
+		{
+			int len = m_spawndelay(gamemode, mutators), interval = len/3, over = interval*2, millis = lastmillis-d->lastdeath;
+			if(millis < len)
+			{
+				if(millis > over) return clamp(1.f-(float(millis-over)/float(interval)), 0.f, 1.f);
+				else return 1.f;
+			}
+			else return 0.f;
+		}
+		if(!physics::issolid(d)) return 0.5f; // sorta legacy
+		return def;
+	}
+
 	void adddynlights()
 	{
 		if(usedynamicglow)
@@ -1445,11 +1467,11 @@ namespace game
 				if(usedynamicglow > 2 || m_team(gamemode, mutators))
 				{
 					gameent *d;
-					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && d->state == CS_ALIVE)
+					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
-						vec colour = vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f),
+						vec col = vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson())),
 							pos = vec(d->feetpos()).add(vec(0, 0, d->height/2));
-						adddynlight(pos, d->height*1.5f, colour);
+						adddynlight(pos, d->height*1.5f, col);
 					}
 				}
 			}
@@ -1471,7 +1493,7 @@ namespace game
 				anims.add(i);
 	}
 
-	void renderclient(gameent *d, bool third, bool trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
+	void renderclient(gameent *d, bool third, float trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		string mdl;
 		if(third) copystring(mdl, teamtype[team].tpmdl);
@@ -1571,16 +1593,19 @@ namespace game
             if(!early && third) flags |= MDL_FULLBRIGHT;
         }
 		else flags |= MDL_CULL_DIST;
-        float fade = 1;
         if(early) flags |= MDL_NORENDER;
-		else if(trans) fade = 0.5f;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
-		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, fade);
+		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, trans);
 	}
 
-	void renderplayer(gameent *d, bool third, bool trans, bool early = false)
+	void renderplayer(gameent *d, bool third, float trans, bool early = false)
 	{
+		if(trans <= 0.f)
+		{
+			if(rendernormally && (early || d != player1)) trans = 1e-16f;
+			else return; // screw it, don't render them
+		}
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0,
@@ -1713,11 +1738,6 @@ namespace game
 		}
         if(rendernormally && (early || d != player1)) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
-	}
-
-	bool showtranslucent(gameent *d, bool third = true)
-	{
-		return !physics::issolid(d) || (d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent));
 	}
 
 	void render()

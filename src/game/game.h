@@ -171,7 +171,7 @@ enttypes enttype[] = {
 			inttobit(FLAG),
 			0,
 			false,				"flag",
-			{ "id",		"team",		"",			"",			"" }
+			{ "id",		"team",		"yaw",		"pitch",	"" }
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,

@@ -20,7 +20,7 @@ namespace stf
 			stfstate::flag &b = st.flags[i];
             if(!b.ent) continue;
 			const char *flagname = teamtype[b.owner].flag;
-            rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, b.ent->attr[2], b.ent->attr[3], 0, MDL_DYNSHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_LIGHT);
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
 				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);

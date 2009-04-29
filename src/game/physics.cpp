@@ -90,11 +90,8 @@ namespace physics
 	{
 		if(d->state == CS_ALIVE)
 		{
-			if(d->type == ENT_PLAYER)
-			{
-				gameent *o = (gameent *)d;
-				if(o->protect(lastmillis, spawnprotecttime*1000)) return false;
-			}
+			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, spawnprotecttime*1000))
+				return false;
 			return true;
 		}
         return d->state == CS_DEAD || d->state == CS_WAITING || d->state == CS_SPECTATOR;
