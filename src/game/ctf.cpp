@@ -126,7 +126,7 @@ namespace ctf
 			float trans = 1.f;
 			int millis = lastmillis-f.interptime;
 			if(millis < 1000) trans = float(millis)/1000.f;
-            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, !f.droptime ? f.ent->attr[2] : f.interptime%360, !f.droptime ? f.ent->attr[3] : 0, 0, MDL_DYNSHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_LIGHT, NULL, NULL, 0, 0, trans);
+            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, !f.droptime ? f.ent->attr[2] : f.interptime%360, !f.droptime ? f.ent->attr[3] : 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
             above.z += enttype[FLAG].radius/2;
             defformatstring(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME && !f.droptime && !f.owner ? "base" : "flag");
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
