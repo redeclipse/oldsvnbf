@@ -1714,14 +1714,22 @@ namespace entities
 				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-                    float fade = 1;
-					if(!active) fade = 0.5f;
+                    float fade = 1, yaw = 0, pitch = 0;
+					if(!active)
+					{
+						fade = 0.5f;
+						if(e.type == FLAG)
+						{
+							yaw = e.attr[2];
+							pitch = e.attr[3];
+						}
+					}
 					else
 					{
 						int millis = lastmillis-e.lastspawn;
 						if(millis < 1000) fade = float(millis)/1000.f;
 					}
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags, NULL, NULL, 0, 0, fade);
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
 				}
 			}
 		}
