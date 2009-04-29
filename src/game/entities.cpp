@@ -815,6 +815,12 @@ namespace entities
 		switch(e.type)
 		{
 			case MAPMODEL:
+				while(e.attr[1] < 0) e.attr[1] += 360;
+				while(e.attr[1] >= 360) e.attr[1] -= 360;
+				while(e.attr[2] < 0) e.attr[2] += 360;
+				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[3] < 0) e.attr[3] += 360;
+				while(e.attr[3] >= 360) e.attr[3] -= 360;
 			case PARTICLES:
 			case MAPSOUND:
 			{
@@ -854,10 +860,10 @@ namespace entities
 			case FLAG:
 				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
 				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
-				while(e.attr[2] < 0) e.attr[0] += 360;
-				while(e.attr[2] >= 360) e.attr[0] -= 360;
-				while(e.attr[3] < 0) e.attr[0] += 360;
-				while(e.attr[3] >= 360) e.attr[0] -= 360;
+				while(e.attr[2] < 0) e.attr[2] += 360;
+				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[3] < 0) e.attr[3] += 360;
+				while(e.attr[3] >= 360) e.attr[3] -= 360;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < 0) e.attr[0] += 360;

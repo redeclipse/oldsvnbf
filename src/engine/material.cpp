@@ -485,7 +485,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
 		loopi(va->matsurfs)
 		{
 			materialsurface &m = va->matbuf[i];
-			if(!editmode || !showmat || !rendernormally)
+			if(!editmode || !showmat || envmapping)
 			{
                 if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>hdr.worldsize))) continue;
                 if(m.material&MAT_EDIT) continue;
@@ -587,8 +587,8 @@ void rendermaterials()
 	int lastfogtype = 1;
 	loopv(vismats)
 	{
-		materialsurface &m = *vismats[editmode && showmat && rendernormally ? vismats.length()-1-i : i];
-        int curmat = !editmode || !showmat || !rendernormally || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
+		materialsurface &m = *vismats[editmode && showmat && !envmapping ? vismats.length()-1-i : i];
+        int curmat = !editmode || !showmat || envmapping || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
 		if(lastmat!=curmat || lastorient!=m.orient || (curmat==MAT_GLASS && envmapped && m.envmap != envmapped))
 		{
 			int fogtype = lastfogtype;
@@ -786,7 +786,7 @@ void rendermaterials()
 				default:
 				{
 					if(lastmat==curmat) break;
-					if(lastmat<MAT_EDIT)
+                    if(lastmat < MAT_EDIT)
 					{
 						if(begin) { glEnd(); begin = false; }
 						if(!depth) { glDepthMask(GL_TRUE); depth = true; }
@@ -826,7 +826,7 @@ void rendermaterials()
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
                     if(renderpath!=R_FIXEDFUNCTION && hasCM && waterfallenv) glNormal3fv(normals[m.orient].v);
-					if (wslot.sts.inrange(1))
+                    if(wslot.sts.inrange(1))
 						renderwaterfall(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER);
 				}
 				break;
@@ -835,13 +835,13 @@ void rendermaterials()
 				if(m.orient==O_TOP)
 				{
 					if(!vertwater && !begin) { glBegin(GL_QUADS); begin = true; }
-					if (lslot.sts.inrange(0))
+                    if(lslot.sts.inrange(0))
 						renderlava(m, lslot.sts[0].t, lslot.scale);
 				}
 				else
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
-					if (lslot.sts.inrange(1))
+                    if(lslot.sts.inrange(1))
 						renderwaterfall(m, lslot.sts[1].t, lslot.scale, 0.1f, MAT_LAVA);
 				}
 				break;
@@ -868,7 +868,7 @@ void rendermaterials()
 	if(blended) glDisable(GL_BLEND);
 	if(overbright) resettmu(0);
 	if(!lastfogtype) glFogfv(GL_FOG_COLOR, oldfogc);
-	if(editmode && showmat && rendernormally)
+	if(editmode && showmat && !envmapping)
 	{
 		foggednotextureshader->set();
 		rendermatgrid(vismats);
