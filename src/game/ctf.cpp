@@ -106,8 +106,8 @@ namespace ctf
 			ctfstate::flag &f = st.flags[i];
 			float skew = 0.75f, fade = blend;
 			int millis = lastmillis-f.interptime;
-			if(f.owner || f.droptime) skew += (millis < 500 ? clamp(float(millis)/500.f, 0.f, 1.f)*0.25f : 0.25f);
-			else if(millis < 500) skew += 0.25f-(clamp(float(millis)/500.f, 0.f, 1.f)*0.25f);
+			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f : 0.25f);
+			else if(millis < 1000) skew += 0.25f-(clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f);
 			int oldy = y-sy;
 			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydrop" : "\fgsafe"));
 			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
@@ -123,7 +123,10 @@ namespace ctf
             if(!f.ent || f.owner) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.pos());
-            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, 0.f, 0.f, 0.f, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+			float trans = 1.f;
+			int millis = lastmillis-f.interptime;
+			if(millis < 1000) trans = float(millis)/1000.f;
+            rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, f.ent->attr[2], f.ent->attr[3], 0, MDL_DYNSHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_LIGHT, NULL, NULL, 0, 0, trans);
             above.z += enttype[FLAG].radius/2;
             defformatstring(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME && !f.droptime && !f.owner ? "base" : "flag");
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
@@ -136,7 +139,13 @@ namespace ctf
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.ent) continue;
-			vec colour = vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f),
+			float trans = 1.f;
+			if(!f.owner)
+			{
+				int millis = lastmillis-f.interptime;
+				if(millis < 1000) trans = float(millis)/1000.f;
+			}
+			vec colour = vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f).mul(trans),
 				pos = vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2));
 			adddynlight(pos, enttype[FLAG].radius*1.5f, colour);
         }

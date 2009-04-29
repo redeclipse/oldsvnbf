@@ -848,9 +848,16 @@ namespace entities
 			case PLAYERSTART:
 				while(e.attr[0] < 0) e.attr[0] += 360;
 				while(e.attr[0] >= 360) e.attr[0] -= 360;
+				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
+				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
+				break;
 			case FLAG:
 				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
 				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
+				while(e.attr[2] < 0) e.attr[0] += 360;
+				while(e.attr[2] >= 360) e.attr[0] -= 360;
+				while(e.attr[3] < 0) e.attr[0] += 360;
+				while(e.attr[3] >= 360) e.attr[0] -= 360;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < 0) e.attr[0] += 360;
@@ -1709,6 +1716,11 @@ namespace entities
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
                     float fade = 1;
 					if(!active) fade = 0.5f;
+					else
+					{
+						int millis = lastmillis-e.lastspawn;
+						if(millis < 1000) fade = float(millis)/1000.f;
+					}
 					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, 0.f, 0.f, 0.f, flags, NULL, NULL, 0, 0, fade);
 				}
 			}
