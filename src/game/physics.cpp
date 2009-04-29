@@ -501,7 +501,7 @@ namespace physics
 			pl->lastimpulse = 0;
 			if(game::allowmove(pl) && pl->jumping)
 			{
-				pl->vel.z = max(pl->vel.z, 0.f) + jumpvelocity(pl);
+				pl->vel.z += jumpvelocity(pl);
 				pl->jumping = false;
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
@@ -512,7 +512,7 @@ namespace physics
 			if(game::allowmove(pl) && pl->jumping)
 			{
 				pl->falling = vec(0, 0, 0);
-				pl->vel.z += max(pl->vel.z, 0.f) + jumpvelocity(pl);
+				pl->vel.z += jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
 				pl->jumping = false;
 				if(local && pl->type == ENT_PLAYER)
@@ -612,11 +612,8 @@ namespace physics
 
 			if(local)
 			{
-				if(!isliquid(curmat) && isliquid(oldmat))
-					pl->vel.z = max(pl->vel.z, jumpvelocity(pl));
-				else if(isliquid(curmat) && !isliquid(oldmat))
-					pl->vel.mul(liquidscale);
-
+				if(!isliquid(curmat) && isliquid(oldmat)) pl->vel.z += jumpvelocity(pl);
+				else if(isliquid(curmat) && !isliquid(oldmat)) pl->vel.mul(liquidscale);
 				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
 					game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 			}
@@ -675,12 +672,12 @@ namespace physics
 		else						// apply velocity with collision
 		{
 			const float f = 1.0f/moveres;
-			int collisions = 0;
+			int collisions = 0, timeinair = pl->timeinair;
 			vec vel(pl->vel);
 
 			d.mul(f);
 			loopi(moveres) if(!move(pl, d)) { if(++collisions<5) i--; } // discrete steps collision detection & sliding
-			if(pl->type==ENT_PLAYER && !pl->timeinair && vel.z <= -64) // if we land after long time must have been a high jump, make thud sound
+			if(pl->type == ENT_PLAYER && !pl->timeinair && timeinair > 1000) // if we land after long time must have been a high jump, make thud sound
 				playsound(S_LAND, pl->o, pl);
 		}
 
