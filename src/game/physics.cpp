@@ -612,7 +612,7 @@ namespace physics
 
 			if(local)
 			{
-				if(!isliquid(curmat) && isliquid(oldmat)) pl->vel.z += jumpvelocity(pl);
+				if(!isliquid(curmat) && isliquid(oldmat)) pl->vel.z = max(pl->vel.z, jumpvelocity(pl)); // ensure we have enough push out of water
 				else if(isliquid(curmat) && !isliquid(oldmat)) pl->vel.mul(liquidscale);
 				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
 					game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
