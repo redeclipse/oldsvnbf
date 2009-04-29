@@ -148,12 +148,14 @@ COMMANDN(music, playmusic, "ss");
 void smartmusic(bool cond, bool autooff)
 {
 	if(nosound || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
+	if(oldmusicvol >= 0) oldmusicvol = musicvol;
 	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic)))
 	{
 		playmusic(titlemusic, "");
 		playedmusic = autooff;
 		if(!cond) oldmusicvol = -1;
 	}
+	else if(music && Mix_PlayingMusic()) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
 }
 ICOMMAND(smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
 

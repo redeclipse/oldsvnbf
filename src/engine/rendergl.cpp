@@ -1283,22 +1283,16 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if(limitsky()) drawskybox(farplane, true);
-
 	rendergeom(level ? causticspass : 0);
-
 	if(level) queryreflections();
-
     if(level >= 2) generategrass();
-
     if(!limitsky()) drawskybox(farplane, false);
-
     if(level >= 2) renderdecals();
 
 	rendermapmodels();
 
 	if(level >= 2)
 	{
-		/*
 		rendergame();
 	    if(hasFBO)
 	    {
@@ -1307,9 +1301,8 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 	        drawreflections();
 	    }
 	    renderwater();
-		*/
         rendergrass();
-		//rendermaterials();
+		rendermaterials();
 		renderparticles();
     }
 
@@ -1703,7 +1696,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 		glPushMatrix();
 		glScalef(3.0f, 3.0f, 1);
 		const int subdiv = 16;
-		float cx = 0.5f*w, cy = 0.5f*h, aw = h*4.0f/3.0f, ah = h;
+		float cx = 0.5f*w, cy = (0.5f*h)+32, aw = h*4.0f/3.0f, ah = h;
 		if(aw > w) { aw = w; ah = w*3.0f/4.0f; }
         float tx1 = 378/1024.f, tx2 = 648/1024.f, txc = cx-aw/2 + aw*(tx1 + tx2)/2, txr = aw*(tx2 - tx1)/2,
               ty1 = 307/1024.f, ty2 = 658/1024.f, tyc = cy-ah/2 + ah*(ty1 + ty2)/2, tyr = ah*(ty2 - ty1)/2;
