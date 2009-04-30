@@ -95,9 +95,12 @@ void fatal(const char *s, ...)    // failure exit
 
         if(errors <= 1) // avoid recursion
         {
-            showcursor(true);
-            SDL_WM_GrabInput(SDL_GRAB_OFF);
-            SDL_SetGamma(1, 1, 1);
+            if(SDL_WasInit(SDL_INIT_VIDEO))
+            {
+                showcursor(true);
+                SDL_WM_GrabInput(SDL_GRAB_OFF);
+                SDL_SetGamma(1, 1, 1);
+            }
             #ifdef WIN32
                 MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
