@@ -618,6 +618,13 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="game\ai.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+			<Option target="server" />
+			<Option target="server-dbg" />
+		</Unit>
 		<Unit filename="game\aiman.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
