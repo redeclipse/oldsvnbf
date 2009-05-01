@@ -299,7 +299,7 @@ namespace game
 	{
 		part_create(PART_ELECTRIC_SLENS, m_speedtimex(fade), o, colour, size);
 		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, 20.f);
-		adddynlight(o, radius*1.1f, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
+		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
 	}
 
 	gameent *pointatplayer()
@@ -1442,7 +1442,7 @@ namespace game
 		}
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
-			int len = m_spawndelay(gamemode, mutators), interval = len/3, over = interval*2, millis = lastmillis-d->lastdeath;
+			int len = m_spawndelay(gamemode, mutators), interval = min(len/3, 1000), over = max(len-interval, 0), millis = lastmillis-d->lastdeath;
 			if(millis < len)
 			{
 				if(millis > over) return clamp(1.f-(float(millis-over)/float(interval)), 0.f, 1.f);
@@ -1469,9 +1469,8 @@ namespace game
 					gameent *d;
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
-						vec col = vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson())),
-							pos = vec(d->feetpos()).add(vec(0, 0, d->height/2));
-						adddynlight(pos, d->height*1.5f, col);
+						adddynlight(d->abovehead(), d->height*2,
+							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson())));
 					}
 				}
 			}
@@ -1603,7 +1602,8 @@ namespace game
 	{
 		if(trans <= 0.f)
 		{
-			if(rendernormally && (early || d != player1)) trans = 1e-16f;
+			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
+				trans = 1e-16f; // we need tag_muzzle
 			else return; // screw it, don't render them
 		}
         modelattach a[4];
