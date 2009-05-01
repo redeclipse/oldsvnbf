@@ -189,12 +189,12 @@ namespace stf
 		st.findscore(team).total = total;
 	}
 
-	bool aicheck(gameent *d, aistate &b)
+	bool aicheck(gameent *d, ai::aistate &b)
 	{
 		return false;
 	}
 
-	void aifind(gameent *d, aistate &b, vector<interest> &interests)
+	void aifind(gameent *d, ai::aistate &b, vector<ai::interest> &interests)
 	{
 		vec pos = d->feetpos();
 		loopvj(st.flags)
@@ -202,7 +202,7 @@ namespace stf
 			stfstate::flag &f = st.flags[j];
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, j, true);
+			ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
@@ -213,17 +213,17 @@ namespace stf
 			}
 			if((!regen && f.owner == d->team) || (targets.empty() && (f.owner != d->team || f.enemy)))
 			{
-				interest &n = interests.add();
-				n.state = AI_S_DEFEND;
+				ai::interest &n = interests.add();
+				n.state = ai::AI_S_DEFEND;
 				n.node = entities::closestent(WAYPOINT, f.o, ai::NEARDIST, false);
 				n.target = j;
-				n.targtype = AI_T_AFFINITY;
+				n.targtype = ai::AI_T_AFFINITY;
 				n.score = pos.squaredist(f.o)/(!regen ? 100.f : 1.f);
 			}
 		}
 	}
 
-	bool aidefend(gameent *d, aistate &b)
+	bool aidefend(gameent *d, ai::aistate &b)
 	{
 		if(st.flags.inrange(b.target))
 		{
@@ -234,7 +234,7 @@ namespace stf
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
-				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
+				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 				gameent *e = NULL;
 				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
@@ -258,9 +258,9 @@ namespace stf
 		return false;
 	}
 
-	bool aipursue(gameent *d, aistate &b)
+	bool aipursue(gameent *d, ai::aistate &b)
 	{
-		b.type = AI_S_DEFEND;
+		b.type = ai::AI_S_DEFEND;
 		return aidefend(d, b);
 	}
 

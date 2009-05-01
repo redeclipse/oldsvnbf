@@ -348,7 +348,7 @@ namespace ctf
        }
     }
 
-	bool aihomerun(gameent *d, aistate &b)
+	bool aihomerun(gameent *d, ai::aistate &b)
 	{
 		vec pos = d->feetpos();
 		loopk(2)
@@ -365,14 +365,14 @@ namespace ctf
 			}
 			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc, false))
 			{
-				d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, goal);
+				d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	bool aicheck(gameent *d, aistate &b)
+	bool aicheck(gameent *d, ai::aistate &b)
 	{
 		static vector<int> hasflags, takenflags;
 		hasflags.setsizenodelete(0);
@@ -392,13 +392,13 @@ namespace ctf
 		if(!ai::badhealth(d) && !takenflags.empty())
 		{
 			int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
-			d->ai->addstate(AI_S_PURSUE, AI_T_AFFINITY, takenflags[flag]);
+			d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
 			return true;
 		}
 		return false;
 	}
 
-	void aifind(gameent *d, aistate &b, vector<interest> &interests)
+	void aifind(gameent *d, ai::aistate &b, vector<ai::interest> &interests)
 	{
 		vec pos = d->feetpos();
 		loopvj(st.flags)
@@ -407,7 +407,7 @@ namespace ctf
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
 			bool home = isctfhome(f, d->team), regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
-			ai::checkothers(targets, d, home ? AI_S_DEFEND : AI_S_PURSUE, AI_T_AFFINITY, j, true);
+			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
@@ -433,11 +433,11 @@ namespace ctf
 				}
 				if(guard)
 				{ // defend the flag
-					interest &n = interests.add();
-					n.state = AI_S_DEFEND;
+					ai::interest &n = interests.add();
+					n.state = ai::AI_S_DEFEND;
 					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
-					n.targtype = AI_T_AFFINITY;
+					n.targtype = ai::AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos())/(!regen ? 100.f : 1.f);
 				}
 			}
@@ -445,11 +445,11 @@ namespace ctf
 			{
 				if(targets.empty())
 				{ // attack the flag
-					interest &n = interests.add();
-					n.state = AI_S_PURSUE;
+					ai::interest &n = interests.add();
+					n.state = ai::AI_S_PURSUE;
 					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
-					n.targtype = AI_T_AFFINITY;
+					n.targtype = ai::AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos());
 				}
 				else
@@ -457,11 +457,11 @@ namespace ctf
 					gameent *t;
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						interest &n = interests.add();
-						n.state = AI_S_DEFEND;
+						ai::interest &n = interests.add();
+						n.state = ai::AI_S_DEFEND;
 						n.node = t->lastnode;
 						n.target = t->clientnum;
-						n.targtype = AI_T_PLAYER;
+						n.targtype = ai::AI_T_PLAYER;
 						n.score = d->o.squaredist(t->o);
 					}
 				}
@@ -469,7 +469,7 @@ namespace ctf
 		}
 	}
 
-	bool aidefend(gameent *d, aistate &b)
+	bool aidefend(gameent *d, ai::aistate &b)
 	{
 		if(st.flags.inrange(b.target))
 		{
@@ -496,7 +496,7 @@ namespace ctf
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
-				ai::checkothers(targets, d, AI_S_DEFEND, AI_T_AFFINITY, b.target, true);
+				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 				gameent *e = NULL;
 				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 				{ // try to guess what non ai are doing
@@ -531,7 +531,7 @@ namespace ctf
 		return false;
 	}
 
-	bool aipursue(gameent *d, aistate &b)
+	bool aipursue(gameent *d, ai::aistate &b)
 	{
 		if(st.flags.inrange(b.target))
 		{
