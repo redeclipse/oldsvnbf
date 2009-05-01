@@ -225,7 +225,7 @@ static int getvardef(char *var)
     }
 }
 
-void guislider(char *var, int *min, int *max, char *onchange)
+void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
 {
 	if(!cgui) return;
 	int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
@@ -234,11 +234,11 @@ void guislider(char *var, int *min, int *max, char *onchange)
 		int vdef = getvardef(var);
 		vmax = vdef > vmin ? vdef*3 : vmin*4;
 	}
-	cgui->slider(val, vmin, vmax, GUI_TITLE_COLOR);
+	cgui->slider(val, vmin, vmax, GUI_TITLE_COLOR, NULL, *reverse ? true : false);
 	if(val != oldval) updateval(var, val, onchange);
 }
 
-void guilistslider(char *var, char *list, char *onchange)
+void guilistslider(char *var, char *list, char *onchange, int *reverse)
 {
 	if(!cgui) return;
 	vector<int> vals;
@@ -253,7 +253,7 @@ void guilistslider(char *var, char *list, char *onchange)
 	int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
 	loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
 	defformatstring(label)("%d", val);
-	cgui->slider(offset, 0, vals.length()-1, GUI_TITLE_COLOR, label);
+	cgui->slider(offset, 0, vals.length()-1, GUI_TITLE_COLOR, label, *reverse ? true : false);
 	if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
@@ -394,8 +394,8 @@ COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
 COMMAND(guiimage,"ssfiss");
-COMMAND(guislider,"siis");
-COMMAND(guilistslider, "sss");
+COMMAND(guislider,"siisi");
+COMMAND(guilistslider, "sssi");
 COMMAND(guiradio,"ssis");
 COMMAND(guibitfield, "ssis");
 COMMAND(guicheckbox, "ssiis");

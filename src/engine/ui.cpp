@@ -241,7 +241,7 @@ struct gui : g3d_gui
         return layout(size+SHADOW, size+SHADOW);
     }
 
-	void slider(int &val, int vmin, int vmax, int color, char *label)
+	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse)
 	{
 		autotab();
 		int x = curx;
@@ -263,12 +263,14 @@ struct gui : g3d_gui
 			{
 				hit = ishit(FONTH, ysize, x, y);
 				px = x + (FONTH-w)/2;
-                py = y + (ysize-FONTH) - ((ysize-FONTH)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at bottom
+                if(reverse) py = y + ((ysize-FONTH)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at top
+                else py = y + (ysize-FONTH) - ((ysize-FONTH)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at bottom
 			}
 			else
 			{
 				hit = ishit(xsize, FONTH, x, y);
-                px = x + FONTH/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
+                if(reverse) px = x + (xsize-FONTH/2-w/2) - ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at right
+                else px = x + FONTH/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
 				py = y;
 			}
 
@@ -277,8 +279,8 @@ struct gui : g3d_gui
 			if(hit && actionon)
 			{
                 int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
-                if(ishorizontal()) vnew = int(vnew*(y+ysize-FONTH/2-hity)/(ysize-FONTH));
-                else vnew = int(vnew*(hitx-x-FONTH/2)/(xsize-w));
+                if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-FONTH/2)/(ysize-FONTH)) : int(vnew*(y+ysize-FONTH/2-hity)/(ysize-FONTH));
+                else vnew = reverse ? int(vnew*(x+xsize-FONTH/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-FONTH/2)/(xsize-w));
 				vnew += vmin;
                 vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
 				if(vnew != val) val = vnew;
@@ -366,7 +368,7 @@ struct gui : g3d_gui
             if(slines > 0)
             {
                 int pos = e->scrolly;
-                slider(e->scrolly, slines, 0, color, NULL);
+                slider(e->scrolly, slines, 0, color, NULL, false);
                 if(pos != e->scrolly) e->cy = e->scrolly;
             }
             if(wasvertical) poplist();
