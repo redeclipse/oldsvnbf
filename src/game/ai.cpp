@@ -144,13 +144,13 @@ namespace ai
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, float obdist)
 	{
 		int n = node;
-		if((n == d->lastnode || n == d->ai->lastnode || n == d->ai->prevnode) && entities::ents.inrange(d->lastnode))
+		if((n == d->lastnode || d->ai->hasprevnode(n)) && entities::ents.inrange(d->lastnode))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 			static vector<int> noderemap; noderemap.setsizenodelete(0);
 			if(!e.links.empty())
 			{
-				loopv(e.links) if(e.links[i] != d->lastnode && e.links[i] != d->ai->lastnode && e.links[i] != d->ai->prevnode)
+				loopv(e.links) if(e.links[i] != d->lastnode && !d->ai->hasprevnode(e.links[i]))
 					noderemap.add(e.links[i]);
 			}
 			if(!noderemap.empty()) n = noderemap[rnd(noderemap.length())];
@@ -185,7 +185,7 @@ namespace ai
 		while(!candidates.empty())
 		{
 			int w = rnd(candidates.length()), n = candidates.removeunordered(w);
-			if(n != d->lastnode && n != d->ai->lastnode && n != d->ai->prevnode && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
+			if(n != d->lastnode && !d->ai->hasprevnode(n) && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
 		}
 		return false;
 	}
@@ -591,12 +591,12 @@ namespace ai
 		vec pos = d->feetpos();
 		int node = -1;
 		float mindist = NEARDISTSQ;
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && d->ai->route[i] != d->ai->lastnode && d->ai->route[i] != d->ai->prevnode)))
+		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && !d->ai->hasprevnode(d->ai->route[i]))))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, d->ai->route[i], epos);
-			if(entities::ents.inrange(entid) && (force || entid == d->ai->route[i] || (entid != d->ai->lastnode && entid != d->ai->prevnode)))
+			if(entities::ents.inrange(entid) && (force || entid == d->ai->route[i] || !d->ai->hasprevnode(entid)))
 			{
 				float dist = epos.squaredist(pos);
 				if(dist < mindist)
@@ -616,7 +616,7 @@ namespace ai
 			gameentity &e = *(gameentity *)entities::ents[n];
 			vec epos = e.o;
 			int entid = obstacles.remap(d, n, epos);
-			if(entities::ents.inrange(entid) && (force || entid == n || (entid != d->ai->lastnode && entid != d->ai->prevnode)))
+			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
 				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
@@ -642,7 +642,7 @@ namespace ai
 				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
 				if(!e.links.empty())
 				{
-					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || (e.links[i] != d->ai->lastnode && e.links[i] != d->ai->prevnode)))
+					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || !d->ai->hasprevnode(e.links[i])))
 						anyremap.add(e.links[i]);
 				}
 				while(!anyremap.empty())
@@ -963,12 +963,7 @@ namespace ai
 						}
 					}
 				}
-				if(d->ai->prevnode != d->lastnode)
-				{
-					if(d->ai->lastnode != d->ai->prevnode)
-						d->ai->lastnode = d->ai->prevnode;
-					d->ai->prevnode = d->lastnode;
-				}
+                d->ai->addprevnode(d->lastnode);
 			}
 		}
         if(d->state == CS_DEAD || d->state == CS_WAITING)
@@ -1104,13 +1099,6 @@ namespace ai
 	void drawroute(gameent *d, aistate &b, float amt)
 	{
 		int colour = teamtype[d->team].colour, last = -1;
-		if(aidebug > 4)
-		{
-			vec pos = vec(d->feetpos()).add(vec(0, 0, 0.1f));
-			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x00FFFF);
-			if(entities::ents.inrange(d->lastnode)) part_trace(pos, vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0xFF00FF);
-			if(entities::ents.inrange(d->ai->lastnode)) part_trace(pos, vec(entities::ents[d->ai->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0x880088);
-		}
 		loopvrev(d->ai->route)
 		{
 			if(d->ai->route.inrange(last))
@@ -1125,6 +1113,13 @@ namespace ai
 				}
 			}
 			last = i;
+		}
+		if(aidebug > 4)
+		{
+			vec pos = vec(d->feetpos()).add(vec(0, 0, 0.1f));
+			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x00FFFF);
+			if(entities::ents.inrange(d->lastnode)) part_trace(pos, vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0xFF00FF);
+			if(entities::ents.inrange(d->ai->prevnodes[1])) part_trace(pos, vec(entities::ents[d->ai->prevnodes[1]]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0x880088);
 		}
 	}
 
