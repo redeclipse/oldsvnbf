@@ -145,9 +145,8 @@ namespace ctf
 				int millis = lastmillis-f.interptime;
 				if(millis < 1000) trans = float(millis)/1000.f;
 			}
-			vec colour = vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f).mul(trans),
-				pos = vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius/2));
-			adddynlight(pos, enttype[FLAG].radius*1.5f, colour);
+			adddynlight(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2,
+				vec((teamtype[f.team].colour>>16), ((teamtype[f.team].colour>>8)&0xFF), (teamtype[f.team].colour&0xFF)).div(255.f).mul(trans));
         }
     }
 

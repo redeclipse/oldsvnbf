@@ -9,7 +9,7 @@ namespace entities
 	VARP(showentdir, 0, 1, 3);
 	VARP(showentradius, 0, 1, 3);
 	VARP(showentlinks, 0, 1, 3);
-	VARP(showlighting, 0, 1, 1);
+	VARP(showlighting, 0, 0, 1);
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	vector<extentity *> &getents() { return ents; }
@@ -1625,8 +1625,7 @@ namespace entities
 
 	void renderentlight(gameentity &e)
 	{
-		vec colour = vec(e.attr[1], e.attr[2], e.attr[3]).div(264.f);
-		adddynlight(vec(e.o), float(e.attr[0] ? e.attr[0] : hdr.worldsize)*0.9f, colour);
+		adddynlight(vec(e.o), float(e.attr[0] ? e.attr[0] : hdr.worldsize)*0.75f, vec(e.attr[1], e.attr[2], e.attr[3]).div(383.f));
 	}
 
 	void adddynlights()
