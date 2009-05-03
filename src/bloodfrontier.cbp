@@ -59,7 +59,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-hhome -rinit.cfg -df0 -dw848 -dh480" />
+				<Option parameters="-hhome -rinit.cfg -df0 -dw1024 -dh768" />
 				<Option projectCompilerOptionsRelation="1" />
 				<Option projectLinkerOptionsRelation="1" />
 				<Option projectIncludeDirsRelation="1" />
