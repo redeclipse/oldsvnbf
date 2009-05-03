@@ -415,8 +415,11 @@ int addclient(int type)
 
 #ifndef STANDALONE
 extern bool connectedlocally;
+extern char *lastaddress;
 void localconnect()
 {
+	if(lastaddress) delete[] lastaddress;
+	lastaddress = NULL;
     int cn = addclient(ST_LOCAL);
     clientdata &c = *clients[cn];
     c.peer = NULL;

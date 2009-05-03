@@ -428,8 +428,8 @@ void clearservers()
 {
     resolverclear();
     servers.deletecontentsp();
-	if(servertype)
-		addserver("localhost", serverport, serverqueryport);
+	//if(servertype)
+	//	addserver("localhost", serverport, serverqueryport);
 	lastinfo = 0;
 }
 
