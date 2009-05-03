@@ -305,8 +305,8 @@ namespace ctf
     void scoreflag(gameent *d, int relay, int goal, int score)
     {
         if(!st.flags.inrange(goal) || !st.flags.inrange(relay)) return;
-		ctfstate::flag &f = st.flags[goal], &g = st.flags[relay];
-		flageffect(goal, d->team, st.flags[goal].spawnloc, st.flags[relay].spawnloc);
+		ctfstate::flag &f = st.flags[relay], &g = st.flags[goal];
+		flageffect(goal, d->team, g.spawnloc, f.spawnloc);
 		(st.findscore(d->team)).total = score;
 		f.interptime = lastmillis;
 		st.returnflag(relay);
@@ -315,7 +315,7 @@ namespace ctf
 			defformatstring(ds)("@CAPTURED!");
 			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, teamtype[d->team].colour, 3.f);
 		}
-		game::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[g.team].chat, teamtype[g.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-g.taketime)/1000.f);
+		game::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
 		g.taketime = 0;
     }
 
