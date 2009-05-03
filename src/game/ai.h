@@ -184,8 +184,8 @@ namespace ai
 
 	extern bool badhealth(gameent *d);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
-	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, float obdist = NEARDIST);
-	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true, float obdist = NEARDIST);
+	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, bool check = true);
+	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true, bool check = true);
 	extern bool randomnode(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST);
 	extern bool randomnode(gameent *d, aistate &b, float guard = NEARDIST, float wander = FARDIST);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);

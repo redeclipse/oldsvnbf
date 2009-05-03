@@ -114,7 +114,7 @@ namespace physics
 
 	float gravityforce(physent *d)
 	{
-		return m_speedscale(gravity)*(d->weight/100.f)*gravityscale;
+		return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale;
 	}
 
 	float upwardforce(physent *d)

@@ -1080,7 +1080,7 @@ namespace entities
         float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, float obdist)
+	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool check)
 	{
         if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
 			return false;
@@ -1098,21 +1098,18 @@ namespace entities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
-		if(obdist >= 0.f)
+		if(check)
 		{
 			vec pos = d->feetpos();
-			loopavoid(obstacles, d,
+			loopavoid(obstacles, d, { if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
 			{
-				if(ents.inrange(ent) && ents[ent]->type == ents[node]->type && (ent == node || ent == goal || !ents[ent]->links.empty()))
+				if(ent != node && ent != goal && ents[node]->links.find(ent) < 0 && ents[goal]->links.find(ent) < 0)
 				{
-					if(obdist <= 0.f || ents[ent]->o.dist(pos) <= obdist)
-					{
-						nodes[ent].id = routeid;
-						nodes[ent].curscore = -1.f;
-						nodes[ent].estscore = 0.f;
-					}
+					nodes[ent].id = routeid;
+					nodes[ent].curscore = -1.f;
+					nodes[ent].estscore = 0.f;
 				}
-			});
+			}});
 		}
 
 		nodes[node].id = routeid;
