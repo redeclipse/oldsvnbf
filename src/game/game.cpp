@@ -1432,7 +1432,7 @@ namespace game
 		}
 	}
 
-	float showtranslucent(gameent *d, bool third = true)
+	float showtranslucent(gameent *d, bool third = true, bool full = false)
 	{
 		float def = (d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent)) ? 0.5f : 1.f;
 		if(d->state == CS_ALIVE)
@@ -1442,7 +1442,7 @@ namespace game
 		}
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
-			int len = m_spawndelay(gamemode, mutators), interval = min(len/3, 1000), over = max(len-interval, 0), millis = lastmillis-d->lastdeath;
+			int len = m_spawndelay(gamemode, mutators), interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
 			if(millis < len)
 			{
 				if(millis > over) return clamp(1.f-(float(millis-over)/float(interval)), 0.f, 1.f);
@@ -1470,7 +1470,7 @@ namespace game
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
 						adddynlight(d->abovehead(), d->height*2,
-							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson())));
+							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson(), true)));
 					}
 				}
 			}
