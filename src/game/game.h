@@ -1150,7 +1150,7 @@ namespace hud
 namespace game
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, lastzoom, lastspec, spectvtime,
+			quakewobble, lastzoom, lastspec, lastspecchg, spectvtime,
 				noblood, fogdist;
 	extern bool intermission, zooming;
 

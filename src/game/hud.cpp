@@ -1278,10 +1278,7 @@ namespace hud
 		}
 		else if(game::tvmode())
 		{
-			float amt = 1.f;
-			int millis = game::spectvtime ? min(game::spectvtime/10, 500) : 500, interval = lastmillis-game::lastspec;
-			if(!game::lastspec || interval < millis) amt = game::lastspec ? float(interval)/float(millis) : 0.f;
-			else if(game::spectvtime && interval > game::spectvtime-millis) amt = float(game::spectvtime-interval)/float(millis);
+			float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
 			if(amt < 1.f)
 			{
 				usetexturing(false); texturing = false;
