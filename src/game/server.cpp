@@ -791,7 +791,7 @@ namespace server
 	void sendspawn(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), !m_noitems(gamemode, mutators));
+		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v",
 			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.sequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
