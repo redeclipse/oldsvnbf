@@ -39,8 +39,6 @@ namespace hud
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
-	FVARP(commandoffset, 0.f, 0.35f, 1.f);
-
 	FVARP(noticeoffset, 0.f, 0.33f, 1.f);
 	FVARP(noticeblend, 0.f, 0.75f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
@@ -489,12 +487,15 @@ namespace hud
 
 		// superhud!
 		pushfont("super");
-		int ty = (hudsize/2)-FONTH, tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
+		int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
-			ty += draw_textx(commandbuf, tx-FONTW/2, ty+int(hudsize/2*commandoffset), 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
+		{
+			pushfont("emphasis");
+			ty += draw_textx(commandbuf, tx-FONTW/2, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
+			popfont();
+		}
 		else if(shownotices && game::maptime && !UI::hascursor(false) && !texpaneltimer)
 		{
-			ty += int(hudsize/2*noticeoffset);
 			tf = int(tf*noticeblend);
 			if(teamnotices) skewcolour(tr, tg, tb);
 			if(lastmillis-game::maptime <= titlecard)
@@ -697,6 +698,7 @@ namespace hud
 		bool full = fullconsole || commandmillis >= 0;
 		if(full) numl = fullconsize;
 		else numl = consize;
+		pushfont("hud");
 		if(type == CON_CHAT)
 		{
 			numl = chatconsize;
@@ -708,10 +710,8 @@ namespace hud
 					if(refs.length() >= numl) break;
 				}
 			}
-			pushfont("hud");
 			int r = x+FONTW, z = y;
 			loopv(refs) z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_UP, -1, s, refs[i]);
-			popfont();
 		}
 		else
 		{
@@ -723,11 +723,10 @@ namespace hud
 					if(refs.length() >= numl) break;
 				}
 			}
-			pushfont("sub");
 			int z = y;
 			loopvrev(refs) z += draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), TEXT_CENTERED, -1, s, refs[i]);
-			popfont();
 		}
+		popfont();
 	}
 
 	float radarrange()
