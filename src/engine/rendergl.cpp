@@ -1592,23 +1592,12 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
 }
 
 extern int actualvsync;
-int lastoutofloop = 0, timeoutofloop = 0;
+int lastoutofloop = 0;
 float loadprogress = 0;
 void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
-	if(!inbetweenframes) return;
-	else if(actualvsync > 0)
-	{ // try a best guess at the time it takes to swap the buffer
-		int tick = SDL_GetTicks();
-		if(!timeoutofloop)
-		{ // time the buffer swap to get an idea of the refresh interval
-			loopi(2) SDL_GL_SwapBuffers();
-			timeoutofloop = SDL_GetTicks()-tick; // doesn't need to be accurate, just close
-			conoutf("\fgvsync interval estimate is: %d", timeoutofloop);
-			return; // because we just flipped twice, don't block more
-		}
-		else if(lastoutofloop && tick-lastoutofloop < timeoutofloop) return;
-	}
+	if(!inbetweenframes || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
+		return;
 	clientkeepalive();
 
     #ifdef __APPLE__
@@ -1731,7 +1720,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	swapbuffers();
-	if(actualvsync > 0) lastoutofloop = SDL_GetTicks();
+	lastoutofloop = SDL_GetTicks();
 }
 
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;

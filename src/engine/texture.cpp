@@ -136,7 +136,7 @@ void texreorient(ImageData &s, bool flipx, bool flipy, bool swapxy, int type = T
 
 void texrotate(ImageData &s, int numrots, int type = TEX_DIFFUSE)
 {
-    // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y 
+    // 1..3 rotate through 90..270 degrees, 4 flips X, 5 flips Y
     if(numrots>=1 && numrots<=5)
         texreorient(s,
             numrots>=2 && numrots<=4, // flip X on 180/270 degrees
@@ -518,7 +518,7 @@ void setuptexparameters(int tnum, void *pixels, int clamp, int filter, GLenum fo
                 (bilinear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST)) :
             (filter && bilinear ? GL_LINEAR : GL_NEAREST));
     if(hasGM && filter > 1 && pixels && hwmipmap && !uncompressedformat(format))
-        glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE); 
+        glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
 }
 
 void createtexture(int tnum, int w, int h, void *pixels, int clamp, int filter, GLenum component, GLenum subtarget, int pw, int ph, int pitch, bool resize)
@@ -698,7 +698,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
         }
         createcompressedtexture(t->frames[0], t->w, t->h, data, s.align, s.bpp, levels, clamp, mipit ? 2 : 1, s.compressed, GL_TEXTURE_2D);
     }
-	else 
+	else
     {
         resizetexture(t->w, t->h, mipit, canreduce, GL_TEXTURE_2D, compress, t->w, t->h);
         GLenum format = compressedformat(texformat(t->bpp), t->w, t->h, compress);
@@ -715,10 +715,10 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
             {
                 int sx = (i%anim->x)*anim->w, sy = (((i-(i%anim->x))/anim->x)%anim->y)*anim->h;
                 texcrop(s, cropped, sx, sy, anim->w, anim->h);
-                data = cropped.data;         
+                data = cropped.data;
                 pitch = cropped.pitch;
             }
-    
+
             createtexture(t->frames[i], t->w, t->h, data, clamp, mipit ? 2 : 1, format, GL_TEXTURE_2D, t->xs, t->ys, pitch, false);
 
 		    if(verbose >= 3)
@@ -758,7 +758,7 @@ SDL_Surface *creatergbsurface(SDL_Surface *os)
 SDL_Surface *creatergbasurface(SDL_Surface *os)
 {
     SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RGBAMASKS);
-    if(ns) 
+    if(ns)
     {
         SDL_SetAlpha(os, 0, 0);
         SDL_BlitSurface(os, NULL, ns, NULL);
@@ -783,9 +783,9 @@ SDL_Surface *fixsurfaceformat(SDL_Surface *s)
 {
     if(!s) return NULL;
     if(!s->pixels || min(s->w, s->h) <= 0 || s->format->BytesPerPixel <= 0)
-    { 
-        SDL_FreeSurface(s); 
-        return NULL; 
+    {
+        SDL_FreeSurface(s);
+        return NULL;
     }
     static const uint rgbmasks[] = { RGBMASKS }, rgbamasks[] = { RGBAMASKS };
     switch(s->format->BytesPerPixel)
@@ -1447,10 +1447,10 @@ Texture *loadthumbnail(Slot &slot)
                 forcergbimage(s);
                 forcergbimage(l);
                 uchar *dstrow = &s.data[s.pitch*l.h + s.bpp*l.w], *srcrow = l.data;
-                loop(y, l.h) 
+                loop(y, l.h)
                 {
                     for(uchar *dst = dstrow, *src = srcrow, *end = &srcrow[l.w*l.bpp]; src < end; dst += s.bpp, src += l.bpp)
-                        loopk(3) dst[k] = src[k]; 
+                        loopk(3) dst[k] = src[k];
                     dstrow += s.pitch;
                     srcrow += l.pitch;
                 }
@@ -1703,6 +1703,7 @@ void genenvmaps()
             lastprogress = millis;
         }
 	}
+	restorebackground();
 }
 
 ushort closestenvmap(const vec &o)
