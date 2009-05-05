@@ -10,7 +10,7 @@ namespace hud
 	FVARP(gapsize, 0, 0.01f, 1000);
 
 	VARP(showconsole, 0, 2, 2);
-	VARP(shownotices, 0, 4, 4);
+	VARP(shownotices, 0, 3, 4);
 
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
@@ -30,10 +30,10 @@ namespace hud
 	}
 	COMMANDN(conskip, setconskip, "i");
 
-	VARP(consize, 0, 5, 100);
+	VARP(consize, 0, 6, 100);
 	VARP(contime, 0, 15000, INT_MAX-1);
 	FVARP(conblend, 0, 0.85f, 1);
-	VARP(chatconsize, 0, 5, 100);
+	VARP(chatconsize, 0, 6, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	FVARP(chatconblend, 0, 0.85f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
@@ -101,7 +101,9 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventoryedit, 0, 1, 1);
-	VARP(inventoryscores, 0, 1, 1);
+	VARP(inventorygame, 0, 0, 1);
+	VARP(inventorystatus, 0, 0, 1);
+	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventoryweapents, 0, 0, 1);
 	VARP(inventoryhealth, 0, 2, 2);
@@ -369,6 +371,10 @@ namespace hud
 					drawfadedslice(max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo),
 						min(min(maxammo-ammo, ammo), 2) /float(maxammo),
 							x, y, s, fade, r, g, b);
+                break;
+
+            case WEAPON_GL:
+                drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
                 break;
 
             default:
@@ -980,9 +986,12 @@ namespace hud
 		int sy = showfps ? s/2+s/4 : s/16;
 		if(game::player1->state == CS_ALIVE)
 		{
-			if(game::player1->team)
-				sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name) + s/8;
-			else sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+			if(inventorystatus)
+			{
+				if(game::player1->team)
+					sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name) + s/8;
+				else sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+			}
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
@@ -1045,7 +1054,7 @@ namespace hud
 		{
 			if(game::player1->state == CS_EDITING)
 			{
-				sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
 				if(inventoryedit)
 				{
 					int stop = hudsize-s*3;
@@ -1053,9 +1062,12 @@ namespace hud
 					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend)) >= stop) break;
 				}
 			}
-			else if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
-			else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f);
-			else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
+			else if(inventorystatus)
+			{
+				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
+				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f);
+				else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
+			}
 		}
 		return sy;
 	}
@@ -1068,7 +1080,7 @@ namespace hud
         settexture(healthtex, 3);
         glColor4f(r, g, b, fade*(game::player1->state == CS_ALIVE ? 0.5f : 1.f));
         drawtex(x, y-size, width, size);
-		if(inventoryhealth && game::player1->state == CS_ALIVE)
+		if(game::player1->state == CS_ALIVE)
 		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
 			else if(inventorythrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
@@ -1140,8 +1152,8 @@ namespace hud
 		{
 			case 0: default:
 			{
-				if((cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-				if(!m_edit(game::gamemode) && inventoryscores && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				if(inventoryhealth && (cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+				if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 				break;
 			}
 			case 1:
@@ -1149,8 +1161,11 @@ namespace hud
 				if(!texpaneltimer)
 				{
 					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-					if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-					if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					if(inventorygame)
+					{
+						if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+						if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+					}
 				}
 				break;
 			}
@@ -1343,7 +1358,7 @@ namespace hud
 		if(showconsole)
 		{
 			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, ox/2, os, bs*2);
-			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, bs);
+			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 		}
 
 		if(!texpaneltimer)

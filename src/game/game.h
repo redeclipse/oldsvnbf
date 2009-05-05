@@ -330,7 +330,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,			0x8822FF,
 			S_RIFLE,	S_BZAP,		S_BZZT,	-1,
-			1,		5,		750,	1250,	100,	3000,	0,		10000,
+			1,		5,		750,	1250,	100,	3000,	0,		20000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
@@ -340,7 +340,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_GL,			ANIM_GRENADES,	-5,    5,			0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		4,		1500,	1500,	200,	350,	3000,	3000,
+			1,		2,		1500,	1500,	200,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		300.f,
@@ -830,20 +830,19 @@ struct gamestate
 		weapreset(true);
 	}
 
-	void spawnstate(int sweap, int heal, bool others)
+	void spawnstate(int sweap, int heal)
 	{
 		health = heal;
 		weapreset(true);
 		lastweap = weapselect = sweap;
-		loopi(WEAPON_MAX)
-			ammo[i] = (i == sweap || (others && !weaptype[i].reloads)) ? weaptype[i].add : -1;
+		loopi(WEAPON_MAX) ammo[i] = i == sweap ? weaptype[i].add : -1;
 	}
 
 	void editspawn(int millis, int sweap, int heal)
 	{
 		clearstate();
 		lastspawn = millis;
-		spawnstate(sweap, heal, true);
+		spawnstate(sweap, heal);
 	}
 
     int respawnwait(int millis, int delay)
