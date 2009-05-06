@@ -2,7 +2,7 @@
 namespace client
 {
 	bool c2sinit = false, sendinfo = false, isready = false, remote = false,
-		demoplayback = false, needsmap = false, gettingmap = false, donesave = false;
+		demoplayback = false, needsmap = false, gettingmap = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
 
@@ -108,7 +108,7 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		gettingmap = needsmap = donesave = remote = isready = c2sinit = sendinfo = false;
+		gettingmap = needsmap = remote = isready = c2sinit = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
         messagereliable = false;
@@ -366,7 +366,7 @@ namespace client
 		game::maptime = 0;
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
-		donesave = needsmap = false;
+		needsmap = false;
 		if(!name || !*name || !load_world(name, temp))
 		{
 			emptymap(0, true, NULL);
@@ -474,7 +474,7 @@ namespace client
 		const char *mapname = getmapname();
 		if(!mapname || !*mapname) mapname = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
-		defformatstring(mapfile)("temp/%s", mapname);
+		defformatstring(mapfile)("%s%s", edit ? "temp/" : "", mapname);
 		loopi(3)
 		{
 			string mapfext;
@@ -484,11 +484,10 @@ namespace client
 				case 1: formatstring(mapfext)("%s.png", mapfile); break;
 				case 0: default:
 					formatstring(mapfext)("%s.bgz", mapfile);
-					if(edit || !donesave)
+					if(edit)
 					{
 						save_world(mapfile, edit, true);
 						setnames(mapname, MAP_BFGZ);
-						donesave = true;
 					}
 					break;
 			}
@@ -1678,7 +1677,7 @@ namespace client
 					int size = getint(p);
 					if(size>=0) emptymap(size, true);
 					else enlargemap(true);
-					donesave = needsmap = false;
+					needsmap = false;
 					if(d && d!=game::player1)
 					{
 						int newsize = 0;
