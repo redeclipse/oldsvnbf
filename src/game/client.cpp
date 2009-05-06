@@ -63,9 +63,9 @@ namespace client
 
 	void switchteam(const char *team)
 	{
-		if(m_team(game::gamemode, game::mutators) && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING)
+		if(team[0])
 		{
-			if(team[0])
+			if(m_team(game::gamemode, game::mutators) && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING)
 			{
 				int t = teamname(team);
 				if(t != game::player1->team)
@@ -74,9 +74,9 @@ namespace client
 					game::player1->team = t;
 				}
 			}
-			else conoutf("\fs\fmyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+			else conoutf("\frcan only change teams when actually playing in team games");
 		}
-		else conoutf("\frcan only change teams when actually playing in team games");
+		else conoutf("\fs\fmyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 	}
 	ICOMMAND(team, "s", (char *s), switchteam(s));
 

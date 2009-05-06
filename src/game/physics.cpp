@@ -94,7 +94,7 @@ namespace physics
 				return false;
 			return true;
 		}
-        return d->state == CS_DEAD || d->state == CS_WAITING || d->state == CS_SPECTATOR;
+        return d->state == CS_DEAD || d->state == CS_WAITING;
 	}
 
 	bool iscrouching(physent *d)
@@ -135,12 +135,13 @@ namespace physics
 	{
 		if(d->type == ENT_CAMERA)
 		{
-			if(game::player1->state == CS_WAITING) return m_speedscale(game::player1->maxspeed)*(game::player1->weight/100.f);
+			if(game::player1->state == CS_SPECTATOR) return game::player1->maxspeed*(game::player1->weight/100.f);
+			else if(game::player1->state == CS_WAITING) return m_speedscale(game::player1->maxspeed)*(game::player1->weight/100.f);
 			else return d->maxspeed*(d->weight/100.f);
 		}
 		else if(d->type == ENT_PLAYER)
 		{
-			if(d->state != CS_SPECTATOR && d->state != CS_EDITING)
+			if(d->state != CS_EDITING)
 				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
 			else return d->maxspeed*(d->weight/100.f);
 		}
@@ -149,7 +150,7 @@ namespace physics
 
 	bool movepitch(physent *d)
 	{
-		return d->type == ENT_CAMERA || d->state == CS_SPECTATOR || d->state == CS_EDITING;
+		return d->type == ENT_CAMERA || d->state == CS_EDITING;
 	}
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
@@ -642,7 +643,7 @@ namespace physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
+		bool floating = pl->type == ENT_PLAYER && pl->state == CS_EDITING;
 		float secs = millis/1000.f;
 
 		if(pl->type==ENT_PLAYER)

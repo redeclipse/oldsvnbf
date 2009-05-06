@@ -54,11 +54,8 @@ namespace game
 
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv, 2 = follow
 	VARP(spectvtime, 1000, 30000, INT_MAX-1);
-	//VAR(specfollowing, 0, 0, INT_MAX-1);
-	VARP(specmouse, 0, 0, 2);
 	VARP(specfov, 1, 120, 179);
-	VARP(specdeadzone, 0, 10, 100);
-	VARP(specpanspeed, 1, 20, INT_MAX-1);
+
 	FVARP(spectvspeed, 0.1f, 1.f, 1000);
 	FVARP(deathcamspeed, 0.1f, 2.f, 1000);
 
@@ -119,9 +116,7 @@ namespace game
 
 	//ICOMMAND(specfollow, "i", (int *d), specfollower(*d));
 
-	void start()
-	{
-	}
+	void start() { }
 
 	char *gametitle() { return server::gamename(gamemode, mutators); }
 	char *gametext() { return getmapname(); }
@@ -140,7 +135,6 @@ namespace game
 	int mousestyle()
 	{
 		if(player1->state == CS_EDITING) return editmouse;
-		if(player1->state == CS_SPECTATOR) return specmouse;
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemouse : pronemouse;
 		if(isthirdperson()) return thirdpersonmouse;
 		return firstpersonmouse;
@@ -149,7 +143,6 @@ namespace game
 	int deadzone()
 	{
 		if(player1->state == CS_EDITING) return editdeadzone;
-		if(player1->state == CS_SPECTATOR) return specdeadzone;
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipedeadzone : pronedeadzone;
 		if(isthirdperson()) return thirdpersondeadzone;
 		return firstpersondeadzone;
@@ -159,7 +152,6 @@ namespace game
 	{
 		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipepanspeed : pronepanspeed;
 		if(player1->state == CS_EDITING) return editpanspeed;
-		if(player1->state == CS_SPECTATOR) return specpanspeed;
 		if(isthirdperson()) return thirdpersonpanspeed;
 		return firstpersonpanspeed;
 	}
@@ -279,7 +271,7 @@ namespace game
         		if(UI::hascursor(true)) return false;
 				if(tvmode()) return false;
         	}
-			if(d->state == CS_DEAD || d->state == CS_WAITING || intermission)
+			if(d->state == CS_DEAD || d->state == CS_WAITING || d->state == CS_SPECTATOR || intermission)
 				return false;
         }
         return true;
@@ -919,7 +911,7 @@ namespace game
 	{
 		bool hascursor = UI::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
-		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING))
+		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR))
 		{
 			if(absmouse) // absolute positions, unaccelerated
 			{
@@ -934,9 +926,9 @@ namespace game
 				return true;
 			}
 		}
-		else
+		else if(!tvmode())
 		{
-			if(player1->state == CS_WAITING)
+			if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
 			{
 				camera1->yaw += mousesens(dx, w, yawsensitivity*sensitivity);
 				camera1->pitch -= mousesens(dy, h, pitchsensitivity*sensitivity*(!hascursor && invmouse ? -1.f : 1.f));
@@ -1045,7 +1037,7 @@ namespace game
 			camera1->state = CS_ALIVE;
 			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
-		if(player1->state != CS_WAITING)
+		if(player1->state != CS_WAITING && (player1->state != CS_SPECTATOR || tvmode()))
 		{
 			camera1->vel = vec(0, 0, 0);
 			camera1->move = camera1->strafe = 0;
@@ -1054,7 +1046,7 @@ namespace game
 
 	void cameraplayer()
 	{
-		if(player1->state != CS_WAITING && player1->state != CS_DEAD && !tvmode())
+		if(player1->state != CS_WAITING && player1->state != CS_SPECTATOR && player1->state != CS_DEAD && !tvmode())
 		{
 			if(mousestyle() == 2) vectoyawpitch(cursordir, player1->yaw, player1->pitch);
 			if(isthirdperson())
@@ -1239,6 +1231,7 @@ namespace game
 			}
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			else scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
+			camera1->resetinterp();
 			player1->yaw = player1->aimyaw = camera1->yaw;
 			player1->pitch = player1->aimpitch = camera1->pitch;
 			player1->resetinterp();
@@ -1264,7 +1257,7 @@ namespace game
         	game::player1->conopen = commandmillis >= 0 || UI::hascursor(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
-			else player1->stopmoving(player1->state != CS_WAITING);
+			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
             gameent *d = NULL;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
@@ -1301,16 +1294,13 @@ namespace game
 			else
             {
                 if(player1->ragdoll) cleanragdoll(player1);
-				if(!intermission)
+				if(player1->state == CS_EDITING) physics::move(player1, 10, true);
+				else if(!intermission && player1->state == CS_ALIVE)
 				{
-					if(player1->state == CS_ALIVE)
-					{
-						physics::move(player1, 10, true);
-						addsway(player1);
-						entities::checkitems(player1);
-						weapons::reload(player1);
-					}
-					else if(!tvmode()) physics::move(player1, 10, true);
+					physics::move(player1, 10, true);
+					addsway(player1);
+					entities::checkitems(player1);
+					weapons::reload(player1);
 				}
             }
 			checkcamera();
@@ -1323,13 +1313,13 @@ namespace game
 				camera1->aimyaw = camera1->yaw;
 				camera1->aimpitch = camera1->pitch;
 			}
-			else if(player1->state == CS_WAITING)
+			else if(tvmode()) cameratv();
+			else if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
 			{
 				camera1->move = player1->move;
 				camera1->strafe = player1->strafe;
 				physics::move(camera1, 10, true);
 			}
-			else if(tvmode()) cameratv();
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
 		}
 
@@ -1346,14 +1336,14 @@ namespace game
 			{
 				resetcursor();
 				cameras.setsize(0);
-				if(mousestyle() == 2 && player1->state != CS_WAITING)
+				if(mousestyle() == 2 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR)
 				{
 					camera1->yaw = player1->aimyaw = player1->yaw;
 					camera1->pitch = player1->aimpitch = player1->pitch;
 				}
 			}
 
-			if(player1->state == CS_DEAD || player1->state == CS_WAITING || tvmode())
+			if(player1->state == CS_DEAD || player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
 			{
 				camera1->aimyaw = camera1->yaw;
 				camera1->aimpitch = camera1->pitch;
