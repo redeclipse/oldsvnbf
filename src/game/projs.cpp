@@ -120,7 +120,7 @@ namespace projs
 			{
 				if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 				{
-					proj.mdl = ((int)(size_t)&proj)&0x40 ? "gibc" : "gibh";
+					proj.mdl = rnd(2) ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.3f;
 					proj.reflectivity = 0.f;
@@ -427,7 +427,7 @@ namespace projs
 				}
 				case WEAPON_FLAMER:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.05f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender)
 					{
 						bool effect = false;
@@ -562,16 +562,16 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood || m_paint(game::gamemode, game::mutators))))
 		{
-			proj.lifesize = clamp(1.f-proj.lifespan, 1e-3f, 1.f); // gets smaller as it gets older
-			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 0, 10);
+			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize), 5, 15);
 			if(proj.canrender && steps && proj.movement > 0.f)
 			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.5f), pos = proj.o;
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.35f), pos = proj.o;
 				loopi(steps)
 				{
-					float res = float(steps-i)/float(steps), size = clamp(proj.radius*proj.lifesize*res, 0.1f, proj.radius);
-					int col = ((int(144*max(res,0.3f))<<16)+1)|((int(48*max(res,0.1f))+1)<<8);
-					part_create(i ? PART_PLASMA_SOFT : PART_PLASMA_SOFT_SLENS, 1, pos, col, size);
+					float res = float(steps-i)/float(steps), size = clamp(proj.radius*(proj.lifesize+0.1f)*res, 0.1f, proj.radius);
+					int col = ((int(196*max(res,0.3f))<<16)+1)|((int(64*max(res,0.2f))+1)<<8);
+					part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT_SLENS, 1, pos, col, size);
 					pos.add(dir);
 					if(proj.o.dist(pos) > proj.movement) break;
 				}
@@ -1051,7 +1051,19 @@ namespace projs
 		{
 			projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
-			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST);
+			float trans = 1.f;
+			switch(proj.projtype)
+			{
+				case PRJ_GIBS: case PRJ_DEBRIS:
+					if(proj.lifemillis)
+					{
+						int interval = min(proj.lifemillis, 1000);
+						if(proj.lifetime < interval) trans = float(proj.lifetime)/float(interval);
+					}
+					break;
+				default: break;
+			}
+			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST, NULL, NULL, 0, 0, trans);
 		}
 	}
 
