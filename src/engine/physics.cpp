@@ -680,7 +680,7 @@ void rotatebb(vec &center, vec &radius, int yaw)
 
 bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // collide with a mapmodel
 {
-    if(d->type == ENT_CAMERA || d->state == CS_SPECTATOR) return true;
+    if(d->type == ENT_CAMERA) return true;
     const vector<extentity *> &ents = entities::getents();
     loopv(oc.mapmodels)
     {
@@ -757,7 +757,7 @@ bool cubecollide(physent *d, const vec &dir, float cutoff, cube &c, int x, int y
                 if(!dir.iszero())
                 {
                     if(f.dot(dir) >= -cutoff*dir.magnitude()) continue;
-                    if((d->type<ENT_CAMERA && d->state != CS_SPECTATOR) &&
+                    if(d->type<ENT_CAMERA &&
                         dist < (dir.z*f.z < 0 ?
                             d->zmargin-(d->height+d->aboveeye)/(dir.z < 0 ? 3.0f : 4.0f) :
                             ((dir.x*f.x < 0 || dir.y*f.y < 0) ? -r : 0)))
@@ -802,7 +802,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
             if(c[i].ext) switch(c[i].ext->material&MATF_CLIP)
 			{
                 case MAT_NOCLIP: continue;
-                case MAT_CLIP: if(isclipped(c[i].ext->material&MATF_VOLUME) || (d->type<ENT_CAMERA && d->state != CS_SPECTATOR)) solid = true; break;
+                case MAT_CLIP: if(isclipped(c[i].ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
             if(!cubecollide(d, dir, cutoff, c[i], o.x, o.y, o.z, size, solid)) return false;
@@ -831,7 +831,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     if(c->ext) switch(c->ext->material&MATF_CLIP)
     {
         case MAT_NOCLIP: return true;
-        case MAT_CLIP: if(isclipped(c->ext->material&MATF_VOLUME) || (d->type<ENT_CAMERA && d->state != CS_SPECTATOR)) solid = true; break;
+        case MAT_CLIP: if(isclipped(c->ext->material&MATF_VOLUME) || d->type<ENT_CAMERA) solid = true; break;
     }
     if(!solid && isempty(*c)) return true;
     int csize = 2<<scale, cmask = ~(csize-1);
