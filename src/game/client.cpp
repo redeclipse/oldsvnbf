@@ -196,7 +196,7 @@ namespace client
         int aitype = type > 0 && type < AI_MAX ? type : AI_BOT;
         return d->aitype==aitype;
     }
-    ICOMMAND(isai, "i", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
+    ICOMMAND(isai, "ii", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
 
     int parseplayer(const char *arg)
     {
