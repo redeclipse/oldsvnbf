@@ -169,26 +169,81 @@ namespace client
 		entities::edittoggled(edit);
 	}
 
-	int parseplayer(const char *arg)
-	{
-		char *end;
-		int n = strtol(arg, &end, 10);
-		if(!game::players.inrange(n)) return -1;
-		if(*arg && !*end) return n;
-		// try case sensitive first
-		loopi(game::numdynents())
-		{
-			gameent *o = (gameent *)game::iterdynents(i);
-			if(o && !strcmp(arg, o->name)) return o->clientnum;
-		}
-		// nothing found, try case insensitive
-		loopi(game::numdynents())
-		{
-			gameent *o = (gameent *)game::iterdynents(i);
-			if(o && !strcasecmp(arg, o->name)) return o->clientnum;
-		}
-		return -1;
-	}
+    const char *getclientname(int cn)
+    {
+        gameent *d = game::getclient(cn);
+        return d ? d->name : "";
+    }
+    ICOMMAND(getclientname, "i", (int *cn), result(getclientname(*cn)));
+
+    int getclientteam(int cn)
+    {
+        gameent *d = game::getclient(cn);
+        return d ? d->team : -1;
+    }
+    ICOMMAND(getclientteam, "i", (int *cn), intret(getclientteam(*cn)));
+
+    bool isspectator(int cn)
+    {
+        gameent *d = game::getclient(cn);
+        return d->state==CS_SPECTATOR;
+    }
+    ICOMMAND(isspectator, "i", (int *cn), intret(isspectator(*cn) ? 1 : 0));
+
+    bool isai(int cn, int type)
+    {
+        gameent *d = game::getclient(cn);
+        int aitype = type > 0 && type < AI_MAX ? type : AI_BOT;
+        return d->aitype==aitype;
+    }
+    ICOMMAND(isai, "i", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
+
+    int parseplayer(const char *arg)
+    {
+        char *end;
+        int n = strtol(arg, &end, 10);
+        if(*arg && !*end)
+        {
+            if(n!=game::player1->clientnum && !game::players.inrange(n)) return -1;
+            return n;
+        }
+        // try case sensitive first
+        loopv(game::players)
+        {
+            gameent *o = game::players[i];
+            if(!strcmp(arg, o->name)) return o->clientnum;
+        }
+        // nothing found, try case insensitive
+        loopv(game::players)
+        {
+            gameent *o = game::players[i];
+            if(!strcasecmp(arg, o->name)) return o->clientnum;
+        }
+        return -1;
+    }
+    ICOMMAND(getclientnum, "s", (char *name), intret(name[0] ? parseplayer(name) : game::player1->clientnum));
+
+    void listclients(bool local)
+    {
+        vector<char> buf;
+        string cn;
+        int numclients = 0;
+        if(local)
+        {
+            formatstring(cn)("%d", game::player1->clientnum);
+            buf.put(cn, strlen(cn));
+            numclients++;
+        }
+        loopv(game::players) if(game::players[i])
+        {
+            formatstring(cn)("%d", game::players[i]->clientnum);
+            if(numclients++) buf.add(' ');
+            buf.put(cn, strlen(cn));
+        }
+        buf.add('\0');
+        result(buf.getbuf());
+    }
+    ICOMMAND(listclients, "i", (int *local), listclients(*local!=0));
 
 	void clearbans()
 	{
@@ -255,19 +310,6 @@ namespace client
 
 	void addmsg(int type, const char *fmt, ...)
 	{
-		/*
-		if(remote && spectator && (!game::player1->privilege || type<SV_MASTERMODE))
-		{
-			static int spectypes[] = { SV_MAPVOTE, SV_GETMAP, SV_TEXT, SV_SETMASTER, SV_AUTHTRY, SV_AUTHANS };
-			bool allowed = false;
-			loopi(sizeof(spectypes)/sizeof(spectypes[0])) if(type==spectypes[i])
-			{
-				allowed = true;
-				break;
-			}
-			if(!allowed) return;
-		}
-		*/
 		static uchar buf[MAXTRANS];
 		ucharbuf p(buf, MAXTRANS);
 		putint(p, type);
