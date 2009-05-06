@@ -619,9 +619,9 @@ namespace projs
 							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.15f), PART_EXPLOSION, m_speedtimex(500), 0xAA3300, 1.f);
 							loopi(rnd(25)+10)
 								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(2500)+1500, 0, rnd(1000), rnd(125)+25);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.75f, bvec(196, 24, 0));
 						}
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
-						adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.75f, bvec(196, 24, 0));
 						break;
 					}
 					case WEAPON_SG: case WEAPON_CG:
@@ -645,7 +645,7 @@ namespace projs
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(100), proj.o, 0x444444, weaptype[proj.weap].partsize);
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtimex(200), 10);
-						adddecal(DECAL_SCORCH, proj.o, proj.norm, 3.f);
+						adddecal(DECAL_SCORCH, proj.o, proj.norm, 4.f);
                         adddecal(DECAL_ENERGY, proj.o, proj.norm, 3.f, bvec(96, 16, 254));
 						break;
 					}
@@ -748,7 +748,7 @@ namespace projs
                         if(!proj.lastbounce)
                         {
                             adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
-                            adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
+                            //adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
                         }
                         break;
                     }
