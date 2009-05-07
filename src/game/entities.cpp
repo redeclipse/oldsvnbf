@@ -943,7 +943,7 @@ namespace entities
 		}
 	}
 
-	bool tryspawn(dynent *d, const vec &o, float yaw = 0.f)
+	bool tryspawn(dynent *d, const vec &o, float yaw)
 	{
 		d->yaw = yaw;
 		d->pitch = d->roll = 0;
@@ -952,29 +952,23 @@ namespace entities
 		return physics::entinmap(d, true);
 	}
 
-	bool spawnplayer(gameent *d, int ent, bool recover, bool suicide)
+	void spawnplayer(gameent *d, int ent, bool recover, bool suicide)
 	{
-		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return true;
+		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return;
 		if(recover)
 		{
 			if(m_team(game::gamemode, game::mutators))
 			{
 				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[1] == d->team && tryspawn(d, ents[i]->o, float(ents[i]->attr[0])))
-					return true;
+					return;
 			}
-			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return true;
-			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return true;
+			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return;
+			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return;
 			d->o.x = d->o.y = d->o.z = getworldsize();
 			d->o.x *= 0.5f; d->o.y *= 0.5f;
-			if(physics::entinmap(d, false)) return true;
+			if(physics::entinmap(d, false)) return;
 		}
-		if(!m_edit(game::gamemode) && m_play(game::gamemode) && suicide)
-		{
-			game::suicide(d, HIT_SPAWN);
-			return true;
-		}
-		else return true;
-		return false;
+		if(!m_edit(game::gamemode) && m_play(game::gamemode) && suicide) game::suicide(d, HIT_SPAWN);
 	}
 
 	void editent(int i)

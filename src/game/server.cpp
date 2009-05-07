@@ -1336,20 +1336,20 @@ namespace server
 
 	void changemap(const char *name, int mode, int muts)
 	{
-		const char *mapname = name && *name ? name : GVAR(defaultmap);
+		const char *reqmap = name && *name ? name : GVAR(defaultmap);
 		loopi(3)
 		{
 			if(mapdata[i]) DELETEP(mapdata[i]);
-			const char *mapext = "xxx";
+			const char *reqext = "xxx";
 			switch(i)
 			{
-				case 2: mapext = "cfg"; break;
-				case 1: mapext = "png"; break;
-				default: case 0: mapext = "bgz"; break;
+				case 2: reqext = "cfg"; break;
+				case 1: reqext = "png"; break;
+				default: case 0: reqext = "bgz"; break;
 			}
-			defformatstring(mapfile)(strstr(mapname, "maps/")==mapname || strstr(mapname, "maps\\")==mapname ? "%s" : "maps/%s", mapname);
-			defformatstring(mapfext)("%s.%s", mapfile, mapext);
-			if(!(mapdata[i] = openfile(mapfext, "wb")) && !i)
+			defformatstring(reqfile)(strstr(reqmap, "maps/")==reqmap || strstr(reqmap, "maps\\")==reqmap ? "%s" : "maps/%s", reqmap);
+			defformatstring(reqfext)("%s.%s", reqfile, reqext);
+			if(!(mapdata[i] = openfile(reqfext, "rb")) && !i)
 			{
 				loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
 				break;
@@ -1365,7 +1365,7 @@ namespace server
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
-		copystring(smapname, mapname);
+		copystring(smapname, reqmap);
 		sents.setsize(0);
 		setupspawns(false);
 		notgotinfo = true;
