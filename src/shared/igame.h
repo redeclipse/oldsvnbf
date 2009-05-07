@@ -121,7 +121,7 @@ namespace server
 	extern bool sendpackets();
 	extern void queryreply(ucharbuf &req, ucharbuf &p);
 	extern void serverupdate();
-	extern void changemap(const char *s, int mode = -1, int muts = -1);
+	extern void changemap(const char *name, int mode = -1, int muts = -1);
 	extern const char *gameid();
 	extern char *gamename(int mode, int muts);
 	extern void modecheck(int *mode, int *muts);

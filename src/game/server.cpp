@@ -1334,27 +1334,25 @@ namespace server
 	#include "duelmut.h"
 	#include "aiman.h"
 
-	void changemap(const char *s, int mode, int muts)
+	void changemap(const char *name, int mode, int muts)
 	{
-		loopi(3) if(mapdata[i])
+		const char *mapname = name && *name ? name : GVAR(defaultmap);
+		loopi(3)
 		{
-			DELETEP(mapdata[i]);
-			if(s && *s)
+			if(mapdata[i]) DELETEP(mapdata[i]);
+			const char *mapext = "xxx";
+			switch(i)
 			{
-				const char *mapext = "xxx";
-				switch(i)
-				{
-					case 2: mapext = "cfg"; break;
-					case 1: mapext = "png"; break;
-					default: case 0: mapext = "bgz"; break;
-				}
-				defformatstring(mapfile)(strstr(s, "maps/")==s || strstr(s, "maps\\")==s ? "%s" : "maps/%s", s);
-				defformatstring(mapfext)("%s.%s", mapfile, mapext);
-				if(!(mapdata[i] = openfile(mapfext, "wb")))
-				{
-					loopk(3) DELETEP(mapdata[k]);
-					break;
-				}
+				case 2: mapext = "cfg"; break;
+				case 1: mapext = "png"; break;
+				default: case 0: mapext = "bgz"; break;
+			}
+			defformatstring(mapfile)(strstr(mapname, "maps/")==mapname || strstr(mapname, "maps\\")==mapname ? "%s" : "maps/%s", mapname);
+			defformatstring(mapfext)("%s.%s", mapfile, mapext);
+			if(!(mapdata[i] = openfile(mapfext, "wb")) && !i)
+			{
+				loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
+				break;
 			}
 		}
 		maprequest = mapsending = shouldcheckvotes = false;
@@ -1367,7 +1365,7 @@ namespace server
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
-		copystring(smapname, s && *s ? s : GVAR(defaultmap));
+		copystring(smapname, mapname);
 		sents.setsize(0);
 		setupspawns(false);
 		notgotinfo = true;
@@ -3348,7 +3346,7 @@ namespace server
 				case SV_GETMAP:
 				{
 					ci->wantsmap = true;
-					if(!mapsending && mapdata[2])
+					if(!mapsending && mapdata[0])
 					{
 						loopk(3) if(mapdata[k])
 							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
