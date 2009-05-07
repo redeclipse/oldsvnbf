@@ -743,6 +743,22 @@ bool serveroption(char *opt)
 	{
 		case 'k': kidmode = atoi(opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
+		case 'o':
+		{
+			#ifndef putenv
+			#ifdef _putenv
+			#define putenv _putenv
+			#endif
+			#endif
+			#ifdef putenv
+			defformatstring(octaenv)("OCTA_DIR=\"%s\"", &opt[2]);
+			putenv(octaenv);
+			conoutf("\fgset OCTA_DIR to: %s", &opt[2]);
+			#else
+			conoutf("\frunable to automatically set OCTA_DIR on your operating system");
+			#endif
+			break;
+		}
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;
 		case 's':
@@ -780,6 +796,42 @@ bool serveroption(char *opt)
 	return false;
 }
 
+VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
+bool findoctadir(const char *name)
+{
+	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
+	if(fileexists(findfile(octalogo, "r"), "r"))
+	{
+		conoutf("\fgfound OCTA directory: %s", name);
+		defformatstring(octadata)("%s/data", name);
+		defformatstring(octapaks)("%s/packages", name);
+		addpackagedir(name);
+		addpackagedir(octadata);
+		addpackagedir(octapaks);
+		hasoctapaks = 1;
+		return true;
+	}
+	return false;
+}
+void trytofindocta()
+{
+	const char *octadir = getenv("OCTA_DIR");
+	if(!octadir || !*octadir || !findoctadir(octadir))
+	{ // user hasn't specifically set it, try some common locations alongside our folder
+		const char *tryoctadirs[4] = { // by no means a definitive list either..
+			"../Sauerbraten", "../sauerbraten", "../sauer",
+#if defined(WIN32)
+			"/Program Files/Sauerbraten"
+#elif defined(__APPLE__)
+			"/Volumes/Play/sauerbraten"
+#else
+			"/usr/games/sauerbraten"
+#endif
+		};
+		loopi(4) if(findoctadir(tryoctadirs[i])) break;
+	}
+}
+
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
@@ -790,6 +842,7 @@ int main(int argc, char* argv[])
 	atexit(cleanupserver);
 	enet_time_set(0);
 	initgame();
+	trytofindocta();
 	serverloop();
 	return 0;
 }
