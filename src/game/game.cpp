@@ -20,27 +20,22 @@ namespace game
 	VARW(numteamplayers, 0, 4, MAXCLIENTS/2);
 	SVARW(mapmusic, "");
 
-	VARP(invmouse, 0, 0, 1);
-	VARP(absmouse, 0, 0, 1);
+	VARP(mouseinvert, 0, 0, 1);
+	VARP(mouseabsolute, 0, 0, 1);
+	VARP(mousetype, 0, 0, 2);
+	VARP(mousedeadzone, 0, 10, 100);
+	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
 	VARP(usedynamicglow, 0, 3, 3);
 	VARP(playersfade, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
-	VARP(thirdpersonmouse, 0, 0, 2);
-	VARP(thirdpersondeadzone, 0, 10, 100);
-	VARP(thirdpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
 	FVARP(thirdpersonfade, 0, 0.5f, 1);
 	FVARP(thirdpersondist, -100, 1.f, 100);
-	FVARP(thirdpersonshift, -100, -8.f, 100);
-	VARP(thirdpersonangle, 0, 0, 360);
 
 	VARP(firstpersonmodel, 0, 1, 1);
-	VARP(firstpersonmouse, 0, 0, 2);
-	VARP(firstpersondeadzone, 0, 10, 100);
-	VARP(firstpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
 	FVARP(firstpersonfade, 0, 1, 1);
@@ -48,11 +43,7 @@ namespace game
 	FVARP(firstpersonshift, -10000, 0.25f, 10000);
 	FVARP(firstpersonadjust, -10000, 0.f, 10000);
 
-	VARP(editmouse, 0, 0, 2);
 	VARP(editfov, 1, 120, 179);
-	VARP(editdeadzone, 0, 10, 100);
-	VARP(editpanspeed, 1, 20, INT_MAX-1);
-
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv, 2 = follow
 	VARP(spectvtime, 1000, 30000, INT_MAX-1);
 	VARP(specfov, 1, 120, 179);
@@ -68,18 +59,18 @@ namespace game
 	FVARP(pronesensitivity, 1e-3f, 5.0f, 1000);
 
 	VARP(snipetype, 0, 0, 1);
-	VARP(snipemouse, 0, 0, 2);
-	VARP(snipedeadzone, 0, 25, 100);
-	VARP(snipepanspeed, 1, 10, INT_MAX-1);
+	VARP(snipemousetype, 0, 0, 2);
+	VARP(snipemousedeadzone, 0, 25, 100);
+	VARP(snipemousepanspeed, 1, 10, INT_MAX-1);
 	VARP(snipecarbinefov, 45, 45, 150);
 	VARP(sniperiflefov, 20, 20, 150);
 	VARP(sniperifletime, 1, 250, 10000);
 	VARP(snipecarbinetime, 1, 150, 10000);
 
 	VARP(pronetype, 0, 0, 1);
-	VARP(pronemouse, 0, 0, 2);
-	VARP(pronedeadzone, 0, 25, 100);
-	VARP(pronepanspeed, 1, 10, INT_MAX-1);
+	VARP(pronemousetype, 0, 0, 2);
+	VARP(pronemousedeadzone, 0, 25, 100);
+	VARP(pronemousepanspeed, 1, 10, INT_MAX-1);
 	VARP(pronefov, 70, 70, 150);
 	VARP(pronetime, 1, 150, 10000);
 
@@ -122,7 +113,7 @@ namespace game
 	char *gametitle() { return server::gamename(gamemode, mutators); }
 	char *gametext() { return getmapname(); }
 
-	bool isthirdperson()
+	bool thirdpersonview()
 	{
         if(player1->state == CS_DEAD || player1->state == CS_WAITING) return true;
 		if(!thirdperson) return false;
@@ -131,37 +122,31 @@ namespace game
 		if(inzoom()) return false;
 		return true;
 	}
-	ICOMMAND(inthirdperson, "", (), intret(isthirdperson() ? 1 : 0));
+	ICOMMAND(isthirdperson, "", (), intret(thirdpersonview() ? 1 : 0));
 
 	int mousestyle()
 	{
-		if(player1->state == CS_EDITING) return editmouse;
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemouse : pronemouse;
-		if(isthirdperson()) return thirdpersonmouse;
-		return firstpersonmouse;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousetype : pronemousetype;
+		return mousetype;
 	}
 
 	int deadzone()
 	{
-		if(player1->state == CS_EDITING) return editdeadzone;
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipedeadzone : pronedeadzone;
-		if(isthirdperson()) return thirdpersondeadzone;
-		return firstpersondeadzone;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousedeadzone : pronemousedeadzone;
+		return mousedeadzone;
 	}
 
 	int panspeed()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipepanspeed : pronepanspeed;
-		if(player1->state == CS_EDITING) return editpanspeed;
-		if(isthirdperson()) return thirdpersonpanspeed;
-		return firstpersonpanspeed;
+		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousepanspeed : pronemousepanspeed;
+		return mousepanspeed;
 	}
 
 	int fov()
 	{
 		if(player1->state == CS_EDITING) return editfov;
 		if(player1->state == CS_SPECTATOR) return specfov;
-		if(isthirdperson()) return thirdpersonfov;
+		if(thirdpersonview()) return thirdpersonfov;
 		return firstpersonfov;
 	}
 
@@ -914,7 +899,7 @@ namespace game
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR))
 		{
-			if(absmouse) // absolute positions, unaccelerated
+			if(mouseabsolute) // absolute positions, unaccelerated
 			{
 				cursorx = clamp(float(x)/float(w), 0.f, 1.f);
 				cursory = clamp(float(y)/float(h), 0.f, 1.f);
@@ -923,7 +908,7 @@ namespace game
 			else
 			{
 				cursorx = clamp(cursorx+mousesens(dx, w, mousesensitivity), 0.f, 1.f);
-				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity*(!hascursor && invmouse ? -1.f : 1.f)), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity*(!hascursor && mouseinvert ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
@@ -932,7 +917,7 @@ namespace game
 			if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
 			{
 				camera1->yaw += mousesens(dx, w, yawsensitivity*sensitivity);
-				camera1->pitch -= mousesens(dy, h, pitchsensitivity*sensitivity*(!hascursor && invmouse ? -1.f : 1.f));
+				camera1->pitch -= mousesens(dy, h, pitchsensitivity*sensitivity*(!hascursor && mouseinvert ? -1.f : 1.f));
 				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
 			}
 			else if(allowmove(player1))
@@ -941,7 +926,7 @@ namespace game
 						(weaptype[player1->weapselect].snipes? snipesensitivity : pronesensitivity)
 					: sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
-				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && invmouse ? -1.f : 1.f));
+				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
 				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
 			}
 			return true;
@@ -1049,21 +1034,9 @@ namespace game
 	{
 		if(player1->state != CS_WAITING && player1->state != CS_SPECTATOR && player1->state != CS_DEAD && !tvmode())
 		{
-			if(mousestyle() == 2) vectoyawpitch(cursordir, player1->yaw, player1->pitch);
-			if(isthirdperson())
-			{
-				vec dir(worldpos);
-				dir.sub(camera1->o);
-				dir.normalize();
-				vectoyawpitch(dir, player1->aimyaw, player1->aimpitch);
-			}
-			else
-			{
-				player1->aimyaw = camera1->yaw;
-				player1->aimpitch = camera1->pitch;
-			}
+			player1->aimyaw = camera1->yaw;
+			player1->aimpitch = camera1->pitch;
 			fixrange(player1->aimyaw, player1->aimpitch);
-
 			if(lastcamera && mousestyle() >= 1 && !UI::hascursor())
 			{
 				physent *d = mousestyle() != 2 ? player1 : camera1;
@@ -1354,26 +1327,14 @@ namespace game
 				camera1->o = player1->headpos();
 				if(mousestyle() <= 1)
 					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
-				if(isthirdperson())
-				{
-					float angle = thirdpersonangle ? 0-thirdpersonangle : player1->pitch;
-					camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-					camera1->aimpitch = mousestyle() <= 1 ? angle : player1->aimpitch;
 
-					#define cameramove(d,s) \
-						if(d) \
-						{ \
-                            vec dir; \
-                            vecfromyawpitch(camera1->aimyaw, camera1->aimpitch, !s ? (d > 0 ? -1 : 1) : 0, s ? (d > 0 ? -1 : 1) : 0, dir); \
-							physics::movecamera(camera1, dir, fabs(d), 1.0f); \
-						}
-					cameramove(thirdpersondist, false);
-					cameramove(thirdpersonshift, true);
-				}
-				else
+				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
+				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
+				if(thirdpersonview() && thirdpersondist)
 				{
-					camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-					camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
+					vec dir;
+					vecfromyawpitch(camera1->aimyaw, camera1->aimpitch, thirdpersondist > 0 ? -1 : 1, 0, dir);
+					physics::movecamera(camera1, dir, fabs(thirdpersondist), 1.0f);
 				}
                 camera1->resetinterp();
 
@@ -1382,19 +1343,8 @@ namespace game
 					case 0:
 					case 1:
 					{
-						if(isthirdperson())
-						{
-							vec dir(worldpos);
-							dir.sub(camera1->o);
-							dir.normalize();
-							vectoyawpitch(dir, camera1->yaw, camera1->pitch);
-							fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
-						}
-						else
-						{
-							camera1->yaw = player1->yaw;
-							camera1->pitch = player1->pitch;
-						}
+						camera1->yaw = player1->yaw;
+						camera1->pitch = player1->pitch;
 						if(mousestyle())
 						{
 							camera1->aimyaw = camera1->yaw;
@@ -1410,18 +1360,8 @@ namespace game
 						findorientation(camera1->o, yaw, pitch, worldpos);
 						if(allowmove(player1))
 						{
-							if(isthirdperson())
-							{
-								vec dir(worldpos);
-								dir.sub(camera1->o);
-								dir.normalize();
-								vectoyawpitch(dir, player1->yaw, player1->pitch);
-							}
-							else
-							{
-								player1->yaw = yaw;
-								player1->pitch = pitch;
-							}
+							player1->yaw = yaw;
+							player1->pitch = pitch;
 						}
 						break;
 					}
@@ -1499,7 +1439,7 @@ namespace game
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
 						adddynlight(d->abovehead(), d->height*2,
-							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || isthirdperson(), true)));
+							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || thirdpersonview(), true)));
 					}
 				}
 			}
@@ -1796,9 +1736,9 @@ namespace game
     void renderavatar(bool early)
     {
     	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
-        if((isthirdperson() || !rendernormally) && player1->state != CS_SPECTATOR)
+        if((thirdpersonview() || !rendernormally) && player1->state != CS_SPECTATOR)
 			renderplayer(player1, true, showtranslucent(player1, true), early);
-        else if(!isthirdperson() && player1->state == CS_ALIVE)
+        else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
 

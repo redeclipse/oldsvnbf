@@ -682,7 +682,7 @@ namespace hud
 		}
 		popfont();
 
-		if(overlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (overlaydisplay || !game::isthirdperson())))
+		if(overlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (overlaydisplay || !game::thirdpersonview())))
 		{
 			Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
 			if(t != notexture)
@@ -1333,7 +1333,7 @@ namespace hud
 		glOrtho(0, ox, oy, 0, -1, 1);
 		if(game::maptime && connected() && client::ready())
 		{
-			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::isthirdperson())))
+			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview())))
 			{
 				Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
 				if(t != notexture)
