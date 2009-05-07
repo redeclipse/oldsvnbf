@@ -443,17 +443,17 @@ namespace client
 			case SV_SENDMAPSHOT:
 			case SV_SENDMAPFILE:
 			{
-				const char *mapname = getmapname(), *mapext = "xxx";
-				if(type == SV_SENDMAPCONFIG) mapext = "cfg";
-				else if(type == SV_SENDMAPSHOT) mapext = "png";
-				else if(type == SV_SENDMAPFILE) mapext = "bgz";
-				if(!mapname || !*mapname) mapname = "maps/untitled";
-				defformatstring(mapfile)(strstr(mapname, "temp/")==mapname || strstr(mapname, "temp\\")==mapname ? "%s" : "temp/%s", mapname);
-				defformatstring(mapfext)("%s.%s", mapfile, mapext);
-				stream *f = openfile(mapfext, "wb");
+				const char *reqmap = getmapname(), *reqext = "xxx";
+				if(type == SV_SENDMAPCONFIG) reqext = "cfg";
+				else if(type == SV_SENDMAPSHOT) reqext = "png";
+				else if(type == SV_SENDMAPFILE) reqext = "bgz";
+				if(!reqmap || !*reqmap) reqmap = "maps/untitled";
+				defformatstring(reqfile)(strstr(reqmap, "temp/")==reqmap || strstr(reqmap, "temp\\")==reqmap ? "%s" : "temp/%s", reqmap);
+				defformatstring(reqfext)("%s.%s", reqfile, reqext);
+				stream *f = openfile(reqfext, "wb");
 				if(!f)
 				{
-					conoutf("\frfailed to open map file: %s", mapfext);
+					conoutf("\frfailed to open map file: %s", reqfext);
 					return;
 				}
 				gettingmap = true;
@@ -504,43 +504,43 @@ namespace client
 	{
         int nextmode = game::nextmode, nextmuts = game::nextmuts; // in case stopdemo clobbers these
         if(!remote) stopdemo();
-        string mapfile;
-		copystring(mapfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
-        addmsg(SV_MAPVOTE, "rsi2", mapfile, nextmode, nextmuts);
+        string reqfile;
+		copystring(reqfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
+        addmsg(SV_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
 	}
 	ICOMMAND(map, "s", (char *s), changemap(s));
 
 	void sendmap()
 	{
 		conoutf("\fmsending map...");
-		const char *mapname = getmapname();
-		if(!mapname || !*mapname) mapname = "maps/untitled";
+		const char *reqmap = getmapname();
+		if(!reqmap || !*reqmap) reqmap = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
-		defformatstring(mapfile)("%s%s", edit ? "temp/" : "", mapname);
+		defformatstring(reqfile)("%s%s", edit ? "temp/" : "", reqmap);
 		loopi(3)
 		{
-			string mapfext;
+			string reqfext;
 			switch(i)
 			{
-				case 2: formatstring(mapfext)("%s.cfg", mapfile); break;
-				case 1: formatstring(mapfext)("%s.png", mapfile); break;
+				case 2: formatstring(reqfext)("%s.cfg", reqfile); break;
+				case 1: formatstring(reqfext)("%s.png", reqfile); break;
 				case 0: default:
-					formatstring(mapfext)("%s.bgz", mapfile);
+					formatstring(reqfext)("%s.bgz", reqfile);
 					if(edit)
 					{
-						save_world(mapfile, edit, true);
-						setnames(mapname, MAP_BFGZ);
+						save_world(reqfile, edit, true);
+						setnames(reqmap, MAP_BFGZ);
 					}
 					break;
 			}
-			stream *f = openfile(mapfext, "rb");
+			stream *f = openfile(reqfext, "rb");
 			if(f)
 			{
-				conoutf("\fgtransmitting file: %s", mapfext);
+				conoutf("\fgtransmitting file: %s", reqfext);
 				sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
                 delete f;
 			}
-			else conoutf("\frfailed to open map file: %s", mapfext);
+			else conoutf("\frfailed to open map file: %s", reqfext);
 		}
 	}
 	ICOMMAND(resendmap, "", (), sendmap());

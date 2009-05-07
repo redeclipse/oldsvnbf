@@ -25,13 +25,14 @@ namespace game
 
 	VARP(thirdperson, 0, 0, 1);
 	VARP(usedynamicglow, 0, 3, 3);
+	VARP(playersfade, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonmouse, 0, 0, 2);
 	VARP(thirdpersondeadzone, 0, 10, 100);
 	VARP(thirdpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(thirdpersonfov, 90, 120, 150);
-	VARP(thirdpersontranslucent, 0, 0, 1);
+	FVARP(thirdpersonfade, 0, 0.5f, 1);
 	FVARP(thirdpersondist, -100, 1.f, 100);
 	FVARP(thirdpersonshift, -100, -8.f, 100);
 	VARP(thirdpersonangle, 0, 0, 360);
@@ -42,7 +43,7 @@ namespace game
 	VARP(firstpersonpanspeed, 1, 30, INT_MAX-1);
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
-	VARP(firstpersontranslucent, 0, 0, 1);
+	FVARP(firstpersonfade, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.25f, 10000);
 	FVARP(firstpersonadjust, -10000, 0.f, 10000);
@@ -977,20 +978,20 @@ namespace game
 			score = 0.f;
 			alter = false;
 		}
+
+		static int camsort(const camstate *a, const camstate *b)
+		{
+			int asee = a->cansee.length(), bsee = b->cansee.length();
+			if(a->alter && asee) asee = 1;
+			if(b->alter && bsee) bsee = 1;
+			if(asee > bsee) return -1;
+			if(asee < bsee) return 1;
+			if(a->score < b->score) return -1;
+			if(a->score > b->score) return 1;
+			return 0;
+		}
 	};
 	vector<camstate> cameras;
-
-	static int camerasort(const camstate *a, const camstate *b)
-	{
-		int asee = a->cansee.length(), bsee = b->cansee.length();
-		if(a->alter && asee) asee = 1;
-		if(b->alter && bsee) bsee = 1;
-		if(asee > bsee) return -1;
-		if(asee < bsee) return 1;
-		if(a->score < b->score) return -1;
-		if(a->score > b->score) return 1;
-		return 0;
-	}
 
 	void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch)
 	{
@@ -1217,7 +1218,7 @@ namespace game
 			}
 			if(renew)
 			{
-				cameras.sort(camerasort);
+				cameras.sort(camstate::camsort);
 				cam = &cameras[0];
 				lastspec = lastmillis;
 				if(!lastspecchg || cam->ent != entidx) lastspecchg = lastmillis;
@@ -1462,24 +1463,24 @@ namespace game
 
 	float showtranslucent(gameent *d, bool third = true, bool full = false)
 	{
-		float def = (d == player1 && (third ? thirdpersontranslucent : firstpersontranslucent)) ? 0.5f : 1.f;
+		float total = full ? 1.f : (d == player1 ? (third ? thirdpersonfade : firstpersonfade) : playersfade);
 		if(d->state == CS_ALIVE)
 		{
 			int len = spawnprotecttime*1000, millis = d->protect(lastmillis, len); // protect returns time left
-			if(millis) return clamp(1.f-(float(millis)/float(len)), 0.f, def);
+			if(millis > 0) return (1.f-(float(millis)/float(len)))*total;
+			else return total;
 		}
-		if(d->state == CS_DEAD || d->state == CS_WAITING)
+		else if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			int len = m_spawndelay(gamemode, mutators), interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
 			if(millis < len)
 			{
-				if(millis > over) return clamp(1.f-(float(millis-over)/float(interval)), 0.f, 1.f);
-				else return 1.f;
+				if(millis > over) return (1.f-(float(millis-over)/float(interval)))*total;
+				else return total;
 			}
 			else return 0.f;
 		}
-		if(!physics::issolid(d)) return 0.5f; // sorta legacy
-		return def;
+		return total;
 	}
 
 	void adddynlights()
@@ -1628,7 +1629,7 @@ namespace game
 
 	void renderplayer(gameent *d, bool third, float trans, bool early = false)
 	{
-		if(trans <= 0.f)
+		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
 			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
 				trans = 1e-16f; // we need tag_muzzle
@@ -1795,9 +1796,9 @@ namespace game
     void renderavatar(bool early)
     {
     	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
-        if(((isthirdperson() && thirdpersonmodel) || !rendernormally) && player1->state != CS_SPECTATOR)
+        if((isthirdperson() || !rendernormally) && player1->state != CS_SPECTATOR)
 			renderplayer(player1, true, showtranslucent(player1, true), early);
-        else if(!isthirdperson() && firstpersonmodel && player1->state == CS_ALIVE)
+        else if(!isthirdperson() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
 
