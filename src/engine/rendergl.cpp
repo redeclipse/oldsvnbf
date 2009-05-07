@@ -1066,7 +1066,7 @@ void drawglare()
     rendermaterials();
     renderparticles();
 
-    if(game::isthirdperson()) renderavatar(false);
+    if(game::thirdpersonview()) renderavatar(false);
     else
     {
         viewproject(firstpersondepth);
@@ -1181,7 +1181,7 @@ void drawreflection(float z, bool refract, bool clear)
     rendermaterials();
     renderparticles();
 
-    if(game::isthirdperson() || reflecting) renderavatar(false);
+    if(game::thirdpersonview() || reflecting) renderavatar(false);
 
     if(fading) glColorMask(COLORMASK, GL_TRUE);
 
@@ -2016,7 +2016,7 @@ void drawview(int targtype)
 	rendermaterials();
 	renderparticles(true);
 
-    if(game::isthirdperson()) renderavatar(false);
+    if(game::thirdpersonview()) renderavatar(false);
     else
     {
         viewproject(0.5f);
