@@ -3,9 +3,9 @@
 
 #include "cube.h"
 
-#define ENG_VERSION			80
+#define ENG_VERSION			81
 #define ENG_NAME			"Blood Frontier"
-#define ENG_RELEASE			"Beta 1"
+#define ENG_RELEASE			"Beta 1.1"
 #define ENG_URL				"www.bloodfrontier.com"
 #define ENG_BLURB			"It's bloody fun!"
 
