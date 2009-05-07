@@ -768,24 +768,6 @@ void eastereggs()
 	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
 }
 
-VAR(hasoctapaks, 1, 0, 0);
-bool findoctadir(const char *name)
-{
-	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
-	if(fileexists(findfile(octalogo, "r"), "r"))
-	{
-		conoutf("\fgfound OCTA directory: %s", name);
-		defformatstring(octadata)("%s/data", name);
-		defformatstring(octapaks)("%s/packages", name);
-		addpackagedir(name);
-		addpackagedir(octadata);
-		addpackagedir(octapaks);
-		hasoctapaks = 1;
-		return true;
-	}
-	return false;
-}
-
 void updatetimer(bool outofloop)
 {
 	int millis = SDL_GetTicks() - clockrealbase;
@@ -844,22 +826,6 @@ int main(int argc, char **argv)
 				break;
 			}
 			case 'x': initscript = &argv[i][2]; break;
-			case 'o':
-			{
-				#ifndef putenv
-				#ifdef _putenv
-				#define putenv _putenv
-				#endif
-				#endif
-				#ifdef putenv
-				defformatstring(octaenv)("OCTA_DIR=\"%s\"", &argv[i][2]);
-				putenv(octaenv);
-				conoutf("\fgset OCTA_DIR to: %s", &argv[i][2]);
-				#else
-				conoutf("\frunable to automatically set OCTA_DIR on your operating system");
-				#endif
-				break;
-			}
 			default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
 		}
 		else gameargs.add(argv[i]);
@@ -942,23 +908,7 @@ int main(int argc, char **argv)
 	particleinit();
     initdecals();
 
-	// MEGAHACK: try to find Sauerbraten, done after our own data so as to not clobber stuff
-	const char *octadir = getenv("OCTA_DIR");
-	if(!octadir || !*octadir || !findoctadir(octadir))
-	{ // user hasn't specifically set it, try some common locations alongside our folder
-		const char *tryoctadirs[4] = { // by no means a definitive list either..
-			"../Sauerbraten", "../sauerbraten", "../sauer",
-#if defined(WIN32)
-			"/Program Files/Sauerbraten"
-#elif defined(__APPLE__)
-			"/Volumes/Play/sauerbraten"
-#else
-			"/usr/games/sauerbraten"
-#endif
-		};
-		loopi(4) if(findoctadir(tryoctadirs[i])) break;
-	}
-
+	trytofindocta();
 	conoutf("\fmloading main..");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
