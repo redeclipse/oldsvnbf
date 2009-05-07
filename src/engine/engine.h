@@ -559,6 +559,7 @@ extern void attachentities();
 extern void freeoctaentities(cube &c);
 extern bool pointinsel(selinfo &sel, vec &o);
 
+extern void clearworldvars(bool msg = false);
 extern void resetmap(bool empty);
 
 // rendermodel

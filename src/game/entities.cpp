@@ -180,353 +180,353 @@ namespace entities
 		}
 	}
 
-    struct entcachenode
-    {
-        float split[2];
-        uint child[2];
+	struct entcachenode
+	{
+		float split[2];
+		uint child[2];
 
-        int axis() const { return child[0]>>30; }
-        int childindex(int which) const { return child[which]&0x3FFFFFFF; }
-        bool isleaf(int which) const { return (child[1]&(1<<(30+which)))!=0; }
-    };
+		int axis() const { return child[0]>>30; }
+		int childindex(int which) const { return child[which]&0x3FFFFFFF; }
+		bool isleaf(int which) const { return (child[1]&(1<<(30+which)))!=0; }
+	};
 
-    vector<entcachenode> entcache;
-    int entcachedepth = -1;
-    vec entcachemin(1e16f, 1e16f, 1e16f), entcachemax(-1e16f, -1e16f, -1e16f);
+	vector<entcachenode> entcache;
+	int entcachedepth = -1;
+	vec entcachemin(1e16f, 1e16f, 1e16f), entcachemax(-1e16f, -1e16f, -1e16f);
 
-    float calcentcacheradius(extentity &e)
-    {
-        switch(e.type)
-        {
-            case WAYPOINT: return 0;
-            case TRIGGER: case TELEPORT: case PUSHER:
-                if(e.attr[3]) return e.attr[3];
-                // fall through
-            default:
-                return enttype[e.type].radius;
-        }
-    }
+	float calcentcacheradius(extentity &e)
+	{
+		switch(e.type)
+		{
+			case WAYPOINT: return 0;
+			case TRIGGER: case TELEPORT: case PUSHER:
+				if(e.attr[3]) return e.attr[3];
+				// fall through
+			default:
+				return enttype[e.type].radius;
+		}
+	}
 
-    static void buildentcache(int *indices, int numindices, int depth = 1)
-    {
-        vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-        loopi(numindices)
-        {
-            extentity &e = *ents[indices[i]];
-            float radius = calcentcacheradius(e);
-            loopk(3)
-            {
-                vmin[k] = min(vmin[k], e.o[k]-radius);
-                vmax[k] = max(vmax[k], e.o[k]+radius);
-            }
-        }
-        if(depth==1)
-        {
-            entcachemin = vmin;
-            entcachemax = vmax;
-        }
+	static void buildentcache(int *indices, int numindices, int depth = 1)
+	{
+		vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
+		loopi(numindices)
+		{
+			extentity &e = *ents[indices[i]];
+			float radius = calcentcacheradius(e);
+			loopk(3)
+			{
+				vmin[k] = min(vmin[k], e.o[k]-radius);
+				vmax[k] = max(vmax[k], e.o[k]+radius);
+			}
+		}
+		if(depth==1)
+		{
+			entcachemin = vmin;
+			entcachemax = vmax;
+		}
 
-        int axis = 2;
-        loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
+		int axis = 2;
+		loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
-        float split = 0.5f*(vmax[axis] + vmin[axis]), splitleft = -1e16f, splitright = 1e16f;
-        int left, right;
-        for(left = 0, right = numindices; left < right;)
-        {
-            extentity &e = *ents[indices[left]];
-            float radius = calcentcacheradius(e);
-            if(max(split - (e.o[axis]-radius), 0.0f) > max((e.o[axis]+radius) - split, 0.0f))
-            {
-                ++left;
-                splitleft = max(splitleft, e.o[axis]+radius);
-            }
-            else
-            {
-                --right;
-                swap(indices[left], indices[right]);
-                splitright = min(splitright, e.o[axis]-radius);
-            }
-        }
+		float split = 0.5f*(vmax[axis] + vmin[axis]), splitleft = -1e16f, splitright = 1e16f;
+		int left, right;
+		for(left = 0, right = numindices; left < right;)
+		{
+			extentity &e = *ents[indices[left]];
+			float radius = calcentcacheradius(e);
+			if(max(split - (e.o[axis]-radius), 0.0f) > max((e.o[axis]+radius) - split, 0.0f))
+			{
+				++left;
+				splitleft = max(splitleft, e.o[axis]+radius);
+			}
+			else
+			{
+				--right;
+				swap(indices[left], indices[right]);
+				splitright = min(splitright, e.o[axis]-radius);
+			}
+		}
 
-        if(!left || right==numindices)
-        {
-            left = right = numindices/2;
-            splitleft = -1e16f;
-            splitright = 1e16f;
-            loopi(numindices)
-            {
-                extentity &e = *ents[indices[i]];
-                float radius = calcentcacheradius(e);
-                if(i < left) splitleft = max(splitleft, e.o[axis]+radius);
-                else splitright = min(splitright, e.o[axis]-radius);
-            }
-        }
+		if(!left || right==numindices)
+		{
+			left = right = numindices/2;
+			splitleft = -1e16f;
+			splitright = 1e16f;
+			loopi(numindices)
+			{
+				extentity &e = *ents[indices[i]];
+				float radius = calcentcacheradius(e);
+				if(i < left) splitleft = max(splitleft, e.o[axis]+radius);
+				else splitright = min(splitright, e.o[axis]-radius);
+			}
+		}
 
-        int node = entcache.length();
-        entcache.add();
-        entcache[node].split[0] = splitleft;
-        entcache[node].split[1] = splitright;
+		int node = entcache.length();
+		entcache.add();
+		entcache[node].split[0] = splitleft;
+		entcache[node].split[1] = splitright;
 
-        if(left==1) entcache[node].child[0] = (axis<<30) | indices[0];
-        else
-        {
-            entcache[node].child[0] = (axis<<30) | entcache.length();
-            if(left) buildentcache(indices, left, depth+1);
-        }
+		if(left==1) entcache[node].child[0] = (axis<<30) | indices[0];
+		else
+		{
+			entcache[node].child[0] = (axis<<30) | entcache.length();
+			if(left) buildentcache(indices, left, depth+1);
+		}
 
-        if(numindices-right==1) entcache[node].child[1] = (1<<31) | (left==1 ? 1<<30 : 0) | indices[right];
-        else
-        {
-            entcache[node].child[1] = (left==1 ? 1<<30 : 0) | entcache.length();
-            if(numindices-right) buildentcache(&indices[right], numindices-right, depth+1);
-        }
+		if(numindices-right==1) entcache[node].child[1] = (1<<31) | (left==1 ? 1<<30 : 0) | indices[right];
+		else
+		{
+			entcache[node].child[1] = (left==1 ? 1<<30 : 0) | entcache.length();
+			if(numindices-right) buildentcache(&indices[right], numindices-right, depth+1);
+		}
 
-        entcachedepth = max(entcachedepth, depth);
-    }
+		entcachedepth = max(entcachedepth, depth);
+	}
 
-    void clearentcache()
-    {
-        entcache.setsizenodelete(0);
-        entcachedepth = -1;
-        entcachemin = vec(1e16f, 1e16f, 1e16f);
-        entcachemax = vec(-1e16f, -1e16f, -1e16f);
-    }
-    ICOMMAND(clearentcache, "", (void), clearentcache());
+	void clearentcache()
+	{
+		entcache.setsizenodelete(0);
+		entcachedepth = -1;
+		entcachemin = vec(1e16f, 1e16f, 1e16f);
+		entcachemax = vec(-1e16f, -1e16f, -1e16f);
+	}
+	ICOMMAND(clearentcache, "", (void), clearentcache());
 
-    void buildentcache()
-    {
-        entcache.setsizenodelete(0);
-        vector<int> indices;
-        loopv(ents)
-        {
-            extentity &e = *ents[i];
-            if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE) indices.add(i);
-        }
-        buildentcache(indices.getbuf(), indices.length());
-    }
+	void buildentcache()
+	{
+		entcache.setsizenodelete(0);
+		vector<int> indices;
+		loopv(ents)
+		{
+			extentity &e = *ents[i];
+			if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE) indices.add(i);
+		}
+		buildentcache(indices.getbuf(), indices.length());
+	}
 
-    struct entcachestack
-    {
-        entcachenode *node;
-        float tmin, tmax;
-    };
+	struct entcachestack
+	{
+		entcachenode *node;
+		float tmin, tmax;
+	};
 
-    vector<entcachenode *> entcachestack;
+	vector<entcachenode *> entcachestack;
 
-    int closestent(int type, const vec &pos, float mindist, bool links)
-    {
-        if(entcachedepth<0) buildentcache();
+	int closestent(int type, const vec &pos, float mindist, bool links)
+	{
+		if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+		entcachestack.setsizenodelete(0);
 
-        int closest = -1;
-        entcachenode *curnode = &entcache[0];
-        #define CHECKCLOSEST(branch) do { \
-            int n = curnode->childindex(branch); \
-            extentity &e = *ents[n]; \
-            if(e.type == type && (!links || !e.links.empty())) \
-            { \
-                float dist = e.o.squaredist(pos); \
-                if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
-            } \
-        } while(0)
-        for(;;)
-        {
-            int axis = curnode->axis();
-            float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
-            if(dist1 >= mindist)
-            {
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKCLOSEST(1);
-                }
-            }
-            else if(curnode->isleaf(0))
-            {
-                CHECKCLOSEST(0);
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKCLOSEST(1);
-                }
-            }
-            else
-            {
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
-                    else CHECKCLOSEST(1);
-                }
-                curnode = &entcache[curnode->childindex(0)];
-                continue;
-            }
-            if(entcachestack.empty()) return closest;
-            curnode = entcachestack.pop();
-        }
-    }
+		int closest = -1;
+		entcachenode *curnode = &entcache[0];
+		#define CHECKCLOSEST(branch) do { \
+			int n = curnode->childindex(branch); \
+			extentity &e = *ents[n]; \
+			if(e.type == type && (!links || !e.links.empty())) \
+			{ \
+				float dist = e.o.squaredist(pos); \
+				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
+			} \
+		} while(0)
+		for(;;)
+		{
+			int axis = curnode->axis();
+			float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+			if(dist1 >= mindist)
+			{
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKCLOSEST(1);
+				}
+			}
+			else if(curnode->isleaf(0))
+			{
+				CHECKCLOSEST(0);
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKCLOSEST(1);
+				}
+			}
+			else
+			{
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+					else CHECKCLOSEST(1);
+				}
+				curnode = &entcache[curnode->childindex(0)];
+				continue;
+			}
+			if(entcachestack.empty()) return closest;
+			curnode = entcachestack.pop();
+		}
+	}
 
-    void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
-    {
-        float mindist2 = mindist*mindist, maxdist2 = maxdist*maxdist;
+	void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
+	{
+		float mindist2 = mindist*mindist, maxdist2 = maxdist*maxdist;
 
-        if(entcachedepth<0) buildentcache();
+		if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+		entcachestack.setsizenodelete(0);
 
-        entcachenode *curnode = &entcache[0];
-        #define CHECKWITHIN(branch) do { \
-            int n = curnode->childindex(branch); \
-            extentity &e = *ents[n]; \
-            if(e.type == type) \
-            { \
-                float dist = e.o.squaredist(pos); \
-                if(dist > mindist2 && dist < maxdist2) results.add(n); \
-            } \
-        } while(0)
-        for(;;)
-        {
-            int axis = curnode->axis();
-            float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
-            if(dist1 >= maxdist)
-            {
-                if(dist2 < maxdist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKWITHIN(1);
-                }
-            }
-            else if(curnode->isleaf(0))
-            {
-                CHECKWITHIN(0);
-                if(dist2 < maxdist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKWITHIN(1);
-                }
-            }
-            else
-            {
-                if(dist2 < maxdist)
-                {
-                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
-                    else CHECKWITHIN(1);
-                }
-                curnode = &entcache[curnode->childindex(0)];
-                continue;
-            }
-            if(entcachestack.empty()) return;
-            curnode = entcachestack.pop();
-        }
-    }
+		entcachenode *curnode = &entcache[0];
+		#define CHECKWITHIN(branch) do { \
+			int n = curnode->childindex(branch); \
+			extentity &e = *ents[n]; \
+			if(e.type == type) \
+			{ \
+				float dist = e.o.squaredist(pos); \
+				if(dist > mindist2 && dist < maxdist2) results.add(n); \
+			} \
+		} while(0)
+		for(;;)
+		{
+			int axis = curnode->axis();
+			float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+			if(dist1 >= maxdist)
+			{
+				if(dist2 < maxdist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKWITHIN(1);
+				}
+			}
+			else if(curnode->isleaf(0))
+			{
+				CHECKWITHIN(0);
+				if(dist2 < maxdist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKWITHIN(1);
+				}
+			}
+			else
+			{
+				if(dist2 < maxdist)
+				{
+					if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+					else CHECKWITHIN(1);
+				}
+				curnode = &entcache[curnode->childindex(0)];
+				continue;
+			}
+			if(entcachestack.empty()) return;
+			curnode = entcachestack.pop();
+		}
+	}
 
-    void avoidset::avoidnear(dynent *d, const vec &pos, float limit)
-    {
-        float limit2 = limit*limit;
+	void avoidset::avoidnear(dynent *d, const vec &pos, float limit)
+	{
+		float limit2 = limit*limit;
 
-        if(entcachedepth<0) buildentcache();
+		if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+		entcachestack.setsizenodelete(0);
 
-        entcachenode *curnode = &entcache[0];
-        #define CHECKNEAR(branch) do { \
-            int n = curnode->childindex(branch); \
-            extentity &e = *ents[n]; \
-            if(e.type == WAYPOINT && e.o.squaredist(pos) < limit2) add(d, n); \
-        } while(0)
-        for(;;)
-        {
-            int axis = curnode->axis();
-            float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
-            if(dist1 >= limit)
-            {
-                if(dist2 < limit)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKNEAR(1);
-                }
-            }
-            else if(curnode->isleaf(0))
-            {
-                CHECKNEAR(0);
-                if(dist2 < limit)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKNEAR(1);
-                }
-            }
-            else
-            {
-                if(dist2 < limit)
-                {
-                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
-                    else CHECKNEAR(1);
-                }
-                curnode = &entcache[curnode->childindex(0)];
-                continue;
-            }
-            if(entcachestack.empty()) return;
-            curnode = entcachestack.pop();
-        }
-    }
+		entcachenode *curnode = &entcache[0];
+		#define CHECKNEAR(branch) do { \
+			int n = curnode->childindex(branch); \
+			extentity &e = *ents[n]; \
+			if(e.type == WAYPOINT && e.o.squaredist(pos) < limit2) add(d, n); \
+		} while(0)
+		for(;;)
+		{
+			int axis = curnode->axis();
+			float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+			if(dist1 >= limit)
+			{
+				if(dist2 < limit)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKNEAR(1);
+				}
+			}
+			else if(curnode->isleaf(0))
+			{
+				CHECKNEAR(0);
+				if(dist2 < limit)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKNEAR(1);
+				}
+			}
+			else
+			{
+				if(dist2 < limit)
+				{
+					if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+					else CHECKNEAR(1);
+				}
+				curnode = &entcache[curnode->childindex(0)];
+				continue;
+			}
+			if(entcachestack.empty()) return;
+			curnode = entcachestack.pop();
+		}
+	}
 
-    void collateents(const vec &pos, float xyrad, float zrad, vector<actitem> &actitems)
-    {
-        if(entcachedepth<0) buildentcache();
+	void collateents(const vec &pos, float xyrad, float zrad, vector<actitem> &actitems)
+	{
+		if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+		entcachestack.setsizenodelete(0);
 
-        entcachenode *curnode = &entcache[0];
-        #define CHECKITEM(branch) do { \
-            int n = curnode->childindex(branch); \
-            extentity &e = *ents[n]; \
-            if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || e.spawned)) \
-            { \
-                float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3] ? e.attr[3] : enttype[e.type].radius; \
-                if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
-                { \
-                    actitem &t = actitems.add(); \
-                    t.type = ITEM_ENT; \
-                    t.target = n; \
-                    t.score = pos.squaredist(e.o); \
-                } \
-            } \
-        } while(0)
-        for(;;)
-        {
-            int axis = curnode->axis();
-            float mindist = axis<2 ? xyrad : zrad, dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
-            if(dist1 >= mindist)
-            {
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKITEM(1);
-                }
-            }
-            else if(curnode->isleaf(0))
-            {
-                CHECKITEM(0);
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
-                    CHECKITEM(1);
-                }
-            }
-            else
-            {
-                if(dist2 < mindist)
-                {
-                    if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
-                    else CHECKITEM(1);
-                }
-                curnode = &entcache[curnode->childindex(0)];
-                continue;
-            }
-            if(entcachestack.empty()) return;
-            curnode = entcachestack.pop();
-        }
-    }
+		entcachenode *curnode = &entcache[0];
+		#define CHECKITEM(branch) do { \
+			int n = curnode->childindex(branch); \
+			extentity &e = *ents[n]; \
+			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || e.spawned)) \
+			{ \
+				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3] ? e.attr[3] : enttype[e.type].radius; \
+				if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
+				{ \
+					actitem &t = actitems.add(); \
+					t.type = ITEM_ENT; \
+					t.target = n; \
+					t.score = pos.squaredist(e.o); \
+				} \
+			} \
+		} while(0)
+		for(;;)
+		{
+			int axis = curnode->axis();
+			float mindist = axis<2 ? xyrad : zrad, dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
+			if(dist1 >= mindist)
+			{
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKITEM(1);
+				}
+			}
+			else if(curnode->isleaf(0))
+			{
+				CHECKITEM(0);
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) { curnode = &entcache[curnode->childindex(1)]; continue; }
+					CHECKITEM(1);
+				}
+			}
+			else
+			{
+				if(dist2 < mindist)
+				{
+					if(!curnode->isleaf(1)) entcachestack.add(&entcache[curnode->childindex(1)]);
+					else CHECKITEM(1);
+				}
+				curnode = &entcache[curnode->childindex(0)];
+				continue;
+			}
+			if(entcachestack.empty()) return;
+			curnode = entcachestack.pop();
+		}
+	}
 
 	static int sortitems(const actitem *a, const actitem *b)
 	{
@@ -540,7 +540,7 @@ namespace entities
 		float eye = d->height*0.5f;
 		vec m = vec(d->o).sub(vec(0, 0, eye));
 
-        collateents(m, d->radius, eye, actitems);
+		collateents(m, d->radius, eye, actitems);
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
@@ -684,7 +684,7 @@ namespace entities
 	void checkitems(gameent *d)
 	{
 		static vector<actitem> actitems;
-        actitems.setsizenodelete(0);
+		actitems.setsizenodelete(0);
 		if(collateitems(d, actitems))
 		{
 			bool tried = false;
@@ -773,13 +773,13 @@ namespace entities
 	}
 
 	extentity *newent() { return new gameentity; }
-    void deleteent(extentity *e) { delete (gameentity *)e; }
+	void deleteent(extentity *e) { delete (gameentity *)e; }
 
-    void clearents()
-    {
-        clearentcache();
-        while(ents.length()) deleteent(ents.pop());
-    }
+	void clearents()
+	{
+		clearentcache();
+		while(ents.length()) deleteent(ents.pop());
+	}
 
 	bool cansee(const extentity &e)
 	{
@@ -1071,12 +1071,12 @@ namespace entities
 
 		linkq() : id(0), curscore(0.f), estscore(0.f), prev(NULL) {}
 
-        float score() const { return curscore + estscore; }
+		float score() const { return curscore + estscore; }
 	};
 
 	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool check)
 	{
-        if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
+		if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
 			return false;
 
 		static uint routeid = 1;
@@ -1141,15 +1141,15 @@ namespace entities
 						if(n.estscore <= float(enttype[ents[link]->type].radius*4) && (lowest < 0 || n.estscore < nodes[lowest].estscore))
 							lowest = link;
 						n.id = routeid;
-                        if(link == goal) goto foundgoal;
-                        queue.add(&n);
+						if(link == goal) goto foundgoal;
+						queue.add(&n);
 					}
 				}
 			}
 		}
-        foundgoal:
+		foundgoal:
 
-        routeid++;
+		routeid++;
 
 		if(lowest >= 0) // otherwise nothing got there
 		{
@@ -1203,7 +1203,7 @@ namespace entities
 	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		gameentity &f = (gameentity &)e;
-		f.mark = false;
+		f.mark = -1;
 		if(mtype == MAP_OCTA)
 		{
 			// translate into our format
@@ -1255,7 +1255,7 @@ namespace entities
 				// 20	TELEDEST		9	TELEPORT (linked)
 				case 19: case 20:
 				{
-					if(f.type == 20) f.mark = true; // needs translating later
+					if(f.type == 20) f.mark = f.attr[1]; // needs translating later
 					f.type = TELEPORT;
 					break;
 				}
@@ -1326,18 +1326,14 @@ namespace entities
 	void importentities(int mtype, int gver)
 	{
 		int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };
-		vector<short> teleyaw;
-		loopv(ents) teleyaw.add(0);
-
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			if(verbose) renderprogress(float(i)/float(ents.length()), "importing entities...");
 
-			if(e.type == TELEPORT && e.mark) // translate teledest to teleport and link them appropriately
+			if(e.type == TELEPORT && e.mark >= 0) // translate teledest to teleport and link them appropriately
 			{
 				int dest = -1;
-
 				loopvj(ents) // see if this guy is sitting on top of a teleport already
 				{
 					gameentity &f = *(gameentity *)ents[j];
@@ -1352,19 +1348,20 @@ namespace entities
 				{
 					if(verbose) conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
 					e.type = NOTUSED; // get rid of this guy then
+					ents[dest]->attr[0] = e.attr[0];
 				}
 				else
 				{
 					if(verbose) conoutf("\frWARNING: modified teledest %d to a teleport", i);
 					dest = i;
+					e.attr[1] = -1; // invisible
+					e.attr[2] = e.attr[3] = e.attr[4] = 0;
 				}
-
-				teleyaw[dest] = e.attr[0]; // store the yaw for later
 
 				loopvj(ents) // find linked teleport(s)
 				{
 					gameentity &f = *(gameentity *)ents[j];
-					if(f.type == TELEPORT && !f.mark && f.attr[0] == e.attr[1])
+					if(f.type == TELEPORT && f.mark < 0 && f.attr[0] == e.mark)
 					{
 						if(verbose) conoutf("\frimported teleports %d and %d linked automatically", dest, j);
 						f.links.add(dest);
@@ -1428,12 +1425,19 @@ namespace entities
 			{
 				case TELEPORT:
 				{
-					e.attr[0] = teleyaw[i]; // grab what we stored earlier
-					e.attr[1] = e.attr[3] = 0; // not set in octa
-					e.attr[2] = 100; // give a push
-					e.attr[4] = 0x11A; // give it a pretty blueish teleport like sauer's
+					if(e.attr[1] >= 0)
+					{
+						e.attr[1] = e.attr[3] = 0;
+						e.attr[2] = 100; // give a push
+						e.attr[4] = 0x11A; // give it a pretty blueish teleport like sauer's
+					}
+					else
+					{
+						e.attr[2] = 100; // give a push
+						e.attr[3] = e.attr[4] = 0;
+					}
 					e.o.z += game::player1->height/2; // teleport in BF is at middle
-					e.mark = false;
+					e.mark = -1;
 					break;
 				}
 				case WAYPOINT:
@@ -1496,16 +1500,49 @@ namespace entities
 		}
 	}
 
+	void importwaypoints(int mtype, int gver)
+	{
+		const char *mname = getmapname();
+		if(!mname || !*mname) return;
+		string wptname;
+		formatstring(wptname)("%s.wpt", mname);
+
+		stream *f = opengzfile(wptname, "rb");
+		if(!f) return;
+		char magic[4];
+		if(f->read(magic, 4) < 4 || memcmp(magic, "OWPT", 4)) { delete f; return; }
+
+		int numents = ents.length()-1; // -1 because OCTA waypoints count from 1 upward
+		ushort numwp = f->getlil<ushort>();
+		loopi(numwp)
+		{
+			if(f->end()) break;
+			extentity &e = *newent();
+			ents.add(&e);
+			e.type = WAYPOINT;
+			e.o.x = f->getlil<float>();
+			e.o.y = f->getlil<float>();
+			e.o.z = f->getlil<float>();
+			int numlinks = clamp(f->getchar(), 0, 6);
+			loopi(numlinks)
+			{
+				int idx = f->getlil<ushort>();
+				if(idx > 0) e.links.add(numents+idx);
+			}
+		}
+		delete f;
+		conoutf("loaded %d waypoints from %s", numwp, wptname);
+	}
+
 	void initents(stream *g, int mtype, int mver, char *gid, int gver)
 	{
-		renderprogress(0, "checking entities...");
 		if(gver <= 49 || mtype == MAP_OCTA) importentities(mtype, gver);
-		renderprogress(0.25f, "checking entities...");
 		if(mtype != MAP_BFGZ || gver <= 112) updateoldentities(mtype, gver);
+		if(mtype == MAP_OCTA) importwaypoints(mtype, gver);
 		loopvj(ents) fixentity(j);
 		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
 			setspawn(j, false);
-		renderprogress(1.f, "checking entities...");
+		clearentcache();
 	}
 
 	void mapstart()
@@ -1624,19 +1661,19 @@ namespace entities
 		if(game::player1->state == CS_EDITING && showlighting)
 		{
 			#define islightable(q) ((q)->type == LIGHT && (q)->attr[0] > 0)
-            loopv(entgroup)
-            {
-                int n = entgroup[i];
-                if(ents.inrange(n) && islightable(ents[n]) && n != enthover)
-                    renderfocus(n, renderentlight(e));
-            }
-            if(ents.inrange(enthover) && islightable(ents[enthover]))
-                renderfocus(enthover, renderentlight(e));
+			loopv(entgroup)
+			{
+				int n = entgroup[i];
+				if(ents.inrange(n) && islightable(ents[n]) && n != enthover)
+					renderfocus(n, renderentlight(e));
+			}
+			if(ents.inrange(enthover) && islightable(ents[enthover]))
+				renderfocus(enthover, renderentlight(e));
 		}
 	}
 
-    void preload()
-    {
+	void preload()
+	{
 		static bool weapf[WEAPON_MAX];
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		loopi(WEAPON_MAX) weapf[i] = (i == sweap ? true : false);
@@ -1661,7 +1698,7 @@ namespace entities
 			}
 #endif
 		}
-    }
+	}
 
  	void update()
 	{
@@ -1687,14 +1724,14 @@ namespace entities
 		{
 			int level = (m_edit(game::gamemode) ? 2 : ((showentdir == 3  || showentradius == 3 || showentlinks == 3 || dropwaypoints || ai::aidebug >= 6) ? 3 : 0));
 			if(level)
-            {
-            	bool editing = game::player1->state == CS_EDITING;
-                loopv(ents)
-                {
-                	int lvl = (editing && (entgroup.find(i) >= 0 || enthover == i)) ? 1 : level;
-                	renderfocus(i, renderentshow(e, i, lvl));
-                }
-            }
+			{
+				bool editing = game::player1->state == CS_EDITING;
+				loopv(ents)
+				{
+					int lvl = (editing && (entgroup.find(i) >= 0 || enthover == i)) ? 1 : level;
+					renderfocus(i, renderentshow(e, i, lvl));
+				}
+			}
 		}
 
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
@@ -1710,7 +1747,7 @@ namespace entities
 				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-                    float fade = 1, yaw = 0, pitch = 0;
+					float fade = 1, yaw = 0, pitch = 0;
 					if(!active)
 					{
 						fade = 0.5f;
@@ -1731,29 +1768,29 @@ namespace entities
 		}
 	}
 
-    void maketeleport(const gameentity &e)
-    {
-        vec dir;
-        vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
-        vec o = vec(e.o).add(dir);
-        float radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
-        int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-        part_portal(o, radius, e.attr[0], e.attr[1], PART_TELEPORT, 0, colour);
-    }
+	void maketeleport(const gameentity &e)
+	{
+		vec dir;
+		vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
+		vec o = vec(e.o).add(dir);
+		float radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
+		int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
+		part_portal(o, radius, e.attr[0], e.attr[1], PART_TELEPORT, 0, colour);
+	}
 
 	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)
 	{
-        switch(e.type)
-        {
-            case PARTICLES:
-			    if(idx < 0 || e.links.empty()) makeparticles(e);
-			    else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
-				    makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-                break;
+		switch(e.type)
+		{
+			case PARTICLES:
+				if(idx < 0 || e.links.empty()) makeparticles(e);
+				else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
+					makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				break;
 
-            case TELEPORT:
-                if(e.attr[4]) maketeleport(e);
-                break;
+			case TELEPORT:
+				if(e.attr[4]) maketeleport(e);
+				break;
 		}
 
 		bool hasent = false, edit = m_edit(game::gamemode) && cansee(e);
@@ -1799,20 +1836,20 @@ namespace entities
 
 	void drawparticles()
 	{
-        float maxdist = float(maxparticledistance)*float(maxparticledistance);
-        int ignoretypes = m_edit(game::gamemode) ? NOTUSED : MAXENTTYPES;
+		float maxdist = float(maxparticledistance)*float(maxparticledistance);
+		int ignoretypes = m_edit(game::gamemode) ? NOTUSED : MAXENTTYPES;
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-            switch(e.type)
-            {
-                case PARTICLES: case TELEPORT:
-                    break;
-                default:
-                    if(enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
-                    break;
-            }
-            if(e.o.squaredist(camera1->o) > maxdist) continue;
+			switch(e.type)
+			{
+				case PARTICLES: case TELEPORT:
+					break;
+				default:
+					if(enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
+					break;
+			}
+			if(e.o.squaredist(camera1->o) > maxdist) continue;
 			drawparticle(e, e.o, i, e.spawned);
 		}
 		loopv(projs::projs)

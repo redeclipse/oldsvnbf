@@ -616,7 +616,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			}
 			lilswap(&newhdr.version, 2);
 
-			string oldmaptitle;
+			clearworldvars();
 			if(strncmp(newhdr.head, "BFGZ", 4) == 0)
 			{
 				#define BFGZCOMPAT(ver) \
@@ -638,7 +638,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					copystring(oldmaptitle, chdr.maptitle);
+					setsvar("maptitle", chdr.maptitle, true);
 				}
 				else if(newhdr.version <= 32)
 				{
@@ -648,7 +648,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					copystring(oldmaptitle, chdr.maptitle);
+					setsvar("maptitle", chdr.maptitle, true);
 				}
 				else if(newhdr.version <= 33)
 				{
@@ -656,7 +656,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					lilswap(&chdr.worldsize, 7);
 					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*7);
 					memcpy(&newhdr.gameid, &chdr.gameid, 4);
-					copystring(oldmaptitle, chdr.maptitle);
+					setsvar("maptitle", chdr.maptitle, true);
 				}
 				else
 				{
@@ -667,7 +667,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						return false;
 					}
 					lilswap(&newhdr.worldsize, 7);
-					oldmaptitle[0] = 0;
 				}
 
 				if(newhdr.version > MAPVERSION)
@@ -775,35 +774,66 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			}
 			else if(strncmp(newhdr.head, "OCTA", 4) == 0)
 			{
-				octacompat28 ohdr;
+				octa ohdr;
 				memcpy(&ohdr, &newhdr, sizeof(binary));
+
+				#define OCTACOMPAT(ver) \
+					octacompat##ver chdr; \
+					memcpy(&chdr, &ohdr, sizeof(binary)); \
+					if((size_t)newhdr.headersize > sizeof(chdr) || f->read(&chdr.worldsize, ohdr.headersize-sizeof(binary))!=ohdr.headersize-(int)sizeof(binary)) \
+					{ \
+						conoutf("\frerror loading %s: malformatted header", mapname); \
+						delete f; \
+						return false; \
+					}
+
+				#define OCTAVARS \
+					if(chdr.lightprecision) setvar("lightprecision", chdr.lightprecision); \
+					if(chdr.lighterror) setvar("lighterror", chdr.lighterror); \
+					if(chdr.bumperror) setvar("bumperror", chdr.bumperror); \
+					setvar("lightlod", chdr.lightlod); \
+					if(chdr.ambient) setvar("ambient", chdr.ambient); \
+					setvar("skylight", (int(chdr.skylight[0])<<16) | (int(chdr.skylight[1])<<8) | int(chdr.skylight[2])); \
+					setvar("watercolour", (int(chdr.watercolour[0])<<16) | (int(chdr.watercolour[1])<<8) | int(chdr.watercolour[2]), true); \
+					setvar("waterfallcolour", (int(chdr.waterfallcolour[0])<<16) | (int(chdr.waterfallcolour[1])<<8) | int(chdr.waterfallcolour[2])); \
+					setvar("lavacolour", (int(chdr.lavacolour[0])<<16) | (int(chdr.lavacolour[1])<<8) | int(chdr.lavacolour[2])); \
+					setvar("fullbright", 0, true); \
+					if(chdr.lerpsubdivsize || chdr.lerpangle) setvar("lerpangle", chdr.lerpangle); \
+					if(chdr.lerpsubdivsize) \
+					{ \
+						setvar("lerpsubdiv", chdr.lerpsubdiv); \
+						setvar("lerpsubdivsize", chdr.lerpsubdivsize); \
+					} \
+					setsvar("maptitle", chdr.maptitle); \
+					ohdr.numvars = 0;
 
 				if(ohdr.version <= 25)
 				{
-					octacompat25 chdr;
-					memcpy(&chdr, &ohdr, sizeof(binary));
-					if(f->read(&chdr.worldsize, sizeof(octacompat25)-sizeof(binary))!=sizeof(octacompat25)-(int)sizeof(binary))
-					{
-					    conoutf("\frerror loading %s: malformatted header", mapname);
-					    delete f;
-					    return false;
-					}
-					lilswap(&chdr.worldsize, 8);
+					OCTACOMPAT(25);
+					lilswap(&chdr.worldsize, 7);
 					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
 					ohdr.numpvs = 0;
-					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(octacompat25)-sizeof(binary)-sizeof(int)*3);
+					memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(int)*3);
+					OCTAVARS;
+				}
+				else if(ohdr.version <= 28)
+				{
+					OCTACOMPAT(28);
+					lilswap(&chdr.worldsize, 7);
+					memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*6);
+					OCTAVARS;
+					ohdr.blendmap = chdr.blendmap;
 				}
 				else
 				{
-					if(f->read(&ohdr.worldsize, sizeof(octacompat28)-sizeof(binary))!=sizeof(octacompat28)-(int)sizeof(binary))
+					if(f->read(&ohdr.worldsize, sizeof(octa)-sizeof(binary))!=sizeof(octa)-(int)sizeof(binary))
 					{
 						conoutf("\frerror loading %s: malformatted header", mapname);
 						delete f;
 						return false;
 					}
-					lilswap(&ohdr.worldsize, 8);
+					lilswap(&ohdr.worldsize, 6);
 				}
-				copystring(oldmaptitle, ohdr.maptitle);
 
 				if(ohdr.version > OCTAVERSION)
 				{
@@ -828,26 +858,48 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				hdr.numents = ohdr.numents;
 				hdr.numpvs = ohdr.numpvs;
 				hdr.lightmaps = ohdr.lightmaps;
+				hdr.blendmap = ohdr.blendmap;
 				hdr.revision = 1;
 
-				if(ohdr.version<=20) conoutf("\frloading older / less efficient map format, may benefit from \"calclight 2\", then \"savecurrentmap\"");
-				if(!ohdr.ambient) ohdr.ambient = 25;
-				if(!ohdr.lerpsubdivsize)
+				if(ohdr.version >= 29) loopi(ohdr.numvars)
 				{
-					if(!ohdr.lerpangle) ohdr.lerpangle = 44;
-					ohdr.lerpsubdiv = 2;
-					ohdr.lerpsubdivsize = 4;
+					int type = f->getchar(), ilen = f->getlil<ushort>();
+					string name;
+					f->read(name, min(ilen, OCTASTRLEN-1));
+					name[min(ilen, OCTASTRLEN-1)] = '\0';
+					if(ilen >= OCTASTRLEN) f->seek(ilen - (OCTASTRLEN-1), SEEK_CUR);
+					ident *id = getident(name);
+					bool exists = id && id->type == type;
+					switch(type)
+					{
+						case ID_VAR:
+						{
+							int val = f->getlil<int>();
+							if(exists && id->minval <= id->maxval) setvar(name, val);
+							break;
+						}
+
+						case ID_FVAR:
+						{
+							float val = f->getlil<float>();
+							if(exists && id->minvalf <= id->maxvalf) setfvar(name, val);
+							break;
+						}
+
+						case ID_SVAR:
+						{
+							int slen = f->getlil<ushort>();
+							string val;
+							f->read(val, min(slen, OCTASTRLEN-1));
+							val[min(slen, OCTASTRLEN-1)] = '\0';
+							if(slen >= OCTASTRLEN) f->seek(slen - (OCTASTRLEN-1), SEEK_CUR);
+							if(exists) setsvar(name, val);
+							break;
+						}
+					}
 				}
 
 				sanevars();
-				if(ohdr.lightprecision) setvar("lightprecision", ohdr.lightprecision);
-                if(ohdr.lighterror) setvar("lighterror", ohdr.lighterror);
-				if(ohdr.bumperror) setvar("bumperror", ohdr.bumperror);
-				setvar("lightlod", ohdr.lightlod);
-                setvar("ambient", ohdr.ambient);
-				setvar("lerpangle", ohdr.lerpangle);
-				setvar("lerpsubdiv", ohdr.lerpsubdiv);
-				setvar("lerpsubdivsize", ohdr.lerpsubdivsize);
 
 				string gameid;
 				if(hdr.version >= 16)
@@ -881,9 +933,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				continue;
 			}
 
-			if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 33)) && oldmaptitle[0])
-				setsvar("maptitle", oldmaptitle, true);
-
 			renderprogress(0, "clearing world...");
 
 			texmru.setsize(0);
@@ -913,10 +962,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				f->read(&e, sizeof(entity));
 				lilswap(&e.o.x, 3);
 				lilswap(&e.attr, ENTATTRS);
-				e.links.setsize(0);
-				e.spawned = false;
-				e.lastemit = 0;
-				e.inoctanode = false;
 				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
 					e.attr[4] = 0; // init ever-present attr5
 				if(maptype == MAP_OCTA)

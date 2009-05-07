@@ -8,7 +8,7 @@ enum							// hardcoded texture numbers
 	DEFAULT_CEIL
 };
 
-#define OCTAVERSION 28			// diverged at ver 25
+#define OCTAVERSION 29			// diverged at ver 25
 #define MAPVERSION 34			// bump if map format changes, see worldio.cpp
 
 struct binary
@@ -17,6 +17,7 @@ struct binary
 	int version, headersize;
 };
 
+#define OCTASTRLEN 260
 struct octacompat25 : binary
 {
 	int worldsize;

@@ -768,6 +768,7 @@ void eastereggs()
 	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
 }
 
+VAR(hasoctapaks, 1, 0, 0);
 bool findoctadir(const char *name)
 {
 	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
@@ -779,6 +780,7 @@ bool findoctadir(const char *name)
 		addpackagedir(name);
 		addpackagedir(octadata);
 		addpackagedir(octapaks);
+		hasoctapaks = 1;
 		return true;
 	}
 	return false;

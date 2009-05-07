@@ -720,7 +720,7 @@ void splitocta(cube *c, int size)
 	}
 }
 
-void clearworldvars(bool msg = false)
+void clearworldvars(bool msg)
 {
 	overrideidents = worldidents = true;
 	persistidents = false;
@@ -778,7 +778,6 @@ void resetmap(bool empty)
 	cancelsel();
 	pruneundos();
     entities::clearents();
-	clearworldvars();
 	game::resetmap(empty);
 }
 
@@ -790,6 +789,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 		return false;
 	}
 
+	clearworldvars();
 	resetmap(nocfg);
 	setnames(mname, MAP_BFGZ);
 	strncpy(hdr.head, "BFGZ", 4);
