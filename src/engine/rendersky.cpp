@@ -28,7 +28,6 @@ FVARW(spinsky, -720, 0, 720);
 VARW(yawsky, 0, 0, 360);
 
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
-FVARW(cloudblend, 0, 1.0f, 1);
 FVARW(spinclouds, -720, 0, 720);
 VARW(yawclouds, 0, 0, 360);
 FVARW(cloudclip, 0, 0.5f, 1);
@@ -40,6 +39,8 @@ FVARW(spincloudlayer, -720, 0, 720);
 VARW(yawcloudlayer, 0, 0, 360);
 FVARW(cloudheight, -1, 0.2f, 1);
 FVARW(cloudfade, 0, 0.2f, 1);
+FVARW(cloudblend, 0, 1.0f, 1);
+FVARFW(cloudalpha, 0, 1.0f, 1, cloudblend = cloudalpha);
 VARW(cloudsubdiv, 4, 16, 64);
 HVARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
 

@@ -873,6 +873,7 @@ void floatret(float v)
 }
 
 ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
+ICOMMANDN(?, iif, "sss", (char *cond, char *t, char *f), result(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
 ICOMMAND(loop, "sis", (char *var, int *n, char *body),
 {
 	if(*n<=0) return;

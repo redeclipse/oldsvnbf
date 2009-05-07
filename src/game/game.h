@@ -871,9 +871,9 @@ struct gameentity : extentity
 {
 	int schan;
 	int lastuse, lastspawn;
-	bool mark;
+	int mark;
 
-	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(false) {}
+	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(-1) {}
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);

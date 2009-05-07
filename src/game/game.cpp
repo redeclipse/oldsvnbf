@@ -16,8 +16,8 @@ namespace game
 
 	ICOMMANDG(resetvars, "", (), return); // server side
 
-	VARW(numplayers, 0, 4, MAXCLIENTS/2);
-	VARW(numteamplayers, 0, 4, MAXCLIENTS/2);
+	VARW(numplayers, 0, 8, MAXCLIENTS/2);
+	VARW(numteamplayers, 0, 12, MAXCLIENTS/2);
 	SVARW(mapmusic, "");
 
 	VARP(mouseinvert, 0, 0, 1);
@@ -1086,6 +1086,20 @@ namespace game
 			lastspec = lastspecchg = 0;
 			if(!cameras.empty()) break;
 		}
+		#define unsetspectv(q) \
+		{ \
+			if(q) \
+			{ \
+				camera1->o.x = camera1->o.y = camera1->o.z = getworldsize(); \
+				camera1->o.x *= 0.5f; camera1->o.y *= 0.5f; \
+				player1->o = camera1->o; \
+			} \
+			player1->resetinterp(); \
+			camera1->resetinterp(); \
+			setvar("specmode", 0, true); \
+			return; \
+		}
+
 		if(!cameras.empty())
 		{
 			camstate *cam = &cameras[0];
@@ -1185,7 +1199,7 @@ namespace game
 				if(override && !found && (k || !alter))
 				{
 					if(k < 3) renew = true;
-					else setvar("specmode", 0, true); // bail
+					else unsetspectv(lastspec ? false : true);
 				}
 				else break;
 			}
@@ -1205,11 +1219,12 @@ namespace game
 			}
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			else scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
-			camera1->resetinterp();
 			player1->yaw = player1->aimyaw = camera1->yaw;
 			player1->pitch = player1->aimpitch = camera1->pitch;
 			player1->resetinterp();
+			camera1->resetinterp();
 		}
+		else unsetspectv(true);
 	}
 
 	void updateworld()		// main game update loop

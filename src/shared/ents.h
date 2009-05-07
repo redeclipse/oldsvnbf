@@ -38,10 +38,15 @@ struct extentity : entity                       // part of the entity that doesn
 	vector<int> links;
 	int lastemit;
 
-    extentity() : visible(false), lastemit(0)
+    extentity() { reset(); }
+
+    void reset()
     {
-    	links.setsize(0);
-	}
+		loopi(ENTATTRS) attr[i] = 0;
+		links.setsize(0);
+		spawned = inoctanode = visible = false;
+		lastemit = 0;
+    }
 };
 
 extern int efocus, enthover, entorient;
