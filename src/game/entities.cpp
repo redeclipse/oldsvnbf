@@ -1338,7 +1338,7 @@ namespace entities
 				{
 					gameentity &f = *(gameentity *)ents[j];
 
-					if(f.type == TELEPORT && !f.mark &&
+					if(f.type == TELEPORT && f.mark < 0 &&
 						(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
 							e.o.dist(f.o) <= enttype[TELEPORT].radius*4.f)
 								dest = j;
