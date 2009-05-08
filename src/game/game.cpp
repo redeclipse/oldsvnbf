@@ -113,16 +113,16 @@ namespace game
 	char *gametitle() { return server::gamename(gamemode, mutators); }
 	char *gametext() { return getmapname(); }
 
-	bool thirdpersonview()
+	bool thirdpersonview(bool viewonly)
 	{
-        if(player1->state == CS_DEAD || player1->state == CS_WAITING) return true;
+        if(!viewonly && (player1->state == CS_DEAD || player1->state == CS_WAITING)) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
 		if(inzoom()) return false;
 		return true;
 	}
-	ICOMMAND(isthirdperson, "", (), intret(thirdpersonview() ? 1 : 0));
+	ICOMMAND(isthirdperson, "i", (int *viewonly), intret(thirdpersonview(*viewonly ? true : false) ? 1 : 0));
 
 	int mousestyle()
 	{
@@ -146,7 +146,7 @@ namespace game
 	{
 		if(player1->state == CS_EDITING) return editfov;
 		if(player1->state == CS_SPECTATOR) return specfov;
-		if(thirdpersonview()) return thirdpersonfov;
+		if(thirdpersonview(true)) return thirdpersonfov;
 		return firstpersonfov;
 	}
 
@@ -1345,7 +1345,7 @@ namespace game
 
 				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
 				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
-				if(thirdpersonview() && thirdpersondist)
+				if(thirdpersonview(true) && thirdpersondist)
 				{
 					vec dir;
 					vecfromyawpitch(camera1->aimyaw, camera1->aimpitch, thirdpersondist > 0 ? -1 : 1, 0, dir);
@@ -1454,7 +1454,7 @@ namespace game
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 					{
 						adddynlight(d->abovehead(), d->height*2,
-							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || thirdpersonview(), true)));
+							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || thirdpersonview(true), true)));
 					}
 				}
 			}
@@ -1752,7 +1752,7 @@ namespace game
     {
     	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
         if((thirdpersonview() || !rendernormally) && player1->state != CS_SPECTATOR)
-			renderplayer(player1, true, showtranslucent(player1, true), early);
+			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
     }
