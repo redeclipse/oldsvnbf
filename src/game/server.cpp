@@ -556,8 +556,7 @@ namespace server
 		if(GVAR(maprotate))
 		{
 			const char *maplist = GVAR(mainmaps);
-			if(m_lobby(gamemode)) maplist = GVAR(lobbymaps);
-			else if(m_mission(gamemode)) maplist = GVAR(missionmaps);
+			if(m_mission(gamemode)) maplist = GVAR(missionmaps);
 			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 			if(maplist && *maplist)

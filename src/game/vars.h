@@ -4,12 +4,11 @@ SVARG(defaultmap, "bath");
 VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
-SVARG(lobbymaps, "bath citadel deli dualstar eight gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo overseer 4square siege");
 SVARG(missionmaps, "mpspbf1 mpspbf2");
-SVARG(mainmaps, "bath citadel deli dualstar eight gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo");
-SVARG(ctfmaps, "bath citadel deli dualstar gladiator refuge nova panic rivals smouldering tower warehouse warground");
+SVARG(mainmaps, "bath citadel deli dualstar eight gladiator nova panic refuge rivals smouldering tower warehouse warground venus");
+SVARG(ctfmaps, "bath citadel deli dualstar gladiator refuge nova panic rivals smouldering tower warehouse warground venus");
 SVARG(mctfmaps, "refuge");
-SVARG(stfmaps, "bath citadel deli dualstar gladiator nova panic refuge rivals smouldering tower warehouse warground vertigo");
+SVARG(stfmaps, "bath citadel deli dualstar gladiator nova panic refuge rivals smouldering tower warehouse warground venus");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
