@@ -1,0 +1,285 @@
+@charset "utf-8";
+body {
+	font-family: sans-serif;
+	font-size: normal;
+	background: #0e0e0e url(/bits/bg_01.jpg) no-repeat scroll center top;
+	margin: 0px;
+	padding: 0px;
+}
+#container {
+	margin: 0px auto;
+	width: 820px;
+	padding: 0px;
+}
+#header {
+	margin: 19px 0px 0px;
+	padding: 0px;
+	float: left;
+	width: 820px;
+}
+#header img {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	border-style: none;
+}
+#links {
+	font-size: 16px;
+	color: #FFFFFF;
+	background: #000000 url(/bits/bg_links.jpg) repeat-x center center;
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	height: 75px;
+	width: 738px;
+}
+#page {
+	padding: 0px 40px;
+	width: 738px;
+	background: url(/bits/bg_page.png) repeat-y center top;
+	float: left;
+}
+#links a {
+	color: #FFFFFF;
+	text-decoration: none;
+	display: block;
+	float: left;
+	margin-left: 20px;
+	text-align: center;
+	margin-top: 25px;
+	height: 24px;
+	padding-top: 3px;
+	width: 70px;
+}
+#links a:visited {
+	background: none;
+	color: #FFFFFF;
+}
+#links a:hover {
+	background: url(/bits/bg_link.png) no-repeat center top;
+	color: #CCCCCC;
+}
+#noticebg {
+	background: #000000 url(/bits/bg_blood.gif) no-repeat center top;
+	margin: 0px;
+	padding: 20px 0px 0px;
+	float: left;
+	width: 738px;
+	height: 234px;
+}
+.blockborder {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	height: 20px;
+}
+.redblock {
+	background: url(/bits/bg_block.png) repeat-y;
+	float: left;
+	width: 510px;
+	margin: 0px;
+	padding: 0px 20px 0px 19px;
+	color: #FFFFFF;
+	font-size: 11px;
+}
+.version {
+	font-size: 16px;
+	color: #FFFFFF;
+	float: left;
+	margin: 0px 0px 10px;
+	padding: 0px;
+}
+.version a {
+	color: #CC0000;
+	text-decoration: none;
+}
+.version a:visited {
+	color: #CC0000;
+	text-decoration: none;
+}
+.version a:hover {
+	color: #FF0000;
+	text-decoration: underline;
+}
+.redblock hr {
+	background: url(/bits/bg_hr.png) no-repeat center center;
+	margin: 0px 0px 10px;
+	padding: 0px;
+	float: left;
+	height: 2px;
+	width: 510px;
+	border-style: none;
+	border-width: 0px;
+}
+.notice {
+	font-size: 11px;
+	color: #FFFFFF;
+	display: block;
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	width: 400px;
+}
+#right {
+	font-size: 11px;
+	color: #FFFFFF;
+	text-align: center;
+	margin: 0px;
+	padding: 0px 0px 0px 10px;
+	float: left;
+	width: 92px;
+}
+#right form {
+	margin: 0px 0px 10px;
+	padding: 0px;
+	float: left;
+	width: 92px;
+	display: block;
+}
+#right img {
+	float: left;
+	margin: 0px 0px 5px;
+	display: block;
+}
+#right input {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	display: block;
+	width: 92px;
+}
+#insert {
+	float: left;
+	width: 92px;
+	display: block;
+}
+#right a {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+#footer {
+	font-size: 14px;
+	color: #FFFFFF;
+	background: url(/bits/bg_footer.png) no-repeat center top;
+	margin: 0px;
+	padding: 10px 0px 20px 60px;
+	float: left;
+	height: 44px;
+	width: 760px;
+}
+#footer a {
+	color: #CC0000;
+	text-decoration: none;
+}
+#footer a:visited {
+	color: #CC0000;
+	text-decoration: none;
+}
+#footer a:hover {
+	color: #FF0000;
+	text-decoration: underline;
+}
+.list {
+	font-size: 14px;
+	color: #FFFFFF;
+	margin: 0px;
+	padding: 20px 20px 0px 0px;
+	float: right;
+	width: 140px;
+}
+.list ul {
+	margin: 0px;
+	padding: 10px 0px;
+	float: left;
+	list-style: none;
+	width: 140px;
+	display: block;
+}
+.list li {
+	margin: 0px;
+	padding: 4px 0px 6px 20px;
+	float: left;
+	background: url(/bits/bg_li.png) no-repeat left center;
+	display: block;
+	width: 120px;
+}
+.list a {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+.list a:visited {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+.list a:hover {
+	color: #CCCCCC;
+	text-decoration: none;
+}
+#sflogo {
+	margin: 0px;
+	padding: 0px;
+	float: left;
+}
+#video {
+	background: url(/bits/bg_vid.jpg) no-repeat center center;
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	height: 469px;
+	width: 738px;
+}
+#video object {
+	margin: 0px;
+	padding: 0px;
+}
+#youtube {
+	margin: 0px;
+	padding: 40px 0px 0px 19px;
+	float: left;
+	height: 385px;
+	width: 480px;
+}
+#subtext {
+	font-size: 11px;
+	color: #FFFFFF;
+	margin: 0px;
+	padding: 0px 30px 0px 0px;
+	float: right;
+	width: 180px;
+}
+#subtext img {
+	margin: 0px;
+	padding: 5px 5px 0px 0px;
+	float: right;
+}
+#subtext p {
+	width: 180px;
+	margin: 0px 0px 5px;
+	padding: 0px;
+	float: right;
+	display: block;
+
+}
+#subtext a {
+	color: #999999;
+	margin: 0px;
+	padding: 0px;
+}
+#subtext h2 {
+	font-size: 14px;
+	margin: 0px;
+	padding: 5px 0px;
+	color: #CC0000;
+	float: right;
+	width: 180px;
+	display: block;
+}
+#subtext h3 {
+	font-size: 12px;
+	margin: 0px;
+	padding: 5px 0px;
+	color: #999999;
+	float: right;
+	width: 180px;
+	display: block;
+}
