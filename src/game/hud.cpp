@@ -39,7 +39,7 @@ namespace hud
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
-	FVARP(noticeoffset, 0.f, 0.33f, 1.f);
+	FVARP(noticeoffset, 0.f, 0.35f, 1.f);
 	FVARP(noticeblend, 0.f, 0.75f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
@@ -490,8 +490,8 @@ namespace hud
 		glOrtho(0, hudwidth, hudsize, 0, -1, 1);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		drawpointers(w, h);
 
-		// superhud!
 		pushfont("super");
 		int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
@@ -692,7 +692,6 @@ namespace hud
 				drawtex(0, 0, hudwidth, hudsize);
 			}
 		}
-		drawpointers(w, h); // do this last, as it has to interact with the lower levels unhindered
 
 		glDisable(GL_BLEND);
 	}
