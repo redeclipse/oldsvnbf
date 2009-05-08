@@ -14,7 +14,7 @@ namespace entities
 	extern int findtype(char *type);
 	extern bool maylink(int type, int ver = 0);
 	extern bool canlink(int index, int node, bool msg = false);
-	extern bool linkents(int index, int node, bool add, bool local, bool toggle);
+	extern bool linkents(int index, int node, bool add = true, bool local = true, bool toggle = true);
 	extern extentity *newent();
     extern void deleteent(extentity *e);
     extern void clearents();

@@ -658,7 +658,7 @@ void entlink()
 				if(verbose >= 2) conoutf("\fwattempting to link %d and %d (%d)", index, node, i+1);
 				if(ents.inrange(node))
 				{
-					if(!entities::linkents(index, node, true, true, true) && !entities::linkents(node, index, true, true, true))
+					if(!entities::linkents(index, node) && !entities::linkents(node, index))
 						conoutf("\frERROR: failed linking %d and %d (%d)", index, node, i+1);
 				}
 				else conoutf("\frERROR: %d (%d) is not in range", node, i+1);
