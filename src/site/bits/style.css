@@ -90,16 +90,19 @@ body {
 	padding: 0px;
 }
 .version a {
-	color: #CC0000;
+	color: #F0F0F0;
 	text-decoration: none;
+	border-bottom: 1px dotted #C0C0C0;
 }
 .version a:visited {
-	color: #CC0000;
+	color: #F0F0F0;
 	text-decoration: none;
+	border-bottom: 1px dotted #C0C0C0;
 }
 .version a:hover {
-	color: #FF0000;
-	text-decoration: underline;
+	color: #FFFFFF;
+	text-decoration: none;
+	border-bottom: 1px solid #CCCCCC;
 }
 .redblock hr {
 	background: url(/bits/bg_hr.png) no-repeat center center;
