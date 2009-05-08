@@ -99,7 +99,7 @@ namespace game
 	extern void findanims(const char *pattern, vector<int> &anims);
 	extern void render();
 	extern void renderavatar(bool early);
-	extern bool thirdpersonview();
+	extern bool thirdpersonview(bool viewonly = false);
 	extern void start();
 }
 #endif
