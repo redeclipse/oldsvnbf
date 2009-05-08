@@ -5,13 +5,16 @@
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
-	$app['sitemainlogo'] = "/bits/logo.png";
-	$app['sitecss'] = "/bits/site.css";
+	$app['sitenotice'] = "<u>Thanks</u> to all the donors following our last release! Quin successfully raised half the money required to fund the contruction of a new PC, which has arrived and been (stress) tested.	Our heartfelt appreciation goes to all those who helped ensure our Lead Developer can continue his tireless work for a long time to come. If you'd still like to donate, further money raised will go toward future project endeavours and ongoing costs.";
+	$app['sitepaypal'] = "212900";
+	$app['sitedonate'] = "Donate to Quin";
+	$app['sitemainlogo'] = "/bits/logo_bf.png";
+	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
-
+	$app['sitemiddle'] = "/bits/middle.png";
 	$app['siteaddname'] = "Built on Cube Engine 2";
 	$app['siteaddurl'] = "http://www.cubeengine.com/";
-	$app['siteaddlogo'] = "/bits/cube2.png";
+	$app['siteaddlogo'] = "/bits/logo_c2.png";
 
 	$app['sfproject'] = "bloodfrontier";
 	$app['sfgroupid'] = 198419;
@@ -35,9 +38,9 @@
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'nav' => 1, 'redir' => 1);
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/?view=rev&amp;rev=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => 0, 'redir' => 1);
-	$app['targets']['facebook'] = array('name' => 'On Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 1, 'redir' => 1);
-	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 1, 'redir' => 1);
-	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 1, 'redir' => 1);
+	$app['targets']['facebook'] = array('name' => 'On Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
+	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -61,7 +64,7 @@
 		$app['navbar'] = ''; // cache the navbar
 		foreach ($app['targets'] as $key => $targ) {
 			if ($key != "" && $targ['name'] != "" && $targ['nav']) {
-				$app['navbar'] .= '<li><a href="/'.$key.'">'. $targ['name'] .'</a></li>';
+				$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a>';
 			}
 		}
 ?>
@@ -85,30 +88,67 @@
 <?php } ?>
 	</head>
 	<body>
-		<div id="wrapper" align="center">
+		<div id="container">
 			<div id="header">
-				<div id="logo">
-					<a href="/home"><img id="sitelogo" src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" style="border: none" /></a>
-					<a href="<?php echo $app['siteaddurl']; ?>"><img id="sitelogo" src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" style="border: none" /></a>
+				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
+				<img src="<?php echo $app['sitemiddle']; ?>" alt="<?php echo $app['siteblurb']; ?>" width="323" height="143" border="0" />
+				<a href="<?php echo $app['siteaddurl']; ?>"><img src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" width="193" height="143" border="0" /></a>
+			</div>
+			<div id="page">
+				<div id="links"><?php echo $app['navbar']; ?></div>
+				<div id="noticebg">
+					<div class="list">
+						<b>Blood Frontier:</b>
+						<ul>
+							<li><a href="/youtube">on Youtube</a></li>
+							<li><a href="/google">on Google</a></li>
+							<li><a href="/facebook">on Facebook</a></li>
+						</ul>
+<?php				if ($app['sflogo'] > 0) { ?>
+						<a href="/project">
+							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" name="sflogo" width="120" height="30" border="0" id="sflogo"/>
+						</a>
+<?php				} ?>
+					</div>
+					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" class="blockborder" />
+					<div class="redblock">
+						<p class="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
+						<hr />
+						<p class="notice"><?php echo $app['sitenotice']; ?></p>
+						<div id="right">
+							<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
+								<input type="hidden" value="_s-xclick" name="cmd"/>
+								<input type="hidden" value="<?php echo $app['sitepaypal']; ?>" name="hosted_button_id"/>
+								<input type="image" alt="<?php echo $app['sitedonate']; ?>" name="submit" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif"/>
+							</form>
+						</div>
+					</div>
+					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" class="blockborder" />
 				</div>
-				<div id="tags">
-<?php			if ($app['sflogo'] > 0) { ?>
-					<a href="/project">
-						<img id="sflogo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" style="border: none" alt="Get <?php echo $app['sitename']; ?> at SourceForge" />
-					</a>
-<?php			} ?>
-					<div id="blurb"><i><?php echo $app['siteblurb']; ?></i></div>
+				<div id="video">
+					<div id="youtube">
+						<object width="480" height="385" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
+							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
+							<param name="allowscriptaccess" value="always" />
+							<param name="allowFullScreen" value="true" />
+							<embed width="480" height="385" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
+						</object>
+					</div>
+					<div id="subtext">
+						<h2><?php echo $app['sitename']; ?></h2>
+						<h3><?php echo $app['siteblurb']; ?></h3>
+						<p><?php echo $app['siteinfo']; ?></p>
+						<p>
+							<a href="/bits/ss01.jpg"><img src="/bits/ss01t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss02.jpg"><img src="/bits/ss02t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss03.jpg"><img src="/bits/ss03t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss04.jpg"><img src="/bits/ss04t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
+						</p>
+						<p><a href="/gallery">View Gallery</a></p>
+					</div>
 				</div>
 			</div>
-			<div id="version"><b>Current Version:</b> <a href="/download"><?php echo $app['siterelver']; ?></a> released <i><?php echo $app['sitereldate']; ?></i></div>
-			<div id="navbar">
-				<ul class="nav-list">
-					<?php echo $app['navbar']; ?>
-				</ul>
-			</div>
-			<div id="body" align="center">
-<?php			include_once($app['target'].'.php'); ?>
-			</div>
+			<div id="footer"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</div>
 		</div>
 	</body>
 </html>
