@@ -81,6 +81,7 @@ namespace game
 	TVAR(conopentex, "textures/conopen", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
+	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
 	VARP(announcedelay, 0, 0, INT_MAX-1); // in case you wanna clip announcements to not overlap
 
@@ -696,7 +697,7 @@ namespace game
 		if(!players.inrange(cn)) return;
 		gameent *d = players[cn];
 		if(!d) return;
-		if(d->name[0]) conoutf("\fo%s left the game", colorname(d));
+		if(d->name[0] && showplayerinfo) conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
 		projs::remove(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
         if(m_stf(gamemode)) stf::removeplayer(d);

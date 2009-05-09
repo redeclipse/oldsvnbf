@@ -82,18 +82,21 @@ namespace ai
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
-			if(aidebug) conoutf("\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
-			else conoutf("\fg%s joined the game", game::colorname(d, name), m, sk);
+			if(game::showplayerinfo)
+			{
+				if(aidebug) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
+				else conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s joined the game", game::colorname(d, name), m, sk);
+			}
 			resetthisguy = true;
 		}
 		else
 		{
 			if(d->ownernum != on)
 			{
-				if(aidebug) conoutf("\fg%s reassigned to %s", game::colorname(d, name), m);
+				if(aidebug && game::showplayerinfo) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s reassigned to %s", game::colorname(d, name), m);
 				resetthisguy = true;
 			}
-			if(d->skill != sk && aidebug) conoutf("\fg%s changed skill to %d", game::colorname(d, name), sk);
+			if(d->skill != sk && aidebug && game::showplayerinfo) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
 		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", game::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 

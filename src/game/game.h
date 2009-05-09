@@ -478,7 +478,7 @@ extern gametypes gametype[], mutstype[];
 // network messages codes, c2s, c2c, s2c
 enum
 {
-	SV_CONNECT = 0, SV_INITS2C, SV_WELCOME, SV_INITC2S, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_CDIS,
+	SV_CONNECT = 0, SV_SERVERINIT, SV_WELCOME, SV_CLIENTINIT, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_DISCONNECT,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_FRAG, SV_DAMAGE, SV_SHOTFX,
 	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
 	SV_DROP, SV_WEAPSELECT, SV_TAUNT,
@@ -503,8 +503,8 @@ char msgsizelookup(int msg)
 {
 	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
-		SV_CONNECT, 0, SV_INITS2C, 5, SV_WELCOME, 1, SV_INITC2S, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
-		SV_ANNOUNCE, 0, SV_CDIS, 2,
+		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
+		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 6, SV_FRAG, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 14, SV_SPAWN, 4,
 		SV_DROP, 0, SV_WEAPSELECT, 0, SV_TAUNT, 2,
@@ -1149,7 +1149,7 @@ namespace hud
 namespace game
 {
 	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, lastzoom, lastspec, lastspecchg, spectvtime,
+			quakewobble, lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
 				noblood, fogdist;
 	extern bool intermission, zooming;
 

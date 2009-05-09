@@ -91,7 +91,7 @@ namespace aiman
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
 		dropitems(ci, true);
-		sendf(-1, 1, "ri2", SV_CDIS, cn);
+		sendf(-1, 1, "ri2", SV_DISCONNECT, cn);
 		clients.removeobj(ci);
 		delclient(cn);
 		dorefresh = true;

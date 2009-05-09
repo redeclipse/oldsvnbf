@@ -1607,7 +1607,7 @@ namespace server
 
     void sendinits2c(clientinfo *ci)
     {
-        sendf(ci->clientnum, 1, "ri5", SV_INITS2C, ci->clientnum, GAMEVERSION, ci->sessionid, serverpass[0] ? 1 : 0);
+        sendf(ci->clientnum, 1, "ri5", SV_SERVERINIT, ci->clientnum, GAMEVERSION, ci->sessionid, serverpass[0] ? 1 : 0);
     }
 
     void sendresume(clientinfo *ci)
@@ -1642,7 +1642,7 @@ namespace server
         }
         else
         {
-			putint(p, SV_INITC2S);
+			putint(p, SV_CLIENTINIT);
 			sendstring(ci->name, p);
 			putint(p, ci->team);
         }
@@ -1689,7 +1689,7 @@ namespace server
             }
             else
             {
-				putint(q, SV_INITC2S);
+				putint(q, SV_CLIENTINIT);
 				sendstring(ci->name, q);
 				putint(q, ci->team);
             }
@@ -2453,7 +2453,7 @@ namespace server
 		    mutate(smuts, mut->leavegame(ci, true));
 		    ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		    savescore(ci);
-		    sendf(-1, 1, "ri2", SV_CDIS, n);
+		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
 		    aiman::removeai(ci, complete);
@@ -2540,7 +2540,7 @@ namespace server
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_INITS2C, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
+		static int servtypes[] = { SV_SERVERINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -3017,7 +3017,7 @@ namespace server
 					break;
 				}
 
-				case SV_INITC2S:
+				case SV_CLIENTINIT:
 				{
 					getstring(text, p);
 					if(!text[0]) copystring(text, "unnamed");
