@@ -92,9 +92,9 @@
 	<body>
 		<div id="container">
 			<div id="header">
-				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
-				<img src="<?php echo $app['sitemiddle']; ?>" alt="<?php echo $app['siteblurb']; ?>" width="323" height="143" border="0" />
-				<a href="<?php echo $app['siteaddurl']; ?>"><img src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" width="193" height="143" border="0" /></a>
+				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" title="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
+				<img src="<?php echo $app['sitemiddle']; ?>" alt="<?php echo $app['siteblurb']; ?>" title="<?php echo $app['siteblurb']; ?>" width="323" height="143" border="0" />
+				<a href="<?php echo $app['siteaddurl']; ?>"><img src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" title="<?php echo $app['siteaddname']; ?>" width="193" height="143" border="0" /></a>
 			</div>
 			<div id="page">
 				<div id="links"><?php echo $app['navbar']; ?></div>
@@ -108,11 +108,11 @@
 						</ul>
 <?php				if ($app['sflogo'] > 0) { ?>
 						<a href="/project">
-							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" name="sflogo" width="120" height="30" border="0" id="sflogo"/>
+							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" title="Get <?php echo $app['sitename']; ?> at SourceForge" name="sflogo" width="120" height="30" border="0" id="sflogo"/>
 						</a>
 <?php				} ?>
 					</div>
-					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" class="blockborder" />
+					<img src="/bits/block_up.png" alt="-" width="549" height="20" border="0" class="blockborder" />
 					<div class="redblock">
 						<p class="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
 						<hr />
@@ -125,7 +125,7 @@
 							</form>
 						</div>
 					</div>
-					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" class="blockborder" />
+					<img src="/bits/block_down.png" alt="-" width="549" height="20" border="0" class="blockborder" />
 				</div>
 				<div id="video">
 					<div id="youtube">
@@ -140,10 +140,10 @@
 						<h3><?php echo $app['siteblurb']; ?></h3>
 						<p><?php echo $app['siteinfo']; ?></p>
 						<p>
-							<a href="/bits/ss01.jpg"><img src="/bits/ss01t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss02.jpg"><img src="/bits/ss02t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss03.jpg"><img src="/bits/ss03t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss04.jpg"><img src="/bits/ss04t.jpg" alt="screenshot" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss01.jpg"><img src="/bits/ss01t.jpg" alt="Screenshot 01" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss02.jpg"><img src="/bits/ss02t.jpg" alt="Screenshot 02" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss03.jpg"><img src="/bits/ss03t.jpg" alt="Screenshot 03" width="85" height="53" border="0" /></a>
+							<a href="/bits/ss04.jpg"><img src="/bits/ss04t.jpg" alt="Screenshot 04" width="85" height="53" border="0" /></a>
 						</p>
 						<p><a href="/gallery">View Gallery</a></p>
 					</div>
