@@ -64,7 +64,7 @@
 		$app['navbar'] = ''; // cache the navbar
 		foreach ($app['targets'] as $key => $targ) {
 			if ($key != "" && $targ['name'] != "" && $targ['nav']) {
-				$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a>';
+				$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a> ';
 			}
 		}
 ?>
@@ -112,7 +112,7 @@
 						</a>
 <?php				} ?>
 					</div>
-					<img src="/bits/block_up.png" alt="-" width="549" height="20" border="0" class="blockborder" />
+					<img src="/bits/block_up.png" width="549" height="20" border="0" class="blockborder" />
 					<div class="redblock">
 						<p class="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
 						<hr />
@@ -125,7 +125,7 @@
 							</form>
 						</div>
 					</div>
-					<img src="/bits/block_down.png" alt="-" width="549" height="20" border="0" class="blockborder" />
+					<img src="/bits/block_down.png" width="549" height="20" border="0" class="blockborder" />
 				</div>
 				<div id="video">
 					<div id="youtube">
