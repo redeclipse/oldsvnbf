@@ -781,7 +781,7 @@ namespace client
 			packet->flags |= ENET_PACKET_FLAG_RELIABLE;
 			c2sinit = true;
             CHECKSPACE(10 + 2*(strlen(d->name) + 1));
-			putint(p, SV_INITC2S);
+			putint(p, SV_CLIENTINIT);
 			sendstring(d->name, p);
 			putint(p, d->team);
 		}
@@ -980,7 +980,7 @@ namespace client
 			if(verbose > 5) conoutf("\fo[client] msg: %d, prev: %d", type, prevtype);
 			switch(type)
 			{
-				case SV_INITS2C:					// welcome messsage from the server
+				case SV_SERVERINIT:					// welcome messsage from the server
 				{
 					int mycn = getint(p), gver = getint(p);
 					if(gver!=GAMEVERSION)
@@ -1122,7 +1122,7 @@ namespace client
 					break;
 				}
 
-				case SV_INITC2S: // another client either connected or changed name/team
+				case SV_CLIENTINIT: // another client either connected or changed name/team
 				{
 					d = game::newclient(cn);
 					if(!d)
@@ -1140,12 +1140,14 @@ namespace client
 							string oldname, newname;
 							copystring(oldname, game::colorname(d, NULL, "", false));
 							copystring(newname, game::colorname(d, text));
-							conoutf("\fm%s is now known as %s", oldname, newname);
+							if(game::showplayerinfo)
+								conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fm%s is now known as %s", oldname, newname);
 						}
 					}
 					else					// new client
 					{
-						conoutf("\fg%s has joined the game", game::colorname(d, text, "", false));
+						if(game::showplayerinfo)
+							conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s has joined the game", game::colorname(d, text, "", false));
 						loopv(game::players)	// clear copies since new player doesn't have them
 							if(game::players[i]) freeeditinfo(game::players[i]->edit);
 						freeeditinfo(localedit);
@@ -1155,7 +1157,7 @@ namespace client
 					break;
 				}
 
-				case SV_CDIS:
+				case SV_DISCONNECT:
 					game::clientdisconnected(getint(p));
 					break;
 
