@@ -120,10 +120,17 @@ namespace projs
 			{
 				if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 				{
-					if(proj.owner && waited)
+					if(proj.owner)
 					{
-						proj.o = proj.owner->ragdoll ? proj.owner->o : proj.owner->headpos();
-						proj.o.z -= proj.owner->height*0.65f;
+						if(proj.owner->state == CS_DEAD || proj.owner->state == CS_WAITING)
+							proj.o = ragdollcenter(proj.owner);
+						else
+						{
+							proj.lifemillis = proj.lifetime = 1;
+							proj.lifespan = proj.lifesize = 1.f;
+							proj.state = CS_DEAD;
+							return;
+						}
 					}
 					proj.mdl = rnd(2) ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
