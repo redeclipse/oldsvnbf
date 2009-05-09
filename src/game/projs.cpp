@@ -96,7 +96,7 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if((proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
+				if(proj.owner && (proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
 					proj.o = proj.from = proj.owner->muzzle;
 				proj.aboveeye = proj.height = proj.radius = 0.1f;
 				proj.elasticity = weaptype[proj.weap].elasticity;
@@ -120,6 +120,11 @@ namespace projs
 			{
 				if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 				{
+					if(proj.owner && waited)
+					{
+						proj.o = proj.owner->ragdoll ? proj.owner->o : proj.owner->headpos();
+						proj.o.z -= proj.owner->height*0.65f;
+					}
 					proj.mdl = rnd(2) ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.3f;
