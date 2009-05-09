@@ -79,6 +79,8 @@
 		<script type="text/javascript"><!--
 			var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/" : "http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/");
 			document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
+		--></script>
+		<script type="text/javascript"><!--
 			piwik_action_name = '<?php echo $app['target']; ?>';
 			piwik_idsite = 1;
 			piwik_url = pkBaseURL + "piwik.php";
