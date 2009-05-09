@@ -1752,7 +1752,7 @@ namespace game
 
     void renderavatar(bool early)
     {
-    	if(rendernormally) player1->muzzle = vec(-1, -1, -1);
+    	if(rendernormally && early) player1->muzzle = vec(-1, -1, -1);
         if((thirdpersonview() || !rendernormally) && player1->state != CS_SPECTATOR)
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
