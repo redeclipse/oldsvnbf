@@ -7,6 +7,7 @@ namespace ai
 
 	VAR(aidebug, 0, 0, 6);
     VAR(aiforcegun, -1, -1, WEAPON_TOTAL-1);
+    VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
@@ -82,9 +83,9 @@ namespace ai
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
-			if(game::showplayerinfo)
+			if(showaiinfo && game::showplayerinfo)
 			{
-				if(aidebug) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
+				if(showaiinfo > 1) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
 				else conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s joined the game", game::colorname(d, name), m, sk);
 			}
 			resetthisguy = true;
@@ -93,10 +94,12 @@ namespace ai
 		{
 			if(d->ownernum != on)
 			{
-				if(aidebug && game::showplayerinfo) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s reassigned to %s", game::colorname(d, name), m);
+				if(showaiinfo && game::showplayerinfo)
+					conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s reassigned to %s", game::colorname(d, name), m);
 				resetthisguy = true;
 			}
-			if(d->skill != sk && aidebug && game::showplayerinfo) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s changed skill to %d", game::colorname(d, name), sk);
+			if(d->skill != sk && showaiinfo > 1 && game::showplayerinfo)
+				conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
 		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", game::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
