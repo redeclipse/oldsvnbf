@@ -13,50 +13,37 @@ namespace auth
     void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
 	{
         if(authname && !val) return;
-		const char *name = "";
 		if(val)
 		{
             bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
-			if(ci->privilege)
+			if(ci->privilege >= (haspass || authname || ci->local ? PRIV_ADMIN : PRIV_MASTER)) return;
+			if(haspass || authname || ci->local)
 			{
-				if(!adminpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
+				loopv(clients) if(ci != clients[i] && clients[i]->privilege <= PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
+				ci->privilege = PRIV_ADMIN;
 			}
-            else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !haspriv(ci, PRIV_MASTER))
-				return;
-            loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
-			{
-				if(haspass) clients[i]->privilege = PRIV_NONE;
-                else if((authname || ci->local) && clients[i]->privilege<=PRIV_MASTER) continue;
-				else return;
-			}
-            if(haspass) ci->privilege = PRIV_ADMIN;
-            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
+            else if(!(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
-                sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
+            	srvmsgf(ci->clientnum, "\fraccess denied, you need auth/admin access to gain master");
                 return;
             }
-            else
-            {
-                if(authname)
-                {
-                    loopv(clients) if(ci!=clients[i] && clients[i]->privilege<=PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
-					ci->privilege = PRIV_ADMIN;
-                }
-                else ci->privilege = PRIV_MASTER;
-            }
-            name = privname(ci->privilege);
+			else
+			{
+				loopv(clients) if(ci != clients[i] && clients[i]->privilege >= PRIV_MASTER)
+				{
+					srvmsgf(ci->clientnum, "\fraccess denied, there is already another master");
+					return;
+				}
+				ci->privilege = PRIV_MASTER;
+			}
 		}
 		else
 		{
 			if(!ci->privilege) return;
-			name = privname(ci->privilege);
-			ci->privilege = 0;
+			ci->privilege = PRIV_NONE;
 		}
-		mastermode = MM_OPEN;
-        allowedips.setsize(0);
-        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), name, authname);
-        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
-		currentmaster = val ? ci->clientnum : -1;
+        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), privname(ci->privilege), authname);
+        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", privname(ci->privilege));
 		masterupdate = true;
 	}
 

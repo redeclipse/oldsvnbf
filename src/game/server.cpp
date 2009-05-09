@@ -309,7 +309,7 @@ namespace server
 	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
-	int mastermode = MM_OPEN, mastermask = MM_DEFAULT, currentmaster = -1;
+	int mastermode = MM_OPEN, mastermask = MM_DEFAULT;
 	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	stream *mapdata[3] = { NULL, NULL, NULL };
 
@@ -1809,7 +1809,7 @@ namespace server
 
         if(ci)
         {
-			if(m_play(gamemode) || mastermode>=MM_LOCKED)
+			if(m_play(gamemode) || mastermode >= MM_LOCKED)
             {
                 ci->state.state = CS_SPECTATOR;
                 ci->team = TEAM_NEUTRAL;
@@ -2372,8 +2372,7 @@ namespace server
 
 			if(masterupdate)
 			{
-				clientinfo *m = currentmaster>=0 ? (clientinfo *)getinfo(currentmaster) : NULL;
-				sendf(-1, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
+				loopv(clients) sendf(-1, 1, "ri3", SV_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege);
 				masterupdate = false;
 			}
 
@@ -2677,7 +2676,7 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
-                if(currentmaster>=0) masterupdate = true;
+                masterupdate = true;
                 ci->state.lasttimeplayed = lastmillis;
 
                 sendwelcome(ci);
@@ -3157,7 +3156,7 @@ namespace server
 						{
 							mastermode = mm;
                             allowedips.setsize(0);
-                            if(mm>=MM_PRIVATE)
+                            if(mm >= MM_PRIVATE)
                             {
                                 loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
                             }

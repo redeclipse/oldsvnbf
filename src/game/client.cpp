@@ -1545,9 +1545,7 @@ namespace client
 				case SV_CURRENTMASTER:
 				{
 					int mn = getint(p), priv = getint(p);
-					game::player1->privilege = PRIV_NONE;
-					loopv(game::players) if(game::players[i]) game::players[i]->privilege = PRIV_NONE;
-					if(mn>=0)
+					if(mn >= 0)
 					{
 						gameent *m = game::getclient(mn);
 						if(m) m->privilege = priv;
