@@ -172,7 +172,7 @@ namespace ai
 	};
 
 	extern vec aitarget;
-	extern int aidebug;
+	extern int aidebug, showaiinfo;
 
 	extern float viewdist(int x = 101);
 	extern float viewfieldx(int x = 101);

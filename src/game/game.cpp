@@ -697,7 +697,8 @@ namespace game
 		if(!players.inrange(cn)) return;
 		gameent *d = players[cn];
 		if(!d) return;
-		if(d->name[0] && showplayerinfo) conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
+		if(d->name[0] && showplayerinfo && (d->aitype == AI_NONE || ai::showaiinfo))
+			conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
 		projs::remove(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
         if(m_stf(gamemode)) stf::removeplayer(d);
