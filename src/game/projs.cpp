@@ -554,7 +554,7 @@ namespace projs
 		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 		{
 			proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
-			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtimex(500))
+			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtimex(500) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
 				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x66FFFF, 2.f);
 				proj.lasteffect = lastmillis;
