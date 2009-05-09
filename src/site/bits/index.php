@@ -98,7 +98,7 @@
 				<div id="links"><?php echo $app['navbar']; ?></div>
 				<div id="noticebg">
 					<div class="list">
-						<b>Blood Frontier:</b>
+						<b><?php echo $app['sitename']; ?>:</b>
 						<ul>
 							<li><a href="/youtube">on Youtube</a></li>
 							<li><a href="/google">on Google</a></li>
@@ -131,7 +131,6 @@
 							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
 							<param name="allowscriptaccess" value="always" />
 							<param name="allowFullScreen" value="true" />
-							<embed width="480" height="385" src="<?php echo $app['sitevideo']; ?>" type="application/x-shockwave-flash" allowfullscreen="true"></embed>
 						</object>
 					</div>
 					<div id="subtext">
