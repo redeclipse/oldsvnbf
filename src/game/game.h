@@ -268,7 +268,7 @@ struct weaptypes
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
-	bool	radial,	taper,	extinguish,	reloads,	snipes;
+	bool	radial,	taper,	extinguish,	reloads,	zooms;
 	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	hitpush;
 	const char
 			*name, 		*text,	*item,						*vwep,
@@ -322,7 +322,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		250,    1250,	35,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		true,
+			false,	false,	false,		true,		false,
 			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		120.f,
 			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
 			""
@@ -1175,7 +1175,7 @@ namespace game
 	extern int panspeed();
 	extern bool inzoom();
 	extern bool inzoomswitch();
-	extern int zoomtime();
+	extern int zoominterval();
 	extern bool tvmode();
 	extern void resetcamera();
 	extern void resetworld();

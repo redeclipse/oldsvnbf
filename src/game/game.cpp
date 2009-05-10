@@ -55,17 +55,20 @@ namespace game
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(snipesensitivity, 1e-3f, 3.0f, 1000);
+	FVARP(zoomsensitivity, 1e-3f, 3.0f, 1000);
 	FVARP(pronesensitivity, 1e-3f, 5.0f, 1000);
 
-	VARP(snipetype, 0, 0, 1);
-	VARP(snipemousetype, 0, 0, 2);
-	VARP(snipemousedeadzone, 0, 25, 100);
-	VARP(snipemousepanspeed, 1, 10, INT_MAX-1);
-	VARP(snipecarbinefov, 45, 45, 150);
-	VARP(sniperiflefov, 20, 20, 150);
-	VARP(sniperifletime, 1, 250, 10000);
-	VARP(snipecarbinetime, 1, 150, 10000);
+	VARP(zoomtype, 0, 0, 1);
+	VARP(zoommousetype, 0, 0, 2);
+	VARP(zoommousedeadzone, 0, 25, 100);
+	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
+	VARP(zoomfov, 20, 20, 150);
+	VARP(zoomtime, 1, 250, 10000);
+
+	extern void checkzoom();
+	VARFP(zoomlevel, 1, 4, 10, checkzoom());
+	VARP(zoomlevels, 1, 4, 10);
+	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
 
 	VARP(pronetype, 0, 0, 1);
 	VARP(pronemousetype, 0, 0, 2);
@@ -127,19 +130,19 @@ namespace game
 
 	int mousestyle()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousetype : pronemousetype;
+		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousetype : pronemousetype;
 		return mousetype;
 	}
 
 	int deadzone()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousedeadzone : pronemousedeadzone;
+		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousedeadzone : pronemousedeadzone;
 		return mousedeadzone;
 	}
 
 	int panspeed()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].snipes ? snipemousepanspeed : pronemousepanspeed;
+		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousepanspeed : pronemousepanspeed;
 		return mousepanspeed;
 	}
 
@@ -151,6 +154,22 @@ namespace game
 		return firstpersonfov;
 	}
 
+	void checkzoom()
+	{
+		if(zoomdefault > zoomlevels) zoomdefault = zoomlevels;
+		if(zoomlevel < 0) zoomlevel = zoomdefault ? zoomdefault : zoomlevels;
+		if(zoomlevel > zoomlevels) zoomlevel = zoomlevels;
+	}
+
+	void setzoomlevel(int level)
+	{
+		checkzoom();
+		zoomlevel += level;
+		if(zoomlevel > zoomlevels) zoomlevel = 1;
+		else if(zoomlevel < 1) zoomlevel = zoomlevels;
+	}
+	ICOMMAND(setzoom, "i", (int *level), setzoomlevel(*level));
+
 	void zoomset(bool on, int millis)
 	{
 		if(on != zooming)
@@ -158,7 +177,9 @@ namespace game
 			resetcursor();
 			lastzoom = millis;
 			prevzoom = zooming;
+			if(zoomdefault && on) zoomlevel = zoomdefault;
 		}
+		checkzoom();
 		zooming = on;
 	}
 
@@ -168,18 +189,19 @@ namespace game
 		zoomset(false, 0);
 		return false;
 	}
-	int zoomtime() { return weaptype[player1->weapselect].snipes ? (player1->weapselect == WEAPON_RIFLE ? sniperifletime : snipecarbinetime) : pronetime; }
+	int zoominterval() { return weaptype[player1->weapselect].zooms ? zoomtime : pronetime; }
 
 	bool inzoom()
 	{
-		if(zoomallow() && (zooming || lastmillis-lastzoom < zoomtime()))
+		if(zoomallow() && (zooming || lastmillis-lastzoom < zoominterval()))
 			return true;
 		return false;
 	}
+	ICOMMAND(iszooming, "", (), intret(inzoom() ? 1 : 0));
 
 	bool inzoomswitch()
 	{
-		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoomtime()/2) || (!zooming && lastmillis-lastzoom < zoomtime()/2)))
+		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoominterval()/2) || (!zooming && lastmillis-lastzoom < zoominterval()/2)))
 			return true;
 		return false;
 	}
@@ -189,7 +211,7 @@ namespace game
 		if(zoomallow())
 		{
 			bool on = false;
-			switch(weaptype[player1->weapselect].snipes ? snipetype : pronetype)
+			switch(weaptype[player1->weapselect].zooms ? zoomtype : pronetype)
 			{
 				case 1: on = down; break;
 				case 0: default:
@@ -872,24 +894,16 @@ namespace game
 
 	void fixview(int w, int h)
 	{
-		curfov = float(fov());
-
 		if(inzoom())
 		{
-			int frame = lastmillis-lastzoom, f = pronefov,
-				t = weaptype[player1->weapselect].snipes ? (player1->weapselect == WEAPON_RIFLE ? sniperifletime : snipecarbinetime) : pronetime;
-			if(weaptype[player1->weapselect].snipes) switch(player1->weapselect)
-			{
-				case WEAPON_CARBINE: f = snipecarbinefov; break;
-				case WEAPON_RIFLE: f = sniperiflefov; break;
-				default: break;
-			}
-			float diff = float(fov()-f),
-				amt = frame < t ? clamp(float(frame)/float(t), 0.f, 1.f) : 1.f;
+			int frame = lastmillis-lastzoom, f = weaptype[player1->weapselect].zooms ? zoomfov : pronefov, t = zoominterval();
+			checkzoom();
+			if(zoomlevels > 1 && zoomlevel < zoomlevels) f = fov()-(((fov()-zoomfov)/zoomlevels)*zoomlevel);
+			float diff = float(fov()-f), amt = frame < t ? clamp(float(frame)/float(t), 0.f, 1.f) : 1.f;
 			if(!zooming) amt = 1.f-amt;
-			curfov -= amt*diff;
+			curfov = fov()-(amt*diff);
 		}
-
+		else curfov = float(fov());
         aspect = w/float(h);
         fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
 		hud::hudwidth = int(hud::hudsize*aspect);
@@ -925,7 +939,7 @@ namespace game
 			else if(allowmove(player1))
 			{
 				float scale = inzoom() ?
-						(weaptype[player1->weapselect].snipes? snipesensitivity : pronesensitivity)
+						(weaptype[player1->weapselect].zooms? zoomsensitivity : pronesensitivity)
 					: sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));

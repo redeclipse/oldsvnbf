@@ -79,7 +79,7 @@ namespace hud
 	FVARP(teamindicatorsize, 0, 0.0575f, 1000);
 	FVARP(teamindicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
-	TVAR(snipetex, "textures/snipe", 3);
+	TVAR(zoomtex, "textures/zoom", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
@@ -94,8 +94,8 @@ namespace hud
 	TVAR(crosshairtex, "textures/crosshair", 3);
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
-	TVAR(snipecrosshairtex, "textures/snipecrosshair", 3);
-	FVARP(snipecrosshairsize, 0, 0.575f, 1000);
+	TVAR(zoomcrosshairtex, "textures/zoomcrosshair", 3);
+	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
 	FVARP(cursorsize, 0, 0.05f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
 
@@ -279,7 +279,7 @@ namespace hud
 	enum
 	{
 		POINTER_NONE = 0, POINTER_RELATIVE, POINTER_GUI, POINTER_EDIT, POINTER_SPEC,
-		POINTER_HAIR, POINTER_TEAM, POINTER_HIT, POINTER_SNIPE, POINTER_MAX
+		POINTER_HAIR, POINTER_TEAM, POINTER_HIT, POINTER_ZOOM, POINTER_MAX
 	};
 
     const char *getpointer(int index)
@@ -298,7 +298,7 @@ namespace hud
             case POINTER_HAIR: return crosshairtex; break;
             case POINTER_TEAM: return teamcrosshairtex; break;
             case POINTER_HIT: return hitcrosshairtex; break;
-            case POINTER_SNIPE: return snipecrosshairtex; break;
+            case POINTER_ZOOM: return zoomcrosshairtex; break;
         }
         return NULL;
     }
@@ -409,13 +409,13 @@ namespace hud
 		else if(teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
-			if(index == POINTER_SNIPE)
+			if(index == POINTER_ZOOM)
 			{
-				cs = int(snipecrosshairsize*hudsize);
-				if(game::inzoom() && weaptype[game::player1->weapselect].snipes)
+				cs = int(zoomcrosshairsize*hudsize);
+				if(game::inzoom() && weaptype[game::player1->weapselect].zooms)
 				{
 					int frame = lastmillis-game::lastzoom;
-					float amt = frame < game::zoomtime() ? clamp(float(frame)/float(game::zoomtime()), 0.f, 1.f) : 1.f;
+					float amt = frame < game::zoominterval() ? clamp(float(frame)/float(game::zoominterval()), 0.f, 1.f) : 1.f;
 					if(!game::zooming) amt = 1.f-amt;
 					cs = int(cs*amt);
 				}
@@ -459,7 +459,7 @@ namespace hud
         else if(!showcrosshair || game::player1->state == CS_DEAD || !connected() || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;
-        else if(game::inzoom() && weaptype[game::player1->weapselect].snipes) index = POINTER_SNIPE;
+        else if(game::inzoom()) index = POINTER_ZOOM;
         else if(lastmillis-game::player1->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(game::gamemode, game::mutators))
         {
@@ -646,7 +646,7 @@ namespace hud
 						if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
 						{
 							SEARCHBINDCACHE(zoomkey)("zoom", 0);
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].snipes ? "zoom" : "prone");
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "prone");
 						}
 						if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 						{
@@ -1265,11 +1265,11 @@ namespace hud
         if(dirs) usetexturing(true);
 	}
 
-	void drawsniper(int w, int h, int s, float blend)
+	void drawzoom(int w, int h, int s, float blend)
 	{
-		Texture *t = textureload(snipetex, 3);
+		Texture *t = textureload(zoomtex, 3);
 		int frame = lastmillis-game::lastzoom;
-		float pc = frame < game::zoomtime() ? float(frame)/float(game::zoomtime()) : 1.f;
+		float pc = frame < game::zoominterval() ? float(frame)/float(game::zoominterval()) : 1.f;
 		if(!game::zooming) pc = 1.f-pc;
 		glBindTexture(GL_TEXTURE_2D, t->id);
 		glColor4f(1.f, 1.f, 1.f, pc*blend);
@@ -1343,8 +1343,8 @@ namespace hud
 					drawtex(0, 0, ox, oy);
 				}
 			}
-			if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].snipes)
-				drawsniper(ox, oy, os, fade);
+			if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms)
+				drawzoom(ox, oy, os, fade);
 			if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
 			if(!UI::hascursor())
 			{
