@@ -1357,7 +1357,7 @@ namespace hud
 		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
 		if(showconsole)
 		{
-			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, bs*2);
+			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
 			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 		}
 
