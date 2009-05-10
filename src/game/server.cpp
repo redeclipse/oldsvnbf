@@ -370,7 +370,8 @@ namespace server
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
 	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
-	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
+	VAR(modelock, 0, 0, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
+	VAR(mapslock, 0, 0, 3); // 0 = off, 1 = master can only select non-list maps (+1 admin, +2 completely)
 	VAR(varslock, 0, 0, 2); // 0 = off, 1 = admin only, 2 = nobody
 	VAR(votewait, 0, 5000, INT_MAX-1);
 
@@ -1122,6 +1123,41 @@ namespace server
 			{
 				if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, true))
 					return;
+				break;
+			}
+		}
+		switch(mapslock)
+		{
+			case 0: default: break;
+			case 1: case 2: case 3:
+			{
+				const char *maplist = GVAR(mainmaps);
+				if(m_mission(gamemode)) maplist = GVAR(missionmaps);
+				else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
+				else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+				if(maplist && *maplist)
+				{
+					int n = listlen(maplist);
+					bool found = false;
+					string maploc;
+					if(strpbrk(map, "/\\")) copystring(maploc, map);
+					else formatstring(maploc)("maps/%s", map);
+					loopi(n)
+					{
+						char *maptxt = indexlist(maplist, i);
+						if(maptxt)
+						{
+							string mapname;
+							if(strpbrk(maptxt, "/\\")) copystring(mapname, maptxt);
+							else formatstring(mapname)("maps/%s", maptxt);
+							if(!strcmp(maploc, mapname)) found = true;
+							DELETEP(maptxt);
+						}
+						if(found) break;
+					}
+					if(!found && !haspriv(ci, mapslock == 1 ? PRIV_MASTER : (mapslock == 2 ? PRIV_ADMIN : PRIV_MAX), true))
+						return;
+				}
 				break;
 			}
 		}
