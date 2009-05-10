@@ -109,7 +109,7 @@ namespace hud
 	VARP(inventoryweapents, 0, 0, 1);
 	VARP(inventoryhealth, 0, 2, 2);
 	VARP(inventorythrob, 0, 1, 1);
-	VARP(inventorycolour, 0, 1, 2);
+	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.5f, 1);
 	FVARP(inventoryglow, 0, 0.055f, 1);
