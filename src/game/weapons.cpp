@@ -65,7 +65,7 @@ namespace weapons
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(!d->hasweap(d->weapselect, sweap))
 		{
-			int bestweap = d->bestweap(sweap);
+			int bestweap = d->bestweap(sweap, true);
 			if(d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
 			{
 				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, bestweap);

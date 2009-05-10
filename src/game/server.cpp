@@ -2071,7 +2071,7 @@ namespace server
 			takeammo(ci, WEAPON_GL, 1);
 			if(!gs.hasweap(weap, sweap))
 			{
-				nweap = gs.bestweap(sweap);
+				nweap = gs.bestweap(sweap, true);
 				gs.weapswitch(nweap, millis);
 			}
 			else gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
@@ -2085,7 +2085,7 @@ namespace server
 		}
 		int dropped = gs.entid[weap];
 		gs.ammo[weap] = gs.entid[weap] = -1;
-		int nweap = gs.bestweap(sweap); // switch to best weapon
+		int nweap = gs.bestweap(sweap, true); // switch to best weapon
 		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 		gs.dropped.add(dropped);
 		gs.weapswitch(nweap, millis);
