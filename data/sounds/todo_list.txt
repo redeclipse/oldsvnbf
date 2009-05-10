@@ -81,7 +81,7 @@ Sound Name     ::  Qty :: NotDone/Exists/Replace/Comp/Artist Working
 @  '' Reload     :: 3 :: Blackshoe working (recording 20/10)
 @ Shotgun        :: 5 :: Blackshoe working (recording 20/10)
 @  '' Reload     :: 3 :: Blackshoe working (recording 20/10)
-ChainGun       :: 1 :: Complete??
+SubMachine       :: 1 :: Complete??
 @  '' Reload     :: 3 :: Not Done
 Flamer         :: 1 :: Blackshoe working, Complete??
 @  '' Reload     :: 1 :: IS THIS EVEN NEEDED ????

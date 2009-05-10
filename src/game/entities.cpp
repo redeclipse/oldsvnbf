@@ -1222,7 +1222,7 @@ namespace entities
 				}
 
 				// 8	I_SHELLS		8	WEAPON		WEAPON_SG
-				// 9	I_BULLETS		8	WEAPON		WEAPON_CG
+				// 9	I_BULLETS		8	WEAPON		WEAPON_SMG
 				// 10	I_ROCKETS		8	WEAPON		WEAPON_CARBINE
 				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
 				// 12	I_GRENADES		8	WEAPON		WEAPON_GL
@@ -1230,7 +1230,7 @@ namespace entities
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAPON_SG, WEAPON_CG, WEAPON_CARBINE, WEAPON_RIFLE, WEAPON_GL, WEAPON_PLASMA
+						WEAPON_SG, WEAPON_SMG, WEAPON_CARBINE, WEAPON_RIFLE, WEAPON_GL, WEAPON_PLASMA
 					};
 
 					if(weap >= 0 && weap <= 5)

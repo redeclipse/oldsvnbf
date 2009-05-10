@@ -344,7 +344,7 @@ namespace projs
 				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
 			}
-			case WEAPON_CG:
+			case WEAPON_SMG:
 			{
 				part_create(PART_SMOKE_LERP_SRISE, 100, from, 0x999999, 1.5f);
 				part_create(PART_MUZZLE_FLASH, 25, from, 0xFFAA00, 3.f, d);
@@ -489,7 +489,7 @@ namespace projs
 					}
 					break;
 				}
-				case WEAPON_CG:
+				case WEAPON_SMG:
 				{
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
@@ -636,7 +636,7 @@ namespace projs
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
 						break;
 					}
-					case WEAPON_SG: case WEAPON_CG:
+					case WEAPON_SG: case WEAPON_SMG:
 					{
 						if(proj.lifetime)
 						{
@@ -747,7 +747,7 @@ namespace projs
             {
                 switch(proj.weap)
                 {
-                    case WEAPON_SG: case WEAPON_CG:
+                    case WEAPON_SG: case WEAPON_SMG:
                     {
 						part_create(PART_SPARK_SLENS, m_speedtimex(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f);
                         part_splash(PART_SPARK, 5, m_speedtimex(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f, 8);
@@ -1093,7 +1093,7 @@ namespace projs
 					break;
 				}
 				case WEAPON_SG: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
-				case WEAPON_CG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
+				case WEAPON_SMG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
 				case WEAPON_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.1f), 0.25f*max(1.f-proj.lifespan,0.05f), 0.00f);
