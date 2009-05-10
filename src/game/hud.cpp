@@ -115,7 +115,7 @@ namespace hud
 	FVARP(inventoryglow, 0, 0.055f, 1);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
-	TVAR(chainguntex, "textures/chaingun", 3);
+	TVAR(submachinetex, "textures/submachine", 3);
 	TVAR(grenadestex, "textures/grenades", 3);
 	TVAR(flamertex, "textures/flamer", 3);
 	TVAR(carbinetex, "textures/carbine", 3);
@@ -139,7 +139,7 @@ namespace hud
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
-	TVAR(chainguncliptex, "textures/chaingunclip", 3);
+	TVAR(submachinecliptex, "textures/submachineclip", 3);
 	TVAR(grenadescliptex, "textures/grenadesclip", 3);
 	TVAR(flamercliptex, "textures/flamerclip", 3);
 	TVAR(carbinecliptex, "textures/carbineclip", 3);
@@ -329,7 +329,7 @@ namespace hud
     void drawclip(int weap, int x, int y, float s)
     {
         const char *cliptexs[WEAPON_MAX] = {
-            plasmacliptex, shotguncliptex, chainguncliptex,
+            plasmacliptex, shotguncliptex, submachinecliptex,
             flamercliptex, carbinecliptex, riflecliptex, grenadescliptex, // end of regular weapons
 			paintguncliptex
         };
@@ -350,7 +350,7 @@ namespace hud
 		}
         switch(weap)
         {
-            case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_CG: s *= 0.8f; break;
+            case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_SMG: s *= 0.85f; break;
             default: break;
         }
         float r = clipcolour, g = clipcolour, b = clipcolour;
@@ -957,7 +957,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex,
+					plasmatex, shotguntex, submachinetex, flamertex, carbinetex, rifletex, grenadestex,
 					paintguntex
 				};
 				if(isweap(stype)) return weaptexs[stype];
@@ -995,7 +995,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, chainguntex, flamertex, carbinetex, rifletex, grenadestex,
+					plasmatex, shotguntex, submachinetex, flamertex, carbinetex, rifletex, grenadestex,
 					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);

@@ -25,7 +25,7 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_CG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE, S_PAINT,
+	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE, S_PAINT,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -206,7 +206,7 @@ enum
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
-    ANIM_CHAINGUN, ANIM_CHAINGUN_SHOOT, ANIM_CHAINGUN_RELOAD,
+    ANIM_SUBMACHINE, ANIM_SUBMACHINE_SHOOT, ANIM_SUBMACHINE_RELOAD,
     ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
     ANIM_CARBINE, ANIM_CARBINE_SHOOT, ANIM_CARBINE_RELOAD,
@@ -223,7 +223,7 @@ enum
 {
 	WEAPON_PLASMA = 0,
 	WEAPON_SG,
-	WEAPON_CG,
+	WEAPON_SMG,
 	WEAPON_FLAMER,
 	WEAPON_CARBINE,
 	WEAPON_RIFLE,
@@ -298,13 +298,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_CG,			ANIM_CHAINGUN,	-5,	     5,			0xFF9922,
-			S_CG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
+		WEAPON_SMG,			ANIM_SUBMACHINE,	-5,	     5,		0xFF9922,
+			S_SMG,		S_RICOCHET,	S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		50.f,
-			"chaingun",	"\fo",	"weapons/chaingun/item",	"weapons/chaingun/vwep",
+			"submachine",	"\fo",	"weapons/submachine/item",	"weapons/submachine/vwep",
 			""
 	},
 	{
@@ -912,7 +912,7 @@ const char *animnames[] =
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"plasma", "plasma shoot", "plasma reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
-	"chaingun", "chaingun shoot", "chaingun reload",
+	"submachine", "submachine shoot", "submachine reload",
 	"grenades", "grenades throw", "grenades reload", "grenades power",
 	"flamer", "flamer shoot", "flamer reload",
 	"carbine", "carbine shoot", "carbine reload",
