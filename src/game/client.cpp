@@ -1798,8 +1798,8 @@ namespace client
 
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
+		if(!serversort || !*serversort) resetserversort();
 		int ac = 0, bc = 0;
-
 		if(a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length() && (kidmode < 2 || m_paint(a->attr[1], a->attr[2])))
 		{
 			if(!strcmp(a->sdesc, servermaster)) ac = 3;
