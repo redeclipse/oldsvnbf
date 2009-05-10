@@ -32,6 +32,7 @@ namespace hud
 
 	VARP(consize, 0, 6, 100);
 	VARP(contime, 0, 15000, INT_MAX-1);
+	VARP(concenter, 0, 0, 1);
 	FVARP(conblend, 0, 0.85f, 1);
 	VARP(chatconsize, 0, 6, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
@@ -729,7 +730,7 @@ namespace hud
 				}
 			}
 			int z = y;
-			loopvrev(refs) z += draw_textx("%s", x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), TEXT_CENTERED, -1, s, refs[i]);
+			loopvrev(refs) z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
 		}
 		popfont();
 	}
@@ -1356,7 +1357,7 @@ namespace hud
 		int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
 		if(showconsole)
 		{
-			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, ox/2, os, bs*2);
+			drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, bs*2);
 			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 		}
 
