@@ -309,7 +309,7 @@ namespace server
 	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
-	int mastermode = MM_OPEN, mastermask = MM_DEFAULT;
+	int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
 	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	stream *mapdata[3] = { NULL, NULL, NULL };
 
@@ -369,6 +369,14 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
+    VARF(serveropen, 0, 0, 2, {
+		switch(serveropen)
+		{
+			case 0: default: mastermask = MM_PRIVSERV; break;
+			case 1: mastermask = MM_PUBSERV; break;
+			case 2: mastermask = MM_COOPSERV; break;
+		}
+	});
 	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
 	VAR(modelock, 0, 0, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
 	VAR(mapslock, 0, 0, 3); // 0 = off, 1 = master can only select non-list maps (+1 admin, +2 completely)
@@ -426,6 +434,19 @@ namespace server
 
 	void *newinfo() { return new clientinfo; }
 	void deleteinfo(void *ci) { delete (clientinfo *)ci; }
+
+	const char *mastermodename(int type)
+	{
+		switch(type)
+		{
+			case MM_OPEN: return "open";
+			case MM_VETO: return "veto";
+			case MM_LOCKED: return "locked";
+			case MM_PRIVATE: return "private";
+			case MM_PASSWORD: return "password";
+			default: return "unknown";
+		}
+	}
 
 	const char *privname(int type)
 	{
@@ -3197,9 +3218,9 @@ namespace server
                             {
                                 loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
                             }
-							srvoutf(3, "mastermode is now %d", mastermode);
+							srvoutf(3, "mastermode is now %d (%s)", mastermode, mastermodename(mm));
 						}
-						else srvmsgf(sender, "mastermode %d is disabled on this server", mm);
+						else srvmsgf(sender, "mastermode %d (%s) is disabled on this server", mm, mastermodename(mm));
 					}
 					break;
 				}
@@ -3492,7 +3513,7 @@ namespace server
 			case 'd': setsvar("serverdesc", &arg[3]); return true;
 			case 'P': setsvar("adminpass", &arg[3]); return true;
             case 'k': setsvar("serverpass", &arg[3]); return true;
-			case 'o': if(atoi(&arg[3])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
+			case 'o': setvar("serveropen", atoi(&arg[2])); return true;
 			case 'M': setsvar("servermotd", &arg[3]); return true;
 			default: break;
 		}
