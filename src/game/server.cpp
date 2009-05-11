@@ -451,10 +451,11 @@ namespace server
 		return n;
 	}
 
-	bool haspriv(clientinfo *ci, int flag, bool msg = false)
+	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
 	{
 		if(ci->local || ci->privilege >= flag || !numclients(ci->clientnum, false, true)) return true;
-		else if(msg) srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s", privname(flag));
+		else if(msg)
+			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
 		return false;
 	}
 
@@ -1115,13 +1116,13 @@ namespace server
 			case 0: default: break;
 			case 1: case 2:
 			{
-				if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, true))
+				if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes"))
 					return;
 				break;
 			}
 			case 3: case 4:
 			{
-				if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, true))
+				if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, "change to a locked game mode"))
 					return;
 				break;
 			}
@@ -1155,7 +1156,7 @@ namespace server
 						}
 						if(found) break;
 					}
-					if(!found && !haspriv(ci, mapslock == 1 ? PRIV_MASTER : (mapslock == 2 ? PRIV_ADMIN : PRIV_MAX), true))
+					if(!found && !haspriv(ci, mapslock == 1 ? PRIV_MASTER : (mapslock == 2 ? PRIV_ADMIN : PRIV_MAX), "select a custom maps"))
 						return;
 				}
 				break;
@@ -1548,7 +1549,7 @@ namespace server
 				case ID_COMMAND:
 				{
 					if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
 					string s;
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
@@ -1566,7 +1567,7 @@ namespace server
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
 					if(id->maxval < id->minval)
 					{
 						srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
@@ -1594,7 +1595,7 @@ namespace server
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
 					float ret = atof(arg);
 					if(ret < id->minvalf || ret > id->maxvalf)
 					{
@@ -1614,7 +1615,7 @@ namespace server
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, true)) return;
+					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
@@ -3186,7 +3187,7 @@ namespace server
 				case SV_MASTERMODE:
 				{
 					int mm = getint(p);
-					if(haspriv(ci, PRIV_MASTER, true) && mm >= MM_OPEN && mm <= MM_PRIVATE)
+					if(haspriv(ci, PRIV_MASTER, "change mastermode") && mm >= MM_OPEN && mm <= MM_PRIVATE)
 					{
 						if(haspriv(ci, PRIV_ADMIN) || (mastermask&(1<<mm)))
 						{
@@ -3198,17 +3199,14 @@ namespace server
                             }
 							srvoutf(3, "mastermode is now %d", mastermode);
 						}
-						else
-						{
-							srvmsgf(sender, "mastermode %d is disabled on this server", mm);
-						}
+						else srvmsgf(sender, "mastermode %d is disabled on this server", mm);
 					}
 					break;
 				}
 
 				case SV_CLEARBANS:
 				{
-					if(haspriv(ci, PRIV_MASTER, true))
+					if(haspriv(ci, PRIV_MASTER, "clear bans"))
 					{
 						bannedips.setsize(0);
 						srvoutf(3, "cleared all bans");
@@ -3219,7 +3217,7 @@ namespace server
 				case SV_KICK:
 				{
 					int victim = getint(p);
-					if(haspriv(ci, PRIV_MASTER, true) && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
+					if(haspriv(ci, PRIV_MASTER, "kick people") && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
 					{
 						ban &b = bannedips.add();
 						b.time = totalmillis;
@@ -3233,7 +3231,7 @@ namespace server
 				case SV_SPECTATOR:
 				{
 					int spectator = getint(p), val = getint(p);
-					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, true)) break;
+					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, "spectate others")) break;
 					clientinfo *cp = (clientinfo *)getinfo(spectator);
 					if(!cp || cp->state.aitype != AI_NONE) break;
 					if(cp->state.state != CS_SPECTATOR && val)
@@ -3262,7 +3260,7 @@ namespace server
 				case SV_SETTEAM:
 				{
 					int who = getint(p), team = getint(p);
-					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, true)) break;
+					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, "change the team of others")) break;
 					clientinfo *cp = (clientinfo *)getinfo(who);
 					if(!cp || !m_team(gamemode, mutators)) break;
 					if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
@@ -3273,7 +3271,7 @@ namespace server
 				case SV_RECORDDEMO:
 				{
 					int val = getint(p);
-					if(!haspriv(ci, PRIV_ADMIN, true)) break;
+					if(!haspriv(ci, PRIV_ADMIN, "record demos")) break;
 					demonextmatch = val!=0;
 					srvoutf(4, "demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
 					break;
@@ -3281,7 +3279,7 @@ namespace server
 
 				case SV_STOPDEMO:
 				{
-					if(!haspriv(ci, PRIV_ADMIN, true)) break;
+					if(!haspriv(ci, PRIV_ADMIN, "stop demos")) break;
 					if(m_demo(gamemode)) enddemoplayback();
 					else enddemorecord();
 					break;
@@ -3290,7 +3288,7 @@ namespace server
 				case SV_CLEARDEMOS:
 				{
 					int demo = getint(p);
-					if(!haspriv(ci, PRIV_ADMIN, true)) break;
+					if(!haspriv(ci, PRIV_ADMIN, "clear demos")) break;
 					cleardemos(demo);
 					break;
 				}
