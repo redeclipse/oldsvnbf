@@ -13,6 +13,7 @@ namespace auth
     void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
 	{
         if(authname && !val) return;
+        int privilege = ci->privilege;
 		if(val)
 		{
             bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
@@ -20,7 +21,7 @@ namespace auth
 			if(haspass || authname || ci->local)
 			{
 				loopv(clients) if(ci != clients[i] && clients[i]->privilege <= PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
-				ci->privilege = PRIV_ADMIN;
+				privilege = ci->privilege = PRIV_ADMIN;
 			}
             else if(!(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
@@ -34,7 +35,7 @@ namespace auth
 					srvmsgf(ci->clientnum, "\fraccess denied, there is already another master");
 					return;
 				}
-				ci->privilege = PRIV_MASTER;
+				privilege = ci->privilege = PRIV_MASTER;
 			}
 		}
 		else
@@ -42,8 +43,8 @@ namespace auth
 			if(!ci->privilege) return;
 			ci->privilege = PRIV_NONE;
 		}
-        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), privname(ci->privilege), authname);
-        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", privname(ci->privilege));
+        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
+        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
 		masterupdate = true;
 	}
 
