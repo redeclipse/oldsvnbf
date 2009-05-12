@@ -1024,7 +1024,7 @@ namespace server
 	{
 		if(m_demo(gamemode) || m_edit(gamemode)) return;
 
-        demotmp = opentempfile("w+b");
+        demotmp = opentempfile("demorecord", "w+b");
         stream *f = opengzfile(NULL, "wb", demotmp);
         if(!f) { DELETEP(demotmp); return; }
 
@@ -2582,7 +2582,7 @@ namespace server
 			srvmsgf(sender, "you sent a zero length packet for map data!");
 			return false;
 		}
-		mapdata[n] = opentempfile("w+b");
+		mapdata[n] = opentempfile(((const char *[3]){ "mapdata", "mapshot", "mapconf" })[n], "w+b");
         if(!mapdata[n])
         {
         	srvmsgf(sender, "failed to open temporary file for map");

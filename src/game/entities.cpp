@@ -1596,6 +1596,20 @@ namespace entities
 					part_radius(e.o, vec(s, s, s));
 					break;
 				}
+				case SPOTLIGHT:
+				{
+					loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == LIGHT)
+					{
+						gameentity &f = *(gameentity *)ents[e.links[i]];
+						float radius = f.attr[0];
+						if(!radius) radius = 2*e.o.dist(f.o);
+						vec dir = vec(e.o).sub(f.o).normalize();
+						float angle = max(1, min(90, int(e.attr[0])));
+						part_cone(f.o, dir, radius, angle);
+						break;
+					}
+					break;
+				}
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
@@ -1662,7 +1676,7 @@ namespace entities
 	{
 		if(game::player1->state == CS_EDITING && showlighting)
 		{
-			#define islightable(q) ((q)->type == LIGHT && (q)->attr[0] > 0)
+			#define islightable(q) ((q)->type == LIGHT && (q)->attr[0] > 0 && !(q)->links.length())
 			loopv(entgroup)
 			{
 				int n = entgroup[i];

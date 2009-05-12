@@ -182,6 +182,7 @@ enum
     PT_LINE,
     PT_TRIANGLE,
     PT_ELLIPSE,
+    PT_CONE,
 
     PT_MOD		= 1<<8,
     PT_RND4		= 1<<9,		// uses random image quarters
@@ -201,7 +202,7 @@ enum
 {
     PART_TELEPORT = 0,
     PART_ICON, PART_ICON_RISE,
-    PART_LINE, PART_TRIANGLE, PART_ELLIPSE,
+    PART_LINE, PART_TRIANGLE, PART_ELLIPSE, PART_CONE,
     PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
     PART_SMOKE_LERP, PART_SMOKE_LERP_SRISE, PART_SMOKE_LERP_SRISE_SOFT, PART_SMOKE_LERP_FRISE, PART_SMOKE_LERP_SINK,
@@ -267,6 +268,7 @@ extern void part_dir(const vec &o, float yaw, float pitch, float size = 1.f, int
 extern void part_trace(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true);
 extern void part_ellipse(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int axis = 0, bool fill = false, int type = PART_ELLIPSE);
 extern void part_radius(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0x00FFFF, bool fill = false);
+extern void part_cone(const vec &o, const vec &dir, float radius, float angle, float size = 1.f, int fade = 1, int color = 0x00FFFF, bool fill = false, int type = PART_CONE);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;

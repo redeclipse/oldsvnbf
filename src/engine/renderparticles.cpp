@@ -29,7 +29,7 @@ static bool emit_particles()
 	return emit;
 }
 
-const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare", "portal", "icon", "line", "triangle", "ellipse" };
+const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare", "portal", "icon", "line", "triangle", "ellipse", "cone" };
 
 struct partvert
 {
@@ -816,15 +816,15 @@ struct softquadrenderer : quadrenderer
 	}
 };
 
-struct lineprmtv : listparticle<lineprmtv>
+struct lineprimitive : listparticle<lineprimitive>
 {
 	vec value;
 };
 
-struct lineprmtvrenderer : listrenderer<lineprmtv>
+struct lineprimitiverenderer : listrenderer<lineprimitive>
 {
-	lineprmtvrenderer(int type)
-		: listrenderer<lineprmtv>(NULL, type, 0, 0, 0)
+	lineprimitiverenderer(int type)
+		: listrenderer<lineprimitive>(NULL, type, 0, 0, 0)
 	{}
 
 	void startrender()
@@ -842,7 +842,7 @@ struct lineprmtvrenderer : listrenderer<lineprmtv>
 		particleshader->set();
 	}
 
-	void renderpart(lineprmtv *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(lineprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(o.x, o.y, o.z);
@@ -851,16 +851,16 @@ struct lineprmtvrenderer : listrenderer<lineprmtv>
 		glColor3ubv(color);
 
 		glBegin(GL_LINES);
-		glVertex3f(0.f, 0.f, 0.f);
-		glVertex3f(p->value.x, p->value.y, p->value.z);
+		glVertex3f(0, 0, 0);
+		glVertex3fv(p->value.v);
 		glEnd();
 
 		glPopMatrix();
 	}
 
-	lineprmtv *addline(const vec &o, const vec &v, int fade, int color, float size)
+	lineprimitive *addline(const vec &o, const vec &v, int fade, int color, float size)
 	{
-		lineprmtv *p = (lineprmtv *)listrenderer<lineprmtv>::addpart(o, vec(0, 0, 0), fade, color, size);
+		lineprimitive *p = (lineprimitive *)listrenderer<lineprimitive>::addpart(o, vec(0, 0, 0), fade, color, size);
 		p->value = vec(v).sub(o).div(size);
 		return p;
 	}
@@ -868,18 +868,18 @@ struct lineprmtvrenderer : listrenderer<lineprmtv>
 	// use addline() instead
 	particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
-static lineprmtvrenderer lineprmtvs(PT_LINE|PT_LERP);
+static lineprimitiverenderer lineprimitives(PT_LINE|PT_LERP);
 
-struct trisprmtv : listparticle<trisprmtv>
+struct trisprimitive : listparticle<trisprimitive>
 {
 	vec value[2];
 	bool fill;
 };
 
-struct trisprmtvrenderer : listrenderer<trisprmtv>
+struct trisprimitiverenderer : listrenderer<trisprimitive>
 {
-	trisprmtvrenderer(int type)
-		: listrenderer<trisprmtv>(NULL, type, 0, 0, 0)
+	trisprimitiverenderer(int type)
+		: listrenderer<trisprimitive>(NULL, type, 0, 0, 0)
 	{}
 
 	void startrender()
@@ -897,7 +897,7 @@ struct trisprmtvrenderer : listrenderer<trisprmtv>
 		particleshader->set();
 	}
 
-	void renderpart(trisprmtv *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(trisprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(o.x, o.y, o.z);
@@ -907,7 +907,7 @@ struct trisprmtvrenderer : listrenderer<trisprmtv>
 
 		glBegin(GL_TRIANGLES);
 		glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
-		glVertex3f(0.f, 0.f, 0.f);
+		glVertex3f(0, 0, 0);
 		glVertex3fv(p->value[0].v);
 		glVertex3fv(p->value[1].v);
 		glEnd();
@@ -915,14 +915,14 @@ struct trisprmtvrenderer : listrenderer<trisprmtv>
 		glPopMatrix();
 	}
 
-	trisprmtv *addtriangle(const vec &o, float yaw, float pitch, int fade, int color, float size, bool fill)
+	trisprimitive *addtriangle(const vec &o, float yaw, float pitch, int fade, int color, float size, bool fill)
 	{
 		vec dir[3];
 		vecfromyawpitch(yaw, pitch, 1, 0, dir[0]);
 		vecfromyawpitch(yaw, pitch, -1, 1, dir[1]);
 		vecfromyawpitch(yaw, pitch, -1, -1, dir[2]);
 
-		trisprmtv *p = (trisprmtv *)listrenderer<trisprmtv>::addpart(dir[0].mul(size*2.f).add(o), vec(0, 0, 0), fade, color, size);
+		trisprimitive *p = (trisprimitive *)listrenderer<trisprimitive>::addpart(dir[0].mul(size*2.f).add(o), vec(0, 0, 0), fade, color, size);
 		p->value[0] = dir[1];
 		p->value[1] = dir[2];
 		p->fill = fill;
@@ -932,19 +932,19 @@ struct trisprmtvrenderer : listrenderer<trisprmtv>
 	// use addtriangle() instead
 	particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
-static trisprmtvrenderer trisprmtvs(PT_TRIANGLE|PT_LERP);
+static trisprimitiverenderer trisprimitives(PT_TRIANGLE|PT_LERP);
 
-struct loopprmtv : listparticle<loopprmtv>
+struct loopprimitive : listparticle<loopprimitive>
 {
 	vec value;
 	int axis;
 	bool fill;
 };
 
-struct loopprmtvrenderer : listrenderer<loopprmtv>
+struct loopprimitiverenderer : listrenderer<loopprimitive>
 {
-	loopprmtvrenderer(int type)
-		: listrenderer<loopprmtv>(NULL, type, 0, 0, 0)
+	loopprimitiverenderer(int type)
+		: listrenderer<loopprimitive>(NULL, type, 0, 0, 0)
 	{}
 
 	void startrender()
@@ -962,7 +962,7 @@ struct loopprmtvrenderer : listrenderer<loopprmtv>
 		particleshader->set();
 	}
 
-	void renderpart(loopprmtv *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(loopprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(o.x, o.y, o.z);
@@ -994,9 +994,9 @@ struct loopprmtvrenderer : listrenderer<loopprmtv>
 		glPopMatrix();
 	}
 
-	loopprmtv *addellipse(const vec &o, const vec &v, int fade, int color, float size, int axis, bool fill)
+	loopprimitive *addellipse(const vec &o, const vec &v, int fade, int color, float size, int axis, bool fill)
 	{
-		loopprmtv *p = (loopprmtv *)listrenderer<loopprmtv>::addpart(o, vec(0, 0, 0), fade, color, size);
+		loopprimitive *p = (loopprimitive *)listrenderer<loopprimitive>::addpart(o, vec(0, 0, 0), fade, color, size);
 		p->value = vec(v).div(size);
 		p->axis = axis;
 		p->fill = fill;
@@ -1006,13 +1006,89 @@ struct loopprmtvrenderer : listrenderer<loopprmtv>
 	// use addellipse() instead
 	particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
 };
-static loopprmtvrenderer loopprmtvs(PT_ELLIPSE|PT_LERP);
+static loopprimitiverenderer loopprimitives(PT_ELLIPSE|PT_LERP);
+
+struct coneprimitive : listparticle<coneprimitive>
+{
+	vec dir, spot, spoke;
+	float radius, angle;
+	bool fill;
+};
+
+struct coneprimitiverenderer : listrenderer<coneprimitive>
+{
+	coneprimitiverenderer(int type)
+		: listrenderer<coneprimitive>(NULL, type, 0, 0, 0)
+	{}
+
+	void startrender()
+	{
+		glDisable(GL_TEXTURE_2D);
+		glDisable(GL_CULL_FACE);
+		particlenotextureshader->set();
+	}
+
+	void endrender()
+	{
+		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_CULL_FACE);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
+		particleshader->set();
+	}
+
+	void renderpart(coneprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	{
+		glPushMatrix();
+		glTranslatef(o.x, o.y, o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glScalef(p->size, p->size, p->size);
+		glColor3ubv(color);
+
+		glBegin(GL_LINES);
+		//glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
+		loopi(16)
+		{
+			vec v = vec(p->spoke).rotate(2*M_PI*i/16.f, p->dir).add(p->spot);
+			glVertex3f(0, 0, 0);
+			glVertex3fv(v.v);
+		}
+		glEnd();
+
+		glBegin(GL_LINE_LOOP);
+		//glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
+		loopi(16)
+		{
+			vec v = vec(p->spoke).rotate(2*M_PI*i/16.f, p->dir).add(p->spot);
+			glVertex3fv(v.v);
+		}
+		glEnd();
+
+		glPopMatrix();
+	}
+
+	coneprimitive *addcone(const vec &o, const vec &dir, float radius, float angle, int fade, int color, float size, bool fill)
+	{
+		coneprimitive *p = (coneprimitive *)listrenderer<coneprimitive>::addpart(o, vec(0, 0, 0), fade, color, size);
+		p->dir = dir;
+		p->radius = radius;
+		p->angle = angle;
+		p->fill = fill;
+		p->spot = vec(p->dir).mul(p->radius*cosf(p->angle*RAD));
+		p->spoke.orthogonal(p->dir);
+		p->spoke.normalize().mul(p->radius*sinf(p->angle*RAD));
+		return p;
+	}
+
+	// use addcone() instead
+	particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
+};
+static coneprimitiverenderer coneprimitives(PT_CONE|PT_LERP);
 
 static partrenderer *parts[] =
 {
 	new portalrenderer("textures/teleport"),
 	&icons, &iconups,
-	&lineprmtvs, &trisprmtvs, &loopprmtvs,
+	&lineprimitives, &trisprimitives, &loopprimitives, &coneprimitives,
 
 	new trailrenderer("particles/entity", PT_TRAIL|PT_LERP, 0, 0),
 	new softquadrenderer("particles/fireball", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP, -10, 0),
@@ -1440,14 +1516,14 @@ void part_icon(const vec &o, Texture *tex, float blend, float size, int fade, in
 void part_line(const vec &o, const vec &v, float size, int fade, int color, int type)
 {
 	if(shadowmapping || renderedgame) return;
-	lineprmtvrenderer *p = dynamic_cast<lineprmtvrenderer *>(parts[type]);
+	lineprimitiverenderer *p = dynamic_cast<lineprimitiverenderer *>(parts[type]);
 	if(p) p->addline(o, v, fade, color, size);
 }
 
 void part_triangle(const vec &o, float yaw, float pitch, float size, int fade, int color, bool fill, int type)
 {
 	if(shadowmapping || renderedgame) return;
-	trisprmtvrenderer *p = dynamic_cast<trisprmtvrenderer *>(parts[type]);
+	trisprimitiverenderer *p = dynamic_cast<trisprimitiverenderer *>(parts[type]);
 	if(p) p->addtriangle(o, yaw, pitch, fade, color, size, fill);
 }
 
@@ -1473,20 +1549,27 @@ void part_trace(const vec &o, const vec &v, float size, int fade, int color, boo
 void part_ellipse(const vec &o, const vec &v, float size, int fade, int color, int axis, bool fill, int type)
 {
 	if(shadowmapping || renderedgame) return;
-	loopprmtvrenderer *p = dynamic_cast<loopprmtvrenderer *>(parts[type]);
+	loopprimitiverenderer *p = dynamic_cast<loopprimitiverenderer *>(parts[type]);
 	if(p) p->addellipse(o, v, fade, color, size, axis, fill);
 }
 
 void part_radius(const vec &o, const vec &v, float size, int fade, int color, bool fill)
 {
 	if(shadowmapping || renderedgame) return;
-	loopprmtvrenderer *p = dynamic_cast<loopprmtvrenderer *>(parts[PART_ELLIPSE]);
+	loopprimitiverenderer *p = dynamic_cast<loopprimitiverenderer *>(parts[PART_ELLIPSE]);
 	if(p)
 	{
 		p->addellipse(o, v, fade, color, size, 0, fill);
 		p->addellipse(o, v, fade, color, size, 1, fill);
 		p->addellipse(o, v, fade, color, size, 2, fill);
 	}
+}
+
+void part_cone(const vec &o, const vec &dir, float radius, float angle, float size, int fade, int color, bool fill, int type)
+{
+	if(shadowmapping || renderedgame) return;
+	coneprimitiverenderer *p = dynamic_cast<coneprimitiverenderer *>(parts[type]);
+	if(p) p->addcone(o, dir, radius, angle, fade, color, size, fill);
 }
 
 //dir = 0..6 where 0=up
