@@ -358,7 +358,7 @@ namespace projs
 				adddynlight(from, 48, vec(1.1f, 0.33f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
-			case WEAPON_CARBINE:
+			case WEAPON_PISTOL:
 			{
 				part_create(PART_SMOKE_LERP_SRISE, 200, from, 0xAAAAAA, 1.f);
 				part_create(PART_MUZZLE_FLASH_SLENS, 100, from, 0xFFCC22, 2.f, d);
@@ -504,7 +504,7 @@ namespace projs
 					}
 					break;
 				}
-				case WEAPON_CARBINE:
+				case WEAPON_PISTOL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
@@ -645,7 +645,7 @@ namespace projs
 						}
 						break;
 					}
-					case WEAPON_CARBINE:
+					case WEAPON_PISTOL:
 					{
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(200), proj.o, 0x999999, weaptype[proj.weap].partsize);
@@ -1100,7 +1100,7 @@ namespace projs
 					adddynlight(proj.o, weaptype[proj.weap].explode*1.1f*proj.lifespan, col);
 					break;
 				}
-				case WEAPON_CARBINE: adddynlight(proj.o, 4, vec(0.075f, 0.075f, 0.075f)); break;
+				case WEAPON_PISTOL: adddynlight(proj.o, 4, vec(0.075f, 0.075f, 0.075f)); break;
 				case WEAPON_RIFLE:
 				{
 					vec pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));

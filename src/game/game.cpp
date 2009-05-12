@@ -1567,7 +1567,7 @@ namespace game
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
 				case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_SUBMACHINE:
-				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_CARBINE: case ANIM_RIFLE:
+				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_PISTOL: case ANIM_RIFLE: case ANIM_PAINTGUN:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);

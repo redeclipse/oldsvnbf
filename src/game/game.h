@@ -25,7 +25,7 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_CARBINE, S_RIFLE, S_PAINT,
+	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_PISTOL, S_RIFLE, S_PAINT,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -209,8 +209,9 @@ enum
     ANIM_SUBMACHINE, ANIM_SUBMACHINE_SHOOT, ANIM_SUBMACHINE_RELOAD,
     ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
-    ANIM_CARBINE, ANIM_CARBINE_SHOOT, ANIM_CARBINE_RELOAD,
+    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
+    ANIM_PAINTGUN, ANIM_PAINTGUN_SHOOT, ANIM_PAINTGUN_RELOAD,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAX
 };
@@ -225,7 +226,7 @@ enum
 	WEAPON_SG,
 	WEAPON_SMG,
 	WEAPON_FLAMER,
-	WEAPON_CARBINE,
+	WEAPON_PISTOL,
 	WEAPON_RIFLE,
 	WEAPON_GL,
 	WEAPON_TOTAL, // end of selectable weapon set
@@ -318,13 +319,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_CARBINE,		ANIM_CARBINE,	-15,	15,			0x999999,
-			S_CARBINE,	S_RICOCHET,	S_WHIZZ,	-1,
+		WEAPON_PISTOL,		ANIM_PISTOL,	-15,	15,			0x999999,
+			S_PISTOL,	S_RICOCHET,	S_WHIZZ,	-1,
 			10,		10,		250,    1250,	35,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,
 			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		120.f,
-			"carbine",	"\fa",	"weapons/carbine/item",		"weapons/carbine/vwep",
+			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",
 			""
 	},
 	{
@@ -348,13 +349,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_CARBINE,		-5,  	5,		0xFF22AA,
+		WEAPON_PAINT,		ANIM_PAINTGUN,		-5,  	5,		0xFF22AA,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.05f,		2.0f,		0.f,	2.f,		20.f,
-			"paintgun",	"\fm",	"weapons/carbine/item",		"weapons/carbine/vwep",
+			"paintgun",	"\fm",	"weapons/paintgun/item",		"weapons/paintgun/vwep",
 			""
 	},
 };
@@ -917,8 +918,9 @@ const char *animnames[] =
 	"submachine", "submachine shoot", "submachine reload",
 	"grenades", "grenades throw", "grenades reload", "grenades power",
 	"flamer", "flamer shoot", "flamer reload",
-	"carbine", "carbine shoot", "carbine reload",
+	"pistol", "pistol shoot", "pistol reload",
 	"rifle", "rifle shoot", "rifle reload",
+	"paintgun", "paintgun shoot", "paintgun reload",
 	"vwep", "shield", "powerup",
 	""
 };

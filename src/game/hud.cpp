@@ -118,7 +118,7 @@ namespace hud
 	TVAR(submachinetex, "textures/submachine", 3);
 	TVAR(grenadestex, "textures/grenades", 3);
 	TVAR(flamertex, "textures/flamer", 3);
-	TVAR(carbinetex, "textures/carbine", 3);
+	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(rifletex, "textures/rifle", 3);
 	TVAR(paintguntex, "textures/paintgun", 3);
 	TVAR(healthtex, "textures/health", 3);
@@ -142,7 +142,7 @@ namespace hud
 	TVAR(submachinecliptex, "textures/submachineclip", 3);
 	TVAR(grenadescliptex, "textures/grenadesclip", 3);
 	TVAR(flamercliptex, "textures/flamerclip", 3);
-	TVAR(carbinecliptex, "textures/carbineclip", 3);
+	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
 	TVAR(paintguncliptex, "textures/paintgunclip", 3);
 
@@ -330,7 +330,7 @@ namespace hud
     {
         const char *cliptexs[WEAPON_MAX] = {
             plasmacliptex, shotguncliptex, submachinecliptex,
-            flamercliptex, carbinecliptex, riflecliptex, grenadescliptex, // end of regular weapons
+            flamercliptex, pistolcliptex, riflecliptex, grenadescliptex, // end of regular weapons
 			paintguncliptex
         };
         Texture *t = textureload(cliptexs[weap], 3);
@@ -350,7 +350,7 @@ namespace hud
 		}
         switch(weap)
         {
-            case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_SMG: s *= 0.85f; break;
+            case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PISTOL: s *= 0.85f; break;
             default: break;
         }
         float r = clipcolour, g = clipcolour, b = clipcolour;
@@ -459,7 +459,7 @@ namespace hud
         else if(!showcrosshair || game::player1->state == CS_DEAD || !connected() || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;
-        else if(game::inzoom()) index = POINTER_ZOOM;
+        else if(game::inzoom() && weaptype[game::player1->weapselect].zooms) index = POINTER_ZOOM;
         else if(lastmillis-game::player1->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(game::gamemode, game::mutators))
         {
@@ -957,7 +957,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, submachinetex, flamertex, carbinetex, rifletex, grenadestex,
+					plasmatex, shotguntex, submachinetex, flamertex, pistoltex, rifletex, grenadestex,
 					paintguntex
 				};
 				if(isweap(stype)) return weaptexs[stype];
@@ -995,7 +995,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, submachinetex, flamertex, carbinetex, rifletex, grenadestex,
+					plasmatex, shotguntex, submachinetex, flamertex, pistoltex, rifletex, grenadestex,
 					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
