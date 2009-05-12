@@ -80,6 +80,7 @@ namespace entities
 				if(attr5&SND_NOATTEN) addentinfo("noatten");
 				if(attr5&SND_NODELAY) addentinfo("nodelay");
 				if(attr5&SND_NOCULL) addentinfo("nocull");
+				if(attr5&SND_NOPAN) addentinfo("nopan");
 			}
 		}
 		else if(type == TRIGGER)
@@ -930,6 +931,7 @@ namespace entities
 								if(f.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
 								if(f.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
 								if(f.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
+								if(f.attr[4]&SND_NOPAN) flags |= SND_NOPAN;
 								playsound(f.attr[0], both ? f.o : e.o, NULL, flags, f.attr[3], f.attr[1], f.attr[2], &f.schan);
 								commit = e.type != TRIGGER && local;
 							}
@@ -1713,6 +1715,7 @@ namespace entities
 				if(e.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
 				if(e.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
 				if(e.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
+				if(e.attr[4]&SND_NOPAN) flags |= SND_NOPAN;
 				playsound(e.attr[0], e.o, NULL, flags, e.attr[3], e.attr[1], e.attr[2], &e.schan);
 			}
 		}
