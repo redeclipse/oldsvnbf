@@ -829,34 +829,22 @@ namespace physics
 		if(d->state != CS_ALIVE) { d->resetinterp(); return insideworld(d->o); }
 		vec orig = d->o;
 		#define inmapchk(x,y) \
+		{ \
 			loopi(x) \
 			{ \
-				if(i) \
-				{ \
-					d->o = orig; \
-					y; \
-				} \
+				if(i) { y; } \
 				if(collide(d) && !inside) \
 				{ \
-					if(hitplayer) \
-					{ \
-						if(!avoidplayers) continue; \
-						d->o = orig; \
-                        d->resetinterp(); \
-						return false; \
-					} \
+					if(avoidplayers && hitplayer && issolid(hitplayer)) continue; \
                     d->resetinterp(); \
 					return true; \
 				} \
-			}
-
-		inmapchk(10, { d->o.add(vec(d->vel).mul(i)); });
-		inmapchk(100, {
-				d->o.x += (rnd(21)-10)*i/10.f;  // increasing distance
-				d->o.y += (rnd(21)-10)*i/10.f;
-				d->o.z += (rnd(21)-10)*i/10.f;
-			});
-
+				d->o = orig; \
+			} \
+		}
+		vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
+		inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));
+		inmapchk(100, d->o.add(vec((rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f)));
 		d->o = orig;
         d->resetinterp();
 		return false;
