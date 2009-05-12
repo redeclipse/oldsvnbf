@@ -1093,18 +1093,16 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						float dist = e.o.dist(a.o);
 						if(dist < closedist)
 						{
-							closest = i;
+							closest = k;
 							closedist = dist;
 						}
 					}
 					if(ents.inrange(closest) && closedist <= 100)
 					{
 						extentity &a = *ents[closest];
-						if(a.links.find(i) < 0)
-						{
-							a.links.add(i);
-							if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
-						}
+						if(e.links.find(closest) < 0) e.links.add(closest);
+						if(a.links.find(i) < 0) a.links.add(i);
+						if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
 					}
 				}
 				if(e.type == ET_MAPMODEL && e.attr[0] >= 0)

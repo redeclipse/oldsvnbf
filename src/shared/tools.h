@@ -142,6 +142,8 @@ struct databuf
     int len, maxlen;
     uchar flags;
 
+    databuf() : buf(NULL), len(0), maxlen(0), flags(0) {}
+
     template<class U>
     databuf(T *buf, U maxlen) : buf(buf), len(0), maxlen((int)maxlen), flags(0) {}
 
@@ -196,6 +198,64 @@ struct databuf
 
 typedef databuf<char> charbuf;
 typedef databuf<uchar> ucharbuf;
+
+struct packetbuf : ucharbuf
+{
+    ENetPacket *packet;
+    int growth;
+
+    packetbuf(ENetPacket *packet) : ucharbuf(packet->data, packet->dataLength), packet(packet), growth(0) {}
+    packetbuf(int growth, int pflags = 0) : growth(growth)
+    {
+        packet = enet_packet_create(NULL, growth, pflags);
+        buf = (uchar *)packet->data;
+        maxlen = packet->dataLength;
+    }
+    ~packetbuf() { cleanup(); }
+
+    void reliable() { packet->flags |= ENET_PACKET_FLAG_RELIABLE; }
+
+    void resize(int n)
+    {
+        enet_packet_resize(packet, n);
+        buf = (uchar *)packet->data;
+        maxlen = packet->dataLength;
+    }
+
+    void checkspace(int n)
+    {
+        if(len + n > maxlen && packet && growth > 0) resize(max(len + n, maxlen + growth));    
+    }
+
+    ucharbuf subbuf(int sz)
+    {
+        checkspace(sz);
+        return ucharbuf::subbuf(sz);
+    }
+
+    void put(const uchar &val)
+    {
+        checkspace(1);
+        ucharbuf::put(val);
+    }
+
+    void put(const uchar *vals, int numvals)
+    {
+        checkspace(numvals);
+        ucharbuf::put(vals, numvals);
+    }
+    
+    ENetPacket *finalize()
+    {
+        resize(len);
+        return packet;
+    }
+
+    void cleanup()
+    {
+        if(growth > 0 && packet && !packet->referenceCount) { enet_packet_destroy(packet); packet = NULL; buf = NULL; len = maxlen = 0; }
+    }
+};
 
 template <class T> struct vector
 {
@@ -269,6 +329,7 @@ template <class T> struct vector
     void drop() { buf[--ulen].~T(); }
     bool empty() const { return ulen==0; }
 
+    int capacity() const { return alen; }
     int length() const { return ulen; }
     T &operator[](int i) { ASSERT(i>=0 && i<ulen); return buf[i]; }
     const T &operator[](int i) const { ASSERT(i >= 0 && i<ulen); return buf[i]; }
@@ -605,7 +666,7 @@ template <class T, int SIZE> struct ringbuf
         T &t = (data[index] = e);
         index++;
         if(index >= SIZE) index -= SIZE;
-        if(len<SIZE) len++;
+        if(len < SIZE) len++;
         return t;
     }
 
@@ -733,6 +794,7 @@ struct stream
     virtual bool putstring(const char *str) { int len = strlen(str); return write(str, len) == len; }
     virtual bool putline(const char *str) { return putstring(str) && putchar('\n'); }
     virtual int printf(const char *fmt, ...) { return -1; }
+    virtual uint getcrc() { return 0; }
 
     template<class T> bool put(T n) { return write(&n, sizeof(n)) == sizeof(n); }
     template<class T> bool putlil(T n) { return put<T>(lilswap(n)); }
@@ -761,7 +823,7 @@ extern const char *findfile(const char *filename, const char *mode);
 extern stream *openrawfile(const char *filename, const char *mode);
 extern stream *openzipfile(const char *filename, const char *mode);
 extern stream *openfile(const char *filename, const char *mode);
-extern stream *opentempfile(const char *mode);
+extern stream *opentempfile(const char *filename, const char *mode);
 extern stream *opengzfile(const char *filename, const char *mode, stream *file = NULL, int level = Z_BEST_COMPRESSION);
 extern char *loadfile(const char *fn, int *size);
 extern bool listdir(const char *dir, const char *ext, vector<char *> &files);

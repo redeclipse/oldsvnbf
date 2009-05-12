@@ -85,7 +85,7 @@ enttypes enttype[] = {
 	{
 		LIGHT,			59,		0,		EU_NONE,
 			inttobit(SPOTLIGHT),
-			0,
+			inttobit(SPOTLIGHT),
 			false,				"light",
 			{ "radius",	"red",		"green",	"blue",		"" }
 	},
@@ -126,8 +126,8 @@ enttypes enttype[] = {
 	},
 	{
 		SPOTLIGHT,		59,		0,		EU_NONE,
-			0,
-			0,
+			inttobit(LIGHT),
+			inttobit(LIGHT),
 			false,				"spotlight",
 			{ "radius",	"",			"",			"",			"" }
 	},

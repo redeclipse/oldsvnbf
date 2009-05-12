@@ -171,15 +171,16 @@ bool createdir(const char *path)
 #endif
 }
 
-static void fixdir(char *dir)
+size_t fixdir(char *dir)
 {
     path(dir);
     size_t len = strlen(dir);
-    if(dir[len-1]!=PATHDIV)
+    if(len > 0 && dir[len-1] != PATHDIV)
     {
         dir[len] = PATHDIV;
         dir[len+1] = '\0';
     }
+    return len;
 }
 
 void sethomedir(const char *dir)
@@ -363,10 +364,14 @@ struct filestream : stream
         return file!=NULL;
     }
 
-    bool opentemp(const char *mode)
+    bool opentemp(const char *name, const char *mode)
     {
         if(file) return false;
+#ifdef WIN32
+        file = fopen(name, mode);
+#else
         file = tmpfile();
+#endif
         return file!=NULL;
     }
 
@@ -522,6 +527,8 @@ struct gzstream : stream
         else if(writing) writeheader();
         return true;
     }
+
+    uint getcrc() { return crc; }
 
     void finishreading()
     {
@@ -687,10 +694,11 @@ stream *openfile(const char *filename, const char *mode)
     return openrawfile(filename, mode);
 }
 
-stream *opentempfile(const char *mode)
+stream *opentempfile(const char *name, const char *mode)
 {
+    const char *found = findfile(name, mode);
     filestream *file = new filestream;
-    if(!file->opentemp(mode)) { delete file; return NULL; }
+    if(!file->opentemp(found ? found : name, mode)) { delete file; return NULL; }
     return file;
 }
 
