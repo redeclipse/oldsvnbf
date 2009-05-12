@@ -612,10 +612,10 @@ namespace entities
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
 										d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
-										if(physics::entinmap(d, false))
+										d->yaw = f.attr[0];
+										d->pitch = f.attr[1];
+										if(physics::entinmap(d, true))
 										{
-											d->yaw = f.attr[0];
-											d->pitch = f.attr[1];
 											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
 											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 											d->vel.mul(mag);
@@ -966,9 +966,10 @@ namespace entities
 			}
 			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return;
 			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return;
+			d->yaw = d->pitch = d->roll = 0;
 			d->o.x = d->o.y = d->o.z = getworldsize();
 			d->o.x *= 0.5f; d->o.y *= 0.5f;
-			if(physics::entinmap(d, false)) return;
+			if(physics::entinmap(d, true)) return;
 		}
 		if(!m_edit(game::gamemode) && m_play(game::gamemode) && suicide) game::suicide(d, HIT_SPAWN);
 	}

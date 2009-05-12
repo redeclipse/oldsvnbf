@@ -157,14 +157,15 @@ namespace client
 		{
 			game::player1->state = CS_EDITING;
 			game::resetstate();
+			physics::entinmap(game::player1, false);
 		}
 		else if(game::player1->state != CS_SPECTATOR)
 		{
 			game::player1->state = CS_ALIVE;
 			game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
+			physics::entinmap(game::player1, true); // find spawn closest to current floating pos
 		}
 		projs::remove(game::player1);
-		physics::entinmap(game::player1, false); // find spawn closest to current floating pos
 		if(m_edit(game::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);
 	}
