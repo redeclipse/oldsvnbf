@@ -232,30 +232,25 @@ ICOMMAND(mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u
 
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
-	bool posliquid = isliquid(lookupmaterial(pos)&MATF_VOLUME),
-			camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 	int svol = clamp(((soundvol*vol*slotvol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
-
-	vec v;
-	float dist = camera1->o.dist(pos, v);
-
 	if(!(flags&SND_NOATTEN))
 	{
-		if(!soundmono && (v.x != 0 || v.y != 0))
+		vec unitv;
+		float dist = camera1->o.dist(pos, unitv);
+		bool posliquid = isliquid(lookupmaterial(pos)&MATF_VOLUME), camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
+		if(!soundmono && !(flags&SND_NOPAN) && (unitv.x != 0 || unitv.y != 0))
 		{
-			float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
+			float yaw = -atan2f(unitv.x, unitv.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
 			*curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
 		}
 		else *curpan = 127;
 
-		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.1f);
-		else if(posliquid || camliquid) svol = int(svol*0.25f);
+		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.25f);
+		else if(posliquid || camliquid) svol = int(svol*0.5f);
 
-		float mrad = float(maxrad > 0 ? maxrad : 256),
-			nrad = float(minrad < mrad ? minrad : mrad/2.f);
-
+		float mrad = float(maxrad > 0 ? maxrad : 256), nrad = float(minrad <= 0 ? 0 : (minrad < mrad ? minrad : mrad/2.f));
 		if(dist <= nrad) *curvol = svol;
-		else if(dist <= mrad) *curvol = int(float(svol)*((mrad-nrad-dist)/(mrad-nrad)));
+		else if(dist <= mrad) *curvol = int(float(svol)*(1.f-(float(dist-nrad)/float(mrad-nrad))));
 		else *curvol = 0;
 	}
 	else
@@ -273,11 +268,9 @@ void updatesound(int chan)
 	{
 		if(waiting)
 		{ // delay the sound based on average physical constants
-			bool liquid = (
-				isliquid(lookupmaterial(s.pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME)
-			);
+			bool liquid = isliquid(lookupmaterial(s.pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 			float dist = camera1->o.dist(s.pos);
-			int delay = int((dist/8.f)*(liquid ? 1.497f : 0.343f));
+			int delay = int((dist/8.f)*(liquid ? 1.5f : 0.35f));
 			if(lastmillis >= s.millis + delay)
 			{
 				Mix_Resume(chan);

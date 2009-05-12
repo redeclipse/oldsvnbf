@@ -10,8 +10,9 @@ enum
 	SND_NOATTEN	= 1<<0,	// disable attenuation
 	SND_NODELAY	= 1<<1,	// disable delay
 	SND_NOCULL	= 1<<2,	// disable culling
-	SND_LOOP	= 1<<3,
-	SND_MAP		= 1<<4,
+	SND_NOPAN	= 1<<3, // disable panning (distance only attenuation)
+	SND_LOOP	= 1<<4,
+	SND_MAP		= 1<<5,
 	SND_FORCED	= SND_NOATTEN|SND_NODELAY|SND_NOCULL,
 	SND_MASKF	= SND_LOOP|SND_MAP
 };
