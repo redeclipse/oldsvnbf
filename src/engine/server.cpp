@@ -4,13 +4,10 @@
 #include "engine.h"
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
-SVAR(octadir, "");
-VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
-
 int kidmode = 0;
 ICOMMAND(getkidmode, "", (void), intret(kidmode));
 
-SVAR(consoletimefmt, "%c");
+SVARP(consoletimefmt, "%c");
 char *gettime(char *format)
 {
 	time_t ltime;
@@ -741,6 +738,9 @@ void initgame()
     setupserver();
 }
 
+VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
+SVARP(octadir, "");//, if(!hasoctapaks) trytofindocta(false););
+
 bool serveroption(char *opt)
 {
 	switch(opt[1])
@@ -785,7 +785,7 @@ bool serveroption(char *opt)
 	return false;
 }
 
-bool findoctadir(const char *name)
+bool findoctadir(const char *name, bool fallback)
 {
 	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
 	if(fileexists(findfile(octalogo, "r"), "r"))
@@ -796,19 +796,19 @@ bool findoctadir(const char *name)
 		addpackagedir(name);
 		addpackagedir(octadata);
 		addpackagedir(octapaks);
-		hasoctapaks = 1;
+		hasoctapaks = fallback ? 1 : 2;
 		return true;
 	}
 	return false;
 }
-void trytofindocta()
+void trytofindocta(bool fallback)
 {
 	if(!octadir || !*octadir)
 	{
 		const char *dir = getenv("OCTA_DIR");
 		if(dir && *dir) setsvar("octadir", dir);
 	}
-	if(!octadir || !*octadir || !findoctadir(octadir))
+	if((!octadir || !*octadir || !findoctadir(octadir, false)) && fallback)
 	{ // user hasn't specifically set it, try some common locations alongside our folder
 		const char *tryoctadirs[4] = { // by no means a definitive list either..
 			"../Sauerbraten", "../sauerbraten", "../sauer",
@@ -820,7 +820,7 @@ void trytofindocta()
 			"/usr/games/sauerbraten"
 #endif
 		};
-		loopi(4) if(findoctadir(tryoctadirs[i])) break;
+		loopi(4) if(findoctadir(tryoctadirs[i], true)) break;
 	}
 }
 

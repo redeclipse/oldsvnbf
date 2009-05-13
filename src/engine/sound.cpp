@@ -19,7 +19,7 @@ VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT
 
 VARP(musicvol, 0, 32, 255);
 VARP(musicfade, 0, 3000, INT_MAX-1);
-SVAR(titlemusic, "loops/title");
+SVAR(titlemusic, "sounds/loops/title");
 
 void initsound()
 {
@@ -122,11 +122,11 @@ void playmusic(const char *name, const char *cmd)
 
 	if(soundvol && musicvol && *name)
 	{
-		const char *exts[] = { "", ".wav", ".ogg" };
 		string buf;
-		loopi(sizeof(exts)/sizeof(exts[0]))
+		const char *dirs[] = { "", "sounds/" }, *exts[] = { "", ".wav", ".ogg" };
+		loopi(sizeof(dirs)/sizeof(dirs[0])) loopk(sizeof(exts)/sizeof(exts[0]))
 		{
-			formatstring(buf)("sounds/%s%s", name, exts[i]);
+			formatstring(buf)("%s%s%s", dirs[i], name, exts[k]);
 			if(loadmusic(buf))
 			{
                 DELETEA(musicfile);
@@ -196,11 +196,11 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 	}
 	if(!sample->sound)
 	{
-		const char *exts[] = { "", ".wav", ".ogg" };
 		string buf;
-		loopi(sizeof(exts)/sizeof(exts[0]))
+		const char *dirs[] = { "", "sounds/" }, *exts[] = { "", ".wav", ".ogg" };
+		loopi(sizeof(dirs)/sizeof(dirs[0])) loopk(sizeof(exts)/sizeof(exts[0]))
 		{
-			formatstring(buf)("sounds/%s%s", sample->name, exts[i]);
+			formatstring(buf)("%s%s%s", dirs[i], sample->name, exts[k]);
             sample->sound = loadwav(buf);
             if(sample->sound) break;
 		}
