@@ -167,7 +167,11 @@ namespace entities
 			{
 				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis, true);
 				d->ammo[g] = d->entid[g] = -1;
-				d->weapselect = g;
+				if(d->weapselect != g)
+				{
+					d->lastweap = d->weapselect;
+					d->weapselect = g;
+				}
 			}
 			d->useitem(n, e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
