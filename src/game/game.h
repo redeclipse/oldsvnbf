@@ -695,9 +695,9 @@ struct gamestate
 	int bestweap(int sweap, bool last = false)
 	{
 		if(last && hasweap(lastweap, sweap)) return lastweap;
-		loopi(WEAPON_MAX) if(hasweap(i, sweap, 3)) return i; // reloadable first
-		loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) return i; // carriable second
-		loopi(WEAPON_MAX) if(hasweap(i, sweap, 0)) return i; // any just to bail us out
+		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 3)) return i; // reloadable first
+		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 1)) return i; // carriable second
+		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 0)) return i; // any just to bail us out
 		return weapselect;
 	}
 
@@ -712,13 +712,10 @@ struct gamestate
 	{
 		int weap = -1;
 		if(hasweap(weapselect, sweap, 1, exclude)) weap = weapselect;
-		else
+		else loopi(WEAPON_MAX) if(hasweap(i, sweap, 1, exclude))
 		{
-			loopi(WEAPON_MAX) if(hasweap(i, sweap, 1, exclude))
-			{
-				weap = i;
-				break;
-			}
+			weap = i;
+			break;
 		}
 		return weap;
 	}
