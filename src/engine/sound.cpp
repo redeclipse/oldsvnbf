@@ -124,20 +124,26 @@ void playmusic(const char *name, const char *cmd)
 	{
 		string buf;
 		const char *dirs[] = { "", "sounds/" }, *exts[] = { "", ".wav", ".ogg" };
-		loopi(sizeof(dirs)/sizeof(dirs[0])) loopk(sizeof(exts)/sizeof(exts[0]))
+		bool found = false;
+		loopi(sizeof(dirs)/sizeof(dirs[0]))
 		{
-			formatstring(buf)("%s%s%s", dirs[i], name, exts[k]);
-			if(loadmusic(buf))
+			loopk(sizeof(exts)/sizeof(exts[0]))
 			{
-                DELETEA(musicfile);
-                DELETEA(musicdonecmd);
-				musicfile = newstring(name);
-                if(cmd[0]) musicdonecmd = newstring(cmd);
-				Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-				Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
-				oldmusicvol = musicvol;
-                break;
+				formatstring(buf)("%s%s%s", dirs[i], name, exts[k]);
+				if(loadmusic(buf))
+				{
+					DELETEA(musicfile);
+					DELETEA(musicdonecmd);
+					musicfile = newstring(name);
+					if(cmd[0]) musicdonecmd = newstring(cmd);
+					Mix_PlayMusic(music, cmd[0] ? 0 : -1);
+					Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+					oldmusicvol = musicvol;
+					found = true;
+				}
+				if(found) break;
 			}
+			if(found) break;
 		}
 		if(!music) { conoutf("\frcould not play music: %s", name); return; }
 	}
@@ -198,11 +204,16 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 	{
 		string buf;
 		const char *dirs[] = { "", "sounds/" }, *exts[] = { "", ".wav", ".ogg" };
-		loopi(sizeof(dirs)/sizeof(dirs[0])) loopk(sizeof(exts)/sizeof(exts[0]))
+		bool found = false;
+		loopi(sizeof(dirs)/sizeof(dirs[0]))
 		{
-			formatstring(buf)("%s%s%s", dirs[i], sample->name, exts[k]);
-            sample->sound = loadwav(buf);
-            if(sample->sound) break;
+			loopk(sizeof(exts)/sizeof(exts[0]))
+			{
+				formatstring(buf)("%s%s%s", dirs[i], sample->name, exts[k]);
+				if((sample->sound = loadwav(buf)) != NULL) found = true;
+				if(found) break;
+			}
+			if(found) break;
 		}
 
 		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
