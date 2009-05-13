@@ -4,8 +4,12 @@
 #include "engine.h"
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
+SVAR(octadir, "");
+VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
+
 int kidmode = 0;
 ICOMMAND(getkidmode, "", (void), intret(kidmode));
+
 SVAR(consoletimefmt, "%c");
 char *gettime(char *format)
 {
@@ -743,22 +747,7 @@ bool serveroption(char *opt)
 	{
 		case 'k': kidmode = atoi(opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
-		case 'o':
-		{
-			#ifndef putenv
-			#ifdef _putenv
-			#define putenv _putenv
-			#endif
-			#endif
-			#ifdef putenv
-			defformatstring(octaenv)("OCTA_DIR=\"%s\"", &opt[2]);
-			putenv(octaenv);
-			conoutf("\fgset OCTA_DIR to: %s", &opt[2]);
-			#else
-			conoutf("\frunable to automatically set OCTA_DIR on your operating system");
-			#endif
-			break;
-		}
+		case 'o': setsvar("octadir", &opt[2]); break;
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;
 		case 's':
@@ -796,7 +785,6 @@ bool serveroption(char *opt)
 	return false;
 }
 
-VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
 bool findoctadir(const char *name)
 {
 	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
@@ -815,7 +803,11 @@ bool findoctadir(const char *name)
 }
 void trytofindocta()
 {
-	const char *octadir = getenv("OCTA_DIR");
+	if(!octadir || !*octadir)
+	{
+		const char *dir = getenv("OCTA_DIR");
+		if(dir && *dir) setsvar("octadir", dir);
+	}
 	if(!octadir || !*octadir || !findoctadir(octadir))
 	{ // user hasn't specifically set it, try some common locations alongside our folder
 		const char *tryoctadirs[4] = { // by no means a definitive list either..
