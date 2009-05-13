@@ -20,7 +20,7 @@ enum
 #ifndef STANDALONE
 #include "SDL_mixer.h"
 extern bool nosound;
-extern int soundvol;
+extern int mastervol, soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;
 extern Mix_Music *music;
 extern char *musicfile, *musicdonecmd;
 extern int soundsatonce, lastsoundmillis;
@@ -93,6 +93,4 @@ extern void removetrackedsounds(physent *d);
 extern void initmumble();
 extern void closemumble();
 extern void updatemumble();
-
-extern int soundvol, musicvol, soundmono, soundchans, soundbufferlen, soundfreq, maxsoundsatonce;
 #endif
