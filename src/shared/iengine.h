@@ -367,6 +367,9 @@ extern void sendqueryreply(ucharbuf &p);
 extern bool resolverwait(const char *name, int port, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 
+extern bool findoctadir(const char *name, bool fallback);
+extern void trytofindocta(bool fallback = true);
+
 // client
 struct serverinfo
 {

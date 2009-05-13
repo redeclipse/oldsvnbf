@@ -456,9 +456,6 @@ extern bool serveroption(char *opt);
 extern void localconnect();
 extern void localdisconnect();
 
-extern bool findoctadir(const char *name);
-extern void trytofindocta();
-
 // serverbrowser
 extern void addserver(const char *name, int port, int qport);
 extern void writeservercfg();
