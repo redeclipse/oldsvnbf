@@ -98,8 +98,7 @@ struct partrenderer
 				vec v = vec(d).mul(secs);
 				static physent dummy;
 				dummy.weight = grav;
-				v.z -= physics::gravityforce(&dummy)*secs;
-				v.mul(secs);
+				v.z -= physics::gravityforce(&dummy)*secs*secs/2;
 				o.add(v);
 			}
 			if(collide && o.z < p->val && lastpass)
