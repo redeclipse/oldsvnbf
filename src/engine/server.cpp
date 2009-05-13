@@ -747,7 +747,7 @@ bool serveroption(char *opt)
 	{
 		case 'k': kidmode = atoi(opt+2); return true;
 		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
-		case 'o': setsvar("octadir", &opt[2]); break;
+		case 'o': setsvar("octadir", &opt[2]); return true;
 		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;
 		case 's':
