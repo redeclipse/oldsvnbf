@@ -11,6 +11,7 @@ stream *musicstream = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 
+VARP(mastervol, 0, 255, 255);
 VARP(soundvol, 0, 255, 255);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
@@ -116,11 +117,11 @@ Mix_Music *loadmusic(const char *name)
 
 void playmusic(const char *name, const char *cmd)
 {
-	if(nosound || !musicvol) return;
+	if(nosound) return;
 
 	stopmusic(false);
 
-	if(soundvol && musicvol && *name)
+	if(*name)
 	{
 		string buf;
 		const char *dirs[] = { "", "sounds/" }, *exts[] = { "", ".wav", ".ogg" };
@@ -137,7 +138,7 @@ void playmusic(const char *name, const char *cmd)
 					musicfile = newstring(name);
 					if(cmd[0]) musicdonecmd = newstring(cmd);
 					Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-					Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+					Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 					oldmusicvol = musicvol;
 					found = true;
 				}
@@ -153,7 +154,7 @@ COMMANDN(music, playmusic, "ss");
 
 void smartmusic(bool cond, bool autooff)
 {
-	if(nosound || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
+	if(nosound || !mastervol || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
 	if(oldmusicvol >= 0) oldmusicvol = musicvol;
 	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic)))
 	{
@@ -161,7 +162,7 @@ void smartmusic(bool cond, bool autooff)
 		playedmusic = autooff;
 		if(!cond) oldmusicvol = -1;
 	}
-	else if(music && Mix_PlayingMusic()) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+	else if(music && Mix_PlayingMusic()) Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 }
 ICOMMAND(smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
 
@@ -243,7 +244,7 @@ ICOMMAND(mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u
 
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
-	int svol = clamp(((soundvol*vol*slotvol*MIX_MAX_VOLUME)/255/255/255), 0, MIX_MAX_VOLUME);
+	int svol = clamp(int((mastervol/255.f)*(soundvol/255.f)*(vol/255.f)*(slotvol/255.f)*MIX_MAX_VOLUME), 0, MIX_MAX_VOLUME);
 	if(!(flags&SND_NOATTEN))
 	{
 		vec unitv;
@@ -324,7 +325,7 @@ void updatesounds()
 	}
 	if(music || Mix_PlayingMusic())
 	{
-		if(nosound || !musicvol) stopmusic(false);
+		if(nosound || !mastervol || !musicvol) stopmusic(false);
 		else if(playedmusic && oldmusicvol >= 0) musicdone(false);
 		else if(!Mix_PlayingMusic()) musicdone(true);
 		else if(musictime >= 0)
@@ -336,14 +337,14 @@ void updatesounds()
 				int vol = int(musicvol*(1.f-fade));
 				if(vol != oldmusicvol)
 				{
-					Mix_VolumeMusic((vol*MIX_MAX_VOLUME)/255);
+					Mix_VolumeMusic(int((mastervol/255.f)*(vol/255.f)*MIX_MAX_VOLUME));
 					oldmusicvol = vol;
 				}
 			}
 		}
 		else if(musicvol != oldmusicvol)
 		{
-			Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+			Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 			oldmusicvol = musicvol;
 		}
 	}
@@ -351,7 +352,7 @@ void updatesounds()
 
 int playsound(int n, const vec &pos, physent *d, int flags, int vol, int maxrad, int minrad, int *hook, int ends)
 {
-	if(nosound || !soundvol) return -1;
+	if(nosound || !mastervol || !soundvol) return -1;
 
 	vector<soundslot> &soundset = flags&SND_MAP ? mapsounds : gamesounds;
 
@@ -477,7 +478,7 @@ void resetsound()
     if(music && loadmusic(musicfile))
     {
         Mix_PlayMusic(music, musicdonecmd ? 0 : -1);
-        Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+        Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
     }
     else
     {
