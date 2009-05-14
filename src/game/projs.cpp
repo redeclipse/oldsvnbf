@@ -415,8 +415,12 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
-			if(proj.canrender && weaptype[proj.weap].fsound >= 0 && !issound(proj.schan))
-				playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, proj.weap == WEAPON_FLAMER ? int(255*proj.lifespan) : -1, -1, -1, &proj.schan);
+			if(proj.canrender && weaptype[proj.weap].fsound >= 0)
+			{
+				int vol = int(255*proj.lifespan);
+				if(issound(proj.schan)) sounds[proj.schan].vol = vol;
+				else playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, vol, -1, -1, &proj.schan);
+			}
 			switch(proj.weap)
 			{
 				case WEAPON_PLASMA:
@@ -599,7 +603,7 @@ namespace projs
 			case PRJ_SHOT:
 			{
 				if(proj.owner) proj.from = proj.owner->muzzle;
-				if(weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o);
+				int vol = 255;
 				switch(proj.weap)
 				{
 					case WEAPON_PLASMA:
@@ -638,6 +642,7 @@ namespace projs
 					}
 					case WEAPON_SG: case WEAPON_SMG:
 					{
+						vol = int(proj.lifespan*255);
 						if(proj.lifetime)
 						{
 							part_create(PART_SPARK_SLENS, m_speedtimex(500), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f);
@@ -647,6 +652,7 @@ namespace projs
 					}
 					case WEAPON_PISTOL:
 					{
+						vol = int(proj.lifespan*255);
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(200), proj.o, 0x999999, weaptype[proj.weap].partsize);
 						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
@@ -654,6 +660,7 @@ namespace projs
 					}
 					case WEAPON_RIFLE:
 					{
+						vol = int(proj.lifespan*255);
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(100), proj.o, 0x444444, weaptype[proj.weap].partsize);
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtimex(200), 10);
@@ -663,6 +670,7 @@ namespace projs
 					}
 					case WEAPON_PAINT:
 					{
+						vol = int(proj.lifespan*255);
 						proj.from = vec(proj.o).sub(proj.vel);
 						int r = 255-(proj.colour>>16), g = 255-((proj.colour>>8)&0xFF), b = 255-(proj.colour&0xFF),
 							colour = (r<<16)|(g<<8)|b;
@@ -671,6 +679,7 @@ namespace projs
 						break;
 					}
 				}
+				if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
 				if(proj.local)
 				{
 					int radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
@@ -740,7 +749,6 @@ namespace projs
     void bounceeffect(projent &proj)
     {
         if(proj.movement < 2.f && proj.lastbounce) return;
-        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
         switch(proj.projtype)
         {
             case PRJ_SHOT:
@@ -766,8 +774,8 @@ namespace projs
                     }
                     default: break;
                 }
-                if(vol && weaptype[proj.weap].rsound >= 0)
-                    playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
+                int vol = int(255*proj.lifespan);
+                if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
                 break;
             }
             case PRJ_GIBS:
@@ -776,12 +784,14 @@ namespace projs
             	{
 					if(!proj.lastbounce)
 						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
 					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
 					break;
             	} // otherwise fall through
             }
             case PRJ_DEBRIS:
             {
+       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
                 if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
                 break;
             }
