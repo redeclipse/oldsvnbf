@@ -27,8 +27,8 @@ namespace game
 	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
-	VARP(usedynamicglow, 0, 3, 3);
-	VARP(playersfade, 0, 1, 1);
+	VARP(dynlightentities, 0, 2, 2);
+	FVARP(playersfade, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonfov, 90, 120, 150);
@@ -1456,23 +1456,14 @@ namespace game
 
 	void adddynlights()
 	{
-		if(usedynamicglow)
+		if(dynlightentities)
 		{
 			projs::adddynlights();
 			entities::adddynlights();
-			if(usedynamicglow > 1)
+			if(dynlightentities > 1)
 			{
 				if(m_ctf(gamemode)) ctf::adddynlights();
 				if(m_stf(gamemode)) stf::adddynlights();
-				if(usedynamicglow > 2 || m_team(gamemode, mutators))
-				{
-					gameent *d;
-					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
-					{
-						adddynlight(d->abovehead(), d->height*2,
-							vec((teamtype[d->team].colour>>16), ((teamtype[d->team].colour>>8)&0xFF), (teamtype[d->team].colour&0xFF)).div(255.f).mul(showtranslucent(d, d != player1 || thirdpersonview(true), true)));
-					}
-				}
 			}
 		}
 	}
