@@ -121,12 +121,13 @@ namespace server
 	extern bool sendpackets();
 	extern void queryreply(ucharbuf &req, ucharbuf &p);
 	extern void serverupdate();
-	extern void changemap(const char *name, int mode = -1, int muts = -1);
 	extern const char *gameid();
 	extern char *gamename(int mode, int muts);
 	extern void modecheck(int *mode, int *muts);
 	extern int gamever();
-	extern const char *choosemap(const char *suggest);
+	extern const char *pickmap(const char *suggest = NULL);
+	extern const char *choosemap(const char *suggest = NULL, int force = 0);
+	extern void changemap(const char *name = NULL, int mode = -1, int muts = -1);
 	extern bool canload(char *type);
 	extern void start();
 	extern bool servcmd(int nargs, char *cmd, char *arg);

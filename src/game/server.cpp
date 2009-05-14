@@ -422,12 +422,19 @@ namespace server
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
 
+	const char *pickmap(const char *suggest)
+	{
+		const char *map = GVAR(defaultmap);
+		if(!map || !*map) map = choosemap(suggest, GVAR(maprotate) ? GVAR(maprotate) : 2);
+		return map;
+	}
+
 	void cleanup()
 	{
 		bannedips.setsize(0);
 		aiman::clearai();
 		if(GVAR(resetvarsonend)) resetgamevars(true);
-		changemap(GVAR(defaultmap), GVAR(defaultmode), GVAR(defaultmuts));
+		changemap();
 	}
 
 	void start() { cleanup(); }
@@ -571,12 +578,13 @@ namespace server
 	}
 	ICOMMAND(mutscheck, "iii", (int *g, int *m), intret(mutscheck(*g, *m)));
 
-	const char *choosemap(const char *suggest)
+	const char *choosemap(const char *suggest, int force)
 	{
 		static string mapchosen;
 		if(suggest && *suggest) copystring(mapchosen, suggest);
 		else *mapchosen = 0;
-		if(GVAR(maprotate))
+		int rotate = force ? force : GVAR(maprotate);
+		if(rotate)
 		{
 			const char *maplist = GVAR(mainmaps);
 			if(m_mission(gamemode)) maplist = GVAR(missionmaps);
@@ -598,8 +606,7 @@ namespace server
 							if(!strcmp(mapchosen, maptxt) || !strcmp(mapchosen, maploc))
 							{
 								p = i;
-								if(GVAR(maprotate) == 1)
-									c = i >= 0 && i < n-1 ? i+1 : 0;
+								if(rotate == 1) c = i >= 0 && i < n-1 ? i+1 : 0;
 							}
 							DELETEP(maptxt);
 						}
@@ -619,7 +626,7 @@ namespace server
 				}
 			}
 		}
-		return *mapchosen ? mapchosen : GVAR(defaultmap);
+		return *mapchosen ? mapchosen : pickmap(suggest);
 	}
 
 	bool canload(char *type)
@@ -1393,7 +1400,22 @@ namespace server
 
 	void changemap(const char *name, int mode, int muts)
 	{
-		const char *reqmap = name && *name ? name : GVAR(defaultmap);
+		maprequest = mapsending = shouldcheckvotes = false;
+        stopdemo();
+		aiman::clearai();
+		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
+		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
+		modecheck(&gamemode, &mutators);
+		numplayers = gamemillis = interm = 0;
+		oldtimelimit = GVAR(timelimit);
+		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
+		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
+		sents.setsize(0);
+		setupspawns(false);
+		notgotinfo = true;
+		scores.setsize(0);
+
+		const char *reqmap = name && *name ? name : pickmap(smapname);
 		loopi(3)
 		{
 			if(mapdata[i]) DELETEP(mapdata[i]);
@@ -1412,21 +1434,7 @@ namespace server
 				break;
 			}
 		}
-		maprequest = mapsending = shouldcheckvotes = false;
-        stopdemo();
-		aiman::clearai();
-		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
-		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
-		modecheck(&gamemode, &mutators);
-		numplayers = gamemillis = interm = 0;
-		oldtimelimit = GVAR(timelimit);
-		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
-		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
 		copystring(smapname, reqmap);
-		sents.setsize(0);
-		setupspawns(false);
-		notgotinfo = true;
-		scores.setsize(0);
 
 		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
 
