@@ -61,18 +61,18 @@ body {
 #noticebg {
 	background: #000000 url(/bits/bg_blood.gif) no-repeat center top;
 	margin: 0px;
-	padding: 20px 0px 0px;
+	padding: 15px 0px 0px;
 	float: left;
 	width: 738px;
 	height: 234px;
 }
-.blockborder {
+#blockborder {
 	margin: 0px;
 	padding: 0px;
 	float: left;
 	height: 20px;
 }
-.redblock {
+#redblock {
 	background: url(/bits/bg_block.png) repeat-y;
 	float: left;
 	width: 510px;
@@ -81,46 +81,47 @@ body {
 	color: #FFFFFF;
 	font-size: 11px;
 }
-.version {
+#version {
 	font-size: 16px;
 	color: #FFFFFF;
 	float: left;
 	margin: 0px 0px 10px;
 	padding: 0px;
+	width: 500px;
 }
-.version a {
+#version a {
 	color: #F0F0F0;
 	text-decoration: none;
 	border-bottom: 1px dotted #C0C0C0;
 }
-.version a:visited {
+#version a:visited {
 	color: #F0F0F0;
 	text-decoration: none;
 	border-bottom: 1px dotted #C0C0C0;
 }
-.version a:hover {
+#version a:hover {
 	color: #FFFFFF;
 	text-decoration: none;
 	border-bottom: 1px solid #CCCCCC;
 }
-.redblock hr {
+#redblock hr {
 	background: url(/bits/bg_hr.png) no-repeat center center;
 	margin: 0px 0px 10px;
 	padding: 0px;
 	float: left;
 	height: 2px;
-	width: 510px;
+	width: 520px;
 	border-style: none;
 	border-width: 0px;
 }
-.notice {
+#notice {
 	font-size: 11px;
 	color: #FFFFFF;
 	display: block;
 	margin: 0px;
-	padding: 0px;
+	padding: 0px 0px 0px 0px;
 	float: left;
-	width: 400px;
+	width: 500px;
 }
 #right {
 	font-size: 11px;
@@ -181,23 +182,32 @@ body {
 	color: #FF0000;
 	text-decoration: underline;
 }
-.list {
-	font-size: 14px;
+#list {
+	font-size: 12px;
 	color: #FFFFFF;
 	margin: 0px;
-	padding: 20px 20px 0px 0px;
+	padding: 15px 20px 0px 0px;
 	float: right;
 	width: 140px;
 }
-.list ul {
+#list h2 {
+	font-size: 14px;
+	font-weight: bold;
+	padding: 0px 0px 0px 0px;
+	color: #FFFFFF;
 	margin: 0px;
-	padding: 10px 0px;
+	float: right;
+	width: 140px;
+}
+#list ul {
+	margin: 0px;
+	padding: 8px 0px;
 	float: left;
 	list-style: none;
 	width: 140px;
 	display: block;
 }
-.list li {
+#list li {
 	margin: 0px;
 	padding: 4px 0px 6px 20px;
 	float: left;
@@ -205,22 +215,25 @@ body {
 	display: block;
 	width: 120px;
 }
-.list a {
+#list a {
 	color: #FFFFFF;
 	text-decoration: none;
 }
-.list a:visited {
+#list a:visited {
 	color: #FFFFFF;
 	text-decoration: none;
 }
-.list a:hover {
+#list a:hover {
 	color: #CCCCCC;
 	text-decoration: none;
 }
-#sflogo {
+#listlogo {
 	margin: 0px;
-	padding: 0px;
-	float: left;
+	padding: 0px 0px 0px 0px;
+}
+#listdonate {
+	margin: 0px;
+	padding: 8px 0px 0px 15px;
 }
 #video {
 	background: url(/bits/bg_vid.jpg) no-repeat center center;
@@ -268,9 +281,10 @@ body {
 	padding: 0px;
 }
 #subtext h2 {
-	font-size: 14px;
+	font-size: 15px;
+	font-weight: bold;
 	margin: 0px;
-	padding: 5px 0px;
+	padding: 5px 0px 0px 0px;
 	color: #CC0000;
 	float: right;
 	width: 180px;
@@ -278,8 +292,9 @@ body {
 }
 #subtext h3 {
 	font-size: 12px;
+	font-weight: bold;
 	margin: 0px;
-	padding: 5px 0px;
+	padding: 0px 0px 5px 0px;
 	color: #999999;
 	float: right;
 	width: 180px;

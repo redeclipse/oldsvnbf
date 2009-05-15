@@ -4,8 +4,8 @@
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
+	$app['sitenotice'] = "Blood Frontier is a Free and Open Source game, using SDL and OpenGL which allows it to be ported to many platforms; you can download it for both PC (Windows, Linux, BSD) and Mac. You can also obtain it through our subversion repository and live on the bleeding edge of development. The game is a single-player and multi-player first-person shooter, built as a total conversion of Cube Engine 2, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.";
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
-	$app['sitenotice'] = "<u>Thanks</u> to all the donors following our last release! Quin successfully raised half the money required to fund the contruction of a new PC, which has arrived and been (stress) tested.	Our heartfelt appreciation goes to all those who helped ensure our Lead Developer can continue his tireless work for a long time to come. If you'd still like to donate, further money raised will go toward future project endeavours and ongoing costs.";
 	$app['sitepaypal'] = "212900";
 	$app['sitedonate'] = "Donate to Quin";
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
@@ -99,25 +99,21 @@
 			<div id="page">
 				<div id="links"><?php echo $app['navbar']; ?></div>
 				<div id="noticebg">
-					<div class="list">
-						<b><?php echo $app['sitename']; ?>:</b>
+					<div id="list">
+						<h2><?php echo $app['sitename']; ?></h2>
 						<ul>
 							<li><a href="/youtube">on Youtube</a></li>
 							<li><a href="/google">on Google</a></li>
 							<li><a href="/facebook">on Facebook</a></li>
 						</ul>
 <?php				if ($app['sflogo'] > 0) { ?>
-						<a href="/project">
-							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" title="Get <?php echo $app['sitename']; ?> at SourceForge" name="sflogo" width="120" height="30" border="0" id="sflogo"/>
-						</a>
+						<div id="listlogo">
+							<a href="/project">
+								<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" title="Get <?php echo $app['sitename']; ?> at SourceForge" width="120" height="30" border="0" id="sflogo"/>
+							</a>
+						</div>
 <?php				} ?>
-					</div>
-					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" class="blockborder" />
-					<div class="redblock">
-						<p class="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
-						<hr />
-						<p class="notice"><?php echo $app['sitenotice']; ?></p>
-						<div id="right">
+						<div id="listdonate">
 							<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
 								<input type="hidden" value="_s-xclick" name="cmd"/>
 								<input type="hidden" value="<?php echo $app['sitepaypal']; ?>" name="hosted_button_id"/>
@@ -125,7 +121,13 @@
 							</form>
 						</div>
 					</div>
-					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" class="blockborder" />
+					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" id="blockborder" />
+					<div id="redblock" align="center">
+						<p id="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
+						<hr />
+						<p id="notice"><?php echo $app['sitenotice']; ?></p>
+					</div>
+					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
 				<div id="video">
 					<div id="youtube">
@@ -135,7 +137,7 @@
 							<param name="allowFullScreen" value="true" />
 						</object>
 					</div>
-					<div id="subtext">
+					<div id="subtext" align="center">
 						<h2><?php echo $app['sitename']; ?></h2>
 						<h3><?php echo $app['siteblurb']; ?></h3>
 						<p><?php echo $app['siteinfo']; ?></p>
