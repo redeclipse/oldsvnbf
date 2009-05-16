@@ -260,9 +260,9 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.25f);
 		else if(posliquid || camliquid) svol = int(svol*0.5f);
 
-		float mrad = float(maxrad > 0 ? maxrad : 256), nrad = float(minrad <= 0 ? 0 : (minrad < mrad ? minrad : 0));
+		float mrad = maxrad > 0 ? maxrad : 256, nrad = minrad > 0 ? (minrad <= mrad ? minrad : mrad) : 0;
 		if(dist <= nrad) *curvol = svol;
-		else if(dist <= mrad) *curvol = int(float(svol)*(1.f-(float(dist-nrad)/float(mrad-nrad))));
+		else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/(mrad-nrad))));
 		else *curvol = 0;
 	}
 	else
@@ -283,7 +283,7 @@ void updatesound(int chan)
 			bool liquid = isliquid(lookupmaterial(s.pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 			float dist = camera1->o.dist(s.pos);
 			int delay = int((dist/8.f)*(liquid ? 1.5f : 0.35f));
-			if(lastmillis >= s.millis + delay)
+			if(lastmillis >= s.millis+delay)
 			{
 				Mix_Resume(chan);
 				waiting = false;
@@ -315,10 +315,7 @@ void updatesounds()
 		if((!s.ends || lastmillis < s.ends) && Mix_Playing(i))
 		{
 			if(s.owner) s.pos = s.owner->o;
-			calcvol(
-				s.flags, s.vol, s.slot->vol, s.slot->material, s.maxrad, s.minrad, s.pos,
-				&s.curvol, &s.curpan
-			);
+			calcvol(s.flags, s.vol, s.slot->vol, s.slot->material, s.maxrad, s.minrad, s.pos, &s.curvol, &s.curpan);
 			updatesound(i);
 		}
 		else removesound(i);
@@ -359,18 +356,9 @@ int playsound(int n, const vec &pos, physent *d, int flags, int vol, int maxrad,
 	if(soundset.inrange(n) && soundset[n].sample->sound)
 	{
 		soundslot *slot = &soundset[n];
-		int cvol = 0, cpan = 0, v = vol > 0 && vol < 256 ? vol : 255, x = maxrad, y = minrad;
-
-		if(x <= 0)
-		{
-			if(slot->maxrad > 0) x = slot->maxrad;
-			else x = 256;
-		}
-		if(y < 0)
-		{
-			if(slot->minrad >= 0) y = slot->minrad;
-			else y = 0;
-		}
+		int cvol = 0, cpan = 0, v = vol > 0 && vol < 256 ? vol : 255,
+			x = maxrad > 0 ? maxrad : (slot->maxrad > 0 ? slot->maxrad : 256),
+			y = minrad >= 0 ? minrad : (slot->minrad >= 0 ? slot->minrad : 0);
 
 		calcvol(flags, v, slot->vol, slot->material, x, y, pos, &cvol, &cpan);
 
