@@ -260,7 +260,7 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.25f);
 		else if(posliquid || camliquid) svol = int(svol*0.5f);
 
-		float mrad = float(maxrad > 0 ? maxrad : 256), nrad = float(minrad <= 0 ? 0 : (minrad < mrad ? minrad : mrad/2.f));
+		float mrad = float(maxrad > 0 ? maxrad : 256), nrad = float(minrad <= 0 ? 0 : (minrad < mrad ? minrad : 0));
 		if(dist <= nrad) *curvol = svol;
 		else if(dist <= mrad) *curvol = int(float(svol)*(1.f-(float(dist-nrad)/float(mrad-nrad))));
 		else *curvol = 0;
@@ -369,7 +369,7 @@ int playsound(int n, const vec &pos, physent *d, int flags, int vol, int maxrad,
 		if(y < 0)
 		{
 			if(slot->minrad >= 0) y = slot->minrad;
-			else y = 2;
+			else y = 0;
 		}
 
 		calcvol(flags, v, slot->vol, slot->material, x, y, pos, &cvol, &cpan);
