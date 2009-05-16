@@ -115,7 +115,7 @@ struct physent                                  // base entity type, can be affe
         resetinterp();
     }
 
-    vec abovehead(float offset = 2) const { return vec(o).add(vec(0, 0, aboveeye+offset)); }
+    vec abovehead(float offset = 0.5f) const { return vec(o).add(vec(0, 0, aboveeye+offset)); }
     vec feetpos(float offset = 0) const { return vec(o).add(vec(0, 0, offset-height)); }
     vec headpos(float offset = 0) const { return vec(o).add(vec(0, 0, offset)); }
 };

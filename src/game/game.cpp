@@ -1711,9 +1711,16 @@ namespace game
 		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead();
-			if(shownamesabovehead > (d != player1 ? 0 : 1)) part_text(pos, colorname(d, NULL, "@"));
+			if(shownamesabovehead > (d != player1 ? 0 : 1))
+			{
+				part_text(pos, colorname(d, NULL, "@"));
+				pos.z += 2;
+			}
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
-                part_icon(pos.add(vec(0, 0, 2)), textureload(conopentex, 3), statusaboveheadblend, 2);
+			{
+                part_icon(pos, textureload(conopentex, 3), statusaboveheadblend, 2);
+				pos.z += 2;
+			}
 		}
 		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
 		if(third)
