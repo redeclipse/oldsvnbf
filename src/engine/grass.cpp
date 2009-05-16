@@ -4,7 +4,7 @@ VARP(grass, 0, 0, 1);
 VAR(dbggrass, 0, 0, 1);
 VARP(grassdist, 0, 256, 10000);
 FVARW(grasstaper, 0, 0.2, 1);
-FVARW(grassstep, 0.5, 2, 8);
+FVARP(grassstep, 0.5, 2, 8);
 VARW(grassheight, 1, 4, 64);
 
 #define NUMGRASSWEDGES 8
