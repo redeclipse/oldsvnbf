@@ -2726,7 +2726,7 @@ namespace server
             else
             {
                 getstring(text, p);
-                filtertext(text, text, false, MAXNAMELEN);
+                //filtertext(text, text, true, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
                 copystring(ci->name, text, MAXNAMELEN+1);
 
