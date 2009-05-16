@@ -415,11 +415,11 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
-			if(proj.canrender && weaptype[proj.weap].fsound >= 0)
+			if(weaptype[proj.weap].fsound >= 0)
 			{
 				int vol = int(255*proj.lifespan);
 				if(issound(proj.schan)) sounds[proj.schan].vol = vol;
-				else playsound(weaptype[proj.weap].fsound, proj.o, &proj, 0, vol, -1, -1, &proj.schan);
+				else playsound(weaptype[proj.weap].fsound, proj.o, &proj, SND_LOOP, vol, -1, -1, &proj.schan);
 			}
 			switch(proj.weap)
 			{
