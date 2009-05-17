@@ -756,7 +756,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 									break;
 								}
 							}
-							if(!proceed) conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+							if(!proceed)
+							{
+								if(verbose) conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+							}
 							else vars++;
 						}
 					}
