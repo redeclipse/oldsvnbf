@@ -120,9 +120,9 @@ namespace aiman
 		{
 			if(ci->state.aireinit == 2)
 			{
+				waiting(ci, 2);
 				ci->state.dropped.reset();
 				loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
-				waiting(ci, 2);
 			}
 			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 			ci->state.aireinit = 0;
