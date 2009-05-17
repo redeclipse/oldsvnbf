@@ -323,11 +323,31 @@ namespace game
 	}
 	ICOMMAND(mode, "ii", (int *val, int *mut), setmode(*val, *mut));
 
+	void checkcamera()
+	{
+		camera1 = &camera;
+		if(camera1->type != ENT_CAMERA)
+		{
+			camera1->reset();
+			camera1->type = ENT_CAMERA;
+			camera1->state = CS_ALIVE;
+			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
+		}
+		if(player1->state != CS_WAITING && (player1->state != CS_SPECTATOR || tvmode()))
+		{
+			camera1->vel = vec(0, 0, 0);
+			camera1->move = camera1->strafe = 0;
+		}
+	}
+
 	void resetcamera()
 	{
 		lastcamera = 0;
 		zoomset(false, 0);
 		resetcursor();
+		checkcamera();
+		camera1->o = player1->o;
+		camera1->resetinterp();
 	}
 
 	void resetworld()
@@ -755,7 +775,6 @@ namespace game
 		maptime = 0;
 		projs::reset();
 		resetworld();
-		resetcamera();
 
 		entities::mapstart();
 		client::mapstart();
@@ -771,6 +790,7 @@ namespace game
 		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
 			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
+		resetcamera();
 
 		fogdist = getvar("fog");
 	}
@@ -1027,23 +1047,6 @@ namespace game
 			if(targpitch > pitch) pitch = targpitch;
 		}
 		fixrange(yaw, pitch);
-	}
-
-	void checkcamera()
-	{
-		camera1 = &camera;
-		if(camera1->type != ENT_CAMERA)
-		{
-			camera1->reset();
-			camera1->type = ENT_CAMERA;
-			camera1->state = CS_ALIVE;
-			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
-		}
-		if(player1->state != CS_WAITING && (player1->state != CS_SPECTATOR || tvmode()))
-		{
-			camera1->vel = vec(0, 0, 0);
-			camera1->move = camera1->strafe = 0;
-		}
 	}
 
 	void cameraplayer()

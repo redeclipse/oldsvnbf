@@ -1676,18 +1676,24 @@ namespace server
         sendf(ci->clientnum, 1, "ri5", SV_SERVERINIT, ci->clientnum, GAMEVERSION, ci->sessionid, serverpass[0] ? 1 : 0);
     }
 
-    void sendresume(clientinfo *ci)
-    {
+	bool restorescore(clientinfo *ci)
+	{
         savedscore &sc = findscore(ci, false);
         if(&sc)
         {
             sc.restore(ci->state);
-            servstate &gs = ci->state;
-            sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum,
-                gs.state, gs.frags,
-                gs.sequence, gs.health,
-                gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
+            return true;
         }
+        return false;
+	}
+
+    void sendresume(clientinfo *ci)
+    {
+		servstate &gs = ci->state;
+		sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum,
+			gs.state, gs.frags,
+			gs.sequence, gs.health,
+			gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
     }
 
     void sendinitc2s(clientinfo *ci)
@@ -2746,7 +2752,7 @@ namespace server
                 ci->state.lasttimeplayed = lastmillis;
 
                 sendwelcome(ci);
-                sendresume(ci);
+                if(restorescore(ci)) sendresume(ci);
                 sendinitc2s(ci);
                 relayf(2, "\fg%s has joined the game", colorname(ci));
             }
