@@ -1719,6 +1719,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glPopMatrix();
 	swapbuffers();
 	lastoutofloop = SDL_GetTicks();
+	autoadjustlevel = 100;
 }
 
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
@@ -1986,7 +1987,6 @@ void drawview(int targtype)
 	if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
 
 	queryreflections();
-
     generategrass();
 
 	if(!limitsky()) drawskybox(farplane, false);
