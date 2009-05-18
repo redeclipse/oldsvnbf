@@ -415,20 +415,24 @@ int addclient(int type)
 }
 
 #ifndef STANDALONE
+VARP(autoconnect, 0, 0, 1);
 extern bool connectedlocally;
 extern char *lastaddress;
-void localconnect()
+void localconnect(bool force)
 {
-	if(lastaddress) delete[] lastaddress;
-	lastaddress = NULL;
-    int cn = addclient(ST_LOCAL);
-    clientdata &c = *clients[cn];
-    c.peer = NULL;
-    copystring(c.hostname, "<local>");
-    conoutf("\fglocal client %d connected", c.num);
-    client::gameconnect(false);
-    server::clientconnect(c.num, 0, true);
-    connectedlocally = true;
+	if((!connected() || !connectedlocally) && (force || autoconnect))
+	{
+		if(lastaddress) delete[] lastaddress;
+		lastaddress = NULL;
+		int cn = addclient(ST_LOCAL);
+		clientdata &c = *clients[cn];
+		c.peer = NULL;
+		copystring(c.hostname, "<local>");
+		conoutf("\fglocal client %d connected", c.num);
+		client::gameconnect(false);
+		server::clientconnect(c.num, 0, true);
+		connectedlocally = true;
+	}
 }
 
 void localdisconnect()

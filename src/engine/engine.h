@@ -258,7 +258,7 @@ extern void setcolormask(bool r = true, bool g = true, bool b = true);
 
 extern const char *loadback, *loadbackinfo;
 extern float loadprogress;
-extern void loadbackground(int w, int h, Texture *t = NULL);
+extern void loadbackground(int w, int h, const char *name = NULL, Texture *t = NULL);
 extern void renderbackground(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, bool restore = false);
 extern void restorebackground();
 extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
@@ -453,7 +453,7 @@ extern uchar *retrieveservers(uchar *buf, int buflen);
 extern void localclienttoserver(int chan, ENetPacket *);
 extern void lanconnect();
 extern bool serveroption(char *opt);
-extern void localconnect();
+extern void localconnect(bool force = true);
 extern void localdisconnect();
 
 // serverbrowser

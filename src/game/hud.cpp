@@ -1279,53 +1279,56 @@ namespace hud
 	void drawhud(int w, int h)
 	{
 		float fade = hudblend;
-		bool texturing = true;
-		if(!game::maptime || lastmillis-game::maptime < titlecard)
+		if(connected() && client::ready())
 		{
-			float amt = game::maptime ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
-			if(amt < 1.f)
+			bool texturing = true;
+			if(!game::maptime || lastmillis-game::maptime < titlecard)
 			{
-				usetexturing(false); texturing = false;
-				drawblend(0, 0, w, h, amt, amt, amt);
-				fade *= amt;
-			}
-		}
-		else if(game::tvmode())
-		{
-			float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
-			if(amt < 1.f)
-			{
-				usetexturing(false); texturing = false;
-				drawblend(0, 0, w, h, amt, amt, amt);
-				fade *= amt;
-			}
-		}
-		else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
-		{
-			float amt = (lastmillis-game::player1->lastspawn)/500.f;
-			if(amt < 2.f)
-			{
-				float r = 1.f, g = 1.f, b = 1.f;
-				skewcolour(r, g, b, true);
-				fade *= amt*0.5f;
+				float amt = game::maptime ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
 				if(amt < 1.f)
 				{
-					r *= amt;
-					g *= amt;
-					b *= amt;
+					usetexturing(false); texturing = false;
+					drawblend(0, 0, w, h, amt, amt, amt);
+					fade *= amt;
 				}
-				else
-				{
-					amt -= 1.f;
-					r += (1.f-r)*amt;
-					g += (1.f-g)*amt;
-					b += (1.f-b)*amt;
-				}
-				usetexturing(false); texturing = false;
-				drawblend(0, 0, w, h, r, g, b);
 			}
+			else if(game::tvmode())
+			{
+				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
+				if(amt < 1.f)
+				{
+					usetexturing(false); texturing = false;
+					drawblend(0, 0, w, h, amt, amt, amt);
+					fade *= amt;
+				}
+			}
+			else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
+			{
+				float amt = (lastmillis-game::player1->lastspawn)/500.f;
+				if(amt < 2.f)
+				{
+					float r = 1.f, g = 1.f, b = 1.f;
+					skewcolour(r, g, b, true);
+					fade *= amt*0.5f;
+					if(amt < 1.f)
+					{
+						r *= amt;
+						g *= amt;
+						b *= amt;
+					}
+					else
+					{
+						amt -= 1.f;
+						r += (1.f-r)*amt;
+						g += (1.f-g)*amt;
+						b += (1.f-b)*amt;
+					}
+					usetexturing(false); texturing = false;
+					drawblend(0, 0, w, h, r, g, b);
+				}
+			}
+			if(!texturing) usetexturing(true);
 		}
-		if(!texturing) usetexturing(true);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
@@ -1361,7 +1364,7 @@ namespace hud
 			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 		}
 
-		if(!texpaneltimer)
+		if(connected() && client::ready() && !texpaneltimer)
 		{
 			pushfont("sub");
 			bx -= FONTW;

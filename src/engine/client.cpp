@@ -56,7 +56,7 @@ void abortconnect(bool msg)
 void connectfail()
 {
     abortconnect(false);
-    if(!connected()) localconnect();
+    localconnect(false);
 }
 
 void trydisconnect()
@@ -152,14 +152,14 @@ void disconnect(int onlyclean, int async)
         client::gamedisconnect(onlyclean);
         localdisconnect();
     }
-    if(!onlyclean) localconnect();
+    if(!onlyclean) localconnect(false);
 }
 
 ICOMMAND(connect, "siis", (char *n, int *a, int *b, char *pwd), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT, pwd));
 COMMANDN(disconnect, trydisconnect, "");
 
-void lanconnect() { connects(); }
-COMMAND(lanconnect, "");
+ICOMMAND(lanconnect, "", (), connects());
+ICOMMAND(localconnect, "i", (int *n), localconnect(*n ? false : true));
 
 void reconnect()
 {
