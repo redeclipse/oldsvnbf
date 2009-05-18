@@ -1685,11 +1685,10 @@ void editmat(char *name)
 
 COMMAND(editmat, "s");
 
-#define TEXTURE_WIDTH 10
-#define TEXTURE_HEIGHT 7
-
+VAR(thumbwidth, 0, 10, 1000);
+VAR(thumbheight, 0, 6, 1000);
 VAR(thumbtime, 0, 50, 1000);
-
+FVAR(thumbsize, 0, 2, 10);
 static int lastthumbnail = 0;
 
 struct texturegui : g3d_callback
@@ -1703,19 +1702,20 @@ struct texturegui : g3d_callback
 	{
 		int origtab = menutab;
 		g.start(menustart, 0.04f, &menutab, true);
-		loopi(1+curtexnum/(TEXTURE_WIDTH*TEXTURE_HEIGHT))
+		loopi(1+curtexnum/(thumbwidth*thumbheight))
 		{
             g.tab(!i ? "Textures" : NULL, 0xAAFFAA);
             if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-			loopj(TEXTURE_HEIGHT)
+			loopj(thumbheight)
 			{
 				g.pushlist();
-				loopk(TEXTURE_WIDTH)
+				loopk(thumbwidth)
 				{
-					int ti = (i*TEXTURE_HEIGHT+j)*TEXTURE_WIDTH+k;
+					int ti = (i*thumbheight+j)*thumbwidth+k;
+					Texture *tex = textureload("textures/nothumb", 3);
 					if(ti<curtexnum)
 					{
-                        Texture *tex = notexture, *glowtex = NULL, *layertex = NULL;
+                        Texture *glowtex = NULL, *layertex = NULL;
                         Slot &slot = lookuptexture(ti, false);
                         if(slot.sts.empty()) continue;
                         else if(slot.loaded)
@@ -1730,11 +1730,10 @@ struct texturegui : g3d_callback
                         }
                         else if(slot.thumbnail) tex = slot.thumbnail;
                         else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-                        if(g.texture(tex, 1.0, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture))
+                        if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture))
                             edittex(ti);
 					}
-					else
-                        g.texture(notexture, 1.0); //create an empty space
+					else g.texture(tex, thumbsize); //create an empty space
 				}
 				g.poplist();
 			}
@@ -1746,7 +1745,7 @@ struct texturegui : g3d_callback
 	{
         if(on != menuon && (menuon = on))
         {
-            if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(TEXTURE_WIDTH*TEXTURE_HEIGHT);
+            if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(thumbwidth*thumbheight);
             menustart = starttime();
         }
 	}
