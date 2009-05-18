@@ -2,7 +2,7 @@
 #include "game.h"
 namespace game
 {
-	int nextmode = G_LOBBY, nextmuts = 0, gamemode = G_LOBBY, mutators = 0;
+	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1;
 	bool intermission = false;
 	int maptime = 0, minremain = 0, swaymillis = 0;
 	vec swaydir(0, 0, 0);

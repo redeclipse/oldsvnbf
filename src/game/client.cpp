@@ -506,9 +506,9 @@ namespace client
 	void changemap(const char *name) // request map change, server may ignore
 	{
         int nextmode = game::nextmode, nextmuts = game::nextmuts; // in case stopdemo clobbers these
-        if(!remote)
+        if(!remote) stopdemo();
+        if(!connected())
         {
-        	stopdemo();
         	server::changemap(name, nextmode, nextmuts);
         	localconnect(true);
         }
