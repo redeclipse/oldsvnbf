@@ -912,7 +912,7 @@ int main(int argc, char **argv)
 	conoutf("\fmloading main..");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
-    if(!connected()) localconnect();
+    localconnect(false);
 
 	resetfps();
 

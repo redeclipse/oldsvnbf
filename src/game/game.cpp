@@ -1281,6 +1281,7 @@ namespace game
             }
             otherplayers();
         }
+        else if(!guiactive()) showgui("main");
 
 		gets2c();
 

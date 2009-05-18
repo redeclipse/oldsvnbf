@@ -504,10 +504,18 @@ namespace client
 	void changemap(const char *name) // request map change, server may ignore
 	{
         int nextmode = game::nextmode, nextmuts = game::nextmuts; // in case stopdemo clobbers these
-        if(!remote) stopdemo();
-        string reqfile;
-		copystring(reqfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
-        addmsg(SV_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
+        if(!remote)
+        {
+        	stopdemo();
+        	server::changemap(name, nextmode, nextmuts);
+        	localconnect(true);
+        }
+        else
+        {
+			string reqfile;
+			copystring(reqfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
+			addmsg(SV_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
+        }
 	}
 	ICOMMAND(map, "s", (char *s), changemap(s));
 
