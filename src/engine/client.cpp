@@ -62,9 +62,9 @@ void connectfail()
 void trydisconnect()
 {
 	if(connpeer) abortconnect();
-    else if(curpeer)
+    else if(curpeer || connectedlocally)
     {
-        conoutf("\fwattempting to disconnect...");
+        if(verbose) conoutf("\fwattempting to disconnect...");
         disconnect(0, !discmillis);
     }
     else conoutf("\frnot connected");
@@ -124,20 +124,23 @@ void connects(const char *name, int port, int qport, const char *password)
 void disconnect(int onlyclean, int async)
 {
 	bool cleanup = onlyclean!=0;
-	if(curpeer)
+	if(curpeer || connectedlocally)
 	{
-		if(!discmillis)
+		if(curpeer)
 		{
-			enet_peer_disconnect(curpeer, DISC_NONE);
-			if(clienthost) enet_host_flush(clienthost);
-			discmillis = totalmillis;
+			if(!discmillis)
+			{
+				enet_peer_disconnect(curpeer, DISC_NONE);
+				if(clienthost) enet_host_flush(clienthost);
+				discmillis = totalmillis;
+			}
+			if(curpeer->state!=ENET_PEER_STATE_DISCONNECTED)
+			{
+				if(async) return;
+				enet_peer_reset(curpeer);
+			}
+			curpeer = NULL;
 		}
-		if(curpeer->state!=ENET_PEER_STATE_DISCONNECTED)
-		{
-			if(async) return;
-			enet_peer_reset(curpeer);
-		}
-		curpeer = NULL;
 		discmillis = 0;
 		conoutf("\fodisconnected");
 		cleanup = true;
