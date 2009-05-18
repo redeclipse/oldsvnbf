@@ -118,6 +118,8 @@ namespace client
 		game::player1->clientnum = -1;
 		game::player1->privilege = PRIV_NONE;
 		loopv(game::players) if(game::players[i]) game::clientdisconnected(i);
+		emptymap(0, true, NULL, true);
+		smartmusic(true, false);
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_CLIENT) // reset vars
 			{
