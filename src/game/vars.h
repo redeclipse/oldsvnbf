@@ -47,7 +47,7 @@ VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
 
-VARG(spawnweapon, 0, WEAPON_PLASMA, WEAPON_TOTAL-1);
+VARG(spawnweapon, 0, WEAPON_PISTOL, WEAPON_TOTAL-1);
 VARG(instaspawnweapon, 0, WEAPON_RIFLE, WEAPON_TOTAL-1);
 
 VARG(spawndelay, 0, 3, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)

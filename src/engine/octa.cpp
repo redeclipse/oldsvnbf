@@ -108,10 +108,10 @@ void optiface(uchar *p, cube &c)
 void printcube()
 {
 	cube &c = lookupcube(lu.x, lu.y, lu.z, 0); // assume this is cube being pointed at
-	conoutf("\fw= %p = (%d, %d, %d) @ %d", &c, lu.x, lu.y, lu.z, lusize);
-	conoutf("\fw x  %.8x", c.faces[0]);
-	conoutf("\fw y  %.8x", c.faces[1]);
-	conoutf("\fw z  %.8x", c.faces[2]);
+	conoutf("\fa= %p = (%d, %d, %d) @ %d", &c, lu.x, lu.y, lu.z, lusize);
+	conoutf("\fa x  %.8x", c.faces[0]);
+	conoutf("\fa y  %.8x", c.faces[1]);
+	conoutf("\fa z  %.8x", c.faces[2]);
 }
 
 COMMAND(printcube, "");

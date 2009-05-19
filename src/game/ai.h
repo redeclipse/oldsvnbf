@@ -118,7 +118,7 @@ namespace ai
 			wipe();
 			if(!tryit)
 			{
-				weappref = WEAPON_PLASMA;
+				weappref = WEAPON_PISTOL;
 				spot = target = vec(0, 0, 0);
 				enemy = -1;
 				lastaction = lasthunt = enemyseen = enemymillis = 0;

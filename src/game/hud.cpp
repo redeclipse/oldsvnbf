@@ -50,8 +50,8 @@ namespace hud
 	VARP(teamclips, 0, 1, 2);
 	VARP(teamcrosshair, 0, 1, 2);
 	VARP(teamnotices, 0, 0, 1);
-	VARP(teamkillnum, 0, 5, INT_MAX-1);
-	VARP(teamkilltime, 0, 30, INT_MAX-1);
+	VARP(teamkillnum, 0, 3, INT_MAX-1);
+	VARP(teamkilltime, 0, 120, INT_MAX-1);
 
 	TVAR(underlaytex, "", 3);
 	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
@@ -113,12 +113,12 @@ namespace hud
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.5f, 1);
 	FVARP(inventoryglow, 0, 0.055f, 1);
-	TVAR(plasmatex, "textures/plasma", 3);
+	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(submachinetex, "textures/submachine", 3);
 	TVAR(grenadestex, "textures/grenades", 3);
 	TVAR(flamertex, "textures/flamer", 3);
-	TVAR(pistoltex, "textures/pistol", 3);
+	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(rifletex, "textures/rifle", 3);
 	TVAR(paintguntex, "textures/paintgun", 3);
 	TVAR(healthtex, "textures/health", 3);
@@ -137,12 +137,12 @@ namespace hud
 	FVARP(clipsize, 0, 0.05f, 1000);
 	FVARP(clipblend, 0, 0.5f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
-	TVAR(plasmacliptex, "textures/plasmaclip", 3);
+	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(submachinecliptex, "textures/submachineclip", 3);
 	TVAR(grenadescliptex, "textures/grenadesclip", 3);
 	TVAR(flamercliptex, "textures/flamerclip", 3);
-	TVAR(pistolcliptex, "textures/pistolclip", 3);
+	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
 	TVAR(paintguncliptex, "textures/paintgunclip", 3);
 
@@ -329,8 +329,8 @@ namespace hud
     void drawclip(int weap, int x, int y, float s)
     {
         const char *cliptexs[WEAPON_MAX] = {
-            plasmacliptex, shotguncliptex, submachinecliptex,
-            flamercliptex, pistolcliptex, riflecliptex, grenadescliptex, // end of regular weapons
+            pistolcliptex, shotguncliptex, submachinecliptex,
+            flamercliptex, plasmacliptex, riflecliptex, grenadescliptex, // end of regular weapons
 			paintguncliptex
         };
         Texture *t = textureload(cliptexs[weap], 3);
@@ -350,7 +350,7 @@ namespace hud
 		}
         switch(weap)
         {
-            case WEAPON_PLASMA: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PISTOL: s *= 0.85f; break;
+            case WEAPON_PISTOL: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PLASMA: s *= 0.85f; break;
             default: break;
         }
         float r = clipcolour, g = clipcolour, b = clipcolour;
@@ -957,7 +957,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, submachinetex, flamertex, pistoltex, rifletex, grenadestex,
+					pistoltex, shotguntex, submachinetex, flamertex, plasmatex, rifletex, grenadestex,
 					paintguntex
 				};
 				if(isweap(stype)) return weaptexs[stype];
@@ -995,7 +995,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
-					plasmatex, shotguntex, submachinetex, flamertex, pistoltex, rifletex, grenadestex,
+					pistoltex, shotguntex, submachinetex, flamertex, plasmatex, rifletex, grenadestex,
 					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
@@ -1044,7 +1044,7 @@ namespace hud
 							lastweapids = changedkeys;
 						}
 						if(inventoryweapents && entities::ents.inrange(game::player1->entid[i]) && game::player1->hasweap(i, sweap))
-							drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "[\fs\fa%d\fS] \fs%s%s\fS", game::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+							drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "[\fs\fd%d\fS] \fs%s%s\fS", game::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 						else drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 					}
 				}

@@ -115,6 +115,7 @@ SVARP(cyan, "\fc");
 SVARP(violet, "\fv");
 SVARP(purple, "\fp");
 SVARP(brown, "\fn");
+SVARP(darkgray, "\fd");
 SVARP(defcolour, "\fu");
 
 static void text_color(char c, char *stack, int size, int &sp, bvec color, int r, int g, int b, int a)
@@ -143,6 +144,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
             case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
             case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
             case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
+            case 'd': case 'D': color = bvec(112, 112, 112); break;	// dark gray
             case 'u': color = bvec(r, g, b); break;	// user colour
 			default: break; // everything else
         }

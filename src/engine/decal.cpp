@@ -257,7 +257,7 @@ struct decalrenderer
             if(flags&DF_INVMOD) glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             else if(flags&DF_ADD) glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-           
+
             if(flags&DF_SATURATE)
             {
                 if(renderpath!=R_FIXEDFUNCTION) SETSHADER(saturatedecal);
@@ -350,7 +350,7 @@ struct decalrenderer
         if(dbgdec)
         {
             int nverts = endvert < dstart ? endvert + maxverts - dstart : endvert - dstart;
-            conoutf("\fwtris = %d, verts = %d, total tris = %d", nverts/3, nverts, (maxverts - 3 - availverts)/3);
+            conoutf("\fatris = %d, verts = %d, total tris = %d", nverts/3, nverts, (maxverts - 3 - availverts)/3);
         }
         if(endvert==dstart) return;
 

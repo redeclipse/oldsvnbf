@@ -2060,9 +2060,7 @@ namespace server
 			else if(!weaptype[weap].radial || radial <= 0 || weaptype[weap].taper) // destroy
 			{
 				gs.weapshots[weap].remove(id);
-				radial = weaptype[weap].taper ? (radial < 0 ? -radial :
-					max(int((weaptype[weap].explode*(gs.aitype != AI_NONE ? 0.5f : 0.75f))), 1)) // PATCHED: hacked until next release
-				: weaptype[weap].explode;
+				radial = weaptype[weap].taper ? max(-radial, 1) : weaptype[weap].explode;
 			}
 			loopv(hits)
 			{

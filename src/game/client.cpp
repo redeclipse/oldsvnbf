@@ -1004,7 +1004,7 @@ namespace client
 					isready = true;
 					game::player1->clientnum = mycn;	  // we are now fully ready
                     if(getint(p)) conoutf("\frthe server is password protected");
-                    else if(verbose) conoutf("\fathe server welcomes us, yay");
+                    else if(verbose) conoutf("\fdthe server welcomes us, yay");
                     sendintro();
 					break;
 				}
@@ -1537,7 +1537,7 @@ namespace client
 					else loopi(demos)
 					{
 						getstring(text, p);
-						conoutf("\fw%d. %s", i+1, text);
+						conoutf("\fa%d. %s", i+1, text);
 					}
 					break;
 				}

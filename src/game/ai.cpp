@@ -79,7 +79,7 @@ namespace ai
 		gameent *o = game::newclient(on);
 		string m;
 		if(o) copystring(m, game::colorname(o));
-		else formatstring(m)("\fs\fwunknown [\fs\fr%d\fS]\fS", on);
+		else formatstring(m)("\fs\faunknown [\fs\fr%d\fS]\fS", on);
 		bool resetthisguy = false;
 		if(!d->name[0])
 		{
@@ -442,7 +442,7 @@ namespace ai
 			else while(true)
 			{
 				d->ai->weappref = rnd(WEAPON_TOTAL);
-				if(d->ai->weappref != WEAPON_PLASMA || !rnd(d->skill)) break;
+				if(d->ai->weappref != WEAPON_PISTOL || !rnd(d->skill)) break;
 			}
 		}
 	}
