@@ -722,7 +722,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
             createtexture(t->frames[i], t->w, t->h, data, clamp, mipit ? 2 : 1, format, GL_TEXTURE_2D, t->xs, t->ys, pitch, false);
 
 		    if(verbose >= 3)
-			    conoutf("\fwadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, t->xs, t->ys);
+			    conoutf("\faadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, t->xs, t->ys);
         }
 	}
 	updatetexture(t);

@@ -45,7 +45,7 @@ void abortconnect(bool msg)
 {
 	if(!connpeer) return;
     client::connectfail();
-    if(msg) conoutf("\fwaborting connection attempt");
+    if(msg) conoutf("\faaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
     if(curpeer) return;
@@ -64,7 +64,7 @@ void trydisconnect()
 	if(connpeer) abortconnect();
     else if(curpeer || connectedlocally)
     {
-        if(verbose) conoutf("\fwattempting to disconnect...");
+        if(verbose) conoutf("\faattempting to disconnect...");
         disconnect(0, !discmillis);
     }
     else conoutf("\frnot connected");
@@ -87,7 +87,7 @@ void connects(const char *name, int port, int qport, const char *password)
 	if(name && *name)
 	{
 		addserver(name, port, qport);
-		conoutf("\fwattempting to connect to %s:[%d]", name, port);
+		conoutf("\faattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
 		{
 			conoutf("\frcould not resolve host %s", name);
@@ -98,7 +98,7 @@ void connects(const char *name, int port, int qport, const char *password)
 	}
 	else
 	{
-		conoutf("\fwattempting to connect to a local server");
+		conoutf("\faattempting to connect to a local server");
 		address.host = ENET_HOST_BROADCAST;
 	}
 
@@ -224,7 +224,7 @@ void gets2c()			// get updates from the server
 			connectfail();
 			return;
 		}
-        else conoutf("\fwconnection attempt %d", connattempts);
+        else conoutf("\faconnection attempt %d", connattempts);
 	}
 	while(clienthost && enet_host_service(clienthost, &event, 0)>0)
 	switch(event.type)
@@ -240,7 +240,7 @@ void gets2c()			// get updates from the server
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			if(discmillis) conoutf("\fwattempting to disconnect...");
+			if(discmillis) conoutf("\faattempting to disconnect...");
 			else servertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
 			enet_packet_destroy(event.packet);
 			break;

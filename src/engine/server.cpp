@@ -497,7 +497,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 {
 	if(remoteaddress.host==ENET_HOST_ANY)
 	{
-		conoutf("\fwlooking up %s:[%d]...", hostname, remoteaddress.port);
+		conoutf("\falooking up %s:[%d]...", hostname, remoteaddress.port);
 		if(!resolverwait(hostname, remoteaddress.port, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
     ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
@@ -515,7 +515,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 	defformatstring(mget)("%s\n", req);
 	buf.data = mget;
 	buf.dataLength = strlen((char *)buf.data);
-	conoutf("\fwsending request to %s:[%d]", hostname, remoteaddress.port);
+	conoutf("\fasending request to %s:[%d]", hostname, remoteaddress.port);
 	enet_socket_send(sock, NULL, &buf, 1);
 	return sock;
 }

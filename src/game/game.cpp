@@ -533,11 +533,11 @@ namespace game
         	else if(flags && isweap(weap))
         	{
 				static const char *suicidenames[WEAPON_MAX] = {
-					"found out what their plasma tasted like",
+					"pulled off a seemingly impossible stunt",
 					"discovered buckshot bounces",
 					"got caught up in their own crossfire",
 					"barbequed themself for dinner",
-					"pulled off a seemingly impossible stunt",
+					"found out what their plasma tasted like",
 					"pulled off a seemingly impossible stunt",
 					"decided to kick it, kamikaze style",
 					"ate paint"
@@ -553,31 +553,31 @@ namespace game
 		{
 			static const char *obitnames[3][WEAPON_MAX] = {
 				{
-					"was plasmified by",
+					"was pierced by",
 					"was filled with buckshot by",
 					"was riddled with holes by",
 					"was char-grilled by",
-					"was pierced by",
+					"was plasmified by",
 					"was given laser burn by",
 					"was blown to pieces by",
 					"was tagged out by"
 				},
 				{
-					"was plasmafied by",
+					"was given an extra orifice by",
 					"was given scrambled brains cooked up by",
 					"was air conditioned courtesy of",
 					"was char-grilled by",
-					"was given an extra orifice by",
+					"was plasmafied by",
 					"was expertly sniped by",
 					"was blown to pieces by",
 					"was tagged out by"
 				},
 				{
-					"was reduced to ooze by",
+					"was skewered by",
 					"was turned into little chunks by",
 					"was swiss-cheesed by",
 					"was made the main course by order of chef",
-					"was skewered by",
+					"was reduced to ooze by",
 					"was laser-scalpeled by",
 					"was obliterated by",
 					"was tagged out by"
@@ -613,7 +613,7 @@ namespace game
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
-					case 25:
+					case 15:
 					{
 						concatstring(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
@@ -621,7 +621,7 @@ namespace game
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
-					case 50:
+					case 20:
 					{
 						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
@@ -629,7 +629,7 @@ namespace game
 						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
 						break;
 					}
-					case 100:
+					case 25:
 					{
 						concatstring(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
@@ -676,8 +676,8 @@ namespace game
 			}
 			if(show)
 			{
-				if(isme) announce(anc, "\fa%s", d->obit);
-				else conoutf("\fa%s", d->obit);
+				if(isme) announce(anc, "\fw%s", d->obit);
+				else conoutf("\fw%s", d->obit);
 			}
 		}
 		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
@@ -687,8 +687,7 @@ namespace game
 			loopi(amt)
 				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
 		}
-		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
-			hud::teamkills.add(lastmillis);
+		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
 	}
 
@@ -1560,8 +1559,8 @@ namespace game
 
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
-				case ANIM_IDLE: case ANIM_PLASMA: case ANIM_SHOTGUN: case ANIM_SUBMACHINE:
-				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_PISTOL: case ANIM_RIFLE: case ANIM_PAINTGUN:
+				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SUBMACHINE:
+				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE: case ANIM_PAINTGUN:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);

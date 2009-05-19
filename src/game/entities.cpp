@@ -1033,7 +1033,7 @@ namespace entities
 					if(recip) f.links.remove(h);
 					fixentity(index);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
-					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+					if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
 				else if(toggle && canlink(node, index))
@@ -1042,7 +1042,7 @@ namespace entities
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
 					fixentity(node);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
-					if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+					if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
@@ -1052,7 +1052,7 @@ namespace entities
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
 				fixentity(node);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
-				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+				if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
 			else if(toggle || add)
@@ -1061,7 +1061,7 @@ namespace entities
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
 				fixentity(index);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
-				if(verbose > 2) conoutf("\fwentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+				if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
@@ -1165,7 +1165,7 @@ namespace entities
 		}
 
 		if(verbose >= 3)
-			conoutf("\fwroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+			conoutf("\faroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return !route.empty();
 	}
@@ -1230,14 +1230,14 @@ namespace entities
 
 				// 8	I_SHELLS		8	WEAPON		WEAPON_SG
 				// 9	I_BULLETS		8	WEAPON		WEAPON_SMG
-				// 10	I_ROCKETS		8	WEAPON		WEAPON_PISTOL
+				// 10	I_ROCKETS		8	WEAPON		WEAPON_PLASMA
 				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
 				// 12	I_GRENADES		8	WEAPON		WEAPON_GL
-				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PLASMA
+				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PISTOL
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAPON_SG, WEAPON_SMG, WEAPON_PISTOL, WEAPON_RIFLE, WEAPON_GL, WEAPON_PLASMA
+						WEAPON_SG, WEAPON_SMG, WEAPON_PLASMA, WEAPON_RIFLE, WEAPON_GL, WEAPON_PISTOL
 					};
 
 					if(weap >= 0 && weap <= 5)
@@ -1832,7 +1832,7 @@ namespace entities
 					{
 						if(*enttype[e.type].attrs[k])
 						{
-							formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fa", enttype[e.type].attrs[k], e.attr[k]);
+							formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attr[k]);
 							part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 						}
 						else break;

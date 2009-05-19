@@ -440,7 +440,7 @@ namespace hud
 				default: break;
 			}
 			int sy = hud::drawitem(hud::flagtex(team), x, y, s, true, 1.f, 1.f, 1.f, fade, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
-			hud::drawitemsubtext(x, y, s, true, skew, "sub", fade, "%s%s", team ? teamtype[team].chat : "\fw", name);
+			hud::drawitemsubtext(x, y, s, true, skew, "sub", fade, "%s%s", teamtype[team].chat, name);
 			return sy;
 		}
 

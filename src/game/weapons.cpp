@@ -3,7 +3,7 @@ namespace weapons
 {
 	VARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
-	VARP(skipplasma, 0, 0, 1); // whether to skip plasma when switching
+	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
 	VARP(skipgrenades, 0, 0, 1); // whether to skip grenades when switching
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
@@ -29,7 +29,7 @@ namespace weapons
 			if(a < 0)
 			{ // weapon skipping when scrolling
 				if(skipspawnweapon && s == m_spawnweapon(game::gamemode, game::mutators)) continue;
-				if(skipplasma && s == WEAPON_PLASMA) continue;
+				if(skippistol && s == WEAPON_PISTOL) continue;
 				if(skipgrenades && s == WEAPON_GL) continue;
 			}
 

@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID				"bfa"
-#define GAMEVERSION			157
+#define GAMEVERSION			158
 #define DEMO_VERSION		GAMEVERSION
 
 #define MAXBOTS 100
@@ -25,7 +25,7 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PLASMA, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_PISTOL, S_RIFLE, S_PAINT,
+	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_PLASMA, S_RIFLE, S_PAINT,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -33,8 +33,7 @@ enum
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
-	S_V_YOUWIN, S_V_YOULOSE, S_V_MCOMPLETE, S_V_FRAGGED, S_V_OWNED,
-	S_V_DENIED, S_V_SPREE5, // FIXME: reorder after Beta 1.1
+	S_V_YOUWIN, S_V_YOULOSE, S_V_MCOMPLETE, S_V_FRAGGED, S_V_OWNED, S_V_DENIED,
 	S_MAX
 };
 
@@ -204,12 +203,12 @@ enum
 	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP, ANIM_IMPULSE, ANIM_SINK,
 	ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
-    ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
+    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
     ANIM_SUBMACHINE, ANIM_SUBMACHINE_SHOOT, ANIM_SUBMACHINE_RELOAD,
     ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
-    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
+    ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
     ANIM_PAINTGUN, ANIM_PAINTGUN_SHOOT, ANIM_PAINTGUN_RELOAD,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
@@ -222,11 +221,11 @@ enum
 
 enum
 {
-	WEAPON_PLASMA = 0,
+	WEAPON_PISTOL = 0,
 	WEAPON_SG,
 	WEAPON_SMG,
 	WEAPON_FLAMER,
-	WEAPON_PISTOL,
+	WEAPON_PLASMA,
 	WEAPON_RIFLE,
 	WEAPON_GL,
 	WEAPON_TOTAL, // end of selectable weapon set
@@ -279,13 +278,13 @@ struct weaptypes
 weaptypes weaptype[WEAPON_MAX] =
 {
 	{
-		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,			0x22FFFF,
-			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		400,	1000,	25,		1000,	0,		1000,
-			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,	true,		true,		false,
-			0.f,		0.f,			0.5f,		1.0f,		0.f,	4.f,		50.f,
-			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
+		WEAPON_PISTOL,		ANIM_PISTOL,	-15,	15,			0x999999,
+			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
+			10,		10,		250,    1250,	25,		2000,	0,		10000,
+			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			false,	false,	false,		true,		false,
+			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		100.f,
+			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",
 			""
 	},
 	{
@@ -319,13 +318,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_PISTOL,		ANIM_PISTOL,	-15,	15,			0x999999,
-			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		250,    1250,	35,		2000,	0,		10000,
-			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		false,
-			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		120.f,
-			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",
+		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,			0x22FFFF,
+			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
+			20,		20,		400,	1000,	35,		1000,	0,		1000,
+			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
+			false,	true,	true,		true,		false,
+			0.f,		0.f,			0.5f,		1.0f,		0.f,	6.f,		50.f,
+			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
 	{
@@ -366,7 +365,7 @@ extern weaptypes weaptype[];
 #define isweap(a)		(a > -1 && a < WEAPON_MAX)
 #define weaploads(a,b)	(a == b || weaptype[a].reloads)
 #define weapcarry(a,b)	(a != b && weaptype[a].reloads)
-#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GL ? WEAPON_GL : WEAPON_PLASMA))
+#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GL ? WEAPON_GL : WEAPON_PISTOL))
 
 enum
 {
@@ -554,9 +553,9 @@ struct teamtypes
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
 	{
-		TEAM_NEUTRAL,	0xFFFFFF,			"neutral",
+		TEAM_NEUTRAL,	0x666666,			"neutral",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fw"
+		"flag",			"team",				"\fd"
 	},
 	{
 		TEAM_ALPHA,		0x2222AA,			"alpha",
@@ -910,12 +909,12 @@ const char *animnames[] =
 	"pain", "jump", "impulse", "sink",
 	"edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
-	"plasma", "plasma shoot", "plasma reload",
+	"pistol", "pistol shoot", "pistol reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
 	"submachine", "submachine shoot", "submachine reload",
 	"grenades", "grenades throw", "grenades reload", "grenades power",
 	"flamer", "flamer shoot", "flamer reload",
-	"pistol", "pistol shoot", "pistol reload",
+	"plasma", "plasma shoot", "plasma reload",
 	"rifle", "rifle shoot", "rifle reload",
 	"paintgun", "paintgun shoot", "paintgun reload",
 	"vwep", "shield", "powerup",
