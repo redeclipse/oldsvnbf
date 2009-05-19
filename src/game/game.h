@@ -956,6 +956,7 @@ struct gameent : dynent, gamestate
     vec muzzle;
 	bool attacking, reloading, useaction, conopen, k_up, k_down, k_left, k_right;
 	string name, info, obit;
+	vector<int> airnodes;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
 		conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
@@ -997,6 +998,7 @@ struct gameent : dynent, gamestate
 		clearstate();
 		physent::reset();
 		gamestate::respawn(millis, heal);
+		airnodes.setsizenodelete(0);
 	}
 
 	void editspawn(int millis, int sweap, int heal)
@@ -1011,6 +1013,7 @@ struct gameent : dynent, gamestate
         floor = vec(0, 0, 1);
         resetinterp();
 		gamestate::editspawn(millis, sweap, heal);
+		airnodes.setsizenodelete(0);
 	}
 
 	void resetstate(int millis, int heal)
