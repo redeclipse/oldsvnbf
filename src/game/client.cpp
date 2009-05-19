@@ -1810,15 +1810,16 @@ namespace client
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		if(!serversort || !*serversort) resetserversort();
-		int ac = a->attr[0] != GAMEVERSION ? -1 : 0, bc = b->attr[0] != GAMEVERSION ? -1 : 0;
-		if(!ac && a->address.host != ENET_HOST_ANY && a->ping < 999 && a->attr.length() && (kidmode < 2 || m_paint(a->attr[1], a->attr[2])))
+		int ac = a->address.host == ENET_HOST_ANY || a->ping >= 999 || a->attr.empty() || a->attr[0] != GAMEVERSION || (kidmode > 1 && m_paint(a->attr[1], a->attr[2])) ? -1 : 0,
+			bc = b->address.host == ENET_HOST_ANY || b->ping >= 999 || b->attr.empty() || b->attr[0] != GAMEVERSION || (kidmode > 1 && m_paint(b->attr[1], b->attr[2])) ? -1 : 0;
+		if(!ac)
 		{
 			if(!strcmp(a->sdesc, servermaster)) ac = 3;
 			else if(!strcmp(a->name, "localhost")) ac = 2;
 			else ac = 1;
 		}
 
-		if(!bc && b->address.host != ENET_HOST_ANY && b->ping < 999 && b->attr.length() && (kidmode < 2 || m_paint(b->attr[1], b->attr[2])))
+		if(!bc)
 		{
 			if(!strcmp(b->sdesc, servermaster)) bc = 3;
 			else if(!strcmp(b->name, "localhost")) bc = 2;
