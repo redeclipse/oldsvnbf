@@ -780,7 +780,7 @@ namespace client
 		{
             packet->flags |= ENET_PACKET_FLAG_RELIABLE;
 			putint(p, SV_GAMEINFO);
-			putint(p, m_team(game::gamemode, game::mutators) && game::numteamplayers ? game::numteamplayers : game::numplayers);
+			putint(p, game::numplayers);
 			entities::putitems(p);
 			putint(p, -1);
 			if(m_stf(game::gamemode)) stf::sendflags(p);

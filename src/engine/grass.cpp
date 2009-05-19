@@ -5,7 +5,7 @@ FVARP(grassstep, 0.5, 1, 8);
 FVARP(grasstaper, 0, 0.1, 1);
 
 VAR(dbggrass, 0, 0, 1);
-VARA(grassdist, 128, 512, 4096);
+VARA(grassdist, 64, 512, 4096);
 VARW(grassheight, 1, 4, 64);
 
 struct grasswedge
@@ -29,7 +29,7 @@ void resetgrasswedges(int n)
 	grassws = new grasswedge[n];
 	loopi(n) grassws[i].init(i, n);
 }
-VARFP(grasswedges, 8, 128, 1024, resetgrasswedges(grasswedges));
+VARFP(grasswedges, 8, 8, 1024, resetgrasswedges(grasswedges));
 
 struct grassvert
 {
@@ -58,7 +58,7 @@ void resetgrassoffsets(int n)
 	grassanimoffsets = new float[n];
 	loopi(n) grassoffsets[i] = rnd(0x1000000)/float(0x1000000);
 }
-VARFP(grassoffset, 8, 64, 1024, resetgrassoffsets(grassoffset));
+VARFP(grassoffset, 8, 32, 1024, resetgrassoffsets(grassoffset));
 
 void checkgrass()
 {

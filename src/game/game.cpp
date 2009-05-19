@@ -16,8 +16,7 @@ namespace game
 
 	ICOMMANDG(resetvars, "", (), return); // server side
 
-	VARW(numplayers, 0, 8, MAXCLIENTS/2);
-	VARW(numteamplayers, 0, 12, MAXCLIENTS/2);
+	VARW(numplayers, 0, 8, MAXCLIENTS);
 	SVARW(mapmusic, "");
 
 	VARP(mouseinvert, 0, 0, 1);
