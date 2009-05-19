@@ -1182,10 +1182,28 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
-		if(d->state == CS_ALIVE)
+		if(d->state != CS_ALIVE)
+		{
+			if(!d->airnodes.empty())
+			{
+				if(d->state == CS_DEAD)
+				{
+					loopv(d->airnodes) if(ents.inrange(d->airnodes[i]))
+						ents[d->airnodes[i]]->type = NOTUSED;
+					loopvk(ents) if(!ents[k]->links.empty())
+					{
+						loopvrev(ents[k]->links) if(d->airnodes.find(ents[k]->links[i]) >= 0)
+							ents[k]->links.remove(i);
+					}
+				}
+				d->airnodes.setsizenodelete(0);
+			}
+			d->lastnode = -1;
+		}
+		else
 		{
 			vec v = d->feetpos();
-			bool shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai; // for all but our own AI
+			bool shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !ai::clipped(v);
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 			if(!ents.inrange(curnode) && shoulddrop)
@@ -1194,6 +1212,7 @@ namespace entities
 				if(physics::iscrouching(d)) cmds |= WP_CROUCH;
 				curnode = ents.length();
 				newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
+				if(d->timeinair) d->airnodes.add(curnode);
 				clearentcache();
 			}
 			if(ents.inrange(curnode))
@@ -1204,7 +1223,6 @@ namespace entities
 			}
 			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false);
 		}
-		else d->lastnode = -1;
 	}
 
 	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
@@ -1498,7 +1516,8 @@ namespace entities
 				}
 				case WAYPOINT:
 				{
-					if(mtype == MAP_BFGZ && gver <= 90)
+					if(ai::clipped(e.o)) e.type = NOTUSED;
+					else if(mtype == MAP_BFGZ && gver <= 90)
 						e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
 					break;
 				}
@@ -1519,22 +1538,27 @@ namespace entities
 		char magic[4];
 		if(f->read(magic, 4) < 4 || memcmp(magic, "OWPT", 4)) { delete f; return; }
 
-		int numents = ents.length()-1; // -1 because OCTA waypoints count from 1 upward
+		int numents = ents.length()-1, offset = 0; // -1 because OCTA waypoints count from 1 upward
 		ushort numwp = f->getlil<ushort>();
 		loopi(numwp)
 		{
 			if(f->end()) break;
-			extentity &e = *newent();
-			ents.add(&e);
-			e.type = WAYPOINT;
-			e.o.x = f->getlil<float>();
-			e.o.y = f->getlil<float>();
-			e.o.z = f->getlil<float>();
+			vec o(f->getlil<float>(), f->getlil<float>(), f->getlil<float>());
+			bool proceed = !ai::clipped(o);
+			extentity *e = NULL;
+			if(proceed)
+			{
+				e = newent();
+				ents.add(e);
+				e->type = WAYPOINT;
+				e->o = o;
+			}
+			else offset++;
 			int numlinks = clamp(f->getchar(), 0, 6);
 			loopi(numlinks)
 			{
 				int idx = f->getlil<ushort>();
-				if(idx > 0) e.links.add(numents+idx);
+				if(proceed && idx > 0) e->links.add(numents+idx-offset);
 			}
 		}
 		delete f;
