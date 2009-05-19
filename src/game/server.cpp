@@ -758,6 +758,7 @@ namespace server
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
+			int numt = numteams(gamemode, mutators);
 			bool teamspawns = m_team(gamemode, mutators) && !m_stf(gamemode);
 			loopv(sents) if(sents[i].type == PLAYERSTART && (!teamspawns || isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)))
 			{
@@ -766,7 +767,7 @@ namespace server
 			}
 			if(totalspawns && teamspawns)
 			{ // reset if a team has no spawns, or if we're in dm/stf
-				loopi(numteams(gamemode, mutators)) if(spawns[i+TEAM_FIRST].ents.empty())
+				loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
 				{
 					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
@@ -790,6 +791,12 @@ namespace server
 				}
 			}
 			numplayers = players;
+			if(numplayers <= 0) numplayers = totalspawns/2;
+			if(m_team(gamemode, mutators))
+			{
+				int offt = numplayers%numt;
+				if(offt) numplayers += numt-offt;
+			}
 		}
 	}
 

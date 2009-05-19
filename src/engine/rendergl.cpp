@@ -1639,11 +1639,12 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 	notextureshader->set();
 
+	int area = (w-256)*3;
 	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
 	glVertex2f(0,	0);
-	glVertex2f(w*3, 0);
-	glVertex2f(w*3, 204);
+	glVertex2f(area, 0);
+	glVertex2f(area, 204);
 	glVertex2f(0,	204);
 	glEnd();
 
@@ -1673,8 +1674,8 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 			draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
 		}
 		if(text2 && bar2 > 0)
-			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1, text2, int(bar2*100));
-		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, text1);
+			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, area, text1, text2, int(bar2*100));
+		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, area, text1);
 	}
 
 	glDisable(GL_BLEND);

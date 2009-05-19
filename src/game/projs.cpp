@@ -417,7 +417,7 @@ namespace projs
 			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
 			if(weaptype[proj.weap].fsound >= 0)
 			{
-				int vol = int(255*proj.lifespan);
+				int vol = int(255*(1.f-proj.lifespan));
 				if(issound(proj.schan)) sounds[proj.schan].vol = vol;
 				else playsound(weaptype[proj.weap].fsound, proj.o, &proj, SND_LOOP, vol, -1, -1, &proj.schan);
 			}
@@ -598,6 +598,7 @@ namespace projs
 
 	void destroy(projent &proj)
 	{
+		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
 		switch(proj.projtype)
 		{
 			case PRJ_SHOT:
@@ -642,7 +643,7 @@ namespace projs
 					}
 					case WEAPON_SG: case WEAPON_SMG:
 					{
-						vol = int(proj.lifespan*255);
+						vol = int(255*(1.f-proj.lifespan));
 						if(proj.lifetime)
 						{
 							part_create(PART_SPARK_SLENS, m_speedtimex(500), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f);
@@ -652,7 +653,7 @@ namespace projs
 					}
 					case WEAPON_PISTOL:
 					{
-						vol = int(proj.lifespan*255);
+						vol = int(255*(1.f-proj.lifespan));
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(200), proj.o, 0x999999, weaptype[proj.weap].partsize);
 						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
@@ -660,7 +661,6 @@ namespace projs
 					}
 					case WEAPON_RIFLE:
 					{
-						vol = int(proj.lifespan*255);
 						proj.from = vec(proj.o).sub(proj.vel);
 						part_create(PART_SMOKE_LERP_SRISE, m_speedtimex(100), proj.o, 0x444444, weaptype[proj.weap].partsize);
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtimex(200), 10);
@@ -670,7 +670,7 @@ namespace projs
 					}
 					case WEAPON_PAINT:
 					{
-						vol = int(proj.lifespan*255);
+						vol = int(255*(1.f-proj.lifespan));
 						proj.from = vec(proj.o).sub(proj.vel);
 						int r = 255-(proj.colour>>16), g = 255-((proj.colour>>8)&0xFF), b = 255-(proj.colour&0xFF),
 							colour = (r<<16)|(g<<8)|b;
@@ -774,7 +774,7 @@ namespace projs
                     }
                     default: break;
                 }
-                int vol = int(255*proj.lifespan);
+				int vol = int(255*(1.f-proj.lifespan));
                 if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
                 break;
             }
@@ -969,13 +969,17 @@ namespace projs
         {
             if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || !move(proj, physics::physframetime))
             {
+            	if(proj.lifetime < 0) proj.lifetime = 0;
                 alive = false;
                 break;
             }
         }
         proj.deltapos = proj.o;
         if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || !move(proj, physics::physframetime)))
+        {
+           	if(proj.lifetime < 0) proj.lifetime = 0;
 			alive = false;
+        }
         proj.newpos = proj.o;
         proj.deltapos.sub(proj.newpos);
         proj.newpos.z -= proj.height;
@@ -1050,6 +1054,7 @@ namespace projs
 
 					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || !move(proj, qtime))
 					{
+						if(proj.lifetime < 0) proj.lifetime = 0;
 						proj.state = CS_DEAD;
  						break;
 					}

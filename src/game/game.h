@@ -331,7 +331,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,			0x8822FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1250,	100,	3000,	0,		20000,
+			1,		5,		750,	1250,	100,	4000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
@@ -1149,7 +1149,7 @@ namespace hud
 
 namespace game
 {
-	extern int numplayers, numteamplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
+	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
 			quakewobble, lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
 				noblood, fogdist;
 	extern bool intermission, zooming;
