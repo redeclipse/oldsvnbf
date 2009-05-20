@@ -117,9 +117,9 @@ namespace physics
 		return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale;
 	}
 
-	float upwardforce(physent *d)
+	float stepforce(physent *d, bool up)
 	{
-		if(d->onladder) return ladderspeed;
+		if(up && d->onladder) return ladderspeed;
 		if(d->physstate > PHYS_FALL) return stepspeed;
 		return 1.f;
 	}
@@ -199,9 +199,10 @@ namespace physics
     bool trystepup(physent *d, vec &dir, const vec &obstacle, float maxstep, const vec &floor)
     {
         vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < slopez ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).rescale(1);
+        float force = stepforce(d, true);
 		if(d->onladder)
 		{
-			vec laddir = vec(stairdir).add(vec(0, 0, maxstep)).mul(0.1f*upwardforce(d));
+			vec laddir = vec(stairdir).add(vec(0, 0, maxstep)).mul(0.1f*force);
             loopi(2)
             {
 				d->o.add(laddir);
@@ -229,7 +230,7 @@ namespace physics
             vec checkdir = stairdir;
             checkdir.mul(0.1f);
             checkdir.z += maxstep + 0.1f;
-            checkdir.mul(upwardforce(d));
+            checkdir.mul(force);
             d->o.add(checkdir);
             if(!collide(d))
             {
@@ -244,7 +245,7 @@ namespace physics
             d->o = old;
             vec checkdir = stairdir;
             checkdir.z += 1;
-            checkdir.mul(maxstep*upwardforce(d));
+            checkdir.mul(maxstep*force);
             d->o.add(checkdir);
             if(!collide(d, checkdir))
             {
@@ -256,7 +257,7 @@ namespace physics
             }
 			/* try stepping up half as much as forward */
 			d->o = old;
-			vec smoothdir = vec(dir.x, dir.y, 0).mul(upwardforce(d));
+			vec smoothdir = vec(dir.x, dir.y, 0).mul(force);
 			float magxy = smoothdir.magnitude();
 			if(magxy > 1e-9f)
 			{
@@ -264,14 +265,14 @@ namespace physics
 				{
 					smoothdir.mul(1/magxy);
 					smoothdir.z = 0.5f;
-					smoothdir.mul(dir.magnitude()*upwardforce(d)/smoothdir.magnitude());
+					smoothdir.mul(dir.magnitude()*force/smoothdir.magnitude());
 				}
 				else smoothdir.z = dir.z;
 				d->o.add(smoothdir);
-				d->o.z += maxstep*upwardforce(d) + 0.1f*upwardforce(d);
+				d->o.z += maxstep*force + 0.1f*force;
 				if(collide(d, smoothdir))
 				{
-					d->o.z -= maxstep*upwardforce(d) + 0.1f*upwardforce(d);
+					d->o.z -= maxstep*force + 0.1f*force;
 					if(d->physstate == PHYS_FALL || d->floor != floor)
 					{
 						d->timeinair = 0;
@@ -286,7 +287,7 @@ namespace physics
 
         /* try stepping up */
         d->o = old;
-        d->o.z += dir.magnitude()*upwardforce(d);
+        d->o.z += dir.magnitude()*force;
         if(collide(d, vec(0, 0, 1)))
         {
             if(d->physstate == PHYS_FALL || d->floor != floor)
@@ -301,12 +302,11 @@ namespace physics
         d->o = old;
         return false;
     }
-#if 0
-	bool trystepdown(physent *d, vec &dir, float step, float a, float b)
+
+	bool trystepdown(physent *d, vec &dir, float step, float xy, float z)
 	{
 		vec old(d->o);
-		vec dv(dir.x*a, dir.y*a, -step*b), v(dv);
-		v.mul(stairheight/(step*b));
+		vec dv(dir.x*xy, dir.y*xy, -step*z), v = vec(dv).mul(stairheight/(step*z));
 		d->o.add(v);
 		if(!collide(d, vec(0, 0, -1), slopez))
 		{
@@ -318,38 +318,23 @@ namespace physics
 		return false;
 	}
 
-	bool trystep(physent *d, vec &dir, float step, const vec &way)
-	{
-		vec old(d->o);
-		vec dv(dir.x, dir.y, step*way.z), v(dv);
-		v.mul(stairheight/step);
-		d->o.add(v);
-		if(!collide(d, way, slopez))
-		{
-			d->o = old;
-			d->o.add(dv);
-			if(collide(d, way)) return true;
-		}
-		d->o = old;
-		return false;
-	}
-#endif
+
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-#if 0
-		if(d->physstate >= PHYS_FLOOR && (floor.z == 0.0f || floor.z == 1.0f))
+		if(d->physstate >= PHYS_FLOOR)
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
 			if(!collide(d, vec(0, 0, -1), slopez))
 			{
 				d->o = moved;
+				d->timeinair = 0;
 				d->physstate = PHYS_STEP_DOWN;
 				return;
 			}
 			else d->o = moved;
 		}
-#endif
+
         if(floor.z > 0.0f && floor.z < slopez)
         {
             if(floor.z >= wallz) switchfloor(d, dir, floor);
@@ -377,7 +362,7 @@ namespace physics
 #endif
         switchfloor(d, dir, floor);
         d->timeinair = 0;
-        if(d->physstate!=PHYS_STEP_UP || !collided)
+        if((d->physstate!=PHYS_STEP_UP && d->physstate!=PHYS_STEP_DOWN) || !collided)
             d->physstate = floor.z >= floorz ? PHYS_FLOOR : PHYS_SLOPE;
 		d->floor = floor;
 	}
@@ -392,7 +377,7 @@ namespace physics
 			floor = vec(0, 0, 1);
 			found = true;
 		}
-		else if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
+		else if(d->physstate != PHYS_FALL && !collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
 		{
 			floor = wall;
 			found = true;
@@ -431,17 +416,18 @@ namespace physics
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o);
-#if 0
-		if(d->physstate == PHYS_STEP_DOWN && dir.z < 0.f)
+
+		if(d->physstate == PHYS_STEP_DOWN)
 		{
+			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
 			if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
 			if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
 			d->o.z -= step;
 			if(collide(d, vec(0, 0, -1))) return true;
 			d->o = old;
+			if(!collide(d, vec(0, 0, -1))) d->physstate = PHYS_FALL;
 		}
-#endif
 
 		bool collided = false, slidecollide = false;
 		vec obstacle;
@@ -513,6 +499,7 @@ namespace physics
 			if(game::allowmove(pl) && pl->jumping)
 			{
 				pl->falling = vec(0, 0, 0);
+				pl->physstate = PHYS_FALL; // cancel out other physstate
 				pl->vel.z += jumpvelocity(pl);
 				if(pl->inliquid) { pl->vel.x *= liquidscale; pl->vel.y *= liquidscale; }
 				pl->jumping = false;
@@ -531,6 +518,7 @@ namespace physics
 			dir.normalize();
 			dir.mul(impulsevelocity(pl));
 			pl->falling = vec(0, 0, 0);
+			pl->physstate = PHYS_FALL; // cancel out other physstate
 			pl->vel.add(dir);
 			pl->lastimpulse = lastmillis;
 			if(local && pl->type == ENT_PLAYER)
@@ -542,9 +530,9 @@ namespace physics
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
-		vec m(0.0f, 0.0f, 0.0f);
+		vec m(0, 0, 0);
         bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
-		if(m.iszero() && wantsmove)
+		if(wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
             if(pl->type == ENT_PLAYER && !floating && pl->physstate >= PHYS_SLOPE)
@@ -555,18 +543,16 @@ namespace physics
 			m.normalize();
 		}
 
-		vec d(m);
-		d.mul(movevelocity(pl));
+		vec d = vec(m).mul(movevelocity(pl));
         if(pl->type==ENT_PLAYER)
         {
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
-		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
+		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
         }
         else if(pl->type==ENT_CAMERA)
         {
             if(local) d.mul(floatspeed/100.0f);
         }
-
 
 		float fric = floating || pl->type==ENT_CAMERA ? floatfric : (pl->inliquid ? liquidfric : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
         pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
@@ -649,11 +635,9 @@ namespace physics
 		if(pl->type==ENT_PLAYER)
         {
             updatematerial(pl, local, floating);
-            // apply gravity
-            if(!floating && !pl->onladder) modifygravity(pl, millis);
+            if(!floating && !pl->onladder) modifygravity(pl, millis); // apply gravity
         }
-		// apply any player generated changes in velocity
-		modifyvelocity(pl, local, floating, millis);
+		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
 		vec d(pl->vel);
         if(pl->type==ENT_PLAYER && !floating && pl->inliquid) d.mul(liquiddampen);
@@ -793,6 +777,7 @@ namespace physics
 		{
 			case PHYS_SLOPE:
 			case PHYS_FLOOR:
+			case PHYS_STEP_DOWN:
 				d->o.z -= 0.15f;
 				if(!collide(d, vec(0, 0, -1), d->physstate == PHYS_SLOPE ? slopez : floorz))
                 {
