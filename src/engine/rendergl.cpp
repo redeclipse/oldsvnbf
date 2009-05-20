@@ -2105,7 +2105,7 @@ void drawview(int targtype)
 
 void gl_drawframe(int w, int h)
 {
-    if(connected(false) && client::ready())
+    if(client::ready())
     {
 		fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
 		causticspass = 0.f;
