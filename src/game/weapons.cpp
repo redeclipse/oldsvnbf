@@ -129,6 +129,7 @@ namespace weapons
 		}
 		else if(!d->attacking || !game::allowmove(d)) return;
 
+		if(d->weapselect == WEAPON_PISTOL) d->attacking = false;
 		if(weaptype[d->weapselect].max) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-1, 0);
 		d->setweapstate(d->weapselect, WPSTATE_SHOOT, weaptype[d->weapselect].adelay, lastmillis);
 		d->totalshots += int(weaptype[d->weapselect].damage*damagescale)*weaptype[d->weapselect].rays;
