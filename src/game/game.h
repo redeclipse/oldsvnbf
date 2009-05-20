@@ -280,7 +280,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PISTOL,		ANIM_PISTOL,	-15,	15,			0x999999,
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		250,    1250,	25,		2000,	0,		10000,
+			10,		10,		125,    1250,	25,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,
 			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		100.f,
