@@ -82,8 +82,6 @@ namespace client
 
 	int numchannels() { return 3; }
 
-	void mapstart() { sendinfo = true; }
-
 	void writeclientinfo(stream *f)
 	{
 		f->printf("name \"%s\"\n\n", game::player1->name);
@@ -383,8 +381,11 @@ namespace client
 
 	void toserver(int flags, char *text)
 	{
-		saytext(game::player1, flags, text);
-		addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
+		if(isready)
+		{
+			saytext(game::player1, flags, text);
+			addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
+		}
 	}
 	ICOMMAND(say, "C", (char *s), toserver(SAY_NONE, s));
 	ICOMMAND(me, "C", (char *s), toserver(SAY_ACTION, s));
@@ -629,7 +630,7 @@ namespace client
 	}
 	ICOMMAND(goto, "s", (char *s), gotoplayer(s));
 
-	bool ready() { return isready; }
+	bool ready() { return connected(false) && isready && game::maptime; }
 	ICOMMAND(ready, "", (), intret(ready()));
 
 	int state() { return game::player1->state; }

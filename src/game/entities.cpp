@@ -1577,10 +1577,6 @@ namespace entities
 		clearentcache();
 	}
 
-	void mapstart()
-	{
-	}
-
 	void edittoggled(bool edit)
 	{
 		clearentcache();

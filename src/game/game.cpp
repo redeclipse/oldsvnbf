@@ -774,9 +774,6 @@ namespace game
 		projs::reset();
 		resetworld();
 
-		entities::mapstart();
-		client::mapstart();
-
 		if(*name)
 		{
 			const char *title = getmaptitle();
@@ -789,7 +786,7 @@ namespace game
 			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
-
+		client::sendinfo = true;
 		fogdist = getvar("fog");
 	}
 
@@ -1337,7 +1334,7 @@ namespace game
 	{
 		fixview(w, h);
 		checkcamera();
-		if(connected() && client::ready() && maptime)
+		if(client::ready())
 		{
 			if(!lastcamera)
 			{

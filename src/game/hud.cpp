@@ -456,7 +456,7 @@ namespace hud
 	{
         int index = POINTER_NONE;
 		if(UI::hascursor()) index = UI::hascursor(true) ? POINTER_GUI : POINTER_NONE;
-        else if(!showcrosshair || game::player1->state == CS_DEAD || !connected() || !client::ready()) index = POINTER_NONE;
+        else if(!showcrosshair || game::player1->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;
         else if(game::inzoom() && weaptype[game::player1->weapselect].zooms) index = POINTER_ZOOM;
@@ -1279,7 +1279,7 @@ namespace hud
 	void drawhud(int w, int h)
 	{
 		float fade = hudblend;
-		if(connected() && client::ready())
+		if(client::ready())
 		{
 			bool texturing = true;
 			if(!game::maptime || lastmillis-game::maptime < titlecard)
@@ -1334,7 +1334,7 @@ namespace hud
 		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
-		if(game::maptime && connected() && client::ready())
+		if(client::ready())
 		{
 			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
 			{
@@ -1364,7 +1364,7 @@ namespace hud
 			if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 		}
 
-		if(connected() && client::ready() && !texpaneltimer)
+		if(client::ready() && !texpaneltimer)
 		{
 			pushfont("sub");
 			bx -= FONTW;

@@ -321,7 +321,7 @@ weaptypes weaptype[WEAPON_MAX] =
 		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		400,	1000,	35,		1000,	0,		1000,
-			0,		16,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
+			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,	true,		true,		false,
 			0.f,		0.f,			0.5f,		1.0f,		0.f,	6.f,		50.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
@@ -1080,9 +1080,8 @@ namespace server
 
 namespace client
 {
-	extern bool demoplayback;
+	extern bool demoplayback, sendinfo;
 	extern void addmsg(int type, const char *fmt = NULL, ...);
-	extern void mapstart();
     extern void c2sinfo();
 }
 
@@ -1205,7 +1204,6 @@ namespace entities
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);
 	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
 	extern void preload();
-	extern void mapstart();
 	extern void edittoggled(bool edit);
 	extern const char *findname(int type);
 	extern void adddynlights();
