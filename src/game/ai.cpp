@@ -722,7 +722,7 @@ namespace ai
 			vec dir = vec(dp).sub(ep).normalize();
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
-					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 1.f : 1e16f),
+					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 0.25f : 1e16f),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= d->ai->views[0]*skew && cpitch <= d->ai->views[1]*skew) return true;
 		}
