@@ -321,7 +321,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->physstate >= PHYS_FLOOR)
+		if(d->type == ENT_PLAYER && d->physstate >= PHYS_FLOOR && !d->onladder)
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -417,7 +417,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if(d->physstate == PHYS_STEP_DOWN)
+		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder)
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
