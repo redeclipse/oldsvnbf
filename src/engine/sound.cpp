@@ -57,7 +57,7 @@ void stopmusic(bool docmd)
 		delete[] cmd;
 	}
 	musictime = -1;
-	if(oldmusicvol >= 0) oldmusicvol = musicvol;
+	if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
 	playedmusic = false;
 }
 
@@ -66,7 +66,7 @@ void musicdone(bool docmd)
 	if(musicfade && !docmd)
 	{
 		musictime = lastmillis;
-		if(oldmusicvol >= 0) oldmusicvol = musicvol;
+		if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
 		playedmusic = false;
 	}
 	else stopmusic(docmd);
@@ -138,8 +138,8 @@ void playmusic(const char *name, const char *cmd)
 					musicfile = newstring(name);
 					if(cmd[0]) musicdonecmd = newstring(cmd);
 					Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-					Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
-					oldmusicvol = musicvol;
+					oldmusicvol = int((mastervol/255.f)*musicvol);
+					Mix_VolumeMusic(int((oldmusicvol/255.f)*MIX_MAX_VOLUME));
 					found = true;
 				}
 				if(found) break;
@@ -155,7 +155,7 @@ COMMANDN(music, playmusic, "ss");
 void smartmusic(bool cond, bool autooff)
 {
 	if(nosound || !mastervol || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
-	if(oldmusicvol >= 0) oldmusicvol = musicvol;
+	if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
 	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic)))
 	{
 		playmusic(titlemusic, "");
@@ -331,18 +331,22 @@ void updatesounds()
 			else
 			{
 				float fade = clamp(float(lastmillis-musictime)/float(musicfade), 0.f, 1.f);
-				int vol = int(musicvol*(1.f-fade));
+				int vol = int(((mastervol/255.f)*musicvol)*(1.f-fade));
 				if(vol != oldmusicvol)
 				{
-					Mix_VolumeMusic(int((mastervol/255.f)*(vol/255.f)*MIX_MAX_VOLUME));
+					Mix_VolumeMusic(int((vol/255.f)*MIX_MAX_VOLUME));
 					oldmusicvol = vol;
 				}
 			}
 		}
-		else if(musicvol != oldmusicvol)
+		else
 		{
-			Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
-			oldmusicvol = musicvol;
+			int vol = int((mastervol/255.f)*musicvol);
+			if(vol != oldmusicvol)
+			{
+				Mix_VolumeMusic(int((vol/255.f)*MIX_MAX_VOLUME));
+				oldmusicvol = vol;
+			}
 		}
 	}
 }
