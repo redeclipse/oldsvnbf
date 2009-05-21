@@ -1256,12 +1256,12 @@ namespace entities
 				// 9	I_BULLETS		8	WEAPON		WEAPON_SMG
 				// 10	I_ROCKETS		8	WEAPON		WEAPON_PLASMA
 				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
-				// 12	I_GRENADES		8	WEAPON		WEAPON_GL
+				// 12	I_GL			8	WEAPON		WEAPON_GRENADE
 				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PISTOL
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAPON_SG, WEAPON_SMG, WEAPON_PLASMA, WEAPON_RIFLE, WEAPON_GL, WEAPON_PISTOL
+						WEAPON_SG, WEAPON_SMG, WEAPON_PLASMA, WEAPON_RIFLE, WEAPON_GRENADE, WEAPON_PISTOL
 					};
 
 					if(weap >= 0 && weap <= 5)
@@ -1505,9 +1505,9 @@ namespace entities
 				case WEAPON:
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
-					{ // move grenades to the end of the weapon array
+					{ // move grenade to the end of the weapon array
 						if(e.attr[0] >= 4) e.attr[0]--;
-						else if(e.attr[0] == 3) e.attr[0] = WEAPON_GL;
+						else if(e.attr[0] == 3) e.attr[0] = WEAPON_GRENADE;
 					}
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attr[0] >= 4)
 						e.attr[0]++; // add in pistol

@@ -4,7 +4,7 @@ namespace weapons
 	VARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
-	VARP(skipgrenades, 0, 0, 1); // whether to skip grenades when switching
+	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
 	ICOMMAND(ammo, "s", (char *a),
@@ -30,7 +30,7 @@ namespace weapons
 			{ // weapon skipping when scrolling
 				if(skipspawnweapon && s == m_spawnweapon(game::gamemode, game::mutators)) continue;
 				if(skippistol && s == WEAPON_PISTOL) continue;
-				if(skipgrenades && s == WEAPON_GL) continue;
+				if(skipgrenade && s == WEAPON_GRENADE) continue;
 			}
 
 			if(d->canswitch(s, sweap, lastmillis))
@@ -48,7 +48,7 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(!m_noitems(game::gamemode, game::mutators) && isweap(weap) && ((weap == WEAPON_GL && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
+		if(!m_noitems(game::gamemode, game::mutators) && isweap(weap) && ((weap == WEAPON_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			d->reqswitch = lastmillis;
@@ -174,7 +174,7 @@ namespace weapons
 			if(weaptype[d->weapselect].spread)
 				offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
-			if(d->weapselect == WEAPON_GL) dest.z += from.dist(dest)/8;
+			if(d->weapselect == WEAPON_GRENADE) dest.z += from.dist(dest)/8;
 			addshot;
 		}
 		projs::shootv(d->weapselect, power, from, vshots, d, true);

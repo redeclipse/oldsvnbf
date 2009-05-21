@@ -1372,11 +1372,11 @@ namespace server
 		servstate &ts = ci->state;
 		vector<droplist> drop;
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAPON_GL, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAPON_GL))))
+		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAPON_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAPON_GRENADE))))
 		{
-			ts.weapshots[WEAPON_GL].add(-1);
+			ts.weapshots[WEAPON_GRENADE].add(-1);
 			droplist &d = drop.add();
-			d.weap = WEAPON_GL;
+			d.weap = WEAPON_GRENADE;
 			d.ent = -1;
 		}
 		if(!m_noitems(gamemode, mutators))
@@ -2135,17 +2135,17 @@ namespace server
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!gs.hasweap(weap, sweap, weap == WEAPON_GL ? 2 : 0) || m_noitems(gamemode, mutators))
+		if(!gs.hasweap(weap, sweap, weap == WEAPON_GRENADE ? 2 : 0) || m_noitems(gamemode, mutators))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
 		}
-		if(weap == WEAPON_GL)
+		if(weap == WEAPON_GRENADE)
 		{
 			int nweap = -1; // try to keep this weapon
 			gs.entid[weap] = -1;
-			gs.weapshots[WEAPON_GL].add(-1);
-			takeammo(ci, WEAPON_GL, 1);
+			gs.weapshots[WEAPON_GRENADE].add(-1);
+			takeammo(ci, WEAPON_GRENADE, 1);
 			if(!gs.hasweap(weap, sweap))
 			{
 				nweap = gs.bestweap(sweap, true);

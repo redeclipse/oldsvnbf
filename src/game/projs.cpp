@@ -293,7 +293,7 @@ namespace projs
 				d->ammo[g] = -1;
 				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 			}
-			else if(g == WEAPON_GL)
+			else if(g == WEAPON_GRENADE)
 			{
 				create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time, 1, 1, -1, g);
 				d->ammo[g] = max(d->ammo[g]-1, 0);
@@ -461,7 +461,7 @@ namespace projs
 					}
 					break;
 				}
-				case WEAPON_GL:
+				case WEAPON_GRENADE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
 					if(proj.canrender)
@@ -616,7 +616,7 @@ namespace projs
 						break;
 					}
 					case WEAPON_FLAMER:
-					case WEAPON_GL:
+					case WEAPON_GRENADE:
 					{ // both basically explosions
 						part_create(proj.weap == WEAPON_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 500 : 1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
 						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.25f : 0.75f));
@@ -627,7 +627,7 @@ namespace projs
 						}
 						part_create(PART_SMOKE_LERP_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x303030 : 0x222222, weaptype[proj.weap].explode, -20);
 						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
-						if(proj.weap == WEAPON_GL)
+						if(proj.weap == WEAPON_GRENADE)
 						{
 							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
@@ -687,7 +687,7 @@ namespace projs
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-							radialeffect(f, proj, proj.weap == WEAPON_GL, radius);
+							radialeffect(f, proj, proj.weap == WEAPON_GRENADE, radius);
 						}
 					}
 					else if(proj.hit && proj.hit->type == ENT_PLAYER)
@@ -925,7 +925,7 @@ namespace projs
 		{
 			switch(proj.weap)
 			{
-				case WEAPON_GL:
+				case WEAPON_GRENADE:
 				{
 					adddiff(proj.yaw);
 					adddiff(proj.pitch);

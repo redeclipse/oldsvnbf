@@ -205,8 +205,8 @@ enum
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
-    ANIM_SUBMACHINE, ANIM_SUBMACHINE_SHOOT, ANIM_SUBMACHINE_RELOAD,
-    ANIM_GRENADES, ANIM_GRENADES_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADES_POWER,
+    ANIM_SMG, ANIM_SMG_SHOOT, ANIM_SMG_RELOAD,
+    ANIM_GRENADE, ANIM_GRENADE_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADE_POWER,
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
     ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
@@ -227,7 +227,7 @@ enum
 	WEAPON_FLAMER,
 	WEAPON_PLASMA,
 	WEAPON_RIFLE,
-	WEAPON_GL,
+	WEAPON_GRENADE,
 	WEAPON_TOTAL, // end of selectable weapon set
 	WEAPON_PAINT = WEAPON_TOTAL,
 	WEAPON_MAX // end of superimposed weapon set
@@ -290,7 +290,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
 			S_SG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		500,	1250,	15,		1000,	0,		1000,
+			1,		8,		500,	1250,	15,		2000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,
 			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		50.f,
@@ -298,13 +298,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_SMG,			ANIM_SUBMACHINE,	-10,	5,			0xFF9922,
+		WEAPON_SMG,			ANIM_SMG,	-10,	5,			0xFF9922,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		75,    1500,	12,		1500,	0,		2000,
+			40,		40,		75,    1500,	12,		3000,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		50.f,
-			"submachine",	"\fo",	"weapons/submachine/item",	"weapons/submachine/vwep",
+			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",
 			""
 	},
 	{
@@ -320,7 +320,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		400,	1000,	35,		1000,	0,		1000,
+			20,		20,		400,	1000,	35,		1500,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,	true,		true,		false,
 			0.f,		0.f,			0.5f,		1.0f,		0.f,	6.f,		50.f,
@@ -338,13 +338,13 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_GL,			ANIM_GRENADES,		-5,		5,			0x22FF22,
+		WEAPON_GRENADE,			ANIM_GRENADE,		-5,		5,			0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	1500,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		300.f,
-			"grenade",	"\fg",	"weapons/grenades/item",	"weapons/grenades/vwep",
+			"grenade",	"\fg",	"weapons/grenade/item",	"weapons/grenade/vwep",
 			"projectiles/grenade"
 	},
 	{
@@ -365,7 +365,7 @@ extern weaptypes weaptype[];
 #define isweap(a)		(a > -1 && a < WEAPON_MAX)
 #define weaploads(a,b)	(a == b || weaptype[a].reloads)
 #define weapcarry(a,b)	(a != b && weaptype[a].reloads)
-#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GL ? WEAPON_GL : WEAPON_PISTOL))
+#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
 
 enum
 {
@@ -911,8 +911,8 @@ const char *animnames[] =
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"pistol", "pistol shoot", "pistol reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
-	"submachine", "submachine shoot", "submachine reload",
-	"grenades", "grenades throw", "grenades reload", "grenades power",
+	"smg", "smg shoot", "smg reload",
+	"grenade", "grenade throw", "grenade reload", "grenade power",
 	"flamer", "flamer shoot", "flamer reload",
 	"plasma", "plasma shoot", "plasma reload",
 	"rifle", "rifle shoot", "rifle reload",

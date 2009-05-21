@@ -722,7 +722,7 @@ namespace ai
 			vec dir = vec(dp).sub(ep).normalize();
 			vectoyawpitch(dir, targyaw, targpitch);
 			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
-					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GL ? 0.25f : 1e16f),
+					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GRENADE ? 0.25f : 1e16f),
 						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
 			if(cyaw <= d->ai->views[0]*skew && cpitch <= d->ai->views[1]*skew) return true;
 		}
@@ -869,7 +869,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.idle)
 		{
-			loopirev(WEAPON_MAX) if(i != WEAPON_GL && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+			loopirev(WEAPON_MAX) if(i != WEAPON_GRENADE && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
 				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
 				d->ai->lastaction = d->reqswitch = lastmillis;

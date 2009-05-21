@@ -217,20 +217,14 @@ const char *findfile(const char *filename, const char *mode)
             return s;
         }
     }
-    if(mode[0]=='w' || mode[0]=='a')
-    {
-        copystring(s, filename);
-        path(s);
-        return s;
-    }
+    copystring(s, filename); path(s); // our own packages take priority
+    if(mode[0]=='w' || mode[0]=='a' || fileexists(s, mode)) return s;
     loopv(packagedirs)
     {
-        formatstring(s)("%s%s", packagedirs[i], filename);
-        path(s);
+        formatstring(s)("%s%s", packagedirs[i], filename); path(s);
         if(fileexists(s, mode)) return s;
     }
-    copystring(s, filename);
-    path(s);
+    copystring(s, filename); path(s);
     return s;
 }
 
