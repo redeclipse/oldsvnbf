@@ -429,14 +429,14 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 16.f, dist = proj.o.dist(proj.from),
+						float adjust = 12.f, dist = proj.o.dist(proj.from),
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
 						part_flare(proj.to, proj.o, 1, PART_SFLARE, col, weaptype[proj.weap].partsize);
 						part_flare(proj.to, proj.o, 1, PART_FFLARE_LERP, col, weaptype[proj.weap].partsize*0.5f);
-						part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, col, 0.6f);
+						part_create(PART_PLASMA_SOFT_SLENS, 1, proj.o, col, 0.5f);
 					}
 					break;
 				}
@@ -483,7 +483,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float dist = proj.o.dist(proj.from), size = clamp(48.f*(1.f-proj.lifesize), 1.f, iter ? min(48.f, proj.movement) : dist);
+						float adjust = 48.f, dist = proj.o.dist(proj.from), size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
@@ -498,7 +498,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float dist = proj.o.dist(proj.from), size = clamp(24.f*(1.f-proj.lifesize), 1.f, iter ? min(24.f, proj.movement) : dist);
+						float adjust = 32.f, dist = proj.o.dist(proj.from), size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
@@ -531,7 +531,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 96.f, dist = proj.o.dist(proj.from),
+						float adjust = 512.f, dist = proj.o.dist(proj.from),
 							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
