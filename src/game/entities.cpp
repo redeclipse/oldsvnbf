@@ -151,14 +151,14 @@ namespace entities
 				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
 				vec above = vec(d->abovehead()).add(vec(0, 0, 2));
 				if(texname && *texname)
-					part_icon(above, textureload(texname, 3), 1, 2, 3000, colour, PART_ICON_RISE);
+					part_icon(above, textureload(texname, 3), 1, 2, -10, 0, 3000, colour);
 				else
 				{
 					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
 					if(item && *item)
 					{
 						defformatstring(ds)("@%s", item);
-						part_text(above, ds, PART_TEXT_RISE, 3000, colour, 2);
+						part_text(above, ds, PART_TEXT, 3000, colour, 2, -10);
 					}
 				}
 			}

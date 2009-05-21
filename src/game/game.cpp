@@ -297,8 +297,7 @@ namespace game
 	VARA(spawneffectnum, 3, 10, 20);
 	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
-		part_create(PART_ELECTRIC_SLENS, m_speedtimex(fade), o, colour, size);
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, 20.f);
+		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, -5, 0, 20.f);
 		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
 	}
 
@@ -461,11 +460,11 @@ namespace game
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
-					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, int(d->radius));
+					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x66FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					defformatstring(ds)("@%d", damage);
-					part_text(d->abovehead(4), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+					part_text(d->abovehead(4), ds, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
 				}
 				if(!issound(d->vschan))
 					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -515,7 +514,7 @@ namespace game
 		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators)) dth = S_SPLAT;
 		else
 		{
-			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators);
+			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators)*3/2;
 			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
 			else if(obliterated) dth = S_SPLOSH;
 			else dth = S_DIE1+rnd(2);
@@ -602,7 +601,7 @@ namespace game
 						concatstring(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
 						defformatstring(ds)("@\fgCARNAGE");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						break;
 					}
 					case 10:
@@ -610,7 +609,7 @@ namespace game
 						concatstring(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
 						defformatstring(ds)("@\fgSLAUGHTER");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						break;
 					}
 					case 15:
@@ -618,7 +617,7 @@ namespace game
 						concatstring(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
 						defformatstring(ds)("@\fgMASSACRE");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						break;
 					}
 					case 20:
@@ -626,7 +625,7 @@ namespace game
 						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
 						defformatstring(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						break;
 					}
 					case 25:
@@ -634,7 +633,7 @@ namespace game
 						concatstring(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
 						defformatstring(ds)("@\fgUNSTOPPABLE");
-						part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						break;
 					}
 					default:
@@ -643,7 +642,7 @@ namespace game
 						{
 							anc = S_V_HEADSHOT;
 							defformatstring(ds)("@\fgHEADSHOT");
-							part_text(actor->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 4.f);
+							part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
 							anc = S_V_OWNED;

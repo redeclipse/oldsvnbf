@@ -63,7 +63,7 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
 struct lightningrenderer : sharedlistrenderer
 {
     lightningrenderer()
-        : sharedlistrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE, 0, 0)
+        : sharedlistrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE)
     {}
 
     void startrender()
