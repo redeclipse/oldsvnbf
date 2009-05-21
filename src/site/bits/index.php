@@ -38,9 +38,10 @@
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'nav' => 1, 'redir' => 1);
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/?view=rev&amp;rev=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => 0, 'redir' => 1);
-	$app['targets']['facebook'] = array('name' => 'On Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
-	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
 	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['facebook'] = array('name' => 'On Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
+	$app['targets']['blackboxbeta'] = array('name' => 'On BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -105,6 +106,7 @@
 							<li><a href="/youtube">on Youtube</a></li>
 							<li><a href="/google">on Google</a></li>
 							<li><a href="/facebook">on Facebook</a></li>
+							<li><a href="/blackboxbeta">on BlackBoxBETA</a></li>
 						</ul>
 <?php				if ($app['sflogo'] > 0) { ?>
 						<div id="listlogo">
