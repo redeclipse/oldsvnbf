@@ -330,7 +330,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0x8822FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1250,	150,	4000,	0,		10000,
+			1,		5,		750,	1250,	150,	10000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
