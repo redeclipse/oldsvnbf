@@ -1183,30 +1183,14 @@ namespace entities
 
 	void entitycheck(gameent *d)
 	{
-		if(d->state != CS_ALIVE)
-		{
-			if(!d->airnodes.empty())
-			{
-				if(d->state == CS_DEAD)
-				{
-					loopv(d->airnodes) if(ents.inrange(d->airnodes[i]))
-						ents[d->airnodes[i]]->type = NOTUSED;
-					loopvk(ents) if(!ents[k]->links.empty())
-					{
-						loopvrev(ents[k]->links) if(d->airnodes.find(ents[k]->links[i]) >= 0)
-							ents[k]->links.remove(i);
-					}
-				}
-				d->airnodes.setsizenodelete(0);
-			}
-			d->lastnode = -1;
-		}
-		else
+		int cleanairnodes = 0;
+		if(d->state == CS_ALIVE)
 		{
 			vec v = d->feetpos();
-			bool shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !ai::clipped(v);
+			bool clip = !ai::clipped(v), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
+
 			if(!ents.inrange(curnode) && shoulddrop)
 			{
 				int cmds = WP_NONE;
@@ -1216,6 +1200,7 @@ namespace entities
 				if(d->timeinair) d->airnodes.add(curnode);
 				clearentcache();
 			}
+
 			if(ents.inrange(curnode))
 			{
 				if(shoulddrop && ents.inrange(d->lastnode) && d->lastnode != curnode)
@@ -1223,6 +1208,29 @@ namespace entities
 				d->lastnode = curnode;
 			}
 			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false);
+
+			if(clip) cleanairnodes = 2;
+			else if(!d->timeinair) cleanairnodes = 1;
+		}
+		else
+		{
+			d->lastnode = -1;
+			cleanairnodes = 2;
+		}
+
+		if(cleanairnodes && !d->airnodes.empty())
+		{
+			if(cleanairnodes > 1)
+			{
+				loopv(d->airnodes) if(ents.inrange(d->airnodes[i]))
+					ents[d->airnodes[i]]->type = NOTUSED;
+				loopvk(ents) if(!ents[k]->links.empty())
+				{
+					loopvrev(ents[k]->links) if(d->airnodes.find(ents[k]->links[i]) >= 0)
+						ents[k]->links.remove(i);
+				}
+			}
+			d->airnodes.setsizenodelete(0);
 		}
 	}
 

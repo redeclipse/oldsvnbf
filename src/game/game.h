@@ -264,7 +264,7 @@ enum
 
 struct weaptypes
 {
-	int	info, 				anim,			kick,	wobble,		colour,
+	int	info, 				anim,				kick,	wobble,		colour,
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
@@ -278,7 +278,7 @@ struct weaptypes
 weaptypes weaptype[WEAPON_MAX] =
 {
 	{
-		WEAPON_PISTOL,		ANIM_PISTOL,	-15,	15,			0x999999,
+		WEAPON_PISTOL,		ANIM_PISTOL,		-20,	15,			0x999999,
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		125,    1250,	25,		2000,	0,		10000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -288,9 +288,9 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_SG,			ANIM_SHOTGUN,	-30,    30,			0xFFFF22,
+		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
 			S_SG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		500,	1250,	10,		1000,	0,		1000,
+			1,		8,		500,	1250,	15,		1000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,
 			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		50.f,
@@ -298,7 +298,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_SMG,			ANIM_SUBMACHINE,	-5,	     5,		0xFF9922,
+		WEAPON_SMG,			ANIM_SUBMACHINE,	-10,	5,			0xFF9922,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		1500,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -308,9 +308,9 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_FLAMER,		ANIM_FLAMER,	-1,		 1,			0xFF2222,
+		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	20,		100,	0,		3000,
+			50,		50,		100, 	2000,	25,		100,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,
 			0.15f,		45.f,			0.25f,		1.5f,		50.f,	30.f,		10.f,
@@ -318,7 +318,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_PLASMA,		ANIM_PLASMA,	-5,		5,			0x22FFFF,
+		WEAPON_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		400,	1000,	35,		1000,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
@@ -328,9 +328,9 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_RIFLE,		ANIM_RIFLE,		-20,  	20,			0x8822FF,
+		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0x8822FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1250,	100,	4000,	0,		10000,
+			1,		5,		750,	1250,	150,	4000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
@@ -338,9 +338,9 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_GL,			ANIM_GRENADES,	-5,    5,			0x22FF22,
+		WEAPON_GL,			ANIM_GRENADES,		-5,		5,			0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		2,		1500,	1500,	200,	350,	3000,	3000,
+			1,		2,		1500,	1500,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		300.f,
@@ -962,7 +962,7 @@ struct gameent : dynent, gamestate
 		conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
-		weight = 200; // so we can control the 'gravity' feel
+		weight = 250; // so we can control the 'gravity' feel
 		maxspeed = 50; // ditto for movement
 		respawn(-1, 100);
 	}
