@@ -19,7 +19,7 @@ static bool fieldsactive = false;
 #define INSERT (3*SKIN_SCALE)
 
 VARP(guiautotab, 6, 16, 40);
-VARP(guiclicktab, 0, 0, 1);
+VARP(guiclicktab, 0, 1, 1);
 
 static bool needsinput = false;
 
