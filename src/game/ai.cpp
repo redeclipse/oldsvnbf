@@ -754,10 +754,10 @@ namespace ai
 			d->jumptime = lastmillis;
 			if(jumper && propel) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*10;
-			d->ai->propelseed = lastmillis+rnd(seed);
-			if(jump) d->ai->jumpseed = d->ai->propelseed+rnd(seed);
+			d->ai->propelseed = lastmillis+seed+rnd(seed);
+			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
 			seed *= d->onladder || b.idle ? 25 : 50;
-			d->ai->jumprand = lastmillis+rnd(seed);
+			d->ai->jumprand = lastmillis+seed+rnd(seed);
 		}
 	}
 
