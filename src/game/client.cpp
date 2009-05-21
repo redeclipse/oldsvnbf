@@ -372,7 +372,7 @@ namespace client
 		if(d->state != CS_SPECTATOR)
 		{
 			defformatstring(ds)("@%s", &s);
-			part_text(d->abovehead(), ds, PART_TEXT_RISE, 2500, 0xFFFFFF, 3.f);
+			part_text(d->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
 		}
 
 		conoutft(CON_CHAT, "%s", s);
@@ -1359,14 +1359,14 @@ namespace client
 							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
 						if(texname && *texname)
-							part_icon(pos, textureload(texname, 3), 1, 2, 3000, colour, PART_ICON_RISE);
+							part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, 3000, colour);
 						else
 						{
 							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
 							if(item && *item)
 							{
 								defformatstring(ds)("@%s", item);
-								part_text(pos, ds, PART_TEXT_RISE, 3000, colour, 2);
+								part_text(pos, ds, PART_TEXT, 3000, colour, 2, -10);
 							}
 						}
 					}

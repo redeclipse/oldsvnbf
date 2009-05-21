@@ -29,7 +29,6 @@ struct flare
 };
 
 VARW(flarelights, 0, 0, 1);
-VARP(flareparts, 0, 1, 1);
 VARP(flarecutoff, 0, 1000, 10000);
 VARP(flaresize, 20, 100, 500);
 
@@ -40,7 +39,7 @@ struct flarerenderer : partrenderer
     flare *flares;
 
     flarerenderer(const char *texname, int maxflares)
-        : partrenderer(texname, PT_FLARE, 0, 0), maxflares(maxflares), shinetime(0)
+        : partrenderer(texname, PT_FLARE), maxflares(maxflares), shinetime(0)
     {
         flares = new flare[maxflares];
     }
@@ -186,7 +185,7 @@ struct flarerenderer : partrenderer
     }
 
     //square per round hole - use addflare(..) instead
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, physent *pl = NULL) { return NULL; }
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int grav, int collide, physent *pl = NULL) { return NULL; }
 };
 static flarerenderer flares("particles/lensflares", 128);
 

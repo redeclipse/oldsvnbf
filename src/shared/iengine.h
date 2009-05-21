@@ -171,7 +171,6 @@ enum
     PT_TAPE,
     PT_TRAIL,
     PT_TEXT,
-    PT_TEXTUP,
     PT_METER,
     PT_METERVS,
     PT_FIREBALL,
@@ -192,36 +191,28 @@ enum
     PT_LERP		= 1<<13,	// use very sparingly - order of blending issues
     PT_GLARE	= 1<<14,	// use glare when available
     PT_SOFT		= 1<<15,	// use soft quad rendering when available
-    PT_LENS		= 1<<16,	// add a lens flare effect too
-    PT_SPARKLE	= 1<<17,	// add a sparkle to lens flare
-    PT_ONTOP	= 1<<18,	// render on top of everything else, remove depth testing
+    PT_ONTOP	= 1<<16,	// render on top of everything else, remove depth testing
 	PT_FLIP		= PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
 enum
 {
-    PART_TELEPORT = 0,
-    PART_ICON, PART_ICON_RISE,
+    PART_TELEPORT = 0, PART_ICON,
     PART_LINE, PART_TRIANGLE, PART_ELLIPSE, PART_CONE,
-    PART_WATER,
 	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_SFLARE_LERP, PART_FFLARE_LERP,
-    PART_SMOKE_LERP, PART_SMOKE_LERP_SRISE, PART_SMOKE_LERP_SRISE_SOFT, PART_SMOKE_LERP_FRISE, PART_SMOKE_LERP_SINK,
-    PART_SMOKE, PART_SMOKE_SRISE, PART_SMOKE_SRISE_SOFT, PART_SMOKE_FRISE, PART_SMOKE_SINK,
+    PART_SMOKE_LERP_SOFT, PART_SMOKE_LERP,
+    PART_SMOKE_SOFT, PART_SMOKE,
     PART_BLOOD,
     PART_EDIT, PART_EDIT_ONTOP,
-    PART_SPARK, PART_SPARK_LENS, PART_SPARK_SLENS,
+    PART_SPARK,
     PART_FIREBALL_SOFT, PART_FIREBALL,
-    PART_FIREBALL_SOFT_LENS, PART_FIREBALL_LENS,
-    PART_FIREBALL_SOFT_SLENS, PART_FIREBALL_SLENS,
     PART_PLASMA_SOFT, PART_PLASMA,
-    PART_PLASMA_SOFT_LENS, PART_PLASMA_LENS,
-    PART_PLASMA_SOFT_SLENS, PART_PLASMA_SLENS,
-    PART_ELECTRIC, PART_ELECTRIC_LENS, PART_ELECTRIC_SLENS,
-    PART_FLAME, PART_FLAME_LENS, PART_FLAME_SLENS,
+    PART_ELECTRIC,
+    PART_FLAME,
     PART_SFLARE, PART_FFLARE,
-    PART_MUZZLE_FLASH, PART_MUZZLE_FLASH_LENS, PART_MUZZLE_FLASH_SLENS,
+    PART_MUZZLE_FLASH,
     PART_SNOW,
-    PART_TEXT, PART_TEXT_RISE, PART_TEXT_ONTOP,
+    PART_TEXT, PART_TEXT_ONTOP,
     PART_METER, PART_METER_VS,
     PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
     PART_LIGHTNING,
@@ -231,7 +222,7 @@ enum
 struct particle
 {
     vec o, d;
-    int fade, millis, frame;
+    int collide, fade, grav, millis;
     bvec color;
     uchar flags;
     float size;
@@ -248,20 +239,20 @@ struct particle
 	physent *owner;
 };
 
-extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL, int delay = 0);
-extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
-extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int radius = 150, int delay = 0);
-extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int radius = 4);
-extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f);
-extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2.f);
-extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFFF, float size = 2.f);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2.f, physent *pl = NULL);
-extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
-extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, physent *pl = NULL);
+extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
+extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, int radius = 150, int delay = 0);
+extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, int radius = 4);
+extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f, int grav = 0, int collide = 0);
+extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0);
+extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
+extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
-extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int fade = 1, int color = 0xFFFFFF, int type = PART_ICON);
+extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int grav = 0, int collide = 0, int fade = 1, int color = 0xFFFFFF, int type = PART_ICON);
 extern void part_line(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int type = PART_LINE);
 extern void part_triangle(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true, int type = PART_TRIANGLE);
 extern void part_dir(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0x0000FF, bool fill = true);
@@ -273,13 +264,19 @@ extern void part_cone(const vec &o, const vec &dir, float radius, float angle, f
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, float vel = 1.f);
-void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2.0f, float vel = 1.f);
+extern particle *newparticle(const vec &o, const vec &d, int fade, int type, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void create(int type, int color, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regularcreate(int type, int color, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
+extern void splash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0);
+extern void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, int delay = 0);
+extern void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, float vel = 1.f);
+extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2.0f, int grav = -1, int collide = 0, float vel = 1.f);
 
 // decal
 enum
 {
-    DECAL_SCORCH = 0,
+    DECAL_SMOKE = 0,
+    DECAL_SCORCH,
     DECAL_BLOOD,
     DECAL_BULLET,
     DECAL_ENERGY,
