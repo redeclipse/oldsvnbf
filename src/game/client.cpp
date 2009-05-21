@@ -358,7 +358,7 @@ namespace client
 	void saytext(gameent *d, int flags, char *text)
 	{
 		if(!colourchat) filtertext(text, text);
-		string s;
+		string s; s[0] = 0;
 		bool team = m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
 		if(team)
@@ -371,7 +371,7 @@ namespace client
 
 		if(d->state != CS_SPECTATOR)
 		{
-			defformatstring(ds)("@%s", &s);
+			defformatstring(ds)("@%s", s);
 			part_text(d->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
 		}
 
@@ -1358,15 +1358,14 @@ namespace client
 						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
 							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
-						if(texname && *texname)
-							part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, 3000, colour);
+						if(texname && *texname) part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, 2500, colour);
 						else
 						{
 							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
 							if(item && *item)
 							{
-								defformatstring(ds)("@%s", item);
-								part_text(pos, ds, PART_TEXT, 3000, colour, 2, -10);
+								defformatstring(ds)("@%s (%d)", item, entities::ents[ent]->type);
+								part_text(pos, ds, PART_TEXT, 2500, colour, 2, -10);
 							}
 						}
 					}

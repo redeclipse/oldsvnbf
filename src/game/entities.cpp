@@ -27,9 +27,7 @@ namespace entities
 
 	const char *entinfo(int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool full)
 	{
-		static string entinfostr;
-		string str;
-		entinfostr[0] = 0;
+		static string entinfostr; entinfostr[0] = 0;
 		#define addentinfo(s) { \
 			if(entinfostr[0]) concatstring(entinfostr, ", "); \
 			concatstring(entinfostr, s); \
@@ -38,12 +36,12 @@ namespace entities
 		{
 			if(valteam(attr2, TEAM_FIRST))
 			{
-				formatstring(str)("team %s", teamtype[attr2].name);
+				defformatstring(str)("team %s", teamtype[attr2].name);
 				addentinfo(str);
 			}
 			else if(attr2 < TEAM_MAX)
 			{
-				formatstring(str)("%s", teamtype[attr2].name);
+				defformatstring(str)("%s", teamtype[attr2].name);
 				addentinfo(str);
 			}
 		}
@@ -53,7 +51,7 @@ namespace entities
 				attr = weapattr(attr1, sweap);
 			if(isweap(attr))
 			{
-				formatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
+				defformatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
 				addentinfo(str);
 				if(full)
 				{
@@ -93,7 +91,7 @@ namespace entities
 				};
 				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
 					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
-				formatstring(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
+				defformatstring(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
 		}
@@ -101,10 +99,10 @@ namespace entities
 		{
 			if(full)
 			{
-				if(attr1 & WP_CROUCH) addentinfo("crouch");
+				if(attr1&WP_CROUCH) addentinfo("crouch");
 			}
 		}
-		return entinfostr;
+		return entinfostr[0] ? entinfostr : "";
 	}
 
 	const char *entmdlname(int type, int attr1, int attr2, int attr3, int attr4, int attr5)
@@ -150,15 +148,14 @@ namespace entities
 				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
 				vec above = vec(d->abovehead()).add(vec(0, 0, 2));
-				if(texname && *texname)
-					part_icon(above, textureload(texname, 3), 1, 2, -10, 0, 3000, colour);
+				if(texname && *texname) part_icon(above, textureload(texname, 3), 1, 2, -10, 0, 2500, colour);
 				else
 				{
 					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
 					if(item && *item)
 					{
-						defformatstring(ds)("@%s", item);
-						part_text(above, ds, PART_TEXT, 3000, colour, 2, -10);
+						defformatstring(ds)("@%s (%d)", item, e.type);
+						part_text(above, ds, PART_TEXT, 2500, colour, 2, -10);
 					}
 				}
 			}
@@ -1875,12 +1872,15 @@ namespace entities
 			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attr[0], sweap) : e.attr[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
-			if(itext && *itext)
-				part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
+			if(itext && *itext) part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
 			else
 			{
-				defformatstring(ds)("@%s", entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent));
-				part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
+				const char *item = entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent);
+				if(item && *item)
+				{
+					defformatstring(ds)("@%s", item);
+					part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
+				}
 			}
 		}
 	}

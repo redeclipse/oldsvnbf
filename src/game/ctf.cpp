@@ -310,11 +310,7 @@ namespace ctf
 		(st.findscore(d->team)).total = score;
 		f.interptime = lastmillis;
 		st.returnflag(relay);
-		if(d!=game::player1)
-		{
-			defformatstring(ds)("@CAPTURED!");
-			part_text(d->abovehead(), ds, PART_TEXT, 2500, teamtype[d->team].colour, 3.f, -10);
-		}
+		part_text(d->abovehead(), "@CAPTURED!", PART_TEXT, 2500, teamtype[d->team].colour, 3.f, -10);
 		game::announce(S_V_FLAGSCORE, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
 		g.taketime = 0;
     }
