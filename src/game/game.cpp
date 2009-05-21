@@ -1549,8 +1549,8 @@ namespace game
 
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
-				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SUBMACHINE:
-				case ANIM_GRENADES: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE: case ANIM_PAINTGUN:
+				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SMG:
+				case ANIM_GRENADE: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE: case ANIM_PAINTGUN:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);
@@ -1680,13 +1680,13 @@ namespace game
 					}
 					case WPSTATE_SHOOT:
 					{
-						if(weap == WEAPON_GL && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
+						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
 						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
-						if(weap == WEAPON_GL && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
+						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
 						animflags = (weaptype[weap].anim+weapstate);
 						break;
 					}

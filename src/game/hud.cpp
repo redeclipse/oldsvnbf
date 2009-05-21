@@ -115,8 +115,8 @@ namespace hud
 	FVARP(inventoryglow, 0, 0.055f, 1);
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
-	TVAR(submachinetex, "textures/submachine", 3);
-	TVAR(grenadestex, "textures/grenades", 3);
+	TVAR(smgtex, "textures/smg", 3);
+	TVAR(grenadetex, "textures/grenade", 3);
 	TVAR(flamertex, "textures/flamer", 3);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(rifletex, "textures/rifle", 3);
@@ -139,8 +139,8 @@ namespace hud
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
-	TVAR(submachinecliptex, "textures/submachineclip", 3);
-	TVAR(grenadescliptex, "textures/grenadesclip", 3);
+	TVAR(smgcliptex, "textures/smgclip", 3);
+	TVAR(grenadecliptex, "textures/grenadeclip", 3);
 	TVAR(flamercliptex, "textures/flamerclip", 3);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
@@ -329,8 +329,8 @@ namespace hud
     void drawclip(int weap, int x, int y, float s)
     {
         const char *cliptexs[WEAPON_MAX] = {
-            pistolcliptex, shotguncliptex, submachinecliptex,
-            flamercliptex, plasmacliptex, riflecliptex, grenadescliptex, // end of regular weapons
+            pistolcliptex, shotguncliptex, smgcliptex,
+            flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
 			paintguncliptex
         };
         Texture *t = textureload(cliptexs[weap], 3);
@@ -374,7 +374,7 @@ namespace hud
 							x, y, s, fade, r, g, b);
                 break;
 
-            case WEAPON_GL:
+            case WEAPON_GRENADE:
                 drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
                 break;
 
@@ -957,7 +957,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAPON_MAX] = {
-					pistoltex, shotguntex, submachinetex, flamertex, plasmatex, rifletex, grenadestex,
+					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
 					paintguntex
 				};
 				if(isweap(stype)) return weaptexs[stype];
@@ -995,7 +995,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAPON_MAX] = {
-					pistoltex, shotguntex, submachinetex, flamertex, plasmatex, rifletex, grenadestex,
+					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
 					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
