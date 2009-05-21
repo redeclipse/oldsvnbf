@@ -59,7 +59,7 @@ struct partrenderer
 	virtual void init(int n) { }
 	virtual void reset() = NULL;
 	virtual void resettracked(physent *owner) { }
-	virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int grav, int collide, physent *pl = NULL) = NULL;
+	virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int grav = 0, int collide = 0, physent *pl = NULL) = NULL;
 	virtual int adddepthfx(vec &bbmin, vec &bbmax) { return 0; }
 	virtual void update() { }
 #if 0
@@ -397,21 +397,14 @@ struct textrenderer : sharedlistrenderer
 			if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
 			else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
 		}
-
 		glRotatef(camera1->yaw-180, 0, 0, 1);
 		glRotatef(camera1->pitch-90, 1, 0, 0);
-
 		float scale = p->size/80.0f;
 		glScalef(-scale, scale, -scale);
-
 		const char *text = p->text+(p->text[0]=='@' ? 1 : 0);
 		float xoff = -text_width(text)/2;
-		float yoff = 0;
-		if(p->grav) { xoff += detrnd((size_t)p, p->grav*2)-p->grav; yoff -= detrnd((size_t)p, 101); } //@TODO instead in worldspace beforehand?
-		glTranslatef(xoff, yoff, 50);
-
+		glTranslatef(xoff, 0, 50);
 		draw_text(text, 0, 0, color[0], color[1], color[2], blend);
-
 		glPopMatrix();
 	}
 };
@@ -1401,10 +1394,9 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
 
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide)
 {
-	if(shadowmapping || renderedgame) return;
+	if(shadowmapping || renderedgame || !t[0] || (t[0] == '@' && !t[1])) return;
 	if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
-	if(t[0]=='@') t = newstring(t);
-	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide)->text = t;
+	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide)->text = t[0]=='@' ? newstring(t) : t;
 }
 
 void part_meter(const vec &s, float val, int type, int fade, int color, int color2, float size, int grav, int collide)

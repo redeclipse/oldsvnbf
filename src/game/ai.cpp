@@ -1089,7 +1089,7 @@ namespace ai
 		}, *btypes[AI_T_MAX+1] = {
 			"none", "node", "player", "affinity", "entity", "drop"
 		};
-		string s;
+		string s; s[0] = 0;
 		if(top)
 		{
 			formatstring(s)("@\fg%s (%d[%d]) %s:%d (%d[%d])",
@@ -1108,7 +1108,7 @@ namespace ai
 				btypes[b.targtype+1], b.target
 			);
 		}
-		part_text(vec(d->abovehead()).add(vec(0, 0, above)), s);
+		if(s[0]) part_text(vec(d->abovehead()).add(vec(0, 0, above)), s);
 	}
 
 	void drawroute(gameent *d, aistate &b, float amt)

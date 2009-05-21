@@ -294,7 +294,7 @@ namespace game
 		}
 	}
 
-	VARA(spawneffectnum, 3, 10, 20);
+	VARA(spawneffectnum, 1, 25, INT_MAX-1);
 	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
 	{
 		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, -5, 0, 20.f);
@@ -464,7 +464,7 @@ namespace game
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					defformatstring(ds)("@%d", damage);
-					part_text(d->abovehead(4), ds, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+					part_text(d->abovehead(4), ds, PART_TEXT, 2500, 0x00FFFF, 3.f, -10);
 				}
 				if(!issound(d->vschan))
 					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -600,40 +600,35 @@ namespace game
 					{
 						concatstring(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
-						defformatstring(ds)("@\fgCARNAGE");
-						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+						part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						break;
 					}
 					case 10:
 					{
 						concatstring(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
-						defformatstring(ds)("@\fgSLAUGHTER");
-						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+						part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						break;
 					}
 					case 15:
 					{
 						concatstring(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
-						defformatstring(ds)("@\fgMASSACRE");
-						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+						part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						break;
 					}
 					case 20:
 					{
 						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
-						defformatstring(ds)(m_paint(gamemode, mutators) ? "@\fgPAINTBATH" : "@\fgBLOODBATH");
-						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+						part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						break;
 					}
 					case 25:
 					{
 						concatstring(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
-						defformatstring(ds)("@\fgUNSTOPPABLE");
-						part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+						part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						break;
 					}
 					default:
@@ -641,8 +636,7 @@ namespace game
 						if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 						{
 							anc = S_V_HEADSHOT;
-							defformatstring(ds)("@\fgHEADSHOT");
-							part_text(actor->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 4.f, -10);
+							part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
 							anc = S_V_OWNED;
@@ -1711,8 +1705,12 @@ namespace game
 			vec pos = d->abovehead();
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
 			{
-				part_text(pos, colorname(d, NULL, "@"));
-				pos.z += 2;
+				const char *name = colorname(d, NULL, "@");
+				if(name && *name && (*name != '@' || name[1]))
+				{
+					part_text(pos, name);
+					pos.z += 2;
+				}
 			}
 			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
 			{
