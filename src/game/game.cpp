@@ -600,35 +600,35 @@ namespace game
 					{
 						concatstring(d->obit, " in total carnage!");
 						anc = S_V_SPREE1;
-						part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+						part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						break;
 					}
 					case 10:
 					{
 						concatstring(d->obit, " who is slaughtering!");
 						anc = S_V_SPREE2;
-						part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+						part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						break;
 					}
 					case 15:
 					{
 						concatstring(d->obit, " going on a massacre!");
 						anc = S_V_SPREE3;
-						part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+						part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						break;
 					}
 					case 20:
 					{
 						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
 						anc = S_V_SPREE4;
-						part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+						part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						break;
 					}
 					case 25:
 					{
 						concatstring(d->obit, " who seems unstoppable!");
 						anc = S_V_SPREE4;
-						part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+						part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						break;
 					}
 					default:
@@ -636,7 +636,7 @@ namespace game
 						if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 						{
 							anc = S_V_HEADSHOT;
-							part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0xFF0000, 4.f, -10);
+							part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						}
 						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
 							anc = S_V_OWNED;
