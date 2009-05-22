@@ -2102,8 +2102,8 @@ namespace server
 			}
 			else
 			{
-				takeammo(ci, weap, 1);
-				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, weap, -1);
+				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
+				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
 			}
 		}
 		takeammo(ci, weap, 1);
@@ -2133,8 +2133,8 @@ namespace server
 			}
 			else
 			{
-				takeammo(ci, gs.weapselect, 1);
-				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -1);
+				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
+				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
 			}
 		}
 		gs.weapswitch(weap, millis);
@@ -2198,7 +2198,9 @@ namespace server
 			return;
 		}
 		gs.setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, millis);
+		int oldammo = gs.ammo[weap];
 		gs.ammo[weap] = clamp(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].add, weaptype[weap].max);
+		gs.weapload[gs.weapselect] = gs.ammo[weap]-oldammo;
 		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, weap, gs.ammo[weap]);
 	}
 

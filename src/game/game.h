@@ -667,7 +667,7 @@ enum
 struct gamestate
 {
 	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
-	int lastweap, weapselect, weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
+	int lastweap, weapselect, weapload[WEAPON_MAX], weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
 	int sequence, aitype, ownernum, skill, spree;
 
@@ -724,7 +724,7 @@ struct gamestate
 		loopi(WEAPON_MAX)
 		{
 			weapstate[i] = WPSTATE_IDLE;
-			weapwait[i] = weaplast[i] = 0;
+			weapwait[i] = weaplast[i] = weapload[i] = 0;
 			if(full) ammo[i] = -1;
 			entid[i] = -1;
 		}
@@ -765,7 +765,7 @@ struct gamestate
 
 	bool canshoot(int weap, int sweap, int millis, int skip = -1)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skip != WPSTATE_RELOAD || ammo[weap] > 1 ? skip : -1))
+		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skip != WPSTATE_RELOAD || ammo[weap] > weaptype[weap].add || weapload[weap] < weaptype[weap].add ? skip : -1))
 			return true;
 		return false;
 	}
