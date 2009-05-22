@@ -1266,6 +1266,7 @@ namespace client
 					if(amt >= 0)
 					{
 						target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
+						target->weapload[weap] = amt-target->ammo[weap];
 						target->ammo[weap] = amt;
 						playsound(S_RELOAD, target->o, target);
 						target->reqreload = -1;

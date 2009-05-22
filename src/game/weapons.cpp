@@ -63,7 +63,7 @@ namespace weapons
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		bool canreload = d->canreload(d->weapselect, sweap, lastmillis);
-		if(canreload && autoreloading > 1 && !d->attacking && !d->reloading && !d->useaction) d->reloading = true;
+		if(canreload && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1 && !d->attacking && !d->reloading && !d->useaction) d->reloading = true;
 		if(!d->hasweap(d->weapselect, sweap))
 		{
 			int bestweap = d->bestweap(sweap, true);
