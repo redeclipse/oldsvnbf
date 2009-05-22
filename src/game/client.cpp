@@ -1263,10 +1263,14 @@ namespace client
 					int trg = getint(p), weap = getint(p), amt = getint(p);
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
-					target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
-					target->ammo[weap] = amt;
-					target->reqreload = -1;
-					playsound(S_RELOAD, target->o, target);
+					if(amt >= 0)
+					{
+						target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
+						target->ammo[weap] = amt;
+						playsound(S_RELOAD, target->o, target);
+						target->reqreload = -1;
+					}
+					else target->ammo[weap] = max(target->ammo[weap] + amt, 0);
 					break;
 				}
 

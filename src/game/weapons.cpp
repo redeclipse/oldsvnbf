@@ -1,7 +1,7 @@
 #include "game.h"
 namespace weapons
 {
-	VARP(autoreload, 0, 1, 10);// auto reload when 0:never 1:empty 2+:every(this*rdelay)
+	VARP(autoreloading, 0, 2, 2);
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
 	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
@@ -33,10 +33,11 @@ namespace weapons
 				if(skipgrenade && s == WEAPON_GRENADE) continue;
 			}
 
-			if(d->canswitch(s, sweap, lastmillis))
+			if(d->canswitch(s, sweap, lastmillis, WPSTATE_RELOAD))
 			{
 				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, s);
 				d->reqswitch = lastmillis;
+				d->reloading = false;
 				return;
 			}
 			else if(a >= 0) break;
@@ -51,33 +52,28 @@ namespace weapons
 		if(!m_noitems(game::gamemode, game::mutators) && isweap(weap) && ((weap == WEAPON_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+			d->reloading = false;
 			d->reqswitch = lastmillis;
 		}
 		else if(d == game::player1) playsound(S_DENIED, d->o, d);
 	}
 	ICOMMAND(drop, "s", (char *n), drop(game::player1, *n ? atoi(n) : -1));
 
-	bool doautoreload(gameent *d)
-	{
-		if(autoreload && !d->ammo[d->weapselect]) return true;
-		if(autoreload > 1 && lastmillis-d->weaplast[d->weapselect] > weaptype[d->weapselect].rdelay*autoreload)
-			return true;
-		return false;
-	}
-
 	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
+		bool canreload = d->canreload(d->weapselect, sweap, lastmillis);
+		if(canreload && autoreloading > 1 && !d->attacking && !d->reloading && !d->useaction) d->reloading = true;
 		if(!d->hasweap(d->weapselect, sweap))
 		{
 			int bestweap = d->bestweap(sweap, true);
-			if(d->canswitch(bestweap, sweap, lastmillis) && d->reqswitch < 0)
+			if(d->canswitch(bestweap, sweap, lastmillis, WPSTATE_RELOAD) && d->reqswitch < 0)
 			{
 				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, bestweap);
 				d->reqswitch = lastmillis;
 			}
 		}
-		else if(d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0 && (d->reloading || doautoreload(d)))
+		else if(canreload && d->reqreload < 0 && (d->reloading || (autoreloading && !d->ammo[d->weapselect])))
 		{
 			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, d->weapselect);
 			d->reqreload = lastmillis;
@@ -104,7 +100,7 @@ namespace weapons
 
 	void shoot(gameent *d, vec &targ, int force)
 	{
-		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) || !game::allowmove(d))
 			return;
 
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
@@ -127,8 +123,9 @@ namespace weapons
 			}
 			d->attacking = false;
 		}
-		else if(!d->attacking || !game::allowmove(d)) return;
+		else if(!d->attacking) return;
 
+		d->reloading = false;
 		int adelay = weaptype[d->weapselect].adelay;
 		if(d->weapselect == WEAPON_PISTOL)
 		{

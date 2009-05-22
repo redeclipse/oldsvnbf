@@ -749,23 +749,23 @@ struct gamestate
 		setweapstate(weap, state, WEAPSWITCHDELAY, millis, true);
 	}
 
-	bool weapwaited(int weap, int millis, bool skip = false)
+	bool weapwaited(int weap, int millis, int skip = -1)
 	{
 		if(!weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER) return true;
-		if(skip && (weapstate[weap] == WPSTATE_SHOOT || weapstate[weap] == WPSTATE_RELOAD || weapstate[weap] == WPSTATE_PICKUP)) return true;
+		if(skip >= 0 && weapstate[weap] == skip) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
-	bool canswitch(int weap, int sweap, int millis)
+	bool canswitch(int weap, int sweap, int millis, int skip = -1)
 	{
-		if(weap != weapselect && weapwaited(weapselect, millis, true) && hasweap(weap, sweap) && weapwaited(weap, millis, true))
+		if(weap != weapselect && weapwaited(weapselect, millis, skip) && hasweap(weap, sweap) && weapwaited(weap, millis, skip))
 			return true;
 		return false;
 	}
 
-	bool canshoot(int weap, int sweap, int millis)
+	bool canshoot(int weap, int sweap, int millis, int skip = -1)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis))
+		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skip != WPSTATE_RELOAD || ammo[weap] > 1 ? skip : -1))
 			return true;
 		return false;
 	}
@@ -1111,10 +1111,9 @@ namespace projs
 
 namespace weapons
 {
-	extern int autoreload;
+	extern int autoreloading;
 	extern void reload(gameent *d);
 	extern void shoot(gameent *d, vec &targ, int force = 0);
-	extern bool doautoreload(gameent *d);
 	extern void preload(int weap = -1);
 }
 
