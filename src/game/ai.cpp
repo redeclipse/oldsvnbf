@@ -803,7 +803,7 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis) && hastarget(d, b, e))
+					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) && hastarget(d, b, e))
 					{
 						d->attacking = true;
 						d->ai->lastaction = d->attacktime = lastmillis;
@@ -931,7 +931,7 @@ namespace ai
 			int weap = -1;
 			if(d->hasweap(d->ai->weappref, sweap)) weap = d->ai->weappref; // could be any weap
 			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
-			if(weap != d->weapselect && d->canswitch(weap, sweap, lastmillis))
+			if(weap != d->weapselect && d->canswitch(weap, sweap, lastmillis, WPSTATE_RELOAD))
 			{
 				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 				d->ai->lastaction = d->reqswitch = lastmillis;

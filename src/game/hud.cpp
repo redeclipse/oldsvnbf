@@ -648,7 +648,7 @@ namespace hud
 							SEARCHBINDCACHE(zoomkey)("zoom", 0);
 							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "prone");
 						}
-						if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+						if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD))
 						{
 							SEARCHBINDCACHE(attackkey)("attack", 0);
 							ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
@@ -657,8 +657,6 @@ namespace hud
 						{
 							SEARCHBINDCACHE(reloadkey)("reload", 0);
 							ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey);
-							if(weapons::autoreload > 1 && lastmillis-game::player1->weaplast[game::player1->weapselect] <= 1000)
-								ty += draw_textx("Automatic reload in \fs\fy%.01f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, float(1000-(lastmillis-game::player1->weaplast[game::player1->weapselect]))/1000.f);
 						}
 					}
 					popfont();

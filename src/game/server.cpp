@@ -2094,9 +2094,17 @@ namespace server
 		}
 		if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis))
 		{
-			takeammo(ci, weap, 1); // keep synched!
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
-			return;
+			if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
+			{
+				takeammo(ci, weap, 1);
+				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
+				return;
+			}
+			else
+			{
+				takeammo(ci, weap, 1);
+				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, weap, -1);
+			}
 		}
 		takeammo(ci, weap, 1);
 		gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
@@ -2118,8 +2126,16 @@ namespace server
 		}
 		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
-			return;
+			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
+			{
+				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
+				return;
+			}
+			else
+			{
+				takeammo(ci, gs.weapselect, 1);
+				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -1);
+			}
 		}
 		gs.weapswitch(weap, millis);
 		sendf(-1, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);

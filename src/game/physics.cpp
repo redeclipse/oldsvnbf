@@ -45,12 +45,12 @@ namespace physics
 	imov(right,    strafe, -1, k_right, k_left);
 
 	// inputs
-	#define iput(x,y,t,z,a) \
+	#define iput(x,y,t,z,a,f) \
 		void do##x(bool down) \
 		{ \
 			if(game::allowmove(game::player1)) \
 			{ \
-				if(a) \
+				if(a > 0) \
 				{ \
 					if(game::player1->y != down) \
 					{ \
@@ -58,12 +58,18 @@ namespace physics
 						else if(down) game::player1->t = -game::player1->t; \
 					} \
 				} \
-				else if(down) game::player1->t = lastmillis; \
+				else if(a < 0 && !down) return; \
+				else if(down) \
+				{ \
+					if(a < 0 && game::player1->y) down = false; \
+					else game::player1->t = lastmillis; \
+				} \
 				game::player1->y = down; \
+				f; \
 			} \
 			else \
 			{ \
-				if(a && game::player1->y && game::player1->t >= 0) \
+				if(a > 0 && game::player1->y && game::player1->t >= 0) \
 					game::player1->t = lastmillis-max(a-(lastmillis-game::player1->t), 0); \
 				game::player1->y = false; \
 				if(z && down) game::respawn(game::player1); \
@@ -71,11 +77,11 @@ namespace physics
 		} \
 		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
 
-	iput(crouch,	crouching,	crouchtime,	false,	CROUCHTIME);
-	iput(jump,		jumping,	jumptime,	false,	0);
-	iput(attack,	attacking,	attacktime,	true,	0);
-	iput(reload,	reloading,	reloadtime,	false,	0);
-	iput(action,	useaction,	usetime,	false,	0);
+	iput(crouch,	crouching,	crouchtime,	false,	CROUCHTIME, );
+	iput(jump,		jumping,	jumptime,	false,	0, );
+	iput(attack,	attacking,	attacktime,	true,	0, { if(down) game::player1->reloading = game::player1->useaction = false; });
+	iput(reload,	reloading,	reloadtime,	false,	-1, { if(down) game::player1->useaction = game::player1->attacking = false; });
+	iput(action,	useaction,	usetime,	false,	0, { if(down) game::player1->reloading = game::player1->attacking = false; });
 
 	void taunt(gameent *d)
 	{
