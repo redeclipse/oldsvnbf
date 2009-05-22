@@ -583,7 +583,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 #ifndef STANDALONE
 					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, arg);
 #endif
-					else conoutf("\frunknown command: %s", c);
+					if(!found) conoutf("\frunknown command: %s", c);
 				}
 				setretval(newstring(c));
 			}

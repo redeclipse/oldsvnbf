@@ -381,7 +381,7 @@ namespace client
 
 	void toserver(int flags, char *text)
 	{
-		if(isready)
+		if(ready())
 		{
 			saytext(game::player1, flags, text);
 			addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
@@ -392,12 +392,77 @@ namespace client
 	ICOMMAND(sayteam, "C", (char *s), toserver(SAY_TEAM, s));
 	ICOMMAND(meteam, "C", (char *s), toserver(SAY_ACTION|SAY_TEAM, s));
 
+	void parsecommand(gameent *d, char *cmd, char *arg)
+	{
+		ident *id = idents->access(cmd);
+		if(id && id->flags&IDF_CLIENT)
+		{
+			string val;
+			val[0] = 0;
+			switch(id->type)
+			{
+#if 0 // these shouldn't get here
+				case ID_COMMAND:
+				case ID_COMMAND:
+				{
+					string s;
+					formatstring(s)("%s %s", cmd, arg);
+					char *ret = executeret(s);
+					if(ret)
+					{
+						conoutf("\fm%s: %s", cmd, ret);
+						delete[] ret;
+					}
+					return;
+				}
+#endif
+				case ID_VAR:
+				{
+					int ret = atoi(arg);
+					*id->storage.i = ret;
+					id->changed();
+					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					break;
+				}
+				case ID_FVAR:
+				{
+					float ret = atof(arg);
+					*id->storage.f = ret;
+					id->changed();
+					formatstring(val)("%s", floatstr(*id->storage.f));
+					break;
+				}
+				case ID_SVAR:
+				{
+					delete[] *id->storage.s;
+					*id->storage.s = newstring(arg);
+					id->changed();
+					formatstring(val)("%s", *id->storage.s);
+					break;
+				}
+				default: return;
+			}
+			if(d || verbose >= 2)
+				conoutf("\fm%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
+		}
+		else conoutf("\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
+	}
+
 	bool sendcmd(int nargs, char *cmd, char *arg)
 	{
-		if(isready)
+		if(ready())
 		{
 			addmsg(SV_COMMAND, "ri2ss", game::player1->clientnum, nargs, cmd, arg);
 			return true;
+		}
+		else
+		{
+			defformatstring(scmd)("sv_%s", cmd);
+			if(server::servcmd(nargs, scmd, arg))
+			{
+				parsecommand(NULL, cmd, arg);
+				return true;
+			}
 		}
 		return false;
 	}
@@ -556,62 +621,6 @@ namespace client
 		}
 	}
 	ICOMMAND(resendmap, "", (), sendmap());
-
-	void parsecommand(gameent *d, char *cmd, char *arg)
-	{
-		ident *id = idents->access(cmd);
-		if(id && id->flags&IDF_CLIENT)
-		{
-			string val;
-			val[0] = 0;
-			switch(id->type)
-			{
-#if 0 // these shouldn't get here
-				case ID_COMMAND:
-				case ID_COMMAND:
-				{
-					string s;
-					formatstring(s)("%s %s", cmd, arg);
-					char *ret = executeret(s);
-					if(ret)
-					{
-						conoutf("\fm%s: %s", cmd, ret);
-						delete[] ret;
-					}
-					return;
-				}
-#endif
-				case ID_VAR:
-				{
-					int ret = atoi(arg);
-					*id->storage.i = ret;
-					id->changed();
-					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
-					break;
-				}
-				case ID_FVAR:
-				{
-					float ret = atof(arg);
-					*id->storage.f = ret;
-					id->changed();
-					formatstring(val)("%s", floatstr(*id->storage.f));
-					break;
-				}
-				case ID_SVAR:
-				{
-					delete[] *id->storage.s;
-					*id->storage.s = newstring(arg);
-					id->changed();
-					formatstring(val)("%s", *id->storage.s);
-					break;
-				}
-				default: return;
-			}
-			if(d || verbose >= 2)
-				conoutf("\fm%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
-		}
-		else conoutf("\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
-	}
 
 	void gotoplayer(const char *arg)
 	{

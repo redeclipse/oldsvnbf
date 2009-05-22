@@ -206,55 +206,52 @@ namespace projs
 		proj.spawntime = lastmillis;
 		proj.movement = 1;
 
-		if(proj.projtype == PRJ_SHOT)
+		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode*0.1f;
+		if(proj.projcollide)
 		{
-			if(proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode*0.1f;
-			if(proj.projcollide)
+			vec ray(proj.vel);
+			ray.normalize();
+			int maxsteps = 25;
+			float step = 4,
+				  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
+				  dist = 0;
+			loopi(maxsteps)
 			{
-				vec ray(proj.vel);
-				ray.normalize();
-				int maxsteps = 25;
-				float step = 4,
-					  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
-					  dist = 0;
-				loopi(maxsteps)
+				proj.hit = NULL;
+				float olddist = dist;
+				if(dist < barrier && dist + step > barrier) dist = barrier;
+				else dist += step;
+				if(proj.projcollide&COLLIDE_TRACE)
 				{
-					proj.hit = NULL;
-                    float olddist = dist;
-					if(dist < barrier && dist + step > barrier) dist = barrier;
-					else dist += step;
-                    if(proj.projcollide&COLLIDE_TRACE)
-                    {
-                        proj.o = vec(ray).mul(olddist).add(orig);
-                        float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
-                        proj.o.add(vec(ray).mul(dist - olddist));
-                        if(cdist < 0 || dist >= barrier) break;
-                    }
-                    else
-                    {
-					    proj.o = vec(ray).mul(dist).add(orig);
-					    if(collide(&proj) && !inside) break;
-                    }
-                    if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+					proj.o = vec(ray).mul(olddist).add(orig);
+					float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
+					proj.o.add(vec(ray).mul(dist - olddist));
+					if(cdist < 0 || dist >= barrier) break;
+				}
+				else
+				{
+					proj.o = vec(ray).mul(dist).add(orig);
+					if(collide(&proj) && !inside) break;
+				}
+				if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+				{
+					if(hitplayer)
 					{
-            			if(hitplayer)
-            			{
-                			proj.hit = hitplayer;
-                			proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
-            			}
-            			else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
-						if(proj.lifemillis)
-						{ // fastfwd to end
-							proj.lifemillis = proj.lifetime = 1;
-							proj.lifespan = proj.lifesize = 1.f;
-							proj.state = CS_DEAD;
-						}
-						break;
+						proj.hit = hitplayer;
+						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 					}
+					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
+					if(proj.projtype == PRJ_SHOT && proj.lifemillis)
+					{ // fastfwd to end
+						proj.lifemillis = proj.lifetime = 1;
+						proj.lifespan = proj.lifesize = 1.f;
+						proj.state = CS_DEAD;
+					}
+					break;
 				}
 			}
-			if(proj.radial) proj.height = proj.radius = 1.f;
 		}
+		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
