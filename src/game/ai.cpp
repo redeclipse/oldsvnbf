@@ -909,7 +909,7 @@ namespace ai
 				if(entities::ents.inrange(ent))
 				{
 					extentity &e = *entities::ents[ent];
-					if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis)) switch(e.type)
+					if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
 					{
 						case WEAPON:
 						{

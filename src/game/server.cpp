@@ -2215,8 +2215,16 @@ namespace server
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attr[0], sweap) : sents[ent].attr[0];
 		if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
-			return;
+			if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis, WPSTATE_RELOAD))
+			{
+				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
+				return;
+			}
+			else
+			{
+				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
+				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
+			}
 		}
 		if(!sents[ent].spawned && !(sents[ent].attr[1]&WEAPFLAG_FORCED))
 		{
