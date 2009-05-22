@@ -1488,7 +1488,7 @@ namespace server
 		ident *id = idents->access(cmd);
 		if(id && id->flags&IDF_SERVER)
 		{
-			string val; val[0] = 0;
+			static string scmdval; scmdval[0] = 0;
 			switch(id->type)
 			{
 				case ID_CCOMMAND:
@@ -1528,7 +1528,7 @@ namespace server
 					}
 					*id->storage.i = ret;
 					id->changed();
-					formatstring(val)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
+					formatstring(scmdval)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
 					break;
 				}
 				case ID_FVAR:
@@ -1546,7 +1546,7 @@ namespace server
 					}
 					*id->storage.f = ret;
 					id->changed();
-					formatstring(val)("%s", floatstr(*id->storage.f));
+					formatstring(scmdval)("%s", floatstr(*id->storage.f));
 					break;
 				}
 				case ID_SVAR:
@@ -1559,13 +1559,13 @@ namespace server
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
-					formatstring(val)("%s", *id->storage.s);
+					formatstring(scmdval)("%s", *id->storage.s);
 					break;
 				}
 				default: return false;
 			}
-			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id->name[3], val);
-			arg = val;
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id->name[3], scmdval);
+			arg = scmdval;
 			return true;
 		}
 		return false; // parse will spit out "unknown command" in this case
