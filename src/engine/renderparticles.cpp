@@ -1654,16 +1654,56 @@ void regularflame(int type, const vec &p, float radius, float height, int color,
 	}
 }
 
+#if 0
+vector<mapparticle> mapparts;
+
+int addmapparticle(const char *name, int part, int type, int colour, int grav, int fade, float radius, float height, int attr, float size, float vel)
+{
+	if(!name || !*name || part < 0 || part >= PART_MAX) return -1;
+	int idx = -1;
+	loopv(mapparts) if(!strcasecmp(name, mapparts[i].name)) return i;
+	idx = mapparts.length();
+	mapparticle &p = mapparts.add();
+	p.name = newstring(name);
+	p.part = part;
+	p.type = type;
+	p.colour = colour;
+	p.grav = grav;
+	p.fade = fade;
+	p.radius = radius;
+	p.height = height;
+	p.attr = attr;
+	p.size = size;
+	p.vel = vel;
+}
+ICOMMAND(mapparticle, "siiiiiffiff", (const char *name, int *part, int *type, int *colour, int *grav, int *fade, float *radius, float *height, int *attr, float *size, float *vel),
+	intret(addmapparticle(name, *part, *type, *colour, *grav, *fade, *radius, *height, *attr, *size, *vel)));
+
+void defaultparticles()
+{
+	if(mapparts.length()) mapparts.setsizenodelete(0);
+	addmapparticle("fire", PART_FLAME, PARTTYPE_FIRE, 0x903020, -10, 500, 1.5f, 0.5f, 0, 2.f, 200);
+	addmapparticle("smoke", PART_SMOKE, PARTTYPE_SPLASH, 0x897661, -20, 200, 2.f, 0.f, 3, 2.4f, 0.f, 1);
+	addmapparticle("water", PART_ELECTRIC, PARTTYPE_SPLASH, (int(watercolor[0])<<16) | (int(watercolor[1])<<8) | int(watercolor[2]), 10, 500, 10.f, 0.f, 10, 0.6f, 4);
+}
+#endif
+
 void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
 {
 	switch(attr1)
 	{
 		case 0: //fire
-			regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f, -10);
-			regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
+		{
+			//regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f, -10);
+			//regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
+            float radius = attr2 ? float(attr2)/100.0f : 1.5f,
+                  height = attr3 ? float(attr3)/100.0f : radius/3;
+            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0x903020, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -10, 0, 200);
+            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x303020, 1, attr5 > 0 ? attr5 : 1000, 4.0f, -20, 0, 100);
 			break;
+		}
 		case 1: //smoke vent - <dir>
-			regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), -20, 0, 2.4f);
+			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), -20, 0, 2.4f);
 			break;
 		case 2: //water fountain - <dir>
 		{
@@ -1683,8 +1723,8 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		case 12: //snow
 		case 13: //sparks
 		{
-			const int typemap[] = { PART_SFLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE_LERP, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
-			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 100, 0, 0, 200, 200, 200, 200, 200, 40, 200 },
+			const int typemap[] = { PART_SFLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
+			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 100, 0, 0, 200, 200, 100, 100, 100, 40, 200 },
 				gravmap[] = { 0, 0, 0, 0, 0, -20, -10, 0, 100, 10 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];

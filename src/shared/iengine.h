@@ -216,7 +216,8 @@ enum
     PART_METER, PART_METER_VS,
     PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
     PART_LIGHTNING,
-    PART_LENS_FLARE
+    PART_LENS_FLARE,
+    PART_MAX
 };
 
 struct particle
@@ -271,6 +272,24 @@ extern void splash(int type, int color, int radius, int num, int fade, const vec
 extern void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, int delay = 0);
 extern void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, float vel = 1.f);
 extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2.0f, int grav = -1, int collide = 0, float vel = 1.f);
+
+#if 0
+enum { PARTTYPE_CREATE = 0, PARTTYPE_SPLASH, PARTTYPE_SHAPE, PARTTYPE_FIRE, PARTTYPE_FLAME, PARTTYPE_METER, PARTTYPE_FLARE, PARTTYPE_MAX };
+
+struct mapparticle
+{
+	const char *name;
+	int part, type, colour, grav, fade, attr;
+	float radius, height, size, vel;
+
+	mapparticle() : name(NULL) {}
+	~mapparticle()
+	{
+		if(name) delete name;
+	}
+};
+extern vector<mapparticle> mapparts;
+#endif
 
 // decal
 enum

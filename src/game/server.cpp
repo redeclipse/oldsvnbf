@@ -1491,7 +1491,6 @@ namespace server
 			string val; val[0] = 0;
 			switch(id->type)
 			{
-#if 0 // these shouldn't get here
 				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
@@ -1506,7 +1505,6 @@ namespace server
 					}
 					return true;
 				}
-#endif
 				case ID_VAR:
 				{
 					if(nargs <= 1 || !arg)
@@ -1567,6 +1565,7 @@ namespace server
 				default: return false;
 			}
 			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &id->name[3], val);
+			arg = val;
 			return true;
 		}
 		return false; // parse will spit out "unknown command" in this case
