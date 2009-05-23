@@ -212,14 +212,15 @@ namespace hud
 
 			if(game::intermission || showscoresinfo())
 			{
-				int accuracy = game::player1->totaldamage*100/max(game::player1->totalshots, 1);
+				float ratio =  game::player1->frags*100.f/float(max(game::player1->deaths, 1)),
+					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
 
 				g.separator();
 
-				g.textf("%s: \fs\f0%d\fS %s(s), \fs\f0%d\fS %s(s)", 0xFFFFFF, NULL, game::player1->name,
+				g.textf("%s: \fs\fg%d\fS %s(s), \fs\fg%d\fS %s(s), \fs\fy%.1f%%\fS ratio", 0xFFFFFF, NULL, game::player1->name,
 					game::player1->frags, m_paint(game::gamemode, game::mutators) ? "tag" : "frag",
-					game::player1->deaths, m_paint(game::gamemode, game::mutators) ? "out" : "death");
-				g.textf("damage: \fs\f0%d\fS hp, wasted: \fs\f0%d\fS, accuracy: \fs\f0%d%%\fS", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+					game::player1->deaths, m_paint(game::gamemode, game::mutators) ? "out" : "death", ratio);
+				g.textf("damage: \fs\fg%d\fS hp, wasted: \fs\fg%d\fS, accuracy: \fs\fg%.1f%%\fS", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
 
 				if(m_mission(game::gamemode))
 				{
@@ -228,17 +229,17 @@ namespace hud
 					pen = (lastmillis-game::maptime)/1000;
 					score += pen;
 					if(pen)
-						g.textf("time taken: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
+						g.textf("time taken: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
 
 					pen = game::player1->deaths*60;
 					score += pen;
 					if(pen)
-						g.textf("penalty for \fs\f0%d\fS deaths: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
+						g.textf("penalty for \fs\fg%d\fS deaths: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
 
 					pen = 100-accuracy;
 					score += pen;
 					if(pen)
-						g.textf("penalty for missed shots: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", pen);
+						g.textf("penalty for missed shots: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
 
 					defformatstring(aname)("bestscore_%s", getmapname());
 					const char *bestsc = getalias(aname);
@@ -246,7 +247,7 @@ namespace hud
 					if(score<bestscore) bestscore = score;
 					defformatstring(nscore)("%d", bestscore);
 					alias(aname, nscore);
-					g.textf("SCORE: \fs\f0%d\fS second(s), best: \fs\f0%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
+					g.textf("SCORE: \fs\fg%d\fS second(s), best: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
 				}
 			}
 			g.separator();
