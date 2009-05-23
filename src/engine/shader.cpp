@@ -1104,6 +1104,7 @@ void useshader(Shader *s)
     standardshader = s->standard;
     forceshaders = false;
     persistidents = false;
+    curparams.setsize(0);
     execute(defer);
     persistidents = waspersisting;
     forceshaders = wasforcing;
