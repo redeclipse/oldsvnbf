@@ -51,7 +51,7 @@ namespace hud
 	VARP(teamcrosshair, 0, 1, 2);
 	VARP(teamnotices, 0, 0, 1);
 	VARP(teamkillnum, 0, 3, INT_MAX-1);
-	VARP(teamkilltime, 0, 120, INT_MAX-1);
+	VARP(teamkilltime, 0, 60, INT_MAX-1);
 
 	TVAR(underlaytex, "", 3);
 	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always

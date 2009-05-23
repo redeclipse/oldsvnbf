@@ -12,7 +12,7 @@ namespace projs
 	VARA(maxprojectiles, 0, 300, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
 	VARP(flamerdelay, 1, 50, INT_MAX-1);
-	VARA(flamerlength, 1, 500, INT_MAX-1);
+	VARA(flamerlength, 1, 600, INT_MAX-1);
 	VARA(flamersmoke, 1, 200, INT_MAX-1);
 
 	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
@@ -241,7 +241,7 @@ namespace projs
 						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 					}
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
-					if(proj.projtype == PRJ_SHOT && proj.lifemillis)
+					if(proj.lifemillis)
 					{ // fastfwd to end
 						proj.lifemillis = proj.lifetime = 1;
 						proj.lifespan = proj.lifesize = 1.f;
@@ -382,25 +382,29 @@ namespace projs
 		}
 	}
 
-	void radiate(projent &proj)
+	void radiate(projent &proj, gameent *d)
 	{
-		if(!proj.lastradial || (lastmillis-proj.lastradial >= m_speedtimex(500)))
+		if(!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtimex(250)))
 		{ // for the flamer this results in at most 40 damage per second
 			int radius = int(weaptype[proj.weap].explode*proj.radius);
 			if(radius > 0)
 			{
 				hits.setsizenodelete(0);
-				loopi(game::numdynents())
+				if(!d)
 				{
-					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-					radialeffect(f, proj, false, radius);
+					loopi(game::numdynents())
+					{
+						gameent *f = (gameent *)game::iterdynents(i);
+						if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+						radialeffect(f, proj, false, radius);
+					}
 				}
+				else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
 				if(!hits.empty())
 				{
 					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
 							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-					proj.lastradial = lastmillis;
+					if(!d) proj.lastradial = lastmillis;
 				}
 			}
 		}
@@ -422,7 +426,7 @@ namespace projs
 			{
 				case WEAPON_PISTOL:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
@@ -449,7 +453,7 @@ namespace projs
 							effect = true;
 							proj.lasteffect = lastmillis;
 						}
-						int col = ((int(224*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(64*max((1.f-proj.lifespan),0.2f))+1)<<8),
+						int col = ((int(254*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(90*max((1.f-proj.lifespan),0.2f))+1)<<8),
 							len = effect ? max(int(m_speedtimex(flamerlength)*(1.1f-proj.lifespan)), 1) : 1;
 						if(len <= 1) effect = false;
 						part_create(effect ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT, len, proj.o, col, size, -10);
@@ -460,7 +464,7 @@ namespace projs
 				}
 				case WEAPON_GRENADE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender)
 					{
 						int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
@@ -476,7 +480,7 @@ namespace projs
 				}
 				case WEAPON_SG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
@@ -491,7 +495,7 @@ namespace projs
 				}
 				case WEAPON_SMG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
@@ -524,7 +528,7 @@ namespace projs
 				}
 				case WEAPON_RIFLE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
@@ -557,7 +561,7 @@ namespace projs
 				}
 				default:
 				{
-					proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender) part_create(PART_PLASMA_SOFT, 1, proj.o, proj.colour, 1.f);
 					break;
 				}
@@ -566,7 +570,7 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
 		{
-			proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f);
+			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtimex(500) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
 				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x66FFFF, 2.f, 50, DECAL_BLOOD);
@@ -615,11 +619,11 @@ namespace projs
 					case WEAPON_FLAMER:
 					case WEAPON_GRENADE:
 					{ // both basically explosions
-						part_create(proj.weap == WEAPON_FLAMER ? PART_FIREBALL_SOFT : PART_PLASMA_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 500 : 1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
-						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.25f : 0.75f));
-						loopi(rnd(3)+3)
+						part_create(PART_PLASMA_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 500 : 1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
+						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
+						loopi(rnd(7)+4)
 						{
-							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
+							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
 							part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
 						}
 						part_create(PART_SMOKE_LERP_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x303030 : 0x222222, weaptype[proj.weap].explode, -20);
@@ -629,10 +633,9 @@ namespace projs
 							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
 							game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
-							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.15f), PART_EXPLOSION, m_speedtimex(500), 0xAA3300, 1.f);
-							loopi(rnd(25)+10)
-								create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(2500)+1500, 0, rnd(1000), rnd(125)+25);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.75f, bvec(196, 24, 0));
+							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtimex(500), 0xAA3300, 1.f);
+							loopi(rnd(26)+10) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(30001)+1500, 0, rnd(1001), rnd(126)+25);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
 						}
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
 						break;
@@ -1052,7 +1055,8 @@ namespace projs
  						break;
 					}
 				}
-				if(proj.state != CS_DEAD && proj.radial && proj.local) radiate(proj);
+				if(proj.state != CS_DEAD && proj.radial && proj.local)
+					radiate(proj, proj.hit && proj.hit->type == ENT_PLAYER ? (gameent *)proj.hit : NULL);
 			}
 			else proj.state = CS_DEAD;
 

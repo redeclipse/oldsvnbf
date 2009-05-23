@@ -290,7 +290,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
 			S_SG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		500,	1250,	15,		2000,	0,		1000,
+			1,		8,		500,	1000,	15,		2000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,
 			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		50.f,
@@ -310,17 +310,17 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	25,		100,	0,		3000,
+			50,		50,		100, 	2000,	25,		200,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,
-			0.15f,		45.f,			0.25f,		1.5f,		50.f,	30.f,		10.f,
+			0.15f,		45.f,			0.25f,		1.5f,		25.f,	36.f,		10.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
 	},
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		400,	1000,	35,		1500,	0,		1000,
+			20,		20,		350,	1000,	35,		1500,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			false,	true,	true,		true,		false,
 			0.f,		0.f,			0.5f,		1.0f,		0.f,	6.f,		50.f,
@@ -330,7 +330,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0x8822FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1250,	150,	10000,	0,		10000,
+			1,		5,		750,	1000,	150,	10000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,
 			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		150.f,
