@@ -306,6 +306,7 @@ FVAR(ragdollliquidfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollgravity, 0, 1.f, 1000);
+FVAR(ragdollelasticity, 0, 0.5f, 1000);
 VAR(ragdollexpireoffset, 0, 1000, 30000);
 VAR(ragdollliquidexpireoffset, 0, 3000, 30000);
 VAR(ragdollexpiremillis, 1, 1000, 30000);
@@ -340,7 +341,7 @@ void ragdolldata::move(dynent *pl, float ts)
         v.collided = !collide(&d, dir, 0, false);
         if(v.collided)
         {
-            v.oldpos = vec(curpos).sub(dir.reflect(wall));
+            v.oldpos = vec(curpos).sub(dir.reflect(wall).mul(ragdollelasticity));
             v.pos = curpos;
             collisions++;
         }
