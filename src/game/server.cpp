@@ -852,7 +852,9 @@ namespace server
 		defvformatstring(str, s, s);
 		string st;
 		filtertext(st, str);
+#ifdef IRC
 		ircoutf(r, "%s", st);
+#endif
 #ifdef STANDALONE
 		printf("%s\n", st);
 #endif
