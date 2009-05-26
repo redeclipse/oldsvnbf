@@ -983,7 +983,7 @@ namespace ai
 		}
         if(d->state == CS_DEAD || d->state == CS_WAITING)
         {
-        	if(d->ragdoll) moveragdoll(d, false);
+        	if(d->ragdoll) moveragdoll(d, true);
 			else if(lastmillis-d->lastpain < 2000)
 				physics::move(d, 1, false);
         }
