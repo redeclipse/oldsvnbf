@@ -760,7 +760,7 @@ namespace game
 		if(!empty) smartmusic(true, false);
 	}
 
-	void startmap(const char *name)	// called just after a map load
+	void startmap(const char *name, bool empty)	// called just after a map load
 	{
 		intermission = false;
 		maptime = 0;
@@ -779,7 +779,7 @@ namespace game
 			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
 		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
-		client::sendinfo = true;
+		if(!empty) client::sendinfo = true;
 		fogdist = getvar("fog");
 	}
 
