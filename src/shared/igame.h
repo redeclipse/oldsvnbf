@@ -79,7 +79,7 @@ namespace game
 	extern void updateworld();
 	extern void newmap(int size);
 	extern void resetmap(bool empty);
-	extern void startmap(const char *name);
+	extern void startmap(const char *name, bool empty = false);
 	extern bool allowmove(physent *d);
 	extern dynent *iterdynents(int i);
 	extern int numdynents();
