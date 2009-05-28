@@ -301,7 +301,7 @@ namespace server
 		extern void reqdel(clientinfo *ci);
 	}
 
-	bool notgotinfo = true, notgotflags = false;
+	bool hasgameinfo = false;
 	int gamemode = G_LOBBY, mutators = 0;
 	int gamemillis = 0, gamelimit = 0;
 
@@ -794,6 +794,7 @@ namespace server
 			if(numplayers <= 0) numplayers = totalspawns/2;
 			if(m_team(gamemode, mutators))
 			{
+				if(m_multi(gamemode, mutators)) numplayers += numplayers/2;
 				int offt = numplayers%numt;
 				if(offt) numplayers += numt-offt;
 			}
@@ -1409,9 +1410,8 @@ namespace server
 
 	void changemap(const char *name, int mode, int muts)
 	{
-		maprequest = mapsending = shouldcheckvotes = false;
-        stopdemo();
-		aiman::clearai();
+		hasgameinfo = maprequest = mapsending = shouldcheckvotes = false;
+        stopdemo(); aiman::clearai();
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
@@ -1421,7 +1421,6 @@ namespace server
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
 		sents.setsize(0);
 		setupspawns(false);
-		notgotinfo = true;
 		scores.setsize(0);
 
 		const char *reqmap = name && *name ? name : pickmap(smapname);
@@ -1874,7 +1873,7 @@ namespace server
 			putint(p, minremain);
 		}
 
-		if(!notgotinfo)
+		if(hasgameinfo)
 		{
 			putint(p, SV_GAMEINFO);
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM || sents[i].type == TRIGGER)
@@ -2104,11 +2103,12 @@ namespace server
 			}
 			else
 			{
-				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
-				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
+				takeammo(ci, weap, gs.weapload[weap]+1);
+				gs.weapload[weap] = -gs.weapload[weap];
+				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
 		}
-		takeammo(ci, weap, 1);
+		else takeammo(ci, weap, 1);
 		gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			weap, power, from[0], from[1], from[2],
@@ -2136,7 +2136,8 @@ namespace server
 			else
 			{
 				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
-				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
+				gs.weapload[gs.weapselect] = -gs.weapload[gs.weapselect];
+				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
 		}
 		gs.weapswitch(weap, millis);
@@ -2201,9 +2202,9 @@ namespace server
 		}
 		gs.setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, millis);
 		int oldammo = gs.ammo[weap];
-		gs.ammo[weap] = clamp(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].add, weaptype[weap].max);
-		gs.weapload[gs.weapselect] = gs.ammo[weap]-oldammo;
-		sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, weap, gs.ammo[weap]);
+		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
+		gs.weapload[weap] = gs.ammo[weap]-oldammo;
+		sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 	}
 
 	void useevent::process(clientinfo *ci)
@@ -2225,7 +2226,8 @@ namespace server
 			else
 			{
 				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
-				sendf(-1, 1, "ri4", SV_RELOAD, ci->clientnum, gs.weapselect, -gs.weapload[gs.weapselect]);
+				gs.weapload[gs.weapselect] = -gs.weapload[gs.weapselect];
+				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
 		}
 		if(!sents[ent].spawned && !(sents[ent].attr[1]&WEAPFLAG_FORCED))
@@ -3159,9 +3161,8 @@ namespace server
 					int n, np = getint(p);
 					while((n = getint(p)) != -1)
 					{
-						int type = getint(p), attr1 = getint(p), attr2 = getint(p),
-							attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
-						if(notgotinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == TRIGGER))
+						int type = getint(p), attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
+						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
 							sents[n].type = type;
@@ -3176,7 +3177,7 @@ namespace server
 								sents[n].millis += GVAR(itemspawndelay)*1000;
 						}
 					}
-					if(notgotinfo)
+					if(!hasgameinfo)
 					{
 						loopvk(clients)
 						{
@@ -3185,8 +3186,7 @@ namespace server
 							cp->state.weapreset(false);
 						}
 						setupspawns(true, np);
-						notgotinfo = false;
-						aiman::dorefresh = true;
+						hasgameinfo = aiman::dorefresh = true;
 					}
 					break;
 				}
@@ -3476,7 +3476,7 @@ namespace server
 					{
 						smapname[0] = '\0';
 						sents.setsize(0);
-						notgotinfo = false;
+						hasgameinfo = true;
 						if(smode) smode->reset(true);
 						mutate(smuts, mut->reset(true));
 					}

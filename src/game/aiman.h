@@ -107,6 +107,7 @@ namespace aiman
 		}
 		if(req)
 		{
+			if(autooverride) dorefresh = true;
 			autooverride = false;
 			return true;
 		}
@@ -249,7 +250,7 @@ namespace aiman
 
 	void checkai()
 	{
-		if(!notgotinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
+		if(hasgameinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
 			if(oldteambalance != GVAR(teambalance)) { dorefresh = true; oldteambalance = GVAR(teambalance); }
 			if(oldbotratio != GVAR(botratio)) { dorefresh = true; oldbotratio = GVAR(botratio); }

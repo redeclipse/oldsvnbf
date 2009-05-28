@@ -3,19 +3,19 @@ struct ctfservmode : ctfstate, servmode
 {
     static const int RESETFLAGTIME = 10000;
 
-    bool notgotflags;
+    bool hasflaginfo;
 
-    ctfservmode() : notgotflags(false) {}
+    ctfservmode() : hasflaginfo(false) {}
 
     void reset(bool empty)
     {
         ctfstate::reset();
-        notgotflags = true;
+        hasflaginfo = false;
     }
 
     void dropflag(clientinfo *ci, const vec &o)
     {
-        if(notgotflags) return;
+        if(!hasflaginfo) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
 			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius ? ci->state.o : o).mul(DMF));
@@ -43,7 +43,7 @@ struct ctfservmode : ctfstate, servmode
 
     void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
     {
-        if(notgotflags) return;
+        if(!hasflaginfo) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
             loopvk(flags)
@@ -67,7 +67,7 @@ struct ctfservmode : ctfstate, servmode
 
     void takeflag(clientinfo *ci, int i)
     {
-        if(notgotflags || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || !(flags[i].base&BASE_FLAG)) return;
+        if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || !(flags[i].base&BASE_FLAG)) return;
 		flag &f = flags[i];
 		if(f.team == ci->team)
 		{
@@ -86,7 +86,7 @@ struct ctfservmode : ctfstate, servmode
 
     void update()
     {
-        if(notgotflags) return;
+        if(!hasflaginfo) return;
         loopv(flags)
         {
             flag &f = flags[i];
@@ -133,7 +133,7 @@ struct ctfservmode : ctfstate, servmode
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(!notgotflags) loopv(flags)
+		if(hasflaginfo) loopv(flags)
         {
             flag &f = flags[i];
             bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius*2.f);
@@ -153,13 +153,16 @@ struct ctfservmode : ctfstate, servmode
     void parseflags(ucharbuf &p)
     {
     	int numflags = getint(p);
-        loopi(numflags)
-        {
-            int team = getint(p), base = getint(p);
-            vec o;
-            loopk(3) o[k] = getint(p)/DMF;
-            if(notgotflags) addflag(o, team, base, i);
-        }
-        notgotflags = false;
+    	if(numflags)
+    	{
+			loopi(numflags)
+			{
+				int team = getint(p), base = getint(p);
+				vec o;
+				loopk(3) o[k] = getint(p)/DMF;
+				if(!hasflaginfo) addflag(o, team, base, i);
+			}
+			hasflaginfo = true;
+    	}
     }
 } ctfmode;

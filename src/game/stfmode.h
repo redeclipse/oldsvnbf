@@ -2,15 +2,15 @@
 struct stfservmode : stfstate, servmode
 {
 	int scoresec;
-	bool notgotflags;
+	bool hasflaginfo;
 
-	stfservmode() : scoresec(0), notgotflags(false) {}
+	stfservmode() : scoresec(0), hasflaginfo(false) {}
 
 	void reset(bool empty)
 	{
 		stfstate::reset();
 		scoresec = 0;
-		notgotflags = true;
+		hasflaginfo = false;
 	}
 
 	void stealflag(int n, int team)
@@ -172,37 +172,37 @@ struct stfservmode : stfstate, servmode
 
 	void entergame(clientinfo *ci)
 	{
-        if(notgotflags || ci->state.state!=CS_ALIVE) return;
+        if(!hasflaginfo || ci->state.state!=CS_ALIVE) return;
 		enterflags(ci->team, ci->state.o);
 	}
 
 	void spawned(clientinfo *ci)
 	{
-		if(notgotflags) return;
+		if(!hasflaginfo) return;
 		enterflags(ci->team, ci->state.o);
 	}
 
     void leavegame(clientinfo *ci, bool disconnecting = false)
 	{
-        if(notgotflags || ci->state.state!=CS_ALIVE) return;
+        if(!hasflaginfo || ci->state.state!=CS_ALIVE) return;
 		leaveflags(ci->team, ci->state.o);
 	}
 
 	void died(clientinfo *ci, clientinfo *actor)
 	{
-		if(notgotflags) return;
+		if(!hasflaginfo) return;
 		leaveflags(ci->team, ci->state.o);
 	}
 
 	void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
 	{
-		if(notgotflags) return;
+		if(!hasflaginfo) return;
 		moveflags(ci->team, oldpos, newpos);
 	}
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(!notgotflags) loopv(flags)
+		if(hasflaginfo) loopv(flags)
 		{
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o, 2.f))
@@ -218,19 +218,22 @@ struct stfservmode : stfstate, servmode
 	void parseflags(ucharbuf &p)
 	{
 		int numflags = getint(p);
-		loopi(numflags)
+		if(numflags)
 		{
-			vec o;
-			o.x = getint(p)/DMF;
-			o.y = getint(p)/DMF;
-			o.z = getint(p)/DMF;
-			if(notgotflags) addflag(o);
-		}
-		if(notgotflags)
-		{
-			notgotflags = false;
-			sendflags();
-			loopv(clients) if(clients[i]->state.state==CS_ALIVE) entergame(clients[i]);
+			loopi(numflags)
+			{
+				vec o;
+				o.x = getint(p)/DMF;
+				o.y = getint(p)/DMF;
+				o.z = getint(p)/DMF;
+				if(!hasflaginfo) addflag(o);
+			}
+			if(!hasflaginfo)
+			{
+				hasflaginfo = true;
+				sendflags();
+				loopv(clients) if(clients[i]->state.state==CS_ALIVE) entergame(clients[i]);
+			}
 		}
 	}
 } stfmode;
