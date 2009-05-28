@@ -93,7 +93,7 @@ struct duelservmode : servmode
 
 	void update()
 	{
-		if(interm || !numclients() || notgotinfo) return;
+		if(interm || !numclients() || !hasgameinfo) return;
 
 		if(dueltime < 0)
 		{

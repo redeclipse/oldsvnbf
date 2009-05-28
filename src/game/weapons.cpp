@@ -100,9 +100,13 @@ namespace weapons
 
 	void shoot(gameent *d, vec &targ, int force)
 	{
-		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) || !game::allowmove(d))
-			return;
-
+		if(!game::allowmove(d)) return;
+		int offset = 1;
+		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+		{
+			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD)) return;
+			else offset = max(d->weapload[d->weapselect], 1)+1;
+		}
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
 		if(weaptype[d->weapselect].power)
 		{
@@ -110,7 +114,7 @@ namespace weapons
 			{
 				if(d->weapstate[d->weapselect] != WPSTATE_POWER)
 				{
-					if(d->attacking && game::allowmove(d))
+					if(d->attacking)
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
 						d->setweapstate(d->weapselect, WPSTATE_POWER, 0, lastmillis);
@@ -119,7 +123,7 @@ namespace weapons
 				}
 
 				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, weaptype[d->weapselect].power);
-				if(game::allowmove(d) && d->attacking && power < weaptype[d->weapselect].power) return;
+				if(d->attacking && power < weaptype[d->weapselect].power) return;
 			}
 			d->attacking = false;
 		}
@@ -132,8 +136,8 @@ namespace weapons
 			d->attacking = false;
 			if(d->ai) adelay += int(adelay*(((101-d->skill)+rnd(111-d->skill))/100.f));
 		}
-		if(weaptype[d->weapselect].max) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-1, 0);
 		d->setweapstate(d->weapselect, WPSTATE_SHOOT, adelay, lastmillis);
+		d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 		d->totalshots += int(weaptype[d->weapselect].damage*damagescale)*weaptype[d->weapselect].rays;
 
 		vec to = targ, from = d->muzzle, unitv;

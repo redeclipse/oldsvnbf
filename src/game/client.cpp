@@ -1133,6 +1133,7 @@ namespace client
 				{
 					int n;
 					while((n = getint(p)) != -1) entities::setspawn(n, getint(p) ? true : false);
+					sendinfo = false;
 					break;
 				}
 
@@ -1260,18 +1261,17 @@ namespace client
 
 				case SV_RELOAD:
 				{
-					int trg = getint(p), weap = getint(p), amt = getint(p);
+					int trg = getint(p), weap = getint(p), amt = getint(p), ammo = getint(p);
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
 					if(amt >= 0)
 					{
 						target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
-						target->weapload[weap] = amt-target->ammo[weap];
-						target->ammo[weap] = amt;
 						playsound(S_RELOAD, target->o, target);
-						target->reqreload = -1;
 					}
-					else target->ammo[weap] = max(target->ammo[weap] + amt, 0);
+					target->weapload[weap] = amt;
+					target->ammo[weap] = ammo;
+					target->reqreload = -1;
 					break;
 				}
 

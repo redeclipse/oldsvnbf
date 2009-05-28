@@ -765,7 +765,7 @@ struct gamestate
 
 	int skipwait(int weap, int skip)
 	{
-		return skip != WPSTATE_RELOAD || ammo[weap] > weaptype[weap].add || weapload[weap] < weaptype[weap].add ? skip : -1;
+		return skip != WPSTATE_RELOAD || ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add) ? skip : -1;
 	}
 
 	bool canshoot(int weap, int sweap, int millis, int skip = -1)
