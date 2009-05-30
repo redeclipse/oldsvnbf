@@ -584,7 +584,7 @@ namespace hud
 				if(shownotices >= 3 && game::allowmove(game::player1))
 				{
 					pushfont("default");
-					if(game::player1->requse < 0)
+					if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, WPSTATE_RELOAD)))
 					{
 						static vector<actitem> actitems;
 						actitems.setsizenodelete(0);
@@ -653,7 +653,7 @@ namespace hud
 							SEARCHBINDCACHE(attackkey)("attack", 0);
 							ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
 						}
-						if(game::player1->reqreload < 0 && game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+						if(game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 						{
 							SEARCHBINDCACHE(reloadkey)("reload", 0);
 							ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey);

@@ -867,16 +867,17 @@ namespace ai
 	bool request(gameent *d, aistate &b)
 	{
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
-		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->reqswitch < 0 && b.type == AI_S_DEFEND && b.idle)
+		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
 		{
 			loopirev(WEAPON_MAX) if(i != WEAPON_GRENADE && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
 				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
-				d->ai->lastaction = d->reqswitch = lastmillis;
+				d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
+				d->ai->lastaction = lastmillis;
 				break;
 			}
 		}
-		if(game::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->requse < 0)
+		if(game::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -926,23 +927,21 @@ namespace ai
 			}
 		}
 
-		if(busy <= (!d->hasweap(d->weapselect, sweap) ? 2 : 1) && d->reqswitch < 0)
+		if(busy <= (!d->hasweap(d->weapselect, sweap) ? 2 : 1) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			int weap = -1;
 			if(d->hasweap(d->ai->weappref, sweap)) weap = d->ai->weappref; // could be any weap
 			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
-			if(weap != d->weapselect && d->canswitch(weap, sweap, lastmillis, WPSTATE_RELOAD))
+			if(weap != d->weapselect && weapons::weapselect(d, weap))
 			{
-				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
-				d->ai->lastaction = d->reqswitch = lastmillis;
+				d->ai->lastaction = lastmillis;
 				return true;
 			}
 		}
 
-		if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1) && d->canreload(d->weapselect, sweap, lastmillis) && d->reqreload < 0)
+		if(d->hasweap(d->weapselect, sweap) && busy <= (!d->ammo[d->weapselect] ? 3 : 1) && weapons::weapreload(d, d->weapselect))
 		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, d->weapselect);
-			d->ai->lastaction = d->reqreload = lastmillis;
+			d->ai->lastaction = lastmillis;
 			return true;
 		}
 

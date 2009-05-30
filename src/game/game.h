@@ -247,6 +247,7 @@ enum
 	WPSTATE_POWER,
 	WPSTATE_SWITCH,
 	WPSTATE_PICKUP,
+	WPSTATE_WAIT,
 	WPSTATE_MAX
 };
 
@@ -751,8 +752,8 @@ struct gamestate
 
 	bool weapwaited(int weap, int millis, int skip = -1)
 	{
-		if(!weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER) return true;
 		if(skip >= 0 && weapstate[weap] == skip) return true;
+		if(!weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
@@ -953,7 +954,7 @@ struct gameent : dynent, gamestate
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
 		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
 			totalshots, smoothmillis, lastnode, respawned, suicided, vschan, dschan, wschan,
-				reqswitch, reqreload, requse, lasthit, lastkill;
+				lasthit, lastkill;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
@@ -993,7 +994,7 @@ struct gameent : dynent, gamestate
 	void clearstate()
 	{
         lasttaunt = lasthit = lastkill = 0;
-		lastflag = respawned = suicided = lastnode = reqswitch = reqreload = requse = -1;
+		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
 
@@ -1117,6 +1118,8 @@ namespace projs
 namespace weapons
 {
 	extern int autoreloading;
+	extern bool weapselect(gameent *d, int weap, bool local = true);
+	extern bool weapreload(gameent *d, int weap, int load = -1, int ammo = -1, bool local = true);
 	extern void reload(gameent *d);
 	extern void shoot(gameent *d, vec &targ, int force = 0);
 	extern void preload(int weap = -1);

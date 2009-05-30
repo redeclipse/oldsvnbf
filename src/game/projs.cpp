@@ -301,7 +301,7 @@ namespace projs
 				d->ammo[g] = -1;
 				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 			}
-			d->reqswitch = d->entid[g] = -1;
+			d->entid[g] = -1;
 		}
 	}
 

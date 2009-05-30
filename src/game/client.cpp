@@ -1264,14 +1264,7 @@ namespace client
 					int trg = getint(p), weap = getint(p), amt = getint(p), ammo = getint(p);
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
-					if(amt >= 0)
-					{
-						target->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
-						playsound(S_RELOAD, target->o, target);
-					}
-					target->weapload[weap] = amt;
-					target->ammo[weap] = ammo;
-					target->reqreload = -1;
+					weapons::weapreload(target, weap, amt, ammo, false);
 					break;
 				}
 
@@ -1321,7 +1314,6 @@ namespace client
 					if(isweap(weap) && target)
 					{
 						target->weapswitch(weap, lastmillis);
-						target->reqswitch = -1;
 						playsound(S_SWITCH, target->o, target);
 					}
 					break;
@@ -1332,9 +1324,7 @@ namespace client
 					int trg = getint(p), weap = getint(p);
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
-					target->weapswitch(weap, lastmillis);
-					target->reqswitch = -1;
-					playsound(S_SWITCH, target->o, target);
+					weapons::weapselect(target, weap, false);
 					break;
 				}
 
@@ -1401,7 +1391,6 @@ namespace client
 					gameent *target = game::getclient(lcn);
 					if(!target) break;
 					entities::useeffects(target, ent, spawn, weap, drop);
-					target->requse = -1;
 					break;
 				}
 

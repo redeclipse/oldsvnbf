@@ -2124,6 +2124,7 @@ namespace server
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", weap);
+			sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
 			return;
 		}
 		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis))
@@ -2131,6 +2132,7 @@ namespace server
 			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
+				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
 				return;
 			}
 			else
@@ -2141,7 +2143,7 @@ namespace server
 			}
 		}
 		gs.weapswitch(weap, millis);
-		sendf(-1, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
+		sendf(-1, 1, "ri3x", SV_WEAPSELECT, ci->clientnum, weap, ci->clientnum);
 	}
 
 	void dropevent::process(clientinfo *ci)
@@ -2193,18 +2195,20 @@ namespace server
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", weap);
+			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
 		if(!gs.canreload(weap, m_spawnweapon(gamemode, mutators), millis))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", weap);
+			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
 		gs.setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, millis);
 		int oldammo = gs.ammo[weap];
 		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
 		gs.weapload[weap] = gs.ammo[weap]-oldammo;
-		sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
+		sendf(-1, 1, "ri5x", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap], ci->clientnum);
 	}
 
 	void useevent::process(clientinfo *ci)
