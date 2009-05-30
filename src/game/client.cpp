@@ -843,7 +843,6 @@ namespace client
 		if(d == game::player1 || d->ai) getint(p);
 		else d->state = getint(p);
 		d->frags = getint(p);
-		d->sequence = getint(p); // lifesequence
         d->health = getint(p);
         if(resume && (d == game::player1 || d->ai))
         {
@@ -1213,7 +1212,7 @@ namespace client
 					f->state = CS_ALIVE;
 					if(f == game::player1 || f->ai)
 					{
-						addmsg(SV_SPAWN, "ri3", f->clientnum, f->sequence, f->weapselect); // lifesequence
+						addmsg(SV_SPAWN, "ri", f->clientnum);
 						entities::spawnplayer(f, ent, ent < 0, true);
 						playsound(S_RESPAWN, f->o, f);
 						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));

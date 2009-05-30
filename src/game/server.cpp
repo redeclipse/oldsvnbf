@@ -146,7 +146,6 @@ namespace server
         projectilestate dropped, weapshots[WEAPON_MAX];
 		int frags, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
-		float effectiveness;
 
 		servstate() : state(CS_SPECTATOR), aireinit(0) {}
 
@@ -160,11 +159,7 @@ namespace server
 			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
-			if(!change)
-			{
-				timeplayed = 0;
-				effectiveness = 0;
-			}
+			if(!change) timeplayed = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
@@ -181,7 +176,6 @@ namespace server
 		uint ip;
 		string name;
 		int frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
-		float effectiveness;
 
 		void save(servstate &gs)
 		{
@@ -192,7 +186,6 @@ namespace server
             shotdamage = gs.shotdamage;
             damage = gs.damage;
 			timeplayed = gs.timeplayed;
-			effectiveness = gs.effectiveness;
 		}
 
 		void restore(servstate &gs)
@@ -204,7 +197,6 @@ namespace server
             gs.shotdamage = shotdamage;
             gs.damage = damage;
 			gs.timeplayed = timeplayed;
-			gs.effectiveness = effectiveness;
 		}
 	};
 
@@ -830,10 +822,8 @@ namespace server
 		servstate &gs = ci->state;
 		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 		int spawn = pickspawn(ci);
-		sendf(ci->clientnum, 1, "ri8v",
-			SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.sequence, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
+		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
-		gs.sequence++;
 	}
 
     void sendstate(clientinfo *ci, ucharbuf &p)
@@ -842,7 +832,6 @@ namespace server
         putint(p, ci->clientnum);
         putint(p, gs.state);
         putint(p, gs.frags);
-        putint(p, gs.sequence);
         putint(p, gs.health);
         putint(p, gs.weapselect);
         loopi(WEAPON_MAX) putint(p, gs.ammo[i]);
@@ -1276,11 +1265,11 @@ namespace server
 					switch(GVAR(teambalance))
 					{
 						case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
-						case 2: case 3: rank = cp->state.effectiveness/max(cp->state.timeplayed, 1); break;
+						case 2: case 3: rank = cp->state.frags/float(max(cp->state.timeplayed, 1)); break;
 						case 4: case 5:
 						{
 							if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
-							else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.effectiveness/max(cp->state.timeplayed, 1);
+							else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.frags/float(max(cp->state.timeplayed, 1));
 							break;
 						}
 						case 6: default: break;
@@ -1697,10 +1686,7 @@ namespace server
     void sendresume(clientinfo *ci)
     {
 		servstate &gs = ci->state;
-		sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum,
-			gs.state, gs.frags,
-			gs.sequence, gs.health,
-			gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
+		sendf(-1, 1, "ri6vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
     }
 
     void sendinitc2s(clientinfo *ci)
@@ -1996,35 +1982,20 @@ namespace server
 
 		if(realflags&HIT_KILL || GVAR(scoringstyle))
 		{
+            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
             if(realflags&HIT_KILL)
             {
 				target->state.deaths++;
-				if(actor!=target && m_team(gamemode, mutators) && actor->team == target->team) actor->state.teamkills++;
+				if(m_team(gamemode, mutators) && actor->team == target->team)
+				{
+					if(actor != target) actor->state.teamkills++;
+					actor->state.spree = 0;
+				}
+				else if(actor != target) actor->state.spree++;
+				else actor->state.spree = 0;
+				if(GVAR(scoringstyle)) fragvalue *= GVAR(scoringstyle);
             }
-
-            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
-            if(GVAR(scoringstyle) && realflags&HIT_KILL) fragvalue *= GVAR(scoringstyle);
             actor->state.frags += fragvalue;
-
-			if(fragvalue > 0)
-			{
-				int friends = 0, enemies = 0; // note: friends also includes the fragger
-				if(m_team(gamemode, mutators))
-				{
-					loopv(clients)
-					{
-						if(clients[i]->team != actor->team) enemies++;
-						else friends++;
-					}
-				}
-				else
-				{
-					friends = 1;
-					enemies = clients.length()-1;
-				}
-				actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
-				actor->state.spree++;
-			}
 			sendf(-1, 1, "ri4", SV_FRAG, actor->clientnum, actor->state.frags, actor->state.spree);
 
 			if(realflags&HIT_KILL)
@@ -2047,6 +2018,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
+        ci->state.spree = 0;
         ci->state.deaths++;
 		dropitems(ci);
 		sendf(-1, 1, "ri4", SV_FRAG, ci->clientnum, ci->state.frags, ci->state.spree);
@@ -2937,15 +2909,12 @@ namespace server
 				case SV_SPAWN:
 				{
 					int lcn = getint(p);
-					getint(p); // sequence
-					int weapselect = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD && cp->state.state!=CS_WAITING) || cp->state.lastrespawn < 0)
 						break;
 					cp->state.lastrespawn = -1;
 					cp->state.state = CS_ALIVE;
-					cp->state.weapselect = weapselect;
 					if(smode) smode->spawned(cp);
 					mutate(smuts, mut->spawned(cp););
 					QUEUE_BUF(100,
@@ -3041,7 +3010,7 @@ namespace server
 						hitset &hit = ev->hits.add();
 						hit.flags = getint(p);
 						hit.target = getint(p);
-						hit.id = getint(p); // sequence
+						hit.id = getint(p);
 						hit.dist = getint(p);
 						loopk(3) hit.dir[k] = getint(p);
 					}
