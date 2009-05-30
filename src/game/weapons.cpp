@@ -105,7 +105,7 @@ namespace weapons
 		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD)) return;
-			else offset = max(d->weapload[d->weapselect], 1)+1;
+			else offset += max(d->weapload[d->weapselect], 1);
 		}
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
 		if(weaptype[d->weapselect].power)
