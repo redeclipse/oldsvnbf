@@ -73,10 +73,10 @@ namespace hud
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.021f, 1000);
+	FVARP(indicatorsize, 0, 0.025f, 1000);
 	FVARP(indicatorblend, 0, 0.75f, 1);
-	VARP(teamindicator, 0, 1, 1);
-	FVARP(teamindicatorsize, 0, 0.0575f, 1000);
+	VARP(teamindicator, 0, 2, 2);
+	FVARP(teamindicatorsize, 0, 0.06f, 1000);
 	FVARP(teamindicatorblend, 0, 0.5f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
@@ -87,10 +87,10 @@ namespace hud
 	FVARP(crosshairblend, 0, 0.75f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
-	TVAR(relativecursortex, "textures/dotcrosshair", 3);
+	TVAR(relativecursortex, "textures/crosshair", 3);
 	TVAR(guicursortex, "textures/cursor", 3);
-	TVAR(editcursortex, "textures/dotcrosshair", 3);
-	TVAR(speccursortex, "textures/dotcrosshair", 3);
+	TVAR(editcursortex, "textures/crosshair", 3);
+	TVAR(speccursortex, "textures/crosshair", 3);
 	TVAR(crosshairtex, "textures/crosshair", 3);
 	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
@@ -423,7 +423,7 @@ namespace hud
 			if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
 		int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
-		if(index > POINTER_GUI && teamindicator && game::player1->team)
+		if(index > POINTER_GUI && teamindicator && (game::player1->team || teamindicator > 1))
 		{
 			Texture *t = textureload(indicatortex, 3);
 			if(t != notexture)

@@ -88,14 +88,11 @@ namespace game
 	VARP(announcedelay, 0, 0, INT_MAX-1); // in case you wanna clip announcements to not overlap
 	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
+    VARP(ragdolls, 0, 1, 1);
 	VARP(noblood, 0, 0, 1);
-
 	VARP(nogibs, 0, 0, 1);
 	FVARP(gibscale, 0, 1.f, 1000);
 	VARP(gibexpire, 0, 5000, INT_MAX-1);
-
-    VARP(ragdolls, 0, 1, 1);
-    FVARP(ragdollpush, 0, 1.5f, 10000);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -488,11 +485,12 @@ namespace game
 		}
 		if(d == player1 || d->ai)
 		{
-			float force = m_speedscale(float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
+			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
-			else if(d->health <= 0) force *= ragdollpush*deadpushscale;
+			else if(d->health <= 0) force *= deadpushscale;
 			else force *= hitpushscale;
-			d->vel.add(vec(dir).mul(m_speedscale(force)));
+			vec push = dir; push.z += 0.25f; push.mul(m_speedscale(force));
+			d->vel.add(push);
 		}
         if(d != actor && actor != game::player1)
 			actor->lasthit = lastmillis;

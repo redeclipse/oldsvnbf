@@ -1950,11 +1950,19 @@ namespace server
 		servstate &ts = target->state;
 		if(ts.protect(gamemillis, GVAR(spawnprotecttime)*1000)) return; // ignore completely
 
-		int realdamage = damage, realflags = flags, nodamage = 0;
+		int realdamage = damage, realflags = flags, nodamage = !m_play(gamemode) ? 1 : 0;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
-		if(!m_play(gamemode) || (!GVAR(teamdamage) && m_team(gamemode, mutators) && actor->team == target->team && actor != target))
-			nodamage++;
+		if(actor == target && !GVAR(selfdamage)) nodamage++;
+		else if(m_team(gamemode, mutators) && actor->team == target->team)
+		{
+			switch(GVAR(teamdamage))
+			{
+				case 2: default: break;
+				case 1: if(actor->state.aitype == AI_NONE) break;
+				case 0: nodamage++; break;
+			}
+		}
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
 		else if((realflags&HIT_FULL) && weap != WEAPON_PAINT && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor))
