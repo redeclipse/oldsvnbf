@@ -86,6 +86,7 @@ namespace game
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
 	VARP(announcedelay, 0, 0, INT_MAX-1); // in case you wanna clip announcements to not overlap
+	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
 	VARP(noblood, 0, 0, 1);
 
@@ -239,7 +240,7 @@ namespace game
 	{
 		defvformatstring(text, msg, msg);
 		conoutf("%s", text);
-		if(!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay)
+		if(idx >= 0 && (!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay))
 			playsound(idx, camera1->o, camera1, SND_FORCED);
 	}
 	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
