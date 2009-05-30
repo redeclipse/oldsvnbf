@@ -13,11 +13,47 @@ namespace weapons
 		intret(isweap(n) ? game::player1->ammo[n] : -1);
 	});
 
+	bool weapselect(gameent *d, int weap, bool local)
+	{
+		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD))
+		{
+			if(local) client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+			playsound(S_SWITCH, d->o, d);
+			d->weapswitch(weap, lastmillis);
+			d->reloading = false;
+			return true;
+		}
+		return false;
+	}
+
+	bool weapreload(gameent *d, int weap, int load, int ammo, bool local)
+	{
+		if(!local || d->canreload(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+		{
+			if(local)
+			{
+				client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+				int oldammo = d->ammo[weap];
+				ammo = min(max(d->ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
+				load = ammo-oldammo;
+			}
+			if(load >= 0)
+			{
+				playsound(S_RELOAD, d->o, d);
+				d->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
+			}
+			d->weapload[weap] = load;
+			d->ammo[weap] = min(ammo, weaptype[weap].max);
+			return true;
+		}
+		return false;
+	}
+
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
 		if(a < -1 || b < -1 || a >= WEAPON_MAX || b >= WEAPON_MAX) return;
-		if(d->reqswitch >= 0 || game::inzoom()) return;
-		int s = d->weapselect, sweap = m_spawnweapon(game::gamemode, game::mutators);
+		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD))) return;
+		int s = d->weapselect;
 		loopi(WEAPON_MAX) // only loop the amount of times we have weaps for
 		{
 			if(a >= 0) s = a;
@@ -33,13 +69,7 @@ namespace weapons
 				if(skipgrenade && s == WEAPON_GRENADE) continue;
 			}
 
-			if(d->canswitch(s, sweap, lastmillis, WPSTATE_RELOAD))
-			{
-				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, s);
-				d->reqswitch = lastmillis;
-				d->reloading = false;
-				return;
-			}
+			if(weapselect(d, s)) return;
 			else if(a >= 0) break;
 		}
 		if(d == game::player1) playsound(S_DENIED, d->o, d);
@@ -49,11 +79,11 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(!m_noitems(game::gamemode, game::mutators) && isweap(weap) && ((weap == WEAPON_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->reqswitch < 0)
+		if(!m_noitems(game::gamemode, game::mutators) && isweap(weap) && ((weap == WEAPON_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+			d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
 			d->reloading = false;
-			d->reqswitch = lastmillis;
 		}
 		else if(d == game::player1) playsound(S_DENIED, d->o, d);
 	}
@@ -62,22 +92,12 @@ namespace weapons
 	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-		bool canreload = d->canreload(d->weapselect, sweap, lastmillis);
-		if(canreload && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1 && !d->attacking && !d->reloading && !d->useaction) d->reloading = true;
-		if(!d->hasweap(d->weapselect, sweap))
-		{
-			int bestweap = d->bestweap(sweap, true);
-			if(d->canswitch(bestweap, sweap, lastmillis, WPSTATE_RELOAD) && d->reqswitch < 0)
-			{
-				client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, bestweap);
-				d->reqswitch = lastmillis;
-			}
-		}
-		else if(canreload && d->reqreload < 0 && (d->reloading || (autoreloading && !d->ammo[d->weapselect])))
-		{
-			client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, d->weapselect);
-			d->reqreload = lastmillis;
-		}
+
+		if(d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1 && !d->attacking && !d->reloading && !d->useaction)
+			d->reloading = true;
+
+		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
+		else if(d->reloading || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
 	}
 
 	void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
@@ -105,7 +125,11 @@ namespace weapons
 		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD)) return;
-			else offset += max(d->weapload[d->weapselect], 1);
+			else
+			{
+				offset += max(d->weapload[d->weapselect], 1);
+				d->weapload[d->weapselect] = -d->weapload[d->weapselect];
+			}
 		}
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
 		if(weaptype[d->weapselect].power)
