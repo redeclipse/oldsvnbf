@@ -32,7 +32,7 @@ namespace projs
 		hitmsg &h = hits.add();
 		h.flags = flags;
 		h.target = d->clientnum;
-		h.id = d->sequence;
+		h.id = lastmillis-game::maptime;
 		h.dist = dist;
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
