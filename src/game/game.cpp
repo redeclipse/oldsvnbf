@@ -1587,8 +1587,7 @@ namespace game
 		}
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
-			weap = d->weapselect, lastaction = 0,
-			animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
+			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = isweap(weap);
 
 		if(d->state == CS_SPECTATOR) return;
@@ -1657,27 +1656,30 @@ namespace game
 					{
 						if(lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2)
 						{
-							if(d->hasweap(d->lastweap, m_spawnweapon(gamemode, mutators))) weap = d->lastweap;
-							else showweap = false;
+							if(!d->hasweap(d->lastweap, m_spawnweapon(gamemode, mutators))) showweap = false;
+							else weap = d->lastweap;
 						}
+						else if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
 						animflags = ANIM_SWITCH;
 						break;
 					}
 					case WPSTATE_POWER:
 					{
-						if(weaptype[weap].power) animflags = (weaptype[weap].anim+d->weapstate[weap])|ANIM_LOOP;
+						if(weaptype[weap].power) animflags = weaptype[weap].anim+d->weapstate[weap];
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WPSTATE_SHOOT:
 					{
-						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
+						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaploads(weap, m_spawnweapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
+							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
-						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
+						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaploads(weap, m_spawnweapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
+							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
