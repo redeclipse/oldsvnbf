@@ -1703,7 +1703,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			break;
 		}
 		case 1: //smoke vent - <dir>
-			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), -20, 0, 2.4f);
+			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f, -20);
 			break;
 		case 2: //water fountain - <dir>
 		{
@@ -1725,7 +1725,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		{
 			const int typemap[] = { PART_SFLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 100, 0, 0, 200, 200, 100, 100, 100, 40, 200 },
-				gravmap[] = { 0, 0, 0, 0, 0, -20, -10, 0, 100, 10 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
+				gravmap[] = { 0, 0, 0, 0, -10, -20, -10, 0, 100, 10 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];
 			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, grav, 0, vel);

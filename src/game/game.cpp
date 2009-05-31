@@ -1648,14 +1648,9 @@ namespace game
 			secondary = third;
 			if(showweap)
 			{
-				int weapstate = WPSTATE_IDLE;
-				if(lastmillis-d->weaplast[weap] <= d->weapwait[weap])
-				{
-					weapstate = d->weapstate[weap];
-					lastaction = d->weaplast[weap];
-					animdelay = d->weapwait[weap];
-				}
-				switch(weapstate)
+				lastaction = d->weaplast[weap];
+				animdelay = d->weapwait[weap];
+				switch(d->weapstate[weap])
 				{
 					case WPSTATE_SWITCH:
 					case WPSTATE_PICKUP:
@@ -1670,26 +1665,26 @@ namespace game
 					}
 					case WPSTATE_POWER:
 					{
-						if(weaptype[weap].power) animflags = (weaptype[weap].anim+weapstate)|ANIM_LOOP;
+						if(weaptype[weap].power) animflags = (weaptype[weap].anim+d->weapstate[weap])|ANIM_LOOP;
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WPSTATE_SHOOT:
 					{
 						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
-						animflags = weaptype[weap].anim+weapstate;
+						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
 						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
-						animflags = weaptype[weap].anim+weapstate;
+						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
 					case WPSTATE_IDLE: case WPSTATE_WAIT: default:
 					{
 						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
-						else animflags = weaptype[weap].anim|ANIM_LOOP;
+						animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 				}
