@@ -300,7 +300,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_SMG,			ANIM_SMG,	-10,	5,			0xFF9922,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		50,    1500,	20,		3000,	0,		2000,
+			40,		40,		75,    1500,	20,		3000,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		true,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		48.f,		100.f,
