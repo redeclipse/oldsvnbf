@@ -278,7 +278,7 @@ void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 		ircchan *c = ircfindchan(n, target);
 		if(c)
 		{
-			formatstring(s)("\fs\fa[%s]\fS %s", c->friendly);
+			formatstring(s)("\fs\fa[%s]\fS", c->friendly);
 			while(c->lines.length() >= 1000)
 			{
 				char *a = c->lines.remove(0);
