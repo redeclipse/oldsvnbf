@@ -145,7 +145,6 @@ namespace weapons
 					}
 					else return;
 				}
-
 				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, weaptype[d->weapselect].power);
 				if(d->attacking && power < weaptype[d->weapselect].power) return;
 			}
@@ -155,7 +154,7 @@ namespace weapons
 
 		d->reloading = false;
 		int adelay = weaptype[d->weapselect].adelay;
-		if(d->weapselect == WEAPON_PISTOL)
+		if(!weaptype[d->weapselect].fullauto)
 		{
 			d->attacking = false;
 			if(d->ai) adelay += int(adelay*(((101-d->skill)+rnd(111-d->skill))/100.f));
@@ -196,8 +195,8 @@ namespace weapons
 		loopi(weaptype[d->weapselect].rays)
 		{
 			vec dest;
-			if(weaptype[d->weapselect].spread)
-				offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
+			int spread = d == game::player1 && weaptype[d->weapselect].zooms && game::inzoom() ? 0 : weaptype[d->weapselect].spread;
+			if(spread) offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
 			if(d->weapselect == WEAPON_GRENADE) dest.z += from.dist(dest)/8;
 			addshot;
