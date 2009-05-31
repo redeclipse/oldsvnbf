@@ -268,7 +268,7 @@ struct weaptypes
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
-	bool	radial,	taper,	extinguish,	reloads,	zooms;
+	bool	radial,	taper,	extinguish,	reloads,	zooms,		fullauto;
 	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	hitpush;
 	const char
 			*name, 		*text,	*item,						*vwep,
@@ -282,17 +282,17 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		125,    1250,	20,		2000,	0,		1000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		false,
-			0.f,		0.f,			0.01f,		2.0f,		0.f,	0.45f,		150.f,
+			false,	false,	false,		true,		false,		false,
+			0.f,		0.f,			0.05f,		2.0f,		0.f,	0.45f,		150.f,
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",
 			""
 	},
 	{
 		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
 			S_SG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		500,	1000,	15,		2000,	0,		1000,
+			1,		8,		500,	1250,	15,		2000,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
-			false,	false,	false,		true,		false,
+			false,	false,	false,		true,		false,		false,
 			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		200.f,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
@@ -302,7 +302,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	12,		3000,	0,		2000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
-			false,	false,	false,		true,		false,
+			false,	false,	false,		true,		false,		true,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		100.f,
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",
 			""
@@ -312,7 +312,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	25,		200,	0,		3000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
-			true,	false,	true,		true,		false,
+			true,	false,	true,		true,		false,		true,
 			0.15f,		45.f,			0.25f,		1.5f,		25.f,	36.f,		25.f,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
 			""
@@ -322,18 +322,18 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		350,	1000,	35,		1500,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,	true,		true,		false,
-			0.f,		0.f,			0.5f,		1.0f,		0.f,	6.f,		100.f,
+			false,	true,	true,		true,		false,		true,
+			0.f,		0.f,			0.125f,		1.0f,		0.f,	6.f,		100.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
 	},
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0x8822FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1000,	150,	10000,	0,		10000,
-			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		true,
-			0.f,		 0.f,			0.01f,		2.0f,		0.f,	0.6f,		500.f,
+			1,		5,		750,	1500,	150,	10000,	0,		10000,
+			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			false,	false,	false,		true,		true,		false,
+			0.f,		 0.f,			0.05f,		2.0f,		0.f,	0.6f,		500.f,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
 			""
 	},
@@ -342,7 +342,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	1500,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
-			false,	false,	false,		false,		false,
+			false,	false,	false,		false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		1000.f,
 			"grenade",	"\fg",	"weapons/grenade/item",	"weapons/grenade/vwep",
 			"projectiles/grenade"
@@ -352,7 +352,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		true,
+			false,	false,	false,		true,		true,		true,
 			0.f,		 0.f,			0.05f,		2.0f,		0.f,	2.f,		25.f,
 			"paintgun",	"\fm",	"weapons/paintgun/item",		"weapons/paintgun/vwep",
 			""
