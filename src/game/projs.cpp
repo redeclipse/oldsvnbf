@@ -430,8 +430,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 12.f, dist = proj.o.dist(proj.from),
-							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
+						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
@@ -484,7 +483,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 48.f, dist = proj.o.dist(proj.from), size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
+						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(120*max(1.f-proj.lifesize,0.1f))+1)<<8);
@@ -499,7 +498,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 32.f, dist = proj.o.dist(proj.from), size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
+						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(200*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
@@ -532,8 +531,7 @@ namespace projs
 					if(proj.canrender && proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtimex(200);
-						float adjust = 512.f, dist = proj.o.dist(proj.from),
-							size = clamp(adjust*(1.f-proj.lifesize), 1.f, iter ? min(adjust, proj.movement) : dist);
+						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen, proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						int col = ((int(96*max(1.f-proj.lifesize,0.2f))<<16))|((int(16*max(1.f-proj.lifesize,0.2f)))<<8)|(int(254*max(1.f-proj.lifesize,0.2f)));
