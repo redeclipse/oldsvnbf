@@ -1010,16 +1010,13 @@ namespace client
 						return;
 					}
                     sessionid = getint(p);
-					isready = true;
-					game::player1->clientnum = mycn;	  // we are now fully ready
+					game::player1->clientnum = mycn;
                     if(getint(p)) conoutf("\frthe server is password protected");
                     else if(verbose) conoutf("\fdthe server welcomes us, yay");
                     sendintro();
 					break;
 				}
-
-                case SV_WELCOME:
-                    break;
+                case SV_WELCOME: isready = true; break;
 
 				case SV_CLIENT:
 				{
