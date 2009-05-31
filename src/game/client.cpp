@@ -1528,9 +1528,12 @@ namespace client
 					break;
 
 				case SV_SERVMSG:
+				{
+					int lev = getint(p);
 					getstring(text, p);
-					conoutf("%s", text);
+					conoutft(lev >= 0 && lev < CON_MAX ? lev : CON_INFO, "%s", text);
 					break;
+				}
 
 				case SV_SENDDEMOLIST:
 				{

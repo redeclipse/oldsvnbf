@@ -37,7 +37,6 @@ enum
 	S_MAX
 };
 
-
 enum								// entity types
 {
 	NOTUSED = ET_EMPTY,
@@ -532,6 +531,7 @@ char msgsizelookup(int msg)
 extern char msgsizelookup(int msg);
 #endif
 enum { SPHY_NONE = 0, SPHY_JUMP, SPHY_IMPULSE, SPHY_POWER, SPHY_MAX };
+enum { CON_CHAT = CON_GAMESPECIFIC, CON_MAX };
 
 #define DEMO_MAGIC "BFDZ"
 struct demoheader
@@ -1125,7 +1125,6 @@ namespace weapons
 	extern void preload(int weap = -1);
 }
 
-enum { CON_CHAT = CON_GAMESPECIFIC, CON_MAX };
 namespace hud
 {
 	extern int hudwidth, hudsize, damageresidue, radarflagnames;
