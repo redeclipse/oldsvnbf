@@ -280,7 +280,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_PISTOL,		ANIM_PISTOL,		-20,	15,			0x999999,
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		100,    1250,	25,		2500,	0,		1000,
+			10,		10,		100,    1000,	25,		2500,	0,		2000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,		false,
 			0.f,		0.f,			0.05f,		2.0f,		0.f,	0.45f,		16.f,		150.f,
@@ -300,7 +300,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_SMG,			ANIM_SMG,	-10,	5,			0xFF9922,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		75,    1500,	20,		3000,	0,		2000,
+			40,		40,		75,    1500,	20,		3000,	0,		1000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		true,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		48.f,		100.f,
@@ -310,7 +310,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	25,		200,	0,		3000,
+			50,		50,		100, 	2000,	25,		200,	0,		1000,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
 			0.15f,		45.f,			0.25f,		1.5f,		25.f,	36.f,		0.f,		25.f,
