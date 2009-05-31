@@ -1706,12 +1706,12 @@ struct texturegui : g3d_callback
 		{
             g.tab(!i ? "Textures" : NULL, 0xAAFFAA);
             if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-			loopj(thumbheight)
+			loop(h, thumbheight)
 			{
 				g.pushlist();
-				loopk(thumbwidth)
+				loop(w, thumbwidth)
 				{
-					int ti = (i*thumbheight+j)*thumbwidth+k;
+					int ti = (i*thumbheight+h)*thumbwidth+w;
 					Texture *tex = textureload("textures/nothumb", 3);
 					if(ti<curtexnum)
 					{
@@ -1721,7 +1721,7 @@ struct texturegui : g3d_callback
                         else if(slot.loaded)
                         {
                             tex = slot.sts[0].t;
-                            if(slot.texmask&(1<<TEX_GLOW)) { loopv(slot.sts) if(slot.sts[i].type==TEX_GLOW) { glowtex = slot.sts[i].t; break; } }
+                            if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
                             if(slot.layer)
                             {
                                 Slot &layer = lookuptexture(slot.layer);
