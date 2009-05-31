@@ -617,8 +617,6 @@ namespace projs
 					case WEAPON_FLAMER:
 					case WEAPON_GRENADE:
 					{ // both basically explosions
-						if(proj.weap == WEAPON_FLAMER)
-							part_create(PART_PLASMA_SOFT, m_speedtimex(500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
 						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
 						loopi(rnd(7)+4)
 						{
@@ -626,9 +624,9 @@ namespace projs
 							part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
 						}
 						part_create(PART_SMOKE_LERP_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x303030 : 0x222222, weaptype[proj.weap].explode, -20);
-						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
 						if(proj.weap == WEAPON_GRENADE)
 						{
+							part_create(PART_PLASMA_SOFT, m_speedtimex(1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
 							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
 							game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
@@ -637,6 +635,7 @@ namespace projs
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
 						}
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
+						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
 						break;
 					}
 					case WEAPON_SG: case WEAPON_SMG:
