@@ -520,8 +520,8 @@ namespace projs
 					if(proj.canrender)
 					{
 						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*resize);
-						part_create(PART_ELECTRIC, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.65f*resize); // electrifying!
-						part_create(PART_PLASMA, 1, proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.45f*resize); // brighter center part
+						part_create(PART_ELECTRIC, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*0.7f*resize); // electrifying!
+						part_create(PART_PLASMA, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*0.3f*resize); // brighter center part
 					}
 					break;
 				}

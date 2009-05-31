@@ -1698,8 +1698,8 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			//regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
             float radius = attr2 ? float(attr2)/100.0f : 1.5f,
                   height = attr3 ? float(attr3)/100.0f : radius/3;
-            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0x903020, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -10, 0, 200);
-            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x303020, 1, attr5 > 0 ? attr5 : 1000, 4.0f, -20, 0, 100);
+            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0x903020, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -5, 0, 200);
+            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x303020, 1, attr5 > 0 ? attr5 : 1000, 4.0f, -10, 0, 100);
 			break;
 		}
 		case 1: //smoke vent - <dir>
@@ -1725,7 +1725,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		{
 			const int typemap[] = { PART_SFLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 100, 0, 0, 200, 200, 100, 100, 100, 40, 200 },
-				gravmap[] = { 0, 0, 0, 0, -10, -20, -10, 0, 100, 10 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
+				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 100, 10 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];
 			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, grav, 0, vel);
