@@ -492,7 +492,6 @@ namespace hud
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		drawpointers(w, h);
-
 		pushfont("super");
 		int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
 		if(commandmillis >= 0)
@@ -501,7 +500,7 @@ namespace hud
 			ty += draw_textx(commandbuf, tx-FONTW/2, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
 			popfont();
 		}
-		else if(shownotices && game::maptime && !UI::hascursor(false) && !texpaneltimer)
+		else if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
 		{
 			tf = int(tf*noticeblend);
 			if(teamnotices) skewcolour(tr, tg, tb);
@@ -681,7 +680,7 @@ namespace hud
 		}
 		popfont();
 
-		if(overlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (overlaydisplay || !game::thirdpersonview(true))))
+		if(client::ready() && (overlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (overlaydisplay || !game::thirdpersonview(true)))))
 		{
 			Texture *t = *overlaytex ? textureload(overlaytex, 3) : notexture;
 			if(t != notexture)
@@ -1277,61 +1276,60 @@ namespace hud
 	void drawhud(int w, int h)
 	{
 		float fade = hudblend;
-		if(client::ready())
+		bool texturing = true;
+		if(!client::ready() || lastmillis-game::maptime < titlecard)
 		{
-			bool texturing = true;
-			if(!game::maptime || lastmillis-game::maptime < titlecard)
+			float amt = client::ready() ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
+			if(amt < 1.f)
 			{
-				float amt = game::maptime ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
-				if(amt < 1.f)
-				{
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, amt, amt, amt);
-					fade *= amt;
-				}
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, amt, amt, amt);
+				fade *= amt;
 			}
-			else if(game::tvmode())
-			{
-				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
-				if(amt < 1.f)
-				{
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, amt, amt, amt);
-					fade *= amt;
-				}
-			}
-			else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
-			{
-				float amt = (lastmillis-game::player1->lastspawn)/500.f;
-				if(amt < 2.f)
-				{
-					float r = 1.f, g = 1.f, b = 1.f;
-					skewcolour(r, g, b, true);
-					fade *= amt*0.5f;
-					if(amt < 1.f)
-					{
-						r *= amt;
-						g *= amt;
-						b *= amt;
-					}
-					else
-					{
-						amt -= 1.f;
-						r += (1.f-r)*amt;
-						g += (1.f-g)*amt;
-						b += (1.f-b)*amt;
-					}
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, r, g, b);
-				}
-			}
-			if(!texturing) usetexturing(true);
 		}
+		else if(game::tvmode())
+		{
+			float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
+			if(amt < 1.f)
+			{
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, amt, amt, amt);
+				fade *= amt;
+			}
+		}
+		else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
+		{
+			float amt = (lastmillis-game::player1->lastspawn)/500.f;
+			if(amt < 2.f)
+			{
+				float r = 1.f, g = 1.f, b = 1.f;
+				skewcolour(r, g, b, true);
+				fade *= amt*0.5f;
+				if(amt < 1.f)
+				{
+					r *= amt;
+					g *= amt;
+					b *= amt;
+				}
+				else
+				{
+					amt -= 1.f;
+					r += (1.f-r)*amt;
+					g += (1.f-g)*amt;
+					b += (1.f-b)*amt;
+				}
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, r, g, b);
+			}
+		}
+		if(!texturing) usetexturing(true);
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
 		glLoadIdentity();
 		glOrtho(0, ox, oy, 0, -1, 1);
+
 		if(client::ready())
 		{
 			if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
