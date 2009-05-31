@@ -3,7 +3,7 @@ enum { IRCCT_NONE = 0, IRCCT_AUTO };
 struct ircchan
 {
 	int state, type, relay, lastjoin;
-	string name, passkey;
+	string name, friendly, passkey;
 	vector<char *> lines;
 
 	ircchan() {}
@@ -46,7 +46,7 @@ extern void ircnewnet(int type, const char *name, const char *serv, int port, co
 extern ircchan *ircfindchan(ircnet *n, const char *name);
 extern bool ircjoin(ircnet *n, ircchan *c);
 extern bool ircenterchan(ircnet *n, const char *name);
-extern bool ircnewchan(int type, const char *name, const char *channel, const char *passkey = "", int relay = 0);
+extern bool ircnewchan(int type, const char *name, const char *channel, const char *friendly = "", const char *passkey = "", int relay = 0);
 extern void ircparse(ircnet *n, char *reply);
 extern void ircdiscon(ircnet *n);
 extern void irccleanup();

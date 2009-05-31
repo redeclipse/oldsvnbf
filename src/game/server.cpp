@@ -855,7 +855,7 @@ namespace server
 		if(cn < 0 || allowbroadcast(cn))
 		{
 			defvformatstring(str, s, s);
-			sendf(cn, 1, "ris", SV_SERVMSG, str);
+			sendf(cn, 1, "ri2s", SV_SERVMSG, cn > -2 ? int(CON_INFO) : int(CON_CHAT), str);
 		}
 	}
 
