@@ -1670,26 +1670,26 @@ namespace game
 					}
 					case WPSTATE_POWER:
 					{
-						if(!weaptype[weap].power) weapstate = WPSTATE_SHOOT;
-						animflags = (weaptype[weap].anim+weapstate);
+						if(weaptype[weap].power) animflags = (weaptype[weap].anim+weapstate)|ANIM_LOOP;
+						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WPSTATE_SHOOT:
 					{
 						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
-						animflags = (weaptype[weap].anim+weapstate);
+						animflags = weaptype[weap].anim+weapstate;
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
 						if(weap == WEAPON_GRENADE && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2) showweap = false;
-						animflags = (weaptype[weap].anim+weapstate);
+						animflags = weaptype[weap].anim+weapstate;
 						break;
 					}
-					case WPSTATE_IDLE:	default:
+					case WPSTATE_IDLE: case WPSTATE_WAIT: default:
 					{
 						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
-						else animflags = (weaptype[weap].anim+weapstate)|ANIM_LOOP;
+						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 				}
