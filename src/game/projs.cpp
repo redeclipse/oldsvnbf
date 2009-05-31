@@ -617,7 +617,8 @@ namespace projs
 					case WEAPON_FLAMER:
 					case WEAPON_GRENADE:
 					{ // both basically explosions
-						part_create(PART_PLASMA_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 500 : 1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
+						if(proj.weap == WEAPON_FLAMER)
+							part_create(PART_PLASMA_SOFT, m_speedtimex(500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
 						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
 						loopi(rnd(7)+4)
 						{
@@ -631,7 +632,7 @@ namespace projs
 							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
 							game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
-							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtimex(500), 0xAA3300, 1.f);
+							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtimex(750), 0xAA3300, 1.f);
 							loopi(rnd(26)+10) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(30001)+1500, 0, rnd(1001), rnd(126)+25);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
 						}
