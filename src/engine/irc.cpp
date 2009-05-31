@@ -271,8 +271,7 @@ ICOMMAND(ircfriendlychan, "sss", (const char *name, const char *chan, const char
 void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 {
 	defvformatstring(str, msg, msg);
-	string st, s;
-	filtertext(st, str);
+	string s;
 	if(target && *target && strcasecmp(target, n->nick))
 	{
 		ircchan *c = ircfindchan(n, target);
