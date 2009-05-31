@@ -1243,9 +1243,9 @@ namespace game
         	return;
         }
 
+       	if(!*game::player1->name && !guiactive()) showgui("name");
         if(connected())
         {
-        	if(!*game::player1->name && !guiactive()) showgui("name");
         	game::player1->conopen = commandmillis >= 0 || UI::hascursor(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
