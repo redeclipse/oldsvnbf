@@ -1,14 +1,14 @@
 #include "game.h"
 namespace physics
 {
-	FVARW(crawlspeed,		0, 30.f, 10000);	// crawl speed
+	FVARW(crawlspeed,		0, 20.f, 10000);	// crawl speed
 	FVARW(gravity,			0, 50.f, 10000);	// gravity
 	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
-	FVARW(movespeed,		0, 50.f, 10000);	// speed
+	FVARW(movespeed,		0, 40.f, 10000);	// speed
 
-	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
-	FVARW(impulsegravity,	0, 62.5f, 10000);	// modifier of gravity that determines impulse interval
-	VARW(impulsetime,		-1, 0, INT_MAX-1);	// overrides impulsespeed to a specific time interval (-1 = turn off impulse, 0 = use impulsegravity)
+	FVARW(impulsespeed,		0, 30.f, 10000);	// extra velocity to add when impulsing
+	FVARW(impulsemod,		0, 60.f, 10000);	// modifier of gravity that determines impulse interval
+	VARW(impulsetime,		-1, 0, INT_MAX-1);	// overrides impulse to a specific time interval (-1 = turn off impulse, 0 = use impulsemod)
 
 	FVARW(liquidfric,		0, 10.f, 10000);
 	FVARW(liquidscale,		0, 0.9f, 10000);
@@ -25,7 +25,7 @@ namespace physics
 	FVARW(stepspeed,		1e-3f, 1.f, 10000);
 	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
 
-	FVARP(floatspeed,		1e-3f, 75.f, 10000);
+	FVARP(floatspeed,		1e-3f, 80.f, 10000);
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
@@ -135,7 +135,7 @@ namespace physics
 
 	bool canimpulse(physent *d)
 	{
-		int timelen = impulsetime ? impulsetime : int(gravity*impulsegravity);
+		int timelen = impulsetime ? impulsetime : int(gravity*impulsemod);
 		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtimex(timelen);
 		return false;
 	}
