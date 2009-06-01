@@ -40,7 +40,6 @@ VARW(yawcloudlayer, 0, 0, 360);
 FVARW(cloudheight, -1, 0.2f, 1);
 FVARW(cloudfade, 0, 0.2f, 1);
 FVARW(cloudblend, 0, 1.0f, 1);
-FVARFW(cloudalpha, 0, 1.0f, 1, cloudblend = cloudalpha);
 VARW(cloudsubdiv, 4, 16, 64);
 HVARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
 
