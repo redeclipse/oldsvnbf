@@ -1184,7 +1184,7 @@ namespace entities
 		if(d->state == CS_ALIVE)
 		{
 			vec v = d->feetpos();
-			bool clip = !ai::clipped(v), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
+			bool clip = ai::clipped(v), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 
