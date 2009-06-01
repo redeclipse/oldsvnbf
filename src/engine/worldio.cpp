@@ -871,6 +871,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					f->read(name, min(ilen, OCTASTRLEN-1));
 					name[min(ilen, OCTASTRLEN-1)] = '\0';
 					if(ilen >= OCTASTRLEN) f->seek(ilen - (OCTASTRLEN-1), SEEK_CUR);
+					if(!strcmp(name, "cloudalpha")) copystring(name, "cloudblend");
 					ident *id = getident(name);
 					bool exists = id && id->type == type;
 					switch(type)
