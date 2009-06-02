@@ -786,7 +786,6 @@ struct skelmodel : animmodel
                 }
             }
             numinterpbones = numgpubones;
-            calcantipodes();
             loopv(tags)
             {
                 boneinfo &info = bones[tags[i].bone];
@@ -826,6 +825,7 @@ struct skelmodel : animmodel
                     }
                 }
             }
+            calcantipodes();
         }
 
         void optimize()
