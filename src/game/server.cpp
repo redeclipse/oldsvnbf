@@ -2862,6 +2862,7 @@ namespace server
 					if(val && ci->state.state != CS_ALIVE) break;
 					ci->state.dropped.reset();
 					loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
+					ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 					if(val)
 					{
 						if(smode) smode->leavegame(ci);
@@ -2872,7 +2873,6 @@ namespace server
 					else
 					{
 						ci->state.state = CS_ALIVE;
-						ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 						if(smode) smode->entergame(ci);
 						mutate(smuts, mut->entergame(ci));
 					}

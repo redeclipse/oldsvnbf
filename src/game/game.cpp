@@ -634,7 +634,7 @@ namespace game
 							anc = S_V_HEADSHOT;
 							part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
 						}
-						else if(obliterated || lastmillis-d->lastspawn <= spawnprotecttime*2000) // double spawnprotect
+						else if(obliterated || (d->lastspawn && lastmillis-d->lastspawn <= spawnprotecttime*2000)) // double spawnprotect
 							anc = S_V_OWNED;
 						break;
 					}

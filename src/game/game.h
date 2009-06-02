@@ -846,7 +846,6 @@ struct gamestate
 	void editspawn(int millis, int sweap, int heal)
 	{
 		clearstate();
-		lastspawn = millis;
 		spawnstate(sweap, heal);
 	}
 
