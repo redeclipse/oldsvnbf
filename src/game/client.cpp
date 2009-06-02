@@ -153,6 +153,7 @@ namespace client
 
 	void edittoggled(bool edit)
 	{
+		game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
 		if(edit)
 		{
 			game::player1->state = CS_EDITING;
@@ -162,7 +163,6 @@ namespace client
 		else if(game::player1->state != CS_SPECTATOR)
 		{
 			game::player1->state = CS_ALIVE;
-			game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
 			physics::entinmap(game::player1, true); // find spawn closest to current floating pos
 		}
 		projs::remove(game::player1);

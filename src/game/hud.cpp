@@ -1012,7 +1012,7 @@ namespace hud
 					}
 					else if(i != game::player1->weapselect) skew = 0.75f;
 					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WPSTATE_PICKUP);
-					int oldy = y-sy, delay = lastmillis-game::player1->lastspawn;
+					int oldy = y-sy, delay = game::player1->lastspawn ? lastmillis-game::player1->lastspawn : 1000;
 					if(delay < 1000) skew *= delay/1000.f;
 					float r = 1.f, g = 1.f, b = 1.f;
 					if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
