@@ -144,7 +144,7 @@ namespace server
 		vec o;
 		int state;
         projectilestate dropped, weapshots[WEAPON_MAX];
-		int frags, flags, deaths, teamkills, shotdamage, damage;
+		int score, frags, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
 
 		servstate() : state(CS_SPECTATOR), aireinit(0) {}
@@ -159,7 +159,7 @@ namespace server
 			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
-			if(!change) timeplayed = 0;
+			if(!change) score = timeplayed = 0;
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
@@ -175,10 +175,11 @@ namespace server
 	{
 		uint ip;
 		string name;
-		int frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
+		int score, frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
 
 		void save(servstate &gs)
 		{
+			score = gs.score;
 			frags = gs.frags;
 			flags = gs.flags;
             deaths = gs.deaths;
@@ -190,6 +191,7 @@ namespace server
 
 		void restore(servstate &gs)
 		{
+			gs.score = score;
 			gs.frags = frags;
 			gs.flags = flags;
             gs.deaths = deaths;
@@ -1265,11 +1267,11 @@ namespace server
 					switch(GVAR(teambalance))
 					{
 						case 1: rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f; break;
-						case 2: case 3: rank = cp->state.frags/float(max(cp->state.timeplayed, 1)); break;
+						case 2: case 3: rank = cp->state.score/float(max(cp->state.timeplayed, 1)); break;
 						case 4: case 5:
 						{
 							if(ci->state.aitype != AI_NONE) rank = cp->state.aitype != AI_NONE ? GVAR(botratio) : 1.f;
-							else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.frags/float(max(cp->state.timeplayed, 1));
+							else rank = cp->state.aitype != AI_NONE ? 0.f : cp->state.score/float(max(cp->state.timeplayed, 1));
 							break;
 						}
 						case 6: default: break;
@@ -1996,6 +1998,7 @@ namespace server
 				if(GVAR(scoringstyle)) fragvalue *= GVAR(scoringstyle);
             }
             actor->state.frags += fragvalue;
+            actor->state.score += fragvalue;
 			sendf(-1, 1, "ri4", SV_FRAG, actor->clientnum, actor->state.frags, actor->state.spree);
 
 			if(realflags&HIT_KILL)
@@ -2017,7 +2020,9 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE) return;
-        ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
+		int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
+        ci->state.frags += fragvalue;
+        ci->state.score += fragvalue;
         ci->state.spree = 0;
         ci->state.deaths++;
 		dropitems(ci);
@@ -2541,7 +2546,7 @@ namespace server
 		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci, true));
-		    ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+		    ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
 		    savescore(ci);
 		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
