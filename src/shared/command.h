@@ -81,7 +81,7 @@ struct ident
         : type(t), name(n), override(NO_OVERRIDE), stack(NULL), action(a), flags(flags) {}
     // ID_COMMAND, ID_CCOMMAND
     ident(int t, const char *n, const char *narg, void *f, void *s, int flags = IDF_COMPLETE)
-        : type(t), name(n), fun((void (__cdecl *)(void))f), narg(narg), self(s), flags(flags) {}
+        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)(void))f), narg(narg), self(s), flags(flags) {}
 
     virtual ~ident() {}
 
