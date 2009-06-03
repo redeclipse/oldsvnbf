@@ -1238,7 +1238,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
         float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
         else fogmat = abovemat;
-        if(level && caustics && fogmat==MAT_WATER && camera1->o.z < z)
+        if(level > 1 && caustics && fogmat==MAT_WATER && camera1->o.z < z)
             causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
     }
     else
@@ -1246,7 +1246,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     	fogmat = MAT_AIR;
     }
     setfog(fogmat, fogblend, abovemat);
-    if(level && fogmat != MAT_AIR)
+    if(level > 1 && fogmat != MAT_AIR)
     {
         float blend = abovemat==MAT_AIR ? fogblend : 1.0f;
         fovy += blend*sinf(lastmillis/1000.0)*2.0f;
@@ -1265,7 +1265,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 	xtravertsva = xtraverts = glde = gbatches = 0;
 
-    if(level && !hasFBO)
+    if(level > 1 && !hasFBO)
     {
         if(dopostfx)
         {
@@ -1278,39 +1278,39 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
 	visiblecubes(fovx, fovy);
 
-	if(level && shadowmap && !hasFBO) rendershadowmap();
+	if(level > 1 && shadowmap && !hasFBO) rendershadowmap();
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if(limitsky()) drawskybox(farplane, true);
-	rendergeom(level ? causticspass : 0);
-	if(level) queryreflections();
-    if(level >= 2) generategrass();
+	rendergeom(level > 1 ? causticspass : 0);
+	if(level > 1) queryreflections();
+    if(level) generategrass();
     if(!limitsky()) drawskybox(farplane, false);
-    if(level >= 2) renderdecals();
+    if(level > 1) renderdecals();
 
 	rendermapmodels();
 
-	if(level >= 2)
+	if(level) rendergame();
+	if(level > 1)
 	{
-		rendergame();
-	    if(hasFBO)
-	    {
-	        drawglaretex();
-	        drawdepthfxtex();
-	        drawreflections();
-	    }
-	    renderwater();
-        rendergrass();
-		rendermaterials();
-		renderparticles();
-    }
+		if(hasFBO)
+		{
+			drawglaretex();
+			drawdepthfxtex();
+			drawreflections();
+		}
+		renderwater(); // water screws up for some reason
+	}
+	rendergrass();
+	rendermaterials();
+	renderparticles();
 
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-	if(level >= 2) addglare();
+	if(level > 1) addglare();
 
 	glDisable(GL_TEXTURE_2D);
 
