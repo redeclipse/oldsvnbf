@@ -862,7 +862,7 @@ namespace projs
 	bool move(projent &proj, int qtime)
 	{
 		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
-		if(isdeadly(mat&MATF_VOLUME) || proj.o.z < 0) return false; // gets destroyed
+		if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
 		bool water = isliquid(mat&MATF_VOLUME);
 		float secs = float(qtime) / 1000.0f;
 		if(proj.weight > 0.f) proj.vel.z -=  physics::gravityforce(&proj)*secs;

@@ -515,7 +515,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER)
 				{
 					playsound(S_JUMP, pl->o, pl);
-					game::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 250, 1.f);
+					game::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 200, 1.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
@@ -533,7 +533,7 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				game::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 250, 1.f);
+				game::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 200, 1.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
@@ -591,7 +591,7 @@ namespace physics
 
     void updatematerial(physent *pl, const vec &center, float radius, const vec &bottom, bool local, bool floating)
     {
-		int material = lookupmaterial(bottom), curmat = material&MATF_VOLUME, flagmat = material&MATF_FLAGS,
+		int matid = lookupmaterial(bottom), curmat = matid&MATF_VOLUME, flagmat = matid&MATF_FLAGS,
 			oldmat = pl->inmaterial&MATF_VOLUME;
 
 		if(!floating && curmat != oldmat)
@@ -603,18 +603,17 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, watercolor, 1.f, int(radius), 250, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+				mattrig(bottom, watercolor, 1.f, int(radius), 200, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 			if(curmat == MAT_LAVA) mattrig(vec(center).sub(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, S_BURNING);
-
 			if(local)
 			{
 				if(!isliquid(curmat) && isliquid(oldmat)) pl->vel.z = max(pl->vel.z, jumpvelocity(pl)); // ensure we have enough push out of water
 				else if(isliquid(curmat) && !isliquid(oldmat)) pl->vel.mul(liquidscale);
-				if(pl->type == ENT_PLAYER && pl->state == CS_ALIVE && isdeadly(curmat))
-					game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 			}
 		}
-		pl->inmaterial = material;
+		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
+			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
+		pl->inmaterial = matid;
 		pl->inliquid = !floating && isliquid(curmat);
 		pl->onladder = !floating && flagmat == MAT_LADDER;
         if(pl->onladder && pl->physstate < PHYS_SLIDE) pl->floor = vec(0, 0, 1);
