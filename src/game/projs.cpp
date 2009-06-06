@@ -134,11 +134,11 @@ namespace projs
 					}
 					proj.mdl = rnd(2) ? "gibc" : "gibh";
 					proj.aboveeye = 1.0f;
-					proj.elasticity = 0.3f;
+					proj.elasticity = 0.35f;
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
-					proj.weight = 100.f;
+					proj.weight = 75.f;
 					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
@@ -154,11 +154,11 @@ namespace projs
 					case 1: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.5f;
+				proj.elasticity = 0.65f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 120.f;
+				proj.weight = 100.f;
 				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(160)-81));
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				break;
@@ -170,7 +170,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 120.f;
+				proj.weight = 125.f;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
