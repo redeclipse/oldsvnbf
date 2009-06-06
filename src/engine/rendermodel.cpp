@@ -920,7 +920,7 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
     formatstring(dirs[2])("textures/");
     masks = notexture;
 
-	#define tryload(tex, cmd, path) loopi(4) { if((tex = textureload(makerelpath(i < 3 ? dirs[i] : "", path, NULL, cmd), 0, true, false)) != NULL) break; }
+	#define tryload(tex, cmd, path) loopi(4) { if((tex = textureload(makerelpath(i < 3 ? dirs[i] : "", path, NULL, cmd), 0, true, false)) != notexture) break; }
     tryload(skin, NULL, "skin");
     tryload(masks, "<ffmask:25>", "masks");
 }

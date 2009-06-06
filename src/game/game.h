@@ -293,7 +293,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			1,		8,		500,	1250,	15,		2500,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		false,
-			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		48.f,		200.f,
+			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		48.f,		25.f, // remember, this is PER ray
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
 			""
 	},
