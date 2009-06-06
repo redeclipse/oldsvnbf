@@ -744,11 +744,11 @@ namespace server
 			spawncycle = rnd(ents.length());
 		}
 	} spawns[TEAM_LAST+1];
-	int numplayers, totalspawns;
+	int nplayers, totalspawns;
 
 	void setupspawns(bool update, int players = 0)
 	{
-		numplayers = totalspawns = 0;
+		nplayers = totalspawns = 0;
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
@@ -784,13 +784,13 @@ namespace server
 					totalspawns++;
 				}
 			}
-			numplayers = players;
-			if(numplayers <= 0) numplayers = totalspawns/2;
+			nplayers = players;
+			if(nplayers <= 0) nplayers = totalspawns/2;
 			if(m_team(gamemode, mutators))
 			{
-				if(m_multi(gamemode, mutators)) numplayers += numplayers/2;
-				int offt = numplayers%numt;
-				if(offt) numplayers += numt-offt;
+				if(m_multi(gamemode, mutators)) nplayers += nplayers/2;
+				int offt = nplayers%numt;
+				if(offt) nplayers += numt-offt;
 			}
 		}
 	}
@@ -1406,7 +1406,7 @@ namespace server
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
-		numplayers = gamemillis = interm = 0;
+		nplayers = gamemillis = interm = 0;
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
