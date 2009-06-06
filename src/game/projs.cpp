@@ -138,7 +138,7 @@ namespace projs
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
-					proj.weight = 50.f;
+					proj.weight = 100.f;
 					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
@@ -154,11 +154,11 @@ namespace projs
 					case 1: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.9f;
+				proj.elasticity = 0.5f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 100.f;
+				proj.weight = 120.f;
 				proj.vel.add(vec(rnd(80)-41, rnd(80)-41, rnd(160)-81));
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				break;
@@ -170,7 +170,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 100.f;
+				proj.weight = 120.f;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
@@ -584,7 +584,7 @@ namespace projs
 				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.35f), pos = proj.o;
 				loopi(steps)
 				{
-					float res = float(steps-i)/float(steps), size = clamp(proj.radius*(proj.lifesize+0.1f)*res, 0.1f, proj.radius);
+					float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 1e16f, proj.radius);
 					int col = ((int(196*max(res,0.3f))<<16)+1)|((int(64*max(res,0.2f))+1)<<8);
 					part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT, 1, pos, col, size, -10);
 					pos.add(dir);
