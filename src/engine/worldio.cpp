@@ -1021,7 +1021,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
-			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 			if(verbose) conoutf("\faloaded %d entities", hdr.numents);
 
 			renderprogress(0, "loading octree...");
@@ -1069,6 +1068,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			renderprogress(0, "loading world...");
 			game::loadworld(f, maptype);
+			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 
 			overrideidents = worldidents = true;
 			persistidents = false;
