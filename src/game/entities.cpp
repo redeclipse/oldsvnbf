@@ -1439,7 +1439,7 @@ namespace entities
 					if(ents.inrange(dest))
 					{
 						gameentity &f = *(gameentity *)ents[dest];
-						conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr[0], e.attr[1], dest, f.attr[0], f.attr[1]);
+						if(verbose) conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr[0], e.attr[1], dest, f.attr[0], f.attr[1]);
 						if(!f.attr[0]) f.attr[0] = e.attr[0]; // give it the old base idx
 						e.type = NOTUSED;
 					}

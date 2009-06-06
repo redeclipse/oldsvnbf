@@ -617,25 +617,29 @@ namespace projs
 					case WEAPON_FLAMER:
 					case WEAPON_GRENADE:
 					{ // both basically explosions
-						int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
-						loopi(rnd(7)+4)
-						{
-							vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-							part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
-						}
 						part_create(PART_SMOKE_LERP_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 750 : 1500), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), proj.weap == WEAPON_FLAMER ? 0x303030 : 0x222222, weaptype[proj.weap].explode, -20);
-						if(proj.weap == WEAPON_GRENADE)
+						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtimex(1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
-							float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
-							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
-							game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
-							part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtimex(750), 0xAA3300, 1.f);
-							loopi(rnd(26)+10) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(30001)+1500, 0, rnd(1001), rnd(126)+25);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
+							int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
+							loopi(rnd(7)+4)
+							{
+								vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
+								part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
+							}
+							if(proj.weap == WEAPON_GRENADE)
+							{
+								part_create(PART_PLASMA_SOFT, m_speedtimex(1000), vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.15f)), 0x992200, weaptype[proj.weap].explode*0.5f); // corona
+								float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
+								if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
+								game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
+								part_fireball(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f)), float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtimex(750), 0xAA3300, 1.f);
+								loopi(rnd(26)+10) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(30001)+1500, 0, rnd(1001), rnd(126)+25);
+								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
+							}
+							adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
+							adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
 						}
-						adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
-						adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 1250), 10);
+						else vol = 0;
 						break;
 					}
 					case WEAPON_SG: case WEAPON_SMG:
@@ -647,11 +651,15 @@ namespace projs
 					}
 					case WEAPON_PLASMA:
 					{
-						part_create(PART_PLASMA_SOFT, m_speedtimex(100), proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-						part_create(PART_PLASMA, m_speedtimex(100), proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
 						part_create(PART_SMOKE, m_speedtimex(250), proj.o, 0x8899AA, 2.4f, -20);
-						adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(0.1f, 0.4f, 0.6f), m_speedtimex(200), 10);
-						adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
+						if(!proj.limited)
+						{
+							part_create(PART_PLASMA_SOFT, m_speedtimex(100), proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
+							part_create(PART_PLASMA, m_speedtimex(100), proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
+							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(0.1f, 0.4f, 0.6f), m_speedtimex(200), 10);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(86, 196, 244));
+						}
+						else vol = 0;
 						break;
 					}
 					case WEAPON_RIFLE:
@@ -677,19 +685,23 @@ namespace projs
 				if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
 				if(proj.local)
 				{
-					int radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
 					hits.setsizenodelete(0);
-					if(weaptype[proj.weap].explode)
+					int radius = 0;
+					if(!proj.limited)
 					{
-						loopi(game::numdynents())
+						radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
+						if(weaptype[proj.weap].explode)
 						{
-							gameent *f = (gameent *)game::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-							radialeffect(f, proj, proj.weap == WEAPON_GRENADE, radius);
+							loopi(game::numdynents())
+							{
+								gameent *f = (gameent *)game::iterdynents(i);
+								if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+								radialeffect(f, proj, proj.weap == WEAPON_GRENADE, radius);
+							}
 						}
+						else if(proj.hit && proj.hit->type == ENT_PLAYER)
+							hitproj((gameent *)proj.hit, proj);
 					}
-					else if(proj.hit && proj.hit->type == ENT_PLAYER)
-						hitproj((gameent *)proj.hit, proj);
 
 					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
 							-radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -870,7 +882,11 @@ namespace projs
 		vec dir(proj.vel), pos(proj.o);
 		if(water)
 		{
-			if(proj.extinguish) return false; // gets "put out"
+			if(proj.extinguish)
+			{
+				proj.limited = true;
+				return false; // gets "put out"
+			}
 			dir.div(proj.waterfric);
 		}
 		dir.mul(secs);
