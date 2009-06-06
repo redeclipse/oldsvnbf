@@ -189,7 +189,7 @@ namespace aiman
 		{
 			if(m_fight(gamemode))
 			{
-				int balance = int(numplayers*GVAR(botscale));
+				int balance = int(nplayers*GVAR(botscale));
 				if(m_team(gamemode, mutators) && GVAR(teambalance))
 				{ // skew this if teams are unbalanced
 					loopvrev(clients)

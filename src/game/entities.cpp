@@ -805,9 +805,9 @@ namespace entities
 					if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", n, ent);
 				}
 				else continue;
+				fixentity(ent);
 			}
 			else continue;
-			fixentity(ent);
 		}
 		if(issound(e.schan))
 		{
