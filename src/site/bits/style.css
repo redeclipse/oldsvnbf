@@ -1,6 +1,7 @@
 @charset "utf-8";
 body {
 	font-family: sans-serif;
+	font-size: 11px;
 	background: #0e0e0e url(/bits/bg_01.jpg) no-repeat scroll center top;
 	margin: 0px;
 	padding: 0px;
@@ -24,6 +25,7 @@ body {
 }
 #links {
 	font-size: 16px;
+	font-weight: bold;
 	color: #FFFFFF;
 	background: #000000 url(/bits/bg_links.jpg) repeat-x center center;
 	margin: 0px;
@@ -61,10 +63,10 @@ body {
 #noticebg {
 	background: #000000 url(/bits/bg_blood.gif) no-repeat center top;
 	margin: 0px;
-	padding: 15px 0px 0px;
+	padding: 5px 0px 0px;
 	float: left;
 	width: 738px;
-	height: 234px;
+	height: 235px;
 }
 #blockborder {
 	margin: 0px;
@@ -79,7 +81,6 @@ body {
 	margin: 0px;
 	padding: 0px 20px 0px 19px;
 	color: #FFFFFF;
-	font-size: 11px;
 }
 #version {
 	font-size: 16px;
@@ -89,24 +90,24 @@ body {
 	padding: 0px;
 	width: 500px;
 }
-#version a {
+#redblock a {
 	color: #F0F0F0;
 	text-decoration: none;
 	border-bottom: 1px dotted #C0C0C0;
 }
-#version a:visited {
+#redblock a:visited {
 	color: #F0F0F0;
 	text-decoration: none;
 	border-bottom: 1px dotted #C0C0C0;
 }
-#version a:hover {
+#redblock a:hover {
 	color: #FFFFFF;
 	text-decoration: none;
 	border-bottom: 1px solid #CCCCCC;
 }
 #redblock hr {
 	background: url(/bits/bg_hr.png) no-repeat center center;
-	margin: 0px 0px 10px;
+	margin: 0px 0px 5px;
 	padding: 0px;
 	float: left;
 	height: 2px;
@@ -115,16 +116,14 @@ body {
 	border-width: 0px;
 }
 #notice {
-	font-size: 11px;
 	color: #FFFFFF;
 	display: block;
 	margin: 0px;
-	padding: 0px 0px 0px 0px;
+	padding: 5px 0px 0px 0px;
 	float: left;
 	width: 500px;
 }
 #right {
-	font-size: 11px;
 	color: #FFFFFF;
 	text-align: center;
 	margin: 0px;
@@ -183,25 +182,16 @@ body {
 	text-decoration: underline;
 }
 #list {
-	font-size: 12px;
+	font-size: 13px;
 	color: #FFFFFF;
 	margin: 0px;
 	padding: 15px 20px 0px 0px;
 	float: right;
 	width: 140px;
 }
-#list h2 {
-	font-size: 14px;
-	font-weight: bold;
-	padding: 0px 0px 0px 0px;
-	color: #FFFFFF;
-	margin: 0px;
-	float: right;
-	width: 140px;
-}
 #list ul {
 	margin: 0px;
-	padding: 8px 0px;
+	padding: 8px 0px 0px 0px;
 	float: left;
 	list-style: none;
 	width: 140px;
@@ -229,11 +219,13 @@ body {
 }
 #listlogo {
 	margin: 0px;
-	padding: 0px 0px 0px 0px;
+	float: left;
+	padding: 15px 0px 0px 0px;
 }
 #listdonate {
 	margin: 0px;
-	padding: 8px 0px 0px 15px;
+	float: left;
+	padding: 10px 0px 0px 15px;
 }
 #video {
 	background: url(/bits/bg_vid.jpg) no-repeat center center;
@@ -255,7 +247,6 @@ body {
 	width: 480px;
 }
 #subtext {
-	font-size: 11px;
 	color: #FFFFFF;
 	margin: 0px;
 	padding: 0px 30px 0px 0px;
@@ -281,7 +272,7 @@ body {
 	padding: 0px;
 }
 #subtext h2 {
-	font-size: 15px;
+	font-size: 16px;
 	font-weight: bold;
 	margin: 0px;
 	padding: 5px 0px 0px 0px;
@@ -291,7 +282,7 @@ body {
 	display: block;
 }
 #subtext h3 {
-	font-size: 12px;
+	font-size: 14px;
 	font-weight: bold;
 	margin: 0px;
 	padding: 0px 0px 5px 0px;
