@@ -77,6 +77,8 @@ struct physent                                  // base entity type, can be affe
 
 	int inmaterial;
     bool inliquid, onladder;
+    float submerged;
+
     bool jumping, crouching;
     int jumptime, crouchtime, lastimpulse;
 
