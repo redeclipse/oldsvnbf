@@ -1549,10 +1549,13 @@ namespace entities
 		loopi(numwp)
 		{
 			if(f->end()) break;
-			vec o(f->getlil<float>(), f->getlil<float>(), f->getlil<float>());
-			bool proceed = !ai::clipped(o);
+			vec o;
+			o.x = f->getlil<float>();
+			o.y = f->getlil<float>();
+			o.z = f->getlil<float>();
+			bool clip = ai::clipped(o);
 			extentity *e = NULL;
-			if(proceed)
+			if(!clip)
 			{
 				e = newent();
 				ents.add(e);
@@ -1564,7 +1567,7 @@ namespace entities
 			loopi(numlinks)
 			{
 				int idx = f->getlil<ushort>();
-				if(proceed && idx > 0) e->links.add(numents+idx-offset);
+				if(!clip) e->links.add(numents+idx-offset);
 			}
 		}
 		delete f;
