@@ -87,8 +87,8 @@ struct physent                                  // base entity type, can be affe
     uchar type;                                 // one of ENT_* above
     uchar collidetype;                          // one of COLLIDE_* above
 
-    physent() : maxspeed(100), weight(100.f), radius(5.5f), height(15.f), aboveeye(1.f),
-        xradius(5.5f), yradius(5.5f), zmargin(0),
+    physent() : maxspeed(100), weight(100.f), radius(4.1f), height(14.f), aboveeye(1.f),
+        xradius(4.1f), yradius(4.1f), zmargin(0),
 		state(CS_ALIVE), type(ENT_PLAYER),
 		collidetype(COLLIDE_ELLIPSE)
 	{
@@ -108,8 +108,7 @@ struct physent                                  // base entity type, can be affe
     	inliquid = onladder = jumping = crouching = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
-        o = vec(-1, -1, -1);
-		vel = falling = vec(0, 0, 0);
+        o = vel = falling = vec(0, 0, 0);
     	yaw = pitch = roll = aimyaw = aimpitch = 0.f;
         floor = vec(0, 0, 1);
         resetinterp();
