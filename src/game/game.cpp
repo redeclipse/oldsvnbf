@@ -419,7 +419,7 @@ namespace game
 		}
 
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
-		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->respawned = -1;
+		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
 	}
 
 

@@ -56,8 +56,8 @@ namespace ai
 		//if(isentirelysolid(c)) return true;
 		int material = c.ext ? c.ext->material : MAT_AIR, clipmat = material&MATF_CLIP;
 		if(clipmat == MAT_CLIP || clipmat == MAT_AICLIP) return true;
-		int volmat = material&MATF_VOLUME;
-		if(volmat == MAT_LAVA || volmat == MAT_DEATH) return true;
+		if(int(material&MATF_FLAGS) == MAT_DEATH) return true;
+		if(int(material&MATF_VOLUME) == MAT_LAVA) return true;
 		return false;
 	}
 
