@@ -584,7 +584,7 @@ namespace projs
 				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.35f), pos = proj.o;
 				loopi(steps)
 				{
-					float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 1e16f, proj.radius);
+					float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.01f, proj.radius);
 					int col = ((int(196*max(res,0.3f))<<16)+1)|((int(64*max(res,0.2f))+1)<<8);
 					part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT, 1, pos, col, size, -10);
 					pos.add(dir);
