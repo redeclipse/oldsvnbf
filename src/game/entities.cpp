@@ -1544,7 +1544,7 @@ namespace entities
 		char magic[4];
 		if(f->read(magic, 4) < 4 || memcmp(magic, "OWPT", 4)) { delete f; return; }
 
-		int numents = ents.length()-1, offset = 0; // -1 because OCTA waypoints count from 1 upward
+		int numents = ents.length()-1; // -1 because OCTA waypoints count from 1 upward
 		ushort numwp = f->getlil<ushort>();
 		loopi(numwp)
 		{
@@ -1553,22 +1553,13 @@ namespace entities
 			o.x = f->getlil<float>();
 			o.y = f->getlil<float>();
 			o.z = f->getlil<float>();
-			bool clip = ai::clipped(o);
 			extentity *e = NULL;
-			if(!clip)
-			{
-				e = newent();
-				ents.add(e);
-				e->type = WAYPOINT;
-				e->o = o;
-			}
-			else offset++;
+			e = newent();
+			ents.add(e);
+			e->type = ai::clipped(o) ? NOTUSED : WAYPOINT;
+			e->o = o;
 			int numlinks = clamp(f->getchar(), 0, 6);
-			loopi(numlinks)
-			{
-				int idx = f->getlil<ushort>();
-				if(!clip) e->links.add(numents+idx-offset);
-			}
+			loopi(numlinks) e->links.add(numents+f->getlil<ushort>());
 		}
 		delete f;
 		conoutf("loaded %d waypoints from %s", numwp, wptname);
