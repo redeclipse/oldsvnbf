@@ -4,7 +4,11 @@
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
-	$app['sitenotice'] = "Blood Frontier is a Free and Open Source game, using SDL and OpenGL which allows it to be ported to many platforms; you can download it for both PC (Windows, Linux, BSD) and Mac. You can also obtain it through our subversion repository and live on the bleeding edge of development. The game is a single-player and multi-player first-person shooter, built as a total conversion of Cube Engine 2, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.";
+	$app['sitenotice'] = array(
+		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game, using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can download it for both PC (Windows, Linux, BSD) and Mac. You can also obtain it through our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge of development.',
+		'about' => 'The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="/wiki/Cube_Engine_2">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
+		'outro' => 'In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.'
+	);
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitepaypal'] = "212900";
 	$app['sitedonate'] = "Donate to Quin";
@@ -101,7 +105,6 @@
 				<div id="links"><?php echo $app['navbar']; ?></div>
 				<div id="noticebg">
 					<div id="list">
-						<h2><?php echo $app['sitename']; ?></h2>
 						<ul>
 							<li><a href="/youtube">on Youtube</a></li>
 							<li><a href="/google">on Google</a></li>
@@ -127,7 +130,9 @@
 					<div id="redblock" align="center">
 						<p id="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
 						<hr />
-						<p id="notice"><?php echo $app['sitenotice']; ?></p>
+<?php					foreach ($app['sitenotice'] as $key => $targ) {
+							echo "<p id=\"notice\">" . $targ . "</p>";
+						} ?>
 					</div>
 					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
