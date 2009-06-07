@@ -408,12 +408,12 @@ namespace hud
 						else status = "serverlock";
 					}
 					if((i%3)==0) g.pushlist();
-					g.pushlist();
+					//g.pushlist();
 					if(o==game::player1 && highlightscore()) g.background(0x888888, 3);
 					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 						g.textf("%s (%d)", 0xFFFFFF, status, game::colorname(o, NULL, "", false), o->clientnum);
 					else g.textf("%s", 0xFFFFFF, status, game::colorname(o, NULL, "", false));
-					g.poplist();
+					//g.poplist();
 					if(i+1<spectators.length() && (i+1)%3) g.space(1);
 					else g.poplist();
 				}
