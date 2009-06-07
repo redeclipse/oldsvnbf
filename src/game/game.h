@@ -732,22 +732,19 @@ struct gamestate
 		if(full) lastweap = weapselect = -1;
 	}
 
-	void setweapstate(int weap, int state, int delay, int millis, bool skew = false)
+	void setweapstate(int weap, int state, int delay, int millis)
 	{
-		if(isweap(weap) && (!skew || !weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER || millis-weaplast[weap] <= delay))
-		{
-			weapstate[weap] = state;
-			weapwait[weap] = delay;
-			weaplast[weap] = millis;
-		}
+		weapstate[weap] = state;
+		weapwait[weap] = delay;
+		weaplast[weap] = millis;
 	}
 
 	void weapswitch(int weap, int millis, int state = WPSTATE_SWITCH)
 	{
 		lastweap = weapselect;
-		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis, true);
+		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
 		weapselect = weap;
-		setweapstate(weap, state, WEAPSWITCHDELAY, millis, true);
+		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
 	}
 
 	bool weapwaited(int weap, int millis, int skip = -1)
@@ -757,16 +754,16 @@ struct gamestate
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
-	bool canswitch(int weap, int sweap, int millis, int skip = -1)
-	{
-		if(weap != weapselect && weapwaited(weapselect, millis, skip) && hasweap(weap, sweap) && weapwaited(weap, millis, skip))
-			return true;
-		return false;
-	}
-
 	int skipwait(int weap, int skip)
 	{
 		return skip != WPSTATE_RELOAD || ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add) ? skip : -1;
+	}
+
+	bool canswitch(int weap, int sweap, int millis, int skip = -1)
+	{
+		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, skip)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, skip)))
+			return true;
+		return false;
 	}
 
 	bool canshoot(int weap, int sweap, int millis, int skip = -1)
