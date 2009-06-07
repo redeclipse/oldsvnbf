@@ -179,7 +179,6 @@ namespace ai
 	extern float viewfieldy(int x = 101);
 	extern bool targetable(gameent *d, gameent *e, bool z = true);
 	extern bool cansee(gameent *d, vec &x, vec &y, vec &targ = aitarget);
-	extern bool clipped(const vec &o);
 
 	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
 
