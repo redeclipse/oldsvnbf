@@ -298,7 +298,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_SMG,			ANIM_SMG,	-10,	5,			0xFF9922,
+		WEAPON_SMG,			ANIM_SMG,	-10,	5,					0xFFAA22,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	20,		3000,	0,		1000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -328,7 +328,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0x8822FF,
+		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0xBB66FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		750,	1500,	150,	10000,	0,		10000,
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -338,7 +338,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			""
 	},
 	{
-		WEAPON_GRENADE,			ANIM_GRENADE,		-5,		5,			0x22FF22,
+		WEAPON_GRENADE,			ANIM_GRENADE,		-5,		5,		0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	1500,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
@@ -348,7 +348,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_PAINTGUN,		-5,  	5,		0xFF22AA,
+		WEAPON_PAINT,		ANIM_PAINTGUN,		-5,  	5,			0xFF22AA,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
