@@ -389,11 +389,18 @@ namespace ctf
 			aihomerun(d, b);
 			return true;
 		}
-		if(!ai::badhealth(d) && !takenflags.empty())
+		if(!ai::badhealth(d))
 		{
-			int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
-			d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
-			return true;
+			while(!takenflags.empty())
+			{
+				int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
+				if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos(), false))
+				{
+					d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
+					return true;
+				}
+				else takenflags.remove(flag);
+			}
 		}
 		return false;
 	}
