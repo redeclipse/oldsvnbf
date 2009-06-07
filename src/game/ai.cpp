@@ -723,7 +723,7 @@ namespace ai
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		bool offground = (d->timeinair && !d->inliquid && !d->onladder), jumper = off.z >= JUMPMIN,
 			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
-			propeller = dir.magnitude() > JUMPMIN, propel = jumper || propeller;
+			propeller = dir.magnitude() > JUMPMIN*2, propel = jumper || propeller;
 		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
 			propel = false;
 		if(jump)
@@ -741,7 +741,7 @@ namespace ai
 		{
 			d->jumping = true;
 			d->jumptime = lastmillis;
-			if(jumper && propel) d->ai->dontmove = true; // going up
+			if(jumper && !propeller) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*10;
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
