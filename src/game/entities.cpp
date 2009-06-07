@@ -162,7 +162,7 @@ namespace entities
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
 			{
-				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis, true);
+				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
 				d->ammo[g] = d->entid[g] = -1;
 				if(d->weapselect != g)
 				{

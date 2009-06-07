@@ -2109,7 +2109,7 @@ namespace server
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", weap);
-			sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
+			sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 			return;
 		}
 		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis))
@@ -2117,7 +2117,7 @@ namespace server
 			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
-				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, weap);
+				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 				return;
 			}
 			else

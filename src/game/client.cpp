@@ -1320,6 +1320,7 @@ namespace client
 					int trg = getint(p), weap = getint(p);
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
+					conoutf("%d weapselect %d [%d]", trg, weap, target->weapselect);
 					weapons::weapselect(target, weap, false);
 					break;
 				}

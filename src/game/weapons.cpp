@@ -33,15 +33,14 @@ namespace weapons
 			if(local)
 			{
 				client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+				playsound(S_RELOAD, d->o, d);
+				d->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
 				int oldammo = d->ammo[weap];
 				ammo = min(max(d->ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
 				load = ammo-oldammo;
 			}
-			if(load >= 0)
-			{
-				playsound(S_RELOAD, d->o, d);
-				d->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
-			}
+			else if(load < 0 && d->ammo[weap] < ammo && (d == game::player1 || d->ai))
+				return false; // because we've already gone ahead..
 			d->weapload[weap] = load;
 			d->ammo[weap] = min(ammo, weaptype[weap].max);
 			return true;
@@ -125,11 +124,7 @@ namespace weapons
 		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD)) return;
-			else
-			{
-				offset += max(d->weapload[d->weapselect], 1);
-				d->weapload[d->weapselect] = -d->weapload[d->weapselect];
-			}
+			else offset = 0;
 		}
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
 		if(weaptype[d->weapselect].power)
@@ -151,6 +146,12 @@ namespace weapons
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;
+
+		if(!offset)
+		{
+			offset = 1+max(d->weapload[d->weapselect], 1);
+			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
+		}
 
 		d->reloading = false;
 		int adelay = weaptype[d->weapselect].adelay;

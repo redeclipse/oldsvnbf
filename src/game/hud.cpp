@@ -328,60 +328,86 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
-        const char *cliptexs[WEAPON_MAX] = {
-            pistolcliptex, shotguncliptex, smgcliptex,
-            flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
-			paintguncliptex
-        };
-        Texture *t = textureload(cliptexs[weap], 3);
-        int ammo = game::player1->ammo[weap], maxammo = weaptype[weap].max;
-		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else glBlendFunc(GL_ONE, GL_ONE);
+    	if(game::player1->ammo[weap] > 0)
+    	{
+			const char *cliptexs[WEAPON_MAX] = {
+				pistolcliptex, shotguncliptex, smgcliptex,
+				flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
+				paintguncliptex
+			};
+			Texture *t = textureload(cliptexs[weap], 3);
+			int ammo = game::player1->ammo[weap], maxammo = weaptype[weap].max;
+			if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			else glBlendFunc(GL_ONE, GL_ONE);
 
-		float fade = clipblend*hudblend;
-		if(lastmillis-game::player1->weaplast[weap] < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
-		{
-			case WPSTATE_RELOAD: case WPSTATE_PICKUP: case WPSTATE_SWITCH:
+			float fade = clipblend*hudblend;
+			int interval = lastmillis-game::player1->weaplast[weap];
+			if(interval < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 			{
-				fade *= clamp(float(lastmillis-game::player1->weaplast[weap])/float(game::player1->weapwait[weap]), 0.f, 1.f);
-				break;
+				case WPSTATE_RELOAD:
+				{
+					if(game::player1->weapload[weap] > 0)
+					{
+						int half = game::player1->weapwait[weap]/2;
+						if(interval > half)
+							fade *= clamp(float(interval-half)/float(half), 0.f, 1.f);
+						else fade = 0.f;
+						break;
+					}
+					// falls through
+				}
+				case WPSTATE_PICKUP: case WPSTATE_SWITCH:
+				{
+					fade *= clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
+					break;
+				}
+				default: break;
 			}
-			default: break;
-		}
-        switch(weap)
-        {
-            case WEAPON_PISTOL: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PLASMA: s *= 0.85f; break;
-            default: break;
-        }
-        float r = clipcolour, g = clipcolour, b = clipcolour;
-		if(teamclips >= (clipcolour > 0 ? 2 : 1)) skewcolour(r, g, b);
-		else if(clipcolour > 0)
-		{
-			r = ((weaptype[weap].colour>>16)/255.f)*clipcolour;
-			g = (((weaptype[weap].colour>>8)&0xFF)/255.f)*clipcolour;
-			b = ((weaptype[weap].colour&0xFF)/255.f)*clipcolour;
-		}
-        glColor4f(r, g, b, fade);
-        glBindTexture(GL_TEXTURE_2D, t->retframe(ammo, maxammo));
-        if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
-        else switch(weap)
-        {
-            case WEAPON_FLAMER:
-				drawslice(0, max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo), x, y, s);
-				if(game::player1->ammo[weap] < weaptype[weap].max)
-					drawfadedslice(max(ammo-min(maxammo-ammo, 2), 0)/float(maxammo),
-						min(min(maxammo-ammo, ammo), 2) /float(maxammo),
-							x, y, s, fade, r, g, b);
-                break;
-
-            case WEAPON_GRENADE:
-                drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
-                break;
-
-            default:
-                drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, s);
-                break;
-        }
+			switch(weap)
+			{
+				case WEAPON_PISTOL: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PLASMA: s *= 0.85f; break;
+				default: break;
+			}
+			float r = clipcolour, g = clipcolour, b = clipcolour;
+			if(teamclips >= (clipcolour > 0 ? 2 : 1)) skewcolour(r, g, b);
+			else if(clipcolour > 0)
+			{
+				r = ((weaptype[weap].colour>>16)/255.f)*clipcolour;
+				g = (((weaptype[weap].colour>>8)&0xFF)/255.f)*clipcolour;
+				b = ((weaptype[weap].colour&0xFF)/255.f)*clipcolour;
+			}
+			glColor4f(r, g, b, fade);
+			glBindTexture(GL_TEXTURE_2D, t->id);
+			if(game::player1->weapstate[weap] == WPSTATE_RELOAD && game::player1->weapload[weap] > 0)
+			{
+				ammo -= game::player1->weapload[weap];
+				switch(weap)
+				{
+					case WEAPON_FLAMER:
+						drawslice(ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+						break;
+					case WEAPON_GRENADE:
+						drawslice(0.25f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+						break;
+					default:
+						drawslice(0.5f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+						break;
+				}
+				glColor4f(r, g, b, clipblend*hudblend);
+			}
+			if(ammo > 0) switch(weap)
+			{
+				case WEAPON_FLAMER:
+					drawslice(0, ammo/float(maxammo), x, y, s);
+					break;
+				case WEAPON_GRENADE:
+					drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
+					break;
+				default:
+					drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, s);
+					break;
+			}
+    	}
     }
 
 	void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade)
@@ -1002,13 +1028,8 @@ namespace hud
 					if(game::player1->weapstate[i] == WPSTATE_SWITCH || game::player1->weapstate[i] == WPSTATE_PICKUP)
 					{
 						float amt = clamp(float(lastmillis-game::player1->weaplast[i])/float(game::player1->weapwait[i]), 0.f, 1.f);
-						skew = (i != game::player1->weapselect ?
-							(
-								game::player1->hasweap(i, sweap) ? 1.f-(amt*(0.25f)) : 1.f-amt
-							) : (
-								game::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.75f+(amt*(0.25f))
-							)
-						);
+						if(i != game::player1->weapselect) skew = game::player1->hasweap(i, sweap) ? 1.f-(amt*(0.25f)) : 1.f-amt;
+						else skew = game::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.75f+(amt*(0.25f));
 					}
 					else if(i != game::player1->weapselect) skew = 0.75f;
 					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WPSTATE_PICKUP);
