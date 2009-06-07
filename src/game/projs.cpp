@@ -620,10 +620,10 @@ namespace projs
 						if(!proj.limited)
 						{
 							int deviation = int(weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 0.75f));
-							loopi(rnd(7)+4)
+							loopi((proj.weap == WEAPON_FLAMER ? 0 : rnd(7))+4)
 							{
 								vec to = vec(vec(proj.o).sub(vec(0, 0, weaptype[proj.weap].explode*0.25f))).add(vec(rnd(deviation*2)-deviation, rnd(deviation*2)-deviation, rnd(deviation*2)-deviation));
-								part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 500), to, 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
+								part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 500), to, proj.weap == WEAPON_FLAMER ? 0x662600 : 0x660600, weaptype[proj.weap].explode*(proj.weap == WEAPON_FLAMER ? 0.5f : 1.f), proj.weap == WEAPON_FLAMER ? -10 : 0);
 							}
 							if(proj.weap == WEAPON_GRENADE)
 							{
