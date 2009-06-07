@@ -50,17 +50,6 @@ namespace ai
 		return o;
 	}
 
-	bool clipped(const vec &o)
-	{
-		cube &c = lookupcube(o.x, o.y, o.z);
-		//if(isentirelysolid(c)) return true;
-		int material = c.ext ? c.ext->material : MAT_AIR, clipmat = material&MATF_CLIP;
-		if(clipmat == MAT_CLIP || clipmat == MAT_AICLIP) return true;
-		if(int(material&MATF_FLAGS) == MAT_DEATH) return true;
-		if(int(material&MATF_VOLUME) == MAT_LAVA) return true;
-		return false;
-	}
-
 	void create(gameent *d)
 	{
 		if(!d->ai)

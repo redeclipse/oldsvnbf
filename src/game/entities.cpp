@@ -18,7 +18,7 @@ namespace entities
 	{
 		switch(e.type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT:
 				return m_speedtimex(1000); break;
 			default: break;
 		}
@@ -613,7 +613,7 @@ namespace entities
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
 										d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
-										d->yaw = f.attr[0];
+										d->yaw = f.attr[0] < 0 ? (lastmillis/5)%360 : f.attr[0];
 										d->pitch = f.attr[1];
 										if(physics::entinmap(d, true))
 										{
@@ -869,7 +869,7 @@ namespace entities
 				while(e.attr[3] >= 360) e.attr[3] -= 360;
 				break;
 			case TELEPORT:
-				while(e.attr[0] < 0) e.attr[0] += 360;
+				while(e.attr[0] < -1) e.attr[0] += 361;
 				while(e.attr[0] >= 360) e.attr[0] -= 360;
 				while(e.attr[1] < 0) e.attr[1] += 360;
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
@@ -1178,13 +1178,24 @@ namespace entities
 		}
 	}
 
+	bool clipped(const vec &o, bool aiclip)
+	{
+		cube &c = lookupcube(o.x, o.y, o.z);
+		//if(isentirelysolid(c)) return true;
+		int material = c.ext ? c.ext->material : MAT_AIR, clipmat = material&MATF_CLIP;
+		if(clipmat == MAT_CLIP || (aiclip && clipmat == MAT_AICLIP)) return true;
+		if(int(material&MATF_FLAGS) == MAT_DEATH) return true;
+		if(int(material&MATF_VOLUME) == MAT_LAVA) return true;
+		return false;
+	}
+
 	void entitycheck(gameent *d)
 	{
 		int cleanairnodes = 0;
 		if(d->state == CS_ALIVE)
 		{
 			vec v = d->feetpos();
-			bool clip = ai::clipped(v), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
+			bool clip = clipped(v, true), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
 			int curnode = closestent(WAYPOINT, v, dist, false);
 
@@ -1234,7 +1245,7 @@ namespace entities
 	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
 	{
 		gameentity &f = (gameentity &)e;
-		f.mark = -1;
+		f.mark = 0;
 		if(mtype == MAP_OCTA)
 		{
 			// translate into our format
@@ -1286,7 +1297,17 @@ namespace entities
 				// 20	TELEDEST		9	TELEPORT (linked)
 				case 19: case 20:
 				{
-					if(f.type == 20) f.mark = f.attr[1]; // needs translating later
+					if(f.type == 20)
+					{
+						f.mark = f.attr[1]+1; // needs translating later
+						f.attr[1] = -1;
+					}
+					else
+					{
+						f.mark = -(f.attr[0]+1);
+						f.attr[0] = -1;
+					}
+					f.attr[2] = f.attr[3] = f.attr[4] = 0;
 					f.type = TELEPORT;
 					break;
 				}
@@ -1362,88 +1383,72 @@ namespace entities
 			gameentity &e = *(gameentity *)ents[i];
 			if(verbose) renderprogress(float(i)/float(ents.length()), "importing entities...");
 
-			if(e.type == TELEPORT && e.mark >= 0) // translate teledest to teleport and link them appropriately
+			switch(e.type)
 			{
-				int dest = -1;
-				loopvj(ents) // see if this guy is sitting on top of a teleport already
+				case TELEPORT:
 				{
-					gameentity &f = *(gameentity *)ents[j];
-
-					if(f.type == TELEPORT && f.mark < 0 &&
-						(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
-							e.o.dist(f.o) <= enttype[TELEPORT].radius*4.f)
-								dest = j;
-				}
-
-				if(ents.inrange(dest))
-				{
-					if(verbose) conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
-					e.type = NOTUSED; // get rid of this guy then
-					ents[dest]->attr[0] = e.attr[0];
-				}
-				else
-				{
-					if(verbose) conoutf("\frWARNING: modified teledest %d to a teleport", i);
-					dest = i;
-					e.attr[1] = -1; // invisible
-					e.attr[2] = e.attr[3] = e.attr[4] = 0;
-				}
-
-				loopvj(ents) // find linked teleport(s)
-				{
-					gameentity &f = *(gameentity *)ents[j];
-					if(f.type == TELEPORT && f.mark < 0 && f.attr[0] == e.mark)
+					if(e.mark > 0) // translate teledest to teleport and link them appropriately
 					{
-						if(verbose) conoutf("\frimported teleports %d and %d linked automatically", dest, j);
-						f.links.add(dest);
+						loopvj(ents) if(j != i) // find linked teleport(s)
+						{
+							gameentity &f = *(gameentity *)ents[j];
+							if(f.type == TELEPORT && -f.mark == e.mark)
+							{
+								if(verbose) conoutf("\frWARNING: teledest %d and teleport %d linked automatically", i, j);
+								f.links.add(i);
+							}
+						}
 					}
+					break;
 				}
-			}
-			else if(e.type == WEAPON)
-			{
-				float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
-				int weaps[WEAPON_MAX];
-				loopj(WEAPON_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
-				loopvj(ents) if(j != i)
+				case WEAPON:
 				{
-					gameentity &f = *(gameentity *)ents[j];
-					if(f.type == WEAPON && e.o.squaredist(f.o) <= mindist && isweap(f.attr[0]))
-					{
-						weaps[f.attr[0]]++;
-						f.type = NOTUSED;
-						if(verbose) conoutf("\frculled tightly packed weapon %d [%d]", j, f.attr[0]);
-					}
-				}
-				int best = e.attr[0];
-				loopj(WEAPON_MAX) if(weaps[j] > weaps[best])
-					best = j;
-				e.attr[0] = best;
-			}
-			else if(e.type == FLAG) // replace bases/neutral flags near team flags
-			{
-				if(valteam(e.attr[1], TEAM_FIRST)) teams[e.attr[1]-TEAM_FIRST]++;
-				else if(e.attr[1] == TEAM_NEUTRAL)
-				{
-					int dest = -1;
-
+					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
+					int weaps[WEAPON_MAX];
+					loopj(WEAPON_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
 					loopvj(ents) if(j != i)
 					{
 						gameentity &f = *(gameentity *)ents[j];
-
-						if(f.type == FLAG && f.attr[1] != TEAM_NEUTRAL &&
-							(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
-								e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
-									dest = j;
+						if(f.type == WEAPON && e.o.squaredist(f.o) <= mindist && isweap(f.attr[0]))
+						{
+							weaps[f.attr[0]]++;
+							f.type = NOTUSED;
+							if(verbose) conoutf("\frWARNING: culled tightly packed weapon %d [%d]", j, f.attr[0]);
+						}
 					}
-
-					if(ents.inrange(dest))
+					int best = e.attr[0];
+					loopj(WEAPON_MAX) if(weaps[j] > weaps[best])
+						best = j;
+					e.attr[0] = best;
+					break;
+				}
+				case FLAG: // replace bases/neutral flags near team flags
+				{
+					if(valteam(e.attr[1], TEAM_FIRST)) teams[e.attr[1]-TEAM_FIRST]++;
+					else if(e.attr[1] == TEAM_NEUTRAL)
 					{
-						gameentity &f = *(gameentity *)ents[dest];
-						if(verbose) conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr[0], e.attr[1], dest, f.attr[0], f.attr[1]);
-						if(!f.attr[0]) f.attr[0] = e.attr[0]; // give it the old base idx
-						e.type = NOTUSED;
+						int dest = -1;
+
+						loopvj(ents) if(j != i)
+						{
+							gameentity &f = *(gameentity *)ents[j];
+
+							if(f.type == FLAG && f.attr[1] != TEAM_NEUTRAL &&
+								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
+									e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
+										dest = j;
+						}
+
+						if(ents.inrange(dest))
+						{
+							gameentity &f = *(gameentity *)ents[dest];
+							if(verbose) conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr[0], e.attr[1], dest, f.attr[0], f.attr[1]);
+							if(!f.attr[0]) f.attr[0] = e.attr[0]; // give it the old base idx
+							e.type = NOTUSED;
+						}
+						else if(e.attr[0] > flag) flag = e.attr[0]; // find the highest idx
 					}
-					else if(e.attr[0] > flag) flag = e.attr[0]; // find the highest idx
+					break;
 				}
 			}
 		}
@@ -1456,24 +1461,44 @@ namespace entities
 			{
 				case TELEPORT:
 				{
-					if(e.attr[1] >= 0)
+					if(e.mark > 0) // second pass teledest translation
 					{
-						e.attr[1] = e.attr[3] = 0;
-						e.attr[2] = 100; // give a push
-						e.attr[4] = 0x11A; // give it a pretty blueish teleport like sauer's
+						int dest = -1;
+						loopvj(ents) if(j != i) // see if this teledest is sitting on top of a teleport already
+						{
+							gameentity &f = *(gameentity *)ents[j];
+
+							if(f.type == TELEPORT && f.mark < 0 &&
+								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
+									e.o.dist(f.o) <= enttype[TELEPORT].radius*4.f)
+										dest = j;
+						}
+						if(ents.inrange(dest))
+						{
+							gameentity &f = *(gameentity *)ents[dest];
+							if(verbose) conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
+							f.attr[0] = e.attr[0]; // copy the yaw
+							loopvk(e.links) if(f.links.find(e.links[k]) < 0) f.links.add(e.links[k]);
+							loopvj(ents) if(j != i && j != dest)
+							{
+								gameentity &g = *(gameentity *)ents[j];
+								if(g.type == TELEPORT)
+								{
+									int link = g.links.find(i);
+									if(link >= 0)
+									{
+										g.links.remove(link);
+										if(g.links.find(dest) < 0) g.links.add(dest);
+										if(verbose) conoutf("\frWARNING: imported link to teledest %d to teleport %d", i, j);
+									}
+								}
+							}
+							e.type = NOTUSED; // get rid of ye olde teledest
+							e.links.setsize(0);
+							break;
+						}
+						else if(verbose) conoutf("\frWARNING: teledest %d has become a teleport", i);
 					}
-					else
-					{
-						e.attr[2] = 100; // give a push
-						e.attr[3] = e.attr[4] = 0;
-					}
-					e.o.z += game::player1->height/2; // teleport in BF is at middle
-					e.mark = -1;
-					break;
-				}
-				case WAYPOINT:
-				{
-					e.attr[0] = 0;
 					break;
 				}
 				case FLAG:
@@ -1502,6 +1527,24 @@ namespace entities
 			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
 			switch(e.type)
 			{
+				case TELEPORT:
+				{
+					if(mtype == MAP_OCTA)
+					{
+						e.attr[2] = 100; // give a push
+						e.attr[4] = e.attr[1] >= 0 ? 0x2CE : 0;
+						e.attr[1] = e.attr[3] = 0;
+						e.o.z += 8; // teleport in BF is at middle
+						if(e.attr[0] >= 0 && clipped(e.o))
+						{
+							vec dir;
+							vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
+							e.o.add(dir);
+						}
+						e.mark = 0;
+					}
+					break;
+				}
 				case WEAPON:
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
@@ -1522,7 +1565,7 @@ namespace entities
 				}
 				case WAYPOINT:
 				{
-					if(ai::clipped(e.o)) e.type = NOTUSED;
+					if(clipped(e.o, true)) e.type = NOTUSED;
 					else if(mtype == MAP_BFGZ && gver <= 90)
 						e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
 					break;
@@ -1556,7 +1599,7 @@ namespace entities
 			extentity *e = NULL;
 			e = newent();
 			ents.add(e);
-			e->type = ai::clipped(o) ? NOTUSED : WAYPOINT;
+			e->type = clipped(o, true) ? NOTUSED : WAYPOINT;
 			e->o = o;
 			int numlinks = clamp(f->getchar(), 0, 6);
 			loopi(numlinks) e->links.add(numents+f->getlil<ushort>());
@@ -1669,7 +1712,11 @@ namespace entities
 			case TELEPORT:
 			case CAMERA:
 			{
-				if(!level || showentdir >= level) part_dir(e.o, e.attr[0], e.attr[1], 8.f);
+				if(!level || showentdir >= level)
+				{
+					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 8.f);
+					else part_dir(e.o, e.attr[0], e.attr[1], 8.f);
+				}
 				break;
 			}
 			case PUSHER:
@@ -1812,12 +1859,9 @@ namespace entities
 
 	void maketeleport(const gameentity &e)
 	{
-		vec dir;
-		vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
-		vec o = vec(e.o).add(dir);
-		float radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
+		float yaw = e.attr[0] < 0 ? (lastmillis/5)%360 : e.attr[0], radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
 		int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-		part_portal(o, radius, e.attr[0], e.attr[1], PART_TELEPORT, 0, colour);
+		part_portal(e.o, radius, yaw, e.attr[1], PART_TELEPORT, 0, colour);
 	}
 
 	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)

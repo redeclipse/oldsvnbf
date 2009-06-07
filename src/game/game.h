@@ -877,7 +877,7 @@ struct gameentity : extentity
 	int lastuse, lastspawn;
 	int mark;
 
-	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(-1) {}
+	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(0) {}
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
@@ -1208,6 +1208,7 @@ namespace entities
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);
 	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern bool clipped(const vec &o, bool aiclip = false);
 	extern void preload();
 	extern void edittoggled(bool edit);
 	extern const char *findname(int type);
