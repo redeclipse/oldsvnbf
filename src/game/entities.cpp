@@ -608,8 +608,8 @@ namespace entities
 									bool teleported = false;
 									while(!teleports.empty())
 									{
-										int r = e.type == TELEPORT ? rnd(teleports.length()) : 0, t = teleports[r];
-										gameentity &f = *(gameentity *)ents[t];
+										int r = e.type == TELEPORT ? rnd(teleports.length()) : 0;
+										gameentity &f = *(gameentity *)ents[teleports[r]];
 										d->timeinair = 0;
 										d->falling = vec(0, 0, 0);
 										d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
@@ -623,7 +623,7 @@ namespace entities
 											game::fixfullrange(d->yaw, d->pitch, d->roll, true);
 											f.lastuse = f.lastemit = e.lastemit;
 											execlink(d, n, true);
-											execlink(d, t, true);
+											execlink(d, teleports[r], true);
 											if(d == game::player1) game::resetcamera();
 											teleported = true;
 											break;
