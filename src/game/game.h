@@ -310,7 +310,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
 			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	15,		200,	0,		1000,
+			50,		50,		100, 	2000,	15,		200,	0,		500,
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
 			0.15f,		45.f,			0.25f,		1.5f,		25.f,	36.f,		0.f,		25.f,
