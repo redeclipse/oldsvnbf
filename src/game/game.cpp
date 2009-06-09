@@ -776,7 +776,7 @@ namespace game
 		entities::spawnplayer(player1, -1, true, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
 		if(!empty) client::sendinfo = true;
-		fogdist = getvar("fog");
+		fogdist = max(getvar("fog")-16, 64);
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)
@@ -1113,7 +1113,7 @@ namespace game
 			{ \
 				vec trg, pos = p; \
 				float dist = c.pos.dist(pos); \
-				if(dist >= c.mindist && dist <= c.maxdist && raycubelos(c.pos, pos, trg)) \
+				if(dist >= c.mindist && dist <= min(c.maxdist, float(fogdist)) && raycubelos(c.pos, pos, trg)) \
 				{ \
 					c.cansee.add(q); \
 					avg.add(pos); \
@@ -1130,7 +1130,7 @@ namespace game
 			#define dircamentity(q,p) \
 			{ \
 				vec trg, pos = p; \
-				if(getsight(c.pos, yaw, pitch, pos, trg, c.maxdist, curfov, fovy)) \
+				if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
 				{ \
 					c.dir.add(pos); \
 					c.score += c.alter ? rnd(32) : c.pos.dist(pos); \
