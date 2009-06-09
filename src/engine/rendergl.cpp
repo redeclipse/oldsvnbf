@@ -1361,9 +1361,6 @@ void loadbackground(int w, int h, const char *name, Texture *t)
 		aw = w;
 		ah = w*3.0f/4.0f;
 	}
-	glClearColor(0.f, 0.f, 0.f, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-
 	glColor3f(1, 1, 1);
 	if(name && *name)
 	{
@@ -1403,6 +1400,7 @@ void loadbackground(int w, int h, const char *name, Texture *t)
 
 		glEnd();
 	}
+
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0); glVertex2f(w-256, 2);
@@ -1494,6 +1492,9 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     defaultshader->set();
 	loopi(restore ? 1 : 2)
 	{
+		glClearColor(0.f, 0.f, 0.f, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		loadbackground(w, h, kidmode ? "textures/kidback" : loadback, mapshot);
 
         if(caption)
@@ -1735,9 +1736,6 @@ void readmatrices()
     invmvpmatrix.invert(mvpmatrix);
 }
 
-VARP(showhud, 0, 1, 1);
-FVARP(hudblend, 0, 1.f, 1);
-
 float cursorx = 0.5f, cursory = 0.5f;
 vec cursordir(0, 0, 0);
 
@@ -1899,7 +1897,6 @@ void drawnoview()
 {
     xtravertsva = xtraverts = glde = gbatches = 0;
 
-	glClearColor(0.f, 0.f, 0.f, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     int w = screen->w, h = screen->h;
@@ -1908,22 +1905,19 @@ void drawnoview()
     glLoadIdentity();
     glOrtho(0, w, h, 0, -1, 1);
 
+	glClearColor(0.f, 0.f, 0.f, 1);
+	glClear(GL_COLOR_BUFFER_BIT);
+
     glEnable(GL_TEXTURE_2D);
-
     defaultshader->set();
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     loadbackground(w, h);
     glDisable(GL_BLEND);
 
-	if(showhud)
-	{
-		hud::drawhud(w, h);
-		render_texture_panel(w, h);
-		if(commandmillis<0) UI::render();
-		hud::drawlast(w, h);
-	}
+	hud::drawhud(w, h, true);
+	if(commandmillis<0) UI::render();
+	hud::drawlast(w, h);
 
     glDisable(GL_TEXTURE_2D);
 }
@@ -2035,7 +2029,7 @@ void drawview(int targtype)
 
 	glDisable(GL_TEXTURE_2D);
 	notextureshader->set();
-	if(editmode && showhud)
+	if(editmode)
 	{
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
@@ -2082,13 +2076,10 @@ void drawview(int targtype)
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-	if(showhud)
-	{
-		hud::drawhud(w, h);
-		render_texture_panel(w, h);
-		if(commandmillis<0) UI::render();
-		hud::drawlast(w, h);
-	}
+	hud::drawhud(w, h);
+	render_texture_panel(w, h);
+	if(commandmillis<0) UI::render();
+	hud::drawlast(w, h);
 	glDisable(GL_TEXTURE_2D);
 
 	renderedgame = false;

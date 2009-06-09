@@ -663,7 +663,6 @@ extern char *getmaptitle();
 
 // rendergl
 extern int dynentsize, axfps, lastmillis, totalmillis;
-extern float hudblend;
 extern int watercolour, lavacolour;
 extern bvec ambientcolor, skylightcolor;
 extern float curfov, fovy, aspect;
