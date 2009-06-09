@@ -146,12 +146,12 @@ namespace projs
 			}
 			case PRJ_DEBRIS:
 			{
-				switch(((((int)(size_t)&proj)&0xC0)>>6)+1)
+				switch(rnd(4))
 				{
-					case 4: proj.mdl = "debris/debris04"; break;
-					case 3: proj.mdl = "debris/debris03"; break;
-					case 2: proj.mdl = "debris/debris02"; break;
-					case 1: default: proj.mdl = "debris/debris01"; break;
+					case 3: proj.mdl = "debris/debris04"; break;
+					case 2: proj.mdl = "debris/debris03"; break;
+					case 1: proj.mdl = "debris/debris02"; break;
+					case 0: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.65f;
@@ -181,10 +181,20 @@ namespace projs
 		if(proj.mdl && *proj.mdl)
 		{
 			setbbfrommodel(&proj, proj.mdl);
-			proj.radius += 1.f;
-			proj.xradius += 1.f;
-			proj.yradius += 1.f;
-			proj.height += proj.projtype == PRJ_ENT ? 4.f : 1.f;
+			if(proj.projtype == PRJ_ENT)
+			{
+				proj.radius += 1.f;
+				proj.xradius += 1.f;
+				proj.yradius += 1.f;
+				proj.height += 4.f;
+			}
+			else
+			{
+				proj.radius += 0.5f;
+				proj.xradius += 0.5f;
+				proj.yradius += 0.5f;
+				proj.height += 0.5f;
+			}
 		}
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
