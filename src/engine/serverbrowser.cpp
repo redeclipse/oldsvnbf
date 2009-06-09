@@ -441,6 +441,7 @@ void updatefrommaster()
 	{
         clearservers();
 		execute((char *)reply);
+		conoutf("\faretrieved %d server(s) from master", servers.length());
 	}
 	else conoutf("master server not replying");
 	refreshservers();
