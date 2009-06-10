@@ -90,6 +90,90 @@ namespace projs
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
+	void reflect(projent &proj, vec &pos)
+    {
+    	if(proj.elasticity > 0.f)
+    	{
+			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
+    		float mag = proj.vel.magnitude()*proj.elasticity; // conservation of energy
+			loopi(3) if((pos[i] > 0.f && dir[1][i] < 0.f) || (pos[i] < 0.f && dir[1][i] > 0.f))
+				dir[1][i] = fabs(dir[1][i])*pos[i];
+			if(proj.reflectivity > 0.f)
+			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
+				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
+				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
+				loopi(2)
+				{
+					float rmax = 180.f+proj.reflectivity, rmin = 180.f-proj.reflectivity,
+						off = aim[i][1]-aim[i][0];
+					if(fabs(off) <= rmax && fabs(off) >= rmin)
+					{
+						if(off > 0.f ? off > 180.f : off < -180.f)
+							aim[i][1] += rmax-off;
+						else aim[i][1] -= off-rmin;
+					}
+					while(aim[i][1] < 0.f) aim[i][1] += 360.f;
+					while(aim[i][1] >= 360.f) aim[i][1] -= 360.f;
+				}
+				vecfromyawpitch(aim[0][1], aim[1][1], 1, 0, dir[1]);
+			}
+			proj.vel = vec(dir[1]).mul(mag);
+    	}
+    	else proj.vel = vec(0, 0, 0);
+    }
+
+    void bounceeffect(projent &proj)
+    {
+        if(proj.movement < 2.f && proj.lastbounce) return;
+        switch(proj.projtype)
+        {
+            case PRJ_SHOT:
+            {
+                switch(proj.weap)
+                {
+                    case WEAPON_SG: case WEAPON_SMG:
+                    {
+                        part_splash(PART_SPARK, 5, m_speedtimex(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f, 10, 0, 8);
+                        if(!proj.lastbounce)
+                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAPON_SG ? 3.f : 1.5f);
+                        break;
+                    }
+                    case WEAPON_FLAMER:
+                    {
+                        if(!proj.lastbounce)
+                        {
+                            adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
+                            //adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
+                        }
+                        break;
+                    }
+                    default: break;
+                }
+				int vol = int(255*(1.f-proj.lifespan));
+                if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
+                break;
+            }
+            case PRJ_GIBS:
+            {
+            	if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
+            	{
+					if(!proj.lastbounce)
+						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
+					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
+					break;
+            	} // otherwise fall through
+            }
+            case PRJ_DEBRIS:
+            {
+       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
+                if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
+                break;
+            }
+            default: break;
+        }
+    }
+
 	void init(projent &proj, bool waited)
 	{
 		switch(proj.projtype)
@@ -251,7 +335,15 @@ namespace projs
 						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 					}
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
-					if(proj.lifemillis)
+
+					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+					{
+						bounceeffect(proj);
+						reflect(proj, proj.norm);
+						proj.movement = 0;
+						proj.lastbounce = lastmillis;
+					}
+					else if(proj.lifemillis)
 					{ // fastfwd to end
 						proj.lifemillis = proj.lifetime = 1;
 						proj.lifespan = proj.lifesize = 1.f;
@@ -738,90 +830,6 @@ namespace projs
 			default: break;
 		}
 	}
-
-	void reflect(projent &proj, vec &pos)
-    {
-    	if(proj.elasticity > 0.f)
-    	{
-			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
-    		float mag = proj.vel.magnitude()*proj.elasticity; // conservation of energy
-			loopi(3) if((pos[i] > 0.f && dir[1][i] < 0.f) || (pos[i] < 0.f && dir[1][i] > 0.f))
-				dir[1][i] = fabs(dir[1][i])*pos[i];
-			if(proj.reflectivity > 0.f)
-			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
-				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
-				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
-				loopi(2)
-				{
-					float rmax = 180.f+proj.reflectivity, rmin = 180.f-proj.reflectivity,
-						off = aim[i][1]-aim[i][0];
-					if(fabs(off) <= rmax && fabs(off) >= rmin)
-					{
-						if(off > 0.f ? off > 180.f : off < -180.f)
-							aim[i][1] += rmax-off;
-						else aim[i][1] -= off-rmin;
-					}
-					while(aim[i][1] < 0.f) aim[i][1] += 360.f;
-					while(aim[i][1] >= 360.f) aim[i][1] -= 360.f;
-				}
-				vecfromyawpitch(aim[0][1], aim[1][1], 1, 0, dir[1]);
-			}
-			proj.vel = vec(dir[1]).mul(mag);
-    	}
-    	else proj.vel = vec(0, 0, 0);
-    }
-
-    void bounceeffect(projent &proj)
-    {
-        if(proj.movement < 2.f && proj.lastbounce) return;
-        switch(proj.projtype)
-        {
-            case PRJ_SHOT:
-            {
-                switch(proj.weap)
-                {
-                    case WEAPON_SG: case WEAPON_SMG:
-                    {
-                        part_splash(PART_SPARK, 5, m_speedtimex(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize*0.75f, 10, 0, 8);
-                        if(!proj.lastbounce)
-                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAPON_SG ? 3.f : 1.5f);
-                        break;
-                    }
-                    case WEAPON_FLAMER:
-                    {
-                        if(!proj.lastbounce)
-                        {
-                            adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
-                            //adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
-                        }
-                        break;
-                    }
-                    default: break;
-                }
-				int vol = int(255*(1.f-proj.lifespan));
-                if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
-                break;
-            }
-            case PRJ_GIBS:
-            {
-            	if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
-            	{
-					if(!proj.lastbounce)
-						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.5f, 4.f), bvec(100, 255, 255));
-					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
-					break;
-            	} // otherwise fall through
-            }
-            case PRJ_DEBRIS:
-            {
-       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-                if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
-                break;
-            }
-            default: break;
-        }
-    }
 
 	int bounce(projent &proj, const vec &dir)
 	{
