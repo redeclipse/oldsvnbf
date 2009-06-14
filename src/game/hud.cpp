@@ -1383,7 +1383,7 @@ namespace hud
 				if(showinventory) drawinventory(ox, oy, os, fade);
 			}
 
-			int br = is+os*4, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
+			int br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
