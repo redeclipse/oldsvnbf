@@ -1036,14 +1036,14 @@ namespace client
 						case SPHY_JUMP:
 						{
 							playsound(S_JUMP, t->o, t);
-							game::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
+							regularshape(PART_SMOKE, int(t->radius), 0x222222, 21, 20, 250, t->feetpos(), 1.f, -10, 0, 10.f);
 							t->jumptime = lastmillis;
 							break;
 						}
 						case SPHY_IMPULSE:
 						{
 							playsound(S_IMPULSE, t->o, t);
-							game::spawneffect(t->feetpos(), 0x222222, int(t->radius), 250, 1.f);
+							regularshape(PART_SMOKE, int(t->radius), 0x222222, 21, 20, 250, t->feetpos(), 1.f, -10, 0, 10.f);
 							t->lastimpulse = lastmillis;
 							break;
 						}
