@@ -252,9 +252,10 @@ namespace aiman
 	{
 		if(hasgameinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			if(oldteambalance != GVAR(teambalance)) { dorefresh = true; oldteambalance = GVAR(teambalance); }
-			if(oldbotratio != GVAR(botratio)) { dorefresh = true; oldbotratio = GVAR(botratio); }
-			if(oldbotscale != GVAR(botscale)) { dorefresh = true; oldbotscale = GVAR(botscale); }
+			#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
+			checkold(teambalance);
+			checkold(botratio);
+			checkold(botscale);
 			checksetup();
 			while(true) if(!reassignai()) break;
 		}
