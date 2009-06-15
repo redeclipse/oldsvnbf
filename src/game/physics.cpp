@@ -529,7 +529,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER)
 				{
 					playsound(S_JUMP, pl->o, pl);
-					game::spawneffect(pl->feetpos(), 0x111111, int(pl->radius), 200, 1.f);
+					regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
@@ -547,7 +547,7 @@ namespace physics
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
-				game::spawneffect(pl->feetpos(), 0x222222, int(pl->radius), 200, 1.f);
+				regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
@@ -610,15 +610,15 @@ namespace physics
 
 		if(!floating && curmat != oldmat)
 		{
-			#define mattrig(mo,mcol,ms,mt,mz,mw) \
+			#define mattrig(mo,mcol,ms,mt,mz,mq,mp,mw) \
 			{ \
-				int col = (int(mcol[2]) + (int(mcol[1]) << 8) + (int(mcol[0]) << 16)); \
-				game::spawneffect(mo, col, mt, m_speedtimex(mz), ms); \
+				int col = (int(mcol[2]*mq) + (int(mcol[1]*mq) << 8) + (int(mcol[0]*mq) << 16)); \
+				regularshape(mp, mt, col, 21, 20, m_speedtimex(mz), mo, ms, 10, 0, 20.f); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, watercolor, 1.f, int(radius), 200, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, S_BURNING);
+				mattrig(bottom, watercolor, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
 			if(local && !isliquid(curmat) && isliquid(oldmat)) pl->vel.z = max(pl->vel.z, jumpvelocity(pl)); // ensure we have enough push out of water
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
