@@ -303,8 +303,7 @@ namespace projs
 		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode*0.1f;
 		if(proj.projcollide)
 		{
-			vec ray(proj.vel);
-			ray.normalize();
+			vec ray = vec(proj.vel).normalize();
 			int maxsteps = 25;
 			float step = 4,
 				  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
@@ -336,12 +335,16 @@ namespace projs
 					}
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
 
-					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM) && i < maxsteps-1)
 					{
-						bounceeffect(proj);
-						reflect(proj, proj.norm);
-						proj.movement = 0;
-						proj.lastbounce = lastmillis;
+						if(proj.movement)
+						{
+							bounceeffect(proj);
+							reflect(proj, proj.norm);
+							proj.movement = 0;
+							proj.lastbounce = lastmillis;
+							ray = vec(proj.vel).normalize();
+						}
 					}
 					else if(proj.lifemillis)
 					{ // fastfwd to end
@@ -349,7 +352,6 @@ namespace projs
 						proj.lifespan = proj.lifesize = 1.f;
 						proj.state = CS_DEAD;
 					}
-					break;
 				}
 			}
 		}
