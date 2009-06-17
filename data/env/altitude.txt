@@ -1,0 +1,6 @@
+"Altitude" skybox by JWindecker.
+Made with terragen and a bit of post processing done in Paint.net.
+You may distribute this content freely or modify as required so long as this file is included, you may not pass this work as your own, but you may take credit for any modification made by yourself. You must include this file with ALL the files, and if modifications are made your are still to give credit to JWindecker for the original file/s.
+
+Skybox is meant to be pretty and bright; very bright with glare or bloom. It works good to hide things in the white fog without them showing where there is different coloration. 
+Contact:  jacobwindecker@hotmail.com
