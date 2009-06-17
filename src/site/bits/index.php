@@ -34,11 +34,11 @@
 
 	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'nav' => 0, 'redir' => 0));
 	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'nav' => 1, 'redir' => 1);
-	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/wordpress/'.$app['sfproject'].'/', 'nav' => 1, 'redir' => 1);
-	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/mediawiki/'.$app['sfproject'].'/index.php?title=', 'nav' => 1, 'redir' => 1);
-	$app['targets']['forums'] = array('name' => 'Forums', 'url' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/phpbb/'.$app['sfproject'].'/viewforum.php?f=', 'nav' => 1, 'redir' => 1);
+	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'nav' => 1, 'redir' => 1);
+	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/index.php?title=', 'nav' => 1, 'redir' => 1);
+	$app['targets']['forums'] = array('name' => 'Forums', 'url' => 'http://sourceforge.net/apps/phpbb/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/phpbb/'.$app['sfproject'].'/viewforum.php?f=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['chat'] = array('name' => 'Chat', 'url' => 'http://embed.mibbit.com/?server='.$app['ircnetwork'].'&amp;channel=%23'.$app['ircchannel'].'&amp;settings='.$app['ircsetup'].'&amp;forcePrompt=true', 'alturl' => '', 'nav' => 1, 'redir' => 1);
-	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://apps.sourceforge.net/gallery/'.$app['sfproject'].'/index.php?g2_itemId=', 'nav' => 1, 'redir' => 1);
+	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://sourceforge.net/apps/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/gallery/'.$app['sfproject'].'/index.php?g2_itemId=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'nav' => 1, 'redir' => 1);
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/?view=rev&amp;rev=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => 0, 'redir' => 1);
@@ -82,7 +82,7 @@
 		<link rel="stylesheet" type="text/css" href="<?php echo $app['sitecss']; ?>" />
 <?php if ($app['sfpiwik'] > 0) { ?>
 		<script type="text/javascript"><!--
-			var pkBaseURL = (("https:" == document.location.protocol) ? "https://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/" : "http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/");
+			var pkBaseURL = (("https:" == document.location.protocol) ? "https://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/" : "http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/");
 			document.write(unescape("%3Cscript src='" + pkBaseURL + "piwik.js' type='text/javascript'%3E%3C/script%3E"));
 		--></script>
 		<script type="text/javascript"><!--
@@ -91,7 +91,7 @@
 			piwik_url = pkBaseURL + "piwik.php";
 			piwik_log(piwik_action_name, piwik_idsite, piwik_url);
 		--></script>
-		<object><noscript><p><img src="http://apps.sourceforge.net/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
+		<object><noscript><p><img src="http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
 <?php } ?>
 	</head>
 	<body>
