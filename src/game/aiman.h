@@ -1,7 +1,7 @@
 // server-side ai manager
 namespace aiman
 {
-	int oldteambalance = -1;
+	int oldteambalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
 	float oldbotratio = -1.f, oldbotscale = -1.f; // lower than it can go
 
 	int findaiclient(int exclude)
@@ -175,7 +175,7 @@ namespace aiman
 
 	void checksetup()
 	{
-		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
+		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m), numbots = 0;
 		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
@@ -184,61 +184,67 @@ namespace aiman
 				ci->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
 				if(!ci->state.aireinit) ci->state.aireinit = 1;
 			}
-		}
-		if(dorefresh)
-		{
-			if(m_fight(gamemode))
+			if(ci->state.aitype == AI_BOT)
 			{
-				int balance = int(nplayers*GVAR(botscale));
-				if(m_team(gamemode, mutators) && GVAR(teambalance))
-				{ // skew this if teams are unbalanced
-					loopvrev(clients)
+				numbots++;
+				if(numbots >= GVAR(botlimit)) shiftai(ci, -1);
+			}
+		}
+		if(m_fight(gamemode))
+		{
+			int balance = int(nplayers*GVAR(botscale));
+			if(m_team(gamemode, mutators) && GVAR(teambalance))
+			{ // skew this if teams are unbalanced
+				loopvrev(clients)
+				{
+					clientinfo *ci = clients[i];
+					if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
 					{
-						clientinfo *ci = clients[i];
-						if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
-						{
-							if(!autooverride && numclients(-1, true, false) > balance)
-								shiftai(ci, -1); // temporarily remove and cleanup later
-							else setteam(ci, chooseteam(ci, ci->team), true, true);
-						}
-					}
-					if(!autooverride)
-					{
-						int numt = numteams(gamemode, mutators);
-						if(GVAR(teambalance) != 6)
-						{ // balance so all teams have even counts
-							int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
-							loopv(clients)
-							{
-								clientinfo *cp = clients[i];
-								if(!cp->team || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
-								if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
-								int idx = cp->team-TEAM_FIRST;
-								teamcount[idx]++;
-								if(highest < 0 || teamcount[idx] > teamcount[highest]) highest = idx;
-							}
-							if(highest >= 0)
-							{
-								loopi(numt) if(teamcount[highest] > teamcount[i])
-								{
-									int offset = teamcount[highest]-teamcount[i];
-									balance += offset;
-								}
-							}
-							balance -= balance%numt; // just to ensure it is correctly aligned
-						}
-						else balance = max(numclients(-1, true, true)*numt, numt); // humans vs. bots, just directly balance
+						if(!autooverride && numclients(-1, true, false) > balance)
+							shiftai(ci, -1); // temporarily remove and cleanup later
+						else setteam(ci, chooseteam(ci, ci->team), true, true);
 					}
 				}
 				if(!autooverride)
 				{
-					while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
-					while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
+					int numt = numteams(gamemode, mutators), ppl = numclients(-1, true, true);
+					if(GVAR(teambalance) != 6)
+					{ // balance so all teams have even counts
+						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
+						loopv(clients)
+						{
+							clientinfo *cp = clients[i];
+							if(!cp->team || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
+							if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
+							int idx = cp->team-TEAM_FIRST;
+							teamcount[idx]++;
+							if(highest < 0 || teamcount[idx] > teamcount[highest]) highest = idx;
+						}
+						if(highest >= 0)
+						{
+							loopi(numt) if(teamcount[highest] > teamcount[i])
+							{
+								int offset = teamcount[highest]-teamcount[i];
+								balance += offset;
+							}
+						}
+						balance -= balance%numt; // just to ensure it is correctly aligned
+					}
+					else balance = max(ppl*numt, numt); // humans vs. bots, just directly balance
+					int bots = balance-ppl;
+					if(bots > GVAR(botlimit))
+					{
+						balance -= bots-GVAR(botlimit);
+						balance -= balance%numt;
+					}
 				}
 			}
-			dorefresh = false;
+			if(!autooverride)
+			{
+				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
+				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
+			}
 		}
-		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
 	}
 
 	void clearai()
@@ -256,7 +262,11 @@ namespace aiman
 			checkold(teambalance);
 			checkold(botratio);
 			checkold(botscale);
-			checksetup();
+			checkold(botminskill);
+			checkold(botmaxskill);
+			checkold(botlimit);
+			if(dorefresh) { checksetup(); dorefresh = false; }
+			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
 			while(true) if(!reassignai()) break;
 		}
 		else clearai();
