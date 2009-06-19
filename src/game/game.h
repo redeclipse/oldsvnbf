@@ -408,6 +408,7 @@ enum
 	G_M_LMS		= 1<<4,
 	G_M_PAINT	= 1<<5,
 	G_M_VAMP	= 1<<6,
+	G_M_ARENA	= 1<<7,
 	G_M_DM		= G_M_INSTA|G_M_PAINT|G_M_VAMP,
 	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_VAMP,
 	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_PAINT|G_M_VAMP,
@@ -435,6 +436,7 @@ gametypes gametype[] = {
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man" },
 	{ G_M_PAINT,		G_M_ALL,				G_M_PAINT,				"paintball" },
 	{ G_M_VAMP,			G_M_ALL,				G_M_VAMP,				"vampire" },
+	{ G_M_ARENA,		G_M_ALL,				G_M_ARENA,				"arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -461,13 +463,14 @@ extern gametypes gametype[], mutstype[];
 #define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
 #define m_paint(a,b)		((b & G_M_PAINT) || (gametype[a].implied & G_M_PAINT))
 #define m_vamp(a,b)			((b & G_M_VAMP) || (gametype[a].implied & G_M_VAMP))
+#define m_arena(a,b)		((b & G_M_ARENA) || (gametype[a].implied & G_M_ARENA))
 
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT :(m_arena(a,b) ? WEAPON_PISTOL : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
 #define m_spawndelay(a,b)	(!m_duke(a,b) ? (int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)) : 0)
-#define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
+#define m_noitems(a,b)		(m_paint(a,b) || m_arena(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
@@ -479,7 +482,7 @@ enum
 {
 	SV_CONNECT = 0, SV_SERVERINIT, SV_WELCOME, SV_CLIENTINIT, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_DISCONNECT,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_FRAG, SV_DAMAGE, SV_SHOTFX,
-	SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
+	SV_ARENAWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
 	SV_DROP, SV_WEAPSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
@@ -505,7 +508,7 @@ char msgsizelookup(int msg)
 		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 6, SV_FRAG, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
-		SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
+		SV_ARENAWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
 		SV_DROP, 0, SV_WEAPSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
@@ -667,11 +670,11 @@ enum
 struct gamestate
 {
 	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
-	int lastweap, weapselect, weapload[WEAPON_MAX], weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
+	int lastweap, arenaweap, weapselect, weapload[WEAPON_MAX], weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
 	int aitype, ownernum, skill, spree;
 
-	gamestate() : lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
+	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
 		aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
 	~gamestate() {}
 
@@ -831,12 +834,23 @@ struct gamestate
 		weapreset(true);
 	}
 
-	void spawnstate(int sweap, int heal)
+	void spawnstate(int sweap, int heal, bool arena = false)
 	{
 		health = heal;
 		weapreset(true);
-		lastweap = weapselect = sweap;
 		loopi(WEAPON_MAX) ammo[i] = i == sweap ? weaptype[i].add : -1;
+		if(arena)
+		{
+			if(arenaweap <= WEAPON_PISTOL || arenaweap >= WEAPON_TOTAL)
+				arenaweap = rnd(WEAPON_TOTAL-1)+1;
+			ammo[arenaweap] = weaptype[arenaweap].max;
+			lastweap = weapselect = arenaweap;
+		}
+		else
+		{
+			arenaweap = -1;
+			lastweap = weapselect = sweap;
+		}
 	}
 
 	void editspawn(int millis, int sweap, int heal)

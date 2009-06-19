@@ -1850,7 +1850,7 @@ namespace entities
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned;
+			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned && !m_noitems(game::gamemode, game::mutators);
 			if(m_edit(game::gamemode) || active)
 			{
 				int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];

@@ -316,7 +316,7 @@ namespace ai
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->ai->weappref, m_spawnweapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
 		}
 	}
 
@@ -340,7 +340,7 @@ namespace ai
 						n.node = entities::closestent(WAYPOINT, e.o, NEARDIST, true);
 						n.target = j;
 						n.targtype = AI_T_ENTITY;
-						n.score = pos.squaredist(e.o)/(force || attr == d->ai->weappref ? 100.f : 1.f);
+						n.score = pos.squaredist(e.o)/(force || attr == d->arenaweap ? 100.f : 1.f);
 					}
 					break;
 				}
@@ -366,7 +366,7 @@ namespace ai
 						n.node = entities::closestent(WAYPOINT, proj.o, NEARDIST, true);
 						n.target = proj.id;
 						n.targtype = AI_T_DROP;
-						n.score = pos.squaredist(proj.o)/(force || attr == d->ai->weappref ? 100.f : 1.f);
+						n.score = pos.squaredist(proj.o)/(force || attr == d->arenaweap ? 100.f : 1.f);
 					}
 					break;
 				}
@@ -379,7 +379,7 @@ namespace ai
 	{
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
-		if(!d->hasweap(d->ai->weappref, m_spawnweapon(game::gamemode, game::mutators)))
+		if(!d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
 			items(d, b, interests);
 		if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 		if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
@@ -435,13 +435,13 @@ namespace ai
 			d->ai->reset(tryreset);
 			aistate &b = d->ai->getstate();
 			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
-			if(m_noitems(game::gamemode, game::mutators))
-				d->ai->weappref = m_spawnweapon(game::gamemode, game::mutators);
-			else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->ai->weappref = forcegun;
+			if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
+				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
+			else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->arenaweap = forcegun;
 			else while(true)
 			{
-				d->ai->weappref = rnd(WEAPON_TOTAL);
-				if(d->ai->weappref != WEAPON_PISTOL || !rnd(d->skill)) break;
+				d->arenaweap = rnd(WEAPON_TOTAL);
+				if(d->arenaweap != WEAPON_PISTOL || !rnd(d->skill)) break;
 			}
 		}
 	}
@@ -518,7 +518,7 @@ namespace ai
 				}
 				case AI_T_ENTITY:
 				{
-					if(d->hasweap(d->ai->weappref, sweap)) return 0;
+					if(d->hasweap(d->arenaweap, sweap)) return 0;
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
@@ -539,7 +539,7 @@ namespace ai
 				}
 				case AI_T_DROP:
 				{
-					if(d->hasweap(d->ai->weappref, sweap)) return 0;
+					if(d->hasweap(d->arenaweap, sweap)) return 0;
 					loopvj(projs::projs) if(projs::projs[j]->projtype == PRJ_ENT && projs::projs[j]->ready() && projs::projs[j]->id == b.target)
 					{
 						projent &proj = *projs::projs[j];
@@ -858,7 +858,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
 		{
-			loopirev(WEAPON_MAX) if(i != WEAPON_GRENADE && i != d->ai->weappref && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+			loopirev(WEAPON_MAX) if(i != WEAPON_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
 				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
 				d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -866,7 +866,7 @@ namespace ai
 				break;
 			}
 		}
-		if(game::allowmove(d) && busy <= (d->hasweap(d->ai->weappref, sweap) ? 0 : 2) && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(game::allowmove(d) && busy <= (d->hasweap(d->arenaweap, sweap) ? 0 : 2) && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -919,7 +919,7 @@ namespace ai
 		if(busy <= (!d->hasweap(d->weapselect, sweap) ? 2 : 1) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			int weap = -1;
-			if(d->hasweap(d->ai->weappref, sweap)) weap = d->ai->weappref; // could be any weap
+			if(d->hasweap(d->arenaweap, sweap)) weap = d->arenaweap; // could be any weap
 			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
 			if(weap != d->weapselect && weapons::weapselect(d, weap))
 			{
@@ -1029,6 +1029,7 @@ namespace ai
 			}
 			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 5000) && (!d->lastdeath || lastmillis-d->lastdeath > 500))
 			{
+				client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 				d->respawned = lastmillis;
 			}

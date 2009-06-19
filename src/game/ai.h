@@ -93,7 +93,7 @@ namespace ai
 		vector<aistate> state;
 		vector<int> route;
 		vec target, spot;
-		int enemy, enemyseen, enemymillis, weappref, prevnodes[NUMPREVNODES],
+		int enemy, enemyseen, enemymillis, prevnodes[NUMPREVNODES],
 			lastrun, lasthunt, lastaction, jumpseed, jumprand, propelseed;
 		float targyaw, targpitch, views[3];
 		bool dontmove, tryreset, clear;
@@ -118,7 +118,6 @@ namespace ai
 			wipe();
 			if(!tryit)
 			{
-				weappref = WEAPON_PISTOL;
 				spot = target = vec(0, 0, 0);
 				enemy = -1;
 				lastaction = lasthunt = enemyseen = enemymillis = 0;
