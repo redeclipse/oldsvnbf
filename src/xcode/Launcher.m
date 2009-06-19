@@ -19,14 +19,13 @@
 #define kMaxDisplays	16
 
 //If you make a MOD then please change this, the bundle indentifier, the file extensions (.ogz, .dmo), and the url registration.
-#define kSAUERBRATEN @"bloodfrontier"
+#define kBLOODFRONTIER @"bloodfrontier"
 
 //tab names, i.e. image names (text is localised)
 #define tkMAIN @"Main"
 #define tkMAPS @"Maps"
 #define tkKEYS @"Keys"
 #define tkSERVER @"Server"
-#define tkEISENSTERN @"EisenStern"
 
 
 @interface NSString(Extras)
@@ -35,7 +34,7 @@
 - (NSString*)expand {
     NSMutableString *str = [NSMutableString string];
     [str setString:self];
-    [str replaceOccurrencesOfString:@":s" withString:kSAUERBRATEN options:0 range:NSMakeRange(0, [str length])]; 
+    [str replaceOccurrencesOfString:@":s" withString:kBLOODFRONTIER options:0 range:NSMakeRange(0, [str length])]; 
     return str;
 }
 @end
@@ -160,7 +159,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         SEL action = @selector(showHelp:);
         id target = NSApp;
         if(tag) {
-            NSString *names[] = {tkMAIN, tkMAPS, tkKEYS, tkSERVER, tkEISENSTERN};
+            NSString *names[] = {tkMAIN, tkMAPS, tkKEYS, tkSERVER};
             name = names[tag-1];
             action = @selector(switchViews:);
             target = self;
@@ -227,7 +226,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
 }
 
 
-/* directory where user files are kept - typically /Users/<name>/Application Support/sauerbraten */
+/* directory where user files are kept - typically /Users/<name>/Application Support/bloodfrontier */
 + (NSString*)userdir 
 {
     FSRef folder;
@@ -236,7 +235,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         CFURLRef url = CFURLCreateFromFSRef(kCFAllocatorDefault, &folder);
         path = [(NSURL *)url path];
         CFRelease(url);
-        path = [path stringByAppendingPathComponent:kSAUERBRATEN];
+        path = [path stringByAppendingPathComponent:kBLOODFRONTIER];
         NSFileManager *fm = [NSFileManager defaultManager];
         if(![fm fileExistsAtPath:path]) [fm createDirectoryAtPath:path attributes:nil]; //ensure it exists    
     }
@@ -540,16 +539,6 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         [image setSize:region.size];
         [image setName:tkMAIN]; //one less image to include
     }
-    NSImage *en = [NSImage imageNamed:tkEISENSTERN];
-    if(!en) {
-        en = [image copy]; 
-        [en lockFocus];
-        [[NSColor cyanColor] set]; //greenish icon instead - as CGBlendMode is 10.4+, bitmap filters are too much code  
-        NSRectFillUsingOperation(region, NSCompositeSourceAtop);
-        [image drawInRect:region fromRect:region operation:NSCompositePlusDarker fraction:1.0];
-        [en unlockFocus];
-        [en setName:tkEISENSTERN]; //one less image to include
-    }
     
     [self initToolBar];
     [window setBackgroundColor:[NSColor colorWithDeviceRed:0.90 green:0.90 blue:0.90 alpha:1.0]]; //Apples 'mercury' crayon color
@@ -643,7 +632,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
     [self openUserdir:nil]; 
 }
 
-//we register 'sauerbraten' as a url scheme
+//we register 'bloodfrontier' as a url scheme
 - (void)getUrl:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent
 {
     NSURL *url = [NSURL URLWithString:[[event paramDescriptorForKeyword:keyDirectObject] stringValue]];

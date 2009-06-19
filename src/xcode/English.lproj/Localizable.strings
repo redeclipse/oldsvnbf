@@ -1,11 +1,10 @@
-/* note ':s' becomes 'sauerbraten' */
+/* note ':s' becomes 'bloodfrontier' */
 
 /* tabs */
 "Main" = "Main";
 "Maps" = "Maps";
 "Keys" = "Keys";
 "Server" = "Server";
-"EisenStern" = "EisenStern";
 "Help" = "Help";
 
 "Ok" = "Ok";
@@ -24,4 +23,4 @@
 "FileAlertMesg" = "Can only load files that are within the :s/packages/ folder. Do you want to show this folder?";
 
 /* for MOD convenience */
-"forumURL" = "http://www.cubeengine.com/forum.php4";
+"forumURL" = "http://www.bloodfrontier.com/forum";
