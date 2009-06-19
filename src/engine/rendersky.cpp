@@ -23,7 +23,7 @@ Texture *loadskyoverlay(const char *basename)
     return t;
 }
 
-SVARFW(skybox, "env/black", { if(skybox[0]) loadsky(skybox, sky); });
+SVARFW(skybox, "skyboxes/black", { if(skybox[0]) loadsky(skybox, sky); });
 FVARW(spinsky, -720, 0, 720);
 VARW(yawsky, 0, 0, 360);
 
