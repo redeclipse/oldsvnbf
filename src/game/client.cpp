@@ -853,7 +853,7 @@ namespace client
         else
         {
         	d->weapreset(true);
-            d->lastweap = d->weapselect = getint(p);
+            d->lastweap = d->weapselect = d->arenaweap = getint(p);
             loopi(WEAPON_MAX) d->ammo[i] = getint(p);
         }
     }
@@ -1191,6 +1191,13 @@ namespace client
 						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					else parsestate(NULL, p);
+					break;
+				}
+
+				case SV_ARENAWEAP:
+				{
+					if(hud::sb.scoreson) hud::sb.showscores(false);
+					if(!guiactive()) showgui("arena");
 					break;
 				}
 

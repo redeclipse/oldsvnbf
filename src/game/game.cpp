@@ -283,6 +283,28 @@ namespace game
         return true;
     }
 
+	void choosearenaweap(gameent *d, const char *s)
+	{
+		if(m_arena(gamemode, mutators))
+		{
+			int weap = -1;
+			if(*s >= '0' && *s <= '9') weap = atoi(s);
+			else
+			{
+				loopi(WEAPON_TOTAL) if(!strcasecmp(weaptype[i].name, s))
+				{
+					weap = i;
+					break;
+				}
+			}
+			if(weap <= WEAPON_PISTOL || weap >= WEAPON_TOTAL) weap = rnd(WEAPON_TOTAL-1)+1;
+			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
+			conoutf("\fwyou will next spawn with a %s%s", weaptype[weap].text, weaptype[weap].name);
+		}
+		else conoutf("\fronly available in arena");
+	}
+	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(game::player1, s));
+
 	void respawn(gameent *d)
 	{
 		if(d->state == CS_DEAD && d->respawned < 0 && (!d->lastdeath || lastmillis-d->lastdeath > 500))
@@ -1671,14 +1693,14 @@ namespace game
 					}
 					case WPSTATE_SHOOT:
 					{
-						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaploads(weap, m_spawnweapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
+						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
 					case WPSTATE_RELOAD:
 					{
-						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaploads(weap, m_spawnweapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
+						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;

@@ -823,7 +823,7 @@ namespace server
 	void sendspawn(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
+		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), m_arena(gamemode, mutators));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -1877,14 +1877,15 @@ namespace server
 
         if(ci)
         {
-			if(m_play(gamemode) || mastermode >= MM_LOCKED)
-            {
+			//if(m_play(gamemode) || mastermode >= MM_LOCKED)
+            //{
                 ci->state.state = CS_SPECTATOR;
                 ci->team = TEAM_NEUTRAL;
                 putint(p, SV_SPECTATOR);
                 putint(p, ci->clientnum);
                 putint(p, 1);
                 sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
+            /*
             }
             else
 			{
@@ -1894,6 +1895,7 @@ namespace server
 				putint(p, ci->clientnum);
                 if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST)) ci->team = chooseteam(ci);
 			}
+			*/
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
             putint(p, ci->team);
@@ -2141,7 +2143,7 @@ namespace server
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!gs.hasweap(weap, sweap, weap == WEAPON_GRENADE ? 2 : 0) || m_noitems(gamemode, mutators))
+		if(!gs.hasweap(weap, sweap, weap == WEAPON_GRENADE ? 2 : 0) || (weap != WEAPON_GRENADE && m_noitems(gamemode, mutators)))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
@@ -2337,6 +2339,7 @@ namespace server
 			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 			ci->state.state = CS_WAITING;
 			ci->state.weapreset(false);
+			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
@@ -2416,34 +2419,31 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				if(m_regen(gamemode, mutators))
+				if(!m_regen(gamemode, mutators)) continue;
+				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
+				if(smode) smode->regen(ci, total, amt, delay);
+				if(total && amt && delay && ci->state.health < total &&
+					gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay*1000)
 				{
-					int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
-					if(smode) smode->regen(ci, total, amt, delay);
-					if(total && amt && delay && ci->state.health < total &&
-						gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay*1000)
-					{
-						ci->state.health = min(ci->state.health + amt, total);
-						ci->state.lastregen = gamemillis;
-						sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
-					}
+					ci->state.health = min(ci->state.health + amt, total);
+					ci->state.lastregen = gamemillis;
+					sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
 				}
 			}
 			else if(ci->state.state == CS_WAITING)
 			{
-				if(!ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators)))
+				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype == AI_NONE) continue;
+				if(ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators))) continue;
+				int nospawn = 0;
+				if(smode && !smode->canspawn(ci, false)) { nospawn++; }
+				mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
+				if(!nospawn)
 				{
-					int nospawn = 0;
-					if(smode && !smode->canspawn(ci, false)) { nospawn++; }
-					mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
-					if(!nospawn)
-					{
-                        if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
-                        cleartimedevents(ci);
-						ci->state.state = CS_DEAD; // safety
-						ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
-						sendspawn(ci);
-					}
+					if(ci->state.lastdeath) flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
+					cleartimedevents(ci);
+					ci->state.state = CS_DEAD; // safety
+					ci->state.respawn(gamemillis, m_maxhealth(gamemode, mutators));
+					sendspawn(ci);
 				}
 			}
 		}
@@ -2901,6 +2901,15 @@ namespace server
 					mutate(smuts, mut->canspawn(cp, true));
 					cp->state.state = CS_DEAD;
 					waiting(cp);
+					break;
+				}
+
+				case SV_ARENAWEAP:
+				{
+					int lcn = getint(p), aweap = getint(p);
+					clientinfo *cp = (clientinfo *)getinfo(lcn);
+					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					cp->state.arenaweap = aweap;
 					break;
 				}
 
