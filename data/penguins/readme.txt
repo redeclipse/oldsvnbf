@@ -1,4 +1,4 @@
-Kenon Cloudbox, created by SkiingPenguins
+Sky/Cloud boxes created by SkiingPenguins
 Released under the Creative Commons BY-NC-SA License
 http://creativecommons.org/licenses/by-nc-sa/3.0/
 
