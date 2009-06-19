@@ -215,7 +215,6 @@ enum
 };
 
 #define WEAPSWITCHDELAY	750
-#define PLAYERHEIGHT	15.f
 #define EXPLOSIONSCALE	16.f
 
 enum

@@ -940,7 +940,7 @@ void setbbfrommodel(dynent *d, const char *mdl)
 	d->yradius	= radius.y + fabs(center.y);
 	d->radius	= max(d->xradius, d->yradius);
     if(d->collidetype!=COLLIDE_ELLIPSE) d->xradius = d->yradius = d->radius;
-	d->height = (center.z-radius.z) + radius.z*2*m->height;
+	d->height = d->zradius = (center.z-radius.z) + radius.z*2*m->height;
 	d->aboveeye  = radius.z*2*(1.0f-m->height);
 }
 
