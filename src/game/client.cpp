@@ -358,7 +358,7 @@ namespace client
 	void saytext(gameent *d, int flags, char *text)
 	{
 		if(!colourchat) filtertext(text, text);
-		string s; s[0] = 0;
+		string s = "";
 		bool team = m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
 		if(team)
@@ -1959,7 +1959,7 @@ namespace client
 		g->pushlist();
 		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & G3D_UP)
 		{
-			string st; st[0] = 0;
+			string st = "";
 			bool invert = false;
 			int len = execute("listlen $serversort");
 			loopk(len)
@@ -1990,7 +1990,7 @@ namespace client
 
     bool serverentry(g3d_gui *g, int i, serverinfo *si)
     {
-		string text; text[0] = 0;
+		string text = "";
 		bool diff = si->attr[0] != GAMEVERSION;
 		int status = diff ? SSTAT_UNKNOWN : serverstat(si), colour = serverstatus[status].colour;
 		if(status == SSTAT_OPEN && !strcmp(si->sdesc, servermaster)) colour |= 0x222222;
