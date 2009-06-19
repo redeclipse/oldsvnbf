@@ -327,7 +327,7 @@ namespace game
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
 			camera1->state = CS_ALIVE;
-			camera1->height = camera1->radius = camera1->xradius = camera1->yradius = 2;
+			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
 		if(player1->state != CS_WAITING && (player1->state != CS_SPECTATOR || tvmode()))
 		{
@@ -369,7 +369,7 @@ namespace game
 				if(!crouching)
 				{
 					vec pos(d->o);
-					d->o.z += PLAYERHEIGHT;
+					d->o.z += d->zradius;
 					if(!collide(d, vec(0, 0, 1), 0.f, false))
 					{
 						crouching = true;
@@ -389,11 +389,11 @@ namespace game
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
-				d->height = PLAYERHEIGHT-(PLAYERHEIGHT*crouchoff);
+				d->height = d->zradius-(d->zradius*crouchoff);
 			}
-			else d->height = PLAYERHEIGHT;
+			else d->height = d->zradius;
 		}
-		else d->height = PLAYERHEIGHT;
+		else d->height = d->zradius;
 		d->o.z += d->height;
 	}
 

@@ -72,7 +72,7 @@ struct physent                                  // base entity type, can be affe
     float maxspeed, weight;                     // cubes per second, 100 for player
     int timeinair;
     float radius, height, aboveeye;             // bounding box size
-    float xradius, yradius, zmargin;
+    float xradius, yradius, zradius, zmargin;
     vec floor;                                  // the normal of floor the dynent is on
 
 	int inmaterial;
@@ -90,7 +90,7 @@ struct physent                                  // base entity type, can be affe
     uchar collidetype;                          // one of COLLIDE_* above
 
     physent() : maxspeed(100), weight(100.f), radius(4.1f), height(14.f), aboveeye(1.f),
-        xradius(4.1f), yradius(4.1f), zmargin(0),
+        xradius(4.1f), yradius(4.1f), zradius(14.f), zmargin(0),
 		state(CS_ALIVE), type(ENT_PLAYER),
 		collidetype(COLLIDE_ELLIPSE)
 	{
