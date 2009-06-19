@@ -1570,7 +1570,7 @@ namespace server
 		ident *id = idents->access(cmdname);
 		if(id && id->flags&IDF_SERVER)
 		{
-			string val; val[0] = 0;
+			string val = "";
 			switch(id->type)
 			{
 				case ID_CCOMMAND:
@@ -1824,7 +1824,7 @@ namespace server
 		enumerate(*idents, ident, id, {
 			if(id.flags&IDF_SERVER) // reset vars
 			{
-				string val; val[0] = 0;
+				string val = "";
 				switch(id.type)
 				{
 					case ID_VAR:
