@@ -87,10 +87,10 @@ namespace entities
 			{
 				const char *trignames[2][4] = {
 						{ "toggle", "link", "script", "" },
-						{ "disabled", "proximity", "action" }
+						{ "disabled", "proximity", "action", "" }
 				};
-				int tr = attr2 <= TR_NONE || attr2 >= TR_MAX ? TR_NONE : attr2,
-					ta = attr3 <= TA_NONE || attr3 >= TA_MAX ? TA_NONE : attr3;
+				int tr = attr2 < TR_NONE || attr2 > TR_MAX ? TR_MAX : attr2,
+					ta = attr3 < TA_NONE || attr3 > TA_MAX ? TA_MAX : attr3;
 				defformatstring(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
 				addentinfo(str);
 			}
@@ -736,6 +736,8 @@ namespace entities
 			putint(p, int(e.attr[2]));
 			putint(p, int(e.attr[3]));
 			putint(p, int(e.attr[4]));
+			putint(p, e.kin.length());
+			loopvj(e.kin) putint(p, e.kin[j]);
 		}
 	}
 
@@ -754,6 +756,13 @@ namespace entities
 						e.lastemit = lastmillis-(delay-millis);
 					else e.lastemit = lastmillis;
 					execlink(NULL, n, false);
+				}
+				loopv(e.kin) if(ents.inrange(e.kin[i]))
+				{
+					gameentity &f = *(gameentity *)ents[e.kin[i]];
+					f.spawned = e.spawned;
+					f.lastemit = e.lastemit;
+					execlink(NULL, e.kin[i], false, n);
 				}
 			}
 			else if(enttype[e.type].usetype == EU_ITEM)
@@ -839,6 +848,10 @@ namespace entities
 			}
 			case TRIGGER:
 			{
+				while(e.attr[1] < 0) e.attr[1] += TR_MAX;
+				while(e.attr[1] >= TR_MAX) e.attr[1] -= TR_MAX;
+				while(e.attr[2] < 0) e.attr[2] += TA_MAX;
+				while(e.attr[2] >= TA_MAX) e.attr[2] -= TA_MAX;
 				loopv(e.links) if(ents.inrange(e.links[i]) &&
 					(ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
 				{
@@ -892,55 +905,51 @@ namespace entities
 	}
 
 	// these functions are called when the client touches the item
-	void execlink(gameent *d, int index, bool local)
+	void execlink(gameent *d, int index, bool local, int ignore)
 	{
 		if(ents.inrange(index) && maylink(ents[index]->type))
 		{
-			gameentity &e = *(gameentity *)ents[index];
 			bool commit = false;
-			loopv(ents)
+			loopv(ents) if(ents[i]->links.find(index) >= 0)
 			{
-				gameentity &f = *(gameentity *)ents[i];
-				if(f.links.find(index) >= 0)
+				if(ents.inrange(ignore) && ents[ignore]->links.find(index) >= 0) continue;
+				bool both = ents[index]->links.find(i) >= 0;
+				switch(ents[i]->type)
 				{
-					bool both = e.links.find(i) >= 0;
-					switch(f.type)
+					case MAPMODEL:
 					{
-						case MAPMODEL:
+						if(ents[index]->type == TRIGGER)
 						{
-							if(e.type == TRIGGER)
-							{
-								f.spawned = e.spawned;
-								f.lastemit = e.lastemit;
-							}
-							break;
+							ents[i]->spawned = ents[index]->spawned;
+							ents[i]->lastemit = ents[index]->lastemit;
 						}
-						case PARTICLES:
-						{
-							if(e.type == TRIGGER || (!f.lastemit || lastmillis-f.lastemit >= triggertime(f)/2))
-							{
-								f.lastemit = e.lastemit;
-								commit = e.type != TRIGGER && local;
-							}
-							break;
-						}
-						case MAPSOUND:
-						{
-							if(mapsounds.inrange(f.attr[0]) && !issound(f.schan))
-							{
-								f.lastemit = e.lastemit;
-								int flags = SND_MAP;
-								if(f.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-								if(f.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
-								if(f.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
-								if(f.attr[4]&SND_NOPAN) flags |= SND_NOPAN;
-								playsound(f.attr[0], both ? f.o : e.o, NULL, flags, f.attr[3], f.attr[1], f.attr[2], &f.schan);
-								commit = e.type != TRIGGER && local;
-							}
-							break;
-						}
-						default: break;
+						break;
 					}
+					case PARTICLES:
+					{
+						if(ents[index]->type == TRIGGER || (!ents[i]->lastemit || lastmillis-ents[i]->lastemit >= triggertime(*ents[i])/2))
+						{
+							ents[i]->lastemit = ents[index]->lastemit;
+							commit = ents[index]->type != TRIGGER && local;
+						}
+						break;
+					}
+					case MAPSOUND:
+					{
+						if(mapsounds.inrange(ents[i]->attr[0]) && !issound(((gameentity *)ents[i])->schan))
+						{
+							ents[i]->lastemit = ents[index]->lastemit;
+							int flags = SND_MAP;
+							if(ents[i]->attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
+							if(ents[i]->attr[4]&SND_NODELAY) flags |= SND_NODELAY;
+							if(ents[i]->attr[4]&SND_NOCULL) flags |= SND_NOCULL;
+							if(ents[i]->attr[4]&SND_NOPAN) flags |= SND_NOPAN;
+							playsound(ents[i]->attr[0], both ? ents[i]->o : ents[index]->o, NULL, flags, ents[i]->attr[3], ents[i]->attr[1], ents[i]->attr[2], &((gameentity *)ents[i])->schan);
+							commit = ents[index]->type != TRIGGER && local;
+						}
+						break;
+					}
+					default: break;
 				}
 			}
 			if(d && commit) client::addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
@@ -1613,9 +1622,22 @@ namespace entities
 		if(gver <= 49 || mtype == MAP_OCTA) importentities(mtype, gver);
 		if(mtype != MAP_BFGZ || gver <= 112) updateoldentities(mtype, gver);
 		if(mtype == MAP_OCTA) importwaypoints(mtype, gver);
-		loopvj(ents) fixentity(j);
-		loopvj(ents) if(enttype[ents[j]->type].usetype == EU_ITEM || ents[j]->type == TRIGGER)
-			setspawn(j, false);
+		loopv(ents) fixentity(i);
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
+		{
+			setspawn(i, false);
+			if(ents[i]->type == TRIGGER) // find shared kin
+			{
+				loopvj(ents[i]->links) if(ents.inrange(ents[i]->links[j]))
+				{
+					loopvk(ents) if(ents[k]->type == TRIGGER && ents[k]->links.find(ents[i]->links[j]) >= 0)
+					{
+						if(((gameentity *)ents[i])->kin.find(k) < 0) ((gameentity *)ents[i])->kin.add(k);
+						if(((gameentity *)ents[k])->kin.find(i) < 0) ((gameentity *)ents[k])->kin.add(i);
+					}
+				}
+			}
+		}
 		clearentcache();
 	}
 

@@ -873,12 +873,14 @@ struct gameentity : extentity
 	int schan;
 	int lastuse, lastspawn;
 	int mark;
+	vector<int> kin;
 
-	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(0) {}
+	gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(0) { kin.setsize(0); }
 	~gameentity()
 	{
 		if(issound(schan)) removesound(schan);
 		schan = -1;
+		kin.setsize(0);
 	}
 };
 
@@ -1198,7 +1200,7 @@ namespace entities
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
-	extern void execlink(gameent *d, int index, bool local);
+	extern void execlink(gameent *d, int index, bool local, int ignore = -1);
 	extern void setspawn(int n, bool on);
 	extern bool tryspawn(dynent *d, const vec &o, float yaw = 0.f);
 	extern void spawnplayer(gameent *d, int ent = -1, bool recover = false, bool suicide = false);

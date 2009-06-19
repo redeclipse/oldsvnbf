@@ -9,9 +9,10 @@ namespace server
 		short attr[ENTATTRS];
 		bool spawned;
 		int millis;
+		vector<int> kin;
 
-		srventity() : type(NOTUSED), spawned(false), millis(0) { loopi(ENTATTRS) attr[i] = 0; }
-		~srventity() {}
+		srventity() : type(NOTUSED), spawned(false), millis(0) { kin.setsize(0); loopi(ENTATTRS) attr[i] = 0; }
+		~srventity() { kin.setsize(0); }
 	};
 
     static const int DEATHMILLIS = 300;
@@ -2362,7 +2363,7 @@ namespace server
 	{
 		if(sents.inrange(i)) switch(sents[i].type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND:
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT:
 				return m_speedtimex(1000); break;
 			default: break;
 		}
@@ -2380,6 +2381,11 @@ namespace server
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis+(triggertime(i)*2);
 					sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
+					loopvj(sents[i].kin) if(sents.inrange(sents[i].kin[j]))
+					{
+						sents[sents[i].kin[j]].spawned = sents[i].spawned;
+						sents[sents[i].kin[j]].millis = sents[i].millis;
+					}
 				}
 				break;
 			}
@@ -3071,6 +3077,11 @@ namespace server
 							}
 						}
 						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+						loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))
+						{
+							sents[sents[ent].kin[j]].spawned = sents[ent].spawned;
+							sents[sents[ent].kin[j]].millis = sents[ent].millis;
+						}
 					}
 					else if(GVAR(serverdebug)) srvmsgf(cp->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
 					break;
@@ -3147,7 +3158,7 @@ namespace server
 					int n, np = getint(p);
 					while((n = getint(p)) != -1)
 					{
-						int type = getint(p), attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
+						int type = getint(p), attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p), kin = getint(p);
 						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
@@ -3161,7 +3172,10 @@ namespace server
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
 								sents[n].millis += GVAR(itemspawndelay)*1000;
+							sents[n].kin.setsize(0);
+							loopk(kin) sents[n].kin.add(getint(p));
 						}
+						else loopk(kin) getint(p);
 					}
 					if(!hasgameinfo)
 					{
