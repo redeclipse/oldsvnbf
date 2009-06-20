@@ -12,10 +12,10 @@ namespace physics
 
 	FVARW(liquidfric,		0, 10.f, 10000);
 	FVARW(liquidspeed,		0, 0.85f, 1);
-	FVARW(sinkfric,			0, 2.f, 10000);
-	FVARW(floorfric,		0, 5.f, 10000);
-    FVARW(floatfric,        0, 5.f, 10000);
-	FVARW(airfric,			0, 25.f, 10000);
+	FVARW(liquidcurb,		0, 10.f, 10000);
+	FVARW(floorcurb,		0, 5.f, 10000);
+    FVARW(floatcurb,        0, 2.f, 10000);
+	FVARW(aircurb,			0, 25.f, 10000);
 
 	FVARW(stairheight,		0, 4.1f, 10000);
 	FVARW(floorz,			0, 0.867f, 1);
@@ -110,6 +110,11 @@ namespace physics
 		return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200;
 	}
 
+	bool liquidcheck(physent *d)
+	{
+		return d->inliquid && d->submerged > 0.8f;
+	}
+
 	float liquidmerge(physent *d, float from, float to)
 	{
 		if(d->inliquid)
@@ -121,9 +126,9 @@ namespace physics
 		return from;
 	}
 
-	float jumpvelocity(physent *d)
+	float jumpvelocity(physent *d, bool liquid)
 	{
-		return m_speedscale(jumpspeed)*(d->weight/100.f)*liquidmerge(d, 1.f, liquidspeed)*jumpscale;
+		return m_speedscale(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f)*jumpscale;
 	}
 
 	float impulsevelocity(physent *d)
@@ -340,7 +345,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->type == ENT_PLAYER && d->physstate >= PHYS_FLOOR && !d->onladder && (!d->inliquid || d->submerged < 0.75f))
+		if(d->type == ENT_PLAYER && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -436,7 +441,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && (!d->inliquid || d->submerged < 0.75f))
+		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d))
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
@@ -507,19 +512,19 @@ namespace physics
 			pl->lastimpulse = 0;
 			if(game::allowmove(pl) && pl->jumping)
 			{
-				pl->vel.z += jumpvelocity(pl);
+				pl->vel.z += jumpvelocity(pl, false);
 				pl->jumping = false;
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
-        else if(pl->physstate >= PHYS_SLOPE || pl->inliquid)
+        else if(pl->physstate >= PHYS_SLOPE || liquidcheck(pl))
 		{
 			pl->lastimpulse = 0;
 			if(game::allowmove(pl) && pl->jumping)
 			{
 				pl->falling = vec(0, 0, 0);
 				pl->physstate = PHYS_FALL; // cancel out other physstate
-				pl->vel.z += jumpvelocity(pl);
+				pl->vel.z += jumpvelocity(pl, true);
 				if(pl->inliquid)
 				{
 					float scale = liquidmerge(pl, 1.f, liquidspeed);
@@ -557,11 +562,11 @@ namespace physics
         bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
 		if(wantsmove)
 		{
-			vecfromyawpitch(pl->aimyaw, floating || pl->inliquid || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
+			vecfromyawpitch(pl->aimyaw, floating || (pl->inliquid && (liquidcheck(pl) || pl->aimpitch < 0.f)) || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
             if(pl->type == ENT_PLAYER && !floating && pl->physstate >= PHYS_SLOPE)
 			{ // move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
-                m.z = pl->inliquid ? max(m.z, dz) : dz;
+                m.z = liquidcheck(pl) ? max(m.z, dz) : dz;
 			}
 			m.normalize();
 		}
@@ -577,7 +582,7 @@ namespace physics
             if(local) d.mul(floatspeed/100.0f);
         }
 
-		float fric = floating || pl->type==ENT_CAMERA ? floatfric : (pl->inliquid ? liquidmerge(pl, floorfric, liquidfric) : (pl->physstate >= PHYS_SLOPE ? floorfric : airfric));
+		float fric = floating || pl->type==ENT_CAMERA ? floatcurb : (pl->inliquid ? liquidmerge(pl, floorcurb, liquidfric) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb));
         pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 	}
 
@@ -593,12 +598,12 @@ namespace physics
             g.normalize();
             g.mul(gravityforce(pl)*secs);
         }
-        if(!pl->inliquid || (!pl->move && !pl->strafe)) pl->falling.add(g);
+        if(!liquidcheck(pl) || (!pl->move && !pl->strafe)) pl->falling.add(g);
 
-        if(pl->inliquid || pl->physstate >= PHYS_SLOPE)
+        if(liquidcheck(pl) || pl->physstate >= PHYS_SLOPE)
         {
-            float fric = pl->inliquid ? liquidmerge(pl, floorfric, sinkfric) : floorfric,
-                  c = pl->inliquid ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
+            float fric = liquidcheck(pl) ? liquidmerge(pl, aircurb, liquidcurb) : floorcurb,
+                  c = liquidcheck(pl) ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
             pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f*speedscale));
         }
     }
@@ -619,19 +624,19 @@ namespace physics
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
 				mattrig(bottom, watercolor, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
-			if(local && !isliquid(curmat) && isliquid(oldmat)) pl->vel.z = max(pl->vel.z, jumpvelocity(pl)); // ensure we have enough push out of water
+			if(local && !isliquid(curmat) && isliquid(oldmat) && pl->physstate < PHYS_SLIDE) pl->vel.z = max(pl->vel.z, jumpvelocity(pl, false));
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
 			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 		pl->inmaterial = matid;
 		if((pl->inliquid = !floating && isliquid(curmat)) != false)
 		{
-			float part = float(center.z-bottom.z)/10.f;
+			float frac = float(center.z-bottom.z)/10.f;
 			vec tmp = bottom;
 			int found = 0;
-			loopi(9)
+			loopi(10)
 			{
-				tmp.z = bottom.z+(part*(i+1));
+				tmp.z += frac;
 				if(!isliquid(lookupmaterial(tmp)&MATF_VOLUME))
 				{
 					found = i+1;
