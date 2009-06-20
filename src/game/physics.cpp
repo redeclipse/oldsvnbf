@@ -10,7 +10,6 @@ namespace physics
 	FVARW(impulsemod,		0, 60.f, 10000);	// modifier of gravity that determines impulse interval
 	VARW(impulsetime,		-1, 0, INT_MAX-1);	// overrides impulse to a specific time interval (-1 = turn off impulse, 0 = use impulsemod)
 
-	FVARW(liquidfric,		0, 10.f, 10000);
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
 	FVARW(floorcurb,		0, 5.f, 10000);
@@ -582,7 +581,7 @@ namespace physics
             if(local) d.mul(floatspeed/100.0f);
         }
 
-		float fric = floating || pl->type==ENT_CAMERA ? floatcurb : (pl->inliquid ? liquidmerge(pl, floorcurb, liquidfric) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb));
+		float fric = floating || pl->type==ENT_CAMERA ? floatcurb : (pl->inliquid ? liquidmerge(pl, floorcurb, liquidcurb) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb));
         pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 	}
 
