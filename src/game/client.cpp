@@ -853,7 +853,8 @@ namespace client
         else
         {
         	d->weapreset(true);
-            d->lastweap = d->weapselect = d->arenaweap = getint(p);
+            d->lastweap = d->weapselect = getint(p);
+            if(m_arena(game::gamemode, game::mutators)) d->arenaweap = d->weapselect;
             loopi(WEAPON_MAX) d->ammo[i] = getint(p);
         }
     }

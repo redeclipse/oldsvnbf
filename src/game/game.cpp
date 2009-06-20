@@ -388,26 +388,32 @@ namespace game
 			if(physics::iscrouching(d))
 			{
 				bool crouching = d->crouching;
+				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(!crouching)
 				{
-					vec pos(d->o);
-					d->o.z += d->zradius;
-					if(!collide(d, vec(0, 0, 1), 0.f, false))
+					float z = d->o.z, zoff = d->zradius*crouchoff, zrad = d->zradius-zoff, frac = zoff/10.f;
+					d->o.z += zrad;
+					loopi(10)
 					{
-						crouching = true;
+						d->o.z += frac;
+						if(!collide(d, vec(0, 0, 1), 0.f, false))
+						{
+							crouching = true;
+							break;
+						}
+					}
+					if(crouching)
+					{
 						if(d->crouchtime >= 0) d->crouchtime = max(CROUCHTIME-(lastmillis-d->crouchtime), 0)-lastmillis;
 					}
 					else if(d->crouchtime < 0)
 						d->crouchtime = lastmillis-max(CROUCHTIME-(lastmillis+d->crouchtime), 0);
-					d->o = pos;
+					d->o.z = z;
 				}
-
-				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(d->type == ENT_PLAYER)
 				{
 					int crouchtime = abs(d->crouchtime);
-					float amt = lastmillis-crouchtime < CROUCHTIME ?
-						clamp(float(lastmillis-crouchtime)/CROUCHTIME, 0.f, 1.f) : 1.f;
+					float amt = lastmillis-crouchtime < CROUCHTIME ? clamp(float(lastmillis-crouchtime)/CROUCHTIME, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
