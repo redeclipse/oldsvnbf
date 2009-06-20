@@ -321,7 +321,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		350,	1000,	35,		2000,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
-			false,	true,	true,		true,		false,		true,
+			true,	true,	true,		true,		false,		true,
 			0.f,		0.f,			0.125f,		1.0f,		0.f,	8.f,		0.f,		100.f,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
 			""
@@ -329,7 +329,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0xBB66FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1500,	150,	10000,	0,		10000,
+			1,		5,		750,	1500,	150,	25000,	0,		10000,
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		false,
 			0.f,		 0.f,			0.05f,		2.0f,		0.f,	0.6f,		512.f,		500.f,
