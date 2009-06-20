@@ -1037,7 +1037,7 @@ namespace ai
 			}
 			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 5000) && (!d->lastdeath || lastmillis-d->lastdeath > 500))
 			{
-				client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
+				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 				d->respawned = lastmillis;
 			}
