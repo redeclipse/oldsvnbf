@@ -569,7 +569,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 			{
 				if(!isinteger(c))
 				{
-					string arg = "";;
+					mkstring(arg);
 					if(numargs > 1)
 					{
 						loopk(numargs-1) if(w[k+1])
