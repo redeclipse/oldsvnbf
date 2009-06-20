@@ -570,7 +570,7 @@ namespace entities
 		{
 			case EU_ITEM:
 			{
-				if(d->useaction)
+				if(d->useaction && !m_noitems(game::gamemode, game::mutators))
 				{
 					if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 					{

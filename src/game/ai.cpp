@@ -872,46 +872,54 @@ namespace ai
 			actitems.setsizenodelete(0);
 			if(entities::collateitems(d, actitems))
 			{
-				actitem &t = actitems.last();
-				int ent = -1;
-				switch(t.type)
+				while(!actitems.empty())
 				{
-					case ITEM_ENT:
+					actitem &t = actitems.last();
+					int ent = -1;
+					switch(t.type)
 					{
-						if(!entities::ents.inrange(t.target)) break;
-						extentity &e = *entities::ents[t.target];
-						if(enttype[e.type].usetype != EU_ITEM) break;
-						ent = t.target;
-						break;
-					}
-					case ITEM_PROJ:
-					{
-						if(!projs::projs.inrange(t.target)) break;
-						projent &proj = *projs::projs[t.target];
-						if(!entities::ents.inrange(proj.id)) break;
-						extentity &e = *entities::ents[proj.id];
-						if(enttype[e.type].usetype != EU_ITEM || proj.owner == d) break;
-						ent = proj.id;
-						break;
-					}
-					default: break;
-				}
-				if(entities::ents.inrange(ent))
-				{
-					extentity &e = *entities::ents[ent];
-					if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
-					{
-						case WEAPON:
+						case ITEM_ENT:
 						{
-							int attr = weapattr(e.attr[0], sweap);
-							if(d->hasweap(attr, sweap)) break;
-							d->useaction = true;
-							d->ai->lastaction = d->usetime = lastmillis;
-							return true;
+							if(!entities::ents.inrange(t.target)) break;
+							extentity &e = *entities::ents[t.target];
+							if(enttype[e.type].usetype != EU_ITEM) break;
+							ent = t.target;
+							break;
+						}
+						case ITEM_PROJ:
+						{
+							if(!projs::projs.inrange(t.target)) break;
+							projent &proj = *projs::projs[t.target];
+							if(!entities::ents.inrange(proj.id)) break;
+							extentity &e = *entities::ents[proj.id];
+							if(enttype[e.type].usetype != EU_ITEM || proj.owner == d) break;
+							ent = proj.id;
 							break;
 						}
 						default: break;
 					}
+					if(entities::ents.inrange(ent))
+					{
+						extentity &e = *entities::ents[ent];
+						if(enttype[e.type].usetype == EU_ITEM)
+						{
+							if(m_noitems(game::gamemode, game::mutators)) continue;
+							if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
+							{
+								case WEAPON:
+								{
+									int attr = weapattr(e.attr[0], sweap);
+									if(d->hasweap(attr, sweap)) break;
+									d->useaction = true;
+									d->ai->lastaction = d->usetime = lastmillis;
+									return true;
+									break;
+								}
+								default: break;
+							}
+						}
+					}
+					actitems.pop();
 				}
 			}
 		}
