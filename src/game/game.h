@@ -843,7 +843,7 @@ struct gamestate
 		{
 			if(arenaweap <= WEAPON_PISTOL || arenaweap >= WEAPON_TOTAL)
 				arenaweap = rnd(WEAPON_TOTAL-1)+1;
-			ammo[arenaweap] = weaptype[arenaweap].max;
+			ammo[arenaweap] = weaptype[arenaweap].reloads ? weaptype[arenaweap].add : weaptype[arenaweap].max;
 			lastweap = weapselect = arenaweap;
 		}
 		else
