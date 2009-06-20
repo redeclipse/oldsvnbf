@@ -587,6 +587,13 @@ namespace hud
 								popfont();
 							}
 						}
+						if(m_arena(game::gamemode, game::mutators))
+						{
+							SEARCHBINDCACHE(arenakey)("showgui arena", 0);
+							pushfont("default");
+							ty += draw_textx("Press \fs\fc%s\fS to change arena weapon", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, arenakey);
+							popfont();
+						}
 					}
 				}
 				else if(game::player1->state == CS_ALIVE)

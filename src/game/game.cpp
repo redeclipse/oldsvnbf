@@ -299,7 +299,7 @@ namespace game
 			}
 			if(weap <= WEAPON_PISTOL || weap >= WEAPON_TOTAL) weap = rnd(WEAPON_TOTAL-1)+1;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutf("\fwyou will next spawn with a %s%s", weaptype[weap].text, weaptype[weap].name);
+			conoutf("\fwyou will next spawn with: %s%s", weaptype[weap].text, weaptype[weap].name);
 		}
 		else conoutf("\fronly available in arena");
 	}
