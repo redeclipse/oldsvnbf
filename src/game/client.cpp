@@ -287,7 +287,7 @@ namespace client
     {
         if(!arg[0]) return;
         int val = 1;
-        string hash = "";
+        mkstring(hash);
         if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
         else server::hashpassword(game::player1->clientnum, sessionid, arg, hash);
         addmsg(SV_SETMASTER, "ris", val, hash);
@@ -358,7 +358,7 @@ namespace client
 	void saytext(gameent *d, int flags, char *text)
 	{
 		if(!colourchat) filtertext(text, text);
-		string s = "";
+		mkstring(s);
 		bool team = m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
 		if(team)
@@ -720,7 +720,7 @@ namespace client
         ucharbuf p(packet->data, packet->dataLength);
         putint(p, SV_CONNECT);
         sendstring(game::player1->name, p);
-        string hash = "";
+        mkstring(hash);
         if(connectpass[0])
         {
             server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
@@ -1960,7 +1960,7 @@ namespace client
 		g->pushlist();
 		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & G3D_UP)
 		{
-			string st = "";
+			mkstring(st);
 			bool invert = false;
 			int len = execute("listlen $serversort");
 			loopk(len)
@@ -1991,7 +1991,7 @@ namespace client
 
     bool serverentry(g3d_gui *g, int i, serverinfo *si)
     {
-		string text = "";
+		mkstring(text);
 		bool diff = si->attr[0] != GAMEVERSION;
 		int status = diff ? SSTAT_UNKNOWN : serverstat(si), colour = serverstatus[status].colour;
 		if(status == SSTAT_OPEN && !strcmp(si->sdesc, servermaster)) colour |= 0x222222;

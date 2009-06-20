@@ -102,6 +102,7 @@ static inline T min(T a, T b)
 
 #define MAXSTRLEN 512 // must be at least 512 bytes to comply with rfc1459
 typedef char string[MAXSTRLEN];
+#define mkstring(d) string d; d[0] = 0;
 
 inline void vformatstring(char *d, const char *fmt, va_list v, int len = MAXSTRLEN) { _vsnprintf(d, len, fmt, v); d[len-1] = 0; }
 inline char *copystring(char *d, const char *s, size_t len = MAXSTRLEN) { strncpy(d, s, len); d[len-1] = 0; return d; }
@@ -224,7 +225,7 @@ struct packetbuf : ucharbuf
 
     void checkspace(int n)
     {
-        if(len + n > maxlen && packet && growth > 0) resize(max(len + n, maxlen + growth));    
+        if(len + n > maxlen && packet && growth > 0) resize(max(len + n, maxlen + growth));
     }
 
     ucharbuf subbuf(int sz)
@@ -244,7 +245,7 @@ struct packetbuf : ucharbuf
         checkspace(numvals);
         ucharbuf::put(vals, numvals);
     }
-    
+
     ENetPacket *finalize()
     {
         resize(len);
@@ -689,9 +690,9 @@ template <class T, int SIZE> struct queue
 {
     int head, tail, len;
     T data[SIZE];
-    
+
     queue() { clear(); }
-    
+
     void clear() { head = tail = len = 0; }
 
     int length() const { return len; }
@@ -704,7 +705,7 @@ template <class T, int SIZE> struct queue
     T &adding(int offset) { return data[tail+offset >= SIZE ? tail+offset - SIZE : tail+offset]; }
     T &add()
     {
-        ASSERT(len < SIZE);    
+        ASSERT(len < SIZE);
         T &t = data[tail];
         tail = (tail + 1)%SIZE;
         len++;

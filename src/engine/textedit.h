@@ -677,7 +677,7 @@ static editor *useeditor(const char *name, int mode, bool focus, const char *ini
 )
 
 ICOMMAND(textlist, "", (), // @DEBUG return list of all the editors
-    string s = "";
+    mkstring(s);
     loopv(editors)
     {
         if(i > 0) concatstring(s, ", ");
