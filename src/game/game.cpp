@@ -1723,7 +1723,7 @@ namespace game
 
 		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
-			vec pos = d->abovehead();
+			vec pos = d->abovehead(2);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
 			{
 				const char *name = colorname(d, NULL, "@");
