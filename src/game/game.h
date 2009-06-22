@@ -230,6 +230,7 @@ enum
 	WEAPON_PAINT = WEAPON_TOTAL,
 	WEAPON_MAX // end of superimposed weapon set
 };
+#define isweap(a)		(a > -1 && a < WEAPON_MAX)
 
 enum
 {
@@ -339,7 +340,7 @@ weaptypes weaptype[WEAPON_MAX] =
 	{
 		WEAPON_GRENADE,		ANIM_GRENADE,		-5,		5,		0x22FF22,
 			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		2,		1500,	1500,	300,	350,	3000,	3000,
+			1,		2,		1500,	6000,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		0.f,		1000.f,
@@ -360,11 +361,6 @@ weaptypes weaptype[WEAPON_MAX] =
 #else
 extern weaptypes weaptype[];
 #endif
-
-#define isweap(a)		(a > -1 && a < WEAPON_MAX)
-#define weaploads(a,b)	(a == b || weaptype[a].reloads)
-#define weapcarry(a,b)	(a != b && weaptype[a].reloads)
-#define weapattr(a,b)	(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
 
 enum
 {
@@ -411,6 +407,8 @@ enum
 	G_M_ARENA	= 1<<7,
 	G_M_DM		= G_M_INSTA|G_M_PAINT|G_M_VAMP|G_M_ARENA,
 	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_VAMP|G_M_ARENA,
+	G_M_PBALL	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_VAMP|G_M_PAINT,
+	G_M_CLASS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_VAMP|G_M_ARENA,
 	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_PAINT|G_M_VAMP|G_M_ARENA,
 };
 #define G_M_NUM 8
@@ -434,9 +432,9 @@ gametypes gametype[] = {
 	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"insta" },
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man" },
-	{ G_M_PAINT,		G_M_ALL,				G_M_PAINT,				"paintball" },
+	{ G_M_PAINT,		G_M_PBALL,				G_M_PAINT,				"paintball" },
 	{ G_M_VAMP,			G_M_ALL,				G_M_VAMP,				"vampire" },
-	{ G_M_ARENA,		G_M_ALL,				G_M_ARENA,				"arena" },
+	{ G_M_ARENA,		G_M_CLASS,				G_M_ARENA,				"arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -468,7 +466,7 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT :(m_arena(a,b) ? WEAPON_PISTOL : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
 #define m_spawndelay(a,b)	(!m_duke(a,b) ? (int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)) : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || m_arena(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
@@ -476,6 +474,10 @@ extern gametypes gametype[], mutstype[];
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
 #define m_speedtimex(a)		(max(int(m_speedlerp(a)), 1))
 #define m_speedtime(a)		(int(m_speedlerp(a)))
+
+#define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
+#define weapcarry(a,b)		(b > 0 && a != b && weaptype[a].reloads)
+#define weapattr(a,b)		(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -838,13 +840,14 @@ struct gamestate
 	{
 		health = heal;
 		weapreset(true);
-		loopi(WEAPON_MAX) ammo[i] = i == sweap ? weaptype[i].add : -1;
+		if(!isweap(sweap)) sweap = WEAPON_PISTOL;
+		ammo[sweap] = weaptype[sweap].reloads ? weaptype[sweap].add : weaptype[sweap].max;
 		if(arena)
 		{
-			if(arenaweap <= WEAPON_PISTOL || arenaweap >= WEAPON_TOTAL)
-				arenaweap = rnd(WEAPON_TOTAL-1)+1;
-			ammo[arenaweap] = weaptype[arenaweap].reloads ? weaptype[arenaweap].add : weaptype[arenaweap].max;
-			lastweap = weapselect = arenaweap;
+			int aweap = arenaweap;
+			if(aweap <= WEAPON_PISTOL || aweap >= WEAPON_TOTAL) aweap = rnd(WEAPON_TOTAL-1)+1; // pistol = random
+			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
+			lastweap = weapselect = aweap;
 		}
 		else
 		{
