@@ -326,14 +326,15 @@ void ragdolldata::move(dynent *pl, float ts)
     d.type = ENT_PROJ;
     d.radius = d.height = d.aboveeye = 1;
     float airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
+    bool liquid = physics::liquidcheck(pl);
     collisions = 0;
     loopv(skel->verts)
     {
         vert &v = verts[i];
         vec curpos = v.pos, dpos = vec(v.pos).sub(v.oldpos);
-        dpos.mul(pow((pl->inliquid ? ragdollliquidfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
+        dpos.mul(pow((liquid ? ragdollliquidfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
         v.pos.z -= gravity*ts*ts;
-        if(pl->inliquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
+        if(liquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
         v.pos.add(dpos);
         if(v.pos.z < 0) { v.pos.z = 0; curpos = v.pos; collisions++; }
         d.o = v.pos;
@@ -352,7 +353,7 @@ void ragdolldata::move(dynent *pl, float ts)
     if(collisions)
     {
         floating = 0;
-        if(!collidemillis) collidemillis = lastmillis + (pl->inliquid ? ragdollliquidexpireoffset : ragdollexpireoffset);
+        if(!collidemillis) collidemillis = lastmillis + (liquid ? ragdollliquidexpireoffset : ragdollexpireoffset);
     }
     else if(++floating > 1 && lastmillis < collidemillis + ragdollexpiremillis) collidemillis = 0;
 
