@@ -721,7 +721,7 @@ namespace ai
 	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
-		bool offground = (d->timeinair && !d->inliquid && !d->onladder), jumper = off.z >= JUMPMIN,
+		bool offground = (d->timeinair && !physics::liquidcheck(d) && !d->onladder), jumper = off.z >= JUMPMIN,
 			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
 			propeller = dir.magnitude() > JUMPMIN*2, propel = jumper || propeller;
 		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
