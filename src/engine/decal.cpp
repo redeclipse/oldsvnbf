@@ -25,8 +25,8 @@ enum
     DF_SATURATE   = 1<<5
 };
 
-VARFP(maxdecaltris, 1, 4096, INT_MAX-1, initdecals());
-VARA(decalfade, 1000, 60000, INT_MAX-1);
+VARFP(maxdecaltris, 1, 1024, INT_MAX-1, initdecals());
+VARA(decalfade, 1000, 10000, INT_MAX-1);
 VAR(dbgdec, 0, 0, 1);
 
 struct decalrenderer
@@ -537,7 +537,7 @@ void renderdecals(bool mainpass)
     decalrenderer::cleanuprenderstate();
 }
 
-VARA(maxdecaldistance, 128, 4096, INT_MAX-1);
+VARA(maxdecaldistance, 128, 1024, INT_MAX-1);
 
 void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color, int info)
 {
