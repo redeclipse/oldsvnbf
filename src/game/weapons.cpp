@@ -136,6 +136,12 @@ namespace weapons
 					if(d->attacking)
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
+						if(!offset)
+						{
+							offset = max(d->weapload[d->weapselect], 1);
+							d->weapload[d->weapselect] = -d->weapload[d->weapselect];
+							d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
+						}
 						d->setweapstate(d->weapselect, WPSTATE_POWER, 0, lastmillis);
 					}
 					else return;
@@ -146,8 +152,7 @@ namespace weapons
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;
-
-		if(!offset)
+		else if(!offset)
 		{
 			offset = 1+max(d->weapload[d->weapselect], 1);
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
