@@ -61,7 +61,7 @@ void backup(const char *fname, const char *ext, int revision, int start)
     if(fileexists(aname, "r"))
     {
         const char *newname = findfile(makefile(fname, ext, revision, start), "w");
-        rename(aname, newname);
+		remove(newname); rename(aname, newname);
     }
 }
 
