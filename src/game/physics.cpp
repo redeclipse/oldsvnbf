@@ -13,7 +13,6 @@ namespace physics
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
 	FVARW(floorcurb,		0, 5.f, 10000);
-    FVARW(floatcurb,        0, 2.f, 10000);
 	FVARW(aircurb,			0, 25.f, 10000);
 
 	FVARW(stairheight,		0, 4.1f, 10000);
@@ -24,6 +23,8 @@ namespace physics
 	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
 
 	FVARP(floatspeed,		1e-3f, 80.f, 10000);
+    FVARP(floatcurb,        0, 1.f, 10000);
+
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
@@ -127,16 +128,19 @@ namespace physics
 
 	float jumpvelocity(physent *d, bool liquid)
 	{
+		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return jumpspeed;
 		return m_speedscale(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f)*jumpscale;
 	}
 
 	float impulsevelocity(physent *d)
 	{
+		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return impulsespeed;
 		return m_speedscale(impulsespeed)*(d->weight/100.f)*jumpscale;
 	}
 
 	float gravityforce(physent *d)
 	{
+		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return gravity;
 		return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale;
 	}
 
@@ -156,19 +160,9 @@ namespace physics
 
 	float movevelocity(physent *d)
 	{
-		if(d->type == ENT_CAMERA)
-		{
-			if(game::player1->state == CS_SPECTATOR) return game::player1->maxspeed*(game::player1->weight/100.f);
-			else if(game::player1->state == CS_WAITING) return m_speedscale(game::player1->maxspeed)*(game::player1->weight/100.f);
-			else return d->maxspeed*(d->weight/100.f);
-		}
-		else if(d->type == ENT_PLAYER)
-		{
-			if(d->state != CS_EDITING)
-				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
-			else return d->maxspeed*(d->weight/100.f);
-		}
-		return m_speedscale(d->maxspeed);
+		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f);
+		else if(d->type == ENT_PLAYER && d->state == CS_EDITING) return d->maxspeed*(d->weight/100.f);
+		return m_speedscale(d->maxspeed)*(d->weight/100.f);
 	}
 
 	bool movepitch(physent *d)
@@ -571,18 +565,19 @@ namespace physics
 		}
 
 		vec d = vec(m).mul(movevelocity(pl));
-        if(pl->type==ENT_PLAYER)
+        if(pl->type == ENT_PLAYER)
         {
 		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
 		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
         }
-        else if(pl->type==ENT_CAMERA)
-        {
-            if(local) d.mul(floatspeed/100.0f);
-        }
+        else if(pl->type == ENT_CAMERA && local) d.mul(floatspeed/100.0f);
 
-		float fric = floating || pl->type==ENT_CAMERA ? floatcurb : (pl->inliquid ? liquidmerge(pl, floorcurb, liquidcurb) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb));
-        pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
+		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
+		else
+		{
+			float fric = pl->inliquid ? liquidmerge(pl, floorcurb, liquidcurb) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb);
+			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
+		}
 	}
 
     void modifygravity(physent *pl, int curtime)
@@ -667,7 +662,7 @@ namespace physics
 
 	bool moveplayer(physent *pl, int moveres, bool local, int millis)
 	{
-		bool floating = pl->type == ENT_PLAYER && pl->state == CS_EDITING;
+		bool floating = pl->type == ENT_CAMERA || (pl->type == ENT_PLAYER && pl->state == CS_EDITING);
 		float secs = millis/1000.f;
 
 		if(pl->type==ENT_PLAYER)
