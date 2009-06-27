@@ -1600,7 +1600,7 @@ void renderfoggedvas(renderstate &cur, bool doquery = false)
 
     glDisable(GL_TEXTURE_2D);
 
-    glColor3ubv(watercolor.v);
+    glColor3ubv(watercol.v);
 
     loopv(foggedvas)
     {
@@ -1910,7 +1910,7 @@ void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
             setuptmu(cur.fogtmu, "C , P @ Ta", "= Pa");
             if(!fogtex) createfogtex();
             glBindTexture(GL_TEXTURE_1D, fogtex);
-            loopk(3) cur.color[k] = watercolor[k]/255.0f;
+            loopk(3) cur.color[k] = watercol[k]/255.0f;
         }
         if(cur.causticstmu>=0) setupcaustics(cur.causticstmu, causticspass, cur.color);
 	}
@@ -2444,7 +2444,7 @@ void rendergeom(float causticspass, bool fogpass)
             if(!fogtex) createfogtex();
             glBindTexture(GL_TEXTURE_1D, fogtex);
             setuptexgen(1);
-            glColor3ubv(watercolor.v);
+            glColor3ubv(watercol.v);
             rendergeommultipass(cur, RENDERPASS_FOG, fogpass);
             disabletexgen(1);
             glDisable(GL_TEXTURE_1D);

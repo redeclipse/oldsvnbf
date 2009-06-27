@@ -276,20 +276,22 @@ Reflection *findreflection(int height);
 
 VARA(reflectdist, 0, 2000, 10000);
 VARW(waterfog, 0, 150, 10000);
-bvec watercolor(0x10, 0x30, 0x60), waterfallcolor(0, 0, 0);
+bvec watercol(0x10, 0x30, 0x60), waterfallcol(0, 0, 0);
 HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
 {
-    watercolor = bvec((watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF);
+    watercol = bvec((watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF);
 });
+FVARW(waterblend, 0, 0.75f, 1);
 HVARFW(waterfallcolour, 0, 0, 0xFFFFFF,
 {
-    waterfallcolor = bvec((waterfallcolour>>16)&0xFF, (waterfallcolour>>8)&0xFF, waterfallcolour&0xFF);
+    waterfallcol = bvec((waterfallcolour>>16)&0xFF, (waterfallcolour>>8)&0xFF, waterfallcolour&0xFF);
 });
+FVARW(waterfallblend, 0, 0.75f, 1);
 VARW(lavafog, 0, 50, 10000);
-bvec lavacolor(0xFF, 0x44, 0x00);
+bvec lavacol(0xFF, 0x44, 0x00);
 HVARFW(lavacolour, 0, 0xFF4400, 0xFFFFFF,
 {
-    lavacolor = bvec((lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF);
+    lavacol = bvec((lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF);
 });
 
 void setprojtexmatrix(Reflection &ref, bool init = true)
@@ -386,7 +388,7 @@ void renderwaterff()
 
     float offset = -WATER_OFFSET;
 
-	loopi(3) wcol[i] = watercolor[i]/255.0f;
+	loopi(3) wcol[i] = watercol[i]/255.0f;
 
     bool wasbelow = false;
 	loopi(MAXREFLECTIONS)

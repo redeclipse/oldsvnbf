@@ -162,7 +162,7 @@ namespace physics
 	{
 		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f);
 		else if(d->type == ENT_PLAYER && d->state == CS_EDITING) return d->maxspeed*(d->weight/100.f);
-		return m_speedscale(d->maxspeed)*(d->weight/100.f);
+		return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
 	}
 
 	bool movepitch(physent *d)
@@ -616,8 +616,8 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, watercolor, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
-			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacolor, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
+				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
 			if(local && !isliquid(curmat) && isliquid(oldmat) && pl->physstate < PHYS_SLIDE) pl->vel.z = max(pl->vel.z, jumpvelocity(pl, false));
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)

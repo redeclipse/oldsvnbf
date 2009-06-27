@@ -168,7 +168,7 @@ struct animmodel : model
                     glEnable(GL_TEXTURE_GEN_S);
                     glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
                     setuptmu(fogtmu, "K , P @ Ta", masked && envmaptmu>=0 && envmapmax>0 ? "Ka , Pa @ Ta" : "= Pa");
-                    colortmu(fogtmu, watercolor[0]/255.0f, watercolor[1]/255.0f, watercolor[2]/255.0f, 0);
+                    colortmu(fogtmu, watercol[0]/255.0f, watercol[1]/255.0f, watercol[2]/255.0f, 0);
                     if(!fogtex) createfogtex();
                     glBindTexture(GL_TEXTURE_1D, fogtex);
                 }
