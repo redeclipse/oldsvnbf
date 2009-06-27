@@ -2878,7 +2878,7 @@ namespace server
 				{
 					int val = getint(p);
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
-					if(val && ci->state.state != CS_ALIVE) break;
+					//if(val && ci->state.state != CS_ALIVE) break;
 					ci->state.dropped.reset();
 					loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
 					ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));

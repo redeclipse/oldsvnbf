@@ -146,25 +146,18 @@ namespace client
 
 	bool allowedittoggle(bool edit)
 	{
-		bool allow = edit || (m_edit(game::gamemode) && game::player1->state == CS_ALIVE);
-		if(!allow) conoutf("\fryou must be both alive and in coopedit to enter editmode");
+		bool allow = edit || m_edit(game::gamemode); // && game::player1->state == CS_ALIVE);
+		if(!allow) conoutf("\fryou must be in edit mode to start editing");
 		return allow;
 	}
 
 	void edittoggled(bool edit)
 	{
 		game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
-		if(edit)
-		{
-			game::player1->state = CS_EDITING;
-			game::resetstate();
-			physics::entinmap(game::player1, false);
-		}
-		else if(game::player1->state != CS_SPECTATOR)
-		{
-			game::player1->state = CS_ALIVE;
-			physics::entinmap(game::player1, true); // find spawn closest to current floating pos
-		}
+		game::player1->state = edit ? CS_EDITING : CS_ALIVE;
+		game::player1->resetinterp();
+		game::resetstate();
+		physics::entinmap(game::player1, true); // find spawn closest to current floating pos
 		projs::remove(game::player1);
 		if(m_edit(game::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
 		entities::edittoggled(edit);
@@ -1586,6 +1579,7 @@ namespace client
 						d->state = CS_ALIVE;
 						d->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
 					}
+					d->resetinterp();
 					projs::remove(d);
 					break;
 				}

@@ -1123,9 +1123,7 @@ namespace game
 			{ \
 				camera1->o.x = camera1->o.y = camera1->o.z = getworldsize(); \
 				camera1->o.x *= 0.5f; camera1->o.y *= 0.5f; \
-				player1->o = camera1->o; \
 			} \
-			player1->resetinterp(); \
 			camera1->resetinterp(); \
 			setvar("specmode", 0, true); \
 			return; \
@@ -1242,7 +1240,7 @@ namespace game
 				if(!lastspecchg || cam->ent != entidx) lastspecchg = lastmillis;
 			}
 			else if(alter && !cam->cansee.length()) cam->alter = true;
-			player1->o = camera1->o = cam->pos;
+			camera1->o = cam->pos;
 			if(cam->ent != entidx || !cam->alter)
 			{
 				vec dir = vec(cam->dir).sub(camera1->o).normalize();
@@ -1250,9 +1248,6 @@ namespace game
 			}
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			else scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
-			player1->yaw = player1->aimyaw = camera1->yaw;
-			player1->pitch = player1->aimpitch = camera1->pitch;
-			player1->resetinterp();
 			camera1->resetinterp();
 		}
 		else unsetspectv(true);
@@ -1340,6 +1335,13 @@ namespace game
 				camera1->move = player1->move;
 				camera1->strafe = player1->strafe;
 				physics::move(camera1, 10, true);
+			}
+			if(player1->state == CS_SPECTATOR)
+			{
+				player1->aimyaw = player1->yaw = camera1->yaw;
+				player1->aimpitch = player1->pitch = camera1->pitch;
+				player1->o = camera1->o;
+				player1->resetinterp();
 			}
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
 		}
