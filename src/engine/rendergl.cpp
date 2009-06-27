@@ -918,12 +918,12 @@ static void blendfog(int fogmat, float blend, float logblend, float &start, floa
     switch(fogmat)
     {
         case MAT_WATER:
-            loopk(3) fogc[k] += blend*watercolor[k]/255.0f;
+            loopk(3) fogc[k] += blend*watercol[k]/255.0f;
             end += logblend*min(fog, max(waterfog*4, 32));
             break;
 
         case MAT_LAVA:
-            loopk(3) fogc[k] += blend*lavacolor[k]/255.0f;
+            loopk(3) fogc[k] += blend*lavacol[k]/255.0f;
             end += logblend*min(fog, max(lavafog*4, 32));
             break;
 
@@ -967,13 +967,13 @@ static void blendfogoverlay(int fogmat, float blend, float *overlay)
     switch(fogmat)
     {
         case MAT_WATER:
-            maxc = max(watercolor[0], max(watercolor[1], watercolor[2]));
-            loopk(3) overlay[k] += blend*max(0.4f, watercolor[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
+            maxc = max(watercol[0], max(watercol[1], watercol[2]));
+            loopk(3) overlay[k] += blend*max(0.4f, watercol[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         case MAT_LAVA:
-            maxc = max(lavacolor[0], max(lavacolor[1], lavacolor[2]));
-            loopk(3) overlay[k] += blend*max(0.4f, lavacolor[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
+            maxc = max(lavacol[0], max(lavacol[1], lavacol[2]));
+            loopk(3) overlay[k] += blend*max(0.4f, lavacol[k]/min(32.0f + maxc*7.0f/8.0f, 255.0f));
             break;
 
         default:
@@ -1086,7 +1086,7 @@ VARP(reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
-	float fogc[4] = { watercolor[0]/256.0f, watercolor[1]/256.0f, watercolor[2]/256.0f, 1.0f };
+	float fogc[4] = { watercol[0]/256.0f, watercol[1]/256.0f, watercol[2]/256.0f, 1.0f };
 
 	if(refract && !waterfog)
 	{
@@ -1233,7 +1233,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
     int fogmat = lookupmaterial(camera1->o)&MATF_VOLUME, abovemat = MAT_AIR;
     float fogblend = 1.0f, causticspass = 0.0f;
-    if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
+    if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
     {
         float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
@@ -2024,7 +2024,7 @@ void drawview(int targtype)
     glDisable(GL_DEPTH_TEST);
 
 	addglare();
-    if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
+    if(fogmat == MAT_WATER || fogmat == MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
 	renderpostfx();
 
 	glDisable(GL_TEXTURE_2D);
