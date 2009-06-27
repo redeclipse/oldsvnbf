@@ -36,7 +36,7 @@ namespace client
 			c2sinit = false;
 			copystring(game::player1->name, name, MAXNAMELEN);
 		}
-		else conoutf("\fmyour name is: %s", game::colorname(game::player1));
+		else conoutf("\fmyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
 	ICOMMAND(name, "s", (char *s), switchname(s));
 
