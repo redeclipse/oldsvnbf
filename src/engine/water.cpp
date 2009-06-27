@@ -281,12 +281,10 @@ HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
 {
     watercol = bvec((watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF);
 });
-FVARW(waterblend, 0, 0.75f, 1);
 HVARFW(waterfallcolour, 0, 0, 0xFFFFFF,
 {
     waterfallcol = bvec((waterfallcolour>>16)&0xFF, (waterfallcolour>>8)&0xFF, waterfallcolour&0xFF);
 });
-FVARW(waterfallblend, 0, 0.75f, 1);
 VARW(lavafog, 0, 50, 10000);
 bvec lavacol(0xFF, 0x44, 0x00);
 HVARFW(lavacolour, 0, 0xFF4400, 0xFFFFFF,
