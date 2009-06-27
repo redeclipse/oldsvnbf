@@ -424,7 +424,6 @@ extern int refracting;
 extern bool reflecting, fading, fogging;
 extern float reflectz;
 extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
-extern float waterblend, waterfallblend, glassblend;
 extern bvec watercol, waterfallcol, lavacol, glasscol;
 
 extern void cleanreflections();

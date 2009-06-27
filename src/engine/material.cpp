@@ -536,7 +536,6 @@ HVARFW(glasscolour, 0, 0x2060F0, 0xFFFFFF,
 {
     glasscol = bvec((glasscolour>>16)&0xFF, (glasscolour>>8)&0xFF, glasscolour&0xFF);
 });
-FVARW(glassblend, 0, 0.5f, 1);
 VARFP(glassenv, 0, 1, 1, preloadglassshaders());
 
 VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
@@ -550,9 +549,9 @@ void rendermaterials()
 	glDisable(GL_CULL_FACE);
 
 	Slot &wslot = lookupmaterialslot(MAT_WATER), &lslot = lookupmaterialslot(MAT_LAVA), &gslot = lookupmaterialslot(MAT_GLASS);
-    uchar wcol[4] = { watercol[0], watercol[1], watercol[2], int(waterblend*255) },
-          wfcol[4] = { waterfallcol[0], waterfallcol[1], waterfallcol[2], int(waterfallblend*255) },
-          glcol[4] = { glasscol[0], glasscol[1], glasscol[2], int(glassblend*255) };
+    uchar wcol[4] = { watercol[0], watercol[1], watercol[2], 192 },
+          wfcol[4] = { waterfallcol[0], waterfallcol[1], waterfallcol[2], 192 },
+          glcol[4] = { glasscol[0], glasscol[1], glasscol[2], 192 };
     if(!wfcol[0] && !wfcol[2] && !wfcol[2]) memcpy(wfcol, wcol, 3);
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
