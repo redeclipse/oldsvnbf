@@ -426,9 +426,9 @@ namespace server
 
 	void cleanup()
 	{
-		bannedips.setsize(0);
 		aiman::clearai();
 		if(GVAR(resetvarsonend)) resetgamevars(true);
+		if(GVAR(resetbansonend)) bannedips.setsize(0);
 		changemap();
 	}
 
@@ -1059,6 +1059,7 @@ namespace server
 	{
 		if(demorecord) enddemorecord();
 		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
+		if(GVAR(resetbansonend) >= 2) bannedips.setsize(0);
 	}
 
 	void checkvotes(bool force = false)
@@ -2451,6 +2452,12 @@ namespace server
 		}
 	}
 
+	void cleanbans()
+	{
+		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
+			bannedips.remove(0);
+	}
+
 	void serverupdate()
 	{
 		if(numclients(-1, false, true))
@@ -2467,9 +2474,7 @@ namespace server
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
-
-			while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
-				bannedips.remove(0);
+			cleanbans();
 			loopv(connects) if(totalmillis-connects[i]->connectmillis>15000)
 				disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
@@ -2496,6 +2501,7 @@ namespace server
 			}
             if(shouldcheckvotes) checkvotes();
 		}
+		else if(!GVAR(resetbansonend)) cleanbans();
 		auth::update();
 	}
 
