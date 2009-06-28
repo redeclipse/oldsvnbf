@@ -23,7 +23,7 @@ namespace physics
 	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
 
 	FVARP(floatspeed,		1e-3f, 80.f, 10000);
-    FVARP(floatcurb,        0, 1.f, 10000);
+	FVARP(floatcurb,        0, 1.f, 10000);
 
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
@@ -161,8 +161,12 @@ namespace physics
 	float movevelocity(physent *d)
 	{
 		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f);
-		else if(d->type == ENT_PLAYER && d->state == CS_EDITING) return d->maxspeed*(d->weight/100.f);
-		return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
+		else if(d->type == ENT_PLAYER)
+		{
+			if(d->state == CS_EDITING) return d->maxspeed*(d->weight/100.f);
+			else return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
+		}
+		return m_speedscale(d->maxspeed);
 	}
 
 	bool movepitch(physent *d)
