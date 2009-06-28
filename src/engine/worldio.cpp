@@ -334,7 +334,7 @@ void save_config(char *mname)
 	{
 		if(verbose) renderprogress(float(i)/float(MAT_EDIT), "saving material slots...");
 
-		if(i == MAT_WATER || i == MAT_LAVA || i == MAT_GLASS)
+		if(i == MAT_WATER || i == MAT_LAVA)
 		{
 			saveslotconfig(h, materialslots[i], -i);
 		}

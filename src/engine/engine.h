@@ -424,7 +424,7 @@ extern int refracting;
 extern bool reflecting, fading, fogging;
 extern float reflectz;
 extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
-extern bvec watercol, waterfallcol, lavacol, glasscol;
+extern bvec watercol, waterfallcol, lavacol;
 
 extern void cleanreflections();
 extern void queryreflections();
@@ -663,7 +663,7 @@ extern char *getmaptitle();
 
 // rendergl
 extern int dynentsize, axfps, lastmillis, totalmillis;
-extern int watercolour, lavacolour, glasscolour;
+extern int watercolour, lavacolour;
 extern bvec ambientcolor, skylightcolor;
 extern float curfov, fovy, aspect;
 
