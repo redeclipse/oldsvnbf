@@ -38,6 +38,7 @@ struct materialsurface
 	union
 	{
 		entity *light;
+		ushort envmap;
 		uchar ends;
 	};
 };
@@ -171,7 +172,7 @@ struct cubeext
 	octaentities *ents;	  // list of map entites totally inside cube
 	mergeinfo *merges;		// bounds of merged surfaces
     int tjoints;             // linked list of t-joints
-};
+};  
 
 struct cube
 {
@@ -223,7 +224,7 @@ struct undoblock // undo header, all data sits in payload
     int size, timestamp, numents; // if numents is 0, is a cube undo record, otherwise an entity undo record
 
     block3 *block() { return (block3 *)(this + 1); }
-    int *gridmap()
+    int *gridmap()                                                    
     {
         block3 *ub = block();
         return (int *)(ub->c() + ub->size());

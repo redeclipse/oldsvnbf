@@ -1233,7 +1233,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
 
     int fogmat = lookupmaterial(camera1->o)&MATF_VOLUME, abovemat = MAT_AIR;
     float fogblend = 1.0f, causticspass = 0.0f;
-    if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
+    if(fogmat==MAT_WATER || fogmat==MAT_LAVA)
     {
         float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
@@ -2024,7 +2024,7 @@ void drawview(int targtype)
     glDisable(GL_DEPTH_TEST);
 
 	addglare();
-    if(fogmat == MAT_WATER || fogmat == MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
+    if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
 	renderpostfx();
 
 	glDisable(GL_TEXTURE_2D);

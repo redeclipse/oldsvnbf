@@ -71,7 +71,7 @@ struct QuadNode
 	}
 };
 
-void renderripples(materialsurface &m, Texture *tex, float scale, float offset, uchar mat)
+void renderwaterfall(materialsurface &m, Texture *tex, float scale, float offset, uchar mat)
 {
 	float xf = 8.0f/(tex->xs*scale);
 	float yf = 8.0f/(tex->ys*scale);
@@ -89,9 +89,6 @@ void renderripples(materialsurface &m, Texture *tex, float scale, float offset, 
 		case MAT_LAVA:
 			t /= 2000.0f;
 			d /= 3000.0f;
-			break;
-		case MAT_GLASS:
-			t = d = 1000.0f;
 			break;
 	}
     float wave = m.ends&2 ? (vertwater ? WATER_AMPLITUDE*sinf(t)-WATER_OFFSET : -WATER_OFFSET) : 0;
@@ -329,12 +326,6 @@ struct waterinfo
 	double depth, area;
 };
 
-void preloadglassshaders()
-{
-    extern int glassenv;
-   useshaderbyname(glassenv && hasCM ? "glassenv" : "glass");
-}
-
 void setupmaterials(int start, int len)
 {
     int hasmat = 0;
@@ -395,6 +386,18 @@ void setupmaterials(int start, int len)
 					o[dim^1] += lusize;
 				}
 			}
+			else if(m.material==MAT_GLASS)
+			{
+				if(!hasCM) m.envmap = EMID_NONE;
+				else
+				{
+					int dim = dimension(m.orient);
+					vec center(m.o.tovec());
+					center[R[dim]] += m.rsize/2;
+					center[C[dim]] += m.csize/2;
+					m.envmap = closestenvmap(center);
+				}
+			}
             if(m.material&MATF_VOLUME) hasmat |= 1<<m.material;
 		}
 	}
@@ -425,11 +428,7 @@ void setupmaterials(int start, int len)
         useshaderbyname("lavaglare");
         lookupmaterialslot(MAT_LAVA);
     }
-    if(hasmat&(1<<MAT_GLASS))
-    {
-        preloadglassshaders();
-        lookupmaterialslot(MAT_GLASS);
-    }
+    if(hasmat&(1<<MAT_GLASS)) useshaderbyname("glass");
 }
 
 VARP(showmat, 0, 1, 1);
@@ -531,12 +530,28 @@ void rendermatgrid(vector<materialsurface *> &vismats)
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 }
 
-bvec glasscol(0x20, 0x60, 0xF0);
-HVARFW(glasscolour, 0, 0x2060F0, 0xFFFFFF,
+VARP(glassenv, 0, 1, 1);
+
+void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offset)
 {
-    glasscol = bvec((glasscolour>>16)&0xFF, (glasscolour>>8)&0xFF, glasscolour&0xFF);
-});
-VARFP(glassenv, 0, 1, 1, preloadglassshaders());
+	int dim = dimension(orient), c = C[dim], r = R[dim];
+	loopi(4)
+	{
+		int coord = fv[orient][i];
+		vec v(x, y, z);
+		v[c] += cubecoords[coord][c]/8*csize;
+		v[r] += cubecoords[coord][r]/8*rsize;
+		v[dim] += dimcoord(orient) ? -offset : offset;
+
+		vec reflect(v);
+		reflect.sub(camera1->o);
+		reflect[dim] = -reflect[dim];
+
+        glTexCoord3f(reflect.x, reflect.y, reflect.z);
+		glVertex3fv(v.v);
+	}
+	xtraverts += 4;
+}
 
 VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
 
@@ -548,14 +563,13 @@ void rendermaterials()
 
 	glDisable(GL_CULL_FACE);
 
-	Slot &wslot = lookupmaterialslot(MAT_WATER), &lslot = lookupmaterialslot(MAT_LAVA), &gslot = lookupmaterialslot(MAT_GLASS);
-    uchar wcol[4] = { watercol[0], watercol[1], watercol[2], 192 },
-          wfcol[4] = { waterfallcol[0], waterfallcol[1], waterfallcol[2], 192 },
-          glcol[4] = { glasscol[0], glasscol[1], glasscol[2], 192 };
+	Slot &wslot = lookupmaterialslot(MAT_WATER), &lslot = lookupmaterialslot(MAT_LAVA);
+    uchar wcol[4] = { watercol[0], watercol[1], watercol[2], 192 }, wfcol[4] = { waterfallcol[0], waterfallcol[1], waterfallcol[2], 192 };
     if(!wfcol[0] && !wfcol[2] && !wfcol[2]) memcpy(wfcol, wcol, 3);
 	int lastorient = -1, lastmat = -1;
 	GLenum textured = GL_TEXTURE_2D;
-    bool begin = false, depth = true, blended = false, overbright = false, usedcamera = false, usedwaterfall = false, usedglass = false;
+    bool begin = false, depth = true, blended = false, overbright = false, usedcamera = false, usedwaterfall = false;
+    ushort envmapped = EMID_NONE;
     static const vec normals[6] =
     {
         vec(-1, 0, 0),
@@ -574,7 +588,7 @@ void rendermaterials()
 	{
 		materialsurface &m = *vismats[editmode && showmat && !envmapping ? vismats.length()-1-i : i];
         int curmat = !editmode || !showmat || envmapping || m.material&MAT_EDIT ? m.material : m.material|MAT_EDIT;
-		if(lastmat!=curmat || lastorient!=m.orient)
+		if(lastmat!=curmat || lastorient!=m.orient || (curmat==MAT_GLASS && envmapped && m.envmap != envmapped))
 		{
 			int fogtype = lastfogtype;
 			switch(curmat)
@@ -598,7 +612,7 @@ void rendermaterials()
                         else if(renderpath==R_FIXEDFUNCTION || ((!waterfallrefract || reflecting || refracting) && (!hasCM || !waterfallenv)))
                         {
                             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                            glColor4ubv(wfcol);
+                            glColor3ubv(wfcol);
                             foggedshader->set();
                             fogtype = 0;
                             if(!blended) { glEnable(GL_BLEND); blended = true; }
@@ -606,7 +620,7 @@ void rendermaterials()
                         }
                         else
                         {
-                            glColor4ubv(wfcol);
+                            glColor3ubv(wfcol);
                             fogtype = 1;
 
                             if(!usedcamera)
@@ -669,8 +683,10 @@ void rendermaterials()
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					int subslot = m.orient==O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(subslot) ? wslot.sts[subslot].t->id : notexture->id);
+                    {
+                        int subslot = m.orient==O_TOP ? 0 : 1;
+                        glBindTexture(GL_TEXTURE_2D, wslot.sts.inrange(subslot) ? wslot.sts[subslot].t->id : notexture->id);
+                    }
 					break;
 				}
 				case MAT_LAVA:
@@ -701,82 +717,71 @@ void rendermaterials()
 						glEnable(GL_TEXTURE_2D);
 						textured = GL_TEXTURE_2D;
 					}
-					int subslot = m.orient==O_TOP ? 0 : 1;
-					glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(subslot) ? lslot.sts[subslot].t->id : notexture->id);
+                    {
+                        int subslot = m.orient==O_TOP ? 0 : 1;
+                        glBindTexture(GL_TEXTURE_2D, lslot.sts.inrange(subslot) ? lslot.sts[subslot].t->id : notexture->id);
+                    }
 					break;
 				}
 				case MAT_GLASS:
-				{
-					if(lastmat==MAT_GLASS && lastorient!=O_TOP && m.orient!=O_TOP) break;
+					if((m.envmap==EMID_NONE || !glassenv || (envmapped==m.envmap && textured==GL_TEXTURE_CUBE_MAP_ARB)) && lastmat==MAT_GLASS) break;
 					if(begin) { glEnd(); begin = false; }
-					if(lastmat!=MAT_GLASS)// || (lastorient==O_TOP)!=(m.orient==O_TOP))
+					if(m.envmap!=EMID_NONE && glassenv)
 					{
-						if(overbright) { resettmu(0); overbright = false; }
-						if(renderpath==R_FIXEDFUNCTION || ((reflecting || refracting) && (!hasCM || !glassenv)))
-                        {
-                            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                            glColor4ubv(glcol);
-                            foggedshader->set();
-                            fogtype = 0;
-                            if(!blended) { glEnable(GL_BLEND); blended = true; }
-                            if(depth) { glDepthMask(GL_FALSE); depth = false; }
-                        }
-                        else
-                        {
-                            glColor4ubv(glcol);
-                            fogtype = 1;
-
-                            if(!usedcamera)
+						if(textured!=GL_TEXTURE_CUBE_MAP_ARB)
+						{
+							if(textured) glDisable(textured);
+							glEnable(GL_TEXTURE_CUBE_MAP_ARB);
+							textured = GL_TEXTURE_CUBE_MAP_ARB;
+						}
+						if(envmapped!=m.envmap)
+						{
+							glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(m.envmap));
+                            if(renderpath!=R_FIXEDFUNCTION && !usedcamera)
                             {
                                 setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
                                 usedcamera = true;
                             }
-
-							if(glassenv && hasCM)
+							envmapped = m.envmap;
+						}
+					}
+					if(lastmat!=MAT_GLASS)
+					{
+						if(!blended) { glEnable(GL_BLEND); blended = true; }
+						if(overbright) { resettmu(0); overbright = false; }
+						if(depth) { glDepthMask(GL_FALSE); depth = false; }
+						if(m.envmap!=EMID_NONE && glassenv)
+						{
+							if(renderpath==R_FIXEDFUNCTION)
 							{
-								static Shader *glassenvshader = NULL;
-								if(!glassenvshader) glassenvshader = lookupshaderbyname("glassenv");
-								glassenvshader->set();
+								glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+								glColor4f(0.8f, 0.9f, 1.0f, 0.25f);
+								fogtype = 1;
 							}
 							else
 							{
-								static Shader *glassshader = NULL;
-								if(!glassshader) glassshader = lookupshaderbyname("glass");
-								glassshader->set();
+								glBlendFunc(GL_ONE, GL_SRC_ALPHA);
+								glColor3f(0, 0.5f, 1.0f);
 							}
-							glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-							if(!blended) { glEnable(GL_BLEND); blended = true; }
-							if(depth) { glDepthMask(GL_FALSE); depth = false; }
-
-                            if(!usedglass)
-                            {
-                                Texture *dudv = gslot.sts.inrange(2) ? gslot.sts[2].t : notexture;
-                                float scale = 8.0f/(dudv->ys*gslot.scale);
-                                setlocalparamf("dudvoffset", SHPARAM_PIXEL, 1, 0, scale*16);
-
-                                glActiveTexture_(GL_TEXTURE1_ARB);
-                                glBindTexture(GL_TEXTURE_2D, gslot.sts.inrange(1) ? gslot.sts[1].t->id : notexture->id);
-                                glActiveTexture_(GL_TEXTURE2_ARB);
-                                glBindTexture(GL_TEXTURE_2D, gslot.sts.inrange(2) ? gslot.sts[2].t->id : notexture->id);
-                                if(hasCM && glassenv)
-                                {
-                                    glActiveTexture_(GL_TEXTURE3_ARB);
-                                    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(wslot));
-                                }
-                                glActiveTexture_(GL_TEXTURE0_ARB);
-                                usedglass = true;
-                            }
-                        }
-                    }
-					if(textured!=GL_TEXTURE_2D)
-					{
-						if(textured) glDisable(textured);
-						glEnable(GL_TEXTURE_2D);
-						textured = GL_TEXTURE_2D;
+							static Shader *glassshader = NULL;
+							if(!glassshader) glassshader = lookupshaderbyname("glass");
+							glassshader->set();
+						}
+						else
+						{
+							if(textured)
+							{
+								glDisable(textured);
+								textured = 0;
+							}
+							glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+							glColor3f(0.3f, 0.15f, 0.0f);
+							foggednotextureshader->set();
+							fogtype = 0;
+						}
 					}
-                    glBindTexture(GL_TEXTURE_2D, gslot.sts.inrange(0) ? gslot.sts[0].t->id : notexture->id);
 					break;
-				}
+
 				default:
 				{
 					if(lastmat==curmat) break;
@@ -821,7 +826,7 @@ void rendermaterials()
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
                     if(renderpath!=R_FIXEDFUNCTION && hasCM && waterfallenv) glNormal3fv(normals[m.orient].v);
                     if(wslot.sts.inrange(1))
-						renderripples(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER);
+						renderwaterfall(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER);
 				}
 				break;
 
@@ -836,15 +841,19 @@ void rendermaterials()
 				{
 					if(!begin) { glBegin(GL_QUADS); begin = true; }
                     if(lslot.sts.inrange(1))
-						renderripples(m, lslot.sts[1].t, lslot.scale, 0.1f, MAT_LAVA);
+						renderwaterfall(m, lslot.sts[1].t, lslot.scale, 0.1f, MAT_LAVA);
 				}
 				break;
 
 			case MAT_GLASS:
 				if(!begin) { glBegin(GL_QUADS); begin = true; }
-				if(renderpath!=R_FIXEDFUNCTION && hasCM && glassenv) glNormal3fv(normals[m.orient].v);
-				if(gslot.sts.inrange(0))
-					renderripples(m, gslot.sts[0].t, gslot.scale, 0.1f, MAT_GLASS);
+				if(m.envmap!=EMID_NONE && glassenv)
+				{
+                    if(renderpath!=R_FIXEDFUNCTION) glNormal3fv(normals[m.orient].v);
+					drawglass(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f);
+				}
+				else drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f);
+				break;
 
 			default:
 				if(!begin) { glBegin(GL_QUADS); begin = true; }
