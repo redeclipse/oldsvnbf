@@ -512,6 +512,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					if(c->type == IRCCT_AUTO)
 						ircprintf(n, 4, w[g+2], "\fbWaiting 5 mins to rejoin %s", c->name);
 				}
+				break;
 			}
 			default: break;
 		}
