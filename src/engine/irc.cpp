@@ -500,6 +500,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					concatstring(n->nick, "_");
 					ircsend(n, "NICK %s", n->nick);
 				}
+				break;
 			}
 			case 474:
 			{
