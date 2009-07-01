@@ -753,21 +753,21 @@ namespace server
 		loopi(TEAM_LAST+1) spawns[i].reset();
 		if(update)
 		{
-			int numt = numteams(gamemode, mutators);
-			bool teamspawns = m_team(gamemode, mutators) && !m_stf(gamemode);
-			loopv(sents) if(sents[i].type == PLAYERSTART && (!teamspawns || isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)))
+			int numt = numteams(gamemode, mutators), cplayers = 0;
+			if(m_team(gamemode, mutators))
 			{
-				spawns[teamspawns ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
-				totalspawns++;
-			}
-			if(totalspawns && teamspawns)
-			{ // reset if a team has no spawns, or if we're in dm/stf
+				loopv(sents) if(sents[i].type == PLAYERSTART && (m_stf(gamemode) || isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)))
+				{
+					spawns[!m_stf(gamemode) ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
+					totalspawns++;
+				}
 				loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
 				{
 					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
 					break;
 				}
+				if(totalspawns) cplayers = totalspawns/numt;
 			}
 			if(!totalspawns)
 			{ // use all spawns
@@ -776,6 +776,7 @@ namespace server
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
+				cplayers = totalspawns;
 			}
 			if(!totalspawns)
 			{ // we can cheat and use weapons for spawns
@@ -784,12 +785,12 @@ namespace server
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
+				cplayers = totalspawns;
 			}
 			nplayers = players;
-			if(nplayers <= 0) nplayers = totalspawns/2;
+			if(nplayers <= 0) nplayers = cplayers;
 			if(m_team(gamemode, mutators))
 			{
-				if(m_multi(gamemode, mutators)) nplayers += nplayers/2;
 				int offt = nplayers%numt;
 				if(offt) nplayers += numt-offt;
 			}
