@@ -301,6 +301,7 @@ void addserver(const char *name, int port, int qport)
 	if(newserver(name, port, qport) && verbose >= 2)
 		conoutf("added server %s (%d,%d)", name, port, qport);
 }
+ICOMMAND(addserver, "sii", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
 
 VAR(searchlan, 0, 0, 1);
 
@@ -417,21 +418,17 @@ void refreshservers()
 		pingservers();
 }
 
-int showservers(g3d_gui *cgui)
-{
-	refreshservers();
-    servers.sort(sicompare);
-	return client::serverbrowser(cgui);
-}
+bool reqmaster = false;
 
 void clearservers()
 {
     resolverclear();
     servers.deletecontentsp();
-	//if(servertype)
-	//	addserver("localhost", serverport, serverqueryport);
 	lastinfo = 0;
+	reqmaster = false;
 }
+
+COMMAND(clearservers, "");
 
 void updatefrommaster()
 {
@@ -446,16 +443,21 @@ void updatefrommaster()
 	else conoutf("master server not replying");
 	refreshservers();
 }
-
-ICOMMAND(addserver, "sii", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
-COMMAND(clearservers, "");
 COMMAND(updatefrommaster, "");
 
-void writeservercfg()
+int showservers(g3d_gui *cgui)
 {
-	stream *f = openfile("servers.cfg", "w");
-	if(!f) return;
-	loopvrev(servers) f->printf("addserver %s %d %d\n", servers[i]->name, servers[i]->port, servers[i]->qport);
-    delete f;
+	if(!servers.empty())
+	{
+		reqmaster = false;
+		refreshservers();
+		servers.sort(sicompare);
+		return client::serverbrowser(cgui);
+	}
+	else if(!reqmaster)
+	{
+		updatefrommaster();
+		reqmaster = false;
+	}
+	return -1;
 }
-

@@ -460,7 +460,6 @@ extern void localdisconnect();
 
 // serverbrowser
 extern void addserver(const char *name, int port, int qport);
-extern void writeservercfg();
 
 // client
 extern void servertoclient(int chan, uchar *buf, int len);

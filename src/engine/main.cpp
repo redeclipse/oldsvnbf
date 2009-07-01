@@ -75,7 +75,6 @@ void quit()					 // normal exit
 {
 	extern void writeinitcfg();
 	writeinitcfg();
-	writeservercfg();
 	abortconnect();
 	disconnect(1);
 	writecfg();
@@ -712,16 +711,11 @@ VARFP(clockfix, 0, 0, 1, clockreset());
 
 void rehash(bool reload)
 {
-	if(reload)
-	{
-		writeservercfg();
-		writecfg();
-	}
+	if(reload) writecfg();
 
 	persistidents = false;
 
 	execfile("defaults.cfg");
-	execfile("servers.cfg", false);
 
 	persistidents = true;
 
