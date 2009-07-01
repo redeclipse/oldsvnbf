@@ -1729,7 +1729,7 @@ struct texturegui : g3d_callback
 			g.space(1);
 
 			g.pushlist();
-			g.strut(128);
+			g.strut(134);
 			defformatstring(title)("texture slot #%d", menutex);
 			g.title(title, 0xFFFFAA);
 			g.space(1);
@@ -1755,8 +1755,9 @@ struct texturegui : g3d_callback
 					g.pushlist();
 					g.text("setshader", 0xAAFFAA);
 					g.space(1);
-					char *w = g.field("setshader_input", GUI_TEXT_COLOR, -118, 0, slot.shader->name, EDITORREADONLY);
-					if(w && *w) { copystring(slot.shader->name, w); g.fieldedit("setshader_input"); }
+					defformatstring(input)("setshader_%d_input", menutex);
+					char *w = g.field(input, GUI_TEXT_COLOR, -124, 0, slot.shader->name, EDITORREADONLY);
+					if(w && *w) { copystring(slot.shader->name, w); g.fieldedit(input); }
 					g.poplist();
 				}
 				if(!slot.params.empty()) g.space(1);
@@ -1766,14 +1767,14 @@ struct texturegui : g3d_callback
 					g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
 					g.space(1);
 					defformatstring(index)("%d", slot.params[j].index);
-					defformatstring(input)("param_%d_input", j);
+					defformatstring(input)("param_%d_%d_input", menutex, j);
 					char *w = g.field(input, GUI_TEXT_COLOR, -3, 0, index, EDITORFOREVER);
 					if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
 					loopk(4)
 					{
 						g.space(1);
 						defformatstring(index)("%f", slot.params[j].val[k]);
-						defformatstring(input)("param_%d_%d_input", j, k);
+						defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
 						char *w = g.field(input, GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
 					}
@@ -1787,39 +1788,39 @@ struct texturegui : g3d_callback
 					{
 						g.space(1);
 						defformatstring(index)("%s", findtexturename(slot.sts[j].type));
-						defformatstring(input)("texture_%d_name_input", j);
-						char *w = g.field(input, GUI_TEXT_COLOR, -2, 0, index, EDITORFOREVER);
+						defformatstring(input)("texture_%d_%d_name_input", menutex, j);
+						char *w = g.field(input, GUI_TEXT_COLOR, -3, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
 					}
 					{
 						g.space(1);
-						defformatstring(input)("texture_%d_lname_input", j);
-						char *w = g.field(input, GUI_TEXT_COLOR, j ? -116 : -94, 0, slot.sts[j].lname, EDITORFOREVER);
+						defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
+						char *w = g.field(input, GUI_TEXT_COLOR, j ? -121 : -94, 0, slot.sts[j].lname, EDITORFOREVER);
 						if(w && *w) { copystring(slot.sts[j].lname, w); g.fieldedit(input); }
 					}
 					if(!j)
 					{
 						{
 							defformatstring(index)("%d", slot.rotation);
-							defformatstring(input)("texture_%d_rotation_input", j);
-							char *w = g.field(input, GUI_TEXT_COLOR, -2, 0, index, EDITORFOREVER);
+							defformatstring(input)("texture_%d_%d_rotation_input", menutex, j);
+							char *w = g.field(input, GUI_TEXT_COLOR, -3, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.rotation = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%d", slot.xoffset);
-							defformatstring(input)("texture_%d_xoffset_input", j);
-							char *w = g.field(input, GUI_TEXT_COLOR, -2, 0, index, EDITORFOREVER);
+							defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
+							char *w = g.field(input, GUI_TEXT_COLOR, -4, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%d", slot.yoffset);
-							defformatstring(input)("texture_%d_yoffset_input", j);
-							char *w = g.field(input, GUI_TEXT_COLOR, -2, 0, index, EDITORFOREVER);
+							defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
+							char *w = g.field(input, GUI_TEXT_COLOR, -4, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%f", slot.scale);
-							defformatstring(input)("texture_%d_scale_input", j);
+							defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
 							char *w = g.field(input, GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
 						}
@@ -1832,14 +1833,16 @@ struct texturegui : g3d_callback
 				{
 					g.space(1);
 					defformatstring(index)("%f", slot.scrollS * 1000.0f);
-					char *w = g.field("texscroll_x_input", GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
-					if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit("texscroll_x_input"); }
+					defformatstring(input)("texscroll_%d_x_scale_input", menutex);
+					char *w = g.field(input, GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
+					if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
 				}
 				{
 					g.space(1);
 					defformatstring(index)("%f", slot.scrollT * 1000.0f);
-					char *w = g.field("texscroll_y_input", GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
-					if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit("texscroll_y_input"); }
+					defformatstring(input)("texscroll_%d_y_scale_input", menutex);
+					char *w = g.field(input, GUI_TEXT_COLOR, -12, 0, index, EDITORFOREVER);
+					if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
 				}
 				g.poplist();
 			}
