@@ -78,7 +78,7 @@ namespace ctf
 			}
 			if(hasflag >= 0 || !takenflags.empty())
 			{
-				pushfont("emphasis");
+				pushfont("super");
 				if(hasflag >= 0) ty += draw_textx("You have the \fs%s%s\fS flag!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, teamtype[hasflag].chat, teamtype[hasflag].name);
 				if(!takenflags.empty()) ty += draw_textx("Flag has been taken!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 				if(!droppedflags.empty()) ty += draw_textx("Flag has been dropped!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);

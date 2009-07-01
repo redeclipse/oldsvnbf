@@ -16,7 +16,7 @@ namespace hud
 
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
-	FVARP(statblend, 0, 0.75f, 1);
+	FVARP(statblend, 0, 0.6f, 1);
 
 	VARP(showfps, 0, 1, 3);
 
@@ -35,15 +35,15 @@ namespace hud
 	VARP(consize, 0, 6, 100);
 	VARP(contime, 0, 15000, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
-	FVARP(conblend, 0, 0.85f, 1);
+	FVARP(conblend, 0, 0.8f, 1);
 	VARP(chatconsize, 0, 6, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
-	FVARP(chatconblend, 0, 0.85f, 1);
+	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
 	FVARP(noticeoffset, 0.f, 0.35f, 1.f);
-	FVARP(noticeblend, 0.f, 0.75f, 1.f);
+	FVARP(noticeblend, 0.f, 0.5f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
 	TVAR(inputtex, "textures/menu", 3);
@@ -65,7 +65,7 @@ namespace hud
 	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.75f, 1);
+	FVARP(damageblend, 0, 0.8f, 1);
 
 	VARP(showdamagecompass, 0, 1, 1);
 	VARP(damagecompassfade, 1, 1000, 10000);
@@ -76,17 +76,17 @@ namespace hud
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
-	FVARP(indicatorblend, 0, 0.75f, 1);
+	FVARP(indicatorblend, 0, 0.8f, 1);
 	VARP(teamindicator, 0, 2, 2);
 	FVARP(teamindicatorsize, 0, 0.06f, 1000);
-	FVARP(teamindicatorblend, 0, 0.5f, 1);
+	FVARP(teamindicatorblend, 0, 0.3f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.75f, 1);
+	FVARP(crosshairblend, 0, 0.6f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
 	TVAR(relativecursortex, "textures/crosshair", 3);
@@ -137,7 +137,7 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
-	FVARP(clipblend, 0, 0.5f, 1000);
+	FVARP(clipblend, 0, 0.4f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -151,11 +151,11 @@ namespace hud
 	VARP(showradar, 0, 2, 2);
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardblend, 0, 0.75f, 1);
+	FVARP(radarcardblend, 0, 0.6f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
-	FVARP(radarblipblend, 0, 0.75f, 1);
+	FVARP(radarblipblend, 0, 0.6f, 1);
 	FVARP(radarflagblend, 0, 1.f, 1);
-	FVARP(radaritemblend, 0, 0.75f, 1);
+	FVARP(radaritemblend, 0, 0.8f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	FVARP(radaroffset, 0, 0.075f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
@@ -523,16 +523,9 @@ namespace hud
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			drawpointers(w, h);
 			pushfont("super");
-			int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend), tr = 255, tg = 255, tb = 255;
-			if(commandmillis >= 0)
+			if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
 			{
-				pushfont("emphasis");
-				ty += draw_textx(commandbuf, tx-FONTW/2, ty, 255, 255, 255, tf, TEXT_CENTERED, commandpos >= 0 ? commandpos : strlen(commandbuf), hudwidth/3*2);
-				popfont();
-			}
-			else if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
-			{
-				tf = int(tf*noticeblend);
+				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255;
 				if(teamnotices) skewcolour(tr, tg, tb);
 				if(lastmillis-game::maptime <= titlecard)
 				{
@@ -739,7 +732,7 @@ namespace hud
 		bool full = fullconsole || commandmillis >= 0;
 		if(full) numl = fullconsize;
 		else numl = consize;
-		pushfont("hud");
+		pushfont("console");
 		if(type == CON_CHAT)
 		{
 			numl = chatconsize;
@@ -766,6 +759,12 @@ namespace hud
 			}
 			int z = y;
 			loopvrev(refs) z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			if(commandmillis >= 0)
+			{
+				pushfont("command");
+				z += draw_textx("> %s", concenter ? x+s/2-FONTW*3 : x, z, 255, 255, 255, int(255*fullconblend*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, (commandpos >= 0 ? commandpos : strlen(commandbuf))+2, s, commandbuf);
+				popfont();
+			}
 		}
 		popfont();
 	}

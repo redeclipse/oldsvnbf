@@ -1712,10 +1712,9 @@ struct texturegui : g3d_callback
 				loop(w, thumbwidth)
 				{
 					int ti = (i*thumbheight+h)*thumbwidth+w;
-					Texture *tex = textureload("textures/nothumb", 3);
 					if(ti<curtexnum)
 					{
-                        Texture *glowtex = NULL, *layertex = NULL;
+						Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
                         Slot &slot = lookuptexture(ti, false);
                         if(slot.sts.empty()) continue;
                         else if(slot.loaded)
@@ -1733,7 +1732,7 @@ struct texturegui : g3d_callback
                         if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture))
                             edittex(ti);
 					}
-					else g.texture(tex, thumbsize); //create an empty space
+					else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
 				}
 				g.poplist();
 			}
@@ -1770,8 +1769,7 @@ void showtexgui(int *n)
     gui.showtextures(*n==0 ? !gui.menuon : *n==1);
 }
 
-// 0/noargs = toggle, 1 = on, other = off - will autoclose if too far away or exit editmode
-COMMAND(showtexgui, "i");
+COMMAND(showtexgui, "i"); // 0/noargs = toggle, 1 = on, other = off - will autoclose when exiting editmode
 
 void render_texture_panel(int w, int h)
 {
