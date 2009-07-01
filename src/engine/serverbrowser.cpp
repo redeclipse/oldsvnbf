@@ -457,7 +457,7 @@ int showservers(g3d_gui *cgui)
 	else if(!reqmaster)
 	{
 		updatefrommaster();
-		reqmaster = false;
+		reqmaster = true;
 	}
 	return -1;
 }
