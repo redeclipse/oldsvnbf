@@ -476,7 +476,7 @@ extern gametypes gametype[], mutstype[];
 #define m_speedtime(a)		(int(m_speedlerp(a)))
 
 #define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
-#define weapcarry(a,b)		(b > 0 && a != b && weaptype[a].reloads)
+#define weapcarry(a,b)		(b >= 0 && a != b && weaptype[a].reloads)
 #define weapattr(a,b)		(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
 
 // network messages codes, c2s, c2c, s2c
