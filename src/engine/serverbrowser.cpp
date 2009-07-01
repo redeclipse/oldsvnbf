@@ -447,17 +447,12 @@ COMMAND(updatefrommaster, "");
 
 int showservers(g3d_gui *cgui)
 {
-	if(!servers.empty())
-	{
-		reqmaster = false;
-		refreshservers();
-		servers.sort(sicompare);
-		return client::serverbrowser(cgui);
-	}
-	else if(!reqmaster)
+	if(servers.empty() && !reqmaster)
 	{
 		updatefrommaster();
 		reqmaster = true;
 	}
-	return -1;
+	refreshservers();
+	servers.sort(sicompare);
+	return client::serverbrowser(cgui);
 }

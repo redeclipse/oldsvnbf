@@ -754,22 +754,28 @@ namespace server
 		if(update)
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
-			if(m_team(gamemode, mutators))
+			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
+			loopv(sents) if(sents[i].type == PLAYERSTART)
 			{
-				loopv(sents) if(sents[i].type == PLAYERSTART && isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST))
+				if(!teamgame)
 				{
-					spawns[!m_stf(gamemode) ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
-					totalspawns++;
+					if(sents[i].attr[1] != TEAM_NEUTRAL) continue;
 				}
+				else if(!isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)) continue;
+				spawns[m_team(gamemode, mutators) && !m_stf(gamemode) ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
+				totalspawns++;
+			}
+			if(teamgame)
+			{
 				loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
 				{
 					loopj(TEAM_LAST+1) spawns[j].reset();
 					totalspawns = 0;
 					break;
 				}
-				if(totalspawns) cplayers = totalspawns/numt;
 			}
-			if(!totalspawns)
+			if(totalspawns > 0) cplayers = totalspawns/numt;
+			else
 			{ // use all spawns
 				loopv(sents) if(sents[i].type == PLAYERSTART)
 				{
