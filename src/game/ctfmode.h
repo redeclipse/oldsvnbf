@@ -49,17 +49,21 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
 				flag &f = flags[k];
-				if(isctfhome(f, ci->team) && f.owner<0 && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius/2)
+				if(isctfhome(f, ci->team) && (f.owner < 0 || f.owner == ci->clientnum) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius/2)
 				{
-					returnflag(i);
-					ci->state.flags++;
-					int score = addscore(ci->team);
-					sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
-					if(GVAR(ctflimit) && score >= GVAR(ctflimit))
+					ctfstate::returnflag(i);
+					if(flags[i].team != ci->team)
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fccpature limit has been reached!");
-						startintermission();
+						ci->state.flags++;
+						int score = addscore(ci->team);
+						sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
+						if(GVAR(ctflimit) && score >= GVAR(ctflimit))
+						{
+							sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fccpature limit has been reached!");
+							startintermission();
+						}
 					}
+					else sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
 				}
             }
         }
@@ -67,21 +71,12 @@ struct ctfservmode : ctfstate, servmode
 
     void takeflag(clientinfo *ci, int i)
     {
-        if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || !(flags[i].base&BASE_FLAG)) return;
+        if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team) return;
 		flag &f = flags[i];
-		if(f.team == ci->team)
-		{
-			if(!f.droptime || f.owner >= 0) return;
-			ctfstate::returnflag(i);
-			sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
-		}
-		else
-		{
-			if(f.owner >= 0) return;
-			loopvj(flags) if(flags[j].owner == ci->clientnum) return;
-			ctfstate::takeflag(i, ci->clientnum);
-			sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
-		}
+		if(!(f.base&BASE_FLAG) || (f.team == ci->team && !f.droptime) || f.owner >= 0) return;
+		loopvj(flags) if(flags[j].owner == ci->clientnum) return;
+		ctfstate::takeflag(i, ci->clientnum);
+		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
     }
 
     void update()
@@ -92,7 +87,7 @@ struct ctfservmode : ctfstate, servmode
             flag &f = flags[i];
             if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= RESETFLAGTIME)
             {
-                returnflag(i);
+                ctfstate::returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
             }
         }
