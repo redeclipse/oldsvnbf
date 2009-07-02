@@ -1586,7 +1586,7 @@ namespace entities
 
 	void importwaypoints(int mtype, int gver)
 	{
-		const char *mname = getmapname();
+		const char *mname = mapname;
 		if(!mname || !*mname) return;
 		string wptname;
 		formatstring(wptname)("%s.wpt", mname);

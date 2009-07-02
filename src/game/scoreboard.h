@@ -199,8 +199,8 @@ namespace hud
 		{
 			g.start(menustart, 0.03f, NULL, false);
 			int numgroups = groupplayers();
-
-			g.textf("%s (%s)", 0xFFFFFF, NULL, getmaptitle(), getmapname());
+			if(*maptitle) g.textf("%s (%s)", 0xFFFFFF, NULL, maptitle, mapname);
+			else g.textf("untitled (%s)", 0xFFFFFF, NULL, mapname);
 			g.pushlist();
 			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
 			if((m_fight(game::gamemode) || client::demoplayback) && game::minremain >= 0)
@@ -241,7 +241,7 @@ namespace hud
 					if(pen)
 						g.textf("penalty for missed shots: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
 
-					defformatstring(aname)("bestscore_%s", getmapname());
+					defformatstring(aname)("bestscore_%s", mapname);
 					const char *bestsc = getalias(aname);
 					int bestscore = *bestsc ? atoi(bestsc) : score;
 					if(score<bestscore) bestscore = score;

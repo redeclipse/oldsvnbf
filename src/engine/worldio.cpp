@@ -12,7 +12,7 @@ sometype mapdirs[] = {
 	{ "base", MAP_OCTA },
 };
 
-string mapfile, mapname;
+char *mapfile = NULL, *mapname = NULL;
 VAR(maptype, 1, -1, -1);
 SVARW(maptitle, "");
 
@@ -20,14 +20,18 @@ void setnames(const char *fname, int type)
 {
 	maptype = type >= 0 || type <= MAP_MAX-1 ? type : MAP_BFGZ;
 
-	string fn;
+	string fn, mn, mf;
 	if(fname != NULL) formatstring(fn)("%s", fname);
 	else formatstring(fn)("%s/untitled", mapdirs[maptype].name);
 
-	if(strpbrk(fn, "/\\")) copystring(mapname, fn);
-	else formatstring(mapname)("%s/%s", mapdirs[maptype].name, fn);
+	if(strpbrk(fn, "/\\")) copystring(mn, fn);
+	else formatstring(mn)("%s/%s", mapdirs[maptype].name, fn);
+	if(mapname) delete[] mapname;
+	mapname = newstring(mn);
 
-	formatstring(mapfile)("%s%s", mapname, mapexts[maptype].name);
+	formatstring(mf)("%s%s", mapname, mapexts[maptype].name);
+	if(mapfile) delete[] mapfile;
+	mapfile = newstring(mf);
 }
 
 enum { OCTSAV_CHILDREN = 0, OCTSAV_EMPTY, OCTSAV_SOLID, OCTSAV_NORMAL, OCTSAV_LODCUBE };
@@ -1190,11 +1194,9 @@ void writeobj(char *name)
 COMMAND(writeobj, "s");
 
 int getworldsize() { return hdr.worldsize; }
-char *getmapname() { return mapname; }
-ICOMMAND(mapname, "", (void), result(getmapname()));
+ICOMMAND(mapname, "", (void), result(mapname));
 int getmapversion() { return hdr.version; }
 ICOMMAND(mapversion, "", (void), intret(getmapversion()));
 int getmaprevision() { return hdr.revision; }
 ICOMMAND(maprevision, "", (void), intret(getmaprevision()));
-char *getmaptitle() { return maptitle; }
-ICOMMAND(maptitle, "", (void), result(getmaptitle()));
+

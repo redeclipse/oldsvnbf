@@ -505,7 +505,7 @@ namespace client
 			case SV_SENDMAPSHOT:
 			case SV_SENDMAPFILE:
 			{
-				const char *reqmap = getmapname(), *reqext = "xxx";
+				const char *reqmap = mapname, *reqext = "xxx";
 				if(type == SV_SENDMAPCONFIG) reqext = "cfg";
 				else if(type == SV_SENDMAPSHOT) reqext = "png";
 				else if(type == SV_SENDMAPFILE) reqext = "bgz";
@@ -583,7 +583,7 @@ namespace client
 	void sendmap()
 	{
 		conoutf("\fmsending map...");
-		const char *reqmap = getmapname();
+		const char *reqmap = mapname;
 		if(!reqmap || !*reqmap) reqmap = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
 		defformatstring(reqfile)("%s%s", edit ? "temp/" : "", reqmap);

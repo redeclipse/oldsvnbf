@@ -112,7 +112,7 @@ namespace game
 	void start() { }
 
 	char *gametitle() { return server::gamename(gamemode, mutators); }
-	char *gametext() { return getmapname(); }
+	char *gametext() { return mapname; }
 
 	bool thirdpersonview(bool viewonly)
 	{
@@ -793,8 +793,7 @@ namespace game
 
 		if(*name)
 		{
-			const char *title = getmaptitle();
-			if(*title) conoutf("%s", title);
+			if(*maptitle) conoutf("%s", maptitle);
 			preload();
 		}
 		// reset perma-state
