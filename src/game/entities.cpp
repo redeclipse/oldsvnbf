@@ -968,7 +968,14 @@ namespace entities
 
 	void spawnplayer(gameent *d, int ent, bool recover, bool suicide)
 	{
-		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return;
+		if(ent >= 0 && ents.inrange(ent))
+		{
+			switch(ents[ent]->type)
+			{
+				case PLAYERSTART: if(tryspawn(d, ents[ent]->o, ents[ent]->attr[1], ents[ent]->attr[2])) return;
+				default: if(tryspawn(d, ents[ent]->o, rnd(360), 0)) return;
+			}
+		}
 		if(recover)
 		{
 			if(m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
