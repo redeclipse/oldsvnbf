@@ -660,7 +660,7 @@ namespace hud
 												break;
 											}
 										}
-										else if(e.type == TRIGGER && e.attr[2] == TA_ACT)
+										else if(e.type == TRIGGER && e.attr[2] == TA_ACTION)
 										{
 											ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey);
 											break;

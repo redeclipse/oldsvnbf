@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID				"bfa"
-#define GAMEVERSION			158
+#define GAMEVERSION			159
 #define DEMO_VERSION		GAMEVERSION
 
 #define MAXBOTS 100
@@ -60,8 +60,10 @@ enum								// entity types
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
-enum { TR_NONE = 0, TR_LINK, TR_SCRIPT, TR_MAX };
-enum { TA_NONE = 0, TA_AUTO, TA_ACT, TA_MAX };
+
+enum { TR_TOGGLE = 0, TR_LINK, TR_SCRIPT, TR_MAX };
+enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
+#define TRIGSTATE(a,b) (b ? !a : a)
 
 struct enttypes
 {
@@ -92,14 +94,14 @@ enttypes enttype[] = {
 			inttobit(TRIGGER),
 			inttobit(TRIGGER),
 			false,				"mapmodel",
-			{ "idx",	"yaw",		"pitch",	"roll",		"flags" }
+			{ "id",		"yaw",		"pitch",	"roll",		"flags" }
 	},
 	{
 		PLAYERSTART,	59,		0,		EU_NONE,
 			0,
 			0,
 			false,				"playerstart",
-			{ "yaw",	"team",		"id",			"",			"" }
+			{ "team",	"yaw",		"pitch",		"",			"" }
 	},
 	{
 		ENVMAP,			0,		0,		EU_NONE,
@@ -155,7 +157,7 @@ enttypes enttype[] = {
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"trigger",
-			{ "id",		"type",		"action",	"radius",	"" }
+			{ "id",		"type",		"action",	"radius",	"state" }
 	},
 	{
 		PUSHER,			58,		12,		EU_AUTO,
@@ -169,7 +171,7 @@ enttypes enttype[] = {
 			inttobit(FLAG),
 			0,
 			false,				"flag",
-			{ "id",		"team",		"yaw",		"pitch",	"" }
+			{ "team",	"yaw",		"pitch",	"",		"" }
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
@@ -1218,7 +1220,7 @@ namespace entities
 	extern void putitems(ucharbuf &p);
 	extern void execlink(gameent *d, int index, bool local, int ignore = -1);
 	extern void setspawn(int n, bool on);
-	extern bool tryspawn(dynent *d, const vec &o, float yaw = 0.f);
+	extern bool tryspawn(dynent *d, const vec &o, short yaw = 0, short pitch = 0);
 	extern void spawnplayer(gameent *d, int ent = -1, bool recover = false, bool suicide = false);
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);

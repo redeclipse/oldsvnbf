@@ -603,7 +603,7 @@ namespace server
 								p = i;
 								if(rotate == 1) c = i >= 0 && i < n-1 ? i+1 : 0;
 							}
-							DELETEP(maptxt);
+							DELETEA(maptxt);
 						}
 						if(p >= 0) break;
 					}
@@ -617,7 +617,7 @@ namespace server
 				if(mapidx)
 				{
 					copystring(mapchosen, mapidx);
-					DELETEP(mapidx);
+					DELETEA(mapidx);
 				}
 			}
 		}
@@ -761,10 +761,10 @@ namespace server
 				{
 					if(!k && m_team(gamemode, mutators))
 					{
-						if(!isteam(gamemode, mutators, sents[i].attr[1], TEAM_FIRST)) continue;
+						if(!isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
 					}
-					else if(sents[i].attr[1] != TEAM_NEUTRAL) continue;
-					spawns[!k && teamgame ? sents[i].attr[1] : TEAM_NEUTRAL].add(i);
+					else if(sents[i].attr[0] != TEAM_NEUTRAL) continue;
+					spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
 				if(!k && teamgame)
@@ -1194,7 +1194,7 @@ namespace server
 							if(strpbrk(maptxt, "/\\")) copystring(mapname, maptxt);
 							else formatstring(mapname)("maps/%s", maptxt);
 							if(!strcmp(maploc, mapname)) found = true;
-							DELETEP(maptxt);
+							DELETEA(maptxt);
 						}
 						if(found) break;
 					}
@@ -3081,7 +3081,7 @@ namespace server
 						bool commit = false;
 						switch(sents[ent].attr[1])
 						{
-							case TR_NONE:
+							case TR_TOGGLE:
 							{
 								if(!sents[ent].spawned || sents[ent].attr[2] != TA_AUTO)
 								{

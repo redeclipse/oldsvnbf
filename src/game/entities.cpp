@@ -34,14 +34,14 @@ namespace entities
 		}
 		if(type == PLAYERSTART || type == FLAG)
 		{
-			if(valteam(attr2, TEAM_FIRST))
+			if(valteam(attr1, TEAM_FIRST))
 			{
-				defformatstring(str)("team %s", teamtype[attr2].name);
+				defformatstring(str)("team %s", teamtype[attr1].name);
 				addentinfo(str);
 			}
-			else if(attr2 < TEAM_MAX)
+			else if(attr1 < TEAM_MAX)
 			{
-				defformatstring(str)("%s", teamtype[attr2].name);
+				defformatstring(str)("%s", teamtype[attr1].name);
 				addentinfo(str);
 			}
 		}
@@ -87,12 +87,11 @@ namespace entities
 			{
 				const char *trignames[2][4] = {
 						{ "toggle", "link", "script", "" },
-						{ "disabled", "proximity", "action", "" }
+						{ "manual", "proximity", "action", "" }
 				};
-				int tr = attr2 < TR_NONE || attr2 > TR_MAX ? TR_MAX : attr2,
-					ta = attr3 < TA_NONE || attr3 > TA_MAX ? TA_MAX : attr3;
-				defformatstring(str)("%s (%s)", trignames[0][tr], trignames[1][ta]);
-				addentinfo(str);
+				addentinfo(trignames[0][attr2 < TR_TOGGLE || attr2 > TR_MAX ? TR_MAX : attr2]);
+				addentinfo(trignames[1][attr3 < TA_MANUAL || attr3 > TA_MAX ? TA_MAX : attr3]);
+				addentinfo(attr5 ? "(on)" : "(off)");
 			}
 		}
 		else if(type == WAYPOINT)
@@ -114,7 +113,7 @@ namespace entities
 				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
 				return weaptype[attr].item;
 			}
-			case FLAG: return teamtype[attr2].flag;
+			case FLAG: return teamtype[attr1].flag;
 			default: break;
 		}
 		return "";
@@ -201,11 +200,8 @@ namespace entities
 		switch(e.type)
 		{
 			case WAYPOINT: return 0;
-			case TRIGGER: case TELEPORT: case PUSHER:
-				if(e.attr[3]) return e.attr[3];
-				// fall through
-			default:
-				return enttype[e.type].radius;
+			case TRIGGER: case TELEPORT: case PUSHER: if(e.attr[3]) return e.attr[3]; // fall through
+			default: return enttype[e.type].radius;
 		}
 	}
 
@@ -589,7 +585,7 @@ namespace entities
 			}
 			case EU_AUTO:
 			{
-				if(e.type != TRIGGER || ((e.attr[2] == TA_ACT && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO))
+				if(e.type != TRIGGER || ((e.attr[2] == TA_ACTION && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO))
 				{
 					switch(e.type)
 					{
@@ -652,12 +648,12 @@ namespace entities
 						}
 						case TRIGGER:
 						{
-							if((!e.spawned || e.attr[1] != TR_NONE || e.attr[2] != TA_AUTO) && lastmillis-e.lastuse >= triggertime(e)/2)
+							if((e.attr[1] == TR_SCRIPT || !e.spawned) && lastmillis-e.lastuse >= triggertime(e)/2)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr[1])
 								{
-									case TR_NONE: case TR_LINK:
+									case TR_TOGGLE: case TR_LINK:
 									{ // wait for ack
 										client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 										break;
@@ -673,7 +669,7 @@ namespace entities
 									}
 									default: break;
 								}
-								if(e.attr[2] == TA_ACT) d->useaction = false;
+								if(e.attr[2] == TA_ACTION) d->useaction = false;
 							}
 							break;
 						}
@@ -749,7 +745,7 @@ namespace entities
 			if((e.spawned = on) != false) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if(e.attr[1] == TR_NONE || e.attr[1] == TR_LINK)
+				if(e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK)
 				{
 					int millis = lastmillis-e.lastemit, delay = triggertime(e);
 					if(e.lastemit && millis < delay) // skew the animation forward
@@ -841,7 +837,7 @@ namespace entities
 					if(ents[e.links[i]]->lastemit < e.lastemit)
 					{
 						e.lastemit = ents[e.links[i]]->lastemit;
-						e.spawned = ents[e.links[i]]->spawned;
+						e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
 					}
 				}
 				break;
@@ -852,13 +848,15 @@ namespace entities
 				while(e.attr[1] >= TR_MAX) e.attr[1] -= TR_MAX;
 				while(e.attr[2] < 0) e.attr[2] += TA_MAX;
 				while(e.attr[2] >= TA_MAX) e.attr[2] -= TA_MAX;
+				while(e.attr[4] < 0) e.attr[4] += 2;
+				while(e.attr[4] >= 1) e.attr[4] -= 2;
 				loopv(e.links) if(ents.inrange(e.links[i]) &&
 					(ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
 				{
 					if(e.lastemit < ents[e.links[i]]->lastemit)
 					{
 						ents[e.links[i]]->lastemit = e.lastemit;
-						ents[e.links[i]]->spawned = e.spawned;
+						ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
 					}
 				}
 				break;
@@ -868,18 +866,20 @@ namespace entities
 				while(e.attr[0] >= WEAPON_TOTAL) e.attr[0] -= WEAPON_TOTAL;
 				break;
 			case PLAYERSTART:
-				while(e.attr[0] < 0) e.attr[0] += 360;
-				while(e.attr[0] >= 360) e.attr[0] -= 360;
-				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
-				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
-				break;
-			case FLAG:
-				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
-				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
+				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
+				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
+				while(e.attr[1] < 0) e.attr[1] += 360;
+				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < 0) e.attr[2] += 360;
 				while(e.attr[2] >= 360) e.attr[2] -= 360;
-				while(e.attr[3] < 0) e.attr[3] += 360;
-				while(e.attr[3] >= 360) e.attr[3] -= 360;
+				break;
+			case FLAG:
+				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
+				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
+				while(e.attr[1] < 0) e.attr[1] += 360;
+				while(e.attr[1] >= 360) e.attr[1] -= 360;
+				while(e.attr[2] < 0) e.attr[2] += 360;
+				while(e.attr[2] >= 360) e.attr[2] -= 360;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < -1) e.attr[0] += 361;
@@ -920,8 +920,8 @@ namespace entities
 					{
 						if(ents[index]->type == TRIGGER)
 						{
-							ents[i]->spawned = ents[index]->spawned;
 							ents[i]->lastemit = ents[index]->lastemit;
+							ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
 						}
 						break;
 					}
@@ -956,10 +956,11 @@ namespace entities
 		}
 	}
 
-	bool tryspawn(dynent *d, const vec &o, float yaw)
+	bool tryspawn(dynent *d, const vec &o, short yaw, short pitch)
 	{
 		d->yaw = yaw;
-		d->pitch = d->roll = 0;
+		d->pitch = pitch;
+		d->roll = 0;
 		d->o = vec(o).add(vec(0, 0, d->height+1));
 		game::fixrange(d->yaw, d->pitch);
 		return physics::entinmap(d, true);
@@ -970,13 +971,13 @@ namespace entities
 		if(ent >= 0 && ents.inrange(ent) && tryspawn(d, ents[ent]->o, float(ents[ent]->attr[0]))) return;
 		if(recover)
 		{
-			if(m_team(game::gamemode, game::mutators))
+			if(m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
 			{
-				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[1] == d->team && tryspawn(d, ents[i]->o, float(ents[i]->attr[0])))
+				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team && tryspawn(d, ents[i]->o, ents[i]->attr[1], ents[i]->attr[2]))
 					return;
 			}
-			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, float(ents[i]->attr[0]))) return;
-			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o)) return;
+			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, ents[i]->attr[1], ents[i]->attr[2])) return;
+			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o, rnd(360), 0)) return;
 			d->yaw = d->pitch = d->roll = 0;
 			d->o.x = d->o.y = d->o.z = getworldsize();
 			d->o.x *= 0.5f; d->o.y *= 0.5f;
@@ -1329,7 +1330,7 @@ namespace entities
 				// 22	CARROT			11	TRIGGER		0
 				case 22:
 				{
-					f.type = TRIGGER;
+					f.type = NOTUSED;
 					f.attr[0] = f.attr[1] = f.attr[2] = f.attr[3] = f.attr[4] = 0;
 					break;
 				}
@@ -1536,6 +1537,17 @@ namespace entities
 			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
 			switch(e.type)
 			{
+				case PLAYERSTART:
+				{
+					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 158))
+					{
+						short yaw = e.attr[0];
+						e.attr[0] = e.attr[1];
+						e.attr[1] = yaw;
+						e.attr[2] = e.attr[3] = e.attr[4] = 0;
+					}
+					break;
+				}
 				case TELEPORT:
 				{
 					if(mtype == MAP_OCTA)
@@ -1566,10 +1578,26 @@ namespace entities
 					if(mtype != MAP_BFGZ || gver <= 112) e.attr[1] = 0;
 					break;
 				}
+				case TRIGGER:
+				{
+					if(mtype == MAP_BFGZ && gver <= 158) e.attr[4] = 0;
+					break;
+				}
 				case PUSHER:
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95))
 						e.attr[0] = int(e.attr[0]*1.25f);
+					break;
+				}
+				case FLAG:
+				{
+					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 158))
+					{
+						e.attr[0] = e.attr[1];
+						e.attr[1] = e.attr[2];
+						e.attr[2] = e.attr[3];
+						e.attr[3] = e.attr[4] = 0;
+					}
 					break;
 				}
 				case WAYPOINT:
@@ -1619,8 +1647,8 @@ namespace entities
 
 	void initents(stream *g, int mtype, int mver, char *gid, int gver)
 	{
-		if(gver <= 49 || mtype == MAP_OCTA) importentities(mtype, gver);
-		if(mtype != MAP_BFGZ || gver <= 112) updateoldentities(mtype, gver);
+		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, gver);
+		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, gver);
 		if(mtype == MAP_OCTA) importwaypoints(mtype, gver);
 		loopv(ents) fixentity(i);
 		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
@@ -1723,7 +1751,7 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(!level || showentdir >= level) part_dir(e.o, e.attr[0], 0.f, 8.f);
+				if(!level || showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
 				break;
 			}
 			case MAPMODEL:
@@ -1864,8 +1892,8 @@ namespace entities
 						fade = 0.5f;
 						if(e.type == FLAG)
 						{
-							yaw = e.attr[2];
-							pitch = e.attr[3];
+							yaw = e.attr[1];
+							pitch = e.attr[2];
 						}
 					}
 					else

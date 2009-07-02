@@ -126,7 +126,7 @@ namespace ctf
 			float trans = 1.f;
 			int millis = lastmillis-f.interptime;
 			if(millis < 1000) trans = float(millis)/1000.f;
-            rendermodel(!f.droptime ? &f.ent->light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, !f.droptime ? f.ent->attr[2] : f.interptime%360, !f.droptime ? f.ent->attr[3] : 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|(f.droptime ? MDL_LIGHT : 0), NULL, NULL, 0, 0, trans);
+            rendermodel(!f.droptime ? &f.ent->light : NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, !f.droptime ? f.ent->attr[1] : f.interptime%360, !f.droptime ? f.ent->attr[2] : 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|(f.droptime ? MDL_LIGHT : 0), NULL, NULL, 0, 0, trans);
             above.z += enttype[FLAG].radius/2;
             defformatstring(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME && !f.droptime && !f.owner ? "base" : "flag");
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
@@ -155,13 +155,13 @@ namespace ctf
         st.reset();
         #define setupaddflag(a,b) \
         { \
-            index = st.addflag(a->o, a->attr[1], b); \
+            index = st.addflag(a->o, a->attr[0], b); \
 			if(st.flags.inrange(index)) st.flags[index].ent = a; \
 			else continue; \
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !isteam(game::gamemode, game::mutators, a->attr[1], TEAM_NEUTRAL)) continue; \
+			if(a->type != FLAG || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) continue; \
 			else \
 			{ \
 				int already = -1; \
@@ -194,7 +194,7 @@ namespace ctf
 				setupaddflag(g, BASE_FLAG); // add link as flag
 				setuphomeflag;
 			}
-            if(!added && isteam(game::gamemode, game::mutators, e->attr[1], TEAM_FIRST)) // not linked and is a team flag
+            if(!added && isteam(game::gamemode, game::mutators, e->attr[0], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
         }
     }
