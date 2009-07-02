@@ -7,7 +7,7 @@ VARW(lighterror, 1, 8, 16);
 VARW(bumperror, 1, 3, 16);
 VARW(lightlod, 0, 0, 10);
 bvec ambientcolor(25, 25, 25), skylightcolor(0, 0, 0);
-HVARFW(ambient, 0, 0x191919, 0xFFFFFF, 
+HVARFW(ambient, 0, 0x191919, 0xFFFFFF,
 {
     if(ambient <= 255) ambient |= (ambient<<8) | (ambient<<16);
     ambientcolor = bvec((ambient>>16)&0xFF, (ambient>>8)&0xFF, ambient&0xFF);
@@ -33,7 +33,7 @@ static surfaceinfo brightsurfaces[6] =
 // quality parameters, set by the calclight arg
 int aalights = 3;
 
-static Slot *lmslot = NULL;  
+static Slot *lmslot = NULL;
 static int lmtype, lmbpp, lmorient, lmrotate;
 static uchar lm[4*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
@@ -2148,7 +2148,7 @@ void dumplms()
     loopv(lightmaps)
     {
         ImageData temp(LM_PACKW, LM_PACKH, lightmaps[i].bpp, lightmaps[i].data);
-        defformatstring(fname)("%s.lm%.4d", getmapname(), i);
+        defformatstring(fname)("%s.lm%.4d", mapname, i);
         saveimage(fname, temp, imageformat, compresslevel, true);
     }
 }

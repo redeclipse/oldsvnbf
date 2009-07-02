@@ -554,6 +554,12 @@ extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
 extern bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy);
 
+// worldio
+extern char *maptitle, *mapname;
+extern int getmapversion();
+extern int getmaprevision();
+
+
 // world
 extern void entitiesinoctanodes();
 extern void attachentities();
@@ -655,10 +661,6 @@ extern void conline(int type, const char *sf, int n);
 
 // command
 extern char *gettime(char *format);
-extern char *getmapname();
-extern int getmapversion();
-extern int getmaprevision();
-extern char *getmaptitle();
 
 // rendergl
 extern int dynentsize, axfps, lastmillis, totalmillis;

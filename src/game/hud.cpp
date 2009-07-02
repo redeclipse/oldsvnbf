@@ -529,8 +529,8 @@ namespace hud
 				if(teamnotices) skewcolour(tr, tg, tb);
 				if(lastmillis-game::maptime <= titlecard)
 				{
-					const char *title = getmaptitle();
-					if(!*title) title = getmapname();
+					const char *title = maptitle;
+					if(!*title) title = mapname;
 					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, title);
 					pushfont("emphasis");
 					ty += draw_textx("[ %s ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(game::gamemode, game::mutators));
