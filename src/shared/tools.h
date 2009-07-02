@@ -724,10 +724,23 @@ template <class T, int SIZE> struct queue
     }
 };
 
-inline char *newstring(size_t l)                { return new char[l+1]; }
+inline char *newstring(size_t l) { return new char[l+1]; }
 inline char *newstring(const char *s, size_t l) { return copystring(newstring(l), s, l+1); }
-inline char *newstring(const char *s)           { return newstring(s, strlen(s));          }
-inline char *newstringbuf(const char *s)        { return newstring(s, MAXSTRLEN-1);       }
+inline char *newstring(const char *s) { return newstring(s, strlen(s));          }
+inline char *newstringbuf(const char *s) { return newstring(s, MAXSTRLEN-1);       }
+
+inline void itoa(char *s, int i) { formatstring(s)("%d", i); }
+inline char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
+inline char *expandstr(char *o, const char *n, char *delimit = " ")
+{
+	int len = strlen(o)+strlen(n)+strlen(delimit)+1;
+	char *q = new char[len];
+	copystring(q, o, len);
+	if(*delimit) concatstring(q, delimit);
+	concatstring(q, n);
+	delete[] o;
+	return q;
+}
 
 #if defined(WIN32) && !defined(__GNUC__)
 #ifdef _DEBUG
