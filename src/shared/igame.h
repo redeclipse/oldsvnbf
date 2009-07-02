@@ -59,17 +59,18 @@ namespace physics
 	extern float gravity, jumpvel, movespeed, floatspeed,
 		stairheight, floorz, slopez, wallz, stepspeed,
 			liquidfric, liquidscale, sinkfric, floorfric, airfric;
+	extern float liquidmerge(physent *d, float from, float to);
+	extern bool liquidcheck(physent *d);
+	extern float gravityforce(physent *d);
+	extern float movevelocity(physent *d);
+	extern bool issolid(physent *d);
 	extern bool move(physent *d, vec &dir);
 	extern void move(physent *d, int moveres = 10, bool local = true);
 	extern bool entinmap(physent *d, bool avoidplayers);
 	extern void updatephysstate(physent *d);
 	extern bool droptofloor(vec &o, float radius, float height);
-	extern float movevelocity(physent *d);
-	extern bool liquidcheck(physent *d);
-	extern bool issolid(physent *d);
 	extern bool iscrouching(physent *d);
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
-	extern float gravityforce(physent *d);
 	extern void interppos(physent *d);
     extern void updateragdoll(dynent *d, const vec &center, float radius);
 }

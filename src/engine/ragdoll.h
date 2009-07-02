@@ -332,9 +332,9 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec curpos = v.pos, dpos = vec(v.pos).sub(v.oldpos);
-        dpos.mul(pow((liquid ? ragdollliquidfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
+        dpos.mul(pow((liquid ? physics::liquidmerge(pl, 1.f, ragdollliquidfric) : 1.f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*expirefric);
         v.pos.z -= gravity*ts*ts;
-        if(liquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
+        if(liquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts*pl->submerged;
         v.pos.add(dpos);
         if(v.pos.z < 0) { v.pos.z = 0; curpos = v.pos; collisions++; }
         d.o = v.pos;
