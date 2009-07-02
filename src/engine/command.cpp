@@ -3,9 +3,6 @@
 
 #include "engine.h"
 
-void itoa(char *s, int i) { formatstring(s)("%d", i); }
-char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
-
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
 
 bool overrideidents = false, persistidents = true, worldidents = false, interactive = false;
@@ -569,20 +566,14 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 			{
 				if(!isinteger(c))
 				{
-					mkstring(arg);
-					if(numargs > 1)
-					{
-						loopk(numargs-1) if(w[k+1])
-						{
-							if(k) concatstring(arg, " ");
-							concatstring(arg, w[k+1]);
-						}
-					}
 					bool found = false;
-					if(id && id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) found = server::servcmd(numargs, c, arg);
+					char *exargs = NULL;
+					if(numargs > 1) exargs = conc(w+1, numargs-1, true);
+					if(id && id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) found = server::servcmd(numargs, c, exargs);
 #ifndef STANDALONE
-					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, arg);
+					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, exargs);
 #endif
+					if(exargs) delete[] exargs;
 					if(!found) conoutf("\frunknown command: %s", c);
 				}
 				setretval(newstring(c));
@@ -599,13 +590,13 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						float f;
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
-					char *cargs = NULL;
+					char *cargs = NULL, clast = 0;
 					if(id->type==ID_CCOMMAND) v[n++] = id->self;
-					for(const char *a = id->narg; *a; a++) switch(*a)
+					for(const char *a = id->narg; *a; a++) switch((clast = *a))
 					{
-						case 's':								 v[n] = w[++wn];	 n++; break;
+						case 's': v[n] = w[++wn]; n++; break;
 						case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
-						case 'f': nstor[n].f = atof(w[++wn]);	 v[n] = &nstor[n].f; n++; break;
+						case 'f': nstor[n].f = atof(w[++wn]); v[n] = &nstor[n].f; n++; break;
 #ifndef STANDALONE
 						case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
 #endif
@@ -613,13 +604,15 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
 						default: fatal("builtin declared with illegal type");
 					}
+					char *exargs = NULL;
+					if(clast == 's' && wn < numargs-1) { exargs = conc(w+wn, numargs-wn, true); v[n-1] = exargs; }
 					switch(n)
 					{
-						case 0: ((void (__cdecl *)()									  )id->fun)();							 break;
-						case 1: ((void (__cdecl *)(void *)								)id->fun)(v[0]);						 break;
-						case 2: ((void (__cdecl *)(void *, void *)						)id->fun)(v[0], v[1]);				   break;
-						case 3: ((void (__cdecl *)(void *, void *, void *)				)id->fun)(v[0], v[1], v[2]);			 break;
-						case 4: ((void (__cdecl *)(void *, void *, void *, void *)		)id->fun)(v[0], v[1], v[2], v[3]);	   break;
+						case 0: ((void (__cdecl *)())id->fun)(); break;
+						case 1: ((void (__cdecl *)(void *))id->fun)(v[0]); break;
+						case 2: ((void (__cdecl *)(void *, void *))id->fun)(v[0], v[1]); break;
+						case 3: ((void (__cdecl *)(void *, void *, void *))id->fun)(v[0], v[1], v[2]); break;
+						case 4: ((void (__cdecl *)(void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3]); break;
 						case 5: ((void (__cdecl *)(void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4]); break;
 						case 6: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4], v[5]); break;
 						case 7: ((void (__cdecl *)(void *, void *, void *, void *, void *, void *, void *))id->fun)(v[0], v[1], v[2], v[3], v[4], v[5], v[6]); break;
@@ -627,6 +620,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						default: fatal("builtin declared with too many args (use V?)");
 					}
 					if(cargs) delete[] cargs;
+					if(exargs) delete[] exargs;
 					setretval(commandret);
 					commandret = NULL;
 					break;
@@ -717,12 +711,15 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					if(numargs <= 1) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
 					else
 					{
+						char *exargs = NULL, *val = w[1];
+						if(numargs > 2) val = exargs = conc(w+1, numargs-1, true);
 #ifndef STANDALONE
 						WORLDVAR;
 #endif
 						OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s, delete[] *id->storage.s);
-						*id->storage.s = newstring(w[1]);
+						*id->storage.s = newstring(val);
 						id->changed();
+						if(exargs) delete[] exargs;
 #ifndef STANDALONE
 						client::editvar(id, interactive && !overrideidents);
 #endif
