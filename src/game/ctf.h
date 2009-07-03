@@ -43,7 +43,7 @@ struct ctfstate
 #ifndef GAMESERVER
         vec &pos()
         {
-        	if(owner) return vec(owner->o).sub(owner->height);
+        	if(owner) return owner->affinity;
         	if(droptime) return droploc;
         	return spawnloc;
         }

@@ -1,7 +1,7 @@
 // server-side ctf manager
 struct ctfservmode : ctfstate, servmode
 {
-    static const int RESETFLAGTIME = 10000;
+    static const int RESETFLAGTIME = 30000;
 
     bool hasflaginfo;
 
@@ -49,7 +49,7 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
 				flag &f = flags[k];
-				if(isctfhome(f, ci->team) && (f.owner < 0 || f.owner == ci->clientnum) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius/2)
+				if(isctfhome(f, ci->team) && (f.owner < 0 || (f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
 				{
 					ctfstate::returnflag(i);
 					if(flags[i].team != ci->team)
@@ -74,7 +74,6 @@ struct ctfservmode : ctfstate, servmode
         if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team) return;
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || (f.team == ci->team && !f.droptime) || f.owner >= 0) return;
-		loopvj(flags) if(flags[j].owner == ci->clientnum) return;
 		ctfstate::takeflag(i, ci->clientnum);
 		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
     }

@@ -439,6 +439,14 @@ namespace game
         	dir.z -= d->height*0.1f;
 			d->muzzle = vec(d->o).add(dir).add(right);
         }
+        if(d->affinity == vec(-1, -1, -1))
+        { // ensure valid affinity (flag, etc) "position"
+        	vec dir;
+        	vecfromyawpitch(d->yaw, 0, -1, 0, dir);
+        	dir.mul(d->radius*1.25f);
+        	dir.z -= d->height*0.5f;
+			d->affinity = vec(d->o).add(dir);
+        }
 
 		loopi(WEAPON_MAX) if(d->weapstate[i] != WPSTATE_IDLE)
 		{
@@ -1611,7 +1619,7 @@ namespace game
 		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
 			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
-				trans = 1e-16f; // we need tag_muzzle
+				trans = 1e-16f; // we need tag_muzzle/tag_affinity
 			else return; // screw it, don't render them
 		}
         modelattach a[4];
@@ -1741,18 +1749,11 @@ namespace game
 			}
 		}
 		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
-		if(third)
-		{
-			if(m_ctf(gamemode))
-			{
-				loopv(ctf::st.flags) if(ctf::st.flags[i].owner == d && !ctf::st.flags[i].droptime)
-				{
-                    a[ai++] = modelattach("tag_flag", teamtype[ctf::st.flags[i].team].flag, ANIM_MAPMODEL|ANIM_LOOP, 0);
-                    break;
-				}
-			}
-		}
-        if(rendernormally && (early || d != player1)) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+        if(rendernormally && (early || d != player1))
+        {
+        	a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+        	a[ai++] = modelattach("tag_affinity", &d->affinity);
+        }
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
@@ -1768,21 +1769,21 @@ namespace game
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state!=CS_SPECTATOR)
         {
-        	if(rendernormally) d->muzzle = vec(-1, -1, -1);
+        	//if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
 			renderplayer(d, true, showtranslucent(d, true));
         }
 
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
-        else if(m_ctf(gamemode)) ctf::render();
+        if(m_ctf(gamemode)) ctf::render();
         ai::render();
 		endmodelbatches();
 	}
 
     void renderavatar(bool early)
     {
-    	if(rendernormally && early) player1->muzzle = vec(-1, -1, -1);
+    	//if(rendernormally && early) player1->muzzle = player1->affinity = vec(-1, -1, -1);
         if((thirdpersonview() || !rendernormally) && player1->state != CS_SPECTATOR)
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)

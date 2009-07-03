@@ -1739,7 +1739,7 @@ namespace entities
 				{
 					float radius = (float)enttype[e.type].radius;
 					part_radius(e.o, vec(radius, radius, radius));
-					radius *= 0.5f; // ctf pickup dist
+					radius = radius*2/3; // ctf pickup dist
 					part_radius(e.o, vec(radius, radius, radius));
 					break;
 				}
