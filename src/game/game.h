@@ -975,13 +975,14 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	ai::aiinfo *ai;
-    vec muzzle;
+    vec muzzle, affinity;
 	bool attacking, reloading, useaction, conopen, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
 
-	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0), frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL), muzzle(-1, -1, -1),
-		conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
+	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL),
+		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 250; // so we can control the 'gravity' feel
