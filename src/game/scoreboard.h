@@ -75,7 +75,7 @@ namespace hud
 					else
 					{
 						bool win = sg.players[0] == game::player1;
-						game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fw%s won the match with a total score of %d", win ? "you" : game::colorname(sg.players[0]), sg.players[0]->frags);
+						game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
 					}
 				}
 			}

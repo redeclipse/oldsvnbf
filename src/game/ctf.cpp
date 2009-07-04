@@ -286,7 +286,7 @@ namespace ctf
 			}
 		}
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? (denied ? S_V_DENIED : S_V_FLAGDROP) : -1;
-		game::announce(idx, "\fo%s%s dropped the the \fs%s%s\fS flag", d==game::player1 ? "you" : game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(idx, "\fo%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
 		st.dropflag(i, droploc, 1);
 		physics::droptofloor(f.droploc, 2, 0);
     }
@@ -313,7 +313,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.spawnloc);
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || isctfflag(f, game::player1->team) ? S_V_FLAGRETURN : -1;
-		game::announce(idx, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
+		game::announce(idx, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
 		st.returnflag(i);
 		f.interptime = lastmillis;
 		f.taketime = 0;
@@ -339,7 +339,7 @@ namespace ctf
 		(st.findscore(d->team)).total = score;
 		part_text(d->abovehead(), "@CAPTURED!", PART_TEXT, 2500, teamtype[d->team].colour, 3.f, -10);
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? S_V_FLAGSCORE : -1;
-		game::announce(idx, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", d==game::player1 ? "you" : game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
+		game::announce(idx, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
 		st.returnflag(relay);
 		f.interptime = lastmillis;
 		g.taketime = 0;
@@ -351,7 +351,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[i];
 		game::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[d->team].colour, enttype[FLAG].radius);
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? S_V_FLAGPICKUP : -1;
-		game::announce(idx, "\fo%s %s the \fs%s%s\fS flag", d==game::player1 ? "you" : game::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(idx, "\fo%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		if(!f.droptime) f.taketime = lastmillis;
 		st.takeflag(i, d);
 		f.interptime = lastmillis;
