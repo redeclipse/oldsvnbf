@@ -31,13 +31,13 @@ namespace game
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonfov, 90, 120, 150);
-	FVARP(thirdpersonfade, 0, 0.5f, 1);
+	FVARP(thirdpersonblend, 0, 0.5f, 1);
 	FVARP(thirdpersondist, -100, 1.f, 100);
 
 	VARP(firstpersonmodel, 0, 1, 1);
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
-	FVARP(firstpersonfade, 0, 1, 1);
+	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.25f, 10000);
 	FVARP(firstpersonadjust, -10000, 0.f, 10000);
@@ -425,10 +425,8 @@ namespace game
 		d->o.z += d->height;
 	}
 
-	void checkoften(gameent *d, bool local)
+	void checktags(gameent *d)
 	{
-		heightoffset(d, local);
-
         if(d->muzzle == vec(-1, -1, -1))
         { // ensure valid projection "position"
         	vec dir, right;
@@ -443,17 +441,21 @@ namespace game
         { // ensure valid affinity (flag, etc) "position"
         	vec dir;
         	vecfromyawpitch(d->yaw, 0, -1, 0, dir);
-        	dir.mul(d->radius*1.25f);
+        	dir.mul(d->radius*1.15f);
         	dir.z -= d->height*0.5f;
 			d->affinity = vec(d->o).add(dir);
         }
+	}
 
+	void checkoften(gameent *d, bool local)
+	{
+		heightoffset(d, local);
+		checktags(d);
 		loopi(WEAPON_MAX) if(d->weapstate[i] != WPSTATE_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->weapstate[i] != WPSTATE_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
 				d->setweapstate(i, WPSTATE_IDLE, 0, lastmillis);
 		}
-
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
 	}
@@ -1459,7 +1461,7 @@ namespace game
 
 	float showtranslucent(gameent *d, bool third = true, bool full = false)
 	{
-		float total = full ? 1.f : (d == player1 ? (third ? thirdpersonfade : firstpersonfade) : playersfade);
+		float total = full ? 1.f : (d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playersfade);
 		if(d->state == CS_ALIVE)
 		{
 			int len = spawnprotecttime*1000, millis = d->protect(lastmillis, len); // protect returns time left
@@ -1493,8 +1495,10 @@ namespace game
 		}
 	}
 
+#if 0
 	vector<gameent *> bestplayers;
     vector<int> bestteams;
+#endif
 
 	VAR(animoverride, -1, 0, ANIM_MAX-1);
 	VAR(testanims, 0, 0, 1);
@@ -1602,7 +1606,9 @@ namespace game
 		if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
 		int flags = MDL_LIGHT;
+#if 0 // breaks linkpos
 		if(d != player1 && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_CULL_QUERY;
+#endif
         if(d->type == ENT_PLAYER)
         {
             if(!early && third) flags |= MDL_FULLBRIGHT;
@@ -1616,19 +1622,23 @@ namespace game
 
 	void renderplayer(gameent *d, bool third, float trans, bool early = false)
 	{
+		if(d->state == CS_SPECTATOR) return;
+#if 0 // not working great?
 		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
 			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
 				trans = 1e-16f; // we need tag_muzzle/tag_affinity
 			else return; // screw it, don't render them
 		}
+#endif
+
         modelattach a[4];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = isweap(weap);
 
-		if(d->state == CS_SPECTATOR) return;
-		else if(d->state == CS_DEAD || d->state == CS_WAITING)
+
+		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			showweap = false;
 			animflags = ANIM_DYING;
@@ -1752,27 +1762,33 @@ namespace game
         if(rendernormally && (early || d != player1))
         {
         	a[ai++] = modelattach("tag_muzzle", &d->muzzle);
-        	a[ai++] = modelattach("tag_affinity", &d->affinity);
+        	if(third) a[ai++] = modelattach("tag_affinity", &d->affinity);
         }
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	void render()
 	{
+#if 0
 		if(intermission)
 		{
 			if(m_team(gamemode, mutators)) { bestteams.setsize(0); hud::sb.bestteams(bestteams); }
 			else { bestplayers.setsize(0); hud::sb.bestplayers(bestplayers); }
 		}
-
-		startmodelbatches();
+#endif
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state!=CS_SPECTATOR)
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
-        	//if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
+        	if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
 			renderplayer(d, true, showtranslucent(d, true));
         }
+		if(rendernormally)
+		{
+			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state == CS_ALIVE)
+				checktags(d);
+		}
 
+		startmodelbatches(); // two batch passes
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
@@ -1783,11 +1799,12 @@ namespace game
 
     void renderavatar(bool early)
     {
-    	//if(rendernormally && early) player1->muzzle = player1->affinity = vec(-1, -1, -1);
-        if((thirdpersonview() || !rendernormally) && player1->state != CS_SPECTATOR)
+    	if(rendernormally && early) player1->muzzle = player1->affinity = vec(-1, -1, -1);
+        if((thirdpersonview() || !rendernormally))
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
+		if(rendernormally && early && player1->state == CS_ALIVE) checktags(player1);
     }
 
 	bool clientoption(char *arg) { return false; }

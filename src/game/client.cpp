@@ -385,7 +385,7 @@ namespace client
 	ICOMMAND(sayteam, "C", (char *s), toserver(SAY_TEAM, s));
 	ICOMMAND(meteam, "C", (char *s), toserver(SAY_ACTION|SAY_TEAM, s));
 
-	void parsecommand(gameent *d, char *cmd, char *arg)
+	void parsecommand(gameent *d, const char *cmd, const char *arg)
 	{
 		ident *id = idents->access(cmd);
 		if(id && id->flags&IDF_CLIENT)
@@ -441,7 +441,7 @@ namespace client
 		else conoutf("\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
 
-	bool sendcmd(int nargs, char *cmd, char *arg)
+	bool sendcmd(int nargs, const char *cmd, const char *arg)
 	{
 		if(ready())
 		{

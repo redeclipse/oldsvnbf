@@ -1987,10 +1987,10 @@ void drawview(int targtype)
 	if(!limitsky()) drawskybox(farplane, false);
 
     renderdecals(true);
+	renderavatar(true);
 
 	rendermapmodels();
 	rendergame();
-	renderavatar(true);
 
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

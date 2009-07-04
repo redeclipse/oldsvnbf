@@ -31,7 +31,7 @@ namespace client
 	extern void edittoggled(bool edit);
 	extern void writeclientinfo(stream *f);
 	extern void toserver(int flags, char *text);
-	extern bool sendcmd(int nargs, char *cmd, char *arg);
+	extern bool sendcmd(int nargs, const char *cmd, const char *arg);
 	extern void editvar(ident *id, bool local);
 	extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
 	extern void changemap(const char *name);
@@ -130,7 +130,7 @@ namespace server
 	extern const char *pickmap(const char *suggest = NULL);
 	extern const char *choosemap(const char *suggest = NULL, int force = 0);
 	extern void changemap(const char *name = NULL, int mode = -1, int muts = -1);
-	extern bool canload(char *type);
+	extern bool canload(const char *type);
 	extern void start();
-	extern bool servcmd(int nargs, char *cmd, char *arg);
+	extern bool servcmd(int nargs, const char *cmd, const char *arg);
 }
