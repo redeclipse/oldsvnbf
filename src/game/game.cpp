@@ -1781,12 +1781,8 @@ namespace game
         {
         	if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
 			renderplayer(d, true, showtranslucent(d, true));
+			if(rendernormally) checktags(d);
         }
-		if(rendernormally)
-		{
-			loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1 && d->state == CS_ALIVE)
-				checktags(d);
-		}
 
 		startmodelbatches(); // two batch passes
 		entities::render();
@@ -1804,7 +1800,7 @@ namespace game
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
-		if(rendernormally && early && player1->state == CS_ALIVE) checktags(player1);
+		if(rendernormally && early) checktags(player1);
     }
 
 	bool clientoption(char *arg) { return false; }
