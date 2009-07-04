@@ -569,9 +569,9 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					bool found = false;
 					char *exargs = NULL;
 					if(numargs > 1) exargs = conc(w+1, numargs-1, true);
-					if(id && id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) found = server::servcmd(numargs, c, exargs);
+					if(id && id->flags&IDF_SERVER && id->type!=ID_COMMAND && id->type!=ID_CCOMMAND) found = server::servcmd(numargs, c, exargs ? exargs : "");
 #ifndef STANDALONE
-					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, exargs);
+					else if(!id || id->flags&IDF_CLIENT) found = client::sendcmd(numargs, c, exargs ? exargs : "");
 #endif
 					if(exargs) delete[] exargs;
 					if(!found) conoutf("\frunknown command: %s", c);

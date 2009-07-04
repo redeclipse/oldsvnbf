@@ -624,7 +624,7 @@ namespace server
 		return *mapchosen ? mapchosen : pickmap(suggest);
 	}
 
-	bool canload(char *type)
+	bool canload(const char *type)
 	{
 		if(!strcmp(type, gameid()) || !strcmp(type, "fps") || !strcmp(type, "bfg"))
 			return true;
@@ -1490,7 +1490,7 @@ namespace server
 		}
 	}
 
-	bool servcmd(int nargs, char *cmd, char *arg)
+	bool servcmd(int nargs, const char *cmd, const char *arg)
 	{ // incoming command from scripts
 		ident *id = idents->access(cmd);
 		if(id && id->flags&IDF_SERVER)
@@ -1578,7 +1578,7 @@ namespace server
 		return false; // parse will spit out "unknown command" in this case
 	}
 
-	void parsecommand(clientinfo *ci, int nargs, char *cmd, char *arg)
+	void parsecommand(clientinfo *ci, int nargs, const char *cmd, const char *arg)
 	{ // incoming commands from clients
 		defformatstring(cmdname)("sv_%s", cmd);
 		ident *id = idents->access(cmdname);

@@ -27,7 +27,7 @@ struct ctfstate
 
         void reset()
         {
-            droploc = spawnloc = vec(0, 0, 0);
+            droploc = spawnloc = vec(-1, -1, -1);
             base = BASE_NONE;
 #ifdef GAMESERVER
             owner = -1;
