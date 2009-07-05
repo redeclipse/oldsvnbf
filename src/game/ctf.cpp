@@ -36,14 +36,11 @@ namespace ctf
         }
         else dir = f.spawnloc;
 		dir.sub(camera1->o);
-		if(!blip)
+		if(!blip && (!(f.base&BASE_FLAG) || f.owner || f.droptime))
 		{
-			if(!(f.base&BASE_FLAG) || f.owner || f.droptime)
-			{
-				float dist = dir.magnitude(),
-					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-				fade *= 0.25f+(diff*0.5f);
-			}
+			float dist = dir.magnitude(),
+				diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
+			fade *= diff*0.5f;
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
@@ -112,7 +109,7 @@ namespace ctf
             const char *flagname = teamtype[f.team].flag;
             vec above(f.spawnloc);
             float trans = 0.25f;
-            if(!f.owner && !f.droptime)
+            if((f.base&BASE_FLAG) && !f.owner && !f.droptime)
             {
 				int millis = lastmillis-f.interptime;
 				if(millis < 1000)
@@ -134,7 +131,7 @@ namespace ctf
         loopv(st.flags) // dropped/owned
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || (!f.owner && !f.droptime)) continue;
+            if(!f.ent || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.pos());
 			float trans = 1.f, yaw = 90;
@@ -363,7 +360,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || f.owner || !(f.base&BASE_FLAG) || (!f.droptime && f.team == d->team)) continue;
+            if(!f.ent || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && !f.droptime)) continue;
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
                 if(f.pickup) continue;
