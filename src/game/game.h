@@ -171,7 +171,7 @@ enttypes enttype[] = {
 			inttobit(FLAG),
 			0,
 			false,				"flag",
-			{ "team",	"yaw",		"pitch",	"",		"" }
+			{ "team",	"yaw",		"pitch",	"mode",		"" }
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
@@ -480,6 +480,9 @@ extern gametypes gametype[], mutstype[];
 #define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
 #define weapcarry(a,b)		(b >= 0 && a != b && weaptype[a].reloads)
 #define weapattr(a,b)		(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
+
+enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MAX };
+#define chkflagmode(a,b)	(!b || (b == FLAGMODE_STF && m_stf(a)) || (b == FLAGMODE_CTF && m_ctf(a)))
 
 // network messages codes, c2s, c2c, s2c
 enum
