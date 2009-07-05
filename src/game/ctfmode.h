@@ -73,7 +73,7 @@ struct ctfservmode : ctfstate, servmode
     {
         if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team) return;
 		flag &f = flags[i];
-		if(!(f.base&BASE_FLAG) || (f.team == ci->team && !f.droptime) || f.owner >= 0) return;
+		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && !f.droptime)) return;
 		ctfstate::takeflag(i, ci->clientnum);
 		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
     }
