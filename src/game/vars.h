@@ -6,7 +6,7 @@ VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(missionmaps, "mpspbf1 mpspbf2");
 SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli eight enigma gladiator hollow nova panic refuge rivals smouldering tower tranquility warehouse warground venus");
-SVARG(ctfmaps, "bath chaos citadel deadsimple deli enigma gladiator hollow refuge nova panic rivals smouldering tower tranquility warehouse warground venus");
+SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli enigma gladiator hollow refuge nova panic rivals smouldering tower tranquility warehouse warground venus");
 SVARG(mctfmaps, "deadsimple enigma refuge");
 SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli enigma gladiator hollow nova panic refuge rivals smouldering tower tranquility warehouse warground venus");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random

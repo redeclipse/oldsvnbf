@@ -44,6 +44,12 @@ namespace entities
 				defformatstring(str)("%s", teamtype[attr1].name);
 				addentinfo(str);
 			}
+			switch(attr4)
+			{
+				case FLAGMODE_NONE: default: break;
+				case FLAGMODE_STF: addentinfo("stf"); break;
+				case FLAGMODE_CTF: addentinfo("ctf"); break;
+			}
 		}
 		else if(type == WEAPON)
 		{
@@ -880,6 +886,8 @@ namespace entities
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < 0) e.attr[2] += 360;
 				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[3] < 0) e.attr[3] += FLAGMODE_MAX;
+				while(e.attr[3] >= FLAGMODE_MAX) e.attr[3] -= FLAGMODE_MAX;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < -1) e.attr[0] += 361;
@@ -1524,9 +1532,7 @@ namespace entities
 					if(!valteam(e.attr[1], TEAM_NEUTRAL)) // assign a team
 					{
 						int lowest = -1;
-						loopk(TEAM_NUM)
-							if(lowest<0 || teams[k] < teams[lowest])
-								lowest = i;
+						loopk(TEAM_NUM) if(lowest<0 || teams[k] < teams[lowest]) lowest = i;
 						e.attr[1] = lowest+TEAM_FIRST;
 						teams[lowest]++;
 					}
