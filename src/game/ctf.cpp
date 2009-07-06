@@ -435,9 +435,11 @@ namespace ctf
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
+			bool home = isctfhome(f, d->team);
+			if(!home && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool home = isctfhome(f, d->team), regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
