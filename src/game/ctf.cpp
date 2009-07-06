@@ -504,21 +504,21 @@ namespace ctf
 
 	bool aidefend(gameent *d, ai::aistate &b)
 	{
+		static vector<int> hasflags;
+		hasflags.setsizenodelete(0);
+		loopv(st.flags)
+		{
+			ctfstate::flag &g = st.flags[i];
+			if(g.owner == d) hasflags.add(i);
+		}
+		if(!hasflags.empty())
+		{
+			aihomerun(d, b);
+			return true;
+		}
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			static vector<int> hasflags;
-			hasflags.setsizenodelete(0);
-			loopv(st.flags)
-			{
-				ctfstate::flag &g = st.flags[i];
-				if(g.owner == d) hasflags.add(i);
-			}
-			if(!hasflags.empty())
-			{
-				aihomerun(d, b);
-				return true;
-			}
 			if(isctfflag(f, d->team))
 			{
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
