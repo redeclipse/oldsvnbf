@@ -389,7 +389,7 @@ namespace ctf
 			}
 			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc, false))
 			{
-				d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
+				d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
 				return true;
 			}
 		}
@@ -420,7 +420,7 @@ namespace ctf
 				int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
 				if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos(), false))
 				{
-					d->ai->addstate(ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
+					d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
 					return true;
 				}
 				else takenflags.remove(flag);
