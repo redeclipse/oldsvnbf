@@ -4,13 +4,17 @@ struct ircchan
 {
 	int state, type, relay, lastjoin;
 	string name, friendly, passkey;
+#ifndef STANDALONE
 	vector<char *> lines;
+#endif
 
 	ircchan() {}
 	~ircchan()
 	{
+#ifndef STANDALONE
 		loopv(lines) DELETEA(lines[i]);
 		lines.setsize(0);
+#endif
 	}
 };
 enum { IRCT_NONE = 0, IRCT_CLIENT, IRCT_RELAY, IRCT_MAX };
