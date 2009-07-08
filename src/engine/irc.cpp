@@ -358,12 +358,11 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 			}
 			else if(ismsg)
 			{
-				if(n->type == IRCT_RELAY && g && ircfindchan(n, w[g+1]) && !strncasecmp(w[g+2], n->nick, strlen(n->nick)))
+				if(n->type == IRCT_RELAY && g && strcasecmp(w[g+1], n->nick) && !strncasecmp(w[g+2], n->nick, strlen(n->nick)))
 				{
 					const char *p = &w[g+2][strlen(n->nick)];
-					while(p && *p && (*p == ':' || *p == ';' || *p == ',' || *p == '.' || *p == ' ' || *p == '\t'))
-						p++;
-					ircprintf(n, 0, g ? w[g+1] : NULL, "\fa<\fw%s\fa>\fw %s", user[0], p);
+					while(p && (*p == ':' || *p == ';' || *p == ',' || *p == '.' || *p == ' ' || *p == '\t')) p++;
+					if(p && *p) ircprintf(n, 0, w[g+1], "\fa<\fw%s\fa>\fw %s", user[0], p);
 				}
 				else ircprintf(n, 1, g ? w[g+1] : NULL, "\fa<\fw%s\fa>\fw %s", user[0], w[g+2]);
 			}
