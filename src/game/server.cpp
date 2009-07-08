@@ -3130,8 +3130,8 @@ namespace server
 					}
 					if(!m_team(gamemode, mutators) || !(flags&SAY_TEAM))
 					{
-						if(flags&SAY_ACTION) relayf(1, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
-						else relayf(1, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
+						if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
+						else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
 					}
 					break;
 				}
