@@ -89,8 +89,8 @@ struct physent                                  // base entity type, can be affe
     uchar type;                                 // one of ENT_* above
     uchar collidetype;                          // one of COLLIDE_* above
 
-    physent() : maxspeed(100), weight(100.f), radius(4.1f), height(14.f), aboveeye(1.f),
-        xradius(4.1f), yradius(4.1f), zradius(14.f), zmargin(0),
+    physent() : maxspeed(100), weight(100.f), radius(3.f), height(14.f), aboveeye(1.f),
+        xradius(3.f), yradius(3.f), zradius(14.f), zmargin(0),
 		state(CS_ALIVE), type(ENT_PLAYER),
 		collidetype(COLLIDE_ELLIPSE)
 	{
