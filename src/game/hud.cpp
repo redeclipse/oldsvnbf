@@ -33,11 +33,11 @@ namespace hud
 	COMMANDN(conskip, setconskip, "i");
 
 	VARP(consize, 0, 6, 100);
-	VARP(contime, 0, 15000, INT_MAX-1);
+	VARP(contime, 1000, 15000, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	FVARP(conblend, 0, 0.8f, 1);
 	VARP(chatconsize, 0, 6, 100);
-	VARP(chatcontime, 0, 30000, INT_MAX-1);
+	VARP(chatcontime, 1000, 30000, INT_MAX-1);
 	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
@@ -727,38 +727,45 @@ namespace hud
 
 	void drawconsole(int type, int w, int h, int x, int y, int s)
 	{
-		static vector<char *> refs; refs.setsizenodelete(0);
-		int numl = 0;
+		static vector<int> refs; refs.setsizenodelete(0);
 		bool full = fullconsole || commandmillis >= 0;
-		if(full) numl = fullconsize;
-		else numl = consize;
 		pushfont("console");
 		if(type == CON_CHAT)
 		{
-			numl = chatconsize;
-			if(numl) loopv(conlines) if(conlines[i].type == CON_CHAT)
+			if(chatconsize) loopv(conlines) if(conlines[i].type == CON_CHAT)
 			{
 				if(full || lastmillis-conlines[i].outtime < chatcontime)
 				{
-					refs.add(conlines[i].cref);
-					if(refs.length() >= numl) break;
+					refs.add(i);
+					if(refs.length() >= chatconsize) break;
 				}
 			}
 			int r = x+FONTW, z = y;
-			loopv(refs) z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend), TEXT_LEFT_UP, -1, s, refs[i]);
+			loopv(refs)
+			{
+				float fade = full ? 1.f : clamp((chatcontime-(lastmillis-conlines[refs[i]].outtime))/1000.f, 0.f, 1.f);
+				z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref);
+			}
 		}
 		else
 		{
+			int numl = full ? fullconsize : consize;
 			if(numl) loopv(conlines) if(conlines[i].type == CON_INFO || type < 0)
 			{
 				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].outtime < contime)
 				{
-					refs.add(conlines[i].cref);
+					refs.add(i);
 					if(refs.length() >= numl) break;
 				}
 			}
 			int z = y;
-			loopvrev(refs) z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, refs[i]);
+			float fade = 1.f;
+			loopvrev(refs)
+			{
+				if(fade < 1.f) z -= FONTH*(1.f-fade);
+				fade = full ? 1.f : clamp((contime-(lastmillis-conlines[refs[i]].outtime))/1000.f, 0.f, 1.f);
+				z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref);
+			}
 			if(commandmillis >= 0)
 			{
 				pushfont("command");

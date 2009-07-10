@@ -170,14 +170,14 @@ namespace stf
 			if(b.owner != owner)
 			{
 				int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGSECURED : -1;
-				game::announce(idx, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
+				game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				game::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
 			}
 		}
 		else if(b.owner)
 		{
 			int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGOVERTHROWN : -1;
-			game::announce(idx, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
+			game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
 			game::spawneffect(vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
 		}
 		b.owner = owner;

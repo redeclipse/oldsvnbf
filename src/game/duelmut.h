@@ -134,12 +134,12 @@ struct duelservmode : servmode
 					defformatstring(namea)("%s", colorname(alive[0]));
 					defformatstring(nameb)("%s", colorname(alive[1]));
 					defformatstring(fight)("\fyduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
-					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
+					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
 				}
 				else if(m_lms(gamemode, mutators))
 				{
 					defformatstring(fight)("\fylast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
-					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, fight);
+					sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
 				}
 				dueltime = 0;
 			}
@@ -160,7 +160,7 @@ struct duelservmode : servmode
 				{
 					srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
 					if(allowbroadcast(alive[0]->clientnum))
-						sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, "\fgyou survived, yay you!");
+						sendf(alive[0]->clientnum, 1, "ri2s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
 					dueltime = gamemillis+(GVAR(duellimit)*1000);
 					break;
 				}

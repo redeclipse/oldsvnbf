@@ -1189,7 +1189,7 @@ namespace game
 	extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
 	extern void clientdisconnected(int cn);
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
-	extern void announce(int idx, const char *msg, ...);
+	extern void announce(int idx, int targ, const char *msg, ...);
 	extern void respawn(gameent *d);
 	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
 	extern void suicide(gameent *d, int flags);
