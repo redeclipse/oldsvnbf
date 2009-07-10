@@ -89,7 +89,7 @@ namespace ctf
 		loopv(st.flags) if(st.flags[i].base&BASE_FLAG)
 		{
 			ctfstate::flag &f = st.flags[i];
-			float skew = 0.75f, fade = blend;
+			float skew = 0.75f, fade = blend*hud::inventoryblend;
 			int millis = lastmillis-f.interptime;
 			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f : 0.25f);
 			else if(millis < 1000) skew += 0.25f-(clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f);

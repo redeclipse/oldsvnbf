@@ -17,7 +17,7 @@ void conline(int type, const char *sf, int n)
 	cline cl;
 	cl.type = type;
 	cl.cref = conlines.length()>100 ? conlines.pop().cref : newstringbuf("");
-	cl.outtime = lastmillis;
+	cl.reftime = cl.outtime = lastmillis;
 	conlines.insert(n, cl);
 
 	int c = 0;

@@ -886,7 +886,15 @@ namespace game
 
         switch(type&0xFF)
         {
-        	case PT_PART: case PT_TAPE: case PT_FIREBALL: case PT_LIGHTNING: case PT_FLARE:
+        	case PT_TAPE: case PT_LIGHTNING:
+        	{
+        		float dist = o.dist(d);
+				d = o = ((gameent *)p->owner)->muzzle;
+        		vec dir; vecfromyawpitch(p->owner->yaw, p->owner->pitch, 1, 0, dir);
+        		d.add(dir.mul(dist));
+				break;
+        	}
+        	case PT_PART: case PT_FIREBALL: case PT_FLARE:
         	{
 				o = ((gameent *)p->owner)->muzzle;
 				break;

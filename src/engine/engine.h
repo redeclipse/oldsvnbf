@@ -655,7 +655,7 @@ extern void newentity(vec &v, int type, int a1, int a2, int a3, int a4, int a5);
 enum { MN_BACK = 0, MN_INPUT, MN_MAX };
 
 // console
-struct cline { char *cref; int type, outtime; };
+struct cline { char *cref; int type, reftime, outtime; };
 extern vector<cline> conlines;
 extern void conline(int type, const char *sf, int n);
 
