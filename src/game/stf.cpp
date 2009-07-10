@@ -115,7 +115,7 @@ namespace stf
 			bool hasflag = game::player1->state == CS_ALIVE &&
 				insideflag(f, game::player1) && (f.owner == game::player1->team || f.enemy == game::player1->team);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
-			float skew = f.hasflag ? 1.f : 0.75f, fade = blend,
+			float skew = f.hasflag ? 1.f : 0.75f, fade = blend*hud::inventoryblend,
 				occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f);
 			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, delay = lastmillis-game::player1->lastspawn;
 			if(millis < 500)

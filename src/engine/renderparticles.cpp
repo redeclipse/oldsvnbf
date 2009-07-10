@@ -695,23 +695,18 @@ struct varenderer : partrenderer
 				float u1 = u1c, u2 = u2c, v1 = v1c, v2 = v2c; \
 				if(p->flags&0x01) swap(u1, u2); \
 				if(p->flags&0x02) swap(v1, v2); \
-				vs[0].u = u1; \
-				vs[0].v = v1; \
-				vs[1].u = u2; \
-				vs[1].v = v1; \
-				vs[2].u = u2; \
-				vs[2].v = v2; \
-				vs[3].u = u1; \
-				vs[3].v = v2; \
+				vs[0].u = u1; vs[0].v = v1; \
+				vs[1].u = u2; vs[1].v = v1; \
+				vs[2].u = u2; vs[2].v = v2; \
+				vs[3].u = u1; vs[3].v = v2; \
 			}
-			float piece = 1.f, off = 0.f;
 			if(type&PT_RND4)
 			{
-				float tx = off+(0.5f*((p->flags>>5)&1)*piece);
+				float tx = 0.5f*((p->flags>>5)&1);
 				float ty = 0.5f*((p->flags>>6)&1);
-				SETTEXCOORDS(tx, tx+(piece*0.5f), ty, ty+0.5f);
+				SETTEXCOORDS(tx, tx+0.5f, ty, ty+0.5f);
 			}
-			else SETTEXCOORDS(off, off + piece, 0, 1);
+			else SETTEXCOORDS(0.f, 1.f, 0, 1);
 
 			#define SETCOLOR(r, g, b, a) \
 			do { \
@@ -1086,7 +1081,7 @@ static partrenderer *parts[] =
 	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP),
 	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_LERP),
 	new taperenderer("particles/sflare", PT_TAPE|PT_LERP),
-	new taperenderer("particles/fflare", PT_TAPE|PT_LERP),
+	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_LERP),
 	new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP),
 	new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_RND4|PT_FLIP),
 	new softquadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_RND4|PT_FLIP),
@@ -1102,7 +1097,7 @@ static partrenderer *parts[] =
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP),
 	new quadrenderer("particles/fire", PT_PART|PT_HFLIP|PT_RND4|PT_GLARE),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
-	new taperenderer("particles/fflare", PT_TAPE|PT_GLARE),
+	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_GLARE),
 	new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP),
 	new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP),
 	&texts, &textontop, &meters, &metervs,
@@ -1723,7 +1718,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		case 12: //snow
 		case 13: //sparks
 		{
-			const int typemap[] = { PART_SFLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
+			const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 50, 0, 0, 50, 50, 50, 50, 50, 20, 50 },
 				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 100, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];

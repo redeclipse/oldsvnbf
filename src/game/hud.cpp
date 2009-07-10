@@ -32,12 +32,16 @@ namespace hud
 	}
 	COMMANDN(conskip, setconskip, "i");
 
-	VARP(consize, 0, 6, 100);
-	VARP(contime, 1000, 15000, INT_MAX-1);
+	VARP(consize, 0, 5, 100);
+	VARP(contime, 0, 15000, INT_MAX-1);
+	VARP(confade, 0, 1000, INT_MAX-1);
+	VARP(conoverflow, 0, 5, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	FVARP(conblend, 0, 0.8f, 1);
 	VARP(chatconsize, 0, 6, 100);
-	VARP(chatcontime, 1000, 30000, INT_MAX-1);
+	VARP(chatcontime, 0, 30000, INT_MAX-1);
+	VARP(chatconfade, 0, 1000, INT_MAX-1);
+	VARP(chatconoverflow, 0, 2, 1);
 	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
@@ -114,7 +118,8 @@ namespace hud
 	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.5f, 1);
-	FVARP(inventoryglow, 0, 0.055f, 1);
+	FVARP(inventoryglow, 0, 0.1f, 1);
+	FVARP(inventoryhealthblend, 0, 0.9f, 1);
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(smgtex, "textures/smg", 3);
@@ -732,39 +737,61 @@ namespace hud
 		pushfont("console");
 		if(type == CON_CHAT)
 		{
-			if(chatconsize) loopv(conlines) if(conlines[i].type == CON_CHAT)
+			int numl = chatconsize, numo = chatconsize+chatconoverflow, keeptime = chatcontime+chatconfade;
+			if(numl && keeptime)
 			{
-				if(full || lastmillis-conlines[i].outtime < chatcontime)
+				loopv(conlines) if(conlines[i].type == CON_CHAT)
 				{
-					refs.add(i);
-					if(refs.length() >= chatconsize) break;
+					if(full || lastmillis-conlines[i].reftime < keeptime)
+					{
+						if(refs.length() >= numl)
+						{
+							if(refs.length() >= numo)
+							{
+								if(lastmillis-conlines[i].reftime < keeptime) conlines[i].reftime = lastmillis-keeptime;
+								continue;
+							}
+							if(lastmillis-conlines[i].reftime < chatcontime) conlines[i].reftime = lastmillis-chatcontime;
+						}
+						refs.add(i);
+					}
 				}
-			}
-			int r = x+FONTW, z = y;
-			loopv(refs)
-			{
-				float fade = full ? 1.f : clamp((chatcontime-(lastmillis-conlines[refs[i]].outtime))/1000.f, 0.f, 1.f);
-				z -= draw_textx("%s", r, z, 255, 255, 255, int(255*(full ? fullconblend : chatconblend)*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref);
+				int r = x+FONTW, z = y;
+				loopv(refs)
+				{
+					float fade = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref);
+				}
 			}
 		}
 		else
 		{
-			int numl = full ? fullconsize : consize;
-			if(numl) loopv(conlines) if(conlines[i].type == CON_INFO || type < 0)
+			int numl = full ? fullconsize : consize, numo = consize+conoverflow, keeptime = contime+confade, z = y;
+			if(numl && keeptime)
 			{
-				if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].outtime < contime)
+				loopv(conlines) if(conlines[i].type == CON_INFO || type < 0)
 				{
-					refs.add(i);
-					if(refs.length() >= numl) break;
+					if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].reftime < keeptime)
+					{
+						if(refs.length() >= numl)
+						{
+							if(refs.length() >= numo)
+							{
+								if(lastmillis-conlines[i].reftime < keeptime) conlines[i].reftime = lastmillis-keeptime;
+								continue;
+							}
+							if(lastmillis-conlines[i].reftime < contime) conlines[i].reftime = lastmillis-contime;
+						}
+						refs.add(i);
+					}
 				}
-			}
-			int z = y;
-			float fade = 1.f;
-			loopvrev(refs)
-			{
-				if(fade < 1.f) z -= FONTH*(1.f-fade);
-				fade = full ? 1.f : clamp((contime-(lastmillis-conlines[refs[i]].outtime))/1000.f, 0.f, 1.f);
-				z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref);
+				float fade = 1.f;
+				loopvrev(refs)
+				{
+					if(fade < 1.f) z -= int(FONTH*(1.f-fade));
+					fade = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref);
+				}
 			}
 			if(commandmillis >= 0)
 			{
@@ -952,7 +979,7 @@ namespace hud
 	int drawitem(const char *tex, int x, int y, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
-		float f = fade*inventoryblend*skew, cr = r*skew, cg = g*skew, cb = b*skew, s = size*skew;
+		float f = fade*skew, cr = r*skew, cg = g*skew, cb = b*skew, s = size*skew;
 		settexture(tex, 3);
 		glColor4f(cr, cg, cb, f);
 		drawsized(left ? x : x-int(s), y-int(s), int(s));
@@ -976,7 +1003,7 @@ namespace hud
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew))-FONTH, ti = int(255.f*inventoryblend*blend*skew);
+		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew))-FONTH, ti = int(255.f*blend*skew);
 		defvformatstring(str, text, text);
 		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_JUSTIFY : TEXT_RIGHT_JUSTIFY, -1, -1, str);
 		if(font && *font) popfont();
@@ -1015,8 +1042,8 @@ namespace hud
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
 			const char *itext = itemtex(e.type, e.attr[0]);
-			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade, skew, "default", "%s (%d)", enttype[e.type].name, n);
-			drawitemsubtext(x, y, s, false, skew, "sub", fade, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
+			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "%s (%d)", enttype[e.type].name, n);
+			drawitemsubtext(x, y, s, false, skew, "sub", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
 			return ty;
 		}
 		return 0;
@@ -1030,8 +1057,8 @@ namespace hud
 			if(inventorystatus)
 			{
 				if(game::player1->team)
-					sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name) + s/8;
-				else sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+					sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name) + s/8;
+				else sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f) + s/8;
 			}
 			if(inventoryammo)
 			{
@@ -1042,7 +1069,7 @@ namespace hud
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
 				loopi(WEAPON_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])
 				{
-					float fade = blend, size = s, skew = 1.f;
+					float fade = blend*inventoryblend, size = s, skew = 1.f;
 					if(game::player1->weapstate[i] == WPSTATE_SWITCH || game::player1->weapstate[i] == WPSTATE_PICKUP)
 					{
 						float amt = clamp(float(lastmillis-game::player1->weaplast[i])/float(game::player1->weapwait[i]), 0.f, 1.f);
@@ -1090,19 +1117,19 @@ namespace hud
 		{
 			if(game::player1->state == CS_EDITING)
 			{
-				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f) + s/8;
+				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f) + s/8;
 				if(inventoryedit)
 				{
 					int stop = hudsize-s*3;
 					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend);
-					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend)) >= stop) break;
+					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend*inventoryblend)) >= stop) break;
 				}
 			}
 			else if(inventorystatus)
 			{
-				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
-				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend, 1.f);
-				else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend, 1.f);
+				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+				else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			}
 		}
 		return sy;
@@ -1110,11 +1137,20 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s*2, width = s, glow = int(width*inventoryglow);
-		float fade = inventoryblend*blend, r = 1.f, g = 1.f, b = 1.f;
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow);
+		float fade = inventoryhealthblend*blend, r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.5f : 1.f;
 		if(teamwidgets) skewcolour(r, g, b);
+		if(game::player1->state == CS_ALIVE && game::player1->health <= 35)
+		{
+			int timestep = lastmillis%1000;
+			float pulse = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
+			r += (1.f-r)*pulse;
+			g -= g*pulse;
+			b -= b*pulse;
+			bgfade += (1.f-bgfade)*pulse;
+		}
         settexture(healthtex, 3);
-        glColor4f(r, g, b, fade*(game::player1->state == CS_ALIVE ? 0.5f : 1.f));
+        glColor4f(r, g, b, fade*bgfade);
         drawtex(x, y-size, width, size);
 		if(game::player1->state == CS_ALIVE)
 		{
@@ -1164,7 +1200,7 @@ namespace hud
 				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(sx + sw, sy + off*sh);
 			}
 			glEnd();
-			if(inventoryhealth > 1) drawitemsubtext(x, y, width, true, 1.f, "default", fade, "%d", max(game::player1->health, 0));
+			if(inventoryhealth > 1) drawitemsubtext(x, y, width, true, 1.f, "emphasis", fade, "%d", max(game::player1->health, 0));
 		}
 		else
 		{
@@ -1400,7 +1436,7 @@ namespace hud
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
-				if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
+				if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br+os, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 			}
 
 			if(!noview && client::ready() && !texpaneltimer)

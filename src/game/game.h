@@ -273,8 +273,7 @@ struct weaptypes
 	bool	radial,	taper,	extinguish,	reloads,	zooms,		fullauto;
 	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	partlen,	hitpush;
 	const char
-			*name, 		*text,	*item,						*vwep,
-			*proj;
+			*name, 		*text,	*item,						*vwep,						*proj;
 };
 #ifdef GAMESERVER
 weaptypes weaptype[WEAPON_MAX] =
@@ -286,8 +285,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,		false,
 			0.f,		0.f,			0.05f,		2.0f,		0.f,	0.45f,		16.f,		150.f,
-			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",
-			""
+			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
 		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
@@ -296,8 +294,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		false,
 			0.5f,		50.f,			0.05f,		2.0f,		30.f,	0.35f,		48.f,		25.f, // remember, this is PER ray
-			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",
-			""
+			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
 		WEAPON_SMG,			ANIM_SMG,	-10,	5,					0xFFAA22,
@@ -306,8 +303,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		true,
 			0.75f,		30.f,			0.05f,		2.0f,		0.f,	0.25f,		48.f,		100.f,
-			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",
-			""
+			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
 		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
@@ -316,8 +312,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		32,			1,		5,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
 			0.15f,		45.f,			0.25f,		1.5f,		25.f,	36.f,		0.f,		25.f,
-			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",
-			""
+			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAPON_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
@@ -326,8 +321,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,	true,		true,		false,		true,
 			0.f,		0.f,			0.125f,		1.0f,		0.f,	16.f,		0.f,		100.f,
-			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",
-			""
+			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0xBB66FF,
@@ -336,8 +330,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		false,
 			0.f,		 0.f,			0.05f,		2.0f,		0.f,	0.6f,		512.f,		500.f,
-			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",
-			""
+			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAPON_GRENADE,		ANIM_GRENADE,		-5,		5,		0x22FF22,
@@ -346,8 +339,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
 			0.35f,		0.f,			1.0f,		2.0f,		50.f,	4.f,		0.f,		1000.f,
-			"grenade",	"\fg",	"weapons/grenade/item",	"weapons/grenade/vwep",
-			"projectiles/grenade"
+			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{
 		WEAPON_PAINT,		ANIM_PAINTGUN,		-5,  	5,			0xFF22AA,
@@ -356,8 +348,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		true,
 			0.f,		 0.f,			0.05f,		2.0f,		0.f,	2.f,		0.f,		25.f,
-			"paintgun",	"\fm",	"weapons/paintgun/item",		"weapons/paintgun/vwep",
-			""
+			"paintgun",	"\fm",	"weapons/paintgun/item",	"weapons/paintgun/vwep",	""
 	},
 };
 #else
@@ -1148,6 +1139,7 @@ namespace weapons
 namespace hud
 {
 	extern int hudwidth, hudsize, damageresidue, radarflagnames;
+	extern float inventoryblend;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
