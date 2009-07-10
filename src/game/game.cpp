@@ -233,14 +233,14 @@ namespace game
 		else swaydir = vec(0, 0, 0);
 	}
 
-	void announce(int idx, const char *msg, ...)
+	void announce(int idx, int targ, const char *msg, ...)
 	{
 		defvformatstring(text, msg, msg);
-		conoutf("%s", text);
+		conoutft(targ, "%s", text);
 		if(idx >= 0 && (!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay))
 			playsound(idx, camera1->o, camera1, SND_FORCED);
 	}
-	ICOMMAND(announce, "is", (int *idx, char *s), announce(*idx, "\fw%s", s));
+	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, "\fw%s", s));
 
 	bool tvmode()
 	{
@@ -703,8 +703,8 @@ namespace game
 			}
 			if(show)
 			{
-				if(isme) announce(anc, "\fw%s", d->obit);
-				else conoutf("\fw%s", d->obit);
+				if(isme) announce(anc, CON_INFO, "\fw%s", d->obit);
+				else conoutft(CON_INFO, "\fw%s", d->obit);
 			}
 		}
 		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))

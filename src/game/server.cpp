@@ -663,14 +663,14 @@ namespace server
 					else minremain = -1;
 					if(!minremain)
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fctime limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fctime limit has been reached!");
 						startintermission();
 						return; // bail
 					}
 					else
 					{
 						sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-						if(minremain == 1) sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, "\fconly one minute left of play!");
+						if(minremain == 1) sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_INFO, "\fconly one minute left of play!");
 					}
 				}
 			}
@@ -686,7 +686,7 @@ namespace server
 						best = i;
 					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -698,7 +698,7 @@ namespace server
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri2s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -1930,10 +1930,11 @@ namespace server
 
 		if(*servermotd)
 		{
-            int space = 2*strlen(servermotd) + 2 + 5;
+            int space = 2*strlen(servermotd) + 3 + 5;
             CHECKSPACE(space);
 			putint(p, SV_ANNOUNCE);
 			putint(p, S_GUIACT);
+			putint(p, CON_CHAT);
 			sendstring(servermotd, p);
 		}
 

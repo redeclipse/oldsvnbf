@@ -22,6 +22,7 @@ namespace client
 
 	VARP(colourchat, 0, 1, 1);
 	SVARP(serversort, "");
+
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
 	ICOMMAND(getname, "", (), result(game::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[game::player1->team].name));
@@ -1053,9 +1054,9 @@ namespace client
 
 				case SV_ANNOUNCE:
 				{
-					int snd = getint(p);
+					int snd = getint(p), targ = getint(p);
 					getstring(text, p);
-					game::announce(snd, "%s", text);
+					game::announce(snd, targ, "%s", text);
 					break;
 				}
 
