@@ -521,8 +521,8 @@ namespace ctf
 			ctfstate::flag &f = st.flags[b.target];
 			if(isctfflag(f, d->team))
 			{
-				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
+				if(ai::makeroute(d, b, f.pos()))
+					return f.owner ? ai::violence(d, b, f.owner, false) : true;
 			}
 			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			if(regen && lastmillis-b.millis >= (201-d->skill)*33)
@@ -587,8 +587,8 @@ namespace ctf
 			}
 			if(isctfflag(f, d->team))
 			{
-				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
-				if(f.droptime && ai::makeroute(d, b, f.pos())) return true;
+				if(ai::makeroute(d, b, f.pos()))
+					return f.owner ? ai::violence(d, b, f.owner, false) : true;
 			}
 			else return ai::makeroute(d, b, f.pos());
 		}

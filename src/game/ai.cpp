@@ -176,7 +176,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, bool check)
 	{
-		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true);
+		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true, d);
 		return makeroute(d, b, node, changed, check);
 	}
 
@@ -277,8 +277,7 @@ namespace ai
 	{
 		if(targetable(d, e, true))
 		{
-			if(pursue)
-				d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(pursue) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -352,12 +351,13 @@ namespace ai
 		{
 			projent &proj = *projs::projs[j];
 			if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
+			gameentity &e = *(gameentity *)entities::ents[proj.id];
 			int sweap = m_spawnweapon(game::gamemode, game::mutators);
-			switch(entities::ents[proj.id]->type)
+			switch(e.type)
 			{
 				case WEAPON:
 				{
-					int attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
+					int attr = weapattr(e.attr[0], sweap);
 					if(isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						if(proj.owner == d) break;
@@ -530,6 +530,8 @@ namespace ai
 							case WEAPON:
 							{
 								if(!e.spawned || d->hasweap(attr, sweap)) return 0;
+								float guard = enttype[e.type].radius;
+								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false) ? 2 : 1;
 								break;
 							}
 							default: break;
@@ -545,12 +547,15 @@ namespace ai
 					{
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return 0;
-						int attr = weapattr(entities::ents[proj.id]->attr[0], sweap);
-						switch(entities::ents[proj.id]->type)
+						gameentity &e = *(gameentity *)entities::ents[proj.id];
+						int attr = weapattr(e.attr[0], sweap);
+						switch(e.type)
 						{
 							case WEAPON:
 							{
 								if(d->hasweap(attr, sweap) || proj.owner == d) return 0;
+								float guard = enttype[e.type].radius;
+								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false) ? 2 : 1;
 								break;
 							}
 							default: break;
@@ -687,7 +692,7 @@ namespace ai
 						}
 						return true; // this is our goal?
 					}
-					else return anynode(d, b);
+					else if(retries > 2) return anynode(d, b);
 				}
 				else n--; // otherwise, we want the next in line
 			}
@@ -699,15 +704,21 @@ namespace ai
 		return anynode(d, b);
 	}
 
+	bool weaprange(int weap, float sqdist)
+	{
+		float mindist = weaptype[weap].explode ? weaptype[weap].explode : 4,
+			maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
+		return sqdist >= mindist*mindist && sqdist <= maxdist*maxdist;
+	}
+
 	bool hastarget(gameent *d, aistate &b, gameent *e)
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		vec dp = d->headpos(), ep = getaimpos(d, e);
 		gameent *h = game::intersectclosest(dp, d->ai->target, d);
 		if(h && !targetable(d, h, true)) return false;
-		float targyaw, targpitch, mindist = d->radius*d->radius, dist = dp.squaredist(ep);
-		if(weaptype[d->weapselect].explode) mindist = weaptype[d->weapselect].explode*weaptype[d->weapselect].explode;
-		if(mindist <= dist)
+		float targyaw = 0.f, targpitch = 0.f, dist = dp.squaredist(ep);
+		if(weaprange(d->weapselect, dist))
 		{
 			if(d->skill > 100 && h) return true;
 			vec dir = vec(dp).sub(ep).normalize();
@@ -752,6 +763,14 @@ namespace ai
 		}
 	}
 
+	gameent *getenemy(gameent *d, vec &dp)
+	{
+		gameent *e = game::getclient(d->ai->enemy);
+		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = game::intersectclosest(dp, d->ai->target, d);
+		if(e && targetable(d, e, true)) return e;
+		return NULL;
+	}
+
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
@@ -770,9 +789,8 @@ namespace ai
 		else d->ai->dontmove = true;
 		if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 
-		gameent *e = game::getclient(d->ai->enemy);
-		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = game::intersectclosest(dp, d->ai->target, d);
-		if(e && targetable(d, e, true))
+		gameent *e = getenemy(d, dp);
+		if(e)
 		{
 			vec ep = getaimpos(d, e);
 			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
@@ -868,7 +886,7 @@ namespace ai
 				break;
 			}
 		}
-		if(game::allowmove(d) && busy <= (d->hasweap(d->arenaweap, sweap) ? 0 : 2) && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(game::allowmove(d) && busy <= 2 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -885,7 +903,8 @@ namespace ai
 							if(!entities::ents.inrange(t.target)) break;
 							extentity &e = *entities::ents[t.target];
 							if(enttype[e.type].usetype != EU_ITEM) break;
-							ent = t.target;
+							if(!busy || (b.type == AI_S_INTEREST && b.targtype == AI_T_ENTITY && b.target == t.target))
+								ent = t.target;
 							break;
 						}
 						case ITEM_PROJ:
@@ -895,7 +914,8 @@ namespace ai
 							if(!entities::ents.inrange(proj.id)) break;
 							extentity &e = *entities::ents[proj.id];
 							if(enttype[e.type].usetype != EU_ITEM || proj.owner == d) break;
-							ent = proj.id;
+							if(!busy || (b.type == AI_S_INTEREST && b.targtype == AI_T_DROP && b.target == t.target))
+								ent = proj.id;
 							break;
 						}
 						default: break;
@@ -906,11 +926,11 @@ namespace ai
 						if(enttype[e.type].usetype == EU_ITEM)
 						{
 							if(m_noitems(game::gamemode, game::mutators)) continue;
-							if(d->canuse(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
+							int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+							if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
 							{
 								case WEAPON:
 								{
-									int attr = weapattr(e.attr[0], sweap);
 									if(d->hasweap(attr, sweap)) break;
 									d->useaction = true;
 									d->ai->lastaction = d->usetime = lastmillis;
@@ -928,10 +948,20 @@ namespace ai
 
 		if(busy <= (!d->hasweap(d->weapselect, sweap) ? 2 : 1) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
-			int weap = -1;
-			if(d->hasweap(d->arenaweap, sweap)) weap = d->arenaweap; // could be any weap
-			else loopi(WEAPON_MAX) if(d->hasweap(i, sweap, 1)) weap = i; // only choose carriables here
-			if(weap != d->weapselect && weapons::weapselect(d, weap))
+			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
+			vec dp = d->headpos(), ep;
+			gameent *e = getenemy(d, dp);
+			if(e) ep = getaimpos(d, e);
+			float dist = dp.squaredist(ep);
+			if(!isweap(weap) || (e && !weaprange(weap, dist)))
+			{
+				loopirev(WEAPON_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(i, dist)))
+				{
+					weap = i;
+					break;
+				}
+			}
+			if(isweap(weap) && weap != d->weapselect && weapons::weapselect(d, weap))
 			{
 				d->ai->lastaction = lastmillis;
 				return true;
@@ -976,7 +1006,6 @@ namespace ai
 						}
 					}
 				}
-                d->ai->addprevnode(d->lastnode);
 			}
 		}
         if(d->state == CS_DEAD || d->state == CS_WAITING)
@@ -1131,9 +1160,22 @@ namespace ai
 		if(aidebug > 4)
 		{
 			vec pos = vec(d->feetpos()).add(vec(0, 0, 0.1f));
-			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x00FFFF);
-			if(entities::ents.inrange(d->lastnode)) part_trace(pos, vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0xFF00FF);
-			if(entities::ents.inrange(d->ai->prevnodes[1])) part_trace(pos, vec(entities::ents[d->ai->prevnodes[1]]->o).add(vec(0, 0, 0.1f)), 1.f, 1, 0x880088);
+			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x008888);
+			if(entities::ents.inrange(d->lastnode))
+			{
+				vec to = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f));
+				part_trace(pos, to, 1.f, 1, 0x884400);
+				pos = to;
+			}
+			loopi(NUMPREVNODES)
+			{
+				if(entities::ents.inrange(d->ai->prevnodes[i]))
+				{
+					vec to = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, 0.1f));
+					part_trace(pos, to, 1.f, 1, 0x442200);
+					pos = to;
+				}
+			}
 		}
 	}
 
