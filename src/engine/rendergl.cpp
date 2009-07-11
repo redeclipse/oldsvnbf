@@ -1608,10 +1608,12 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
 }
 
 extern int actualvsync;
+extern void updatetimer(bool outofloop);
 int lastoutofloop = 0;
 float loadprogress = 0;
 void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
 {
+	updatetimer(true);
 	if(!inbetweenframes || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
 		return;
 	clientkeepalive();

@@ -770,10 +770,14 @@ void updatetimer(bool outofloop)
 	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
 	millis += clockvirtbase;
 	if(millis<totalmillis) millis = totalmillis;
-	if(!outofloop) limitfps(millis, totalmillis);
-	curtime = millis-totalmillis;
-	lastmillis += curtime;
-	totalmillis = millis;
+	int frame = millis-totalmillis;
+	if(!outofloop)
+	{
+		limitfps(millis, totalmillis);
+		curtime = frame;
+		totalmillis = millis;
+	}
+	lastmillis += frame;
 }
 
 int main(int argc, char **argv)
