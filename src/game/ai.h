@@ -103,7 +103,7 @@ namespace ai
 			reset();
 			loopk(3) views[k] = 0.f;
 		}
-		~aiinfo() { state.setsize(0); route.setsize(0); }
+		~aiinfo() {}
 
 		void clear(bool prev = true)
 		{
