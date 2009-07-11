@@ -59,12 +59,10 @@ void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
 	xtraverts += 4;
 }
 
-void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL, float a = 1.f)
+void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL)
 {
     float vclip = 1-zclip;
     int z = int(ceil(2*w*(vclip-0.5f)));
-
-	glColor4f(1.f, 1.f, 1.f, a);
 
     if(faces&0x01)
         draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
@@ -247,8 +245,6 @@ void drawskybox(int farplane, bool limited)
 
     if(clampsky) glDepthRange(1, 1);
 
-    glColor3f(1, 1, 1);
-
     glPushMatrix();
     glLoadIdentity();
     glRotatef(camera1->roll, 0, 0, 1);
@@ -256,6 +252,7 @@ void drawskybox(int farplane, bool limited)
     glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
     glRotatef(90, 1, 0, 0);
     if(reflecting) glScalef(1, 1, -1);
+    glColor3f(1, 1, 1);
     draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
     glPopMatrix();
 
@@ -273,7 +270,8 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds, cloudblend);
+		glColor4f(1, 1, 1, cloudblend);
+        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
         glPopMatrix();
 
         glDisable(GL_BLEND);
