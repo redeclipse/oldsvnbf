@@ -148,28 +148,16 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool check)
 	{
-		int n = node;
-		if((n == d->lastnode || d->ai->hasprevnode(n)) && entities::ents.inrange(d->lastnode))
+		if(node != d->lastnode)
 		{
-			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-			static vector<int> noderemap; noderemap.setsizenodelete(0);
-			if(!e.links.empty())
-			{
-				loopv(e.links) if(e.links[i] != d->lastnode && !d->ai->hasprevnode(e.links[i]))
-					noderemap.add(e.links[i]);
-			}
-			if(!noderemap.empty()) n = noderemap[rnd(noderemap.length())];
-		}
-		if(n != d->lastnode)
-		{
-			if(changed && !d->ai->route.empty() && d->ai->route[0] == n) return true;
-			if(entities::route(d, d->lastnode, n, d->ai->route, obstacles, check))
+			if(changed && d->ai->route.length() > 1 && d->ai->route[0] == node) return true;
+			if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, check))
 			{
 				b.override = false;
 				return true;
 			}
 		}
-		if(check) return makeroute(d, b, n, true, false);
+		if(check) return makeroute(d, b, node, true, false);
 		d->ai->clear(true);
 		return false;
 	}
@@ -249,7 +237,7 @@ namespace ai
 				b.override = true;
 				return true;
 			}
-			else if(!d->ai->route.empty()) return true;
+			else if(d->ai->route.length() > 1) return true;
 			else if(!retry)
 			{
                 b.override = false;
@@ -603,7 +591,7 @@ namespace ai
 		vec pos = d->feetpos();
 		int node = -1;
 		float mindist = NEARDISTSQ;
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]) && (force || (d->ai->route[i] != d->lastnode && !d->ai->hasprevnode(d->ai->route[i]))))
+		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
@@ -630,7 +618,7 @@ namespace ai
 			int entid = obstacles.remap(d, n, epos);
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
-				if(vec(epos).sub(d->feetpos()).magnitude() > CLOSEDIST*0.5f)
+				if(vec(epos).sub(d->feetpos()).magnitude() > CLOSEDIST*0.125f)
 				{
 					d->ai->spot = epos;
 					if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
