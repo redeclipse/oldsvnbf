@@ -247,7 +247,7 @@ namespace stf
 				{
 					if(lastmillis-b.millis >= (201-d->skill)*33)
 					{
-						d->ai->clear = true; // re-evaluate so as not to herd
+						d->ai->trywipe = true; // re-evaluate so as not to herd
 						return true;
 					}
 					else walk = 2;

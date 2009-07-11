@@ -169,8 +169,8 @@ namespace ai
 				return true;
 			}
 		}
-		d->ai->route.setsize(0);
 		if(check) return makeroute(d, b, n, true, false);
+		d->ai->clear(true);
 		return false;
 	}
 
@@ -514,7 +514,8 @@ namespace ai
 			{
 				case AI_T_NODE:
 				{
-					return !d->ai->route.empty() ? 1 : 0;
+					if(d->lastnode != b.target && entities::ents.inrange(b.target))
+						return makeroute(d, b, entities::ents[b.target]->o) ? 1 : 0;
 					break;
 				}
 				case AI_T_ENTITY:
@@ -659,13 +660,17 @@ namespace ai
 				while(!anyremap.empty())
 				{
 					int r = rnd(anyremap.length()), t = anyremap[r];
-					if(entspot(d, t, retry)) return true;
+					if(entspot(d, t, retry))
+					{
+						d->ai->route.add(t);
+						return true;
+					}
 					anyremap.remove(r);
 				}
 			}
 			if(!retry)
 			{
-				if(entspot(d, d->lastnode, true)) return true;
+				d->ai->clear(true);
 				return anynode(d, b, true);
 			}
 		}
@@ -676,31 +681,22 @@ namespace ai
 	{
 		if(!d->ai->route.empty())
 		{
-			bool alternate = retries%2 ? true : false;
-			int n = alternate ? closenode(d, retries == 3) : d->ai->route.find(d->lastnode);
-			if(!alternate && d->ai->route.inrange(n))
+			int n = retries%2 ? d->ai->route.find(d->lastnode) : closenode(d, retries >= 2);
+			if(retries%2 && d->ai->route.inrange(n))
 			{
 				while(d->ai->route.length() > n+1) d->ai->route.pop(); // waka-waka-waka-waka
 				if(!n)
 				{
-					if(entspot(d, d->ai->route[n], retries > 1))
-					{
-						if(vec(d->ai->spot).sub(d->feetpos()).magnitude() <= CLOSEDIST/2.f)
-						{
-							d->ai->dontmove = true;
-							d->ai->route.setsize(0);
-						}
-						return true; // this is our goal?
-					}
-					else if(retries > 2) return anynode(d, b);
+					if(entspot(d, d->ai->route[n], retries >= 2)) return true;
+					else if(retries <= 2) return hunt(d, b, retries+1); // try again
 				}
 				else n--; // otherwise, we want the next in line
 			}
-			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n], retries > 1)) return true;
-			if(retries < 3) return hunt(d, b, retries+1); // try again
-			d->ai->route.setsize(0);
+			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n], retries >= 2)) return true;
+			else if(retries <= 2) return hunt(d, b, retries+1); // try again
 		}
 		b.override = false;
+		d->ai->clear(false);
 		return anynode(d, b);
 	}
 
@@ -1086,7 +1082,7 @@ namespace ai
 				}
 				if(result <= 0)
 				{
-					d->ai->route.setsize(0);
+					d->ai->clear(true);
 					if(c.type != AI_S_WAIT)
 					{
 						d->ai->removestate(i);
@@ -1107,7 +1103,7 @@ namespace ai
 			logic(d, c, run);
 			break;
 		}
-		if(d->ai->clear) d->ai->wipe();
+		if(d->ai->trywipe) d->ai->wipe();
 	}
 
 	void drawstate(gameent *d, aistate &b, bool top, int above)
@@ -1159,11 +1155,11 @@ namespace ai
 		}
 		if(aidebug > 4)
 		{
-			vec pos = vec(d->feetpos()).add(vec(0, 0, 0.1f));
+			vec pos = vec(d->feetpos()).add(vec(0, 0, amt+0.1f));
 			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x008888);
 			if(entities::ents.inrange(d->lastnode))
 			{
-				vec to = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, 0.1f));
+				vec to = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, amt+0.1f));
 				part_trace(pos, to, 1.f, 1, 0x884400);
 				pos = to;
 			}
@@ -1171,7 +1167,7 @@ namespace ai
 			{
 				if(entities::ents.inrange(d->ai->prevnodes[i]))
 				{
-					vec to = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, 0.1f));
+					vec to = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, amt+0.1f));
 					part_trace(pos, to, 1.f, 1, 0x442200);
 					pos = to;
 				}
