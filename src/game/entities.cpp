@@ -49,6 +49,9 @@ namespace entities
 				case FLAGMODE_NONE: default: break;
 				case FLAGMODE_STF: addentinfo("stf"); break;
 				case FLAGMODE_CTF: addentinfo("ctf"); break;
+				case FLAGMODE_MULTICTF: addentinfo("multi-ctf"); break;
+				case FLAGMODE_STFMULTICTF: addentinfo("stf or multi-ctf"); break;
+				case FLAGMODE_NONMULTICTF: addentinfo("non-multi-ctf"); break;
 			}
 		}
 		else if(type == WEAPON)

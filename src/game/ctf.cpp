@@ -184,7 +184,7 @@ namespace ctf
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !chkflagmode(game::gamemode, a->attr[3]) || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) \
+			if(a->type != FLAG || !chkflagmode(game::gamemode, game::mutators, a->attr[3]) || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) \
 				continue; \
 			else \
 			{ \
@@ -221,6 +221,43 @@ namespace ctf
             if(!added && isteam(game::gamemode, game::mutators, e->attr[0], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(e, BASE_BOTH); // add as both
         }
+        if(!st.flags.empty()) loopi(numteams(game::gamemode, game::mutators))
+        {
+        	bool found = false;
+        	loopvj(st.flags) if(st.flags[j].team == i+TEAM_FIRST) { found = true; break; }
+        	if(!found)
+        	{
+        		loopvj(st.flags) if(st.flags[j].team == TEAM_NEUTRAL) { found = true; break; }
+       			loopvj(st.flags) st.flags[j].team = TEAM_NEUTRAL;
+        		if(!found)
+        		{
+        			loopvj(st.flags) st.flags[j].base &= ~BASE_FLAG;
+        			int best = -1;
+        			float margin = 1e16f, mindist = 1e16f;
+   			        loopvj(entities::ents)
+   			        {
+						extentity *e = entities::ents[j];
+						setupchkflag(e, { continue; });
+						if(!entities::ents.inrange(best)) best = j;
+						else
+						{
+							vector<float> dists;
+							float v = 0.f;
+							loopvk(st.flags) v += dists.add(st.flags[k].spawnloc.dist(e->o));
+							v /= st.flags.length();
+							if(v <= mindist)
+							{
+								float m = 0.f;
+								loopvk(dists) if(k) m += fabs(dists[k]-dists[k-1]);
+								if(m <= margin) { best = j; margin = m; mindist = v; }
+							}
+						}
+   			        }
+					if(entities::ents.inrange(best)) setupaddflag(entities::ents[best], BASE_FLAG);
+        		}
+        		break;
+        	}
+		}
     }
 
     void sendflags(ucharbuf &p)
@@ -439,7 +476,7 @@ namespace ctf
 			if(!home && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = f.team == TEAM_NEUTRAL || !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
 			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
