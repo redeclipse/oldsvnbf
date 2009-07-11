@@ -621,7 +621,7 @@ namespace ai
 		return node;
 	}
 
-	bool entspot(gameent *d, int n, bool force = false)
+	bool wpspot(gameent *d, int n, bool force = false)
 	{
 		if(entities::ents.inrange(n))
 		{
@@ -630,13 +630,16 @@ namespace ai
 			int entid = obstacles.remap(d, n, epos);
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
-				d->ai->spot = epos;
-				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+				if(vec(epos).sub(d->feetpos()).magnitude() > CLOSEDIST*0.5f)
 				{
-					d->crouching = !d->crouching;
-					d->crouchtime = lastmillis;
+					d->ai->spot = epos;
+					if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+					{
+						d->crouching = !d->crouching;
+						d->crouchtime = lastmillis;
+					}
+					return true;
 				}
-				return true;
 			}
 		}
 		return false;
@@ -660,7 +663,7 @@ namespace ai
 				while(!anyremap.empty())
 				{
 					int r = rnd(anyremap.length()), t = anyremap[r];
-					if(entspot(d, t, retry))
+					if(wpspot(d, t, retry))
 					{
 						d->ai->route.add(t);
 						return true;
@@ -687,7 +690,7 @@ namespace ai
 				while(d->ai->route.length() > n+1) d->ai->route.pop(); // waka-waka-waka-waka
 				if(!n)
 				{
-					if(entspot(d, d->ai->route[n], retries >= 2))
+					if(wpspot(d, d->ai->route[n], retries >= 2))
 					{
 						d->ai->clear(false);
 						return true;
@@ -696,7 +699,7 @@ namespace ai
 				}
 				else n--; // otherwise, we want the next in line
 			}
-			if(d->ai->route.inrange(n) && entspot(d, d->ai->route[n], retries >= 2)) return true;
+			if(d->ai->route.inrange(n) && wpspot(d, d->ai->route[n], retries >= 2)) return true;
 			else if(retries <= 2) return hunt(d, b, retries+1); // try again
 		}
 		b.override = false;
@@ -1156,21 +1159,21 @@ namespace ai
 		}
 		if(aidebug > 4)
 		{
-			vec pos = vec(d->feetpos()).add(vec(0, 0, amt+0.1f));
-			if(d->ai->spot != vec(0, 0, 0)) part_trace(pos, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x008888);
+			vec fr = vec(d->feetpos()).add(vec(0, 0, amt));
+			if(d->ai->spot != vec(0, 0, 0)) part_trace(fr, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x008888);
 			if(entities::ents.inrange(d->lastnode))
 			{
-				vec to = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, amt+0.1f));
-				part_trace(pos, to, 1.f, 1, 0x884400);
-				pos = to;
+				vec dr = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, amt));
+				part_trace(fr, dr, 1.f, 1, 0x884400);
+				fr = dr;
 			}
 			loopi(NUMPREVNODES)
 			{
 				if(entities::ents.inrange(d->ai->prevnodes[i]))
 				{
-					vec to = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, amt+0.1f));
-					part_trace(pos, to, 1.f, 1, 0x442200);
-					pos = to;
+					vec dr = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, amt));
+					part_trace(dr, fr, 1.f, 1, 0x442200);
+					fr = dr;
 				}
 			}
 		}
