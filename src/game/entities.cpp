@@ -317,7 +317,7 @@ namespace entities
 
 	vector<entcachenode *> entcachestack;
 
-	int closestent(int type, const vec &pos, float mindist, bool links)
+	int closestent(int type, const vec &pos, float mindist, bool links, gameent *d)
 	{
 		if(entcachedepth<0) buildentcache();
 
@@ -328,7 +328,7 @@ namespace entities
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(e.type == type && (!links || !e.links.empty())) \
+			if(e.type == type && (!links || !e.links.empty()) && (!d || !d->ai || !d->ai->hasprevnode(n))) \
 			{ \
 				float dist = e.o.squaredist(pos); \
 				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
@@ -1134,6 +1134,12 @@ namespace entities
 					nodes[ent].estscore = 0.f;
 				}
 			}});
+			if(d->ai) loopi(ai::NUMPREVNODES) if(d->ai->prevnodes[i] != node && nodes.inrange(d->ai->prevnodes[i]))
+			{
+				nodes[d->ai->prevnodes[i]].id = routeid;
+				nodes[d->ai->prevnodes[i]].curscore = -1.f;
+				nodes[d->ai->prevnodes[i]].estscore = 0.f;
+			}
 		}
 
 		nodes[node].id = routeid;
@@ -1222,7 +1228,7 @@ namespace entities
 			vec v = d->feetpos();
 			bool clip = clipped(v, true), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
 			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
-			int curnode = closestent(WAYPOINT, v, dist, false);
+			int curnode = closestent(WAYPOINT, v, dist, false, d), prevnode = d->lastnode;
 
 			if(!ents.inrange(curnode) && shoulddrop)
 			{
@@ -1240,10 +1246,11 @@ namespace entities
 					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
 				d->lastnode = curnode;
 			}
-			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false);
+			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
 
 			if(clip) cleanairnodes = 2;
 			else if(!d->timeinair) cleanairnodes = 1;
+			if(d->ai && ents.inrange(prevnode) && d->lastnode != prevnode) d->ai->addprevnode(prevnode);
 		}
 		else
 		{
