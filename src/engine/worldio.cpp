@@ -705,9 +705,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						int len = hdr.version >= 25 ? f->getlil<int>() : f->getchar();
 						if(len)
 						{
-							string vname;
-							f->read(vname, len+1);
-							ident *id = idents->access(vname);
+							string name;
+							f->read(name, len+1);
+							if(hdr.version <= 34 && !strcmp(name, "cloudcolour")) copystring(name, "cloudlayercolour");
+							ident *id = idents->access(name);
 							bool proceed = true;
 							int type = hdr.version >= 28 ? f->getlil<int>()+(hdr.version >= 29 ? 0 : 1) : (id ? id->type : ID_VAR);
 							if(!id || type != id->type)
@@ -727,7 +728,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 									{
 										if(val > id->maxval) val = id->maxval;
 										else if(val < id->minval) val = id->minval;
-										setvar(vname, val, true);
+										setvar(name, val, true);
 									}
 									break;
 								}
@@ -738,7 +739,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 									{
 										if(val > id->maxvalf) val = id->maxvalf;
 										else if(val < id->minvalf) val = id->minvalf;
-										setfvar(vname, val, true);
+										setfvar(name, val, true);
 									}
 									break;
 								}
@@ -747,7 +748,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 									int slen = f->getlil<int>();
 									string val;
 									f->read(val, slen+1);
-									if(proceed && slen) setsvar(vname, val, true);
+									if(proceed && slen) setsvar(name, val, true);
 									break;
 								}
 								default:
@@ -763,7 +764,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 							}
 							if(!proceed)
 							{
-								if(verbose) conoutf("\frWARNING: ignoring variable %s stored in map", vname);
+								if(verbose) conoutf("\frWARNING: ignoring variable %s stored in map", name);
 							}
 							else vars++;
 						}
@@ -878,6 +879,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					name[min(ilen, OCTASTRLEN-1)] = '\0';
 					if(ilen >= OCTASTRLEN) f->seek(ilen - (OCTASTRLEN-1), SEEK_CUR);
 					if(!strcmp(name, "cloudalpha")) copystring(name, "cloudblend");
+					if(!strcmp(name, "cloudcolour")) copystring(name, "cloudlayercolour");
 					ident *id = getident(name);
 					bool exists = id && id->type == type;
 					switch(type)
@@ -908,7 +910,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						}
 					}
 				}
-
 				sanevars();
 
 				string gameid;
@@ -1085,6 +1086,14 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				execfile(cfgname);
 			}
 			else if(!execfile(cfgname, false)) execfile("map.cfg");
+			if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 34))
+			{
+				setvar("cloudglare", 0, true);
+				setvar("cloudlayerglare", 0, true);
+				extern float cloudblend;
+				setfvar("cloudlayerblend", cloudblend, true);
+			}
+
 			persistidents = true;
 			overrideidents = worldidents = false;
 
