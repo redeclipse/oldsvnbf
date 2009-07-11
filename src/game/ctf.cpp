@@ -434,7 +434,7 @@ namespace ctf
 					goal = i;
 				}
 			}
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc, false))
+			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc))
 			{
 				d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
 				return true;
@@ -465,7 +465,7 @@ namespace ctf
 			while(!takenflags.empty())
 			{
 				int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
-				if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos(), false))
+				if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos()))
 				{
 					d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
 					return true;
