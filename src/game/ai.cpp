@@ -503,8 +503,12 @@ namespace ai
 				case AI_T_NODE:
 				{
 					if(check(d, b)) return 1;
-					if(d->lastnode != b.target && entities::ents.inrange(b.target))
-						return makeroute(d, b, entities::ents[b.target]->o) ? 1 : 0;
+					if(entities::ents.inrange(b.target))
+					{
+						gameentity &e = *(gameentity *)entities::ents[b.target];
+						if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
+							return makeroute(d, b, e.o) ? 1 : 0;
+					}
 					break;
 				}
 				case AI_T_ENTITY:
@@ -746,7 +750,7 @@ namespace ai
 		{
 			d->jumping = true;
 			d->jumptime = lastmillis;
-			if(jumper && !propeller) d->ai->dontmove = true; // going up
+			if(jumper && !propeller && !d->onladder) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder ? 2 : 5);
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
