@@ -256,18 +256,21 @@ namespace aiman
 
 	void checkai()
 	{
-		if(hasgameinfo && !m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
+		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
 		{
-			#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
-			checkold(teambalance);
-			checkold(botratio);
-			checkold(botscale);
-			checkold(botminskill);
-			checkold(botmaxskill);
-			checkold(botlimit);
-			if(dorefresh) { checksetup(); dorefresh = false; }
-			loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
-			while(true) if(!reassignai()) break;
+			if(hasgameinfo)
+			{
+				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
+				checkold(teambalance);
+				checkold(botratio);
+				checkold(botscale);
+				checkold(botminskill);
+				checkold(botmaxskill);
+				checkold(botlimit);
+				if(dorefresh) { checksetup(); dorefresh = false; }
+				loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
+				while(true) if(!reassignai()) break;
+			}
 		}
 		else clearai();
 	}
