@@ -502,6 +502,7 @@ namespace ai
 			{
 				case AI_T_NODE:
 				{
+					if(check(d, b)) return 1;
 					if(d->lastnode != b.target && entities::ents.inrange(b.target))
 						return makeroute(d, b, entities::ents[b.target]->o) ? 1 : 0;
 					break;
@@ -746,10 +747,10 @@ namespace ai
 			d->jumping = true;
 			d->jumptime = lastmillis;
 			if(jumper && !propeller) d->ai->dontmove = true; // going up
-			int seed = (111-d->skill)*5;
+			int seed = (111-d->skill)*(d->onladder ? 2 : 5);
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
-			seed *= d->onladder || b.idle ? 10 : 20;
+			seed *= b.idle ? 10 : 20;
 			d->ai->jumprand = lastmillis+seed+rnd(seed);
 		}
 	}
