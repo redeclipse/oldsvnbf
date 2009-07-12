@@ -426,7 +426,6 @@ namespace server
 
 	void cleanup()
 	{
-		aiman::clearai();
 		if(GVAR(resetvarsonend)) resetgamevars(true);
 		if(GVAR(resetbansonend)) bannedips.setsize(0);
 		changemap();
@@ -1415,7 +1414,8 @@ namespace server
 	void changemap(const char *name, int mode, int muts)
 	{
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = false;
-        stopdemo(); aiman::clearai();
+		aiman::dorefresh = true;
+        stopdemo();
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
 		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
 		modecheck(&gamemode, &mutators);
@@ -1450,25 +1450,22 @@ namespace server
 #endif
 		copystring(smapname, reqmap);
 
-		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
-
 		// server modes
 		if(m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
 		else smode = NULL;
-
 		smuts.setsize(0);
 		if(m_duke(gamemode, mutators)) smuts.add(&duelmutator);
-
 		if(smode) smode->reset(false);
 		mutate(smuts, mut->reset(false));
 
+		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
 			ci->mapchange(true);
             if(ci->state.state == CS_SPECTATOR) continue;
-            else if(m_play(gamemode))
+            else if(ci->state.aitype == AI_NONE && m_play(gamemode))
             {
                 ci->state.state = CS_SPECTATOR;
                 sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);

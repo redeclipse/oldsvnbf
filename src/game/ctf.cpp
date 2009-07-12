@@ -23,7 +23,7 @@ namespace ctf
 			ctfstate::flag &f = st.flags[i];
 			conoutf("flag %2d: %d [%d] %.1f,%.1f,%.1f", i, f.team, f.base, f.spawnloc.x, f.spawnloc.y, f.spawnloc.z);
 			if(f.droptime) conoutf("    dropped [%d] %.1f,%.1f,%1.f", f.droptime, f.droploc.x, f.droploc.y, f.droploc.z);
-			else if(f.owner) conoutf("    taken [%s] %.1f,%.1f,%1.f", game::colorname(f.owner), f.owner->o.x, f.owner->o.y, f.owner->o.z);
+			if(f.owner) conoutf("    taken [%s] %.1f,%.1f,%1.f", game::colorname(f.owner), f.owner->o.x, f.owner->o.y, f.owner->o.z);
 		}
 	});
 
