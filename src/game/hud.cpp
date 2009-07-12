@@ -38,10 +38,10 @@ namespace hud
 	VARP(conoverflow, 0, 5, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	FVARP(conblend, 0, 0.8f, 1);
-	VARP(chatconsize, 0, 6, 100);
+	VARP(chatconsize, 0, 5, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
-	VARP(chatconoverflow, 0, 2, 1);
+	VARP(chatconoverflow, 0, 3, 1);
 	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
@@ -760,7 +760,7 @@ namespace hud
 				loopv(refs)
 				{
 					float fade = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref);
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*fade;
 				}
 			}
 		}
@@ -785,12 +785,10 @@ namespace hud
 						refs.add(i);
 					}
 				}
-				float fade = 1.f;
 				loopvrev(refs)
 				{
-					if(fade < 1.f) z -= int(FONTH*(1.f-fade));
-					fade = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref);
+					float fade = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*fade;
 				}
 			}
 			if(commandmillis >= 0)
