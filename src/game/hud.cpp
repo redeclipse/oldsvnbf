@@ -1136,9 +1136,9 @@ namespace hud
 	int drawhealth(int x, int y, int s, float blend)
 	{
         int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow);
-		float fade = inventoryhealthblend*blend, r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.5f : 1.f;
+		float fade = inventoryhealthblend*blend, r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
 		if(teamwidgets) skewcolour(r, g, b);
-		if(game::player1->state == CS_ALIVE && game::player1->health <= 35)
+		if(game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2)
 		{
 			int timestep = lastmillis%1000;
 			float pulse = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
