@@ -245,6 +245,7 @@ namespace aiman
 				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
 			}
 		}
+		else if(!autooverride) clearai();
 	}
 
 	void clearai()
