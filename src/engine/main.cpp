@@ -770,11 +770,11 @@ void updatetimer()
 	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
 	millis += clockvirtbase;
 	if(millis<totalmillis) millis = totalmillis;
-	int frame = millis-totalmillis;
 	limitfps(millis, totalmillis);
-	curtime = frame;
+	int elapsed = millis-totalmillis;
+	curtime = elapsed;
+	lastmillis += curtime;
 	totalmillis = millis;
-	lastmillis += frame;
 }
 
 int main(int argc, char **argv)

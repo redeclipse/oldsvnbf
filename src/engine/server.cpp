@@ -79,7 +79,7 @@ VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(servermaster, ENG_MASTER_HOST);
 SVAR(serverip, "");
 
-int curtime = 0, totalmillis = 0, lastmillis = 0;
+int curtime = 0, totalmillis = 1, lastmillis = 1;
 const char *load = NULL;
 vector<char *> gameargs;
 
