@@ -16,7 +16,7 @@ namespace hud
 
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
-	FVARP(statblend, 0, 0.6f, 1);
+	FVARP(statblend, 0, 0.65f, 1);
 
 	VARP(showfps, 0, 1, 3);
 
@@ -37,7 +37,7 @@ namespace hud
 	VARP(confade, 0, 1000, INT_MAX-1);
 	VARP(conoverflow, 0, 5, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
-	FVARP(conblend, 0, 0.8f, 1);
+	FVARP(conblend, 0, 0.75f, 1);
 	VARP(chatconsize, 0, 5, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
@@ -80,17 +80,17 @@ namespace hud
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
-	FVARP(indicatorblend, 0, 0.8f, 1);
+	FVARP(indicatorblend, 0, 0.75f, 1);
 	VARP(teamindicator, 0, 2, 2);
 	FVARP(teamindicatorsize, 0, 0.06f, 1000);
-	FVARP(teamindicatorblend, 0, 0.3f, 1);
+	FVARP(teamindicatorblend, 0, 0.25f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.05f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.6f, 1);
+	FVARP(crosshairblend, 0, 0.65f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
 	TVAR(relativecursortex, "textures/crosshair", 3);
@@ -142,7 +142,7 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
-	FVARP(clipblend, 0, 0.4f, 1000);
+	FVARP(clipblend, 0, 0.25f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -156,11 +156,11 @@ namespace hud
 	VARP(showradar, 0, 2, 2);
 	TVAR(radartex, "textures/radar", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardblend, 0, 0.6f, 1);
+	FVARP(radarcardblend, 0, 0.5f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
-	FVARP(radarblipblend, 0, 0.6f, 1);
+	FVARP(radarblipblend, 0, 0.5f, 1);
 	FVARP(radarflagblend, 0, 1.f, 1);
-	FVARP(radaritemblend, 0, 0.8f, 1);
+	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	FVARP(radaroffset, 0, 0.075f, 1000);
 	VARP(radardist, 0, 256, INT_MAX-1);
@@ -173,7 +173,7 @@ namespace hud
 	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 0, 1);
-	VARP(showeditradar, 0, 1, 1);
+	VARP(showeditradar, 0, 0, 1);
 	VARP(editradarcard, 0, 0, 1);
 	VARP(editradardist, 0, 32, INT_MAX-1);
 	VARP(editradarnoisy, 0, 1, 2);
