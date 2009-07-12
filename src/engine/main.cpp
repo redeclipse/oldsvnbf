@@ -764,19 +764,16 @@ void eastereggs()
 	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
 }
 
-void updatetimer(bool outofloop)
+void updatetimer()
 {
 	int millis = SDL_GetTicks() - clockrealbase;
 	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
 	millis += clockvirtbase;
 	if(millis<totalmillis) millis = totalmillis;
 	int frame = millis-totalmillis;
-	if(!outofloop)
-	{
-		limitfps(millis, totalmillis);
-		curtime = frame;
-		totalmillis = millis;
-	}
+	limitfps(millis, totalmillis);
+	curtime = frame;
+	totalmillis = millis;
 	lastmillis += frame;
 }
 
@@ -918,7 +915,7 @@ int main(int argc, char **argv)
 
 	for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
 	{
-		updatetimer(false);
+		updatetimer();
 		updatefps(frameloops, curtime);
 		checkinput();
 		menuprocess();
