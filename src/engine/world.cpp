@@ -659,14 +659,14 @@ void entlink()
 				if(ents.inrange(node))
 				{
 					if(!entities::linkents(index, node) && !entities::linkents(node, index))
-						conoutf("\frERROR: failed linking %d and %d (%d)", index, node, i+1);
+						conoutf("\frfailed linking %d and %d (%d)", index, node, i+1);
 				}
-				else conoutf("\frERROR: %d (%d) is not in range", node, i+1);
+				else conoutf("\fr%d (%d) is not in range", node, i+1);
 			}
 		}
-		else conoutf("\frERROR: %d (%d) is not in range", index, 0);
+		else conoutf("\fr%d (%d) is not in range", index, 0);
 	}
-	else conoutf("\frERROR: more than one entity must be selected to link");
+	else conoutf("\frmore than one entity must be selected to link");
 }
 COMMAND(entlink, "");
 
