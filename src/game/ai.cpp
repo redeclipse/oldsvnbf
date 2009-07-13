@@ -697,11 +697,11 @@ namespace ai
 		return anynode(d, b);
 	}
 
-	bool weaprange(int weap, float sqdist)
+	bool weaprange(gameent *d, int weap, float dist)
 	{
-		float mindist = weaptype[weap].explode ? weaptype[weap].explode : 4,
-			maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
-		return sqdist >= mindist*mindist && sqdist <= maxdist*maxdist;
+		if(weaptype[weap].extinguish && d->inliquid) return false;
+		float mindist = weaptype[weap].explode ? weaptype[weap].explode : 4, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
+		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
 	gameent *getenemy(gameent *d, vec &dp)
@@ -714,7 +714,7 @@ namespace ai
 	bool hastarget(gameent *d, aistate &b, gameent *e, float yaw, float pitch, float dist)
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-		if(weaprange(d->weapselect, dist))
+		if(weaprange(d, d->weapselect, dist))
 		{
 			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAPON_GRENADE ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
@@ -867,7 +867,7 @@ namespace ai
 				break;
 			}
 		}
-		if(game::allowmove(d) && busy <= 2 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -927,16 +927,16 @@ namespace ai
 			}
 		}
 
-		if(busy <= (!d->hasweap(d->weapselect, sweap) ? 2 : 1) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(), ep;
 			gameent *e = getenemy(d, dp);
 			if(e) ep = getaimpos(d, e);
 			float dist = dp.squaredist(ep);
-			if(!isweap(weap) || (e && !weaprange(weap, dist)))
+			if(!isweap(weap) || (e && !weaprange(d, weap, dist)))
 			{
-				loopirev(WEAPON_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(i, dist)))
+				loopirev(WEAPON_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(d, i, dist)))
 				{
 					weap = i;
 					break;
