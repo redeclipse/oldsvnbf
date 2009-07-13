@@ -683,12 +683,13 @@ void entset(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
 			  e.attr[4]=*a5;);
 }
 
-ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
+ICOMMAND(enthavesel,"", (), addimplicit(intret(entgroup.length())));
 ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
-ICOMMAND(entloop,   "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
-ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget,    "",  (), entfocus(efocus, defformatstring(s)("%s %d %d %d %d %d", entities::findname(e.type), e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);  result(s)));
-ICOMMAND(entindex,  "",  (), intret(efocus));
+ICOMMAND(entloop, "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
+ICOMMAND(enttype, "s", (char *s), entfocus(efocus, intret((!*s || !strcmp(s, entities::findname(e.type))))));
+ICOMMAND(insel, "", (), entfocus(efocus, intret(pointinsel(sel, e.o))));
+ICOMMAND(entget, "", (), entfocus(efocus, defformatstring(s)("%s %d %d %d %d %d", entities::findname(e.type), e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]); result(s)));
+ICOMMAND(entindex, "", (), intret(efocus));
 COMMAND(entset, "siiiii");
 
 
