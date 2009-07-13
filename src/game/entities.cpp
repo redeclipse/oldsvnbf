@@ -1125,6 +1125,12 @@ namespace entities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
+		if(d->ai) loopi(ai::NUMPREVNODES) if(d->ai->prevnodes[i] != node && nodes.inrange(d->ai->prevnodes[i]))
+		{
+			nodes[d->ai->prevnodes[i]].id = routeid;
+			nodes[d->ai->prevnodes[i]].curscore = -1.f;
+			nodes[d->ai->prevnodes[i]].estscore = 0.f;
+		}
 		if(check)
 		{
 			vec pos = d->feetpos();
@@ -1137,12 +1143,6 @@ namespace entities
 					nodes[ent].estscore = 0.f;
 				}
 			}});
-			if(d->ai) loopi(ai::NUMPREVNODES) if(d->ai->prevnodes[i] != node && nodes.inrange(d->ai->prevnodes[i]))
-			{
-				nodes[d->ai->prevnodes[i]].id = routeid;
-				nodes[d->ai->prevnodes[i]].curscore = -1.f;
-				nodes[d->ai->prevnodes[i]].estscore = 0.f;
-			}
 		}
 
 		nodes[node].id = routeid;

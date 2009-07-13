@@ -146,26 +146,23 @@ namespace ai
 		return !targets.empty();
 	}
 
-	bool makeroute(gameent *d, aistate &b, int node, bool changed, bool check)
+	bool makeroute(gameent *d, aistate &b, int node, bool changed, int retries)
 	{
-		if(node != d->lastnode)
+		if(changed && d->ai->route.length() > 1 && d->ai->route[0] == node) return true;
+		if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, retries <= 1))
 		{
-			if(changed && d->ai->route.length() > 1 && d->ai->route[0] == node) return true;
-			if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, check))
-			{
-				b.override = false;
-				return true;
-			}
+			b.override = false;
+			return true;
 		}
-		if(check) return makeroute(d, b, node, true, false);
 		d->ai->clear(true);
+		if(retries <= 1) return makeroute(d, b, node, true, retries+1);
 		return false;
 	}
 
-	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, bool check)
+	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, int retries)
 	{
 		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true, d);
-		return makeroute(d, b, node, changed, check);
+		return makeroute(d, b, node, changed, retries);
 	}
 
 	bool randomnode(gameent *d, aistate &b, const vec &pos, float guard, float wander)
@@ -363,7 +360,7 @@ namespace ai
 		}
 	}
 
-	bool find(gameent *d, aistate &b, bool override = false)
+	bool find(gameent *d, aistate &b)
 	{
 		static vector<interest> interests;
 		interests.setsizenodelete(0);
@@ -389,7 +386,7 @@ namespace ai
 			}
 			if(proceed && makeroute(d, b, n.node, false))
 			{
-				d->ai->setstate(n.state, n.targtype, n.target, override);
+				d->ai->addstate(n.state, n.targtype, n.target);
 				return true;
 			}
 		}
@@ -707,22 +704,20 @@ namespace ai
 		return sqdist >= mindist*mindist && sqdist <= maxdist*maxdist;
 	}
 
-	bool hastarget(gameent *d, aistate &b, gameent *e)
+	gameent *getenemy(gameent *d, vec &dp)
+	{
+		gameent *e = game::intersectclosest(dp, d->ai->target, d);
+		if(!e) e = game::getclient(d->ai->enemy);
+		return e && targetable(d, e, true) ? e : NULL;
+	}
+
+	bool hastarget(gameent *d, aistate &b, gameent *e, float yaw, float pitch, float dist)
 	{ // add margins of error
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-		vec dp = d->headpos(), ep = getaimpos(d, e);
-		gameent *h = game::intersectclosest(dp, d->ai->target, d);
-		if(h && !targetable(d, h, true)) return false;
-		float targyaw = 0.f, targpitch = 0.f, dist = dp.squaredist(ep);
 		if(weaprange(d->weapselect, dist))
 		{
-			if(d->skill > 100 && h) return true;
-			vec dir = vec(dp).sub(ep).normalize();
-			vectoyawpitch(dir, targyaw, targpitch);
-			float rtime = (d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f),
-					skew = clamp(float(lastmillis-d->ai->enemymillis)/float(rtime), 0.f, d->weapselect == WEAPON_GRENADE ? 0.25f : 1e16f),
-						cyaw = fabs(targyaw-d->yaw), cpitch = fabs(targpitch-d->pitch);
-			if(cyaw <= d->ai->views[0]*skew && cpitch <= d->ai->views[1]*skew) return true;
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAPON_GRENADE ? 0.25f : 1e16f);
+			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
 	}
@@ -731,10 +726,8 @@ namespace ai
 	{
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		bool offground = (d->timeinair && !physics::liquidcheck(d) && !d->onladder), jumper = off.z >= JUMPMIN,
-			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand,
-			propeller = dir.magnitude() > JUMPMIN*2, propel = jumper || propeller;
-		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d)))
-			propel = false;
+			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand, propeller = dir.magnitude() > JUMPMIN*2, propel = jumper || propeller;
+		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d))) propel = false;
 		if(jump)
 		{
 			if(offground || lastmillis < d->ai->jumpseed) jump = false;
@@ -757,14 +750,6 @@ namespace ai
 			seed *= b.idle ? 5 : 10;
 			d->ai->jumprand = lastmillis+seed+rnd(seed);
 		}
-	}
-
-	gameent *getenemy(gameent *d, vec &dp)
-	{
-		gameent *e = game::getclient(d->ai->enemy);
-		if(d->skill > 90 && (!e || !targetable(d, e, true))) e = game::intersectclosest(dp, d->ai->target, d);
-		if(e && targetable(d, e, true)) return e;
-		return NULL;
 	}
 
 	int process(gameent *d, aistate &b)
@@ -808,7 +793,7 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(physics::issolid(e) && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) && hastarget(d, b, e))
+					if(d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) && hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
 					{
 						d->attacking = true;
 						d->ai->lastaction = d->attacktime = lastmillis;
