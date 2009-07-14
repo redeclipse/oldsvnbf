@@ -1353,7 +1353,7 @@ namespace hud
 		{
 			bool texturing = true;
 			int millis = lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis);
-			if(commandmillis > 0 || millis < commandfade)
+			if(commandfade && (commandmillis > 0 || millis < commandfade))
 			{
 				float amt = min(float(millis)/float(commandfade), 1.f)*commandfadeamt;
 				if(commandmillis > 0) amt = 1.f-amt;
@@ -1362,7 +1362,7 @@ namespace hud
 				drawblend(0, 0, w, h, amt, amt, amt);
 				fade *= amt;
 			}
-			else if(!client::ready() || lastmillis-game::maptime < titlecard)
+			else if(titlecard && (!client::ready() || lastmillis-game::maptime < titlecard))
 			{
 				float amt = client::ready() ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
 				if(amt < 1.f)
@@ -1372,7 +1372,7 @@ namespace hud
 					fade *= amt;
 				}
 			}
-			else if(game::tvmode())
+			else if(specfade && game::tvmode())
 			{
 				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
 				if(amt < 1.f)
@@ -1382,7 +1382,7 @@ namespace hud
 					fade *= amt;
 				}
 			}
-			else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
+			else if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
 			{
 				float amt = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
 				if(amt < 3.f)
