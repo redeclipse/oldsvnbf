@@ -24,6 +24,8 @@ namespace hud
 	void toggleconsole() { fullconsole = !fullconsole; }
 	COMMAND(toggleconsole, "");
 
+	VARP(specfade, 0, 1000, INT_MAX-1);
+	VARP(spawnfade, 0, 1000, INT_MAX-1);
 	VARP(commandfade, 0, 500, INT_MAX-1);
 	FVARP(commandfadeamt, 0, 0.75f, 1);
 
@@ -1377,7 +1379,7 @@ namespace hud
 			}
 			else if(game::tvmode())
 			{
-				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < 1000 ? float(lastmillis-game::lastspecchg)/1000.f : 1.f) : 0.f;
+				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
 				if(amt < 1.f)
 				{
 					usetexturing(false); texturing = false;
@@ -1385,14 +1387,14 @@ namespace hud
 					fade *= amt;
 				}
 			}
-			else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000)
+			else if(game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
 			{
-				float amt = (lastmillis-game::player1->lastspawn)/500.f;
-				if(amt < 2.f)
+				float amt = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
+				if(amt < 3.f)
 				{
 					float r = 1.f, g = 1.f, b = 1.f;
 					skewcolour(r, g, b, true);
-					fade *= amt*0.5f;
+					fade *= amt/3.f;
 					if(amt < 1.f)
 					{
 						r *= amt;
@@ -1401,7 +1403,7 @@ namespace hud
 					}
 					else
 					{
-						amt -= 1.f;
+						amt = (amt-1.f)*0.5f;
 						r += (1.f-r)*amt;
 						g += (1.f-g)*amt;
 						b += (1.f-b)*amt;
