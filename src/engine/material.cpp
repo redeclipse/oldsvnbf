@@ -121,7 +121,7 @@ void drawmaterial(int orient, int x, int y, int z, int csize, int rsize, float o
 	xtraverts += 4;
 }
 
-sometype materials[] =
+generic materials[] =
 {
 	{"air", MAT_AIR},
 	{"water", MAT_WATER},

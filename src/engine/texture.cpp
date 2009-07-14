@@ -1043,7 +1043,7 @@ void resetmaterials()
 }
 
 ICOMMAND(materialreset, "", (void), if(editmode || worldidents) resetmaterials(););
-sometype textypes[] =
+generic textypes[] =
 {
 	{"c", TEX_DIFFUSE},
 	{"u", TEX_UNKNOWN},

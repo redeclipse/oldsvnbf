@@ -2,12 +2,12 @@
 
 #include "engine.h"
 
-sometype mapexts[] = {
+generic mapexts[] = {
 	{ ".bgz", MAP_BFGZ },
 	{ ".ogz", MAP_OCTA },
 };
 
-sometype mapdirs[] = {
+generic mapdirs[] = {
 	{ "maps", MAP_BFGZ },
 	{ "base", MAP_OCTA },
 };

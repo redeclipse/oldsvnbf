@@ -31,7 +31,7 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
-        if(d != proj.owner && proj.owner == game::player1)
+        if(d != proj.owner && proj.owner == game::player1 && hithurts(flags))
 			game::player1->lasthit = lastmillis;
 		hitmsg &h = hits.add();
 		h.flags = flags;
