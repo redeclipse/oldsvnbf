@@ -442,7 +442,7 @@ namespace projs
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(6.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFCC22, 2.f, 0, 0, d);
+					part_flare(from, to.mul(3.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFCC22, 1.5f, 0, 0, d);
 				}
                 adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
@@ -454,7 +454,7 @@ namespace projs
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(12.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFAA00, 4.f, 0, 0, d);
+					part_flare(from, to.mul(16.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFAA00, 4.f, 0, 0, d);
 				}
 				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
@@ -466,7 +466,7 @@ namespace projs
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(10.f).add(from), 25, PART_MUZZLE_FLARE, 0xFFAA00, 3.f, 0, 0, d);
+					part_flare(from, to.mul(12.f).add(from), 25, PART_MUZZLE_FLARE, 0xFFAA00, 3.f, 0, 0, d);
 				}
                 adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
