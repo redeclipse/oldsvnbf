@@ -261,8 +261,8 @@ namespace ctf
 								if(!q)
 								{
 									int goal = entities::closestent(WAYPOINT, st.flags[k].spawnloc, 1e16f, true);
-									float u = (entities::route(node, goal, route, obstacles)+entities::route(goal, node, route, obstacles))*0.5f;
-									if(u > 0) v += dists.add(u);
+									float u[2] = { entities::route(node, goal, route, obstacles), entities::route(goal, node, route, obstacles) };
+									if(u[0] > 0 && u[1] > 0) v += dists.add((u[0]+u[1])*0.5f);
 									else
 									{
 										found = false;
