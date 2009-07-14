@@ -246,38 +246,35 @@ namespace ctf
         			float margin = 1e16f, mindist = 1e16f;
 					vector<int> route;
 					entities::avoidset obstacles;
-   			        loopvj(entities::ents)
+   			        for(int q = 0; q < 2; q++) loopvj(entities::ents)
    			        {
 						extentity *e = entities::ents[j];
 						setupchkflag(e, { continue; });
 						vector<float> dists;
-						int node = entities::closestent(WAYPOINT, e->o, 1e16f, true);
 						float v = 0;
-						for(int q = 0; q < 2; q++)
+						if(!q)
 						{
+							int node = entities::closestent(WAYPOINT, e->o, 1e16f, true);
 							bool found = true;
 							loopvk(st.flags)
 							{
-								if(!q)
+								int goal = entities::closestent(WAYPOINT, st.flags[k].spawnloc, 1e16f, true);
+								float u[2] = { entities::route(node, goal, route, obstacles), entities::route(goal, node, route, obstacles) };
+								if(u[0] > 0 && u[1] > 0) v += dists.add((u[0]+u[1])*0.5f);
+								else
 								{
-									int goal = entities::closestent(WAYPOINT, st.flags[k].spawnloc, 1e16f, true);
-									float u[2] = { entities::route(node, goal, route, obstacles), entities::route(goal, node, route, obstacles) };
-									if(u[0] > 0 && u[1] > 0) v += dists.add((u[0]+u[1])*0.5f);
-									else
-									{
-										found = false;
-										break;
-									}
+									found = false;
+									break;
 								}
-								else v += dists.add(st.flags[k].spawnloc.dist(e->o));
 							}
-							if(found) break;
-							else
+							if(!found)
 							{
-								dists.setsize(0);
-								v = 0;
+								best = -1;
+								margin = mindist = 1e16f;
+								break;
 							}
 						}
+						else loopvk(st.flags) v += dists.add(st.flags[k].spawnloc.dist(e->o));
 						v /= st.flags.length();
 						if(v <= mindist)
 						{
