@@ -519,7 +519,7 @@ void consolekey(int code, bool isdown, int cooked)
             	interactive = false;
             }
         }
-        else if(code==SDLK_ESCAPE)
+        else if(code==SDLK_ESCAPE || code < 0)
         {
             histpos = history.length();
             inputcommand(NULL);
@@ -532,11 +532,8 @@ void keypress(int code, bool isdown, int cooked)
 	char alpha = cooked < 0x80 ? cooked : '?';
     keym *haskey = keyms.access(code);
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
-    else if(!UI::keypress(code, isdown, alpha)) // 3D GUI mouse button intercept
-    {
-        if(commandmillis > 0) consolekey(code, isdown, alpha);
-        else if(haskey) execbind(*haskey, isdown);
-    }
+	else if(commandmillis > 0) consolekey(code, isdown, alpha);
+	else if(!UI::keypress(code, isdown, alpha) && haskey) execbind(*haskey, isdown);
 }
 
 char *getcurcommand()
