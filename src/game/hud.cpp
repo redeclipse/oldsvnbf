@@ -1444,7 +1444,7 @@ namespace hud
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
-				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
+				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2);
 			}
 
 			if(!noview && client::ready() && !texpaneltimer)
