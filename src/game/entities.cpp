@@ -1107,10 +1107,10 @@ namespace entities
 		float score() const { return curscore + estscore; }
 	};
 
-	bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool check)
+	float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d, bool check)
 	{
 		if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
-			return false;
+			return 0;
 
 		static uint routeid = 1;
 		static vector<linkq> nodes;
@@ -1125,24 +1125,27 @@ namespace entities
 		}
 		while(nodes.length() < ents.length()) nodes.add();
 
-		if(d->ai) loopi(ai::NUMPREVNODES) if(d->ai->prevnodes[i] != node && nodes.inrange(d->ai->prevnodes[i]))
+		if(d)
 		{
-			nodes[d->ai->prevnodes[i]].id = routeid;
-			nodes[d->ai->prevnodes[i]].curscore = -1.f;
-			nodes[d->ai->prevnodes[i]].estscore = 0.f;
-		}
-		if(check)
-		{
-			vec pos = d->feetpos();
-			loopavoid(obstacles, d, { if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
+			if(d->ai) loopi(ai::NUMPREVNODES) if(d->ai->prevnodes[i] != node && nodes.inrange(d->ai->prevnodes[i]))
 			{
-				if(ent != node && ent != goal && ents[node]->links.find(ent) < 0 && ents[goal]->links.find(ent) < 0)
+				nodes[d->ai->prevnodes[i]].id = routeid;
+				nodes[d->ai->prevnodes[i]].curscore = -1.f;
+				nodes[d->ai->prevnodes[i]].estscore = 0.f;
+			}
+			if(check)
+			{
+				vec pos = d->feetpos();
+				loopavoid(obstacles, d, { if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
 				{
-					nodes[ent].id = routeid;
-					nodes[ent].curscore = -1.f;
-					nodes[ent].estscore = 0.f;
-				}
-			}});
+					if(ent != node && ent != goal && ents[node]->links.find(ent) < 0 && ents[goal]->links.find(ent) < 0)
+					{
+						nodes[ent].id = routeid;
+						nodes[ent].curscore = -1.f;
+						nodes[ent].estscore = 0.f;
+					}
+				}});
+			}
 		}
 
 		nodes[node].id = routeid;
@@ -1189,17 +1192,18 @@ namespace entities
 		foundgoal:
 
 		routeid++;
-
+		float score = 0;
 		if(lowest >= 0) // otherwise nothing got there
 		{
 			for(linkq *m = &nodes[lowest]; m != NULL; m = m->prev)
 				route.add(m - &nodes[0]); // just keep it stored backward
+			if(!route.empty()) score = nodes[lowest].score();
 		}
 
 		if(verbose >= 3)
 			conoutf("\faroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
-		return !route.empty();
+		return score;
 	}
 
 	void entitylink(int index, int node, bool both = true)

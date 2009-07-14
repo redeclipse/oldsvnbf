@@ -1353,7 +1353,7 @@ namespace entities
 		}
 	};
     extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
-	extern bool route(gameent *d, int node, int goal, vector<int> &route, const avoidset &obstacles, bool check = true);
+	extern float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d = NULL, bool check = true);
 }
 #elif defined(GAMESERVER)
 namespace client

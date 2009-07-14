@@ -149,7 +149,7 @@ namespace ai
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, int retries)
 	{
 		if(changed && d->ai->route.length() > 1 && d->ai->route[0] == node) return true;
-		if(entities::route(d, d->lastnode, node, d->ai->route, obstacles, retries <= 1))
+		if(entities::route(d->lastnode, node, d->ai->route, obstacles, d, retries <= 1) > 0)
 		{
 			b.override = false;
 			return true;
