@@ -24,6 +24,9 @@ namespace hud
 	void toggleconsole() { fullconsole = !fullconsole; }
 	COMMAND(toggleconsole, "");
 
+	VARP(commandfade, 0, 500, INT_MAX-1);
+	FVARP(commandfadeamt, 0, 0.75f, 1);
+
 	int conskip = 0;
 	void setconskip(int *n)
 	{
@@ -296,7 +299,7 @@ namespace hud
             case POINTER_RELATIVE: default: return relativecursortex; break;
             case POINTER_GUI:
             {
-            	if(commandmillis >= 0) return commandicon ? commandicon : inputtex;
+            	if(commandmillis > 0) return commandicon ? commandicon : inputtex;
             	else return guicursortex;
             	break;
             }
@@ -433,7 +436,7 @@ namespace hud
 		bool guicursor = index == POINTER_GUI;
 		int cs = int((guicursor ? cursorsize : crosshairsize)*hudsize);
 		float r = 1.f, g = 1.f, b = 1.f, fade = (guicursor ? cursorblend : crosshairblend)*hudblend;
-		if(guicursor && commandmillis >= 0)
+		if(guicursor && commandmillis > 0)
 		{
 			fade = float(lastmillis%1000)/1000.f;
 			if(fade < 0.5f) fade = 1.f-fade;
@@ -733,7 +736,7 @@ namespace hud
 	void drawconsole(int type, int w, int h, int x, int y, int s)
 	{
 		static vector<int> refs; refs.setsizenodelete(0);
-		bool full = fullconsole || commandmillis >= 0;
+		bool full = fullconsole || commandmillis > 0;
 		pushfont("console");
 		if(type == CON_CHAT)
 		{
@@ -791,7 +794,7 @@ namespace hud
 					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*fade;
 				}
 			}
-			if(commandmillis >= 0)
+			if(commandmillis > 0)
 			{
 				pushfont("command");
 				z += draw_textx("> %s", concenter ? x+s/2-FONTW*3 : x, z, 255, 255, 255, int(255*fullconblend*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, (commandpos >= 0 ? commandpos : strlen(commandbuf))+2, s, commandbuf);
@@ -1352,9 +1355,19 @@ namespace hud
 		if(!noview)
 		{
 			bool texturing = true;
-			if(!client::ready() || lastmillis-game::maptime < titlecard)
+			int millis = lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis);
+			if(commandmillis > 0 || millis < commandfade)
 			{
-				float amt = !noview && client::ready() ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
+				float amt = min(float(millis)/float(commandfade), 1.f)*commandfadeamt;
+				if(commandmillis > 0) amt = 1.f-amt;
+				else amt += (1.f-commandfadeamt);
+				usetexturing(false); texturing = false;
+				drawblend(0, 0, w, h, amt, amt, amt);
+				fade *= amt;
+			}
+			else if(!client::ready() || lastmillis-game::maptime < titlecard)
+			{
+				float amt = client::ready() ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
 				if(amt < 1.f)
 				{
 					usetexturing(false); texturing = false;
@@ -1434,7 +1447,7 @@ namespace hud
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
-				if(showconsole >= 2) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
+				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs : bs*2);
 			}
 
 			if(!noview && client::ready() && !texpaneltimer)
