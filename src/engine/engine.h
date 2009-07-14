@@ -407,7 +407,7 @@ extern bool getdynlight(int n, vec &o, float &radius, vec &color);
 
 extern int showmat;
 
-extern sometype materials[], textypes[];
+extern generic materials[], textypes[];
 extern const char *findmaterialname(int type);
 extern int findmaterial(const char *name, bool tryint = false);
 extern void genmatsurfs(cube &c, int cx, int cy, int cz, int size, vector<materialsurface> &matsurfs, uchar &vismask, uchar &clipmask);

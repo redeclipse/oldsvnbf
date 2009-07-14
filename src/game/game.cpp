@@ -520,6 +520,7 @@ namespace game
 				}
 			}
 			ai::damaged(d, actor);
+			if(d != actor && actor != game::player1) actor->lasthit = lastmillis;
 		}
 		if(d == player1 || d->ai)
 		{
@@ -530,8 +531,6 @@ namespace game
 			vec push = dir; push.z += 0.25f; push.mul(m_speedscale(force));
 			d->vel.add(push);
 		}
-        if(d != actor && actor != game::player1)
-			actor->lasthit = lastmillis;
 	}
 
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor)

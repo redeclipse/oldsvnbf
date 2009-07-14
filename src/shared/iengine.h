@@ -14,10 +14,7 @@ extern void conoutf(const char *s, ...);
 #define _dbg_ fprintf(stderr, "%s:%d\n", __FILE__, __LINE__);
 #endif
 
-struct sometype
-{
-	const char *name; uchar id;
-};
+struct generic { const char *name; uchar id; };
 
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
