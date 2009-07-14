@@ -2479,7 +2479,6 @@ namespace server
 				checkents();
 				checklimits();
 				checkclients();
-				aiman::checkai();
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
@@ -2512,6 +2511,7 @@ namespace server
 		}
 		else if(!GVAR(resetbansonend)) cleanbans();
 		auth::update();
+		aiman::checkai();
 	}
 
     bool allowbroadcast(int n)
