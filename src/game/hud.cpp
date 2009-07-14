@@ -299,12 +299,7 @@ namespace hud
         switch(index)
         {
             case POINTER_RELATIVE: default: return relativecursortex; break;
-            case POINTER_GUI:
-            {
-            	if(commandmillis > 0) return commandicon ? commandicon : inputtex;
-            	else return guicursortex;
-            	break;
-            }
+            case POINTER_GUI: return guicursortex; break;
             case POINTER_EDIT: return editcursortex; break;
             case POINTER_SPEC: return speccursortex; break;
             case POINTER_HAIR: return crosshairtex; break;
@@ -438,13 +433,7 @@ namespace hud
 		bool guicursor = index == POINTER_GUI;
 		int cs = int((guicursor ? cursorsize : crosshairsize)*hudsize);
 		float r = 1.f, g = 1.f, b = 1.f, fade = (guicursor ? cursorblend : crosshairblend)*hudblend;
-		if(guicursor && commandmillis > 0)
-		{
-			fade = float(lastmillis%1000)/1000.f;
-			if(fade < 0.5f) fade = 1.f-fade;
-			cs = int(max(crosshairsize, cursorsize)*hudsize);
-		}
-		else if(teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
+		if(!guicursor && teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
 			if(index == POINTER_ZOOM)
@@ -493,7 +482,7 @@ namespace hud
 	void drawpointers(int w, int h)
 	{
         int index = POINTER_NONE;
-		if(UI::hascursor()) index = UI::hascursor(true) ? POINTER_GUI : POINTER_NONE;
+		if(UI::hascursor()) index = UI::hascursor(true) && commandmillis < 0 ? POINTER_GUI : POINTER_NONE;
         else if(!showcrosshair || game::player1->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;
@@ -799,7 +788,13 @@ namespace hud
 			if(commandmillis > 0)
 			{
 				pushfont("command");
-				z += draw_textx("> %s", concenter ? x+s/2-FONTW*3 : x, z, 255, 255, 255, int(255*fullconblend*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, (commandpos >= 0 ? commandpos : strlen(commandbuf))+2, s, commandbuf);
+				Texture *t = textureload(commandicon ? commandicon : inputtex, 3);
+				float fade = float(lastmillis%1000)/1000.f;
+				if(fade < 0.5f) fade = 1.f-fade;
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, fullconblend*hudblend*fade);
+				drawtex(x, z, FONTH, FONTH);
+				z += draw_textx("%s", (concenter ? x+s/2-FONTW*3 : x)+(FONTH+FONTW), z, 255, 255, 255, int(255*fullconblend*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, commandpos >= 0 ? commandpos : strlen(commandbuf), s-(FONTH+FONTW), commandbuf);
 				popfont();
 			}
 		}
