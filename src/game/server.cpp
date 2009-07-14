@@ -754,30 +754,40 @@ namespace server
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
-			loopk(2)
+			if(m_team(gamemode, mutators))
 			{
-				loopv(sents) if(sents[i].type == PLAYERSTART)
+				loopk(3)
 				{
-					if(!k && m_team(gamemode, mutators))
+					loopv(sents) if(sents[i].type == PLAYERSTART)
 					{
-						if(!isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
+						if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
+						else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
+						else if(k == 2 && sents[i].attr[0] != TEAM_NEUTRAL) continue;
+						spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
+						totalspawns++;
 					}
-					else if(sents[i].attr[0] != TEAM_NEUTRAL) continue;
-					spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
+					if(!k && teamgame)
+					{
+						loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
+						{
+							loopj(TEAM_LAST+1) spawns[j].reset();
+							totalspawns = 0;
+							break;
+						}
+						cplayers = totalspawns;
+					}
+					else cplayers = totalspawns;
+					if(totalspawns) break;
+				}
+			}
+			else
+			{ // use all neutral spawns
+				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL)
+				{
+					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
-				if(!k && teamgame)
-				{
-					loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
-					{
-						loopj(TEAM_LAST+1) spawns[j].reset();
-						totalspawns = 0;
-						break;
-					}
-					cplayers = totalspawns/numt;
-				}
-				else cplayers = totalspawns/2;
-				if(totalspawns && !k) break;
+				cplayers = totalspawns;
 			}
 			if(!totalspawns)
 			{ // use all spawns
@@ -786,7 +796,7 @@ namespace server
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
-				cplayers = totalspawns/2;
+				cplayers = totalspawns;
 			}
 			if(!totalspawns)
 			{ // we can cheat and use weapons for spawns
