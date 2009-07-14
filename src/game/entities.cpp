@@ -1629,7 +1629,7 @@ namespace entities
 				}
 				case WAYPOINT:
 				{
-					if(clipped(e.o, true)) e.type = NOTUSED;
+					if(!m_edit(game::gamemode) && clipped(e.o, true)) e.type = NOTUSED;
 					else if(mtype == MAP_BFGZ && gver <= 90)
 						e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
 					break;
@@ -1663,7 +1663,7 @@ namespace entities
 			extentity *e = NULL;
 			e = newent();
 			ents.add(e);
-			e->type = clipped(o, true) ? NOTUSED : WAYPOINT;
+			e->type = !m_edit(game::gamemode) && clipped(o, true) ? NOTUSED : WAYPOINT;
 			e->o = o;
 			int numlinks = clamp(f->getchar(), 0, 6);
 			loopi(numlinks) e->links.add(numents+f->getlil<ushort>());
