@@ -4,7 +4,7 @@ Blood Frontier is based on Cube Engine 2, both of which are covered under the ZL
 
     http://www.opensource.org/licenses/zlib-license.php 
 
-Blood Frontier, Copyright (C) 2006-2009 - Tony "Acord" Cord, Quinton "Quin" Reeves, Lee "Eihrul" Salzman 
+Blood Frontier, Copyright (C) 2006-2009 - Anthony "Acord" Cord, Quinton "Quin" Reeves, Lee "Eihrul" Salzman 
 Sauerbraten (Cube Engine 2), Copyright (C) 2001-2009 - Wouter "aardappel" van Oortmerssen, Lee "Eihrul" Salzman 
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software. Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
