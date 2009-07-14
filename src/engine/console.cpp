@@ -221,9 +221,9 @@ ICOMMAND(searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector
 
 void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns input to the command line on or off
 {
-    commandmillis = init ? totalmillis : -1;
-    SDL_EnableUNICODE(commandmillis >= 0 ? 1 : 0);
-    keyrepeat(commandmillis >= 0);
+    commandmillis = init ? lastmillis : -lastmillis;
+    SDL_EnableUNICODE(commandmillis > 0 ? 1 : 0);
+    keyrepeat(commandmillis > 0);
     copystring(commandbuf, init ? init : "");
     DELETEA(commandaction);
     DELETEA(commandicon);
@@ -534,14 +534,14 @@ void keypress(int code, bool isdown, int cooked)
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
     else if(!UI::keypress(code, isdown, alpha)) // 3D GUI mouse button intercept
     {
-        if(commandmillis >= 0) consolekey(code, isdown, alpha);
+        if(commandmillis > 0) consolekey(code, isdown, alpha);
         else if(haskey) execbind(*haskey, isdown);
     }
 }
 
 char *getcurcommand()
 {
-	return commandmillis >= 0 ? commandbuf : (char *)NULL;
+	return commandmillis > 0 ? commandbuf : (char *)NULL;
 }
 
 void clear_console()
@@ -602,7 +602,7 @@ struct filesval
         listfiles(dir, ext, files);
         files.sort(comparefiles);
         loopv(files) if(i && !strcmp(files[i], files[i-1])) delete[] files.remove(i--);
-        millis = totalmillis;
+        millis = lastmillis;
     }
 };
 
