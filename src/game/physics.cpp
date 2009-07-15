@@ -622,15 +622,13 @@ namespace physics
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
 				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
 			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
-			if(local && !isliquid(curmat) && isliquid(oldmat) && pl->physstate < PHYS_SLIDE && pl->vel.z > 1e-16f)
-				pl->vel.z = max(pl->vel.z, jumpvelocity(pl, false));
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
 			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
 		pl->inmaterial = matid;
 		if((pl->inliquid = !floating && isliquid(curmat)) != false)
 		{
-			float frac = float(center.z-bottom.z)/10.f;
+			float frac = float(center.z-bottom.z)/10.f, sub = pl->submerged;
 			vec tmp = bottom;
 			int found = 0;
 			loopi(10)
@@ -643,6 +641,8 @@ namespace physics
 				}
 			}
 			pl->submerged = found ? found/10.f : 1.f;
+			if(local && pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
+				pl->vel.z = max(pl->vel.z, jumpvelocity(pl, false));
 		}
 		else pl->submerged = 0;
 		pl->onladder = !floating && flagmat == MAT_LADDER;

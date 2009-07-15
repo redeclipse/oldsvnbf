@@ -744,7 +744,7 @@ namespace ai
 			d->jumping = true;
 			d->jumptime = lastmillis;
 			if(jumper && !propeller && !d->onladder) d->ai->dontmove = true; // going up
-			int seed = (111-d->skill)*(d->onladder ? 1 : 10);
+			int seed = (111-d->skill)*(d->onladder || physics::liquidcheck(d) ? 1 : 10);
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
 			seed *= b.idle ? 5 : 10;
