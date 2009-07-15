@@ -142,6 +142,7 @@ namespace ai
 			loopi(NUMPREVNODES) if(prevnodes[i] == n) return true;
 			return false;
 		}
+
 		void addprevnode(int n)
 		{
 			if(prevnodes[0] != n)
@@ -201,7 +202,7 @@ namespace ai
 	extern bool randomnode(gameent *d, aistate &b, float guard = NEARDIST, float wander = FARDIST);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 0);
 
 	extern void spawned(gameent *d);
 	extern void damaged(gameent *d, gameent *e);

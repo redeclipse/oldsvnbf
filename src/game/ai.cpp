@@ -29,16 +29,14 @@ namespace ai
 
 	bool targetable(gameent *d, gameent *e, bool z)
 	{
-		aistate &b = d->ai->getstate();
-		if(d != e && game::allowmove(d) && b.type != AI_S_WAIT)
+		if(d != e && game::allowmove(d) && !m_edit(game::gamemode))
 			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || (d)->team != (e)->team);
 		return false;
 	}
 
 	bool cansee(gameent *d, vec &x, vec &y, vec &targ)
 	{
-		aistate &b = d->ai->getstate();
-		if(game::allowmove(d) && b.type != AI_S_WAIT)
+		if(game::allowmove(d))
 			return getsight(x, d->yaw, d->pitch, y, targ, d->ai->views[2], d->ai->views[0], d->ai->views[1]);
 		return false;
 	}
@@ -443,9 +441,13 @@ namespace ai
 
 	int dowait(gameent *d, aistate &b)
 	{
-		if(check(d, b)) return 1;
-		if(find(d, b)) return 1;
-		if(target(d, b, true, true)) return 1;
+		b.idle = 1;
+		if(!m_edit(game::gamemode))
+		{
+			if(check(d, b)) return 1;
+			if(find(d, b)) return 1;
+			if(target(d, b, true, true)) return 1;
+		}
 		if(randomnode(d, b, NEARDIST, 1e16f))
 		{
 			d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
@@ -747,7 +749,7 @@ namespace ai
 			int seed = (111-d->skill)*(d->onladder || physics::liquidcheck(d) ? 1 : 10);
 			d->ai->propelseed = lastmillis+seed+rnd(seed);
 			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
-			seed *= b.idle ? 5 : 10;
+			seed *= b.idle ? 20 : 10;
 			d->ai->jumprand = lastmillis+seed+rnd(seed);
 		}
 	}
@@ -757,6 +759,9 @@ namespace ai
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
 		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2);
 		vec dp = d->headpos();
+
+		bool wasdontmove = d->ai->dontmove;
+		d->ai->dontmove = false;
 		if(b.idle == 1 || (stupify && stupify <= skmod))
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
@@ -768,7 +773,14 @@ namespace ai
 			d->ai->lasthunt = lastmillis;
 		}
 		else d->ai->dontmove = true;
-		if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
+
+		jumpto(d, b, d->ai->spot);
+
+		if(b.idle && (lastmillis-d->crouchtime <= 1000 || (d->ai->dontmove && !wasdontmove && !d->crouching)))
+		{
+			d->crouching = true;
+			d->crouchtime = lastmillis;
+		}
 
 		gameent *e = getenemy(d, dp);
 		if(e)
@@ -825,7 +837,8 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(!d->ai->dontmove)
+		if(d->ai->dontmove) d->move = d->strafe = 0;
+		else
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
 			{
@@ -848,8 +861,6 @@ namespace ai
 			d->aimyaw -= ad.offset;
 			game::fixrange(d->aimyaw, d->aimpitch);
 		}
-		else d->move = d->strafe = 0;
-		d->ai->dontmove = false;
 		d->ai->lastrun = lastmillis;
 		return result;
 	}
@@ -962,27 +973,24 @@ namespace ai
 	{
 		vec dp = d->headpos();
 		findorientation(dp, d->yaw, d->pitch, d->ai->target);
-		bool allowmove = game::allowmove(d) && b.type != AI_S_WAIT;
+		bool allowmove = game::allowmove(d);
 		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
-		if(d->state == CS_ALIVE)
+		if(d->state == CS_ALIVE && allowmove)
 		{
-			if(allowmove)
+			if(!request(d, b)) target(d, b, false, b.idle ? true : false);
+			weapons::shoot(d, d->ai->target);
+			if(d->ai->lasthunt)
 			{
-				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
-				weapons::shoot(d, d->ai->target);
-				if(d->ai->lasthunt)
+				int millis = lastmillis-d->ai->lasthunt;
+				if(millis < 2500) d->ai->tryreset = false;
+				else if(millis < 5000)
 				{
-					int millis = lastmillis-d->ai->lasthunt;
-					if(millis < 2500) d->ai->tryreset = false;
-					else if(millis < 5000)
-					{
-						if(!d->ai->tryreset) setup(d, true);
-					}
-					else if(d->ai->tryreset)
-					{
-						game::suicide(d, HIT_LOST); // better off doing something than nothing
-						d->ai->reset(false);
-					}
+					if(!d->ai->tryreset) setup(d, true);
+				}
+				else if(d->ai->tryreset)
+				{
+					game::suicide(d, HIT_LOST); // better off doing something than nothing
+					d->ai->reset(false);
 				}
 			}
 		}
@@ -1055,7 +1063,7 @@ namespace ai
 			else if(d->state == CS_ALIVE && run && lastmillis >= c.next)
 			{
 				int result = 0;
-				c.idle = c.type == AI_S_WAIT ? 1 : 0;
+				c.idle = 0;
 				switch(c.type)
 				{
 					case AI_S_WAIT: result = dowait(d, c); break;
@@ -1069,19 +1077,14 @@ namespace ai
 					d->ai->clear(true);
 					if(c.type != AI_S_WAIT)
 					{
-						d->ai->removestate(i);
 						switch(result)
 						{
-							case 0: default: cleannext = true; break;
+							case 0: default: d->ai->removestate(i); cleannext = true; break;
 							case -1: i = d->ai->state.length()-1; break;
 						}
+						continue; // shouldn't interfere
 					}
-					else
-					{
-						c.next = lastmillis+1000;
-						d->ai->dontmove = true;
-					}
-					continue; // shouldn't interfere
+					else c.next = lastmillis+1000;
 				}
 			}
 			logic(d, c, run);
