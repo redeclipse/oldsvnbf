@@ -1423,7 +1423,7 @@ namespace server
 
 	void changemap(const char *name, int mode, int muts)
 	{
-		hasgameinfo = maprequest = mapsending = shouldcheckvotes = false;
+		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
 		aiman::dorefresh = true;
         stopdemo();
 		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
