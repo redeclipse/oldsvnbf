@@ -776,7 +776,7 @@ namespace ai
 
 		jumpto(d, b, d->ai->spot);
 
-		if(b.idle)
+		if(b.idle == 1 && b.type != AI_S_WAIT)
 		{
 			bool wascrouching = lastmillis-d->crouchtime <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->crouching;
 			if(wascrouching || wantscrouch)
