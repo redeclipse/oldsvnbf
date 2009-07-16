@@ -2,7 +2,7 @@
 namespace aiman
 {
 	int oldteambalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
-	float oldbotratio = -1.f, oldbotscale = -1.f; // lower than it can go
+	float oldbotscale = -1.f; // lower than it can go
 
 	int findaiclient(int exclude)
 	{
@@ -262,12 +262,7 @@ namespace aiman
 			if(hasgameinfo)
 			{
 				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
-				checkold(teambalance);
-				checkold(botratio);
-				checkold(botscale);
-				checkold(botminskill);
-				checkold(botmaxskill);
-				checkold(botlimit);
+				checkold(teambalance); checkold(botscale); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
 				if(dorefresh) { checksetup(); dorefresh = false; }
 				loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
 				while(true) if(!reassignai()) break;

@@ -41,7 +41,7 @@ VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
 VARG(teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players damage team
-VARG(teambalance, 0, 5, 6); // 0 = off, 2 = by rank(frags/timeplayed), 4 = ai number, humans eff (+1 = but force balance too), 6 = humans vs. bots
+VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number, 2 = by rank, 3 = humans vs. ai
 VARG(scoringstyle, 0, 0, INT_MAX-1); // count hits as frags instead, when really fragged multiply by this
 
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
@@ -59,7 +59,6 @@ FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in inst
 FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
 
 FVARG(botscale, 0, 1.f, 1000);
-FVARG(botratio, 0, 1.f, 1000);
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 32, MAXBOTS);
