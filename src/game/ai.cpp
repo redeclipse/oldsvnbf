@@ -776,10 +776,14 @@ namespace ai
 
 		jumpto(d, b, d->ai->spot);
 
-		if(b.idle && (lastmillis-d->crouchtime <= 1000 || (d->ai->dontmove && !wasdontmove && !d->crouching)))
+		if(b.idle)
 		{
-			d->crouching = true;
-			d->crouchtime = lastmillis;
+			bool wascrouching = lastmillis-d->crouchtime <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->crouching;
+			if(wascrouching || wantscrouch)
+			{
+				d->crouching = true;
+				if(wantscrouch) d->crouchtime = lastmillis;
+			}
 		}
 
 		gameent *e = getenemy(d, dp);
