@@ -11,7 +11,7 @@ namespace projs
 
 	VARA(maxprojectiles, 50, 500, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
-	VARP(flamerdelay, 1, 50, INT_MAX-1);
+	VARP(flamerdelay, 1, 100, INT_MAX-1);
 	VARA(flamerlength, 50, 500, INT_MAX-1);
 	VARP(flamerhint, 0, 1, 1);
 
