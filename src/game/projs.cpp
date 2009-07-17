@@ -694,7 +694,7 @@ namespace projs
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtimex(500) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
-				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x88FFFF, 1.25f, 50, DECAL_BLOOD);
+				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtimex(5000), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
 				proj.lasteffect = lastmillis;
 			}
 		}
@@ -746,7 +746,7 @@ namespace projs
 							{
 								vec to(proj.o);
 								loopk(3) to.v[k] += rnd(deviation*2)-deviation;
-								part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 250 : 500), to, proj.weap == WEAPON_FLAMER ? 0xBB2600 : 0x882600, weaptype[proj.weap].explode*0.5f, -10);
+								part_create(PART_FIREBALL_SOFT, m_speedtimex(proj.weap == WEAPON_FLAMER ? 350 : 700), to, proj.weap == WEAPON_FLAMER ? 0xBB2600 : 0x882600, weaptype[proj.weap].explode*0.5f, -10);
 							}
 							if(proj.weap == WEAPON_GRENADE)
 							{
@@ -811,7 +811,7 @@ namespace projs
 						vol = int(255*(1.f-proj.lifespan));
 						int r = 255-(proj.colour>>16), g = 255-((proj.colour>>8)&0xFF), b = 255-(proj.colour&0xFF),
 							colour = (r<<16)|(g<<8)|b;
-						part_splash(PART_BLOOD, 5, m_speedtimex(5000), proj.o, colour, 1.5f, 25, DECAL_BLOOD, 4);
+						part_splash(PART_BLOOD, 5, m_speedtimex(5000), proj.o, colour, 2.f, 25, DECAL_BLOOD, 4);
                         adddecal(DECAL_BLOOD, proj.o, proj.norm, rnd(4)+1.f, bvec(r, g, b));
 						break;
 					}
