@@ -1212,7 +1212,7 @@ namespace client
 					if(f == game::player1 || f->ai)
 					{
 						addmsg(SV_SPAWN, "ri", f->clientnum);
-						entities::spawnplayer(f, ent, ent < 0, true);
+						entities::spawnplayer(f, ent, true);
 						playsound(S_RESPAWN, f->o, f);
 						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}

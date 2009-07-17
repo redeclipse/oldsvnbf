@@ -977,7 +977,7 @@ namespace entities
 		return physics::entinmap(d, true);
 	}
 
-	void spawnplayer(gameent *d, int ent, bool recover, bool suicide)
+	void spawnplayer(gameent *d, int ent, bool suicide)
 	{
 		if(ent >= 0 && ents.inrange(ent))
 		{
@@ -987,23 +987,25 @@ namespace entities
 				default: if(tryspawn(d, ents[ent]->o, rnd(360), 0)) return;
 			}
 		}
-		if(recover)
+		else
 		{
 			loopk(3)
 			{
 				vector<int> spawns;
-				if(k <= 0 && m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
+				switch(k)
 				{
-					loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team) spawns.add(i);
-						return;
+					case 0: if(m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
+								loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team) spawns.add(i);
+					case 1: if(spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
+					case 2: if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON) spawns.add(i);
+					default: break;
 				}
-				if(k <= 1 && spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
-				if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o, rnd(360), 0)) spawns.add(i);
 				while(!spawns.empty())
 				{
 					int r = rnd(spawns.length());
 					gameentity &e = *(gameentity *)ents[spawns[r]];
-					if(tryspawn(d, e.o, e.type == PLAYERSTART ? e.attr[1] : rnd(360), e.type == PLAYERSTART ? e.attr[2] : 0)) return;
+					if(tryspawn(d, e.o, e.type == PLAYERSTART ? e.attr[1] : rnd(360), e.type == PLAYERSTART ? e.attr[2] : 0))
+						return;
 					spawns.remove(r); // must've really sucked, try another one
 				}
 			}
