@@ -989,13 +989,24 @@ namespace entities
 		}
 		if(recover)
 		{
-			if(m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
+			loopk(3)
 			{
-				loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team && tryspawn(d, ents[i]->o, ents[i]->attr[1], ents[i]->attr[2]))
-					return;
+				vector<int> spawns;
+				if(k <= 0 && m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
+				{
+					loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team) spawns.add(i);
+						return;
+				}
+				if(k <= 1 && spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
+				if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o, rnd(360), 0)) spawns.add(i);
+				while(!spawns.empty())
+				{
+					int r = rnd(spawns.length());
+					gameentity &e = *(gameentity *)ents[spawns[r]];
+					if(tryspawn(d, e.o, e.type == PLAYERSTART ? e.attr[1] : rnd(360), e.type == PLAYERSTART ? e.attr[2] : 0)) return;
+					spawns.remove(r); // must've really sucked, try another one
+				}
 			}
-			loopv(ents) if(ents[i]->type == PLAYERSTART && tryspawn(d, ents[i]->o, ents[i]->attr[1], ents[i]->attr[2])) return;
-			loopv(ents) if(ents[i]->type == WEAPON && tryspawn(d, ents[i]->o, rnd(360), 0)) return;
 			d->yaw = d->pitch = d->roll = 0;
 			d->o.x = d->o.y = d->o.z = getworldsize();
 			d->o.x *= 0.5f; d->o.y *= 0.5f;

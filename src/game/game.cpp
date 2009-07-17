@@ -493,7 +493,7 @@ namespace game
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
-					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
+					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					defformatstring(ds)("@%d", damage);
