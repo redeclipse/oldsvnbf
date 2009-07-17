@@ -706,15 +706,14 @@ namespace ai
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
-	gameent *getenemy(gameent *d, vec &dp)
-	{
-		gameent *e = game::intersectclosest(dp, d->ai->target, d);
-		if(!e) e = game::getclient(d->ai->enemy);
-		return e && targetable(d, e, true) ? e : NULL;
-	}
-
 	bool hastarget(gameent *d, aistate &b, gameent *e, float yaw, float pitch, float dist)
 	{ // add margins of error
+		if(d->skill >= 75)
+		{
+			vec dp = d->headpos();
+			gameent *f = game::intersectclosest(dp, d->ai->target, d);
+			if(f && !targetable(d, f, true)) return false;
+		}
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, dist))
 		{
@@ -786,7 +785,7 @@ namespace ai
 			}
 		}
 
-		gameent *e = getenemy(d, dp);
+		gameent *e = game::getclient(d->ai->enemy);
 		if(e)
 		{
 			vec ep = getaimpos(d, e);
@@ -945,10 +944,9 @@ namespace ai
 		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
-			vec dp = d->headpos(), ep;
-			gameent *e = getenemy(d, dp);
-			if(e) ep = getaimpos(d, e);
-			float dist = dp.squaredist(ep);
+			vec dp = d->headpos(); float dist = 0;
+			gameent *e = game::getclient(d->ai->enemy);
+			if(e) dist = dp.squaredist(getaimpos(d, e));
 			if(!isweap(weap) || (e && !weaprange(d, weap, dist)))
 			{
 				loopirev(WEAPON_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(d, i, dist)))
