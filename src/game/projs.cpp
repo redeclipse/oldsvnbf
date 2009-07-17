@@ -636,19 +636,18 @@ namespace projs
 				}
 				case WEAPON_PLASMA:
 				{
-					int part = PART_PLASMA_SOFT;
+					bool soft = true;
 					float resize = 1.f;
 					resize = proj.lifesize = 1.f-clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.05f, 1.f);
 					if(proj.lifemillis-proj.lifetime < m_speedtimex(100))
 					{
 						resize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtimex(100)), 0.f, 1.f)*0.75f)+0.25f;
-						part = PART_PLASMA;
+						soft = false;
 					}
 					if(proj.canrender)
 					{
-						part_create(part, 1, proj.o, 0x226688, weaptype[proj.weap].partsize*resize);
-						part_create(PART_ELECTRIC, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*0.7f*resize); // electrifying!
-						part_create(PART_PLASMA, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*0.3f*resize); // brighter center part
+						part_create(soft ? PART_PLASMA_SOFT : PART_PLASMA, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*resize);
+						part_create(PART_ELECTRIC, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize*0.7f*resize);
 					}
 					break;
 				}
@@ -667,16 +666,16 @@ namespace projs
 				}
 				case WEAPON_PAINT:
 				{
-					int part = PART_PLASMA;
+					bool soft = true;
 					if(proj.lifemillis-proj.lifetime < m_speedtimex(250)) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/float(m_speedtimex(250)), 0.25f, 1.f);
 					else
 					{
-						part = PART_PLASMA_SOFT;
 						proj.lifesize = 1.f;
+						soft = true;
 					}
 					if(proj.canrender)
 					{
-						part_create(part, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
+						part_create(soft ? PART_PLASMA_SOFT : PART_PLASMA, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
 						part_create(PART_PLASMA_LERP, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize*0.5f);
 					}
 					break;
@@ -751,7 +750,7 @@ namespace projs
 							}
 							if(proj.weap == WEAPON_GRENADE)
 							{
-								part_create(PART_PLASMA_SOFT, m_speedtimex(1000), proj.o, 0xAA4400, weaptype[proj.weap].explode*0.5f); // corona
+								part_create(PART_PLASMA_SOFT, m_speedtimex(750), proj.o, 0xAA4400, weaptype[proj.weap].explode*0.5f); // corona
 								float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 								if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
 								game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
@@ -781,9 +780,9 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtimex(100), proj.o, 0x226688, weaptype[proj.weap].partsize*proj.lifesize);
-							part_create(PART_PLASMA, m_speedtimex(100), proj.o, 0x44AADD, weaptype[proj.weap].partsize*0.5f*proj.lifesize); // brighter center part
-							part_create(PART_SMOKE, m_speedtimex(250), proj.o, 0x8899AA, 2.4f, -20);
+							part_create(PART_PLASMA_SOFT, m_speedtimex(75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize*proj.lifesize*0.8f);
+							part_create(PART_ELECTRIC, m_speedtimex(50), proj.o, 0x55AAEE, weaptype[proj.weap].partsize*proj.lifesize*0.3f);
+							part_create(PART_SMOKE, m_speedtimex(200), proj.o, 0x8896A4, 2.4f, -20);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(98, 196, 244));
 							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode, vec(0.1f, 0.4f, 0.6f), m_speedtimex(200), 10);
 						}

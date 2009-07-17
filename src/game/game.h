@@ -320,7 +320,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			20,		20,		350,	1000,	30,		2000,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,	true,		true,		false,		true,
-			0,			0,				0.125f,		1.0f,		0,		16,			0,			100,		448,
+			0,			0,				0.125f,		1.0f,		0,		12,			0,			100,		448,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
