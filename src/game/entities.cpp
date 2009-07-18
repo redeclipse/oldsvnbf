@@ -185,7 +185,7 @@ namespace entities
 				attr = weapattr(f.attr[0], sweap);
 				if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 			}
-			game::spawneffect(pos, 0x6666FF, enttype[e.type].radius);
+			game::spawneffect(PART_ELECTRIC, pos, 0x6666FF, enttype[e.type].radius);
 			e.spawned = s;
 		}
 	}
@@ -776,7 +776,7 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					game::spawneffect(proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
+					game::spawneffect(PART_ELECTRIC, proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
 					proj.beenused = true;
 					proj.state = CS_DEAD;
 				}

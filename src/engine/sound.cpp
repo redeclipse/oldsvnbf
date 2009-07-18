@@ -18,7 +18,7 @@ VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
-VARP(musicvol, 0, 32, 255);
+VARP(musicvol, 0, 64, 255);
 VARP(musicfade, 0, 3000, INT_MAX-1);
 SVAR(titlemusic, "sounds/loops/title");
 

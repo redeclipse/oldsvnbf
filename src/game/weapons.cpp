@@ -174,7 +174,7 @@ namespace weapons
 		vec to = targ, from = d->muzzle, unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
-		d->vel.add(vec(unitv).mul(m_speedscale(weaptype[d->weapselect].kick*(physics::iscrouching(d) ? 0.1f : 1.f))));
+		if(!physics::iscrouching(d)) d->vel.add(vec(unitv).mul(m_speedscale(weaptype[d->weapselect].kick)));
 		if(d == game::player1) game::quakewobble += weaptype[d->weapselect].wobble;
 
 		// move along the eye ray towards the weap origin, stopping when something is hit

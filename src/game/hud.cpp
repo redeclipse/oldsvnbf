@@ -168,7 +168,7 @@ namespace hud
 	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	FVARP(radaroffset, 0, 0.075f, 1000);
-	VARP(radardist, 0, 256, INT_MAX-1);
+	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
 	VARP(radarcard, 0, 0, 2);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radaritemspawn, 0, 1, 1);
@@ -180,7 +180,7 @@ namespace hud
 	VARP(radarflagnames, 0, 0, 1);
 	VARP(showeditradar, 0, 0, 1);
 	VARP(editradarcard, 0, 0, 1);
-	VARP(editradardist, 0, 32, INT_MAX-1);
+	VARP(editradardist, 0, 64, INT_MAX-1); // 0 = use radardist
 	VARP(editradarnoisy, 0, 1, 2);
 
 	bool hastv(int val)
@@ -803,8 +803,8 @@ namespace hud
 
 	float radarrange()
 	{
-		float dist = float(radardist);
-		if(game::player1->state == CS_EDITING) dist = float(editradardist);
+		float dist = radardist ? radardist : getworldsize();
+		if(game::player1->state == CS_EDITING && editradardist) dist = editradardist;
 		return dist;
 	}
 

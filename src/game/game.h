@@ -1183,7 +1183,7 @@ namespace game
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, int targ, const char *msg, ...);
 	extern void respawn(gameent *d);
-	extern void spawneffect(const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
+	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
 	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);

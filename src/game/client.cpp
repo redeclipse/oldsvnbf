@@ -1183,7 +1183,7 @@ namespace client
 						f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
 						parsestate(f, p);
 						playsound(S_RESPAWN, f->o, f);
-						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(PART_ELECTRIC, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					else parsestate(NULL, p);
 					break;
@@ -1214,10 +1214,10 @@ namespace client
 						addmsg(SV_SPAWN, "ri", f->clientnum);
 						entities::spawnplayer(f, ent, true);
 						playsound(S_RESPAWN, f->o, f);
-						game::spawneffect(vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(PART_ELECTRIC, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
 					ai::spawned(f);
-					if(f == game::player1) game::resetstate();
+					if(f == game::player1) game::resetcamera();
 					break;
 				}
 
@@ -1371,7 +1371,7 @@ namespace client
 							}
 						}
 					}
-					game::spawneffect(entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
+					game::spawneffect(PART_ELECTRIC, entities::ents[ent]->o, 0x6666FF, enttype[entities::ents[ent]->type].radius);
 					break;
 				}
 
