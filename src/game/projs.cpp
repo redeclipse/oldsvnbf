@@ -9,7 +9,7 @@ namespace projs
 	vector<hitmsg> hits;
 	vector<projent *> projs;
 
-	VARA(maxprojectiles, 50, 500, INT_MAX-1);
+	VARA(maxprojectiles, 32, 256, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
 	VARP(flamerdelay, 1, 100, INT_MAX-1);
 	VARA(flamerlength, 50, 500, INT_MAX-1);
@@ -583,7 +583,7 @@ namespace projs
 						int col = ((int(254*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(64*max((1.f-proj.lifespan),0.15f))+1)<<8),
 							len = effect ? max(int(m_speedtime(flamerlength)*max(proj.lifespan, 0.1f)), 0) : 0;
 						if(!len) { effect = false; len = 1; }
-						if(flamerhint) part_create(PART_HINT_SOFT, max(len/2, 1), proj.o, 0x140434, size*1.25f, -5);
+						if(flamerhint) part_create(PART_HINT, max(len/2, 1), proj.o, 0x140434, size*1.25f, -5);
 						part_create(PART_FIREBALL_SOFT, len, proj.o, col, size, -5);
 					}
 					break;

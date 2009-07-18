@@ -5,12 +5,11 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARFP(maxparticles, 10, 16384, INT_MAX-1, particleinit());
-VARA(maxparticledistance, 256, 4096, INT_MAX-1);
-VARP(maxparticletrail, 256, 4096, INT_MAX-1);
+VARFP(maxparticles, 10, 4096, INT_MAX-1, particleinit());
+VARA(maxparticledistance, 256, 1024, INT_MAX-1);
+VARP(maxparticletrail, 256, 1024, INT_MAX-1);
 
 VARP(particletext, 0, 1, 1);
-VARP(maxparticletextdistance, 0, 128, 10000);
 VARP(outlinemeters, 0, 0, 1);
 VARP(particleglare, 0, 1, 100);
 VAR(debugparticles, 0, 0, 1);
