@@ -14,16 +14,16 @@ namespace hud
 	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 3, 4);
 
+	VARP(showfps, 0, 1, 3);
 	VARP(showstats, 0, 1, 2);
 	VARP(statrate, 0, 200, 1000);
 	FVARP(statblend, 0, 0.65f, 1);
-
-	VARP(showfps, 0, 1, 3);
 
 	bool fullconsole = false;
 	void toggleconsole() { fullconsole = !fullconsole; }
 	COMMAND(toggleconsole, "");
 
+	VARP(titlefade, 0, 5000, 10000);
 	VARP(specfade, 0, 1000, INT_MAX-1);
 	VARP(spawnfade, 0, 1000, INT_MAX-1);
 	VARP(commandfade, 0, 500, INT_MAX-1);
@@ -71,7 +71,6 @@ namespace hud
 	VARP(overlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
 	FVARP(overlayblend, 0, 0.5f, 1);
 
-	VARP(titlecard, 0, 5000, 10000);
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
 	FVARP(damageblend, 0, 0.8f, 1);
@@ -513,7 +512,7 @@ namespace hud
 
 	void drawlast(int w, int h)
 	{
-		if(showhud)
+		if(showhud && game::maptime > 0)
 		{
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
@@ -526,7 +525,7 @@ namespace hud
 			{
 				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255;
 				if(teamnotices) skewcolour(tr, tg, tb);
-				if(lastmillis-game::maptime <= titlecard)
+				if(lastmillis-game::maptime <= titlefade)
 				{
 					const char *title = maptitle;
 					if(!*title) title = mapname;
@@ -1362,9 +1361,9 @@ namespace hud
 				drawblend(0, 0, w, h, amt, amt, amt);
 				fade *= amt;
 			}
-			else if(titlecard && (!client::ready() || lastmillis-game::maptime < titlecard))
+			else if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
 			{
-				float amt = client::ready() ? float(lastmillis-game::maptime)/float(titlecard) : 0.f;
+				float amt = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
 				if(amt < 1.f)
 				{
 					usetexturing(false); texturing = false;

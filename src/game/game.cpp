@@ -1275,15 +1275,19 @@ namespace game
 	void updateworld()		// main game update loop
 	{
 		if(!curtime) return;
-        if(!maptime && connected())
-        {
-        	maptime = lastmillis;
-			if(m_lobby(gamemode)) smartmusic(true, false);
-			else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
-			else musicdone(false);
-			RUNWORLD("on_start");
-        	return;
-        }
+		if(connected())
+		{
+			if(!maptime) { maptime = -1; return; } // skip the first loop
+			else if(maptime < 0)
+			{
+				maptime = lastmillis;
+				if(m_lobby(gamemode)) smartmusic(true, false);
+				else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
+				else musicdone(false);
+				RUNWORLD("on_start");
+				return;
+			}
+		}
 
        	if(!*game::player1->name && !guiactive()) showgui("name");
         if(connected())

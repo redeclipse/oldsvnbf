@@ -633,7 +633,7 @@ namespace client
 	}
 	ICOMMAND(goto, "s", (char *s), gotoplayer(s));
 
-	bool ready() { return connected(false) && isready && game::maptime; }
+	bool ready() { return connected(false) && isready && game::maptime > 0; }
 	ICOMMAND(ready, "", (), intret(ready()));
 
 	int state() { return game::player1->state; }
