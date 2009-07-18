@@ -1803,21 +1803,22 @@ namespace game
 			else { bestplayers.setsize(0); hud::sb.bestplayers(bestplayers); }
 		}
 #endif
+		startmodelbatches();
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
         	if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
 			renderplayer(d, true, showtranslucent(d, true));
-			if(rendernormally) checktags(d);
         }
 
-		startmodelbatches(); // two batch passes
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
         if(m_ctf(gamemode)) ctf::render();
         ai::render();
 		endmodelbatches();
+
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) checktags(d);
 	}
 
     void renderavatar(bool early)
