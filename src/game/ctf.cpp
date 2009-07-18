@@ -367,9 +367,9 @@ namespace ctf
 
     void flageffect(int i, int team, const vec &from, const vec &to)
     {
-		if(from.x >= 0) game::spawneffect(vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
-		if(to.x >= 0) game::spawneffect(vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
-		if(from.x >= 0 && to.x >= 0) part_trail(PART_ELECTRIC, 250, from, to, teamtype[team].colour, 2.f, -5);
+		if(from.x >= 0) game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
+		if(to.x >= 0) game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
+		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2.f, -5);
     }
 
     void returnflag(gameent *d, int i)
@@ -414,7 +414,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		game::spawneffect(vec(f.pos()).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[d->team].colour, enttype[FLAG].radius);
+		flageffect(i, d->team, d->feetpos(), f.pos());
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? S_V_FLAGPICKUP : -1;
 		game::announce(idx, CON_INFO, "\fo%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? "picked up" : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		if(!f.droptime) f.taketime = lastmillis;

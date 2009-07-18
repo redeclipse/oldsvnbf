@@ -5,11 +5,9 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-#define MAXPARTICLES 40000
-
-VARFP(maxparticles, 10, 4000, MAXPARTICLES, particleinit());
-VARA(maxparticledistance, 128, 1024, 4096);
-VARP(maxparticletrail, 1, 256, 8192);
+VARFP(maxparticles, 10, 16384, INT_MAX-1, particleinit());
+VARA(maxparticledistance, 256, 4096, INT_MAX-1);
+VARP(maxparticletrail, 256, 4096, INT_MAX-1);
 
 VARP(particletext, 0, 1, 1);
 VARP(maxparticletextdistance, 0, 128, 10000);
@@ -1084,8 +1082,12 @@ static partrenderer *parts[] =
 	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_LERP),
 	new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
-	new softquadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_FLIP|PT_ROT),
-	new quadrenderer("<mad:0.25/0.25/0.25>particles/smoke", PT_PART|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/hint", PT_PART|PT_LERP),
+	new quadrenderer("particles/hint", PT_PART|PT_LERP),
+	new softquadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
+	new quadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/hint", PT_PART),
+	new quadrenderer("particles/hint", PT_PART),
 	new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE|PT_ONTOP),
@@ -1679,7 +1681,7 @@ void defaultparticles()
 	if(mapparts.length()) mapparts.setsizenodelete(0);
 	addmapparticle("fire", PART_FLAME, PARTTYPE_FIRE, 0x903020, -10, 500, 1.5f, 0.5f, 0, 2.f, 200);
 	addmapparticle("smoke", PART_SMOKE, PARTTYPE_SPLASH, 0x897661, -20, 200, 2.f, 0.f, 3, 2.4f, 0.f, 1);
-	addmapparticle("water", PART_ELECTRIC, PARTTYPE_SPLASH, (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]), 10, 500, 10.f, 0.f, 10, 0.6f, 4);
+	addmapparticle("water", PART_SPARK, PARTTYPE_SPLASH, (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]), 10, 500, 10.f, 0.f, 10, 0.6f, 4);
 }
 #endif
 
@@ -1703,7 +1705,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		case 2: //water fountain - <dir>
 		{
 			int color = (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]);
-			regularsplash(PART_ELECTRIC, color, 10, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f, 10);
+			regularsplash(PART_SPARK, color, 10, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f, 10);
 			break;
 		}
 		case 3: //fire ball - <size> <rgb>
@@ -1720,10 +1722,10 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		{
 			const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 50, 0, 0, 50, 50, 50, 50, 50, 20, 50 },
-				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 100, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
+				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];
-			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, grav, 0, vel);
+			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, grav, col, vel);
 			else newparticle(o, offsetvec(o, attr2, max(1+attr3, 0)), attr5 > 0 ? attr5 : 1, type, colorfromattr(attr4), size, grav, col);
 			break;
 		}

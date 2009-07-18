@@ -314,10 +314,10 @@ namespace game
 		}
 	}
 
-	VARA(spawneffectnum, 1, 25, INT_MAX-1);
-	void spawneffect(const vec &o, int colour, int radius, int fade, float size)
+	VARA(spawneffectnum, 10, 50, INT_MAX-1);
+	void spawneffect(int type, const vec &o, int colour, int radius, int fade, float size)
 	{
-		regularshape(PART_ELECTRIC, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, -5, 0, 20.f);
+		regularshape(type, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, -5, 0, 20.f);
 		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
 	}
 
@@ -365,7 +365,10 @@ namespace game
 		resetcursor();
 		checkcamera();
 		camera1->o = player1->o;
+		camera1->yaw = player1->yaw;
+		camera1->pitch = player1->pitch;
 		camera1->resetinterp();
+		player1->resetinterp();
 	}
 
 	void resetworld()
@@ -1436,7 +1439,17 @@ namespace game
 			}
 
 			if(quakewobble > 0)
-				camera1->roll = float(rnd(15)-7)*(float(min(quakewobble, 100))/100.f);
+			{
+				float wobble = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
+				switch(player1->state)
+				{
+					case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;
+					case CS_ALIVE: if(physics::iscrouching(player1)) wobble *= 0.5f; break;
+					case CS_DEAD: break;
+					default: wobble = 0; break;
+				}
+				camera1->roll = wobble;
+			}
 			else camera1->roll = 0;
 
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
