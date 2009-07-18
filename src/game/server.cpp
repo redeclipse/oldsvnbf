@@ -475,7 +475,8 @@ namespace server
 
 	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
 	{
-		if(ci->local || ci->privilege >= flag || !numclients(ci->clientnum, false, true)) return true;
+		if(ci->local || ci->privilege >= flag) return true;
+		else if(mastermask&MM_AUTOAPPROVE && !numclients(ci->clientnum, false, true)) return true;
 		else if(msg)
 			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
 		return false;
