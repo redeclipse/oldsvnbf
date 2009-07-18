@@ -113,7 +113,7 @@ namespace ai
 
 	void update()
 	{
-		bool updating = lastmillis-updatemillis > 100; // fixed rate logic at 10fps
+		bool updating = lastmillis-updatemillis > m_speedtime(100); // fixed rate logic at 10fps
         if(updating)
         {
         	avoid();
@@ -153,7 +153,7 @@ namespace ai
 			return true;
 		}
 		d->ai->clear(true);
-		if(retries <= 1) return makeroute(d, b, node, true, retries+1);
+		if(retries <= 1) return makeroute(d, b, node, false, retries+1);
 		return false;
 	}
 
@@ -259,7 +259,7 @@ namespace ai
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
 			vec dp = d->headpos(), ep = getaimpos(d, e);
-			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= m_speedtime(((111-d->skill)*10)+10); // so we don't "quick"
 			return true;
 		}
 		return false;
@@ -411,7 +411,7 @@ namespace ai
 		{
 			d->ai->reset(tryreset);
 			aistate &b = d->ai->getstate();
-			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
+			b.next = lastmillis+m_speedtime(((111-d->skill)*10)+rnd((111-d->skill)*10));
 			if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
 			else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->arenaweap = forcegun;
@@ -714,19 +714,17 @@ namespace ai
 	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
-		bool offground = (d->timeinair && !physics::liquidcheck(d) && !d->onladder), jumper = off.z >= JUMPMIN,
-			jump = jumper || d->onladder || lastmillis >= d->ai->jumprand, propeller = dir.magnitude() > JUMPMIN*2, propel = jumper || propeller;
-		if(propel && (!offground || lastmillis < d->ai->propelseed || !physics::canimpulse(d))) propel = false;
+		float magxy = dir.magnitude();
+		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
+			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*3,
+			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
+			propel = offground && !d->ai->dontpropel && (jumper || propeller) && physics::canimpulse(d) && lastmillis >= d->ai->propelseed;
 		if(jump)
 		{
-			if(offground || lastmillis < d->ai->jumpseed) jump = false;
-			else
-			{
-				vec old = d->o;
-				d->o = vec(pos).add(vec(0, 0, d->height));
-				if(!collide(d, vec(0, 0, 1))) jump = false;
-				d->o = old;
-			}
+			vec old = d->o;
+			d->o = vec(pos).add(vec(0, 0, d->height));
+			if(!collide(d, vec(0, 0, 1))) jump = false;
+			d->o = old;
 		}
 		if(jump || propel)
 		{
@@ -734,10 +732,10 @@ namespace ai
 			d->jumptime = lastmillis;
 			if(jumper && !propeller && !d->onladder) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder || physics::liquidcheck(d) ? 1 : 10);
-			d->ai->propelseed = lastmillis+seed+rnd(seed);
-			if(jump) d->ai->jumpseed = d->ai->propelseed+seed+rnd(seed);
+			d->ai->propelseed = lastmillis+m_speedtime(seed+rnd(seed));
+			if(jump) d->ai->jumpseed = d->ai->propelseed+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 20 : 10;
-			d->ai->jumprand = lastmillis+seed+rnd(seed);
+			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
 		}
 	}
 
@@ -784,8 +782,8 @@ namespace ai
 		if(e)
 		{
 			vec ep = getaimpos(d, e);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
-				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime((d->skill*50)+1000),
+				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime(skmod);
 			if(insight) d->ai->enemyseen = lastmillis;
 			if(b.idle || insight || hasseen)
 			{
@@ -980,8 +978,8 @@ namespace ai
 			if(d->ai->lasthunt)
 			{
 				int millis = lastmillis-d->ai->lasthunt;
-				if(millis < 2500) d->ai->tryreset = false;
-				else if(millis < 5000)
+				if(millis < m_speedtime(2500)) d->ai->tryreset = false;
+				else if(millis < m_speedtime(5000))
 				{
 					if(!d->ai->tryreset) setup(d, true);
 				}
@@ -1006,6 +1004,7 @@ namespace ai
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
 				if(!ladder && d->onladder) d->ai->jumpseed = d->ai->propelseed = lastmillis;
+				if(d->ai->dontpropel && (!d->timeinair || d->vel.z <= physics::gravityforce(d)/10.f)) d->ai->dontpropel = false;
 				entities::checkitems(d);
             }
         }
@@ -1082,7 +1081,7 @@ namespace ai
 						}
 						continue; // shouldn't interfere
 					}
-					else c.next = lastmillis+1000;
+					else c.next = lastmillis+m_speedtime(1000);
 				}
 			}
 			logic(d, c, run);

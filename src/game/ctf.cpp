@@ -592,7 +592,7 @@ namespace ctf
 					return f.owner ? ai::violence(d, b, f.owner, false) : true;
 			}
 			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
-			if(regen && lastmillis-b.millis >= (201-d->skill)*33)
+			if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
