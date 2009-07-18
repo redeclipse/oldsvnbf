@@ -19,7 +19,7 @@ namespace entities
 		switch(e.type)
 		{
 			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT:
-				return m_speedtimex(1000); break;
+				return m_speedtime(1000); break;
 			default: break;
 		}
 		return 0;
@@ -643,9 +643,10 @@ namespace entities
 						case PUSHER:
 						{
 							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(m_speedscale(10.f));
+							if(d->ai) d->ai->dontpropel = true;
 							d->falling = vec(0, 0, 0);
 							d->physstate = PHYS_FALL;
-							d->timeinair = 0;
+							d->timeinair = 1;
 							loopk(3)
 							{
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))

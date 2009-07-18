@@ -85,7 +85,7 @@ namespace game
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
-	VARP(announcedelay, 0, 0, INT_MAX-1); // in case you wanna clip announcements to not overlap
+	VARP(announcedelay, 0, 25, INT_MAX-1); // in case you wanna clip announcements to not overlap
 	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
     VARP(ragdolls, 0, 1, 1);
@@ -238,7 +238,10 @@ namespace game
 		defvformatstring(text, msg, msg);
 		conoutft(targ, "%s", text);
 		if(idx >= 0 && (!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay))
+		{
 			playsound(idx, camera1->o, camera1, SND_FORCED);
+			lastannounce = lastmillis;
+		}
 	}
 	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, "\fw%s", s));
 
@@ -317,8 +320,8 @@ namespace game
 	VARA(spawneffectnum, 10, 50, INT_MAX-1);
 	void spawneffect(int type, const vec &o, int colour, int radius, int fade, float size)
 	{
-		regularshape(type, radius*2, colour, 21, spawneffectnum, m_speedtimex(fade), o, size, -5, 0, 20.f);
-		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtimex(fade), m_speedtimex(fade/3));
+		regularshape(type, radius*2, colour, 21, spawneffectnum, m_speedtime(fade), o, size, -5, 0, 20.f);
+		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
 	gameent *pointatplayer()

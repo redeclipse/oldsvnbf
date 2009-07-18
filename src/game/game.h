@@ -465,8 +465,7 @@ extern gametypes gametype[], mutstype[];
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
-#define m_speedtimex(a)		(max(int(m_speedlerp(a)), 1))
-#define m_speedtime(a)		(int(m_speedlerp(a)))
+#define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
 
 #define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
 #define weapcarry(a,b)		(b >= 0 && a != b && weaptype[a].reloads)

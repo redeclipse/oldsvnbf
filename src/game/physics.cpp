@@ -154,7 +154,7 @@ namespace physics
 	bool canimpulse(physent *d)
 	{
 		int timelen = impulsetime ? impulsetime : int(gravity*impulsemod);
-		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtimex(timelen);
+		if(timelen > 0) return lastmillis-d->lastimpulse > m_speedtime(timelen);
 		return false;
 	}
 
@@ -616,7 +616,7 @@ namespace physics
 			#define mattrig(mo,mcol,ms,mt,mz,mq,mp,mw) \
 			{ \
 				int col = (int(mcol[2]*mq) + (int(mcol[1]*mq) << 8) + (int(mcol[0]*mq) << 16)); \
-				regularshape(mp, mt, col, 21, 20, m_speedtimex(mz), mo, ms, 10, 0, 20.f); \
+				regularshape(mp, mt, col, 21, 20, m_speedtime(mz), mo, ms, 10, 0, 20.f); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
