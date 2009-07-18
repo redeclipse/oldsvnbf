@@ -29,7 +29,7 @@ namespace ai
 
 	bool targetable(gameent *d, gameent *e, bool z)
 	{
-		if(d != e && game::allowmove(d) && !m_edit(game::gamemode))
+		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode))
 			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || (d)->team != (e)->team);
 		return false;
 	}
@@ -214,12 +214,6 @@ namespace ai
 			if(t && violence(d, b, t, pursue && (tooclose || insight))) return insight || tooclose;
 		}
 		return false;
-	}
-
-	void noenemy(gameent *d)
-	{
-		d->ai->enemy = -1;
-		d->ai->enemymillis = 0;
 	}
 
 	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
@@ -708,12 +702,6 @@ namespace ai
 
 	bool hastarget(gameent *d, aistate &b, gameent *e, float yaw, float pitch, float dist)
 	{ // add margins of error
-		if(d->skill >= 75)
-		{
-			vec dp = d->headpos();
-			gameent *f = game::intersectclosest(dp, d->ai->target, d);
-			if(f && !targetable(d, f, true)) return false;
-		}
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, dist))
 		{
@@ -786,6 +774,13 @@ namespace ai
 		}
 
 		gameent *e = game::getclient(d->ai->enemy);
+		bool enemyok = e && targetable(d, e, true);
+		if(!enemyok || d->skill > 70)
+		{
+			e = game::intersectclosest(dp, d->ai->target, d);
+			if(!targetable(d, e, true))
+				e = enemyok ? game::getclient(d->ai->enemy) : NULL;
+		}
 		if(e)
 		{
 			vec ep = getaimpos(d, e);
@@ -816,22 +811,23 @@ namespace ai
 					}
 					else result = insight ? 3 : 2;
 				}
-				else
-				{
-					if(!b.idle && !hasseen) noenemy(d);
-					result = hasseen ? 2 : 1;
-				}
+				else result = hasseen ? 2 : 1;
 			}
 			else
 			{
-				if(!b.idle) noenemy(d);
+				d->ai->enemy = -1;
+				d->ai->enemymillis = 0;
 				result = 0;
 				frame /= 2.f;
 			}
 		}
 		else
 		{
-			if(!b.idle) noenemy(d);
+			if(!b.idle && !enemyok)
+			{
+				d->ai->enemy = -1;
+				d->ai->enemymillis = 0;
+			}
 			result = 0;
 			frame /= 2.f;
 		}
