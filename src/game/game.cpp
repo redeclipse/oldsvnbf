@@ -1805,19 +1805,14 @@ namespace game
 #endif
 		startmodelbatches();
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
-        {
-        	if(rendernormally) d->muzzle = d->affinity = vec(-1, -1, -1);
-			renderplayer(d, true, showtranslucent(d, true));
-        }
-
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, showtranslucent(d, true));
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
         if(m_ctf(gamemode)) ctf::render();
         ai::render();
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->muzzle = d->affinity = vec(-1, -1, -1);
 		endmodelbatches();
-
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) checktags(d);
 	}
 
