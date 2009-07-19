@@ -105,15 +105,8 @@ namespace physics
         return d->state == CS_DEAD || d->state == CS_WAITING;
 	}
 
-	bool iscrouching(physent *d)
-	{
-		return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200;
-	}
-
-	bool liquidcheck(physent *d)
-	{
-		return d->inliquid && d->submerged > 0.8f;
-	}
+	bool iscrouching(physent *d) { return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200; }
+	bool liquidcheck(physent *d) { return d->inliquid && d->submerged > 0.8f; }
 
 	float liquidmerge(physent *d, float from, float to)
 	{
@@ -126,23 +119,9 @@ namespace physics
 		return from;
 	}
 
-	float jumpvelocity(physent *d, bool liquid)
-	{
-		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return jumpspeed;
-		return m_speedscale(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f)*jumpscale;
-	}
-
-	float impulsevelocity(physent *d)
-	{
-		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return impulsespeed;
-		return m_speedscale(impulsespeed)*(d->weight/100.f)*jumpscale;
-	}
-
-	float gravityforce(physent *d)
-	{
-		if(d->type == ENT_CAMERA || (d->type == ENT_PLAYER && d->state == CS_EDITING)) return gravity;
-		return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale;
-	}
+	float jumpforce(physent *d, bool liquid) { return m_speedscale(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f)*jumpscale; }
+	float impulseforce(physent *d) { return m_speedscale(impulsespeed)*(d->weight/100.f)*jumpscale; }
+	float gravityforce(physent *d) { return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale; }
 
 	float stepforce(physent *d, bool up)
 	{
@@ -160,19 +139,16 @@ namespace physics
 
 	float movevelocity(physent *d)
 	{
-		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f);
+		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f)*(floatspeed/100.0f);
 		else if(d->type == ENT_PLAYER)
 		{
-			if(d->state == CS_EDITING) return d->maxspeed*(d->weight/100.f);
+			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else return m_speedscale(d->maxspeed)*(d->weight/100.f)*(float(iscrouching(d) ? crawlspeed : movespeed)/100.f);
 		}
 		return m_speedscale(d->maxspeed);
 	}
 
-	bool movepitch(physent *d)
-	{
-		return d->type == ENT_CAMERA || d->state == CS_EDITING;
-	}
+	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR; }
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {
@@ -509,7 +485,7 @@ namespace physics
 			pl->lastimpulse = 0;
 			if(game::allowmove(pl) && pl->jumping)
 			{
-				pl->vel.z += jumpvelocity(pl, false);
+				pl->vel.z += jumpforce(pl, false);
 				pl->jumping = false;
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
@@ -521,7 +497,7 @@ namespace physics
 			{
 				pl->falling = vec(0, 0, 0);
 				pl->physstate = PHYS_FALL; // cancel out other physstate
-				pl->vel.z += jumpvelocity(pl, true);
+				pl->vel.z += jumpforce(pl, true);
 				if(pl->inliquid)
 				{
 					float scale = liquidmerge(pl, 1.f, liquidspeed);
@@ -541,7 +517,7 @@ namespace physics
 			vec dir;
 			vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move || pl->strafe ? pl->move : 1, pl->strafe, dir);
 			dir.normalize();
-			dir.mul(impulsevelocity(pl));
+			dir.mul(impulseforce(pl));
 			pl->falling = vec(0, 0, 0);
 			pl->physstate = PHYS_FALL; // cancel out other physstate
 			pl->vel.add(dir);
@@ -569,13 +545,8 @@ namespace physics
 		}
 
 		vec d = vec(m).mul(movevelocity(pl));
-        if(pl->type == ENT_PLAYER)
-        {
-		    if(floating) { if(local) d.mul(floatspeed/100.0f); }
-		    else if(!pl->inliquid) d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
-        }
-        else if(pl->type == ENT_CAMERA && local) d.mul(floatspeed/100.0f);
-
+        if(pl->type == ENT_PLAYER && !floating && !pl->inliquid)
+			d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
@@ -642,7 +613,7 @@ namespace physics
 			}
 			pl->submerged = found ? found/10.f : 1.f;
 			if(local && pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
-				pl->vel.z = max(pl->vel.z, jumpvelocity(pl, false));
+				pl->vel.z = max(pl->vel.z, jumpforce(pl, false));
 		}
 		else pl->submerged = 0;
 		pl->onladder = !floating && flagmat == MAT_LADDER;
