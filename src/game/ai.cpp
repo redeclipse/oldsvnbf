@@ -636,32 +636,24 @@ namespace ai
 		if(entities::ents.inrange(d->lastnode))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-			vec dir = vec(e.o).sub(d->feetpos());
-			if(d->timeinair || dir.magnitude() <= CLOSEDIST || retry)
+			static vector<int> anyremap; anyremap.setsizenodelete(0);
+			if(!e.links.empty())
 			{
-				static vector<int> anyremap; anyremap.setsizenodelete(0);
-				gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-				if(!e.links.empty())
-				{
-					loopv(e.links) if(entities::ents.inrange(e.links[i]) && e.links[i] != d->lastnode && (retry || !d->ai->hasprevnode(e.links[i])))
-						anyremap.add(e.links[i]);
-				}
-				while(!anyremap.empty())
-				{
-					int r = rnd(anyremap.length()), t = anyremap[r];
-					if(wpspot(d, t, retry))
-					{
-						d->ai->route.add(t);
-						return true;
-					}
-					anyremap.remove(r);
-				}
+				loopv(e.links) if(entities::ents.inrange(e.links[i]) && (retry || !d->ai->hasprevnode(e.links[i])))
+					anyremap.add(e.links[i]);
 			}
-			if(!retry)
+			while(!anyremap.empty())
 			{
-				d->ai->clear(true);
-				return anynode(d, b, true);
+				int r = rnd(anyremap.length()), t = anyremap[r];
+				if(wpspot(d, t, retry))
+				{
+					d->ai->route.add(t);
+					d->ai->route.add(d->lastnode);
+					return true;
+				}
+				anyremap.remove(r);
 			}
+			if(!retry) return anynode(d, b, true);
 		}
 		return false;
 	}
@@ -716,7 +708,7 @@ namespace ai
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		float magxy = dir.magnitude();
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
-			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*3,
+			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2,
 			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
 			propel = offground && !d->ai->dontpropel && (jumper || propeller) && physics::canimpulse(d) && lastmillis >= d->ai->propelseed;
 		if(jump)
@@ -1081,8 +1073,9 @@ namespace ai
 						}
 						continue; // shouldn't interfere
 					}
-					else c.next = lastmillis+m_speedtime(1000);
+					else c.next = lastmillis+m_speedtime(1000+rnd(1000));
 				}
+				else c.next = lastmillis+m_speedtime(500+rnd(500));
 			}
 			logic(d, c, run);
 			break;
