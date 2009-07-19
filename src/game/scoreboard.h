@@ -68,16 +68,15 @@ namespace hud
 						scoregroup &sg = *groups[0];
 						if(m_team(game::gamemode, game::mutators))
 						{
-							bool win = sg.players.find(game::player1) >= 0;
+							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
-								game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS secured all flags", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name);
-							else
-								game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+								game::announce(anc, CON_INFO, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else game::announce(anc, CON_INFO, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
-							bool win = sg.players[0] == game::player1;
-							game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
+							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
+							game::announce(anc, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
 						}
 					}
 				}

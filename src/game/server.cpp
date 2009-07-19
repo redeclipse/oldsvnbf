@@ -533,30 +533,30 @@ namespace server
 			*muts = gametype[*mode].implied;
 		}
 
-		#define modecheckreset { i = 0; continue; }
+		#define modecheckreset(a) { i = 0; a; }
 		if(gametype[*mode].mutators && *muts) loopi(G_M_NUM)
 		{
 			if(!(gametype[*mode].mutators & mutstype[i].type) && (*muts & mutstype[i].type))
 			{
 				*muts &= ~mutstype[i].type;
-				modecheckreset;
+				modecheckreset(continue);
 			}
 			if(gametype[*mode].implied && (gametype[*mode].implied & mutstype[i].type) && !(*muts & mutstype[i].type))
 			{
 				*muts |= mutstype[i].type;
-				modecheckreset;
+				modecheckreset(continue);
 			}
 			if(*muts & mutstype[i].type) loopj(G_M_NUM)
 			{
 				if(mutstype[i].mutators && !(mutstype[i].mutators & mutstype[j].type) && (*muts & mutstype[j].type))
 				{
 					*muts &= ~mutstype[j].type;
-					modecheckreset;
+					modecheckreset(break);
 				}
 				if(mutstype[i].implied && (mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
 				{
 					*muts |= mutstype[j].type;
-					modecheckreset;
+					modecheckreset(break);
 				}
 			}
 		}

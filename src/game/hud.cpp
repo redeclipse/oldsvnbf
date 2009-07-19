@@ -999,9 +999,9 @@ namespace hud
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew))-FONTH, ti = int(255.f*blend*skew);
+		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
 		defvformatstring(str, text, text);
-		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_JUSTIFY : TEXT_RIGHT_JUSTIFY, -1, -1, str);
+		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_UP : TEXT_RIGHT_UP, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
 	}
