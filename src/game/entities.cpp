@@ -6,7 +6,7 @@ namespace entities
 	VARP(showentdescs, 0, 2, 3);
 	VARP(showentinfo, 0, 1, 5);
 	VARP(showentnoisy, 0, 0, 2);
-	VARP(showentdir, 0, 1, 3);
+	VARP(showentdir, 0, 2, 3); // 0 = off, 1 = only selected, 2 = always when editing, 3 = always in editmode
 	VARP(showentradius, 0, 1, 3);
 	VARP(showentlinks, 0, 1, 3);
 	VARP(showlighting, 0, 0, 1);
@@ -1738,8 +1738,8 @@ namespace entities
 
 	void renderentshow(gameentity &e, int idx, int level)
 	{
-		if(level != 1 && e.o.squaredist(camera1->o) > maxparticledistance*maxparticledistance) return;
-		if(!level || showentradius >= level)
+		if(e.o.squaredist(camera1->o) > maxparticledistance*maxparticledistance) return;
+		if(showentradius >= level)
 		{
 			switch(e.type)
 			{
@@ -1792,18 +1792,18 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(!level || showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(!level || showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
 				break;
 			}
 			case TELEPORT:
 			case CAMERA:
 			{
-				if(!level || showentdir >= level)
+				if(showentdir >= level)
 				{
 					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 8.f);
 					else part_dir(e.o, e.attr[0], e.attr[1], 8.f);
@@ -1812,7 +1812,7 @@ namespace entities
 			}
 			case PUSHER:
 			{
-				if(!level || showentdir >= level)
+				if(showentdir >= level)
 				{
 					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]);
 					float mag = dir.magnitude();
@@ -1826,7 +1826,7 @@ namespace entities
 		}
 
 		if(enttype[e.type].links)
-			if(!level || showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6)))
+			if(showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6)))
 				renderlinked(e, idx);
 	}
 
@@ -1900,19 +1900,8 @@ namespace entities
 
 	void render()
 	{
-		if(rendermainview) // important, don't render lines and stuff otherwise!
-		{
-			int level = (m_edit(game::gamemode) ? 2 : ((showentdir == 3  || showentradius == 3 || showentlinks == 3 || dropwaypoints || ai::aidebug >= 6) ? 3 : 0));
-			if(level)
-			{
-				bool editing = game::player1->state == CS_EDITING;
-				loopv(ents)
-				{
-					int lvl = (editing && (entgroup.find(i) >= 0 || enthover == i)) ? 1 : level;
-					renderfocus(i, renderentshow(e, i, lvl));
-				}
-			}
-		}
+		if(rendermainview && m_edit(game::gamemode)) loopv(ents) // important, don't render lines and stuff otherwise!
+			renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
 
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		loopv(ents)

@@ -4,7 +4,7 @@ namespace physics
 	FVARW(crawlspeed,		0, 20.f, 10000);	// crawl speed
 	FVARW(gravity,			0, 50.f, 10000);	// gravity
 	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
-	FVARW(movespeed,		0, 40.f, 10000);	// speed
+	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
 	FVARW(impulsespeed,		0, 30.f, 10000);	// extra velocity to add when impulsing
 	FVARW(impulsemod,		0, 60.f, 10000);	// modifier of gravity that determines impulse interval
