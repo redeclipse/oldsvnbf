@@ -1248,7 +1248,7 @@ namespace entities
 		{
 			vec v = d->feetpos();
 			bool clip = clipped(v, true), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
-			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : ai::NEARDIST);
+			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : (d->ai ? ai::JUMPMIN : ai::NEARDIST));
 			int curnode = closestent(WAYPOINT, v, dist, false, d), prevnode = d->lastnode;
 
 			if(!ents.inrange(curnode) && shoulddrop)
@@ -1267,7 +1267,8 @@ namespace entities
 					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
 				d->lastnode = curnode;
 			}
-			else d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
+			else if(!ents.inrange(d->lastnode) || entities::ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
+				d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
 
 			if(clip) cleanairnodes = 2;
 			else if(!d->timeinair) cleanairnodes = 1;

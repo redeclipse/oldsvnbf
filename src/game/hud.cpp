@@ -839,7 +839,7 @@ namespace hud
 		else return;
 		float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
 		int tq = ts/2, cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
-		glColor4f(r, g, b, blend);
+		glColor4f(r, g, b, fade);
 		drawtex(cx, cy, ts, ts, fx, fy, fw, fh);
 		if(text && *text)
 		{
@@ -1133,7 +1133,7 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow);
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow), gap = 0;
 		float fade = inventoryhealthblend*blend, r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
 		if(teamwidgets) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2)
@@ -1144,10 +1144,11 @@ namespace hud
 			g -= g*pulse;
 			b -= b*pulse;
 			bgfade += (1.f-bgfade)*pulse;
+			gap += int(x*pulse);
 		}
         settexture(healthtex, 3);
         glColor4f(r, g, b, fade*bgfade);
-        drawtex(x, y-size, width, size);
+        drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
