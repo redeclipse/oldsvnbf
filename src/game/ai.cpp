@@ -435,7 +435,6 @@ namespace ai
 
 	int dowait(gameent *d, aistate &b)
 	{
-		b.idle = 1;
 		if(!m_edit(game::gamemode))
 		{
 			if(check(d, b)) return 1;
@@ -670,6 +669,7 @@ namespace ai
 				{
 					if(wpspot(d, d->ai->route[n], retries >= 2))
 					{
+						b.next = lastmillis; // reached our goal, update
 						d->ai->clear(false);
 						return true;
 					}
