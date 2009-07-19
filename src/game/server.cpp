@@ -1272,8 +1272,9 @@ namespace server
 	{
 		if(m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1;
-			if(GVAR(teambalance) || team < 0)
+			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
+			if(balance < 3 && ci->state.aitype != AI_NONE) balance = 1;
+			if(balance || team < 0)
 			{
 				teamscore teamscores[TEAM_NUM] = {
 					teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
@@ -1283,20 +1284,22 @@ namespace server
 					clientinfo *cp = clients[i];
 					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
 					if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
-					cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
-					cp->state.lasttimeplayed = lastmillis;
-					teamscore &ts = teamscores[cp->team-TEAM_FIRST]; // remember: ai just balance teams
-					if(ci->state.aitype == AI_NONE && cp->state.aitype == AI_NONE)
+					if(ci->state.aitype != AI_NONE || (ci->state.aitype == AI_NONE && cp->state.aitype == AI_NONE))
+					{ // remember: ai just balance teams
+						cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
+						cp->state.lasttimeplayed = lastmillis;
+						teamscore &ts = teamscores[cp->team-TEAM_FIRST];
 						ts.score += cp->state.score/float(max(cp->state.timeplayed, 1));
-					ts.clients++;
+						ts.clients++;
+					}
 				}
 				teamscore *worst = &teamscores[0];
-				if(GVAR(teambalance) != 3 || ci->state.aitype != AI_NONE)
+				if(balance != 3 || ci->state.aitype != AI_NONE)
 				{
 					loopi(numteams(gamemode, mutators))
 					{
 						teamscore &ts = teamscores[i];
-						switch(GVAR(teambalance))
+						switch(balance)
 						{
 							case 2:
 							{
