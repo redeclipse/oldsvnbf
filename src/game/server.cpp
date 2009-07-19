@@ -1433,7 +1433,7 @@ namespace server
 #ifdef STANDALONE // interferes with savemap on clients, in which case we can just use the auto-request
 		loopi(3)
 		{
-			if(mapdata[i]) delete mapdata[i];
+			if(mapdata[i]) DELETEP(mapdata[i]);
 			const char *reqext = "xxx";
 			switch(i)
 			{
@@ -1445,7 +1445,7 @@ namespace server
 			defformatstring(reqfext)("%s.%s", reqfile, reqext);
 			if(!(mapdata[i] = openfile(reqfext, "rb")) && !i)
 			{
-				loopk(3) if(mapdata[k]) delete mapdata[k];
+				loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
 				break;
 			}
 		}
