@@ -136,21 +136,20 @@ namespace ctf
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
             }
         }
-        static vector<int> numflags, iterflags;
+        static vector<int> numflags, iterflags; // dropped/owned
         loopv(numflags) numflags[i] = iterflags[i] = 0;
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || !f.owner) continue;
-			while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
+            if(!f.ent || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
+            if(f.owner) while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
             vec above(f.pos());
-            above.z += (enttype[FLAG].radius*2/3)+(numflags[f.owner->clientnum]*2);
+            above.z += enttype[FLAG].radius*2/3;
+            if(f.owner) { above.z += numflags[f.owner->clientnum]*2; numflags[f.owner->clientnum]++; }
             defformatstring(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
-           	numflags[f.owner->clientnum]++;
         }
-
-        loopv(st.flags) // dropped/owned
+        loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.ent || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
