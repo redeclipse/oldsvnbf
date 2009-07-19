@@ -975,10 +975,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				lilswap(&e.attr, ENTATTRS);
 				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
 					e.attr[4] = 0; // init ever-present attr5
-				if(maptype == MAP_OCTA)
-				{
-					loopj(eif) f->getchar();
-				}
+				if(maptype == MAP_OCTA) loopj(eif) f->getchar();
 				// sauerbraten version increments
 				if(hdr.version <= 10 && e.type >= 7) e.type++;
 				if(hdr.version <= 12 && e.type >= 8) e.type++;
