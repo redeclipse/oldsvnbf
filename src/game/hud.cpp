@@ -480,7 +480,7 @@ namespace hud
 	void drawpointers(int w, int h)
 	{
         int index = POINTER_NONE;
-		if(UI::hascursor()) index = commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
+		if(UI::hascursor()) index = !UI::hascursor(true) || commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
         else if(!showcrosshair || game::player1->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;

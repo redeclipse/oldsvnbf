@@ -55,30 +55,34 @@ namespace hud
 
 		void showscores(bool on, bool interm = false)
 		{
-			if(!scoreson && on) menustart = starttime();
-			scoreson = on;
-			if(interm)
+			if(client::ready())
 			{
-				if(m_mission(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, "\fwmission complete!");
-				else
+				if(!scoreson && on) menustart = starttime();
+				scoreson = on;
+				if(interm)
 				{
-					if(!groupplayers()) return;
-					scoregroup &sg = *groups[0];
-					if(m_team(game::gamemode, game::mutators))
-					{
-						bool win = sg.players.find(game::player1) >= 0;
-                        if(m_stf(game::gamemode) && sg.score==INT_MAX)
-                            game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS secured all flags", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name);
-						else
-                            game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
-					}
+					if(m_mission(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, "\fwmission complete!");
 					else
 					{
-						bool win = sg.players[0] == game::player1;
-						game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
+						if(!groupplayers()) return;
+						scoregroup &sg = *groups[0];
+						if(m_team(game::gamemode, game::mutators))
+						{
+							bool win = sg.players.find(game::player1) >= 0;
+							if(m_stf(game::gamemode) && sg.score==INT_MAX)
+								game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS secured all flags", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else
+								game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s team \fs%s%s\fS won the match with a total score of %d", win ? "your" : "enemy", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+						}
+						else
+						{
+							bool win = sg.players[0] == game::player1;
+							game::announce(win ? S_V_YOUWIN : S_V_YOULOSE, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
+						}
 					}
 				}
 			}
+			else scoreson = false;
 		}
 
 		static int teamscorecmp(const teamscore *x, const teamscore *y)

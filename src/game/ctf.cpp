@@ -136,8 +136,20 @@ namespace ctf
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
             }
         }
-        static vector<int> numflags;
-        loopv(numflags) numflags[i] = 0;
+        static vector<int> numflags, iterflags;
+        loopv(numflags) numflags[i] = iterflags[i] = 0;
+        loopv(st.flags)
+        {
+            ctfstate::flag &f = st.flags[i];
+            if(!f.ent || !(f.base&BASE_FLAG) || !f.owner) continue;
+			while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
+            vec above(f.pos());
+            above.z += (enttype[FLAG].radius*2/3)+(numflags[f.owner->clientnum]*2);
+            defformatstring(info)("@%s flag", teamtype[f.team].name);
+			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+           	numflags[f.owner->clientnum]++;
+        }
+
         loopv(st.flags) // dropped/owned
         {
             ctfstate::flag &f = st.flags[i];
@@ -147,22 +159,14 @@ namespace ctf
 			float trans = 1.f, yaw = 90;
 			if(f.owner)
 			{
-				while(numflags.length() <= f.owner->clientnum) numflags.add(0);
-				yaw += f.owner->yaw+(numflags[f.owner->clientnum]*30.f);
+				iterflags[f.owner->clientnum]++;
+				yaw += f.owner->yaw-45.f+(90/float(numflags[f.owner->clientnum]+1)*iterflags[f.owner->clientnum]);
 				while(yaw >= 360.f) yaw -= 360.f;
 			}
-			else yaw += f.interptime%360;
+			else yaw += (f.interptime+(360/st.flags.length()*i))%360;
 			int millis = lastmillis-f.interptime;
 			if(millis < 1000) trans = float(millis)/1000.f;
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, yaw, 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
-            above.z += enttype[FLAG].radius*2/3;
-            if(f.owner)
-            {
-            	above.z += numflags[f.owner->clientnum]*2;
-            	numflags[f.owner->clientnum]++; // do last
-            }
-            defformatstring(info)("@%s flag", teamtype[f.team].name);
-			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
         }
     }
 
