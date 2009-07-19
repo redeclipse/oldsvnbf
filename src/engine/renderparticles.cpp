@@ -1483,11 +1483,9 @@ void part_dir(const vec &o, float yaw, float pitch, float size, int fade, int co
 {
 	if(shadowmapping || renderedgame) return;
 
-	vec v;
-	vecfromyawpitch(yaw, pitch, 1, 0, v);
-	v.mul(size).add(o);
-	part_line(o, v, 1.f, fade, color);
-	part_triangle(v, yaw, pitch, 1.f, fade, color, fill);
+	vec v; vecfromyawpitch(yaw, pitch, 1, 0, v); v.normalize();
+	part_line(o, vec(v).mul(size+1.f).add(o), 1.f, fade, color);
+	part_triangle(vec(v).mul(size).add(o), yaw, pitch, 1.f, fade, color, fill);
 }
 
 void part_trace(const vec &o, const vec &v, float size, int fade, int color, bool fill)
@@ -1693,9 +1691,9 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			//regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f, -10);
 			//regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
             float radius = attr2 ? float(attr2)/100.0f : 1.5f,
-                  height = attr3 ? float(attr3)/100.0f : radius/3;
-            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0x903020, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -5, 0, 50);
-            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x303020, 1, attr5 > 0 ? attr5 : 1000, 4.0f, -10, 0, 50);
+                  height = attr3 ? float(attr3)/100.0f : radius*3;
+            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0xF05010, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -5, 0, 30);
+            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x101008, 1, attr5 > 0 ? attr5 : 1000, 2.0f, -10, 0, 30);
 			break;
 		}
 		case 1: //smoke vent - <dir>
@@ -1720,11 +1718,11 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		case 13: //sparks
 		{
 			const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
-			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 4.8f, 2.4f, 0.60f, 4.8f, 0.5f, 0.28f }, velmap[] = { 50, 0, 0, 50, 50, 50, 50, 50, 20, 50 },
+			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.25f, 4.f, 2.f, 0.6f, 4.f, 0.5f, 0.2f }, velmap[] = { 50, 0, 0, 20, 30, 30, 50, 20, 10, 20 },
 				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
 			int type = typemap[attr1-4];
 			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];
-			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 200, o, size, grav, col, vel);
+			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 250, o, size, grav, col, vel);
 			else newparticle(o, offsetvec(o, attr2, max(1+attr3, 0)), attr5 > 0 ? attr5 : 1, type, colorfromattr(attr4), size, grav, col);
 			break;
 		}
@@ -1732,7 +1730,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		case 15: // smoke plume
 		{
 			const int typemap[] = { PART_FLAME, PART_SMOKE }, fademap[] = { 500, 1000 }, densitymap[] = { 3, 1 };
-			const float sizemap[] = { 2.f, 4.f }, velmap[] = { 100.f, 150.f }, gravmap[] = { -10, -20 };
+			const float sizemap[] = { 2, 2 }, velmap[] = { 25, 50 }, gravmap[] = { -5, -10 };
 			int type = typemap[attr1-14], density = densitymap[attr1-14], fade = attr5 > 0 ? attr5 : fademap[attr1-14];
 			float size = sizemap[attr1-14], vel = velmap[attr1-14], grav = gravmap[attr1-14];
 			regularflame(type, o, float(attr2)/100.0f, float(attr3)/100.0f, colorfromattr(attr4), density, fade, size, grav, 0, vel);
