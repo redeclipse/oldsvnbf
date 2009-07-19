@@ -112,7 +112,6 @@ void connects(const char *name, int port, int qport, const char *password)
 		connattempts = 0;
         client::connectattempt(name ? name : "", port, qport, password ? password : "", address);
 		conoutf("\fgconnecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
-//		renderbackground(cs);
 	}
 	else
     {

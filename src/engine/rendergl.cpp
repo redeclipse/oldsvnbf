@@ -1497,6 +1497,19 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 
 		loadbackground(w, h, kidmode ? "textures/kidback" : loadback, mapshot);
 
+		glPushMatrix();
+		glScalef(1/3.0f, 1/3.0f, 1);
+		settexture("textures/wait", 3);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, 0); glVertex2f(0, 0);
+		glTexCoord2f(1, 0); glVertex2f(192, 0);
+		glTexCoord2f(1, 1); glVertex2f(192, 192);
+		glTexCoord2f(0, 1); glVertex2f(0, 192);
+		glEnd();
+		draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
+		draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, caption ? caption : "loading...");
+		glPopMatrix();
+#if 0
         if(caption)
         {
             glPushMatrix();
@@ -1504,7 +1517,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
             draw_text(caption, 70, FONTH/2);
             glPopMatrix();
         }
-#if 0
+
 		if(t)
 		{
 			glBindTexture(GL_TEXTURE_2D, t->id);
@@ -1622,8 +1635,8 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 
 	if(verbose >= 4)
 	{
-		if (text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if (text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
+		if(text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if(text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
 		else conoutf("\fmprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
 	}
 
@@ -1640,31 +1653,50 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	glOrtho(0, w*3, h*3, 0, -1, 1);
 	notextureshader->set();
 
-	int area = (w-256)*3;
 	glColor3f(0, 0, 0);
 	glBegin(GL_QUADS);
 	glVertex2f(0,	0);
-	glVertex2f(area, 0);
-	glVertex2f(area, 204);
+	glVertex2f(w*3, 0);
+	glVertex2f(w*3, 204);
 	glVertex2f(0,	204);
 	glEnd();
 
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
+	glColor3f(1, 1, 1);
+
+	glPushMatrix();
+	glScalef(3.0f, 3.0f, 1);
+
+    settexture("textures/logo", 3);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2f(w-256, 2);
+    glTexCoord2f(1, 0); glVertex2f(w, 2);
+    glTexCoord2f(1, 1); glVertex2f(w, 66);
+    glTexCoord2f(0, 1); glVertex2f(w-256, 66);
+    glEnd();
+
+    settexture("textures/cube2badge", 3);
+    glBegin(GL_QUADS); // goes off the edge on purpose
+    glTexCoord2f(0, 0); glVertex2f(w-108, 36);
+    glTexCoord2f(1, 0); glVertex2f(w-12, 36);
+    glTexCoord2f(1, 1); glVertex2f(w-12, 68);
+    glTexCoord2f(0, 1); glVertex2f(w-108, 68);
+    glEnd();
+
+    glPopMatrix();
 
 	if(text1)
 	{
 		if(bar1 > 0)
 		{
-			glColor3f(1, 1, 1);
 			settexture("textures/progress", 3);
 			drawslice(0, clamp(bar1, 0.f, 1.f), 96, 96, 96);
 			draw_textx("\fg%d%%", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, int(bar1*100));
 		}
 		else
 		{
-			glColor3f(1, 1, 1);
 			settexture("textures/wait", 3);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 0); glVertex2f(0, 0);
@@ -1675,8 +1707,8 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 			draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
 		}
 		if(text2 && bar2 > 0)
-			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, area, text1, text2, int(bar2*100));
-		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, area, text1);
+			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));
+		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1);
 	}
 
 	glDisable(GL_BLEND);
