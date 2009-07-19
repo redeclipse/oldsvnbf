@@ -310,7 +310,7 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 #if SDL_VERSION_ATLEAST(1, 2, 11)
-    if(vsync>=0) SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync);
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync >= 0 ? vsync : 0);
 #endif
     static int configs[] =
     {
