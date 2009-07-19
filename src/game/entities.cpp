@@ -1792,12 +1792,12 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f);
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 8.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f);
 				break;
 			}
 			case TELEPORT:
@@ -1805,7 +1805,7 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 8.f);
+					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 4.f);
 					else part_dir(e.o, e.attr[0], e.attr[1], 8.f);
 				}
 				break;
@@ -1817,8 +1817,8 @@ namespace entities
 					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]);
 					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
-					vectoyawpitch(dir, yaw, pitch);
-					part_dir(e.o, yaw, pitch, 8.f+mag);
+					vectoyawpitch(dir.normalize(), yaw, pitch);
+					part_dir(e.o, yaw, pitch, 4.f+mag);
 				}
 				break;
 			}
