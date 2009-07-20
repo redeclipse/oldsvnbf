@@ -615,16 +615,13 @@ namespace ai
 			int entid = obstacles.remap(d, n, epos);
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
-				if(vec(epos).sub(d->feetpos()).magnitude() > CLOSEDIST*0.125f)
+				d->ai->spot = epos;
+				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
 				{
-					d->ai->spot = epos;
-					if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
-					{
-						d->crouching = !d->crouching;
-						d->crouchtime = lastmillis;
-					}
-					return true;
+					d->crouching = !d->crouching;
+					d->crouchtime = lastmillis;
 				}
+				return true;
 			}
 		}
 		return false;

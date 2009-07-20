@@ -111,19 +111,24 @@ namespace hud
 
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
-	VARP(inventoryedit, 0, 1, 1);
 	VARP(inventorygame, 0, 0, 1);
-	VARP(inventorystatus, 0, 0, 1);
+	VARP(inventorystatus, 0, 1, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
-	VARP(inventoryweapents, 0, 0, 1);
-	VARP(inventoryhealth, 0, 2, 2);
-	VARP(inventorythrob, 0, 1, 1);
 	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
 	FVARP(inventoryblend, 0, 0.5f, 1);
-	FVARP(inventoryglow, 0, 0.1f, 1);
+
+	VARP(inventoryedit, 0, 1, 1);
+	FVARP(inventoryeditblend, 0, 1.f, 1);
+	FVARP(inventoryeditskew, 0, 0.75f, 1);
+
+	VARP(inventoryhealth, 0, 2, 3);
+	VARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.9f, 1);
+	FVARP(inventoryhealthglow, 0, 0.1f, 1);
+	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
+
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(smgtex, "textures/smg", 3);
@@ -141,7 +146,7 @@ namespace hud
 	TVAR(inventoryenttex, "textures/progress", 3);
 	TVAR(inventoryedittex, "textures/progress", 3);
 	TVAR(inventorywaittex, "textures/wait", 3);
-	TVAR(inventorydeadtex, "textures/exit", 3);
+	TVAR(inventorydeadtex, "textures/dead", 3);
 	TVAR(inventorychattex, "textures/conopen", 3);
 
 	VARP(showclip, 0, 1, 1);
@@ -999,9 +1004,9 @@ namespace hud
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
+		int tx = int((x+(left ? size/2 : 0))*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
 		defvformatstring(str, text, text);
-		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_UP : TEXT_RIGHT_UP, -1, -1, str);
+		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_CENTER_UP : TEXT_RIGHT_UP, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
 	}
@@ -1038,7 +1043,8 @@ namespace hud
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
 			const char *itext = itemtex(e.type, e.attr[0]);
-			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "%s (%d)", enttype[e.type].name, n);
+			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "sub", "%s (%d)", enttype[e.type].name, n);
+			drawitemsubtext(x, y-int(s/2*skew), s, false, skew, "sub", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 			drawitemsubtext(x, y, s, false, skew, "sub", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
 			return ty;
 		}
@@ -1050,11 +1056,11 @@ namespace hud
 		int sy = showfps ? s/2+s/4 : s/16;
 		if(game::player1->state == CS_ALIVE)
 		{
-			if(inventorystatus)
+			if(inventorystatus >= 2)
 			{
 				if(game::player1->team)
-					sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name) + s/8;
-				else sy += drawitem(flagtex(game::player1->team), x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f) + s/8;
+					sy += drawitem(flagtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+				else sy += drawitem(flagtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			}
 			if(inventoryammo)
 			{
@@ -1102,9 +1108,7 @@ namespace hud
 							}
 							lastweapids = changedkeys;
 						}
-						if(inventoryweapents && entities::ents.inrange(game::player1->entid[i]) && game::player1->hasweap(i, sweap))
-							drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "[\fs\fd%d\fS] \fs%s%s\fS", game::player1->entid[i], inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
-						else drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+						drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 					}
 				}
 			}
@@ -1113,19 +1117,19 @@ namespace hud
 		{
 			if(game::player1->state == CS_EDITING)
 			{
-				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f) + s/8;
+				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 				if(inventoryedit)
 				{
-					int stop = hudsize-s*3;
-					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend);
-					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, 0.65f, blend*inventoryblend)) >= stop) break;
+					int stop = hudsize-s;
+					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
+					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 				}
 			}
 			else if(inventorystatus)
 			{
-				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy, s, false,1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-				else sy += drawitem(inventorychattex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy+s/8, s-s/4, false,1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+				else sy += drawitem(inventorychattex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			}
 		}
 		return sy;
@@ -1133,26 +1137,32 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryglow), gap = 0;
-		float fade = inventoryhealthblend*blend, r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
-		if(teamwidgets) skewcolour(r, g, b);
-		if(game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2)
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow);
+		float fade = inventoryhealthblend*blend;
+		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2;
+		settexture(healthtex, 3);
+		if(glow || pulse)
 		{
-			int timestep = lastmillis%1000;
-			float pulse = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
-			r += (1.f-r)*pulse;
-			g -= g*pulse;
-			b -= b*pulse;
-			bgfade += (1.f-bgfade)*pulse;
-			gap += int(x*pulse);
+			int gap = 0;
+			float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
+			if(teamwidgets) skewcolour(r, g, b);
+			if(pulse)
+			{
+				int timestep = lastmillis%1000;
+				float skew = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
+				r += (1.f-r)*skew;
+				g -= g*skew;
+				b -= b*skew;
+				bgfade += (1.f-bgfade)*skew;
+				gap += int(x*skew);
+			}
+			glColor4f(r, g, b, fade*bgfade);
+			drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
 		}
-        settexture(healthtex, 3);
-        glColor4f(r, g, b, fade*bgfade);
-        drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-			else if(inventorythrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
+			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
 			{
 				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
 				if(amt < 0.5f) amt = 1.f-amt;
@@ -1197,11 +1207,11 @@ namespace hud
 				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(sx + sw, sy + off*sh);
 			}
 			glEnd();
-			if(inventoryhealth > 1) drawitemsubtext(x, y, width, true, 1.f, "emphasis", fade, "%d", max(game::player1->health, 0));
+			if(inventoryhealth >= 2) drawitemsubtext(x, y, width, true, 1.f, "emphasis", fade, "%d", max(game::player1->health, 0));
 		}
-		else
+		else if(inventoryhealth >= 3)
 		{
-			const char *state = "\fgALIVE";
+			const char *state = "";
 			switch(game::player1->state)
 			{
 				case CS_EDITING: state = "\fcEDIT"; break;
@@ -1209,7 +1219,7 @@ namespace hud
 				case CS_SPECTATOR: state = "\faSPEC"; break;
 				case CS_DEAD: default: state = "\frDEAD"; break;
 			}
-			drawitemsubtext(x, y, width, true, 1.f, "sub", fade, "%s", state);
+			if(*state) drawitemsubtext(x, y, width, true, 1.f, "sub", fade, "%s", state);
 		}
 		return size;
 	}
