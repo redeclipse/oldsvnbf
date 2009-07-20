@@ -826,7 +826,7 @@ namespace hud
 			fw = fh = 0.5f;
 			settexture(radartex, 3);
 			if(blip) tr += ts*blip;
-			//if(blip < 2) ts = ts*2/3;
+			if(blip < 2) ts = ts/2;
 			switch(blip)
 			{
 				case 0: fade *= radarplayerblend; break;
