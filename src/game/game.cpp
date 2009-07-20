@@ -44,11 +44,10 @@ namespace game
 
 	VARP(editfov, 1, 120, 179);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv, 2 = follow
-	VARP(spectvtime, 1000, 30000, INT_MAX-1);
+	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	VARP(specfov, 1, 120, 179);
-
-	FVARP(spectvspeed, 0.1f, 1.f, 1000);
-	FVARP(deathcamspeed, 0.1f, 2.f, 1000);
+	FVARP(spectvspeed, 0, 0.1f, 1000);
+	FVARP(deathcamspeed, 0, 2.f, 1000);
 
 	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
@@ -1269,7 +1268,7 @@ namespace game
 				vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
 			}
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
-			else scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
+			else if(spectvspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
 			camera1->resetinterp();
 		}
 		else unsetspectv(true);
@@ -1351,7 +1350,7 @@ namespace game
 				vec dir = vec(ragdollcenter(player1)).sub(camera1->o).normalize();
 				float yaw = camera1->yaw, pitch = camera1->pitch;
 				vectoyawpitch(dir, yaw, pitch);
-				scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
+				if(deathcamspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
 				camera1->aimyaw = camera1->yaw;
 				camera1->aimpitch = camera1->pitch;
 			}
