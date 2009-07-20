@@ -613,7 +613,7 @@ namespace physics
 			}
 			pl->submerged = found ? found/10.f : 1.f;
 			if(local && pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
-				pl->vel.z = max(pl->vel.z, jumpforce(pl, false));
+				pl->vel.z = max(pl->vel.z, max(jumpforce(pl, false), max(gravityforce(pl), 50.f)));
 		}
 		else pl->submerged = 0;
 		pl->onladder = !floating && flagmat == MAT_LADDER;
