@@ -818,15 +818,15 @@ namespace hud
 		if(idx < 0)
 		{
 			int blip = clamp(-idx-1, 0, 3);
-			const float rdblip[4][2] = { // player entity flag card
-				 { 0.f, 0.f }, { 0.f, 0.5f }, { 0.5f, 0.f }, { 0.5f, 0.5f }
+			const float rdblip[4][2] = { // entity player flag card
+				 { 0.f, 0.5f }, { 0.f, 0.f }, { 0.5f, 0.f }, { 0.5f, 0.5f }
 			};
 			fx = rdblip[blip][0];
 			fy = rdblip[blip][1];
 			fw = fh = 0.5f;
 			settexture(radartex, 3);
 			if(blip) tr += ts*blip;
-			if(blip < 2) ts = ts*2/3;
+			//if(blip < 2) ts = ts*2/3;
 			switch(blip)
 			{
 				case 0: fade *= radarplayerblend; break;
@@ -836,9 +836,8 @@ namespace hud
 			}
 		}
 		else if(isweap(idx))
-		{
+		{ // sit in the entity zone
 			settexture(hud::itemtex(WEAPON, idx), 3);
-			tr += ts; // sit in the entity zone
 			fade *= radaritemblend;
 		}
 		else return;
@@ -868,8 +867,8 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(w, h, s, fade, -1, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
-			else drawblip(w, h, s, fade, -1, dir, r, g, b);
+			if(hastv(radarplayernames)) drawblip(w, h, s, fade, -2, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			else drawblip(w, h, s, fade, -2, dir, r, g, b);
 		}
 	}
 
@@ -913,7 +912,7 @@ namespace hud
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int cp = type == WEAPON ? weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators)) : -2;
+			int cp = type == WEAPON ? weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators)) : -1;
 			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
 			if(cp >= 0)
 			{
