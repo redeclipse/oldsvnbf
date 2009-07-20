@@ -641,8 +641,7 @@ namespace ctf
 			ctfstate::flag &f = st.flags[b.target];
 			if(isctfhome(f, d->team))
 			{
-				static vector<int> hasflags;
-				hasflags.setsizenodelete(0);
+				static vector<int> hasflags; hasflags.setsizenodelete(0);
 				loopv(st.flags)
 				{
 					ctfstate::flag &g = st.flags[i];
