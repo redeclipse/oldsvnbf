@@ -208,7 +208,7 @@ namespace aiman
 				if(!autooverride)
 				{
 					int numt = numteams(gamemode, mutators), ppl = numclients(-1, true, true);
-					if(GVAR(teambalance) != 6)
+					if(GVAR(teambalance) != 3)
 					{ // balance so all teams have even counts
 						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
 						loopv(clients)
