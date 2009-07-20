@@ -146,7 +146,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, int retries)
 	{
-		if(changed && d->ai->route.length() > 1 && d->ai->route[0] == node) return true;
+		if(changed && !d->ai->route.empty() && d->ai->route[0] == node) return true;
 		if(entities::route(d->lastnode, node, d->ai->route, obstacles, d, retries <= 1) > 0)
 		{
 			b.override = false;
@@ -587,8 +587,8 @@ namespace ai
 	{
 		vec pos = d->feetpos();
 		int node = -1;
-		float mindist = NEARDISTSQ;
-		loopv(d->ai->route) if(entities::ents.inrange(d->ai->route[i]))
+		float mindist = FARDIST*FARDIST;
+		loopvrev(d->ai->route) if(entities::ents.inrange(d->ai->route[i]))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
@@ -675,7 +675,7 @@ namespace ai
 				else n--; // otherwise, we want the next in line
 			}
 			if(d->ai->route.inrange(n) && wpspot(d, d->ai->route[n], retries >= 2)) return true;
-			else if(retries <= 2) return hunt(d, b, retries+1); // try again
+			if(retries <= 2) return hunt(d, b, retries+1); // try again
 		}
 		b.override = false;
 		d->ai->clear(false);
