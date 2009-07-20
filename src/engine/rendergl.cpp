@@ -1506,7 +1506,6 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 		glTexCoord2f(1, 1); glVertex2f(192, 192);
 		glTexCoord2f(0, 1); glVertex2f(0, 192);
 		glEnd();
-		draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
 		draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, caption ? caption : "loading...");
 		glPopMatrix();
 #if 0
@@ -1704,7 +1703,6 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 			glTexCoord2f(1, 1); glVertex2f(192, 192);
 			glTexCoord2f(0, 1); glVertex2f(0, 192);
 			glEnd();
-			draw_textx("\fywait", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
 		}
 		if(text2 && bar2 > 0)
 			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));

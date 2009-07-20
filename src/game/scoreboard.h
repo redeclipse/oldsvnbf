@@ -285,14 +285,11 @@ namespace hud
 				g.strut(1);
 				g.poplist();
 				loopscoregroup({
-					const char *status = o->state==CS_DEAD || o->state==CS_WAITING ? "exit" : "player";
-					if(o->privilege)
-					{
-						if(o->privilege >= PRIV_ADMIN) status = "serverfull";
-						else status = "serverlock";
-					}
+					const char *status = o->state==CS_DEAD || o->state==CS_WAITING ? "dead" : "player";
+					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
+					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
 					g.pushlist();
-					if(o==game::player1 && highlightscore()) g.background(0x888888, 3);
+					if(bgcol) g.background(bgcol, 3);
 					g.text("", 0, status);
 					g.poplist();
 				});
@@ -404,19 +401,13 @@ namespace hud
 				loopv(spectators)
 				{
 					gameent *o = spectators[i];
-					const char *status = "conopen";
-					if(o->privilege)
-					{
-						if(o->privilege >= PRIV_ADMIN) status = "serverfull";
-						else status = "serverlock";
-					}
+					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
+					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
 					if((i%3)==0) g.pushlist();
-					//g.pushlist();
-					if(o==game::player1 && highlightscore()) g.background(0x888888, 3);
+					if(bgcol) g.background(bgcol, 3);
 					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
-						g.textf("%s (%d)", 0xFFFFFF, status, game::colorname(o, NULL, "", false), o->clientnum);
-					else g.textf("%s", 0xFFFFFF, status, game::colorname(o, NULL, "", false));
-					//g.poplist();
+						g.textf("%s (%d)", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false), o->clientnum);
+					else g.textf("%s", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false));
 					if(i+1<spectators.length() && (i+1)%3) g.space(1);
 					else g.poplist();
 				}
