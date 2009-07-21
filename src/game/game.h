@@ -478,7 +478,7 @@ enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMOD
 enum
 {
 	SV_CONNECT = 0, SV_SERVERINIT, SV_WELCOME, SV_CLIENTINIT, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_DISCONNECT,
-	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_FRAG, SV_DAMAGE, SV_SHOTFX,
+	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_POINTS, SV_DAMAGE, SV_SHOTFX,
 	SV_ARENAWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
 	SV_DROP, SV_WEAPSELECT, SV_TAUNT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
@@ -489,7 +489,7 @@ enum
     SV_GETMAP, SV_SENDMAP, SV_SENDMAPFILE, SV_SENDMAPSHOT, SV_SENDMAPCONFIG,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_WAITING, SV_SETMASTER, SV_SETTEAM,
 	SV_FLAGS, SV_FLAGINFO,
-    SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS, SV_TEAMSCORE,
+    SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS, SV_SCORE,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_RELOAD, SV_REGEN,
@@ -504,7 +504,7 @@ char msgsizelookup(int msg)
 	{
 		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
-		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 6, SV_FRAG, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
+		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
 		SV_ARENAWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
 		SV_DROP, 0, SV_WEAPSELECT, 0, SV_TAUNT, 2,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
@@ -515,7 +515,7 @@ char msgsizelookup(int msg)
         SV_GETMAP, 0, SV_SENDMAP, 0, SV_SENDMAPFILE, 0, SV_SENDMAPSHOT, 0, SV_SENDMAPCONFIG, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_WAITING, 2, SV_SETMASTER, 0, SV_SETTEAM, 0,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
-        SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0, SV_TEAMSCORE, 0,
+        SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0, SV_SCORE, 0,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 3, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_RELOAD, 0, SV_REGEN, 0,
@@ -669,10 +669,10 @@ struct gamestate
 	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAPON_MAX], weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, ownernum, skill, spree;
+	int aitype, ownernum, skill, spree, points;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(AI_NONE), ownernum(-1), skill(0), spree(0) {}
+		aitype(AI_NONE), ownernum(-1), skill(0), spree(0), points(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -823,6 +823,11 @@ struct gamestate
 		lastrespawn = -1;
 	}
 
+	void mapchange()
+	{
+		points = 0;
+	}
+
 	void respawn(int millis, int heal)
 	{
 		health = heal;
@@ -963,7 +968,7 @@ struct gameent : dynent, gamestate
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
 		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
 			totalshots, smoothmillis, lastnode, respawned, suicided, vschan, dschan, wschan,
-				lasthit, lastkill;
+				lasthit, lastkill, lastpoints;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
@@ -974,7 +979,7 @@ struct gameent : dynent, gamestate
 	vector<int> airnodes;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
-		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), edit(NULL), ai(NULL),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), lastpoints(0), edit(NULL), ai(NULL),
 		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
@@ -1036,6 +1041,12 @@ struct gameent : dynent, gamestate
 	{
 		respawn(millis, heal);
 		frags = deaths = totaldamage = totalshots = 0;
+	}
+
+	void mapchange(int millis, int heal)
+	{
+		resetstate(millis, heal);
+		gamestate::mapchange();
 	}
 };
 

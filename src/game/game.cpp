@@ -813,7 +813,7 @@ namespace game
 		// reset perma-state
 		gameent *d;
 		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-			d->resetstate(lastmillis, m_maxhealth(gamemode, mutators));
+			d->mapchange(lastmillis, m_maxhealth(gamemode, mutators));
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
 		if(!empty) client::sendinfo = true;

@@ -27,6 +27,7 @@ namespace hud
 
 		IVARP(showpj, 0, 0, 1);
 		IVARP(showping, 0, 1, 1);
+		IVARP(showpoints, 0, 1, 1);
 		IVARP(showfrags, 0, 2, 2);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showskills, 0, 1, 1);
@@ -76,7 +77,7 @@ namespace hud
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							game::announce(anc, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->frags);
+							game::announce(anc, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
 				}
@@ -99,6 +100,8 @@ namespace hud
 				else return 1;
 			}
 			else if((*b)->state==CS_SPECTATOR) return -1;
+			if((*a)->points > (*b)->points) return -1;
+			if((*a)->points < (*b)->points) return 1;
 			if((*a)->frags > (*b)->frags) return -1;
 			if((*a)->frags < (*b)->frags) return 1;
 			return strcmp((*a)->name, (*b)->name);
@@ -112,7 +115,7 @@ namespace hud
 				if(o && o->type==ENT_PLAYER && o->state!=CS_SPECTATOR) best.add(o);
 			}
 			best.sort(playersort);
-			while(best.length()>1 && best.last()->frags < best[0]->frags) best.drop();
+			while(best.length()>1 && best.last()->points < best[0]->points) best.drop();
 		}
 
 		void sortteams(vector<teamscore> &teamscores)
@@ -132,8 +135,8 @@ namespace hud
 				{
 					teamscore *ts = NULL;
 					loopv(teamscores) if(teamscores[i].team == o->team) { ts = &teamscores[i]; break; }
-					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : o->frags));
-					else if(!m_stf(game::gamemode) && !m_ctf(game::gamemode)) ts->score += o->frags;
+					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : o->points));
+					else if(!m_stf(game::gamemode) && !m_ctf(game::gamemode)) ts->score += o->points;
 				}
 			}
 			teamscores.sort(teamscorecmp);
@@ -176,7 +179,7 @@ namespace hud
 				{
 					scoregroup &g = *groups[j];
 					if(team != g.team) continue;
-					if(team && !m_stf(game::gamemode) && !m_ctf(game::gamemode)) g.score += o->frags;
+					if(team && !m_stf(game::gamemode) && !m_ctf(game::gamemode)) g.score += o->points;
 					g.players.add(o);
 					found = true;
 				}
@@ -187,7 +190,7 @@ namespace hud
 				if(!team) g.score = 0;
 				else if(m_stf(game::gamemode)) g.score = stf::st.findscore(o->team).total;
 				else if(m_ctf(game::gamemode)) g.score = ctf::st.findscore(o->team).total;
-				else g.score = o->frags;
+				else g.score = o->points;
 
 				g.players.setsize(0);
 				g.players.add(o);
@@ -310,10 +313,19 @@ namespace hud
 				loopscoregroup(g.textf("%s ", 0xFFFFFF, NULL, game::colorname(o, NULL, "", false)));
 				g.poplist();
 
-				if(showfrags() && (showfrags() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
+				if(showpoints())
 				{
 					g.pushlist();
 					g.strut(7);
+					g.text("points", fgcolor);
+					loopscoregroup(g.textf("%d", 0xFFFFFF, NULL, o->points));
+					g.poplist();
+				}
+
+				if(showfrags() && (showfrags() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
+				{
+					g.pushlist();
+					g.strut(6);
 					g.text(m_paint(game::gamemode, game::mutators) ? "tags" : "frags", fgcolor);
 					loopscoregroup(g.textf("%d", 0xFFFFFF, NULL, o->frags));
 					g.poplist();
@@ -322,7 +334,7 @@ namespace hud
 				if(showpj())
 				{
 					g.pushlist();
-					g.strut(6);
+					g.strut(5);
 					g.text("pj", fgcolor);
 					loopscoregroup({
 						g.textf("%s%d", 0xFFFFFF, NULL, lastmillis-o->lastupdate > 1000 ? "\fo" : "", o->plag);
@@ -333,8 +345,8 @@ namespace hud
 				if(showping())
 				{
 					g.pushlist();
+					g.strut(5);
 					g.text("ping", fgcolor);
-					g.strut(6);
 					loopscoregroup({
 						if(o->aitype != AI_NONE)
 						{
@@ -348,8 +360,8 @@ namespace hud
 
 				if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 				{
-					g.space(1);
 					g.pushlist();
+					g.strut(3);
 					g.text("cn", fgcolor);
 					loopscoregroup({
 						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
@@ -359,8 +371,8 @@ namespace hud
 
 				if(showskills())
 				{
-					g.space(1);
 					g.pushlist();
+					g.strut(3);
 					g.text("sk", fgcolor);
 					loopscoregroup({
 						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->skill);
@@ -371,8 +383,8 @@ namespace hud
 
 				if(showownernum())
 				{
-					g.space(1);
 					g.pushlist();
+					g.strut(3);
 					g.text("on", fgcolor);
 					loopscoregroup({
 						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->ownernum);
@@ -458,7 +470,7 @@ namespace hud
 					{
 						gameent *d = sg.players[j];
 						if((d != game::player1) == !i) continue;
-						sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, j, sg.team, d->frags, game::colorname(d, NULL, "", false));
+						sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, j, sg.team, d->points, game::colorname(d, NULL, "", false));
 						if((numout += 1) > 3) return sy;
 					}
 				}

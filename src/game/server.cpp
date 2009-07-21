@@ -161,6 +161,7 @@ namespace server
 			dropped.reset();
             loopi(WEAPON_MAX) weapshots[i].reset();
 			if(!change) score = timeplayed = 0;
+			else gamestate::mapchange();
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
@@ -176,10 +177,11 @@ namespace server
 	{
 		uint ip;
 		string name;
-		int score, frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
+		int points, score, frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
 
 		void save(servstate &gs)
 		{
+			points = gs.points;
 			score = gs.score;
 			frags = gs.frags;
 			flags = gs.flags;
@@ -192,6 +194,7 @@ namespace server
 
 		void restore(servstate &gs)
 		{
+			gs.points = points;
 			gs.score = score;
 			gs.frags = frags;
 			gs.flags = flags;
@@ -339,7 +342,7 @@ namespace server
 		virtual void moved(clientinfo *ci, const vec &oldpos, const vec &newpos) {}
 		virtual bool canspawn(clientinfo *ci, bool tryspawn = false) { return true; }
 		virtual void spawned(clientinfo *ci) {}
-        virtual int fragvalue(clientinfo *victim, clientinfo *actor)
+        virtual int points(clientinfo *victim, clientinfo *actor)
         {
             if(victim==actor || victim->team == actor->team) return -1;
             return 1;
@@ -1374,6 +1377,12 @@ namespace server
 		if(&sc) sc.save(ci->state);
 	}
 
+	void givepoints(clientinfo *ci, int points)
+	{
+		ci->state.score += points; ci->state.points += points;
+		sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, points, ci->state.points);
+	}
+
 	struct droplist { int weap, ent; };
 	void dropitems(clientinfo *ci, bool discon = false)
 	{
@@ -1999,37 +2008,33 @@ namespace server
 			}
 		}
 
-		if(realflags&HIT_KILL || GVAR(scoringstyle))
+		if(realflags&HIT_KILL)
 		{
-            int fragvalue = smode ? smode->fragvalue(target, actor) : (target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1);
-            if(realflags&HIT_KILL)
-            {
-				target->state.deaths++;
-				if(m_team(gamemode, mutators) && actor->team == target->team)
-				{
-					if(actor != target) actor->state.teamkills++;
-					actor->state.spree = 0;
-				}
-				else if(actor != target) actor->state.spree++;
-				else actor->state.spree = 0;
-				if(GVAR(scoringstyle)) fragvalue *= GVAR(scoringstyle);
-            }
+            int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
+				pointvalue = smode ? smode->points(target, actor) : fragvalue;
             actor->state.frags += fragvalue;
-            actor->state.score += fragvalue;
-			sendf(-1, 1, "ri4", SV_FRAG, actor->clientnum, actor->state.frags, actor->state.spree);
-
-			if(realflags&HIT_KILL)
+			if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
-				dropitems(target);
-				// don't issue respawn yet until DEATHMILLIS has elapsed
-				sendf(-1, 1, "ri6", SV_DIED, target->clientnum, actor->clientnum, weap, realflags, realdamage);
-				target->position.setsizenodelete(0);
-				if(smode) smode->died(target, actor);
-				mutate(smuts, mut->died(target, actor));
-				ts.state = CS_DEAD;
-				ts.lastdeath = gamemillis;
-				ts.weapreset(false);
+				if(actor != target) actor->state.teamkills++;
+				actor->state.spree = 0;
+				pointvalue *= 3;
 			}
+			else if(actor != target)
+			{
+				actor->state.spree++;
+				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) pointvalue *= 3;
+			}
+			else actor->state.spree = 0;
+			target->state.deaths++;
+			dropitems(target);
+            givepoints(actor, pointvalue);
+			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, weap, realflags, realdamage);
+			target->position.setsizenodelete(0);
+			if(smode) smode->died(target, actor);
+			mutate(smuts, mut->died(target, actor));
+			ts.state = CS_DEAD; // don't issue respawn yet until DEATHMILLIS has elapsed
+			ts.lastdeath = gamemillis;
+			ts.weapreset(false);
 		}
 	}
 
@@ -2037,14 +2042,13 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE) return;
-		int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
+		int fragvalue = -1, pointvalue = smode ? smode->points(ci, ci) : fragvalue;
         ci->state.frags += fragvalue;
-        ci->state.score += fragvalue;
         ci->state.spree = 0;
         ci->state.deaths++;
 		dropitems(ci);
-		sendf(-1, 1, "ri4", SV_FRAG, ci->clientnum, ci->state.frags, ci->state.spree);
-		sendf(-1, 1, "ri6", SV_DIED, ci->clientnum, ci->clientnum, -1, flags, ci->state.health);
+		givepoints(ci, pointvalue);
+		sendf(-1, 1, "ri6", SV_DIED, ci->clientnum, ci->clientnum, ci->state.points, ci->state.frags, -1, flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
@@ -2660,7 +2664,7 @@ namespace server
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
-		static int servtypes[] = { SV_SERVERINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_FRAG, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_TEAMSCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
+		static int servtypes[] = { SV_SERVERINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
@@ -3219,7 +3223,7 @@ namespace server
 					break;
 				}
 
-				case SV_TEAMSCORE:
+				case SV_SCORE:
 					getint(p);
 					getint(p);
 					QUEUE_MSG;

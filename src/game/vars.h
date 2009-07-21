@@ -41,7 +41,6 @@ VARG(duelclear, 0, 0, 1); // clear items in duel
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
 VARG(teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players damage team
 VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number, 2 = by rank, 3 = humans vs. ai
-VARG(scoringstyle, 0, 0, INT_MAX-1); // count hits as frags instead, when really fragged multiply by this
 
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
