@@ -32,7 +32,7 @@ namespace ctf
         loopi(numteams(game::gamemode, game::mutators)+TEAM_FIRST) loadmodel(teamtype[i].flag, -1, true);
     }
 
-    void drawblip(int w, int h, int s, float blend, int i, bool blip)
+    void drawblip(int w, int h, float blend, int i, bool blip)
     {
 		ctfstate::flag &f = st.flags[i];
 		vec dir;
@@ -54,8 +54,8 @@ namespace ctf
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		if(hud::radarflagnames) hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
-		else hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b);
+		if(hud::radarflagnames) hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
+		else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
     }
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
@@ -82,21 +82,21 @@ namespace ctf
 		}
 	}
 
-    void drawblips(int w, int h, int s, float blend)
+    void drawblips(int w, int h, float blend)
     {
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
             if(!f.ent) continue;
-            drawblip(w, h, s, blend, i, false);
-            drawblip(w, h, s, blend, i, true);
+            drawblip(w, h, blend, i, false);
+            drawblip(w, h, blend, i, true);
         }
     }
 
     int drawinventory(int x, int y, int s, float blend)
     {
 		int sy = 0;
-		loopv(st.flags) if(st.flags[i].base&BASE_FLAG && (hud::inventorygame >= 2 || st.flags[i].owner == game::player1))
+		loopv(st.flags) if(st.flags[i].base&BASE_FLAG && (hud::inventorygame >= 2 || st.flags[i].lastowner == game::player1))
 		{
 			ctfstate::flag &f = st.flags[i];
 			int millis = lastmillis-f.interptime, oldy = y-sy, colour = teamtype[f.team].colour;

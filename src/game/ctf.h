@@ -14,7 +14,7 @@ struct ctfstate
         int owner;
 #else
         bool pickup;
-        gameent *owner;
+        gameent *owner, *lastowner;
         extentity *ent;
         int interptime, taketime;
 #endif
@@ -33,7 +33,7 @@ struct ctfstate
             owner = -1;
 #else
             pickup = false;
-            owner = NULL;
+            owner = lastowner = NULL;
             interptime = taketime = 0;
 #endif
             team = TEAM_NEUTRAL;
@@ -86,6 +86,7 @@ struct ctfstate
 		f.owner = owner;
 		f.droptime = 0;
 #ifndef GAMESERVER
+		f.lastowner = owner;
 		f.pickup = true;
 #endif
     }
@@ -144,7 +145,7 @@ namespace ctf
 	extern void setscore(int team, int total);
 	extern void checkflags(gameent *d);
 	extern void drawlast(int w, int h, int &tx, int &ty, float blend);
-	extern void drawblips(int w, int h, int s, float blend);
+	extern void drawblips(int w, int h, float blend);
 	extern int drawinventory(int x, int y, int s, float blend);
 	extern void preload();
 	extern void render();
