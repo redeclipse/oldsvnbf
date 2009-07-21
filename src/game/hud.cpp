@@ -111,7 +111,7 @@ namespace hud
 
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
-	VARP(inventorygame, 0, 0, 1);
+	VARP(inventorygame, 0, 1, 2);
 	VARP(inventorystatus, 0, 1, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
@@ -138,16 +138,17 @@ namespace hud
 	TVAR(rifletex, "textures/rifle", 3);
 	TVAR(paintguntex, "textures/paintgun", 3);
 	TVAR(healthtex, "textures/health", 3);
-	TVAR(neutralflagtex, "textures/team", 3);
-	TVAR(alphaflagtex, "textures/teamalpha", 3);
-	TVAR(betaflagtex, "textures/teambeta", 3);
-	TVAR(deltaflagtex, "textures/teamdelta", 3);
-	TVAR(gammaflagtex, "textures/teamgamma", 3);
 	TVAR(inventoryenttex, "textures/progress", 3);
 	TVAR(inventoryedittex, "textures/progress", 3);
 	TVAR(inventorywaittex, "textures/wait", 3);
 	TVAR(inventorydeadtex, "textures/dead", 3);
 	TVAR(inventorychattex, "textures/conopen", 3);
+
+	TVAR(neutraltex, "textures/team", 3);
+	TVAR(alphatex, "textures/teamalpha", 3);
+	TVAR(betatex, "textures/teambeta", 3);
+	TVAR(deltatex, "textures/teamdelta", 3);
+	TVAR(gammatex, "textures/teamgamma", 3);
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
@@ -163,7 +164,9 @@ namespace hud
 	TVAR(paintguncliptex, "textures/paintgunclip", 3);
 
 	VARP(showradar, 0, 2, 2);
-	TVAR(radartex, "textures/radar", 3);
+	TVAR(bliptex, "textures/blip", 3);
+	TVAR(cardtex, "textures/card", 3);
+	TVAR(flagtex, "textures/flag", 3);
 	FVARP(radarblend, 0, 1.f, 1);
 	FVARP(radarcardblend, 0, 0.5f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
@@ -811,45 +814,18 @@ namespace hud
 		return dist;
 	}
 
-	void drawblip(int w, int h, int s, float blend, int idx, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
+	void drawblip(const char *tex, int area, int w, int h, int s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
 	{
-		float fx = 0.f, fy = 0.f, fw = 1.f, fh = 1.f, fade = blend;
-		int tx = w/2, ty = h/2, ts = int(s*radarsize), tr = int(s*radaroffset);
-		if(idx < 0)
-		{
-			int blip = clamp(-idx-1, 0, 3);
-			const float rdblip[4][2] = { // entity player flag card
-				 { 0.f, 0.5f }, { 0.f, 0.f }, { 0.5f, 0.f }, { 0.5f, 0.5f }
-			};
-			fx = rdblip[blip][0];
-			fy = rdblip[blip][1];
-			fw = fh = 0.5f;
-			settexture(radartex, 3);
-			if(blip) tr += ts*blip;
-			if(blip < 2) ts = ts/2;
-			switch(blip)
-			{
-				case 0: fade *= radarplayerblend; break;
-				case 1: default: fade *= radarblipblend; break;
-				case 2: fade *= radarflagblend; break;
-				case 3: fade *= radarcardblend; break;
-			}
-		}
-		else if(isweap(idx))
-		{ // sit in the entity zone
-			settexture(hud::itemtex(WEAPON, idx), 3);
-			fade *= radaritemblend;
-		}
-		else return;
-		float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
-		int tq = ts/2, cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
-		glColor4f(r, g, b, fade);
+		float fx = 0.f, fy = 0.f, fw = 1.f, fh = 1.f, yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
+		int tx = w/2, ty = h/2, ts = int(s*radarsize), tr = int(s*area*radaroffset), tq = ts/2, cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
+		settexture(tex, 3);
+		glColor4f(r, g, b, blend);
 		drawtex(cx, cy, ts, ts, fx, fy, fw, fh);
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			draw_textx("%s", cx+tq, cy+(idx > -4 ? ts : ts/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
+			draw_textx("%s", cx+tq, cy+(area < 3 ? ts : ts/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -864,11 +840,11 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotecttime*1000);
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend,
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend*radarplayerblend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(w, h, s, fade, -2, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
-			else drawblip(w, h, s, fade, -2, dir, r, g, b);
+			if(hastv(radarplayernames)) drawblip(bliptex, 0, w, h, s, fade, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			else drawblip(bliptex, 0, w, h, s, fade, dir, r, g, b);
 		}
 	}
 
@@ -889,7 +865,7 @@ namespace hud
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			drawblip(w, h, s, blend, -4, dir, 1.f, 1.f, 1.f, "radar", "%s", card);
+			drawblip(cardtex, 3, w, h, s, blend*radarcardblend, dir, 1.f, 1.f, 1.f, "radar", "%s", card);
 		}
 	}
 
@@ -912,19 +888,21 @@ namespace hud
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int cp = type == WEAPON ? weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators)) : -1;
+			const char *tex = bliptex;
 			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
-			if(cp >= 0)
+			if(type == WEAPON)
 			{
-				r = (weaptype[cp].colour>>16)/255.f;
-				g = ((weaptype[cp].colour>>8)&0xFF)/255.f;
-				b = (weaptype[cp].colour&0xFF)/255.f;
+				int attr = weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators));
+				tex = hud::itemtex(WEAPON, attr);
+				r = (weaptype[attr].colour>>16)/255.f;
+				g = ((weaptype[attr].colour>>8)&0xFF)/255.f;
+				b = (weaptype[attr].colour&0xFF)/255.f;
 			}
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
-			if(insel) drawblip(w, h, s, fade, cp, dir, r, g, b, "radar", "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(w, h, s, fade, cp, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(w, h, s, fade, cp, dir, r, g, b);
+			if(insel) drawblip(tex, 0, w, h, s, fade, dir, r, g, b, "radar", "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, s, fade, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(tex, 0, w, h, s, fade, dir, r, g, b);
 		}
 	}
 
@@ -1010,12 +988,12 @@ namespace hud
 		glPopMatrix();
 	}
 
-	const char *flagtex(int team)
+	const char *teamtex(int team)
 	{
-		const char *flagtexs[TEAM_MAX] = {
-			neutralflagtex, alphaflagtex, betaflagtex, deltaflagtex, gammaflagtex, neutralflagtex
+		const char *teamtexs[TEAM_MAX] = {
+			neutraltex, alphatex, betatex, deltatex, gammatex, neutraltex
 		};
-		return flagtexs[team];
+		return teamtexs[team];
 	}
 
 	const char *itemtex(int type, int stype)
@@ -1058,8 +1036,8 @@ namespace hud
 			if(inventorystatus >= 2)
 			{
 				if(game::player1->team)
-					sy += drawitem(flagtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
-				else sy += drawitem(flagtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+					sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+				else sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			}
 			if(inventoryammo)
 			{

@@ -37,7 +37,7 @@ namespace ctf
 		ctfstate::flag &f = st.flags[i];
 		vec dir;
 		int colour = teamtype[f.team].colour;
-		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend;
+		float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
         if(blip)
         {
             if(!(f.base&BASE_FLAG) || f.owner == game::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400)
@@ -54,8 +54,8 @@ namespace ctf
 		}
 		dir.rotate_around_z(-camera1->yaw*RAD);
 		dir.normalize();
-		if(hud::radarflagnames) hud::drawblip(w, h, s, fade, -3, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
-		else hud::drawblip(w, h, s, fade, -3, dir, r, g, b);
+		if(hud::radarflagnames) hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, blip ? "flag" : "base");
+		else hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b);
     }
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
@@ -96,16 +96,16 @@ namespace ctf
     int drawinventory(int x, int y, int s, float blend)
     {
 		int sy = 0;
-		loopv(st.flags) if(st.flags[i].base&BASE_FLAG)
+		loopv(st.flags) if(st.flags[i].base&BASE_FLAG && (hud::inventorygame >= 2 || st.flags[i].owner == game::player1))
 		{
 			ctfstate::flag &f = st.flags[i];
-			float skew = 0.75f, fade = blend*hud::inventoryblend;
-			int millis = lastmillis-f.interptime;
-			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f : 0.25f);
-			else if(millis < 1000) skew += 0.25f-(clamp(float(millis)/1000.f, 0.f, 1.f)*0.25f);
-			int oldy = y-sy;
-			sy += hud::drawitem(hud::flagtex(f.team), x, y-sy, s, false, 1.f, 1.f, 1.f, fade, skew, "sub", f.owner ? "\frtaken" : (f.droptime ? "\fydrop" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s%s\fS", teamtype[f.owner->team].chat, teamtype[f.owner->team].name);
+			int millis = lastmillis-f.interptime, oldy = y-sy, colour = teamtype[f.team].colour;
+			float skew = hud::inventorygame >= 2 ? 0.75f : 0.f, fade = blend*hud::inventoryblend,
+				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+			else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
+			sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"));
+			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
 		}
 		return sy;
     }
