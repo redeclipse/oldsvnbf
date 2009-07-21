@@ -88,9 +88,9 @@ namespace stf
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("super");
-				int occupy = int((f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f))*50.f);
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
-				ty += draw_textx("Secure \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "\fo" : (occupy < 50.f ? "\fy" : "\fg"), occupy+(overthrow ? 0 : 50));
+				ty += draw_textx("%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f));
 				popfont();
 				break;
 			}
