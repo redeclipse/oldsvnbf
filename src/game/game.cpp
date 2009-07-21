@@ -53,8 +53,8 @@ namespace game
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(zoomsensitivity, 1e-3f, 3.0f, 1000);
-	FVARP(pronesensitivity, 1e-3f, 5.0f, 1000);
+	FVARP(zoomsensitivity, 1e-3f, 5.0f, 1000);
+	FVARP(pronesensitivity, 1e-3f, 7.5f, 1000);
 
 	VARP(zoomtype, 0, 0, 1);
 	VARP(zoommousetype, 0, 0, 2);
@@ -959,7 +959,7 @@ namespace game
 		else curfov = float(fov());
         aspect = w/float(h);
         fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
-		hud::hudwidth = int(hud::hudsize*aspect);
+		hud::hudwidth = int(ceil(hud::hudsize*aspect));
 	}
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
@@ -1491,18 +1491,23 @@ namespace game
 		if(d->state == CS_ALIVE)
 		{
 			int len = spawnprotecttime*1000, millis = d->protect(lastmillis, len); // protect returns time left
-			if(millis > 0) return (1.f-(float(millis)/float(len)))*total;
-			else return total;
+			if(millis > 0) total = (1.f-(float(millis)/float(len)))*total;
 		}
 		else if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			int len = m_spawndelay(gamemode, mutators), interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
 			if(millis < len)
 			{
-				if(millis > over) return (1.f-(float(millis-over)/float(interval)))*total;
-				else return total;
+				if(millis > over) total = (1.f-(float(millis-over)/float(interval)))*total;
 			}
-			else return 0.f;
+			else total = 0.f;
+		}
+		if(d == player1 && game::inzoom())
+		{
+			int frame = lastmillis-game::lastzoom;
+			float pc = frame < game::zoominterval() ? float(frame)/float(game::zoominterval()) : 1.f;
+			if(!game::zooming) pc = 1.f-pc;
+			total *= 1.f-pc;
 		}
 		return total;
 	}

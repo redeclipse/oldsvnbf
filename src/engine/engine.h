@@ -3,7 +3,7 @@
 
 #include "cube.h"
 
-#define ENG_VERSION			83
+#define ENG_VERSION			84
 #define ENG_NAME			"Blood Frontier"
 #define ENG_RELEASE			"Development"
 #define ENG_URL				"www.bloodfrontier.com"

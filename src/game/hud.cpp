@@ -73,21 +73,21 @@ namespace hud
 
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.8f, 1);
+	FVARP(damageblend, 0, 0.85f, 1);
 
 	VARP(showdamagecompass, 0, 1, 1);
 	VARP(damagecompassfade, 1, 1000, 10000);
 	FVARP(damagecompasssize, 0, 0.25f, 1000);
-	FVARP(damagecompassblend, 0, 0.5f, 1);
+	FVARP(damagecompassblend, 0, 0.55f, 1);
 	VARP(damagecompassmin, 1, 25, 1000);
 	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
-	FVARP(indicatorblend, 0, 0.75f, 1);
+	FVARP(indicatorblend, 0, 0.85f, 1);
 	VARP(teamindicator, 0, 2, 2);
 	FVARP(teamindicatorsize, 0, 0.06f, 1000);
-	FVARP(teamindicatorblend, 0, 0.25f, 1);
+	FVARP(teamindicatorblend, 0, 0.55f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
@@ -117,7 +117,7 @@ namespace hud
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
-	FVARP(inventoryblend, 0, 0.5f, 1);
+	FVARP(inventoryblend, 0, 0.55f, 1);
 
 	VARP(inventoryedit, 0, 1, 1);
 	FVARP(inventoryeditblend, 0, 1.f, 1);
@@ -125,7 +125,7 @@ namespace hud
 
 	VARP(inventoryhealth, 0, 2, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
-	FVARP(inventoryhealthblend, 0, 0.9f, 1);
+	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
 	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
 
@@ -152,7 +152,7 @@ namespace hud
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
-	FVARP(clipblend, 0, 0.25f, 1000);
+	FVARP(clipblend, 0, 0.45f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
@@ -213,16 +213,17 @@ namespace hud
 	void drawtex(float x, float y, float w, float h, float tx, float ty, float tw, float th) { drawquad(x, y, w, h, tx, ty, tx+tw, ty+th); }
 	void drawsized(float x, float y, float s) { drawtex(x, y, s, s); }
 
-	void drawblend(int x, int y, int w, int h, float r, float g, float b)
+	void drawblend(int x, int y, int w, int h, float r, float g, float b, bool blend = false)
 	{
-        glEnable(GL_BLEND);
+        if(!blend) glEnable(GL_BLEND);
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 		glColor3f(r, g, b);
 		glBegin(GL_QUADS);
-		glVertex2f(x, y); glVertex2f(w, y);
-		glVertex2f(w, h); glVertex2f(x, h);
+		glVertex2f(x, y); glVertex2f(x+w, y);
+		glVertex2f(x+w, y+h); glVertex2f(x, y+h);
 		glEnd();
-        glDisable(GL_BLEND);
+        if(!blend) glDisable(GL_BLEND);
+        else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	void colourskew(float &r, float &g, float &b, float skew)
@@ -1360,15 +1361,35 @@ namespace hud
         if(dirs) usetexturing(true);
 	}
 
-	void drawzoom(int w, int h, int s, float blend)
+	void drawzoom(int w, int h)
 	{
 		Texture *t = textureload(zoomtex, 3);
 		int frame = lastmillis-game::lastzoom;
 		float pc = frame < game::zoominterval() ? float(frame)/float(game::zoominterval()) : 1.f;
 		if(!game::zooming) pc = 1.f-pc;
+		int x = 0, y = 0, c = 0;
+		if(w > h)
+		{
+			float rc = 1.f-pc;
+			c = h; x += (w-h)/2;
+			usetexturing(false);
+			drawblend(0, 0, x, c, rc, rc, rc, true);
+			drawblend(x+c, 0, x, c, rc, rc, rc, true);
+			usetexturing(true);
+		}
+		else if(h > w)
+		{
+			float rc = 1.f-pc;
+			c = w; y += (h-w)/2;
+			usetexturing(false);
+			drawblend(0, 0, c, y, rc, rc, rc, true);
+			drawblend(0, y+c, c, y, rc, rc, rc, true);
+			usetexturing(true);
+		}
+		else c = h;
 		glBindTexture(GL_TEXTURE_2D, t->id);
-		glColor4f(1.f, 1.f, 1.f, pc*blend);
-		drawtex(0, 0, w, h);
+		glColor4f(1.f, 1.f, 1.f, pc);
+		drawtex(x, y, c, c);
 	}
 
 	void drawhud(int w, int h, bool noview)
@@ -1454,8 +1475,7 @@ namespace hud
 						drawtex(0, 0, ox, oy);
 					}
 				}
-				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms)
-					drawzoom(ox, oy, os, fade);
+				if(game::player1->state == CS_ALIVE && game::inzoom()) drawzoom(ox, oy);
 				if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
 				if(!UI::hascursor())
 				{
