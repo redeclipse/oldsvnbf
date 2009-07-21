@@ -1685,7 +1685,7 @@ void editmat(char *name)
 
 COMMAND(editmat, "s");
 
-VARP(texguieditor, 0, 1, 1);
+VARP(texguieditor, 0, 2, 2);
 VARP(texguiautoclose, 0, 1, 1);
 
 VARP(thumbwidth, 0, 10, 1000);
@@ -1909,7 +1909,7 @@ struct texturegui : g3d_callback
             if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(thumbwidth*thumbheight);
             menustart = starttime();
 			cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
-			menutex = !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
+			menutex = texguieditor >= 2 && !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
         }
 	}
 
