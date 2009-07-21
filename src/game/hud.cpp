@@ -168,11 +168,16 @@ namespace hud
 	TVAR(cardtex, "textures/card", 3);
 	TVAR(flagtex, "textures/flag", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardblend, 0, 0.5f, 1);
-	FVARP(radarplayerblend, 0, 0.5f, 1);
+	FVARP(radarcardsize, 0, 0.85f, 1e16f);
+	FVARP(radarcardblend, 0, 0.75f, 1);
+	FVARP(radarplayerblend, 0, 0.75f, 1);
+	FVARP(radarplayersize, 0, 0.65f, 1e16f);
 	FVARP(radarblipblend, 0, 0.5f, 1);
+	FVARP(radarblipsize, 0, 0.5f, 1e16f);
 	FVARP(radarflagblend, 0, 1.f, 1);
+	FVARP(radarflagsize, 0, 1.f, 1e16f);
 	FVARP(radaritemblend, 0, 0.75f, 1);
+	FVARP(radaritemsize, 0, 1.f, 1e16f);
 	FVARP(radarsize, 0, 0.025f, 1000);
 	FVARP(radaroffset, 0, 0.075f, 1000);
 	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
@@ -814,23 +819,24 @@ namespace hud
 		return dist;
 	}
 
-	void drawblip(const char *tex, int area, int w, int h, int s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
+	void drawblip(const char *tex, int area, int w, int h, float s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
 	{
 		float fx = 0.f, fy = 0.f, fw = 1.f, fh = 1.f, yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
-		int tx = w/2, ty = h/2, ts = int(s*radarsize), tr = int(s*area*radaroffset), tq = ts/2, cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
+		int size = max(w, h)/2, tx = w/2, ty = h/2, ts = int(size*radarsize), tr = int(size*radaroffset)+int(ts*area), tp = int(ts*s), tq = tp/2,
+			cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
 		settexture(tex, 3);
 		glColor4f(r, g, b, blend);
-		drawtex(cx, cy, ts, ts, fx, fy, fw, fh);
+		drawtex(cx, cy, tp, tp, fx, fy, fw, fh);
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			draw_textx("%s", cx+tq, cy+(area < 3 ? ts : ts/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
+			draw_textx("%s", cx+tq, cy+(area < 4 ? tp : tp/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
 
-	void drawplayerblip(gameent *d, int w, int h, int s, float blend)
+	void drawplayerblip(gameent *d, int w, int h, float blend)
 	{
 		vec dir = d->headpos();
 		dir.sub(camera1->o);
@@ -843,12 +849,12 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend*radarplayerblend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(bliptex, 0, w, h, s, fade, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
-			else drawblip(bliptex, 0, w, h, s, fade, dir, r, g, b);
+			if(hastv(radarplayernames)) drawblip(bliptex, 2, w, h, radarplayersize, fade, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			else drawblip(bliptex, 2, w, h, radarplayersize, fade, dir, r, g, b);
 		}
 	}
 
-	void drawcardinalblips(int w, int h, int s, float blend, bool altcard)
+	void drawcardinalblips(int w, int h, float blend, bool altcard)
 	{
 		loopi(4)
 		{
@@ -865,11 +871,11 @@ namespace hud
 			dir.sub(camera1->o);
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			drawblip(cardtex, 3, w, h, s, blend*radarcardblend, dir, 1.f, 1.f, 1.f, "radar", "%s", card);
+			drawblip(cardtex, 4, w, h, radarcardsize, blend*radarcardblend, dir, 1.f, 1.f, 1.f, "radar", "%s", card);
 		}
 	}
 
-	void drawentblip(int w, int h, int s, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn, bool insel)
+	void drawentblip(int w, int h, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn, bool insel)
 	{
 		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || game::player1->state == CS_EDITING))
 		{
@@ -889,7 +895,7 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			const char *tex = bliptex;
-			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend;
+			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend, size = 1.f;
 			if(type == WEAPON)
 			{
 				int attr = weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators));
@@ -897,28 +903,35 @@ namespace hud
 				r = (weaptype[attr].colour>>16)/255.f;
 				g = ((weaptype[attr].colour>>8)&0xFF)/255.f;
 				b = (weaptype[attr].colour&0xFF)/255.f;
+				fade *= radaritemblend;
+				size *= radaritemsize;
+			}
+			else
+			{
+				fade *= radarblipblend;
+				size *= radarblipsize;
 			}
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
-			if(insel) drawblip(tex, 0, w, h, s, fade, dir, r, g, b, "radar", "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, s, fade, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(tex, 0, w, h, s, fade, dir, r, g, b);
+			if(insel) drawblip(tex, 1, w, h, size, fade, dir, r, g, b, "radar", "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, size, fade, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(tex, 1, w, h, size, fade, dir, r, g, b);
 		}
 	}
 
-	void drawentblips(int w, int h, int s, float blend)
+	void drawentblips(int w, int h, float blend)
 	{
 		if(m_edit(game::gamemode) && game::player1->state == CS_EDITING && (entities::ents.inrange(enthover) || !entgroup.empty()))
 		{
 			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != enthover)
 			{
 				gameentity &e = *(gameentity *)entities::ents[entgroup[i]];
-				drawentblip(w, h, s, blend, entgroup[i], e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
+				drawentblip(w, h, blend, entgroup[i], e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
 			if(entities::ents.inrange(enthover))
 			{
 				gameentity &e = *(gameentity *)entities::ents[enthover];
-				drawentblip(w, h, s, blend, enthover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
+				drawentblip(w, h, blend, enthover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
 		}
 		else
@@ -926,31 +939,30 @@ namespace hud
 			loopv(entities::ents)
 			{
 				gameentity &e = *(gameentity *)entities::ents[i];
-				drawentblip(w, h, s, blend, i, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, false);
+				drawentblip(w, h, blend, i, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, false);
 			}
 			loopv(projs::projs) if(projs::projs[i]->projtype == PRJ_ENT && projs::projs[i]->ready())
 			{
 				projent &proj = *projs::projs[i];
 				if(entities::ents.inrange(proj.id))
-					drawentblip(w, h, s, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4], true, proj.spawntime, false);
+					drawentblip(w, h, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4], true, proj.spawntime, false);
 			}
 		}
 	}
 
 	void drawradar(int w, int h, float blend)
 	{
-		int s = max(w, h)/2;
-		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, s, blend*radarblend, m_edit(game::gamemode));
+		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode));
 		if(hastv(radarplayers) || m_edit(game::gamemode))
 		{
 			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
-				drawplayerblip(game::players[i], w, h, s, blend*radarblend);
+				drawplayerblip(game::players[i], w, h, blend*radarblend);
 		}
-		if(hastv(radaritems) || m_edit(game::gamemode)) drawentblips(w, h, s, blend*radarblend);
+		if(hastv(radaritems) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend);
 		if(hastv(radarflags))
 		{
-			if(m_stf(game::gamemode)) stf::drawblips(w, h, s, blend);
-			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, s, blend*radarblend);
+			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
+			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
 	}
 

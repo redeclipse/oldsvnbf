@@ -46,7 +46,7 @@ namespace stf
         }
     }
 
-	void drawblip(int w, int h, int s, float blend, int type, bool skipenemy = false)
+	void drawblip(int w, int h, float blend, int type, bool skipenemy = false)
 	{
 		loopv(st.flags)
 		{
@@ -73,10 +73,10 @@ namespace stf
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
 				if(occupy < 1.f)
-					hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
-				else hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
+					hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
 			}
-			else hud::drawblip(hud::flagtex, 2, w, h, s, fade, dir, r, g, b);
+			else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
 		}
 	}
 
@@ -97,13 +97,13 @@ namespace stf
 		}
 	}
 
-	void drawblips(int w, int h, int s, float blend)
+	void drawblips(int w, int h, float blend)
 	{
 		bool showenemies = lastmillis%1000 >= 500;
-		drawblip(w, h, s, blend, 0, showenemies);
-		drawblip(w, h, s, blend, 1, showenemies);
-		drawblip(w, h, s, blend, 2, showenemies);
-		if(showenemies) drawblip(w, h, s, blend, 3);
+		drawblip(w, h, blend, 0, showenemies);
+		drawblip(w, h, blend, 1, showenemies);
+		drawblip(w, h, blend, 2, showenemies);
+		if(showenemies) drawblip(w, h, blend, 3);
 	}
 
     int drawinventory(int x, int y, int s, float blend)
