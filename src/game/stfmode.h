@@ -60,7 +60,7 @@ struct stfservmode : stfstate, servmode
 	{
 		if(!n) return;
 		flag &b = flags[i];
-		loopvk(clients) if(clients[k]->team == team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
+		loopvk(clients) if(team == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
 		score &cs = findscore(team);
 		cs.total += n;
 		sendf(-1, 1, "ri3", SV_SCORE, team, cs.total);
@@ -79,7 +79,7 @@ struct stfservmode : stfstate, servmode
                 if(!b.owners || !b.enemies)
                 {
                 	int pts = b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
-                	if(pts >= 0) loopvk(clients) if(insideflag(b, clients[k]->state.o)) givepoints(clients[k], pts ? 5 : 3);
+                	if(pts > 0) loopvk(clients) if(b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
                 }
 				sendflag(i);
 			}
