@@ -366,8 +366,7 @@ namespace hud
 			case WPSTATE_SHOOT:
 			{
 				int check = game::player1->weapwait[weap] > 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
-				if(interval < check)
-					fade *= 1.f-clamp(float(interval-check)/float(check), 0.f, 1.f);
+				if(interval < check) fade *= 1.f-clamp(float(interval)/float(check), 0.f, 1.f);
 				else fade = 0.f;
 				//fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
 				break;
@@ -377,8 +376,7 @@ namespace hud
 				if(game::player1->weapload[weap] > 0)
 				{
 					int check = game::player1->weapwait[weap]/2;
-					if(interval > check)
-						fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
+					if(interval > check) fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
 					else fade = 0.f;
 					break;
 				}
