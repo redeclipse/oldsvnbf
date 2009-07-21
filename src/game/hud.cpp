@@ -365,16 +365,20 @@ namespace hud
 		{
 			case WPSTATE_SHOOT:
 			{
-				fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
+				int check = game::player1->weapwait[weap] > 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
+				if(interval < check)
+					fade *= 1.f-clamp(float(interval-check)/float(check), 0.f, 1.f);
+				else fade = 0.f;
+				//fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
 				break;
 			}
 			case WPSTATE_RELOAD:
 			{
 				if(game::player1->weapload[weap] > 0)
 				{
-					int half = game::player1->weapwait[weap]/2;
-					if(interval > half)
-						fade *= clamp(float(interval-half)/float(half), 0.f, 1.f);
+					int check = game::player1->weapwait[weap]/2;
+					if(interval > check)
+						fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
 					else fade = 0.f;
 					break;
 				}
