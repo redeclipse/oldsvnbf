@@ -1280,22 +1280,24 @@ namespace client
 
 				case SV_DIED:
 				{
-					int vcn = getint(p), acn = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
+					int vcn = getint(p), acn = getint(p), frags = getint(p), spree = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
 					gameent *victim = game::getclient(vcn), *actor = game::getclient(acn);
 					if(!actor || !victim) break;
+					actor->frags = frags;
+					actor->spree = spree;
 					game::killed(weap, flags, damage, victim, actor);
 					victim->lastdeath = lastmillis;
 					victim->weapreset(true);
 					break;
 				}
 
-				case SV_FRAG:
+				case SV_POINTS:
 				{
-					int acn = getint(p), frags = getint(p), spree = getint(p);
+					int acn = getint(p), add = getint(p), points = getint(p);
 					gameent *actor = game::getclient(acn);
 					if(!actor) break;
-					actor->frags = frags;
-					actor->spree = spree;
+					actor->lastpoints = add;
+					actor->points = points;
 					break;
 				}
 
@@ -1648,7 +1650,7 @@ namespace client
 					break;
 				}
 
-				case SV_TEAMSCORE:
+				case SV_SCORE:
 				{
 					int team = getint(p), total = getint(p);
 					if(m_ctf(game::gamemode)) ctf::setscore(team, total);

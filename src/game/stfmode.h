@@ -49,12 +49,21 @@ struct stfservmode : stfstate, servmode
 		moveflags(team, vec(-1e10f, -1e10f, -1e10f), o);
 	}
 
-	void addscore(int team, int n)
+    int fragvalue(clientinfo *victim, clientinfo *actor)
+    {
+    	int value = 1;
+    	loopv(flags) if(insideflag(flags[i], victim->state.o)) value++;
+    	return victim==actor || victim->team == actor->team ? -value : value;
+    }
+
+	void addscore(int i, int team, int n)
 	{
 		if(!n) return;
+		flag &b = flags[i];
+		loopvk(clients) if(clients[k]->team == team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
 		score &cs = findscore(team);
 		cs.total += n;
-		sendf(-1, 1, "ri3", SV_TEAMSCORE, team, cs.total);
+		sendf(-1, 1, "ri3", SV_SCORE, team, cs.total);
 	}
 
 	void update()
@@ -67,14 +76,18 @@ struct stfservmode : stfstate, servmode
 			flag &b = flags[i];
 			if(b.enemy)
 			{
-                if(!b.owners || !b.enemies) b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
+                if(!b.owners || !b.enemies)
+                {
+                	int pts = b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
+                	if(pts >= 0) loopvk(clients) if(insideflag(b, clients[k]->state.o)) givepoints(clients[k], pts ? 5 : 3);
+                }
 				sendflag(i);
 			}
 			else if(b.owner)
 			{
 				b.securetime += t;
 				int score = b.securetime/SCORESECS - (b.securetime-t)/SCORESECS;
-				if(score) addscore(b.owner, score);
+				if(score) addscore(i, b.owner, score);
 				sendflag(i);
 			}
 		}
@@ -103,7 +116,7 @@ struct stfservmode : stfstate, servmode
             loopv(scores)
 		    {
 			    score &cs = scores[i];
-			    putint(p, SV_TEAMSCORE);
+			    putint(p, SV_SCORE);
 			    putint(p, cs.team);
 			    putint(p, cs.total);
 		    }
@@ -121,7 +134,7 @@ struct stfservmode : stfstate, servmode
 
 	void winner(int team, int score)
 	{
-		sendf(-1, 1, "ri3", SV_TEAMSCORE, team, score);
+		sendf(-1, 1, "ri3", SV_SCORE, team, score);
 		startintermission();
 	}
 

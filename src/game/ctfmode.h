@@ -34,6 +34,13 @@ struct ctfservmode : ctfstate, servmode
         dropflag(ci, ci->state.o);
     }
 
+    int fragvalue(clientinfo *victim, clientinfo *actor)
+    {
+    	int value = 1;
+    	loopv(flags) if(flags[i].owner == victim->clientnum) value++;
+    	return victim==actor || victim->team == actor->team ? -value : value;
+    }
+
 	int addscore(int team)
 	{
 		score &cs = findscore(team);
@@ -52,6 +59,7 @@ struct ctfservmode : ctfstate, servmode
 				if(isctfhome(f, ci->team) && (f.owner < 0 || (f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
 				{
 					ctfstate::returnflag(i);
+					givepoints(ci, 5);
 					if(flags[i].team != ci->team)
 					{
 						ci->state.flags++;
@@ -75,6 +83,7 @@ struct ctfservmode : ctfstate, servmode
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && !f.droptime)) return;
 		ctfstate::takeflag(i, ci->clientnum);
+		if(f.team != ci->team) givepoints(ci, 3);
 		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
     }
 
@@ -87,6 +96,7 @@ struct ctfservmode : ctfstate, servmode
             if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= RESETFLAGTIME)
             {
                 ctfstate::returnflag(i);
+                loopvk(clients) if(isctfflag(f, clients[k]->team)) givepoints(clients[k], -5);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
             }
         }
@@ -99,7 +109,7 @@ struct ctfservmode : ctfstate, servmode
             loopv(scores)
 		    {
 			    score &cs = scores[i];
-			    putint(p, SV_TEAMSCORE);
+			    putint(p, SV_SCORE);
 			    putint(p, cs.team);
 			    putint(p, cs.total);
 		    }
