@@ -1150,7 +1150,7 @@ namespace hud
 {
 	extern char *bliptex, *cardtex, *flagtex;
 	extern int hudwidth, hudsize, damageresidue, radarflagnames, inventorygame;
-	extern float inventoryblend, radarflagblend, radarblipblend, radarflagsize;
+	extern float inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
