@@ -69,7 +69,7 @@ struct stfservmode : stfstate, servmode
 	void update()
 	{
 		endcheck();
-		int t = (gamemillis/100)-((gamemillis-curtime)/100);
+		int t = (gamemillis/SCORESECS)-((gamemillis-curtime)/SCORESECS);
 		if(t < 1) return;
 		loopv(flags)
 		{
