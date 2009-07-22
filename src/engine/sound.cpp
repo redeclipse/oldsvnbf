@@ -245,11 +245,15 @@ ICOMMAND(mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
 	int svol = clamp(int((mastervol/255.f)*(soundvol/255.f)*(vol/255.f)*(slotvol/255.f)*MIX_MAX_VOLUME), 0, MIX_MAX_VOLUME);
+
+	bool posliquid = isliquid(lookupmaterial(pos)&MATF_VOLUME), camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
+	if(camliquid && slotmat == MAT_AIR) svol /= 4;
+	else if(posliquid || camliquid) svol /= 2;
+
 	if(!(flags&SND_NOATTEN))
 	{
 		vec unitv;
 		float dist = camera1->o.dist(pos, unitv);
-		bool posliquid = isliquid(lookupmaterial(pos)&MATF_VOLUME), camliquid = isliquid(lookupmaterial(camera1->o)&MATF_VOLUME);
 		if(!soundmono && !(flags&SND_NOPAN) && (unitv.x != 0 || unitv.y != 0))
 		{
 			float yaw = -atan2f(unitv.x, unitv.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
@@ -257,19 +261,12 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 		}
 		else *curpan = 127;
 
-		if(camliquid && slotmat == MAT_AIR) svol = int(svol*0.25f);
-		else if(posliquid || camliquid) svol = int(svol*0.5f);
-
 		float mrad = maxrad > 0 ? maxrad : 256, nrad = minrad > 0 ? (minrad <= mrad ? minrad : mrad) : 0;
 		if(dist <= nrad) *curvol = svol;
 		else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/(mrad-nrad))));
 		else *curvol = 0;
 	}
-	else
-	{
-		*curvol = svol;
-		*curpan = 127;
-	}
+	else { *curvol = svol; *curpan = 127; }
 }
 
 void updatesound(int chan)
