@@ -1100,8 +1100,6 @@ namespace hud
 					}
 					else if(i != game::player1->weapselect) skew = inventoryskew;
 					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WPSTATE_PICKUP);
-					int oldy = y-sy, delay = game::player1->lastspawn ? lastmillis-game::player1->lastspawn : 1000;
-					if(delay < 1000) skew *= delay/1000.f;
 					float r = 1.f, g = 1.f, b = 1.f;
 					if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
 					else if(inventorycolour)
@@ -1110,6 +1108,7 @@ namespace hud
 						g = ((weaptype[i].colour>>8)&0xFF)/255.f;
 						b = (weaptype[i].colour&0xFF)/255.f;
 					}
+					int oldy = y-sy;
 					if(inventoryammo && (instate || inventoryammo > 1) && game::player1->hasweap(i, sweap))
 						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "default", "%d", game::player1->ammo[i]);
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
