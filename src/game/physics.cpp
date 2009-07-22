@@ -591,7 +591,7 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH1 : S_SPLASH2);
+				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH2 : S_SPLASH1);
 			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
