@@ -3,7 +3,7 @@
 #endif
 struct stfstate
 {
-	static const int OCCUPYPOINTS = 15;
+	static const int OCCUPYPOINTS = 1;
 	static const int OCCUPYLIMIT = 100;
 	static const int SCORESECS = 10;
 

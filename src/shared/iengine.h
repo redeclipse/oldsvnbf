@@ -16,7 +16,7 @@ extern void conoutf(const char *s, ...);
 
 struct generic { const char *name; uchar id; };
 
-extern void lightent(extentity &e, float height = 8.0f);
+extern void lightent(extentity &e, float height = 8);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
 
@@ -168,8 +168,6 @@ enum
     PT_TAPE,
     PT_TRAIL,
     PT_TEXT,
-    PT_METER,
-    PT_METERVS,
     PT_FIREBALL,
     PT_LIGHTNING,
     PT_FLARE,
@@ -210,7 +208,6 @@ enum
     PART_MUZZLE_FLASH,
     PART_SNOW,
     PART_TEXT, PART_TEXT_ONTOP,
-    PART_METER, PART_METER_VS,
     PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
     PART_LIGHTNING,
     PART_LENS_FLARE,
@@ -237,41 +234,40 @@ struct particle
 	physent *owner;
 };
 
-extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
-extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL);
-extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, int radius = 150, int delay = 0);
-extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, int radius = 4);
+extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
+extern void part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regular_part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, int radius = 150, int delay = 0);
+extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, int radius = 4);
 extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f, int grav = 0, int collide = 0);
-extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0);
-extern void part_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0);
-extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
-extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
-extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
-extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0);
-extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4.f, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0);
+extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);
+extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);
+extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);
+extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
-extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int grav = 0, int collide = 0, int fade = 1, int color = 0xFFFFFF, int type = PART_ICON);
-extern void part_line(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int type = PART_LINE);
-extern void part_triangle(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true, int type = PART_TRIANGLE);
-extern void part_dir(const vec &o, float yaw, float pitch, float size = 1.f, int fade = 1, int color = 0x0000FF, bool fill = true);
-extern void part_trace(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, bool fill = true);
-extern void part_ellipse(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0xFFFFFF, int axis = 0, bool fill = false, int type = PART_ELLIPSE);
-extern void part_radius(const vec &o, const vec &v, float size = 1.f, int fade = 1, int color = 0x00FFFF, bool fill = false);
-extern void part_cone(const vec &o, const vec &dir, float radius, float angle, float size = 1.f, int fade = 1, int color = 0x00FFFF, bool fill = false, int type = PART_CONE);
+extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int grav = 0, int collide = 0, int fade = 1, int color = 0xFFFFFF, float start = 0, float length = 1, int type = PART_ICON);
+extern void part_line(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, int type = PART_LINE);
+extern void part_triangle(const vec &o, float yaw, float pitch, float size = 1, int fade = 1, int color = 0xFFFFFF, bool fill = true, int type = PART_TRIANGLE);
+extern void part_dir(const vec &o, float yaw, float pitch, float size = 1, int fade = 1, int color = 0x0000FF, bool fill = true);
+extern void part_trace(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, bool fill = true);
+extern void part_ellipse(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, int axis = 0, bool fill = false, int type = PART_ELLIPSE);
+extern void part_radius(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0x00FFFF, bool fill = false);
+extern void part_cone(const vec &o, const vec &dir, float radius, float angle, float size = 1, int fade = 1, int color = 0x00FFFF, bool fill = false, int type = PART_CONE);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
 
-extern particle *newparticle(const vec &o, const vec &d, int fade, int type, int color = 0xFFFFFF, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
-extern void create(int type, int color, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL);
-extern void regularcreate(int type, int color, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
-extern void splash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0);
-extern void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, int delay = 0);
-extern void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2.f, int grav = 0, int collide = 0, float vel = 1.f);
-extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2.0f, int grav = -1, int collide = 0, float vel = 1.f);
+extern particle *newparticle(const vec &o, const vec &d, int fade, int type, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void create(int type, int color, int fade, const vec &p, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void regularcreate(int type, int color, int fade, const vec &p, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
+extern void splash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2, int grav = 0, int collide = 0);
+extern void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size = 2, int grav = 0, int collide = 0, int delay = 0);
+extern void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size = 2, int grav = 0, int collide = 0, float vel = 1);
+extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, int fade = 500, float size = 2, int grav = -1, int collide = 0, float vel = 1);
 
 #if 0
-enum { PARTTYPE_CREATE = 0, PARTTYPE_SPLASH, PARTTYPE_SHAPE, PARTTYPE_FIRE, PARTTYPE_FLAME, PARTTYPE_METER, PARTTYPE_FLARE, PARTTYPE_MAX };
+enum { PARTTYPE_CREATE = 0, PARTTYPE_SPLASH, PARTTYPE_SHAPE, PARTTYPE_FIRE, PARTTYPE_FLAME, PARTTYPE_ICON, PARTTYPE_FLARE, PARTTYPE_MAX };
 
 struct mapparticle
 {
@@ -309,7 +305,7 @@ extern void save_world(const char *mname, bool nodata = false, bool forcesave = 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
 extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF, bool collideonly = true, float cutoff = 0);
-extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.0f, bool playercol = true);
+extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0, bool playercol = true);
 extern bool plcollide(physent *d, const vec &dir = vec(0, 0, 0));
 extern float pltracecollide(const vec &o, const vec &ray, float maxdist);
 extern float tracecollide(const vec &o, const vec &ray, float maxdist, int mode = RAY_CLIPMAT|RAY_ALPHAPOLY, bool playercol = true);
