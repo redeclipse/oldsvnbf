@@ -44,7 +44,15 @@ namespace ai
 	vec getaimpos(gameent *d, gameent *e)
 	{
 		vec o = e->headpos();
-		if(d->skill <= 100) o.z -= e->height*(1.f/float(d->skill));
+		if(d->skill <= 100)
+		{
+			o.z -= e->height*(1.f/float(d->skill));
+			if(d->weapselect == WEAPON_PISTOL)
+			{
+				o.x += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
+				o.y += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
+			}
+		}
 		return o;
 	}
 
