@@ -117,11 +117,12 @@ namespace hud
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.05f, 1000);
+	FVARP(inventoryskew, 0, 0.65f, 1);
 	FVARP(inventoryblend, 0, 0.55f, 1);
 
 	VARP(inventoryedit, 0, 1, 1);
 	FVARP(inventoryeditblend, 0, 1.f, 1);
-	FVARP(inventoryeditskew, 0, 0.75f, 1);
+	FVARP(inventoryeditskew, 0, 0.65f, 1);
 
 	VARP(inventoryhealth, 0, 2, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
@@ -1094,10 +1095,10 @@ namespace hud
 					if(game::player1->weapstate[i] == WPSTATE_SWITCH || game::player1->weapstate[i] == WPSTATE_PICKUP)
 					{
 						float amt = clamp(float(lastmillis-game::player1->weaplast[i])/float(game::player1->weapwait[i]), 0.f, 1.f);
-						if(i != game::player1->weapselect) skew = game::player1->hasweap(i, sweap) ? 1.f-(amt*(0.25f)) : 1.f-amt;
-						else skew = game::player1->weapstate[i] == WPSTATE_PICKUP ? amt : 0.75f+(amt*(0.25f));
+						if(i != game::player1->weapselect) skew = game::player1->hasweap(i, sweap) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt;
+						else skew = game::player1->weapstate[i] == WPSTATE_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew));
 					}
-					else if(i != game::player1->weapselect) skew = 0.75f;
+					else if(i != game::player1->weapselect) skew = inventoryskew;
 					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WPSTATE_PICKUP);
 					int oldy = y-sy, delay = game::player1->lastspawn ? lastmillis-game::player1->lastspawn : 1000;
 					if(delay < 1000) skew *= delay/1000.f;

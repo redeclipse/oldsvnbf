@@ -107,7 +107,7 @@ namespace stf
 			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 || f.hasflag || millis < 1000)
 			{
 				int prevsy = sy, colour = teamtype[f.owner].colour;
-				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? 0.75f : 0.f, fade = blend*hud::inventoryblend,
+				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 				if(f.hasflag) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);

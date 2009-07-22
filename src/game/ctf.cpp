@@ -96,7 +96,7 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[i];
 			int millis = lastmillis-f.interptime, oldy = y-sy, colour = teamtype[f.team].colour;
-			float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? 0.75f : 0.f, fade = blend*hud::inventoryblend,
+			float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
 			else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
