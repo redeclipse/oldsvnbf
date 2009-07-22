@@ -52,29 +52,21 @@ namespace stf
         }
     }
 
-	void drawblip(int w, int h, float blend, int type, bool skipenemy = false)
+	void drawblips(int w, int h, float blend)
 	{
 		loopv(st.flags)
 		{
 			stfstate::flag &f = st.flags[i];
-			if(skipenemy && f.enemy) continue;
-			if(type == 0 && (!f.owner || f.owner != game::player1->team)) continue;
-			if(type == 1 && f.owner) continue;
-			if(type == 2 && (!f.owner || f.owner == game::player1->team)) continue;
-			if(type == 3 && (!f.enemy || f.enemy == game::player1->team)) continue;
-			bool blip = f.owner != game::player1->team && f.enemy != game::player1->team;
-			vec dir(f.o);
-			dir.sub(camera1->o);
-			int colour = teamtype[f.owner].colour;
+			vec dir(f.o); dir.sub(camera1->o);
+			int colour = teamtype[f.enemy && lastmillis%600 >= 400 ? f.enemy : f.owner].colour;
 			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
-			if(blip)
+			if(f.owner != game::player1->team && f.enemy != game::player1->team)
 			{
 				float dist = dir.magnitude(),
 					diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-				fade *= 0.5f+(diff*0.5f);
+				fade *= diff*0.5f;
 			}
-			dir.rotate_around_z(-camera1->yaw*RAD);
-			dir.normalize();
+			dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
 			if(hud::radarflagnames)
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
@@ -103,35 +95,26 @@ namespace stf
 		}
 	}
 
-	void drawblips(int w, int h, float blend)
-	{
-		bool showenemies = lastmillis%1000 >= 500;
-		drawblip(w, h, blend, 0, showenemies);
-		drawblip(w, h, blend, 1, showenemies);
-		drawblip(w, h, blend, 2, showenemies);
-		if(showenemies) drawblip(w, h, blend, 3);
-	}
-
     int drawinventory(int x, int y, int s, float blend)
     {
 		int sy = 0;
 		loopv(st.flags)
 		{
 			stfstate::flag &f = st.flags[i];
-			bool hasflag = game::player1->state == CS_ALIVE && insideflag(f, game::player1) && (f.owner == game::player1->team || f.enemy == game::player1->team);
-			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(500-(lastmillis-f.lasthad), 0); }
-			int size = s, millis = lastmillis-f.lasthad, prevsy = sy, colour = teamtype[f.owner].colour, delay = lastmillis-game::player1->lastspawn;
-			float skew = f.hasflag ? 1.f : 0.75f, fade = blend*hud::inventoryblend, occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
-				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(millis < 500)
+			bool hasflag = game::player1->state == CS_ALIVE && insideflag(f, game::player1);
+			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(1000-(lastmillis-f.lasthad), 0); }
+			int millis = lastmillis-f.lasthad;
+			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 || f.hasflag || millis < 1000)
 			{
-				float amt = clamp(float(millis)/500.f, 0.f, 1.f);
-				if(f.hasflag) skew = 0.75f+(amt*0.25f);
-				else skew = 1.f-(amt*0.25f);
+				int prevsy = sy, colour = teamtype[f.owner].colour;
+				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? 0.75f : 0.f, fade = blend*hud::inventoryblend,
+					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
+					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+				if(f.hasflag) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+				else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
+				sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "default", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+				if(f.enemy) hud::drawitem(hud::teamtex(f.enemy), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 			}
-			if(delay < 1000) skew *= delay/1000.f;
-			sy += hud::drawitem(hud::flagtex, x, y-sy, size, false, r, g, b, fade, skew, "default", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
-			if(f.enemy) hud::drawitem(hud::teamtex(f.enemy), x, y-prevsy, int(size*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 		}
         return sy;
     }

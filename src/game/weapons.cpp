@@ -165,7 +165,7 @@ namespace weapons
 		if(!weaptype[d->weapselect].fullauto)
 		{
 			d->attacking = false;
-			if(d->ai) adelay += int(adelay*(((101-d->skill)+rnd(111-d->skill))/100.f));
+			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WPSTATE_SHOOT, adelay, lastmillis);
 		d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
