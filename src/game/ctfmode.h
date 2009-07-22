@@ -1,8 +1,6 @@
 // server-side ctf manager
 struct ctfservmode : ctfstate, servmode
 {
-    static const int RESETFLAGTIME = 30000;
-
     bool hasflaginfo;
 
     ctfservmode() : hasflaginfo(false) {}
