@@ -28,9 +28,14 @@ namespace stf
 			else b.info[0] = '\0';
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
 			vec p = vec(b.o).add(vec(0, 0, enttype[FLAG].radius*0.75f));
-			part_meter(p, occupy, b.enemy && b.owner ? PART_METER_VS : PART_METER, 1, teamtype[attack].colour, teamtype[defend].colour); p.z += 2.f;
-			if(b.info[0]) { part_text(p, b.info); p.z += 2.f; }
-			defformatstring(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 2.f;
+			if(occupy > 0 && occupy < 1)
+			{
+				part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[attack].colour, 0, occupy);
+				part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
+			}
+			else part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
+			defformatstring(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 5;
+			if(b.info[0]) { part_text(p, b.info); p.z += 2; }
 		}
 	}
 

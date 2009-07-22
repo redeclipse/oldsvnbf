@@ -10,7 +10,6 @@ VARA(maxparticledistance, 256, 1024, INT_MAX-1);
 VARP(maxparticletrail, 256, 1024, INT_MAX-1);
 
 VARP(particletext, 0, 1, 1);
-VARP(outlinemeters, 0, 0, 1);
 VARP(particleglare, 0, 1, 100);
 VAR(debugparticles, 0, 0, 1);
 
@@ -26,7 +25,7 @@ static bool emit_particles()
 	return emit;
 }
 
-const char *partnames[] = { "part", "tape", "trail", "text", "meter", "metervs", "fireball", "lightning", "flare", "portal", "icon", "line", "triangle", "ellipse", "cone" };
+const char *partnames[] = { "part", "tape", "trail", "text", "fireball", "lightning", "flare", "portal", "icon", "line", "triangle", "ellipse", "cone" };
 
 struct partvert
 {
@@ -277,94 +276,6 @@ typedef listrenderer<sharedlistparticle> sharedlistrenderer;
 #include "explosion.h"
 #include "lightning.h"
 
-struct meterrenderer : sharedlistrenderer
-{
-	meterrenderer(int type)
-		: sharedlistrenderer(NULL, type)
-	{}
-
-	void startrender()
-	{
-		 glDisable(GL_BLEND);
-		 glDisable(GL_TEXTURE_2D);
-		 particlenotextureshader->set();
-	}
-
-	void endrender()
-	{
-		 glEnable(GL_BLEND);
-		 glEnable(GL_TEXTURE_2D);
-		 if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
-		 particleshader->set();
-	}
-
-	void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
-	{
-		int basetype = type&0xFF;
-
-		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-		glRotatef(camera1->yaw-180, 0, 0, 1);
-		glRotatef(camera1->pitch-90, 1, 0, 0);
-
-		float scale = p->size/80.0f;
-		glScalef(-scale, scale, -scale);
-
-		float right = 8*FONTH, left = p->progress/100.0f*right;
-		glTranslatef(-right/2.0f, 0, 0);
-
-		if(outlinemeters)
-		{
-			glColor3f(0, 0.8f, 0);
-			glBegin(GL_TRIANGLE_STRIP);
-			loopk(10)
-			{
-				float c = (0.5f + 0.1f)*sinf(k/9.0f*M_PI), s = 0.5f - (0.5f + 0.1f)*cosf(k/9.0f*M_PI);
-				glVertex2f(-c*FONTH, s*FONTH);
-				glVertex2f(right + c*FONTH, s*FONTH);
-			}
-			glEnd();
-		}
-
-		if(basetype==PT_METERVS) glColor3ubv(p->color2);
-		else glColor3f(0, 0, 0);
-		glBegin(GL_TRIANGLE_STRIP);
-		loopk(10)
-		{
-			float c = 0.5f*sinf(k/9.0f*M_PI), s = 0.5f - 0.5f*cosf(k/9.0f*M_PI);
-			glVertex2f(left + c*FONTH, s*FONTH);
-			glVertex2f(right + c*FONTH, s*FONTH);
-		}
-		glEnd();
-
-		if(outlinemeters)
-		{
-			glColor3f(0, 0.8f, 0);
-			glBegin(GL_TRIANGLE_FAN);
-			loopk(10)
-			{
-				float c = (0.5f + 0.1f)*sinf(k/9.0f*M_PI), s = 0.5f - (0.5f + 0.1f)*cosf(k/9.0f*M_PI);
-				glVertex2f(left + c*FONTH, s*FONTH);
-			}
-			glEnd();
-		}
-
-		glColor3ubv(color);
-		glBegin(GL_TRIANGLE_STRIP);
-		loopk(10)
-		{
-			float c = 0.5f*sinf(k/9.0f*M_PI), s = 0.5f - 0.5f*cosf(k/9.0f*M_PI);
-			glVertex2f(-c*FONTH, s*FONTH);
-			glVertex2f(left + c*FONTH, s*FONTH);
-		}
-		glEnd();
-
-		glPopMatrix();
-	}
-};
-static meterrenderer meters(PT_METER|PT_LERP), metervs(PT_METERVS|PT_LERP);
-
 struct textrenderer : sharedlistrenderer
 {
 	textrenderer(int type)
@@ -464,7 +375,7 @@ struct portalrenderer : listrenderer<portal>
 struct icon : listparticle<icon>
 {
 	Texture *tex;
-	float blend;
+	float blend, start, length, end;
 };
 
 struct iconrenderer : listrenderer<icon>
@@ -501,21 +412,50 @@ struct iconrenderer : listrenderer<icon>
 		glScalef(p->size, p->size, p->size);
 
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
-		glBegin(GL_QUADS);
-		glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
-		glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
-		glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
-		glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
-		glEnd();
+		if(p->start > 0 || p->length < 1)
+		{
+			float sx = cosf((p->start + 0.25f)*2*M_PI), sy = -sinf((p->start + 0.25f)*2*M_PI),
+				  ex = cosf((p->end + 0.25f)*2*M_PI), ey = -sinf((p->end + 0.25f)*2*M_PI);
+			glBegin(GL_TRIANGLE_FAN);
+			glTexCoord2f(0.5f, 0.5f); glVertex3f(0, 0, 0);
+
+			if(p->start < 0.125f || p->start >= 0.875f) { glTexCoord2f(0.5f + 0.5f*sx/sy, 0); glVertex3f(-(sx/sy), 0, 1);  }
+			else if(p->start < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*sy/sx); glVertex3f(-1, 0, sy/sx); }
+			else if(p->start < 0.625f) { glTexCoord2f(0.5f - 0.5f*sx/sy, 1); glVertex3f(sx/sy, 0, -1); }
+			else { glTexCoord2f(0, 0.5f + 0.5f*sy/sx); glVertex3f(1, 0, -(sy/sx)); }
+
+			if(p->start <= 0.125f && p->end >= 0.125f) { glTexCoord2f(1, 0); glVertex3f(-1, 0, 1); }
+			if(p->start <= 0.375f && p->end >= 0.375f) { glTexCoord2f(1, 1); glVertex3f(-1, 0, -1); }
+			if(p->start <= 0.625f && p->end >= 0.625f) { glTexCoord2f(0, 1); glVertex3f(1, 0, -1); }
+			if(p->start <= 0.875f && p->end >= 0.875f) { glTexCoord2f(0, 0); glVertex3f(1, 0, 1); }
+
+			if(p->end < 0.125f || p->end >= 0.875f) { glTexCoord2f(0.5f + 0.5f*ex/ey, 0); glVertex3f(-(ex/ey), 0, 1);  }
+			else if(p->end < 0.375f) { glTexCoord2f(1, 0.5f - 0.5f*ey/ex); glVertex3f(-1, 0, ey/ex); }
+			else if(p->end < 0.625f) { glTexCoord2f(0.5f - 0.5f*ex/ey, 1); glVertex3f(ex/ey, 0, -1); }
+			else { glTexCoord2f(0, 0.5f + 0.5f*ey/ex); glVertex3f(1, 0, -(ey/ex)); }
+			glEnd();
+		}
+		else
+		{
+			glBegin(GL_QUADS);
+			glTexCoord2f(1, 1); glVertex3f(-1, 0, -1);
+			glTexCoord2f(0, 1); glVertex3f( 1, 0, -1);
+			glTexCoord2f(0, 0); glVertex3f( 1, 0,  1);
+			glTexCoord2f(1, 0); glVertex3f(-1, 0,  1);
+			glEnd();
+		}
 
 		glPopMatrix();
 	}
 
-	icon *addicon(const vec &o, Texture *tex, float blend, int fade, int color, float size, int grav, int collide)
+	icon *addicon(const vec &o, Texture *tex, float blend, int fade, int color, float size, int grav, int collide, float start, float length)
 	{
 		icon *p = (icon *)listrenderer<icon>::addpart(o, vec(0, 0, 0), fade, color, size, grav, collide);
 		p->tex = tex;
 		p->blend = blend;
+		p->start = start;
+		p->length = length;
+		p->end = p->start + p->length;
 		return p;
 	}
 
@@ -1101,7 +1041,7 @@ static partrenderer *parts[] =
 	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_GLARE),
 	new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	&texts, &textontop, &meters, &metervs,
+	&texts, &textontop,
 	&fireballs, &noglarefireballs, &lightnings,
 	&flares // must be done last!
 };
@@ -1395,16 +1335,6 @@ void part_text(const vec &s, const char *t, int type, int fade, int color, float
 	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide)->text = t[0]=='@' ? newstring(t) : t;
 }
 
-void part_meter(const vec &s, float val, int type, int fade, int color, int color2, float size, int grav, int collide)
-{
-	if(shadowmapping || renderedgame) return;
-	particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide);
-	p->color2[0] = color2>>16;
-	p->color2[1] = (color2>>8)&0xFF;
-	p->color2[2] = color2&0xFF;
-	p->progress = clamp(int(val*100), 0, 100);
-}
-
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, int grav, int collide, physent *pl)
 {
 	if(shadowmapping || renderedgame) return;
@@ -1458,11 +1388,11 @@ void part_portal(const vec &o, float size, float yaw, float pitch, int type, int
 	if(p) p->addportal(o, fade, color, size, yaw, pitch);
 }
 
-void part_icon(const vec &o, Texture *tex, float blend, float size, int grav, int collide, int fade, int color, int type)
+void part_icon(const vec &o, Texture *tex, float blend, float size, int grav, int collide, int fade, int color, float start, float length, int type)
 {
 	if(shadowmapping || renderedgame) return;
 	iconrenderer *p = dynamic_cast<iconrenderer *>(parts[type]);
-	if(p) p->addicon(o, tex, blend, fade, color, size, grav, collide);
+	if(p) p->addicon(o, tex, blend, fade, color, size, grav, collide, start, length);
 }
 
 void part_line(const vec &o, const vec &v, float size, int fade, int color, int type)
@@ -1736,15 +1666,15 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			regularflame(type, o, float(attr2)/100.0f, float(attr3)/100.0f, colorfromattr(attr4), density, fade, size, grav, 0, vel);
 			break;
 		}
-		case 5: //meter, metervs - <percent> <rgb> <rgb2>
-		case 6:
+		case 6: //meter, metervs - <percent> <rgb> <rgb2>
 		{
-			particle *p = newparticle(o, vec(0, 0, 1), 1, attr1==5 ? PART_METER : PART_METER_VS, colorfromattr(attr3), 2.f);
-			int color2 = colorfromattr(attr4);
-			p->color2[0] = color2>>16;
-			p->color2[1] = (color2>>8)&0xFF;
-			p->color2[2] = color2&0xFF;
-			p->progress = clamp(attr2, 0, 100);
+			float length = clamp(attr2, 0, 100)/100.f;
+			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, colorfromattr(attr4), length, 1-length); // fall through
+		}
+		case 5:
+		{
+			float length = clamp(attr2, 0, 100)/100.f;
+			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, colorfromattr(attr3), 0, length);
 			break;
 		}
 		case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
