@@ -6,6 +6,8 @@
 #endif
 struct ctfstate
 {
+    static const int RESETFLAGTIME = 30000;
+
     struct flag
     {
         vec droploc, spawnloc;

@@ -24,18 +24,19 @@ namespace stf
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
 				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
-			if(defend) formatstring(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
-			else b.info[0] = '\0';
+			else formatstring(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
-			vec p = vec(b.o).add(vec(0, 0, enttype[FLAG].radius*0.75f));
+			vec above = b.o;
+			above.z += enttype[FLAG].radius*2/3;
+			part_text(above, b.info);
+			above.z += 2.5f;
 			if(occupy > 0 && occupy < 1)
 			{
-				part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[attack].colour, 0, occupy);
-				part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
+				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[attack].colour, 0, occupy);
+				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
 			}
-			else part_icon(p, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
-			defformatstring(str)("@%d%%", int(occupy*100.f)); part_text(p, str); p.z += 5;
-			if(b.info[0]) { part_text(p, b.info); p.z += 2; }
+			else part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
+			defformatstring(str)("@%d%%", int(occupy*100.f)); part_text(above, str);
 		}
 	}
 

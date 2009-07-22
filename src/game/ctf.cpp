@@ -129,10 +129,30 @@ namespace ctf
 				else trans = 1.f;
             }
             rendermodel(&f.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, f.ent->attr[1], f.ent->attr[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
+			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
-				above.z += enttype[FLAG].radius*2/3;
 				defformatstring(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
+				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+				above.z += 2.5f;
+            }
+			if((f.base&BASE_FLAG) && f.droptime)
+			{
+				float wait = clamp((lastmillis-f.droptime)/float(st.RESETFLAGTIME), 0.f, 1.f);
+				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
+				above.z += 2.5f;
+			}
+            if(f.base&BASE_FLAG && (f.owner || f.droptime))
+            {
+				if(f.owner)
+				{
+					defformatstring(info)("@%s", game::colorname(f.owner));
+					part_text(above, info, PART_TEXT, 1);
+					above.z += 1.5f;
+				}
+				defformatstring(info)("@%s", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped");
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
             }
         }
@@ -141,13 +161,9 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
-            if(f.owner) while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
-            vec above(f.pos());
-            above.z += enttype[FLAG].radius*2/3;
-            if(f.owner) { above.z += numflags[f.owner->clientnum]*2; numflags[f.owner->clientnum]++; }
-            defformatstring(info)("@%s flag", teamtype[f.team].name);
-			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+            if(!f.ent || !(f.base&BASE_FLAG) || !f.owner) continue;
+            while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
+            numflags[f.owner->clientnum]++;
         }
         loopv(st.flags)
         {
@@ -158,14 +174,25 @@ namespace ctf
 			float trans = 1.f, yaw = 90;
 			if(f.owner)
 			{
-				iterflags[f.owner->clientnum]++;
-				yaw += f.owner->yaw-45.f+(90/float(numflags[f.owner->clientnum]+1)*iterflags[f.owner->clientnum]);
+				yaw += f.owner->yaw-45.f+(90/float(numflags[f.owner->clientnum]+1)*(iterflags[f.owner->clientnum]+1));
 				while(yaw >= 360.f) yaw -= 360.f;
 			}
 			else yaw += (f.interptime+(360/st.flags.length()*i))%360;
 			int millis = lastmillis-f.interptime;
 			if(millis < 1000) trans = float(millis)/1000.f;
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, yaw, 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
+			above.z += enttype[FLAG].radius*2/3;
+			if(f.owner) { above.z += iterflags[f.owner->clientnum]*2; iterflags[f.owner->clientnum]++; }
+            defformatstring(info)("@%s flag", teamtype[f.team].name);
+			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+			above.z += 2.5f;
+			if((f.base&BASE_FLAG) && f.droptime)
+			{
+				float wait = clamp((lastmillis-f.droptime)/float(st.RESETFLAGTIME), 0.f, 1.f);
+				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
+			}
         }
     }
 
@@ -355,7 +382,7 @@ namespace ctf
 		}
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? (denied ? S_V_DENIED : S_V_FLAGDROP) : -1;
 		game::announce(idx, CON_INFO, "\fo%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
-		st.dropflag(i, droploc, 1);
+		st.dropflag(i, droploc, lastmillis);
 		physics::droptofloor(f.droploc, 2, 0);
     }
 
@@ -364,7 +391,7 @@ namespace ctf
         loopv(st.flags) if(st.flags[i].owner == d)
         {
             ctfstate::flag &f = st.flags[i];
-            st.dropflag(i, f.owner->o, 1);
+            st.dropflag(i, f.owner->o, lastmillis);
         }
     }
 
