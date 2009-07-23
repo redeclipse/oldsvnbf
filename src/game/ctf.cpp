@@ -45,8 +45,7 @@ namespace ctf
 				float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
 				if(k)
 				{
-					if(!(f.base&BASE_FLAG) || f.owner == game::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400)
-						return;
+					if(!(f.base&BASE_FLAG) || f.owner == game::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400) break;
 					dir = f.pos();
 				}
 				else dir = f.spawnloc;
@@ -57,8 +56,7 @@ namespace ctf
 						diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
 					fade *= diff*0.5f;
 				}
-				dir.rotate_around_z(-camera1->yaw*RAD);
-				dir.normalize();
+				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
 				if(hud::radarflagnames) hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
 				else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
             }
