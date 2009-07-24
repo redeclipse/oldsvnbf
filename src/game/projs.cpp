@@ -84,13 +84,8 @@ namespace projs
 
 	void preload()
 	{
-		const char *mdls[] = {
-			"projectiles/grenade",
-			"gibc", "gibh",
-			"debris/debris01", "debris/debris02",
-			"debris/debris03", "debris/debris04",
-			""
-		};
+		loopi(WEAP_MAX) if(*weaptype[i].proj) loadmodel(weaptype[i].proj, -1, true);
+		const char *mdls[] = { "gibc", "gibh", "debris/debris01", "debris/debris02", "debris/debris03", "debris/debris04", "" };
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
@@ -593,8 +588,8 @@ namespace projs
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender)
 					{
-						int col = ((int(196*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(96*max(1.f-proj.lifespan,0.2f))+1)<<8);
-						part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize*proj.lifesize);
+						int col = ((int(224*max(1.f-proj.lifespan,0.375f))<<16)+1)|((int(128*max(1.f-proj.lifespan,0.125f))+1)<<8);
+						part_create(PART_HINT_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize*proj.lifesize);
 						bool moving = proj.movement > 0.f;
 						if(lastmillis-proj.lasteffect >= m_speedtime(moving ? 250 : 500))
 						{
@@ -701,15 +696,15 @@ namespace projs
 		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood || m_paint(game::gamemode, game::mutators))))
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
-			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.25f), 3, 20);
+			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);
 			if(proj.canrender && steps && proj.movement > 0.f)
 			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.35f), pos = proj.o;
+				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
 				loopi(steps)
 				{
 					float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.01f, proj.radius);
-					int col = ((int(196*max(res,0.3f))<<16)+1)|((int(64*max(res,0.2f))+1)<<8);
-					part_create(i ? PART_FIREBALL_SOFT : PART_FIREBALL_SOFT, 1, pos, col, size, -10);
+					int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
+					part_create(PART_FIREBALL_SOFT, 1, pos, col, size, -10);
 					pos.add(dir);
 					if(proj.o.dist(pos) > proj.movement) break;
 				}
@@ -926,7 +921,7 @@ namespace projs
 		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
 		if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
 		bool water = isliquid(mat&MATF_VOLUME);
-		float secs = float(qtime) / 1000.0f;
+		float secs = float(qtime)/1000.f;
 		if(proj.weight > 0.f) proj.vel.z -=  physics::gravityforce(&proj)*secs;
 
 		vec dir(proj.vel), pos(proj.o);
@@ -982,19 +977,20 @@ namespace projs
             }
         }
 
-		float dist = proj.o.dist(pos), diff = dist/(4*RAD);
+		float dist = proj.o.dist(pos), diff = dist/float(4*RAD);
 		if(!blocked) proj.movement += dist;
 		if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_GIBS)
 		{
 			float dummy = 0;
 			vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, dummy);
-			proj.pitch -= diff; while(proj.pitch < 0) proj.pitch += 360.f;
+			proj.yaw -= 90; while(proj.yaw < 0) proj.yaw += 360;
+			proj.roll += diff; while(proj.roll >= 360) proj.roll -= 360;
 		}
 		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
 		{
-			if(proj.pitch < 0.f) { proj.pitch += diff*0.5f; if(proj.pitch > 0.f) proj.pitch = 0.f; }
-			if(proj.pitch > 0.f) { proj.pitch -= diff*0.5f; if(proj.pitch < 0.f) proj.pitch = 0.f; }
-			proj.yaw = proj.roll = 0.f;
+			if(proj.pitch < 0.f) { proj.pitch += diff*0.125f; if(proj.pitch > 0.f) proj.pitch = 0.f; }
+			else if(proj.pitch > 0.f) { proj.pitch -= diff*0.125f; if(proj.pitch < 0.f) proj.pitch = 0.f; }
+			proj.yaw = proj.roll = 0;
 		}
 
 		return true;
