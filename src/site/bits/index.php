@@ -112,13 +112,6 @@
 							<li><a href="/facebook">on Facebook</a></li>
 							<li><a href="/blackboxbeta">on BlackBoxBETA</a></li>
 						</ul>
-<?php				if ($app['sflogo'] > 0) { ?>
-						<div id="listlogo">
-							<a href="/project">
-								<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" title="Get <?php echo $app['sitename']; ?> at SourceForge" width="120" height="30" border="0" id="sflogo"/>
-							</a>
-						</div>
-<?php				} ?>
 						<div id="listdonate">
 							<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
 								<input type="hidden" value="_s-xclick" name="cmd"/>
@@ -159,7 +152,16 @@
 					</div>
 				</div>
 			</div>
-			<div id="footer"><a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!</div>
+			<div id="footer">
+<?php			if ($app['sflogo'] > 0) { ?>
+					<div id="sflogo">
+						<a href="/project">
+							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=<?php echo $app['sfgroupid']; ?>&amp;type=<?php echo $app['sflogo']; ?>" alt="Get <?php echo $app['sitename']; ?> at SourceForge" title="Get <?php echo $app['sitename']; ?> at SourceForge" width="120" height="30" border="0" id="sflogo"/>
+						</a>
+					</div>
+<?php			} ?>
+				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!
+			</div>
 		</div>
 	</body>
 </html>
