@@ -148,8 +148,8 @@ namespace hud
 	TVAR(neutraltex, "textures/team", 3);
 	TVAR(alphatex, "textures/teamalpha", 3);
 	TVAR(betatex, "textures/teambeta", 3);
-	TVAR(deltatex, "textures/teamdelta", 3);
 	TVAR(gammatex, "textures/teamgamma", 3);
+	TVAR(deltatex, "textures/teamdelta", 3);
 
 	VARP(showclip, 0, 1, 1);
 	FVARP(clipsize, 0, 0.05f, 1000);
@@ -1034,7 +1034,7 @@ namespace hud
 	const char *teamtex(int team)
 	{
 		const char *teamtexs[TEAM_MAX] = {
-			neutraltex, alphatex, betatex, deltatex, gammatex, neutraltex
+			neutraltex, alphatex, betatex, gammatex, deltatex, neutraltex
 		};
 		return teamtexs[team];
 	}
