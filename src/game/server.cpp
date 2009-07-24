@@ -1280,7 +1280,7 @@ namespace server
 			if(balance || team < 0)
 			{
 				teamscore teamscores[TEAM_NUM] = {
-					teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_DELTA), teamscore(TEAM_GAMMA)
+					teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_GAMMA), teamscore(TEAM_DELTA)
 				};
 				loopv(clients)
 				{
