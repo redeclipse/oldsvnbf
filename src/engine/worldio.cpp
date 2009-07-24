@@ -1085,8 +1085,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			else if(!execfile(cfgname, false)) execfile("map.cfg");
 			if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 34))
 			{
-				setvar("cloudglare", 0, true);
-				setvar("cloudlayerglare", 0, true);
 				extern float cloudblend;
 				setfvar("cloudlayerblend", cloudblend, true);
 			}

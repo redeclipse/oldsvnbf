@@ -38,14 +38,14 @@ VARW(yawsky, 0, 0, 360);
 
 SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
 FVARW(cloudblend, 0, 1.0f, 1);
-VARW(cloudglare, 0, 1, 1);
+VARW(cloudglare, 0, 0, 1);
 HVARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
 FVARW(spinclouds, -720, 0, 720);
 VARW(yawclouds, 0, 0, 360);
 
 SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
 FVARW(cloudlayerblend, 0, 1.0f, 1);
-VARW(cloudlayerglare, 0, 1, 1);
+VARW(cloudlayerglare, 0, 0, 1);
 HVARW(cloudlayercolour, 0, 0xFFFFFF, 0xFFFFFF);
 FVARW(cloudscrollx, -16, 0, 16);
 FVARW(cloudscrolly, -16, 0, 16);
