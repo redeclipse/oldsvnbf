@@ -64,7 +64,7 @@ namespace entities
 				addentinfo(str);
 				if(full)
 				{
-					if(attr2&WEAPFLAG_FORCED) addentinfo("forced");
+					if(attr2&WEAP_F_FORCED) addentinfo("forced");
 				}
 			}
 		}
@@ -148,7 +148,7 @@ namespace entities
 			gameent *f = NULL;
 			loopi(game::numdynents()) if((f = (gameent *)game::iterdynents(i)) && f->type == ENT_PLAYER)
 			{
-				loopk(WEAPON_MAX) if(f->entid[k] == n) f->entid[k] = -1;
+				loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
 			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 			if(showentdescs)
@@ -170,7 +170,7 @@ namespace entities
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
 			{
-				d->setweapstate(g, WPSTATE_SWITCH, WEAPSWITCHDELAY, lastmillis);
+				d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
 				d->ammo[g] = d->entid[g] = -1;
 				if(d->weapselect != g)
 				{
@@ -577,13 +577,13 @@ namespace entities
 			{
 				if(d->useaction && !m_noitems(game::gamemode, game::mutators))
 				{
-					if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+					if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 					{
 						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-						if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD))
+						if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
 						{
 							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
-							d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
+							d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 							d->useaction = false;
 						}
 						else tried = true;
@@ -784,7 +784,7 @@ namespace entities
 				gameent *d = NULL;
 				loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)) && d->type == ENT_PLAYER)
 				{
-					loopk(WEAPON_MAX) if(d->entid[k] == n) d->entid[k] = -1;
+					loopk(WEAP_MAX) if(d->entid[k] == n) d->entid[k] = -1;
 				}
 			}
 		}
@@ -872,8 +872,8 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attr[0] < 0) e.attr[0] += WEAPON_TOTAL; // don't allow superimposed weaps
-				while(e.attr[0] >= WEAPON_TOTAL) e.attr[0] -= WEAPON_TOTAL;
+				while(e.attr[0] < 0) e.attr[0] += WEAP_TOTAL; // don't allow superimposed weaps
+				while(e.attr[0] >= WEAP_TOTAL) e.attr[0] -= WEAP_TOTAL;
 				break;
 			case PLAYERSTART:
 				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
@@ -1317,16 +1317,16 @@ namespace entities
 					break;
 				}
 
-				// 8	I_SHELLS		8	WEAPON		WEAPON_SG
-				// 9	I_BULLETS		8	WEAPON		WEAPON_SMG
-				// 10	I_ROCKETS		8	WEAPON		WEAPON_PLASMA
-				// 11	I_ROUNDS		8	WEAPON		WEAPON_RIFLE
-				// 12	I_GL			8	WEAPON		WEAPON_GRENADE
-				// 13	I_CARTRIDGES	8	WEAPON		WEAPON_PISTOL
+				// 8	I_SHELLS		8	WEAPON		WEAP_SHOTGUN
+				// 9	I_BULLETS		8	WEAPON		WEAP_SMG
+				// 10	I_ROCKETS		8	WEAPON		WEAP_PLASMA
+				// 11	I_ROUNDS		8	WEAPON		WEAP_RIFLE
+				// 12	I_GL			8	WEAPON		WEAP_GRENADE
+				// 13	I_CARTRIDGES	8	WEAPON		WEAP_PISTOL
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAPON_SG, WEAPON_SMG, WEAPON_PLASMA, WEAPON_RIFLE, WEAPON_GRENADE, WEAPON_PISTOL
+						WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_PISTOL
 					};
 
 					if(weap >= 0 && weap <= 5)
@@ -1338,11 +1338,11 @@ namespace entities
 					else f.type = NOTUSED;
 					break;
 				}
-				// 18	I_QUAD			8	WEAPON		WEAPON_FLAMER
+				// 18	I_QUAD			8	WEAPON		WEAP_FLAMER
 				case 18:
 				{
 					f.type = WEAPON;
-					f.attr[0] = WEAPON_FLAMER;
+					f.attr[0] = WEAP_FLAMER;
 					f.attr[1] = 0;
 					break;
 				}
@@ -1458,8 +1458,8 @@ namespace entities
 				case WEAPON:
 				{
 					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
-					int weaps[WEAPON_MAX];
-					loopj(WEAPON_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
+					int weaps[WEAP_MAX];
+					loopj(WEAP_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
 					loopvj(ents) if(j != i)
 					{
 						gameentity &f = *(gameentity *)ents[j];
@@ -1471,7 +1471,7 @@ namespace entities
 						}
 					}
 					int best = e.attr[0];
-					loopj(WEAPON_MAX) if(weaps[j] > weaps[best])
+					loopj(WEAP_MAX) if(weaps[j] > weaps[best])
 						best = j;
 					e.attr[0] = best;
 					break;
@@ -1613,7 +1613,7 @@ namespace entities
 					if(mtype == MAP_BFGZ && gver <= 90)
 					{ // move grenade to the end of the weapon array
 						if(e.attr[0] >= 4) e.attr[0]--;
-						else if(e.attr[0] == 3) e.attr[0] = WEAPON_GRENADE;
+						else if(e.attr[0] == 3) e.attr[0] = WEAP_GRENADE;
 					}
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attr[0] >= 4)
 						e.attr[0]++; // add in pistol
@@ -1854,9 +1854,9 @@ namespace entities
 
 	void preload()
 	{
-		static bool weapf[WEAPON_MAX];
+		static bool weapf[WEAP_MAX];
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-		loopi(WEAPON_MAX) weapf[i] = (i == sweap ? true : false);
+		loopi(WEAP_MAX) weapf[i] = (i == sweap ? true : false);
 		loopv(ents)
 		{
 			extentity &e = *ents[i];

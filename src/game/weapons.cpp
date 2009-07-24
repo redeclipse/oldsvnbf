@@ -15,7 +15,7 @@ namespace weapons
 
 	bool weapselect(gameent *d, int weap, bool local)
 	{
-		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD))
+		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 		{
 			if(local) client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			playsound(S_SWITCH, d->o, d);
@@ -34,7 +34,7 @@ namespace weapons
 			{
 				client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 				playsound(S_RELOAD, d->o, d);
-				d->setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, lastmillis);
+				d->setweapstate(weap, WEAP_S_RELOAD, weaptype[weap].rdelay, lastmillis);
 				int oldammo = d->ammo[weap];
 				ammo = min(max(d->ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
 				load = ammo-oldammo;
@@ -50,22 +50,22 @@ namespace weapons
 
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
-		if(a < -1 || b < -1 || a >= WEAPON_MAX || b >= WEAPON_MAX) return;
-		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD))) return;
+		if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX) return;
+		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD))) return;
 		int s = d->weapselect;
-		loopi(WEAPON_MAX) // only loop the amount of times we have weaps for
+		loopi(WEAP_MAX) // only loop the amount of times we have weaps for
 		{
 			if(a >= 0) s = a;
 			else s += b;
 
-			while(s > WEAPON_MAX-1) s -= WEAPON_MAX;
-			while(s < 0) s += WEAPON_MAX;
+			while(s > WEAP_MAX-1) s -= WEAP_MAX;
+			while(s < 0) s += WEAP_MAX;
 
 			if(a < 0)
 			{ // weapon skipping when scrolling
 				if(skipspawnweapon && s == m_spawnweapon(game::gamemode, game::mutators)) continue;
-				if(skippistol && s == WEAPON_PISTOL) continue;
-				if(skipgrenade && s == WEAPON_GRENADE) continue;
+				if(skippistol && s == WEAP_PISTOL) continue;
+				if(skipgrenade && s == WEAP_GRENADE) continue;
 			}
 
 			if(weapselect(d, s)) return;
@@ -78,10 +78,10 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAPON_GRENADE) && ((weap == WEAPON_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
-			d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
+			d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 			d->reloading = false;
 		}
 		else if(d == game::player1) playsound(S_DENIED, d->o, d);
@@ -123,7 +123,7 @@ namespace weapons
 		int offset = 1;
 		if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 		{
-			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD)) return;
+			if(!d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD)) return;
 			else offset = 0;
 		}
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
@@ -131,7 +131,7 @@ namespace weapons
 		{
 			if(!power)
 			{
-				if(d->weapstate[d->weapselect] != WPSTATE_POWER)
+				if(d->weapstate[d->weapselect] != WEAP_S_POWER)
 				{
 					if(d->attacking)
 					{
@@ -144,7 +144,7 @@ namespace weapons
 							d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 						}
 						#endif
-						d->setweapstate(d->weapselect, WPSTATE_POWER, 0, lastmillis);
+						d->setweapstate(d->weapselect, WEAP_S_POWER, 0, lastmillis);
 					}
 					else return;
 				}
@@ -167,7 +167,7 @@ namespace weapons
 			d->attacking = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
-		d->setweapstate(d->weapselect, WPSTATE_SHOOT, adelay, lastmillis);
+		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
 		d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 		d->totalshots += int(weaptype[d->weapselect].damage*damagescale)*weaptype[d->weapselect].rays;
 
@@ -206,7 +206,7 @@ namespace weapons
 			int spread = d == game::player1 && weaptype[d->weapselect].zooms && game::inzoom() ? 0 : weaptype[d->weapselect].spread;
 			if(spread) offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
-			if(d->weapselect == WEAPON_GRENADE) dest.z += from.dist(dest)/8;
+			if(d->weapselect == WEAP_GRENADE) dest.z += from.dist(dest)/8;
 			addshot;
 		}
 		projs::shootv(d->weapselect, power, from, vshots, d, true);

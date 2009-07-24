@@ -66,7 +66,7 @@ struct duelservmode : servmode
 				{
 					clientinfo *ci = clients[k];
 					ci->state.dropped.remove(i);
-					loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
+					loopj(WEAP_MAX) if(ci->state.entid[j] == i)
 						ci->state.entid[j] = -1;
 				}
 				sents[i].millis = gamemillis; // hijack its spawn time
