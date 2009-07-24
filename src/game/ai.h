@@ -1,6 +1,6 @@
 struct gameent;
 
-enum { AI_NONE = 0, AI_BOT, AI_BSOLDIER, AI_RSOLDIER, AI_YSOLDIER, AI_GSOLDIER, AI_MAX };
+enum { AI_NONE = 0, AI_BOT, AI_MAX };
 #define isaitype(a)	(a >= 0 && a <= AI_MAX-1)
 
 struct aitypes
@@ -11,10 +11,6 @@ struct aitypes
 aitypes aitype[] = {
 	{ AI_NONE,		"",				"" },
 	{ AI_BOT,		"bot",			"actors/player" },
-	{ AI_BSOLDIER,	"alpha",		"actors/player/alpha" },
-	{ AI_RSOLDIER,	"beta",			"actors/player/beta" },
-	{ AI_YSOLDIER,	"delta",		"actors/player/delta" },
-	{ AI_GSOLDIER,	"gamma",		"actors/player/gamma" },
 };
 #else
 extern aitypes aitype[];

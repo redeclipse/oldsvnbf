@@ -541,8 +541,8 @@ struct demoheader
 
 enum
 {
-	TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_DELTA, TEAM_GAMMA, TEAM_ENEMY, TEAM_MAX,
-	TEAM_FIRST = TEAM_ALPHA, TEAM_LAST = TEAM_GAMMA, TEAM_NUM = TEAM_LAST-(TEAM_FIRST-1)
+	TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_GAMMA, TEAM_DELTA, TEAM_ENEMY, TEAM_MAX,
+	TEAM_FIRST = TEAM_ALPHA, TEAM_LAST = TEAM_DELTA, TEAM_NUM = TEAM_LAST-(TEAM_FIRST-1)
 };
 struct teamtypes
 {
@@ -568,14 +568,14 @@ teamtypes teamtype[] = {
 		"flag/beta",	"teambeta",			"\fr"
 	},
 	{
-		TEAM_DELTA,		0xAAAA22,			"delta",
-		"actors/player/delta",				"actors/player/delta/vwep",
-		"flag/delta",	"teamdelta",		"\fy"
-	},
-	{
 		TEAM_GAMMA,		0x22AA22,			"gamma",
 		"actors/player/gamma",				"actors/player/gamma/vwep",
 		"flag/gamma",	"teamgamma",		"\fg"
+	},
+	{
+		TEAM_DELTA,		0xAAAA22,			"delta",
+		"actors/player/delta",				"actors/player/delta/vwep",
+		"flag/delta",	"teamdelta",		"\fy"
 	},
 	{
 		TEAM_ENEMY,		0x22AAAA,			"enemy",
