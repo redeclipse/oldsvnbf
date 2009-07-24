@@ -25,7 +25,7 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PISTOL, S_SG, S_SMG, S_GLFIRE, S_FLFIRE, S_PLASMA, S_RIFLE, S_PAINT,
+	S_RELOAD, S_SWITCH, S_PISTOL, S_SHOTGUN, S_SMG, S_GRENADE, S_FLAMER, S_PLASMA, S_RIFLE, S_PAINT,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_DENIED,
@@ -221,35 +221,35 @@ enum
 
 enum
 {
-	WEAPON_PISTOL = 0,
-	WEAPON_SG,
-	WEAPON_SMG,
-	WEAPON_FLAMER,
-	WEAPON_PLASMA,
-	WEAPON_RIFLE,
-	WEAPON_GRENADE,
-	WEAPON_TOTAL, // end of selectable weapon set
-	WEAPON_PAINT = WEAPON_TOTAL,
-	WEAPON_MAX // end of superimposed weapon set
+	WEAP_PISTOL = 0,
+	WEAP_SHOTGUN,
+	WEAP_SMG,
+	WEAP_FLAMER,
+	WEAP_PLASMA,
+	WEAP_RIFLE,
+	WEAP_GRENADE,
+	WEAP_TOTAL, // end of selectable weapon set
+	WEAP_PAINTGUN = WEAP_TOTAL,
+	WEAP_MAX // end of superimposed weapon set
 };
-#define isweap(a)		(a > -1 && a < WEAPON_MAX)
+#define isweap(a)		(a > -1 && a < WEAP_MAX)
 
 enum
 {
-	WEAPFLAG_NONE = 0,
-	WEAPFLAG_FORCED = 1<<0, // forced spawned
+	WEAP_F_NONE = 0,
+	WEAP_F_FORCED = 1<<0, // forced spawned
 };
 
 enum
 {
-	WPSTATE_IDLE = 0,
-	WPSTATE_SHOOT,
-	WPSTATE_RELOAD,
-	WPSTATE_POWER,
-	WPSTATE_SWITCH,
-	WPSTATE_PICKUP,
-	WPSTATE_WAIT,
-	WPSTATE_MAX
+	WEAP_S_IDLE = 0,
+	WEAP_S_SHOOT,
+	WEAP_S_RELOAD,
+	WEAP_S_POWER,
+	WEAP_S_SWITCH,
+	WEAP_S_PICKUP,
+	WEAP_S_WAIT,
+	WEAP_S_MAX
 };
 
 enum
@@ -276,10 +276,10 @@ struct weaptypes
 			*name, 		*text,	*item,						*vwep,						*proj;
 };
 #ifdef GAMESERVER
-weaptypes weaptype[WEAPON_MAX] =
+weaptypes weaptype[WEAP_MAX] =
 {
 	{
-		WEAPON_PISTOL,		ANIM_PISTOL,		-20,	15,			0x999999,
+		WEAP_PISTOL,		ANIM_PISTOL,		-20,	15,			0x999999,
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		100,    1000,	25,		2500,	0,		2000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -288,8 +288,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
-		WEAPON_SG,			ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
-			S_SG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
+		WEAP_SHOTGUN,		ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
+			S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	20,		2500,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		false,
@@ -297,7 +297,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
-		WEAPON_SMG,			ANIM_SMG,	-10,	5,					0xFFAA22,
+		WEAP_SMG,			ANIM_SMG,	-10,	5,					0xFFAA22,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	20,		3000,	0,		1000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
@@ -306,8 +306,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
-		WEAPON_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
-			S_FLFIRE,	S_BURN,		S_BURNING,	-1,
+		WEAP_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
+			S_FLAMER,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	15,		200,	0,		500,
 			0,		24,			1,		10,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
@@ -315,7 +315,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
-		WEAPON_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
+		WEAP_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		350,	1000,	30,		2000,	0,		1000,
 			0,		24,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
@@ -324,7 +324,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
-		WEAPON_RIFLE,		ANIM_RIFLE,			-30,  	20,			0xBB66FF,
+		WEAP_RIFLE,			ANIM_RIFLE,			-30,  	20,			0xBB66FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		750,	1500,	150,	40000,	0,		5000,
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -333,8 +333,8 @@ weaptypes weaptype[WEAPON_MAX] =
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
-		WEAPON_GRENADE,		ANIM_GRENADE,		-5,		5,		0x22FF22,
-			S_GLFIRE,	S_EXPLODE,	S_WHIRR,	S_TINK,
+		WEAP_GRENADE,		ANIM_GRENADE,		-5,		5,		0x22FF22,
+			S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	6000,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
@@ -342,7 +342,7 @@ weaptypes weaptype[WEAPON_MAX] =
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{
-		WEAPON_PAINT,		ANIM_PAINTGUN,		-5,  	5,			0xFF22AA,
+		WEAP_PAINTGUN,		ANIM_PAINTGUN,		-5,  	5,			0xFF22AA,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
@@ -459,7 +459,7 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
 
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAPON_PAINT : (m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
+#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAP_PAINTGUN : (m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
 #define m_spawndelay(a,b)	(!m_duke(a,b) ? (int((m_stf(a) ? GVAR(stfspawndelay) : (m_ctf(a) ? GVAR(ctfspawndelay) : GVAR(spawndelay)))*(m_insta(a, b) ? GVAR(instaspawnscale) : 1)*(m_paint(a, b) ? GVAR(paintspawnscale) : 1)*1000)) : 0)
 #define m_noitems(a,b)		(m_paint(a,b) || m_arena(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
@@ -469,7 +469,7 @@ extern gametypes gametype[], mutstype[];
 
 #define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
 #define weapcarry(a,b)		(b >= 0 && a != b && weaptype[a].reloads)
-#define weapattr(a,b)		(a != b ? a : (b != WEAPON_GRENADE ? WEAPON_GRENADE : WEAPON_PISTOL))
+#define weapattr(a,b)		(a != b ? a : (b != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
 
 enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMODE_STFMULTICTF, FLAGMODE_NONMULTICTF, FLAGMODE_MAX };
 #define chkflagmode(a,b,c)	(!c || (c == FLAGMODE_STF && m_stf(a)) || (c == FLAGMODE_CTF && m_ctf(a)) || (c == FLAGMODE_MULTICTF && m_ctf(a) && m_multi(a,b)) || (c == FLAGMODE_STFMULTICTF && (m_stf(a) || (m_ctf(a) && m_multi(a,b)))) || (c == FLAGMODE_NONMULTICTF && m_ctf(a) && !m_multi(a,b)))
@@ -666,8 +666,8 @@ enum
 // inherited by gameent and server clients
 struct gamestate
 {
-	int health, ammo[WEAPON_MAX], entid[WEAPON_MAX];
-	int lastweap, arenaweap, weapselect, weapload[WEAPON_MAX], weapstate[WEAPON_MAX], weapwait[WEAPON_MAX], weaplast[WEAPON_MAX];
+	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
+	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
 	int aitype, ownernum, skill, spree, points;
 
@@ -694,16 +694,16 @@ struct gamestate
 	int bestweap(int sweap, bool last = false)
 	{
 		if(last && hasweap(lastweap, sweap)) return lastweap;
-		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 3)) return i; // reloadable first
-		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 1)) return i; // carriable second
-		loopirev(WEAPON_MAX) if(hasweap(i, sweap, 0)) return i; // any just to bail us out
+		loopirev(WEAP_MAX) if(hasweap(i, sweap, 3)) return i; // reloadable first
+		loopirev(WEAP_MAX) if(hasweap(i, sweap, 1)) return i; // carriable second
+		loopirev(WEAP_MAX) if(hasweap(i, sweap, 0)) return i; // any just to bail us out
 		return weapselect;
 	}
 
 	int carry(int sweap)
 	{
 		int carry = 0;
-		loopi(WEAPON_MAX) if(hasweap(i, sweap, 1)) carry++;
+		loopi(WEAP_MAX) if(hasweap(i, sweap, 1)) carry++;
 		return carry;
 	}
 
@@ -711,7 +711,7 @@ struct gamestate
 	{
 		int weap = -1;
 		if(hasweap(weapselect, sweap, 1, exclude)) weap = weapselect;
-		else loopi(WEAPON_MAX) if(hasweap(i, sweap, 1, exclude))
+		else loopi(WEAP_MAX) if(hasweap(i, sweap, 1, exclude))
 		{
 			weap = i;
 			break;
@@ -721,9 +721,9 @@ struct gamestate
 
 	void weapreset(bool full = false)
 	{
-		loopi(WEAPON_MAX)
+		loopi(WEAP_MAX)
 		{
-			weapstate[i] = WPSTATE_IDLE;
+			weapstate[i] = WEAP_S_IDLE;
 			weapwait[i] = weaplast[i] = weapload[i] = 0;
 			if(full) ammo[i] = -1;
 			entid[i] = -1;
@@ -738,10 +738,10 @@ struct gamestate
 		weaplast[weap] = millis;
 	}
 
-	void weapswitch(int weap, int millis, int state = WPSTATE_SWITCH)
+	void weapswitch(int weap, int millis, int state = WEAP_S_SWITCH)
 	{
 		lastweap = weapselect;
-		setweapstate(lastweap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
+		setweapstate(lastweap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
 		weapselect = weap;
 		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
 	}
@@ -749,13 +749,13 @@ struct gamestate
 	bool weapwaited(int weap, int millis, int skip = -1)
 	{
 		if(skip >= 0 && weapstate[weap] == skip) return true;
-		if(!weapwait[weap] || weapstate[weap] == WPSTATE_IDLE || weapstate[weap] == WPSTATE_POWER) return true;
+		if(!weapwait[weap] || weapstate[weap] == WEAP_S_IDLE || weapstate[weap] == WEAP_S_POWER) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
 	int skipwait(int weap, int skip)
 	{
-		return skip != WPSTATE_RELOAD || ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add) ? skip : -1;
+		return skip != WEAP_S_RELOAD || ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add) ? skip : -1;
 	}
 
 	bool canswitch(int weap, int sweap, int millis, int skip = -1)
@@ -808,7 +808,7 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				weapswitch(attr1, millis, hasweap(attr1, sweap) ? (weapselect != attr1 ? WPSTATE_SWITCH : WPSTATE_RELOAD) : WPSTATE_PICKUP);
+				weapswitch(attr1, millis, hasweap(attr1, sweap) ? (weapselect != attr1 ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
 				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+weaptype[attr1].add, 1, weaptype[attr1].max);
 				entid[attr1] = id;
 				break;
@@ -840,12 +840,12 @@ struct gamestate
 	{
 		health = heal;
 		weapreset(true);
-		if(!isweap(sweap)) sweap = WEAPON_PISTOL;
+		if(!isweap(sweap)) sweap = WEAP_PISTOL;
 		ammo[sweap] = weaptype[sweap].reloads ? weaptype[sweap].add : weaptype[sweap].max;
 		if(arena)
 		{
 			int aweap = arenaweap;
-			if(aweap <= WEAPON_PISTOL || aweap >= WEAPON_TOTAL) aweap = rnd(WEAPON_TOTAL-1)+1; // pistol = random
+			if(aweap <= WEAP_PISTOL || aweap >= WEAP_TOTAL) aweap = rnd(WEAP_TOTAL-1)+1; // pistol = random
 			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
 			lastweap = weapselect = aweap;
 		}

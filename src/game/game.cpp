@@ -293,15 +293,15 @@ namespace game
 			if(*s >= '0' && *s <= '9') weap = atoi(s);
 			else
 			{
-				loopi(WEAPON_TOTAL) if(!strcasecmp(weaptype[i].name, s))
+				loopi(WEAP_TOTAL) if(!strcasecmp(weaptype[i].name, s))
 				{
 					weap = i;
 					break;
 				}
 			}
-			if(weap < WEAPON_PISTOL || weap >= WEAPON_TOTAL) weap = WEAPON_PISTOL;
+			if(weap < WEAP_PISTOL || weap >= WEAP_TOTAL) weap = WEAP_PISTOL;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutf("\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAPON_PISTOL ? weaptype[weap].name : "random weapons"));
+			conoutf("\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
 		}
 		else conoutf("\fronly available in arena");
 	}
@@ -456,10 +456,10 @@ namespace game
 	{
 		heightoffset(d, local);
 		checktags(d);
-		loopi(WEAPON_MAX) if(d->weapstate[i] != WPSTATE_IDLE)
+		loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
 		{
-			if(d->state != CS_ALIVE || (d->weapstate[i] != WPSTATE_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
-				d->setweapstate(i, WPSTATE_IDLE, 0, lastmillis);
+			if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
+				d->setweapstate(i, WEAP_S_IDLE, 0, lastmillis);
 		}
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
@@ -497,7 +497,7 @@ namespace game
 			{
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && !noblood && weap != WEAPON_PAINT && !m_paint(gamemode, mutators))
+				if(!kidmode && !noblood && weap != WEAP_PAINTGUN && !m_paint(gamemode, mutators))
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
@@ -549,7 +549,7 @@ namespace game
 
 		int anc = -1, dth = -1;
 		bool obliterated = false;
-		if(weap == WEAPON_PAINT || m_paint(gamemode, mutators)) dth = S_SPLAT;
+		if(weap == WEAP_PAINTGUN || m_paint(gamemode, mutators)) dth = S_SPLAT;
 		else
 		{
 			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators)*3/2;
@@ -569,7 +569,7 @@ namespace game
 			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
         	else if(flags && isweap(weap))
         	{
-				static const char *suicidenames[WEAPON_MAX] = {
+				static const char *suicidenames[WEAP_MAX] = {
 					"pulled off a seemingly impossible stunt",
 					"discovered buckshot bounces",
 					"got caught up in their own crossfire",
@@ -588,7 +588,7 @@ namespace game
         }
 		else
 		{
-			static const char *obitnames[3][WEAPON_MAX] = {
+			static const char *obitnames[3][WEAP_MAX] = {
 				{
 					"was pierced by",
 					"was filled with buckshot by",
@@ -1729,8 +1729,8 @@ namespace game
 				animdelay = d->weapwait[weap];
 				switch(d->weapstate[weap])
 				{
-					case WPSTATE_SWITCH:
-					case WPSTATE_PICKUP:
+					case WEAP_S_SWITCH:
+					case WEAP_S_PICKUP:
 					{
 						if(lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3)
 						{
@@ -1741,27 +1741,27 @@ namespace game
 						animflags = ANIM_SWITCH;
 						break;
 					}
-					case WPSTATE_POWER:
+					case WEAP_S_POWER:
 					{
 						if(weaptype[weap].power) animflags = weaptype[weap].anim+d->weapstate[weap];
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
-					case WPSTATE_SHOOT:
+					case WEAP_S_SHOOT:
 					{
 						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
-					case WPSTATE_RELOAD:
+					case WEAP_S_RELOAD:
 					{
 						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
 					}
-					case WPSTATE_IDLE: case WPSTATE_WAIT: default:
+					case WEAP_S_IDLE: case WEAP_S_WAIT: default:
 					{
 						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
 						animflags = weaptype[weap].anim|ANIM_LOOP;

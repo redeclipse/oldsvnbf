@@ -15,7 +15,7 @@ VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(overctfhealth, 0, 200, INT_MAX-1);
 VARG(overstfhealth, 0, 200, INT_MAX-1);
-VARG(maxcarry, 0, 2, WEAPON_MAX-1);
+VARG(maxcarry, 0, 2, WEAP_MAX-1);
 
 VARG(regendelay, 0, 3, INT_MAX-1);
 VARG(regenctfguard, 0, 1, INT_MAX-1);
@@ -47,8 +47,8 @@ VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
 
-VARG(spawnweapon, 0, WEAPON_PISTOL, WEAPON_TOTAL-1);
-VARG(instaspawnweapon, 0, WEAPON_RIFLE, WEAPON_TOTAL-1);
+VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
+VARG(instaspawnweapon, 0, WEAP_RIFLE, WEAP_TOTAL-1);
 
 VARG(spawndelay, 0, 3, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
 VARG(stfspawndelay, 0, 5, INT_MAX-1); // .. in stf

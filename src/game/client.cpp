@@ -842,14 +842,14 @@ namespace client
         {
         	d->weapreset(false);
             getint(p);
-            loopi(WEAPON_MAX) getint(p);
+            loopi(WEAP_MAX) getint(p);
         }
         else
         {
         	d->weapreset(true);
             d->lastweap = d->weapselect = getint(p);
             if(m_arena(game::gamemode, game::mutators)) d->arenaweap = d->weapselect;
-            loopi(WEAPON_MAX) d->ammo[i] = getint(p);
+            loopi(WEAP_MAX) d->ammo[i] = getint(p);
         }
     }
 
@@ -1044,7 +1044,7 @@ namespace client
 						}
 						case SPHY_POWER:
 						{
-							t->setweapstate(t->weapselect, WPSTATE_POWER, 0, lastmillis);
+							t->setweapstate(t->weapselect, WEAP_S_POWER, 0, lastmillis);
 							break;
 						}
 						default: break;
@@ -1235,7 +1235,7 @@ namespace client
 					}
 					gameent *s = game::getclient(scn);
 					if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
-					s->setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, lastmillis);
+					s->setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, lastmillis);
 					projs::shootv(weap, power, from, locs, s, false);
 					break;
 				}

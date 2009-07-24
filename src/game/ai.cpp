@@ -6,7 +6,7 @@ namespace ai
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
-    VAR(aiforcegun, -1, -1, WEAPON_TOTAL-1);
+    VAR(aiforcegun, -1, -1, WEAP_TOTAL-1);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
@@ -47,7 +47,7 @@ namespace ai
 		if(d->skill <= 100)
 		{
 			o.z -= e->height*(1.f/float(d->skill));
-			if(d->weapselect == WEAPON_PISTOL)
+			if(d->weapselect == WEAP_PISTOL)
 			{
 				o.x += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
 				o.y += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
@@ -422,11 +422,11 @@ namespace ai
 			b.next = lastmillis+m_speedtime(((111-d->skill)*10)+rnd((111-d->skill)*10));
 			if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
-			else if(forcegun >= 0 && forcegun < WEAPON_TOTAL) d->arenaweap = forcegun;
+			else if(forcegun >= 0 && forcegun < WEAP_TOTAL) d->arenaweap = forcegun;
 			else while(true)
 			{
-				d->arenaweap = rnd(WEAPON_TOTAL);
-				if(d->arenaweap != WEAPON_PISTOL || !rnd(d->skill)) break;
+				d->arenaweap = rnd(WEAP_TOTAL);
+				if(d->arenaweap != WEAP_PISTOL || !rnd(d->skill)) break;
 			}
 		}
 	}
@@ -702,7 +702,7 @@ namespace ai
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, dist))
 		{
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAPON_GRENADE ? 0.25f : 1e16f);
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAP_GRENADE ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
@@ -798,7 +798,7 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD) && hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
+					if(d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) && hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
 					{
 						d->attacking = true;
 						d->ai->lastaction = d->attacktime = lastmillis;
@@ -862,17 +862,17 @@ namespace ai
 	bool request(gameent *d, aistate &b)
 	{
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
-		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
+		if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
 		{
-			loopirev(WEAPON_MAX) if(i != WEAPON_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+			loopirev(WEAP_MAX) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 			{
 				client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
-				d->setweapstate(d->weapselect, WPSTATE_WAIT, WEAPSWITCHDELAY, lastmillis);
+				d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 				d->ai->lastaction = lastmillis;
 				break;
 			}
 		}
-		if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 		{
 			static vector<actitem> actitems;
 			actitems.setsizenodelete(0);
@@ -913,7 +913,7 @@ namespace ai
 						{
 							if(m_noitems(game::gamemode, game::mutators)) continue;
 							int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-							if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD)) switch(e.type)
+							if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD)) switch(e.type)
 							{
 								case WEAPON:
 								{
@@ -932,7 +932,7 @@ namespace ai
 			}
 		}
 
-		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WPSTATE_RELOAD)))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(); float dist = 0;
@@ -940,7 +940,7 @@ namespace ai
 			if(e) dist = dp.squaredist(getaimpos(d, e));
 			if(!isweap(weap) || (e && !weaprange(d, weap, dist)))
 			{
-				loopirev(WEAPON_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(d, i, dist)))
+				loopirev(WEAP_MAX) if(d->hasweap(i, sweap) && (!e || weaprange(d, i, dist)))
 				{
 					weap = i;
 					break;

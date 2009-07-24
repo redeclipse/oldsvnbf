@@ -144,7 +144,7 @@ namespace server
 	{
 		vec o;
 		int state;
-        projectilestate dropped, weapshots[WEAPON_MAX];
+        projectilestate dropped, weapshots[WEAP_MAX];
 		int score, frags, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
 
@@ -159,7 +159,7 @@ namespace server
 		{
 			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
-            loopi(WEAPON_MAX) weapshots[i].reset();
+            loopi(WEAP_MAX) weapshots[i].reset();
 			if(!change) score = timeplayed = 0;
 			else gamestate::mapchange();
             frags = flags = deaths = teamkills = shotdamage = damage = 0;
@@ -721,7 +721,7 @@ namespace server
 				clientinfo *ci = clients[k];
 				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
 					return true;
-				else loopj(WEAPON_MAX) if(ci->state.entid[j] == i) return spawned;
+				else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
 		}
 		if(spawned && timeit && gamemillis < sents[i].millis)
@@ -849,7 +849,7 @@ namespace server
 		servstate &gs = ci->state;
 		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), m_arena(gamemode, mutators));
 		int spawn = pickspawn(ci);
-		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0]);
+		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
@@ -861,7 +861,7 @@ namespace server
         putint(p, gs.frags);
         putint(p, gs.health);
         putint(p, gs.weapselect);
-        loopi(WEAPON_MAX) putint(p, gs.ammo[i]);
+        loopi(WEAP_MAX) putint(p, gs.ammo[i]);
     }
 
 	void relayf(int r, const char *s, ...)
@@ -1389,19 +1389,19 @@ namespace server
 		servstate &ts = ci->state;
 		vector<droplist> drop;
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAPON_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAPON_GRENADE))))
+		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
 		{
-			ts.weapshots[WEAPON_GRENADE].add(-1);
+			ts.weapshots[WEAP_GRENADE].add(-1);
 			droplist &d = drop.add();
-			d.weap = WEAPON_GRENADE;
+			d.weap = WEAP_GRENADE;
 			d.ent = -1;
 		}
 		if(!m_noitems(gamemode, mutators))
 		{
-			loopi(WEAPON_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
+			loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 			{
 				sents[ts.entid[i]].millis = gamemillis;
-				if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAPFLAG_FORCED))
+				if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAP_F_FORCED))
 				{
 					ts.dropped.add(ts.entid[i]);
 					droplist &d = drop.add();
@@ -1711,7 +1711,7 @@ namespace server
     void sendresume(clientinfo *ci)
     {
 		servstate &gs = ci->state;
-		sendf(-1, 1, "ri6vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.weapselect, WEAPON_MAX, &gs.ammo[0], -1);
+		sendf(-1, 1, "ri6vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
     }
 
     void sendinitc2s(clientinfo *ci)
@@ -1979,7 +1979,7 @@ namespace server
 		}
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && weap != WEAPON_PAINT && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor))
+		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor))
 			realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
@@ -2101,7 +2101,7 @@ namespace server
 		}
 		if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis))
 		{
-			if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
+			if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
 			{
 				takeammo(ci, weap, 1);
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
@@ -2115,7 +2115,7 @@ namespace server
 			}
 		}
 		else takeammo(ci, weap, 1);
-		gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
+		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, millis);
 		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
 			weap, power, from[0], from[1], from[2],
 					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(),
@@ -2135,7 +2135,7 @@ namespace server
 		}
 		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis))
 		{
-			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WPSTATE_RELOAD))
+			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
 				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
@@ -2161,27 +2161,27 @@ namespace server
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!gs.hasweap(weap, sweap, weap == WEAPON_GRENADE ? 2 : 0) || (weap != WEAPON_GRENADE && m_noitems(gamemode, mutators)))
+		if(!gs.hasweap(weap, sweap, weap == WEAP_GRENADE ? 2 : 0) || (weap != WEAP_GRENADE && m_noitems(gamemode, mutators)))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
 		}
-		if(weap == WEAPON_GRENADE)
+		if(weap == WEAP_GRENADE)
 		{
 			int nweap = -1; // try to keep this weapon
 			gs.entid[weap] = -1;
-			gs.weapshots[WEAPON_GRENADE].add(-1);
-			takeammo(ci, WEAPON_GRENADE, 1);
+			gs.weapshots[WEAP_GRENADE].add(-1);
+			takeammo(ci, WEAP_GRENADE, 1);
 			if(!gs.hasweap(weap, sweap))
 			{
 				nweap = gs.bestweap(sweap, true);
 				gs.weapswitch(nweap, millis);
 			}
-			else gs.setweapstate(weap, WPSTATE_SHOOT, weaptype[weap].adelay, millis);
+			else gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, millis);
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
-		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAPFLAG_FORCED))
+		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAP_F_FORCED))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
 			return;
@@ -2210,7 +2210,7 @@ namespace server
 			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
-		gs.setweapstate(weap, WPSTATE_RELOAD, weaptype[weap].rdelay, millis);
+		gs.setweapstate(weap, WEAP_S_RELOAD, weaptype[weap].rdelay, millis);
 		int oldammo = gs.ammo[weap];
 		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
 		gs.weapload[weap] = gs.ammo[weap]-oldammo;
@@ -2228,7 +2228,7 @@ namespace server
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attr[0], sweap) : sents[ent].attr[0];
 		if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis))
 		{
-			if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis, WPSTATE_RELOAD))
+			if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis, WEAP_S_RELOAD))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
 				return;
@@ -2240,7 +2240,7 @@ namespace server
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
 		}
-		if(!sents[ent].spawned && !(sents[ent].attr[1]&WEAPFLAG_FORCED))
+		if(!sents[ent].spawned && !(sents[ent].attr[1]&WEAP_F_FORCED))
 		{
 			bool found = false;
 			loopv(clients)
@@ -2265,20 +2265,20 @@ namespace server
 		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
-			gs.setweapstate(weap, WPSTATE_SWITCH, WEAPSWITCHDELAY, millis);
+			gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
 			gs.ammo[weap] = gs.entid[weap] = -1;
 		}
 		gs.useitem(ent, sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);
-			if(!(sents[dropped].attr[1]&WEAPFLAG_FORCED))
+			if(!(sents[dropped].attr[1]&WEAP_F_FORCED))
 			{
 				sents[dropped].spawned = false;
 				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 			}
 		}
-		if(!(sents[ent].attr[1]&WEAPFLAG_FORCED))
+		if(!(sents[ent].attr[1]&WEAP_F_FORCED))
 		{
 			sents[ent].spawned = false;
 			sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
@@ -2418,7 +2418,7 @@ namespace server
 					{
 						clientinfo *ci = clients[k];
 						ci->state.dropped.remove(i);
-						loopj(WEAPON_MAX) if(ci->state.entid[j] == i)
+						loopj(WEAP_MAX) if(ci->state.entid[j] == i)
 							ci->state.entid[j] = -1;
 					}
 					sents[i].spawned = true;
@@ -2895,7 +2895,7 @@ namespace server
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
 					//if(val && ci->state.state != CS_ALIVE) break;
 					ci->state.dropped.reset();
-					loopk(WEAPON_MAX) ci->state.weapshots[k].reset();
+					loopk(WEAP_MAX) ci->state.weapshots[k].reset();
 					ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 					if(val)
 					{
@@ -3421,7 +3421,7 @@ namespace server
 					{
 						clientinfo *cq = clients[k];
 						cq->state.dropped.remove(n);
-						loopj(WEAPON_MAX) if(cq->state.entid[j] == n)
+						loopj(WEAP_MAX) if(cq->state.entid[j] == n)
 							cq->state.entid[j] = -1;
 					}
 					if(enttype[sents[n].type].usetype == EU_ITEM || sents[n].type == TRIGGER)

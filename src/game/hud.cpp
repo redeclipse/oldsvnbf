@@ -334,7 +334,7 @@ namespace hud
 		float r = 1.f, g = 1.f, b = 1.f, amt = 0.f;
 		switch(game::player1->weapstate[weap])
 		{
-			case WPSTATE_POWER:
+			case WEAP_S_POWER:
 			{
 				amt = clamp(float(millis)/float(weaptype[weap].power), 0.f, 1.f);
 				colourskew(r, g, b, 1.f-amt);
@@ -350,7 +350,7 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
-		const char *cliptexs[WEAPON_MAX] = {
+		const char *cliptexs[WEAP_MAX] = {
 			pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
 			paintguncliptex
@@ -364,7 +364,7 @@ namespace hud
 		int interval = lastmillis-game::player1->weaplast[weap];
 		if(interval < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 		{
-			case WPSTATE_SHOOT:
+			case WEAP_S_SHOOT:
 			{
 				int check = game::player1->weapwait[weap] > 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
 				if(interval < check) fade *= 1.f-clamp(float(interval)/float(check), 0.f, 1.f);
@@ -372,7 +372,7 @@ namespace hud
 				//fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
 				break;
 			}
-			case WPSTATE_RELOAD:
+			case WEAP_S_RELOAD:
 			{
 				if(game::player1->weapload[weap] > 0)
 				{
@@ -383,7 +383,7 @@ namespace hud
 				}
 				// falls through
 			}
-			case WPSTATE_PICKUP: case WPSTATE_SWITCH:
+			case WEAP_S_PICKUP: case WEAP_S_SWITCH:
 			{
 				fade *= clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
 				break;
@@ -392,7 +392,7 @@ namespace hud
 		}
 		switch(weap)
 		{
-			case WEAPON_PISTOL: case WEAPON_FLAMER: case WEAPON_SMG: case WEAPON_PLASMA: s *= 0.85f; break;
+			case WEAP_PISTOL: case WEAP_FLAMER: case WEAP_SMG: case WEAP_PLASMA: s *= 0.85f; break;
 			default: break;
 		}
 		float r = clipcolour, g = clipcolour, b = clipcolour;
@@ -407,14 +407,14 @@ namespace hud
 		glBindTexture(GL_TEXTURE_2D, t->id);
 		if(interval < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 		{
-			case WPSTATE_SHOOT:
+			case WEAP_S_SHOOT:
 			{
 				switch(weap)
 				{
-					case WEAPON_FLAMER:
+					case WEAP_FLAMER:
 						drawslice(ammo/float(maxammo), 1/float(maxammo), x, y, s);
 						break;
-					case WEAPON_GRENADE:
+					case WEAP_GRENADE:
 						drawslice(0.25f/maxammo+ammo/float(maxammo), 1/float(maxammo), x, y, s);
 						break;
 					default:
@@ -424,17 +424,17 @@ namespace hud
 				glColor4f(r, g, b, clipblend*hudblend);
 				break;
 			}
-			case WPSTATE_RELOAD:
+			case WEAP_S_RELOAD:
 			{
 				if(game::player1->weapload[weap] > 0)
 				{
 					ammo -= game::player1->weapload[weap];
 					switch(weap)
 					{
-						case WEAPON_FLAMER:
+						case WEAP_FLAMER:
 							drawslice(ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
 							break;
-						case WEAPON_GRENADE:
+						case WEAP_GRENADE:
 							drawslice(0.25f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
 							break;
 						default:
@@ -449,10 +449,10 @@ namespace hud
 		}
 		if(ammo > 0) switch(weap)
 		{
-			case WEAPON_FLAMER:
+			case WEAP_FLAMER:
 				drawslice(0, ammo/float(maxammo), x, y, s);
 				break;
-			case WEAPON_GRENADE:
+			case WEAP_GRENADE:
 				drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
 				break;
 			default:
@@ -513,7 +513,7 @@ namespace hud
 			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
 			{
 				if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
-				if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WPSTATE_POWER)
+				if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WEAP_S_POWER)
 					drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
 			if(game::mousestyle() >= 1) // renders differently
@@ -654,7 +654,7 @@ namespace hud
 					if(shownotices >= 3 && game::allowmove(game::player1))
 					{
 						pushfont("default");
-						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, WPSTATE_RELOAD)))
+						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, WEAP_S_RELOAD)))
 						{
 							static vector<actitem> actitems;
 							actitems.setsizenodelete(0);
@@ -688,7 +688,7 @@ namespace hud
 										if(enttype[e.type].usetype == EU_ITEM)
 										{
 											int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-											if(game::player1->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WPSTATE_RELOAD))
+											if(game::player1->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
 											{
 												if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
 													weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
@@ -718,7 +718,7 @@ namespace hud
 								SEARCHBINDCACHE(zoomkey)("zoom", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "prone");
 							}
-							if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WPSTATE_RELOAD))
+							if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 							{
 								SEARCHBINDCACHE(attackkey)("attack", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
@@ -1045,7 +1045,7 @@ namespace hud
 		{
 			case WEAPON:
 			{
-				const char *weaptexs[WEAPON_MAX] = {
+				const char *weaptexs[WEAP_MAX] = {
 					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
 					paintguntex
 				};
@@ -1084,22 +1084,22 @@ namespace hud
 			}
 			if(inventoryammo)
 			{
-				const char *hudtexs[WEAPON_MAX] = {
+				const char *hudtexs[WEAP_MAX] = {
 					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
 					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
-				loopi(WEAPON_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])
+				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])
 				{
 					float fade = blend*inventoryblend, size = s, skew = 1.f;
-					if(game::player1->weapstate[i] == WPSTATE_SWITCH || game::player1->weapstate[i] == WPSTATE_PICKUP)
+					if(game::player1->weapstate[i] == WEAP_S_SWITCH || game::player1->weapstate[i] == WEAP_S_PICKUP)
 					{
 						float amt = clamp(float(lastmillis-game::player1->weaplast[i])/float(game::player1->weapwait[i]), 0.f, 1.f);
 						if(i != game::player1->weapselect) skew = game::player1->hasweap(i, sweap) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt;
-						else skew = game::player1->weapstate[i] == WPSTATE_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew));
+						else skew = game::player1->weapstate[i] == WEAP_S_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew));
 					}
 					else if(i != game::player1->weapselect) skew = inventoryskew;
-					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WPSTATE_PICKUP);
+					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WEAP_S_PICKUP);
 					float r = 1.f, g = 1.f, b = 1.f;
 					if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
 					else if(inventorycolour)
@@ -1114,11 +1114,11 @@ namespace hud
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
 					if(inventoryweapids && (instate || inventoryweapids > 1))
 					{
-						static string weapids[WEAPON_MAX];
+						static string weapids[WEAP_MAX];
 						static int lastweapids = -1;
 						if(lastweapids != changedkeys)
 						{
-							loopj(WEAPON_MAX)
+							loopj(WEAP_MAX)
 							{
 								defformatstring(action)("weapon %d", j);
 								const char *actkey = searchbind(action, 0);
@@ -1316,7 +1316,7 @@ namespace hud
         damagecompassdir &dir = damagecompassdirs[d];
         dir.damage += max(n, damagecompassmin)/float(damagecompassmax);
         if(dir.damage > 1) dir.damage = 1;
-        if(weap == WEAPON_PAINT)
+        if(weap == WEAP_PAINTGUN)
         {
             int col = paintcolours[actor->type == ENT_PLAYER && m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
             dir.color = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
