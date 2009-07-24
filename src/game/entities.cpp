@@ -18,7 +18,7 @@ namespace entities
 	{
 		switch(e.type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT:
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT: case PUSHER:
 				return m_speedtime(1000); break;
 			default: break;
 		}
@@ -652,7 +652,7 @@ namespace entities
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 									d->vel.v[k] = dir.v[k];
 							}
-							if(lastmillis-e.lastuse >= triggertime(e)/2) e.lastuse = e.lastemit = lastmillis;
+							if(lastmillis-e.lastuse >= triggertime(e)) e.lastuse = e.lastemit = lastmillis;
 							execlink(d, n, true);
 							break;
 						}
@@ -1887,7 +1887,7 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && e.links.empty() && (!e.lastemit || lastmillis-e.lastemit >= triggertime(e)) && mapsounds.inrange(e.attr[0]) && !issound(e.schan))
+			if(e.type == MAPSOUND && e.links.empty() && mapsounds.inrange(e.attr[0]) && !issound(e.schan))
 			{
 				int flags = SND_MAP|SND_LOOP; // ambient sounds loop
 				if(e.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
