@@ -5,10 +5,10 @@ VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(missionmaps, "mpspbf1 mpspbf2");
-SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar eight enigma fatality forge gladiator hollow nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
-SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma fatality forge gladiator hollow refuge nova panic rivals smouldering tower tranquility warehouse warground wet venus");
-SVARG(mctfmaps, "bloodgrounds deadsimple enigma fatality wet refuge");
-SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma fatality forge gladiator hollow nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
+SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar eight enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
+SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
+SVARG(mctfmaps, "bloodgrounds deadsimple enigma wet refuge");
+SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 
