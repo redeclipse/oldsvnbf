@@ -983,26 +983,12 @@ namespace projs
         }
 
 		float dist = proj.o.dist(pos), diff = dist/(4*RAD);
-		#define adddiff(q) { q += diff; if(q >= 360) q = fmod(q, 360.0f); }
 		if(!blocked) proj.movement += dist;
-		if(proj.projtype == PRJ_SHOT)
+		if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_GIBS)
 		{
-			switch(proj.weap)
-			{
-				case WEAP_GRENADE:
-				{
-					adddiff(proj.yaw);
-					adddiff(proj.pitch);
-					adddiff(proj.roll);
-					break;
-				}
-				default:
-				{
-					vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, proj.pitch);
-					adddiff(proj.roll);
-					break;
-				}
-			}
+			float dummy = 0;
+			vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, dummy);
+			proj.pitch -= diff; while(proj.pitch < 0) proj.pitch += 360.f;
 		}
 		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
 		{
