@@ -1457,7 +1457,7 @@ void filltexlist()
 	}
 }
 
-void edittex(int i, bool save = true)
+void edittex(int i, bool save = true, bool edit = true)
 {
     lasttex = i;
     lasttexmillis = totalmillis;
@@ -1465,7 +1465,7 @@ void edittex(int i, bool save = true)
     {
         loopvj(texmru) if(texmru[j]==lasttex) { curtexindex = j; break; }
     }
-    mpedittex(i, allfaces, sel, true);
+    if(edit) mpedittex(i, allfaces, sel, true);
 }
 
 void edittex_(int *dir)
@@ -1685,11 +1685,47 @@ void editmat(char *name)
 
 COMMAND(editmat, "s");
 
-VARP(texguieditor, 0, 2, 2);
+int duplicateslot(Slot &s)
+{
+	if(s.shader) { defformatstring(t)("setshader %s", s.shader->name); execute(t); }
+	loopvj(s.params)
+	{
+		defformatstring(t)("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+		if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) { defformatstring(u)(" \"%s\"", s.params[j].name); concatstring(t, u); }
+		else { defformatstring(u)(" %d", s.params[j].index); concatstring(t, u); }
+		loopk(4) { defformatstring(u)(" %f", s.params[j].val[k]); concatstring(t, u); }
+		execute(t);
+	}
+    loopvj(s.sts)
+    {
+        defformatstring(t)("texture %s \"%s\"", findtexturename(s.sts[j].type), s.sts[j].lname);
+        if(!j) { defformatstring(u)(" %d %d %d %f", s.rotation, s.xoffset, s.yoffset, s.scale); concatstring(t, u); }
+        execute(t);
+    }
+	if(s.scrollS != 0.f || s.scrollT != 0.f) { defformatstring(t)("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f); execute(t); }
+	if(s.layer != 0)
+	{
+		if(s.layermaskname) { defformatstring(t)("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale); execute(t); }
+		else { defformatstring(t)("texlayer %d\n", s.layer); execute(t); }
+	}
+	if(s.autograss) { defformatstring(t)("autograss \"%s\"\n", s.autograss); execute(t); }
+	return slots.length()-1;
+}
+
+void texduplicate()
+{
+	cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
+	int tex = !c.children && !isempty(c) ? c.texture[sel.orient] : lasttex;
+	edittex(duplicateslot(lookuptexture(tex, false)), true, false);
+}
+
+COMMAND(texduplicate, "");
+
+VARP(texguieditor, 0, 1, 2);
 VARP(texguiautoclose, 0, 1, 1);
 
-VARP(thumbwidth, 0, 10, 1000);
-VARP(thumbheight, 0, 6, 1000);
+VARP(thumbwidth, 0, 16, 1000);
+VARP(thumbheight, 0, 8, 1000);
 VARP(thumbtime, 0, 50, 1000);
 FVARP(thumbsize, 0, 2, 6);
 static int lastthumbnail = 0;
@@ -1730,23 +1766,15 @@ struct texturegui : g3d_callback
 
 			g.pushlist();
 			g.strut(134);
-			defformatstring(title)("texture slot #%d", menutex);
-			g.title(title, 0xFFFFAA);
+			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFAA);
 			g.space(1);
 			g.pushlist();
-			if(g.button("<prev", 0x44FFAA) & G3D_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
-			g.space(2);
-			if(g.button("next>", 0xAAFF44) & G3D_UP) menutex = menutex < curtexnum ? menutex+1 : 0;
-			g.space(2);
-			if(g.button("browse", 0xFF88FF) & G3D_UP) menutex = -1;
-			g.space(2);
-			if(g.button("close", 0xFF6666) & G3D_UP) menuon = false;
-			g.space(2);
-			if(g.button("select", 0x66FF66) & G3D_UP)
-			{
-				edittex(menutex);
-				if(texguiautoclose) menuon = false;
-			}
+			if(g.button("<prev    ", 0x44FFAA) & G3D_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
+			if(g.button("next>    ", 0xAAFF44) & G3D_UP) menutex = menutex < curtexnum ? menutex+1 : 0;
+			if(g.button("browse   ", 0xFF88FF) & G3D_UP) menutex = -1;
+			if(g.button("close    ", 0xFF6666) & G3D_UP) menuon = false;
+			if(g.button("select   ", 0x66FF66) & G3D_UP) { edittex(menutex); if(texguiautoclose) menuon = false; }
+			if(g.button("duplicate", 0x888888) & G3D_UP) { menutex = duplicateslot(slot); }
 			g.poplist();
 			if(!slot.sts.empty())
 			{
@@ -1886,11 +1914,7 @@ struct texturegui : g3d_callback
 							if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture))
 							{
 								if(texguieditor) menutex = ti;
-								else
-								{
-									edittex(ti);
-									if(texguiautoclose) menuon = false;
-								}
+								else { edittex(ti); if(texguiautoclose) menuon = false; }
 							}
 						}
 						else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
