@@ -643,7 +643,7 @@ namespace entities
 						case PUSHER:
 						{
 							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(m_speedscale(10.f));
-							if(d->ai) d->ai->dontpropel = true;
+							if(d->ai) d->ai->becareful = true;
 							d->falling = vec(0, 0, 0);
 							d->physstate = PHYS_FALL;
 							d->timeinair = 1;
@@ -723,7 +723,7 @@ namespace entities
 			}
 			if(tried && d->useaction && d == game::player1)
 			{
-				playsound(S_DENIED, d->o, d);
+				playsound(S_ERROR, d->o, d);
 				d->useaction = false;
 			}
 		}

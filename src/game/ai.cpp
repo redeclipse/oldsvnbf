@@ -715,13 +715,22 @@ namespace ai
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
 			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2,
 			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
-			propel = offground && !d->ai->dontpropel && (jumper || propeller) && physics::canimpulse(d) && lastmillis >= d->ai->propelseed;
+			propel = offground && !d->ai->becareful && (jumper || propeller) && physics::canimpulse(d) && lastmillis >= d->ai->propelseed;
 		if(jump)
 		{
 			vec old = d->o;
 			d->o = vec(pos).add(vec(0, 0, d->height));
 			if(!collide(d, vec(0, 0, 1))) jump = false;
 			d->o = old;
+			if(jump)
+			{
+				loopv(entities::ents) if(entities::ents[i]->type == PUSHER)
+				{
+					gameentity &e = *(gameentity *)entities::ents[i];
+					float radius = (e.attr[3] ? e.attr[3] : enttype[e.type].radius)*1.5f; radius *= radius;
+					if(e.o.squaredist(pos) <= radius) { jump = propel = false; break; }
+				}
+			}
 		}
 		if(jump || propel)
 		{
@@ -798,7 +807,8 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) && hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
+					if(!d->ai->becareful && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) &&
+						hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
 					{
 						d->attacking = true;
 						d->ai->lastaction = d->attacktime = lastmillis;
@@ -831,7 +841,7 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(d->ai->dontmove) d->move = d->strafe = 0;
+		if(d->ai->dontmove || d->ai->becareful) d->move = d->strafe = 0;
 		else
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1001,7 +1011,7 @@ namespace ai
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
 				if(!ladder && d->onladder) d->ai->jumpseed = d->ai->propelseed = lastmillis;
-				if(d->ai->dontpropel && (!d->timeinair || d->vel.z <= physics::gravityforce(d)/10.f)) d->ai->dontpropel = false;
+				if(d->ai->becareful && (!d->timeinair || d->vel.z <= physics::gravityforce(d)/10.f)) d->ai->becareful = false;
 				entities::checkitems(d);
             }
         }

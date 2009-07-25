@@ -13,7 +13,7 @@ namespace ctf
 			vec o(vec(d->o).add(dir));
 			client::addmsg(SV_DROPFLAG, "ri4", game::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
 		}
-		else if(d == game::player1) playsound(S_DENIED, d->o, d);
+		else if(d == game::player1) playsound(S_ERROR, d->o, d);
 	}
    	ICOMMAND(dropflag, "", (), dropflag(game::player1));
 
