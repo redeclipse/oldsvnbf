@@ -71,7 +71,7 @@ namespace weapons
 			if(weapselect(d, s)) return;
 			else if(a >= 0) break;
 		}
-		if(d == game::player1) playsound(S_DENIED, d->o, d);
+		if(d == game::player1) playsound(S_ERROR, d->o, d);
 	}
 	ICOMMAND(weapon, "ss", (char *a, char *b), weaponswitch(game::player1, *a ? atoi(a) : -1, *b ? atoi(b) : -1));
 
@@ -84,7 +84,7 @@ namespace weapons
 			d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 			d->reloading = false;
 		}
-		else if(d == game::player1) playsound(S_DENIED, d->o, d);
+		else if(d == game::player1) playsound(S_ERROR, d->o, d);
 	}
 	ICOMMAND(drop, "s", (char *n), drop(game::player1, *n ? atoi(n) : -1));
 
