@@ -118,15 +118,15 @@ namespace hud
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
-	FVARP(inventorysize, 0, 0.05f, 1000);
-	FVARP(inventoryskew, 0, 0.65f, 1);
-	FVARP(inventoryblend, 0, 0.55f, 1);
+	FVARP(inventorysize, 0, 0.06f, 1000);
+	FVARP(inventoryskew, 0, 0.6f, 1);
+	FVARP(inventoryblend, 0, 0.6f, 1);
 
 	VARP(inventoryedit, 0, 1, 1);
 	FVARP(inventoryeditblend, 0, 1.f, 1);
 	FVARP(inventoryeditskew, 0, 0.65f, 1);
 
-	VARP(inventoryhealth, 0, 2, 3);
+	VARP(inventoryhealth, 0, 3, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
@@ -1083,9 +1083,9 @@ namespace hud
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int((x+(left ? size/2 : 0))*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
+		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
 		defvformatstring(str, text, text);
-		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_CENTER_UP : TEXT_RIGHT_UP, -1, -1, str);
+		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_UP : TEXT_RIGHT_UP, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
 	}
@@ -1122,9 +1122,9 @@ namespace hud
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
 			const char *itext = itemtex(e.type, e.attr[0]);
-			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "sub", "%s (%d)", enttype[e.type].name, n);
-			drawitemsubtext(x, y-int(s/2*skew), s, false, skew, "sub", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-			drawitemsubtext(x, y, s, false, skew, "sub", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
+			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "%s (%d)", enttype[e.type].name, n);
+			drawitemsubtext(x, y-int(s/2*skew), s, false, skew, "default", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+			drawitemsubtext(x, y, s, false, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
 			return ty;
 		}
 		return 0;
@@ -1138,7 +1138,7 @@ namespace hud
 			if(inventorystatus >= 2)
 			{
 				if(game::player1->team)
-					sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+					sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "default", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 				else sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			}
 			if(inventoryammo)
@@ -1169,7 +1169,7 @@ namespace hud
 					}
 					int oldy = y-sy;
 					if(inventoryammo && (instate || inventoryammo > 1) && game::player1->hasweap(i, sweap))
-						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "default", "%d", game::player1->ammo[i]);
+						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "super", "%d", game::player1->ammo[i]);
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
 					if(inventoryweapids && (instate || inventoryweapids > 1))
 					{
@@ -1186,7 +1186,7 @@ namespace hud
 							}
 							lastweapids = changedkeys;
 						}
-						drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+						drawitemsubtext(x, oldy, size, false, skew, "default", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 					}
 				}
 			}
@@ -1251,9 +1251,9 @@ namespace hud
 				float health, r, g, b;
 			} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
 			glBegin(GL_QUAD_STRIP);
+			int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
 			float health = clamp(game::player1->health/float(m_maxhealth(game::gamemode, game::mutators)), 0.0f, 1.0f);
 			const float margin = 0.1f;
-			int sx = x+glow, sy = y-size+glow, sw = width-glow*2, sh = size-glow*2;
 			loopi(4)
 			{
 				const healthbarstep &step = steps[i];
@@ -1265,8 +1265,8 @@ namespace hud
 							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
 							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
 							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-						glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(sx, sy + hoff*sh);
-						glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(sx + sw, sy + hoff*sh);
+						glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
+						glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
 					}
 					if(step.health > health + margin)
 					{
@@ -1274,18 +1274,23 @@ namespace hud
 							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
 							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
 							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-						glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(sx, sy + hoff*sh);
-						glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(sx + sw, sy + hoff*sh);
+						glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
+						glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
 						break;
 					}
 				}
 				float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
 				if(step.health > health) hfade *= 1 - (step.health - health)/margin;
-				glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(sx, sy + off*sh);
-				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(sx + sw, sy + off*sh);
+				glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(cx, cy + off*ch);
+				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(cx + cw, cy + off*ch);
 			}
 			glEnd();
-			if(inventoryhealth >= 2) drawitemsubtext(x, y, width, true, 1.f, "emphasis", fade, "%d", max(game::player1->health, 0));
+			if(inventoryhealth >= 2)
+			{
+				pushfont("super");
+				draw_textx("%d", x+width/2, y-size, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, max(game::player1->health, 0));
+				popfont();
+			}
 		}
 		else if(inventoryhealth >= 3)
 		{
@@ -1297,7 +1302,12 @@ namespace hud
 				case CS_SPECTATOR: state = "\faSPEC"; break;
 				case CS_DEAD: default: state = "\frDEAD"; break;
 			}
-			if(*state) drawitemsubtext(x, y, width, true, 1.f, "sub", fade, "%s", state);
+			if(*state)
+			{
+				pushfont("default");
+				draw_textx("%s", x+width/2, y-(pulse || glow ? size : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
+				popfont();
+			}
 		}
 		return size;
 	}
