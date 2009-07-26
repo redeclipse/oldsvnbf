@@ -1149,7 +1149,7 @@ namespace weapons
 namespace hud
 {
 	extern char *bliptex, *cardtex, *flagtex;
-	extern int hudwidth, hudsize, damageresidue, radarflagnames, inventorygame;
+	extern int hudwidth, hudsize, damageresidue, quakewobble, radarflagnames, inventorygame;
 	extern float inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
@@ -1172,7 +1172,7 @@ namespace hud
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);
 	extern int drawhealth(int x, int y, int s, float blend = 1.f);
 	extern void drawinventory(int w, int h, int edge, float blend = 1.f);
-	extern void damagecompass(int n, const vec &loc, gameent *actor, int weap);
+	extern void damage(int n, const vec &loc, gameent *actor, int weap);
 	extern const char *teamtex(int team = TEAM_NEUTRAL);
 	extern const char *itemtex(int type, int stype);
 }
@@ -1180,7 +1180,7 @@ namespace hud
 namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			quakewobble, lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
+			lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
 				noblood, fogdist, announcefilter;
 	extern bool intermission, zooming;
 

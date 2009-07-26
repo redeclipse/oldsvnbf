@@ -2,9 +2,16 @@
 namespace hud
 {
 	const int NUMSTATS = 12;
-	int damageresidue = 0, hudwidth = 0, laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	int damageresidue = 0, quakewobble = 0, hudwidth = 0,
+		laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	vector<int> teamkills;
 	scoreboard sb;
+    struct damageloc
+    {
+        int outtime, damage; vec dir, colour;
+        damageloc(int t, int d, const vec &p, const vec &c) : outtime(t), damage(d), dir(p), colour(c) {}
+    };
+    vector<damageloc> damagelocs;
 
 	VARP(showhud, 0, 1, 1);
 	VARP(hudsize, 0, 2048, INT_MAX-1);
@@ -51,7 +58,7 @@ namespace hud
 	FVARP(fullconblend, 0, 1.f, 1);
 	VARP(fullconsize, 0, 15, 100);
 
-	FVARP(noticeoffset, 0.f, 0.35f, 1.f);
+	FVARP(noticeoffset, 0.f, 0.4f, 1.f);
 	FVARP(noticeblend, 0.f, 0.5f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
@@ -74,13 +81,6 @@ namespace hud
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
 	FVARP(damageblend, 0, 0.85f, 1);
-
-	VARP(showdamagecompass, 0, 1, 1);
-	VARP(damagecompassfade, 1, 1000, 10000);
-	FVARP(damagecompasssize, 0, 0.25f, 1000);
-	FVARP(damagecompassblend, 0, 0.55f, 1);
-	VARP(damagecompassmin, 1, 25, 1000);
-	VARP(damagecompassmax, 1, 200, 1000);
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
@@ -168,18 +168,19 @@ namespace hud
 	TVAR(bliptex, "textures/blip", 3);
 	TVAR(cardtex, "textures/card", 3);
 	TVAR(flagtex, "textures/flag", 3);
+	TVAR(hurttex, "textures/hurt", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardsize, 0, 0.85f, 1e16f);
+	FVARP(radarcardsize, 0, 0.85f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radarplayerblend, 0, 0.75f, 1);
-	FVARP(radarplayersize, 0, 0.65f, 1e16f);
+	FVARP(radarplayersize, 0, 0.65f, 1000);
 	FVARP(radarblipblend, 0, 0.5f, 1);
-	FVARP(radarblipsize, 0, 0.5f, 1e16f);
+	FVARP(radarblipsize, 0, 0.5f, 1000);
 	FVARP(radarflagblend, 0, 1.f, 1);
-	FVARP(radarflagsize, 0, 1.f, 1e16f);
+	FVARP(radarflagsize, 0, 1.f, 1000);
 	FVARP(radaritemblend, 0, 0.75f, 1);
-	FVARP(radaritemsize, 0, 1.f, 1e16f);
-	FVARP(radarsize, 0, 0.025f, 1000);
+	FVARP(radaritemsize, 0, 1.f, 1000);
+	FVARP(radarsize, 0, 0.035f, 1000);
 	FVARP(radaroffset, 0, 0.075f, 1000);
 	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
 	VARP(radarcard, 0, 0, 2);
@@ -191,6 +192,15 @@ namespace hud
 	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 0, 1);
+
+	VARP(radardamage, 0, 1, 1);
+	VARP(radardamagetime, 1, 500, INT_MAX-1);
+	VARP(radardamagefade, 1, 3000, INT_MAX-1);
+	FVARP(radardamagesize, 0, 2.f, 1000);
+	FVARP(radardamageblend, 0, 1.f, 1);
+	VARP(radardamagemin, 1, 25, INT_MAX-1);
+	VARP(radardamagemax, 1, 100, INT_MAX-1);
+
 	VARP(showeditradar, 0, 0, 1);
 	VARP(editradarcard, 0, 0, 1);
 	VARP(editradardist, 0, 64, INT_MAX-1); // 0 = use radardist
@@ -200,6 +210,20 @@ namespace hud
 	{
 		if(val == 2 || (val && game::tvmode())) return true;
 		return false;
+	}
+
+	void damage(int n, const vec &loc, gameent *actor, int weap)
+	{
+		quakewobble = clamp(quakewobble+max(n/2, 1), 0, 1000);
+		damageresidue += n*2;
+		vec colour(1.f, 0, 0);
+        if(weap == WEAP_PAINTGUN)
+        {
+            int col = paintcolours[actor->type == ENT_PLAYER && m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
+            colour = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
+        }
+        else if(kidmode || game::noblood) colour = vec(1, 0.25f, 1);
+        damagelocs.add(damageloc(lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
 	void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
@@ -852,17 +876,32 @@ namespace hud
 
 	void drawblip(const char *tex, int area, int w, int h, float s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
 	{
-		float fx = 0.f, fy = 0.f, fw = 1.f, fh = 1.f, yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw);
-		int size = max(w, h)/2, tx = w/2, ty = h/2, ts = int(size*radarsize), tr = int(size*radaroffset)+int(ts*area), tp = int(ts*s), tq = tp/2,
-			cx = int(tx+(tr*x)-tq), cy = int(ty+(tr*y)-tq);
+		float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
+			size = max(w, h)/2, tx = w/2, ty = h/2, ts = size*radarsize, tp = ts*s, tq = tp/2, tr = (size*radaroffset)+(ts*area);
+		vec pos = vec(tx+(tr*x), ty+(tr*y), 0);
 		settexture(tex, 3);
 		glColor4f(r, g, b, blend);
-		drawtex(cx, cy, tp, tp, fx, fy, fw, fh);
+		glBegin(GL_QUADS);
+		loopk(4)
+		{
+			vec norm;
+			float fx = 0, fy = 0;
+			switch(k)
+			{
+				case 0: vecfromyawpitch(yaw, 0, 1, -1, norm); fx = 1; fy = 0; break;
+				case 1: vecfromyawpitch(yaw, 0, 1, 1, norm); fx = 0; fy = 0; break;
+				case 2: vecfromyawpitch(yaw, 0, -1, 1, norm); fx = 0; fy = 1; break;
+				case 3: vecfromyawpitch(yaw, 0, -1, -1, norm); fx = 1; fy = 1; break;
+			}
+			norm.z = 0; norm.normalize().mul(tq).add(pos);
+			glTexCoord2f(fx, fy); glVertex2f(norm.x, norm.y);
+		}
+		glEnd();
 		if(text && *text)
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			draw_textx("%s", cx+tq, cy+(area < 4 ? tp : tp/2-FONTH/2), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
+			draw_textx("%s", int(pos.x), int(pos.y+(area < 4 ? tq : -FONTH/2)), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}
@@ -981,8 +1020,26 @@ namespace hud
 		}
 	}
 
+	void drawdamageblips(int w, int h, float blend)
+	{
+		loopv(damagelocs)
+		{
+			damageloc &d = damagelocs[i];
+			float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f);
+			int millis = lastmillis-d.outtime;
+			if(millis > radardamagetime)
+			{
+				if(millis > radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
+				fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
+			}
+			else fade *= float(millis)/float(radardamagetime);
+			drawblip(hurttex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, vec(d.dir).rotate_around_z(-camera1->yaw*RAD).normalize(), d.colour.x, d.colour.y, d.colour.z);
+		}
+	}
+
 	void drawradar(int w, int h, float blend)
 	{
+		if(radardamage && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING) drawdamageblips(w, h, blend*radarblend);
 		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode));
 		if(hastv(radarplayers) || m_edit(game::gamemode))
 		{
@@ -1295,74 +1352,6 @@ namespace hud
 		}
 	}
 
-    struct damagecompassdir
-    {
-        float damage;
-        vec color;
-
-        damagecompassdir() : damage(0), color(1, 0, 0) {}
-    } damagecompassdirs[8];
-
-	void damagecompass(int n, const vec &loc, gameent *actor, int weap)
-	{
-		if(!showdamagecompass) return;
-		vec delta = vec(loc).sub(camera1->o).normalize();
-		float yaw, pitch;
-		vectoyawpitch(delta, yaw, pitch);
-		yaw -= camera1->yaw;
-		while(yaw < 0.0f) yaw += 360.0f;
-		while(yaw >= 360.0f) yaw -= 360.0f;
-		int d = clamp(((int)floor((yaw+22.5f)/45.0f))&7, 0, 7);
-        damagecompassdir &dir = damagecompassdirs[d];
-        dir.damage += max(n, damagecompassmin)/float(damagecompassmax);
-        if(dir.damage > 1) dir.damage = 1;
-        if(weap == WEAP_PAINTGUN)
-        {
-            int col = paintcolours[actor->type == ENT_PLAYER && m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
-            dir.color = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
-        }
-        else if(kidmode || game::noblood) dir.color = vec(1, 0.25f, 1);
-        else dir.color = vec(0.75f, 0, 0);
-	}
-
-	void drawdamagecompass(int w, int h, int s, float blend)
-	{
-		int dirs = 0;
-		float size = damagecompasssize*min(h, w)/2.0f;
-		loopi(8) if(damagecompassdirs[i].damage > 0)
-		{
-			if(!dirs)
-			{
-                usetexturing(false);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			}
-			dirs++;
-
-            damagecompassdir &dir = damagecompassdirs[i];
-
-			glPushMatrix();
-			glTranslatef(w/2, h/2, 0);
-			glRotatef(i*45, 0, 0, 1);
-			glTranslatef(0, -size/2.0f-min(h, w)/4.0f, 0);
-			float logscale = 32, scale = log(1 + (logscale - 1)*dir.damage) / log(logscale);
-			glScalef(size*scale, size*scale, 0);
-
-            glColor4f(dir.color.x, dir.color.y, dir.color.z, damagecompassblend*blend);
-
-			glBegin(GL_TRIANGLES);
-			glVertex3f(1, 1, 0);
-			glVertex3f(-1, 1, 0);
-			glVertex3f(0, 0, 0);
-			glEnd();
-			glPopMatrix();
-
-			// fade in log space so short blips don't disappear too quickly
-			scale -= float(curtime)/damagecompassfade;
-			dir.damage = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
-		}
-        if(dirs) usetexturing(true);
-	}
-
 	void drawzoom(int w, int h)
 	{
 		Texture *t = textureload(zoomtex, 3);
@@ -1479,15 +1468,11 @@ namespace hud
 				}
 				if(game::player1->state == CS_ALIVE && game::inzoom()) drawzoom(ox, oy);
 				if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
-				if(!UI::hascursor())
-				{
-					if(showdamagecompass) drawdamagecompass(ox, oy, os, fade);
-					if(game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar)) drawradar(ox, oy, fade);
-				}
+				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);
 			}
 
-			int br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os, bf = int(255*fade*statblend);
+			int br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
@@ -1496,6 +1481,7 @@ namespace hud
 
 			if(!noview && client::ready() && !texpaneltimer)
 			{
+				int bf = int(255*fade*statblend);
 				pushfont("sub");
 				bx -= FONTW;
 				if(totalmillis-laststats >= statrate)
