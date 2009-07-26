@@ -549,8 +549,7 @@ void ircparse(ircnet *n, char *reply)
 			char *user[3] = { NULL, NULL, NULL };
 			if(g)
 			{
-				const char *t = w[0];
-				char *u = strrchr(t, '!');
+				const char *t = w[0], *u = strrchr(t, '!');
 				if(u)
 				{
 					user[0] = newstring(t, u-t);
