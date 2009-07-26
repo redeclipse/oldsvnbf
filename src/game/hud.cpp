@@ -12,6 +12,8 @@ namespace hud
         damageloc(int t, int d, const vec &p, const vec &c) : outtime(t), damage(d), dir(p), colour(c) {}
     };
     vector<damageloc> damagelocs;
+	VARP(quakewobblefade, 0, 100, INT_MAX-1);
+	VARP(damageresiduefade, 0, 750, INT_MAX-1);
 
 	VARP(showhud, 0, 1, 1);
 	VARP(hudsize, 0, 2048, INT_MAX-1);
@@ -80,7 +82,7 @@ namespace hud
 
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.85f, 1);
+	FVARP(damageblend, 0, 0.95f, 1);
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
@@ -1329,9 +1331,7 @@ namespace hud
 
 	void drawdamage(int w, int h, int s, float blend)
 	{
-		float pc = 0.f;
-		if((game::player1->state == CS_ALIVE && hud::damageresidue > 0) || game::player1->state == CS_DEAD)
-			pc = float(game::player1->state == CS_DEAD ? 100 : min(hud::damageresidue, 100))/100.f;
+		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE && hud::damageresidue > 0 ? min(hud::damageresidue, 100)/100.f : 0);
 
 		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
 		{
@@ -1340,7 +1340,7 @@ namespace hud
 			pc += (1.f-pc)*skew;
 		}
 
-		if(pc > 0.f)
+		if(pc > 0)
 		{
 			Texture *t = *damagetex ? textureload(damagetex, 3) : notexture;
 			if(t != notexture)

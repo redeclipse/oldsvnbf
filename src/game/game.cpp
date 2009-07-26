@@ -87,6 +87,7 @@ namespace game
 	VARP(announcedelay, 0, 25, INT_MAX-1); // in case you wanna clip announcements to not overlap
 	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
+    VARP(rollfade, 0, 10, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
 	VARP(noblood, 0, 0, 1);
 	VARP(nogibs, 0, 0, 1);
@@ -1311,15 +1312,15 @@ namespace game
 
 		gets2c();
 
+		#define adjustscaled(t,n,s) \
+			if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n <= 0) n = (t)0; }
+
+		adjustscaled(float, player1->roll, rollfade);
+		adjustscaled(int, hud::quakewobble, hud::quakewobblefade);
+		adjustscaled(int, hud::damageresidue, hud::damageresiduefade);
+
 		if(connected())
 		{
-			#define adjustscaled(t,n) \
-				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
-
-			adjustscaled(float, player1->roll);
-			adjustscaled(int, hud::quakewobble);
-			adjustscaled(int, hud::damageresidue);
-
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
 				if(player1->ragdoll) moveragdoll(player1, true);
