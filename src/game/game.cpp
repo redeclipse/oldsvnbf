@@ -8,7 +8,7 @@ namespace game
 	vec swaydir(0, 0, 0);
     int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, lastannounce = 0;
     bool prevzoom = false, zooming = false;
-	int quakewobble = 0, liquidchan = -1, fogdist = 0;
+	int liquidchan = -1, fogdist = 0;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -486,13 +486,7 @@ namespace game
 			d->dodamage(millis, health);
 			if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
 
-			if(d == player1)
-			{
-				quakewobble += damage/2;
-				hud::damageresidue += damage*2;
-				hud::damagecompass(damage, actor->o, actor, weap);
-			}
-
+			if(d == player1) hud::damage(damage, actor->o, actor, weap);
 			if(d->type == ENT_PLAYER)
 			{
 				vec p = d->headpos();
@@ -1323,7 +1317,7 @@ namespace game
 				if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/100.f)); if(n <= 0) n = (t)0; }
 
 			adjustscaled(float, player1->roll);
-			adjustscaled(int, quakewobble);
+			adjustscaled(int, hud::quakewobble);
 			adjustscaled(int, hud::damageresidue);
 
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
@@ -1444,9 +1438,9 @@ namespace game
 				fixrange(camera1->aimyaw, camera1->aimpitch);
 			}
 
-			if(quakewobble > 0)
+			if(hud::quakewobble > 0)
 			{
-				float wobble = float(rnd(21)-10)*(float(min(quakewobble, 100))/100.f);
+				float wobble = float(rnd(21)-10)*(float(min(hud::quakewobble, 100))/100.f);
 				switch(player1->state)
 				{
 					case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;

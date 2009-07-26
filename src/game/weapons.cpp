@@ -175,7 +175,7 @@ namespace weapons
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
 		if(!physics::iscrouching(d)) d->vel.add(vec(unitv).mul(m_speedscale(m_speedscale(weaptype[d->weapselect].kick)))); // double speedscale on purpose
-		if(d == game::player1) game::quakewobble += weaptype[d->weapselect].wobble;
+		if(d == game::player1) hud::quakewobble = clamp(hud::quakewobble + max(weaptype[d->weapselect].wobble, 1), 0, 1000);
 
 		// move along the eye ray towards the weap origin, stopping when something is hit
 		// nudge the target a tiny bit forward in the direction of the camera for stability

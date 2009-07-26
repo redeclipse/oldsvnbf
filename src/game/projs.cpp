@@ -748,7 +748,7 @@ namespace projs
 								part_create(PART_PLASMA_SOFT, m_speedtime(1000), proj.o, 0xDD4400, weaptype[proj.weap].explode*0.5f); // corona
 								float wobble = weaptype[proj.weap].damage*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode)*0.5f;
 								if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
-								game::quakewobble = clamp(game::quakewobble + max(int(wobble), 1), 0, 1000);
+								hud::quakewobble = clamp(hud::quakewobble + max(int(wobble), 1), 0, 1000);
 								part_fireball(proj.o, float(weaptype[proj.weap].explode*1.5f), PART_EXPLOSION, m_speedtime(750), 0xAA4400, 1.f);
 								loopi(rnd(21)+20) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
