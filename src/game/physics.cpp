@@ -7,7 +7,7 @@ namespace physics
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
 	FVARW(impulsespeed,		0, 30.f, 10000);	// extra velocity to add when impulsing
-	VARW(impulsedelay,		0, 2000, INT_MAX-1);	// impulse delay interval
+	VARW(impulsedelay,		0, 3000, INT_MAX-1);	// impulse delay interval
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
