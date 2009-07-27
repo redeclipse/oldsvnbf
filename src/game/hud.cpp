@@ -170,7 +170,7 @@ namespace hud
 	TVAR(bliptex, "textures/blip", 3);
 	TVAR(cardtex, "textures/card", 3);
 	TVAR(flagtex, "textures/flag", 3);
-	TVAR(hurttex, "textures/hurt", 3);
+	TVAR(arrowtex, "textures/arrow", 3);
 	FVARP(radarblend, 0, 1.f, 1);
 	FVARP(radarcardsize, 0, 0.85f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
@@ -1033,7 +1033,7 @@ namespace hud
 				fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
 			}
 			else fade *= float(millis)/float(radardamagetime);
-			drawblip(hurttex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, vec(d.dir).rotate_around_z(-camera1->yaw*RAD).normalize(), d.colour.x, d.colour.y, d.colour.z);
+			drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, vec(d.dir).rotate_around_z(-camera1->yaw*RAD).normalize(), d.colour.x, d.colour.y, d.colour.z);
 		}
 	}
 
