@@ -67,14 +67,16 @@ namespace stf
 				fade *= diff*0.5f;
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
+			const char *tex = f.hasflag ? hud::arrowtex : hud::flagtex;
+			float size = hud::radarflagsize*(f.hasflag ? 2 : 1);
 			if(hud::radarflagnames)
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
 				if(occupy < 1.f)
-					hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
-				else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
+					hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
 			}
-			else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
+			else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
 		}
 	}
 

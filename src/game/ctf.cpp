@@ -34,6 +34,8 @@ namespace ctf
 
     void drawblips(int w, int h, float blend)
     {
+    	static vector<int> hasflags; hasflags.setsizenodelete(0);
+        loopv(st.flags) if(st.flags[i].ent && st.flags[i].owner == game::player1) hasflags.add(i);
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
@@ -42,6 +44,8 @@ namespace ctf
             {
 				vec dir;
 				int colour = teamtype[f.team].colour;
+				const char *tex = hud::flagtex;
+				float size = hud::radarflagsize;
 				float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
 				if(k)
 				{
@@ -50,15 +54,20 @@ namespace ctf
 				}
 				else dir = f.spawnloc;
 				dir.sub(camera1->o);
-				if(!k && (!(f.base&BASE_FLAG) || f.owner || f.droptime))
+				if(!k)
 				{
-					float dist = dir.magnitude(),
-						diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-					fade *= diff*0.5f;
+					float dist = dir.magnitude(), diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
+					if(isctfhome(f, game::player1->team) && !hasflags.empty())
+					{
+						fade += (1.f-fade)*diff;
+						size += size*diff;
+						tex = hud::arrowtex;
+					}
+					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime) fade *= diff*0.5f;
 				}
 				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
-				if(hud::radarflagnames) hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
-				else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
+				if(hud::radarflagnames) hud::drawblip(tex, 3, w, h,size, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
+				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
             }
         }
     }
