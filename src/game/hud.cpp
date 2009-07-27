@@ -1199,7 +1199,7 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0;
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;;
 		float fade = inventoryhealthblend*blend;
 		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2;
 		settexture(healthtex, 3);
@@ -1288,16 +1288,16 @@ namespace hud
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
 				glColor4f(r, g, b, fade);
-				drawslice(0, len, x+width/2, y-sy-width/2, width/2);
+				drawslice(0, len, x+sw/2, y-sy-sw/2, sw/2);
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
-					draw_textx("%d%%", x+width/2, y-sy-width/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, int(len*100));
+					draw_textx("%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, int(len*100));
 					popfont();
 				}
-				sy += width;
+				sy += sw;
 			}
-			else if(inventorystatus >= 2) sy += drawitem(teamtex(game::player1->team), x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			else if(inventorystatus >= 2) sy += drawitem(teamtex(game::player1->team), x, y-sy, sw, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 		}
 		else
 		{
@@ -1316,7 +1316,7 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 		}
 		return sy;
 	}
