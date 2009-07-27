@@ -1499,12 +1499,12 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 
 		glPushMatrix();
 		glScalef(1/3.0f, 1/3.0f, 1);
-		settexture("textures/wait", 3);
+		settexture("textures/progress", 3);
 		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2f(16, 16);
-		glTexCoord2f(1, 0); glVertex2f(176, 15);
-		glTexCoord2f(1, 1); glVertex2f(176, 176);
-		glTexCoord2f(0, 1); glVertex2f(15, 176);
+		glTexCoord2f(0, 0); glVertex2f(0, 0);
+		glTexCoord2f(1, 0); glVertex2f(192, 0);
+		glTexCoord2f(1, 1); glVertex2f(192, 0);
+		glTexCoord2f(0, 1); glVertex2f(0, 192);
 		glEnd();
 		draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, caption ? caption : "loading...");
 		glPopMatrix();
@@ -1688,22 +1688,9 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 
 	if(text1)
 	{
-		if(bar1 > 0)
-		{
-			settexture("textures/progress", 3);
-			drawslice(0, clamp(bar1, 0.f, 1.f), 96, 96, 96);
-			draw_textx("\fg%d%%", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, int(bar1*100));
-		}
-		else
-		{
-			settexture("textures/wait", 3);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2f(16, 16);
-			glTexCoord2f(1, 0); glVertex2f(176, 15);
-			glTexCoord2f(1, 1); glVertex2f(176, 176);
-			glTexCoord2f(0, 1); glVertex2f(15, 176);
-			glEnd();
-		}
+		settexture("textures/progress", 3);
+		drawslice(0, bar1 > 0 ? clamp(bar1, 0.f, 1.f) : 1.f, 96, 96, 96);
+		if(bar1 > 0) draw_textx("\fg%d%%", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, int(bar1*100));
 		if(text2 && bar2 > 0)
 			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));
 		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1);

@@ -983,7 +983,7 @@ struct gameent : dynent, gamestate
 		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
-		weight = 250; // so we can control the 'gravity' feel
+		weight = 200; // so we can control the 'gravity' feel
 		maxspeed = 50; // ditto for movement
 		respawn(-1, 100);
 	}
@@ -1114,7 +1114,7 @@ namespace client
 
 namespace physics
 {
-	extern int smoothmove, smoothdist;
+	extern int smoothmove, smoothdist, impulsedelay;
 	extern bool canimpulse(physent *d);
     extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
