@@ -1301,6 +1301,7 @@ namespace hud
 		}
 		else
 		{
+			fade *= 0.5f;
 			const char *state = "", *tex = "";
 			switch(game::player1->state)
 			{
@@ -1316,7 +1317,7 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
 		return sy;
 	}
