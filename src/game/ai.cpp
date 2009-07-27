@@ -715,7 +715,7 @@ namespace ai
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
 			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2,
 			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
-			propel = offground && !d->ai->becareful && (jumper || propeller) && physics::canimpulse(d) && lastmillis >= d->ai->propelseed;
+			propel = !d->ai->becareful && (jumper || propeller) && lastmillis >= d->ai->propelseed;
 		if(jump)
 		{
 			vec old = d->o;
@@ -732,21 +732,24 @@ namespace ai
 				}
 			}
 		}
+		if(jump != d->jumping)
+		{
+			d->jumping = jump;
+			d->jumptime = lastmillis;
+		}
+		if(propel != d->impulsing)
+		{
+			d->impulsing = propel;
+			d->impulsetime = lastmillis;
+		}
 		if(jump || propel)
 		{
-			d->jumping = true;
-			if(jump) d->jumptime = lastmillis;
 			if(jumper && !propeller && !physics::liquidcheck(d) && !d->onladder) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->propelseed = lastmillis+m_speedtime(seed+rnd(seed));
 			if(jump) d->ai->jumpseed = d->ai->propelseed+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 50 : 25;
 			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
-		}
-		else if(d->ai->becareful && d->jumping)
-		{
-			d->jumping = false;
-			d->jumptime = lastmillis;
 		}
 	}
 
@@ -801,7 +804,7 @@ namespace ai
 				float yaw, pitch;
 				game::getyawpitch(dp, ep, yaw, pitch);
 				game::fixrange(yaw, pitch);
-				float sskew = (insight ? 2.f : (hasseen ? 1.f : 0.5f))*((insight || hasseen) && (d->jumping || d->timeinair) ? 1.5f : 1.f);
+				float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
 				if(b.idle == 1)
 				{
 					d->ai->targyaw = yaw;
