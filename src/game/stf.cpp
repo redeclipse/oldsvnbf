@@ -80,7 +80,7 @@ namespace stf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::player1->state == CS_ALIVE)
+		if(game::player1->state == CS_ALIVE && !hud::inventorygame)
 		{
 			loopv(st.flags) if(insideflag(st.flags[i], game::player1) && (st.flags[i].owner == game::player1->team || st.flags[i].enemy == game::player1->team))
 			{
@@ -110,7 +110,16 @@ namespace stf
 				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-				if(f.hasflag) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+				if(f.hasflag)
+				{
+					skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+					if(millis > 1000)
+					{
+						float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
+						fade += (1.f-fade)*amt;
+						skew += skew*0.125f*amt;
+					}
+				}
 				else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
 				sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "super", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 				if(f.enemy) hud::drawitem(hud::teamtex(f.enemy), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);

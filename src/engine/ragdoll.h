@@ -164,7 +164,6 @@ struct ragdolldata
         calcboundsphere();
         offset = d->o;
         offset.sub(skel->eye >= 0 ? verts[skel->eye].pos : center);
-        offset.z += (d->height + d->aboveeye)/2;
     }
 
     void move(dynent *pl, float ts);

@@ -65,7 +65,7 @@ namespace ctf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::player1->state == CS_ALIVE)
+		if(game::player1->state == CS_ALIVE && hud::inventorygame <= 1)
 		{
 			static vector<int> hasflags, takenflags, droppedflags;
 			hasflags.setsizenodelete(0); takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
@@ -80,7 +80,7 @@ namespace ctf
 				}
 			}
 			pushfont("super");
-			if(!hasflags.empty()) ty += draw_textx("%sYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy", hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
+			if(!hasflags.empty() && !hud::inventorygame) ty += draw_textx("%sYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, lastmillis%500 >= 250 ? "\fo" : "\fy", hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
 			if(!takenflags.empty()) ty += draw_textx("Flag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			if(!droppedflags.empty()) ty += draw_textx("Flag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			popfont();
@@ -96,7 +96,16 @@ namespace ctf
 			int millis = lastmillis-f.interptime, oldy = y-sy, colour = teamtype[f.team].colour;
 			float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(f.owner || f.droptime) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+			if(f.owner || f.droptime)
+			{
+				skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
+				if(millis > 1000)
+				{
+					float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
+					if(f.owner == game::player1) fade += (1.f-fade)*amt;
+					skew += skew*0.25f*amt;
+				}
+			}
 			else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
 			sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"));
 			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));

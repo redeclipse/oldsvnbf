@@ -446,8 +446,8 @@ namespace hud
 				case 3: colour = "\fr"; break;
 				default: break;
 			}
-			int sy = hud::drawitem(hud::teamtex(team), x, y, s, true, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
-			hud::drawitemsubtext(x, y, s, true, skew, "sub", fade*inventoryblend, "%s%s", teamtype[team].chat, name);
+			int sy = hud::drawitem(hud::teamtex(team), x, y, s-s/4, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
+			hud::drawitemsubtext(x, y, s-s/4, false, skew, "sub", fade*inventoryblend, "%s%s", teamtype[team].chat, name);
 			return sy;
 		}
 
