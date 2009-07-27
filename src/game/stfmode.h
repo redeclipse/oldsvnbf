@@ -79,7 +79,7 @@ struct stfservmode : stfstate, servmode
 			{
                 if(!b.owners || !b.enemies)
                 {
-                	int pts = b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
+                	int pts = b.occupy(b.enemy, GVAR(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GVAR(stfoccupy));
                 	if(pts > 0) loopvk(clients) if(b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
                 }
 				sendflag(i);
@@ -221,9 +221,9 @@ struct stfservmode : stfstate, servmode
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o, 2.f))
 			{
-				if(GVAR(overstfhealth)) total = max(GVAR(overstfhealth), total);
-				if(ci->state.lastregen && GVAR(regenstfguard)) delay = GVAR(regenstfguard);
-				if(GVAR(regenstfflag)) amt = GVAR(regenstfflag);
+				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
+				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
+				if(GVAR(regenextra)) amt = GVAR(regenextra);
 				return;
 			}
 		}

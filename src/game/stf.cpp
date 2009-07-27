@@ -25,7 +25,7 @@ namespace stf
 			if(b.enemy && b.owner)
 				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else formatstring(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
-			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f) : 0.f;
+			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f) : 0.f;
 			vec above = b.o;
 			above.z += enttype[FLAG].radius*2/3;
 			part_text(above, b.info);
@@ -69,7 +69,7 @@ namespace stf
 			dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
 			if(hud::radarflagnames)
 			{
-				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
 				if(occupy < 1.f)
 					hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
 				else hud::drawblip(hud::flagtex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
@@ -86,7 +86,7 @@ namespace stf
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("super");
-				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * st.OCCUPYLIMIT), 0.f, 1.f) : 1.f;
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
 				ty += draw_textx("%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f));
 				popfont();
@@ -108,7 +108,7 @@ namespace stf
 			{
 				int prevsy = sy, colour = teamtype[f.owner].colour;
 				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
-					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*st.OCCUPYLIMIT), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
+					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 				if(f.hasflag) skew += (millis < 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
 				else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
@@ -193,7 +193,7 @@ namespace stf
 			targets.setsizenodelete(0);
 			ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
-			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
 			{ // try to guess what non ai are doing
 				vec ep = e->feetpos();
@@ -217,7 +217,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			bool regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			int walk = 0;
 			if(regen && !f.enemy && f.owner == d->team)
 			{
