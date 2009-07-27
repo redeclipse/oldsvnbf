@@ -131,6 +131,7 @@ namespace hud
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
 	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
+	VARP(inventoryimpulse, 0, 2, 2);
 
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
@@ -141,8 +142,9 @@ namespace hud
 	TVAR(rifletex, "textures/rifle", 3);
 	TVAR(paintguntex, "textures/paintgun", 3);
 	TVAR(healthtex, "textures/health", 3);
+	TVAR(progresstex, "textures/progress", 3);
 	TVAR(inventoryenttex, "textures/progress", 3);
-	TVAR(inventoryedittex, "textures/progress", 3);
+	TVAR(inventoryedittex, "textures/arrow", 3);
 	TVAR(inventorywaittex, "textures/wait", 3);
 	TVAR(inventorydeadtex, "textures/dead", 3);
 	TVAR(inventorychattex, "textures/conopen", 3);
@@ -1220,15 +1222,15 @@ namespace hud
 		}
 		if(game::player1->state == CS_ALIVE)
 		{
+			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
+			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
+			{
+				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
+				if(amt < 0.5f) amt = 1.f-amt;
+				fade *= amt;
+			}
 			if(inventoryhealth >= 2)
 			{
-				if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-				else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
-				{
-					float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
-					if(amt < 0.5f) amt = 1.f-amt;
-					fade *= amt;
-				}
 				const struct healthbarstep
 				{
 					float health, r, g, b;
@@ -1276,6 +1278,22 @@ namespace hud
 				int dt = draw_textx("%d", x+width/2, y-sy, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, max(game::player1->health, 0));
 				if(!sy) sy += dt;
 				popfont();
+			}
+			if(inventoryimpulse && physics::impulsedelay > 0)
+			{
+				float len = clamp((lastmillis-game::player1->lastimpulse)/float(m_speedtime(physics::impulsedelay)), 0.f, 1.f);
+				settexture(progresstex, 3);
+				float r = 1.f, g = 1.f, b = 1.f;
+				if(teamwidgets) skewcolour(r, g, b);
+				glColor4f(r, g, b, fade);
+				drawslice(0, len, x+width/2, y-sy-width/2, width/2);
+				if(inventoryimpulse >= 2)
+				{
+					pushfont("sub");
+					draw_textx("%d%%", x+width/2, y-sy-width/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, int(len*100));
+					popfont();
+				}
+				sy += width;
 			}
 			if(inventorystatus >= 2)
 				sy += drawitem(teamtex(game::player1->team), x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, game::player1->team ? teamtype[game::player1->team].name : "ffa");

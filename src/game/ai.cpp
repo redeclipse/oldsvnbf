@@ -735,13 +735,18 @@ namespace ai
 		if(jump || propel)
 		{
 			d->jumping = true;
-			d->jumptime = lastmillis;
+			if(jump) d->jumptime = lastmillis;
 			if(jumper && !propeller && !physics::liquidcheck(d) && !d->onladder) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->propelseed = lastmillis+m_speedtime(seed+rnd(seed));
 			if(jump) d->ai->jumpseed = d->ai->propelseed+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 50 : 25;
 			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
+		}
+		else if(d->ai->becareful && d->jumping)
+		{
+			d->jumping = false;
+			d->jumptime = lastmillis;
 		}
 	}
 
@@ -1015,7 +1020,7 @@ namespace ai
 				entities::checkitems(d);
             }
         }
-		d->attacking = d->jumping = d->reloading = d->useaction = false;
+		d->attacking = d->reloading = d->useaction = false;
 	}
 
 	void avoid()
