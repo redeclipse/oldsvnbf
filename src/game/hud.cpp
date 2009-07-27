@@ -1190,7 +1190,7 @@ namespace hud
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
 			int stop = hudsize-s;
-			sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			sy += drawitem(inventoryedittex, x, y-sy, s-s/8, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
 			loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 		}
