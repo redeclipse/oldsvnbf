@@ -69,12 +69,13 @@ namespace stf
 			dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
 			const char *tex = f.hasflag ? hud::arrowtex : hud::flagtex;
 			float size = hud::radarflagsize*(f.hasflag ? 2 : 1);
-			if(hud::radarflagnames)
+			if(hud::radarflagnames > (f.hasflag ? 0 : 1))
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
+				bool overthrow = f.owner && f.enemy == game::player1->team;
 				if(occupy < 1.f)
-					hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%d%%", teamtype[f.owner].chat, int(occupy*100.f));
-				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.owner].chat, teamtype[f.owner].name);
+					hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, f.hasflag ? "sub" : "radar", "%s%d%%", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, f.hasflag ? "sub" : "radar", "%s%s", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, teamtype[f.owner].name);
 			}
 			else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
 		}
@@ -119,7 +120,6 @@ namespace stf
 					{
 						float pc = (lastmillis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
 						fade += (1.f-fade)*amt;
-						skew += skew*0.125f*amt;
 					}
 				}
 				else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
