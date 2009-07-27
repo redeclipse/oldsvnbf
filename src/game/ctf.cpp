@@ -130,9 +130,9 @@ namespace ctf
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 				above.z += 2.5f;
             }
-			if((f.base&BASE_FLAG) && f.droptime)
+			if((f.base&BASE_FLAG) && f.droptime && ctfstyle)
 			{
-				float wait = clamp((lastmillis-f.droptime)/float(st.RESETFLAGTIME), 0.f, 1.f);
+				float wait = clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
@@ -182,7 +182,7 @@ namespace ctf
 			above.z += 2.5f;
 			if((f.base&BASE_FLAG) && f.droptime)
 			{
-				float wait = clamp((lastmillis-f.droptime)/float(st.RESETFLAGTIME), 0.f, 1.f);
+				float wait = clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
@@ -536,7 +536,7 @@ namespace ctf
 			if(!home && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = f.team == TEAM_NEUTRAL || !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			bool regen = f.team == TEAM_NEUTRAL || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
@@ -621,7 +621,7 @@ namespace ctf
 				if(ai::makeroute(d, b, f.pos()))
 					return f.owner ? ai::violence(d, b, f.owner, false) : true;
 			}
-			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !overctfhealth || d->health >= overctfhealth;
+			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
 			{
 				static vector<int> targets; // build a list of others who are interested in this

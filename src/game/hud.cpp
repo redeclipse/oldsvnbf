@@ -290,8 +290,7 @@ namespace hud
 		if(full)
 		{
 			int over = total;
-			if(m_ctf(game::gamemode)) over = max(overctfhealth, total);
-			if(m_stf(game::gamemode)) over = max(overstfhealth, total);
+			if(m_ctf(game::gamemode) || m_stf(game::gamemode)) over = max(extrahealth, total);
 			if(over > total)
 				colourskew(r, g, b, 1.f+clamp(float(game::player1->health-total)/float(over-total), 0.f, 1.f));
 		}

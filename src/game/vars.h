@@ -10,32 +10,34 @@ SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma 
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge");
 SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
+
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
+VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
+VARG(spawnprotecttime, 0, 3, INT_MAX-1);
+VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
+VARG(instaspawnweapon, 0, WEAP_RIFLE, WEAP_TOTAL-1);
+FVARG(instaspawndelay, 0, 2, 1000); // .. in instagib matches
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
-VARG(overctfhealth, 0, 200, INT_MAX-1);
-VARG(overstfhealth, 0, 200, INT_MAX-1);
+VARG(extrahealth, 0, 200, INT_MAX-1);
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
 
 VARG(regendelay, 0, 3, INT_MAX-1);
-VARG(regenctfguard, 0, 1, INT_MAX-1);
-VARG(regenstfguard, 0, 1, INT_MAX-1);
+VARG(regenguard, 0, 1, INT_MAX-1);
 VARG(regentime, 0, 1, INT_MAX-1);
 VARG(regenhealth, 0, 10, INT_MAX-1);
-VARG(regenctfflag, 0, 20, INT_MAX-1);
-VARG(regenstfflag, 0, 20, INT_MAX-1);
-VARG(spawnprotecttime, 0, 3, INT_MAX-1);
+VARG(regenextra, 0, 5, INT_MAX-1);
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
-VARG(itemspawndelay, 0, 3, INT_MAX-1); // secs after map start items first spawn
+VARG(itemspawndelay, 0, 1, INT_MAX-1); // secs after map start items first spawn
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
-VARG(intermlimit, 0, 10, INT_MAX-1); // secs before vote menu comes up
-VARG(votelimit, 0, 20, INT_MAX-1); // secs before vote passes by default
-VARG(duellimit, 0, 5, INT_MAX-1); // secs before duel goes to next round
+VARG(intermlimit, 0, 15, INT_MAX-1); // secs before vote menu comes up
+VARG(votelimit, 0, 30, INT_MAX-1); // secs before vote passes by default
+VARG(duellimit, 0, 3, INT_MAX-1); // secs before duel goes to next round
 VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
@@ -43,18 +45,15 @@ VARG(teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players
 VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number, 2 = by rank, 3 = humans vs. ai
 
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
+
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
+VARG(ctfstyle, 0, 1, 1); // 0 = classic touch-and-return, 1 = grab and take home
+VARG(ctfresetdelay, 0, 30, INT_MAX-1);
+
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
-
-VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
-VARG(instaspawnweapon, 0, WEAP_RIFLE, WEAP_TOTAL-1);
-
-VARG(spawndelay, 0, 3, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
-VARG(stfspawndelay, 0, 5, INT_MAX-1); // .. in stf
-VARG(ctfspawndelay, 0, 5, INT_MAX-1); // .. in ctf
-FVARG(instaspawnscale, 0, 0.5f, 1000); // scale the above values by this in instagib
-FVARG(paintspawnscale, 0, 1.f, 1000); // scale the above values by this in paintball
+VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
+VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
 FVARG(botscale, 0, 1.f, 1000);
 VARG(botminskill, 1, 50, 101);

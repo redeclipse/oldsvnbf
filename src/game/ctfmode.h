@@ -80,9 +80,18 @@ struct ctfservmode : ctfstate, servmode
         if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team) return;
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && !f.droptime)) return;
-		ctfstate::takeflag(i, ci->clientnum);
-		if(f.team != ci->team) givepoints(ci, 3);
-		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+		if(!GVAR(ctfstyle) && f.team == ci->team)
+		{
+			ctfstate::returnflag(i);
+			givepoints(ci, 5);
+			sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+		}
+		else
+		{
+			ctfstate::takeflag(i, ci->clientnum);
+			if(f.team != ci->team) givepoints(ci, 3);
+			sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+		}
     }
 
     void resetflag(clientinfo *ci, int i)
@@ -104,7 +113,7 @@ struct ctfservmode : ctfstate, servmode
         loopv(flags)
         {
             flag &f = flags[i];
-            if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= RESETFLAGTIME)
+            if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= GVAR(ctfresetdelay)*1000)
             {
                 ctfstate::returnflag(i);
                 loopvk(clients) if(isctfflag(f, clients[k]->team)) givepoints(clients[k], -5);
@@ -154,12 +163,9 @@ struct ctfservmode : ctfstate, servmode
             bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius*2.f);
             if(insidehome || f.owner == ci->clientnum)
             {
-            	if(insidehome)
-				{
-					if(GVAR(overctfhealth)) total = max(GVAR(overctfhealth), total);
-					if(ci->state.lastregen && GVAR(regenctfguard)) delay = GVAR(regenctfguard);
-				}
-				if(GVAR(regenctfflag)) amt = GVAR(regenctfflag);
+				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
+				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
+				if(GVAR(regenextra)) amt = GVAR(regenextra);
 				return;
             }
 		}
