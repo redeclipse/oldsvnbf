@@ -2071,7 +2071,7 @@ namespace server
 			loopv(hits)
 			{
 				hitset &h = hits[i];
-				float size = radial ? (h.flags&HIT_WAVE ? radial*4.f : radial) : 0.f, dist = float(h.dist)/DMF;
+				float size = radial ? (h.flags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
 				int damage = radial ? int(weaptype[weap].damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage;

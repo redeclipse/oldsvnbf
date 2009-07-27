@@ -64,7 +64,7 @@ namespace projs
 			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
 			hitpush(d, proj, flags, int(dist*DMF));
 		}
-		else if(explode && dist <= radius*4.f) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
+		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
 	}
 
 	void remove(gameent *owner)
