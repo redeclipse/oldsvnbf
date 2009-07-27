@@ -317,7 +317,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		350,	1000,	35,		2000,	0,		1000,
+			20,		20,		350,	1000,	30,		2000,	0,		1000,
 			0,		32,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,	true,		true,		false,		true,
 			0,			0,				0.125f,		1.0f,		0,		16,			0,			100,		448,

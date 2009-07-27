@@ -3250,6 +3250,14 @@ namespace server
 					break;
 				}
 
+				case SV_RESETFLAG:
+				{
+					int flag = getint(p);
+					if(!ci) break;
+					if(smode==&ctfmode) ctfmode.resetflag(ci, flag);
+					break;
+				}
+
 				case SV_DROPFLAG:
 				{
 					int lcn = getint(p);
