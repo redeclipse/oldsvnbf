@@ -1297,8 +1297,7 @@ namespace hud
 				}
 				sy += width;
 			}
-			if(inventorystatus >= 2)
-				sy += drawitem(teamtex(game::player1->team), x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "sub", "%s%s", teamtype[game::player1->team].chat, game::player1->team ? teamtype[game::player1->team].name : "ffa");
+			else if(inventorystatus >= 2) sy += drawitem(teamtex(game::player1->team), x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 		}
 		else
 		{
