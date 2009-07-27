@@ -421,7 +421,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d))
+		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && (!d->lastimpulse || !d->jumping))
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
