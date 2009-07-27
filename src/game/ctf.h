@@ -14,6 +14,7 @@ struct ctfstate
         int team, droptime, base;
 #ifdef GAMESERVER
         int owner;
+        vector<int> votes;
 #else
         bool pickup;
         gameent *owner, *lastowner;
@@ -33,6 +34,7 @@ struct ctfstate
             base = BASE_NONE;
 #ifdef GAMESERVER
             owner = -1;
+            votes.setsize(0);
 #else
             pickup = false;
             owner = lastowner = NULL;
@@ -87,7 +89,9 @@ struct ctfstate
 		flag &f = flags[i];
 		f.owner = owner;
 		f.droptime = 0;
-#ifndef GAMESERVER
+#ifdef GAMESERVER
+        f.votes.setsize(0);
+#else
 		f.lastowner = owner;
 		f.pickup = true;
 #endif
@@ -100,6 +104,7 @@ struct ctfstate
 		f.droptime = t;
 #ifdef GAMESERVER
 		f.owner = -1;
+		f.votes.setsize(0);
 #else
 		f.pickup = false;
 		f.owner = NULL;
@@ -112,6 +117,7 @@ struct ctfstate
 		f.droptime = 0;
 #ifdef GAMESERVER
 		f.owner = -1;
+		f.votes.setsize(0);
 #else
 		f.pickup = false;
 		f.owner = NULL;

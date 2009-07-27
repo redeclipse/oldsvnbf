@@ -327,6 +327,12 @@ namespace ctf
         }
     }
 
+    void dodrop(ctfstate::flag &f, int idx)
+    {
+		if((lookupmaterial(f.droploc)&MATF_FLAGS) == MAT_DEATH || !physics::droptofloor(f.droploc, 2, 0) || (lookupmaterial(f.droploc)&MATF_FLAGS) == MAT_DEATH)
+			client::addmsg(SV_RESETFLAG, "ri", idx);
+    }
+
 	void setscore(int team, int total)
 	{
 		st.findscore(team).total = total;
@@ -354,7 +360,7 @@ namespace ctf
                 else if(!dropped) f.taketime = 0;
                 f.droptime = dropped;
                 f.droploc = dropped ? droploc : f.spawnloc;
-                if(dropped) physics::droptofloor(f.droploc, 2, 0);
+                if(dropped) dodrop(f, i);
             }
         }
     }
@@ -377,7 +383,7 @@ namespace ctf
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? (denied ? S_V_DENIED : S_V_FLAGDROP) : -1;
 		game::announce(idx, CON_INFO, "\fo%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
 		st.dropflag(i, droploc, lastmillis);
-		physics::droptofloor(f.droploc, 2, 0);
+		dodrop(f, i);
     }
 
     void removeplayer(gameent *d)

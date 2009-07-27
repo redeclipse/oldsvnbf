@@ -499,8 +499,8 @@ namespace game
 					defformatstring(ds)("@%d", damage);
 					part_text(d->abovehead(4), ds, PART_TEXT, 2500, 0x00FFFF, 3.f, -10);
 				}
-				if(!issound(d->vschan))
-					playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
+				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
+				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
 			}
 
 			if(d != actor)
@@ -548,7 +548,7 @@ namespace game
 		else
 		{
 			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators)*3/2;
-			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
+			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURNING;
 			else if(obliterated) dth = S_SPLOSH;
 			else dth = S_DIE1+rnd(2);
 		}

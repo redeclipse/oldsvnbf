@@ -85,6 +85,19 @@ struct ctfservmode : ctfstate, servmode
 		sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
     }
 
+    void resetflag(clientinfo *ci, int i)
+    {
+        if(!hasflaginfo || !flags.inrange(i)) return;
+		flag &f = flags[i];
+		if(!(f.base&BASE_FLAG) || f.owner >= 0 || !f.droptime || f.votes.find(ci->clientnum) >= 0) return;
+		f.votes.add(ci->clientnum);
+		if(f.votes.length() >= numclients(-1, false, true)/2)
+		{
+			ctfstate::returnflag(i);
+			sendf(-1, 1, "ri2", SV_RESETFLAG, i);
+		}
+    }
+
     void update()
     {
         if(!hasflaginfo) return;

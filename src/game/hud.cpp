@@ -887,16 +887,15 @@ namespace hud
 		loopk(4)
 		{
 			vec norm;
-			float fx = 0, fy = 0;
 			switch(k)
 			{
-				case 0: vecfromyawpitch(yaw, 0, 1, -1, norm); fx = 1; fy = 0; break;
-				case 1: vecfromyawpitch(yaw, 0, 1, 1, norm); fx = 0; fy = 0; break;
-				case 2: vecfromyawpitch(yaw, 0, -1, 1, norm); fx = 0; fy = 1; break;
-				case 3: vecfromyawpitch(yaw, 0, -1, -1, norm); fx = 1; fy = 1; break;
+				case 0: vecfromyawpitch(yaw, 0, 1, -1, norm);	glTexCoord2f(1, 0); break;
+				case 1: vecfromyawpitch(yaw, 0, 1, 1, norm);	glTexCoord2f(0, 0); break;
+				case 2: vecfromyawpitch(yaw, 0, -1, 1, norm);	glTexCoord2f(0, 1); break;
+				case 3: vecfromyawpitch(yaw, 0, -1, -1, norm);	glTexCoord2f(1, 1); break;
 			}
 			norm.z = 0; norm.normalize().mul(tq).add(pos);
-			glTexCoord2f(fx, fy); glVertex2f(norm.x, norm.y);
+			glVertex2f(norm.x, norm.y);
 		}
 		glEnd();
 		if(text && *text)
