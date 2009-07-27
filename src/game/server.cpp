@@ -367,7 +367,7 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-    VARF(serveropen, 0, 0, 2, {
+    VARF(serveropen, 0, 1, 2, {
 		switch(serveropen)
 		{
 			case 0: default: mastermask = MM_PRIVSERV; break;
@@ -376,9 +376,9 @@ namespace server
 		}
 	});
 	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
-	VAR(modelock, 0, 0, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
-	VAR(mapslock, 0, 0, 3); // 0 = off, 1 = master can only select non-list maps (+1 admin, +2 completely)
-	VAR(varslock, 0, 0, 2); // 0 = off, 1 = admin only, 2 = nobody
+	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
+	VAR(mapslock, 0, 2, 3); // 0 = off, 1 = master can only select non-list maps (+1 admin, +2 completely)
+	VAR(varslock, 0, 1, 2); // 0 = off, 1 = admin only, 2 = nobody
 	VAR(votewait, 0, 5000, INT_MAX-1);
 
 	ICOMMAND(gameid, "", (), result(gameid()));
