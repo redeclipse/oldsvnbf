@@ -713,9 +713,9 @@ namespace ai
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		float magxy = dir.magnitude();
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
-			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2,
+			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2, keeppropel = d->lastimpulse && lastmillis-d->lastimpulse < physics::impulsedelay,
 			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
-			propel = !d->ai->becareful && (jumper || propeller) && lastmillis >= d->ai->propelseed;
+			propel = !d->ai->becareful && (jumper || propeller) && (keeppropel || lastmillis >= d->ai->propelseed);
 		if(jump)
 		{
 			vec old = d->o;
