@@ -78,7 +78,7 @@ namespace game
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
 	FVARP(statusaboveheadblend, 0.f, 0.9f, 1.f);
-	VARP(showteamabovehead, 0, 1, 2);
+	VARP(showteamabovehead, 0, 1, 3);
 	VARP(showdamageabovehead, 0, 0, 2);
 	TVAR(conopentex, "textures/conopen", 3);
 	TVAR(deadtex, "textures/dead", 3);
@@ -1763,7 +1763,7 @@ namespace game
 				else if(d->state == CS_ALIVE)
 				{
 					if(d->conopen) t = textureload(conopentex, 3);
-					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? 0 : 1))
+					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != game::player1->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
 				}
 				if(t)
