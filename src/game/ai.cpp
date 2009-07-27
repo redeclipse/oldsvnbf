@@ -713,9 +713,9 @@ namespace ai
 		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
 		float magxy = dir.magnitude();
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
-			jumper = magxy <= JUMPMIN && off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2, keeppropel = d->lastimpulse && lastmillis-d->lastimpulse < physics::impulsedelay,
-			jump = !offground && (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
-			propel = !d->ai->becareful && (jumper || propeller) && (keeppropel || lastmillis >= d->ai->propelseed);
+			jumper = off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2, keeppropel = d->lastimpulse && lastmillis-d->lastimpulse < physics::impulsedelay,
+			jump = !offground && ((jumper && (!propeller || off.z >= JUMPMIN*2)) || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
+			propel = !d->ai->becareful && propeller && (keeppropel || lastmillis >= d->ai->propelseed);
 		if(jump)
 		{
 			vec old = d->o;
@@ -744,7 +744,7 @@ namespace ai
 		}
 		if(jump || propel)
 		{
-			if(jumper && !propeller && !physics::liquidcheck(d) && !d->onladder) d->ai->dontmove = true; // going up
+			if(jumper && !propeller) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->propelseed = lastmillis+m_speedtime(seed+rnd(seed));
 			if(jump) d->ai->jumpseed = d->ai->propelseed+m_speedtime(seed+rnd(seed));
