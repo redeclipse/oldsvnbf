@@ -195,7 +195,7 @@ namespace hud
 	VARP(radarplayers, 0, 1, 2);
 	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
-	VARP(radarflagnames, 0, 0, 1);
+	VARP(radarflagnames, 0, 1, 2);
 
 	VARP(radardamage, 0, 1, 1);
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
@@ -903,7 +903,9 @@ namespace hud
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			draw_textx("%s", int(pos.x), int(pos.y+(area < 4 ? tq : -FONTH/2)), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
+			if(area < 4) { pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1.f-(-y))*FONTH/2 : FONTH/2+(y*FONTH/2))); }
+			else pos.y -= FONTH/2;
+			draw_textx("%s", int(pos.x), int(pos.y), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
 	}

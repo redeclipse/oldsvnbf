@@ -46,6 +46,7 @@ namespace ctf
 				int colour = teamtype[f.team].colour;
 				const char *tex = hud::flagtex;
 				float size = hud::radarflagsize;
+				bool arrow = false;
 				float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
 				if(k)
 				{
@@ -62,11 +63,12 @@ namespace ctf
 						fade += (1.f-fade)*diff;
 						size += size*diff;
 						tex = hud::arrowtex;
+						arrow = true;
 					}
 					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime) fade *= diff*0.5f;
 				}
 				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
-				if(hud::radarflagnames) hud::drawblip(tex, 3, w, h,size, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
+				if(hud::radarflagnames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h,size, fade, dir, r, g, b, arrow ? "sub" : "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
 				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
             }
         }
