@@ -1130,7 +1130,7 @@ namespace hud
 
 	int drawselection(int x, int y, int s, float blend)
 	{
-		int sy = showfps ? s/4 : s/16;
+		int sy = showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? s/2 : s/16;
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(inventoryammo)
