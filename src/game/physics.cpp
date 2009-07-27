@@ -521,7 +521,7 @@ namespace physics
 				}
 				if(pl->impulsing && canimpulse(pl) && (pl->move || pl->strafe))
 				{
-					vec dir; vecfromyawpitch(pl->aimyaw, max(pl->aimpitch+65.f, 90.f), pl->move, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
+					vec dir; vecfromyawpitch(pl->aimyaw, max(pl->aimpitch+50.f, 90.f), pl->move, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
 					pl->vel.add(dir);
 					pl->lastimpulse = lastmillis;
 					if(local && pl->type == ENT_PLAYER)
@@ -570,7 +570,13 @@ namespace physics
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
-			float fric = pl->inliquid ? liquidmerge(pl, floorcurb, liquidcurb) : (pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb);
+			float curb = pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb;
+			if(impulsedelay > 0 && pl->lastimpulse && pl->impulsing && pl->physstate >= PHYS_SLOPE)
+			{
+				int millis = lastmillis-pl->lastimpulse;
+				if(millis < impulsedelay) curb += (aircurb-floorcurb)*(1.f-clamp(millis/float(impulsedelay), 0.f, 1.f));
+			}
+			float fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 		}
 	}
