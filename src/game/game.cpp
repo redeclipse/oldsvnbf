@@ -43,7 +43,7 @@ namespace game
 	FVARP(firstpersonadjust, -10000, 0.f, 10000);
 
 	VARP(editfov, 1, 120, 179);
-	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv, 2 = follow
+	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	VARP(specfov, 1, 120, 179);
 	FVARP(spectvspeed, 0, 0.1f, 1000);
@@ -75,11 +75,13 @@ namespace game
 	VARP(pronefov, 70, 70, 150);
 	VARP(pronetime, 1, 150, 10000);
 
-	VARP(showstatusabovehead, 0, 1, 2);
-	FVARP(statusaboveheadblend, 0.f, 1.f, 1.f);
-	VARP(shownamesabovehead, 0, 1, 2);
+	VARP(shownamesabovehead, 0, 2, 2);
+	VARP(showstatusabovehead, 0, 2, 2);
+	FVARP(statusaboveheadblend, 0.f, 0.9f, 1.f);
+	VARP(showteamabovehead, 0, 1, 2);
 	VARP(showdamageabovehead, 0, 0, 2);
 	TVAR(conopentex, "textures/conopen", 3);
+	TVAR(deadtex, "textures/dead", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
@@ -103,11 +105,8 @@ namespace game
 		{
 			case 0: specmode = 1; break;
 			case 1: default: specmode = 0; break;
-			//case 2: default: specmode = 0; break;
 		}
 	});
-
-	//ICOMMAND(specfollow, "i", (int *d), specfollower(*d));
 
 	void start() { }
 
@@ -249,27 +248,6 @@ namespace game
 	{
 		return !m_edit(gamemode) && player1->state == CS_SPECTATOR && specmode == 1;
 	}
-
-	/*
-	gameent *following()
-	{
-		if(player1->state == CS_SPECTATOR && specmode == 2)
-		{
-			gameent *d = (gameent *)iterdynents(specfollowing);
-			if(!d || d->state == CS_EDITING || d->state == CS_SPECTATOR || d == player1)
-			{
-				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->state != CS_EDITING && d->state != CS_SPECTATOR)
-				{
-					specfollowing = i;
-					return d;
-				}
-			}
-			else return d;
-			specmode = 1;
-		}
-		return NULL;
-	}
-	*/
 
     bool allowmove(physent *d)
     {
@@ -1766,7 +1744,7 @@ namespace game
 			}
 		}
 
-		if(third && !shadowmapping && !envmapping && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
+		if(third && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead(2);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
@@ -1778,10 +1756,21 @@ namespace game
 					pos.z += 2;
 				}
 			}
-			if(showstatusabovehead > (d != player1 ? 0 : 1) && d->conopen && (d->state == CS_ALIVE || d->state == CS_EDITING))
+			if(showstatusabovehead > (d != player1 ? 0 : 1))
 			{
-                part_icon(pos, textureload(conopentex, 3), statusaboveheadblend, 2);
-				pos.z += 2;
+				Texture *t = NULL;
+				if(d->state == CS_DEAD || d->state == CS_WAITING) t = textureload(deadtex, 3);
+				else if(d->state == CS_ALIVE)
+				{
+					if(d->conopen) t = textureload(conopentex, 3);
+					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? 0 : 1))
+						t = textureload(hud::teamtex(d->team), 3);
+				}
+				if(t)
+				{
+					part_icon(pos, t, statusaboveheadblend*trans, 2);
+					pos.z += 2;
+				}
 			}
 		}
 		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..

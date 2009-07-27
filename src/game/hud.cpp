@@ -114,7 +114,7 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventorygame, 0, 1, 2);
-	VARP(inventorystatus, 0, 1, 2);
+	VARP(inventorystatus, 0, 2, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
@@ -1057,7 +1057,7 @@ namespace hud
 	int drawitem(const char *tex, int x, int y, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
-		float f = fade*skew, cr = r*skew, cg = g*skew, cb = b*skew, s = size*skew;
+		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew;
 		settexture(tex, 3);
 		glColor4f(cr, cg, cb, f);
 		drawsized(left ? x : x-int(s), y-int(s), int(s));
@@ -1130,15 +1130,9 @@ namespace hud
 
 	int drawselection(int x, int y, int s, float blend)
 	{
-		int sy = showfps ? s/2+s/4 : s/16;
+		int sy = showfps ? s/4 : s/16;
 		if(game::player1->state == CS_ALIVE)
 		{
-			if(inventorystatus >= 2)
-			{
-				if(game::player1->team)
-					sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "default", "%s%s", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
-				else sy += drawitem(teamtex(game::player1->team), x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-			}
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAP_MAX] = {
@@ -1189,35 +1183,23 @@ namespace hud
 				}
 			}
 		}
-		else
+		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
-			if(game::player1->state == CS_EDITING)
-			{
-				if(inventorystatus) sy += drawitem(inventoryedittex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-				if(inventoryedit)
-				{
-					int stop = hudsize-s;
-					sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
-					loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
-				}
-			}
-			else if(inventorystatus)
-			{
-				if(game::player1->state == CS_WAITING) sy += drawitem(inventorywaittex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-				else if(game::player1->state == CS_DEAD) sy += drawitem(inventorydeadtex, x, y-sy+s/8, s-s/4, false,1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-				else sy += drawitem(inventorychattex, x, y-sy+s/8, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
-			}
+			int stop = hudsize-s;
+			sy += drawitem(inventoryedittex, x, y-sy, s, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
+			loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 		}
 		return sy;
 	}
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow);
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0;
 		float fade = inventoryhealthblend*blend;
 		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2;
 		settexture(healthtex, 3);
-		if(glow || pulse)
+		if(inventoryhealth && (glow || pulse))
 		{
 			int gap = 0;
 			float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
@@ -1234,80 +1216,90 @@ namespace hud
 			}
 			glColor4f(r, g, b, fade*bgfade);
 			drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
+			sy += size;
 		}
 		if(game::player1->state == CS_ALIVE)
 		{
-			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
-			{
-				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
-				if(amt < 0.5f) amt = 1.f-amt;
-				fade *= amt;
-			}
-			const struct healthbarstep
-			{
-				float health, r, g, b;
-			} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
-			glBegin(GL_QUAD_STRIP);
-			int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
-			float health = clamp(game::player1->health/float(m_maxhealth(game::gamemode, game::mutators)), 0.0f, 1.0f);
-			const float margin = 0.1f;
-			loopi(4)
-			{
-				const healthbarstep &step = steps[i];
-				if(i > 0)
-				{
-					if(step.health > health && steps[i-1].health <= health)
-					{
-						float hoff = 1 - health, hlerp = (health - steps[i-1].health) / (step.health - steps[i-1].health),
-							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
-							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
-							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-						glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
-						glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
-					}
-					if(step.health > health + margin)
-					{
-						float hoff = 1 - (health + margin), hlerp = (health + margin - steps[i-1].health) / (step.health - steps[i-1].health),
-							  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
-							  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
-							  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
-						glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
-						glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
-						break;
-					}
-				}
-				float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
-				if(step.health > health) hfade *= 1 - (step.health - health)/margin;
-				glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(cx, cy + off*ch);
-				glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(cx + cw, cy + off*ch);
-			}
-			glEnd();
 			if(inventoryhealth >= 2)
 			{
+				if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
+				else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
+				{
+					float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
+					if(amt < 0.5f) amt = 1.f-amt;
+					fade *= amt;
+				}
+				const struct healthbarstep
+				{
+					float health, r, g, b;
+				} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
+				glBegin(GL_QUAD_STRIP);
+				int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
+				float health = clamp(game::player1->health/float(m_maxhealth(game::gamemode, game::mutators)), 0.0f, 1.0f);
+				const float margin = 0.1f;
+				loopi(4)
+				{
+					const healthbarstep &step = steps[i];
+					if(i > 0)
+					{
+						if(step.health > health && steps[i-1].health <= health)
+						{
+							float hoff = 1 - health, hlerp = (health - steps[i-1].health) / (step.health - steps[i-1].health),
+								  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
+								  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
+								  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
+							glColor4f(r, g, b, fade); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
+							glColor4f(r, g, b, fade); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
+						}
+						if(step.health > health + margin)
+						{
+							float hoff = 1 - (health + margin), hlerp = (health + margin - steps[i-1].health) / (step.health - steps[i-1].health),
+								  r = step.r*hlerp + steps[i-1].r*(1-hlerp),
+								  g = step.g*hlerp + steps[i-1].g*(1-hlerp),
+								  b = step.b*hlerp + steps[i-1].b*(1-hlerp);
+							glColor4f(r, g, b, 0); glTexCoord2f(0, hoff); glVertex2f(cx, cy + hoff*ch);
+							glColor4f(r, g, b, 0); glTexCoord2f(1, hoff); glVertex2f(cx + cw, cy + hoff*ch);
+							break;
+						}
+					}
+					float off = 1 - step.health, hfade = fade, r = step.r, g = step.g, b = step.b;
+					if(step.health > health) hfade *= 1 - (step.health - health)/margin;
+					glColor4f(r, g, b, hfade); glTexCoord2f(0, off); glVertex2f(cx, cy + off*ch);
+					glColor4f(r, g, b, hfade); glTexCoord2f(1, off); glVertex2f(cx + cw, cy + off*ch);
+				}
+				glEnd();
+				if(!sy) sy += size;
+			}
+			if(inventoryhealth)
+			{
 				pushfont("super");
-				draw_textx("%d", x+width/2, y-size, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, max(game::player1->health, 0));
+				int dt = draw_textx("%d", x+width/2, y-sy, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, max(game::player1->health, 0));
+				if(!sy) sy += dt;
 				popfont();
 			}
+			if(inventorystatus >= 2)
+				sy += drawitem(teamtex(game::player1->team), x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f, "default", "%s%s", teamtype[game::player1->team].chat, game::player1->team ? teamtype[game::player1->team].name : "ffa");
 		}
-		else if(inventoryhealth >= 3)
+		else
 		{
-			const char *state = "";
+			const char *state = "", *tex = "";
 			switch(game::player1->state)
 			{
 				case CS_EDITING: state = "\fcEDIT"; break;
-				case CS_WAITING: state = "\fyWAIT"; break;
-				case CS_SPECTATOR: state = "\faSPEC"; break;
-				case CS_DEAD: default: state = "\frDEAD"; break;
+				case CS_WAITING: state = "\fyWAIT"; tex = inventorywaittex; break;
+				case CS_SPECTATOR: state = "\faSPEC"; tex = inventorychattex; break;
+				case CS_DEAD: default: state = "\frDEAD"; tex = inventorydeadtex; break;
 			}
-			if(*state)
+			if(inventoryhealth >= 3 && *state)
 			{
 				pushfont("default");
-				draw_textx("%s", x+width/2, y-(pulse || glow ? size : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
+				int dt = draw_textx("%s", x+width/2, y-(sy ? sy : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
+				if(!sy) sy += dt;
 				popfont();
 			}
+			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, width, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 		}
-		return size;
+		return sy;
 	}
 
 	void drawinventory(int w, int h, int edge, float blend)
@@ -1317,14 +1309,14 @@ namespace hud
 		{
 			case 0: default:
 			{
-				if(inventoryhealth && (cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
-				if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+				if((cc = drawhealth(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
 				break;
 			}
 			case 1:
 			{
 				if(!texpaneltimer)
 				{
+					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
 					if(inventorygame)
 					{
