@@ -1292,7 +1292,9 @@ namespace hud
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
-					draw_textx("%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1, int(len*100));
+					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
+						game::player1->impulsemillis > 0 ? (physics::impulselength-game::player1->impulsemillis > physics::impulsejump ? "\fy" : "\fw") : "\fg",
+							int(len*100));
 					popfont();
 				}
 				sy += sw;
