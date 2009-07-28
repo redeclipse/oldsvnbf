@@ -139,11 +139,8 @@ namespace projs
                     }
                     case WEAP_FLAMER:
                     {
-                        if(!proj.lastbounce)
-                        {
+                        if(!proj.lastbounce && !rnd(3))
                             adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
-                            //adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*4.f*proj.lifesize, bvec(184, 88, 0));
-                        }
                         break;
                     }
                     default: break;
