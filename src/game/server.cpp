@@ -2429,7 +2429,8 @@ namespace server
 			}
 			default:
 			{
-				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true))
+				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true) &&
+					(!m_arena(gamemode, mutators) || (sents[i].type == WEAPON && sents[i].attr[0] == WEAP_GRENADE)))
 				{
 					loopvk(clients)
 					{

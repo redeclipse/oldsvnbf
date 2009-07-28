@@ -475,14 +475,14 @@ extern gametypes gametype[], mutstype[];
 
 #define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAP_PAINTGUN : (m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
 #define m_spawndelay(a,b)	(!m_duke(a,b) ? ((m_insta(a, b) || m_paint(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))*1000) : 0)
-#define m_noitems(a,b)		(m_paint(a,b) || m_arena(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
+#define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
 #define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
 
-#define weaploads(a,b)		(b < 0 || a == b || weaptype[a].reloads)
-#define weapcarry(a,b)		(b >= 0 && a != b && weaptype[a].reloads)
+#define weaploads(a,b)		(a == b || weaptype[a].reloads)
+#define weapcarry(a,b)		(a != b && weaptype[a].reloads)
 #define weapattr(a,b)		(a != b ? a : (b != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
 
 enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMODE_STFMULTICTF, FLAGMODE_NONMULTICTF, FLAGMODE_MAX };
@@ -859,7 +859,7 @@ struct gamestate
 		if(arena)
 		{
 			int aweap = arenaweap;
-			if(aweap <= WEAP_PISTOL || aweap >= WEAP_TOTAL) aweap = rnd(WEAP_TOTAL-1)+1; // pistol = random
+			while(aweap <= WEAP_PISTOL || aweap >= WEAP_TOTAL || aweap == WEAP_GRENADE) aweap = rnd(WEAP_TOTAL-1)+1; // pistol = random
 			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
 			lastweap = weapselect = aweap;
 		}
