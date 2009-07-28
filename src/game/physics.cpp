@@ -536,7 +536,14 @@ namespace physics
 				if(canimpulse(pl, millis)) pl->impulsemillis += millis;
 				else pl->impulsing = false;
 			}
-			else if((pl->impulsemillis -= millis/(pl->move || pl->strafe ? 2 : 1)) < 0) pl->impulsemillis = 0;
+			else if(pl->impulsemillis > 0)
+			{
+				int timeslice = millis;
+				if(iscrouching(pl)) timeslice += timeslice/2;
+				if(pl->move || pl->strafe) timeslice -= timeslice/2;
+				if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
+				if((pl->impulsemillis -= timeslice) < 0) pl->impulsemillis = 0;
+			}
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
