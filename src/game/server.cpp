@@ -354,7 +354,7 @@ namespace server
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
 		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
-		virtual void regen(clientinfo *ci, int &total, int &amt, int &delay) {}
+		virtual void regen(clientinfo *ci, int &total, int &amt, int &delay, int &penalty) {}
 	};
 
 	vector<srventity> sents;
@@ -1998,13 +1998,13 @@ namespace server
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 		if(m_vamp(gamemode, mutators) && actor->state.state == CS_ALIVE)
 		{
-			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0;
-			if(smode) smode->regen(actor, total, amt, delay);
+			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0, penalty = 0;
+			if(smode) smode->regen(actor, total, amt, delay, penalty);
 			if(total && actor->state.health < total)
 			{
 				actor->state.health = min(actor->state.health + realdamage, total);
 				actor->state.lastregen = gamemillis;
-				sendf(-1, 1, "ri3", SV_REGEN, actor->clientnum, actor->state.health);
+				sendf(-1, 1, "ri4", SV_REGEN, actor->clientnum, actor->state.health, 0);
 			}
 		}
 
@@ -2438,14 +2438,14 @@ namespace server
 			if(ci->state.state == CS_ALIVE)
 			{
 				if(!m_regen(gamemode, mutators)) continue;
-				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
-				if(smode) smode->regen(ci, total, amt, delay);
-				if(total && amt && delay && ci->state.health < total &&
-					gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay*1000)
+				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay), penalty = 0;
+				if(smode) smode->regen(ci, total, amt, delay, penalty);
+				if(delay && (ci->state.health < total || penalty) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
 				{
+					if(!penalty) penalty = GVAR(regenpenalty);
 					ci->state.health = min(ci->state.health + amt, total);
 					ci->state.lastregen = gamemillis;
-					sendf(-1, 1, "ri3", SV_REGEN, ci->clientnum, ci->state.health);
+					sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, penalty);
 				}
 			}
 			else if(ci->state.state == CS_WAITING)
