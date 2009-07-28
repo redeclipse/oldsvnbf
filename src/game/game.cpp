@@ -280,7 +280,7 @@ namespace game
 					break;
 				}
 			}
-			if(weap < WEAP_PISTOL || weap >= WEAP_TOTAL) weap = WEAP_PISTOL;
+			if(weap < WEAP_PISTOL || weap >= WEAP_TOTAL || weap == WEAP_GRENADE) weap = WEAP_PISTOL;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
 			conoutf("\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
 		}

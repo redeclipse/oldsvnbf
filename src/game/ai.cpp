@@ -428,6 +428,8 @@ namespace ai
 				d->arenaweap = rnd(WEAP_TOTAL);
 				if(d->arenaweap != WEAP_PISTOL || !rnd(d->skill)) break;
 			}
+			if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
+				d->arenaweap = WEAP_PISTOL;
 		}
 	}
 
