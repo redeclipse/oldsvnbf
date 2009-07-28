@@ -1488,7 +1488,7 @@ namespace hud
 						drawtex(0, 0, ox, oy);
 					}
 				}
-				if(game::player1->state == CS_ALIVE && game::inzoom()) drawzoom(ox, oy);
+				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(ox, oy);
 				if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
 				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);
