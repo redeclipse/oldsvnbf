@@ -1070,7 +1070,7 @@ namespace hud
 			glPushMatrix();
 			glScalef(skew, skew, 1);
 			if(font && *font) pushfont(font);
-			int tx = int((left ? (x+s) : x)*(1.f/skew)), ty = int((y-s)*(1.f/skew)), ti = int(255.f*f);
+			int tx = int((left ? (x+s) : x)*(1.f/skew)), ty = int((y-s+s/32)*(1.f/skew)), ti = int(255.f*f);
 			defvformatstring(str, text, text);
 			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_RIGHT_JUSTIFY, -1, -1, str);
 			if(font && *font) popfont();
@@ -1085,7 +1085,7 @@ namespace hud
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int(x*(1.f/skew)), ty = int(y*(1.f/skew)), ti = int(255.f*blend*skew);
+		int tx = int(x*(1.f/skew)), ty = int((y-size/32)*(1.f/skew)), ti = int(255.f*blend*skew);
 		defvformatstring(str, text, text);
 		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_UP : TEXT_RIGHT_UP, -1, -1, str);
 		if(font && *font) popfont();
@@ -1283,7 +1283,13 @@ namespace hud
 			}
 			if(inventoryimpulse && physics::impulsedelay > 0)
 			{
-				float len = clamp((lastmillis-game::player1->lastimpulse)/float(m_speedtime(physics::impulsedelay)), 0.f, 1.f);
+				int millis = lastmillis-game::player1->lastimpulse;
+				float len = clamp(millis/float(m_speedtime(physics::impulsedelay)), 0.f, 1.f);
+				if(physics::impulselength > 0)
+				{
+					if(millis < physics::impulselength) len = 1.f-clamp(millis/float(m_speedtime(physics::impulselength)), 0.f, 1.f);
+					else len = clamp((millis-physics::impulselength)/float(m_speedtime(physics::impulsedelay-physics::impulselength)), 0.f, 1.f);
+				}
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
