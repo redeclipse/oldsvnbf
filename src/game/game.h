@@ -32,7 +32,7 @@ enum
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
     S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
-	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4,
+	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_V_SPREE5, S_V_REVENGE, S_V_DOMINATE,
 	S_V_YOUWIN, S_V_YOULOSE, S_V_MCOMPLETE, S_V_FRAGGED, S_V_OWNED, S_V_DENIED,
 	S_MAX
 };
@@ -370,10 +370,24 @@ enum
 	HIT_WAVE	= 1<<10,
 	HIT_SPAWN	= 1<<11,
 	HIT_LOST	= 1<<12,
-	HIT_KILL	= 1<<13
+	HIT_KILL	= 1<<13,
+	HIT_SFLAGS	= HIT_KILL,
 };
 
 #define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
+
+enum
+{
+	FRAG_NONE		= 0,
+	FRAG_HEADSHOT	= 1<<1,
+	FRAG_SPREE1		= 1<<2,
+	FRAG_SPREE2		= 1<<3,
+	FRAG_SPREE3		= 1<<4,
+	FRAG_SPREE4		= 1<<5,
+	FRAG_SPREE5		= 1<<5,
+	FRAG_REVENGE	= 1<<6,
+	FRAG_DOMINATE	= 1<<7,
+};
 
 enum
 {
@@ -669,10 +683,10 @@ struct gamestate
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, ownernum, skill, spree, points;
+	int aitype, ownernum, skill, points;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(AI_NONE), ownernum(-1), skill(0), spree(0), points(0) {}
+		aitype(AI_NONE), ownernum(-1), skill(0), points(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -819,7 +833,7 @@ struct gamestate
 
 	void clearstate()
 	{
-		lastdeath = lastpain = lastregen = spree = 0;
+		lastdeath = lastpain = lastregen = 0;
 		lastrespawn = -1;
 	}
 
@@ -974,7 +988,7 @@ struct gameent : dynent, gamestate
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	ai::aiinfo *ai;
     vec muzzle, affinity;
-	bool attacking, reloading, useaction, conopen, k_up, k_down, k_left, k_right;
+	bool attacking, reloading, useaction, conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
 
@@ -1212,7 +1226,7 @@ namespace game
 	extern void resetworld();
 	extern void resetstate();
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
-	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor);
+	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style);
 	extern void timeupdate(int timeremain);
 }
 

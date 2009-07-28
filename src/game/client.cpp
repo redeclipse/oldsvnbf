@@ -1281,12 +1281,11 @@ namespace client
 
 				case SV_DIED:
 				{
-					int vcn = getint(p), acn = getint(p), frags = getint(p), spree = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
+					int vcn = getint(p), acn = getint(p), frags = getint(p), style = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
 					gameent *victim = game::getclient(vcn), *actor = game::getclient(acn);
 					if(!actor || !victim) break;
 					actor->frags = frags;
-					actor->spree = spree;
-					game::killed(weap, flags, damage, victim, actor);
+					game::killed(weap, flags, damage, victim, actor, style);
 					victim->lastdeath = lastmillis;
 					victim->weapreset(true);
 					break;
