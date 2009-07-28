@@ -8,7 +8,7 @@ namespace physics
 
 	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
 	VARW(impulselength,		0, 5000, INT_MAX-1); // impulse dash length
-	VARW(impulsejump,		0, 2000, INT_MAX-1); // cost of impulse jump
+	VARW(impulsejump,		0, 1000, INT_MAX-1); // cost of impulse jump
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
@@ -494,7 +494,7 @@ namespace physics
 				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
-        else if(pl->physstate >= PHYS_SLOPE || liquidcheck(pl))
+        else if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
 		{
 			if(game::allowmove(pl) && pl->jumping)
 			{
@@ -515,13 +515,14 @@ namespace physics
 				}
 			}
 		}
-		else if(game::allowmove(pl) && pl->jumping && canimpulse(pl, impulsejump))
+		else if(game::allowmove(pl) && pl->jumping && !pl->impulsejump && canimpulse(pl, impulsejump))
 		{
 			vec dir; vecfromyawpitch(pl->aimyaw, 90.f, 1, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
 			if(pl->vel.z < 0) pl->vel.z = 0;
 			pl->vel.add(dir);
 			pl->falling = vec(0, 0, 0);
 			pl->jumping = false;
+			pl->impulsejump = true;
 			pl->impulsemillis += impulsejump;
 			if(local && pl->type == ENT_PLAYER)
 			{
@@ -547,6 +548,7 @@ namespace physics
 			}
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
+        else pl->impulsejump = false;
 
 		vec m(0, 0, 0);
         bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);

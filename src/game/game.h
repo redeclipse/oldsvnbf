@@ -1027,7 +1027,7 @@ struct gameent : dynent, gamestate
 		stopmoving(true);
 		clearstate();
     	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = 0;
-    	inliquid = onladder = jumping = crouching = impulsing = false;
+    	inliquid = onladder = jumping = crouching = impulsing = impulsejump = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = falling = vec(0, 0, 0);
