@@ -5,10 +5,7 @@ namespace physics
 	FVARW(gravity,			0, 50.f, 10000);	// gravity
 	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
-
 	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
-	VARW(impulselength,		0, 5000, INT_MAX-1); // impulse dash length
-	VARW(impulsejump,		0, 1000, INT_MAX-1); // cost of impulse jump
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);

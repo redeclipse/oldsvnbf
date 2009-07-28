@@ -155,7 +155,7 @@ struct ctfservmode : ctfstate, servmode
         }
     }
 
-	void regen(clientinfo *ci, int &total, int &amt, int &delay)
+	void regen(clientinfo *ci, int &total, int &amt, int &delay, int &penalty)
 	{
 		if(hasflaginfo) loopv(flags)
         {
@@ -166,6 +166,7 @@ struct ctfservmode : ctfstate, servmode
 				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
 				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
 				if(GVAR(regenextra)) amt = GVAR(regenextra);
+				penalty = -GVAR(regenreward);
 				return;
             }
 		}
