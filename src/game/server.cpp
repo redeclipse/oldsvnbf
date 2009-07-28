@@ -145,8 +145,9 @@ namespace server
 		vec o;
 		int state;
         projectilestate dropped, weapshots[WEAP_MAX];
-		int score, frags, flags, deaths, teamkills, shotdamage, damage;
+		int score, frags, spree, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
+		vector<int> fraglog;
 
 		servstate() : state(CS_SPECTATOR), aireinit(0) {}
 
@@ -162,7 +163,8 @@ namespace server
             loopi(WEAP_MAX) weapshots[i].reset();
 			if(!change) score = timeplayed = 0;
 			else gamestate::mapchange();
-            frags = flags = deaths = teamkills = shotdamage = damage = 0;
+            frags = spree = flags = deaths = teamkills = shotdamage = damage = 0;
+            fraglog.setsize(0);
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
 
@@ -177,13 +179,14 @@ namespace server
 	{
 		uint ip;
 		string name;
-		int points, score, frags, flags, timeplayed, deaths, teamkills, shotdamage, damage;
+		int points, score, frags, spree, flags, timeplayed, deaths, teamkills, shotdamage, damage;
 
 		void save(servstate &gs)
 		{
 			points = gs.points;
 			score = gs.score;
 			frags = gs.frags;
+			spree = gs.spree;
 			flags = gs.flags;
             deaths = gs.deaths;
             teamkills = gs.teamkills;
@@ -197,6 +200,7 @@ namespace server
 			gs.points = points;
 			gs.score = score;
 			gs.frags = frags;
+			gs.spree = spree;
 			gs.flags = flags;
             gs.deaths = deaths;
             gs.teamkills = teamkills;
@@ -1965,6 +1969,8 @@ namespace server
 		if(ts.protect(gamemillis, GVAR(spawnprotecttime)*1000)) return; // ignore completely
 
 		int realdamage = damage, realflags = flags, nodamage = !m_play(gamemode) ? 1 : 0;
+		realflags &= ~HIT_SFLAGS;
+
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if(actor == target && !GVAR(selfdamage)) nodamage++;
@@ -1979,8 +1985,7 @@ namespace server
 		}
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor))
-			realflags &= ~HIT_FULL;
+		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor)) realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
 			if(realflags&HIT_FULL || realflags&HIT_HEAD || realflags&HIT_FALL) realdamage = int(realdamage*GVAR(damagescale));
@@ -1993,7 +1998,6 @@ namespace server
 		else realdamage = int(realdamage*GVAR(damagescale));
 
 		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
-		else realflags &= ~HIT_KILL;
 
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 		if(m_vamp(gamemode, mutators) && actor->state.state == CS_ALIVE)
@@ -2011,24 +2015,37 @@ namespace server
 		if(realflags&HIT_KILL)
 		{
             int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
-				pointvalue = smode ? smode->points(target, actor) : fragvalue;
+				pointvalue = smode ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
             actor->state.frags += fragvalue;
 			if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
 				if(actor != target) actor->state.teamkills++;
-				actor->state.spree = 0;
 				pointvalue *= 3;
+				actor->state.spree = 0;
 			}
 			else if(actor != target)
 			{
-				actor->state.spree++;
-				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) pointvalue *= 3;
+				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) { style |= FRAG_HEADSHOT; pointvalue *= 3; }
+				switch(++actor->state.spree)
+				{
+					case 5: style |= FRAG_SPREE1; pointvalue += actor->state.spree; break;
+					case 10: style |= FRAG_SPREE2; pointvalue += actor->state.spree; break;
+					case 15: style |= FRAG_SPREE3; pointvalue += actor->state.spree; break;
+					case 20: style |= FRAG_SPREE4; pointvalue += actor->state.spree; break;
+					case 25: style |= FRAG_SPREE5; pointvalue += actor->state.spree; break;
+					default: break;
+				}
+				int logs = 0;
+				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
+				if(logs >= 5) { style |= FRAG_REVENGE; pointvalue += 5; }
+				actor->state.fraglog.add(target->clientnum); logs = 0;
+				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) logs++;
+				if(logs == 5) { style |= FRAG_DOMINATE; pointvalue += 5; }
 			}
 			else actor->state.spree = 0;
 			target->state.deaths++;
-			dropitems(target);
-            givepoints(actor, pointvalue);
-			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, actor->state.spree, weap, realflags, realdamage);
+			dropitems(target); givepoints(actor, pointvalue);
+			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, style, weap, realflags, realdamage);
 			target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
@@ -2571,6 +2588,11 @@ namespace server
 		bool complete = !numclients(n, false, true);
         if(ci->connected)
         {
+        	loopv(clients) if(clients[i] != ci)
+        	{
+        		loopvk(clients[i]->state.fraglog) if(clients[i]->state.fraglog[k] == ci->clientnum)
+					clients[i]->state.fraglog.remove(k--);
+        	}
 		    if(ci->state.state == CS_ALIVE) dropitems(ci, true);
 		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);

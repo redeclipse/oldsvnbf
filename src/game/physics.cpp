@@ -143,7 +143,7 @@ namespace physics
 			else
 			{
 				float speed = iscrouching(d) ? crawlspeed : movespeed;
-				if(impulselength > 0 && d->impulsing && d->impulsemillis < impulselength) speed += impulsespeed;
+				if(impulselength > 0 && d->impulsing && d->impulsemillis < impulselength) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
 				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(speed/100.f);
 			}
 		}

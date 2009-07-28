@@ -77,11 +77,13 @@ namespace game
 
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
-	FVARP(statusaboveheadblend, 0.f, 0.9f, 1.f);
+	FVARP(statusaboveheadblend, 0.f, 0.5f, 1.f);
 	VARP(showteamabovehead, 0, 1, 3);
 	VARP(showdamageabovehead, 0, 0, 2);
 	TVAR(conopentex, "textures/conopen", 3);
 	TVAR(deadtex, "textures/dead", 3);
+	TVAR(dominatingtex, "textures/player", 3);
+	TVAR(dominatedtex, "textures/exit", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
@@ -511,7 +513,7 @@ namespace game
 		}
 	}
 
-	void killed(int weap, int flags, int damage, gameent *d, gameent *actor)
+	void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
 	{
 		if(d->type != ENT_PLAYER) return;
 
@@ -596,6 +598,7 @@ namespace game
 
 			int o = obliterated ? 2 : ((flags&HIT_PROJ) && (flags&HIT_HEAD) ? 1 : 0);
 			concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
+			bool override = false;
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 			{
 				concatstring(d->obit, " teammate ");
@@ -603,57 +606,59 @@ namespace game
 			}
 			else
 			{
+				if(style&FRAG_REVENGE)
+				{
+					concatstring(d->obit, " a vengeful");
+					anc = S_V_REVENGE;
+					part_text(actor->abovehead(), "@REVENGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					part_text(d->abovehead(), "@REVENGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					if(actor == player1) d->dominated = false;
+					else if(d == player1) actor->dominating = false;
+					override = true;
+				}
+				else if(style&FRAG_DOMINATE)
+				{
+					concatstring(d->obit, " dominatrix");
+					anc = S_V_DOMINATE;
+					part_text(actor->abovehead(), "@DOMINATING", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					part_text(d->abovehead(), "@DOMINATED", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					if(actor == player1) d->dominating = true;
+					else if(d == player1) actor->dominated = true;
+					override = true;
+				}
 				concatstring(d->obit, " ");
 				concatstring(d->obit, colorname(actor));
-				if(!kidmode) switch(actor->spree)
-				{
-					case 5:
-					{
-						concatstring(d->obit, " in total carnage!");
-						anc = S_V_SPREE1;
-						part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						break;
-					}
-					case 10:
-					{
-						concatstring(d->obit, " who is slaughtering!");
-						anc = S_V_SPREE2;
-						part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						break;
-					}
-					case 15:
-					{
-						concatstring(d->obit, " going on a massacre!");
-						anc = S_V_SPREE3;
-						part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						break;
-					}
-					case 20:
-					{
-						concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
-						anc = S_V_SPREE4;
-						part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						break;
-					}
-					case 25:
-					{
-						concatstring(d->obit, " who seems unstoppable!");
-						anc = S_V_SPREE4;
-						part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						break;
-					}
-					default:
-					{
-						if((flags&HIT_PROJ) && (flags&HIT_HEAD))
-						{
-							anc = S_V_HEADSHOT;
-							part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-						}
-						else if(obliterated || (d->lastspawn && lastmillis-d->lastspawn <= spawnprotecttime*2000)) // double spawnprotect
-							anc = S_V_OWNED;
-						break;
-					}
-				}
+			}
+
+			if(style&FRAG_SPREE1)
+			{
+				concatstring(d->obit, " in total carnage!");
+				if(!override) { anc = S_V_SPREE1; part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+			}
+			else if(style&FRAG_SPREE2)
+			{
+				concatstring(d->obit, " who is slaughtering!");
+				if(!override) { anc = S_V_SPREE2; part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+			}
+			else if(style&FRAG_SPREE3)
+			{
+				concatstring(d->obit, " going on a massacre!");
+				if(!override) { anc = S_V_SPREE3; part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+			}
+			else if(style&FRAG_SPREE4)
+			{
+				concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
+				if(!override) { anc = S_V_SPREE4; part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+			}
+			else if(style&FRAG_SPREE5)
+			{
+				concatstring(d->obit, " who seems unstoppable!");
+				if(!override) { anc = S_V_SPREE5; part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+			}
+			else if(style&FRAG_HEADSHOT)
+			{
+				concatstring(d->obit, " with a headshot!");
+				if(!override) { anc = S_V_HEADSHOT; part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
 			}
 		}
 		if(d != actor)
@@ -1763,6 +1768,8 @@ namespace game
 				else if(d->state == CS_ALIVE)
 				{
 					if(d->conopen) t = textureload(conopentex, 3);
+					else if(d->dominating) t = textureload(dominatingtex, 3);
+					else if(d->dominated) t = textureload(dominatedtex, 3);
 					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != game::player1->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
 				}
