@@ -31,7 +31,7 @@ VARG(regenpenalty, 0, 500, INT_MAX-1);
 VARG(regenreward, 0, 100, INT_MAX-1);
 
 VARG(impulselength, 0, 5000, INT_MAX-1); // impulse dash length
-VARG(impulsejump, 0, 2000, INT_MAX-1); // cost of impulse jump
+VARG(impulsejump, 0, 1500, INT_MAX-1); // cost of impulse jump
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
