@@ -837,7 +837,7 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(d->ai->dontmove || (d->ai->becareful && d->vel.magnitude() <= physics::gravityforce(d))) d->move = d->strafe = 0;
+		if(d->ai->dontmove || (d->ai->becareful && d->vel.magnitude() > physics::gravityforce(d))) d->move = d->strafe = 0;
 		else
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
