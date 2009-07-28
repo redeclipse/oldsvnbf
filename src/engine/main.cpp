@@ -77,7 +77,7 @@ void quit()					 // normal exit
 	writeinitcfg();
 	abortconnect();
 	disconnect(1);
-	writecfg();
+	if(!ENG_DEVEL) writecfg();
 	cleanup();
 	exit(EXIT_SUCCESS);
 }
@@ -710,7 +710,7 @@ VARFP(clockfix, 0, 0, 1, clockreset());
 
 void rehash(bool reload)
 {
-	if(reload) writecfg();
+	if(reload && !ENG_DEVEL) writecfg();
 
 	persistidents = false;
 
@@ -719,7 +719,7 @@ void rehash(bool reload)
 	persistidents = true;
 
     initing = INIT_LOAD;
-	execfile("config.cfg", false);
+	if(!ENG_DEVEL) execfile("config.cfg", false);
 	execfile("autoexec.cfg", false);
     initing = NOT_INITING;
 }

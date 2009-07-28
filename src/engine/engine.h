@@ -8,6 +8,7 @@
 #define ENG_RELEASE			"Development"
 #define ENG_URL				"www.bloodfrontier.com"
 #define ENG_BLURB			"It's bloody fun!"
+#define ENG_DEVEL			true
 
 #define ENG_SERVER_PORT		28795
 #define ENG_QUERY_PORT		28796
