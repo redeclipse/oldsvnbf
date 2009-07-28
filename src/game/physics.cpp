@@ -6,8 +6,9 @@ namespace physics
 	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
-	FVARW(impulsespeed,		0, 30.f, 10000);	// extra velocity to add when impulsing
-	VARW(impulsedelay,		0, 3000, INT_MAX-1);	// impulse delay interval
+	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
+	VARW(impulsedelay,		0, 5000, INT_MAX-1); // impulse delay interval
+	VARW(impulselength,		0, 2500, INT_MAX-1); // impulse dash length
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
@@ -145,10 +146,10 @@ namespace physics
 			else
 			{
 				float speed = iscrouching(d) ? crawlspeed : movespeed;
-				if(impulsedelay > 0 && d->lastimpulse && d->impulsing)
+				if(impulsedelay > 0 && impulselength > 0 && d->lastimpulse && d->impulsing)
 				{
 					int millis = lastmillis-d->lastimpulse;
-					if(millis < impulsedelay) speed += impulsespeed*(1.f-clamp(millis/float(impulsedelay), 0.f, 1.f));
+					if(millis < impulselength) speed += impulsespeed*(1.f-clamp(millis/float(impulselength), 0.f, 1.f));
 				}
 				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(speed/100.f);
 			}
@@ -422,7 +423,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !d->jumping && !d->impulsing)
+		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !d->jumping)
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
@@ -521,7 +522,7 @@ namespace physics
 				}
 				if(pl->impulsing && canimpulse(pl) && (pl->move || pl->strafe))
 				{
-					vec dir; vecfromyawpitch(pl->aimyaw, max(pl->aimpitch+50.f, 90.f), pl->move, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
+					vec dir; vecfromyawpitch(pl->aimyaw, max(pl->aimpitch+45.f, 90.f), pl->move, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
 					pl->vel.add(dir);
 					pl->lastimpulse = lastmillis;
 					if(local && pl->type == ENT_PLAYER)
@@ -571,10 +572,10 @@ namespace physics
 		else
 		{
 			float curb = pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb;
-			if(impulsedelay > 0 && pl->lastimpulse && pl->impulsing && pl->physstate >= PHYS_SLOPE)
+			if(impulsedelay > 0 && impulselength > 0 && pl->lastimpulse && pl->impulsing && pl->physstate >= PHYS_SLOPE)
 			{
 				int millis = lastmillis-pl->lastimpulse;
-				if(millis < impulsedelay) curb += (aircurb-floorcurb)*(1.f-clamp(millis/float(impulsedelay), 0.f, 1.f));
+				if(millis < impulselength) curb += (aircurb-floorcurb)*(1.f-clamp(millis/float(impulselength), 0.f, 1.f));
 			}
 			float fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));

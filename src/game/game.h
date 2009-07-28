@@ -1114,7 +1114,7 @@ namespace client
 
 namespace physics
 {
-	extern int smoothmove, smoothdist, impulsedelay;
+	extern int smoothmove, smoothdist, impulsedelay, impulselength;
 	extern bool canimpulse(physent *d);
     extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
