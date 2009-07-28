@@ -697,6 +697,11 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
+					if(!d->impulsing && d->impulsemillis < physics::impulselength*2/3)
+					{
+						d->impulsing = true;
+						d->impulsetime = lastmillis;
+					}
 					return true;
 				}
 				else if(!isctfflag(f, d->team)) return false;

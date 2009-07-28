@@ -1039,7 +1039,7 @@ namespace client
 						{
 							playsound(S_IMPULSE, t->o, t);
 							regularshape(PART_SMOKE, int(t->radius), 0x222222, 21, 20, 250, t->feetpos(), 1.f, -10, 0, 10.f);
-							t->impulsetime = t->lastimpulse = lastmillis;
+							t->impulsetime = lastmillis;
 							break;
 						}
 						case SPHY_POWER:

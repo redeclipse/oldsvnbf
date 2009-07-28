@@ -7,8 +7,7 @@ namespace physics
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
 
 	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
-	VARW(impulsedelay,		0, 5000, INT_MAX-1); // impulse delay interval
-	VARW(impulselength,		0, 2500, INT_MAX-1); // impulse dash length
+	VARW(impulselength,		0, 5000, INT_MAX-1); // impulse dash length
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
 	FVARW(liquidcurb,		0, 10.f, 10000);
@@ -131,9 +130,9 @@ namespace physics
 		return 1.f;
 	}
 
-	bool canimpulse(physent *d)
+	bool canimpulse(physent *d, int cost)
 	{
-		if(impulsedelay > 0) return lastmillis-d->lastimpulse > m_speedtime(impulsedelay);
+		if(impulselength) return d->impulsemillis+cost < m_speedtime(impulselength);
 		return false;
 	}
 
@@ -146,11 +145,7 @@ namespace physics
 			else
 			{
 				float speed = iscrouching(d) ? crawlspeed : movespeed;
-				if(impulsedelay > 0 && impulselength > 0 && d->lastimpulse && d->impulsing)
-				{
-					int millis = lastmillis-d->lastimpulse;
-					if(millis < impulselength) speed += impulsespeed*(1.f-clamp(millis/float(impulselength), 0.f, 1.f));
-				}
+				if(impulselength > 0 && d->impulsing && d->impulsemillis < impulselength) speed += impulsespeed;
 				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(speed/100.f);
 			}
 		}
@@ -500,55 +495,48 @@ namespace physics
 		}
         else if(pl->physstate >= PHYS_SLOPE || liquidcheck(pl))
 		{
-			if(game::allowmove(pl))
+			if(game::allowmove(pl) && pl->jumping)
 			{
-				if(pl->jumping)
+				pl->falling = vec(0, 0, 0);
+				pl->physstate = PHYS_FALL; // cancel out other physstate
+				pl->vel.z += jumpforce(pl, true);
+				if(pl->inliquid)
 				{
-					pl->falling = vec(0, 0, 0);
-					pl->physstate = PHYS_FALL; // cancel out other physstate
-					pl->vel.z += jumpforce(pl, true);
-					if(pl->inliquid)
-					{
-						float scale = liquidmerge(pl, 1.f, liquidspeed);
-						pl->vel.x *= scale; pl->vel.y *= scale;
-					}
-					pl->jumping = false;
-					if(local && pl->type == ENT_PLAYER)
-					{
-						playsound(S_JUMP, pl->o, pl);
-						regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
-						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
-					}
+					float scale = liquidmerge(pl, 1.f, liquidspeed);
+					pl->vel.x *= scale; pl->vel.y *= scale;
 				}
-				if(pl->impulsing && canimpulse(pl) && (pl->move || pl->strafe))
+				pl->jumping = false;
+				if(local && pl->type == ENT_PLAYER)
 				{
-					vec dir; vecfromyawpitch(pl->aimyaw, max(pl->aimpitch+45.f, 90.f), pl->move, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
-					pl->vel.add(dir);
-					pl->lastimpulse = lastmillis;
-					if(local && pl->type == ENT_PLAYER)
-					{
-						playsound(S_IMPULSE, pl->o, pl);
-						regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
-						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
-					}
+					playsound(S_JUMP, pl->o, pl);
+					regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
+					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
 		}
-		else if(game::allowmove(pl) && (pl->impulsing || pl->jumping) && canimpulse(pl))
+		else if(game::allowmove(pl) && pl->jumping && canimpulse(pl, impulselength/4))
 		{
-			bool q = (pl->move || pl->strafe) && !pl->jumping && pl->impulsing;
-			vec dir; vecfromyawpitch(pl->aimyaw, q ? pl->aimpitch : 90.f, q ? pl->move : 1, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
-			if(q) pl->vel.z = 0;
+			vec dir; vecfromyawpitch(pl->aimyaw, 90.f, 1, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
+			if(pl->vel.z < 0) pl->vel.z = 0;
 			pl->vel.add(dir);
 			pl->falling = vec(0, 0, 0);
-			pl->lastimpulse = lastmillis;
 			pl->jumping = false;
+			pl->impulsemillis += impulselength/4;
 			if(local && pl->type == ENT_PLAYER)
 			{
 				playsound(S_IMPULSE, pl->o, pl);
 				regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
+		}
+		if(game::allowmove(pl))
+		{
+			if(pl->impulsing && (pl->move || pl->strafe))
+			{
+				if(canimpulse(pl, millis)) pl->impulsemillis += millis;
+				else pl->impulsing = false;
+			}
+			else if((pl->impulsemillis -= millis/2) < 0) pl->impulsemillis = 0;
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
@@ -571,13 +559,7 @@ namespace physics
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
-			float curb = pl->physstate >= PHYS_SLOPE ? floorcurb : aircurb;
-			if(impulsedelay > 0 && impulselength > 0 && pl->lastimpulse && pl->impulsing && pl->physstate >= PHYS_SLOPE)
-			{
-				int millis = lastmillis-pl->lastimpulse;
-				if(millis < impulselength) curb += (aircurb-floorcurb)*(1.f-clamp(millis/float(impulselength), 0.f, 1.f));
-			}
-			float fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
+			float curb = pl->physstate >= PHYS_SLOPE && !pl->impulsing ? floorcurb : aircurb, fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 		}
 	}

@@ -1026,7 +1026,7 @@ struct gameent : dynent, gamestate
 	{
 		stopmoving(true);
 		clearstate();
-    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = lastimpulse = 0;
+    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = 0;
     	inliquid = onladder = jumping = crouching = impulsing = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
@@ -1114,8 +1114,8 @@ namespace client
 
 namespace physics
 {
-	extern int smoothmove, smoothdist, impulsedelay, impulselength;
-	extern bool canimpulse(physent *d);
+	extern int smoothmove, smoothdist, impulselength;
+	extern bool canimpulse(physent *d, int cost);
     extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();

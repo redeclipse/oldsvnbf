@@ -710,12 +710,10 @@ namespace ai
 
 	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
-		vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
-		float magxy = dir.magnitude();
+		vec off = vec(pos).sub(d->feetpos());
 		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
-			jumper = off.z >= JUMPMIN, propeller = magxy >= JUMPMIN*2, keeppropel = d->lastimpulse && lastmillis-d->lastimpulse < physics::impulselength,
-			jump = !offground && ((jumper && (!propeller || off.z >= JUMPMIN*2)) || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed,
-			propel = !d->ai->becareful && propeller && (keeppropel || lastmillis >= d->ai->propelseed);
+			jumper = off.z >= JUMPMIN && (!offground || (d->timeinair > 500 && physics::canimpulse(d, physics::impulselength/4))),
+			jump = (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed;
 		if(jump)
 		{
 			vec old = d->o;
@@ -728,26 +726,16 @@ namespace ai
 				{
 					gameentity &e = *(gameentity *)entities::ents[i];
 					float radius = (e.attr[3] ? e.attr[3] : enttype[e.type].radius)*1.5f; radius *= radius;
-					if(e.o.squaredist(pos) <= radius) { jump = propel = false; break; }
+					if(e.o.squaredist(pos) <= radius) { jump = false; break; }
 				}
 			}
 		}
-		if(jump != d->jumping)
+		if(jump)
 		{
 			d->jumping = jump;
 			d->jumptime = lastmillis;
-		}
-		if(propel != d->impulsing)
-		{
-			d->impulsing = propel;
-			d->impulsetime = lastmillis;
-		}
-		if(jump || propel)
-		{
-			if(jumper && !propeller) d->ai->dontmove = true; // going up
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
-			d->ai->propelseed = lastmillis+m_speedtime(seed+rnd(seed));
-			if(jump) d->ai->jumpseed = d->ai->propelseed+m_speedtime(seed+rnd(seed));
+			d->ai->jumpseed = lastmillis+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 50 : 25;
 			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
 		}
@@ -849,7 +837,7 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(d->ai->dontmove || d->ai->becareful) d->move = d->strafe = 0;
+		if(d->ai->dontmove || (d->ai->becareful && d->vel.magnitude() <= physics::gravityforce(d))) d->move = d->strafe = 0;
 		else
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1018,8 +1006,8 @@ namespace ai
             {
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
-				if(!ladder && d->onladder) d->ai->jumpseed = d->ai->propelseed = lastmillis;
-				if(d->ai->becareful && (!d->timeinair || d->vel.magnitude() <= physics::gravityforce(d))) d->ai->becareful = false;
+				if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
+				if(d->ai->becareful && !d->timeinair) d->ai->becareful = false;
 				entities::checkitems(d);
             }
         }
