@@ -1281,15 +1281,9 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventoryimpulse && physics::impulsedelay > 0)
+			if(inventoryimpulse && physics::impulselength)
 			{
-				int millis = lastmillis-game::player1->lastimpulse;
-				float len = clamp(millis/float(m_speedtime(physics::impulsedelay)), 0.f, 1.f);
-				if(physics::impulselength > 0)
-				{
-					if(millis < physics::impulselength) len = 1.f-clamp(millis/float(m_speedtime(physics::impulselength)), 0.f, 1.f);
-					else len = clamp((millis-physics::impulselength)/float(m_speedtime(physics::impulsedelay-physics::impulselength)), 0.f, 1.f);
-				}
+				float len = 1.f-clamp(game::player1->impulsemillis/float(m_speedtime(physics::impulselength)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
