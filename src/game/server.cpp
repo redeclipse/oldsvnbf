@@ -2037,10 +2037,10 @@ namespace server
 				}
 				int logs = 0;
 				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-				if(logs >= 5) { style |= FRAG_REVENGE; pointvalue += 5; }
+				if(logs >= 3) { style |= FRAG_REVENGE; pointvalue += 5; }
 				actor->state.fraglog.add(target->clientnum); logs = 0;
-				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) logs++;
-				if(logs == 5) { style |= FRAG_DOMINATE; pointvalue += 5; }
+				loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
+				if(logs == 3) { style |= FRAG_DOMINATE; pointvalue += 5; }
 			}
 			else actor->state.spree = 0;
 			target->state.deaths++;
