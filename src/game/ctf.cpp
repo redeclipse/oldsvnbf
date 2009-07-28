@@ -522,7 +522,7 @@ namespace ctf
 		{
 			ctfstate::flag &g = st.flags[i];
 			if(g.owner == d) hasflags.add(i);
-			else if(isctfflag(g, d->team) && (g.owner || g.droptime))
+			else if(isctfflag(g, d->team) && ((g.owner && g.owner->team != d->team) || g.droptime))
 				takenflags.add(i);
 		}
 		if(!hasflags.empty())
