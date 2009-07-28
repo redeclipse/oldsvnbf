@@ -994,7 +994,7 @@ struct gameent : dynent, gamestate
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), lastpoints(0), edit(NULL), ai(NULL),
-		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
+		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 200; // so we can control the 'gravity' feel
@@ -1059,6 +1059,7 @@ struct gameent : dynent, gamestate
 
 	void mapchange(int millis, int heal)
 	{
+		dominating = dominated = false;
 		resetstate(millis, heal);
 		gamestate::mapchange();
 	}
