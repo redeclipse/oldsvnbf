@@ -420,6 +420,7 @@ namespace hud
 		switch(weap)
 		{
 			case WEAP_PISTOL: case WEAP_FLAMER: case WEAP_SMG: case WEAP_PLASMA: s *= 0.85f; break;
+			case WEAP_GRENADE: s *= 1.25f; break;
 			default: break;
 		}
 		float r = clipcolour, g = clipcolour, b = clipcolour;
