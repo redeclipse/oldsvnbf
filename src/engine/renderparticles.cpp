@@ -1328,11 +1328,11 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
 	}
 }
 
-void part_text(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide)
+void part_text(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide, physent *pl)
 {
 	if(shadowmapping || renderedgame || !t[0] || (t[0] == '@' && !t[1])) return;
 	if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
-	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide)->text = t[0]=='@' ? newstring(t) : t;
+	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide, pl)->text = t[0]=='@' ? newstring(t) : t;
 }
 
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, int grav, int collide, physent *pl)

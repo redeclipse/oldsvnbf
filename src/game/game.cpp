@@ -480,7 +480,7 @@ namespace game
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					defformatstring(ds)("@%d", damage);
-					part_text(d->abovehead(4), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10);
+					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
@@ -622,8 +622,8 @@ namespace game
 				if(style&FRAG_REVENGE)
 				{
 					concatstring(d->obit, " a \fs\fy\fzRevengeful\fS");
-					part_text(az, "@\fy\fzReAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
-					part_text(dz, "@\fy\fzReREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); dz.z += 4;
+					part_text(az, "@\fy\fzReAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					part_text(dz, "@\fy\fzReREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominated = false;
 					else if(d == player1) actor->dominating = false;
 					anc = S_V_REVENGE; override = true;
@@ -631,8 +631,8 @@ namespace game
 				else if(style&FRAG_DOMINATE)
 				{
 					concatstring(d->obit, " a \fs\fy\fzRedominating\fS");
-					part_text(az, "@\fy\fzReDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
-					part_text(dz, "@\fy\fzReDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); dz.z += 4;
+					part_text(az, "@\fy\fzReDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					part_text(dz, "@\fy\fzReDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominating = true;
 					else if(d == player1) actor->dominated = true;
 					anc = S_V_DOMINATE; override = true;
@@ -643,22 +643,22 @@ namespace game
 				if(style&FRAG_MKILL1)
 				{
 					concatstring(d->obit, " \fs\fv\fzRedouble-killing\fS");
-					part_text(az, "@\fv\fzReDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fv\fzReDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); dz.z += 4; }
+					part_text(az, "@\fv\fzReDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@\fv\fzReDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL2)
 				{
 					concatstring(d->obit, " \fs\fv\fzRetriple-killing\fS");
-					part_text(az, "@\fv\fzReTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fv\fzReTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); dz.z += 4; }
+					part_text(az, "@\fv\fzReTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@\fv\fzReTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL3)
 				{
 					concatstring(d->obit, " \fs\fv\fzRemulti-killing\fS");
-					part_text(az, "@\fv\fzReMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fv\fzReMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); dz.z += 4; }
+					part_text(az, "@\fv\fzReMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@\fv\fzReMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 			}
@@ -666,42 +666,42 @@ namespace game
 			if(style&FRAG_HEADSHOT)
 			{
 				concatstring(d->obit, " with a \fs\fg\fzReheadshot\fS");
-				part_text(az, "@\fg\fzReHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, "@\fg\fzReHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_HEADSHOT;
 			}
 
 			if(style&FRAG_SPREE1)
 			{
 				concatstring(d->obit, " in total \fs\fc\fzRecarnage\fS!");
-				part_text(az, "@\fc\fzReCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, "@\fc\fzReCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE1;
 				override = true;
 			}
 			else if(style&FRAG_SPREE2)
 			{
 				concatstring(d->obit, " on a \fs\fc\fzReslaughter\fS!");
-				part_text(az, "@\fc\fzReSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, "@\fc\fzReSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE2;
 				override = true;
 			}
 			else if(style&FRAG_SPREE3)
 			{
 				concatstring(d->obit, " on a \fs\fc\fzRemassacre\fS!");
-				part_text(az, "@\fc\fzReMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, "@\fc\fzReMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE3;
 				override = true;
 			}
 			else if(style&FRAG_SPREE4)
 			{
 				concatstring(d->obit, m_paint(gamemode, mutators) ? " in a \fs\fc\fzRepaintbath\fS!" : " in a \fs\fc\fzRebloodbath\fS!");
-				part_text(az, m_paint(gamemode, mutators) ? "@\fc\fzRePAINTBATH" : "@\fc\fzReBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, m_paint(gamemode, mutators) ? "@\fc\fzRePAINTBATH" : "@\fc\fzReBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE4;
 				override = true;
 			}
 			else if(style&FRAG_SPREE5)
 			{
 				concatstring(d->obit, " \fs\fc\fzReunstoppably\fS!");
-				part_text(az, "@\fc\fzReUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10); az.z += 4;
+				part_text(az, "@\fc\fzReUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE5;
 				override = true;
 			}
@@ -918,6 +918,13 @@ namespace game
 
         switch(type&0xFF)
         {
+        	case PT_TEXT:
+        	{
+        		vec q = p->owner->abovehead();
+        		if(q.z < o.z) q.z = o.z;
+        		o = q;
+        		break;
+        	}
         	case PT_TAPE: case PT_LIGHTNING:
         	{
         		float dist = o.dist(d);
