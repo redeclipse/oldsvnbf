@@ -514,9 +514,8 @@ namespace physics
 		}
 		else if(game::allowmove(pl) && pl->jumping && !pl->impulsejump && canimpulse(pl, impulsejump))
 		{
-			vec dir; vecfromyawpitch(pl->aimyaw, 90.f, 1, pl->strafe, dir); dir.normalize().mul(impulseforce(pl));
-			if(pl->vel.z < 0) pl->vel.z = 0;
-			pl->vel.add(dir);
+			vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
+			pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
 			pl->falling = vec(0, 0, 0);
 			pl->jumping = false;
 			pl->impulsejump = true;
