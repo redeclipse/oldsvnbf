@@ -35,7 +35,8 @@ namespace client
 		if(name[0])
 		{
 			c2sinit = false;
-			copystring(game::player1->name, name, MAXNAMELEN);
+			string text; copystring(text, name); filtertext(text, text);
+			copystring(game::player1->name, text, MAXNAMELEN);
 		}
 		else conoutf("\fmyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
@@ -1145,6 +1146,7 @@ namespace client
 						break;
 					}
 					getstring(text, p);
+					filtertext(text, text);
 					if(!text[0]) copystring(text, "unnamed");
 					if(d->name[0])		  // already connected
 					{

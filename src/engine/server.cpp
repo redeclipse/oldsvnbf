@@ -172,9 +172,15 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 {
 	for(int c = *src; c; c = *++src)
 	{
-        switch(c)
+        if(c=='\f')
         {
-        	case '\f': ++src; continue;
+        	++src;
+        	if(*src=='z')
+        	{
+        		++src;
+        		loopi(2) if(*src) ++src;
+        	}
+        	continue;
         }
 		if(isspace(c) ? whitespace : isprint(c))
 		{
