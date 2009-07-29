@@ -919,7 +919,7 @@ namespace game
 	{
 	}
 
-    void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass)
+    void particletrack(particle *p, uint type, int &ts,  bool lastpass)
     {
         if(!p || !p->owner || p->owner->type != ENT_PLAYER) return;
 
@@ -928,21 +928,22 @@ namespace game
         	case PT_TEXT:
         	{
         		vec q = p->owner->abovehead();
-        		if(q.z < o.z) q.z = o.z;
-        		o = q;
+        		if(p->o.z > q.z) q.z = p->o.z;
+				float k = pow(0.5f, float(curtime)/250.f);
+				p->o.mul(k).add(q.mul(1-k));
         		break;
         	}
         	case PT_TAPE: case PT_LIGHTNING:
         	{
-        		float dist = o.dist(d);
-				d = o = ((gameent *)p->owner)->muzzle;
+        		float dist = p->o.dist(p->d);
+				p->d = p->o = ((gameent *)p->owner)->muzzle;
         		vec dir; vecfromyawpitch(p->owner->yaw, p->owner->pitch, 1, 0, dir);
-        		d.add(dir.mul(dist));
+        		p->d.add(dir.mul(dist));
 				break;
         	}
         	case PT_PART: case PT_FIREBALL: case PT_FLARE:
         	{
-				o = ((gameent *)p->owner)->muzzle;
+				p->o = ((gameent *)p->owner)->muzzle;
 				break;
         	}
         	default: break;

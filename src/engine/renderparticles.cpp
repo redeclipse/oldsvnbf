@@ -74,11 +74,10 @@ struct partrenderer
 	}
 
 	//blend = 0 => remove it
-	void calc(particle *p, int &blend, int &ts, vec &o, vec &d, bool lastpass = true)
+	void calc(particle *p, int &blend, int &ts, bool lastpass = true)
 	{
-		o = p->o;
-		d = p->d;
-		game::particletrack(p, type, ts, o, d, lastpass);
+		vec o = p->o;
+		game::particletrack(p, type, ts, lastpass);
 		if(p->fade <= 5)
 		{
 			ts = 1;
@@ -91,23 +90,22 @@ struct partrenderer
 			if(p->grav)
 			{
 				if(ts > p->fade) ts = p->fade;
-				float secs = ts/1000.f;
-				vec v = vec(d).mul(secs);
+				float secs = curtime/1000.f;
+				vec v = vec(p->d).mul(secs);
 				static physent dummy;
 				dummy.weight = p->grav;
-				v.z -= physics::gravityforce(&dummy)*secs*secs/2;
-				o.add(v);
+				v.z -= physics::gravityforce(&dummy)*secs;
+				p->o.add(v);
 			}
-			if(p->collide && o.z < p->val && lastpass)
+			if(p->collide && p->o.z < p->val && lastpass)
 			{
 				vec surface;
-				float floorz = rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
-				float collidez = floorz<0 ? o.z-COLLIDERADIUS : p->val - rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
-				if(o.z >= collidez+COLLIDEERROR)
-					p->val = collidez+COLLIDEERROR;
+				float floorz = rayfloor(vec(p->o.x, p->o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
+				float collidez = floorz<0 ? o.z-COLLIDERADIUS : p->val - rayfloor(vec(p->o.x, p->o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
+				if(p->o.z >= collidez+COLLIDEERROR) p->val = collidez+COLLIDEERROR;
 				else
 				{
-					adddecal(p->collide, vec(o.x, o.y, collidez), vec(p->o).sub(o).normalize(), 2*p->size, p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
+					adddecal(p->collide, vec(p->o.x, p->o.y, collidez), vec(o).sub(p->o).normalize(), 2*p->size, p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
 					blend = 0;
 				}
 			}
@@ -116,9 +114,8 @@ struct partrenderer
 #if 0
 	void makeflare(particle *p)
 	{
-		vec o, d;
 		int blend, ts;
-		calc(p, blend, ts, o, d, false);
+		calc(p, blend, ts, false);
 		if(blend > 0)
 		{
 			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
@@ -228,7 +225,7 @@ struct listrenderer : partrenderer
 
 	virtual void startrender() = 0;
 	virtual void endrender() = 0;
-	virtual void renderpart(T *p, const vec &o, const vec &d, int blend, int ts, uchar *color) = 0;
+	virtual void renderpart(T *p, int blend, int ts, uchar *color) = 0;
 
 	void render()
 	{
@@ -238,12 +235,11 @@ struct listrenderer : partrenderer
 		bool lastpass = !reflecting && !refracting;
 		for(T **prev = &list, *p = list; p; p = *prev)
 		{
-			vec o, d;
 			int blend, ts;
-			calc(p, blend, ts, o, d, lastpass);
+			calc(p, blend, ts, lastpass);
 			if(blend > 0)
 			{
-				renderpart(p, o, d, blend, ts, p->color.v);
+				renderpart(p, blend, ts, p->color.v);
 
 				if(p->fade > 5 || !lastpass)
 				{
@@ -296,14 +292,14 @@ struct textrenderer : sharedlistrenderer
 		if(p->text && p->text[0]=='@') delete[] p->text;
 	}
 
-	void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging)
 		{
-			if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-			else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
+			if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
+			else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - p->o.z)/waterfog)));
 		}
 		glRotatef(camera1->yaw-180, 0, 0, 1);
 		glRotatef(camera1->pitch-90, 1, 0, 0);
@@ -340,11 +336,11 @@ struct portalrenderer : listrenderer<portal>
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
 	}
 
-	void renderpart(portal *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(portal *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glRotatef(p->yaw-180, 0, 0, 1);
 		glRotatef(p->pitch, 1, 0, 0);
 		glScalef(p->size, p->size, p->size);
@@ -396,7 +392,7 @@ struct iconrenderer : listrenderer<icon>
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
 	}
 
-	void renderpart(icon *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(icon *p, int blend, int ts, uchar *color)
 	{
 		if(p->tex != lasttex)
 		{
@@ -405,8 +401,8 @@ struct iconrenderer : listrenderer<icon>
 		}
 
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glRotatef(camera1->yaw-180, 0, 0, 1);
 		glRotatef(camera1->pitch, 1, 0, 0);
 		glScalef(p->size, p->size, p->size);
@@ -615,13 +611,11 @@ struct varenderer : partrenderer
 
 	void genverts(particle *p, partvert *vs, bool regen)
 	{
-		vec o, d;
 		int blend, ts;
-
-		calc(p, blend, ts, o, d);
+		calc(p, blend, ts);
 		if(blend <= 1 || p->fade <= 5) p->fade = -1; //mark to remove on next pass (i.e. after render)
 
-		modifyblend<T>(o, blend);
+		modifyblend<T>(p->o, blend);
 
 		if(regen)
 		{
@@ -657,8 +651,8 @@ struct varenderer : partrenderer
 		else if(type&PT_MOD) SETMODCOLOR;
 		else loopi(4) vs[i].alpha = blend;
 
-		if(type&PT_ROT) genrotpos<T>(o, d, p->size, ts, p->grav, vs, (p->flags>>2)&0x1F);
-		else genpos<T>(o, d, p->size, ts, p->grav, vs);
+		if(type&PT_ROT) genrotpos<T>(p->o, p->d, p->size, ts, p->grav, vs, (p->flags>>2)&0x1F);
+		else genpos<T>(p->o, p->d, p->size, ts, p->grav, vs);
 	}
 
 	void update()
@@ -726,16 +720,15 @@ struct softquadrenderer : quadrenderer
 		{
 			particle &p = parts[i];
 			float radius = p.size*SQRT2;
-			vec o, d;
 			int blend, ts;
-			calc(&p, blend, ts, o, d, false);
-			if(depthfxscissor==2 ? depthfxtex.addscissorbox(o, radius) : isvisiblesphere(radius, o) < VFC_FOGGED)
+			calc(&p, blend, ts, false);
+			if(depthfxscissor==2 ? depthfxtex.addscissorbox(p.o, radius) : isvisiblesphere(radius, p.o) < VFC_FOGGED)
 			{
 				numsoft++;
 				loopk(3)
 				{
-					bbmin[k] = min(bbmin[k], o[k] - radius);
-					bbmax[k] = max(bbmax[k], o[k] + radius);
+					bbmin[k] = min(bbmin[k], p.o[k] - radius);
+					bbmax[k] = max(bbmax[k], p.o[k] + radius);
 				}
 			}
 		}
@@ -769,11 +762,11 @@ struct lineprimitiverenderer : listrenderer<lineprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(lineprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(lineprimitive *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glScalef(p->size, p->size, p->size);
 		glColor3ubv(color);
 
@@ -824,11 +817,11 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(trisprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(trisprimitive *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glScalef(p->size, p->size, p->size);
 		glColor3ubv(color);
 
@@ -889,11 +882,11 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(loopprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(loopprimitive *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glScalef(p->size, p->size, p->size);
 		glColor3ubv(color);
 
@@ -963,11 +956,11 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(coneprimitive *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+	void renderpart(coneprimitive *p, int blend, int ts, uchar *color)
 	{
 		glPushMatrix();
-		glTranslatef(o.x, o.y, o.z);
-		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
+		glTranslatef(p->o.x, p->o.y, p->o.z);
+		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glScalef(p->size, p->size, p->size);
 		glColor3ubv(color);
 

@@ -467,7 +467,7 @@ struct fireballrenderer : sharedlistrenderer
         return numranges;
     }
 
-    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
     {
         float pmax = p->val,
               size = p->fade ? float(ts)/p->fade : 1,
@@ -476,17 +476,17 @@ struct fireballrenderer : sharedlistrenderer
         if(isvisiblesphere(psize*WOBBLE, p->o) >= VFC_FOGGED) return;
 
         glPushMatrix();
-        glTranslatef(o.x, o.y, o.z);
+        glTranslatef(p->o.x, p->o.y, p->o.z);
         if(fogging)
         {
-            if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
+            if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
+            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - p->o.z)/waterfog)));
         }
 
-        bool inside = o.dist(camera1->o) <= psize*WOBBLE;
-        vec oc(o);
+        bool inside = p->o.dist(camera1->o) <= psize*WOBBLE;
+        vec oc(p->o);
         oc.sub(camera1->o);
-        if(reflecting) oc.z = o.z - reflectz;
+        if(reflecting) oc.z = p->o.z - reflectz;
 
         float yaw = inside ? camera1->yaw - 180 : atan2(oc.y, oc.x)/RAD - 90,
         pitch = (inside ? camera1->pitch : asin(oc.z/oc.magnitude())/RAD) - 90;
@@ -515,7 +515,7 @@ struct fireballrenderer : sharedlistrenderer
 
         if(renderpath!=R_FIXEDFUNCTION)
         {
-            setlocalparamf("center", SHPARAM_VERTEX, 0, o.x, o.y, o.z);
+            setlocalparamf("center", SHPARAM_VERTEX, 0, p->o.x, p->o.y, p->o.z);
             setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));
             binddepthfxparams(depthfxblend, inside ? blend/(2*255.0f) : 0, 2*(p->size + pmax)*WOBBLE >= depthfxblend, p);
         }
