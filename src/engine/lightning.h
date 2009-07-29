@@ -19,15 +19,15 @@ static void setuplightning()
     }
 }
 
-static void renderlightning(const vec &o, const vec &d, float sz, float tx, float ty, float tsz)
+static void renderlightning(sharedlistparticle *p, float sz, float tx, float ty, float tsz)
 {
-    vec step(d);
-    step.sub(o);
+    vec step(p->d);
+    step.sub(p->o);
     float len = step.magnitude();
     int numsteps = clamp(int(ceil(len/LIGHTNINGSTEP)), 2, MAXLIGHTNINGSTEPS);
     step.div(numsteps+1);
-    int jitteroffset = detrnd(int(o.x+o.y+o.z), MAXLIGHTNINGSTEPS);
-    vec cur(o), up, right;
+    int jitteroffset = detrnd(int(p->o.x+p->o.y+p->o.z), MAXLIGHTNINGSTEPS);
+    vec cur(p->o), up, right;
     up.orthogonal(step);
     up.normalize();
     right.cross(up, step);
@@ -37,7 +37,7 @@ static void renderlightning(const vec &o, const vec &d, float sz, float tx, floa
     {
         vec next(cur);
         next.add(step);
-        if(j+1==numsteps) next = d;
+        if(j+1==numsteps) next = p->d;
         else
         {
             next.add(vec(right).mul(sz*lnjitterx[(j+jitteroffset)%MAXLIGHTNINGSTEPS]));
@@ -81,7 +81,7 @@ struct lightningrenderer : sharedlistrenderer
         setuplightning();
     }
 
-    void renderpart(sharedlistparticle *p, const vec &o, const vec &d, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
     {
         blend = min(blend<<2, 255);
         if(type&PT_MOD) //multiply alpha into color
@@ -96,7 +96,7 @@ struct lightningrenderer : sharedlistrenderer
             ty = 0.5f*((i>>1)&1);
             tsz = 0.5f;
         }
-        renderlightning(o, d, p->size, tx, ty, tsz);
+        renderlightning(p, p->size, tx, ty, tsz);
     }
 };
 static lightningrenderer lightnings;

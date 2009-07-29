@@ -87,7 +87,7 @@ namespace game
 	extern int numdynents();
 	extern void lighteffects(dynent *d, vec &color, vec &dir);
 	extern void adddynlights();
-	extern void particletrack(particle *p, uint type, int &ts, vec &o, vec &d, bool lastpass);
+	extern void particletrack(particle *p, uint type, int &ts, bool lastpass);
     extern void dynlighttrack(physent *owner, vec &o);
 	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
 	extern void project(int w, int h);
