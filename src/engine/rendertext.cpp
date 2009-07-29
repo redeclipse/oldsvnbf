@@ -149,7 +149,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
 			case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
 			case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
 			case 'd': case 'D': color = bvec(112, 112, 112); break;	// dark gray
-			case 'e': case 'E': f = d!='E' ? f/2 : 0; break;
+			case 'e': case 'E': f -= d!='E' ? f/4 : f; break;
 			case 'u': color = bvec(r, g, b); break;	// user colour
 			case 'R': default: break; // everything else
 		}

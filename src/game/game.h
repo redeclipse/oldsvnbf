@@ -1199,7 +1199,7 @@ namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
 			lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
-				noblood, fogdist, announcefilter;
+				noblood, fogdist, aboveheadfade, announcefilter;
 	extern bool intermission, zooming;
 
 	extern gameent *player1;
