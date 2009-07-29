@@ -362,7 +362,7 @@ namespace client
 			concatstring(m, t);
 		}
 		if(flags&SAY_ACTION) formatstring(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
-		else formatstring(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
+		else formatstring(s)("\fd<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
 		if(d->state != CS_SPECTATOR)
 		{
@@ -1545,7 +1545,7 @@ namespace client
 					else loopi(demos)
 					{
 						getstring(text, p);
-						conoutf("\fa%d. %s", i+1, text);
+						conoutf("\fd%d. %s", i+1, text);
 					}
 					break;
 				}

@@ -45,7 +45,7 @@ void abortconnect(bool msg)
 {
 	if(!connpeer) return;
     client::connectfail();
-    if(msg) conoutf("\faaborting connection attempt");
+    if(msg) conoutf("\fdaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
     if(curpeer) return;
@@ -64,7 +64,7 @@ void trydisconnect()
 	if(connpeer) abortconnect();
     else if(curpeer || connectedlocally)
     {
-        if(verbose) conoutf("\faattempting to disconnect...");
+        if(verbose) conoutf("\fdattempting to disconnect...");
         disconnect(0, !discmillis);
     }
     else conoutf("\frnot connected");
@@ -87,7 +87,7 @@ void connects(const char *name, int port, int qport, const char *password)
 	if(name && *name)
 	{
 		addserver(name, port, qport);
-		conoutf("\faattempting to connect to %s:[%d]", name, port);
+		conoutf("\fdattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
 		{
 			conoutf("\frcould not resolve host %s", name);
@@ -98,7 +98,7 @@ void connects(const char *name, int port, int qport, const char *password)
 	}
 	else
 	{
-		conoutf("\faattempting to connect to a local server");
+		conoutf("\fdattempting to connect to a local server");
 		address.host = ENET_HOST_BROADCAST;
 	}
 
@@ -141,7 +141,7 @@ void disconnect(int onlyclean, int async)
 			curpeer = NULL;
 		}
 		discmillis = 0;
-		conoutf("\fodisconnected");
+		conoutf("\frdisconnected");
 		cleanup = true;
 	}
 	if(!connpeer && clienthost)
@@ -223,7 +223,7 @@ void gets2c()			// get updates from the server
 			connectfail();
 			return;
 		}
-        else conoutf("\faconnection attempt %d", connattempts);
+        else conoutf("\fdconnection attempt %d", connattempts);
 	}
 	while(clienthost && enet_host_service(clienthost, &event, 0)>0)
 	switch(event.type)
@@ -239,7 +239,7 @@ void gets2c()			// get updates from the server
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			if(discmillis) conoutf("\faattempting to disconnect...");
+			if(discmillis) conoutf("\fdattempting to disconnect...");
 			else servertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
 			enet_packet_destroy(event.packet);
 			break;
