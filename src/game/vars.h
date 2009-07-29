@@ -75,5 +75,9 @@ FVARG(deadpushscale, 0, 2.f, 1000);
 FVARG(wavepusharea, 0, 2.5f, 1000);
 FVARG(wavepushscale, 0, 1.f, 1000);
 
+VARG(multikilldelay, 0, 3000, INT_MAX-1);
+VARG(spreecount, 0, 5, INT_MAX-1);
+VARG(dominatecount, 0, 5, INT_MAX-1);
+
 VARG(resetbansonend, 0, 1, 2); // reset bans on end (1: just when empty, 2: when matches end)
 VARG(resetvarsonend, 0, 1, 2); // reset variables on end (1: just when empty, 2: when matches end)

@@ -147,7 +147,7 @@ namespace server
         projectilestate dropped, weapshots[WEAP_MAX];
 		int score, frags, spree, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
-		vector<int> fraglog;
+		vector<int> fraglog, fragmillis;
 
 		servstate() : state(CS_SPECTATOR), aireinit(0) {}
 
@@ -164,7 +164,7 @@ namespace server
 			if(!change) score = timeplayed = 0;
 			else gamestate::mapchange();
             frags = spree = flags = deaths = teamkills = shotdamage = damage = 0;
-            fraglog.setsize(0);
+            fraglog.setsize(0); fragmillis.setsize(0);
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
 
@@ -2020,27 +2020,39 @@ namespace server
 			if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
 				if(actor != target) actor->state.teamkills++;
-				pointvalue *= 3;
-				actor->state.spree = 0;
+				pointvalue *= 3; actor->state.spree = 0;
 			}
 			else if(actor != target)
 			{
-				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) { style |= FRAG_HEADSHOT; pointvalue *= 3; }
-				switch(++actor->state.spree)
+				int logs = 0; actor->state.spree++;
+				actor->state.fraglog.add(target->clientnum);
+				if(GVAR(multikilldelay))
 				{
-					case 5: style |= FRAG_SPREE1; pointvalue += actor->state.spree; break;
-					case 10: style |= FRAG_SPREE2; pointvalue += actor->state.spree; break;
-					case 15: style |= FRAG_SPREE3; pointvalue += actor->state.spree; break;
-					case 20: style |= FRAG_SPREE4; pointvalue += actor->state.spree; break;
-					case 25: style |= FRAG_SPREE5; pointvalue += actor->state.spree; break;
-					default: break;
+					actor->state.fragmillis.add(lastmillis);
+					loopv(actor->state.fragmillis)
+					{
+						if(lastmillis-actor->state.fragmillis[i] > GVAR(multikilldelay)) actor->state.fragmillis.remove(i--);
+						else logs++;
+					}
+					if(logs >= 2)
+					{
+						int offset = clamp(logs-2, 0, 2); // double, triple, multi..
+						style |= FRAG_MKILL1+offset; pointvalue *= offset+2;
+					}
 				}
-				int logs = 0;
-				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-				if(logs >= 5) { style |= FRAG_REVENGE; pointvalue += 5; }
-				actor->state.fraglog.add(target->clientnum); logs = 0;
-				loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-				if(logs == 5) { style |= FRAG_DOMINATE; pointvalue += 5; }
+
+				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) { style |= FRAG_HEADSHOT; pointvalue *= 3; }
+
+				if(actor->state.spree <= GVAR(spreecount)*5 && !(actor->state.spree%GVAR(spreecount)))
+				{
+					int offset = (actor->state.spree/GVAR(spreecount))-1;
+					style |= FRAG_SPREE1+offset; pointvalue += (offset+1)*GVAR(spreecount);
+				}
+				logs = 0; loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
+				if(logs >= GVAR(dominatecount)) { style |= FRAG_REVENGE; pointvalue += GVAR(dominatecount); }
+
+				logs = 0; loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
+				if(logs == GVAR(dominatecount)) { style |= FRAG_DOMINATE; pointvalue += GVAR(dominatecount); }
 			}
 			else actor->state.spree = 0;
 			target->state.deaths++;
@@ -2063,8 +2075,7 @@ namespace server
         ci->state.frags += fragvalue;
         ci->state.spree = 0;
         ci->state.deaths++;
-		dropitems(ci);
-		givepoints(ci, pointvalue);
+		dropitems(ci); givepoints(ci, pointvalue);
 		sendf(-1, 1, "ri6", SV_DIED, ci->clientnum, ci->clientnum, ci->state.points, ci->state.frags, -1, flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
