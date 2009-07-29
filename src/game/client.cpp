@@ -367,7 +367,7 @@ namespace client
 		if(d->state != CS_SPECTATOR)
 		{
 			defformatstring(ds)("@%s", s);
-			part_text(d->abovehead(), ds, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+			part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, -10, 0, d);
 		}
 
 		conoutft(CON_CHAT, "%s", s);
