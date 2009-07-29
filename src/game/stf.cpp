@@ -171,7 +171,7 @@ namespace stf
 				int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGSECURED : -1;
 				game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				defformatstring(text)("@%s\fzReSECURED", teamtype[owner].chat);
-				part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+				part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 				game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
 			}
 		}
@@ -180,7 +180,7 @@ namespace stf
 			int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGOVERTHROWN : -1;
 			game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
 			defformatstring(text)("@%s\fzReOVERTHROWN", teamtype[enemy].chat);
-			part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+			part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
 		}
 		b.owner = owner;

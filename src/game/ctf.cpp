@@ -415,18 +415,24 @@ namespace ctf
         }
     }
 
-    void flageffect(int i, int team, const vec &from, const vec &to, const char *str)
+    void flageffect(int i, int team, const vec &from, const vec &to, int effect, const char *str)
     {
 		if(from.x >= 0)
 		{
-			defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
-			part_text(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+			if(effect&1)
+			{
+				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
+				part_text(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+			}
 			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
 		}
 		if(to.x >= 0)
 		{
-			defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
-			part_text(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
+			if(effect&2)
+			{
+				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
+				part_text(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+			}
 			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
 		}
 		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2.f, -5);
@@ -436,7 +442,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		flageffect(i, d->team, d->feetpos(), f.spawnloc, "RETURNED");
+		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || isctfflag(f, game::player1->team) ? S_V_FLAGRETURN : -1;
 		game::announce(idx, CON_INFO, "\fo%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
 		st.returnflag(i);
@@ -448,7 +454,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, "RESET");
+		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, 3, "RESET");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || isctfflag(f, game::player1->team) ? S_V_FLAGRESET : -1;
 		game::announce(idx, CON_INFO, "\fothe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
 		st.returnflag(i);
@@ -460,7 +466,7 @@ namespace ctf
     {
         if(!st.flags.inrange(goal) || !st.flags.inrange(relay)) return;
 		ctfstate::flag &f = st.flags[relay], &g = st.flags[goal];
-		flageffect(goal, d->team, g.spawnloc, f.spawnloc, "CAPTURED");
+		flageffect(goal, d->team, g.spawnloc, f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? S_V_FLAGSCORE : -1;
 		game::announce(idx, CON_INFO, "\fo%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
@@ -473,7 +479,7 @@ namespace ctf
     {
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
-		flageffect(i, d->team, d->feetpos(), f.pos(), "TAKEN");
+		flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? (f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP) : -1;
 		game::announce(idx, CON_INFO, "\fo%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		if(!f.droptime) f.taketime = lastmillis;
