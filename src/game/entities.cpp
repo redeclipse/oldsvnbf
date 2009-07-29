@@ -642,11 +642,18 @@ namespace entities
 						}
 						case PUSHER:
 						{
-							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(m_speedscale(10.f));
+							float mag = m_speedscale(10.f);
+							if(e.attr[4] && e.attr[4] < e.attr[3])
+							{
+								vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
+								float dist = m.dist(e.o);
+								if(dist >= e.attr[4]) mag *= 1.f-clamp((dist-e.attr[4])/float(e.attr[3]-e.attr[4]), 0.f, 1.f);
+							}
+							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(mag);
 							if(d->ai) d->ai->becareful = true;
 							d->falling = vec(0, 0, 0);
 							d->physstate = PHYS_FALL;
-							d->timeinair = 1;
+							if(!d->timeinair) d->timeinair = 1;
 							loopk(3)
 							{
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
@@ -850,6 +857,12 @@ namespace entities
 						e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
 					}
 				}
+				break;
+			}
+			case PUSHER:
+			{
+				if(e.attr[3] < 0) e.attr[3] = 0;
+				if(e.attr[4] < 0 || e.attr[4] >= e.attr[3]) e.attr[4] = 0;
 				break;
 			}
 			case TRIGGER:
@@ -1784,6 +1797,8 @@ namespace entities
 					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3])
 						radius = (float)e.attr[3];
 					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius));
+					if(e.type == PUSHER && e.attr[4] && e.attr[4] < e.attr[3])
+						part_radius(e.o, vec(e.attr[4], e.attr[4], e.attr[4]));
 					break;
 				}
 			}
