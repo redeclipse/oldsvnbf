@@ -8,7 +8,7 @@ namespace game
 	vec swaydir(0, 0, 0);
     int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, lastannounce = 0;
     bool prevzoom = false, zooming = false;
-	int liquidchan = -1, fogdist = 0;
+	int liquidchan = -1, announcechan = -1, fogdist = 0;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -88,7 +88,7 @@ namespace game
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
-	VARP(announcedelay, 0, 25, INT_MAX-1); // in case you wanna clip announcements to not overlap
+	VARP(announcedelay, 0, 1, INT_MAX-1); // in case you wanna clip announcements to not overlap
 	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
     VARP(rollfade, 0, 10, INT_MAX-1);
@@ -240,7 +240,8 @@ namespace game
 		conoutft(targ, "%s", text);
 		if(idx >= 0 && (!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay))
 		{
-			playsound(idx, camera1->o, camera1, SND_FORCED);
+			if(issound(announcechan)) removesound(announcechan);
+			playsound(idx, camera1->o, camera1, SND_FORCED, -1, -1, -1, &announcechan);
 			lastannounce = lastmillis;
 		}
 	}
@@ -599,6 +600,7 @@ namespace game
 			int o = obliterated ? 2 : ((flags&HIT_PROJ) && (flags&HIT_HEAD) ? 1 : 0);
 			concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "was killed by");
 			bool override = false;
+			vec az = actor->abovehead(), dz = d->abovehead();
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 			{
 				concatstring(d->obit, " teammate ");
@@ -609,56 +611,88 @@ namespace game
 				if(style&FRAG_REVENGE)
 				{
 					concatstring(d->obit, " a vengeful");
-					anc = S_V_REVENGE;
-					part_text(actor->abovehead(), "@REVENGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-					part_text(d->abovehead(), "@REVENGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					part_text(az, "@AVENGED", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+					part_text(dz, "@REVENGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); dz.z += 4;
 					if(actor == player1) d->dominated = false;
 					else if(d == player1) actor->dominating = false;
-					override = true;
+					anc = S_V_REVENGE; override = true;
 				}
 				else if(style&FRAG_DOMINATE)
 				{
 					concatstring(d->obit, " dominatrix");
-					anc = S_V_DOMINATE;
-					part_text(actor->abovehead(), "@DOMINATING", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
-					part_text(d->abovehead(), "@DOMINATED", PART_TEXT, 2500, 0x00FFFF, 4.f, -10);
+					part_text(az, "@DOMINATING", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+					part_text(dz, "@DOMINATED", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); dz.z += 4;
 					if(actor == player1) d->dominating = true;
 					else if(d == player1) actor->dominated = true;
-					override = true;
+					anc = S_V_DOMINATE; override = true;
 				}
 				concatstring(d->obit, " ");
 				concatstring(d->obit, colorname(actor));
+
+				if(style&FRAG_MKILL1)
+				{
+					concatstring(d->obit, " double-killing");
+					part_text(az, "@DOUBLE-KILL", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+					if(actor == player1) { part_text(dz, "@DOUBLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); dz.z += 4; }
+					if(!override) anc = S_V_MKILL1;
+				}
+				else if(style&FRAG_MKILL2)
+				{
+					concatstring(d->obit, " triple-killing");
+					part_text(az, "@TRIPLE-KILL", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+					if(actor == player1) { part_text(dz, "@TRIPLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); dz.z += 4; }
+					if(!override) anc = S_V_MKILL1;
+				}
+				else if(style&FRAG_MKILL3)
+				{
+					concatstring(d->obit, " multi-killing");
+					part_text(az, "@MULTI-KILL", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+					if(actor == player1) { part_text(dz, "@MULTI", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); dz.z += 4; }
+					if(!override) anc = S_V_MKILL1;
+				}
+			}
+
+			if(style&FRAG_HEADSHOT)
+			{
+				concatstring(d->obit, " with a headshot");
+				part_text(az, "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_HEADSHOT;
 			}
 
 			if(style&FRAG_SPREE1)
 			{
 				concatstring(d->obit, " in total carnage!");
-				if(!override) { anc = S_V_SPREE1; part_text(actor->abovehead(), "@CARNAGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+				part_text(az, "@CARNAGE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_SPREE1;
+				override = true;
 			}
 			else if(style&FRAG_SPREE2)
 			{
-				concatstring(d->obit, " who is slaughtering!");
-				if(!override) { anc = S_V_SPREE2; part_text(actor->abovehead(), "@SLAUGHTER", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+				concatstring(d->obit, " on a slaughter!");
+				part_text(az, "@SLAUGHTER", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_SPREE2;
+				override = true;
 			}
 			else if(style&FRAG_SPREE3)
 			{
-				concatstring(d->obit, " going on a massacre!");
-				if(!override) { anc = S_V_SPREE3; part_text(actor->abovehead(), "@MASSACRE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+				concatstring(d->obit, " on a massacre!");
+				part_text(az, "@MASSACRE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_SPREE3;
+				override = true;
 			}
 			else if(style&FRAG_SPREE4)
 			{
-				concatstring(d->obit, m_paint(gamemode, mutators) ? " creating a paintbath!" : " creating a bloodbath!");
-				if(!override) { anc = S_V_SPREE4; part_text(actor->abovehead(), m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+				concatstring(d->obit, m_paint(gamemode, mutators) ? " in a paintbath!" : " in a bloodbath!");
+				part_text(az, m_paint(gamemode, mutators) ? "@PAINTBATH" : "@BLOODBATH", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_SPREE4;
+				override = true;
 			}
 			else if(style&FRAG_SPREE5)
 			{
-				concatstring(d->obit, " who seems unstoppable!");
-				if(!override) { anc = S_V_SPREE5; part_text(actor->abovehead(), "@UNSTOPPABLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
-			}
-			else if(style&FRAG_HEADSHOT)
-			{
-				concatstring(d->obit, " with a headshot!");
-				if(!override) { anc = S_V_HEADSHOT; part_text(actor->abovehead(), "@HEADSHOT", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); }
+				concatstring(d->obit, " unstoppably!");
+				part_text(az, "@UNSTOPPABLE", PART_TEXT, 2500, 0x00FFFF, 4.f, -10); az.z += 4;
+				if(!override) anc = S_V_SPREE5;
+				override = true;
 			}
 		}
 		if(d != actor)
