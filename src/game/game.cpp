@@ -77,18 +77,19 @@ namespace game
 
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
-	FVARP(statusaboveheadblend, 0.f, 0.5f, 1.f);
+	FVARP(statusaboveheadblend, 0.f, 0.75f, 1.f);
 	VARP(showteamabovehead, 0, 1, 3);
 	VARP(showdamageabovehead, 0, 0, 2);
 	TVAR(conopentex, "textures/conopen", 3);
 	TVAR(deadtex, "textures/dead", 3);
-	TVAR(dominatingtex, "textures/player", 3);
+	TVAR(dominatingtex, "textures/arrow", 3);
 	TVAR(dominatedtex, "textures/exit", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
 	VARP(announcedelay, 0, 1, INT_MAX-1); // in case you wanna clip announcements to not overlap
+	VARP(announceobits, 0, 2, 2); // 0 = no announcer, 1 = only for self, 2 = everybody
 	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
     VARP(rollfade, 0, 10, INT_MAX-1);
@@ -728,8 +729,13 @@ namespace game
 			}
 			if(show)
 			{
-				if(isme) announce(anc, CON_INFO, "\fw%s", d->obit);
-				else conoutft(CON_INFO, "\fw%s", d->obit);
+				if(announceobits && isme) announce(anc, CON_INFO, "\fw%s", d->obit);
+				else
+				{
+					conoutft(CON_INFO, "\fw%s", d->obit);
+					if(announceobits && (announceobits >= 2 || player1->state == CS_SPECTATOR) && anc >= 0)
+						playsound(anc, actor->abovehead(), NULL, 0, -1, getworldsize()/2, actor->radius);
+				}
 			}
 		}
 		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
