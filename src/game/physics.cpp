@@ -610,7 +610,7 @@ namespace physics
 			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
 		}
 		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
-			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : 0)|HIT_FULL);
+			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : HIT_FALL)|HIT_FULL);
 		pl->inmaterial = matid;
 		if((pl->inliquid = !floating && isliquid(curmat)) != false)
 		{

@@ -2076,7 +2076,7 @@ namespace server
         ci->state.spree = 0;
         ci->state.deaths++;
 		dropitems(ci); givepoints(ci, pointvalue);
-		sendf(-1, 1, "ri6", SV_DIED, ci->clientnum, ci->clientnum, ci->state.points, ci->state.frags, -1, flags, ci->state.health);
+		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, ci->state.frags, 0, -1, flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);
 		mutate(smuts, mut->died(ci, NULL));
@@ -3170,7 +3170,7 @@ namespace server
 					if(!m_team(gamemode, mutators) || !(flags&SAY_TEAM))
 					{
 						if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
-						else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
+						else relayf(0, "\fd<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
 					}
 					break;
 				}

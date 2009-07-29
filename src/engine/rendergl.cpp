@@ -1694,7 +1694,7 @@ void renderprogress(float bar1, const char *text1, float bar2, const char *text2
 	if(text1)
 	{
 		if(text2 && bar2 > 0)
-			draw_textx("%s %s [\fs\fo%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));
+			draw_textx("%s %s [\fs\fy%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));
 		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1);
 	}
 

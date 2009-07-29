@@ -1154,7 +1154,7 @@ COMMAND(genpvs, "i");
 
 void pvsstats()
 {
-    conoutf("\fa%d unique view cells totaling %.1f kB and averaging %d B",
+    conoutf("\fd%d unique view cells totaling %.1f kB and averaging %d B",
         pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1));
 }
 

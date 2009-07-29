@@ -108,7 +108,7 @@ SVARP(green, "\fg");
 SVARP(blue, "\fb");
 SVARP(yellow, "\fy");
 SVARP(red, "\fr");
-SVARP(gray, "\fa");
+SVARP(gray, "\fd");
 SVARP(magenta, "\fm");
 SVARP(orange, "\fo");
 SVARP(white, "\fw");
@@ -139,7 +139,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
 			case 'b': case '1': color = bvec( 64,  64, 255); break;	// blue
 			case 'y': case '2': color = bvec(255, 255,   0); break;	// yellow
 			case 'r': case '3': color = bvec(255,  64,  64); break;	// red
-			case 'a': case '4': color = bvec(196, 196, 196); break;	// gray
+			case 'a': case '4': color = bvec(164, 164, 164); break;	// gray
 			case 'm': case '5': color = bvec(255,  64, 255); break;	// magenta
 			case 'o': case '6': color = bvec(255,  96,   0); break;	// orange
 			case 'w': case '7': color = bvec(255, 255, 255); break;	// white
@@ -148,7 +148,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
 			case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
 			case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
 			case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
-			case 'd': case 'D': color = bvec(112, 112, 112); break;	// dark gray
+			case 'd': case 'D': color = bvec(100, 100, 100); break;	// dark gray
 			case 'e': case 'E': f -= d!='E' ? f/4 : f; break;
 			case 'u': color = bvec(r, g, b); break;	// user colour
 			case 'R': default: break; // everything else

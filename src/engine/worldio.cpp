@@ -318,7 +318,7 @@ void save_config(char *mname)
 		}
 	}
 	if(vars) h->printf("\n");
-	if(verbose >= 2) conoutf("\fawrote %d variable values", vars);
+	if(verbose >= 2) conoutf("\fdwrote %d variable values", vars);
 
 	int aliases = 0;
     loopv(ids)
@@ -331,7 +331,7 @@ void save_config(char *mname)
 		}
 	}
 	if(aliases) h->printf("\n");
-	if(verbose >= 2) conoutf("\fasaved %d aliases", aliases);
+	if(verbose >= 2) conoutf("\fdsaved %d aliases", aliases);
 
 	// texture slots
 	loopi(MAT_EDIT)
@@ -343,14 +343,14 @@ void save_config(char *mname)
 			saveslotconfig(h, materialslots[i], -i);
 		}
 	}
-	if(verbose) conoutf("\fasaved %d material slots", MAT_EDIT);
+	if(verbose) conoutf("\fdsaved %d material slots", MAT_EDIT);
 
 	loopv(slots)
 	{
 		if(verbose) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslotconfig(h, slots[i], i);
 	}
-	if(verbose) conoutf("\fasaved %d texture slots", slots.length());
+	if(verbose) conoutf("\fdsaved %d texture slots", slots.length());
 
 	loopv(mapmodels)
 	{
@@ -358,7 +358,7 @@ void save_config(char *mname)
 		h->printf("mmodel \"%s\"\n", mapmodels[i].name);
 	}
 	if(mapmodels.length()) h->printf("\n");
-	if(verbose) conoutf("\fasaved %d mapmodel slots", mapmodels.length());
+	if(verbose) conoutf("\fdsaved %d mapmodel slots", mapmodels.length());
 
 	loopv(mapsounds)
 	{
@@ -366,10 +366,10 @@ void save_config(char *mname)
 		h->printf("mapsound \"%s\" %d \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, findmaterialname(mapsounds[i].material), mapsounds[i].maxrad, mapsounds[i].minrad);
 	}
 	if(mapsounds.length()) h->printf("\n");
-	if(verbose) conoutf("\fasaved %d mapsound slots", mapsounds.length());
+	if(verbose) conoutf("\fdsaved %d mapsound slots", mapsounds.length());
 
 	delete h;
-	if(verbose) conoutf("\fasaved config %s", fname);
+	if(verbose) conoutf("\fdsaved config %s", fname);
 }
 ICOMMAND(savemapconfig, "s", (char *mname), save_config(*mname ? mname : mapname));
 
@@ -470,7 +470,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 		}
 	});
 
-	if(verbose) conoutf("\fasaved %d variables", vars);
+	if(verbose) conoutf("\fdsaved %d variables", vars);
 
 	// texture slots
 	f->putlil<ushort>(texmru.length());
@@ -506,12 +506,12 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 
 				f->putlil<int>(links.length());
 				loopvj(links) f->putlil<int>(links[j]); // aligned index
-				if(verbose >= 2) conoutf("\faentity %s (%d) saved %d links", entities::findname(e.type), i, links.length());
+				if(verbose >= 2) conoutf("\fdentity %s (%d) saved %d links", entities::findname(e.type), i, links.length());
 			}
 			count++;
 		}
 	}
-	if(verbose) conoutf("\fasaved %d entities", count);
+	if(verbose) conoutf("\fdsaved %d entities", count);
 
 	savec(worldroot, f, nodata);
     if(!nodata)
@@ -528,18 +528,18 @@ void save_world(const char *mname, bool nodata, bool forcesave)
             }
             f->write(lm.data, lm.bpp*LM_PACKW*LM_PACKH);
         }
-        if(verbose) conoutf("\fasaved %d lightmaps", lightmaps.length());
+        if(verbose) conoutf("\fdsaved %d lightmaps", lightmaps.length());
         if(getnumviewcells()>0)
         {
             if(verbose) renderprogress(0, "saving PVS...");
             savepvs(f);
-            if(verbose) conoutf("\fasaved %d PVS view cells", getnumviewcells());
+            if(verbose) conoutf("\fdsaved %d PVS view cells", getnumviewcells());
         }
         if(shouldsaveblendmap())
         {
             if(verbose) renderprogress(0, "saving blendmap...");
             saveblendmap(f);
-            if(verbose) conoutf("\fasaved blendmap");
+            if(verbose) conoutf("\fdsaved blendmap");
         }
     }
 
@@ -547,7 +547,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	game::saveworld(f);
 	delete f;
 
-	conoutf("\fasaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
+	conoutf("\fdsaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
 }
 
 ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname));
@@ -691,7 +691,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				maptype = MAP_BFGZ;
 
 				if(hdr.version <= 24) copystring(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
-				if(verbose) conoutf("\faloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
+				if(verbose) conoutf("\fdloading v%d map from %s game v%d", hdr.version, hdr.gameid, hdr.gamever);
 
 				if(hdr.version >= 25 || (hdr.version == 24 && hdr.gamever >= 44))
 				{
@@ -771,7 +771,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					}
 					persistidents = true;
 					overrideidents = worldidents = false;
-					if(verbose) conoutf("\faloaded %d variables", vars);
+					if(verbose) conoutf("\fdloaded %d variables", vars);
 				}
 				sanevars();
 
@@ -926,7 +926,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					if(verbose) conoutf("\frWARNING: loading OCTA v%d map from %s game, ignoring game specific data", hdr.version, hdr.gameid);
 					samegame = false;
 				}
-				else if(verbose) conoutf("\faloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
+				else if(verbose) conoutf("\fdloading OCTA v%d map from %s game", hdr.version, hdr.gameid);
 
 				if(hdr.version>=16)
 				{
@@ -1002,7 +1002,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						int ln = f->getlil<int>();
 						e.links.add(ln);
 					}
-					if(verbose >= 2) conoutf("\faentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
+					if(verbose >= 2) conoutf("\fdentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
 				}
 				if(maptype == MAP_OCTA && e.type == ET_PARTICLES && e.attr[0] >= 11)
 				{
@@ -1025,7 +1025,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
 					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
-			if(verbose) conoutf("\faloaded %d entities", hdr.numents);
+			if(verbose) conoutf("\fdloaded %d entities", hdr.numents);
 
 			renderprogress(0, "loading octree...");
 			worldroot = loadchildren(f);
@@ -1068,7 +1068,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			if(hdr.numpvs > 0) loadpvs(f);
 			if(hdr.blendmap) loadblendmap(f);
 
-			if(verbose) conoutf("\faloaded %d lightmaps", hdr.lightmaps);
+			if(verbose) conoutf("\fdloaded %d lightmaps", hdr.lightmaps);
 
 			renderprogress(0, "loading world...");
 			game::loadworld(f, maptype);
@@ -1137,7 +1137,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			loadprogress = 0;
 
 			delete f;
-			conoutf("\faloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
+			conoutf("\fdloaded map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-loadingstart)/1000.0f);
 
 			if((maptype == MAP_OCTA && hdr.version <= 25) || (maptype == MAP_BFGZ && hdr.version <= 26))
 				fixlightmapnormals();

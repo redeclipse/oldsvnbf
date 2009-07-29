@@ -217,21 +217,21 @@ void setvar(const char *name, int i, bool dofunc)
 	GETVAR(id, name, );
 	*id->storage.i = clamp(i, id->minval, id->maxval);
 	if(dofunc) id->changed();
-	if(verbose >= 4) conoutf("\fa%s set to %d", id->name, *id->storage.i);
+	if(verbose >= 4) conoutf("\fd%s set to %d", id->name, *id->storage.i);
 }
 void setfvar(const char *name, float f, bool dofunc)
 {
 	_GETVAR(id, ID_FVAR, name, );
 	*id->storage.f = clamp(f, id->minvalf, id->maxvalf);
 	if(dofunc) id->changed();
-	if(verbose >= 4) conoutf("\fa%s set to %s", id->name, floatstr(*id->storage.f));
+	if(verbose >= 4) conoutf("\fd%s set to %s", id->name, floatstr(*id->storage.f));
 }
 void setsvar(const char *name, const char *str, bool dofunc)
 {
 	_GETVAR(id, ID_SVAR, name, );
 	*id->storage.s = exchangestr(*id->storage.s, str);
 	if(dofunc) id->changed();
-	if(verbose >= 4) conoutf("\fa%s set to %s", id->name, *id->storage.s);
+	if(verbose >= 4) conoutf("\fd%s set to %s", id->name, *id->storage.s);
 }
 int getvar(const char *name)
 {
@@ -627,7 +627,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 				}
 
 				case ID_VAR:						// game defined variables
-                    if(numargs <= 1) conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fa%s = 0x%.6X" : "\fa%s = 0x%X") : "\fa%s = %d", c, *id->storage.i);      // var with no value just prints its current value
+                    if(numargs <= 1) conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fd%s = 0x%.6X" : "\fd%s = 0x%X") : "\fd%s = %d", c, *id->storage.i);      // var with no value just prints its current value
 					else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
@@ -685,7 +685,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					break;
 
 				case ID_FVAR:
-					if(numargs <= 1) conoutf("\fa%s = %s", c, floatstr(*id->storage.f));
+					if(numargs <= 1) conoutf("\fd%s = %s", c, floatstr(*id->storage.f));
 					else if(id->minvalf>id->maxvalf) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
@@ -777,7 +777,7 @@ bool execfile(const char *cfgfile, bool msg)
     }
 	execute(buf);
 	delete[] buf;
-	if (verbose >= 3) conoutf("\faloaded script %s", cfgfile);
+	if (verbose >= 3) conoutf("\fdloaded script %s", cfgfile);
 	return true;
 }
 
@@ -1091,7 +1091,7 @@ ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
-ICOMMAND(echo, "C", (char *s), conoutf("\fa%s", s));
+ICOMMAND(echo, "C", (char *s), conoutf("\fd%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
 

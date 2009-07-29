@@ -655,7 +655,7 @@ void entlink()
 			{
 				int node = entgroup[i+1];
 
-				if(verbose >= 2) conoutf("\faattempting to link %d and %d (%d)", index, node, i+1);
+				if(verbose >= 2) conoutf("\fdattempting to link %d and %d (%d)", index, node, i+1);
 				if(ents.inrange(node))
 				{
 					if(!entities::linkents(index, node) && !entities::linkents(node, index))
