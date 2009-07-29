@@ -1126,7 +1126,7 @@ namespace hud
 			gameentity &e = *(gameentity *)entities::ents[n];
 			const char *itext = itemtex(e.type, e.attr[0]);
 			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "%s (%d)", enttype[e.type].name, n);
-			drawitemsubtext(x, y-int(s/2*skew), s, false, skew, "default", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+			drawitemsubtext(x, y-int(s/3*skew), s, false, skew, "default", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 			drawitemsubtext(x, y, s, false, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
 			return ty;
 		}
@@ -1191,7 +1191,7 @@ namespace hud
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
 			int stop = hudsize-s;
-			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend*0.25f, 1.f);
 			sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
 			loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 		}
