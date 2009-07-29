@@ -1,5 +1,7 @@
 #include "engine.h"
 
+VARP(blinkingtext, 0, 1, 1);
+
 static hashtable<const char *, font> fonts;
 static font *fontdef = NULL;
 
@@ -118,41 +120,48 @@ SVARP(brown, "\fn");
 SVARP(darkgray, "\fd");
 SVARP(defcolour, "\fu");
 
-static void text_color(char c, char *stack, int size, int &sp, bvec color, int r, int g, int b, int a)
+static void text_color(char c, char *stack, int size, int &sp, bvec &color, int r, int g, int b, int a)
 {
-    if(c=='s') // save color
+	char d = c;
+    if(d=='s') // save color
     {
-        c = stack[sp];
-        if(sp<size-1) stack[++sp] = c;
+        d = stack[sp];
+        if(sp<size-1) stack[++sp] = d;
     }
     else
     {
-        if(c=='S') c = stack[(sp > 0) ? --sp : sp]; // restore color
-        else stack[sp] = c;
-        switch(c)
+    	int f = a;
+    	if(d=='e' || d=='E') f = d!='E' ? f/2 : 0;
+        if(d!='R')
         {
-            case 'g': case '0': color = bvec( 64, 255,  64); break;	// green
-            case 'b': case '1': color = bvec( 64,  64, 255); break;	// blue
-            case 'y': case '2': color = bvec(255, 255,   0); break;	// yellow
-            case 'r': case '3': color = bvec(255,  64,  64); break;	// red
-            case 'a': case '4': color = bvec(196, 196, 196); break;	// gray
-            case 'm': case '5': color = bvec(255,  64, 255); break;	// magenta
-            case 'o': case '6': color = bvec(255,  96,   0); break;	// orange
-            case 'w': case '7': color = bvec(255, 255, 255); break;	// white
-            case 'k': case '8': color = bvec(0,     0,   0); break;	// black
-            case 'c': case '9': color = bvec(64,  255, 255); break;	// cyan
-            case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
-            case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
-            case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
-            case 'd': case 'D': color = bvec(112, 112, 112); break;	// dark gray
-            case 'u': color = bvec(r, g, b); break;	// user colour
-			default: break; // everything else
+        	if(d=='S') d = stack[(sp > 0) ? --sp : sp]; // restore color
+			else stack[sp] = d;
+			switch(d)
+			{
+				case 'g': case '0': color = bvec( 64, 255,  64); break;	// green
+				case 'b': case '1': color = bvec( 64,  64, 255); break;	// blue
+				case 'y': case '2': color = bvec(255, 255,   0); break;	// yellow
+				case 'r': case '3': color = bvec(255,  64,  64); break;	// red
+				case 'a': case '4': color = bvec(196, 196, 196); break;	// gray
+				case 'm': case '5': color = bvec(255,  64, 255); break;	// magenta
+				case 'o': case '6': color = bvec(255,  96,   0); break;	// orange
+				case 'w': case '7': color = bvec(255, 255, 255); break;	// white
+				case 'k': case '8': color = bvec(0,     0,   0); break;	// black
+				case 'c': case '9': color = bvec(64,  255, 255); break;	// cyan
+				case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
+				case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
+				case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
+				case 'd': case 'D': color = bvec(112, 112, 112); break;	// dark gray
+				case 'u': color = bvec(r, g, b); break;	// user colour
+				default: break; // everything else
+			}
         }
-        glColor4ub(color.x, color.y, color.z, a);
+        glColor4ub(color.x, color.y, color.z, f);
     }
 }
 
 #define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
+#define TEXTBLINK(x,y,z) { if(x[y] == 'z') { int q = blinkingtext && lastmillis%500 > 250 ? 2 : 1; if(x[y+q]) { y += q; z; } y += 2-q; } else { z } }
 #define TEXTALIGN \
 	x = (!(flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT) ? TEXTTAB(0) : 0); \
 	if(!y && (flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT)) maxwidth -= PIXELTAB; \
@@ -167,7 +176,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
         if(c=='\t')      { x = TEXTTAB(x); TEXTWHITE(i) }\
         else if(c==' ')  { x += curfont->defaultw; TEXTWHITE(i) }\
         else if(c=='\n') { TEXTLINE(i) TEXTALIGN }\
-        else if(c=='\f') { if(str[i+1]) { i++; TEXTCOLOR(i) }}\
+        else if(c=='\f') { if(str[i+1]) { i++; TEXTBLINK(str,i, TEXTCOLOR(i)); }}\
         else if(curfont->chars.inrange(c-33))\
         {\
             if(maxwidth != -1)\
@@ -198,7 +207,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int r
                 {\
                     TEXTINDEX(j)\
                     int c = str[j];\
-                    if(c=='\f') { if(str[j+1]) { j++; TEXTCOLOR(j) }}\
+                    if(c=='\f') { if(str[j+1]) { j++; TEXTBLINK(str,j, TEXTCOLOR(j)); }}\
                     else { TEXTCHAR(j) }\
                 }
 

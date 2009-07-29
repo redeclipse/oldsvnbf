@@ -91,7 +91,7 @@ namespace stf
 				pushfont("super");
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
-				ty += draw_textx("%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f));
+				ty += draw_textx("\fzwa%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f));
 				popfont();
 				break;
 			}
@@ -170,6 +170,8 @@ namespace stf
 			{
 				int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGSECURED : -1;
 				game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
+				defformatstring(text)("@%s\fzReSECURED", teamtype[owner].chat);
+				part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
 				game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius);
 			}
 		}
@@ -177,6 +179,8 @@ namespace stf
 		{
 			int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || owner == game::player1->team || enemy == game::player1->team || b.owner == game::player1->team || b.enemy == game::player1->team ? S_V_FLAGOVERTHROWN : -1;
 			game::announce(idx, CON_INFO, "\foteam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
+			defformatstring(text)("@%s\fzReOVERTHROWN", teamtype[enemy].chat);
+			part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, 2500, 0xFFFFFF, 3.f, -10);
 			game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius);
 		}
 		b.owner = owner;
