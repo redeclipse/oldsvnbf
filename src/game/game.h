@@ -164,7 +164,7 @@ enttypes enttype[] = {
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			inttobit(MAPSOUND)|inttobit(PARTICLES),
 			false,				"pusher",
-			{ "zpush",	"ypush",	"xpush",	"radius",	"" }
+			{ "zpush",	"ypush",	"xpush",	"radius",	"min" }
 	},
 	{
 		FLAG,			48,		32,		EU_NONE,
