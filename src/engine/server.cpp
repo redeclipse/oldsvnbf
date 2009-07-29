@@ -174,11 +174,11 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 	{
         if(c=='\f')
         {
-        	++src;
-        	if(*src=='z')
+        	c = *++src;
+        	if(c=='z')
         	{
-        		++src;
-        		loopi(2) if(*src) ++src;
+        		c = *++src;
+        		loopi(2) if(c) c = *++src;
         	}
         	continue;
         }
