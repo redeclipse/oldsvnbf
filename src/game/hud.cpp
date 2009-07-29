@@ -1135,7 +1135,7 @@ namespace hud
 
 	int drawselection(int x, int y, int s, float blend)
 	{
-		int sy = showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? s/2 : s/16;
+		int sy = 0;
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(inventoryammo)
@@ -1191,7 +1191,7 @@ namespace hud
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
 			int stop = hudsize-s;
-			sy += drawitem(inventoryedittex, x, y-sy, s-s/8, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
+			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 			sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
 			loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 		}
@@ -1339,6 +1339,7 @@ namespace hud
 			{
 				if(!texpaneltimer)
 				{
+					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
 					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
 					if(inventorygame)
