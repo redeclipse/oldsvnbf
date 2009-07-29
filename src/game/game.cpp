@@ -700,9 +700,16 @@ namespace game
 			}
 			else if(style&FRAG_SPREE5)
 			{
+				concatstring(d->obit," on a \fs\fc\fzRerampage\fS!");
+				part_text(az, "@\fc\fzReRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				if(!override) anc = S_V_SPREE5;
+				override = true;
+			}
+			else if(style&FRAG_SPREE6)
+			{
 				concatstring(d->obit, " \fs\fc\fzReunstoppably\fS!");
 				part_text(az, "@\fc\fzReUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-				if(!override) anc = S_V_SPREE5;
+				if(!override) anc = S_V_SPREE6;
 				override = true;
 			}
 		}
