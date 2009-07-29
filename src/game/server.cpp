@@ -2043,7 +2043,7 @@ namespace server
 
 				if((flags&HIT_PROJ) && (flags&HIT_HEAD)) { style |= FRAG_HEADSHOT; pointvalue *= 3; }
 
-				if(actor->state.spree <= GVAR(spreecount)*5 && !(actor->state.spree%GVAR(spreecount)))
+				if(actor->state.spree <= GVAR(spreecount)*6 && !(actor->state.spree%GVAR(spreecount)))
 				{
 					int offset = (actor->state.spree/GVAR(spreecount))-1;
 					style |= FRAG_SPREE1+offset; pointvalue += (offset+1)*GVAR(spreecount);
