@@ -2820,6 +2820,7 @@ namespace server
                 getstring(text, p);
                 //filtertext(text, text, true, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
+				filtertext(text, text);
                 copystring(ci->name, text, MAXNAMELEN+1);
 
                 getstring(text, p);
@@ -3190,6 +3191,7 @@ namespace server
 				{
 					getstring(text, p);
 					if(!text[0]) copystring(text, "unnamed");
+					filtertext(text, text);
 				    if(strcmp(ci->name, text))
 					{
 						string oldname, newname;
