@@ -409,21 +409,19 @@ namespace hud
 			if(showspectators() && spectators.length())
 			{
 				g.separator();
-				g.pushlist();
 				loopv(spectators)
 				{
 					gameent *o = spectators[i];
 					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
 					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
 					if((i%3)==0) g.pushlist();
-					if(bgcol) g.background(bgcol, 3);
+					if(bgcol) g.background(bgcol);
 					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 						g.textf("%s (%d)", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false), o->clientnum);
 					else g.textf("%s", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false));
 					if(i+1<spectators.length() && (i+1)%3) g.space(1);
 					else g.poplist();
 				}
-				g.poplist();
 			}
 			g.end();
 		}
