@@ -444,7 +444,7 @@ struct iconrenderer : listrenderer<icon>
 		glPopMatrix();
 	}
 
-	icon *addicon(const vec &o, Texture *tex, float blend, int fade, int color, float size, int grav, int collide, float start, float length)
+	icon *addicon(const vec &o, Texture *tex, float blend, int fade, int color, float size, int grav, int collide, float start, float length, physent *pl = NULL)
 	{
 		icon *p = (icon *)listrenderer<icon>::addpart(o, vec(0, 0, 0), fade, color, size, grav, collide);
 		p->tex = tex;
@@ -452,6 +452,7 @@ struct iconrenderer : listrenderer<icon>
 		p->start = start;
 		p->length = length;
 		p->end = p->start + p->length;
+		p->owner = pl;
 		return p;
 	}
 
@@ -1381,11 +1382,11 @@ void part_portal(const vec &o, float size, float yaw, float pitch, int type, int
 	if(p) p->addportal(o, fade, color, size, yaw, pitch);
 }
 
-void part_icon(const vec &o, Texture *tex, float blend, float size, int grav, int collide, int fade, int color, float start, float length, int type)
+void part_icon(const vec &o, Texture *tex, float blend, float size, int grav, int collide, int fade, int color, float start, float length, physent *pl)
 {
 	if(shadowmapping || renderedgame) return;
-	iconrenderer *p = dynamic_cast<iconrenderer *>(parts[type]);
-	if(p) p->addicon(o, tex, blend, fade, color, size, grav, collide, start, length);
+	iconrenderer *p = dynamic_cast<iconrenderer *>(parts[PART_ICON]);
+	if(p) p->addicon(o, tex, blend, fade, color, size, grav, collide, start, length, pl);
 }
 
 void part_line(const vec &o, const vec &v, float size, int fade, int color, int type)

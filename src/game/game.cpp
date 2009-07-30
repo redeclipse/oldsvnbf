@@ -926,9 +926,9 @@ namespace game
 
         switch(type&0xFF)
         {
-        	case PT_TEXT:
+        	case PT_TEXT: case PT_ICON:
         	{
-        		vec q = p->owner->abovehead();
+        		vec q = p->owner->abovehead(); q.z += p->size;
         		if(p->o.z > q.z) q.z = p->o.z;
 				float k = pow(0.5f, float(curtime)/250.f);
 				p->o.mul(k).add(q.mul(1-k));
@@ -1834,10 +1834,10 @@ namespace game
 				else if(d->state == CS_ALIVE)
 				{
 					if(d->conopen) t = textureload(conopentex, 3);
-					else if(d->dominating) t = textureload(dominatingtex, 3);
-					else if(d->dominated) t = textureload(dominatedtex, 3);
 					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != game::player1->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
+					else if(d->dominating) t = textureload(dominatingtex, 3);
+					else if(d->dominated) t = textureload(dominatedtex, 3);
 				}
 				if(t)
 				{

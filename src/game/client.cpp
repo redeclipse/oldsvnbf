@@ -1364,14 +1364,14 @@ namespace client
 						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
 							colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
-						if(texname && *texname) part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, 2500, colour);
+						if(texname && *texname) part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour);
 						else
 						{
 							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
 							if(item && *item)
 							{
 								defformatstring(ds)("@%s (%d)", item, entities::ents[ent]->type);
-								part_text(pos, ds, PART_TEXT, 2500, colour, 2, -10);
+								part_text(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, -10);
 							}
 						}
 					}
