@@ -268,6 +268,7 @@ extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const 
 
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
+extern void renderellipse(vec &o, float xradius, float yradius, float yaw);
 
 // octa
 extern cube *newcubes(uint face = F_EMPTY);

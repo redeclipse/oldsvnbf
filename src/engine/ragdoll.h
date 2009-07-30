@@ -263,7 +263,7 @@ extern vec wall;
 void ragdolldata::updatepos()
 {
     static physent d;
-    d.type = ENT_PROJ;
+    d.type = ENT_RAGDOLL;
     d.radius = d.height = d.aboveeye = 1;
     loopv(skel->verts)
     {
@@ -322,7 +322,7 @@ void ragdolldata::move(dynent *pl, float ts)
     float gravity = physics::gravityforce(pl)*ragdollgravity;
 
     physent d;
-    d.type = ENT_PROJ;
+    d.type = ENT_RAGDOLL;
     d.radius = d.height = d.aboveeye = 1;
     float airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     bool liquid = physics::liquidcheck(pl);

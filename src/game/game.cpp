@@ -417,32 +417,10 @@ namespace game
 		d->o.z += d->height;
 	}
 
-	void checktags(gameent *d)
-	{
-        if(d->muzzle == vec(-1, -1, -1))
-        { // ensure valid projection "position"
-        	vec dir, right;
-        	vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
-        	vecfromyawpitch(d->yaw, d->pitch, 0, -1, right);
-        	dir.mul(d->radius*1.25f);
-        	right.mul(d->radius);
-        	dir.z -= d->height*0.1f;
-			d->muzzle = vec(d->o).add(dir).add(right);
-        }
-        if(d->affinity == vec(-1, -1, -1))
-        { // ensure valid affinity (flag, etc) "position"
-        	vec dir;
-        	vecfromyawpitch(d->yaw, 0, -1, 0, dir);
-        	dir.mul(d->radius*1.15f);
-        	dir.z -= d->height*0.5f;
-			d->affinity = vec(d->o).add(dir);
-        }
-	}
-
 	void checkoften(gameent *d, bool local)
 	{
+		d->checktags();
 		heightoffset(d, local);
-		checktags(d);
 		loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
@@ -1701,12 +1679,12 @@ namespace game
 		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
 			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
-				trans = 1e-16f; // we need tag_muzzle/tag_affinity
+				trans = 1e-16f; // we need tag_muzzle/tag_waist
 			else return; // screw it, don't render them
 		}
 #endif
 
-        modelattach a[4];
+        modelattach a[8];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = isweap(weap);
@@ -1849,7 +1827,14 @@ namespace game
         if(rendernormally && (early || d != player1))
         {
         	a[ai++] = modelattach("tag_muzzle", &d->muzzle);
-        	if(third) a[ai++] = modelattach("tag_affinity", &d->affinity);
+        	if(third)
+        	{
+        		a[ai++] = modelattach("tag_head", &d->head);
+        		a[ai++] = modelattach("tag_torso", &d->torso);
+        		a[ai++] = modelattach("tag_waist", &d->waist);
+        		a[ai++] = modelattach("tag_lfoot", &d->lfoot);
+        		a[ai++] = modelattach("tag_rfoot", &d->rfoot);
+        	}
         }
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
@@ -1871,19 +1856,20 @@ namespace game
 		if(m_stf(gamemode)) stf::render();
         if(m_ctf(gamemode)) ctf::render();
         ai::render();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->muzzle = d->affinity = vec(-1, -1, -1);
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
+			d->head = d->torso = d->muzzle = d->waist = d->lfoot = d->rfoot = vec(-1, -1, -1);
 		endmodelbatches();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) checktags(d);
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->checktags();
 	}
 
     void renderavatar(bool early)
     {
-    	if(rendernormally && early) player1->muzzle = player1->affinity = vec(-1, -1, -1);
+    	if(rendernormally && early) player1->head = player1->torso = player1->muzzle = player1->waist = player1->lfoot = player1->rfoot = vec(-1, -1, -1);
         if((thirdpersonview() || !rendernormally))
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
-		if(rendernormally && early) checktags(player1);
+		if(rendernormally && early) player1->checktags();
     }
 
 	bool clientoption(char *arg) { return false; }

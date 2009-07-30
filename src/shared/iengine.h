@@ -303,7 +303,7 @@ extern bool load_world(const char *mname, bool temp = false);
 extern void save_world(const char *mname, bool nodata = false, bool forcesave = false);
 
 // physics
-extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, float yaw, float xr, float yr,  float hi, float lo);
+extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo);
 extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF, bool collideonly = true, float cutoff = 0);
 extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0, bool playercol = true);
 extern bool plcollide(physent *d, const vec &dir = vec(0, 0, 0));

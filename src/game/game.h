@@ -992,18 +992,20 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	ai::aiinfo *ai;
-    vec muzzle, affinity;
+    vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool attacking, reloading, useaction, conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), lastattacker(-1), lastpoints(0), edit(NULL), ai(NULL),
-		muzzle(-1, -1, -1), affinity(-1, -1, -1), conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
+		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),  lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
+		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 200; // so we can control the 'gravity' feel
 		maxspeed = 50; // ditto for movement
+		checktags();
 		respawn(-1, 100);
 	}
 	~gameent()
@@ -1068,6 +1070,36 @@ struct gameent : dynent, gamestate
 		resetstate(millis, heal);
 		gamestate::mapchange();
 	}
+
+	void checktags()
+	{
+		float hsize = max(xradius*0.4f, yradius*0.4f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
+		vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.4f, yradius*0.4f, hsize);
+        if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
+        float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
+		float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
+        if(muzzle == vec(-1, -1, -1))
+        {
+        	vec right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
+        	dir.mul(radius*1.25f); right.mul(radius); dir.z -= height*0.1f;
+			muzzle = vec(o).add(dir).add(right);
+        }
+        if(waist == vec(-1, -1, -1))
+        {
+        	vecfromyawpitch(yaw, 0, -1, 0, dir); dir.mul(radius*1.15f); dir.z -= height*0.5f;
+			waist = vec(o).add(dir);
+        }
+        if(lfoot == vec(-1, -1, -1))
+        {
+        	vecfromyawpitch(yaw, 0, 0, -1, dir); dir.mul(radius); dir.z -= height;
+			lfoot = vec(o).add(dir);
+        }
+        if(rfoot == vec(-1, -1, -1))
+        {
+        	vecfromyawpitch(yaw, 0, 0, 1, dir); dir.mul(radius); dir.z -= height;
+			rfoot = vec(o).add(dir);
+        }
+	}
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
@@ -1080,13 +1112,13 @@ struct projent : dynent
 	bool local, beenused, radial, extinguish, canrender, limited;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int schan, id, weap, colour;
+	int schan, id, weap, colour, hitflags;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
 	const char *mdl;
 
-	projent() : norm(0, 0, 1), projtype(PRJ_SHOT), id(-1), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
+	projent() : norm(0, 0, 1), projtype(PRJ_SHOT), id(-1), hitflags(physics::HITFLAG_NONE), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
 	~projent()
 	{
 		removetrackedparticles(this);

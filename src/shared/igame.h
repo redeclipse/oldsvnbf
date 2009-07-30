@@ -55,10 +55,9 @@ namespace hud
 
 namespace physics
 {
-	extern int physsteps, physframetime, physinterp;
-	extern float gravity, jumpvel, movespeed, floatspeed,
-		stairheight, floorz, slopez, wallz, stepspeed,
-			liquidfric, liquidscale, sinkfric, floorfric, airfric;
+	enum { HITFLAG_NONE = 0, HITFLAG_LEGS = 1, HITFLAG_TORSO = 2, HITFLAG_HEAD = 4 };
+	extern int physsteps, physframetime, physinterp, hitflags;
+	extern float gravity, jumpvel, movespeed, floatspeed, stairheight, floorz, slopez, wallz, stepspeed, liquidfric, liquidscale, sinkfric, floorfric, airfric;
 	extern float liquidmerge(physent *d, float from, float to);
 	extern bool liquidcheck(physent *d);
 	extern float gravityforce(physent *d);
@@ -73,6 +72,9 @@ namespace physics
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
 	extern void interppos(physent *d);
     extern void updateragdoll(dynent *d, const vec &center, float radius);
+    extern bool xcollide(physent *d, const vec &dir, physent *o);
+    extern bool xtracecollide(const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o);
+    extern void complexboundbox(physent *d);
 }
 
 namespace game

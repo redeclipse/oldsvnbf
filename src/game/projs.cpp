@@ -19,19 +19,9 @@ namespace projs
 	VARP(muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
 	#define muzzlechk(a,b) (a > 0 && (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::player1)))
 
-	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
-	{
-		int hits = 0;
-		if(o.z <= (pos.z-height*0.65f)+float(radius)) hits |= HIT_LEGS;
-		if(o.z <= (pos.z-above)+float(radius) && o.z > (pos.z-height*0.65f)-float(radius)) hits |= HIT_TORSO;
-		if(o.z > (pos.z-above)-float(radius)) hits |= HIT_HEAD;
-		return hits;
-	}
-
 	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
 	{
-        if(d != proj.owner && proj.owner == game::player1 && hithurts(flags))
-			game::player1->lasthit = lastmillis;
+        if(d != proj.owner && proj.owner == game::player1 && hithurts(flags)) game::player1->lasthit = lastmillis;
 		hitmsg &h = hits.add();
 		h.flags = flags;
 		h.target = d->clientnum;
@@ -46,9 +36,15 @@ namespace projs
 
 	void hitproj(gameent *d, projent &proj)
 	{
-		int flags = HIT_PROJ;
-		flags |= proj.weap != WEAP_PAINTGUN ? hitzones(proj.o, d->o, d->height, d->aboveeye) : HIT_FULL;
-		hitpush(d, proj, flags);
+		int flags = 0;
+		if(proj.weap != WEAP_PAINTGUN)
+		{
+			if(proj.hitflags&physics::HITFLAG_LEGS) flags |= HIT_LEGS;
+			if(proj.hitflags&physics::HITFLAG_TORSO) flags |= HIT_TORSO;
+			if(proj.hitflags&physics::HITFLAG_HEAD) flags |= HIT_HEAD;
+		}
+		else flags |= HIT_FULL;
+		if(flags) hitpush(d, proj, flags|HIT_PROJ);
 	}
 
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
@@ -56,13 +52,8 @@ namespace projs
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
 		float dist = middle.dist(proj.o, dir);
-		dir.div(dist);
-		if(dist < 0) dist = 0;
-		if(dist <= radius)
-		{
-			int flags = (explode ? HIT_EXPLODE : HIT_BURN)|hitzones(proj.o, d->o, d->height, d->aboveeye, radius);
-			hitpush(d, proj, flags, int(dist*DMF));
-		}
+		dir.div(dist); if(dist < 0) dist = 0;
+		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), int(dist*DMF));
 		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
 	}
 
@@ -306,6 +297,7 @@ namespace projs
 			loopi(maxsteps)
 			{
 				proj.hit = NULL;
+				proj.hitflags = physics::HITFLAG_NONE;
 				float olddist = dist;
 				if(dist < barrier && dist + step > barrier) dist = barrier;
 				else dist += step;
@@ -326,6 +318,7 @@ namespace projs
 					if(hitplayer)
 					{
 						proj.hit = hitplayer;
+						proj.hitflags = physics::hitflags;
 						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 					}
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
@@ -837,7 +830,7 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					if(entities::ents.inrange(proj.id)) game::spawneffect(PART_ELECTRIC, proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
+					if(entities::ents.inrange(proj.id)) game::spawneffect(PART_FIREBALL, proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
 					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-game::maptime, -1, proj.id, 0, 0);
 				}
 				break;
@@ -849,6 +842,7 @@ namespace projs
 	int bounce(projent &proj, const vec &dir)
 	{
 		proj.hit = NULL;
+		proj.hitflags = physics::HITFLAG_NONE;
 		if(!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside)
 		{
 			if(hitplayer)
@@ -856,6 +850,7 @@ namespace projs
 				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
 				{
 					proj.hit = hitplayer;
+					proj.hitflags = physics::hitflags;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 				}
 				else return 1;
@@ -878,6 +873,7 @@ namespace projs
     int trace(projent &proj, const vec &dir)
     {
         proj.hit = NULL;
+        proj.hitflags = physics::HITFLAG_NONE;
         vec to(proj.o), ray = dir;
         to.add(dir);
         float maxdist = ray.magnitude();
@@ -892,6 +888,7 @@ namespace projs
             	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
             	{
 					proj.hit = hitplayer;
+					proj.hitflags = physics::hitflags;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
             	}
             	else return 1;
