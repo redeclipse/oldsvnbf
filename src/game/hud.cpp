@@ -8,8 +8,8 @@ namespace hud
 	scoreboard sb;
     struct damageloc
     {
-        int outtime, damage; vec dir, colour;
-        damageloc(int t, int d, const vec &p, const vec &c) : outtime(t), damage(d), dir(p), colour(c) {}
+        int attacker, outtime, damage; vec dir, colour;
+        damageloc(int a, int t, int d, const vec &p, const vec &c) : attacker(a), outtime(t), damage(d), dir(p), colour(c) {}
     };
     vector<damageloc> damagelocs;
 	VARP(quakewobblefade, 0, 100, INT_MAX-1);
@@ -197,7 +197,7 @@ namespace hud
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 1, 2);
 
-	VARP(radardamage, 0, 1, 1);
+	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, + 2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 3000, INT_MAX-1);
 	FVARP(radardamagesize, 0, 2.f, 1000);
@@ -227,7 +227,7 @@ namespace hud
             colour = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
         }
         else if(kidmode || game::noblood) colour = vec(1, 0.25f, 1);
-        damagelocs.add(damageloc(lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
+        damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
 	void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
@@ -904,8 +904,8 @@ namespace hud
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			if(area < 4) { pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1.f-(-y))*FONTH/2 : FONTH/2+(y*FONTH/2))); }
-			else pos.y -= FONTH/2;
+			int width, height; text_bounds(str, width, height, -1, TEXT_CENTERED|TEXT_NO_INDENT);
+			pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1.f-(-y))*height/2 : height/2+(y*height/2)));
 			draw_textx("%s", int(pos.x), int(pos.y), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
@@ -921,10 +921,10 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotecttime*1000);
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f)*blend*radarplayerblend,
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(bliptex, 2, w, h, radarplayersize, fade, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			if(hastv(radarplayernames)) drawblip(bliptex, 2, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 2, w, h, radarplayersize, fade, dir, r, g, b);
 		}
 	}
@@ -970,7 +970,7 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			const char *tex = bliptex;
-			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f)*blend, size = 1.f;
+			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = fade;
 			if(type == WEAPON)
 			{
 				int attr = weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators));
@@ -988,9 +988,9 @@ namespace hud
 			}
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
-			if(insel) drawblip(tex, 1, w, h, size, fade, dir, r, g, b, "radar", "%s\n%s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, size, fade, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(tex, 1, w, h, size, fade, dir, r, g, b);
+			if(insel) drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b);
 		}
 	}
 
@@ -1030,21 +1030,53 @@ namespace hud
 		loopv(damagelocs)
 		{
 			damageloc &d = damagelocs[i];
-			float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f);
 			int millis = lastmillis-d.outtime;
-			if(millis > radardamagetime)
+			if(millis > radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
+			if(game::player1->state == CS_ALIVE)
 			{
-				if(millis > radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
-				fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
+				float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f);
+				if(millis > radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
+				else fade *= float(millis)/float(radardamagetime);
+				vec dir = vec(d.dir).normalize().rotate_around_z(-camera1->yaw*RAD);
+				if(radardamage >= 5)
+				{
+					gameent *a = game::getclient(d.attacker);
+					drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
+				}
+				else drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
 			}
-			else fade *= float(millis)/float(radardamagetime);
-			drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, vec(d.dir).rotate_around_z(-camera1->yaw*RAD).normalize(), d.colour.x, d.colour.y, d.colour.z);
+		}
+		if(radardamage >= 2)
+		{
+			bool dead = game::player1->state == CS_DEAD || game::player1->state == CS_WAITING;
+			if(dead && lastmillis-game::player1->lastdeath < m_spawndelay(game::gamemode, game::mutators))
+			{
+				vec dir = vec(game::player1->o).sub(camera1->o).normalize().rotate_around_z(-camera1->yaw*RAD);
+				float r = (teamtype[game::player1->team].colour>>16)/255.f, g = ((teamtype[game::player1->team].colour>>8)&0xFF)/255.f, b = (teamtype[game::player1->team].colour&0xFF)/255.f;
+				drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "you");
+			}
+			gameent *a = game::getclient(game::player1->lastattacker);
+			if(a && (dead || (radardamage >= 3 && (a->aitype == AI_NONE || radardamage >= 4))))
+			{
+				vec pos = vec(a->o).sub(camera1->o).normalize(), dir = vec(pos).rotate_around_z(-camera1->yaw*RAD);
+				float r = (teamtype[a->team].colour>>16)/255.f, g = ((teamtype[a->team].colour>>8)&0xFF)/255.f, b = (teamtype[a->team].colour&0xFF)/255.f;
+				if(dead) drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "%s (%d)", game::colorname(a), a->health);
+				else
+				{
+					float dist = pos.magnitude();
+					if(dist > 0 && dist <= radarrange())
+					{
+						float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f);
+						drawblip(arrowtex, 3+int(ceil(radardamagesize*fade)), w, h, radardamagesize*fade, blend*radardamageblend*fade, dir, r, g, b, "radar", "%s", game::colorname(a));
+					}
+				}
+			}
 		}
 	}
 
 	void drawradar(int w, int h, float blend)
 	{
-		if(radardamage && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING) drawdamageblips(w, h, blend*radarblend);
+		if(radardamage) drawdamageblips(w, h, blend*radarblend);
 		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode));
 		if(hastv(radarplayers) || m_edit(game::gamemode))
 		{

@@ -535,7 +535,6 @@ namespace game
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
-
 		int anc = -1, dth = -1;
 		if(weap == WEAP_PAINTGUN || m_paint(gamemode, mutators)) dth = S_SPLAT;
 		else if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
@@ -572,6 +571,8 @@ namespace game
         }
 		else
 		{
+			if(actor->lastattacker == d->clientnum) actor->lastattacker = -1;
+			d->lastattacker = actor->clientnum;
 			concatstring(d->obit, "was ");
 			static const char *obitnames[3][WEAP_MAX] = {
 				{
