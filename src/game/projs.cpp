@@ -22,10 +22,9 @@ namespace projs
 	int hitzones(vec &o, vec &pos, float height, float above, int radius = 0)
 	{
 		int hits = 0;
-		if(o.z <= (pos.z-height*0.75f)+float(radius)) hits |= HIT_LEGS;
-		if(o.z < (pos.z-above)+float(radius) && o.z > (pos.z-height*0.75f)-float(radius))
-			hits |= HIT_TORSO;
-		if(o.z >= (pos.z-above)-float(radius)) hits |= HIT_HEAD;
+		if(o.z <= (pos.z-height*0.65f)+float(radius)) hits |= HIT_LEGS;
+		if(o.z <= (pos.z-above)+float(radius) && o.z > (pos.z-height*0.65f)-float(radius)) hits |= HIT_TORSO;
+		if(o.z > (pos.z-above)-float(radius)) hits |= HIT_HEAD;
 		return hits;
 	}
 

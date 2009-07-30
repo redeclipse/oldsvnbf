@@ -2015,8 +2015,10 @@ namespace server
 		if(realflags&HIT_KILL)
 		{
             int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
-				pointvalue = smode ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
+				pointvalue = smode ? smode->points(target, actor) : fragvalue,
+				style = realflags&HIT_EXPLODE || realdamage > m_maxhealth(gamemode, mutators)*3/2 ? FRAG_OBLITERATE : FRAG_NONE;
             actor->state.frags += fragvalue;
+
 			if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
 				if(actor != target) actor->state.teamkills++;
