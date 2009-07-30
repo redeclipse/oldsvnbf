@@ -266,12 +266,13 @@ enum
 
 struct weaptypes
 {
-	int	info, 				anim,				kick,	wobble,		colour,
+	int	info, 				anim,				colour,
 			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
 	bool	radial,	taper,	extinguish,	reloads,	zooms,		fullauto;
-	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	partlen,	hitpush,	maxdist;
+	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	partlen,
+			kickpush,	hitpush,	maxdist;
 	const char
 			*name, 		*text,	*item,						*vwep,						*proj;
 };
@@ -279,75 +280,83 @@ struct weaptypes
 weaptypes weaptype[WEAP_MAX] =
 {
 	{
-		WEAP_PISTOL,		ANIM_PISTOL,		-20,	15,			0x999999,
+		WEAP_PISTOL,		ANIM_PISTOL,		0x999999,
 			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		100,    1000,	25,		2500,	0,		2000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,		false,
-			0,			0,				0.05f,		2.0f,		0,		0.5f,		10,			150,		768,
+			0,			0,				0.05f,		2.0f,		0,		0.5f,		10,
+			2,			150,		768,
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
-		WEAP_SHOTGUN,		ANIM_SHOTGUN,		-50,    35,			0xFFFF22,
+		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,
 			S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	20,		2500,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		false,
-			0.5f,		50,				0.05f,		2.0f,		30,		0.75f,		50,			25,			384,
+			0.5f,		50,				0.05f,		2.0f,		30,		0.75f,		50,
+			15,			25,			384,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
-		WEAP_SMG,			ANIM_SMG,	-10,	5,					0xFFAA22,
+		WEAP_SMG,			ANIM_SMG,			0xFFAA22,
 			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	20,		3000,	0,		1000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		true,
-			0.75f,		30,				0.05f,		2.0f,		0,		0.5f,		40,			100,		512,
+			0.75f,		30,				0.05f,		2.0f,		0,		0.5f,		40,
+			3,			100,		512,
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
-		WEAP_FLAMER,		ANIM_FLAMER,		-3,		1,			0xFF2222,
+		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,
 			S_FLAMER,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	15,		200,	0,		500,
 			0,		24,			1,		10,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
-			0.15f,		45,				0.25f,		1.5f,		25,		24,			0,			25,			192,
+			0.15f,		45,				0.25f,		1.5f,		25,		24,			0,
+			1,			25,			192,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
-		WEAP_PLASMA,		ANIM_PLASMA,		-10,	5,			0x22FFFF,
+		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,
 			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		350,	1000,	30,		2000,	0,		1000,
 			0,		32,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,	true,		true,		false,		true,
-			0,			0,				0.125f,		1.0f,		0,		16,			0,			100,		448,
+			0,			0,				0.125f,		1.0f,		0,		16,			0,
+			3,			100,		448,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
-		WEAP_RIFLE,			ANIM_RIFLE,			-30,  	20,			0xBB66FF,
+		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,
 			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		750,	1500,	150,	40000,	0,		5000,
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		false,
-			0,			 0,				0.05f,		2.0f,		0,		0.75f,		5000,		500,		0,
+			0,			 0,				0.05f,		2.0f,		0,		0.75f,		5000,
+			5,		500,		0,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
-		WEAP_GRENADE,		ANIM_GRENADE,		-5,		5,		0x22FF22,
+		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,
 			S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	6000,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
-			0.35f,		0,				1.0f,		2.0f,		50,		4,			0,			1000,		768,
+			0.35f,		0,				1.0f,		2.0f,		50,		4,			0,
+			5,			1000,		768,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{
-		WEAP_PAINTGUN,		ANIM_PAINTGUN,		-5,  	5,			0xFF22AA,
+		WEAP_PAINTGUN,		ANIM_PAINTGUN,		0xFF22AA,
 			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		true,
-			0,			 0,				0.05f,		2.0f,		0,		2,			0,			25,			0,
+			0,			 0,				0.05f,		2.0f,		0,		2,			0,
+			1,			25,			0,
 			"paintgun",	"\fm",	"weapons/paintgun/item",	"weapons/paintgun/vwep",	""
 	},
 };
@@ -1202,6 +1211,7 @@ namespace game
 			lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
 				noblood, fogdist, aboveheadfade, announcefilter;
 	extern bool intermission, zooming;
+	extern vec swaypush, swaydir;
 
 	extern gameent *player1;
 	extern vector<gameent *> players;

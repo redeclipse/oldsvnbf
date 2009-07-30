@@ -5,7 +5,7 @@ namespace game
 	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1;
 	bool intermission = false;
 	int maptime = 0, minremain = 0, swaymillis = 0;
-	vec swaydir(0, 0, 0);
+	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
     int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, lastannounce = 0;
     bool prevzoom = false, zooming = false;
 	int liquidchan = -1, announcechan = -1, fogdist = 0;
@@ -37,6 +37,8 @@ namespace game
 	VARP(firstpersonmodel, 0, 1, 1);
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
+	VARP(firstpersonswayspeed, 0, 25, INT_MAX-1);
+	VARP(firstpersonswaypush, 0, 100, INT_MAX-1);
 	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.25f, 10000);
@@ -229,11 +231,12 @@ namespace game
 		if(firstpersonsway)
 		{
 			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
-			float k = pow(0.7f, curtime/10.0f);
+			float k = pow(0.7f, curtime/float(firstpersonswayspeed));
 			vec vel = vec(d->vel).sub(d->falling);
 			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
+			swaypush.mul(pow(0.5f, curtime/float(firstpersonswaypush)));
 		}
-		else swaydir = vec(0, 0, 0);
+		else swaydir = swaypush = vec(0, 0, 0);
 	}
 
 	void announce(int idx, int targ, const char *msg, ...)
@@ -1609,7 +1612,7 @@ namespace game
 				dir.x *= -swayxy;
 				dir.y *= swayxy;
 				dir.z = -fabs(swayspeed*swayz);
-				dir.add(swaydir);
+				dir.add(swaydir).add(swaypush);
 				o.add(dir);
 			}
 			if(firstpersondist != 0.f)

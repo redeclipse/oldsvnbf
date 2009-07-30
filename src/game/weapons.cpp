@@ -174,9 +174,14 @@ namespace weapons
 		vec to = targ, from = d->muzzle, unitv;
 		float dist = to.dist(from, unitv);
 		unitv.div(dist);
-		if(!physics::iscrouching(d)) d->vel.add(vec(unitv).mul(m_speedscale(m_speedscale(weaptype[d->weapselect].kick)))); // double speedscale on purpose
-		if(d == game::player1) hud::quakewobble = clamp(hud::quakewobble + max(weaptype[d->weapselect].wobble, 1), 0, 1000);
-
+		vec kick = vec(unitv).mul(-weaptype[d->weapselect].kickpush);
+		if(d == game::player1)
+		{
+			if(weaptype[d->weapselect].zooms && game::inzoom()) kick.mul(0.25f);
+			game::swaypush.add(vec(kick).mul(0.0625f));
+			if(!physics::iscrouching(d)) hud::quakewobble = clamp(hud::quakewobble+max(int(weaptype[d->weapselect].kickpush), 1), 0, 1000);
+		}
+		if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_speedscale(m_speedscale(0.5f))));
 		// move along the eye ray towards the weap origin, stopping when something is hit
 		// nudge the target a tiny bit forward in the direction of the camera for stability
 		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
