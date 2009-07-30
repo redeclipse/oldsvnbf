@@ -246,7 +246,7 @@ extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1
 extern void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);
 extern void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt = 1, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade = 1, int color = 0xFFFFFF);
-extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int grav = 0, int collide = 0, int fade = 1, int color = 0xFFFFFF, float start = 0, float length = 1, int type = PART_ICON);
+extern void part_icon(const vec &o, Texture *tex, float blend, float size = 2, int grav = 0, int collide = 0, int fade = 1, int color = 0xFFFFFF, float start = 0, float length = 1, physent *pl = NULL);
 extern void part_line(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, int type = PART_LINE);
 extern void part_triangle(const vec &o, float yaw, float pitch, float size = 1, int fade = 1, int color = 0xFFFFFF, bool fill = true, int type = PART_TRIANGLE);
 extern void part_dir(const vec &o, float yaw, float pitch, float size = 1, int fade = 1, int color = 0x0000FF, bool fill = true);

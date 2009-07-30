@@ -155,15 +155,14 @@ namespace entities
 			{
 				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
-				vec above = vec(d->abovehead()).add(vec(0, 0, 2));
-				if(texname && *texname) part_icon(above, textureload(texname, 3), 1, 2, -10, 0, 2500, colour);
+				if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
 				else
 				{
 					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
 					if(item && *item)
 					{
 						defformatstring(ds)("@%s (%d)", item, e.type);
-						part_text(above, ds, PART_TEXT, 2500, colour, 2, -10);
+						part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
 					}
 				}
 			}
