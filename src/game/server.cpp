@@ -1985,10 +1985,10 @@ namespace server
 		}
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && (!(realflags&HIT_FALL) || !(realflags&HIT_MELT) || target != actor)) realflags &= ~HIT_FULL;
+		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && !weaptype[weap].explode) realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
-			if(realflags&HIT_FULL || realflags&HIT_HEAD || realflags&HIT_FALL) realdamage = int(realdamage*GVAR(damagescale));
+			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
 			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*GVAR(damagescale));
 			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*GVAR(damagescale));
 			else realdamage = 0;

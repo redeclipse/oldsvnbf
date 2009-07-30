@@ -629,16 +629,8 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 		loopv(dynents)
 		{
 			physent *o = dynents[i];
-			if(o==d || !physics::issolid(o) || d->o.reject(o->o, d->radius+o->radius)) continue;
-            if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
-            {
-                if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
-                {
-                    hitplayer = o;
-                    return false;
-                }
-            }
-            else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
+			if(o==d || !physics::issolid(o)) continue;
+			if(!physics::xcollide(d, dir, o))
 			{
 				hitplayer = o;
 				return false;
@@ -863,16 +855,16 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(!physics::issolid(o) || o->o.x+o->radius < x1 || o->o.y+o->radius < y1 || o->o.x-o->radius > x2 || o->o.y-o->radius > y2)
-				continue;
+            if(!physics::issolid(o)) continue;
             float dist;
-            if(intersect(o, from, to, dist) && dist < bestdist)
+            if(!physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
             {
                 bestdist = dist;
                 if(dist <= maxdist) hitplayer = o;
             }
         }
     }
+    if(hitplayer) { float dist; physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, hitplayer); }
     return bestdist <= maxdist ? bestdist : -1;
 }
 

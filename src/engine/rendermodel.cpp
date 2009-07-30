@@ -750,11 +750,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE);
 
-		if(d && showboundingbox==1)
-		{
-			render3dbox(d->o, d->height, d->aboveeye, d->radius);
-			renderellipse(d->o, d->xradius, d->yradius, d->yaw);
-		}
+		if(d && showboundingbox==1) physics::complexboundbox(d);
 		else
 		{
 			vec center, radius;

@@ -25,7 +25,7 @@ namespace physics
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
-	int physsteps = 0, lastphysframe = 0;
+	int physsteps = 0, lastphysframe = 0, hitflags = HITFLAG_NONE;
 
 	#define imov(name,v,d,s,os) \
 		void do##name(bool down) \
@@ -834,6 +834,78 @@ namespace physics
 		d->o = old;
 	}
 
+	bool xcollide(physent *d, const vec &dir, physent *o)
+	{
+		hitflags = HITFLAG_NONE;
+		if(d->type == ENT_PROJ && o->type == ENT_PLAYER)
+		{
+			gameent *e = (gameent *)o;
+			if(!d->o.reject(e->legs, d->radius+max(e->lrad.x, e->lrad.y)) && !ellipsecollide(d, dir, e->legs, vec(0, 0, 0), e->yaw, e->lrad.x, e->lrad.y, e->lrad.z, e->lrad.z))
+				hitflags |= HITFLAG_LEGS;
+			if(!d->o.reject(e->torso, d->radius+max(e->trad.x, e->trad.y)) && !ellipsecollide(d, dir, e->torso, vec(0, 0, 0), e->yaw, e->trad.x, e->trad.y, e->trad.z, e->trad.z))
+				hitflags |= HITFLAG_TORSO;
+			if(!d->o.reject(e->head, d->radius+max(e->hrad.x, e->hrad.y)) && !ellipsecollide(d, dir, e->head, vec(0, 0, 0), e->yaw, e->hrad.x, e->hrad.y, e->hrad.z, e->hrad.z))
+				hitflags |= HITFLAG_HEAD;
+			return hitflags == HITFLAG_NONE;
+		}
+		if(!d->o.reject(o->o, d->radius+o->radius))
+		{
+			if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
+			{
+				if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
+					return false;
+			}
+			else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
+				return false;
+		}
+		return true;
+	}
+
+	bool xtracecollide(const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o)
+	{
+		hitflags = HITFLAG_NONE;
+		if(o->type == ENT_PLAYER)
+		{
+			gameent *e = (gameent *)o;
+			if(e->legs.x+e->lrad.x >= x1 && e->legs.y+e->lrad.y >= y1 && e->legs.x-e->lrad.x <= x2 && e->legs.y-e->lrad.y <= y2)
+			{
+				vec bottom(e->legs), top(e->legs); bottom.z -= e->lrad.z; top.z += e->lrad.z;
+				if(linecylinderintersect(from, to, bottom, top, max(e->lrad.x, e->lrad.y), dist)) hitflags |= HITFLAG_LEGS;
+			}
+			if(e->torso.x+e->trad.x >= x1 && e->torso.y+e->trad.y >= y1 && e->torso.x-e->trad.x <= x2 && e->torso.y-e->trad.y <= y2)
+			{
+				vec bottom(e->torso), top(e->torso); bottom.z -= e->trad.z; top.z += e->trad.z;
+				if(linecylinderintersect(from, to, bottom, top, max(e->trad.x, e->trad.y), dist)) hitflags |= HITFLAG_TORSO;
+			}
+			if(e->head.x+e->hrad.x >= x1 && e->head.y+e->hrad.y >= y1 && e->head.x-e->hrad.x <= x2 && e->head.y-e->hrad.y <= y2)
+			{
+				vec bottom(e->head), top(e->head); bottom.z -= e->hrad.z; top.z += e->hrad.z;
+				if(linecylinderintersect(from, to, bottom, top, max(e->hrad.x, e->hrad.y), dist)) hitflags |= HITFLAG_HEAD;
+			}
+			return hitflags == HITFLAG_NONE;
+		}
+		if(o->o.x+o->radius >= x1 && o->o.y+o->radius >= y1 && o->o.x-o->radius <= x2 && o->o.y-o->radius <= y2 && intersect(o, from, to, dist)) return false;
+		return true;
+	}
+
+	void complexboundbox(physent *d)
+	{
+		render3dbox(d->o, d->height, d->aboveeye, d->radius);
+		renderellipse(d->o, d->xradius, d->yradius, d->yaw);
+		if(d->type == ENT_PLAYER)
+		{
+			gameent *e = (gameent *)d;
+			render3dbox(e->head, e->hrad.z, e->hrad.z, max(e->hrad.x, e->hrad.y));
+			renderellipse(e->head, e->hrad.x, e->hrad.y, e->yaw);
+			render3dbox(e->torso, e->trad.z, e->trad.z, max(e->trad.x, e->trad.y));
+			renderellipse(e->torso, e->trad.x, e->trad.y, e->yaw);
+			render3dbox(e->legs, e->lrad.z, e->lrad.z, max(e->lrad.x, e->lrad.y));
+			renderellipse(e->legs, e->lrad.x, e->lrad.y, e->yaw);
+			render3dbox(e->waist, 0.25f, 0.25f, 0.25f);
+			render3dbox(e->lfoot, 1, 1, 1); render3dbox(e->rfoot, 1, 1, 1);
+		}
+	}
+
 	bool entinmap(physent *d, bool avoidplayers)
 	{
 		if(d->state != CS_ALIVE) { d->resetinterp(); return insideworld(d->o); }
@@ -919,7 +991,7 @@ namespace physics
 		v.normalize();
 		if(raycube(o, v, hdr.worldsize) >= hdr.worldsize) return false;
 		physent d;
-		d.type = ENT_PROJ;
+		d.type = ENT_DUMMY;
 		d.o = o;
 		d.radius = radius;
 		d.height = height;
