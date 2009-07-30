@@ -266,8 +266,7 @@ enum
 
 struct weaptypes
 {
-	int	info, 				anim,				colour,
-			sound, 		esound, 	fsound,		rsound,
+	int	info, 				anim,				colour,			sound, 		esound, 	fsound,		rsound,
 			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
 			delay,	explode,	rays,	spread,	zdiv,	collide;
 	bool	radial,	taper,	extinguish,	reloads,	zooms,		fullauto;
@@ -280,8 +279,7 @@ struct weaptypes
 weaptypes weaptype[WEAP_MAX] =
 {
 	{
-		WEAP_PISTOL,		ANIM_PISTOL,		0x999999,
-			S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
+		WEAP_PISTOL,		ANIM_PISTOL,		0x999999,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		100,    1000,	25,		2500,	0,		2000,
 			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		false,		false,
@@ -290,8 +288,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
-		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,
-			S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
+		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			1,		8,		500,	1250,	20,		2500,	0,		1000,
 			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		false,
@@ -300,8 +297,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
-		WEAP_SMG,			ANIM_SMG,			0xFFAA22,
-			S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
+		WEAP_SMG,			ANIM_SMG,			0xFFAA22,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			40,		40,		75,    1500,	20,		3000,	0,		1000,
 			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
 			false,	false,	false,		true,		false,		true,
@@ -310,8 +306,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
-		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,
-			S_FLAMER,	S_BURN,		S_BURNING,	-1,
+		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
 			50,		50,		100, 	2000,	15,		200,	0,		500,
 			0,		24,			1,		10,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			true,	false,	true,		true,		false,		true,
@@ -320,8 +315,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
-		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,
-			S_PLASMA,	S_ENERGY,	S_HUM,		-1,
+		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		350,	1000,	30,		2000,	0,		1000,
 			0,		32,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
 			true,	true,	true,		true,		false,		true,
@@ -330,8 +324,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
-		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,
-			S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
+		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		750,	1500,	150,	40000,	0,		5000,
 			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		false,
@@ -340,8 +333,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
-		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,
-			S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
+		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		1500,	6000,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
@@ -350,8 +342,7 @@ weaptypes weaptype[WEAP_MAX] =
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{
-		WEAP_PAINTGUN,		ANIM_PAINTGUN,		0xFF22AA,
-			S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
+		WEAP_PAINTGUN,		ANIM_PAINTGUN,		0xFF22AA,		S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
 			10,		10,		500,	1000,	25,		1000,	0,		10000,
 			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 			false,	false,	false,		true,		true,		true,
@@ -389,17 +380,18 @@ enum
 {
 	FRAG_NONE		= 0,
 	FRAG_HEADSHOT	= 1<<1,
-	FRAG_SPREE1		= 1<<2,
-	FRAG_SPREE2		= 1<<3,
-	FRAG_SPREE3		= 1<<4,
-	FRAG_SPREE4		= 1<<5,
-	FRAG_SPREE5		= 1<<6,
-	FRAG_SPREE6		= 1<<7,
-	FRAG_MKILL1		= 1<<8,
-	FRAG_MKILL2		= 1<<9,
-	FRAG_MKILL3		= 1<<10,
-	FRAG_REVENGE	= 1<<11,
-	FRAG_DOMINATE	= 1<<12,
+	FRAG_OBLITERATE = 1<<2,
+	FRAG_SPREE1		= 1<<3,
+	FRAG_SPREE2		= 1<<4,
+	FRAG_SPREE3		= 1<<5,
+	FRAG_SPREE4		= 1<<6,
+	FRAG_SPREE5		= 1<<7,
+	FRAG_SPREE6		= 1<<8,
+	FRAG_MKILL1		= 1<<9,
+	FRAG_MKILL2		= 1<<10,
+	FRAG_MKILL3		= 1<<11,
+	FRAG_REVENGE	= 1<<12,
+	FRAG_DOMINATE	= 1<<13,
 };
 
 enum

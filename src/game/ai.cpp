@@ -44,14 +44,13 @@ namespace ai
 	vec getaimpos(gameent *d, gameent *e)
 	{
 		vec o = e->headpos();
+		if(weaptype[d->weapselect].radial) o.z -= e->height;
 		if(d->skill <= 100)
 		{
-			o.z -= e->height*(1.f/float(d->skill));
-			if(d->weapselect == WEAP_PISTOL)
-			{
-				o.x += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
-				o.y += (rnd(int(e->radius*6)+1)-e->radius*3)*(1.f/float(d->skill));
-			}
+			if(weaptype[d->weapselect].radial) o.z += e->height*(1.f/float(d->skill));
+			else o.z -= e->height*(1.f/float(d->skill));
+			o.x += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 4 : 2))*(1.f/float(d->skill));
+			o.y += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 4 : 2))*(1.f/float(d->skill));
 		}
 		return o;
 	}
@@ -584,7 +583,12 @@ namespace ai
 				{
 					if(check(d, b)) return 1;
 					gameent *e = game::getclient(b.target);
-					if(e && e->state == CS_ALIVE) return patrol(d, b, e->feetpos()) ? 1 : 0;
+					if(e && e->state == CS_ALIVE)
+					{
+						int weap = d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? d->arenaweap : d->weapselect;
+						float mindist = weaptype[weap].explode ? weaptype[weap].explode : NEARDIST, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : FARDIST;
+						return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
+					}
 					break;
 				}
 				default: break;

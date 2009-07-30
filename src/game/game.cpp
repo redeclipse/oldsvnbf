@@ -537,15 +537,10 @@ namespace game
 		d->deaths++;
 
 		int anc = -1, dth = -1;
-		bool obliterated = false;
 		if(weap == WEAP_PAINTGUN || m_paint(gamemode, mutators)) dth = S_SPLAT;
-		else
-		{
-			obliterated = flags&HIT_EXPLODE || flags&HIT_MELT || damage > m_maxhealth(gamemode, mutators)*3/2;
-			if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURNING;
-			else if(obliterated) dth = S_SPLOSH;
-			else dth = S_DIE1+rnd(2);
-		}
+		else if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
+		else if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURNING;
+		else dth = S_DIE1+rnd(2);
 
 		if(d == player1) anc = S_V_FRAGGED;
 		else d->resetinterp();
@@ -570,8 +565,8 @@ namespace game
 				};
         		concatstring(d->obit, suicidenames[weap]);
         	}
-        	else if(flags&HIT_EXPLODE) concatstring(d->obit, "was obliterated");
         	else if(flags&HIT_BURN) concatstring(d->obit, "burnt up");
+        	else if(style&FRAG_OBLITERATE) concatstring(d->obit, "was obliterated");
         	else if(m_paint(gamemode, mutators)) concatstring(d->obit, "gave up");
         	else concatstring(d->obit, "suicided");
         }
@@ -611,7 +606,7 @@ namespace game
 				}
 			};
 
-			int o = obliterated ? 2 : (style&FRAG_HEADSHOT ? 1 : 0);
+			int o = style&FRAG_OBLITERATE ? 2 : (style&FRAG_HEADSHOT ? 1 : 0);
 			concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "killed by");
 			bool override = false;
 			vec az = actor->abovehead(), dz = d->abovehead();
