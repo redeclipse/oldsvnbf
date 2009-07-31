@@ -82,6 +82,8 @@ namespace game
 	FVARP(statusaboveheadblend, 0.f, 0.75f, 1.f);
 	VARP(showteamabovehead, 0, 1, 3);
 	VARP(showdamageabovehead, 0, 0, 2);
+	FVAR(aboveheadsmooth, 0, 0.5f, 1);
+	VAR(aboveheadsmoothmillis, 1, 200, 10000);
 	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
 	TVAR(conopentex, "textures/conopen", 3);
 	TVAR(deadtex, "textures/dead", 3);
@@ -905,9 +907,8 @@ namespace game
         {
         	case PT_TEXT: case PT_ICON:
         	{
-        		vec q = p->owner->abovehead(); q.z += p->size;
-        		if(p->o.z > q.z) q.z = p->o.z;
-				float k = pow(0.5f, float(curtime)/250.f);
+        		vec q = p->owner->abovehead(); q.z = p->o.z;
+				float k = pow(aboveheadsmooth, float(curtime)/float(aboveheadsmoothmillis));
 				p->o.mul(k).add(q.mul(1-k));
         		break;
         	}
