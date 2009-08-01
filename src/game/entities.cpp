@@ -97,7 +97,8 @@ namespace entities
 				const char *trgnames[3] = { "toggle", "link", "script" }, *actnames[3] = { "manual", "proximity", "action" };
 				addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX-1 : attr2]);
 				addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX-1 : attr3]);
-				addentinfo(attr5 ? "(on)" : "(off)");
+				if(attr5 >= 2) addentinfo("game controlled");
+				addentinfo(attr5%2 ? "default on" : "default off");
 			}
 		}
 		else if(type == WAYPOINT)
@@ -754,16 +755,13 @@ namespace entities
 		{
 			gameentity &e = *(gameentity *)ents[n];
 			bool spawned = e.spawned;
-			if((e.spawned = on)) e.lastspawn = lastmillis;
+			if((e.spawned = on) == true) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if(e.spawned != spawned)
+				if((!e.lastemit || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK))
 				{
-					if(e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK)
-					{
-						e.lastemit = lastmillis-max(triggertime(e)-(lastmillis-e.lastemit), 0);
-						execlink(NULL, n, false);
-					}
+					e.lastemit = lastmillis-(e.lastemit ? max(triggertime(e)-(lastmillis-e.lastemit), 0) : triggertime(e));
+					execlink(NULL, n, false);
 					loopv(e.kin) if(ents.inrange(e.kin[i]))
 					{
 						gameentity &f = *(gameentity *)ents[e.kin[i]];
@@ -861,8 +859,13 @@ namespace entities
 				while(e.attr[1] >= TR_MAX) e.attr[1] -= TR_MAX;
 				while(e.attr[2] < 0) e.attr[2] += TA_MAX;
 				while(e.attr[2] >= TA_MAX) e.attr[2] -= TA_MAX;
-				while(e.attr[4] < 0) e.attr[4] += 2;
-				while(e.attr[4] >= 1) e.attr[4] -= 2;
+				while(e.attr[4] < 0) e.attr[4] += 4;
+				while(e.attr[4] >= 4) e.attr[4] -= 4;
+				if(e.attr[4] >= 2)
+				{
+					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS;
+					while(e.attr[0] >= TRIGGERIDS) e.attr[0] += TRIGGERIDS;
+				}
 				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND) && e.lastemit < ents[e.links[i]]->lastemit)
 				{
 					ents[e.links[i]]->lastemit = e.lastemit;

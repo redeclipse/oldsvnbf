@@ -63,7 +63,8 @@ enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
 
 enum { TR_TOGGLE = 0, TR_LINK, TR_SCRIPT, TR_MAX };
 enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
-#define TRIGSTATE(a,b) (b ? !a : a)
+#define TRIGGERIDS		16
+#define TRIGSTATE(a,b)	(b%2 ? !a : a)
 
 struct enttypes
 {
