@@ -1382,7 +1382,6 @@ namespace client
 				case SV_TRIGGER:
 				{
 					int ent = getint(p), st = getint(p);
-					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, st ? true : false);
 					break;
 				}

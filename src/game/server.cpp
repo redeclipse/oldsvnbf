@@ -714,6 +714,39 @@ namespace server
 		}
 	}
 
+	int triggerid = -1;
+	struct triggergrp
+	{
+		int id;
+		vector<int> ents;
+		triggergrp() { reset(); }
+		void reset(int n = 0) { id = n; ents.setsize(0); }
+	} triggers[TRIGGERIDS];
+
+	void setuptriggers(bool update)
+	{
+		loopi(TRIGGERIDS) triggers[i].reset(i);
+		if(!update) triggerid = -1;
+		else
+		{
+			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] < TRIGGERIDS)
+				triggers[sents[i].attr[0]].ents.add(i);
+			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i].ents.empty()) valid.add(triggers[i].id);
+			triggerid = !valid.empty() ? valid[rnd(valid.length())] : -1;
+			loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents) if(sents[triggers[i].ents[k]].attr[4]%2)
+			{
+				sents[triggers[i].ents[k]].spawned = true;
+				sents[triggers[i].ents[k]].millis = gamemillis;
+				sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1);
+				loopvj(sents[i].kin) if(sents.inrange(sents[triggers[i].ents[k]].kin[j]))
+				{
+					sents[sents[triggers[i].ents[k]].kin[j]].spawned = sents[triggers[i].ents[k]].spawned;
+					sents[sents[triggers[i].ents[k]].kin[j]].millis = sents[triggers[i].ents[k]].millis;
+				}
+			}
+		}
+	}
+
 	bool finditem(int i, bool spawned = true, bool timeit = false)
 	{
 		if(sents[i].spawned) return true;
@@ -728,8 +761,7 @@ namespace server
 				else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
 			}
 		}
-		if(spawned && timeit && gamemillis < sents[i].millis)
-			return true;
+		if(spawned && timeit && gamemillis < sents[i].millis) return true;
 		return false;
 	}
 
@@ -1438,9 +1470,8 @@ namespace server
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
 		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
-		sents.setsize(0);
-		setupspawns(false);
-		scores.setsize(0);
+		sents.setsize(0); scores.setsize(0);
+		setuptriggers(false); setupspawns(false);
 
 		const char *reqmap = name && *name ? name : pickmap(smapname);
 #ifdef STANDALONE // interferes with savemap on clients, in which case we can just use the auto-request
@@ -2427,11 +2458,11 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis)
+				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attr[4] <= 1 || (triggerid >= 0 && triggers[triggerid].ents.find(i) >= 0)))
 				{
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis+(triggertime(i)*2);
-					sendf(-1, 1, "ri2", SV_TRIGGER, i, 0);
+					sendf(-1, 1, "ri3", SV_TRIGGER, i, 0);
 					loopvj(sents[i].kin) if(sents.inrange(sents[i].kin[j]))
 					{
 						sents[sents[i].kin[j]].spawned = sents[i].spawned;
@@ -3117,9 +3148,9 @@ namespace server
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(sents.inrange(ent) && sents[ent].type == TRIGGER)
+					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attr[4] <= 1 || (triggerid >= 0 && triggers[triggerid].ents.find(ent) >= 0)))
 					{
-						bool commit = false;
+						bool commit = false, kin = false;
 						switch(sents[ent].attr[1])
 						{
 							case TR_TOGGLE:
@@ -3128,14 +3159,14 @@ namespace server
 								{
 									sents[ent].millis = gamemillis+(triggertime(ent)*2);
 									sents[ent].spawned = !sents[ent].spawned;
-									commit = true;
+									commit = kin = true;
 								}
 								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
 							case TR_LINK:
 							{
-								sents[ent].millis = gamemillis+(triggertime(ent)*2);
+								sents[ent].millis = gamemillis+(triggertime(ent)*2); kin = true;
 								if(!sents[ent].spawned)
 								{
 									sents[ent].spawned = true;
@@ -3146,7 +3177,7 @@ namespace server
 							}
 						}
 						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
-						loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))
+						if(kin) loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))
 						{
 							sents[sents[ent].kin[j]].spawned = sents[ent].spawned;
 							sents[sents[ent].kin[j]].millis = sents[ent].millis;
@@ -3255,6 +3286,7 @@ namespace server
 							cp->state.dropped.reset();
 							cp->state.weapreset(false);
 						}
+						setuptriggers(true);
 						setupspawns(true, np);
 						hasgameinfo = aiman::dorefresh = true;
 					}
