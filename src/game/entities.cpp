@@ -94,12 +94,9 @@ namespace entities
 		{
 			if(full)
 			{
-				const char *trignames[2][4] = {
-						{ "toggle", "link", "script", "" },
-						{ "manual", "proximity", "action", "" }
-				};
-				addentinfo(trignames[0][attr2 < TR_TOGGLE || attr2 > TR_MAX ? TR_MAX : attr2]);
-				addentinfo(trignames[1][attr3 < TA_MANUAL || attr3 > TA_MAX ? TA_MAX : attr3]);
+				const char *trgnames[3] = { "toggle", "link", "script" }, *actnames[3] = { "manual", "proximity", "action" };
+				addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX-1 : attr2]);
+				addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX-1 : attr3]);
 				addentinfo(attr5 ? "(on)" : "(off)");
 			}
 		}
@@ -599,7 +596,7 @@ namespace entities
 					{
 						case TELEPORT:
 						{
-							if(lastmillis-e.lastuse >= triggertime(e))
+							if(lastmillis-e.lastuse >= triggertime(e)/2)
 							{
 								e.lastuse = e.lastemit = lastmillis;
 								static vector<int> teleports;
@@ -626,8 +623,7 @@ namespace entities
 											d->vel.mul(mag);
 											game::fixfullrange(d->yaw, d->pitch, d->roll, true);
 											f.lastuse = f.lastemit = e.lastemit;
-											execlink(d, n, true);
-											execlink(d, teleports[r], true);
+											execlink(d, n, true); execlink(d, teleports[r], true);
 											if(d == game::player1) game::resetcamera();
 											teleported = true;
 											break;
@@ -658,13 +654,12 @@ namespace entities
 								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
 									d->vel.v[k] = dir.v[k];
 							}
-							if(lastmillis-e.lastuse >= triggertime(e)) e.lastuse = e.lastemit = lastmillis;
-							execlink(d, n, true);
+							e.lastuse = e.lastemit = lastmillis; execlink(d, n, true);
 							break;
 						}
 						case TRIGGER:
 						{
-							if((e.attr[1] == TR_SCRIPT || !e.spawned) && lastmillis-e.lastuse >= triggertime(e)/2)
+							if(lastmillis-e.lastuse >= triggertime(e)/2)
 							{
 								e.lastuse = lastmillis;
 								switch(e.attr[1])
@@ -758,23 +753,23 @@ namespace entities
 		if(ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)ents[n];
-			if((e.spawned = on) != false) e.lastspawn = lastmillis;
+			bool spawned = e.spawned;
+			if((e.spawned = on)) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if(e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK)
+				if(e.spawned != spawned)
 				{
-					int millis = lastmillis-e.lastemit, delay = triggertime(e);
-					if(e.lastemit && millis < delay) // skew the animation forward
-						e.lastemit = lastmillis-(delay-millis);
-					else e.lastemit = lastmillis;
-					execlink(NULL, n, false);
-				}
-				loopv(e.kin) if(ents.inrange(e.kin[i]))
-				{
-					gameentity &f = *(gameentity *)ents[e.kin[i]];
-					f.spawned = e.spawned;
-					f.lastemit = e.lastemit;
-					execlink(NULL, e.kin[i], false, n);
+					if(e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK)
+					{
+						e.lastemit = lastmillis-max(triggertime(e)-(lastmillis-e.lastemit), 0);
+						execlink(NULL, n, false);
+					}
+					loopv(e.kin) if(ents.inrange(e.kin[i]))
+					{
+						gameentity &f = *(gameentity *)ents[e.kin[i]];
+						f.spawned = e.spawned; f.lastemit = e.lastemit;
+						execlink(NULL, e.kin[i], false, n);
+					}
 				}
 			}
 			else if(enttype[e.type].usetype == EU_ITEM)
@@ -832,9 +827,8 @@ namespace entities
 		}
 		if(issound(e.schan))
 		{
-			removesound(e.schan);
-			e.schan = -1; // prevent clipping when moving around
-			if(e.type == MAPSOUND) e.lastemit = lastmillis;
+			removesound(e.schan); e.schan = -1; // prevent clipping when moving around
+			if(e.type == MAPSOUND) e.lastemit = lastmillis+1000;
 		}
 		switch(e.type)
 		{
@@ -848,13 +842,10 @@ namespace entities
 			case PARTICLES:
 			case MAPSOUND:
 			{
-				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
+				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER && ents[e.links[i]]->lastemit < e.lastemit)
 				{
-					if(ents[e.links[i]]->lastemit < e.lastemit)
-					{
-						e.lastemit = ents[e.links[i]]->lastemit;
-						e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
-					}
+					e.lastemit = ents[e.links[i]]->lastemit;
+					e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
 				}
 				break;
 			}
@@ -872,14 +863,10 @@ namespace entities
 				while(e.attr[2] >= TA_MAX) e.attr[2] -= TA_MAX;
 				while(e.attr[4] < 0) e.attr[4] += 2;
 				while(e.attr[4] >= 1) e.attr[4] -= 2;
-				loopv(e.links) if(ents.inrange(e.links[i]) &&
-					(ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
+				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND) && e.lastemit < ents[e.links[i]]->lastemit)
 				{
-					if(e.lastemit < ents[e.links[i]]->lastemit)
-					{
-						ents[e.links[i]]->lastemit = e.lastemit;
-						ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
-					}
+					ents[e.links[i]]->lastemit = e.lastemit;
+					ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
 				}
 				break;
 			}
@@ -942,20 +929,14 @@ namespace entities
 				{
 					case MAPMODEL:
 					{
-						if(ents[index]->type == TRIGGER)
-						{
-							ents[i]->lastemit = ents[index]->lastemit;
-							ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
-						}
+						ents[i]->lastemit = ents[index]->lastemit;
+						ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
 						break;
 					}
 					case PARTICLES:
 					{
-						if(ents[index]->type == TRIGGER || (!ents[i]->lastemit || lastmillis-ents[i]->lastemit >= triggertime(*ents[i])/2))
-						{
-							ents[i]->lastemit = ents[index]->lastemit;
-							commit = ents[index]->type != TRIGGER && local;
-						}
+						ents[i]->lastemit = ents[index]->lastemit;
+						commit = ents[index]->type != TRIGGER && local;
 						break;
 					}
 					case MAPSOUND:
@@ -1965,8 +1946,7 @@ namespace entities
 		{
 			case PARTICLES:
 				if(idx < 0 || e.links.empty()) makeparticles(e);
-				else if(e.lastemit && lastmillis-e.lastemit < triggertime(e))
-					makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				else if(e.lastemit && lastmillis-e.lastemit <= triggertime(e)/2) makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 				break;
 
 			case TELEPORT:
