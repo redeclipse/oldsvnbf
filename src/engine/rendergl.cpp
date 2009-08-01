@@ -1501,10 +1501,10 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 		glScalef(1/3.0f, 1/3.0f, 1);
 		settexture("textures/progress", 3);
 		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2f(0, 0);
-		glTexCoord2f(1, 0); glVertex2f(192, 0);
-		glTexCoord2f(1, 1); glVertex2f(192, 0);
-		glTexCoord2f(0, 1); glVertex2f(0, 192);
+		glTexCoord2f(0, 0); glVertex2f(1, 1);
+		glTexCoord2f(1, 0); glVertex2f(190, 1);
+		glTexCoord2f(1, 1); glVertex2f(190, 1);
+		glTexCoord2f(0, 1); glVertex2f(1, 190);
 		glEnd();
 		draw_textx("\fgload", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
 		draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, caption ? caption : "loading...");
