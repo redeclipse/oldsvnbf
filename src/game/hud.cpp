@@ -996,17 +996,18 @@ namespace hud
 
 	void drawentblips(int w, int h, float blend)
 	{
-		if(m_edit(game::gamemode) && game::player1->state == CS_EDITING && (entities::ents.inrange(enthover) || !entgroup.empty()))
+		if(m_edit(game::gamemode) && game::player1->state == CS_EDITING)
 		{
-			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != enthover)
+			int hover = !entities::ents.inrange(enthover) && !entgroup.empty() ? entgroup[0] : -1;
+			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != hover)
 			{
 				gameentity &e = *(gameentity *)entities::ents[entgroup[i]];
 				drawentblip(w, h, blend, entgroup[i], e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
-			if(entities::ents.inrange(enthover))
+			if(entities::ents.inrange(hover))
 			{
-				gameentity &e = *(gameentity *)entities::ents[enthover];
-				drawentblip(w, h, blend, enthover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
+				gameentity &e = *(gameentity *)entities::ents[hover];
+				drawentblip(w, h, blend, hover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
 			}
 		}
 		else
@@ -1222,10 +1223,10 @@ namespace hud
 		}
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
-			int stop = hudsize-s;
+			int stop = hudsize-s, hover = !entities::ents.inrange(enthover) && !entgroup.empty() ? entgroup[0] : -1;
 			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend*0.25f, 1.f);
-			sy += drawentitem(enthover, x, y-sy, s, 1.f, blend*inventoryeditblend);
-			loopv(entgroup) if(entgroup[i] != enthover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
+			sy += drawentitem(hover, x, y-sy, s, 1.f, blend*inventoryeditblend);
+			loopv(entgroup) if(entgroup[i] != hover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
 		}
 		return sy;
 	}
