@@ -114,7 +114,7 @@ namespace server
 	extern bool serveroption(char *arg);
 	extern void *newinfo();
 	extern void deleteinfo(void *ci);
-	extern int numclients(int exclude = -1, bool nospec = true, bool noai = false);
+	extern int numclients(int exclude = -1, bool nospec = true, int aitype = -1);
     extern int reserveclients();
 	extern void clientdisconnect(int n, bool local = false);
 	extern int clientconnect(int n, uint ip, bool local = false);

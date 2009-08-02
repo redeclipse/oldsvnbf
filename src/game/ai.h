@@ -1,16 +1,24 @@
 struct gameent;
 
-enum { AI_NONE = 0, AI_BOT, AI_MAX };
+enum { AI_BOT, AI_TURRET, AI_START = AI_TURRET, AI_MAX };
+enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 #define isaitype(a)	(a >= 0 && a <= AI_MAX-1)
 
 struct aitypes
 {
-	int type;	const char *name,	*mdl;
+	int	type,			weap,			health;	float	skill,	xradius,	yradius,	height;
+	bool	canmove,	canfight,	useweap;	const char	*name,		*mdl;
 };
 #ifdef GAMESERVER
 aitypes aitype[] = {
-	{ AI_NONE,		"",				"" },
-	{ AI_BOT,		"bot",			"actors/player" },
+	{
+		AI_BOT,			-1, 			0,				1.f,	0,			0, 			0,
+			true,		true,		true,					"bot",		"actors/player"
+	},
+	{
+		AI_TURRET,		WEAP_SMG,	 	200,			1.f,	6,		6,				6,
+		false,		true,		false,					"turret",		"actors/mturret"
+	},
 };
 #else
 extern aitypes aitype[];
@@ -186,7 +194,7 @@ namespace ai
 	extern bool targetable(gameent *d, gameent *e, bool z = true);
 	extern bool cansee(gameent *d, vec &x, vec &y, vec &targ = aitarget);
 
-	extern void init(gameent *d, int at, int on, int sk, int bn, char *name, int tm);
+	extern void init(gameent *d, int at, int et, int on, int sk, int bn, char *name, int tm);
 
 	extern bool badhealth(gameent *d);
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);

@@ -534,32 +534,35 @@ namespace ctf
 
 	bool aicheck(gameent *d, ai::aistate &b)
 	{
-		static vector<int> hasflags, takenflags;
-		hasflags.setsizenodelete(0);
-		takenflags.setsizenodelete(0);
-		loopv(st.flags)
+		if(d->aitype == AI_BOT)
 		{
-			ctfstate::flag &g = st.flags[i];
-			if(g.owner == d) hasflags.add(i);
-			else if(isctfflag(g, d->team) && (ctfstyle >= 2 || (g.owner && g.owner->team != d->team) || g.droptime))
-				takenflags.add(i);
-		}
-		if(!hasflags.empty() && ctfstyle <= 1)
-		{
-			aihomerun(d, b);
-			return true;
-		}
-		if(!ai::badhealth(d))
-		{
-			while(!takenflags.empty())
+			static vector<int> hasflags, takenflags;
+			hasflags.setsizenodelete(0);
+			takenflags.setsizenodelete(0);
+			loopv(st.flags)
 			{
-				int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
-				if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos()))
+				ctfstate::flag &g = st.flags[i];
+				if(g.owner == d) hasflags.add(i);
+				else if(isctfflag(g, d->team) && (ctfstyle >= 2 || (g.owner && g.owner->team != d->team) || g.droptime))
+					takenflags.add(i);
+			}
+			if(!hasflags.empty() && ctfstyle <= 1)
+			{
+				aihomerun(d, b);
+				return true;
+			}
+			if(!ai::badhealth(d))
+			{
+				while(!takenflags.empty())
 				{
-					d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
-					return true;
+					int flag = takenflags.length() > 2 ? rnd(takenflags.length()) : 0;
+					if(ai::makeroute(d, b, st.flags[takenflags[flag]].pos()))
+					{
+						d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, takenflags[flag]);
+						return true;
+					}
+					else takenflags.remove(flag);
 				}
-				else takenflags.remove(flag);
 			}
 		}
 		return false;
@@ -572,17 +575,20 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[j];
 			bool home = isctfhome(f, d->team);
-			if((!home || ctfstyle >= 2) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
+			if(d->aitype == AI_BOT && (!home || ctfstyle >= 2) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = f.team == TEAM_NEUTRAL || ctfstyle >= 2 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
-			gameent *e = NULL;
-			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-			{ // try to guess what non ai are doing
-				vec ep = e->feetpos();
-				if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-					targets.add(e->clientnum);
+			bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 2 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			ai::checkothers(targets, d, home || d->aitype != AI_BOT ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
+			if(d->aitype == AI_BOT)
+			{
+				gameent *e = NULL;
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = e->feetpos();
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+						targets.add(e->clientnum);
+				}
 			}
 			if(home)
 			{
@@ -615,7 +621,7 @@ namespace ctf
 				if(targets.empty())
 				{ // attack the flag
 					ai::interest &n = interests.add();
-					n.state = ai::AI_S_PURSUE;
+					n.state = d->aitype == AI_BOT ? ai::AI_S_PURSUE : ai::AI_S_DEFEND;
 					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
 					n.target = j;
 					n.targtype = ai::AI_T_AFFINITY;
@@ -640,7 +646,7 @@ namespace ctf
 
 	bool aidefend(gameent *d, ai::aistate &b)
 	{
-		if(ctfstyle <= 1)
+		if(ctfstyle <= 1 && d->aitype == AI_BOT)
 		{
 			static vector<int> hasflags;
 			hasflags.setsizenodelete(0);
@@ -660,42 +666,50 @@ namespace ctf
 			ctfstate::flag &f = st.flags[b.target];
 			if(isctfflag(f, d->team))
 			{
-				if(ai::makeroute(d, b, f.pos()))
-					return f.owner ? ai::violence(d, b, f.owner, false) : true;
+				if(d->aitype == AI_BOT)
+				{
+					if(ai::makeroute(d, b, f.pos()))
+						return f.owner ? ai::violence(d, b, f.owner, false) : true;
+				}
+				else if(f.owner && ai::violence(d, b, f.owner, false)) return true;
 			}
-			int walk = 0, regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-			if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
+			int walk = 0;
+			if(d->aitype == AI_BOT)
 			{
-				static vector<int> targets; // build a list of others who are interested in this
-				targets.setsizenodelete(0);
-				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
-				gameent *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-				{ // try to guess what non ai are doing
-					vec ep = e->feetpos();
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-						targets.add(e->clientnum);
-				}
-				if(!targets.empty())
+				int regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+				if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
 				{
-					d->ai->trywipe = true; // re-evaluate so as not to herd
-					return true;
+					static vector<int> targets; // build a list of others who are interested in this
+					targets.setsizenodelete(0);
+					ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
+					gameent *e = NULL;
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+					{ // try to guess what non ai are doing
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+							targets.add(e->clientnum);
+					}
+					if(!targets.empty())
+					{
+						d->ai->trywipe = true; // re-evaluate so as not to herd
+						return true;
+					}
+					else
+					{
+						walk = 2;
+						b.millis = lastmillis;
+					}
 				}
-				else
-				{
-					walk = 2;
-					b.millis = lastmillis;
-				}
-			}
-			vec pos = d->feetpos();
-			float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*8);
-			loopv(st.flags)
-			{ // get out of the way of the returnee!
-				ctfstate::flag &g = st.flags[i];
-				if(pos.squaredist(g.pos()) <= mindist)
-				{
-					if(g.owner && g.owner->team == d->team) walk = 1;
-					if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
+				vec pos = d->feetpos();
+				float mindist = float(enttype[FLAG].radius*enttype[FLAG].radius*8);
+				loopv(st.flags)
+				{ // get out of the way of the returnee!
+					ctfstate::flag &g = st.flags[i];
+					if(pos.squaredist(g.pos()) <= mindist)
+					{
+						if(g.owner && g.owner->team == d->team) walk = 1;
+						if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
+					}
 				}
 			}
 			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius*2), float(enttype[FLAG].radius*(2+(walk*2))), walk);
@@ -705,7 +719,7 @@ namespace ctf
 
 	bool aipursue(gameent *d, ai::aistate &b)
 	{
-		if(st.flags.inrange(b.target))
+		if(st.flags.inrange(b.target) && d->aitype == AI_BOT)
 		{
 			ctfstate::flag &f = st.flags[b.target];
 			if(isctfhome(f, d->team) && ctfstyle <= 1)

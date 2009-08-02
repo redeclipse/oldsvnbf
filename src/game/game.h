@@ -7,8 +7,8 @@
 #define GAMEVERSION			159
 #define DEMO_VERSION		GAMEVERSION
 
-#define MAXBOTS 100
-#define MAXPLAYERS (MAXCLIENTS + MAXBOTS)
+#define MAXAI 256
+#define MAXPLAYERS (MAXCLIENTS + MAXAI)
 
 // network quantization scale
 #define DMF 16.0f			// for world locations
@@ -151,7 +151,7 @@ enttypes enttype[] = {
 			0,
 			0,
 			false,				"actor",
-			{ "",		"",			"",			"",			"" }
+			{ "type",	"team",		"yaw",		"pitch",	"flags" }
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,
@@ -691,10 +691,10 @@ struct gamestate
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, ownernum, skill, points;
+	int aitype, aientity, ownernum, skill, points;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(AI_NONE), ownernum(-1), skill(0), points(0) {}
+		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -1076,32 +1076,35 @@ struct gameent : dynent, gamestate
 
 	void checktags()
 	{
-		float hsize = max(xradius*0.4f, yradius*0.4f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
-		vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.4f, yradius*0.4f, hsize);
-        if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
-        float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
-		float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
-        if(muzzle == vec(-1, -1, -1))
-        {
-        	vec right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
-        	dir.mul(radius*1.25f); right.mul(radius); dir.z -= height*0.1f;
+		if(muzzle == vec(-1, -1, -1))
+		{
+			vec dir, right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
+			dir.mul(radius*1.25f); right.mul(radius); dir.z -= height*0.1f;
 			muzzle = vec(o).add(dir).add(right);
-        }
-        if(waist == vec(-1, -1, -1))
-        {
-        	vecfromyawpitch(yaw, 0, -1, 0, dir); dir.mul(radius*1.15f); dir.z -= height*0.5f;
-			waist = vec(o).add(dir);
-        }
-        if(lfoot == vec(-1, -1, -1))
-        {
-        	vecfromyawpitch(yaw, 0, 0, -1, dir); dir.mul(radius); dir.z -= height;
-			lfoot = vec(o).add(dir);
-        }
-        if(rfoot == vec(-1, -1, -1))
-        {
-        	vecfromyawpitch(yaw, 0, 0, 1, dir); dir.mul(radius); dir.z -= height;
-			rfoot = vec(o).add(dir);
-        }
+		}
+		if(type == ENT_PLAYER)
+		{
+			float hsize = max(xradius*0.4f, yradius*0.4f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
+			vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.4f, yradius*0.4f, hsize);
+			if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
+			float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
+			float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
+			if(waist == vec(-1, -1, -1))
+			{
+				vecfromyawpitch(yaw, 0, -1, 0, dir); dir.mul(radius*1.15f); dir.z -= height*0.5f;
+				waist = vec(o).add(dir);
+			}
+			if(lfoot == vec(-1, -1, -1))
+			{
+				vecfromyawpitch(yaw, 0, 0, -1, dir); dir.mul(radius); dir.z -= height;
+				lfoot = vec(o).add(dir);
+			}
+			if(rfoot == vec(-1, -1, -1))
+			{
+				vecfromyawpitch(yaw, 0, 0, 1, dir); dir.mul(radius); dir.z -= height;
+				rfoot = vec(o).add(dir);
+			}
+		}
 	}
 };
 
@@ -1320,7 +1323,7 @@ namespace entities
 			obstacle &ob = obstacles.add(obstacle(ent));
 			switch(ent->type)
 			{
-				case ENT_PLAYER:
+				case ENT_PLAYER: case ENT_AI:
 				{
 					gameent *e = (gameent *)ent;
 					ob.above = e->abovehead().z;

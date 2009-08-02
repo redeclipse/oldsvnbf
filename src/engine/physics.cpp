@@ -864,7 +864,7 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
             }
         }
     }
-    if(hitplayer) { float dist; physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, hitplayer); }
+    if(hitplayer) { float dist = 1e16f; physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, hitplayer); }
     return bestdist <= maxdist ? bestdist : -1;
 }
 

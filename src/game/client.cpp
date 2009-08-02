@@ -641,7 +641,7 @@ namespace client
 	int otherclients()
 	{
 		int n = 0; // ai don't count
-		loopv(game::players) if(game::players[i] && game::players[i]->aitype == AI_NONE) n++;
+		loopv(game::players) if(game::players[i] && game::players[i]->aitype < 0) n++;
 		return n;
 	}
 
@@ -1750,12 +1750,12 @@ namespace client
 
 				case SV_INITAI:
 				{
-					int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 101);
+					int bn = getint(p), on = getint(p), at = getint(p), et = getint(p), sk = clamp(getint(p), 1, 101);
 					getstring(text, p);
 					int tm = getint(p);
 					gameent *b = game::newclient(bn);
 					if(!b) break;
-					ai::init(b, at, on, sk, bn, text, tm);
+					ai::init(b, at, et, on, sk, bn, text, tm);
 					break;
 				}
 

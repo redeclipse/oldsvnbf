@@ -54,10 +54,18 @@ namespace entities
 				case FLAGMODE_NONMULTICTF: addentinfo("non-multi-ctf"); break;
 			}
 		}
+		else if(type == ACTOR)
+		{
+			if(full && attr1 >= AI_START && attr1 < AI_MAX)
+			{
+				addentinfo(aitype[attr1].name);
+				if(attr2 >= 0 && attr2 < TEAM_MAX) addentinfo(teamtype[attr2].name);
+				if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
+			}
+		}
 		else if(type == WEAPON)
 		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators),
-				attr = weapattr(attr1, sweap);
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
 			if(isweap(attr))
 			{
 				defformatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
@@ -115,12 +123,14 @@ namespace entities
 	{
 		switch(type)
 		{
+			case PLAYERSTART: return teamtype[attr1].tpmdl;
 			case WEAPON:
 			{
 				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
 				return weaptype[attr].item;
 			}
 			case FLAG: return teamtype[attr1].flag;
+			case ACTOR: if(attr1 >= AI_START && attr1 < AI_MAX) return aitype[attr1].mdl;
 			default: break;
 		}
 		return "";
@@ -735,7 +745,7 @@ namespace entities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == TRIGGER)
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == ACTOR || ents[i]->type == TRIGGER)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);
@@ -834,8 +844,8 @@ namespace entities
 			case MAPMODEL:
 				while(e.attr[1] < 0) e.attr[1] += 360;
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
-				while(e.attr[2] < 0) e.attr[2] += 360;
-				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[2] < -90) e.attr[2] += 180;
+				while(e.attr[2] > 90) e.attr[2] -= 180;
 				while(e.attr[3] < 0) e.attr[3] += 360;
 				while(e.attr[3] >= 360) e.attr[3] -= 360;
 			case PARTICLES:
@@ -883,24 +893,34 @@ namespace entities
 				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
 				while(e.attr[1] < 0) e.attr[1] += 360;
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
+				while(e.attr[2] < -90) e.attr[2] += 180;
+				while(e.attr[2] > 90) e.attr[2] -= 180;
+				break;
+			case ACTOR:
+				while(e.attr[0] < 0) e.attr[0] += AI_MAX;
+				while(e.attr[0] >= AI_MAX) e.attr[0] -= AI_MAX;
+				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
+				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
 				while(e.attr[2] < 0) e.attr[2] += 360;
 				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[3] < -90) e.attr[3] += 180;
+				while(e.attr[3] > 90) e.attr[3] -= 180;
 				break;
 			case FLAG:
 				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
 				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
 				while(e.attr[1] < 0) e.attr[1] += 360;
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
-				while(e.attr[2] < 0) e.attr[2] += 360;
-				while(e.attr[2] >= 360) e.attr[2] -= 360;
+				while(e.attr[2] < -90) e.attr[2] += 180;
+				while(e.attr[2] > 90) e.attr[2] -= 180;
 				while(e.attr[3] < 0) e.attr[3] += FLAGMODE_MAX;
 				while(e.attr[3] >= FLAGMODE_MAX) e.attr[3] -= FLAGMODE_MAX;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < -1) e.attr[0] += 361;
 				while(e.attr[0] >= 360) e.attr[0] -= 360;
-				while(e.attr[1] < 0) e.attr[1] += 360;
-				while(e.attr[1] >= 360) e.attr[1] -= 360;
+				while(e.attr[2] < -90) e.attr[2] += 180;
+				while(e.attr[2] > 90) e.attr[2] -= 180;
 				break;
 			default:
 				break;
@@ -981,11 +1001,12 @@ namespace entities
 		{
 			switch(ents[ent]->type)
 			{
+				case ACTOR: if(d->type != ENT_PLAYER && tryspawn(d, ents[ent]->o, ents[ent]->attr[2], ents[ent]->attr[3])) return;
 				case PLAYERSTART: if(tryspawn(d, ents[ent]->o, ents[ent]->attr[1], ents[ent]->attr[2])) return;
 				default: if(tryspawn(d, ents[ent]->o, rnd(360), 0)) return;
 			}
 		}
-		else
+		else if(d->type == ENT_PLAYER)
 		{
 			loopk(3)
 			{
@@ -1741,6 +1762,11 @@ namespace entities
 		{
 			switch(e.type)
 			{
+				case PLAYERSTART:
+				{
+					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2));
+					break;
+				}
 				case MAPSOUND:
 				{
 					part_radius(e.o, vec(e.attr[1], e.attr[1], e.attr[1]));
@@ -1798,6 +1824,11 @@ namespace entities
 			case MAPMODEL:
 			{
 				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f);
+				break;
+			}
+			case ACTOR:
+			{
+				if(showentdir >= level) part_dir(e.o, e.attr[2], e.attr[3], 4.f);
 				break;
 			}
 			case TELEPORT:
@@ -1919,12 +1950,9 @@ namespace entities
 					float fade = 1, yaw = 0, pitch = 0;
 					if(!active)
 					{
-						fade = 0.5f;
-						if(e.type == FLAG)
-						{
-							yaw = e.attr[1];
-							pitch = e.attr[2];
-						}
+						fade = 0.75f;
+						if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attr[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attr[2]; }
+						else if(e.type == ACTOR) { yaw = e.attr[2]+90; pitch = e.attr[3]; }
 					}
 					else
 					{

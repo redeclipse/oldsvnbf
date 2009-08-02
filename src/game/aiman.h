@@ -11,12 +11,12 @@ namespace aiman
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.aitype >= 0 || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.aitype >= 0 && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
 			}
 		}
@@ -36,7 +36,7 @@ namespace aiman
 		return -1;
 	}
 
-	bool addai(int type, int skill, bool req)
+	bool addai(int type, int ent, int skill, bool req)
 	{
 		int numbots = 0;
 		loopv(clients)
@@ -49,6 +49,8 @@ namespace aiman
 				{ // reuse a slot that was going to removed
 					ci->state.ownernum = findaiclient();
 					ci->state.aireinit = 2;
+					ci->state.aitype = type;
+					ci->state.aientity = ent;
 					if(req) autooverride = true;
 					return true;
 				}
@@ -62,18 +64,19 @@ namespace aiman
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
+				int s = skill, m = int(max(GVAR(botmaxskill), GVAR(botminskill))*aitype[type].skill), n = int(min(GVAR(botminskill), m)*aitype[type].skill);
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
-				ci->state.aitype = type;
 				ci->state.ownernum = findaiclient();
+				ci->state.aireinit = 2;
+				ci->state.aitype = type;
+				ci->state.aientity = ent;
 				ci->state.skill = clamp(s, 1, 101);
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
 				copystring(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->state.state = CS_DEAD;
 				ci->team = TEAM_NEUTRAL;
-				ci->state.aireinit = 2;
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
 				return true;
@@ -125,7 +128,7 @@ namespace aiman
 				ci->state.dropped.reset();
 				loopk(WEAP_MAX) ci->state.weapshots[k].reset();
 			}
-			sendf(-1, 1, "ri5si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
+			sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
 			ci->state.aireinit = 0;
 		}
 	}
@@ -138,7 +141,7 @@ namespace aiman
 
 	void removeai(clientinfo *ci, bool complete)
 	{ // either schedules a removal, or someone else to assign to
-		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum == ci->clientnum)
 			shiftai(clients[i], complete ? -1 : findaiclient(ci->clientnum));
 	}
 
@@ -150,12 +153,12 @@ namespace aiman
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
+			if(ci->clientnum < 0 || ci->state.aitype >= 0 || !ci->name[0] || !ci->connected || ci->clientnum == exclude)
 				siblings[i] = -1;
 			else
 			{
 				siblings[i] = 0;
-				loopvj(clients) if(clients[j]->state.aitype != AI_NONE && clients[j]->state.ownernum == ci->clientnum)
+				loopvj(clients) if(clients[j]->state.aitype >= 0 && clients[j]->state.ownernum == ci->clientnum)
 					siblings[i]++;
 				if(!siblings.inrange(hi) || siblings[i] > siblings[hi]) hi = i;
 				if(!siblings.inrange(lo) || siblings[i] < siblings[lo]) lo = i;
@@ -164,7 +167,7 @@ namespace aiman
 		if(siblings.inrange(hi) && siblings.inrange(lo) && (siblings[hi]-siblings[lo]) > 1)
 		{
 			clientinfo *ci = clients[hi];
-			loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum == ci->clientnum)
+			loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum == ci->clientnum)
 			{
 				shiftai(clients[i], clients[lo]->clientnum);
 				return true;
@@ -176,12 +179,13 @@ namespace aiman
 	void checksetup()
 	{
 		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m), numbots = 0;
-		loopv(clients) if(clients[i]->state.aitype != AI_NONE && clients[i]->state.ownernum >= 0)
+		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
-			if(ci->state.skill > m || ci->state.skill < n)
+			int o = int(m*aitype[ci->state.aitype].skill), p = int(n*aitype[ci->state.aitype].skill);
+			if(ci->state.skill > o || ci->state.skill < o)
 			{ // needs re-skilling
-				ci->state.skill = (m != n ? rnd(m-n) + n + 1 : m);
+				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);
 				if(!ci->state.aireinit) ci->state.aireinit = 1;
 			}
 			if(ci->state.aitype == AI_BOT)
@@ -192,6 +196,12 @@ namespace aiman
 		}
 		if(m_fight(gamemode))
 		{
+			loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && aitype[sents[i].attr[0]].canfight && isteam(gamemode, mutators, sents[i].attr[1], TEAM_NEUTRAL))
+			{
+				bool needent = true;
+				loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
+				if(needent) addai(sents[i].attr[0], i, -1, false);
+			}
 			int balance = int(nplayers*GVAR(botscale));
 			if(m_team(gamemode, mutators) && GVAR(teambalance))
 			{ // skew this if teams are unbalanced
@@ -200,14 +210,14 @@ namespace aiman
 					clientinfo *ci = clients[i];
 					if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
 					{
-						if(!autooverride && numclients(-1, true, false) > balance)
+						if(!autooverride && numclients(-1, true, AI_BOT) > balance)
 							shiftai(ci, -1); // temporarily remove and cleanup later
 						else setteam(ci, chooseteam(ci, ci->team), true, true);
 					}
 				}
 				if(!autooverride)
 				{
-					int numt = numteams(gamemode, mutators), ppl = numclients(-1, true, true);
+					int numt = numteams(gamemode, mutators), ppl = numclients(-1, true, -1);
 					if(GVAR(teambalance) != 3)
 					{ // balance so all teams have even counts
 						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
@@ -215,7 +225,7 @@ namespace aiman
 						{
 							clientinfo *cp = clients[i];
 							if(!cp->team || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
-							if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
+							if((cp->state.aitype >= 0 && cp->state.ownernum < 0) || cp->state.aitype >= AI_START) continue;
 							int idx = cp->team-TEAM_FIRST;
 							teamcount[idx]++;
 							if(highest < 0 || teamcount[idx] > teamcount[highest]) highest = idx;
@@ -241,30 +251,29 @@ namespace aiman
 			}
 			if(!autooverride)
 			{
-				while(numclients(-1, true, false) < balance) if(!addai(AI_BOT, -1)) break;
-				while(numclients(-1, true, false) > balance) if(!delai(AI_BOT)) break;
+				while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
+				while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
 			}
 		}
 		else if(!autooverride) clearai();
 	}
 
-	void clearai()
+	void clearai(int type)
 	{ // clear and remove all ai immediately
-		loopvrev(clients) if(clients[i]->state.aitype != AI_NONE)
-			deleteai(clients[i]);
+		loopvrev(clients) if(clients[i]->state.aitype >= type) deleteai(clients[i]);
 		dorefresh = autooverride = false;
 	}
 
 	void checkai()
 	{
-		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, true))
+		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, -1))
 		{
 			if(hasgameinfo)
 			{
 				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
 				checkold(teambalance); checkold(botscale); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
 				if(dorefresh) { checksetup(); dorefresh = false; }
-				loopvrev(clients) if(clients[i]->state.aitype != AI_NONE) reinitai(clients[i]);
+				loopvrev(clients) if(clients[i]->state.aitype >= 0) reinitai(clients[i]);
 				while(true) if(!reassignai()) break;
 			}
 		}
@@ -276,7 +285,7 @@ namespace aiman
 		if(haspriv(ci, PRIV_MASTER, "add bots"))
 		{
 			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(!addai(AI_BOT, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
+			else if(!addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
 

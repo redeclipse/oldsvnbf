@@ -293,13 +293,13 @@ namespace server
 	namespace aiman {
 		bool autooverride = false, dorefresh = false;
 		extern int findaiclient(int exclude = -1);
-		extern bool addai(int type, int skill, bool req = false);
+		extern bool addai(int type, int ent, int skill, bool req = false);
 		extern void deleteai(clientinfo *ci);
 		extern bool delai(int type, bool req = false);
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
-		extern void clearai();
+		extern void clearai(int type = AI_BOT);
 		extern void checkai();
 		extern void reqadd(clientinfo *ci, int skill);
 		extern void reqdel(clientinfo *ci);
@@ -469,14 +469,14 @@ namespace server
 		}
 	}
 
-	int numclients(int exclude, bool nospec, bool noai)
+	int numclients(int exclude, bool nospec, int aitype)
 	{
 		int n = 0;
 		loopv(clients)
 		{
 			if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->clientnum != exclude &&
 				(!nospec || clients[i]->state.state != CS_SPECTATOR) &&
-					(clients[i]->state.aitype == AI_NONE || (!noai && clients[i]->state.ownernum >= 0)))
+					(clients[i]->state.aitype < 0 || (aitype >= 0 && clients[i]->state.aitype <= aitype && clients[i]->state.ownernum >= 0)))
 						n++;
 		}
 		return n;
@@ -485,7 +485,7 @@ namespace server
 	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
 	{
 		if(ci->local || ci->privilege >= flag) return true;
-		else if(mastermask&MM_AUTOAPPROVE && !numclients(ci->clientnum, false, true)) return true;
+		else if(mastermask&MM_AUTOAPPROVE && !numclients(ci->clientnum, false, -1)) return true;
 		else if(msg)
 			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
 		return false;
@@ -504,9 +504,9 @@ namespace server
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
 		formatstring(cname)("\fs%s%s", chat, name);
-		if(!name[0] || ci->state.aitype != AI_NONE || (dupname && duplicatename(ci, name)))
+		if(!name[0] || ci->state.aitype >= 0 || (dupname && duplicatename(ci, name)))
 		{
-			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype != AI_NONE ? "\fc" : "\fm", ci->clientnum);
+			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype >= 0 ? "\fc" : "\fm", ci->clientnum);
 			concatstring(cname, s);
 		}
 		concatstring(cname, "\fS");
@@ -649,6 +649,7 @@ namespace server
 		maprequest = false;
 		interm = gamemillis+(GVAR(intermlimit)*1000);
 		sendf(-1, 1, "ri2", SV_TIMEUP, 0);
+		aiman::clearai(AI_START);
 	}
 
 	void checklimits()
@@ -688,7 +689,7 @@ namespace server
 				if(m_team(gamemode, mutators))
 				{
 					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 };
-					loopv(clients) if(isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 						teamscores[clients[i]->team-TEAM_FIRST] += clients[i]->state.frags;
 					int best = -1;
 					loopi(TEAM_NUM) if(best < 0 || teamscores[i] > teamscores[best])
@@ -703,7 +704,7 @@ namespace server
 				else
 				{
 					int best = -1;
-					loopv(clients) if(best < 0 || clients[i]->state.frags > clients[best]->state.frags)
+					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && (best < 0 || clients[i]->state.frags > clients[best]->state.frags))
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
@@ -860,7 +861,8 @@ namespace server
 
 	int pickspawn(clientinfo *ci)
 	{
-		if(totalspawns && GVAR(spawnrotate))
+		if(ci->state.aitype >= AI_START) return ci->state.aientity;
+		else if(totalspawns && GVAR(spawnrotate))
 		{
 			int team = m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 			if(!spawns[team].ents.empty())
@@ -885,7 +887,15 @@ namespace server
 	void sendspawn(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		gs.spawnstate(m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators), m_arena(gamemode, mutators));
+		int weap = m_spawnweapon(gamemode, mutators), maxhealth = m_maxhealth(gamemode, mutators);
+		if(ci->state.aitype >= AI_START)
+		{
+			bool randweap = sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[4]&AI_F_RANDWEAP;
+			weap = aitype[ci->state.aitype].weap;
+			if(!isweap(weap) || randweap) weap = rnd(WEAP_TOTAL-1)+1;
+			maxhealth = aitype[ci->state.aitype].health;
+		}
+		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -1133,7 +1143,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *oi = clients[i];
-			if(oi->state.aitype != AI_NONE) continue;
+			if(oi->state.aitype >= 0) continue;
 			maxvotes++;
 			if(!oi->mapvote[0]) continue;
 			votecount *vc = NULL;
@@ -1193,7 +1203,7 @@ namespace server
 		clientinfo *ci = (clientinfo *)getinfo(sender);
 		modecheck(&reqmode, &reqmuts);
         if(!ci || !m_game(reqmode) || !map || !*map) return;
-        bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, true));
+        bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
         if(!hasveto)
         {
         	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return;
@@ -1291,7 +1301,7 @@ namespace server
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}
-			if(ci->state.aitype == AI_NONE) aiman::dorefresh = true; // get the ai to reorganise
+			if(ci->state.aitype < 0) aiman::dorefresh = true; // get the ai to reorganise
 		}
 		if(info) sendf(-1, 1, "ri3", SV_SETTEAM, ci->clientnum, ci->team);
 	}
@@ -1313,8 +1323,9 @@ namespace server
 	{
 		if(m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
+			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[1]) return sents[ci->state.aientity].attr[1];
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
-			if(balance < 3 && ci->state.aitype != AI_NONE) balance = 1;
+			if(balance < 3 && ci->state.aitype >= 0) balance = 1;
 			if(balance || team < 0)
 			{
 				teamscore teamscores[TEAM_NUM] = {
@@ -1324,8 +1335,8 @@ namespace server
 				{
 					clientinfo *cp = clients[i];
 					if(!cp->team || cp == ci || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
-					if(cp->state.aitype != AI_NONE && cp->state.ownernum < 0) continue;
-					if(ci->state.aitype != AI_NONE || (ci->state.aitype == AI_NONE && cp->state.aitype == AI_NONE))
+					if((cp->state.aitype >= 0 && cp->state.ownernum < 0) || cp->state.aitype >= AI_START) continue;
+					if(ci->state.aitype >= 0 || (ci->state.aitype < 0 && cp->state.aitype < 0))
 					{ // remember: ai just balance teams
 						cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 						cp->state.lasttimeplayed = lastmillis;
@@ -1335,7 +1346,7 @@ namespace server
 					}
 				}
 				teamscore *worst = &teamscores[0];
-				if(balance != 3 || ci->state.aitype != AI_NONE)
+				if(balance != 3 || ci->state.aitype >= 0)
 				{
 					loopi(numteams(gamemode, mutators))
 					{
@@ -1424,35 +1435,39 @@ namespace server
 	struct droplist { int weap, ent; };
 	void dropitems(clientinfo *ci, bool discon = false)
 	{
-		servstate &ts = ci->state;
-		vector<droplist> drop;
-		int sweap = m_spawnweapon(gamemode, mutators);
-		if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
+		if(ci->state.aitype >= AI_START) ci->state.weapreset(false);
+		else
 		{
-			ts.weapshots[WEAP_GRENADE].add(-1);
-			droplist &d = drop.add();
-			d.weap = WEAP_GRENADE;
-			d.ent = -1;
-		}
-		if(!m_noitems(gamemode, mutators))
-		{
-			loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
+			servstate &ts = ci->state;
+			vector<droplist> drop;
+			int sweap = m_spawnweapon(gamemode, mutators);
+			if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
 			{
-				sents[ts.entid[i]].millis = gamemillis;
-				if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAP_F_FORCED))
+				ts.weapshots[WEAP_GRENADE].add(-1);
+				droplist &d = drop.add();
+				d.weap = WEAP_GRENADE;
+				d.ent = -1;
+			}
+			if(!m_noitems(gamemode, mutators))
+			{
+				loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 				{
-					ts.dropped.add(ts.entid[i]);
-					droplist &d = drop.add();
-					d.weap = i;
-					d.ent = ts.entid[i];
-					if(weapcarry(i, sweap))
-						sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
+					sents[ts.entid[i]].millis = gamemillis;
+					if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAP_F_FORCED))
+					{
+						ts.dropped.add(ts.entid[i]);
+						droplist &d = drop.add();
+						d.weap = i;
+						d.ent = ts.entid[i];
+						if(weapcarry(i, sweap))
+							sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
+					}
 				}
 			}
+			ts.weapreset(false);
+			if(!discon && !drop.empty())
+				sendf(-1, 1, "ri3iv", SV_DROP, ci->clientnum, -1, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 		}
-		ts.weapreset(false);
-		if(!discon && !drop.empty())
-			sendf(-1, 1, "ri3iv", SV_DROP, ci->clientnum, -1, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 	}
 
 	#include "stfmode.h"
@@ -1513,7 +1528,7 @@ namespace server
 			clientinfo *ci = clients[i];
 			ci->mapchange(true);
             if(ci->state.state == CS_SPECTATOR) continue;
-            else if(ci->state.aitype == AI_NONE && m_play(gamemode))
+            else if(ci->state.aitype < 0 && m_play(gamemode))
             {
                 ci->state.state = CS_SPECTATOR;
                 sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
@@ -1526,7 +1541,7 @@ namespace server
 			}
 		}
 
-		if(m_fight(gamemode) && numclients(-1, false, true)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		if(m_fight(gamemode) && numclients(-1, false, -1)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
 		{
@@ -1723,7 +1738,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *cs = clients[i];
-			if(cs->state.aitype != AI_NONE || !cs->name[0] || !cs->online || cs->wantsmap) continue;
+			if(cs->state.aitype >= 0 || !cs->name[0] || !cs->online || cs->wantsmap) continue;
 			if(!best || cs->state.timeplayed > best->state.timeplayed) best = cs;
 		}
 		return best;
@@ -1757,12 +1772,13 @@ namespace server
 
         ucharbuf h(packet->data, 16), p(&h.buf[h.maxlen], packet->dataLength-h.maxlen);
 
-        if(ci->state.aitype != AI_NONE)
+        if(ci->state.aitype >= 0)
         {
 			putint(p, SV_INITAI);
 			putint(p, ci->clientnum);
 			putint(p, ci->state.ownernum);
 			putint(p, ci->state.aitype);
+			putint(p, ci->state.aientity);
 			putint(p, ci->state.skill);
 			sendstring(ci->name, p);
 			putint(p, ci->team);
@@ -1804,12 +1820,13 @@ namespace server
             if(!ci->connected || ci->clientnum == exclude) continue;
 
             ucharbuf q(buf, sizeof(buf));
-            if(ci->state.aitype != AI_NONE)
+            if(ci->state.aitype >= 0)
             {
 				putint(q, SV_INITAI);
 				putint(q, ci->clientnum);
 				putint(q, ci->state.ownernum);
 				putint(q, ci->state.aitype);
+				putint(q, ci->state.aientity);
 				putint(q, ci->state.skill);
 				sendstring(ci->name, q);
 				putint(q, ci->team);
@@ -1858,7 +1875,7 @@ namespace server
 			sendstring(smapname, p);
 		}
         if(!ci) putint(p, 0);
-		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, true))
+		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, -1))
 		{
 			ci->wantsmap = true;
 			clientinfo *best = choosebestclient();
@@ -1915,7 +1932,7 @@ namespace server
 
         CHECKSPACE(256);
 
-		if(!ci || (m_fight(gamemode) && numclients(-1, false, true)))
+		if(!ci || (m_fight(gamemode) && numclients(-1, false, -1)))
 		{
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
@@ -2012,7 +2029,7 @@ namespace server
 			switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
-				case 1: if(actor->state.aitype == AI_NONE) break;
+				case 1: if(actor->state.aitype < 0) break;
 				case 0: nodamage++; break;
 			}
 		}
@@ -2424,7 +2441,7 @@ namespace server
 			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 			ci->state.state = CS_WAITING;
 			ci->state.weapreset(false);
-			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
+			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
@@ -2505,7 +2522,7 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				if(!m_regen(gamemode, mutators)) continue;
+				if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
 				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay), penalty = 0;
 				if(smode) smode->regen(ci, total, amt, delay, penalty);
 				if(delay && (ci->state.health < total || penalty) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
@@ -2518,8 +2535,8 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{
-				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype == AI_NONE) continue;
-				if(ci->state.respawnwait(gamemillis, m_spawndelay(gamemode, mutators))) continue;
+				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
+				if(ci->state.respawnwait(gamemillis, ci->state.aitype >= AI_START && ci->state.lastdeath ? 30000 : m_spawndelay(gamemode, mutators))) continue;
 				int nospawn = 0;
 				if(smode && !smode->canspawn(ci, false)) { nospawn++; }
 				mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
@@ -2543,7 +2560,7 @@ namespace server
 
 	void serverupdate()
 	{
-		if(numclients(-1, false, true))
+		if(numclients(-1, false, -1))
 		{
 			gamemillis += curtime;
 			if(m_demo(gamemode)) readdemo();
@@ -2591,13 +2608,13 @@ namespace server
     bool allowbroadcast(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        return ci && ci->connected && ci->state.aitype == AI_NONE;
+        return ci && ci->connected && ci->state.aitype < 0;
     }
 
     int peerowner(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        if(ci) return ci->state.aitype != AI_NONE ? ci->state.ownernum : ci->clientnum;
+        if(ci) return ci->state.aitype >= 0 ? ci->state.ownernum : ci->clientnum;
         return -1;
     }
 
@@ -2613,7 +2630,7 @@ namespace server
             return DISC_NONE;
         }
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(numclients(-1, false, true) >= serverclients) return DISC_MAXCLIENTS;
+        if(numclients(-1, false, -1) >= serverclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         loopv(bannedips) if(bannedips[i].ip == ip) return DISC_IPBAN;
         if(mastermode >= MM_PRIVATE && allowedips.find(ip) < 0) return DISC_PRIVATE;
@@ -2636,7 +2653,7 @@ namespace server
 	void clientdisconnect(int n, bool local)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		bool complete = !numclients(n, false, true);
+		bool complete = !numclients(n, false, -1);
         if(ci->connected)
         {
         	loopv(clients) if(clients[i] != ci)
@@ -2670,7 +2687,7 @@ namespace server
             extqueryreply(req, p);
             return;
         }
-		putint(p, numclients(-1, false, true));
+		putint(p, numclients(-1, false, -1));
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
@@ -2799,7 +2816,7 @@ namespace server
 		{
 			clientinfo &ci = *clients[i];
 			ENetPacket *packet;
-			if(ci.state.aitype == AI_NONE && psize && (ci.posoff<0 || psize-ci.position.length()>0))
+			if(ci.state.aitype < 0 && psize && (ci.posoff<0 || psize-ci.position.length()>0))
 			{
 				packet = enet_packet_create(&ws.positions[ci.posoff<0 ? 0 : ci.posoff+ci.position.length()],
 											ci.posoff<0 ? psize : psize-ci.position.length(),
@@ -2810,7 +2827,7 @@ namespace server
 			}
 			ci.position.setsizenodelete(0);
 
-			if(ci.state.aitype == AI_NONE && msize && (ci.msgoff<0 || msize-ci.msglen>0))
+			if(ci.state.aitype < 0 && msize && (ci.msgoff<0 || msize-ci.msglen>0))
 			{
 				packet = enet_packet_create(&ws.messages[ci.msgoff<0 ? 0 : ci.msgoff+ci.msglen],
 											ci.msgoff<0 ? msize : msize-ci.msglen,
@@ -3203,7 +3220,7 @@ namespace server
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || t->state.aitype != AI_NONE || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
+						if(t == cp || t->state.aitype >= 0 || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
 					if(!m_team(gamemode, mutators) || !(flags&SAY_TEAM))
@@ -3266,7 +3283,7 @@ namespace server
 					while((n = getint(p)) != -1)
 					{
 						int type = getint(p), attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p), kin = getint(p);
-						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == TRIGGER))
+						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == ACTOR || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
 							sents[n].type = type;
@@ -3416,7 +3433,7 @@ namespace server
 					int spectator = getint(p), val = getint(p);
 					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, spectator != sender ? "spectate others" : "unspectate")) break;
 					clientinfo *cp = (clientinfo *)getinfo(spectator);
-					if(!cp || cp->state.aitype != AI_NONE) break;
+					if(!cp || cp->state.aitype >= 0) break;
 					if(cp->state.state != CS_SPECTATOR && val)
 					{
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);

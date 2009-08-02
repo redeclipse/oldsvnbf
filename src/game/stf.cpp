@@ -200,29 +200,32 @@ namespace stf
 
 	void aifind(gameent *d, ai::aistate &b, vector<ai::interest> &interests)
 	{
-		vec pos = d->feetpos();
-		loopvj(st.flags)
+		if(d->aitype == AI_BOT)
 		{
-			stfstate::flag &f = st.flags[j];
-			static vector<int> targets; // build a list of others who are interested in this
-			targets.setsizenodelete(0);
-			ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
-			gameent *e = NULL;
-			bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-			{ // try to guess what non ai are doing
-				vec ep = e->feetpos();
-				if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
-					targets.add(e->clientnum);
-			}
-			if((!regen && f.owner == d->team) || (targets.empty() && (f.owner != d->team || f.enemy)))
+			vec pos = d->feetpos();
+			loopvj(st.flags)
 			{
-				ai::interest &n = interests.add();
-				n.state = ai::AI_S_DEFEND;
-				n.node = entities::closestent(WAYPOINT, f.o, ai::NEARDIST, false);
-				n.target = j;
-				n.targtype = ai::AI_T_AFFINITY;
-				n.score = pos.squaredist(f.o)/(!regen ? 100.f : 1.f);
+				stfstate::flag &f = st.flags[j];
+				static vector<int> targets; // build a list of others who are interested in this
+				targets.setsizenodelete(0);
+				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
+				gameent *e = NULL;
+				bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				{ // try to guess what non ai are doing
+					vec ep = e->feetpos();
+					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+						targets.add(e->clientnum);
+				}
+				if((!regen && f.owner == d->team) || (targets.empty() && (f.owner != d->team || f.enemy)))
+				{
+					ai::interest &n = interests.add();
+					n.state = ai::AI_S_DEFEND;
+					n.node = entities::closestent(WAYPOINT, f.o, ai::NEARDIST, false);
+					n.target = j;
+					n.targtype = ai::AI_T_AFFINITY;
+					n.score = pos.squaredist(f.o)/(!regen ? 100.f : 1.f);
+				}
 			}
 		}
 	}
@@ -232,19 +235,22 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			bool regen = d->aitype != AI_BOT || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			int walk = 0;
-			if(regen && !f.enemy && f.owner == d->team)
+			if(regen && (d->aitype == AI_TURRET || (!f.enemy && f.owner == d->team)))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
-				gameent *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
-				{ // try to guess what non ai are doing
-					vec ep = e->feetpos();
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
-						targets.add(e->clientnum);
+				if(d->aitype == AI_BOT)
+				{
+					gameent *e = NULL;
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+					{ // try to guess what non ai are doing
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
+							targets.add(e->clientnum);
+					}
 				}
 				if(!targets.empty())
 				{

@@ -13,7 +13,7 @@ struct ctfservmode : ctfstate, servmode
 
     void dropflag(clientinfo *ci, const vec &o)
     {
-        if(!hasflaginfo) return;
+        if(!hasflaginfo || ci->state.aitype >= AI_START) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
 			ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius ? ci->state.o : o).mul(DMF));
@@ -48,7 +48,7 @@ struct ctfservmode : ctfstate, servmode
 
     void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
     {
-        if(!hasflaginfo) return;
+        if(!hasflaginfo || ci->state.aitype >= AI_START) return;
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
             loopvk(flags)
@@ -77,7 +77,7 @@ struct ctfservmode : ctfstate, servmode
 
     void takeflag(clientinfo *ci, int i)
     {
-        if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team) return;
+        if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || ci->state.aitype >= AI_START) return;
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && GVAR(ctfstyle) <= 1 && !f.droptime)) return;
 		if(!GVAR(ctfstyle) && f.team == ci->team)
@@ -96,11 +96,11 @@ struct ctfservmode : ctfstate, servmode
 
     void resetflag(clientinfo *ci, int i)
     {
-        if(!hasflaginfo || !flags.inrange(i)) return;
+        if(!hasflaginfo || !flags.inrange(i) || ci->state.ownernum >= 0) return;
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || f.owner >= 0 || !f.droptime || f.votes.find(ci->clientnum) >= 0) return;
 		f.votes.add(ci->clientnum);
-		if(f.votes.length() >= numclients(-1, false, true)/2)
+		if(f.votes.length() >= numclients(-1, false, -1)/2)
 		{
 			ctfstate::returnflag(i);
 			sendf(-1, 1, "ri2", SV_RESETFLAG, i);
