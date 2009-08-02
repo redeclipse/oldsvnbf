@@ -140,7 +140,6 @@ namespace hud
 	TVAR(flamertex, "textures/flamer", 3);
 	TVAR(plasmatex, "textures/plasma", 3);
 	TVAR(rifletex, "textures/rifle", 3);
-	TVAR(paintguntex, "textures/paintgun", 3);
 	TVAR(healthtex, "textures/health", 3);
 	TVAR(progresstex, "textures/progress", 3);
 	TVAR(inventoryenttex, "textures/progress", 3);
@@ -166,7 +165,6 @@ namespace hud
 	TVAR(flamercliptex, "textures/flamerclip", 3);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
-	TVAR(paintguncliptex, "textures/paintgunclip", 3);
 
 	VARP(showradar, 0, 2, 2);
 	TVAR(bliptex, "textures/blip", 3);
@@ -220,13 +218,7 @@ namespace hud
 	{
 		quakewobble = clamp(quakewobble+max(n/2, 1), 0, 1000);
 		damageresidue += n*2;
-		vec colour(1.f, 0, 0);
-        if(weap == WEAP_PAINTGUN)
-        {
-            int col = paintcolours[m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
-            colour = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
-        }
-        else if(kidmode || game::noblood) colour = vec(1, 0.25f, 1);
+		vec colour = kidmode || game::noblood ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
@@ -380,7 +372,6 @@ namespace hud
 		const char *cliptexs[WEAP_MAX] = {
 			pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
-			paintguncliptex
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
 		int ammo = game::player1->ammo[weap], maxammo = weaptype[weap].max;
@@ -612,7 +603,7 @@ namespace hud
 				if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 				{
 					int sdelay = m_spawndelay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
-					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? (m_paint(game::gamemode, game::mutators) ? "Tagged!" : "Fragged!") : "Please Wait";
+					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, msg);
 					if(obitnotices && game::player1->lastdeath && *game::player1->obit)
 					{
@@ -1142,7 +1133,6 @@ namespace hud
 			{
 				const char *weaptexs[WEAP_MAX] = {
 					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
-					paintguntex
 				};
 				if(isweap(stype)) return weaptexs[stype];
 				break;
@@ -1175,7 +1165,6 @@ namespace hud
 			{
 				const char *hudtexs[WEAP_MAX] = {
 					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
-					paintguntex
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])

@@ -37,13 +37,9 @@ namespace projs
 	void hitproj(gameent *d, projent &proj)
 	{
 		int flags = 0;
-		if(proj.weap != WEAP_PAINTGUN)
-		{
-			if(proj.hitflags&physics::HITFLAG_LEGS) flags |= HIT_LEGS;
-			if(proj.hitflags&physics::HITFLAG_TORSO) flags |= HIT_TORSO;
-			if(proj.hitflags&physics::HITFLAG_HEAD) flags |= HIT_HEAD;
-		}
-		else flags |= HIT_FULL;
+		if(proj.hitflags&physics::HITFLAG_LEGS) flags |= HIT_LEGS;
+		if(proj.hitflags&physics::HITFLAG_TORSO) flags |= HIT_TORSO;
+		if(proj.hitflags&physics::HITFLAG_HEAD) flags |= HIT_HEAD;
 		if(flags) hitpush(d, proj, flags|HIT_PROJ);
 	}
 
@@ -141,7 +137,7 @@ namespace projs
             }
             case PRJ_GIBS:
             {
-            	if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
+            	if(!kidmode && !game::noblood)
             	{
 					if(!proj.lastbounce)
 						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
@@ -178,17 +174,11 @@ namespace projs
 				proj.radial = weaptype[proj.weap].radial;
 				proj.extinguish = weaptype[proj.weap].extinguish;
 				proj.mdl = weaptype[proj.weap].proj;
-				if(proj.weap == WEAP_PAINTGUN)
-				{
-					if(m_team(game::gamemode, game::mutators) && proj.owner)
-						proj.colour = paintcolours[proj.owner->team];
-					else proj.colour = paintcolours[rnd(10)];
-				}
 				break;
 			}
 			case PRJ_GIBS:
 			{
-				if(!kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
+				if(!kidmode && !game::noblood)
 				{
 					if(proj.owner)
 					{
@@ -481,11 +471,6 @@ namespace projs
                 adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
 				break;
 			}
-			case WEAP_PAINTGUN:
-			{
-				part_create(PART_SMOKE, 250, from, 0x999999, 0.5f, -20);
-				break;
-			}
 		}
 		loopv(locs)
 		{
@@ -648,22 +633,6 @@ namespace projs
 					}
 					break;
 				}
-				case WEAP_PAINTGUN:
-				{
-					bool soft = true;
-					if(proj.lifemillis-proj.lifetime < m_speedtime(250)) proj.lifesize = clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(250)), 0.25f, 1.f);
-					else
-					{
-						proj.lifesize = 1.f;
-						soft = true;
-					}
-					if(proj.canrender)
-					{
-						part_create(soft ? PART_PLASMA_SOFT : PART_PLASMA, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize);
-						part_create(PART_PLASMA_LERP, 1, proj.o, proj.colour, weaptype[proj.weap].partsize*proj.lifesize*0.5f);
-					}
-					break;
-				}
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
@@ -673,7 +642,7 @@ namespace projs
 			}
 			if(weaptype[proj.weap].radial || weaptype[proj.weap].taper) proj.radius = max(proj.lifesize, 0.1f);
 		}
-		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood && !m_paint(game::gamemode, game::mutators))
+		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtime(500) && proj.lifetime >= min(proj.lifemillis, 1000))
@@ -682,7 +651,7 @@ namespace projs
 				proj.lasteffect = lastmillis;
 			}
 		}
-		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood || m_paint(game::gamemode, game::mutators))))
+		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood)))
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);
@@ -788,15 +757,6 @@ namespace projs
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(200), 10);
 						adddecal(DECAL_SCORCH, proj.o, proj.norm, 5.f);
                         adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
-						break;
-					}
-					case WEAP_PAINTGUN:
-					{
-						vol = int(255*(1.f-proj.lifespan));
-						int r = 255-(proj.colour>>16), g = 255-((proj.colour>>8)&0xFF), b = 255-(proj.colour&0xFF),
-							colour = (r<<16)|(g<<8)|b;
-						part_splash(PART_BLOOD, 5, m_speedtime(5000), proj.o, colour, 2.f, 25, DECAL_BLOOD, 4);
-                        adddecal(DECAL_BLOOD, proj.o, proj.norm, rnd(4)+1.f, bvec(r, g, b));
 						break;
 					}
 				}

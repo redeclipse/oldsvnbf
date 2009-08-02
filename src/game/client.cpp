@@ -1818,8 +1818,8 @@ namespace client
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		if(!serversort || !*serversort) resetserversort();
-		int ac = a->address.host == ENET_HOST_ANY || a->ping >= 999 || a->attr.empty() || a->attr[0] != GAMEVERSION || (kidmode > 1 && !m_paint(a->attr[1], a->attr[2])) ? -1 : 0,
-			bc = b->address.host == ENET_HOST_ANY || b->ping >= 999 || b->attr.empty() || b->attr[0] != GAMEVERSION || (kidmode > 1 && !m_paint(b->attr[1], b->attr[2])) ? -1 : 0;
+		int ac = a->address.host == ENET_HOST_ANY || a->ping >= 999 || a->attr.empty() || a->attr[0] != GAMEVERSION ? -1 : 0,
+			bc = b->address.host == ENET_HOST_ANY || b->ping >= 999 || b->attr.empty() || b->attr[0] != GAMEVERSION ? -1 : 0;
 		if(!ac)
 		{
 			if(!strcmp(a->sdesc, servermaster)) ac = 3;
@@ -2081,7 +2081,7 @@ namespace client
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
 					serverinfo *si = servers[j];
-					if(si->ping < 999 && si->attr.length() && si->attr[0] == GAMEVERSION && (kidmode < 2 || m_paint(si->attr[1], si->attr[2])))
+					if(si->ping < 999 && si->attr.length() && si->attr[0] == GAMEVERSION)
 					{
 						if(serverentry(g, i, si)) n = j;
 					}
