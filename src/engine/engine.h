@@ -518,8 +518,9 @@ struct menu : g3d_callback
 {
     char *name, *header, *contents, *initscript;
     int passes;
+    bool world;
 
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0) {}
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), world(false) {}
 
     void gui(g3d_gui &g, bool firstpass)
     {
@@ -528,9 +529,16 @@ struct menu : g3d_callback
         cmenu = this;
         cgui->start(cmenustart, 0.03f, &cmenutab, true);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
-		if(!passes && initscript && *initscript)
-			execute(initscript);
-        if(contents && *contents) execute(contents);
+		if(!passes)
+		{
+			world = worldidents;
+			if(initscript && *initscript) execute(initscript);
+		}
+        if(contents && *contents)
+        {
+        	if(world && passes) { RUNWORLD(contents); }
+        	else execute(contents);
+        }
         cgui->end();
         cmenu = NULL;
         cgui = NULL;
