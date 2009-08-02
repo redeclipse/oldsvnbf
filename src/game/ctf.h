@@ -9,7 +9,7 @@ struct ctfstate
     struct flag
     {
         vec droploc, spawnloc;
-        int team, droptime, base;
+        int team, droptime, taketime, base;
 #ifdef GAMESERVER
         int owner;
         vector<int> votes;
@@ -17,7 +17,7 @@ struct ctfstate
         bool pickup;
         gameent *owner, *lastowner;
         extentity *ent;
-        int interptime, taketime;
+        int interptime;
 #endif
 
         flag()
@@ -36,10 +36,10 @@ struct ctfstate
 #else
             pickup = false;
             owner = lastowner = NULL;
-            interptime = taketime = 0;
+            interptime = 0;
 #endif
             team = TEAM_NEUTRAL;
-            droptime = 0;
+            taketime = droptime = 0;
         }
 
 #ifndef GAMESERVER
@@ -79,14 +79,15 @@ struct ctfstate
     }
 
 #ifdef GAMESERVER
-    void takeflag(int i, int owner)
+    void takeflag(int i, int owner, int t)
 #else
-    void takeflag(int i, gameent *owner)
+    void takeflag(int i, gameent *owner, int t)
 #endif
     {
 		flag &f = flags[i];
 		f.owner = owner;
 		f.droptime = 0;
+		f.taketime = t;
 #ifdef GAMESERVER
         f.votes.setsize(0);
 #else
@@ -100,6 +101,7 @@ struct ctfstate
 		flag &f = flags[i];
 		f.droploc = o;
 		f.droptime = t;
+		f.taketime = 0;
 #ifdef GAMESERVER
 		f.owner = -1;
 		f.votes.setsize(0);
@@ -113,6 +115,7 @@ struct ctfstate
     {
 		flag &f = flags[i];
 		f.droptime = 0;
+		f.taketime = 0;
 #ifdef GAMESERVER
 		f.owner = -1;
 		f.votes.setsize(0);

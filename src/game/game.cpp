@@ -645,8 +645,7 @@ namespace game
 
 			if(style&FRAG_HEADSHOT)
 			{
-				concatstring(d->obit, " with a \fs\fzReheadshot\fS");
-				part_text(az, "@\fzcbHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_HEADSHOT;
 			}
 

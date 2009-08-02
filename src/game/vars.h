@@ -52,7 +52,7 @@ VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number, 2 = by rank, 3 = humans v
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
-VARG(ctfstyle, 0, 1, 1); // 0 = classic touch-and-return, 1 = grab and take home
+VARG(ctfstyle, 0, 1, 2); // 0 = classic touch-and-return, 1 = grab and take home, 2 = dominate and protect
 VARG(ctfresetdelay, 0, 30, INT_MAX-1);
 
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
@@ -75,7 +75,7 @@ FVARG(deadpushscale, 0, 2.f, 1000);
 FVARG(wavepusharea, 0, 2.5f, 1000);
 FVARG(wavepushscale, 0, 1.f, 1000);
 
-VARG(multikilldelay, 0, 3000, INT_MAX-1);
+VARG(multikilldelay, 0, 5000, INT_MAX-1);
 VARG(spreecount, 0, 5, INT_MAX-1);
 VARG(dominatecount, 0, 5, INT_MAX-1);
 
