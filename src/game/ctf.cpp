@@ -5,7 +5,7 @@ namespace ctf
 
 	void dropflag(gameent *d)
 	{
-		if(m_ctf(game::gamemode))
+		if(m_ctf(game::gamemode) && ctfstyle <= 1)
 		{
 			vec dir;
 			vecfromyawpitch(d->yaw, d->pitch, -d->move, -d->strafe, dir);
@@ -58,7 +58,7 @@ namespace ctf
 				if(!k)
 				{
 					float dist = dir.magnitude(), diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-					if(isctfhome(f, game::player1->team) && !hasflags.empty())
+					if(isctfhome(f, game::player1->team) && ctfstyle <= 1 && !hasflags.empty())
 					{
 						fade += (1.f-fade)*diff;
 						size += size*diff;
@@ -91,7 +91,7 @@ namespace ctf
 				}
 			}
 			pushfont("super");
-			if(!hasflags.empty()) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
+			if(!hasflags.empty() && ctfstyle <= 1) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
 			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			popfont();
@@ -119,7 +119,11 @@ namespace ctf
 			}
 			else if(millis < 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
 			sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"));
-			if(f.owner) hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
+			if(f.owner) switch(ctfstyle)
+			{
+				case 2: if(f.owner == game::player1) { hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay)*100)); break; }
+				default: hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner)); break;
+			}
 		}
 		return sy;
     }
@@ -150,9 +154,9 @@ namespace ctf
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 				above.z += 2.5f;
             }
-			if((f.base&BASE_FLAG) && f.droptime && ctfstyle)
+			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 2 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
-				float wait = clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f);
+				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay*1000), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
@@ -200,9 +204,9 @@ namespace ctf
             defformatstring(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 			above.z += 2.5f;
-			if((f.base&BASE_FLAG) && f.droptime)
+			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 2 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
-				float wait = clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f);
+				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay*1000), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay*1000), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
@@ -377,8 +381,8 @@ namespace ctf
                 f.base = base;
                 f.owner = owner >= 0 ? game::newclient(owner) : NULL;
                 if(f.owner) { if(!f.taketime) f.taketime = lastmillis; }
-                else if(!dropped) f.taketime = 0;
-                f.droptime = dropped;
+                else f.taketime = 0;
+                f.droptime = dropped ? lastmillis : 0;
                 f.droploc = dropped ? droploc : f.spawnloc;
                 if(dropped) dodrop(f, i);
             }
@@ -445,9 +449,7 @@ namespace ctf
 		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || isctfflag(f, game::player1->team) ? S_V_FLAGRETURN : -1;
 		game::announce(idx, CON_INFO, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
-		st.returnflag(i);
-		f.interptime = lastmillis;
-		f.taketime = 0;
+		st.returnflag(i); f.interptime = lastmillis;
     }
 
     void resetflag(int i)
@@ -457,22 +459,23 @@ namespace ctf
 		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, 3, "RESET");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || isctfflag(f, game::player1->team) ? S_V_FLAGRESET : -1;
 		game::announce(idx, CON_INFO, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
-		st.returnflag(i);
-		f.interptime = lastmillis;
-		f.taketime = 0;
+		st.returnflag(i); f.interptime = lastmillis;
     }
 
     void scoreflag(gameent *d, int relay, int goal, int score)
     {
-        if(!st.flags.inrange(goal) || !st.flags.inrange(relay)) return;
-		ctfstate::flag &f = st.flags[relay], &g = st.flags[goal];
-		flageffect(goal, d->team, g.spawnloc, f.spawnloc, 3, "CAPTURED");
+        if(!st.flags.inrange(relay)) return;
+        ctfstate::flag &f = st.flags[relay];
+        if(st.flags.inrange(goal))
+        {
+			ctfstate::flag &g = st.flags[goal];
+			flageffect(goal, d->team, g.spawnloc, f.spawnloc, 3, "CAPTURED");
+        }
+        else flageffect(goal, d->team, f.pos(), f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? S_V_FLAGSCORE : -1;
 		game::announce(idx, CON_INFO, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
-		st.returnflag(relay);
-		f.interptime = lastmillis;
-		g.taketime = 0;
+		st.returnflag(relay); f.interptime = lastmillis;
     }
 
     void takeflag(gameent *d, int i)
@@ -482,9 +485,7 @@ namespace ctf
 		flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
 		int idx = !game::announcefilter || game::player1->state == CS_SPECTATOR || d->team == game::player1->team || isctfflag(f, game::player1->team) ? (f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP) : -1;
 		game::announce(idx, CON_INFO, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
-		if(!f.droptime) f.taketime = lastmillis;
-		st.takeflag(i, d);
-		f.interptime = lastmillis;
+		st.takeflag(i, d, lastmillis); f.interptime = lastmillis;
     }
 
     void checkflags(gameent *d)
@@ -493,7 +494,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && !f.droptime)) continue;
+            if(!f.ent || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 1 && !f.droptime)) continue;
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
                 if(f.pickup) continue;
@@ -506,23 +507,26 @@ namespace ctf
 
 	bool aihomerun(gameent *d, ai::aistate &b)
 	{
-		vec pos = d->feetpos();
-		loopk(2)
+		if(ctfstyle <= 1)
 		{
-			int goal = -1;
-			loopv(st.flags)
+			vec pos = d->feetpos();
+			loopk(2)
 			{
-				ctfstate::flag &g = st.flags[i];
-				if(isctfhome(g, d->team) && (k || (!g.owner && !g.droptime)) &&
-					(!st.flags.inrange(goal) || g.spawnloc.squaredist(pos) < st.flags[goal].spawnloc.squaredist(pos)))
+				int goal = -1;
+				loopv(st.flags)
 				{
-					goal = i;
+					ctfstate::flag &g = st.flags[i];
+					if(isctfhome(g, d->team) && (k || (!g.owner && !g.droptime)) &&
+						(!st.flags.inrange(goal) || g.spawnloc.squaredist(pos) < st.flags[goal].spawnloc.squaredist(pos)))
+					{
+						goal = i;
+					}
 				}
-			}
-			if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc))
-			{
-				d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
-				return true;
+				if(st.flags.inrange(goal) && ai::makeroute(d, b, st.flags[goal].spawnloc))
+				{
+					d->ai->switchstate(b, ai::AI_S_PURSUE, ai::AI_T_AFFINITY, goal);
+					return true;
+				}
 			}
 		}
 		return false;
@@ -537,10 +541,10 @@ namespace ctf
 		{
 			ctfstate::flag &g = st.flags[i];
 			if(g.owner == d) hasflags.add(i);
-			else if(isctfflag(g, d->team) && ((g.owner && g.owner->team != d->team) || g.droptime))
+			else if(isctfflag(g, d->team) && (ctfstyle >= 2 || (g.owner && g.owner->team != d->team) || g.droptime))
 				takenflags.add(i);
 		}
-		if(!hasflags.empty())
+		if(!hasflags.empty() && ctfstyle <= 1)
 		{
 			aihomerun(d, b);
 			return true;
@@ -568,10 +572,10 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[j];
 			bool home = isctfhome(f, d->team);
-			if(!home && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
+			if((!home || ctfstyle >= 2) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = f.team == TEAM_NEUTRAL || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			bool regen = f.team == TEAM_NEUTRAL || ctfstyle >= 2 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			gameent *e = NULL;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
@@ -636,17 +640,20 @@ namespace ctf
 
 	bool aidefend(gameent *d, ai::aistate &b)
 	{
-		static vector<int> hasflags;
-		hasflags.setsizenodelete(0);
-		loopv(st.flags)
+		if(ctfstyle <= 1)
 		{
-			ctfstate::flag &g = st.flags[i];
-			if(g.owner == d) hasflags.add(i);
-		}
-		if(!hasflags.empty())
-		{
-			aihomerun(d, b);
-			return true;
+			static vector<int> hasflags;
+			hasflags.setsizenodelete(0);
+			loopv(st.flags)
+			{
+				ctfstate::flag &g = st.flags[i];
+				if(g.owner == d) hasflags.add(i);
+			}
+			if(!hasflags.empty())
+			{
+				aihomerun(d, b);
+				return true;
+			}
 		}
 		if(st.flags.inrange(b.target))
 		{
@@ -701,7 +708,7 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfhome(f, d->team))
+			if(isctfhome(f, d->team) && ctfstyle <= 1)
 			{
 				static vector<int> hasflags; hasflags.setsizenodelete(0);
 				loopv(st.flags)

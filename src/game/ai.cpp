@@ -742,7 +742,7 @@ namespace ai
 			d->jumptime = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->jumpseed = lastmillis+m_speedtime(seed+rnd(seed));
-			seed *= b.idle ? 50 : 25;
+			seed *= b.idle ? 100 : 50;
 			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
 		}
 	}
