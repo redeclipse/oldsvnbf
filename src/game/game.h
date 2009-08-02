@@ -25,7 +25,7 @@ enum
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2,
 	S_SPLASH1, S_SPLASH2, S_UNDERWATER,
 	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT,
-	S_RELOAD, S_SWITCH, S_PISTOL, S_SHOTGUN, S_SMG, S_GRENADE, S_FLAMER, S_PLASMA, S_RIFLE, S_PAINT,
+	S_RELOAD, S_SWITCH, S_PISTOL, S_SHOTGUN, S_SMG, S_GRENADE, S_FLAMER, S_PLASMA, S_RIFLE,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN,
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_ERROR, S_ALARM,
@@ -212,7 +212,6 @@ enum
     ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
     ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
     ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
-    ANIM_PAINTGUN, ANIM_PAINTGUN_SHOOT, ANIM_PAINTGUN_RELOAD,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAX
 };
@@ -230,8 +229,7 @@ enum
 	WEAP_RIFLE,
 	WEAP_GRENADE,
 	WEAP_TOTAL, // end of selectable weapon set
-	WEAP_PAINTGUN = WEAP_TOTAL,
-	WEAP_MAX // end of superimposed weapon set
+	WEAP_MAX = WEAP_TOTAL,
 };
 #define isweap(a)		(a > -1 && a < WEAP_MAX)
 
@@ -342,15 +340,6 @@ weaptypes weaptype[WEAP_MAX] =
 			5,			1000,		768,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
-	{
-		WEAP_PAINTGUN,		ANIM_PAINTGUN,		0xFF22AA,		S_PAINT,	S_SPLAT,	S_WHIZZ,	-1,
-			10,		10,		500,	1000,	25,		1000,	0,		10000,
-			0,		0,			1,		0,		0,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
-			false,	false,	false,		true,		true,		true,
-			0,			 0,				0.05f,		2.0f,		0,		2,			0,
-			1,			25,			0,
-			"paintgun",	"\fm",	"weapons/paintgun/item",	"weapons/paintgun/vwep",	""
-	},
 };
 #else
 extern weaptypes weaptype[];
@@ -417,16 +406,14 @@ enum
 	G_M_INSTA	= 1<<2,
 	G_M_DUEL	= 1<<3,
 	G_M_LMS		= 1<<4,
-	G_M_PAINT	= 1<<5,
-	G_M_VAMP	= 1<<6,
-	G_M_ARENA	= 1<<7,
-	G_M_DM		= G_M_INSTA|G_M_PAINT|G_M_VAMP|G_M_ARENA,
-	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_PAINT|G_M_VAMP|G_M_ARENA,
-	G_M_PBALL	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_VAMP|G_M_PAINT,
-	G_M_CLASS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_VAMP|G_M_ARENA,
-	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_PAINT|G_M_VAMP|G_M_ARENA,
+	G_M_ARENA	= 1<<5,
+	G_M_DM		= G_M_INSTA|G_M_ARENA,
+	G_M_TEAMS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,
+	G_M_PBALL	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS,
+	G_M_CLASS	= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,
+	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,
 };
-#define G_M_NUM 8
+#define G_M_NUM 6
 
 struct gametypes
 {
@@ -447,8 +434,6 @@ gametypes gametype[] = {
 	{ G_M_INSTA,		G_M_ALL,				G_M_INSTA,				"insta" },
 	{ G_M_DUEL,			G_M_DM|G_M_DUEL,		G_M_DUEL,				"duel" },
 	{ G_M_LMS,			G_M_DM|G_M_LMS,			G_M_LMS,				"last-man" },
-	{ G_M_PAINT,		G_M_PBALL,				G_M_PAINT,				"paintball" },
-	{ G_M_VAMP,			G_M_ALL,				G_M_VAMP,				"vampire" },
 	{ G_M_ARENA,		G_M_CLASS,				G_M_ARENA,				"arena" },
 };
 #else
@@ -474,16 +459,14 @@ extern gametypes gametype[], mutstype[];
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
 #define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
-#define m_paint(a,b)		((b & G_M_PAINT) || (gametype[a].implied & G_M_PAINT))
-#define m_vamp(a,b)			((b & G_M_VAMP) || (gametype[a].implied & G_M_VAMP))
 #define m_arena(a,b)		((b & G_M_ARENA) || (gametype[a].implied & G_M_ARENA))
 
 #define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
-#define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b) && !m_paint(a,b))
+#define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
-#define m_spawnweapon(a,b)	(m_paint(a,b) ? WEAP_PAINTGUN : (m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon))))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? ((m_insta(a, b) || m_paint(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))*1000) : 0)
-#define m_noitems(a,b)		(m_paint(a,b) || (GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1)))
+#define m_spawnweapon(a,b)	(m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
+#define m_spawndelay(a,b)	(!m_duke(a,b) ? ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))*1000) : 0)
+#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
@@ -619,11 +602,6 @@ enum
 #define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
-
-const int paintcolours[10] = {
-    0xA0A0A0, 0x2222FF, 0xFF2222, 0xFFFF22, 0x22FF22,
-    0xFF8822, 0xFF22FF, 0x22FFFF, 0xFF2288, 0x222222
-};
 
 #define MAXNAMELEN		16
 
@@ -958,7 +936,6 @@ const char *animnames[] =
 	"flamer", "flamer shoot", "flamer reload",
 	"plasma", "plasma shoot", "plasma reload",
 	"rifle", "rifle shoot", "rifle reload",
-	"paintgun", "paintgun shoot", "paintgun reload",
 	"vwep", "shield", "powerup",
 	""
 };

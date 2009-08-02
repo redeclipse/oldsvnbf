@@ -458,7 +458,7 @@ namespace game
 			{
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && !noblood && weap != WEAP_PAINTGUN && !m_paint(gamemode, mutators) && d->aitype != AI_TURRET)
+				if(!kidmode && !noblood && d->aitype != AI_TURRET)
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
@@ -516,8 +516,7 @@ namespace game
 		d->state = CS_DEAD;
 		d->deaths++;
 		int anc = -1, dth = -1;
-		if(weap == WEAP_PAINTGUN || m_paint(gamemode, mutators)) dth = S_SPLAT;
-		else if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
+		if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
 		else if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURNING;
 		else dth = S_DIE1+rnd(2);
 
@@ -541,13 +540,11 @@ namespace game
 					"found out what their plasma tasted like",
 					"pulled off a seemingly impossible stunt",
 					"decided to kick it, kamikaze style",
-					"ate paint"
 				};
         		concatstring(d->obit, suicidenames[weap]);
         	}
         	else if(flags&HIT_BURN) concatstring(d->obit, "burnt up");
         	else if(style&FRAG_OBLITERATE) concatstring(d->obit, "was obliterated");
-        	else if(m_paint(gamemode, mutators)) concatstring(d->obit, "gave up");
         	else concatstring(d->obit, "suicided");
         }
 		else
@@ -567,7 +564,6 @@ namespace game
 						"plasmified by",
 						"was given laser burn by",
 						"blown to pieces by",
-						"tagged out by"
 					},
 					{
 						"given an extra orifice by",
@@ -577,7 +573,6 @@ namespace game
 						"plasmafied by",
 						"expertly sniped by",
 						"blown to pieces by",
-						"tagged out by"
 					},
 					{
 						"skewered by",
@@ -587,7 +582,6 @@ namespace game
 						"reduced to ooze by",
 						"laser-scalpeled by",
 						"obliterated by",
-						"tagged out by"
 					}
 				};
 
@@ -677,8 +671,8 @@ namespace game
 			}
 			else if(style&FRAG_SPREE4)
 			{
-				concatstring(d->obit, m_paint(gamemode, mutators) ? " in a \fs\fzcgpaintbath\fS!" : " in a \fs\fzcgbloodbath\fS!");
-				part_text(az, m_paint(gamemode, mutators) ? "@\fzcgPAINTBATH" : "@\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				concatstring(d->obit, " in a \fs\fzcgbloodbath\fS!");
+				part_text(az, "@\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE4;
 				override = true;
 			}
@@ -730,7 +724,7 @@ namespace game
 				}
 			}
 		}
-		if(!kidmode && !noblood && !nogibs && !m_paint(gamemode, mutators))
+		if(!kidmode && !noblood && !nogibs)
 		{
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs+1)*gibscale);
@@ -1652,7 +1646,7 @@ namespace game
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
 				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SMG:
-				case ANIM_GRENADE: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE: case ANIM_PAINTGUN:
+				case ANIM_GRENADE: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);

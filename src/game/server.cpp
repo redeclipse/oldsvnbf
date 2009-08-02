@@ -571,7 +571,6 @@ namespace server
 		}
 		else *muts = G_M_NONE;
         *muts |= gametype[*mode].implied;
-		if(kidmode > 1 && !(*muts&G_M_PAINT)) *muts |= G_M_PAINT;
     }
 
 	int mutscheck(int mode, int muts)
@@ -2035,7 +2034,7 @@ namespace server
 		}
 
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && weap != WEAP_PAINTGUN && !weaptype[weap].explode) realflags &= ~HIT_FULL;
+		else if((realflags&HIT_FULL) && !weaptype[weap].explode) realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
 			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
@@ -2050,7 +2049,7 @@ namespace server
 		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
 
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
-		if(m_vamp(gamemode, mutators) && actor->state.state == CS_ALIVE)
+		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
 		{
 			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0, penalty = 0;
 			if(smode) smode->regen(actor, total, amt, delay, penalty);

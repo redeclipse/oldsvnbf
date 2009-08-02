@@ -22,6 +22,7 @@ VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 200, INT_MAX-1);
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
 
+VARG(vampire, 0, 0, 1);
 VARG(regendelay, 0, 3000, INT_MAX-1);
 VARG(regenguard, 0, 1500, INT_MAX-1);
 VARG(regentime, 0, 1000, INT_MAX-1);
