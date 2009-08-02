@@ -338,7 +338,7 @@ weaptypes weaptype[WEAP_MAX] =
 			1,		2,		1500,	6000,	300,	350,	3000,	3000,
 			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
 			false,	false,	false,		false,		false,		false,
-			0.35f,		0,				1.0f,		2.0f,		50,		4,			0,
+			0.5f,		0,				1.0f,		2.0f,		50,		4,			0,
 			5,			1000,		768,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
