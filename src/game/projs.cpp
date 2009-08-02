@@ -790,7 +790,12 @@ namespace projs
 			{
 				if(!proj.beenused)
 				{
-					if(entities::ents.inrange(proj.id)) game::spawneffect(PART_FIREBALL, proj.o, 0x6666FF, enttype[entities::ents[proj.id]->type].radius);
+					if(entities::ents.inrange(proj.id))
+					{
+						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attr[0], sweap) : entities::ents[proj.id]->attr[0],
+							colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
+						game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[entities::ents[proj.id]->type].radius);
+					}
 					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-game::maptime, -1, proj.id, 0, 0);
 				}
 				break;

@@ -158,10 +158,10 @@ namespace entities
 			{
 				loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
+				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			if(showentdescs)
 			{
-				int colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
 				if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
 				else
@@ -174,7 +174,6 @@ namespace entities
 					}
 				}
 			}
-			playsound(S_ITEMPICKUP, d->o, d);
 			if(isweap(g))
 			{
 				d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
@@ -186,13 +185,14 @@ namespace entities
 				}
 			}
 			d->useitem(n, e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis);
+			game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius);
+			playsound(S_ITEMPICKUP, d->o, d);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
 				gameentity &f = *(gameentity *)ents[r];
 				attr = weapattr(f.attr[0], sweap);
 				if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 			}
-			game::spawneffect(PART_FIREBALL, pos, 0x6666FF, enttype[e.type].radius);
 			e.spawned = s;
 		}
 	}
@@ -787,7 +787,9 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					game::spawneffect(PART_FIREBALL, proj.o, 0x6666FF, enttype[ents[proj.id]->type].radius);
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attr[0], sweap) : entities::ents[proj.id]->attr[0],
+						colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
+					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius);
 					proj.beenused = true;
 					proj.state = CS_DEAD;
 				}
