@@ -6,18 +6,18 @@ enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 
 struct aitypes
 {
-	int	type,			weap,			health;	float	skill,	xradius,	yradius,	height;
+	int	type,			weap,			health,	maxspeed,	frame;	float	skill,	xradius,	yradius,	height,		weight;
 	bool	canmove,	canfight,	useweap;	const char	*name,		*mdl;
 };
 #ifdef GAMESERVER
 aitypes aitype[] = {
 	{
-		AI_BOT,			-1, 			0,				1.f,	0,			0, 			0,
+		AI_BOT,			-1, 			0,		50,			1,				1.f,	0,			0, 			0,			200,
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	200,			1.f,	6,		6,				6,
-		false,		true,		false,					"turret",		"actors/mturret"
+		AI_TURRET,		WEAP_SMG,	 	200,	0,			10,				1.f,	3,			3,			4,			0,
+			false,		true,		true,					"turret",	"actors/player/vwep"
 	},
 };
 #else
