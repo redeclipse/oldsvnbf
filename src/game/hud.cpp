@@ -46,19 +46,18 @@ namespace hud
 	}
 	COMMANDN(conskip, setconskip, "i");
 
-	VARP(consize, 0, 5, 100);
+	VARP(consize, 0, 6, 100);
 	VARP(contime, 0, 15000, INT_MAX-1);
 	VARP(confade, 0, 1000, INT_MAX-1);
-	VARP(conoverflow, 0, 5, INT_MAX-1);
+	VARP(conoverflow, 0, 9, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	FVARP(conblend, 0, 0.75f, 1);
-	VARP(chatconsize, 0, 5, 100);
+	VARP(chatconsize, 0, 4, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
-	VARP(chatconoverflow, 0, 3, 1);
+	VARP(chatconoverflow, 0, 6, 1);
 	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
-	VARP(fullconsize, 0, 15, 100);
 
 	FVARP(noticeoffset, 0.f, 0.4f, 1.f);
 	FVARP(noticeblend, 0.f, 0.5f, 1.f);
@@ -821,7 +820,7 @@ namespace hud
 		}
 		else
 		{
-			int numl = full ? fullconsize : consize, numo = consize+conoverflow, keeptime = contime+confade, z = y;
+			int numl = consize, numo = consize+conoverflow, keeptime = contime+confade, z = y;
 			if(numl && keeptime)
 			{
 				loopv(conlines) if(conlines[i].type == CON_INFO || type < 0)
