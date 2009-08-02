@@ -740,7 +740,7 @@ namespace ai
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, dist))
 		{
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAP_GRENADE ? 0.25f : 1e16f);
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAP_GRENADE ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
@@ -837,7 +837,7 @@ namespace ai
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!insight) frame /= 3.f;
+					if(!insight) frame /= 4.f;
 				}
 				else if(!insight) frame /= 2.f;
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);

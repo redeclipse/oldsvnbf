@@ -16,7 +16,7 @@ aitypes aitype[] = {
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	200,	0,			10,				1.f,	3,			3,			4,			0,
+		AI_TURRET,		WEAP_SMG,	 	200,	0,			2,				1.f,	3,			3,			4,			0,
 			false,		true,		true,					"turret",	"actors/player/vwep"
 	},
 };
