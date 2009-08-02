@@ -817,7 +817,7 @@ namespace projs
 								radialeffect(f, proj, proj.weap == WEAP_GRENADE, radius);
 							}
 						}
-						else if(proj.hit && proj.hit->type == ENT_PLAYER)
+						else if(proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI))
 							hitproj((gameent *)proj.hit, proj);
 					}
 
@@ -1095,7 +1095,7 @@ namespace projs
 					}
 				}
 				if(proj.state != CS_DEAD && proj.radial && proj.local)
-					radiate(proj, proj.hit && proj.hit->type == ENT_PLAYER ? (gameent *)proj.hit : NULL);
+					radiate(proj, proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL);
 			}
 			else proj.state = CS_DEAD;
 

@@ -422,7 +422,7 @@ namespace game
 	void checkoften(gameent *d, bool local)
 	{
 		d->checktags();
-		heightoffset(d, local);
+		if(d->aitype <= AI_BOT) heightoffset(d, local);
 		loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
@@ -451,10 +451,10 @@ namespace game
 		if(hithurts(flags))
 		{
 			d->dodamage(millis, health);
-			if(actor->type == ENT_PLAYER) actor->totaldamage += damage;
+			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
 
 			if(d == player1) hud::damage(damage, actor->o, actor, weap);
-			if(d->type == ENT_PLAYER)
+			if(d->type == ENT_PLAYER || d->type == ENT_AI)
 			{
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
@@ -496,7 +496,7 @@ namespace game
 			ai::damaged(d, actor);
 			if(d != actor && actor != game::player1) actor->lasthit = lastmillis;
 		}
-		if(d == player1 || d->ai)
+		if(d == player1 || (d->ai && aitype[d->aitype].canmove))
 		{
 			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -509,7 +509,7 @@ namespace game
 
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
 	{
-		if(d->type != ENT_PLAYER) return;
+		if(d->type != ENT_PLAYER && d->type != ENT_AI) return;
 
         d->lastregen = 0;
         d->lastpain = lastmillis;
@@ -524,9 +524,10 @@ namespace game
 		if(d == player1) anc = S_V_FRAGGED;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
-        if(d == actor)
+		if(d == actor)
         {
-        	if(flags&HIT_MELT) concatstring(d->obit, "melted");
+        	if(d->aitype == AI_TURRET) concatstring(d->obit, "was destroyed");
+        	else if(flags&HIT_MELT) concatstring(d->obit, "melted");
 			else if(flags&HIT_FALL) concatstring(d->obit, "thought they could fly");
 			else if(flags&HIT_SPAWN) concatstring(d->obit, "tried to spawn inside solid matter");
 			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
@@ -554,41 +555,45 @@ namespace game
 			if(actor->lastattacker == d->clientnum) actor->lastattacker = -1;
 			d->lastattacker = actor->clientnum;
 			concatstring(d->obit, "was ");
-			static const char *obitnames[3][WEAP_MAX] = {
-				{
-					"pierced by",
-					"filled with buckshot by",
-					"riddled with holes by",
-					"char-grilled by",
-					"plasmified by",
-					"was given laser burn by",
-					"blown to pieces by",
-					"tagged out by"
-				},
-				{
-					"given an extra orifice by",
-					"given scrambled brains cooked up by",
-					"air conditioned courtesy of",
-					"char-grilled by",
-					"plasmafied by",
-					"expertly sniped by",
-					"blown to pieces by",
-					"tagged out by"
-				},
-				{
-					"skewered by",
-					"turned into little chunks by",
-					"swiss-cheesed by",
-					"made the main course by order of chef",
-					"reduced to ooze by",
-					"laser-scalpeled by",
-					"obliterated by",
-					"tagged out by"
-				}
-			};
+			if(d->aitype == AI_TURRET) concatstring(d->obit, "destroyed by");
+			else
+			{
+				static const char *obitnames[3][WEAP_MAX] = {
+					{
+						"pierced by",
+						"filled with buckshot by",
+						"riddled with holes by",
+						"char-grilled by",
+						"plasmified by",
+						"was given laser burn by",
+						"blown to pieces by",
+						"tagged out by"
+					},
+					{
+						"given an extra orifice by",
+						"given scrambled brains cooked up by",
+						"air conditioned courtesy of",
+						"char-grilled by",
+						"plasmafied by",
+						"expertly sniped by",
+						"blown to pieces by",
+						"tagged out by"
+					},
+					{
+						"skewered by",
+						"turned into little chunks by",
+						"swiss-cheesed by",
+						"made the main course by order of chef",
+						"reduced to ooze by",
+						"laser-scalpeled by",
+						"obliterated by",
+						"tagged out by"
+					}
+				};
 
-			int o = style&FRAG_OBLITERATE ? 2 : (style&FRAG_HEADSHOT ? 1 : 0);
-			concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "killed by");
+				int o = style&FRAG_OBLITERATE ? 2 : (style&FRAG_HEADSHOT ? 1 : 0);
+				concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "killed by");
+			}
 			bool override = false;
 			vec az = actor->abovehead(), dz = d->abovehead();
 			if(m_team(gamemode, mutators) && d->team == actor->team)
@@ -710,8 +715,8 @@ namespace game
 			{
 				case 1: if(isme) show = true; break;
 				case 2: if(isme || anc >= 0) show = true; break;
-				case 3: if(isme || d->aitype == AI_NONE || anc >= 0) show = true; break;
-				case 4: if(isme || d->aitype == AI_NONE || actor->aitype == AI_NONE || anc >= 0) show = true; break;
+				case 3: if(isme || d->aitype < 0 || anc >= 0) show = true; break;
+				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0) show = true; break;
 				case 5: default: show = true; break;
 			}
 			if(show)
@@ -730,7 +735,7 @@ namespace game
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs+1)*gibscale);
 			loopi(amt)
-				projs::create(pos, vec(pos).add(d->vel), true, d, PRJ_GIBS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
+				projs::create(pos, vec(pos).add(d->vel), true, d, d->aitype != AI_TURRET ? PRJ_GIBS : PRJ_DEBRIS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
@@ -782,7 +787,7 @@ namespace game
 		if(!players.inrange(cn)) return;
 		gameent *d = players[cn];
 		if(!d) return;
-		if(d->name[0] && showplayerinfo && (d->aitype == AI_NONE || ai::showaiinfo))
+		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
 		projs::remove(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
@@ -875,9 +880,9 @@ namespace game
 		static string cname;
 		const char *chat = team && m_team(gamemode, mutators) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat;
 		formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
-		if(!name[0] || d->aitype != AI_NONE || (dupname && duplicatename(d, name)))
+		if(!name[0] || d->aitype >= 0 || (dupname && duplicatename(d, name)))
 		{
-			defformatstring(s)(" [\fs%s%d\fS]", d->aitype != AI_NONE ? "\fc" : "\fm", d->clientnum);
+			defformatstring(s)(" [\fs%s%d\fS]", d->aitype >= 0 ? "\fc" : "\fm", d->clientnum);
 			concatstring(cname, s);
 		}
 		concatstring(cname, "\fS");
@@ -900,7 +905,7 @@ namespace game
 
     void particletrack(particle *p, uint type, int &ts,  bool lastpass)
     {
-        if(!p || !p->owner || p->owner->type != ENT_PLAYER) return;
+        if(!p || !p->owner || (p->owner->type != ENT_PLAYER && p->owner->type != ENT_AI)) return;
 
         switch(type&0xFF)
         {
@@ -1567,8 +1572,12 @@ namespace game
 	void renderclient(gameent *d, bool third, float trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		string mdl;
-		if(third) copystring(mdl, teamtype[team].tpmdl);
-		else copystring(mdl, teamtype[team].fpmdl);
+		if(d->aitype <= AI_BOT)
+		{
+			if(third) copystring(mdl, teamtype[team].tpmdl);
+			else copystring(mdl, teamtype[team].fpmdl);
+		}
+		else if(d->aitype < AI_MAX) copystring(mdl, aitype[d->aitype].mdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? d->feetpos() : d->headpos());
@@ -1617,7 +1626,7 @@ namespace game
 		}
 		else
 		{
-			if(secondary)
+			if(secondary && (d->aitype <= AI_BOT || aitype[d->aitype].canmove))
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1687,7 +1696,7 @@ namespace game
         modelattach a[8];
 		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
-		bool secondary = false, showweap = isweap(weap);
+		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aitype[d->aitype].useweap;
 
 
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
@@ -1792,7 +1801,7 @@ namespace game
 			}
 		}
 
-		if(third && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
+		if(third && d->type == ENT_PLAYER && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead(2);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
@@ -1826,8 +1835,10 @@ namespace game
 		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
         if(rendernormally && (early || d != player1))
         {
-        	a[ai++] = modelattach("tag_muzzle", &d->muzzle);
-        	if(third)
+        	const char *muzzle = "tag_muzzle";
+        	if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
+        	a[ai++] = modelattach(muzzle, &d->muzzle);
+        	if(third && d->type == ENT_PLAYER)
         	{
         		a[ai++] = modelattach("tag_head", &d->head);
         		a[ai++] = modelattach("tag_torso", &d->torso);

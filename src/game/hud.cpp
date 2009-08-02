@@ -223,7 +223,7 @@ namespace hud
 		vec colour(1.f, 0, 0);
         if(weap == WEAP_PAINTGUN)
         {
-            int col = paintcolours[actor->type == ENT_PLAYER && m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
+            int col = paintcolours[m_team(game::gamemode, game::mutators) ? actor->team : rnd(10)];
             colour = vec((col>>16)&0xFF, (col>>8)&0xFF, col&0xFF).div(0xFF);
         }
         else if(kidmode || game::noblood) colour = vec(1, 0.25f, 1);
@@ -1057,7 +1057,7 @@ namespace hud
 				drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "you");
 			}
 			gameent *a = game::getclient(game::player1->lastattacker);
-			if(a && (dead || (radardamage >= 3 && (a->aitype == AI_NONE || radardamage >= 4))))
+			if(a && (dead || (radardamage >= 3 && (a->aitype < 0 || radardamage >= 4))))
 			{
 				vec pos = vec(a->o).sub(camera1->o).normalize(), dir = vec(pos).rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[a->team].colour>>16)/255.f, g = ((teamtype[a->team].colour>>8)&0xFF)/255.f, b = (teamtype[a->team].colour&0xFF)/255.f;

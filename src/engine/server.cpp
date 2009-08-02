@@ -589,7 +589,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 	if(servertype >= 2 && totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
 	{
 		laststatus = totalmillis;
-		if(bsend || brec || server::numclients(-1, false, true))
+		if(bsend || brec || server::numclients(-1, false, -1))
 			conoutf("\fmstatus: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(-1, false, true), bsend/60.0f/1024, brec/60.0f/1024);
 		bsend = brec = 0;
 	}

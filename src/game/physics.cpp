@@ -137,7 +137,7 @@ namespace physics
 	float movevelocity(physent *d)
 	{
 		if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f)*(floatspeed/100.0f);
-		else if(d->type == ENT_PLAYER)
+		else if(d->type == ENT_PLAYER || d->type == ENT_AI)
 		{
 			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else
@@ -320,7 +320,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->type == ENT_PLAYER && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d))
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -416,7 +416,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if(d->type == ENT_PLAYER && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !d->jumping)
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !d->jumping)
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
@@ -435,7 +435,7 @@ namespace physics
 		{
             obstacle = wall;
             /* check to see if there is an obstacle that would prevent this one from being used as a floor */
-            if(d->type==ENT_PLAYER && ((wall.z>=slopez && dir.z<0) || (wall.z<=-slopez && dir.z>0)) && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
+            if((d->type==ENT_PLAYER || d->type==ENT_AI) && ((wall.z>=slopez && dir.z<0) || (wall.z<=-slopez && dir.z>0)) && (dir.x || dir.y) && !collide(d, vec(dir.x, dir.y, 0)))
             {
                 if(wall.dot(dir) >= 0) slidecollide = true;
                 obstacle = wall;
@@ -488,7 +488,7 @@ namespace physics
 			{
 				pl->vel.z += jumpforce(pl, false);
 				pl->jumping = false;
-				if(local && pl->type == ENT_PLAYER) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+				if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 			}
 		}
         else if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
@@ -504,7 +504,7 @@ namespace physics
 					pl->vel.x *= scale; pl->vel.y *= scale;
 				}
 				pl->jumping = false;
-				if(local && pl->type == ENT_PLAYER)
+				if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 				{
 					playsound(S_JUMP, pl->o, pl);
 					regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
@@ -520,7 +520,7 @@ namespace physics
 			pl->jumping = false;
 			pl->impulsejump = true;
 			pl->impulsemillis += impulsejump;
-			if(local && pl->type == ENT_PLAYER)
+			if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 			{
 				playsound(S_IMPULSE, pl->o, pl);
 				regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
@@ -551,7 +551,7 @@ namespace physics
 		if(wantsmove)
 		{
 			vecfromyawpitch(pl->aimyaw, floating || (pl->inliquid && (liquidcheck(pl) || pl->aimpitch < 0.f)) || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
-            if(pl->type == ENT_PLAYER && !floating && pl->physstate >= PHYS_SLOPE)
+            if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && pl->physstate >= PHYS_SLOPE)
 			{ // move up or down slopes in air but only move up slopes in liquid
 				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
                 m.z = liquidcheck(pl) ? max(m.z, dz) : dz;
@@ -560,7 +560,7 @@ namespace physics
 		}
 
 		vec d = vec(m).mul(movevelocity(pl));
-        if(pl->type == ENT_PLAYER && !floating && !pl->inliquid)
+        if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && !pl->inliquid)
 			d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
@@ -609,7 +609,7 @@ namespace physics
 				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH2 : S_SPLASH1);
 			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
 		}
-		if(local && pl->type == ENT_PLAYER && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
+		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
 			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : HIT_FALL)|HIT_FULL);
 		pl->inmaterial = matid;
 		if((pl->inliquid = !floating && isliquid(curmat)) != false)
@@ -637,7 +637,7 @@ namespace physics
 
     void updatematerial(physent *pl, bool local, bool floating)
     {
-        updatematerial(pl, pl->o, pl->height/2.f, pl->type == ENT_PLAYER ? pl->feetpos(1) : pl->o, local, floating);
+        updatematerial(pl, pl->o, pl->height/2.f, (pl->type == ENT_PLAYER || pl->type == ENT_AI) ? pl->feetpos(1) : pl->o, local, floating);
     }
 
     void updateragdoll(dynent *d, const vec &center, float radius)
@@ -656,7 +656,7 @@ namespace physics
 		bool floating = pl->type == ENT_CAMERA || (pl->type == ENT_PLAYER && pl->state == CS_EDITING);
 		float secs = millis/1000.f;
 
-		if(pl->type==ENT_PLAYER)
+		if(pl->type==ENT_PLAYER || pl->type==ENT_AI)
         {
             updatematerial(pl, local, floating);
             if(!floating && !pl->onladder) modifygravity(pl, millis); // apply gravity
@@ -664,7 +664,7 @@ namespace physics
 		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
 		vec d(pl->vel);
-        if(pl->type==ENT_PLAYER && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, liquidspeed));
+        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, liquidspeed));
         d.add(pl->falling);
 		d.mul(secs);
 
@@ -690,7 +690,7 @@ namespace physics
 				playsound(S_LAND, pl->o, pl);
 		}
 
-        if(pl->type==ENT_PLAYER && pl->state==CS_ALIVE)
+        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && pl->state==CS_ALIVE)
         {
 		    updatedynentcache(pl);
 
@@ -853,10 +853,16 @@ namespace physics
 			if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
 			{
 				if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
+				{
+					if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
 					return false;
+				}
 			}
 			else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
+			{
+				if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
 				return false;
+			}
 		}
 		return true;
 	}
@@ -869,22 +875,26 @@ namespace physics
 			gameent *e = (gameent *)o;
 			if(e->legs.x+e->lrad.x >= x1 && e->legs.y+e->lrad.y >= y1 && e->legs.x-e->lrad.x <= x2 && e->legs.y-e->lrad.y <= y2)
 			{
-				vec bottom(e->legs), top(e->legs); bottom.z -= e->lrad.z; top.z += e->lrad.z;
-				if(linecylinderintersect(from, to, bottom, top, max(e->lrad.x, e->lrad.y), dist)) hitflags |= HITFLAG_LEGS;
+				vec bottom(e->legs), top(e->legs); bottom.z -= e->lrad.z; top.z += e->lrad.z; float d;
+				if(linecylinderintersect(from, to, bottom, top, max(e->lrad.x, e->lrad.y), d) && d < dist) { hitflags |= HITFLAG_LEGS; dist = d; }
 			}
 			if(e->torso.x+e->trad.x >= x1 && e->torso.y+e->trad.y >= y1 && e->torso.x-e->trad.x <= x2 && e->torso.y-e->trad.y <= y2)
 			{
-				vec bottom(e->torso), top(e->torso); bottom.z -= e->trad.z; top.z += e->trad.z;
-				if(linecylinderintersect(from, to, bottom, top, max(e->trad.x, e->trad.y), dist)) hitflags |= HITFLAG_TORSO;
+				vec bottom(e->torso), top(e->torso); bottom.z -= e->trad.z; top.z += e->trad.z; float d;
+				if(linecylinderintersect(from, to, bottom, top, max(e->trad.x, e->trad.y), d) && d < dist) { hitflags |= HITFLAG_TORSO; dist = d; }
 			}
 			if(e->head.x+e->hrad.x >= x1 && e->head.y+e->hrad.y >= y1 && e->head.x-e->hrad.x <= x2 && e->head.y-e->hrad.y <= y2)
 			{
-				vec bottom(e->head), top(e->head); bottom.z -= e->hrad.z; top.z += e->hrad.z;
-				if(linecylinderintersect(from, to, bottom, top, max(e->hrad.x, e->hrad.y), dist)) hitflags |= HITFLAG_HEAD;
+				vec bottom(e->head), top(e->head); bottom.z -= e->hrad.z; top.z += e->hrad.z; float d;
+				if(linecylinderintersect(from, to, bottom, top, max(e->hrad.x, e->hrad.y), d) && d < dist) { hitflags |= HITFLAG_HEAD; dist = d; }
 			}
 			return hitflags == HITFLAG_NONE;
 		}
-		if(o->o.x+o->radius >= x1 && o->o.y+o->radius >= y1 && o->o.x-o->radius <= x2 && o->o.y-o->radius <= y2 && intersect(o, from, to, dist)) return false;
+		if(o->o.x+o->radius >= x1 && o->o.y+o->radius >= y1 && o->o.x-o->radius <= x2 && o->o.y-o->radius <= y2 && intersect(o, from, to, dist))
+		{
+			if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
+			return false;
+		}
 		return true;
 	}
 

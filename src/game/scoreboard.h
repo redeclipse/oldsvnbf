@@ -348,7 +348,7 @@ namespace hud
 					g.strut(5);
 					g.text("ping", fgcolor);
 					loopscoregroup({
-						if(o->aitype != AI_NONE)
+						if(o->aitype >= 0)
 						{
 							gameent *od = game::getclient(o->ownernum);
 							g.textf("%d", 0xFFFFFF, NULL, od ? od->ping : -1);
@@ -375,7 +375,7 @@ namespace hud
 					g.strut(3);
 					g.text("sk", fgcolor);
 					loopscoregroup({
-						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->skill);
+						if(o->aitype >= 0) g.textf("%d", 0xFFFFFF, NULL, o->skill);
 						else g.space(1);
 					});
 					g.poplist();
@@ -387,7 +387,7 @@ namespace hud
 					g.strut(3);
 					g.text("on", fgcolor);
 					loopscoregroup({
-						if(o->aitype != AI_NONE) g.textf("%d", 0xFFFFFF, NULL, o->ownernum);
+						if(o->aitype >= 0) g.textf("%d", 0xFFFFFF, NULL, o->ownernum);
 						else g.space(1);
 					});
 					g.poplist();
