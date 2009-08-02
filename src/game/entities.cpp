@@ -566,6 +566,8 @@ namespace entities
 	}
 
 	gameent *trigger = NULL;
+	ICOMMAND(triggerclientnum, "", (), intret(trigger ? trigger->clientnum : -1));
+
 	void runtrigger(int n, gameent *d, bool act = true)
 	{
 		gameentity &e = *(gameentity *)ents[n];
