@@ -1933,34 +1933,36 @@ namespace entities
 	{
 		if(rendermainview && m_edit(game::gamemode)) loopv(ents) // important, don't render lines and stuff otherwise!
 			renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
-
-		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-		loopv(ents)
+		if(!envmapping)
 		{
-			gameentity &e = *(gameentity *)ents[i];
-			if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-			bool active = enttype[e.type].usetype == EU_ITEM && e.spawned && !m_noitems(game::gamemode, game::mutators);
-			if(m_edit(game::gamemode) || active)
+			int sweap = m_spawnweapon(game::gamemode, game::mutators);
+			loopv(ents)
 			{
-				int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-				const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-				vec pos = e.o;
-				if(mdlname && *mdlname)
+				gameentity &e = *(gameentity *)ents[i];
+				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
+				bool active = enttype[e.type].usetype == EU_ITEM && e.spawned && !m_noitems(game::gamemode, game::mutators);
+				if(m_edit(game::gamemode) || active)
 				{
-					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-					float fade = 1, yaw = 0, pitch = 0;
-					if(!active)
+					int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+					const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+					vec pos = e.o;
+					if(mdlname && *mdlname)
 					{
-						fade = 0.5f;
-						if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attr[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attr[2]; }
-						else if(e.type == ACTOR) { yaw = e.attr[2]+90; pitch = e.attr[3]; }
+						int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
+						float fade = 1, yaw = 0, pitch = 0;
+						if(!active)
+						{
+							fade = 0.5f;
+							if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attr[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attr[2]; }
+							else if(e.type == ACTOR) { yaw = e.attr[2]+90; pitch = e.attr[3]; }
+						}
+						else
+						{
+							int millis = lastmillis-e.lastspawn;
+							if(millis < 1000) fade = float(millis)/1000.f;
+						}
+						rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
 					}
-					else
-					{
-						int millis = lastmillis-e.lastspawn;
-						if(millis < 1000) fade = float(millis)/1000.f;
-					}
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
 				}
 			}
 		}
