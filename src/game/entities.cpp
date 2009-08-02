@@ -1944,13 +1944,14 @@ namespace entities
 			{
 				int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
 				const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				vec pos = e.o;
 				if(mdlname && *mdlname)
 				{
 					int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
 					float fade = 1, yaw = 0, pitch = 0;
 					if(!active)
 					{
-						fade = 0.75f;
+						fade = 0.5f;
 						if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attr[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attr[2]; }
 						else if(e.type == ACTOR) { yaw = e.attr[2]+90; pitch = e.attr[3]; }
 					}
@@ -1959,7 +1960,7 @@ namespace entities
 						int millis = lastmillis-e.lastspawn;
 						if(millis < 1000) fade = float(millis)/1000.f;
 					}
-					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, e.o, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
+					rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
 				}
 			}
 		}

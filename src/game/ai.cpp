@@ -112,6 +112,8 @@ namespace ai
 		{
 			d->type = ENT_AI;
 			d->aientity = et;
+			d->maxspeed = aitype[d->aitype].maxspeed;
+			d->weight = aitype[d->aitype].weight;
 			d->xradius = aitype[d->aitype].xradius;
 			d->yradius = aitype[d->aitype].yradius;
 			d->zradius = d->height = aitype[d->aitype].height;
@@ -239,7 +241,7 @@ namespace ai
 
 	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
 	{
-		if(aitype[d->aitype].canmove)
+		if(aitype[d->aitype].maxspeed)
 		{
 			vec feet = d->feetpos();
 			if(walk == 2 || b.override || (walk && feet.squaredist(pos) <= guard*guard) || !makeroute(d, b, pos))
@@ -266,7 +268,7 @@ namespace ai
 	bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
 	{
 		bool hasenemy = enemy(d, b, pos, wander, false);
-		if(!aitype[d->aitype].canmove) { b.idle = hasenemy ? 2 : 1; return true; }
+		if(!aitype[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
 		{
 			if(!walk && d->feetpos().squaredist(pos) <= guard*guard)
 			{
@@ -282,7 +284,7 @@ namespace ai
 	{
 		if(targetable(d, e, true))
 		{
-			if(pursue && aitype[d->aitype].canmove) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(pursue && aitype[d->aitype].maxspeed) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -404,7 +406,7 @@ namespace ai
 					break;
 				default: break;
 			}
-			if(proceed && (!aitype[d->aitype].canmove || makeroute(d, b, n.node, false)))
+			if(proceed && (!aitype[d->aitype].maxspeed || makeroute(d, b, n.node, false)))
 			{
 				d->ai->addstate(n.state, n.targtype, n.target);
 				return true;
@@ -526,7 +528,7 @@ namespace ai
 
 	int dointerest(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE && aitype[d->aitype].canmove)
+		if(d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
 		{
 			int sweap = m_spawnweapon(game::gamemode, game::mutators);
 			switch(b.targtype)
@@ -598,7 +600,7 @@ namespace ai
 
 	int dopursue(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE && aitype[d->aitype].canmove)
+		if(d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
 		{
 			switch(b.targtype)
 			{
@@ -780,12 +782,12 @@ namespace ai
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
-		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2);
+		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2*aitype[d->aitype].frame);
 		vec dp = d->headpos();
 
 		bool wasdontmove = d->ai->dontmove;
 		d->ai->dontmove = false;
-		if(b.idle == 1 || (stupify && stupify <= skmod) || !aitype[d->aitype].canmove)
+		if(b.idle == 1 || (stupify && stupify <= skmod) || !aitype[d->aitype].maxspeed)
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
@@ -797,7 +799,7 @@ namespace ai
 		}
 		else d->ai->dontmove = true;
 
-		if(aitype[d->aitype].canmove)
+		if(aitype[d->aitype].maxspeed)
 		{
 			jumpto(d, b, d->ai->spot);
 			if(b.idle == 1 && b.type != AI_S_WAIT)
@@ -1019,7 +1021,7 @@ namespace ai
 		{
 			if(!request(d, b)) target(d, b, false, b.idle ? true : false);
 			weapons::shoot(d, d->ai->target);
-			if(d->ai->lasthunt && aitype[d->aitype].canmove)
+			if(d->ai->lasthunt && aitype[d->aitype].maxspeed)
 			{
 				int millis = lastmillis-d->ai->lasthunt;
 				if(millis < m_speedtime(2500)) d->ai->tryreset = false;
@@ -1220,7 +1222,7 @@ namespace ai
 				{
 					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
-					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aitype[d->aitype].canmove)
+					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aitype[d->aitype].maxspeed)
 						drawroute(d, b, 4.f*(float(amt[1])/float(amt[0])));
 					if(top)
 					{

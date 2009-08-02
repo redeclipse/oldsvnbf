@@ -458,7 +458,7 @@ namespace game
 			{
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && !noblood && weap != WEAP_PAINTGUN && !m_paint(gamemode, mutators))
+				if(!kidmode && !noblood && weap != WEAP_PAINTGUN && !m_paint(gamemode, mutators) && d->aitype != AI_TURRET)
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
@@ -496,7 +496,7 @@ namespace game
 			ai::damaged(d, actor);
 			if(d != actor && actor != game::player1) actor->lasthit = lastmillis;
 		}
-		if(d == player1 || (d->ai && aitype[d->aitype].canmove))
+		if(d == player1 || (d->ai && aitype[d->aitype].maxspeed))
 		{
 			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -1577,7 +1577,11 @@ namespace game
 			if(third) copystring(mdl, teamtype[team].tpmdl);
 			else copystring(mdl, teamtype[team].fpmdl);
 		}
-		else if(d->aitype < AI_MAX) copystring(mdl, aitype[d->aitype].mdl);
+		else if(d->aitype < AI_MAX) switch(d->aitype)
+		{
+			case AI_TURRET: copystring(mdl, teamtype[team].fpmdl); break;
+			default: copystring(mdl, aitype[d->aitype].mdl); break;
+		}
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? d->feetpos() : d->headpos());
@@ -1626,7 +1630,7 @@ namespace game
 		}
 		else
 		{
-			if(secondary && (d->aitype <= AI_BOT || aitype[d->aitype].canmove))
+			if(secondary && (d->aitype <= AI_BOT || aitype[d->aitype].maxspeed))
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1836,7 +1840,7 @@ namespace game
         if(rendernormally && (early || d != player1))
         {
         	const char *muzzle = "tag_muzzle";
-        	if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
+        	//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
         	a[ai++] = modelattach(muzzle, &d->muzzle);
         	if(third && d->type == ENT_PLAYER)
         	{

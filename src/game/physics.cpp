@@ -144,10 +144,10 @@ namespace physics
 			{
 				float speed = iscrouching(d) ? crawlspeed : movespeed;
 				if(impulselength > 0 && d->impulsing && d->impulsemillis < impulselength) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
-				return m_speedscale(d->maxspeed)*(d->weight/100.f)*(speed/100.f);
+				return m_speedscale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
 			}
 		}
-		return m_speedscale(d->maxspeed);
+		return m_speedscale(max(d->maxspeed,1.f));
 	}
 
 	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR; }
