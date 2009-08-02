@@ -731,7 +731,7 @@ namespace ai
 	bool weaprange(gameent *d, int weap, float dist)
 	{
 		if(weaptype[weap].extinguish && d->inliquid) return false;
-		float mindist = weaptype[weap].explode ? weaptype[weap].explode : 4, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
+		float mindist = weaptype[weap].explode ? weaptype[weap].explode : d->radius, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 

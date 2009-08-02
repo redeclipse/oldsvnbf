@@ -673,7 +673,7 @@ namespace ctf
 				}
 				else if(f.owner && ai::violence(d, b, f.owner, false)) return true;
 			}
-			int walk = 0;
+			int walk = f.owner && f.owner->team != d->team ? 1 : 0;
 			if(d->aitype == AI_BOT)
 			{
 				int regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
@@ -712,7 +712,7 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(enttype[FLAG].radius*2), float(enttype[FLAG].radius*(2+(walk*2))), walk);
+			return ai::defend(d, b, f.pos(), f.owner ? ai::NEARDIST : float(enttype[FLAG].radius*2), f.owner ? ai::FARDIST : float(enttype[FLAG].radius*(2+(walk*2))), walk);
 		}
 		return false;
 	}
