@@ -236,7 +236,7 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[b.target];
 			bool regen = d->aitype != AI_BOT || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-			int walk = 0;
+			int walk = !f.enemy && f.owner == d->team ? 1 : 0;
 			if(regen && (d->aitype == AI_TURRET || (!f.enemy && f.owner == d->team)))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
@@ -263,7 +263,7 @@ namespace stf
 				}
 				else walk = 1;
 			}
-			return ai::defend(d, b, f.o, float(enttype[FLAG].radius), float(enttype[FLAG].radius*(2+(walk*2))), walk);
+			return ai::defend(d, b, f.o, !f.enemy ? ai::CLOSEDIST : float(enttype[FLAG].radius), !f.enemy ? ai::FARDIST : float(enttype[FLAG].radius*(2+(walk*2))), walk);
 		}
 		return false;
 	}
