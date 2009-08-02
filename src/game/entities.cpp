@@ -565,130 +565,129 @@ namespace entities
 		return false;
 	}
 
+	gameent *trigger = NULL;
+	void runtrigger(int n, gameent *d, bool act = true)
+	{
+		gameentity &e = *(gameentity *)ents[n];
+		if(lastmillis-e.lastuse >= triggertime(e)/2)
+		{
+			e.lastuse = lastmillis;
+			switch(e.attr[1])
+			{
+				case TR_TOGGLE: case TR_LINK:
+				{ // wait for ack
+					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
+					break;
+				}
+				case TR_SCRIPT:
+				{
+					defformatstring(s)("on_trigger_%d", e.attr[0]);
+					trigger = d; RUNWORLD(s); trigger = NULL;
+					break;
+				}
+				default: break;
+			}
+			if(act && e.attr[2] == TA_ACTION) d->useaction = false;
+		}
+	}
+
+	void runtriggers(int n, gameent *d)
+	{
+		loopv(ents) if(ents[i]->type == TRIGGER && ents[i]->attr[0] == n && ents[i]->attr[2] == TA_MANUAL) runtrigger(i, d, false);
+	}
+	ICOMMAND(exectrigger, "i", (int *n), if(worldidents) runtriggers(*n, trigger ? trigger : game::player1));
+
 	void execitem(int n, gameent *d, bool &tried)
 	{
 		gameentity &e = *(gameentity *)ents[n];
 		switch(enttype[e.type].usetype)
 		{
-			case EU_ITEM:
+			case EU_ITEM: if(d->useaction && !m_noitems(game::gamemode, game::mutators))
 			{
-				if(d->useaction && !m_noitems(game::gamemode, game::mutators))
+				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 				{
-					if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
+					if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
 					{
-						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-						if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
-						{
-							client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
-							d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
-							d->useaction = false;
-						}
-						else tried = true;
+						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
+						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
+						d->useaction = false;
 					}
 					else tried = true;
 				}
-				break;
-			}
-			case EU_AUTO:
+				else tried = true;
+			} break;
+			case EU_AUTO: switch(e.type)
 			{
-				if(e.type != TRIGGER || ((e.attr[2] == TA_ACTION && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO))
+				case TELEPORT:
 				{
-					switch(e.type)
+					if(lastmillis-e.lastuse >= triggertime(e)/2)
 					{
-						case TELEPORT:
+						e.lastuse = e.lastemit = lastmillis;
+						static vector<int> teleports;
+						teleports.setsize(0);
+						loopv(e.links)
+							if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
+								teleports.add(e.links[i]);
+						if(!teleports.empty())
 						{
-							if(lastmillis-e.lastuse >= triggertime(e)/2)
+							bool teleported = false;
+							while(!teleports.empty())
 							{
-								e.lastuse = e.lastemit = lastmillis;
-								static vector<int> teleports;
-								teleports.setsize(0);
-								loopv(e.links)
-									if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
-										teleports.add(e.links[i]);
-								if(!teleports.empty())
+								int r = e.type == TELEPORT ? rnd(teleports.length()) : 0;
+								gameentity &f = *(gameentity *)ents[teleports[r]];
+								d->timeinair = 0;
+								d->falling = vec(0, 0, 0);
+								d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
+								d->yaw = f.attr[0] < 0 ? (lastmillis/5)%360 : f.attr[0];
+								d->pitch = f.attr[1];
+								if(physics::entinmap(d, true))
 								{
-									bool teleported = false;
-									while(!teleports.empty())
-									{
-										int r = e.type == TELEPORT ? rnd(teleports.length()) : 0;
-										gameentity &f = *(gameentity *)ents[teleports[r]];
-										d->timeinair = 0;
-										d->falling = vec(0, 0, 0);
-										d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
-										d->yaw = f.attr[0] < 0 ? (lastmillis/5)%360 : f.attr[0];
-										d->pitch = f.attr[1];
-										if(physics::entinmap(d, true))
-										{
-											float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
-											vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
-											d->vel.mul(mag);
-											game::fixfullrange(d->yaw, d->pitch, d->roll, true);
-											f.lastuse = f.lastemit = e.lastemit;
-											execlink(d, n, true); execlink(d, teleports[r], true);
-											if(d == game::player1) game::resetcamera();
-											teleported = true;
-											break;
-										}
-										teleports.remove(r); // must've really sucked, try another one
-									}
-									if(!teleported) game::suicide(d, HIT_SPAWN);
+									float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
+									vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
+									d->vel.mul(mag);
+									game::fixfullrange(d->yaw, d->pitch, d->roll, true);
+									f.lastuse = f.lastemit = e.lastemit;
+									execlink(d, n, true); execlink(d, teleports[r], true);
+									if(d == game::player1) game::resetcamera();
+									teleported = true;
+									break;
 								}
+								teleports.remove(r); // must've really sucked, try another one
 							}
-							break;
-						}
-						case PUSHER:
-						{
-							float mag = m_speedscale(10.f);
-							if(e.attr[4] && e.attr[4] < e.attr[3])
-							{
-								vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
-								float dist = m.dist(e.o);
-								if(dist >= e.attr[4]) mag *= 1.f-clamp((dist-e.attr[4])/float(e.attr[3]-e.attr[4]), 0.f, 1.f);
-							}
-							vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(mag);
-							if(d->ai) d->ai->becareful = true;
-							d->falling = vec(0, 0, 0);
-							d->physstate = PHYS_FALL;
-							if(!d->timeinair) d->timeinair = 1;
-							loopk(3)
-							{
-								if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
-									d->vel.v[k] = dir.v[k];
-							}
-							e.lastuse = e.lastemit = lastmillis; execlink(d, n, true);
-							break;
-						}
-						case TRIGGER:
-						{
-							if(lastmillis-e.lastuse >= triggertime(e)/2)
-							{
-								e.lastuse = lastmillis;
-								switch(e.attr[1])
-								{
-									case TR_TOGGLE: case TR_LINK:
-									{ // wait for ack
-										client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
-										break;
-									}
-									case TR_SCRIPT:
-									{
-										if(d == game::player1)
-										{
-											defformatstring(s)("on_trigger_%d", e.attr[0]);
-											RUNWORLD(s);
-										}
-										break;
-									}
-									default: break;
-								}
-								if(e.attr[2] == TA_ACTION) d->useaction = false;
-							}
-							break;
+							if(!teleported) game::suicide(d, HIT_SPAWN);
 						}
 					}
+					break;
 				}
-				break;
-			}
+				case PUSHER:
+				{
+					float mag = m_speedscale(10.f);
+					if(e.attr[4] && e.attr[4] < e.attr[3])
+					{
+						vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
+						float dist = m.dist(e.o);
+						if(dist >= e.attr[4]) mag *= 1.f-clamp((dist-e.attr[4])/float(e.attr[3]-e.attr[4]), 0.f, 1.f);
+					}
+					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(mag);
+					if(d->ai) d->ai->becareful = true;
+					d->falling = vec(0, 0, 0);
+					d->physstate = PHYS_FALL;
+					if(!d->timeinair) d->timeinair = 1;
+					loopk(3)
+					{
+						if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
+							d->vel.v[k] = dir.v[k];
+					}
+					e.lastuse = e.lastemit = lastmillis; execlink(d, n, true);
+					break;
+				}
+				case TRIGGER:
+				{
+					if((e.attr[2] == TA_ACTION && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO) runtrigger(n, d);
+					break;
+				}
+			} break;
 		}
 	}
 

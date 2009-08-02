@@ -286,7 +286,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define ISVARFW(n, c, b) _ISVAR(n, c, void changed() { b; }, IDF_WORLD|IDF_COMPLETE)
 
 // game world controlling stuff
-#define RUNWORLD(n) { ident *wid = idents->access(n); if(wid && wid->action && wid->flags&IDF_WORLD) { execute(wid->action); }; }
+#define RUNWORLD(n) { ident *wid = idents->access(n); if(wid && wid->action && wid->flags&IDF_WORLD) { bool _oldworldidents = worldidents; worldidents = true; execute(wid->action); worldidents = _oldworldidents; }; }
 #if defined(GAMEWORLD)
 #define ICOMMANDG(n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
 #define ICOMMANDNG(n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b, IDF_CLIENT|IDF_COMPLETE)
