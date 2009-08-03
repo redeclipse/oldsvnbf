@@ -420,6 +420,7 @@ float rayfloor(const vec &o, vec &floor, int mode, float radius)
 // info about collisions
 bool inside; // whether an internal collision happened
 physent *hitplayer; // whether the collection hit a player
+int hitflags = HITFLAG_NONE;
 vec wall; // just the normal vectors.
 float walldistance;
 
@@ -835,6 +836,7 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol)
 {
 	inside = false;
 	hitplayer = NULL;
+	hitflags = HITFLAG_NONE;
 	wall.x = wall.y = wall.z = 0;
 	ivec bo(int(d->o.x-d->radius), int(d->o.y-d->radius), int(d->o.z-d->height)),
 		 bs(int(d->radius)*2, int(d->radius)*2, int(d->height+d->aboveeye));
@@ -848,7 +850,7 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
     vec to = vec(ray).mul(maxdist).add(from);
     float x1 = floor(min(from.x, to.x)), y1 = floor(min(from.y, to.y)),
           x2 = ceil(max(from.x, to.x)), y2 = ceil(max(from.y, to.y));
-    float bestdist = 1e16f;
+    float bestdist = 1e16f; int bestflags = HITFLAG_NONE;
     loopdynentcachebb(x, y, x1, y1, x2, y2)
     {
         const vector<physent *> &dynents = checkdynentcache(x, y);
@@ -856,15 +858,15 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
         {
             physent *o = dynents[i];
             if(!physics::issolid(o)) continue;
-            float dist;
+            float dist = 1e16f;
             if(!physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
             {
                 bestdist = dist;
-                if(dist <= maxdist) hitplayer = o;
+                if(dist <= maxdist) { hitplayer = o; bestflags = hitflags; }
             }
         }
     }
-    if(hitplayer) { float dist = 1e16f; physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, hitplayer); }
+    hitflags = bestflags;
     return bestdist <= maxdist ? bestdist : -1;
 }
 
@@ -872,6 +874,7 @@ float tracecollide(const vec &o, const vec &ray, float maxdist, int mode, bool p
 {
     hitsurface = vec(0, 0, 0);
     hitplayer = NULL;
+    hitflags = HITFLAG_NONE;
     float dist = raycube(o, ray, maxdist+1e-3f, mode);
     if(playercol)
     {
