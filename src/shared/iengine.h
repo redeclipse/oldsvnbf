@@ -510,8 +510,11 @@ extern ENetHost *serverhost;
 
 extern bool inside;
 extern physent *hitplayer;
+extern int hitflags;
 extern vec wall, hitsurface;
 extern float walldistance;
+
+enum { HITFLAG_NONE = 0, HITFLAG_LEGS = 1<<0, HITFLAG_TORSO = 1<<1, HITFLAG_HEAD = 1<<2, HITFLAG_FULL = 1<<4 };
 
 enum
 {

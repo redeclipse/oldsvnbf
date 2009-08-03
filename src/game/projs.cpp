@@ -37,9 +37,9 @@ namespace projs
 	void hitproj(gameent *d, projent &proj)
 	{
 		int flags = 0;
-		if(proj.hitflags&physics::HITFLAG_LEGS) flags |= HIT_LEGS;
-		if(proj.hitflags&physics::HITFLAG_TORSO) flags |= HIT_TORSO;
-		if(proj.hitflags&physics::HITFLAG_HEAD) flags |= HIT_HEAD;
+		if(proj.hitflags&HITFLAG_LEGS) flags |= HIT_LEGS;
+		if(proj.hitflags&HITFLAG_TORSO) flags |= HIT_TORSO;
+		if(proj.hitflags&HITFLAG_HEAD) flags |= HIT_HEAD;
 		if(flags) hitpush(d, proj, flags|HIT_PROJ);
 	}
 
@@ -287,7 +287,7 @@ namespace projs
 			loopi(maxsteps)
 			{
 				proj.hit = NULL;
-				proj.hitflags = physics::HITFLAG_NONE;
+				proj.hitflags = HITFLAG_NONE;
 				float olddist = dist;
 				if(dist < barrier && dist + step > barrier) dist = barrier;
 				else dist += step;
@@ -308,7 +308,7 @@ namespace projs
 					if(hitplayer)
 					{
 						proj.hit = hitplayer;
-						proj.hitflags = physics::hitflags;
+						proj.hitflags = hitflags;
 						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 					}
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
@@ -807,7 +807,7 @@ namespace projs
 	int bounce(projent &proj, const vec &dir)
 	{
 		proj.hit = NULL;
-		proj.hitflags = physics::HITFLAG_NONE;
+		proj.hitflags = HITFLAG_NONE;
 		if(!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside)
 		{
 			if(hitplayer)
@@ -815,7 +815,7 @@ namespace projs
 				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
 				{
 					proj.hit = hitplayer;
-					proj.hitflags = physics::hitflags;
+					proj.hitflags = hitflags;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
 				}
 				else return 1;
@@ -838,7 +838,7 @@ namespace projs
     int trace(projent &proj, const vec &dir)
     {
         proj.hit = NULL;
-        proj.hitflags = physics::HITFLAG_NONE;
+        proj.hitflags = HITFLAG_NONE;
         vec to(proj.o), ray = dir;
         to.add(dir);
         float maxdist = ray.magnitude();
@@ -853,7 +853,7 @@ namespace projs
             	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
             	{
 					proj.hit = hitplayer;
-					proj.hitflags = physics::hitflags;
+					proj.hitflags = hitflags;
 					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
             	}
             	else return 1;

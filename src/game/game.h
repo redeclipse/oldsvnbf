@@ -1101,7 +1101,7 @@ struct projent : dynent
 	physent *hit;
 	const char *mdl;
 
-	projent() : norm(0, 0, 1), projtype(PRJ_SHOT), id(-1), hitflags(physics::HITFLAG_NONE), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
+	projent() : norm(0, 0, 1), projtype(PRJ_SHOT), id(-1), hitflags(HITFLAG_NONE), owner(NULL), hit(NULL), mdl(NULL) { reset(); }
 	~projent()
 	{
 		removetrackedparticles(this);

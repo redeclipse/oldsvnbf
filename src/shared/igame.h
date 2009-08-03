@@ -55,8 +55,7 @@ namespace hud
 
 namespace physics
 {
-	enum { HITFLAG_NONE = 0, HITFLAG_LEGS = 1, HITFLAG_TORSO = 2, HITFLAG_HEAD = 4 };
-	extern int physsteps, physframetime, physinterp, hitflags;
+	extern int physsteps, physframetime, physinterp;
 	extern float gravity, jumpvel, movespeed, floatspeed, stairheight, floorz, slopez, wallz, stepspeed, liquidfric, liquidscale, sinkfric, floorfric, airfric;
 	extern float liquidmerge(physent *d, float from, float to);
 	extern bool liquidcheck(physent *d);

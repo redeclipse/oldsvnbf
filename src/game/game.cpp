@@ -81,7 +81,7 @@ namespace game
 	VARP(showstatusabovehead, 0, 2, 2);
 	FVARP(statusaboveheadblend, 0.f, 0.75f, 1.f);
 	VARP(showteamabovehead, 0, 1, 3);
-	VARP(showdamageabovehead, 0, 0, 2);
+	VARP(showdamageabovehead, 0, 0, 3);
 	FVAR(aboveheadsmooth, 0, 0.5f, 1);
 	VAR(aboveheadsmoothmillis, 1, 200, 10000);
 	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
@@ -462,7 +462,9 @@ namespace game
 					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
-					defformatstring(ds)("@%d", damage);
+					string ds;
+					if(showdamageabovehead > 2) formatstring(ds)("@-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
+					else formatstring(ds)("@-%d", damage);
 					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
