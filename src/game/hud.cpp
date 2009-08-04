@@ -653,7 +653,7 @@ namespace hud
 					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
 						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1);
-						if(shownotices >= 2)
+						if(m_fight(game::gamemode) && shownotices >= 2)
 						{
 							pushfont("emphasis");
 							ty += draw_textx("You are on team \fs%s%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);

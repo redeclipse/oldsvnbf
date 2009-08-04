@@ -384,12 +384,14 @@ namespace ai
 
 	bool find(gameent *d, aistate &b)
 	{
-		static vector<interest> interests;
-		interests.setsizenodelete(0);
-		if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
-			items(d, b, interests);
-		if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
-		if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
+		static vector<interest> interests; interests.setsizenodelete(0);
+		if(m_fight(game::gamemode))
+		{ // don't let bots consume items in story mode (yet?)
+			if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
+				items(d, b, interests);
+			if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
+			if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
+		}
 		if(d->aitype == AI_BOT && m_team(game::gamemode, game::mutators)) assist(d, b, interests);
 		while(!interests.empty())
 		{
@@ -399,7 +401,7 @@ namespace ai
 			bool proceed = true;
 			static vector<int> targets;
 			targets.setsizenodelete(0);
-			if(d->aitype == AI_BOT) switch(n.state)
+			if(m_fight(game::gamemode) && d->aitype == AI_BOT) switch(n.state)
 			{
 				case AI_S_DEFEND: // don't get into herds
 					proceed = !checkothers(targets, d, n.state, n.targtype, n.target, true);
@@ -801,7 +803,7 @@ namespace ai
 
 		if(aitype[d->aitype].maxspeed)
 		{
-			jumpto(d, b, d->ai->spot);
+			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(b.idle == 1 && b.type != AI_S_WAIT)
 			{
 				bool wascrouching = lastmillis-d->crouchtime <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->crouching;
