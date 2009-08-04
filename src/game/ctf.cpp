@@ -242,7 +242,7 @@ namespace ctf
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !chkflagmode(game::gamemode, game::mutators, a->attr[3]) || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) \
+			if(a->type != FLAG || !chkmode(game::gamemode, a->attr[3]) || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) \
 				continue; \
 			else \
 			{ \

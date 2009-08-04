@@ -102,7 +102,7 @@ enttypes enttype[] = {
 			0,
 			0,
 			false,				"playerstart",
-			{ "team",	"yaw",		"pitch",		"id",	"" }
+			{ "team",	"yaw",		"pitch",		"mode",	"id" }
 	},
 	{
 		ENVMAP,			0,		0,		EU_NONE,
@@ -172,7 +172,7 @@ enttypes enttype[] = {
 			inttobit(FLAG),
 			0,
 			false,				"flag",
-			{ "team",	"yaw",		"pitch",	"mode",		"" }
+			{ "team",	"yaw",		"pitch",	"mode",		"id" }
 	},
 	{
 		CHECKPOINT,		48,		16,		EU_NONE,
@@ -477,7 +477,7 @@ extern gametypes gametype[], mutstype[];
 #define weapattr(a,b)		(a != b ? a : (b != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
 
 enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMODE_STFMULTICTF, FLAGMODE_NONMULTICTF, FLAGMODE_MAX };
-#define chkflagmode(a,b,c)	(!c || (c == FLAGMODE_STF && m_stf(a)) || (c == FLAGMODE_CTF && m_ctf(a)) || (c == FLAGMODE_MULTICTF && m_ctf(a) && m_multi(a,b)) || (c == FLAGMODE_STFMULTICTF && (m_stf(a) || (m_ctf(a) && m_multi(a,b)))) || (c == FLAGMODE_NONMULTICTF && m_ctf(a) && !m_multi(a,b)))
+#define chkmode(a,b)		(!a || !b || a == b)
 
 // network messages codes, c2s, c2c, s2c
 enum

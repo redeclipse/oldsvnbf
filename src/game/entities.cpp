@@ -44,15 +44,7 @@ namespace entities
 				defformatstring(str)("%s", teamtype[attr1].name);
 				addentinfo(str);
 			}
-			switch(attr4)
-			{
-				case FLAGMODE_NONE: default: break;
-				case FLAGMODE_STF: addentinfo("stf"); break;
-				case FLAGMODE_CTF: addentinfo("ctf"); break;
-				case FLAGMODE_MULTICTF: addentinfo("multi-ctf"); break;
-				case FLAGMODE_STFMULTICTF: addentinfo("stf or multi-ctf"); break;
-				case FLAGMODE_NONMULTICTF: addentinfo("non-multi-ctf"); break;
-			}
+			if(attr4 > G_DEMO && attr4 < G_MAX) addentinfo(gametype[attr4].name);
 		}
 		else if(type == ACTOR)
 		{
@@ -897,6 +889,8 @@ namespace entities
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < -90) e.attr[2] += 180;
 				while(e.attr[2] > 90) e.attr[2] -= 180;
+				while(e.attr[3] < 0) e.attr[3] += G_MAX;
+				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX;
 				break;
 			case ACTOR:
 				while(e.attr[0] < 0) e.attr[0] += AI_MAX;
@@ -915,8 +909,8 @@ namespace entities
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < -90) e.attr[2] += 180;
 				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] < 0) e.attr[3] += FLAGMODE_MAX;
-				while(e.attr[3] >= FLAGMODE_MAX) e.attr[3] -= FLAGMODE_MAX;
+				while(e.attr[3] < 0) e.attr[3] += G_MAX;
+				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < -1) e.attr[0] += 361;

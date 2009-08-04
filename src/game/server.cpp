@@ -799,14 +799,14 @@ namespace server
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
-			loop(q, 2)
+			loop(q, 2) loop(r, 2)
 			{
-				if(!q && triggerid < 0) continue;
+				if((!q && triggerid < 0) || (!r && m_edit(gamemode))) continue;
 				if(m_fight(gamemode) && m_team(gamemode, mutators))
 				{
 					loopk(3)
 					{
-						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[3] == triggerid))
+						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
 						{
 							if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
 							else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
@@ -829,7 +829,7 @@ namespace server
 				}
 				else
 				{ // use all neutral spawns
-					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[3] == triggerid))
+					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
 					{
 						spawns[TEAM_NEUTRAL].add(i);
 						totalspawns++;
@@ -837,7 +837,7 @@ namespace server
 					if(totalspawns) break;
 				}
 				// use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[3] == triggerid))
+				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
