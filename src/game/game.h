@@ -102,7 +102,7 @@ enttypes enttype[] = {
 			0,
 			0,
 			false,				"playerstart",
-			{ "team",	"yaw",		"pitch",		"",			"" }
+			{ "team",	"yaw",		"pitch",		"id",	"" }
 	},
 	{
 		ENVMAP,			0,		0,		EU_NONE,
@@ -391,7 +391,7 @@ enum
 	G_DEMO = 0,
 	G_LOBBY,
 	G_EDITMODE,
-	G_MISSION,
+	G_STORY,
 	G_DEATHMATCH,
 	G_STF,
 	G_CTF,
@@ -424,7 +424,7 @@ gametypes gametype[] = {
 	{ G_DEMO,			G_M_NONE,				G_M_NONE,				"demo" },
 	{ G_LOBBY,			G_M_NONE,				G_M_NONE,				"lobby" },
 	{ G_EDITMODE,		G_M_NONE,				G_M_NONE,				"editing" },
-	{ G_MISSION,		G_M_NONE,				G_M_NONE,				"mission" },
+	{ G_STORY,			G_M_TEAM,				G_M_TEAM,				"story" },
 	{ G_DEATHMATCH,		G_M_ALL,				G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_TEAMS,				G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_TEAMS,				G_M_TEAM,				"capture-the-flag" },
@@ -445,12 +445,12 @@ extern gametypes gametype[], mutstype[];
 #define m_demo(a)			(a == G_DEMO)
 #define m_lobby(a)			(a == G_LOBBY)
 #define m_edit(a)			(a == G_EDITMODE)
-#define m_mission(a)		(a == G_MISSION)
+#define m_story(a)			(a == G_STORY)
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
 
-#define m_play(a)			(a >= G_MISSION)
+#define m_play(a)			(a >= G_STORY)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
 #define m_fight(a)			(a >= G_DEATHMATCH)
 

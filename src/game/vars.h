@@ -4,7 +4,7 @@ SVARG(defaultmap, "");
 VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
-SVARG(missionmaps, "mpspbf1 mpspbf2");
+SVARG(storymaps, "wishbone");
 SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar eight enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
 SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground venus");
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge");
@@ -17,6 +17,7 @@ VARG(spawnprotecttime, 0, 3, INT_MAX-1);
 VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, lms)
 VARG(instaspawnweapon, 0, WEAP_RIFLE, WEAP_TOTAL-1);
 FVARG(instaspawndelay, 0, 2, 1000); // .. in instagib matches
+VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 200, INT_MAX-1);

@@ -194,7 +194,21 @@ namespace aiman
 				if(numbots >= GVAR(botlimit)) shiftai(ci, -1);
 			}
 		}
-		if(m_fight(gamemode))
+		if(m_story(gamemode))
+		{
+			loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && sents[i].attr[1] == TEAM_ENEMY)
+			{
+				bool needent = true;
+				loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
+				if(needent) addai(sents[i].attr[0], i, -1, false);
+			}
+			if(!autooverride) // story mode strictly obeys nplayers
+			{
+				while(numclients(-1, true, AI_BOT) < nplayers) if(!addai(AI_BOT, -1, -1)) break;
+				while(numclients(-1, true, AI_BOT) > nplayers) if(!delai(AI_BOT)) break;
+			}
+		}
+		else if(m_fight(gamemode))
 		{
 			loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && aitype[sents[i].attr[0]].canfight && isteam(gamemode, mutators, sents[i].attr[1], TEAM_NEUTRAL))
 			{

@@ -590,7 +590,7 @@ namespace server
 		if(rotate)
 		{
 			const char *maplist = GVAR(mainmaps);
-			if(m_mission(gamemode)) maplist = GVAR(missionmaps);
+			if(m_story(gamemode)) maplist = GVAR(storymaps);
 			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 			if(maplist && *maplist)
@@ -734,16 +734,19 @@ namespace server
 			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] < TRIGGERIDS)
 				triggers[sents[i].attr[0]].ents.add(i);
 			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i].ents.empty()) valid.add(triggers[i].id);
-			triggerid = !valid.empty() ? valid[rnd(valid.length())] : -1;
-			loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents) if(sents[triggers[i].ents[k]].attr[4]%2)
+			if(!valid.empty())
 			{
-				sents[triggers[i].ents[k]].spawned = true;
-				sents[triggers[i].ents[k]].millis = gamemillis;
-				sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1);
-				loopvj(sents[i].kin) if(sents.inrange(sents[triggers[i].ents[k]].kin[j]))
+				triggerid = valid[rnd(valid.length())];
+				loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents) if(sents[triggers[i].ents[k]].attr[4]%2)
 				{
-					sents[sents[triggers[i].ents[k]].kin[j]].spawned = sents[triggers[i].ents[k]].spawned;
-					sents[sents[triggers[i].ents[k]].kin[j]].millis = sents[triggers[i].ents[k]].millis;
+					sents[triggers[i].ents[k]].spawned = true;
+					sents[triggers[i].ents[k]].millis = gamemillis;
+					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1);
+					loopvj(sents[i].kin) if(sents.inrange(sents[triggers[i].ents[k]].kin[j]))
+					{
+						sents[sents[triggers[i].ents[k]].kin[j]].spawned = sents[triggers[i].ents[k]].spawned;
+						sents[sents[triggers[i].ents[k]].kin[j]].millis = sents[triggers[i].ents[k]].millis;
+					}
 				}
 			}
 		}
@@ -796,61 +799,63 @@ namespace server
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
-			if(m_team(gamemode, mutators))
+			loop(q, 2)
 			{
-				loopk(3)
+				if(!q && triggerid < 0) continue;
+				if(m_fight(gamemode) && m_team(gamemode, mutators))
 				{
-					loopv(sents) if(sents[i].type == PLAYERSTART)
+					loopk(3)
 					{
-						if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
-						else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
-						else if(k == 2 && sents[i].attr[0] != TEAM_NEUTRAL) continue;
-						spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
-						totalspawns++;
-					}
-					if(!k && teamgame)
-					{
-						loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
+						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[3] == triggerid))
 						{
-							loopj(TEAM_LAST+1) spawns[j].reset();
-							totalspawns = 0;
-							break;
+							if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
+							else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
+							else if(k == 2 && sents[i].attr[0] != TEAM_NEUTRAL) continue;
+							spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
+							totalspawns++;
 						}
-						cplayers = totalspawns;
+						if(!k && teamgame)
+						{
+							loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
+							{
+								loopj(TEAM_LAST+1) spawns[j].reset();
+								totalspawns = 0;
+								break;
+							}
+						}
+						if(totalspawns) break;
 					}
-					else cplayers = totalspawns;
 					if(totalspawns) break;
 				}
+				else
+				{ // use all neutral spawns
+					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[3] == triggerid))
+					{
+						spawns[TEAM_NEUTRAL].add(i);
+						totalspawns++;
+					}
+					if(totalspawns) break;
+				}
+				// use all spawns
+				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[3] == triggerid))
+				{
+					spawns[TEAM_NEUTRAL].add(i);
+					totalspawns++;
+				}
+				if(totalspawns) break;
 			}
+			if(totalspawns) cplayers = totalspawns/2;
 			else
-			{ // use all neutral spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL)
-				{
-					spawns[TEAM_NEUTRAL].add(i);
-					totalspawns++;
-				}
-				cplayers = totalspawns;
-			}
-			if(!totalspawns)
-			{ // use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART)
-				{
-					spawns[TEAM_NEUTRAL].add(i);
-					totalspawns++;
-				}
-				cplayers = totalspawns;
-			}
-			if(!totalspawns)
 			{ // we can cheat and use weapons for spawns
 				loopv(sents) if(sents[i].type == WEAPON)
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
-				cplayers = totalspawns/2;
+				cplayers = totalspawns/3;
 			}
 			nplayers = players > 0 ? players : cplayers;
-			if(m_team(gamemode, mutators))
+			if(m_fight(gamemode) && m_team(gamemode, mutators))
 			{
 				int offt = nplayers%numt;
 				if(offt) nplayers += numt-offt;
@@ -863,7 +868,7 @@ namespace server
 		if(ci->state.aitype >= AI_START) return ci->state.aientity;
 		else if(totalspawns && GVAR(spawnrotate))
 		{
-			int team = m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+			int team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 			if(!spawns[team].ents.empty())
 			{
 				switch(GVAR(spawnrotate))
@@ -881,6 +886,19 @@ namespace server
 			}
 		}
 		return -1;
+	}
+
+	void setupgameinfo(int np)
+	{
+		loopvk(clients)
+		{
+			clientinfo *cp = clients[k];
+			cp->state.dropped.reset();
+			cp->state.weapreset(false);
+		}
+		setuptriggers(true);
+		setupspawns(true, m_story(gamemode) ? GVAR(storyplayers) : np);
+		hasgameinfo = aiman::dorefresh = true;
 	}
 
 	void sendspawn(clientinfo *ci)
@@ -1235,7 +1253,7 @@ namespace server
 			case 1: case 2: case 3:
 			{
 				const char *maplist = GVAR(mainmaps);
-				if(m_mission(gamemode)) maplist = GVAR(missionmaps);
+				if(m_story(gamemode)) maplist = GVAR(storymaps);
 				else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 				else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 				if(maplist && *maplist)
@@ -1320,7 +1338,7 @@ namespace server
 
 	int chooseteam(clientinfo *ci, int suggest = -1)
 	{
-		if(m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
+		if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[1]) return sents[ci->state.aientity].attr[1];
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
@@ -2025,7 +2043,11 @@ namespace server
 		if(actor == target && !GVAR(selfdamage)) nodamage++;
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
-			switch(GVAR(teamdamage))
+			if(m_story(gamemode))
+			{
+				if(target->team == TEAM_NEUTRAL) nodamage++;
+			}
+			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
 				case 1: if(actor->state.aitype < 0) break;
@@ -3222,7 +3244,7 @@ namespace server
 						if(t == cp || t->state.aitype >= 0 || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(!m_team(gamemode, mutators) || !(flags&SAY_TEAM))
+					if(!m_fight(gamemode) || !m_team(gamemode, mutators) || !(flags&SAY_TEAM))
 					{
 						if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
 						else relayf(0, "\fd<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
@@ -3300,18 +3322,7 @@ namespace server
 						}
 						else loopk(kin) getint(p);
 					}
-					if(!hasgameinfo)
-					{
-						loopvk(clients)
-						{
-							clientinfo *cp = clients[k];
-							cp->state.dropped.reset();
-							cp->state.weapreset(false);
-						}
-						setuptriggers(true);
-						setupspawns(true, np);
-						hasgameinfo = aiman::dorefresh = true;
-					}
+					if(!hasgameinfo) setupgameinfo(np);
 					break;
 				}
 
@@ -3461,7 +3472,7 @@ namespace server
 					int who = getint(p), team = getint(p);
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, "change the team of others")) break;
 					clientinfo *cp = (clientinfo *)getinfo(who);
-					if(!cp || !m_team(gamemode, mutators)) break;
+					if(!cp || !m_team(gamemode, mutators) || !m_fight(gamemode)) break;
 					if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
 					setteam(cp, team, true, true);
 					break;

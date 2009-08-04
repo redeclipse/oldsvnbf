@@ -62,8 +62,8 @@ namespace hud
 				scoreson = on;
 				if(interm)
 				{
-					if(m_mission(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, "\fwmission complete!");
-					else
+					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, "\fwchapter complete!");
+					else if(m_fight(game::gamemode))
 					{
 						if(!groupplayers()) return;
 						scoregroup &sg = *groups[0];
@@ -173,7 +173,7 @@ namespace hud
 				gameent *o = (gameent *)game::iterdynents(i);
 				if(!o || o->type!=ENT_PLAYER || (!showconnecting() && !o->name[0])) continue;
 				if(o->state==CS_SPECTATOR) { spectators.add(o); continue; }
-				int team = m_team(game::gamemode, game::mutators) ? o->team : TEAM_NEUTRAL;
+				int team = m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) ? o->team : TEAM_NEUTRAL;
 				bool found = false;
 				loopj(numgroups)
 				{
@@ -228,7 +228,7 @@ namespace hud
 					game::player1->deaths, "death", ratio);
 				g.textf("damage: \fs\fg%d\fS hp, wasted: \fs\fg%d\fS, accuracy: \fs\fg%.1f%%\fS", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
 
-				if(m_mission(game::gamemode))
+				if(m_story(game::gamemode))
 				{
 					int pen, score = 0;
 
@@ -263,7 +263,7 @@ namespace hud
 				if((k%2)==0) g.pushlist(); // horizontal
 
 				scoregroup &sg = *groups[k];
-				int bgcolor = sg.team && m_team(game::gamemode, game::mutators) ? teamtype[sg.team].colour : 0,
+				int bgcolor = sg.team && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) ? teamtype[sg.team].colour : 0,
 					fgcolor = 0xFFFFFF;
 
 				g.pushlist(); // vertical
@@ -277,7 +277,7 @@ namespace hud
 					}
 
 				g.pushlist();
-				if(sg.team && m_team(game::gamemode, game::mutators))
+				if(sg.team && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					g.pushlist();
 					g.background(bgcolor, numgroups>1 ? 3 : 5);
@@ -298,7 +298,7 @@ namespace hud
 				});
 				g.poplist();
 
-				if(sg.team && m_team(game::gamemode, game::mutators))
+				if(sg.team && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					g.pushlist(); // vertical
 					if(m_stf(game::gamemode) && stflimit && sg.score >= stflimit) g.textf("%s: WIN", fgcolor, NULL, teamtype[sg.team].name);
@@ -393,7 +393,7 @@ namespace hud
 					g.poplist();
 				}
 
-				if(sg.team && m_team(game::gamemode, game::mutators))
+				if(sg.team && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					g.poplist(); // horizontal
 					g.poplist(); // vertical
@@ -451,6 +451,7 @@ namespace hud
 
 		int drawinventory(int x, int y, int s, float blend)
 		{
+			if(!m_fight(game::gamemode)) return 0;
 			int sy = 0, numgroups = groupplayers(), numout = 0;
 			loopi(2) loopk(numgroups)
 			{

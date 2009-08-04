@@ -294,7 +294,7 @@ namespace game
 		}
 		else conoutf("\fronly available in arena");
 	}
-	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(game::player1, s));
+	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(player1, s));
 
 	void respawn(gameent *d)
 	{
@@ -496,7 +496,7 @@ namespace game
 				}
 			}
 			ai::damaged(d, actor);
-			if(d != actor && actor != game::player1) actor->lasthit = lastmillis;
+			if(d != actor && actor != player1) actor->lasthit = lastmillis;
 		}
 		if(d == player1 || (d->ai && aitype[d->aitype].maxspeed))
 		{
@@ -795,7 +795,7 @@ namespace game
 
     void preload()
     {
-    	int n = m_team(gamemode, mutators) ? numteams(gamemode, mutators)+1 : 1;
+    	int n = m_fight(gamemode) && m_team(gamemode, mutators) ? numteams(gamemode, mutators)+1 : 1;
     	loopi(n)
     	{
 			loadmodel(teamtype[i].tpmdl, -1, true);
@@ -1313,10 +1313,10 @@ namespace game
 			}
 		}
 
-       	if(!*game::player1->name && !guiactive()) showgui("name");
+       	if(!*player1->name && !guiactive()) showgui("name");
         if(connected())
         {
-        	game::player1->conopen = commandmillis > 0 || UI::hascursor(true);
+        	player1->conopen = commandmillis > 0 || UI::hascursor(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
@@ -1524,11 +1524,11 @@ namespace game
 			}
 			else total = 0.f;
 		}
-		if(d == player1 && game::inzoom())
+		if(d == player1 && inzoom())
 		{
-			int frame = lastmillis-game::lastzoom;
-			float pc = frame < game::zoominterval() ? float(frame)/float(game::zoominterval()) : 1.f;
-			if(!game::zooming) pc = 1.f-pc;
+			int frame = lastmillis-lastzoom;
+			float pc = frame < zoominterval() ? float(frame)/float(zoominterval()) : 1.f;
+			if(!zooming) pc = 1.f-pc;
 			total *= 1.f-pc;
 		}
 		return total;
@@ -1694,7 +1694,7 @@ namespace game
 #endif
 
         modelattach a[8];
-		int ai = 0, team = m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
+		int ai = 0, team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aitype[d->aitype].useweap;
 
@@ -1726,7 +1726,7 @@ namespace game
 			lastaction = lastmillis;
 			animflags = ANIM_LOSE|ANIM_LOOP;
 			animdelay = 1000;
-			if(m_team(gamemode, mutators))
+			if(m_fight(gamemode) && m_team(gamemode, mutators))
 			{
 				loopv(bestteams) if(bestteams[i] == d->team)
 				{
@@ -1820,7 +1820,7 @@ namespace game
 				else if(d->state == CS_ALIVE)
 				{
 					if(d->conopen) t = textureload(conopentex, 3);
-					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != game::player1->team ? 1 : 0) : 2))
+					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != player1->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
 					else if(d->dominating) t = textureload(dominatingtex, 3);
 					else if(d->dominated) t = textureload(dominatedtex, 3);

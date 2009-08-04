@@ -1015,7 +1015,7 @@ namespace entities
 				vector<int> spawns;
 				switch(k)
 				{
-					case 0: if(m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
+					case 0: if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
 								loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team) spawns.add(i);
 					case 1: if(spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
 					case 2: if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON) spawns.add(i);

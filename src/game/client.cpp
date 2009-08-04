@@ -44,7 +44,7 @@ namespace client
 
 	int teamname(const char *team)
 	{
-		if(m_team(game::gamemode, game::mutators))
+		if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 		{
 			if(team[0])
 			{
@@ -67,7 +67,7 @@ namespace client
 	{
 		if(team[0])
 		{
-			if(m_team(game::gamemode, game::mutators) && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING)
+			if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && game::player1->state != CS_SPECTATOR && game::player1->state != CS_EDITING)
 			{
 				int t = teamname(team);
 				if(t != game::player1->team)
@@ -256,7 +256,7 @@ namespace client
 
 	void setteam(const char *arg1, const char *arg2)
 	{
-		if(m_team(game::gamemode, game::mutators))
+		if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 		{
 			int i = parseplayer(arg1);
 			if(i>=0 && i!=game::player1->clientnum)
@@ -354,7 +354,7 @@ namespace client
 	{
 		if(!colourchat) filtertext(text, text);
 		mkstring(s);
-		bool team = m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
+		bool team = m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
 		if(team)
 		{
