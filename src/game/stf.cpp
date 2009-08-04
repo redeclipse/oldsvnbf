@@ -136,7 +136,7 @@ namespace stf
 		loopv(entities::ents)
 		{
 			extentity *e = entities::ents[i];
-			if(e->type != FLAG || !chkflagmode(game::gamemode, game::mutators, e->attr[3])) continue;
+			if(e->type != FLAG || !chkmode(game::gamemode, e->attr[3])) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
 			defformatstring(alias)("flag_%d", e->attr[0]);
