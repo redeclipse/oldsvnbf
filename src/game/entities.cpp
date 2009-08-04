@@ -102,7 +102,7 @@ namespace entities
 		{
 			if(full)
 			{
-				const char *trgnames[3] = { "toggle", "link", "script" }, *actnames[3] = { "manual", "proximity", "action" };
+				const char *trgnames[TR_MAX] = { "toggle", "link", "script", "once" }, *actnames[TA_MAX] = { "manual", "proximity", "action" };
 				addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX-1 : attr2]);
 				addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX-1 : attr3]);
 				if(attr5 >= 2) addentinfo("game controlled");
@@ -586,7 +586,7 @@ namespace entities
 			e.lastuse = lastmillis;
 			switch(e.attr[1])
 			{
-				case TR_TOGGLE: case TR_LINK:
+				case TR_TOGGLE: case TR_LINK: case TR_ONCE:
 				{ // wait for ack
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
@@ -769,7 +769,7 @@ namespace entities
 			if((e.spawned = on) == true) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if((!e.lastemit || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK))
+				if((!e.lastemit || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK || e.attr[1] == TR_ONCE))
 				{
 					e.lastemit = lastmillis-(e.lastemit ? max(triggertime(e)-(lastmillis-e.lastemit), 0) : triggertime(e));
 					execlink(NULL, n, false);

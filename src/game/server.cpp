@@ -3208,6 +3208,7 @@ namespace server
 								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
+							case TR_ONCE: if(sents[ent].spawned) break;
 							case TR_LINK:
 							{
 								sents[ent].millis = gamemillis+(triggertime(ent)*2); kin = true;
