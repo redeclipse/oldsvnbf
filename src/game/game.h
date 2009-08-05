@@ -1263,7 +1263,7 @@ namespace entities
 	extern void checkitems(gameent *d);
 	extern void putitems(ucharbuf &p);
 	extern void execlink(gameent *d, int index, bool local, int ignore = -1);
-	extern void setspawn(int n, bool on);
+	extern void setspawn(int n, int m);
 	extern bool tryspawn(dynent *d, const vec &o, short yaw = 0, short pitch = 0);
 	extern void spawnplayer(gameent *d, int ent = -1, bool suicide = false);
 	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
@@ -1299,7 +1299,8 @@ namespace entities
 		void add(dynent *ent)
 		{
 			obstacle &ob = obstacles.add(obstacle(ent));
-			switch(ent->type)
+			if(!ent) ob.above = enttype[WAYPOINT].radius;
+			else switch(ent->type)
 			{
 				case ENT_PLAYER: case ENT_AI:
 				{
@@ -1334,7 +1335,7 @@ namespace entities
 				{ \
 					const entities::avoidset::obstacle &ob = (v).obstacles[i]; \
 					int next = cur + ob.numentities; \
-					if(ob.ent && ob.ent != (d)) \
+					if(!ob.ent || ob.ent != (d)) \
 					{ \
 						for(; cur < next; cur++) \
 						{ \
@@ -1361,7 +1362,7 @@ namespace entities
 				{
 					obstacle &ob = obstacles[i];
 					int next = cur + ob.numentities;
-					if(ob.ent && ob.ent != d)
+					if(!ob.ent || ob.ent != d)
 					{
 						for(; cur < next; cur++) if(entities[cur] == n)
 						{

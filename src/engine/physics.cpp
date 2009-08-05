@@ -143,12 +143,13 @@ int hitent, hitorient;
 				{ \
 					if(e.spawned) continue; \
 				} \
-				else \
+				else if(e.lastemit > 0) \
 				{ \
 					int millis = lastmillis-e.lastemit, delay = entities::triggertime(e); \
 					if(!e.spawned && millis < delay/2) continue; \
 					if(e.spawned && millis > delay/2) continue; \
 				} \
+				else if(e.spawned) continue; \
 			} \
 	}
 

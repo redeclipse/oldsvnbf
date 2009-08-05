@@ -391,7 +391,7 @@ void rendermapmodel(extentity &e)
     {
     	if(e.attr[4]&MMT_HIDE && e.spawned) return;
 		anim = e.spawned ? ANIM_TRIGGER_ON : ANIM_TRIGGER_OFF;
-		if(lastmillis-e.lastemit < entities::triggertime(e)) basetime = e.lastemit;
+		if(e.lastemit > 0 && lastmillis-e.lastemit < entities::triggertime(e)) basetime = e.lastemit;
 		else anim |= ANIM_END;
     }
 	if((e.lastemit || e.attr[4]&MMT_NOSHADOW) && !(e.attr[4]&MMT_NODYNSHADOW)) flags |= MDL_SHADOW;

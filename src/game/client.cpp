@@ -1122,7 +1122,7 @@ namespace client
 				case SV_GAMEINFO:
 				{
 					int n;
-					while((n = getint(p)) != -1) entities::setspawn(n, getint(p) ? true : false);
+					while((n = getint(p)) != -1) entities::setspawn(n, getint(p));
 					sendinfo = false;
 					break;
 				}
@@ -1354,7 +1354,7 @@ namespace client
 				{
 					int ent = getint(p);
 					if(!entities::ents.inrange(ent)) break;
-					entities::setspawn(ent, true);
+					entities::setspawn(ent, 1);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
 					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
 						colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
@@ -1380,7 +1380,7 @@ namespace client
 				case SV_TRIGGER:
 				{
 					int ent = getint(p), st = getint(p);
-					entities::setspawn(ent, st ? true : false);
+					entities::setspawn(ent, st);
 					break;
 				}
 
@@ -1502,7 +1502,7 @@ namespace client
 					int type = getint(p);
 					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
 					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, attr5, false);
-					entities::setspawn(i, false);
+					entities::setspawn(i, 0);
 					entities::clearentcache();
 					break;
 				}
@@ -1652,8 +1652,8 @@ namespace client
 				case SV_SCORE:
 				{
 					int team = getint(p), total = getint(p);
-					if(m_ctf(game::gamemode)) ctf::setscore(team, total);
 					if(m_stf(game::gamemode)) stf::setscore(team, total);
+					else if(m_ctf(game::gamemode)) ctf::setscore(team, total);
 					break;
 				}
 

@@ -737,11 +737,15 @@ namespace server
 			if(!valid.empty())
 			{
 				triggerid = valid[rnd(valid.length())];
-				loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents) if(sents[triggers[i].ents[k]].attr[4]%2)
+				loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents)
 				{
-					sents[triggers[i].ents[k]].spawned = true;
-					sents[triggers[i].ents[k]].millis = gamemillis;
-					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1);
+					bool spawn = sents[triggers[i].ents[k]].attr[4]%2;
+					if(spawn != sents[triggers[i].ents[k]].spawned)
+					{
+						sents[triggers[i].ents[k]].spawned = spawn;
+						sents[triggers[i].ents[k]].millis = gamemillis;
+					}
+					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1+(spawn ? 2 : 1));
 					loopvj(sents[i].kin) if(sents.inrange(sents[triggers[i].ents[k]].kin[j]))
 					{
 						sents[sents[triggers[i].ents[k]].kin[j]].spawned = sents[triggers[i].ents[k]].spawned;
