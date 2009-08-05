@@ -506,8 +506,7 @@ namespace physics
 				pl->jumping = false;
 				if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 				{
-					playsound(S_JUMP, pl->o, pl);
-					regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
+					playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
 					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
@@ -522,8 +521,7 @@ namespace physics
 			pl->impulsemillis += impulsejump;
 			if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 			{
-				playsound(S_IMPULSE, pl->o, pl);
-				regularshape(PART_SMOKE, int(pl->radius), 0x222222, 21, 20, 250, pl->feetpos(), 1.f, -10, 0, 10.f);
+				playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
 				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 			}
 		}
