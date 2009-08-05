@@ -331,27 +331,33 @@ struct gui : g3d_gui
         if(visible())
 		{
             bool hit = ishit(w, h);
-            if(hit)
-            {
-                if(mousebuttons&G3D_DOWN) //mouse request focus
-				{
-                    if(fieldtype==FIELDKEY) e->clear();
-                    useeditor(e->name, initmode, true);
-                    e->mark(false);
-                    fieldmode = fieldtype;
-                }
-			}
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
-            if(hit && editing && (mousebuttons&G3D_PRESSED)!=0 && fieldtype==FIELDEDIT) e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
-            if(editing && ((fieldmode==FIELDCOMMIT) || (fieldmode==FIELDABORT) || !hit)) // commit field if user pressed enter or wandered out of focus
+			if(mousebuttons&G3D_DOWN) //mouse request focus
+			{
+	            if(hit)
+	            {
+					if(fieldtype==FIELDKEY) e->clear();
+					useeditor(e->name, initmode, true);
+					e->mark(false);
+					fieldmode = fieldtype;
+	            }
+				else if(editing)
+				{
+					fieldmode = FIELDCOMMIT;
+					e->mode = EDITORFOCUSED;
+				}
+			}
+            if(hit && editing && (mousebuttons&G3D_PRESSED)!=0 && fieldtype==FIELDEDIT)
+				e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
+            if(editing && (fieldmode==FIELDCOMMIT || fieldmode==FIELDABORT)) // commit field if user pressed enter
             {
-                if(fieldmode==FIELDCOMMIT || (fieldmode!=FIELDABORT && !hit)) result = e->currentline().text;
+                if(fieldmode==FIELDCOMMIT) result = e->currentline().text;
 				e->active = (e->mode!=EDITORFOCUSED);
                 fieldmode = FIELDSHOW;
 			}
             else fieldsactive = true;
 
-            e->draw(curx+FONTW/2, cury, color, hit && editing);
+            e->draw(curx+FONTW/2, cury, color, editing);
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);

@@ -289,7 +289,7 @@ extern vector<mapparticle> mapparts;
 enum
 {
     DECAL_SMOKE = 0,
-    DECAL_SCORCH,
+    DECAL_SCORCH, DECAL_SCORCH_SHORT,
     DECAL_BLOOD,
     DECAL_BULLET,
     DECAL_ENERGY,
