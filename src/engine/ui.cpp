@@ -1004,7 +1004,7 @@ void g3d_render()
 namespace UI
 {
 	bool isopen = false;
-	bool hascursor(bool targeting) { return (targeting ? commandmillis < 0 : commandmillis > 0) || g3d_active(true, targeting); }
+	bool hascursor(bool targeting) { return (!targeting && commandmillis > 0) || g3d_active(true, targeting); }
 	bool keypress(int code, bool isdown, int cooked) { return g3d_keypress(code, isdown, cooked); }
 	void setup() { return; }
 	void update()
