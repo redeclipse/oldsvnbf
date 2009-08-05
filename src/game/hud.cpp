@@ -599,8 +599,8 @@ namespace hud
 					popfont();
 				}
 
-				if(m_ctf(game::gamemode)) ctf::drawlast(w, h, tx, ty, tf/255.f);
-				else if(m_stf(game::gamemode)) stf::drawlast(w, h, tx, ty, tf/255.f);
+				if(m_stf(game::gamemode)) stf::drawlast(w, h, tx, ty, tf/255.f);
+				else if(m_ctf(game::gamemode)) ctf::drawlast(w, h, tx, ty, tf/255.f);
 
 				if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 				{
@@ -616,13 +616,16 @@ namespace hud
 					if(shownotices >= 2)
 					{
 						SEARCHBINDCACHE(attackkey)("attack", 0);
-						if(delay || m_duke(game::gamemode, game::mutators))
+						if(delay || m_story(game::gamemode) || m_duke(game::gamemode, game::mutators))
 						{
-							pushfont("emphasis");
-							if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
-								ty += draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1);
-							else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f);
-							popfont();
+							if(!m_story(game::gamemode))
+							{
+								pushfont("emphasis");
+								if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
+									ty += draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1);
+								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f);
+								popfont();
+							}
 							if(game::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-game::player1->lastdeath > 500)
 							{
 								pushfont("default");
@@ -1368,8 +1371,8 @@ namespace hud
 					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
 					if(inventorygame)
 					{
-						if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 						if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+						else if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
 					}
 				}
 				break;

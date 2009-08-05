@@ -1,7 +1,7 @@
 #include "game.h"
 namespace ai
 {
-	entities::avoidset obstacles;
+	entities::avoidset obs;
     int updatemillis = 0, updateiters = 0, forcegun = -1;
     vec aitarget(0, 0, 0);
 
@@ -170,7 +170,7 @@ namespace ai
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, int retries)
 	{
 		if(changed && !d->ai->route.empty() && d->ai->route[0] == node) return true;
-		if(entities::route(d->lastnode, node, d->ai->route, obstacles, d, retries <= 1) > 0)
+		if(entities::route(d->lastnode, node, d->ai->route, obs, d, retries <= 1) > 0)
 		{
 			b.override = false;
 			return true;
@@ -195,7 +195,7 @@ namespace ai
 		while(!candidates.empty())
 		{
 			int w = rnd(candidates.length()), n = candidates.removeunordered(w);
-			if(n != d->lastnode && !d->ai->hasprevnode(n) && !obstacles.find(n, d) && makeroute(d, b, n)) return true;
+			if(n != d->lastnode && !d->ai->hasprevnode(n) && !obs.find(n, d) && makeroute(d, b, n)) return true;
 		}
 		return false;
 	}
@@ -389,8 +389,8 @@ namespace ai
 		{ // don't let bots consume items in story mode (yet?)
 			if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
 				items(d, b, interests);
-			if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
+			else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 		}
 		if(d->aitype == AI_BOT && m_team(game::gamemode, game::mutators)) assist(d, b, interests);
 		while(!interests.empty())
@@ -463,8 +463,8 @@ namespace ai
 
 	bool check(gameent *d, aistate &b)
 	{
-		if(m_ctf(game::gamemode) && ctf::aicheck(d, b)) return true;
 		if(m_stf(game::gamemode) && stf::aicheck(d, b)) return true;
+		else if(m_ctf(game::gamemode) && ctf::aicheck(d, b)) return true;
 		return false;
 	}
 
@@ -511,8 +511,8 @@ namespace ai
 				}
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(game::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
 					if(m_stf(game::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
+					else if(m_ctf(game::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
 					break;
 				}
 				case AI_T_PLAYER:
@@ -608,8 +608,8 @@ namespace ai
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
 					if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
+					else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
 					break;
 				}
 
@@ -640,7 +640,7 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
 			vec epos = e.o;
-			int entid = obstacles.remap(d, d->ai->route[i], epos);
+			int entid = obs.remap(d, d->ai->route[i], epos);
 			if(entities::ents.inrange(entid) && (force || entid == d->ai->route[i] || !d->ai->hasprevnode(entid)))
 			{
 				float dist = epos.squaredist(pos);
@@ -660,7 +660,7 @@ namespace ai
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
 			vec epos = e.o;
-			int entid = obstacles.remap(d, n, epos);
+			int entid = obs.remap(d, n, epos);
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
@@ -1061,25 +1061,33 @@ namespace ai
 
 	void avoid()
 	{
-		// guess as to the radius of ai and other critters relying on the avoid set for now
-		float guessradius = game::player1->radius;
-		obstacles.clear();
+		obs.clear();
 		loopi(game::numdynents())
 		{
 			gameent *d = (gameent *)game::iterdynents(i);
 			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
 			vec pos = d->feetpos();
-			float limit = guessradius+d->radius;
-            obstacles.avoidnear(d, pos, limit);
+			float limit = enttype[WAYPOINT].radius+d->radius;
+            obs.avoidnear(d, pos, limit);
 		}
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
 			{
-				float limit = guessradius+(weaptype[p->weap].explode*p->lifesize);
-                obstacles.avoidnear(p, p->o, limit);
+				float limit = enttype[WAYPOINT].radius+(weaptype[p->weap].explode*p->lifesize);
+                obs.avoidnear(p, p->o, limit);
 			}
+		}
+		loopv(entities::ents) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
+		{
+			mapmodelinfo &mmi = getmminfo(entities::ents[i]->attr[0]);
+			vec center, radius;
+			mmi.m->collisionbox(0, center, radius);
+			if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(entities::ents[i]->attr[1]));
+			float limit = enttype[WAYPOINT].radius+(max(radius.x, max(radius.y, radius.z))*mmi.m->height);
+			vec pos = entities::ents[i]->o; pos.z += limit*0.5f;
+			obs.avoidnear(NULL, pos, limit);
 		}
 	}
 
@@ -1231,6 +1239,22 @@ namespace ai
 						if(aidebug > 2) top = false;
 						else break;
 					}
+				}
+			}
+			if(aidebug >= 4 && !m_edit(game::gamemode))
+			{
+				int cur = 0;
+				loopv(obs.obstacles)
+				{
+					const entities::avoidset::obstacle &ob = obs.obstacles[i];
+					int next = cur + ob.numentities;
+					for(; cur < next; cur++)
+					{
+						int ent = obs.entities[cur];
+						gameentity &e = *(gameentity *)entities::ents[ent];
+						part_create(PART_EDIT, 1, e.o, 0xFF1122, 1.f);
+					}
+					cur = next;
 				}
 			}
 		}

@@ -752,18 +752,18 @@ namespace entities
 		}
 	}
 
-	void setspawn(int n, bool on)
+	void setspawn(int n, int m)
 	{
 		if(ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)ents[n];
-			bool spawned = e.spawned;
+			bool on = m%2, spawned = e.spawned;
 			if((e.spawned = on) == true) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if((!e.lastemit || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK || e.attr[1] == TR_ONCE))
+				if((m >= 2 || e.lastemit <= 0 || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK || e.attr[1] == TR_ONCE))
 				{
-					e.lastemit = lastmillis-(e.lastemit ? max(triggertime(e)-(lastmillis-e.lastemit), 0) : triggertime(e));
+					e.lastemit = m <= 1 ? lastmillis-(e.lastemit ? max(triggertime(e)-(lastmillis-e.lastemit), 0) : triggertime(e)) : -1;
 					execlink(NULL, n, false);
 					loopv(e.kin) if(ents.inrange(e.kin[i]))
 					{
@@ -845,7 +845,7 @@ namespace entities
 			case PARTICLES:
 			case MAPSOUND:
 			{
-				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER && ents[e.links[i]]->lastemit < e.lastemit)
+				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 				{
 					e.lastemit = ents[e.links[i]]->lastemit;
 					e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
@@ -871,7 +871,7 @@ namespace entities
 					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS;
 					while(e.attr[0] >= TRIGGERIDS) e.attr[0] += TRIGGERIDS;
 				}
-				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND) && e.lastemit < ents[e.links[i]]->lastemit)
+				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
 				{
 					ents[e.links[i]]->lastemit = e.lastemit;
 					ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
@@ -1709,7 +1709,7 @@ namespace entities
 		loopv(ents) fixentity(i);
 		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
 		{
-			setspawn(i, false);
+			setspawn(i, 0);
 			if(ents[i]->type == TRIGGER) // find shared kin
 			{
 				loopvj(ents[i]->links) if(ents.inrange(ents[i]->links[j]))
@@ -1977,7 +1977,7 @@ namespace entities
 		{
 			case PARTICLES:
 				if(idx < 0 || e.links.empty()) makeparticles(e);
-				else if(e.lastemit && lastmillis-e.lastemit <= triggertime(e)/2) makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				else if(e.lastemit > 0 && lastmillis-e.lastemit <= triggertime(e)/2) makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 				break;
 
 			case TELEPORT:
