@@ -26,8 +26,8 @@ extern aitypes aitype[];
 
 enum
 {
-	WP_NONE = 0,
-	WP_CROUCH = 1<<0,
+	WP_F_NONE = 0,
+	WP_F_CROUCH = 1<<0,
 };
 
 namespace ai
