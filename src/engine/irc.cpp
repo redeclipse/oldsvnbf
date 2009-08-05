@@ -725,11 +725,11 @@ bool ircchangui(g3d_gui *g, ircnet *n, ircchan *c, bool tab)
 	defformatstring(cwindow)("%s_%s_window", n->name, c->name);
 	g->fieldclear(cwindow);
 	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
-	g->field(cwindow, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
+	g->field(cwindow, GUI_TEXT_COLOR, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(cwindow);
 
 	defformatstring(cinput)("%s_%s_input", n->name, c->name);
-	char *v = g->field(cinput, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
+	char *v = g->field(cinput, GUI_TEXT_COLOR, -150, 0, "", EDITORFOREVER);
 	if(v && *v)
 	{
 		irccmd(n, c, v);
@@ -746,11 +746,11 @@ bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
 	defformatstring(window)("%s_window", n->name);
 	g->fieldclear(window);
 	loopvk(n->lines) g->fieldline(window, n->lines[k]);
-	g->field(window, GUI_TEXT_COLOR, -80, 20, NULL, EDITORREADONLY);
+	g->field(window, GUI_TEXT_COLOR, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(window);
 
 	defformatstring(input)("%s_input", n->name);
-	char *w = g->field(input, GUI_TEXT_COLOR, -80, 0, "", EDITORFOREVER);
+	char *w = g->field(input, GUI_TEXT_COLOR, -150, 0, "", EDITORFOREVER);
 	if(w && *w)
 	{
 		irccmd(n, NULL, w);
@@ -770,7 +770,7 @@ bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
 bool ircgui(g3d_gui *g, const char *s)
 {
 	g->allowautotab(false);
-	g->strut(81);
+	g->strut(151);
 	if(s && *s)
 	{
 		ircnet *n = ircfind(s);

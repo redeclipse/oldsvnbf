@@ -790,7 +790,7 @@ namespace hud
 		}
 	}
 
-	void drawconsole(int type, int w, int h, int x, int y, int s)
+	void drawconsole(int type, int w, int h, int x, int y, int s, float fade)
 	{
 		static vector<int> refs; refs.setsizenodelete(0);
 		bool full = fullconsole || commandmillis > 0;
@@ -819,8 +819,8 @@ namespace hud
 				int r = x+FONTW, z = y;
 				loopv(refs)
 				{
-					float fade = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*fade;
+					float f = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 		}
@@ -847,18 +847,18 @@ namespace hud
 				}
 				loopvrev(refs)
 				{
-					float fade = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*fade;
+					float f = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 			if(commandmillis > 0)
 			{
 				pushfont("command");
 				Texture *t = textureload(commandicon ? commandicon : inputtex, 3);
-				float fade = float(lastmillis%1000)/1000.f;
-				if(fade < 0.5f) fade = 1.f-fade;
+				float f = float(lastmillis%1000)/1000.f;
+				if(f < 0.5f) f = 1.f-f;
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(1.f, 1.f, 1.f, fullconblend*hudblend*fade);
+				glColor4f(1.f, 1.f, 1.f, fullconblend*hudblend*f);
 				drawtex(x, z, FONTH, FONTH);
 				z += draw_textx("%s", (concenter ? x+s/2-FONTW*3 : x)+(FONTH+FONTW), z, 255, 255, 255, int(255*fullconblend*hudblend), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, commandpos >= 0 ? commandpos : strlen(commandbuf), s-(FONTH+FONTW), commandbuf);
 				popfont();
@@ -1437,23 +1437,24 @@ namespace hud
 	void drawhud(int w, int h, bool noview)
 	{
 		float fade = hudblend;
+		vec colour(1, 1, 1);
+		if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
+		{
+			float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
+			if(commandmillis > 0) a = 1.f-a;
+			else a += (1.f-commandfadeamt);
+			loopi(3) if(a < colour[i]) colour[i] = a;
+		}
+		if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
+		{
+			float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
+			if(uimillis > 0) a = 1.f-a;
+			else a += (1.f-uifadeamt);
+			loopi(3) if(a < colour[i]) colour[i] = a;
+			if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
+		}
 		if(!noview)
 		{
-			vec colour(1, 1, 1);
-			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
-			{
-				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
-				if(commandmillis > 0) a = 1.f-a;
-				else a += (1.f-commandfadeamt);
-				loopi(3) if(a < colour[i]) colour[i] = a;
-			}
-			if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
-			{
-				float a = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f)*uifadeamt;
-				if(uimillis > 0) a = 1.f-a;
-				else a += (1.f-uifadeamt);
-				loopi(3) if(a < colour[i]) colour[i] = a;
-			}
 			if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
 			{
 				float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
@@ -1475,15 +1476,15 @@ namespace hud
 					loopi(3) if(col[i] < colour[i]) colour[i] = col[i];
 				}
 			}
-			if(colour.x < 1 || colour.y < 1 || colour.z < 1)
-			{
-				usetexturing(false);
-				drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
-				usetexturing(true);
-				fade *= min(colour.x, min(colour.y, colour.z));
-			}
 		}
-		if(showhud)
+		if(colour.x < 1 || colour.y < 1 || colour.z < 1)
+		{
+			usetexturing(false);
+			drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
+			usetexturing(true);
+			fade *= min(colour.x, min(colour.y, colour.z));
+		}
+		if(showhud && fade > 0)
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1512,8 +1513,8 @@ namespace hud
 			int br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
 			if(showconsole)
 			{
-				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2);
-				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2);
+				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2, fade);
+				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
 			}
 
 			if(!noview && client::ready() && !texpaneltimer)

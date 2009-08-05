@@ -126,7 +126,7 @@ namespace projs
                     case WEAP_FLAMER:
                     {
                         if(!proj.lastbounce && !rnd(3))
-                            adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
+                            adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, weaptype[proj.weap].explode*3.f*proj.lifesize);
                         break;
                     }
                     default: break;
@@ -712,7 +712,7 @@ namespace projs
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode*0.7f, bvec(196, 24, 0));
 							}
 							part_create(PART_SMOKE_LERP_SOFT, m_speedtime(proj.weap == WEAP_FLAMER ? 250 : 1500), proj.o, proj.weap == WEAP_FLAMER ? 0x666666 : 0x333333, weaptype[proj.weap].explode, -25);
-							adddecal(DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
+							adddecal(proj.weap == WEAP_FLAMER ? DECAL_SCORCH_SHORT : DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode);
 							adddynlight(proj.o, 1.f*weaptype[proj.weap].explode, vec(1.1f, 0.22f, 0.02f), m_speedtime(proj.weap == WEAP_FLAMER ? 250 : 1000), 10);
 						}
 						else
@@ -755,7 +755,7 @@ namespace projs
 						part_flare(proj.to, proj.o, m_speedtime(250), PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize*0.25f);
 						part_create(PART_SMOKE_LERP, m_speedtime(250), proj.o, 0x444444, weaptype[proj.weap].partsize, -20);
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(200), 10);
-						adddecal(DECAL_SCORCH, proj.o, proj.norm, 5.f);
+						adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
                         adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
 						break;
 					}
