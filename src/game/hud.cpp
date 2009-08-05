@@ -35,8 +35,11 @@ namespace hud
 	VARP(titlefade, 0, 5000, 10000);
 	VARP(specfade, 0, 1000, INT_MAX-1);
 	VARP(spawnfade, 0, 1000, INT_MAX-1);
+
 	VARP(commandfade, 0, 500, INT_MAX-1);
 	FVARP(commandfadeamt, 0, 0.75f, 1);
+	VARP(uifade, 0, 500, INT_MAX-1);
+	FVARP(uifadeamt, 0, 0.75f, 1);
 
 	int conskip = 0;
 	void setconskip(int *n)
@@ -1433,63 +1436,49 @@ namespace hud
 		float fade = hudblend;
 		if(!noview)
 		{
-			bool texturing = true;
-			int millis = lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis);
-			if(commandfade && (commandmillis > 0 || millis < commandfade))
+			vec colour(1, 1, 1);
+			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
 			{
-				float amt = min(float(millis)/float(commandfade), 1.f)*commandfadeamt;
-				if(commandmillis > 0) amt = 1.f-amt;
-				else amt += (1.f-commandfadeamt);
-				usetexturing(false); texturing = false;
-				drawblend(0, 0, w, h, amt, amt, amt);
-				fade *= amt;
+				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
+				if(commandmillis > 0) a = 1.f-a;
+				else a += (1.f-commandfadeamt);
+				loopi(3) if(a < colour[i]) colour[i] = a;
 			}
-			else if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
+			if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
 			{
-				float amt = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
-				if(amt < 1.f)
+				float a = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f)*uifadeamt;
+				if(uimillis > 0) a = 1.f-a;
+				else a += (1.f-uifadeamt);
+				loopi(3) if(a < colour[i]) colour[i] = a;
+			}
+			if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
+			{
+				float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
+				loopi(3) if(a < colour[i]) colour[i] = a;
+			}
+			if(specfade && game::tvmode())
+			{
+				float a = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
+				loopi(3) if(a < colour[i]) colour[i] = a;
+			}
+			if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
+			{
+				float a = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
+				if(a < 3.f)
 				{
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, amt, amt, amt);
-					fade *= amt;
+					vec col; skewcolour(col.x, col.y, col.z, true);
+					if(a < 1.f) { loopi(3) col[i] *= a; }
+					else { a = (a-1.f)*0.5f; loopi(3) col[i] += (1.f-col[i])*a; }
+					loopi(3) if(col[i] < colour[i]) colour[i] = col[i];
 				}
 			}
-			else if(specfade && game::tvmode())
+			if(colour.x < 1 || colour.y < 1 || colour.z < 1)
 			{
-				float amt = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
-				if(amt < 1.f)
-				{
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, amt, amt, amt);
-					fade *= amt;
-				}
+				usetexturing(false);
+				drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
+				usetexturing(true);
+				fade *= min(colour.x, min(colour.y, colour.z));
 			}
-			else if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
-			{
-				float amt = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
-				if(amt < 3.f)
-				{
-					float r = 1.f, g = 1.f, b = 1.f;
-					skewcolour(r, g, b, true);
-					fade *= amt/3.f;
-					if(amt < 1.f)
-					{
-						r *= amt;
-						g *= amt;
-						b *= amt;
-					}
-					else
-					{
-						amt = (amt-1.f)*0.5f;
-						r += (1.f-r)*amt;
-						g += (1.f-g)*amt;
-						b += (1.f-b)*amt;
-					}
-					usetexturing(false); texturing = false;
-					drawblend(0, 0, w, h, r, g, b);
-				}
-			}
-			if(!texturing) usetexturing(true);
 		}
 		if(showhud)
 		{

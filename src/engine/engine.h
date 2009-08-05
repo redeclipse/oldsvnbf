@@ -480,7 +480,7 @@ extern void writecompletions(stream *f);
 extern const char *addreleaseaction(const char *s);
 extern const char *getkeyname(int code);
 
-extern int conskip, commandmillis,  commandpos;
+extern int uimillis, conskip, commandmillis,  commandpos;
 extern string commandbuf;
 extern char *commandaction, *commandicon;
 extern bool fullconsole;
