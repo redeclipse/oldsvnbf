@@ -529,8 +529,7 @@ bool dropentity(entity &e, int drop = -1)
 	switch(drop)
 	{
 	case 1:
-		if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
-			dropenttofloor(&e);
+		if(e.type != ET_LIGHT && e.type != ET_LIGHTFX) dropenttofloor(&e);
 		break;
 	case 2:
 	case 3:
