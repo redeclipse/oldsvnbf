@@ -28,85 +28,99 @@ namespace entities
 	const char *entinfo(int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool full)
 	{
 		static string entinfostr; entinfostr[0] = 0;
-		#define addentinfo(s) { \
+		#define addentinfo(s) if(*(s)) { \
 			if(entinfostr[0]) concatstring(entinfostr, ", "); \
 			concatstring(entinfostr, s); \
 		}
-		if(type == PLAYERSTART || type == FLAG)
+		switch(type)
 		{
-			if(valteam(attr1, TEAM_FIRST))
+			case PLAYERSTART: case FLAG:
 			{
-				defformatstring(str)("team %s", teamtype[attr1].name);
-				addentinfo(str);
+				if(valteam(attr1, TEAM_FIRST))
+				{
+					defformatstring(str)("team %s", teamtype[attr1].name);
+					addentinfo(str);
+				}
+				else if(attr1 < TEAM_MAX)
+				{
+					defformatstring(str)("%s", teamtype[attr1].name);
+					addentinfo(str);
+				}
+				if(attr4 > G_DEMO && attr4 < G_MAX) addentinfo(gametype[attr4].name);
+				break;
 			}
-			else if(attr1 < TEAM_MAX)
+			case ACTOR:
 			{
-				defformatstring(str)("%s", teamtype[attr1].name);
-				addentinfo(str);
+				if(full && attr1 >= AI_START && attr1 < AI_MAX)
+				{
+					addentinfo(aitype[attr1].name);
+					if(attr2 >= 0 && attr2 < TEAM_MAX) addentinfo(teamtype[attr2].name);
+					if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
+				}
+				break;
 			}
-			if(attr4 > G_DEMO && attr4 < G_MAX) addentinfo(gametype[attr4].name);
-		}
-		else if(type == ACTOR)
-		{
-			if(full && attr1 >= AI_START && attr1 < AI_MAX)
+			case WEAPON:
 			{
-				addentinfo(aitype[attr1].name);
-				if(attr2 >= 0 && attr2 < TEAM_MAX) addentinfo(teamtype[attr2].name);
-				if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
+				if(isweap(attr))
+				{
+					defformatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
+					addentinfo(str);
+					if(full)
+					{
+						if(attr2&WEAP_F_FORCED) addentinfo("forced");
+					}
+				}
+				break;
 			}
-		}
-		else if(type == WEAPON)
-		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
-			if(isweap(attr))
+			case MAPMODEL:
 			{
-				defformatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
-				addentinfo(str);
+				if(mapmodels.inrange(attr1)) addentinfo(mapmodels[attr1].name);
 				if(full)
 				{
-					if(attr2&WEAP_F_FORCED) addentinfo("forced");
+					if(attr5&MMT_HIDE) addentinfo("hide");
+					if(attr5&MMT_NOCLIP) addentinfo("noclip");
+					if(attr5&MMT_NOSHADOW) addentinfo("noshadow");
+					if(attr5&MMT_NODYNSHADOW) addentinfo("nodynshadow");
 				}
+				break;
 			}
-		}
-		else if(type == MAPMODEL)
-		{
-			if(mapmodels.inrange(attr1)) addentinfo(mapmodels[attr1].name);
-			if(full)
+			case MAPSOUND:
 			{
-				if(attr5&MMT_HIDE) addentinfo("hide");
-				if(attr5&MMT_NOCLIP) addentinfo("noclip");
-				if(attr5&MMT_NOSHADOW) addentinfo("noshadow");
-				if(attr5&MMT_NODYNSHADOW) addentinfo("nodynshadow");
+				if(mapsounds.inrange(attr1)) addentinfo(mapsounds[attr1].sample->name);
+				if(full)
+				{
+					if(attr5&SND_NOATTEN) addentinfo("noatten");
+					if(attr5&SND_NODELAY) addentinfo("nodelay");
+					if(attr5&SND_NOCULL) addentinfo("nocull");
+					if(attr5&SND_NOPAN) addentinfo("nopan");
+				}
+				break;
 			}
-		}
-		else if(type == MAPSOUND)
-		{
-			if(mapsounds.inrange(attr1)) addentinfo(mapsounds[attr1].sample->name);
-			if(full)
+			case TRIGGER:
 			{
-				if(attr5&SND_NOATTEN) addentinfo("noatten");
-				if(attr5&SND_NODELAY) addentinfo("nodelay");
-				if(attr5&SND_NOCULL) addentinfo("nocull");
-				if(attr5&SND_NOPAN) addentinfo("nopan");
+				if(full)
+				{
+					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
+					addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX : attr2]);
+					addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX : attr3]);
+					if(attr5 >= 2) addentinfo("game controlled");
+					addentinfo(attr5%2 ? "default on" : "default off");
+				}
+				break;
 			}
-		}
-		else if(type == TRIGGER)
-		{
-			if(full)
+			case WAYPOINT:
 			{
-				const char *trgnames[TR_MAX] = { "toggle", "link", "script", "once" }, *actnames[TA_MAX] = { "manual", "proximity", "action" };
-				addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX-1 : attr2]);
-				addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX-1 : attr3]);
-				if(attr5 >= 2) addentinfo("game controlled");
-				addentinfo(attr5%2 ? "default on" : "default off");
+				if(full)
+				{
+					const char *wpnames[WP_MAX+1] = { "common", "player", "enemy", "linked", "" }, *wpsnames[WP_S_MAX+1] = { "", "defend", "" };
+					addentinfo(wpnames[attr1 < 0 || attr1 >= WP_MAX ? WP_MAX : attr1]);
+					addentinfo(wpsnames[attr2 < 0 || attr2 >= WP_S_MAX ? WP_S_MAX : attr2]);
+					if(attr5&WP_F_CROUCH) addentinfo("crouch");
+				}
+				break;
 			}
-		}
-		else if(type == WAYPOINT)
-		{
-			if(full)
-			{
-				if(attr1&WP_CROUCH) addentinfo("crouch");
-			}
+			default: break;
 		}
 		return entinfostr[0] ? entinfostr : "";
 	}
@@ -319,6 +333,18 @@ namespace entities
 
 	vector<entcachenode *> entcachestack;
 
+	bool allowuse(gameent *d, int n)
+	{
+		if(!d || !d->ai || !d->ai->hasprevnode(n)) switch(ents[n]->attr[0])
+		{
+			case WP_COMMON: return true; break;
+			case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
+			case WP_ENEMY: if(d->aitype >= AI_START) return true; break;
+			case WP_LINKED: if(ents.inrange(d->aientity) && ents[n]->links.find(d->aientity) >= 0) return true; break;
+		}
+		return false;
+	}
+
 	int closestent(int type, const vec &pos, float mindist, bool links, gameent *d)
 	{
 		if(entcachedepth<0) buildentcache();
@@ -330,7 +356,7 @@ namespace entities
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(e.type == type && (!links || !e.links.empty()) && (!d || !d->ai || !d->ai->hasprevnode(n))) \
+			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n)) \
 			{ \
 				float dist = e.o.squaredist(pos); \
 				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
@@ -384,7 +410,7 @@ namespace entities
 		#define CHECKWITHIN(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(e.type == type) \
+			if(e.type == type && allowuse(NULL, n)) \
 			{ \
 				float dist = e.o.squaredist(pos); \
 				if(dist > mindist2 && dist < maxdist2) results.add(n); \
@@ -918,6 +944,12 @@ namespace entities
 				while(e.attr[2] < -90) e.attr[2] += 180;
 				while(e.attr[2] > 90) e.attr[2] -= 180;
 				break;
+			case WAYPOINT:
+				while(e.attr[0] < 0) e.attr[0] += WP_MAX;
+				while(e.attr[0] >= WP_MAX) e.attr[0] -= WP_MAX;
+				while(e.attr[1] < 0) e.attr[1] += WP_S_MAX;
+				while(e.attr[1] >= WP_S_MAX) e.attr[1] -= WP_S_MAX;
+				break;
 			default:
 				break;
 		}
@@ -1198,7 +1230,7 @@ namespace entities
 			loopv(links)
 			{
 				int link = links[i];
-				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()))
+				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()) && allowuse(d, link))
 				{
 					linkq &n = nodes[link];
 					float curscore = prevscore + ents[link]->o.dist(ent.o);
@@ -1267,10 +1299,10 @@ namespace entities
 
 			if(!ents.inrange(curnode) && shoulddrop)
 			{
-				int cmds = WP_NONE;
-				if(physics::iscrouching(d)) cmds |= WP_CROUCH;
+				int cmds = WP_F_NONE;
+				if(physics::iscrouching(d)) cmds |= WP_F_CROUCH;
 				curnode = ents.length();
-				newentity(v, WAYPOINT, cmds, 0, 0, 0, 0);
+				newentity(v, WAYPOINT, WP_COMMON, WP_S_NONE, 0, 0, cmds);
 				if(d->timeinair) d->airnodes.add(curnode);
 				clearentcache();
 			}
@@ -1659,8 +1691,17 @@ namespace entities
 				case WAYPOINT:
 				{
 					if(!m_edit(game::gamemode) && clipped(e.o, true)) e.type = NOTUSED;
-					else if(mtype == MAP_BFGZ && gver <= 90)
-						e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
+					else if(mtype == MAP_BFGZ)
+					{
+						if(gver <= 90) e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
+						else if(gver <= 159)
+						{
+							e.attr[4] = e.attr[0];
+							e.attr[0] = WP_COMMON;
+							e.attr[1] = WP_S_NONE;
+							e.attr[2] = e.attr[3] = 0;
+						}
+					}
 					break;
 				}
 				default: break;
@@ -1795,6 +1836,12 @@ namespace entities
 					part_radius(e.o, vec(radius, radius, radius));
 					radius = radius*2/3; // ctf pickup dist
 					part_radius(e.o, vec(radius, radius, radius));
+					break;
+				}
+				case WAYPOINT:
+				{
+					int s = e.attr[4] ? e.attr[4] : enttype[e.type].radius;
+					part_radius(e.o, vec(s, s, s));
 					break;
 				}
 				default:

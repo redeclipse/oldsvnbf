@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID				"bfa"
-#define GAMEVERSION			159
+#define GAMEVERSION			160
 #define DEMO_VERSION		GAMEVERSION
 
 #define MAXAI 256
@@ -65,6 +65,9 @@ enum { TR_TOGGLE = 0, TR_LINK, TR_SCRIPT, TR_ONCE, TR_MAX };
 enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
 #define TRIGGERIDS		16
 #define TRIGSTATE(a,b)	(b%2 ? !a : a)
+
+enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_MAX };
+enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_MAX };
 
 struct enttypes
 {
@@ -148,7 +151,7 @@ enttypes enttype[] = {
 	},
 	{
 		ACTOR,			59,		0,		EU_NONE,
-			0,
+			inttobit(WAYPOINT),
 			0,
 			false,				"actor",
 			{ "type",	"team",		"yaw",		"pitch",	"flags" }
@@ -193,7 +196,7 @@ enttypes enttype[] = {
 			inttobit(WAYPOINT),
 			0,
 			true,				"waypoint",
-			{ "flags",	"",			"",			"",			"" }
+			{ "type",	"state",	"id",		"radius",	"flags" }
 	}
 };
 #else

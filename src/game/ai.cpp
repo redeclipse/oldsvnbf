@@ -678,7 +678,7 @@ namespace ai
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
-				if(((e.attr[0] & WP_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+				if(((e.attr[0] & WP_F_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
 				{
 					d->crouching = !d->crouching;
 					d->crouchtime = lastmillis;
