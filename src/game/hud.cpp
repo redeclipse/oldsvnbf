@@ -820,7 +820,7 @@ namespace hud
 				loopv(refs)
 				{
 					float f = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*fade*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*(full ? 1.f : fade)*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 		}
@@ -848,7 +848,7 @@ namespace hud
 				loopvrev(refs)
 				{
 					float f = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*fade*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*(full ? 1.f : fade)*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 			if(commandmillis > 0)
@@ -1484,7 +1484,7 @@ namespace hud
 			usetexturing(true);
 			fade *= min(colour.x, min(colour.y, colour.z));
 		}
-		if(showhud && fade > 0)
+		if(showhud)
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1492,7 +1492,7 @@ namespace hud
 			glLoadIdentity();
 			glOrtho(0, ox, oy, 0, -1, 1);
 
-			if(!noview && client::ready())
+			if(!noview && client::ready() && fade > 0)
 			{
 				if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
 				{
@@ -1517,7 +1517,7 @@ namespace hud
 				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
 			}
 
-			if(!noview && client::ready() && !texpaneltimer)
+			if(!noview && client::ready() && !texpaneltimer && fade > 0)
 			{
 				int bf = int(255*fade*statblend);
 				pushfont("sub");
