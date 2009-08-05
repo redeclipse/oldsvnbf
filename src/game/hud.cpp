@@ -589,7 +589,7 @@ namespace hud
 			{
 				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255;
 				if(teamnotices) skewcolour(tr, tg, tb);
-				if(lastmillis-game::maptime <= titlefade)
+				if(lastmillis-game::maptime <= titlefade*2)
 				{
 					const char *title = maptitle;
 					if(!*title) title = mapname;
