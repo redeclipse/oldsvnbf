@@ -46,7 +46,7 @@ enum								// entity types
 	ENVMAP = ET_ENVMAP,
 	PARTICLES = ET_PARTICLES,
 	MAPSOUND = ET_SOUND,
-	SPOTLIGHT = ET_SPOTLIGHT,
+	LIGHTFX = ET_LIGHTFX,
 	WEAPON = ET_GAMESPECIFIC,
 	TELEPORT,
 	ACTOR,
@@ -88,8 +88,8 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHT,			59,		0,		EU_NONE,
-			inttobit(SPOTLIGHT),
-			inttobit(SPOTLIGHT),
+			inttobit(LIGHTFX),
+			inttobit(LIGHTFX),
 			false,				"light",
 			{ "radius",	"red",		"green",	"blue",		"" }
 	},
@@ -129,11 +129,11 @@ enttypes enttype[] = {
 			{ "id",		"maxrad",	"minrad",	"volume",	"flags" }
 	},
 	{
-		SPOTLIGHT,		59,		0,		EU_NONE,
+		LIGHTFX,		59,		0,		EU_NONE,
 			inttobit(LIGHT),
 			inttobit(LIGHT),
-			false,				"spotlight",
-			{ "radius",	"",			"",			"",			"" }
+			false,				"lightfx",
+			{ "type",	"mod",		"min",		"max",	"flags" }
 	},
 	{
 		WEAPON,			59,		16,		EU_ITEM,
@@ -144,8 +144,8 @@ enttypes enttype[] = {
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,
-			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(TELEPORT),
-			inttobit(MAPSOUND)|inttobit(PARTICLES),
+			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX)|inttobit(TELEPORT),
+			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"teleport",
 			{ "yaw",	"pitch",	"push",		"radius",	"colour" }
 	},
@@ -158,15 +158,15 @@ enttypes enttype[] = {
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,
-			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
-			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES),
+			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
+			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"trigger",
 			{ "id",		"type",		"action",	"radius",	"state" }
 	},
 	{
 		PUSHER,			58,		12,		EU_AUTO,
-			inttobit(MAPSOUND)|inttobit(PARTICLES),
-			inttobit(MAPSOUND)|inttobit(PARTICLES),
+			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
+			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"pusher",
 			{ "zpush",	"ypush",	"xpush",	"radius",	"min" }
 	},

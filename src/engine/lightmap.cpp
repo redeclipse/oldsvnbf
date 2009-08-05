@@ -355,7 +355,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(light.links)
 			{
-				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_SPOTLIGHT)
+				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_LIGHTFX && ents[light.links[k]]->attr[0] == LFX_SPOTLIGHT)
 				{
 					slight = light.links[k];
 					break;
@@ -365,11 +365,12 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(light.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				attenuation *= spotatten;
 			}
+			else continue;
 		}
 		if(lmshadows && mag)
 		{
@@ -2017,7 +2018,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attr[0] == LFX_SPOTLIGHT)
 				{
 					slight = e.links[k];
 					break;
@@ -2027,11 +2028,12 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;
 			}
+			else continue;
 		}
 
 		color.add(vec(e.attr[1], e.attr[2], e.attr[3]).div(255).mul(intensity));
@@ -2088,7 +2090,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_SPOTLIGHT)
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attr[0] == LFX_SPOTLIGHT)
 				{
 					slight = e.links[k];
 					break;
@@ -2098,11 +2100,12 @@ entity *brightestlight(const vec &target, const vec &dir)
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[0])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;
 			}
+			else continue;
 		}
 
 		if(!brightest || intensity > bintensity)

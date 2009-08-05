@@ -230,3 +230,40 @@ int setdynlights(vtxarray *va, const ivec &vaorigin)
     return index;
 }
 
+void makelightfx(const entity &e, const entity &f)
+{
+	if(f.attr[0])
+	{
+		vec colour = vec(f.attr[1], f.attr[2], f.attr[3]).div(255.f);
+		float radius = f.attr[0];
+		switch(e.attr[0])
+		{
+			case LFX_SPOTLIGHT: break;
+			case LFX_DYNLIGHT: adddynlight(f.o, radius, colour); break;
+			case LFX_FLICKER:
+			{
+				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
+				if(c < a) adddynlight(f.o, radius, colour);
+				break;
+			}
+			case LFX_PULSE:
+			{
+				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
+				float skew = c < a ? 1.f-(clamp(float(c)/float(a), 0.f, 1.f)) : clamp(float(c-a)/float(b), 0.f, 1.f);
+				radius *= e.attr[1]*skew;
+				adddynlight(f.o, radius, colour);
+				break;
+			}
+			case LFX_GLOW:
+			{
+				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
+				float skew = c < a ? 1.f-(clamp(float(c)/float(a), 0.f, 1.f)) : clamp(float(c-a)/float(b), 0.f, 1.f);
+				if(e.attr[1]) radius *= e.attr[1]*skew;
+				colour.mul(skew);
+				adddynlight(f.o, radius, colour);
+				break;
+			}
+			default: break;
+		}
+	}
+}

@@ -49,6 +49,15 @@ namespace entities
 				if(attr4 > G_DEMO && attr4 < G_MAX) addentinfo(gametype[attr4].name);
 				break;
 			}
+			case LIGHTFX:
+			{
+				if(full)
+				{
+					const char *lfxnames[LFX_MAX+1] = { "spotlight", "dynlight", "flicker", "pulse", "glow", "" };
+					addentinfo(lfxnames[attr1 < 0 || attr1 >= LFX_MAX ? LFX_MAX : attr1]);
+				}
+				break;
+			}
 			case ACTOR:
 			{
 				if(full && attr1 >= AI_START && attr1 < AI_MAX)
@@ -102,8 +111,8 @@ namespace entities
 				if(full)
 				{
 					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
-					addentinfo(trgnames[attr2 < TR_TOGGLE || attr2 >= TR_MAX ? TR_MAX : attr2]);
-					addentinfo(actnames[attr3 < TA_MANUAL || attr3 >= TA_MAX ? TA_MAX : attr3]);
+					addentinfo(trgnames[attr2 < 0 || attr2 >= TR_MAX ? TR_MAX : attr2]);
+					addentinfo(actnames[attr3 < 0 || attr3 >= TA_MAX ? TA_MAX : attr3]);
 					if(attr5 >= 2) addentinfo("game controlled");
 					addentinfo(attr5%2 ? "default on" : "default off");
 				}
@@ -871,6 +880,7 @@ namespace entities
 				while(e.attr[3] >= 360) e.attr[3] -= 360;
 			case PARTICLES:
 			case MAPSOUND:
+			case LIGHTFX:
 			{
 				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 				{
@@ -898,7 +908,7 @@ namespace entities
 					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS;
 					while(e.attr[0] >= TRIGGERIDS) e.attr[0] += TRIGGERIDS;
 				}
-				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND))
+				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND || ents[e.links[i]]->type == LIGHTFX))
 				{
 					ents[e.links[i]]->lastemit = e.lastemit;
 					ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
@@ -983,27 +993,30 @@ namespace entities
 					case MAPMODEL:
 					{
 						ents[i]->lastemit = ents[index]->lastemit;
-						ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
 						break;
 					}
+					case LIGHTFX:
 					case PARTICLES:
 					{
 						ents[i]->lastemit = ents[index]->lastemit;
-						commit = ents[index]->type != TRIGGER && local;
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						else if(local) commit = true;
 						break;
 					}
 					case MAPSOUND:
 					{
+						ents[i]->lastemit = ents[index]->lastemit;
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						else if(local) commit = true;
 						if(mapsounds.inrange(ents[i]->attr[0]) && !issound(((gameentity *)ents[i])->schan))
 						{
-							ents[i]->lastemit = ents[index]->lastemit;
 							int flags = SND_MAP;
 							if(ents[i]->attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
 							if(ents[i]->attr[4]&SND_NODELAY) flags |= SND_NODELAY;
 							if(ents[i]->attr[4]&SND_NOCULL) flags |= SND_NOCULL;
 							if(ents[i]->attr[4]&SND_NOPAN) flags |= SND_NOPAN;
 							playsound(ents[i]->attr[0], both ? ents[i]->o : ents[index]->o, NULL, flags, ents[i]->attr[3], ents[i]->attr[1], ents[i]->attr[2], &((gameentity *)ents[i])->schan);
-							commit = ents[index]->type != TRIGGER && local;
 						}
 						break;
 					}
@@ -1626,6 +1639,16 @@ namespace entities
 			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
 			switch(e.type)
 			{
+				case LIGHTFX:
+				{
+					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 159))
+					{
+						e.attr[1] = e.attr[0];
+						e.attr[0] = LFX_SPOTLIGHT;
+						e.attr[2] = e.attr[3] = e.attr[4] = 0;
+					}
+					break;
+				}
 				case PLAYERSTART:
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 158))
@@ -1817,15 +1840,15 @@ namespace entities
 					part_radius(e.o, vec(s, s, s));
 					break;
 				}
-				case SPOTLIGHT:
+				case LIGHTFX:
 				{
-					loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == LIGHT)
+					if(e.attr[0] == LFX_SPOTLIGHT) loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == LIGHT)
 					{
 						gameentity &f = *(gameentity *)ents[e.links[i]];
 						float radius = f.attr[0];
 						if(!radius) radius = 2*e.o.dist(f.o);
 						vec dir = vec(e.o).sub(f.o).normalize();
-						float angle = max(1, min(90, int(e.attr[0])));
+						float angle = max(1, min(90, int(e.attr[1])));
 						part_cone(f.o, dir, radius, angle);
 						break;
 					}
@@ -1923,6 +1946,22 @@ namespace entities
 			}
 			if(ents.inrange(enthover) && islightable(ents[enthover]))
 				renderfocus(enthover, renderentlight(e));
+		}
+		loopv(ents) if(ents[i]->type == LIGHTFX && ents[i]->attr[0] != LFX_SPOTLIGHT)
+		{
+			if(ents[i]->spawned || lastmillis-ents[i]->lastemit <= triggertime(*ents[i])/2)
+			{
+				if(!ents[i]->spawned && ents[i]->lastemit > 0 && lastmillis-ents[i]->lastemit > triggertime(*ents[i])/2)
+					continue;
+			}
+			else
+			{
+				bool lonely = true;
+				loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type != LIGHT) { lonely = false; break; }
+				if(!lonely) continue;
+			}
+			loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type == LIGHT)
+				makelightfx(*ents[i], *ents[ents[i]->links[k]]);
 		}
 	}
 
@@ -2025,7 +2064,8 @@ namespace entities
 		{
 			case PARTICLES:
 				if(idx < 0 || e.links.empty()) makeparticles(e);
-				else if(e.lastemit > 0 && lastmillis-e.lastemit <= triggertime(e)/2) makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+				else if(e.spawned || (e.lastemit > 0 && lastmillis-e.lastemit <= triggertime(e)/2))
+					makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
 				break;
 
 			case TELEPORT:
