@@ -194,29 +194,17 @@ namespace aiman
 				if(numbots >= GVAR(botlimit)) shiftai(ci, -1);
 			}
 		}
-		if(m_story(gamemode))
+		loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && chkmode(sents[i].attr[1], gamemode))
 		{
-			loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && sents[i].attr[1] == TEAM_ENEMY)
-			{
-				bool needent = true;
-				loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-				if(needent) addai(sents[i].attr[0], i, -1, false);
-			}
-			if(!autooverride) // story mode strictly obeys nplayers
-			{
-				while(numclients(-1, true, AI_BOT) < nplayers) if(!addai(AI_BOT, -1, -1)) break;
-				while(numclients(-1, true, AI_BOT) > nplayers) if(!delai(AI_BOT)) break;
-			}
+			bool needent = true;
+			loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
+			if(needent) addai(sents[i].attr[0], i, -1, false);
 		}
+		int balance = 0;
+		if(m_story(gamemode)) balance = nplayers;
 		else if(m_fight(gamemode))
 		{
-			loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && aitype[sents[i].attr[0]].canfight && isteam(gamemode, mutators, sents[i].attr[1], TEAM_NEUTRAL))
-			{
-				bool needent = true;
-				loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-				if(needent) addai(sents[i].attr[0], i, -1, false);
-			}
-			int balance = int(nplayers*GVAR(botscale));
+			balance = int(nplayers*GVAR(botscale));
 			if(m_team(gamemode, mutators) && GVAR(teambalance))
 			{ // skew this if teams are unbalanced
 				loopvrev(clients)
@@ -269,7 +257,15 @@ namespace aiman
 				while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
 			}
 		}
-		else if(!autooverride) clearai();
+		if(!autooverride) // story mode strictly obeys nplayers
+		{
+			if(balance > 0)
+			{
+				while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
+				while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
+			}
+			else clearai();
+		}
 	}
 
 	void clearai(int type)

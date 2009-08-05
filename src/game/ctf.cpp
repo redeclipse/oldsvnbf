@@ -35,11 +35,11 @@ namespace ctf
     void drawblips(int w, int h, float blend)
     {
     	static vector<int> hasflags; hasflags.setsizenodelete(0);
-        loopv(st.flags) if(st.flags[i].ent && st.flags[i].owner == game::player1) hasflags.add(i);
+        loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && st.flags[i].owner == game::player1) hasflags.add(i);
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent) continue;
+            if(!entities::ents.inrange(f.ent)) continue;
             loopk(2)
             {
 				vec dir;
@@ -133,7 +133,7 @@ namespace ctf
         loopv(st.flags) // flags/bases
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent) continue;
+            if(!entities::ents.inrange(f.ent)) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.spawnloc);
             float trans = 0.25f;
@@ -146,7 +146,7 @@ namespace ctf
 				}
 				else trans = 1.f;
             }
-            rendermodel(&f.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, f.ent->attr[1], f.ent->attr[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
+            rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attr[1], entities::ents[f.ent]->attr[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
 			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
@@ -179,14 +179,14 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || !f.owner) continue;
+            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || !f.owner) continue;
             while(numflags.length() <= f.owner->clientnum) { numflags.add(0); iterflags.add(0); }
             numflags[f.owner->clientnum]++;
         }
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
+            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || (!f.owner && !f.droptime)) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.pos());
 			float trans = 1.f, yaw = 90;
@@ -219,7 +219,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent) continue;
+            if(!entities::ents.inrange(f.ent)) continue;
 			float trans = 1.f;
 			if(!f.owner)
 			{
@@ -236,13 +236,13 @@ namespace ctf
         st.reset();
         #define setupaddflag(a,b) \
         { \
-            index = st.addflag(a->o, a->attr[0], b); \
+            index = st.addflag(entities::ents[a]->o, entities::ents[a]->attr[0], b); \
 			if(st.flags.inrange(index)) st.flags[index].ent = a; \
 			else continue; \
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(a->type != FLAG || !chkmode(game::gamemode, a->attr[3]) || !isteam(game::gamemode, game::mutators, a->attr[0], TEAM_NEUTRAL)) \
+			if(entities::ents[a]->type != FLAG || !chkmode(game::gamemode, entities::ents[a]->attr[3]) || !isteam(game::gamemode, game::mutators, entities::ents[a]->attr[0], TEAM_NEUTRAL)) \
 				continue; \
 			else \
 			{ \
@@ -255,29 +255,27 @@ namespace ctf
 				if(st.flags.inrange(already)) b; \
 			} \
 		}
-		#define setuphomeflag if(!added) { setupaddflag(e, BASE_HOME); added = true; }
+		#define setuphomeflag(a) if(!added) { setupaddflag(a, BASE_HOME); added = true; }
 		int index = -1;
         loopv(entities::ents)
         {
-            extentity *e = entities::ents[i];
-            setupchkflag(e, { continue; });
+            setupchkflag(i, { continue; });
 			bool added = false; // check for a linked flag to see if we should use a seperate flag/home assignment
-			loopvj(e->links) if(entities::ents.inrange(e->links[j]))
+			loopvj(entities::ents[i]->links) if(entities::ents.inrange(entities::ents[i]->links[j]))
 			{
-				extentity *g = entities::ents[e->links[j]];
-				setupchkflag(g,
+				setupchkflag(entities::ents[i]->links[j],
 				{
 					ctfstate::flag &f = st.flags[already];
 					if((f.base&BASE_FLAG) && (f.base&BASE_HOME)) // got found earlier, but it is linked!
 						f.base &= ~BASE_HOME;
-					setuphomeflag;
+					setuphomeflag(i);
 					continue;
 				});
-				setupaddflag(g, BASE_FLAG); // add link as flag
-				setuphomeflag;
+				setupaddflag(entities::ents[i]->links[j], BASE_FLAG); // add link as flag
+				setuphomeflag(i);
 			}
-            if(!added && isteam(game::gamemode, game::mutators, e->attr[0], TEAM_FIRST)) // not linked and is a team flag
-				setupaddflag(e, BASE_BOTH); // add as both
+            if(!added && isteam(game::gamemode, game::mutators, entities::ents[i]->attr[0], TEAM_FIRST)) // not linked and is a team flag
+				setupaddflag(i, BASE_BOTH); // add as both
         }
         if(!st.flags.empty()) loopi(numteams(game::gamemode, game::mutators))
         {
@@ -297,7 +295,7 @@ namespace ctf
    			        for(int q = 0; q < 2; q++) loopvj(entities::ents)
    			        {
 						extentity *e = entities::ents[j];
-						setupchkflag(e, { continue; });
+						setupchkflag(j, { continue; });
 						vector<float> dists;
 						float v = 0;
 						if(!q)
@@ -331,7 +329,7 @@ namespace ctf
 							if(m <= margin) { best = j; margin = m; mindist = v; }
 						}
    			        }
-					if(entities::ents.inrange(best)) setupaddflag(entities::ents[best], BASE_FLAG);
+					if(entities::ents.inrange(best)) setupaddflag(best, BASE_FLAG);
         		}
         		break;
         	}
@@ -397,7 +395,7 @@ namespace ctf
 		loopvk(st.flags)
 		{
             ctfstate::flag &g = st.flags[k];
-            if(!g.ent || g.owner || g.droptime || !isctfhome(st.flags[k], d->team)) continue;
+            if(!entities::ents.inrange(g.ent) || g.owner || g.droptime || !isctfhome(st.flags[k], d->team)) continue;
 			if(d->o.dist(g.pos()) <= enttype[FLAG].radius*4)
 			{
 				denied = true;
@@ -494,7 +492,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!f.ent || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 1 && !f.droptime)) continue;
+            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 1 && !f.droptime)) continue;
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
                 if(f.pickup) continue;
@@ -530,6 +528,13 @@ namespace ctf
 			}
 		}
 		return false;
+	}
+
+	int aiowner(gameent *d)
+	{
+		loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && entities::ents[d->aientity]->links.find(st.flags[i].ent) >= 0)
+			return st.flags[i].team;
+		return d->team;
 	}
 
 	bool aicheck(gameent *d, ai::aistate &b)

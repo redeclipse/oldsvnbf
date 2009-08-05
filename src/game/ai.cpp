@@ -27,10 +27,20 @@ namespace ai
 		return viewfieldx(x)*3.f/4.f;
 	}
 
+	int owner(gameent *d)
+	{
+		if(entities::ents.inrange(d->aientity))
+		{
+			if(m_stf(game::gamemode)) return stf::aiowner(d);
+			else if(m_stf(game::gamemode)) return stf::aiowner(d);
+		}
+		return d->team;
+	}
+
 	bool targetable(gameent *d, gameent *e, bool z)
 	{
 		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode))
-			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || (d)->team != (e)->team);
+			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e));
 		return false;
 	}
 
@@ -105,7 +115,6 @@ namespace ai
 			if(d->skill != sk && showaiinfo > 1 && game::showplayerinfo)
 				conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
-		//else if(d->team != tm) conoutf("\fg%s switched to \fs%s%s\fS team", game::colorname(d, name), teamtype[tm].chat, teamtype[tm].name);
 
 		copystring(d->name, name, MAXNAMELEN);
 		if((d->aitype = at) >= AI_START)
@@ -118,7 +127,6 @@ namespace ai
 			d->yradius = aitype[d->aitype].yradius;
 			d->zradius = d->height = aitype[d->aitype].height;
 		}
-		else d->aientity = -1;
 		d->ownernum = on;
 		d->skill = sk;
 		d->team = tm;
@@ -156,7 +164,7 @@ namespace ai
 		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE && e->aitype == d->aitype)
 		{
 			if(targets.find(e->clientnum) >= 0) continue;
-			if(teams && m_team(game::gamemode, game::mutators) && d && d->team != e->team) continue;
+			if(teams && m_team(game::gamemode, game::mutators) && d && owner(d) != owner(e)) continue;
 			aistate &b = e->ai->getstate();
 			if(state >= 0 && b.type != state) continue;
 			if(target >= 0 && b.target != target) continue;
@@ -314,7 +322,7 @@ namespace ai
 	void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
 	{
 		gameent *e = NULL;
-		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && d->team == e->team)
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && owner(d) == owner(e))
 		{
 			interest &n = interests.add();
 			n.state = AI_S_DEFEND;
@@ -436,8 +444,9 @@ namespace ai
 		}
 	}
 
-	void setup(gameent *d, bool tryreset = false)
+	void setup(gameent *d, bool tryreset = false, int ent = -1)
 	{
+		d->aientity = ent;
 		if(d->ai)
 		{
 			d->ai->reset(tryreset);
@@ -461,7 +470,7 @@ namespace ai
 		}
 	}
 
-	void spawned(gameent *d) { setup(d, false); }
+	void spawned(gameent *d, int ent) { setup(d, false, ent); }
 	void killed(gameent *d, gameent *e) { if(d->ai) d->ai->reset(); }
 
 	bool check(gameent *d, aistate &b)
@@ -1045,7 +1054,7 @@ namespace ai
 					if(millis < m_speedtime(2500)) d->ai->tryreset = false;
 					else if(millis < m_speedtime(5000))
 					{
-						if(!d->ai->tryreset) setup(d, true);
+						if(!d->ai->tryreset) setup(d, true, d->aientity);
 					}
 					else if(d->ai->tryreset)
 					{
@@ -1113,7 +1122,7 @@ namespace ai
 		// the state stack works like a chain of commands, certain commands simply replace each other
 		// others spawn new commands to the stack the ai reads the top command from the stack and executes
 		// it or pops the stack and goes back along the history until it finds a suitable command to execute
-		if(d->ai->state.empty()) setup(d);
+		if(d->ai->state.empty()) setup(d, false, d->aientity);
 		bool cleannext = false;
 		loopvrev(d->ai->state)
 		{
@@ -1203,7 +1212,7 @@ namespace ai
 
 	void drawroute(gameent *d, aistate &b, float amt)
 	{
-		int colour = teamtype[d->team].colour, last = -1;
+		int colour = teamtype[owner(d)].colour, last = -1;
 		loopvrev(d->ai->route)
 		{
 			if(d->ai->route.inrange(last))

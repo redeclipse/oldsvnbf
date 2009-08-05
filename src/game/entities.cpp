@@ -54,7 +54,7 @@ namespace entities
 				if(full && attr1 >= AI_START && attr1 < AI_MAX)
 				{
 					addentinfo(aitype[attr1].name);
-					if(attr2 >= 0 && attr2 < TEAM_MAX) addentinfo(teamtype[attr2].name);
+					if(attr2 > G_DEMO && attr2 < G_MAX) addentinfo(gametype[attr2].name);
 					if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
 				}
 				break;
@@ -113,7 +113,7 @@ namespace entities
 			{
 				if(full)
 				{
-					const char *wpnames[WP_MAX+1] = { "common", "player", "enemy", "linked", "" }, *wpsnames[WP_S_MAX+1] = { "", "defend", "" };
+					const char *wpnames[WP_MAX+1] = { "common", "player", "enemy", "linked", "camera", "" }, *wpsnames[WP_S_MAX+1] = { "", "defend", "project", "" };
 					addentinfo(wpnames[attr1 < 0 || attr1 >= WP_MAX ? WP_MAX : attr1]);
 					addentinfo(wpsnames[attr2 < 0 || attr2 >= WP_S_MAX ? WP_S_MAX : attr2]);
 					if(attr5&WP_F_CROUCH) addentinfo("crouch");
@@ -341,6 +341,7 @@ namespace entities
 			case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
 			case WP_ENEMY: if(d->aitype >= AI_START) return true; break;
 			case WP_LINKED: if(ents.inrange(d->aientity) && ents[n]->links.find(d->aientity) >= 0) return true; break;
+			case WP_CAMERA: if(d == game::player1 && d->state == CS_SPECTATOR) return true; break;
 		}
 		return false;
 	}
@@ -921,8 +922,8 @@ namespace entities
 			case ACTOR:
 				while(e.attr[0] < 0) e.attr[0] += AI_MAX;
 				while(e.attr[0] >= AI_MAX) e.attr[0] -= AI_MAX;
-				while(e.attr[1] < 0) e.attr[1] += TEAM_MAX;
-				while(e.attr[1] >= TEAM_MAX) e.attr[1] -= TEAM_MAX;
+				while(e.attr[1] < 0) e.attr[1] += G_MAX;
+				while(e.attr[1] >= G_MAX) e.attr[1] -= G_MAX;
 				while(e.attr[2] < 0) e.attr[2] += 360;
 				while(e.attr[2] >= 360) e.attr[2] -= 360;
 				while(e.attr[3] < -90) e.attr[3] += 180;
