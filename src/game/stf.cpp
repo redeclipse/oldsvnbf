@@ -18,9 +18,9 @@ namespace stf
 		loopv(st.flags)
 		{
 			stfstate::flag &b = st.flags[i];
-            if(!b.ent) continue;
+            if(!entities::ents.inrange(b.ent)) continue;
 			const char *flagname = teamtype[b.owner].flag;
-            rendermodel(&b.ent->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, b.ent->attr[2], b.ent->attr[3], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED);
+            rendermodel(&entities::ents[b.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, entities::ents[b.ent]->attr[2], entities::ents[b.ent]->attr[3], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
 				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
@@ -46,7 +46,7 @@ namespace stf
         loopv(st.flags)
         {
             stfstate::flag &f = st.flags[i];
-            if(!f.ent) continue;
+            if(!entities::ents.inrange(f.ent)) continue;
 			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*1.5f,
 				vec((teamtype[f.owner].colour>>16), ((teamtype[f.owner].colour>>8)&0xFF), (teamtype[f.owner].colour&0xFF)).div(255.f));
         }
@@ -143,7 +143,7 @@ namespace stf
 			const char *name = getalias(alias);
 			if(name[0]) copystring(b.name, name);
 			else formatstring(b.name)("flag %d", st.flags.length());
-			b.ent = e;
+			b.ent = i;
 		}
 	}
 
@@ -191,6 +191,13 @@ namespace stf
 	void setscore(int team, int total)
 	{
 		st.findscore(team).total = total;
+	}
+
+	int aiowner(gameent *d)
+	{
+		loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && entities::ents[d->aientity]->links.find(st.flags[i].ent) >= 0)
+			return st.flags[i].owner ? st.flags[i].owner : st.flags[i].enemy;
+		return d->team;
 	}
 
 	bool aicheck(gameent *d, ai::aistate &b)

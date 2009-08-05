@@ -1342,7 +1342,8 @@ namespace server
 
 	int chooseteam(clientinfo *ci, int suggest = -1)
 	{
-		if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
+		if(ci->state.aitype >= AI_START) return TEAM_ENEMY;
+		else if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[1]) return sents[ci->state.aientity].attr[1];
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);

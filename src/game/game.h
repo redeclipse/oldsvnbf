@@ -66,8 +66,8 @@ enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
 #define TRIGGERIDS		16
 #define TRIGSTATE(a,b)	(b%2 ? !a : a)
 
-enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_MAX };
-enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_MAX };
+enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_CAMERA, WP_MAX };
+enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
 struct enttypes
 {
@@ -151,10 +151,10 @@ enttypes enttype[] = {
 	},
 	{
 		ACTOR,			59,		0,		EU_NONE,
-			inttobit(WAYPOINT),
+			inttobit(WAYPOINT)|inttobit(FLAG),
 			0,
 			false,				"actor",
-			{ "type",	"team",		"yaw",		"pitch",	"flags" }
+			{ "type",	"mode",		"yaw",		"pitch",	"flags" }
 	},
 	{
 		TRIGGER,		58,		16,		EU_AUTO,

@@ -207,7 +207,7 @@ namespace ai
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1, bool retry = false);
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 0);
 
-	extern void spawned(gameent *d);
+	extern void spawned(gameent *d, int ent);
 	extern void damaged(gameent *d, gameent *e);
 	extern void killed(gameent *d, gameent *e);
 	extern void update();

@@ -11,15 +11,14 @@ struct stfstate
 		int owner, enemy;
 #ifndef GAMESERVER
 		string name, info;
-		extentity *ent;
 		bool hasflag;
-		int lasthad;
+		int ent, lasthad;
 #endif
 		int owners, enemies, converted, securetime;
 
 		flag()
 #ifndef GAMESERVER
-          : ent(NULL)
+          : ent(-1)
 #endif
         { reset(); }
 
@@ -187,6 +186,7 @@ namespace stf
 	extern void preload();
 	extern void render();
 	extern void adddynlights();
+	extern int aiowner(gameent *d);
 	extern void aifind(gameent *d, ai::aistate &b, vector<ai::interest> &interests);
 	extern bool aicheck(gameent *d, ai::aistate &b);
 	extern bool aidefend(gameent *d, ai::aistate &b);

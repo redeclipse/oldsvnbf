@@ -1217,7 +1217,7 @@ namespace client
 						playsound(S_RESPAWN, f->o, f);
 						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
 					}
-					ai::spawned(f);
+					ai::spawned(f, ent);
 					if(f == game::player1) game::resetcamera();
 					break;
 				}

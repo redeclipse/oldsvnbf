@@ -1583,11 +1583,7 @@ namespace game
 			if(third) copystring(mdl, teamtype[team].tpmdl);
 			else copystring(mdl, teamtype[team].fpmdl);
 		}
-		else if(d->aitype < AI_MAX) switch(d->aitype)
-		{
-			case AI_TURRET: copystring(mdl, teamtype[team].fpmdl); break;
-			default: copystring(mdl, aitype[d->aitype].mdl); break;
-		}
+		else if(d->aitype < AI_MAX) copystring(mdl, aitype[d->aitype].mdl);
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? d->feetpos() : d->headpos());
