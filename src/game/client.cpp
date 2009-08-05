@@ -753,7 +753,7 @@ namespace client
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) |
-				((d->crouching ? 1 : 0)<<4) | ((d->conopen ? 1 : 0)<<6) |
+				((d->crouching ? 1 : 0)<<4) | ((d->impulsing ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
 					((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
 			putuint(q, flags);
             if(flags&0x20)
@@ -916,7 +916,8 @@ namespace client
 				gameent *d = game::getclient(lcn);
                 if(!d || d==game::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
-				d->conopen = f&0x40 ? true : false;
+				d->impulsing = f&0x40 ? true : false;
+				d->conopen = f&0x80 ? true : false;
 				d->yaw = yaw;
 				d->pitch = pitch;
 				d->roll = roll;
@@ -1031,16 +1032,13 @@ namespace client
 					{
 						case SPHY_JUMP:
 						{
-							playsound(S_JUMP, t->o, t);
-							regularshape(PART_SMOKE, int(t->radius), 0x222222, 21, 20, 250, t->feetpos(), 1.f, -10, 0, 10.f);
+							playsound(S_JUMP, t->o, t); regularshape(PART_SMOKE, int(t->radius), 0x111111, 21, 20, 100, t->feetpos(), 1.f, -10, 0, 10.f);
 							t->jumptime = lastmillis;
 							break;
 						}
 						case SPHY_IMPULSE:
 						{
-							playsound(S_IMPULSE, t->o, t);
-							regularshape(PART_SMOKE, int(t->radius), 0x222222, 21, 20, 250, t->feetpos(), 1.f, -10, 0, 10.f);
-							t->impulsetime = lastmillis;
+							playsound(S_IMPULSE, t->o, t); game::impulseeffect(t, true);
 							break;
 						}
 						case SPHY_POWER:

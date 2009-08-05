@@ -312,6 +312,16 @@ namespace game
 		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
+	void impulseeffect(gameent *d, bool effect)
+	{
+		if(d->type == ENT_PLAYER)
+		{
+			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->lfoot, 1.5f, -5, 0, 10.f);
+			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->rfoot, 1.5f, -5, 0, 10.f);
+		}
+		else regularshape(PART_FIREBALL, int(d->radius)*2, 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->feetpos(), 1.5f, -5, 0, 10.f);
+	}
+
 	gameent *pointatplayer()
 	{
 		loopv(players)
@@ -1870,7 +1880,11 @@ namespace game
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
 			d->head = d->torso = d->muzzle = d->waist = d->lfoot = d->rfoot = vec(-1, -1, -1);
 		endmodelbatches();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->checktags();
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
+        {
+        	d->checktags();
+        	if(d->impulsing && d->state == CS_ALIVE) impulseeffect(d, false);
+        }
 	}
 
     void renderavatar(bool early)
@@ -1880,7 +1894,11 @@ namespace game
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
-		if(rendernormally && early) player1->checktags();
+		if(rendernormally && early)
+		{
+			player1->checktags();
+        	if(player1->impulsing && player1->state == CS_ALIVE) impulseeffect(player1, false);
+		}
     }
 
 	bool clientoption(char *arg) { return false; }

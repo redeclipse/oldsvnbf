@@ -1231,6 +1231,7 @@ namespace game
 	extern void announce(int idx, int targ, const char *msg, ...);
 	extern void respawn(gameent *d);
 	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
+	extern void impulseeffect(gameent *d, bool effect);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
 	extern void fixfullrange(float &yaw, float &pitch, float &roll, bool full);
