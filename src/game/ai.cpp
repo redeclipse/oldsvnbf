@@ -138,15 +138,14 @@ namespace ai
         }
 		loopv(game::players) if(game::players[i] && game::players[i]->ai)
 		{
-			bool doupdate = updating && (game::players[i]->aitype >= AI_START ? !(updateiters%5) : true);
+			bool doupdate = updating && (game::players[i]->aitype >= AI_START ? !updateiters : true);
 			if(!game::intermission) think(game::players[i], doupdate);
 			else game::players[i]->stopmoving(true);
 		}
 		if(updating)
 		{
 			updatemillis = lastmillis;
-			if(updateiters>5) updateiters = 1;
-			updateiters++;
+			if(++updateiters >= 5) updateiters = 0;
 		}
 	}
 
@@ -284,7 +283,7 @@ namespace ai
 	{
 		if(targetable(d, e, true))
 		{
-			if(pursue && aitype[d->aitype].maxspeed) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(pursue) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -453,8 +452,12 @@ namespace ai
 				d->arenaweap = rnd(WEAP_TOTAL);
 				if(d->arenaweap != WEAP_PISTOL || !rnd(d->skill)) break;
 			}
-			if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
-				d->arenaweap = WEAP_PISTOL;
+			if(d->aitype == AI_BOT)
+			{
+				d->ai->suspended = false;
+				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
+					d->arenaweap = WEAP_PISTOL;
+			}
 		}
 	}
 
@@ -602,14 +605,17 @@ namespace ai
 
 	int dopursue(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
+		if(d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
 				case AI_T_AFFINITY:
 				{
-					if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
-					else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
+					if(aitype[d->aitype].maxspeed)
+					{
+						if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
+						else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
+					}
 					break;
 				}
 
@@ -619,9 +625,17 @@ namespace ai
 					gameent *e = game::getclient(b.target);
 					if(e && e->state == CS_ALIVE)
 					{
-						int weap = d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? d->arenaweap : d->weapselect;
-						float mindist = weaptype[weap].explode ? weaptype[weap].explode : NEARDIST, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : FARDIST;
-						return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
+						if(aitype[d->aitype].maxspeed)
+						{
+							int weap = d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? d->arenaweap : d->weapselect;
+							float mindist = weaptype[weap].explode ? weaptype[weap].explode : NEARDIST, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : FARDIST;
+							return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
+						}
+						else
+						{
+							vec dp = d->headpos(), ep = getaimpos(d, e);
+							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime((d->skill*50)+1000));
+						}
 					}
 					break;
 				}
@@ -1015,26 +1029,29 @@ namespace ai
 
 	void logic(gameent *d, aistate &b, bool run)
 	{
-		vec dp = d->headpos();
-		findorientation(dp, d->yaw, d->pitch, d->ai->target);
-		bool allowmove = game::allowmove(d);
-		if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
-		if(d->state == CS_ALIVE && allowmove)
+		if(!d->ai->suspended)
 		{
-			if(!request(d, b)) target(d, b, false, b.idle ? true : false);
-			weapons::shoot(d, d->ai->target);
-			if(d->ai->lasthunt && aitype[d->aitype].maxspeed)
+			vec dp = d->headpos();
+			findorientation(dp, d->yaw, d->pitch, d->ai->target);
+			bool allowmove = game::allowmove(d);
+			if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
+			if(d->state == CS_ALIVE && allowmove)
 			{
-				int millis = lastmillis-d->ai->lasthunt;
-				if(millis < m_speedtime(2500)) d->ai->tryreset = false;
-				else if(millis < m_speedtime(5000))
+				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
+				weapons::shoot(d, d->ai->target);
+				if(d->ai->lasthunt && aitype[d->aitype].maxspeed)
 				{
-					if(!d->ai->tryreset) setup(d, true);
-				}
-				else if(d->ai->tryreset)
-				{
-					game::suicide(d, HIT_LOST); // better off doing something than nothing
-					d->ai->reset(false);
+					int millis = lastmillis-d->ai->lasthunt;
+					if(millis < m_speedtime(2500)) d->ai->tryreset = false;
+					else if(millis < m_speedtime(5000))
+					{
+						if(!d->ai->tryreset) setup(d, true);
+					}
+					else if(d->ai->tryreset)
+					{
+						game::suicide(d, HIT_LOST); // better off doing something than nothing
+						d->ai->reset(false);
+					}
 				}
 			}
 		}
@@ -1047,7 +1064,7 @@ namespace ai
 		else
         {
             if(d->ragdoll) cleanragdoll(d);
-            if(d->state == CS_ALIVE && !game::intermission)
+            if(d->state == CS_ALIVE && !game::intermission && !d->ai->suspended)
             {
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
@@ -1137,9 +1154,17 @@ namespace ai
 						}
 						continue; // shouldn't interfere
 					}
-					else c.next = lastmillis+m_speedtime(1000+rnd(1000));
+					else
+					{
+						if(d->aitype >= AI_START) d->ai->suspended = true;
+						c.next = lastmillis+m_speedtime(1000+rnd(1000));
+					}
 				}
-				else c.next = lastmillis+m_speedtime(500+rnd(500));
+				else
+				{
+					d->ai->suspended = false;
+					c.next = lastmillis+m_speedtime(500+rnd(500));
+				}
 			}
 			logic(d, c, run);
 			break;

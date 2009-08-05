@@ -728,7 +728,7 @@ namespace client
 
 	void updateposition(gameent *d)
 	{
-        if(d->state==CS_ALIVE || d->state==CS_EDITING)
+        if((d->state==CS_ALIVE || d->state==CS_EDITING) && (!d->ai || !d->ai->suspended))
 		{
 			// send position updates separately so as to not stall out aiming
 			ENetPacket *packet = enet_packet_create(NULL, 100, 0);
@@ -823,11 +823,12 @@ namespace client
 
     void c2sinfo() // send update to the server
     {
-        static int lastupdate = -1000;
-        if(totalmillis - lastupdate < 40) return;    // don't update faster than 25fps
+        static int lastupdate = -1000, numupdates = 0;
+        if(totalmillis-lastupdate < 40) return;    // don't update faster than 25fps
         lastupdate = totalmillis;
         updateposition(game::player1);
-        loopv(game::players) if(game::players[i] && game::players[i]->ai) updateposition(game::players[i]);
+        loopv(game::players) if(game::players[i] && game::players[i]->ai && (game::players[i]->type == ENT_PLAYER || !numupdates)) updateposition(game::players[i]);
+		if(++numupdates >= 2) numupdates = 0;
         sendmessages(game::player1);
         flushclient();
     }

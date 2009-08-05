@@ -99,7 +99,7 @@ namespace ai
 		int enemy, enemyseen, enemymillis, prevnodes[NUMPREVNODES],
 			lastrun, lasthunt, lastaction, jumpseed, jumprand;
 		float targyaw, targpitch, views[3];
-		bool dontmove, becareful, tryreset, trywipe;
+		bool suspended, dontmove, becareful, tryreset, trywipe;
 
 		aiinfo()
 		{
@@ -120,6 +120,7 @@ namespace ai
 			state.setsizenodelete(0);
 			addstate(AI_S_WAIT);
 			trywipe = becareful = false;
+			suspended = true;
 		}
 
 		void reset(bool tryit = false)
