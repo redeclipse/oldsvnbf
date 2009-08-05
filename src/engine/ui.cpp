@@ -1,6 +1,8 @@
 #include "engine.h"
 #include "textedit.h"
 
+int uimillis = -1;
+
 static bool layoutpass, actionon = false;
 static int mousebuttons = 0;
 static struct gui *windowhit = NULL;
@@ -123,7 +125,7 @@ struct gui : g3d_gui
 				*tcurrent = tpos; //roll-over to switch tab
 				color = 0xFF0000;
 			}
-
+			else if(visible()) tcolor = 0xFFFFFF;
 			skin_(x1-skinx[visible()?2:6]*SKIN_SCALE, y1-skiny[1]*SKIN_SCALE, w, h, visible()?10:19, 9);
             text_(name, x1 + (skinx[3]-skinx[2])*SKIN_SCALE-(w ? INSERT : INSERT/2), y1 + (skiny[2]-skiny[1])*SKIN_SCALE - INSERT, tcolor, visible());
 		}
@@ -631,6 +633,7 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
+#if 0
 		if(!skintex) skintex = textureload(guiskintex, 3);
 		glBindTexture(GL_TEXTURE_2D, skintex->id);
 		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
@@ -701,6 +704,7 @@ struct gui : g3d_gui
 			}
 		}
 		if(quads) glEnd();
+#endif
 	}
 
     vec origin, scale;
@@ -790,7 +794,7 @@ struct gui : g3d_gui
 
 Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 
-TVARN(guiskintex, "textures/guiskin", gui::skintex, 0);
+//TVARN(guiskintex, "textures/guiskin", gui::skintex, 0);
 TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex, 0);
 TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
 
@@ -993,9 +997,14 @@ void g3d_render()
 
 namespace UI
 {
+	bool isopen = false;
 	bool hascursor(bool targeting) { return commandmillis > 0 || g3d_active(true, targeting); }
 	bool keypress(int code, bool isdown, int cooked) { return g3d_keypress(code, isdown, cooked); }
 	void setup() { return; }
-	void update() { return; }
+	void update()
+	{
+		bool p = g3d_active(true, false);
+		if(isopen != p) uimillis = (isopen = p) ? lastmillis : -lastmillis;
+	}
 	void render() { g3d_render(); }
 };
