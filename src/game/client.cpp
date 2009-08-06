@@ -1131,7 +1131,7 @@ namespace client
 				case SV_NEWGAME: // server requests next game
 				{
 					if(hud::sb.scoreson) hud::sb.showscores(false);
-					if(!guiactive()) showgui("game");
+					if(!menuactive()) showgui("game");
 					break;
 				}
 
@@ -1193,7 +1193,7 @@ namespace client
 				case SV_ARENAWEAP:
 				{
 					if(hud::sb.scoreson) hud::sb.showscores(false);
-					if(!guiactive()) showgui("arena");
+					if(!menuactive()) showgui("arena");
 					break;
 				}
 
@@ -1952,10 +1952,10 @@ namespace client
 		}
 	}
 
-    void serverstartcolumn(g3d_gui *g, int i)
+    void serverstartcolumn(guient *g, int i)
     {
 		g->pushlist();
-		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & G3D_UP)
+		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & GUI_UP)
 		{
 			mkstring(st);
 			bool invert = false;
@@ -1980,13 +1980,13 @@ namespace client
 		g->mergehits(true);
     }
 
-    void serverendcolumn(g3d_gui *g, int i)
+    void serverendcolumn(guient *g, int i)
     {
         g->mergehits(false);
         g->poplist();
     }
 
-    bool serverentry(g3d_gui *g, int i, serverinfo *si)
+    bool serverentry(guient *g, int i, serverinfo *si)
     {
 		mkstring(text);
 		int status = serverstat(si), colour = serverstatus[status].colour;
@@ -1995,51 +1995,51 @@ namespace client
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("", colour, serverstatus[status].icon) & G3D_UP)
+				if(g->button("", colour, serverstatus[status].icon) & GUI_UP)
 					return true;
 				break;
 			}
 			case SINFO_DESC:
 			{
 				copystring(text, si->sdesc, 24);
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
 				formatstring(text)("%d", si->ping);
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
 				formatstring(text)("%d", si->numplayers);
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
 				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%d", si->attr[4]);
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
 				if(si->attr.length() > 1) formatstring(text)("%s", server::gamename(si->attr[1], si->attr[2]));
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
 				copystring(text, si->map, 18);
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
 				if(si->attr.length() > 3 && si->attr[3] >= 0)
 					formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
-				if(g->buttonf("%s ", colour, NULL, text) & G3D_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
 				break;
 			}
 			default:
@@ -2048,7 +2048,7 @@ namespace client
 		return false;
     }
 
-	int serverbrowser(g3d_gui *g)
+	int serverbrowser(guient *g)
 	{
 		if(servers.empty())
 		{

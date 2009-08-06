@@ -637,7 +637,7 @@ void findorientation(vec &o, float yaw, float pitch, vec &pos)
 	vec dir;
 	vecfromyawpitch(yaw, pitch, 1, 0, dir);
 	if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-		pos = dir.mul(2*hdr.worldsize).add(o); //otherwise 3dgui won't work when outside of map
+		pos = dir.mul(2*hdr.worldsize).add(o); //otherwise gui won't work when outside of map
 }
 
 void transplayer()

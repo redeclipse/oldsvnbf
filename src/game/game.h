@@ -140,7 +140,7 @@ enttypes enttype[] = {
 			0,
 			0,
 			false,				"weapon",
-			{ "id",		"flags",	"",			"",			"" }
+			{ "id",		"flags",	"mode",		"",			"" }
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,
