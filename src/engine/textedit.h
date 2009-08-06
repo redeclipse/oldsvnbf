@@ -631,7 +631,7 @@ struct editor
                 glEnable(GL_TEXTURE_2D);
                 defaultshader->set();
             }
-            h+=guibound[2];
+            h+=height;
         }
     }
 };
