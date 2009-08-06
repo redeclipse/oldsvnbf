@@ -2106,16 +2106,22 @@ namespace server
 				actor->state.fraglog.add(target->clientnum);
 				if(GVAR(multikilldelay))
 				{
-					actor->state.fragmillis.add(lastmillis);
+					logs = 0;
 					loopv(actor->state.fragmillis)
 					{
 						if(lastmillis-actor->state.fragmillis[i] > GVAR(multikilldelay)) actor->state.fragmillis.remove(i--);
 						else logs++;
 					}
+					if(!logs) actor->state.rewards &= ~FRAG_MULTI;
+					actor->state.fragmillis.add(lastmillis); logs++;
 					if(logs >= 2)
 					{
 						int offset = clamp(logs-2, 0, 2), type = FRAG_MKILL1+offset; // double, triple, multi..
-						style |= type; pointvalue *= offset+2;
+						if(!(actor->state.rewards&type))
+						{
+							style |= type;  actor->state.rewards |= type; pointvalue *= offset+2;
+							loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
+						}
 					}
 				}
 
@@ -2126,15 +2132,14 @@ namespace server
 					int offset = (actor->state.spree/GVAR(spreecount))-1, type = FRAG_SPREE1+offset;
 					if(!(actor->state.rewards&type))
 					{
-						style |= type; actor->state.rewards |= type;
-						pointvalue += (offset+1)*GVAR(spreecount);
+						style |= type; actor->state.rewards |= type; pointvalue *= offset+2;
 					}
 				}
 				logs = 0; loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-				if(logs >= GVAR(dominatecount)) { style |= FRAG_REVENGE; pointvalue += GVAR(dominatecount); }
+				if(logs >= GVAR(dominatecount)) { style |= FRAG_REVENGE; pointvalue *= GVAR(dominatecount); }
 
 				logs = 0; loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-				if(logs == GVAR(dominatecount)) { style |= FRAG_DOMINATE; pointvalue += GVAR(dominatecount); }
+				if(logs == GVAR(dominatecount)) { style |= FRAG_DOMINATE; pointvalue *= GVAR(dominatecount); }
 			}
 			else actor->state.spree = 0;
 			target->state.deaths++;

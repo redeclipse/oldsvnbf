@@ -817,10 +817,11 @@ namespace hud
 					}
 				}
 				int r = x+FONTW, z = y;
+				float blend = chatconblend*hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
 				loopv(refs)
 				{
 					float f = full || !chatconfade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*chatconblend*hudblend*(full ? 1.f : fade)*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*blend*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 		}
@@ -845,10 +846,11 @@ namespace hud
 						refs.add(i);
 					}
 				}
+				float blend = (full ? fullconblend : conblend)*hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
 				loopvrev(refs)
 				{
 					float f = full || !confade ? 1.f : clamp((keeptime-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*(full ? fullconblend : conblend)*hudblend*(full ? 1.f : fade)*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*blend*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 			if(commandmillis > 0)

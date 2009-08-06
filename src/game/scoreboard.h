@@ -203,17 +203,21 @@ namespace hud
 
 		void gui(g3d_gui &g, bool firstpass)
 		{
-			g.start(menustart, 0.03f, NULL, false);
+			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
+			g.pushfont("super");
 			if(*maptitle) g.textf("%s (%s)", 0xFFFFFF, NULL, maptitle, mapname);
-			else g.textf("untitled (%s)", 0xFFFFFF, NULL, mapname);
+			else g.textf("(%s)", 0xFFFFFF, NULL, mapname);
+			g.popfont();
 			g.pushlist();
+			g.pushfont("emphasis");
 			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
 			if((m_fight(game::gamemode) || client::demoplayback) && game::minremain >= 0)
 			{
 				if(!game::minremain) g.textf(", intermission", 0xFFFFFF, NULL);
 				else g.textf(", %d %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "minute" : "minutes");
 			}
+			g.popfont();
 			g.poplist();
 
 			if(game::intermission || showscoresinfo())

@@ -1742,7 +1742,7 @@ struct texturegui : g3d_callback
 		if(texguieditor && menutex >= 0 && menutex <= curtexnum)
 		{
 			Slot &slot = lookuptexture(menutex, false);
-			g.start(menustart, 0.04f);
+			g.start(menustart, menuscale);
 			g.pushlist();
 
 			Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
@@ -1899,7 +1899,7 @@ struct texturegui : g3d_callback
 		else
 		{
 			int origtab = menutab;
-			g.start(menustart, 0.04f, &menutab, true);
+			g.start(menustart, menuscale, &menutab, true);
 			loopi(1+curtexnum/(thumbwidth*thumbheight))
 			{
 				g.tab(!i ? "Textures" : NULL, 0xAAFFAA);

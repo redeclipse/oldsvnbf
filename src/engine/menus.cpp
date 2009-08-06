@@ -9,6 +9,7 @@ hashtable<const char *, menu> guis;
 vector<menu *> guistack;
 vector<char *> executelater;
 bool shouldclearmenu = true, clearlater = false;
+FVARP(menuscale, 0, 0.02f, 1);
 
 void popgui()
 {
@@ -172,6 +173,15 @@ void guistrut(int *strut, int *alt)
 		if(!*alt) cgui->pushlist();
 		cgui->strut(*strut);
 		if(!*alt) cgui->poplist();
+	}
+}
+
+void guifont(char *font)
+{
+	if(cgui)
+	{
+		if(font && *font) cgui->pushfont(font);
+		else cgui->popfont();
 	}
 }
 
@@ -393,6 +403,7 @@ COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
+COMMAND(guifont,"s");
 COMMAND(guiimage,"ssfiss");
 COMMAND(guislider,"siisi");
 COMMAND(guilistslider, "sssi");
@@ -419,7 +430,7 @@ static struct applymenu : menu
     void gui(g3d_gui &g, bool firstpass)
     {
         if(guistack.empty()) return;
-        g.start(cmenustart, 0.03f, NULL, true);
+        g.start(cmenustart, menuscale, NULL, true);
         g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
         loopv(needsapply) g.text(needsapply[i].desc, GUI_TEXT_COLOR, "info");
         g.separator();

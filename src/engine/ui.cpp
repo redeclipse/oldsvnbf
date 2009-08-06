@@ -36,7 +36,7 @@ struct gui : g3d_gui
 
 	static vector<list> lists;
 	static float hitx, hity;
-	static int curdepth, curlist, xsize, ysize, curx, cury;
+	static int curdepth, curlist, xsize, ysize, curx, cury, fontdepth;
     static bool shouldmergehits, shouldautotab;
 
 	static void reset()
@@ -97,6 +97,7 @@ struct gui : g3d_gui
 	void tab(const char *name, int color)
 	{
 		if(curdepth != 0) return;
+		gui::pushfont("super");
         if(color) tcolor = color;
 		tpos++;
 		if(!name)
@@ -130,6 +131,7 @@ struct gui : g3d_gui
             text_(name, x1 + (skinx[3]-skinx[2])*SKIN_SCALE-(w ? INSERT : INSERT/2), y1 + (skiny[2]-skiny[1])*SKIN_SCALE - INSERT, tcolor, visible());
 		}
 		tx += w + ((skinx[5]-skinx[4]) + (skinx[3]-skinx[2]))*SKIN_SCALE;
+		gui::popfont();
 	}
 
 	bool ishorizontal() const { return curdepth&1; }
@@ -189,6 +191,9 @@ struct gui : g3d_gui
     void strut(int size) { layout(isvertical() ? size*FONTW : 0, isvertical() ? 0 : size*FONTH); }
 	//add space between list items
     void space(int size) { layout(isvertical() ? 0 : size*FONTW, isvertical() ? size*FONTH : 0); }
+
+    void pushfont(const char *font) { ::pushfont(font); fontdepth++; }
+    void popfont() { if(fontdepth) { ::popfont(); fontdepth--; } }
 
 	int layout(int w, int h)
 	{
@@ -302,6 +307,7 @@ struct gui : g3d_gui
 
     char *field_(const char *name, int color, int length, int height, const char *initval, int initmode, int fieldtype = FIELDEDIT)
 	{
+		gui::pushfont("console");
         editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
         {
@@ -381,6 +387,7 @@ struct gui : g3d_gui
             }
             if(wasvertical) poplist();
         }
+        gui::popfont();
 		return result;
 	}
 
@@ -639,78 +646,79 @@ struct gui : g3d_gui
 
 	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
 	{
-#if 0
-		if(!skintex) skintex = textureload(guiskintex, 3);
-		glBindTexture(GL_TEXTURE_2D, skintex->id);
-		int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
-		float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
-
-		bool quads = false;
-		glColor4f(1.0f, 1.0f, 1.0f, 0.80f);
-		loopi(n)
+		if(*guiskintex)
 		{
-			const patch &p = patches[start+i];
-			int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
-				top = skiny[p.top]*SKIN_SCALE, bottom = skiny[p.bottom]*SKIN_SCALE;
-			float tleft = left*wscale, tright = right*wscale,
-					ttop = top*hscale, tbottom = bottom*hscale;
-			if(p.flags&0x1)
-			{
-				gapx1 = left;
-				gapx2 = right;
-			}
-			else if(left >= gapx2)
-			{
-				left += gapw - (gapx2-gapx1);
-				right += gapw - (gapx2-gapx1);
-			}
-			if(p.flags&0x10)
-			{
-				gapy1 = top;
-				gapy2 = bottom;
-			}
-			else if(top >= gapy2)
-			{
-				top += gaph - (gapy2-gapy1);
-				bottom += gaph - (gapy2-gapy1);
-			}
+			if(!skintex) skintex = textureload(guiskintex, 3);
+			glBindTexture(GL_TEXTURE_2D, skintex->id);
+			int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
+			float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
 
-			//multiple tiled quads if necessary rather than a single stretched one
-			int ystep = bottom-top;
-			int yo = y+top;
-			while(ystep > 0)
+			bool quads = false;
+			glColor4f(1.0f, 1.0f, 1.0f, 0.80f);
+			loopi(n)
 			{
-				if(p.flags&0x10 && yo+ystep-(y+top) > gaph)
+				const patch &p = patches[start+i];
+				int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
+					top = skiny[p.top]*SKIN_SCALE, bottom = skiny[p.bottom]*SKIN_SCALE;
+				float tleft = left*wscale, tright = right*wscale,
+						ttop = top*hscale, tbottom = bottom*hscale;
+				if(p.flags&0x1)
 				{
-					ystep = gaph+y+top-yo;
-					tbottom = ttop+ystep*hscale;
+					gapx1 = left;
+					gapx2 = right;
 				}
-				int xstep = right-left;
-				int xo = x+left;
-				float tright2 = tright;
-				while(xstep > 0)
+				else if(left >= gapx2)
 				{
-					if(p.flags&0x01 && xo+xstep-(x+left) > gapw)
+					left += gapw - (gapx2-gapx1);
+					right += gapw - (gapx2-gapx1);
+				}
+				if(p.flags&0x10)
+				{
+					gapy1 = top;
+					gapy2 = bottom;
+				}
+				else if(top >= gapy2)
+				{
+					top += gaph - (gapy2-gapy1);
+					bottom += gaph - (gapy2-gapy1);
+				}
+
+				//multiple tiled quads if necessary rather than a single stretched one
+				int ystep = bottom-top;
+				int yo = y+top;
+				while(ystep > 0)
+				{
+					if(p.flags&0x10 && yo+ystep-(y+top) > gaph)
 					{
-						xstep = gapw+x+left-xo;
-						tright = tleft+xstep*wscale;
+						ystep = gaph+y+top-yo;
+						tbottom = ttop+ystep*hscale;
 					}
-					if(!quads) { quads = true; glBegin(GL_QUADS); }
-                    glTexCoord2f(tleft,  ttop);    glVertex2f(xo,       yo);
-                    glTexCoord2f(tright, ttop);    glVertex2f(xo+xstep, yo);
-                    glTexCoord2f(tright, tbottom); glVertex2f(xo+xstep, yo+ystep);
-                    glTexCoord2f(tleft,  tbottom); glVertex2f(xo,       yo+ystep);
-					xtraverts += 4;
-					if(!(p.flags&0x01)) break;
-					xo += xstep;
+					int xstep = right-left;
+					int xo = x+left;
+					float tright2 = tright;
+					while(xstep > 0)
+					{
+						if(p.flags&0x01 && xo+xstep-(x+left) > gapw)
+						{
+							xstep = gapw+x+left-xo;
+							tright = tleft+xstep*wscale;
+						}
+						if(!quads) { quads = true; glBegin(GL_QUADS); }
+						glTexCoord2f(tleft,  ttop);    glVertex2f(xo,       yo);
+						glTexCoord2f(tright, ttop);    glVertex2f(xo+xstep, yo);
+						glTexCoord2f(tright, tbottom); glVertex2f(xo+xstep, yo+ystep);
+						glTexCoord2f(tleft,  tbottom); glVertex2f(xo,       yo+ystep);
+						xtraverts += 4;
+						if(!(p.flags&0x01)) break;
+						xo += xstep;
+					}
+					tright = tright2;
+					if(!(p.flags&0x10)) break;
+					yo += ystep;
 				}
-				tright = tright2;
-				if(!(p.flags&0x10)) break;
-				yo += ystep;
 			}
+			if(quads) glEnd();
 		}
-		if(quads) glEnd();
-#endif
 	}
 
     vec origin, scale;
@@ -740,6 +748,8 @@ struct gui : g3d_gui
         if(layoutpass) scale.x = scale.y = scale.z = min(basescale*(totalmillis-starttime)/300.0f, basescale);
         if(allowinput) needsinput = true;
         passthrough = !allowinput;
+        fontdepth = 0;
+        gui::pushfont("default");
 		curdepth = -1;
 		curlist = -1;
 		tpos = 0;
@@ -795,12 +805,13 @@ struct gui : g3d_gui
 			glPopMatrix();
 		}
 		poplist();
+		while(fontdepth) gui::popfont();
 	}
 };
 
 Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 
-//TVARN(guiskintex, "textures/guiskin", gui::skintex, 0);
+TVARN(guiskintex, "", gui::skintex, 0);
 TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex, 0);
 TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
 
@@ -850,7 +861,7 @@ vector<gui::list> gui::lists;
 float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;
 bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
 vec gui::light;
-int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
+int gui::curdepth, gui::fontdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> gui2ds;
 
@@ -948,7 +959,6 @@ void g3d_render()
 	if(actionon) mousebuttons |= G3D_PRESSED;
 	gui::reset();
 	gui2ds.setsize(0);
-	pushfont("gui");
 
 	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
 	g3d_texturemenu();
@@ -997,7 +1007,6 @@ void g3d_render()
 		keyrepeat(fieldmode!=FIELDSHOW);
     }
 
-	popfont();
 	mousebuttons = 0;
 }
 
