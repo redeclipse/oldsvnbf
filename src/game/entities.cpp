@@ -14,7 +14,7 @@ namespace entities
 
 	vector<extentity *> &getents() { return ents; }
 
-	int triggertime(const extentity &e)
+	int triggertime(extentity &e)
 	{
 		switch(e.type)
 		{
@@ -55,6 +55,9 @@ namespace entities
 				{
 					const char *lfxnames[LFX_MAX+1] = { "spotlight", "dynlight", "flicker", "pulse", "glow", "" };
 					addentinfo(lfxnames[attr1 < 0 || attr1 >= LFX_MAX ? LFX_MAX : attr1]);
+					loopi(LFX_MAX-1) if(attr5&(1<<(LFX_S_MAX+i))) { defformatstring(ds)("+%s", lfxnames[i+1]); addentinfo(ds); break; }
+					if(attr5&LFX_S_RAND1) addentinfo("rnd-min");
+					if(attr5&LFX_S_RAND2) addentinfo("rnd-max");
 				}
 				break;
 			}
@@ -839,7 +842,7 @@ namespace entities
 		while(ents.length()) deleteent(ents.pop());
 	}
 
-	bool cansee(const extentity &e)
+	bool cansee(extentity &e)
 	{
 		return (showentinfo || game::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && game::player1->state == CS_EDITING));
 	}
@@ -2051,14 +2054,14 @@ namespace entities
 		}
 	}
 
-	void maketeleport(const gameentity &e)
+	void maketeleport(gameentity &e)
 	{
 		float yaw = e.attr[0] < 0 ? (lastmillis/5)%360 : e.attr[0], radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
 		int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
 		part_portal(e.o, radius, yaw, e.attr[1], PART_TELEPORT, 0, colour);
 	}
 
-	void drawparticle(const gameentity &e, const vec &o, int idx, bool spawned)
+	void drawparticle(gameentity &e, const vec &o, int idx, bool spawned)
 	{
 		switch(e.type)
 		{

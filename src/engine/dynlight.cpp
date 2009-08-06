@@ -230,40 +230,39 @@ int setdynlights(vtxarray *va, const ivec &vaorigin)
     return index;
 }
 
-void makelightfx(const entity &e, const entity &f)
+void makelightfx(extentity &e, extentity &f)
 {
-	if(f.attr[0])
+	if(f.attr[0] && e.attr[0] != LFX_SPOTLIGHT)
 	{
 		vec colour = vec(f.attr[1], f.attr[2], f.attr[3]).div(255.f);
-		float radius = f.attr[0];
-		switch(e.attr[0])
+		float radius = f.attr[0]; int millis = lastmillis-e.emit[2], effect = e.attr[0], interval = e.emit[0]+e.emit[1];
+		if(!e.emit[2] || millis >= interval) loopi(2)
 		{
-			case LFX_SPOTLIGHT: break;
-			case LFX_DYNLIGHT: adddynlight(f.o, radius, colour); break;
+			e.emit[i] = e.attr[i+2] ? e.attr[i+2] : 750;
+			if(e.attr[4]&(1<<i)) e.emit[i] = rnd(e.emit[i]);
+			millis -= interval; e.emit[2] = lastmillis-millis;
+		}
+		if(millis >= e.emit[0]) loopi(LFX_MAX-1) if(e.attr[4]&(1<<(LFX_S_MAX+i))) { effect = i+1; break; }
+		#define lightskew float skew = clamp(millis < e.emit[0] ? 1.f-(float(millis)/float(e.emit[0])) : float(millis-e.emit[0])/float(e.emit[1]), 0.f, 1.f);
+		switch(effect)
+		{
 			case LFX_FLICKER:
 			{
-				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
-				if(c < a) adddynlight(f.o, radius, colour);
+				if(millis >= e.emit[0]) radius -= (e.attr[1] ? e.attr[1] : radius);
 				break;
 			}
 			case LFX_PULSE:
 			{
-				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
-				float skew = c < a ? 1.f-(clamp(float(c)/float(a), 0.f, 1.f)) : clamp(float(c-a)/float(b), 0.f, 1.f);
-				radius *= e.attr[1]*skew;
-				adddynlight(f.o, radius, colour);
+				lightskew; radius -= (e.attr[1] ? e.attr[1] : radius)*skew;
 				break;
 			}
 			case LFX_GLOW:
 			{
-				int a = e.attr[2] ? e.attr[2] : 500, b = e.attr[3] ? e.attr[3] : 500, c = lastmillis%(a+b);
-				float skew = c < a ? 1.f-(clamp(float(c)/float(a), 0.f, 1.f)) : clamp(float(c-a)/float(b), 0.f, 1.f);
-				if(e.attr[1]) radius *= e.attr[1]*skew;
-				colour.mul(skew);
-				adddynlight(f.o, radius, colour);
+				lightskew; colour.mul(skew); radius -= e.attr[1]*skew;
 				break;
 			}
 			default: break;
 		}
+		if(radius > 0) adddynlight(f.o, radius, colour);
 	}
 }

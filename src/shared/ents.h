@@ -5,6 +5,7 @@
 
 enum { ET_EMPTY=0, ET_LIGHT, ET_MAPMODEL, ET_PLAYERSTART, ET_ENVMAP, ET_PARTICLES, ET_SOUND, ET_LIGHTFX, ET_GAMESPECIFIC };
 enum { LFX_SPOTLIGHT = 0, LFX_DYNLIGHT, LFX_FLICKER, LFX_PULSE, LFX_GLOW, LFX_MAX };
+enum { LFX_S_NONE = 0, LFX_S_RAND1 = 1<<0, LFX_S_RAND2 = 1<<1, LFX_S_MAX = 2 };
 
 #define ENTATTRS 5
 struct entity                                   // persistent map entity
@@ -37,7 +38,7 @@ struct extentity : entity                       // part of the entity that doesn
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
 	vector<int> links;
-	int lastemit;
+	int lastemit, emit[3];
 
     extentity() { reset(); }
 
@@ -46,7 +47,7 @@ struct extentity : entity                       // part of the entity that doesn
 		loopi(ENTATTRS) attr[i] = 0;
 		links.setsize(0);
 		spawned = inoctanode = visible = false;
-		lastemit = 0;
+		lastemit = emit[0] = emit[1] = emit[2] = 0;
     }
 };
 
