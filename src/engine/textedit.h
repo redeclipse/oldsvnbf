@@ -431,7 +431,7 @@ struct editor
                     int x, y;
                     char *str = currentline().text;
                     text_pos(str, cx+1, x, y, pixelwidth, TEXT_NO_INDENT);
-                    if(y > 0) { cx = text_visible(str, x, y-FONTH, pixelwidth, TEXT_NO_INDENT); break; }
+                    if(y > 0) { cx = text_visible(str, x, y-guibound[1], pixelwidth, TEXT_NO_INDENT); break; }
                 }
                 cy--;
                 break;
@@ -442,7 +442,7 @@ struct editor
                     char *str = currentline().text;
                     text_pos(str, cx, x, y, pixelwidth, TEXT_NO_INDENT);
                     text_bounds(str, width, height, pixelwidth, TEXT_NO_INDENT);
-                    y += FONTH;
+                    y += guibound[1];
                     if(y < height) { cx = text_visible(str, x, y, pixelwidth, TEXT_NO_INDENT); break; }
                 }
                 cy++;
@@ -454,10 +454,10 @@ struct editor
                 cy++;
                 break;
             case SDLK_PAGEUP:
-                cy-=pixelheight/FONTH;
+                cy-=pixelheight/guibound[1];
                 break;
             case SDLK_PAGEDOWN:
-                cy+=pixelheight/FONTH;
+                cy+=pixelheight/guibound[1];
                 break;
             case SDLK_HOME:
                 cx = cy = 0;
@@ -573,7 +573,7 @@ struct editor
             {
                 // crop top/bottom within window
                 if(sy < scrolly) { sy = scrolly; psy = 0; psx = 0; }
-                if(ey > maxy) { ey = maxy; pey = pixelheight - FONTH; pex = pixelwidth; }
+                if(ey > maxy) { ey = maxy; pey = pixelheight - guibound[1]; pex = pixelwidth; }
 
                 notextureshader->set();
                 glDisable(GL_TEXTURE_2D);
@@ -583,24 +583,24 @@ struct editor
                 {
                     glVertex2f(x+psx, y+psy);
                     glVertex2f(x+pex, y+psy);
-                    glVertex2f(x+pex, y+pey+FONTH);
-                    glVertex2f(x+psx, y+pey+FONTH);
+                    glVertex2f(x+pex, y+pey+guibound[1]);
+                    glVertex2f(x+psx, y+pey+guibound[1]);
                 }
                 else
                 {   glVertex2f(x+psx,        y+psy);
-                    glVertex2f(x+psx,        y+psy+FONTH);
-                    glVertex2f(x+pixelwidth, y+psy+FONTH);
+                    glVertex2f(x+psx,        y+psy+guibound[1]);
+                    glVertex2f(x+pixelwidth, y+psy+guibound[1]);
                     glVertex2f(x+pixelwidth, y+psy);
-                    if(pey-psy > FONTH)
+                    if(pey-psy > guibound[1])
                     {
-                        glVertex2f(x,            y+psy+FONTH);
-                        glVertex2f(x+pixelwidth, y+psy+FONTH);
+                        glVertex2f(x,            y+psy+guibound[1]);
+                        glVertex2f(x+pixelwidth, y+psy+guibound[1]);
                         glVertex2f(x+pixelwidth, y+pey);
                         glVertex2f(x,            y+pey);
                     }
                     glVertex2f(x,     y+pey);
-                    glVertex2f(x,     y+pey+FONTH);
-                    glVertex2f(x+pex, y+pey+FONTH);
+                    glVertex2f(x,     y+pey+guibound[1]);
+                    glVertex2f(x+pex, y+pey+guibound[1]);
                     glVertex2f(x+pex, y+pey);
                 }
                 glEnd();
@@ -617,21 +617,21 @@ struct editor
             if(h + height > pixelheight) break;
 
             draw_text(lines[i].text, x, y+h, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, TEXT_NO_INDENT, hit&&(cy==i)?cx:-1, maxwidth);
-            if(linewrap && height > FONTH) // line wrap indicator
+            if(linewrap && height > guibound[1]) // line wrap indicator
             {
                 notextureshader->set();
                 glDisable(GL_TEXTURE_2D);
                 glColor3ub(0x80, 0xA0, 0x80);
                 glBegin(GL_QUADS);
-                glVertex2f(x,         y+h+FONTH);
+                glVertex2f(x,         y+h+guibound[1]);
                 glVertex2f(x,         y+h+height);
-                glVertex2f(x-FONTW/2, y+h+height);
-                glVertex2f(x-FONTW/2, y+h+FONTH);
+                glVertex2f(x-guibound[0]/2, y+h+height);
+                glVertex2f(x-guibound[0]/2, y+h+guibound[1]);
                 glEnd();
                 glEnable(GL_TEXTURE_2D);
                 defaultshader->set();
             }
-            h+=height;
+            h+=guibound[2];
         }
     }
 };
