@@ -1684,7 +1684,7 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 	}
 }
 
-void makeparticles(const entity &e)
+void makeparticles(extentity &e)
 {
 	makeparticle(e.o, (int)e.attr[0], (int)e.attr[1], (int)e.attr[2], (int)e.attr[3], (int)e.attr[4]);
 }

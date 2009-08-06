@@ -129,7 +129,7 @@ bool raycubeintersect(const cube &c, const vec &o, const vec &ray, float maxdist
     return true;
 }
 
-extern void entselectionbox(const entity &e, vec &eo, vec &es);
+extern void entselectionbox(const extentity &e, vec &eo, vec &es);
 extern int entselradius;
 float hitentdist;
 int hitent, hitorient;

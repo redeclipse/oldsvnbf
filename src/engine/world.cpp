@@ -314,7 +314,7 @@ void entrotate(int *cw)
 	);
 }
 
-void entselectionbox(const entity &e, vec &eo, vec &es)
+void entselectionbox(const extentity &e, vec &eo, vec &es)
 {
 	model *m = NULL;
 	if(e.type == ET_MAPMODEL && (m = loadmodel(NULL, e.attr[0])))
