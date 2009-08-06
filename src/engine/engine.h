@@ -512,6 +512,7 @@ extern void swapbuffers();
 #define GUI_BUTTON_COLOR 0xFFFFFF
 #define GUI_TEXT_COLOR  0xDDFFDD
 
+extern float menuscale;
 extern int cmenustart, cmenutab;
 extern g3d_gui *cgui;
 struct menu : g3d_callback
@@ -527,7 +528,7 @@ struct menu : g3d_callback
         cgui = &g;
         extern menu *cmenu;
         cmenu = this;
-        cgui->start(cmenustart, 0.03f, &cmenutab, true);
+        cgui->start(cmenustart, menuscale, &cmenutab, true);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
 		if(!passes)
 		{
