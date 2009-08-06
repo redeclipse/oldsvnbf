@@ -718,7 +718,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 	}
 }
 
-bool ircchangui(g3d_gui *g, ircnet *n, ircchan *c, bool tab)
+bool ircchangui(guient *g, ircnet *n, ircchan *c, bool tab)
 {
 	if(tab) g->tab(c->name, GUI_TITLE_COLOR);
 
@@ -739,7 +739,7 @@ bool ircchangui(g3d_gui *g, ircnet *n, ircchan *c, bool tab)
 	return true;
 }
 
-bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
+bool ircnetgui(guient *g, ircnet *n, bool tab)
 {
 	if(tab) g->tab(n->name, GUI_TITLE_COLOR);
 
@@ -767,7 +767,7 @@ bool ircnetgui(g3d_gui *g, ircnet *n, bool tab)
 	return true;
 }
 
-bool ircgui(g3d_gui *g, const char *s)
+bool ircgui(guient *g, const char *s)
 {
 	g->allowautotab(false);
 	g->strut(151);

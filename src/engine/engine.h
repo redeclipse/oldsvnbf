@@ -514,8 +514,8 @@ extern void swapbuffers();
 
 extern float menuscale;
 extern int cmenustart, cmenutab;
-extern g3d_gui *cgui;
-struct menu : g3d_callback
+extern guient *cgui;
+struct menu : guicb
 {
     char *name, *header, *contents, *initscript;
     int passes;
@@ -523,7 +523,7 @@ struct menu : g3d_callback
 
     menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), world(false) {}
 
-    void gui(g3d_gui &g, bool firstpass)
+    void gui(guient &g, bool firstpass)
     {
         cgui = &g;
         extern menu *cmenu;
@@ -549,8 +549,8 @@ struct menu : g3d_callback
     virtual void clear() {}
 };
 extern menu *cmenu;
-extern hashtable<const char *, menu> guis;
-extern vector<menu *> guistack;
+extern hashtable<const char *, menu> menus;
+extern vector<menu *> menustack;
 extern vector<char *> executelater;
 extern bool shouldclearmenu, clearlater;
 
@@ -630,15 +630,10 @@ extern double skyarea;
 extern void drawskybox(int farplane, bool limited);
 extern bool limitsky();
 
-// 3dgui
-extern char *guiskintex, *guioverlaytex, *guislidertex;
-extern void g3d_render();
-extern bool g3d_windowhit(bool on, bool act);
-extern void g3d_mainmenu();
-extern bool g3d_active(bool hit = true, bool pass = true);
-extern void g3d_texturemenu();
-
-// 3dgui
+// gui
+extern void mainmenu();
+extern void texturemenu();
+extern bool menuactive();
 extern int cleargui(int n = 0);
 
 // octaedit

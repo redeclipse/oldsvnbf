@@ -42,7 +42,7 @@ namespace client
 	extern int otherclients();
 	extern int numchannels();
 	extern int servercompare(serverinfo *a, serverinfo *b);
-	extern int serverbrowser(g3d_gui *g);
+	extern int serverbrowser(guient *g);
 }
 
 namespace hud

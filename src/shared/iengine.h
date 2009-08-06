@@ -100,7 +100,6 @@ struct bindlist
 // menus
 extern void newgui(char *name, char *contents, char *initaction = NULL, char *header = NULL);
 extern void showgui(const char *name);
-extern bool guiactive();
 
 // world
 extern bool emptymap(int factor, bool force = false, char *mname = NULL, bool nocfg = false);
@@ -418,23 +417,14 @@ extern void *genchallenge(void *pubkey, const void *seed, int seedlen, vector<ch
 extern void freechallenge(void *answer);
 extern bool checkchallenge(const char *answerstr, void *correct);
 
-// 3dgui
-namespace UI
-{
-	extern bool hascursor(bool targeting = false);
-	extern bool keypress(int code, bool isdown, int cooked);
-	extern void setup();
-	extern void update();
-	extern void render();
-}
-
-enum { G3D_DOWN = 0x0001, G3D_UP = 0x0002, G3D_PRESSED = 0x0004, G3D_ROLLOVER = 0x0008, G3D_DRAGGED = 0x0010, G3D_ALTERNATE = 0x0020 };
+// gui
+enum { GUI_DOWN = 0x0001, GUI_UP = 0x0002, GUI_PRESSED = 0x0004, GUI_ROLLOVER = 0x0008, GUI_DRAGGED = 0x0010, GUI_ALTERNATE = 0x0020 };
 enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct Texture;
-struct g3d_gui
+struct guient
 {
-    virtual ~g3d_gui() {}
+    virtual ~guient() {}
 
     virtual void start(int starttime, float basescale, int *tab = NULL, bool allowinput = true) = 0;
     virtual void end() = 0;
@@ -478,18 +468,27 @@ struct g3d_gui
     virtual void mergehits(bool on) = 0;
 };
 
-struct g3d_callback
+struct guicb
 {
-    virtual ~g3d_callback() {}
-
+    virtual ~guicb() {}
     int starttime() { extern int totalmillis; return totalmillis; }
-
-    virtual void gui(g3d_gui &g, bool firstpass) = 0;
+    virtual void gui(guient &g, bool firstpass) = 0;
 };
 
-extern void g3d_addgui(g3d_callback *cb);
-extern bool g3d_keypress(int code, bool isdown, int cooked);
-extern void g3d_limitscale(float scale);
+extern char *guiskintex, *guioverlaytex, *guislidertex;
+
+namespace UI
+{
+	extern bool keypress(int code, bool isdown, int cooked);
+	extern void setup();
+	extern void update();
+	extern void render();
+	extern bool active(bool pass = true);
+	extern bool hascursor(bool targeting = false);
+	extern bool hit(bool on, bool act);
+	extern void addcb(guicb *cb);
+	extern void limitscale(float scale);
+}
 
 // client
 enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_REMOTE };

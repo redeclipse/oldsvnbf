@@ -733,7 +733,7 @@ namespace server
 		{
 			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] < TRIGGERIDS)
 				triggers[sents[i].attr[0]].ents.add(i);
-			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i].ents.empty()) valid.add(triggers[i].id);
+			vector<int> valid; loopi(TRIGGERIDS) if(i && !triggers[i].ents.empty()) valid.add(triggers[i].id);
 			if(!valid.empty())
 			{
 				triggerid = valid[rnd(valid.length())];
@@ -803,14 +803,14 @@ namespace server
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
-			loop(q, 2) loop(r, 2)
+			loop(q, 2)
 			{
-				if((!q && triggerid < 0) || (!r && m_edit(gamemode))) continue;
+				if(!q && triggerid < 0) continue;
 				if(m_fight(gamemode) && m_team(gamemode, mutators))
 				{
 					loopk(3)
 					{
-						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
+						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
 						{
 							if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
 							else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
@@ -833,7 +833,7 @@ namespace server
 				}
 				else
 				{ // use all neutral spawns
-					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
+					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
 					{
 						spawns[TEAM_NEUTRAL].add(i);
 						totalspawns++;
@@ -841,7 +841,7 @@ namespace server
 					if(totalspawns) break;
 				}
 				// use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && (sents[i].attr[3] == (r ? 0 : gamemode)))
+				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
@@ -2525,10 +2525,10 @@ namespace server
 				}
 				break;
 			}
+			case WEAPON: if(!chkmode(sents[i].attr[2], gamemode) && (!m_arena(gamemode, mutators) || sents[i].attr[0] == WEAP_GRENADE)) break;
 			default:
 			{
-				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true) &&
-					(!m_arena(gamemode, mutators) || (sents[i].type == WEAPON && sents[i].attr[0] == WEAP_GRENADE)))
+				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true))
 				{
 					loopvk(clients)
 					{

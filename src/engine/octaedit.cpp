@@ -1730,14 +1730,14 @@ VARP(thumbtime, 0, 50, 1000);
 FVARP(thumbsize, 0, 2, 6);
 static int lastthumbnail = 0;
 
-struct texturegui : g3d_callback
+struct texturegui : guicb
 {
 	bool menuon;
     int menustart, menutab, menutex;
 
     texturegui() : menustart(-1), menutex(-1) {}
 
-	void gui(g3d_gui &g, bool firstpass)
+	void gui(guient &g, bool firstpass)
 	{
 		if(texguieditor && menutex >= 0 && menutex <= curtexnum)
 		{
@@ -1761,7 +1761,7 @@ struct texturegui : g3d_callback
 				else if(slot.thumbnail) tex = slot.thumbnail;
 				else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
 			}
-			g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture);
+			g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP && (slot.loaded || tex!=notexture);
 			g.space(1);
 
 			g.pushlist();
@@ -1769,12 +1769,12 @@ struct texturegui : g3d_callback
 			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFAA);
 			g.space(1);
 			g.pushlist();
-			if(g.button("<prev    ", 0x44FFAA) & G3D_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
-			if(g.button("next>    ", 0xAAFF44) & G3D_UP) menutex = menutex < curtexnum ? menutex+1 : 0;
-			if(g.button("browse   ", 0xFF88FF) & G3D_UP) menutex = -1;
-			if(g.button("close    ", 0xFF6666) & G3D_UP) menuon = false;
-			if(g.button("select   ", 0x66FF66) & G3D_UP) { edittex(menutex); if(texguiautoclose) menuon = false; }
-			if(g.button("duplicate", 0x888888) & G3D_UP) { menutex = duplicateslot(slot); }
+			if(g.button("<prev    ", 0x44FFAA) & GUI_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
+			if(g.button("next>    ", 0xAAFF44) & GUI_UP) menutex = menutex < curtexnum ? menutex+1 : 0;
+			if(g.button("browse   ", 0xFF88FF) & GUI_UP) menutex = -1;
+			if(g.button("close    ", 0xFF6666) & GUI_UP) menuon = false;
+			if(g.button("select   ", 0x66FF66) & GUI_UP) { edittex(menutex); if(texguiautoclose) menuon = false; }
+			if(g.button("duplicate", 0x888888) & GUI_UP) { menutex = duplicateslot(slot); }
 			g.poplist();
 			if(!slot.sts.empty())
 			{
@@ -1927,7 +1927,7 @@ struct texturegui : g3d_callback
 							}
 							else if(slot.thumbnail) tex = slot.thumbnail;
 							else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-							if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture))
+							if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP && (slot.loaded || tex!=notexture))
 							{
 								if(texguieditor) menutex = ti;
 								else { edittex(ti); if(texguiautoclose) menuon = false; }
@@ -1958,11 +1958,11 @@ struct texturegui : g3d_callback
 		if(!menuon) return;
 		filltexlist();
 		if(!editmode) menuon = false;
-		else g3d_addgui(this);
+		else UI::addcb(this);
 	}
 } gui;
 
-void g3d_texturemenu()
+void texturemenu()
 {
 	gui.show();
 }

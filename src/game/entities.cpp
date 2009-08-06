@@ -46,7 +46,13 @@ namespace entities
 					defformatstring(str)("%s", teamtype[attr1].name);
 					addentinfo(str);
 				}
-				if(attr4 > G_DEMO && attr4 < G_MAX) addentinfo(gametype[attr4].name);
+				if(attr4 && attr4 > -G_MAX && attr4 < G_MAX)
+				{
+					string ds;
+					if(attr4<0) formatstring(ds)("not %s", gametype[-attr4].name);
+					else formatstring(ds)("%s", gametype[attr4].name);
+					addentinfo(ds);
+				}
 				break;
 			}
 			case LIGHTFX:
@@ -66,7 +72,13 @@ namespace entities
 				if(full && attr1 >= AI_START && attr1 < AI_MAX)
 				{
 					addentinfo(aitype[attr1].name);
-					if(attr2 > G_DEMO && attr2 < G_MAX) addentinfo(gametype[attr2].name);
+					if(attr2 && attr2 > -G_MAX && attr2 < G_MAX)
+					{
+						string ds;
+						if(attr2<0) formatstring(ds)("not %s", gametype[-attr2].name);
+						else formatstring(ds)("%s", gametype[attr2].name);
+						addentinfo(ds);
+					}
 					if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
 				}
 				break;
@@ -80,6 +92,13 @@ namespace entities
 					addentinfo(str);
 					if(full)
 					{
+						if(attr3 && attr3 > -G_MAX && attr3 < G_MAX)
+						{
+							string ds;
+							if(attr3<0) formatstring(ds)("not %s", gametype[-attr3].name);
+							else formatstring(ds)("%s", gametype[attr3].name);
+							addentinfo(ds);
+						}
 						if(attr2&WEAP_F_FORCED) addentinfo("forced");
 					}
 				}
@@ -921,6 +940,8 @@ namespace entities
 			case WEAPON:
 				while(e.attr[0] < 0) e.attr[0] += WEAP_TOTAL; // don't allow superimposed weaps
 				while(e.attr[0] >= WEAP_TOTAL) e.attr[0] -= WEAP_TOTAL;
+				while(e.attr[2] <= -G_MAX) e.attr[2] += G_MAX*2;
+				while(e.attr[2] >= G_MAX) e.attr[2] -= G_MAX*2;
 				break;
 			case PLAYERSTART:
 				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
@@ -929,8 +950,8 @@ namespace entities
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < -90) e.attr[2] += 180;
 				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] < 0) e.attr[3] += G_MAX;
-				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX;
+				while(e.attr[3] <= -G_MAX) e.attr[3] += G_MAX*2;
+				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX*2;
 				break;
 			case ACTOR:
 				while(e.attr[0] < 0) e.attr[0] += AI_MAX;
@@ -949,8 +970,8 @@ namespace entities
 				while(e.attr[1] >= 360) e.attr[1] -= 360;
 				while(e.attr[2] < -90) e.attr[2] += 180;
 				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] < 0) e.attr[3] += G_MAX;
-				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX;
+				while(e.attr[3] <= -G_MAX) e.attr[3] += G_MAX*2;
+				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX*2;
 				break;
 			case TELEPORT:
 				while(e.attr[0] < -1) e.attr[0] += 361;

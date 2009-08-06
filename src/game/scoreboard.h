@@ -1,6 +1,6 @@
 namespace hud
 {
-	struct scoreboard : g3d_callback
+	struct scoreboard : guicb
 	{
 		bool scoreson, shownscores;
 		int menustart;
@@ -201,7 +201,7 @@ namespace hud
 			return numgroups;
 		}
 
-		void gui(g3d_gui &g, bool firstpass)
+		void gui(guient &g, bool firstpass)
 		{
 			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
@@ -432,7 +432,7 @@ namespace hud
 
 		void show()
 		{
-			if(scoreson) g3d_addgui(this);
+			if(scoreson) UI::addcb(this);
 			if(game::player1->state == CS_DEAD) { if(scoreson) shownscores = true; }
 			else shownscores = false;
 		}

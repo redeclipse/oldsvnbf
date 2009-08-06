@@ -1323,7 +1323,7 @@ namespace game
 			}
 		}
 
-       	if(!*player1->name && !guiactive()) showgui("name");
+       	if(!*player1->name && !menuactive()) showgui("name");
         if(connected())
         {
         	player1->conopen = commandmillis > 0 || UI::hascursor(true);
@@ -1345,7 +1345,7 @@ namespace game
             }
             otherplayers();
         }
-        else if(!guiactive()) showgui("main");
+        else if(!menuactive()) showgui("main");
 
 		gets2c();
 

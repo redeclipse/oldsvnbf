@@ -4,7 +4,6 @@ int uimillis = -1;
 
 static bool layoutpass, actionon = false;
 static int mousebuttons = 0, guibound[2] = {0};
-static struct gui *windowhit = NULL;
 
 static float firstx, firsty;
 
@@ -25,31 +24,21 @@ VARP(guiclicktab, 0, 1, 1);
 static bool needsinput = false;
 
 #include "textedit.h"
-struct gui : g3d_gui
+struct gui : guient
 {
-	struct list
-	{
-		int parent, w, h;
-	};
+	struct list { int parent, w, h; };
 
 	int nextlist;
-
 	static vector<list> lists;
 	static float hitx, hity;
 	static int curdepth, curlist, xsize, ysize, curx, cury, fontdepth;
     static bool shouldmergehits, shouldautotab;
 
-	static void reset()
-	{
-		lists.setsize(0);
-	}
+	static void reset() { lists.setsize(0); }
 
 	static int ty, tx, tpos, *tcurrent, tcolor; //tracking tab size and position since uses different layout method...
 
-    void allowautotab(bool on)
-    {
-        shouldautotab = on;
-    }
+    void allowautotab(bool on) { shouldautotab = on; }
 
 	void autotab()
 	{
@@ -120,11 +109,11 @@ struct gui : g3d_gui
 				x2 = x1 + w + ((skinx[3]-skinx[2]) + (skinx[5]-skinx[4]))*SKIN_SCALE,
 				y1 = cury - ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
 				y2 = cury;
-			bool hit = tcurrent && windowhit==this && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-            if(hit && (!guiclicktab || mousebuttons&G3D_DOWN))
+			bool hit = tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
+            if(hit && (!guiclicktab || mousebuttons&GUI_DOWN))
 			{
 				*tcurrent = tpos; //roll-over to switch tab
-				color = 0xFF0000;
+				color = 0xFFFF00;
 			}
 			else if(visible()) tcolor = 0xFFFFFF;
 			skin_(x1-skinx[visible()?2:6]*SKIN_SCALE, y1-skiny[1]*SKIN_SCALE, w, h, visible()?10:19, 9);
@@ -216,7 +205,7 @@ struct gui : g3d_gui
 			bool hit = ishit(w, h);
 			if(ishorizontal()) curx += w;
 			else cury += h;
-			return (hit && visible()) ? mousebuttons|G3D_ROLLOVER : 0;
+			return (hit && visible()) ? mousebuttons|GUI_ROLLOVER : 0;
 		}
 	}
 
@@ -224,10 +213,10 @@ struct gui : g3d_gui
 
 	bool ishit(int w, int h, int x = curx, int y = cury)
 	{
-        if(shouldmergehits) return windowhit==this && (ishorizontal() ? hitx>=x && hitx<x+w : hity>=y && hity<y+h);
+        if(shouldmergehits) return ishorizontal() ? hitx>=x && hitx<x+w : hity>=y && hity<y+h;
 		if(ishorizontal()) h = ysize;
 		else w = xsize;
-		return windowhit==this && hitx>=x && hity>=y && hitx<x+w && hity<y+h;
+		return hitx>=x && hity>=y && hitx<x+w && hity<y+h;
 	}
 
     int image(Texture *t, float scale, bool overlaid)
@@ -338,7 +327,7 @@ struct gui : g3d_gui
 		{
             bool hit = ishit(w, h);
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
-			if(mousebuttons&G3D_DOWN) //mouse request focus
+			if(mousebuttons&GUI_DOWN) //mouse request focus
 			{
 	            if(hit)
 	            {
@@ -353,8 +342,8 @@ struct gui : g3d_gui
 					e->mode = EDITORFOCUSED;
 				}
 			}
-            if(hit && editing && (mousebuttons&G3D_PRESSED)!=0 && fieldtype==FIELDEDIT)
-				e->hit(int(floor(hitx-(curx+guibound[0]/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
+            if(hit && editing && (mousebuttons&GUI_PRESSED)!=0 && fieldtype==FIELDEDIT)
+				e->hit(int(floor(hitx-(curx+guibound[0]/2))), int(floor(hity-cury)), (mousebuttons&GUI_DRAGGED)!=0); //mouse request position
             if(editing && (fieldmode==FIELDCOMMIT || fieldmode==FIELDABORT)) // commit field if user pressed enter
             {
                 if(fieldmode==FIELDCOMMIT) result = e->currentline().text;
@@ -430,7 +419,7 @@ struct gui : g3d_gui
 
 	void fieldscroll(const char *name, int n)
 	{
-		if(n < 0 && mousebuttons&G3D_PRESSED) return; // don't auto scroll during edits
+		if(n < 0 && mousebuttons&GUI_PRESSED) return; // don't auto scroll during edits
         if(!layoutpass) return;
         loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
@@ -724,7 +713,7 @@ struct gui : g3d_gui
 	}
 
     vec origin, scale;
-	g3d_callback *cb;
+	guicb *cb;
 
     static float basescale, maxscale;
 	static bool passthrough;
@@ -788,17 +777,11 @@ struct gui : g3d_gui
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
 			adjustscale();
 
-			if(!windowhit && !passthrough)
+			if(!passthrough)
 			{
 				hitx = (cursorx - origin.x)/scale.x;
 				hity = (cursory - origin.y)/scale.y;
-
-                if((mousebuttons & G3D_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mousebuttons |= G3D_DRAGGED;
-				if(hitx>=-xsize/2 && hitx<=xsize/2 && hity<=0)
-				{
-					if(hity>=-ysize || (tcurrent && hity>=-ysize-(guibound[1]-2*INSERT)-((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE && hitx<=tx-xsize/2))
-						windowhit = this;
-				}
+                if((mousebuttons & GUI_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mousebuttons |= GUI_DRAGGED;
 			}
 		}
 		else
@@ -865,158 +848,12 @@ bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
 vec gui::light;
 int gui::curdepth, gui::fontdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
-static vector<gui> gui2ds;
-
-bool g3d_keypress(int code, bool isdown, int cooked)
-{
-    editor *e = currentfocus();
-    if(fieldmode == FIELDKEY)
-    {
-        switch(code)
-        {
-            case SDLK_ESCAPE:
-                if(isdown) fieldmode = FIELDCOMMIT;
-                return true;
-        }
-        const char *keyname = getkeyname(code);
-        if(keyname && isdown)
-        {
-            if(e->lines.length()!=1 || !e->lines[0].empty()) e->insert(" ");
-            e->insert(keyname);
-        }
-        return true;
-    }
-
-    if((code==-1 || code == -2) && g3d_windowhit(isdown, true)) return true;
-    else if(code==-3 && g3d_windowhit(isdown, false)) return true;
-
-    if(fieldmode == FIELDSHOW || !e) return false;
-    switch(code)
-    {
-        case SDLK_ESCAPE: //cancel editing without commit
-            if(isdown) fieldmode = FIELDABORT;
-            return true;
-        case SDLK_RETURN:
-        case SDLK_TAB:
-            if(cooked && (e->maxy != 1)) break;
-        case SDLK_KP_ENTER:
-            if(isdown) fieldmode = FIELDCOMMIT; //signal field commit (handled when drawing field)
-            return true;
-        case SDLK_HOME:
-        case SDLK_END:
-        case SDLK_PAGEUP:
-        case SDLK_PAGEDOWN:
-        case SDLK_DELETE:
-        case SDLK_BACKSPACE:
-        case SDLK_UP:
-        case SDLK_DOWN:
-        case SDLK_LEFT:
-        case SDLK_RIGHT:
-        case SDLK_LSHIFT:
-        case SDLK_RSHIFT:
-        case -4:
-        case -5:
-            break;
-        default:
-            if(!cooked || (code<32)) return false;
-    }
-    if(!isdown) return true;
-    e->key(code, cooked);
-    return true;
-}
-
-bool g3d_active(bool hit, bool pass)
-{
-	return (gui2ds.length() && (!pass || needsinput)) || (hit && windowhit);
-}
-
-void g3d_addgui(g3d_callback *cb)
-{
-	gui &g = gui2ds.add();
-	g.cb = cb;
-	g.adjustscale();
-}
-
-void g3d_limitscale(float scale)
-{
-    gui::maxscale = scale;
-}
-
-bool g3d_windowhit(bool on, bool act)
-{
-	if(act)
-	{
-        if(actionon || windowhit)
-        {
-            if(on) { firstx = gui::hitx; firsty = gui::hity; }
-            mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
-        }
-    } else if(!on && windowhit) cleargui(1);
-    return g3d_active();
-}
-
-void g3d_render()
-{
-	windowhit = NULL;
-	if(actionon) mousebuttons |= G3D_PRESSED;
-	gui::reset();
-	gui2ds.setsize(0);
-
-	// call all places in the engine that may want to render a gui from here, they call g3d_addgui()
-	g3d_texturemenu();
-	g3d_mainmenu();
-	hud::gamemenus();
-
-	readyeditors();
-    bool wasfocused = (fieldmode!=FIELDSHOW);
-    fieldsactive = false;
-
-    needsinput = false;
-
-	layoutpass = true;
-	loopv(gui2ds) gui2ds[i].cb->gui(gui2ds[i], true);
-	layoutpass = false;
-
-	if(gui2ds.length())
-	{
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, 1, 1, 0, -1, 1);
-
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-
-		loopvrev(gui2ds) gui2ds[i].cb->gui(gui2ds[i], false);
-
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-
-        glDisable(GL_BLEND);
-	}
-
-    flusheditors();
-    if(!fieldsactive) fieldmode = FIELDSHOW; //didn't draw any fields, so loose focus - mainly for menu closed
-    if((fieldmode!=FIELDSHOW) != wasfocused)
-    {
-        SDL_EnableUNICODE(fieldmode!=FIELDSHOW);
-		keyrepeat(fieldmode!=FIELDSHOW);
-    }
-
-	mousebuttons = 0;
-}
+static vector<gui> guis;
 
 namespace UI
 {
 	bool isopen = false;
-	bool hascursor(bool targeting) { return (!targeting && commandmillis > 0) || g3d_active(true, targeting); }
-	bool keypress(int code, bool isdown, int cooked) { return g3d_keypress(code, isdown, cooked); }
+
 	void setup()
 	{
 		const char *fonts[2] = { "sub", "console" };
@@ -1027,10 +864,146 @@ namespace UI
 			popfont();
 		}
 	}
+
+	bool keypress(int code, bool isdown, int cooked)
+	{
+		editor *e = currentfocus();
+		if(fieldmode == FIELDKEY)
+		{
+			switch(code)
+			{
+				case SDLK_ESCAPE:
+					if(isdown) fieldmode = FIELDCOMMIT;
+					return true;
+			}
+			const char *keyname = getkeyname(code);
+			if(keyname && isdown)
+			{
+				if(e->lines.length()!=1 || !e->lines[0].empty()) e->insert(" ");
+				e->insert(keyname);
+			}
+			return true;
+		}
+
+		if((code==-1 || code == -2) && hit(isdown, true)) return true;
+		else if(code==-3 && hit(isdown, false)) return true;
+
+		if(fieldmode == FIELDSHOW || !e) return false;
+		switch(code)
+		{
+			case SDLK_ESCAPE: //cancel editing without commit
+				if(isdown) fieldmode = FIELDABORT;
+				return true;
+			case SDLK_RETURN:
+			case SDLK_TAB:
+				if(cooked && (e->maxy != 1)) break;
+			case SDLK_KP_ENTER:
+				if(isdown) fieldmode = FIELDCOMMIT; //signal field commit (handled when drawing field)
+				return true;
+			case SDLK_HOME:
+			case SDLK_END:
+			case SDLK_PAGEUP:
+			case SDLK_PAGEDOWN:
+			case SDLK_DELETE:
+			case SDLK_BACKSPACE:
+			case SDLK_UP:
+			case SDLK_DOWN:
+			case SDLK_LEFT:
+			case SDLK_RIGHT:
+			case SDLK_LSHIFT:
+			case SDLK_RSHIFT:
+			case -4:
+			case -5:
+				break;
+			default:
+				if(!cooked || (code<32)) return false;
+		}
+		if(!isdown) return true;
+		e->key(code, cooked);
+		return true;
+	}
+
+	bool active(bool pass) { return guis.length() && (!pass || needsinput); }
+	bool hascursor(bool targeting) { return (!targeting && commandmillis > 0) || active(targeting); }
+	void limitscale(float scale) {  gui::maxscale = scale; }
+
+	void addcb(guicb *cb)
+	{
+		gui &g = guis.add();
+		g.cb = cb;
+		g.adjustscale();
+	}
+
+	bool hit(bool on, bool act)
+	{
+		if(act)
+		{
+			if(on) { firstx = gui::hitx; firsty = gui::hity; }
+			mousebuttons |= (actionon=on) ? GUI_DOWN : GUI_UP;
+		} else if(!on) cleargui(1);
+		return active();
+	}
+
 	void update()
 	{
-		bool p = g3d_active(true, false);
+		bool p = active(false);
 		if(isopen != p) uimillis = (isopen = p) ? lastmillis : -lastmillis;
 	}
-	void render() { g3d_render(); }
+
+	void render()
+	{
+		if(actionon) mousebuttons |= GUI_PRESSED;
+		gui::reset(); guis.setsize(0);
+
+		// call all places in the engine that may want to render a gui from here, they call addcb()
+		texturemenu();
+		hud::gamemenus();
+		mainmenu();
+
+		readyeditors();
+		bool wasfocused = (fieldmode!=FIELDSHOW);
+		fieldsactive = false;
+
+		needsinput = false;
+
+		if(!guis.empty())
+		{
+			layoutpass = true;
+			//loopv(guis) guis[i].cb->gui(guis[i], true);
+			guis.last().cb->gui(guis.last(), true);
+			layoutpass = false;
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glMatrixMode(GL_PROJECTION);
+			glPushMatrix();
+			glLoadIdentity();
+			glOrtho(0, 1, 1, 0, -1, 1);
+
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glLoadIdentity();
+
+			//loopvrev(guis) guis[i].cb->gui(guis[i], false);
+			guis.last().cb->gui(guis.last(), false);
+
+			glMatrixMode(GL_PROJECTION);
+			glPopMatrix();
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+
+			glDisable(GL_BLEND);
+		}
+
+		flusheditors();
+		if(!fieldsactive) fieldmode = FIELDSHOW; //didn't draw any fields, so loose focus - mainly for menu closed
+		if((fieldmode!=FIELDSHOW) != wasfocused)
+		{
+			SDL_EnableUNICODE(fieldmode!=FIELDSHOW);
+			keyrepeat(fieldmode!=FIELDSHOW);
+		}
+
+		mousebuttons = 0;
+	}
 };

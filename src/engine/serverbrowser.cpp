@@ -446,7 +446,7 @@ void updatefrommaster()
 }
 COMMAND(updatefrommaster, "");
 
-int showservers(g3d_gui *cgui)
+int showservers(guient *cgui)
 {
 	if(servers.empty() && !reqmaster)
 	{
