@@ -1,10 +1,9 @@
 #include "engine.h"
-#include "textedit.h"
 
 int uimillis = -1;
 
 static bool layoutpass, actionon = false;
-static int mousebuttons = 0;
+static int mousebuttons = 0, guibound[2] = {0};
 static struct gui *windowhit = NULL;
 
 static float firstx, firsty;
@@ -14,7 +13,7 @@ static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
 #define SHADOW 4
-#define ICON_SIZE (FONTH-SHADOW)
+#define ICON_SIZE (guibound[1]-SHADOW)
 #define SKIN_W 256
 #define SKIN_H 128
 #define SKIN_SCALE 4
@@ -25,6 +24,7 @@ VARP(guiclicktab, 0, 1, 1);
 
 static bool needsinput = false;
 
+#include "textedit.h"
 struct gui : g3d_gui
 {
 	struct list
@@ -56,7 +56,7 @@ struct gui : g3d_gui
 		if(tcurrent)
 		{
 			if(layoutpass && !tpos) tcurrent = NULL; //disable tabs because you didn't start with one
-            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor);
+            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*guibound[1]) tab(NULL, tcolor);
 		}
 	}
 
@@ -66,7 +66,7 @@ struct gui : g3d_gui
         {
             if(layoutpass)
             {
-                int space = guiautotab*FONTH - ysize;
+                int space = guiautotab*guibound[1] - ysize;
                 if(space < 0) return true;
                 int l = lists[curlist].parent;
                 while(l >= 0)
@@ -78,7 +78,7 @@ struct gui : g3d_gui
             }
             else
             {
-                int space = guiautotab*FONTH - cury;
+                int space = guiautotab*guibound[1] - cury;
                 if(ysize > space) return true;
                 int l = lists[curlist].parent;
                 while(l >= 0)
@@ -188,9 +188,9 @@ struct gui : g3d_gui
 	void progress(float percent) { autotab(); line_(FONTH*2/5, percent); }
 
 	//use to set min size (useful when you have progress bars)
-    void strut(int size) { layout(isvertical() ? size*FONTW : 0, isvertical() ? 0 : size*FONTH); }
+    void strut(int size) { layout(isvertical() ? size*guibound[0] : 0, isvertical() ? 0 : size*guibound[1]); }
 	//add space between list items
-    void space(int size) { layout(isvertical() ? 0 : size*FONTW, isvertical() ? size*FONTH : 0); }
+    void space(int size) { layout(isvertical() ? 0 : size*guibound[0], isvertical() ? size*guibound[1] : 0); }
 
     void pushfont(const char *font) { ::pushfont(font); fontdepth++; }
     void popfont() { if(fontdepth) { ::popfont(); fontdepth--; } }
@@ -234,7 +234,7 @@ struct gui : g3d_gui
 	{
 		autotab();
 		if(scale==0) scale = 1;
-		int size = (int)(scale*2*FONTH)-SHADOW;
+		int size = (int)(scale*2*guibound[1])-SHADOW;
 		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+SHADOW, size+SHADOW));
 		return layout(size+SHADOW, size+SHADOW);
 	}
@@ -243,7 +243,7 @@ struct gui : g3d_gui
     {
         autotab();
         if(scale==0) scale = 1;
-        int size = (int)(scale*2*FONTH)-SHADOW;
+        int size = (int)(scale*2*guibound[1])-SHADOW;
         if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW), rotate, xoff, yoff, glowtex, glowcolor, layertex);
         return layout(size+SHADOW, size+SHADOW);
     }
@@ -268,16 +268,16 @@ struct gui : g3d_gui
 			int px, py;
 			if(ishorizontal())
 			{
-				hit = ishit(FONTH, ysize, x, y);
-				px = x + (FONTH-w)/2;
-                if(reverse) py = y + ((ysize-FONTH)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at top
-                else py = y + (ysize-FONTH) - ((ysize-FONTH)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at bottom
+				hit = ishit(guibound[0], ysize, x, y);
+				px = x + (guibound[0]-w)/2;
+                if(reverse) py = y + ((ysize-guibound[1])*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at top
+                else py = y + (ysize-guibound[1]) - ((ysize-guibound[1])*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at bottom
 			}
 			else
 			{
-				hit = ishit(xsize, FONTH, x, y);
-                if(reverse) px = x + (xsize-FONTH/2-w/2) - ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at right
-                else px = x + FONTH/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
+				hit = ishit(xsize, guibound[1], x, y);
+                if(reverse) px = x + (xsize-guibound[0]/2-w/2) - ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at right
+                else px = x + guibound[0]/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
 				py = y;
 			}
 
@@ -286,8 +286,8 @@ struct gui : g3d_gui
 			if(hit && actionon)
 			{
                 int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
-                if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-FONTH/2)/(ysize-FONTH)) : int(vnew*(y+ysize-FONTH/2-hity)/(ysize-FONTH));
-                else vnew = reverse ? int(vnew*(x+xsize-FONTH/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-FONTH/2)/(xsize-w));
+                if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-guibound[1]/2)/(ysize-guibound[1])) : int(vnew*(y+ysize-guibound[1]/2-hity)/(ysize-guibound[1]));
+                else vnew = reverse ? int(vnew*(x+xsize-guibound[0]/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-guibound[0]/2)/(xsize-w));
 				vnew += vmin;
                 vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
 				if(vnew != val) val = vnew;
@@ -318,17 +318,17 @@ struct gui : g3d_gui
             e->linewrap = (length<0);
             e->maxx = (e->linewrap) ? -1 : length;
             e->maxy = (height<=0)?1:-1;
-            e->pixelwidth = abs(length)*FONTW;
+            e->pixelwidth = abs(length)*guibound[0];
             if(e->linewrap && e->maxy==1)
             {
 	            int temp;
                 text_bounds(e->lines[0].text, temp, e->pixelheight, e->pixelwidth); //only single line editors can have variable height
             }
             else
-                e->pixelheight = FONTH*max(height, 1);
+                e->pixelheight = guibound[1]*max(height, 1);
         }
         int h = e->pixelheight;
-        int w = e->pixelwidth + FONTW;
+        int w = e->pixelwidth + guibound[0];
 
         bool wasvertical = isvertical();
         if(wasvertical && e->maxy != 1) pushlist();
@@ -354,7 +354,7 @@ struct gui : g3d_gui
 				}
 			}
             if(hit && editing && (mousebuttons&G3D_PRESSED)!=0 && fieldtype==FIELDEDIT)
-				e->hit(int(floor(hitx-(curx+FONTW/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
+				e->hit(int(floor(hitx-(curx+guibound[0]/2))), int(floor(hity-cury)), (mousebuttons&G3D_DRAGGED)!=0); //mouse request position
             if(editing && (fieldmode==FIELDCOMMIT || fieldmode==FIELDABORT)) // commit field if user pressed enter
             {
                 if(fieldmode==FIELDCOMMIT) result = e->currentline().text;
@@ -363,7 +363,7 @@ struct gui : g3d_gui
 			}
             else fieldsactive = true;
 
-            e->draw(curx+FONTW/2, cury, color, editing);
+            e->draw(curx+guibound[0]/2, cury, color, editing);
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
@@ -378,7 +378,7 @@ struct gui : g3d_gui
     	layout(w, h);
         if(e->maxy != 1)
         {
-            int slines = e->lines.length()-e->pixelheight/FONTH;
+            int slines = e->lines.length()-e->pixelheight/guibound[1];
             if(slines > 0)
             {
                 int pos = e->scrolly;
@@ -599,24 +599,25 @@ struct gui : g3d_gui
 			{
 				glColor4f(light.x, light.y, light.z, 0.375f);
 				if(ishorizontal())
-					rect_(curx + FONTH/2 - size, cury, size*2, ysize, 0);
+					rect_(curx + guibound[0]/2 - size, cury, size*2, ysize, 0);
 				else
-					rect_(curx, cury + FONTH/2 - size, xsize, size*2, 1);
+					rect_(curx, cury + guibound[0]/2 - size, xsize, size*2, 1);
 			}
 			glColor3fv(light.v);
 			if(ishorizontal())
-				rect_(curx + FONTH/2 - size, cury + ysize*(1-percent), size*2, ysize*percent, 0);
+				rect_(curx + guibound[0]/2 - size, cury + ysize*(1-percent), size*2, ysize*percent, 0);
 			else
-				rect_(curx, cury + FONTH/2 - size, xsize*percent, size*2, 1);
+				rect_(curx, cury + guibound[0]/2 - size, xsize*percent, size*2, 1);
 			glEnd();
 		}
-		layout(ishorizontal() ? FONTH : 0, ishorizontal() ? 0 : FONTH);
+		layout(ishorizontal() ? guibound[0] : 0, ishorizontal() ? 0 : guibound[1]);
 	}
 
 	int button_(const char *text, int color, const char *icon, bool clickable, bool center)
 	{
 		const int padding = 10;
-		int w = 0;
+		if(center) gui::pushfont("default");
+		int w = 0, h = FONTH;
 		if(icon) w += ICON_SIZE;
 		if(icon && text) w += padding;
 		if(text) w += text_width(text);
@@ -637,7 +638,8 @@ struct gui : g3d_gui
 			if(icon && text) x += padding;
 			if(text) text_(text, x, cury, color, center || (hit && clickable && actionon));
 		}
-		return layout(w, FONTH);
+		if(center) gui::popfont();
+		return layout(w, h);
 	}
 
 	static Texture *skintex, *overlaytex, *slidertex;
@@ -731,7 +733,7 @@ struct gui : g3d_gui
 	void adjustscale()
 	{
 		int w = xsize + (skinx[2]-skinx[1])*SKIN_SCALE + (skinx[10]-skinx[9])*SKIN_SCALE, h = ysize + (skiny[8]-skiny[6])*SKIN_SCALE;
-		if(tcurrent) h += ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE + FONTH-2*INSERT;
+		if(tcurrent) h += ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE + guibound[1]-2*INSERT;
 		else h += (skiny[5]-skiny[3])*SKIN_SCALE;
 
         float aspect = float(screen->h)/float(screen->w), fit = 1.0f;
@@ -749,7 +751,7 @@ struct gui : g3d_gui
         if(allowinput) needsinput = true;
         passthrough = !allowinput;
         fontdepth = 0;
-        gui::pushfont("default");
+        gui::pushfont("sub");
 		curdepth = -1;
 		curlist = -1;
 		tpos = 0;
@@ -794,14 +796,14 @@ struct gui : g3d_gui
                 if((mousebuttons & G3D_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mousebuttons |= G3D_DRAGGED;
 				if(hitx>=-xsize/2 && hitx<=xsize/2 && hity<=0)
 				{
-					if(hity>=-ysize || (tcurrent && hity>=-ysize-(FONTH-2*INSERT)-((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE && hitx<=tx-xsize/2))
+					if(hity>=-ysize || (tcurrent && hity>=-ysize-(guibound[1]-2*INSERT)-((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE && hitx<=tx-xsize/2))
 						windowhit = this;
 				}
 			}
 		}
 		else
 		{
-			if(tcurrent && tx<xsize) skin_(curx+tx-skinx[5]*SKIN_SCALE, -ysize-skiny[5]*SKIN_SCALE, xsize-tx, FONTH, 9, 1);
+			if(tcurrent && tx<xsize) skin_(curx+tx-skinx[5]*SKIN_SCALE, -ysize-skiny[5]*SKIN_SCALE, xsize-tx, guibound[1], 9, 1);
 			glPopMatrix();
 		}
 		poplist();
@@ -1015,7 +1017,16 @@ namespace UI
 	bool isopen = false;
 	bool hascursor(bool targeting) { return (!targeting && commandmillis > 0) || g3d_active(true, targeting); }
 	bool keypress(int code, bool isdown, int cooked) { return g3d_keypress(code, isdown, cooked); }
-	void setup() { return; }
+	void setup()
+	{
+		const char *fonts[2] = { "sub", "console" };
+		loopi(2)
+		{
+			pushfont(fonts[i]);
+			loopk(2) if((k ? FONTH : FONTW) > guibound[k]) guibound[k] = (k ? FONTH : FONTW);
+			popfont();
+		}
+	}
 	void update()
 	{
 		bool p = g3d_active(true, false);

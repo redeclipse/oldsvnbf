@@ -9,7 +9,7 @@ hashtable<const char *, menu> guis;
 vector<menu *> guistack;
 vector<char *> executelater;
 bool shouldclearmenu = true, clearlater = false;
-FVARP(menuscale, 0, 0.02f, 1);
+FVARP(menuscale, 0, 0.025f, 1);
 
 void popgui()
 {
