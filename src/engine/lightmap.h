@@ -122,19 +122,19 @@ extern void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start,
 extern void newnormals(cube &c);
 extern void freenormals(cube &c);
 
-#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress) \
-	if(check_calclight_progress) \
+#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog) \
+	if(check_calclight_lmprog) \
 	{ \
 		if(!calclight_canceled) \
 		{ \
-			show_calclight_progress(); \
+			show_calclight_lmprog(); \
 			check_calclight_canceled(); \
 		} \
 		if(calclight_canceled) exit; \
 	}
 
 extern bool calclight_canceled;
-extern volatile bool check_calclight_progress;
+extern volatile bool check_calclight_lmprog;
 
 extern void check_calclight_canceled();
 extern void fixlightmapnormals();

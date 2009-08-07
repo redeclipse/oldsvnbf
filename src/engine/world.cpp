@@ -762,7 +762,7 @@ ICOMMAND(resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true
 
 void resetmap(bool empty)
 {
-	renderprogress(0, "resetting map...");
+	progress(0, "resetting map...");
 	resetmaterials();
 	resettextures();
 	resetmapmodels();

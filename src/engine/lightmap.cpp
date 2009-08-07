@@ -39,52 +39,52 @@ static uchar lm[4*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
 static vector<const extentity *> lights1, lights2;
-static uint progress = 0;
-static GLuint progresstex = 0;
-static int progresstexticks = 0;
+static uint lmprog = 0;
+static GLuint lmprogtex = 0;
+static int lmprogtexticks = 0;
 
 bool calclight_canceled = false;
-volatile bool check_calclight_progress = false;
+volatile bool check_calclight_lmprog = false;
 
 void check_calclight_canceled()
 {
     if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
-	if(!calclight_canceled) check_calclight_progress = false;
+	if(!calclight_canceled) check_calclight_lmprog = false;
 }
 
 static int curlumels = 0;
 
-void show_calclight_progress()
+void show_calclight_lmprog()
 {
 	int lumels = curlumels;
 	loopv(lightmaps) lumels += lightmaps[i].lumels;
-	float bar1 = float(progress) / float(allocnodes),
+	float bar1 = float(lmprog) / float(allocnodes),
 		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
 	defformatstring(text)("%d textures used", lightmaps.length());
 
-	if(LM_PACKW <= hwtexsize && !progresstex)
+	if(LM_PACKW <= hwtexsize && !lmprogtex)
 	{
-		glGenTextures(1, &progresstex);
-		createtexture(progresstex, LM_PACKW, LM_PACKH, NULL, 3, 1, GL_RGB);
+		glGenTextures(1, &lmprogtex);
+		createtexture(lmprogtex, LM_PACKW, LM_PACKH, NULL, 3, 1, GL_RGB);
 	}
 	// only update once a sec (4 * 250 ms ticks) to not kill performance
-	if(progresstex && !calclight_canceled)
+	if(lmprogtex && !calclight_canceled)
     {
         loopvrev(lightmaps) if((lightmaps[i].type&LM_TYPE)!=LM_BUMPMAP1)
 	    {
-		    if(progresstexticks++ % 4) break;
-		    glBindTexture(GL_TEXTURE_2D, progresstex);
+		    if(lmprogtexticks++ % 4) break;
+		    glBindTexture(GL_TEXTURE_2D, lmprogtex);
             glPixelStorei(GL_UNPACK_ALIGNMENT, texalign(lightmaps[i].data, LM_PACKW, lightmaps[i].bpp));
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, LM_PACKW, LM_PACKH,
                             lightmaps[i].type&LM_ALPHA ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, lightmaps[i].data);
 		    break;
 	    }
     }
-	renderprogress(bar1, "computing lightmaps..", bar2, text, progresstexticks ? progresstex : 0);
+	progress(bar1, "computing lightmaps..", bar2, text);//, lmprogtexticks ? lmprogtex : 0);
 }
 
-#define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress)
+#define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog)
 
 bool PackNode::insert(ushort &tx, ushort &ty, ushort tw, ushort th)
 {
@@ -1352,7 +1352,7 @@ void generate_lightmaps(cube *c, int cx, int cy, int cz, int size)
 {
 	CHECK_PROGRESS(return);
 
-	progress++;
+	lmprog++;
 
 	loopi(8)
 	{
@@ -1549,7 +1549,7 @@ void cleanuplightmaps()
     }
     loopv(lightmaptexs) glDeleteTextures(1, &lightmaptexs[i].id);
     lightmaptexs.setsize(0);
-    if(progresstex) { glDeleteTextures(1, &progresstex); progresstex = 0; }
+    if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 void resetlightmaps()
@@ -1561,7 +1561,7 @@ void resetlightmaps()
 
 static Uint32 calclight_timer(Uint32 interval, void *param)
 {
-	check_calclight_progress = true;
+	check_calclight_lmprog = true;
 	return interval;
 }
 
@@ -1580,21 +1580,21 @@ void calclight(int quality)
 		conoutf("\frvalid range for calclight quality is 0..3");
 		return;
 	}
-	renderbackground("computing lightmaps... (esc to abort)");
+	progress(0, "computing lightmaps...");
     mpremip(true);
     loadlayermasks();
     optimizeblendmap();
 	resetlightmaps();
 	clear_lmids(worldroot);
 	curlumels = 0;
-	progress = 0;
-	progresstexticks = 0;
+	lmprog = 0;
+	lmprogtexticks = 0;
 	calclight_canceled = false;
-	check_calclight_progress = false;
+	check_calclight_lmprog = false;
 	SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
 	Uint32 start = SDL_GetTicks();
 	calcnormals();
-	show_calclight_progress();
+	show_calclight_lmprog();
 	generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
 	clearnormals();
 	Uint32 end = SDL_GetTicks();
@@ -1609,7 +1609,7 @@ void calclight(int quality)
 	}
 	if(!editmode) compressed.clear();
 	initlights();
-	renderbackground("lighting done...");
+	progress(0, "lighting done...");
 	allchanged();
 	if(calclight_canceled)
 		conoutf("\frcalclight aborted");
@@ -1633,11 +1633,11 @@ void patchlight(int quality)
 		conoutf("\frvalid range for patchlight quality is 0..3");
 		return;
 	}
-	renderbackground("patching lightmaps... (esc to abort)");
+	progress(0, "patching lightmaps...");
     loadlayermasks();
     cleanuplightmaps();
-	progress = 0;
-	progresstexticks = 0;
+	lmprog = 0;
+	lmprogtexticks = 0;
 	int total = 0, lumels = 0;
 	loopv(lightmaps)
 	{
@@ -1646,12 +1646,12 @@ void patchlight(int quality)
 	}
 	curlumels = lumels;
 	calclight_canceled = false;
-	check_calclight_progress = false;
+	check_calclight_lmprog = false;
 	SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
-	if(patchnormals) renderprogress(0, "computing normals...");
+	if(patchnormals) progress(0, "computing normals...");
 	Uint32 start = SDL_GetTicks();
 	if(patchnormals) calcnormals();
-	show_calclight_progress();
+	show_calclight_lmprog();
 	generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
 	if(patchnormals) clearnormals();
 	Uint32 end = SDL_GetTicks();
@@ -1662,7 +1662,7 @@ void patchlight(int quality)
 		lumels += lightmaps[i].lumels;
 	}
 	initlights();
-	renderbackground("lighting done...");
+	progress(0, "lighting done...");
 	allchanged();
 	if(calclight_canceled)
 		conoutf("\frpatchlight aborted");

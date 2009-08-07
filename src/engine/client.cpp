@@ -111,7 +111,7 @@ void connects(const char *name, int port, int qport, const char *password)
 		connmillis = totalmillis;
 		connattempts = 0;
         client::connectattempt(name ? name : "", port, qport, password ? password : "", address);
-		conoutf("\fgconnecting to %s:[%d] (esc to abort)", name != NULL ? name : "local server", port);
+		conoutf("\fgconnecting to %s:[%d]", name != NULL ? name : "local server", port);
 	}
 	else
     {

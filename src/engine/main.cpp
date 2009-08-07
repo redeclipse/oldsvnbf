@@ -135,7 +135,7 @@ VARF(colorbits, 0, 0, 32, initwarning("color depth"));
 VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
 VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
 VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
-int actualvsync = -1;
+int actualvsync = -1, lastoutofloop = 0;
 VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 
 void writeinitcfg()
@@ -373,7 +373,7 @@ void resetgl()
 {
     clearchanges(CHANGE_GFX);
 
-    renderbackground("resetting OpenGL");
+    progress(0, "resetting OpenGL");
 
     extern void cleanupva();
     extern void cleanupparticles();
@@ -418,7 +418,7 @@ void resetgl()
 			fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
-    renderbackground("initializing...");
+    progress(0, "initializing...");
     resetgamma();
     reloadshaders();
     reloadtextures();
@@ -725,6 +725,7 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
+const char *loadback = "textures/loadback", *loadbackinfo = "";
 void eastereggs()
 {
 	time_t ct = time(NULL); // current time
@@ -760,6 +761,47 @@ void eastereggs()
 	if(month == 7 && mday == 2)		loadbackinfo = "Happy Birthday c0rdawg and LedIris!";
 	if(month == 9 && mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
 	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
+}
+
+bool progressing = false;
+
+FVAR(loadprogress, 0, 0, 1);
+SVAR(progresstitle, "");
+SVAR(progresstext, "");
+FVAR(progressamt, 0, 0, 1);
+FVAR(progresspart, 0, 0, 1);
+
+void progress(float bar1, const char *text1, float bar2, const char *text2)
+{
+	if(progressing || !inbetweenframes)// || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
+		return;
+	clientkeepalive();
+
+    #ifdef __APPLE__
+    interceptkey(SDLK_UNKNOWN); // keep the event queue awake to avoid 'beachball' cursor
+    #endif
+
+	setsvar("progresstitle", text1 ? text1 : "please wait...");
+	setfvar("progressamt", bar1);
+	setsvar("progresstext", text2 ? text2 : "");
+	setfvar("progresspart", bar2);
+	if(verbose >= 4)
+	{
+		if(text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if(text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
+		else conoutf("\fmprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+	}
+
+	progressing = true;
+	loopi(2)
+	{
+		drawnoview();
+		swapbuffers();
+	}
+	progressing = false;
+
+	lastoutofloop = SDL_GetTicks();
+	autoadjustlevel = 100;
 }
 
 void updatetimer()
@@ -867,7 +909,7 @@ int main(int argc, char **argv)
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	keyrepeat(false);
-	setcaption("loading..");
+	setcaption("please wait...");
 	eastereggs();
 
 	conoutf("\fmloading gl..");
@@ -884,12 +926,11 @@ int main(int argc, char **argv)
 	persistidents = false;
 	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
+	inbetweenframes = true;
+    progress(0, "please wait...");
 
     conoutf("\fmloading gl effects..");
-	inbetweenframes = true;
-    renderbackground("loading...");
     loadshaders();
-	UI::setup();
 
 	conoutf("\fmloading world..");
 	emptymap(0, true, NULL, true);
@@ -897,6 +938,7 @@ int main(int argc, char **argv)
 	conoutf("\fmloading config..");
 	rehash(false);
 	smartmusic(true, false);
+	UI::setup();
 
 	conoutf("\fmloading required data..");
     preloadtextures();

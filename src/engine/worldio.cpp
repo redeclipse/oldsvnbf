@@ -12,8 +12,9 @@ generic mapdirs[] = {
 	{ "base", MAP_OCTA },
 };
 
-char *mapfile = NULL, *mapname = NULL;
 VAR(maptype, 1, -1, -1);
+SVAR(mapfile, "");
+SVAR(mapname, "");
 SVARW(maptitle, "");
 
 void setnames(const char *fname, int type)
@@ -26,12 +27,10 @@ void setnames(const char *fname, int type)
 
 	if(strpbrk(fn, "/\\")) copystring(mn, fn);
 	else formatstring(mn)("%s/%s", mapdirs[maptype].name, fn);
-	if(mapname) delete[] mapname;
-	mapname = newstring(mn);
+	setsvar("mapname", mn);
 
 	formatstring(mf)("%s%s", mapname, mapexts[maptype].name);
-	if(mapfile) delete[] mapfile;
-	mapfile = newstring(mf);
+	setsvar("mapfile", mf);
 }
 
 enum { OCTSAV_CHILDREN = 0, OCTSAV_EMPTY, OCTSAV_SOLID, OCTSAV_NORMAL, OCTSAV_LODCUBE };
@@ -336,7 +335,7 @@ void save_config(char *mname)
 	// texture slots
 	loopi(MAT_EDIT)
 	{
-		if(verbose) renderprogress(float(i)/float(MAT_EDIT), "saving material slots...");
+		if(verbose) progress(float(i)/float(MAT_EDIT), "saving material slots...");
 
 		if(i == MAT_WATER || i == MAT_LAVA)
 		{
@@ -347,14 +346,14 @@ void save_config(char *mname)
 
 	loopv(slots)
 	{
-		if(verbose) renderprogress(float(i)/float(slots.length()), "saving texture slots...");
+		if(verbose) progress(float(i)/float(slots.length()), "saving texture slots...");
 		saveslotconfig(h, slots[i], i);
 	}
 	if(verbose) conoutf("\fdsaved %d texture slots", slots.length());
 
 	loopv(mapmodels)
 	{
-		if(verbose) renderprogress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
+		if(verbose) progress(float(i)/float(mapmodels.length()), "saving mapmodel slots...");
 		h->printf("mmodel \"%s\"\n", mapmodels[i].name);
 	}
 	if(mapmodels.length()) h->printf("\n");
@@ -362,7 +361,7 @@ void save_config(char *mname)
 
 	loopv(mapsounds)
 	{
-		if(verbose) renderprogress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
+		if(verbose) progress(float(i)/float(mapsounds.length()), "saving mapsound slots...");
 		h->printf("mapsound \"%s\" %d \"%s\" %d %d\n", mapsounds[i].sample->name, mapsounds[i].vol, findmaterialname(mapsounds[i].material), mapsounds[i].maxrad, mapsounds[i].minrad);
 	}
 	if(mapsounds.length()) h->printf("\n");
@@ -413,7 +412,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	if(autosavemapshot || forcesave) save_mapshot(mapname);
 	if(autosaveconfig || forcesave) save_config(mapname);
 
-	renderbackground("saving map..");
+	progress(0, "saving map..");
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
@@ -449,7 +448,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 		if((id.type == ID_VAR || id.type == ID_FVAR || id.type == ID_SVAR) && id.flags&IDF_WORLD && strlen(id.name))
 		{
 			vars++;
-			if(verbose) renderprogress(float(vars)/float(numvars), "saving world variables...");
+			if(verbose) progress(float(vars)/float(numvars), "saving world variables...");
 			f->putlil<int>((int)strlen(id.name));
 			f->write(id.name, (int)strlen(id.name)+1);
 			f->putlil<int>(id.type);
@@ -480,7 +479,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	int count = 0;
 	loopv(ents) // extended
 	{
-		if(verbose) renderprogress(float(i)/float(ents.length()), "saving entities...");
+		if(verbose) progress(float(i)/float(ents.length()), "saving entities...");
 		if(ents[i]->type!=ET_EMPTY)
 		{
 			entity tmp = *ents[i];
@@ -518,7 +517,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
     {
         loopv(lightmaps)
         {
-            if(verbose) renderprogress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+            if(verbose) progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
             LightMap &lm = lightmaps[i];
             f->putchar(lm.type | (lm.unlitx>=0 ? 0x80 : 0));
             if(lm.unlitx>=0)
@@ -531,19 +530,19 @@ void save_world(const char *mname, bool nodata, bool forcesave)
         if(verbose) conoutf("\fdsaved %d lightmaps", lightmaps.length());
         if(getnumviewcells()>0)
         {
-            if(verbose) renderprogress(0, "saving PVS...");
+            if(verbose) progress(0, "saving PVS...");
             savepvs(f);
             if(verbose) conoutf("\fdsaved %d PVS view cells", getnumviewcells());
         }
         if(shouldsaveblendmap())
         {
-            if(verbose) renderprogress(0, "saving blendmap...");
+            if(verbose) progress(0, "saving blendmap...");
             saveblendmap(f);
             if(verbose) conoutf("\fdsaved blendmap");
         }
     }
 
-	renderprogress(0, "saving world...");
+	progress(0, "saving world...");
 	game::saveworld(f);
 	delete f;
 
@@ -602,15 +601,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			stream *f = opengzfile(mapfile, "rb");
 			if(!f) continue;
 
-			Texture *mapshot = notexture;
-            const char *mapshotname = strrchr(mapname, '/');
-            if(!mapshotname) mapshotname = strrchr(mapname, '\\');
-            if(mapshotname) mapshotname++;
-            else mapshotname = mapname;
-
 			bool samegame = true;
 			int eif = 0;
-
 			bfgz newhdr;
 			if(f->read(&newhdr, sizeof(binary))!=(int)sizeof(binary))
 			{
@@ -682,12 +674,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				}
 
                 resetmap(false);
-
 				hdr = newhdr;
-
-				mapshot = textureload(mapname, 0, true, false);
-				renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
-
+				progress(0, "please wait...");
 				maptype = MAP_BFGZ;
 
 				if(hdr.version <= 24) copystring(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
@@ -698,10 +686,10 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					int numvars = hdr.version >= 25 ? f->getlil<int>() : f->getchar(), vars = 0;
 					overrideidents = worldidents = true;
 					persistidents = false;
-					renderprogress(0, "loading variables...");
+					progress(0, "loading variables...");
 					loopi(numvars)
 					{
-						if(verbose) renderprogress(float(i)/float(numvars), "loading variables...");
+						if(verbose) progress(float(i)/float(numvars), "loading variables...");
 						int len = hdr.version >= 25 ? f->getlil<int>() : f->getchar();
 						if(len)
 						{
@@ -853,12 +841,8 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				}
 
                 resetmap(false);
-
 				hdr = newhdr;
-
-				mapshot = textureload(mapname, 0, true, false);
-				renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
-
+				progress(0, "please wait...");
 				maptype = MAP_OCTA;
 
 				strncpy(hdr.head, ohdr.head, 4);
@@ -944,7 +928,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				continue;
 			}
 
-			renderprogress(0, "clearing world...");
+			progress(0, "clearing world...");
 
 			texmru.setsize(0);
 			if(hdr.version<14)
@@ -962,12 +946,12 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			freeocta(worldroot);
 			worldroot = NULL;
 
-			renderprogress(0, "loading entities...");
+			progress(0, "loading entities...");
 
 			vector<extentity *> &ents = entities::getents();
 			loopi(hdr.numents)
 			{
-				if(verbose) renderprogress(float(i)/float(hdr.numents), "loading entities...");
+				if(verbose) progress(float(i)/float(hdr.numents), "loading entities...");
 				extentity &e = *entities::newent();
 				ents.add(&e);
 				f->read(&e, sizeof(entity));
@@ -1027,7 +1011,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			}
 			if(verbose) conoutf("\fdloaded %d entities", hdr.numents);
 
-			renderprogress(0, "loading octree...");
+			progress(0, "loading octree...");
 			worldroot = loadchildren(f);
 
 			if(hdr.version <= 11)
@@ -1039,7 +1023,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			if(hdr.worldsize > VVEC_INT_MASK+1 && hdr.version <= 25)
 				fixoversizedcubes(worldroot, hdr.worldsize>>1);
 
-			renderprogress(0, "validating...");
+			progress(0, "validating...");
 			validatec(worldroot, hdr.worldsize>>1);
 
 			worldscale = 0;
@@ -1047,7 +1031,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			if(hdr.version >= 7) loopi(hdr.lightmaps)
 			{
-				if(verbose) renderprogress(i/(float)hdr.lightmaps, "loading lightmaps...");
+				if(verbose) progress(i/(float)hdr.lightmaps, "loading lightmaps...");
 				LightMap &lm = lightmaps.add();
 				if(hdr.version >= 17)
 				{
@@ -1070,7 +1054,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			if(verbose) conoutf("\fdloaded %d lightmaps", hdr.lightmaps);
 
-			renderprogress(0, "loading world...");
+			progress(0, "loading world...");
 			game::loadworld(f, maptype);
 			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 
@@ -1146,8 +1130,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			initlights();
 			allchanged(true);
 
-			renderbackground("loading...", mapshot!=notexture ? mapshot : NULL, mapshotname);
-			renderprogress(0, "starting world...");
+			progress(0, "starting world...");
 			game::startmap(mapname);
 			return true;
 		}
@@ -1198,7 +1181,6 @@ void writeobj(char *name)
 COMMAND(writeobj, "s");
 
 int getworldsize() { return hdr.worldsize; }
-ICOMMAND(mapname, "", (void), result(mapname));
 int getmapversion() { return hdr.version; }
 ICOMMAND(mapversion, "", (void), intret(getmapversion()));
 int getmaprevision() { return hdr.revision; }

@@ -11,13 +11,7 @@ enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW, FIELDKEY};
 static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
-#define SHADOW 4
-#define ICON_SIZE (guibound[1]-SHADOW)
-#define SKIN_W 256
-#define SKIN_H 128
-#define SKIN_SCALE 4
-#define INSERT (3*SKIN_SCALE)
-
+VARP(guishadow, 0, 2, 8);
 VARP(guiautotab, 6, 16, 40);
 VARP(guiclicktab, 0, 1, 1);
 
@@ -86,7 +80,6 @@ struct gui : guient
 	void tab(const char *name, int color)
 	{
 		if(curdepth != 0) return;
-		gui::pushfont("super");
         if(color) tcolor = color;
 		tpos++;
 		if(!name)
@@ -95,7 +88,8 @@ struct gui : guient
 			formatstring(title)("%d", tpos);
 			name = title;
 		}
-		int w = max(text_width(name) - 2*INSERT, 0);
+		gui::pushfont(visible() ? "super" : "emphasis");
+		int w = text_width(name);
 		if(layoutpass)
 		{
 			ty = max(ty, ysize);
@@ -104,23 +98,35 @@ struct gui : guient
 		else
 		{
 			cury = -ysize;
-			int h = FONTH-2*INSERT,
-				x1 = curx + tx,
-				x2 = x1 + w + ((skinx[3]-skinx[2]) + (skinx[5]-skinx[4]))*SKIN_SCALE,
-				y1 = cury - ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
-				y2 = cury;
-			bool hit = tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-            if(hit && (!guiclicktab || mousebuttons&GUI_DOWN))
+			int x1 = curx + tx + guibound[0], x2 = x1 + w, y1 = cury - guibound[1]*3, y2 = cury - guibound[1]*3 + FONTH;
+			if(visible()) tcolor = 0xFFFFFF;
+			else if(tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2)
 			{
-				*tcurrent = tpos; //roll-over to switch tab
+				if(!guiclicktab || mousebuttons&GUI_UP) *tcurrent = tpos; // switch tab
 				color = 0xFFFF00;
 			}
-			else if(visible()) tcolor = 0xFFFFFF;
-			skin_(x1-skinx[visible()?2:6]*SKIN_SCALE, y1-skiny[1]*SKIN_SCALE, w, h, visible()?10:19, 9);
-            text_(name, x1 + (skinx[3]-skinx[2])*SKIN_SCALE-(w ? INSERT : INSERT/2), y1 + (skiny[2]-skiny[1])*SKIN_SCALE - INSERT, tcolor, visible());
+            text_(name, x1, y1, tcolor, visible());
 		}
-		tx += w + ((skinx[5]-skinx[4]) + (skinx[3]-skinx[2]))*SKIN_SCALE;
+		tx += w + guibound[0]*3;
 		gui::popfont();
+	}
+
+	void uibuttons()
+	{
+		cury = -ysize;
+		int x = curx + max(tx, xsize) + guibound[0], y = cury - guibound[1]*3;
+		#define uibtn(a,b) \
+		{ \
+			bool hit = false; \
+			if(hitx>=x && hity>=y && hitx<x+guibound[1] && hity<y+guibound[1]) \
+			{ \
+				if(mousebuttons&GUI_UP) { b; } \
+				hit = true; \
+			} \
+			icon_(textureload(a, 3), false, false, x, y, guibound[1], hit); \
+			y += guibound[1]*3/2; \
+		}
+		uibtn("textures/exit", cleargui(1));
 	}
 
 	bool ishorizontal() const { return curdepth&1; }
@@ -169,9 +175,9 @@ struct gui : guient
 		}
 	}
 
-	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false); }
-	int button(const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, true, false); }
-	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, true); }
+	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false); }
+	int button(const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, true); }
+	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "default"); }
 
 	void separator() { autotab(); line_(5); }
 	void progress(float percent) { autotab(); line_(FONTH*2/5, percent); }
@@ -223,18 +229,18 @@ struct gui : guient
 	{
 		autotab();
 		if(scale==0) scale = 1;
-		int size = (int)(scale*2*guibound[1])-SHADOW;
-		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+SHADOW, size+SHADOW));
-		return layout(size+SHADOW, size+SHADOW);
+		int size = (int)(scale*2*guibound[1])-guishadow;
+		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+guishadow, size+guishadow));
+		return layout(size+guishadow, size+guishadow);
 	}
 
     int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor, Texture *layertex)
     {
         autotab();
         if(scale==0) scale = 1;
-        int size = (int)(scale*2*guibound[1])-SHADOW;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+SHADOW, size+SHADOW), rotate, xoff, yoff, glowtex, glowcolor, layertex);
-        return layout(size+SHADOW, size+SHADOW);
+        int size = (int)(scale*2*guibound[1])-guishadow;
+        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
+        return layout(size+guishadow, size+guishadow);
     }
 
 	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse)
@@ -286,17 +292,17 @@ struct gui : guient
 
     char *field(const char *name, int color, int length, int height, const char *initval, int initmode)
     {
-        return field_(name, color, length, height, initval, initmode, FIELDEDIT);
+        return field_(name, color, length, height, initval, initmode, FIELDEDIT, "console");
     }
 
     char *keyfield(const char *name, int color, int length, int height, const char *initval, int initmode)
     {
-        return field_(name, color, length, height, initval, initmode, FIELDKEY);
+        return field_(name, color, length, height, initval, initmode, FIELDKEY, "console");
     }
 
-    char *field_(const char *name, int color, int length, int height, const char *initval, int initmode, int fieldtype = FIELDEDIT)
+    char *field_(const char *name, int color, int length, int height, const char *initval, int initmode, int fieldtype = FIELDEDIT, const char *font = "")
 	{
-		gui::pushfont("console");
+		if(font && *font) gui::pushfont(font);
         editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
         {
@@ -376,7 +382,7 @@ struct gui : guient
             }
             if(wasvertical) poplist();
         }
-        gui::popfont();
+        if(font && *font) gui::popfont();
 		return result;
 	}
 
@@ -446,7 +452,7 @@ struct gui : guient
 
 	void text_(const char *text, int x, int y, int color, bool shadow)
 	{
-		if(shadow) draw_text(text, x+SHADOW, y+SHADOW, 0x00, 0x00, 0x00, 0xC0);
+		if(shadow) draw_text(text, x+guishadow, y+guishadow, 0x00, 0x00, 0x00, 0xC0);
 		draw_text(text, x, y, color>>16, (color>>8)&0xFF, color&0xFF);
 	}
 
@@ -510,7 +516,7 @@ struct gui : guient
 			notextureshader->set();
 			glColor4f(0, 0, 0, 0.75f);
 			glBegin(GL_QUADS);
-			rect_(x+SHADOW, y+SHADOW, xs, ys);
+			rect_(x+guishadow, y+guishadow, xs, ys);
 			glEnd();
 			glEnable(GL_TEXTURE_2D);
 			defaultshader->set();
@@ -602,12 +608,12 @@ struct gui : guient
 		layout(ishorizontal() ? guibound[0] : 0, ishorizontal() ? 0 : guibound[1]);
 	}
 
-	int button_(const char *text, int color, const char *icon, bool clickable, bool center)
+	int button_(const char *text, int color, const char *icon, bool clickable, const char *font = "")
 	{
 		const int padding = 10;
-		if(center) gui::pushfont("default");
+		if(font && *font) gui::pushfont(font);
 		int w = 0, h = FONTH;
-		if(icon) w += ICON_SIZE;
+		if(icon) w += guibound[1];
 		if(icon && text) w += padding;
 		if(text) w += text_width(text);
 
@@ -616,101 +622,20 @@ struct gui : guient
 			bool hit = ishit(w, FONTH);
 			if(hit && clickable) color = 0xFF0000;
 			int x = curx;
-			if(isvertical() && center) x += (xsize-w)/2;
-
 			if(icon)
 			{
 				defformatstring(tname)("textures/%s", icon);
-				icon_(textureload(tname, 3), false, false, x, cury, ICON_SIZE, clickable && hit);
-				x += ICON_SIZE;
+				icon_(textureload(tname, 3), false, false, x, cury, guibound[1], clickable && hit);
+				x += guibound[1];
 			}
 			if(icon && text) x += padding;
-			if(text) text_(text, x, cury, color, center || (hit && clickable && actionon));
+			if(text) text_(text, x, cury, color, hit && clickable && actionon);
 		}
-		if(center) gui::popfont();
+		if(font && *font) gui::popfont();
 		return layout(w, h);
 	}
 
-	static Texture *skintex, *overlaytex, *slidertex;
-	static const int skinx[], skiny[];
-	static const struct patch { ushort left, right, top, bottom; uchar flags; } patches[];
-
-	void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n)
-	{
-		if(*guiskintex)
-		{
-			if(!skintex) skintex = textureload(guiskintex, 3);
-			glBindTexture(GL_TEXTURE_2D, skintex->id);
-			int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
-			float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
-
-			bool quads = false;
-			glColor4f(1.0f, 1.0f, 1.0f, 0.80f);
-			loopi(n)
-			{
-				const patch &p = patches[start+i];
-				int left = skinx[p.left]*SKIN_SCALE, right = skinx[p.right]*SKIN_SCALE,
-					top = skiny[p.top]*SKIN_SCALE, bottom = skiny[p.bottom]*SKIN_SCALE;
-				float tleft = left*wscale, tright = right*wscale,
-						ttop = top*hscale, tbottom = bottom*hscale;
-				if(p.flags&0x1)
-				{
-					gapx1 = left;
-					gapx2 = right;
-				}
-				else if(left >= gapx2)
-				{
-					left += gapw - (gapx2-gapx1);
-					right += gapw - (gapx2-gapx1);
-				}
-				if(p.flags&0x10)
-				{
-					gapy1 = top;
-					gapy2 = bottom;
-				}
-				else if(top >= gapy2)
-				{
-					top += gaph - (gapy2-gapy1);
-					bottom += gaph - (gapy2-gapy1);
-				}
-
-				//multiple tiled quads if necessary rather than a single stretched one
-				int ystep = bottom-top;
-				int yo = y+top;
-				while(ystep > 0)
-				{
-					if(p.flags&0x10 && yo+ystep-(y+top) > gaph)
-					{
-						ystep = gaph+y+top-yo;
-						tbottom = ttop+ystep*hscale;
-					}
-					int xstep = right-left;
-					int xo = x+left;
-					float tright2 = tright;
-					while(xstep > 0)
-					{
-						if(p.flags&0x01 && xo+xstep-(x+left) > gapw)
-						{
-							xstep = gapw+x+left-xo;
-							tright = tleft+xstep*wscale;
-						}
-						if(!quads) { quads = true; glBegin(GL_QUADS); }
-						glTexCoord2f(tleft,  ttop);    glVertex2f(xo,       yo);
-						glTexCoord2f(tright, ttop);    glVertex2f(xo+xstep, yo);
-						glTexCoord2f(tright, tbottom); glVertex2f(xo+xstep, yo+ystep);
-						glTexCoord2f(tleft,  tbottom); glVertex2f(xo,       yo+ystep);
-						xtraverts += 4;
-						if(!(p.flags&0x01)) break;
-						xo += xstep;
-					}
-					tright = tright2;
-					if(!(p.flags&0x10)) break;
-					yo += ystep;
-				}
-			}
-			if(quads) glEnd();
-		}
-	}
+	static Texture *overlaytex, *slidertex;
 
     vec origin, scale;
 	guicb *cb;
@@ -721,14 +646,11 @@ struct gui : guient
 
 	void adjustscale()
 	{
-		int w = xsize + (skinx[2]-skinx[1])*SKIN_SCALE + (skinx[10]-skinx[9])*SKIN_SCALE, h = ysize + (skiny[8]-skiny[6])*SKIN_SCALE;
-		if(tcurrent) h += ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE + guibound[1]-2*INSERT;
-		else h += (skiny[5]-skiny[3])*SKIN_SCALE;
-
+		int w = xsize + guibound[0]*2, h = ysize + guibound[1]*2;
         float aspect = float(screen->h)/float(screen->w), fit = 1.0f;
         if(w*aspect*basescale>1.0f) fit = 1.0f/(w*aspect*basescale);
         if(h*basescale*fit>maxscale) fit *= maxscale/(h*basescale*fit);
-		origin = vec(0.5f-((w-xsize)/2 - (skinx[2]-skinx[1])*SKIN_SCALE)*aspect*scale.x*fit, 0.5f + (0.5f*h-(skiny[8]-skiny[6])*SKIN_SCALE)*scale.y*fit, 0);
+		origin = vec(0.5f-((w-xsize)/2 - guibound[0])*aspect*scale.x*fit, 0.5f + (0.5f*h-guibound[1])*scale.y*fit, 0);
 		scale = vec(aspect*scale.x*fit, scale.y*fit, 1);
 	}
 
@@ -736,7 +658,7 @@ struct gui : guient
 	{
 		initscale *= 0.025f;
 		basescale = initscale;
-        if(layoutpass) scale.x = scale.y = scale.z = min(basescale*(totalmillis-starttime)/300.0f, basescale);
+        if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(totalmillis-starttime)/300.0f, basescale);
         if(allowinput) needsinput = true;
         passthrough = !allowinput;
         fontdepth = 0;
@@ -760,9 +682,6 @@ struct gui : guient
 			glTranslatef(origin.x, origin.y, origin.z);
 			glScalef(scale.x, scale.y, scale.z);
 			light = vec(1, 1, 1);
-
-			skin_(curx-skinx[2]*SKIN_SCALE, cury-skiny[5]*SKIN_SCALE, xsize, ysize, 0, 9);
-			if(!tcurrent) skin_(curx-skinx[5]*SKIN_SCALE, cury-skiny[5]*SKIN_SCALE, xsize, 0, 9, 1);
 		}
 	}
 
@@ -772,7 +691,7 @@ struct gui : guient
 		{
 			xsize = max(tx, xsize);
 			ysize = max(ty, ysize);
-			ysize = max(ysize, (skiny[6]-skiny[5])*SKIN_SCALE);
+			ysize = max(ysize, guibound[1]);
 
 			if(tcurrent) *tcurrent = max(1, min(*tcurrent, tpos));
 			adjustscale();
@@ -786,7 +705,7 @@ struct gui : guient
 		}
 		else
 		{
-			if(tcurrent && tx<xsize) skin_(curx+tx-skinx[5]*SKIN_SCALE, -ysize-skiny[5]*SKIN_SCALE, xsize-tx, guibound[1], 9, 1);
+			if(needsinput) uibuttons();
 			glPopMatrix();
 		}
 		poplist();
@@ -794,53 +713,9 @@ struct gui : guient
 	}
 };
 
-Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
-
-TVARN(guiskintex, "", gui::skintex, 0);
+Texture *gui::overlaytex = NULL, *gui::slidertex = NULL;
 TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex, 0);
 TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
-
-//chop skin into a grid
-const int gui::skiny[] = {0, 7, 21, 34, 48, 56, 104, 111, 119, 128},
-		  gui::skinx[] = {0, 11, 23, 37, 105, 119, 137, 151, 215, 229, 245, 256};
-//Note: skinx[3]-skinx[2] = skinx[7]-skinx[6]
-//	  skinx[5]-skinx[4] = skinx[9]-skinx[8]
-const gui::patch gui::patches[] =
-{ //arguably this data can be compressed - it depends on what else needs to be skinned in the future
-	{1,2,3,5,  0},	// body
-	{2,9,4,5,  0x01},
-	{9,10,3,5, 0},
-
-	{1,2,5,6,  0x10},
-	{2,9,5,6,  0x11},
-	{9,10,5,6, 0x10},
-
-	{1,2,6,8,  0},
-	{2,9,6,8,  0x01},
-	{9,10,6,8, 0},
-
-	{5,6,3,4, 0x01}, // top
-
-	{2,3,1,2, 0},	// selected tab
-	{3,4,1,2, 0x01},
-	{4,5,1,2, 0},
-	{2,3,2,3, 0x10},
-	{3,4,2,3, 0x11},
-	{4,5,2,3, 0x10},
-	{2,3,3,4, 0},
-	{3,4,3,4, 0x01},
-	{4,5,3,4, 0},
-
-	{6,7,1,2, 0},	// deselected tab
-	{7,8,1,2, 0x01},
-	{8,9,1,2, 0},
-	{6,7,2,3, 0x10},
-	{7,8,2,3, 0x11},
-	{8,9,2,3, 0x10},
-	{6,7,3,4, 0},
-	{7,8,3,4, 0x01},
-	{8,9,3,4, 0},
-};
 
 vector<gui::list> gui::lists;
 float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;
@@ -852,7 +727,7 @@ static vector<gui> guis;
 
 namespace UI
 {
-	bool isopen = false;
+	bool isopen = false, ready = false;
 
 	void setup()
 	{
@@ -863,6 +738,7 @@ namespace UI
 			loopk(2) if((k ? FONTH : FONTW) > guibound[k]) guibound[k] = (k ? FONTH : FONTW);
 			popfont();
 		}
+		ready = true;
 	}
 
 	bool keypress(int code, bool isdown, int cooked)
@@ -885,8 +761,20 @@ namespace UI
 			return true;
 		}
 
-		if((code==-1 || code == -2) && hit(isdown, true)) return true;
-		else if(code==-3 && hit(isdown, false)) return true;
+		if(code<0) switch(code)
+		{ // fall-through-o-rama
+			case -3:
+				mousebuttons |= GUI_ALT;
+			case -1:
+				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
+				mousebuttons |= (actionon=isdown) ? GUI_DOWN : GUI_UP;
+				if(active()) return true;
+				break;
+			case -2:
+				cleargui(1);
+				if(active()) return true;
+			default: break;
+		}
 
 		if(fieldmode == FIELDSHOW || !e) return false;
 		switch(code)
@@ -934,16 +822,6 @@ namespace UI
 		g.adjustscale();
 	}
 
-	bool hit(bool on, bool act)
-	{
-		if(act)
-		{
-			if(on) { firstx = gui::hitx; firsty = gui::hity; }
-			mousebuttons |= (actionon=on) ? GUI_DOWN : GUI_UP;
-		} else if(!on) cleargui(1);
-		return active();
-	}
-
 	void update()
 	{
 		bool p = active(false);
@@ -952,13 +830,18 @@ namespace UI
 
 	void render()
 	{
+		if(!ready) return;
 		if(actionon) mousebuttons |= GUI_PRESSED;
 		gui::reset(); guis.setsize(0);
 
 		// call all places in the engine that may want to render a gui from here, they call addcb()
-		texturemenu();
-		hud::gamemenus();
-		mainmenu();
+		if(progressing) progressmenu();
+		else
+		{
+			texturemenu();
+			hud::gamemenus();
+			mainmenu();
+		}
 
 		readyeditors();
 		bool wasfocused = (fieldmode!=FIELDSHOW);

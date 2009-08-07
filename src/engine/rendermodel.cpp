@@ -337,7 +337,7 @@ model *loadmodel(const char *name, int i, bool msg)
 		if(msg)
 		{
 			defformatstring(filename)("models/%s", name);
-			renderprogress(loadprogress, filename);
+			progress(loadprogress, filename);
 		}
 		m = new md5(name);
 		loadingmodel = m;

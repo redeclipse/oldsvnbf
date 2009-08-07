@@ -553,8 +553,8 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	ENetSocket sock = mastersend(address, servermaster, "list");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
-	defformatstring(text)("retrieving servers from %s:[%d] (esc to abort)", servermaster, address.port);
-	renderprogress(0, text);
+	defformatstring(text)("retrieving servers from %s:[%d]", servermaster, address.port);
+	progress(0, text);
 
 	ENetBuffer eb;
 	eb.data = buf;
@@ -564,7 +564,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 	while(masterreceive(sock, eb, 250))
 	{
 		timeout = SDL_GetTicks() - starttime;
-        renderprogress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
+        progress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
         if(interceptkey(SDLK_ESCAPE)) timeout = RETRIEVELIMIT + 1;
 		if(timeout > RETRIEVELIMIT)
 		{

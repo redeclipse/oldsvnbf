@@ -539,8 +539,8 @@ struct vacollect : verthash
     }
 } vc;
 
-int recalcprogress = 0;
-#define progress(s)     if((recalcprogress++&0x7FF)==0) renderprogress(recalcprogress/(float)allocnodes, s);
+int recalcocprog = 0;
+#define showocprog(s) if((recalcocprog++&0x7FF)==0) progress(recalcocprog/(float)allocnodes, s);
 
 vector<tjoint> tjoints;
 
@@ -929,7 +929,7 @@ void gencubeedges(cube &c, int x, int y, int z, int size)
 
 void gencubeedges(cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = hdr.worldsize>>1)
 {
-    progress("fixing t-joints...");
+    showocprog("fixing t-joints...");
     loopi(8)
     {
         ivec o(i, x, y, z, size);
@@ -1486,7 +1486,7 @@ VARF(vacubemin, 0, 128, 256*256, allchanged());
 
 int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 {
-	progress("recalculating geometry...");
+	showocprog("recalculating geometry...");
 	static int faces[6];
 	int ccount = 0, cmergemax = vamergemax, chasmerges = vahasmerges;
 	loopi(8)									// counting number of semi-solid/solid children cubes
@@ -1636,7 +1636,7 @@ void octarender()								// creates va s for all leaf cubes that don't already h
 	int csi = 0;
 	while(1<<csi < hdr.worldsize) csi++;
 
-	recalcprogress = 0;
+	recalcocprog = 0;
 	varoot.setsizenodelete(0);
 	updateva(worldroot, 0, 0, 0, hdr.worldsize/2, csi-1);
 	flushvbo();
@@ -1674,7 +1674,7 @@ void precachetextures()
 
 void allchanged(bool load)
 {
-	renderprogress(0, "clearing vertex arrays...");
+	progress(0, "clearing vertex arrays...");
 	clearvas(worldroot);
 	resetqueries();
 	if(load) initenvmaps();
@@ -1683,7 +1683,7 @@ void allchanged(bool load)
     tjoints.setsizenodelete(0);
     if(filltjoints)
     {
-        recalcprogress = 0;
+        recalcocprog = 0;
         gencubeedges();
         enumeratekt(edgegroups, edgegroup, g, int, e, findtjoints(e, g));
         cubeedges.setsizenodelete(0);
