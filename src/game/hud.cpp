@@ -177,15 +177,15 @@ namespace hud
 	FVARP(radarcardsize, 0, 0.85f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radarplayerblend, 0, 0.75f, 1);
-	FVARP(radarplayersize, 0, 0.65f, 1000);
+	FVARP(radarplayersize, 0, 0.5f, 1000);
 	FVARP(radarblipblend, 0, 0.5f, 1);
 	FVARP(radarblipsize, 0, 0.5f, 1000);
 	FVARP(radarflagblend, 0, 1.f, 1);
 	FVARP(radarflagsize, 0, 1.f, 1000);
 	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radaritemsize, 0, 1.f, 1000);
-	FVARP(radarsize, 0, 0.035f, 1000);
-	FVARP(radaroffset, 0, 0.075f, 1000);
+	FVARP(radarsize, 0, 0.03f, 1000);
+	FVARP(radaroffset, 0, 0.03f, 1000);
 	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
 	VARP(radarcard, 0, 0, 2);
 	VARP(radaritems, 0, 2, 2);
@@ -200,7 +200,7 @@ namespace hud
 	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, + 2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 3000, INT_MAX-1);
-	FVARP(radardamagesize, 0, 2.f, 1000);
+	FVARP(radardamagesize, 0, 2.5f, 1000);
 	FVARP(radardamageblend, 0, 1.f, 1);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
 	VARP(radardamagemax, 1, 100, INT_MAX-1);
@@ -968,7 +968,7 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			const char *tex = bliptex;
-			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = fade;
+			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = radarblipsize;
 			if(type == WEAPON)
 			{
 				int attr = weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators));
@@ -977,13 +977,9 @@ namespace hud
 				g = ((weaptype[attr].colour>>8)&0xFF)/255.f;
 				b = (weaptype[attr].colour&0xFF)/255.f;
 				fade *= radaritemblend;
-				size *= radaritemsize;
+				size = radaritemsize;
 			}
-			else
-			{
-				fade *= radarblipblend;
-				size *= radarblipsize;
-			}
+			else fade *= radarblipblend;
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
 			if(insel) drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
