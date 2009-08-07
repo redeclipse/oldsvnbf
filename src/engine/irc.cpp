@@ -720,16 +720,16 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 
 bool ircchangui(guient *g, ircnet *n, ircchan *c, bool tab)
 {
-	if(tab) g->tab(c->name, GUI_TITLE_COLOR);
+	if(tab) g->tab(c->name);
 
 	defformatstring(cwindow)("%s_%s_window", n->name, c->name);
 	g->fieldclear(cwindow);
 	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
-	g->field(cwindow, GUI_TEXT_COLOR, -150, 50, NULL, EDITORREADONLY);
+	g->field(cwindow, 0xFFFFAA, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(cwindow);
 
 	defformatstring(cinput)("%s_%s_input", n->name, c->name);
-	char *v = g->field(cinput, GUI_TEXT_COLOR, -150, 0, "", EDITORFOREVER);
+	char *v = g->field(cinput, 0xFFFFAA, -150, 0, "", EDITORFOREVER);
 	if(v && *v)
 	{
 		irccmd(n, c, v);
@@ -741,16 +741,16 @@ bool ircchangui(guient *g, ircnet *n, ircchan *c, bool tab)
 
 bool ircnetgui(guient *g, ircnet *n, bool tab)
 {
-	if(tab) g->tab(n->name, GUI_TITLE_COLOR);
+	if(tab) g->tab(n->name);
 
 	defformatstring(window)("%s_window", n->name);
 	g->fieldclear(window);
 	loopvk(n->lines) g->fieldline(window, n->lines[k]);
-	g->field(window, GUI_TEXT_COLOR, -150, 50, NULL, EDITORREADONLY);
+	g->field(window, 0xFFFFAA, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(window);
 
 	defformatstring(input)("%s_input", n->name);
-	char *w = g->field(input, GUI_TEXT_COLOR, -150, 0, "", EDITORFOREVER);
+	char *w = g->field(input, 0xFFFFAA, -150, 0, "", EDITORFOREVER);
 	if(w && *w)
 	{
 		irccmd(n, NULL, w);
@@ -778,7 +778,7 @@ bool ircgui(guient *g, const char *s)
 		{
 			if(!ircnetgui(g, n, false)) return false;
 		}
-		else g->textf("not currently connected to %s", GUI_TEXT_COLOR, NULL, s);
+		else g->textf("not currently connected to %s", 0xFFFFAA, NULL, s);
 	}
 	else
 	{
@@ -787,12 +787,12 @@ bool ircgui(guient *g, const char *s)
 		{
 			ircnet *n = &ircnets[i];
 			g->pushlist();
-			g->buttonf("%s via %s:[%d]", GUI_BUTTON_COLOR, NULL, n->name, n->serv, n->port);
+			g->buttonf("%s via %s:[%d]", 0xFFFFFF, NULL, n->name, n->serv, n->port);
 			g->space(1);
 			const char *ircstates[IRC_MAX] = {
 					"\froffline", "\foconnecting", "\fynegotiating", "\fgonline"
 			};
-			g->buttonf("\fs%s\fS as %s", GUI_BUTTON_COLOR, NULL, ircstates[n->state], n->nick);
+			g->buttonf("\fs%s\fS as %s", 0xFFFFFF, NULL, ircstates[n->state], n->nick);
 			g->poplist();
 			nets++;
 		}
@@ -804,7 +804,7 @@ bool ircgui(guient *g, const char *s)
 				if(!ircnetgui(g, n, true)) return false;
 			}
 		}
-		else g->text("no current connections..", GUI_TEXT_COLOR);
+		else g->text("no current connections..", 0xFFFFAA);
 	}
 	return true;
 }

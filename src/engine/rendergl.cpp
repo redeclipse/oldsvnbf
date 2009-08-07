@@ -1350,214 +1350,6 @@ void gettextres(int &w, int &h)
 	}
 }
 
-const char *loadback = "textures/loadback", *loadbackinfo = "";
-
-void loadbackground(int w, int h, const char *name, Texture *t)
-{
-	float cx = 0.5f*w, cy = (0.5f*(h-32))+32, // hacked for renderprogress
-		  aw = (h-32)*4.0f/3.0f, ah = (h-32);
-	if(aw > w)
-	{
-		aw = w;
-		ah = w*3.0f/4.0f;
-	}
-	glColor3f(1, 1, 1);
-	if(name && *name)
-	{
-		settexture(name);
-		glBegin(GL_QUADS);
-
-		glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-		glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-		glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-		glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-
-		if(w > aw)
-		{
-			glTexCoord2f(0, 0); glVertex2f(0, cy-ah/2);
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-			glTexCoord2f(0, 1); glVertex2f(0, cy+ah/2);
-
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-			glTexCoord2f(1, 0); glVertex2f(w, cy-ah/2);
-			glTexCoord2f(1, 1); glVertex2f(w, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-		}
-
-		if(h > ah)
-		{
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, 0);
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, 0);
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, h);
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, h);
-		}
-
-		glEnd();
-	}
-
-    settexture("textures/logo", 3);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(w-256, 2);
-    glTexCoord2f(1, 0); glVertex2f(w, 2);
-    glTexCoord2f(1, 1); glVertex2f(w, 66);
-    glTexCoord2f(0, 1); glVertex2f(w-256, 66);
-    glEnd();
-
-    settexture("textures/cube2badge", 3);
-    glBegin(GL_QUADS); // goes off the edge on purpose
-    glTexCoord2f(0, 0); glVertex2f(w-108, 36);
-    glTexCoord2f(1, 0); glVertex2f(w-12, 36);
-    glTexCoord2f(1, 1); glVertex2f(w-12, 68);
-    glTexCoord2f(0, 1); glVertex2f(w-108, 68);
-    glEnd();
-
-    if(t)
-    {
-        float tx1 = 378/1024.f, tx2 = 648/1024.f, txc = cx-aw/2 + aw*(tx1 + tx2)/2, txr = aw*(tx2 - tx1)/2,
-              ty1 = 307/1024.f, ty2 = 658/1024.f, tyc = cy-ah/2 + ah*(ty1 + ty2)/2, tyr = ah*(ty2 - ty1)/2;
-
-        glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_TRIANGLE_FAN);
-        const int subdiv = 16;
-        const float solid = 0.8f;
-        loopi(subdiv+1)
-        {
-            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
-            glTexCoord2f(0.5f + solid*0.5f*rx, 0.5f + solid*0.5f*ry);
-            glVertex2f(txc + solid*txr*rx, tyc + solid*tyr*ry);
-        }
-        glEnd();
-        glBegin(GL_QUAD_STRIP);
-        loopi(subdiv+1)
-        {
-            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
-            glColor4f(1, 1, 1, 0);
-            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
-            glVertex2f(txc + txr*rx, tyc + tyr*ry);
-            glColor4f(1, 1, 1, 1);
-            glTexCoord2f(0.5f + solid*0.5f*rx, 0.5f + solid*0.5f*ry);
-            glVertex2f(txc + solid*txr*rx, tyc + solid*tyr*ry);
-        }
-        glEnd();
-        glColor3f(1, 1, 1);
-    }
-
-	glPushMatrix();
-	glScalef(1/3.0f, 1/3.0f, 1);
-	if(loadbackinfo && *loadbackinfo)
-		draw_textx("%s", FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, loadbackinfo);
-	draw_textx("v%.2f (%s)", w*3-FONTH, h*3-FONTH*2-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
-	draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
-	glPopMatrix();
-}
-
-string backgroundcaption = "";
-Texture *backgroundmapshot = NULL;
-string backgroundmapname = "";
-
-void restorebackground()
-{
-    if(renderedframe) return;
-    renderbackground(backgroundcaption[0] ? backgroundcaption : NULL, backgroundmapshot, backgroundmapname[0] ? backgroundmapname : NULL, true);
-}
-
-void renderbackground(const char *caption, Texture *mapshot, const char *mapname, bool restore)
-{
-    if(!inbetweenframes) return;
-
-	int w = screen->w, h = screen->h;
-	if(caption && mapname)
-    {
-        defformatstring(mapcaption)("%s - %s", mapname, caption);
-        setcaption(mapcaption);
-    }
-    else setcaption(caption);
-    smartmusic(false, true);
-    getscreenres(w, h);
-	gettextres(w, h);
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, w, h, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    defaultshader->set();
-	loopi(restore ? 1 : 2)
-	{
-		glClearColor(0.f, 0.f, 0.f, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		loadbackground(w, h, kidmode ? "textures/kidback" : loadback, mapshot);
-
-		glPushMatrix();
-		glScalef(1/3.0f, 1/3.0f, 1);
-		settexture("textures/progress", 3);
-		glBegin(GL_QUADS);
-		glTexCoord2f(0, 0); glVertex2f(1, 1);
-		glTexCoord2f(1, 0); glVertex2f(190, 1);
-		glTexCoord2f(1, 1); glVertex2f(190, 1);
-		glTexCoord2f(0, 1); glVertex2f(1, 190);
-		glEnd();
-		draw_textx("\fgload", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
-		draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, caption ? caption : "loading...");
-		glPopMatrix();
-#if 0
-        if(caption)
-        {
-            glPushMatrix();
-            glScalef(1/3.0f, 1/3.0f, 1);
-            draw_text(caption, 70, FONTH/2);
-            glPopMatrix();
-        }
-
-		if(t)
-		{
-			glBindTexture(GL_TEXTURE_2D, t->id);
-			int sz = 256, x = (w-sz)/2, y = min(384, h-256);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2f(x,	y);
-			glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-			glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
-			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
-			glEnd();
-			settexture(guioverlaytex);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0, 0); glVertex2f(x,	y);
-			glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-			glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
-			glTexCoord2f(0, 1); glVertex2f(x,	y+sz);
-			glEnd();
-		}
-#endif
-        if(mapname)
-        {
-            glPushMatrix();
-            glScalef(1/3.0f, 1/3.0f, 1);
-			draw_textx("%s", (w/2)*3, (h/2)*3+FONTH, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, mapname);
-            glPopMatrix();
-        }
-		if(!restore) swapbuffers();
-	}
-	glDisable(GL_BLEND);
-	glDisable(GL_TEXTURE_2D);
-
-    if(!restore)
-    {
-        renderedframe = false;
-        copystring(backgroundcaption, caption ? caption : "");
-        backgroundmapshot = mapshot;
-        copystring(backgroundmapname, mapname ? mapname : "");
-    }
-}
-
 void drawslice(float start, float length, float x, float y, float size)
 {
     float end = start + length,
@@ -1618,129 +1410,6 @@ void drawfadedslice(float start, float length, float x, float y, float size, flo
     else if(end < 0.625f) SLICESPOKE(-ex/ey, 1)
     else SLICESPOKE(-1, ey/ex)
     glEnd();
-}
-
-extern int actualvsync;
-int lastoutofloop = 0;
-float loadprogress = 0;
-void renderprogress(float bar1, const char *text1, float bar2, const char *text2, GLuint tex)	// also used during loading
-{
-	if(!inbetweenframes || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
-		return;
-	clientkeepalive();
-
-    #ifdef __APPLE__
-    interceptkey(SDLK_UNKNOWN); // keep the event queue awake to avoid 'beachball' cursor
-    #endif
-
-	if(verbose >= 4)
-	{
-		if(text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if(text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
-		else conoutf("\fmprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-	}
-
-	int w = screen->w, h = screen->h;
-    getscreenres(w, h);
-	gettextres(w, h);
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0, w*3, h*3, 0, -1, 1);
-	notextureshader->set();
-
-	glColor3f(0, 0, 0);
-	glBegin(GL_QUADS);
-	glVertex2f(0,	0);
-	glVertex2f(w*3, 0);
-	glVertex2f(w*3, 204);
-	glVertex2f(0,	204);
-	glEnd();
-
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
-	glColor3f(1, 1, 1);
-
-	glPushMatrix();
-	glScalef(3.0f, 3.0f, 1);
-
-    settexture("textures/logo", 3);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(w-256, 2);
-    glTexCoord2f(1, 0); glVertex2f(w, 2);
-    glTexCoord2f(1, 1); glVertex2f(w, 66);
-    glTexCoord2f(0, 1); glVertex2f(w-256, 66);
-    glEnd();
-
-    settexture("textures/cube2badge", 3);
-    glBegin(GL_QUADS); // goes off the edge on purpose
-    glTexCoord2f(0, 0); glVertex2f(w-108, 36);
-    glTexCoord2f(1, 0); glVertex2f(w-12, 36);
-    glTexCoord2f(1, 1); glVertex2f(w-12, 68);
-    glTexCoord2f(0, 1); glVertex2f(w-108, 68);
-    glEnd();
-
-    glPopMatrix();
-
-	settexture("textures/progress", 3);
-	drawslice(0, bar1 > 0 ? clamp(bar1, 0.f, 1.f) : 1.f, 96, 96, 96);
-	if(bar1 > 0) draw_textx("\fg%d%%", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1, int(bar1*100));
-	else draw_textx("\fgload", 96, 96-FONTH/2, 255, 255, 255, 255, TEXT_CENTERED, -1, -1);
-	if(text1)
-	{
-		if(text2 && bar2 > 0)
-			draw_textx("%s %s [\fs\fy%d%%\fS]", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1, text2, int(bar2*100));
-		else draw_textx("%s", 192+FONTW, 96-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, (w-256)*3, text1);
-	}
-
-	glDisable(GL_BLEND);
-	if(tex)
-	{
-		glPushMatrix();
-		glScalef(3.0f, 3.0f, 1);
-		const int subdiv = 16;
-		float cx = 0.5f*w, cy = (0.5f*h)+12, aw = h*4.0f/3.0f, ah = h;
-		if(aw > w) { aw = w; ah = w*3.0f/4.0f; }
-        float tx1 = 378/1024.f, tx2 = 648/1024.f, txc = cx-aw/2 + aw*(tx1 + tx2)/2, txr = aw*(tx2 - tx1)/2,
-              ty1 = 307/1024.f, ty2 = 658/1024.f, tyc = cy-ah/2 + ah*(ty1 + ty2)/2, tyr = ah*(ty2 - ty1)/2;
-		glColor3f(1, 1, 1);
-		glBindTexture(GL_TEXTURE_2D, tex);
-        glBegin(GL_TRIANGLE_FAN);
-        loopi(subdiv+1)
-        {
-            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
-            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
-            glVertex2f(txc + txr*rx, tyc + tyr*ry);
-        }
-        glEnd();
-#if 0
-        glBegin(GL_QUAD_STRIP);
-        loopi(subdiv+1)
-        {
-            float angle = float(i*2*M_PI)/subdiv, rx = cosf(angle), ry = sinf(angle);
-            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
-            glVertex2f(txc + txr*rx, tyc + tyr*ry);
-            glTexCoord2f(0.5f + 0.5f*rx, 0.5f + 0.5f*ry);
-            glVertex2f(txc + txr*rx, tyc + tyr*ry);
-        }
-        glEnd();
-#endif
-		glPopMatrix();
-	}
-
-	glDisable(GL_TEXTURE_2D);
-
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-	swapbuffers();
-	lastoutofloop = SDL_GetTicks();
-	autoadjustlevel = 100;
 }
 
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
@@ -1931,12 +1600,78 @@ void drawnoview()
     defaultshader->set();
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    loadbackground(w, h);
+
+	float cx = 0.5f*w, cy = 0.5f*h, aw = h*4.0f/3.0f, ah = h;
+	if(aw > w) { aw = w; ah = w*3.0f/4.0f; }
+	glColor3f(1, 1, 1);
+	if(loadback && *loadback)
+	{
+		settexture(loadback);
+		glBegin(GL_QUADS);
+
+		glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+		glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+		glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+		glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+
+		if(w > aw)
+		{
+			glTexCoord2f(0, 0); glVertex2f(0, cy-ah/2);
+			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+			glTexCoord2f(0, 1); glVertex2f(0, cy+ah/2);
+
+			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+			glTexCoord2f(1, 0); glVertex2f(w, cy-ah/2);
+			glTexCoord2f(1, 1); glVertex2f(w, cy+ah/2);
+			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+		}
+
+		if(h > ah)
+		{
+			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, 0);
+			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, 0);
+			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
+			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
+
+			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
+			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
+			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, h);
+			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, h);
+		}
+
+		glEnd();
+	}
+
+    settexture("textures/logo", 3);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2f(w-256, 2);
+    glTexCoord2f(1, 0); glVertex2f(w, 2);
+    glTexCoord2f(1, 1); glVertex2f(w, 66);
+    glTexCoord2f(0, 1); glVertex2f(w-256, 66);
+    glEnd();
+
+    settexture("textures/cube2badge", 3);
+    glBegin(GL_QUADS); // goes off the edge on purpose
+    glTexCoord2f(0, 0); glVertex2f(w-108, 36);
+    glTexCoord2f(1, 0); glVertex2f(w-12, 36);
+    glTexCoord2f(1, 1); glVertex2f(w-12, 68);
+    glTexCoord2f(0, 1); glVertex2f(w-108, 68);
+    glEnd();
+
+	glPushMatrix();
+	glScalef(1/3.0f, 1/3.0f, 1);
+	if(loadbackinfo && *loadbackinfo)
+		draw_textx("%s", FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, loadbackinfo);
+	draw_textx("v%.2f (%s)", w*3-FONTH, h*3-FONTH*2-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
+	draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
+	glPopMatrix();
+
     glDisable(GL_BLEND);
 
 	hud::drawhud(w, h, true);
-	if(commandmillis<0) UI::render();
-	hud::drawlast(w, h);
+	if(progressing || commandmillis<0) UI::render();
+	if(!progressing) hud::drawlast(w, h);
 
     glDisable(GL_TEXTURE_2D);
 }

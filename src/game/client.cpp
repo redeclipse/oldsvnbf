@@ -117,6 +117,7 @@ namespace client
 		removetrackedsounds(game::player1);
 		game::player1->clientnum = -1;
 		game::player1->privilege = PRIV_NONE;
+		game::gamemode = game::mutators = -1;
 		loopv(game::players) if(game::players[i]) game::clientdisconnected(i);
 		emptymap(0, true, NULL, true);
 		smartmusic(true, false);
@@ -1955,7 +1956,7 @@ namespace client
     void serverstartcolumn(guient *g, int i)
     {
 		g->pushlist();
-		if(g->buttonf("%s ", GUI_BUTTON_COLOR, NULL, i ? serverinfotypes[i] : "") & GUI_UP)
+		if(g->buttonf("%s ", 0xFFFFFF, NULL, i ? serverinfotypes[i] : "") & GUI_UP)
 		{
 			mkstring(st);
 			bool invert = false;
@@ -2053,7 +2054,7 @@ namespace client
 		if(servers.empty())
 		{
 			g->pushlist();
-			g->text("No servers, press UPDATE to see some..", GUI_TEXT_COLOR);
+			g->text("No servers, press UPDATE to see some..", 0xFFFFAA);
 			g->poplist();
 			return -1;
 		}
@@ -2062,7 +2063,7 @@ namespace client
 			if(servers[i]->attr[0] > GAMEVERSION)
 			{
 				g->pushlist();
-				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fb%s\fS for more information.", GUI_TEXT_COLOR, "info", ENG_URL);
+				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fb%s\fS for more information.", 0xFFFFAA, "info", ENG_URL);
 				g->poplist();
 			}
 			break;

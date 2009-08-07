@@ -90,15 +90,15 @@ void findnormal(const ivec &origin, const vvec &offset, const vec &surface, vec 
 VARW(lerpsubdiv, 0, 2, 4);
 VARW(lerpsubdivsize, 4, 4, 128);
 
-static uint progress = 0;
+static uint nmprog = 0;
 
-void show_calcnormals_progress()
+void show_calcnormals_nmprog()
 {
-	float bar1 = float(progress) / float(allocnodes);
-	renderprogress(bar1, "computing normals...");
+	float bar1 = float(nmprog) / float(allocnodes);
+	progress(bar1, "computing normals...");
 }
 
-#define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calcnormals_progress)
+#define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calcnormals_nmprog)
 
 void addnormals(cube &c, const ivec &o, int size)
 {
@@ -106,7 +106,7 @@ void addnormals(cube &c, const ivec &o, int size)
 
 	if(c.children)
 	{
-		progress++;
+		nmprog++;
 		size >>= 1;
 		loopi(8) addnormals(c.children[i], ivec(i, o.x, o.y, o.z, size), size);
 		return;
@@ -197,7 +197,7 @@ void calcnormals()
 {
     if(!lerpangle) return;
     lerpthreshold = cos(lerpangle*RAD) - 1e-5f;
-    progress = 1;
+    nmprog = 1;
     loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, hdr.worldsize/2), hdr.worldsize/2);
 }
 

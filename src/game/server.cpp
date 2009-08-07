@@ -1272,10 +1272,10 @@ namespace server
 						char *maptxt = indexlist(maplist, i);
 						if(maptxt)
 						{
-							string mapname;
-							if(strpbrk(maptxt, "/\\")) copystring(mapname, maptxt);
-							else formatstring(mapname)("maps/%s", maptxt);
-							if(!strcmp(maploc, mapname)) found = true;
+							string cmapname;
+							if(strpbrk(maptxt, "/\\")) copystring(cmapname, maptxt);
+							else formatstring(cmapname)("maps/%s", maptxt);
+							if(!strcmp(maploc, cmapname)) found = true;
 							DELETEA(maptxt);
 						}
 						if(found) break;

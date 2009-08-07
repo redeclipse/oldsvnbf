@@ -99,11 +99,11 @@ SVAR(guirolloveraction, "");
 void guibutton(char *name, char *action, char *icon, char *altact)
 {
 	if(!cgui) return;
-	int ret = cgui->button(name, GUI_BUTTON_COLOR, *icon ? icon : (strstr(action, "showgui") ? "menu" : "action"));
+	int ret = cgui->button(name, 0xFFFFFF, *icon ? icon : NULL);
 	if(ret&GUI_UP)
 	{
 		char *act = name;
-		if (*altact && ret&GUI_ALTERNATE) act = altact;
+		if (*altact && ret&GUI_ALT) act = altact;
 		else if (*action) act = action;
 		executelater.add(newstring(act));
         if(shouldclearmenu) clearlater = true;
@@ -131,7 +131,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 	if(ret&GUI_UP)
 	{
 		char *act = NULL;
-		if (*altact && ret&GUI_ALTERNATE) act = altact;
+		if (*altact && ret&GUI_ALT) act = altact;
 		else if (*action) act = action;
 		if (*act)
 		{
@@ -148,17 +148,17 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 
 void guitext(char *name, char *icon)
 {
-	if(cgui) cgui->text(name, icon[0] ? GUI_BUTTON_COLOR : GUI_TEXT_COLOR, icon[0] ? icon : NULL);
+	if(cgui) cgui->text(name, icon[0] ? 0xFFFFFF : 0xFFFFAA, icon[0] ? icon : NULL);
 }
 
 void guititle(char *name)
 {
-	if(cgui) cgui->title(name, GUI_TITLE_COLOR);
+	if(cgui) cgui->title(name);
 }
 
 void guitab(char *name)
 {
-	if(cgui) cgui->tab(name, GUI_TITLE_COLOR);
+	if(cgui) cgui->tab(name);
 }
 
 void guibar()
@@ -244,7 +244,7 @@ void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
 		int vdef = getvardef(var);
 		vmax = vdef > vmin ? vdef*3 : vmin*4;
 	}
-	cgui->slider(val, vmin, vmax, GUI_TITLE_COLOR, NULL, *reverse ? true : false);
+	cgui->slider(val, vmin, vmax, 0xAAAAAA, NULL, *reverse ? true : false);
 	if(val != oldval) updateval(var, val, onchange);
 }
 
@@ -263,14 +263,14 @@ void guilistslider(char *var, char *list, char *onchange, int *reverse)
 	int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
 	loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
 	defformatstring(label)("%d", val);
-	cgui->slider(offset, 0, vals.length()-1, GUI_TITLE_COLOR, label, *reverse ? true : false);
+	cgui->slider(offset, 0, vals.length()-1, 0xAAAAAA, label, *reverse ? true : false);
 	if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
 void guicheckbox(char *name, char *var, int *on, int *off, char *onchange)
 {
 	bool enabled = getval(var)!=*off;
-	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkboxon" : "checkbox")&GUI_UP)
+	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox")&GUI_UP)
 	{
 		updateval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
 	}
@@ -279,7 +279,7 @@ void guicheckbox(char *name, char *var, int *on, int *off, char *onchange)
 void guiradio(char *name, char *var, int *n, char *onchange)
 {
 	bool enabled = getval(var)==*n;
-	if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "radioboxon" : "radiobox")&GUI_UP)
+	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "radioboxon" : "radiobox")&GUI_UP)
 	{
 		if(!enabled) updateval(var, *n, onchange);
 	}
@@ -289,7 +289,7 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 {
     int val = getval(var);
     bool enabled = (val & *mask) != 0;
-    if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkboxon" : "checkbox")&GUI_UP)
+    if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox")&GUI_UP)
     {
         updateval(var, enabled ? val & ~*mask : val | *mask, onchange);
     }
@@ -302,7 +302,7 @@ void guifield(char *var, int *maxlength, char *onchange)
     const char *initval = "";
 	ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, 0, initval);
+	char *result = cgui->field(var, 0xFFFFFF, *maxlength ? *maxlength : 12, 0, initval);
 	if(result)
 	{
 		alias(var, result);
@@ -314,7 +314,7 @@ void guifield(char *var, int *maxlength, char *onchange)
 void guieditor(char *name, int *maxlength, int *height, int *mode)
 {
     if(!cgui) return;
-    cgui->field(name, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, *height, NULL, *mode<=0 ? EDITORFOREVER : *mode);
+    cgui->field(name, 0xFFFFFF, *maxlength ? *maxlength : 12, *height, NULL, *mode<=0 ? EDITORFOREVER : *mode);
     //returns a non-NULL pointer (the currentline) when the user commits, could then manipulate via text* commands
 }
 
@@ -325,7 +325,7 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
     const char *initval = "";
     ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-    char *result = cgui->keyfield(var, GUI_BUTTON_COLOR, *maxlength ? *maxlength : -8, 0, initval);
+    char *result = cgui->keyfield(var, 0xFFFFFF, *maxlength ? *maxlength : -8, 0, initval);
     if(result)
     {
         alias(var, result);
@@ -431,11 +431,11 @@ static struct applymenu : menu
     {
         if(menustack.empty()) return;
         g.start(cmenustart, menuscale, NULL, true);
-        g.text("the following settings have changed:", GUI_TEXT_COLOR, "info");
-        loopv(needsapply) g.text(needsapply[i].desc, GUI_TEXT_COLOR, "info");
+        g.text("the following settings have changed:", 0xFFFFAA, "info");
+        loopv(needsapply) g.text(needsapply[i].desc, 0xFFFFAA, "info");
         g.separator();
-        g.text("apply changes now?", GUI_TEXT_COLOR, "info");
-        if(g.button("yes", GUI_BUTTON_COLOR, "action")&GUI_UP)
+        g.text("apply changes now?", 0xFFFFAA, "info");
+        if(g.button("yes", 0xFFFFFF, "action")&GUI_UP)
         {
             int changetypes = 0;
             loopv(needsapply) changetypes |= needsapply[i].type;
@@ -443,7 +443,7 @@ static struct applymenu : menu
             if(changetypes&CHANGE_SOUND) executelater.add(newstring("resetsound"));
             clearlater = true;
         }
-        if(g.button("no", GUI_BUTTON_COLOR, "action")&GUI_UP)
+        if(g.button("no", 0xFFFFFF, "action")&GUI_UP)
             clearlater = true;
         g.end();
     }
@@ -488,6 +488,17 @@ void menuprocess()
         if(level==menustack.length()) loopi(level) popgui();
 		clearlater = false;
 	}
+}
+
+void progressmenu()
+{
+    menu *m = menus.access("loading");
+    if(m)
+    {
+    	m->useinput = false;
+    	UI::addcb(m);
+    }
+    else conoutf("cannot find menu 'loading'");
 }
 
 void mainmenu()

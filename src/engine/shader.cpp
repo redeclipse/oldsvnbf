@@ -1178,7 +1178,7 @@ void shader(int *type, char *name, char *vs, char *ps)
     if(renderpath!=R_FIXEDFUNCTION)
     {
         defformatstring(info)("shader %s", name);
-        renderprogress(loadprogress, info);
+        progress(loadprogress, info);
         if(mesa_program_bug && initshaders)
         {
             glEnable(GL_VERTEX_PROGRAM_ARB);
@@ -1216,7 +1216,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
 
     defformatstring(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
     //defformatstring(info)("shader %s", varname);
-    //renderprogress(loadprogress, info);
+    //progress(loadprogress, info);
     extern int mesa_program_bug;
     if(renderpath!=R_FIXEDFUNCTION && mesa_program_bug && initshaders)
     {
@@ -1840,7 +1840,7 @@ void reloadshaders()
         if(!s.standard && !(s.type&(SHADER_DEFERRED|SHADER_INVALID)) && !s.variantshader)
         {
             defformatstring(info)("shader %s", s.name);
-            renderprogress(0.0, info);
+            progress(0.0, info);
             if(!s.compile()) s.cleanup(true);
             loopi(MAXVARIANTROWS) loopvj(s.variants[i])
             {

@@ -1438,44 +1438,47 @@ namespace hud
 
 	void drawhud(int w, int h, bool noview)
 	{
-		float fade = hudblend;
-		vec colour(1, 1, 1);
-		if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
+		float fade = hudblend; vec colour(1, 1, 1);
+		if(progressing) { loopi(3) colour[i] = 0.5f; }
+		else
 		{
-			float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
-			if(commandmillis > 0) a = 1.f-a;
-			else a += (1.f-commandfadeamt);
-			loopi(3) if(a < colour[i]) colour[i] = a;
-		}
-		if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
-		{
-			float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
-			if(uimillis > 0) a = 1.f-a;
-			else a += (1.f-uifadeamt);
-			loopi(3) if(a < colour[i]) colour[i] = a;
-			if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
-		}
-		if(!noview)
-		{
-			if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
+			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
 			{
-				float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
+				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
+				if(commandmillis > 0) a = 1.f-a;
+				else a += (1.f-commandfadeamt);
 				loopi(3) if(a < colour[i]) colour[i] = a;
 			}
-			if(specfade && game::tvmode())
+			if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
 			{
-				float a = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
+				float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
+				if(uimillis > 0) a = 1.f-a;
+				else a += (1.f-uifadeamt);
 				loopi(3) if(a < colour[i]) colour[i] = a;
+				if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
 			}
-			if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
+			if(!noview)
 			{
-				float a = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
-				if(a < 3.f)
+				if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
 				{
-					vec col; skewcolour(col.x, col.y, col.z, true);
-					if(a < 1.f) { loopi(3) col[i] *= a; }
-					else { a = (a-1.f)*0.5f; loopi(3) col[i] += (1.f-col[i])*a; }
-					loopi(3) if(col[i] < colour[i]) colour[i] = col[i];
+					float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
+					loopi(3) if(a < colour[i]) colour[i] = a;
+				}
+				if(specfade && game::tvmode())
+				{
+					float a = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
+					loopi(3) if(a < colour[i]) colour[i] = a;
+				}
+				if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
+				{
+					float a = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
+					if(a < 3.f)
+					{
+						vec col; skewcolour(col.x, col.y, col.z, true);
+						if(a < 1.f) { loopi(3) col[i] *= a; }
+						else { a = (a-1.f)*0.5f; loopi(3) col[i] += (1.f-col[i])*a; }
+						loopi(3) if(col[i] < colour[i]) colour[i] = col[i];
+					}
 				}
 			}
 		}
@@ -1486,7 +1489,7 @@ namespace hud
 			usetexturing(true);
 			fade *= min(colour.x, min(colour.y, colour.z));
 		}
-		if(showhud)
+		if(showhud && !progressing)
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

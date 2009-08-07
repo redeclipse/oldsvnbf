@@ -157,8 +157,8 @@ bool resolverwait(const char *name, int port, ENetAddress *address)
 {
 	if(resolverthreads.empty()) resolverinit();
 
-	defformatstring(text)("resolving %s... (esc to abort)", name);
-	renderprogress(0, text);
+	defformatstring(text)("resolving %s...", name);
+	progress(0, text);
 
 	SDL_LockMutex(resolvermutex);
 	resolverq &rq = resolverqueries.add();
@@ -181,7 +181,7 @@ bool resolverwait(const char *name, int port, ENetAddress *address)
 		if(resolved) break;
 
 		timeout = SDL_GetTicks() - starttime;
-        renderprogress(min(float(timeout)/RESOLVERLIMIT, 1.0f), text);
+        progress(min(float(timeout)/RESOLVERLIMIT, 1.0f), text);
         if(interceptkey(SDLK_ESCAPE)) timeout = RESOLVERLIMIT + 1;
 		if(timeout > RESOLVERLIMIT) break;
 	}
@@ -241,8 +241,8 @@ int connectthread(void *data)
 
 int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address)
 {
-	defformatstring(text)("connecting to %s:[%d]... (esc to abort)", hostname != NULL ? hostname : "local server", address.port);
-	renderprogress(0, text);
+	defformatstring(text)("connecting to %s:[%d]...", hostname != NULL ? hostname : "local server", address.port);
+	progress(0, text);
 
 	if(!connmutex) connmutex = SDL_CreateMutex();
 	if(!conncond) conncond = SDL_CreateCond();
@@ -259,7 +259,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &addre
 			break;
 		}
 		timeout = SDL_GetTicks() - starttime;
-        renderprogress(min(float(timeout)/CONNLIMIT, 1.0f), text);
+        progress(min(float(timeout)/CONNLIMIT, 1.0f), text);
         if(interceptkey(SDLK_ESCAPE)) timeout = CONNLIMIT + 1;
 		if(timeout > CONNLIMIT) break;
 	}

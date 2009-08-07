@@ -1519,7 +1519,7 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(verbose) renderprogress(float(i)/float(ents.length()), "importing entities...");
+			if(verbose) progress(float(i)/float(ents.length()), "importing entities...");
 
 			switch(e.type)
 			{
@@ -1660,7 +1660,7 @@ namespace entities
 		loopvj(ents)
 		{
 			gameentity &e = *(gameentity *)ents[j];
-			if(verbose) renderprogress(float(j)/float(ents.length()), "updating old entities...");
+			if(verbose) progress(float(j)/float(ents.length()), "updating old entities...");
 			switch(e.type)
 			{
 				case LIGHTFX:

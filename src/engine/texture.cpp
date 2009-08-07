@@ -905,7 +905,7 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         else if(!strncmp(cmd, "dds", len)) dds = true;
     }
 
-    if(msg) renderprogress(loadprogress, file);
+    if(msg) progress(loadprogress, file);
 
     int flen = strlen(file);
     if((flen >= 4 && !strcasecmp(file + flen - 4, ".dds")) || dds)
@@ -1688,7 +1688,7 @@ void initenvmaps()
 void genenvmaps()
 {
 	if(envmaps.empty()) return;
-	renderprogress(0, "generating environment maps...");
+	progress(0, "generating environment maps...");
     int lastprogress = SDL_GetTicks();
 	loopv(envmaps)
 	{
@@ -1698,12 +1698,10 @@ void genenvmaps()
         int millis = SDL_GetTicks();
         if(millis - lastprogress >= 250)
         {
-            restorebackground();
-            renderprogress(float(i+1)/envmaps.length(), "generating environment maps...");
+            progress(float(i+1)/envmaps.length(), "generating environment maps...");
             lastprogress = millis;
         }
 	}
-	restorebackground();
 }
 
 ushort closestenvmap(const vec &o)

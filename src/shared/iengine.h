@@ -418,7 +418,7 @@ extern void freechallenge(void *answer);
 extern bool checkchallenge(const char *answerstr, void *correct);
 
 // gui
-enum { GUI_DOWN = 0x0001, GUI_UP = 0x0002, GUI_PRESSED = 0x0004, GUI_ROLLOVER = 0x0008, GUI_DRAGGED = 0x0010, GUI_ALTERNATE = 0x0020 };
+enum { GUI_DOWN = 0x0001, GUI_UP = 0x0002, GUI_PRESSED = 0x0004, GUI_ROLLOVER = 0x0008, GUI_DRAGGED = 0x0010, GUI_ALT = 0x0020 };
 enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct Texture;
@@ -448,8 +448,8 @@ struct guient
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
-	virtual void tab(const char *name = NULL, int color = 0) = 0;
-    virtual int title(const char *text, int color, const char *icon = NULL) = 0;
+	virtual void tab(const char *name = NULL, int color = 0xAAAAAA) = 0;
+    virtual int title(const char *text, int color = 0xAAAAAA, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false) = 0;
@@ -475,10 +475,11 @@ struct guicb
     virtual void gui(guient &g, bool firstpass) = 0;
 };
 
-extern char *guiskintex, *guioverlaytex, *guislidertex;
+extern char *guioverlaytex, *guislidertex;
 
 namespace UI
 {
+	extern bool isopen, ready;
 	extern bool keypress(int code, bool isdown, int cooked);
 	extern void setup();
 	extern void update();

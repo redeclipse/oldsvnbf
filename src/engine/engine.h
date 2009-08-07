@@ -249,6 +249,7 @@ extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
 extern void rendergame();
 extern void renderavatar(bool early);
 extern void invalidatepostfx();
+extern void drawnoview();
 extern void gl_drawframe(int w, int h);
 extern void enablepolygonoffset(GLenum type);
 extern void disablepolygonoffset(GLenum type);
@@ -258,13 +259,6 @@ extern void popscissor();
 extern void setfogplane(const plane &p, bool flush = false);
 extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void setcolormask(bool r = true, bool g = true, bool b = true);
-
-extern const char *loadback, *loadbackinfo;
-extern float loadprogress;
-extern void loadbackground(int w, int h, const char *name = NULL, Texture *t = NULL);
-extern void renderbackground(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, bool restore = false);
-extern void restorebackground();
-extern void renderprogress(float bar1, const char *text1, float bar2 = 0, const char *text2 = NULL, GLuint tex = 0);
 
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
@@ -493,6 +487,11 @@ enum
 };
 extern int initing;
 
+extern bool progressing;
+extern const char *loadback, *loadbackinfo;
+extern float loadprogress;
+extern void progress(float bar1 = 0, const char *text1 = NULL, float bar2 = 0, const char *text2 = NULL);
+
 enum
 {
     CHANGE_GFX   = 1<<0,
@@ -508,10 +507,6 @@ extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 extern void swapbuffers();
 
 // menu
-#define GUI_TITLE_COLOR  0xFFDD88
-#define GUI_BUTTON_COLOR 0xFFFFFF
-#define GUI_TEXT_COLOR  0xDDFFDD
-
 extern float menuscale;
 extern int cmenustart, cmenutab;
 extern guient *cgui;
@@ -519,17 +514,17 @@ struct menu : guicb
 {
     char *name, *header, *contents, *initscript;
     int passes;
-    bool world;
+    bool world, useinput;
 
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), world(false) {}
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), world(false), useinput(true) {}
 
     void gui(guient &g, bool firstpass)
     {
         cgui = &g;
         extern menu *cmenu;
         cmenu = this;
-        cgui->start(cmenustart, menuscale, &cmenutab, true);
-        cgui->tab(header ? header : name, GUI_TITLE_COLOR);
+        cgui->start(cmenustart, menuscale, &cmenutab, useinput);
+        cgui->tab(header ? header : name);
 		if(!passes)
 		{
 			world = worldidents;
@@ -631,6 +626,7 @@ extern void drawskybox(int farplane, bool limited);
 extern bool limitsky();
 
 // gui
+extern void progressmenu();
 extern void mainmenu();
 extern void texturemenu();
 extern bool menuactive();
