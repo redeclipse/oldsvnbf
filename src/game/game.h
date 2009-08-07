@@ -130,8 +130,8 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHTFX,		59,		0,		EU_NONE,
-			inttobit(LIGHT),
-			inttobit(LIGHT),
+			inttobit(LIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(LIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"lightfx",
 			{ "type",	"mod",		"min",		"max",	"flags" }
 	},

@@ -18,7 +18,7 @@ namespace entities
 	{
 		switch(e.type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT: case PUSHER:
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case LIGHTFX: case TELEPORT: case PUSHER:
 				return m_speedtime(1000); break;
 			default: break;
 		}
@@ -1973,7 +1973,7 @@ namespace entities
 		}
 		loopv(ents) if(ents[i]->type == LIGHTFX && ents[i]->attr[0] != LFX_SPOTLIGHT)
 		{
-			if(ents[i]->spawned || lastmillis-ents[i]->lastemit <= triggertime(*ents[i])/2)
+			if(ents[i]->spawned || ents[i]->lastemit)
 			{
 				if(!ents[i]->spawned && ents[i]->lastemit > 0 && lastmillis-ents[i]->lastemit > triggertime(*ents[i])/2)
 					continue;

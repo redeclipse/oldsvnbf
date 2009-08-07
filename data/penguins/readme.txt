@@ -1,4 +1,5 @@
 Sky/Cloud boxes created by SkiingPenguins (skiing_penguins@yahoo.com)
+Harmony Skybox, August 7, 2009, Originally created for the first person shooter Cube 2: Sauerbraten
 This readme must always be included with the skybox files.
 
 Released under the Creative Commons BY-SA License
