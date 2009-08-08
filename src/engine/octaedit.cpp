@@ -1725,6 +1725,7 @@ VARP(thumbwidth, 0, 24, 1000);
 VARP(thumbheight, 0, 8, 1000);
 VARP(thumbtime, 0, 50, 1000);
 FVARP(thumbsize, 0, 2, 6);
+
 static int lastthumbnail = 0;
 
 struct texturegui : guicb
@@ -1767,8 +1768,10 @@ struct texturegui : guicb
 						}
 						else if(slot.thumbnail) tex = slot.thumbnail;
 						else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-						if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP)
+						if((slot.loaded || slot.thumbnail ? g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex) : g.texture(tex, thumbsize))&GUI_UP)
+						{
 							nextslot = ti;
+						}
 					}
 					else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
 				}
@@ -1807,6 +1810,11 @@ struct texturegui : guicb
 						}
 					}
 					else if(slot.thumbnail) tex = slot.thumbnail;
+					else
+					{
+						tex = loadthumbnail(slot);
+						lastthumbnail = totalmillis;
+					}
 				}
 				if(g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
 				g.space(2);
