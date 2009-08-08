@@ -927,8 +927,8 @@ namespace entities
 				while(e.attr[4] >= 4) e.attr[4] -= 4;
 				if(e.attr[4] >= 2)
 				{
-					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS;
-					while(e.attr[0] >= TRIGGERIDS) e.attr[0] += TRIGGERIDS;
+					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS+1;
+					while(e.attr[0] > TRIGGERIDS) e.attr[0] -= TRIGGERIDS+1;
 				}
 				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND || ents[e.links[i]]->type == LIGHTFX))
 				{
