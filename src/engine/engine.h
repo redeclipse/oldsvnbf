@@ -561,7 +561,7 @@ extern float shadowray(const vec &o, const vec &ray, float radius, int mode, ext
 extern bool getsight(vec &o, float yaw, float pitch, vec &q, vec &v, float mdist, float fovx, float fovy);
 
 // worldio
-extern char *maptitle, *mapname;
+extern char *maptitle, *mapauthor, *mapname;
 extern int getmapversion();
 extern int getmaprevision();
 

@@ -206,11 +206,20 @@ namespace hud
 			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
 			g.pushfont("super");
-			if(*maptitle) g.textf("%s (%s)", 0xFFFFFF, NULL, maptitle, mapname);
+			if(*maptitle) g.textf("%s", 0xFFFFFF, NULL, maptitle);
 			else g.textf("(%s)", 0xFFFFFF, NULL, mapname);
 			g.popfont();
+			if(*mapauthor)
+			{
+				g.pushlist();
+				g.space(4);
+				g.pushfont("default");
+				g.textf("by %s", 0xFFFFFF, NULL, mapauthor);
+				g.popfont();
+				g.poplist();
+			}
 			g.pushlist();
-			g.pushfont("emphasis");
+			g.pushfont("sub");
 			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
 			if((m_fight(game::gamemode) || client::demoplayback) && game::minremain >= 0)
 			{

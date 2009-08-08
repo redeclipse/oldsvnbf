@@ -148,7 +148,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 
 void guitext(char *name, char *icon)
 {
-	if(cgui) cgui->text(name, icon[0] ? 0xFFFFFF : 0xFFFFAA, icon[0] ? icon : NULL);
+	if(cgui) cgui->text(name, icon[0] ? 0xFFFFFF : 0xFFFFFF, icon[0] ? icon : NULL);
 }
 
 void guititle(char *name)
@@ -438,10 +438,10 @@ static struct applymenu : menu
     {
         if(menustack.empty()) return;
         g.start(cmenustart, menuscale, NULL, true);
-        g.text("the following settings have changed:", 0xFFFFAA, "info");
-        loopv(needsapply) g.text(needsapply[i].desc, 0xFFFFAA, "info");
+        g.text("the following settings have changed:", 0xFFFFFF, "info");
+        loopv(needsapply) g.text(needsapply[i].desc, 0xFFFFFF, "info");
         g.separator();
-        g.text("apply changes now?", 0xFFFFAA, "info");
+        g.text("apply changes now?", 0xFFFFFF, "info");
         if(g.button("yes", 0xFFFFFF, "action")&GUI_UP)
         {
             int changetypes = 0;

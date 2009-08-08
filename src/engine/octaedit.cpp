@@ -1766,7 +1766,7 @@ struct texturegui : guicb
 
 			g.pushlist();
 			g.strut(134);
-			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFAA);
+			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
 			g.space(1);
 			g.pushlist();
 			if(g.button("<prev    ", 0x44FFAA) & GUI_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
@@ -1784,7 +1784,7 @@ struct texturegui : guicb
 					g.text("setshader", 0xAAFFAA);
 					g.space(1);
 					defformatstring(input)("setshader_%d_input", menutex);
-					char *w = g.field(input, 0xFFFFAA, -123, 0, slot.shader->name, EDITORREADONLY);
+					char *w = g.field(input, 0xFFFFFF, -123, 0, slot.shader->name, EDITORREADONLY);
 					if(w && *w) { copystring(slot.shader->name, w); g.fieldedit(input); }
 					g.poplist();
 				}
@@ -1798,14 +1798,14 @@ struct texturegui : guicb
 					{
 						defformatstring(index)("%s", slot.params[j].name);
 						defformatstring(input)("param_%d_%d_input", menutex, j);
-						char *w = g.field(input, 0xFFFFAA, -32, 0, index, EDITORFOREVER);
+						char *w = g.field(input, 0xFFFFFF, -32, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
 					}
 					else
 					{
 						defformatstring(index)("%d", slot.params[j].index);
 						defformatstring(input)("param_%d_%d_input", menutex, j);
-						char *w = g.field(input, 0xFFFFAA, -2, 0, index, EDITORFOREVER);
+						char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
 					}
 					loopk(4)
@@ -1813,7 +1813,7 @@ struct texturegui : guicb
 						g.space(1);
 						defformatstring(index)("%f", slot.params[j].val[k]);
 						defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
-						char *w = g.field(input, 0xFFFFAA, -12, 0, index, EDITORFOREVER);
+						char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
 					}
 					g.poplist();
@@ -1827,13 +1827,13 @@ struct texturegui : guicb
 						g.space(1);
 						defformatstring(index)("%s", findtexturename(slot.sts[j].type));
 						defformatstring(input)("texture_%d_%d_name_input", menutex, j);
-						char *w = g.field(input, 0xFFFFAA, -2, 0, index, EDITORFOREVER);
+						char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
 						if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
 					}
 					{
 						g.space(1);
 						defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
-						char *w = g.field(input, 0xFFFFAA, j ? -121 : -95, 0, slot.sts[j].lname, EDITORFOREVER);
+						char *w = g.field(input, 0xFFFFFF, j ? -121 : -95, 0, slot.sts[j].lname, EDITORFOREVER);
 						if(w && *w)
 						{
 							copystring(slot.sts[j].lname, w);
@@ -1847,25 +1847,25 @@ struct texturegui : guicb
 						{
 							defformatstring(index)("%d", slot.rotation);
 							defformatstring(input)("texture_%d_%d_rotation_input", menutex, j);
-							char *w = g.field(input, 0xFFFFAA, -2, 0, index, EDITORFOREVER);
+							char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.rotation = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%d", slot.xoffset);
 							defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
-							char *w = g.field(input, 0xFFFFAA, -4, 0, index, EDITORFOREVER);
+							char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%d", slot.yoffset);
 							defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
-							char *w = g.field(input, 0xFFFFAA, -4, 0, index, EDITORFOREVER);
+							char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
 						}
 						{
 							defformatstring(index)("%f", slot.scale);
 							defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
-							char *w = g.field(input, 0xFFFFAA, -12, 0, index, EDITORFOREVER);
+							char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
 							if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
 						}
 					}
@@ -1878,14 +1878,14 @@ struct texturegui : guicb
 					g.space(1);
 					defformatstring(index)("%f", slot.scrollS * 1000.0f);
 					defformatstring(input)("texscroll_%d_x_scale_input", menutex);
-					char *w = g.field(input, 0xFFFFAA, -12, 0, index, EDITORFOREVER);
+					char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
 					if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
 				}
 				{
 					g.space(1);
 					defformatstring(index)("%f", slot.scrollT * 1000.0f);
 					defformatstring(input)("texscroll_%d_y_scale_input", menutex);
-					char *w = g.field(input, 0xFFFFAA, -12, 0, index, EDITORFOREVER);
+					char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
 					if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
 				}
 				g.poplist();
