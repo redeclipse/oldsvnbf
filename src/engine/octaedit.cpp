@@ -1915,7 +1915,7 @@ struct texturegui : guicb
 						int ti = (i*thumbheight+h)*thumbwidth+w;
 						if(ti<curtexnum)
 						{
-							Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL, *tmp = tex;
+							Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
 							Slot &slot = lookuptexture(ti, false);
 							if(slot.sts.empty()) continue;
 							else if(slot.loaded)
@@ -1931,7 +1931,7 @@ struct texturegui : guicb
 							else if(slot.thumbnail) tex = slot.thumbnail;
 							else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
 
-						if((tmp == tex ? g.texture(tex, thumbsize, 0, 0, 0, glowtex, vec(0,0,0), layertex) : g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex))&GUI_UP /*&& (slot.loaded || tex!=notexture)*/)
+						if(((!slot.loaded && !slot.thumbnail) ? g.image(tex, thumbsize, true) : g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex))&GUI_UP /*&& (slot.loaded || tex!=notexture)*/)
 							{
 								if(texguieditor) menutex = ti;
 								else { edittex(ti); if(texguiautoclose) menuon = false; }
