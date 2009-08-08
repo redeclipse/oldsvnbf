@@ -1619,6 +1619,7 @@ void calclight(int quality)
 			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
 			lightmaps.length(),
 			(end - start) / 1000.0f);
+	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 ICOMMAND(calclight, "s", (char *s), int n = *s ? atoi(s) : 3; calclight(n));
@@ -1672,6 +1673,7 @@ void patchlight(int quality)
 			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
 			lightmaps.length(),
 			(end - start) / 1000.0f);
+	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 ICOMMAND(patchlight, "s", (char *s), int n = *s ? atoi(s) : 3; patchlight(n));
