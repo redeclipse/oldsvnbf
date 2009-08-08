@@ -716,40 +716,40 @@ namespace server
 		}
 	}
 
-	int triggerid = -1;
+	int triggerid = 0;
 	struct triggergrp
 	{
 		int id;
 		vector<int> ents;
 		triggergrp() { reset(); }
 		void reset(int n = 0) { id = n; ents.setsize(0); }
-	} triggers[TRIGGERIDS];
+	} triggers[TRIGGERIDS+1];
 
 	void setuptriggers(bool update)
 	{
-		loopi(TRIGGERIDS) triggers[i].reset(i);
-		if(!update) triggerid = -1;
+		loopi(TRIGGERIDS+1) triggers[i].reset(i);
+		if(!update) triggerid = 0;
 		else
 		{
-			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] < TRIGGERIDS)
+			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] <= TRIGGERIDS)
 				triggers[sents[i].attr[0]].ents.add(i);
-			vector<int> valid; loopi(TRIGGERIDS) if(i && !triggers[i].ents.empty()) valid.add(triggers[i].id);
+			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
 			if(!valid.empty())
 			{
 				triggerid = valid[rnd(valid.length())];
-				loopi(TRIGGERIDS) if(triggers[i].id != triggerid) loopvk(triggers[i].ents)
+				loopi(TRIGGERIDS) if(triggers[i+1].id != triggerid) loopvk(triggers[i+1].ents)
 				{
-					bool spawn = sents[triggers[i].ents[k]].attr[4]%2;
-					if(spawn != sents[triggers[i].ents[k]].spawned)
+					bool spawn = sents[triggers[i+1].ents[k]].attr[4]%2;
+					if(spawn != sents[triggers[i+1].ents[k]].spawned)
 					{
-						sents[triggers[i].ents[k]].spawned = spawn;
-						sents[triggers[i].ents[k]].millis = gamemillis;
+						sents[triggers[i+1].ents[k]].spawned = spawn;
+						sents[triggers[i+1].ents[k]].millis = gamemillis;
 					}
-					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i].ents[k], 1+(spawn ? 2 : 1));
-					loopvj(sents[i].kin) if(sents.inrange(sents[triggers[i].ents[k]].kin[j]))
+					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i+1].ents[k], 1+(spawn ? 2 : 1));
+					loopvj(sents[triggers[i+1].ents[k]].kin) if(sents.inrange(sents[triggers[i+1].ents[k]].kin[j]))
 					{
-						sents[sents[triggers[i].ents[k]].kin[j]].spawned = sents[triggers[i].ents[k]].spawned;
-						sents[sents[triggers[i].ents[k]].kin[j]].millis = sents[triggers[i].ents[k]].millis;
+						sents[sents[triggers[i+1].ents[k]].kin[j]].spawned = sents[triggers[i+1].ents[k]].spawned;
+						sents[sents[triggers[i+1].ents[k]].kin[j]].millis = sents[triggers[i+1].ents[k]].millis;
 					}
 				}
 			}
@@ -805,12 +805,12 @@ namespace server
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
 			loop(q, 2)
 			{
-				if(!q && triggerid < 0) continue;
+				if(!q && triggerid <= 0) continue;
 				if(m_fight(gamemode) && m_team(gamemode, mutators))
 				{
 					loopk(3)
 					{
-						loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
+						loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
 						{
 							if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
 							else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
@@ -833,7 +833,7 @@ namespace server
 				}
 				else
 				{ // use all neutral spawns
-					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
+					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
 					{
 						spawns[TEAM_NEUTRAL].add(i);
 						totalspawns++;
@@ -841,7 +841,7 @@ namespace server
 					if(totalspawns) break;
 				}
 				// use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && (q || sents[i].attr[4] == triggerid) && chkmode(sents[i].attr[3], gamemode))
+				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
@@ -2512,7 +2512,7 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attr[4] <= 1 || (triggerid >= 0 && triggers[triggerid].ents.find(i) >= 0)))
+				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attr[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(i) >= 0)))
 				{
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis+(triggertime(i)*2);
@@ -3202,7 +3202,7 @@ namespace server
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attr[4] <= 1 || (triggerid >= 0 && triggers[triggerid].ents.find(ent) >= 0)))
+					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attr[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(ent) >= 0)))
 					{
 						bool commit = false, kin = false;
 						switch(sents[ent].attr[1])
