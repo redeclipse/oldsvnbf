@@ -262,6 +262,7 @@ enum
 	BOUNCE_PLAYER	= 1<<3,
 	COLLIDE_TRACE	= 1<<4,
 	COLLIDE_OWNER	= 1<<5,
+	COLLIDE_CONT	= 1<<6,
 	COLLIDE_GEOM	= IMPACT_GEOM | BOUNCE_GEOM,
 	COLLIDE_PLAYER	= IMPACT_PLAYER | BOUNCE_PLAYER,
 };
@@ -328,7 +329,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		750,	1500,	150,	40000,	0,		5000,
-			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
 			false,	false,	false,		true,		true,		false,
 			0,			 0,				0.05f,		2.0f,		0,		0.75f,		5000,
 			5,		500,		0,
