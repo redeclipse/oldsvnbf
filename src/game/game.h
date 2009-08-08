@@ -481,7 +481,7 @@ extern gametypes gametype[], mutstype[];
 #define weapattr(a,b)		(a != b ? a : (b != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
 
 enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMODE_STFMULTICTF, FLAGMODE_NONMULTICTF, FLAGMODE_MAX };
-#define chkmode(a,b)		(!a || !b || a == b)
+#define chkmode(a,b)		(!a  || (a < 0 ? -a != b : a == b))
 
 // network messages codes, c2s, c2c, s2c
 enum
