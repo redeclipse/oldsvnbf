@@ -1286,7 +1286,7 @@ namespace ai
 					{
 						int ent = obs.entities[cur];
 						gameentity &e = *(gameentity *)entities::ents[ent];
-						part_create(PART_EDIT, 1, e.o, 0xFF1122, 1.f);
+						part_create(PART_EDIT, 1, e.o, 0xFF6600, 2.f);
 					}
 					cur = next;
 				}

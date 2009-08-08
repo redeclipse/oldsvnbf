@@ -62,7 +62,7 @@ namespace hud
 				scoreson = on;
 				if(interm)
 				{
-					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, "\fwchapter complete!");
+					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, NULL, "\fwchapter complete!");
 					else if(m_fight(game::gamemode))
 					{
 						if(!groupplayers()) return;
@@ -71,13 +71,13 @@ namespace hud
 						{
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
-								game::announce(anc, CON_INFO, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
-							else game::announce(anc, CON_INFO, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+								game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							game::announce(anc, CON_INFO, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
+							game::announce(anc, CON_INFO, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
 				}

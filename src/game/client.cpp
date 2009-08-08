@@ -1057,7 +1057,7 @@ namespace client
 				{
 					int snd = getint(p), targ = getint(p);
 					getstring(text, p);
-					game::announce(snd, targ, "%s", text);
+					game::announce(snd, targ, NULL, "%s", text);
 					break;
 				}
 
