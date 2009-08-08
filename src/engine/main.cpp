@@ -74,6 +74,7 @@ void cleanup()
 void quit()					 // normal exit
 {
 	extern void writeinitcfg();
+	inbetweenframes = false;
 	writeinitcfg();
 	abortconnect();
 	disconnect(1);
@@ -785,11 +786,7 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	}
 
 	progressing = true;
-	loopi(bar1 > 0 ? 1 : 2)
-	{
-		drawnoview();
-		swapbuffers();
-	}
+	loopi(2) { drawnoview(); swapbuffers(); }
 	progressing = false;
 
 	lastoutofloop = SDL_GetTicks();

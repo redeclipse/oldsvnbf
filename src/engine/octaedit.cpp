@@ -1807,12 +1807,11 @@ struct texturegui : guicb
 				g.pushlist();
 
 				g.pushlist();
-				g.space(1);
 				g.pushfont("default");
-				if(g.button("<prev ", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
-				if(g.button("next> ", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
-				if(g.button("select ", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
-				if(g.button("dupe ", 0x888888)&GUI_UP) { menutex = duplicateslot(slot); }
+				if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+				g.space(2); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
+				g.space(2); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
+				g.space(2); if(g.button("dupe", 0x888888)&GUI_UP) { menutex = duplicateslot(slot); }
 				g.popfont();
 				g.poplist();
 
@@ -1887,10 +1886,8 @@ struct texturegui : guicb
 						if(!j)
 						{
 							{
-								defformatstring(index)("%d", slot.rotation);
-								defformatstring(input)("texture_%d_%d_rotation_input", menutex, j);
-								char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
-								if(w && *w) { slot.rotation = atoi(w); g.fieldedit(input); }
+								defformatstring(index)("[%d]", slot.rotation);
+								if(g.button(index, 0xAAAAAA)&GUI_UP) slot.rotation = (slot.rotation+1)%4;
 							}
 							{
 								defformatstring(index)("%d", slot.xoffset);
@@ -1973,10 +1970,8 @@ struct texturegui : guicb
 	}
 } gui;
 
-void texturemenu()
-{
-	gui.show();
-}
+void texturemenu() { gui.show(); }
+bool closetexgui() { if(gui.menuon) { gui.menuon = false; return true; } return false; }
 
 void showtexgui(int *n)
 {
