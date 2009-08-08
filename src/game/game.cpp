@@ -832,7 +832,7 @@ namespace game
 
 		if(*name)
 		{
-			if(*maptitle) conoutf("%s", maptitle);
+			conoutf("%s by %s", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown");
 			preload();
 		}
 		// reset perma-state

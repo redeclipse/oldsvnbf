@@ -591,10 +591,12 @@ namespace hud
 				if(teamnotices) skewcolour(tr, tg, tb);
 				if(lastmillis-game::maptime <= titlefade*2)
 				{
-					const char *title = maptitle;
-					if(!*title) title = mapname;
-					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, title);
-					pushfont("emphasis");
+
+					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, *maptitle ? maptitle : mapname);
+					pushfont("default");
+					if(*mapauthor) ty += draw_textx("by %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, mapauthor);
+					popfont();
+					pushfont("sub");
 					ty += draw_textx("[ %s ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(game::gamemode, game::mutators));
 					popfont();
 				}

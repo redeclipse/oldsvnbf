@@ -725,11 +725,11 @@ bool ircchangui(guient *g, ircnet *n, ircchan *c, bool tab)
 	defformatstring(cwindow)("%s_%s_window", n->name, c->name);
 	g->fieldclear(cwindow);
 	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
-	g->field(cwindow, 0xFFFFAA, -150, 50, NULL, EDITORREADONLY);
+	g->field(cwindow, 0xFFFFFF, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(cwindow);
 
 	defformatstring(cinput)("%s_%s_input", n->name, c->name);
-	char *v = g->field(cinput, 0xFFFFAA, -150, 0, "", EDITORFOREVER);
+	char *v = g->field(cinput, 0xFFFFFF, -150, 0, "", EDITORFOREVER);
 	if(v && *v)
 	{
 		irccmd(n, c, v);
@@ -746,11 +746,11 @@ bool ircnetgui(guient *g, ircnet *n, bool tab)
 	defformatstring(window)("%s_window", n->name);
 	g->fieldclear(window);
 	loopvk(n->lines) g->fieldline(window, n->lines[k]);
-	g->field(window, 0xFFFFAA, -150, 50, NULL, EDITORREADONLY);
+	g->field(window, 0xFFFFFF, -150, 50, NULL, EDITORREADONLY);
 	g->fieldscroll(window);
 
 	defformatstring(input)("%s_input", n->name);
-	char *w = g->field(input, 0xFFFFAA, -150, 0, "", EDITORFOREVER);
+	char *w = g->field(input, 0xFFFFFF, -150, 0, "", EDITORFOREVER);
 	if(w && *w)
 	{
 		irccmd(n, NULL, w);
@@ -778,7 +778,7 @@ bool ircgui(guient *g, const char *s)
 		{
 			if(!ircnetgui(g, n, false)) return false;
 		}
-		else g->textf("not currently connected to %s", 0xFFFFAA, NULL, s);
+		else g->textf("not currently connected to %s", 0xFFFFFF, NULL, s);
 	}
 	else
 	{
@@ -804,7 +804,7 @@ bool ircgui(guient *g, const char *s)
 				if(!ircnetgui(g, n, true)) return false;
 			}
 		}
-		else g->text("no current connections..", 0xFFFFAA);
+		else g->text("no current connections..", 0xFFFFFF);
 	}
 	return true;
 }
