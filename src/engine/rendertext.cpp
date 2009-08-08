@@ -293,7 +293,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
 		glColor4ub(color.x, color.y, color.z, int(a*fade));
 		if(cx == INT_MIN) { cx = x; cy = y; }
 		if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
-		draw_char('_', left+cx, top+cy);
+		draw_char('|', left+cx-FONTW/2, top+cy-FONTH/32);
 	}
     glEnd();
     #undef TEXTINDEX
