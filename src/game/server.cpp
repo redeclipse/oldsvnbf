@@ -2178,12 +2178,8 @@ namespace server
 		if(isweap(weap))
 		{
 			if(gs.weapshots[weap].find(id) < 0) return;
-			else if(!weaptype[weap].radial || radial <= 0 || weaptype[weap].taper) // destroy
-			{
-				gs.weapshots[weap].remove(id);
-				radial = weaptype[weap].taper ? max(-radial, 1) : weaptype[weap].explode;
-			}
-			loopv(hits)
+			if(hits.empty()) gs.weapshots[weap].remove(id);
+			else loopv(hits)
 			{
 				hitset &h = hits[i];
 				float size = radial ? (h.flags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;

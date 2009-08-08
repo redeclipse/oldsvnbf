@@ -43,6 +43,15 @@ namespace projs
 		if(flags) hitpush(d, proj, flags|HIT_PROJ);
 	}
 
+	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
+	{
+		proj.hit = d;
+		proj.hitflags = flags;
+		proj.norm = norm;
+		if(!weaptype[proj.weap].explode && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+		return !(proj.projcollide&COLLIDE_CONT);
+	}
+
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
 	{
 		vec dir, middle = d->o;
@@ -284,10 +293,10 @@ namespace projs
 			float step = 4,
 				  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
 				  dist = 0;
+			proj.hit = NULL;
+			proj.hitflags = HITFLAG_NONE;
 			loopi(maxsteps)
 			{
-				proj.hit = NULL;
-				proj.hitflags = HITFLAG_NONE;
 				float olddist = dist;
 				if(dist < barrier && dist + step > barrier) dist = barrier;
 				else dist += step;
@@ -303,14 +312,9 @@ namespace projs
 					proj.o = vec(ray).mul(dist).add(orig);
 					if(collide(&proj) && !inside) break;
 				}
-				if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+				if(hitplayer && hitplayer != proj.hit ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
 				{
-					if(hitplayer)
-					{
-						proj.hit = hitplayer;
-						proj.hitflags = hitflags;
-						proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
-					}
+					if(hitplayer) { if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) continue; }
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
 
 					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM) && i < maxsteps-1)
@@ -479,31 +483,22 @@ namespace projs
 		}
 	}
 
-	void radiate(projent &proj, gameent *d)
+	void radiate(projent &proj, int radius)
 	{
-		if(!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtime(250)))
+		gameent *d = proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL;
+		if((!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtime(250))) && radius > 0)
 		{ // for the flamer this results in at most 40 damage per second
-			int radius = int(weaptype[proj.weap].explode*proj.radius);
-			if(radius > 0)
+			if(!d)
 			{
-				hits.setsizenodelete(0);
-				if(!d)
+				loopi(game::numdynents())
 				{
-					loopi(game::numdynents())
-					{
-						gameent *f = (gameent *)game::iterdynents(i);
-						if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-						radialeffect(f, proj, false, radius);
-					}
+					gameent *f = (gameent *)game::iterdynents(i);
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+					radialeffect(f, proj, false, radius);
 				}
-				else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
-				if(!hits.empty())
-				{
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
-							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-					if(!d) proj.lastradial = lastmillis;
-				}
+				proj.lastradial = lastmillis;
 			}
+			else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
 		}
 	}
 
@@ -761,29 +756,7 @@ namespace projs
 					}
 				}
 				if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
-				if(proj.local)
-				{
-					hits.setsizenodelete(0);
-					int radius = 0;
-					if(!proj.limited)
-					{
-						radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
-						if(weaptype[proj.weap].explode)
-						{
-							loopi(game::numdynents())
-							{
-								gameent *f = (gameent *)game::iterdynents(i);
-								if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-								radialeffect(f, proj, proj.weap == WEAP_GRENADE, radius);
-							}
-						}
-						else if(proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI))
-							hitproj((gameent *)proj.hit, proj);
-					}
-
-					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
-							-radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-				}
+				if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
 				break;
 			}
 			case PRJ_ENT:
@@ -806,17 +779,13 @@ namespace projs
 
 	int bounce(projent &proj, const vec &dir)
 	{
-		proj.hit = NULL;
-		proj.hitflags = HITFLAG_NONE;
 		if(!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside)
 		{
 			if(hitplayer)
 			{
-				if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
+				if(hitplayer != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner))
 				{
-					proj.hit = hitplayer;
-					proj.hitflags = hitflags;
-					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+					if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
 				}
 				else return 1;
 			}
@@ -837,8 +806,6 @@ namespace projs
 
     int trace(projent &proj, const vec &dir)
     {
-        proj.hit = NULL;
-        proj.hitflags = HITFLAG_NONE;
         vec to(proj.o), ray = dir;
         to.add(dir);
         float maxdist = ray.magnitude();
@@ -850,11 +817,9 @@ namespace projs
         {
             if(hitplayer)
             {
-            	if((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner)
+            	if(hitplayer != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner))
             	{
-					proj.hit = hitplayer;
-					proj.hitflags = hitflags;
-					proj.norm = vec(hitplayer->o).sub(proj.o).normalize();
+					if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
             	}
             	else return 1;
             }
@@ -1028,6 +993,9 @@ namespace projs
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
+			proj.hit = NULL;
+			proj.hitflags = HITFLAG_NONE;
+			hits.setsizenodelete(0);
 			if(proj.owner && proj.state != CS_DEAD)
 			{
 				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
@@ -1059,11 +1027,35 @@ namespace projs
  						break;
 					}
 				}
-				if(proj.state != CS_DEAD && proj.radial && proj.local)
-					radiate(proj, proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL);
 			}
 			else proj.state = CS_DEAD;
-
+			if(proj.local && proj.projtype == PRJ_SHOT)
+			{
+				int radius = 0;
+				if(proj.state == CS_DEAD)
+				{
+					if(!proj.limited && weaptype[proj.weap].explode)
+					{
+						radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode*proj.radius), 1) : weaptype[proj.weap].explode;
+						loopi(game::numdynents())
+						{
+							gameent *f = (gameent *)game::iterdynents(i);
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+							radialeffect(f, proj, proj.weap == WEAP_GRENADE, radius);
+						}
+					}
+				}
+				else if(proj.radial)
+				{
+					radius = int(weaptype[proj.weap].explode*proj.radius);
+					if(!proj.limited) radiate(proj, radius);
+				}
+				if(!hits.empty())
+				{
+					client::addmsg(SV_DESTROY, "ri5iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.id >= 0 ? proj.id-game::maptime : proj.id,
+							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+				}
+			}
 			if(proj.state == CS_DEAD)
 			{
 				destroy(proj);
