@@ -327,7 +327,7 @@ template <class T> struct vector
 
     T &pop() { return buf[--ulen]; }
     T &last() { return buf[ulen-1]; }
-    void drop() { buf[--ulen].~T(); }
+    void drop() { ulen--; buf[ulen].~T(); }
     bool empty() const { return ulen==0; }
 
     int capacity() const { return alen; }
