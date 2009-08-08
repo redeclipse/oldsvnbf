@@ -123,7 +123,7 @@ struct gui : guient
 				if(mousebuttons&GUI_UP) { b; } \
 				hit = true; \
 			} \
-			icon_(textureload(a, 3), false, false, x, y, guibound[1], hit); \
+			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], hit); \
 			y += guibound[1]*3/2; \
 		}
 		uibtn("textures/exit", cleargui(1));
@@ -177,14 +177,14 @@ struct gui : guient
 
 	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false); }
 	int button(const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, true); }
-	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "default"); }
+	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "emphasis"); }
 
 	void separator() { autotab(); line_(5); }
 	void progress(float percent, int size)
 	{
 		autotab();
 		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
-		slice_(textureload("textures/progress", 3), curx, cury, size, 0, percent, s);
+		slice_(textureload("textures/progress", 3, true, false), curx, cury, size, 0, percent, s);
 	}
 
 	//use to set min size (useful when you have progress bars)
@@ -539,7 +539,7 @@ struct gui : guient
 			}
 			else
 			{
-				if((t = textureload(mapname, 3)) == notexture) t = textureload("textures/nothumb", 3);
+				if((t = textureload(mapname, 3, true, false)) == notexture) t = textureload("textures/nothumb", 3, true, false);
 				xt = 1.0f; yt = 1.0f;
 				float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
 				xr = t->xs; yr = t->ys;
@@ -594,7 +594,7 @@ struct gui : guient
 		if(tiled) defaultshader->set();
 		if(overlaid)
 		{
-			if(!overlaytex) overlaytex = textureload(guioverlaytex, 3);
+			if(!overlaytex) overlaytex = textureload(guioverlaytex, 3, true, false);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
             glColor3fv(light.v);
 			glBegin(GL_QUADS);
@@ -623,7 +623,7 @@ struct gui : guient
 	{
 		if(visible())
 		{
-			if(!slidertex) slidertex = textureload(guislidertex, 3);
+			if(!slidertex) slidertex = textureload(guislidertex, 3, true, false);
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, slidertex->id);
 			glBegin(GL_QUADS);
@@ -662,7 +662,7 @@ struct gui : guient
 			if(icon)
 			{
 				defformatstring(tname)("textures/%s", icon);
-				icon_(textureload(tname, 3), false, false, x, cury, guibound[1], clickable && hit);
+				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], clickable && hit);
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;

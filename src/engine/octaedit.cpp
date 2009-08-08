@@ -1721,10 +1721,7 @@ void texduplicate()
 
 COMMAND(texduplicate, "");
 
-VARP(texguieditor, 0, 1, 2);
-VARP(texguiautoclose, 0, 1, 1);
-
-VARP(thumbwidth, 0, 16, 1000);
+VARP(thumbwidth, 0, 24, 1000);
 VARP(thumbheight, 0, 8, 1000);
 VARP(thumbtime, 0, 50, 1000);
 FVARP(thumbsize, 0, 2, 6);
@@ -1739,211 +1736,216 @@ struct texturegui : guicb
 
 	void gui(guient &g, bool firstpass)
 	{
-		if(texguieditor && menutex >= 0 && menutex < curtexnum)
+		int origtab = menutab, nextslot = menutex;
+		g.start(menustart, menuscale, &menutab, true);
+		loopi(1+curtexnum/(thumbwidth*thumbheight))
 		{
-			Slot &slot = lookuptexture(menutex, false);
-			int nextslot = menutex;
-			g.start(menustart, menuscale);
+			g.tab(!i ? "Textures" : NULL);
+			if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
 			g.pushlist();
-
-			Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
-			if(!slot.sts.empty())
+			g.pushlist();
+			loop(h, thumbheight)
 			{
-				if(slot.loaded)
-				{
-					tex = slot.sts[0].t;
-					if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-					if(slot.layer)
-					{
-						Slot &layer = lookuptexture(slot.layer);
-						if(!layer.sts.empty()) layertex = layer.sts[0].t;
-					}
-				}
-				else if(slot.thumbnail) tex = slot.thumbnail;
-				else
-					tex = loadthumbnail(slot);
-			}
-			g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP && (slot.loaded || tex!=notexture);
-			g.space(1);
-
-			g.pushlist();
-			g.strut(134);
-			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
-			g.space(1);
-			g.pushlist();
-			if(g.button("<prev    ", 0x44FFAA) & GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
-			if(g.button("next>    ", 0xAAFF44) & GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
-			if(g.button("browse   ", 0xFF88FF) & GUI_UP) nextslot = -1;
-			if(g.button("close    ", 0xFF6666) & GUI_UP) menuon = false;
-			if(g.button("select   ", 0x66FF66) & GUI_UP) { edittex(menutex); if(texguiautoclose) menuon = false; }
-			if(g.button("duplicate", 0x888888) & GUI_UP) { menutex = duplicateslot(slot); }
-			g.poplist();
-			if(!slot.sts.empty())
-			{
-				g.space(1);
-				{
-					g.pushlist();
-					g.text("setshader", 0xAAFFAA);
-					g.space(1);
-					defformatstring(input)("setshader_%d_input", menutex);
-					char *w = g.field(input, 0xFFFFFF, -123, 0, slot.shader->name, EDITORREADONLY);
-					if(w && *w) { copystring(slot.shader->name, w); g.fieldedit(input); }
-					g.poplist();
-				}
-				if(!slot.params.empty()) g.space(1);
-				loopvj(slot.params)
-				{
-					g.pushlist();
-					g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
-					g.space(1);
-					if(slot.params[j].type == SHPARAM_LOOKUP || slot.params[j].type == SHPARAM_UNIFORM)
-					{
-						defformatstring(index)("%s", slot.params[j].name);
-						defformatstring(input)("param_%d_%d_input", menutex, j);
-						char *w = g.field(input, 0xFFFFFF, -32, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
-					}
-					else
-					{
-						defformatstring(index)("%d", slot.params[j].index);
-						defformatstring(input)("param_%d_%d_input", menutex, j);
-						char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
-					}
-					loopk(4)
-					{
-						g.space(1);
-						defformatstring(index)("%f", slot.params[j].val[k]);
-						defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
-						char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
-					}
-					g.poplist();
-				}
-				if(!slot.sts.empty()) g.space(1);
-				loopvj(slot.sts)
-				{
-					g.pushlist();
-					g.text("texture", 0xAAFFAA);
-					{
-						g.space(1);
-						defformatstring(index)("%s", findtexturename(slot.sts[j].type));
-						defformatstring(input)("texture_%d_%d_name_input", menutex, j);
-						char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
-					}
-					{
-						g.space(1);
-						defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
-						char *w = g.field(input, 0xFFFFFF, j ? -121 : -95, 0, slot.sts[j].lname, EDITORFOREVER);
-						if(w && *w)
-						{
-							copystring(slot.sts[j].lname, w);
-							copystring(slot.sts[j].name, w);
-							slot.cleanup();
-							g.fieldedit(input);
-						}
-					}
-					if(!j)
-					{
-						{
-							defformatstring(index)("%d", slot.rotation);
-							defformatstring(input)("texture_%d_%d_rotation_input", menutex, j);
-							char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.rotation = atoi(w); g.fieldedit(input); }
-						}
-						{
-							defformatstring(index)("%d", slot.xoffset);
-							defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
-							char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
-						}
-						{
-							defformatstring(index)("%d", slot.yoffset);
-							defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
-							char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
-						}
-						{
-							defformatstring(index)("%f", slot.scale);
-							defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
-							char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
-						}
-					}
-					g.poplist();
-				}
-				g.space(1);
 				g.pushlist();
-				g.text("texscroll", 0xAAFFAA);
+				loop(w, thumbwidth)
 				{
-					g.space(1);
-					defformatstring(index)("%f", slot.scrollS * 1000.0f);
-					defformatstring(input)("texscroll_%d_x_scale_input", menutex);
-					char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
-					if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
-				}
-				{
-					g.space(1);
-					defformatstring(index)("%f", slot.scrollT * 1000.0f);
-					defformatstring(input)("texscroll_%d_y_scale_input", menutex);
-					char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
-					if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
+					int ti = (i*thumbheight+h)*thumbwidth+w;
+					if(ti<curtexnum)
+					{
+						Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
+						Slot &slot = lookuptexture(ti, false);
+						if(slot.sts.empty()) continue;
+						else if(slot.loaded)
+						{
+							tex = slot.sts[0].t;
+							if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+							if(slot.layer)
+							{
+								Slot &layer = lookuptexture(slot.layer);
+								if(!layer.sts.empty()) layertex = layer.sts[0].t;
+							}
+						}
+						else if(slot.thumbnail) tex = slot.thumbnail;
+						else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
+						if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP)
+							nextslot = ti;
+					}
+					else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
 				}
 				g.poplist();
 			}
-			else g.text("empty slot", 0xAAFFAA);
-			g.poplist();
-			menutex = nextslot;
-
-			g.poplist();
-			g.end();
-		}
-		else
-		{
-			int origtab = menutab;
-			g.start(menustart, menuscale, &menutab, true);
-			loopi(1+curtexnum/(thumbwidth*thumbheight))
+			g.space(1);
+			g.pushlist();
+			g.pushfont("default");
+			if(g.button("<prev        ", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+			if(g.button("next>        ", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
+			if(g.button("browse       ", 0xFF88FF)&GUI_UP) nextslot = -1;
+			if(g.button("close        ", 0xFF6666)&GUI_UP) menuon = false;
+			if(menutex >= 0 && menutex < curtexnum)
 			{
-				g.tab(!i ? "Textures" : NULL);
-				if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-				loop(h, thumbheight)
+				if(g.button("select       ", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
+				if(g.button("duplicate    ", 0x888888)&GUI_UP) { menutex = duplicateslot(lookuptexture(menutex, false)); }
+			}
+			g.popfont();
+			g.poplist();
+			g.space(1);
+			if(menutex >= 0 && menutex < curtexnum)
+			{
+				Slot &slot = lookuptexture(menutex, false);
+				g.pushlist();
+				Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
+				if(!slot.sts.empty())
 				{
-					g.pushlist();
-					loop(w, thumbwidth)
+					if(slot.loaded)
 					{
-						int ti = (i*thumbheight+h)*thumbwidth+w;
-						if(ti<curtexnum)
+						tex = slot.sts[0].t;
+						if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+						if(slot.layer)
 						{
-							Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
-							Slot &slot = lookuptexture(ti, false);
-							if(slot.sts.empty()) continue;
-							else if(slot.loaded)
+							Slot &layer = lookuptexture(slot.layer);
+							if(!layer.sts.empty()) layertex = layer.sts[0].t;
+						}
+					}
+					else if(slot.thumbnail) tex = slot.thumbnail;
+				}
+				if(g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
+				g.space(2);
+				g.pushlist();
+				g.space(1);
+				defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
+				if(!slot.sts.empty())
+				{
+					g.space(1);
+					{
+						g.pushlist();
+						g.text("setshader", 0xAAFFAA);
+						g.space(1);
+						defformatstring(input)("setshader_%d_input", menutex);
+						char *w = g.field(input, 0xFFFFFF, -128, 0, slot.shader->name, EDITORREADONLY);
+						if(w && *w) { copystring(slot.shader->name, w); g.fieldedit(input); }
+						g.poplist();
+					}
+					if(!slot.params.empty()) g.space(1);
+					loopvj(slot.params)
+					{
+						g.pushlist();
+						g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+						g.space(1);
+						if(slot.params[j].type == SHPARAM_LOOKUP || slot.params[j].type == SHPARAM_UNIFORM)
+						{
+							defformatstring(index)("%s", slot.params[j].name);
+							defformatstring(input)("param_%d_%d_input", menutex, j);
+							char *w = g.field(input, 0xFFFFFF, -32, 0, index, EDITORFOREVER);
+							if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+						}
+						else
+						{
+							defformatstring(index)("%d", slot.params[j].index);
+							defformatstring(input)("param_%d_%d_input", menutex, j);
+							char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
+							if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+						}
+						loopk(4)
+						{
+							g.space(1);
+							defformatstring(index)("%f", slot.params[j].val[k]);
+							defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
+							char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
+							if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
+						}
+						g.poplist();
+					}
+					if(!slot.sts.empty()) g.space(1);
+					loopvj(slot.sts)
+					{
+						g.pushlist();
+						g.text("texture", 0xAAFFAA);
+						{
+							g.space(1);
+							defformatstring(index)("%s", findtexturename(slot.sts[j].type));
+							defformatstring(input)("texture_%d_%d_name_input", menutex, j);
+							char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
+							if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
+						}
+						{
+							g.space(1);
+							defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
+							char *w = g.field(input, 0xFFFFFF, j ? -126 : -100, 0, slot.sts[j].lname, EDITORFOREVER);
+							if(w && *w)
 							{
-								tex = slot.sts[0].t;
-								if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-								if(slot.layer)
-								{
-									Slot &layer = lookuptexture(slot.layer);
-									if(!layer.sts.empty()) layertex = layer.sts[0].t;
-								}
-							}
-							else if(slot.thumbnail) tex = slot.thumbnail;
-							else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-
-						if(((!slot.loaded && !slot.thumbnail) ? g.image(tex, thumbsize, true) : g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex))&GUI_UP /*&& (slot.loaded || tex!=notexture)*/)
-							{
-								if(texguieditor) menutex = ti;
-								else { edittex(ti); if(texguiautoclose) menuon = false; }
+								copystring(slot.sts[j].lname, w);
+								copystring(slot.sts[j].name, w);
+								slot.cleanup();
+								g.fieldedit(input);
 							}
 						}
-						else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
+						if(!j)
+						{
+							{
+								defformatstring(index)("%d", slot.rotation);
+								defformatstring(input)("texture_%d_%d_rotation_input", menutex, j);
+								char *w = g.field(input, 0xFFFFFF, -2, 0, index, EDITORFOREVER);
+								if(w && *w) { slot.rotation = atoi(w); g.fieldedit(input); }
+							}
+							{
+								defformatstring(index)("%d", slot.xoffset);
+								defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
+								char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
+								if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
+							}
+							{
+								defformatstring(index)("%d", slot.yoffset);
+								defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
+								char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
+								if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
+							}
+							{
+								defformatstring(index)("%f", slot.scale);
+								defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
+								char *w = g.field(input, 0xFFFFFF, -12, 0, index, EDITORFOREVER);
+								if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
+							}
+						}
+						g.poplist();
+					}
+					g.space(1);
+					g.pushlist();
+					g.text("texscroll", 0xAAFFAA);
+					{
+						g.space(1);
+						defformatstring(index)("%f", slot.scrollS * 1000.0f);
+						defformatstring(input)("texscroll_%d_x_scale_input", menutex);
+						char *w = g.field(input, 0xFFFFFF, -16, 0, index, EDITORFOREVER);
+						if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
+					}
+					{
+						g.space(1);
+						defformatstring(index)("%f", slot.scrollT * 1000.0f);
+						defformatstring(input)("texscroll_%d_y_scale_input", menutex);
+						char *w = g.field(input, 0xFFFFFF, -16, 0, index, EDITORFOREVER);
+						if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
 					}
 					g.poplist();
 				}
+				g.poplist();
+				g.poplist();
 			}
-			g.end();
+			else
+			{
+				g.pushlist();
+				g.texture(textureload("textures/nothumb", 3), 7);
+				g.space(2);
+				g.pushlist();
+				g.space(1);
+				g.title("no texture selected", 0xFFFFFF);
+				g.poplist();
+				g.poplist();
+			}
+			g.poplist();
+			g.poplist();
 		}
+		menutex = nextslot;
+		g.end();
 	}
 
 	void showtextures(bool on)
@@ -1953,7 +1955,7 @@ struct texturegui : guicb
             if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(thumbwidth*thumbheight);
             menustart = starttime();
 			cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
-			menutex = texguieditor >= 2 && !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
+			menutex = !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
         }
 	}
 
