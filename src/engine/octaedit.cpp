@@ -1739,9 +1739,10 @@ struct texturegui : guicb
 
 	void gui(guient &g, bool firstpass)
 	{
-		if(texguieditor && menutex >= 0 && menutex <= curtexnum)
+		if(texguieditor && menutex >= 0 && menutex < curtexnum)
 		{
 			Slot &slot = lookuptexture(menutex, false);
+			int nextslot = menutex;
 			g.start(menustart, menuscale);
 			g.pushlist();
 
@@ -1759,7 +1760,8 @@ struct texturegui : guicb
 					}
 				}
 				else if(slot.thumbnail) tex = slot.thumbnail;
-				else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
+				else
+					tex = loadthumbnail(slot);
 			}
 			g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP && (slot.loaded || tex!=notexture);
 			g.space(1);
@@ -1769,9 +1771,9 @@ struct texturegui : guicb
 			defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
 			g.space(1);
 			g.pushlist();
-			if(g.button("<prev    ", 0x44FFAA) & GUI_UP) menutex = menutex > 0 ? menutex-1 : curtexnum;
-			if(g.button("next>    ", 0xAAFF44) & GUI_UP) menutex = menutex < curtexnum ? menutex+1 : 0;
-			if(g.button("browse   ", 0xFF88FF) & GUI_UP) menutex = -1;
+			if(g.button("<prev    ", 0x44FFAA) & GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+			if(g.button("next>    ", 0xAAFF44) & GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
+			if(g.button("browse   ", 0xFF88FF) & GUI_UP) nextslot = -1;
 			if(g.button("close    ", 0xFF6666) & GUI_UP) menuon = false;
 			if(g.button("select   ", 0x66FF66) & GUI_UP) { edittex(menutex); if(texguiautoclose) menuon = false; }
 			if(g.button("duplicate", 0x888888) & GUI_UP) { menutex = duplicateslot(slot); }
@@ -1892,6 +1894,7 @@ struct texturegui : guicb
 			}
 			else g.text("empty slot", 0xAAFFAA);
 			g.poplist();
+			menutex = nextslot;
 
 			g.poplist();
 			g.end();
@@ -1912,7 +1915,7 @@ struct texturegui : guicb
 						int ti = (i*thumbheight+h)*thumbwidth+w;
 						if(ti<curtexnum)
 						{
-							Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
+							Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL, *tmp = tex;
 							Slot &slot = lookuptexture(ti, false);
 							if(slot.sts.empty()) continue;
 							else if(slot.loaded)
@@ -1927,7 +1930,8 @@ struct texturegui : guicb
 							}
 							else if(slot.thumbnail) tex = slot.thumbnail;
 							else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-							if(g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP && (slot.loaded || tex!=notexture))
+
+						if((tmp == tex ? g.texture(tex, thumbsize, 0, 0, 0, glowtex, vec(0,0,0), layertex) : g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex))&GUI_UP /*&& (slot.loaded || tex!=notexture)*/)
 							{
 								if(texguieditor) menutex = ti;
 								else { edittex(ti); if(texguiautoclose) menuon = false; }
