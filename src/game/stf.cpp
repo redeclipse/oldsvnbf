@@ -218,13 +218,13 @@ namespace stf
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 				gameent *e = NULL;
 				bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
 						targets.add(e->clientnum);
 				}
-				if((!regen && f.owner == d->team) || (targets.empty() && (f.owner != d->team || f.enemy)))
+				if((!regen && f.owner == ai::owner(d)) || (targets.empty() && (f.owner != ai::owner(d) || f.enemy)))
 				{
 					ai::interest &n = interests.add();
 					n.state = ai::AI_S_DEFEND;
@@ -243,8 +243,8 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[b.target];
 			bool regen = d->aitype != AI_BOT || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
-			int walk = !f.enemy && f.owner == d->team ? 1 : 0;
-			if(regen && (d->aitype == AI_TURRET || (!f.enemy && f.owner == d->team)))
+			int walk = f.enemy && f.enemy != ai::owner(d) ? 1 : 0;
+			if(regen && (!f.enemy && ai::owner(d) == f.owner))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -252,7 +252,7 @@ namespace stf
 				if(d->aitype == AI_BOT)
 				{
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
 					{ // try to guess what non ai are doing
 						vec ep = e->feetpos();
 						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
