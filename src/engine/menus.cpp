@@ -62,8 +62,10 @@ void showgui(const char *name)
 	playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
+extern bool closetexgui();
 int cleargui(int n)
 {
+	if(closetexgui()) n--;
     int clear = menustack.length();
     if(n>0) clear = min(clear, n);
     loopi(clear) popgui();
