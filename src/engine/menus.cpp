@@ -121,7 +121,7 @@ SVAR(guirolloverimgaction, "");
 void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
 	if(!cgui) return;
-    Texture *t = textureload(path, 0, true, false);
+    Texture *t = path && *path ? textureload(path, 0, true, false) : NULL;
     if(t == notexture)
     {
         if(*altpath) t = textureload(altpath, 0, true, false);

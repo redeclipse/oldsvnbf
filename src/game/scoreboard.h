@@ -212,7 +212,7 @@ namespace hud
 			if(*mapauthor)
 			{
 				g.pushlist();
-				g.space(4);
+				g.space(3);
 				g.pushfont("default");
 				g.textf("by %s", 0xFFFFFF, NULL, mapauthor);
 				g.popfont();

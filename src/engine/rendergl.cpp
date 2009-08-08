@@ -1581,6 +1581,9 @@ void viewproject(float zscale)
     }
 }
 
+extern char *progresstitle, *progresstext;
+extern float progresspart;
+
 void drawnoview()
 {
     xtravertsva = xtraverts = glde = gbatches = 0;
@@ -1600,77 +1603,42 @@ void drawnoview()
     defaultshader->set();
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	float cx = 0.5f*w, cy = 0.5f*h, aw = h*4.0f/3.0f, ah = h;
-	if(aw > w) { aw = w; ah = w*3.0f/4.0f; }
 	glColor3f(1, 1, 1);
-	if(loadback && *loadback)
-	{
-		settexture(loadback);
-		glBegin(GL_QUADS);
-
-		glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-		glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-		glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-		glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-
-		if(w > aw)
-		{
-			glTexCoord2f(0, 0); glVertex2f(0, cy-ah/2);
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-			glTexCoord2f(0, 1); glVertex2f(0, cy+ah/2);
-
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-			glTexCoord2f(1, 0); glVertex2f(w, cy-ah/2);
-			glTexCoord2f(1, 1); glVertex2f(w, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-		}
-
-		if(h > ah)
-		{
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, 0);
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, 0);
-			glTexCoord2f(1, 0); glVertex2f(cx+aw/2, cy-ah/2);
-			glTexCoord2f(0, 0); glVertex2f(cx-aw/2, cy-ah/2);
-
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, cy+ah/2);
-			glTexCoord2f(1, 1); glVertex2f(cx+aw/2, h);
-			glTexCoord2f(0, 1); glVertex2f(cx-aw/2, h);
-		}
-
-		glEnd();
-	}
 
     settexture("textures/logo", 3);
     glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(w-256, 2);
-    glTexCoord2f(1, 0); glVertex2f(w, 2);
-    glTexCoord2f(1, 1); glVertex2f(w, 66);
-    glTexCoord2f(0, 1); glVertex2f(w-256, 66);
+    glTexCoord2f(0, 0); glVertex2f(w-256, 0);
+    glTexCoord2f(1, 0); glVertex2f(w, 0);
+    glTexCoord2f(1, 1); glVertex2f(w, 64);
+    glTexCoord2f(0, 1); glVertex2f(w-256, 64);
     glEnd();
 
     settexture("textures/cube2badge", 3);
     glBegin(GL_QUADS); // goes off the edge on purpose
-    glTexCoord2f(0, 0); glVertex2f(w-108, 36);
-    glTexCoord2f(1, 0); glVertex2f(w-12, 36);
-    glTexCoord2f(1, 1); glVertex2f(w-12, 68);
-    glTexCoord2f(0, 1); glVertex2f(w-108, 68);
+    glTexCoord2f(0, 0); glVertex2f(w-80, 36);
+    glTexCoord2f(1, 0); glVertex2f(w-16, 36);
+    glTexCoord2f(1, 1); glVertex2f(w-16, 68);
+    glTexCoord2f(0, 1); glVertex2f(w-80, 68);
     glEnd();
 
 	glPushMatrix();
 	glScalef(1/3.0f, 1/3.0f, 1);
-	if(loadbackinfo && *loadbackinfo)
-		draw_textx("%s", FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_LEFT_JUSTIFY, -1, -1, loadbackinfo);
-	draw_textx("v%.2f (%s)", w*3-FONTH, h*3-FONTH*2-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, float(ENG_VERSION)/100.f, ENG_RELEASE);
-	draw_textx("%s", w*3-FONTH/2, h*3-FONTH-FONTH/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, ENG_URL);
+	int y = h*3-FONTH/2;
+	if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
+	if(progressing)
+	{
+		if(*progresstext) y -= draw_textx("%s [%d%%]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, progresstext, int(progresspart));
+		y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, h*2, *progresstitle ? progresstitle : "please wait...");
+	}
+	y = h*3-FONTH/2;
+	y -= draw_textx("%s", w*3-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
+	y -= draw_textx("v%.2f (%s)", w*3-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
 	glPopMatrix();
 
     glDisable(GL_BLEND);
 
 	hud::drawhud(w, h, true);
-	if(progressing || commandmillis<0) UI::render();
+	if(UI::ready && (progressing || commandmillis<0)) UI::render();
 	if(!progressing) hud::drawlast(w, h);
 
     glDisable(GL_TEXTURE_2D);

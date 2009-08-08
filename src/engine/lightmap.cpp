@@ -40,7 +40,7 @@ static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
 static vector<const extentity *> lights1, lights2;
 static uint lmprog = 0;
-static GLuint lmprogtex = 0;
+GLuint lmprogtex = 0;
 static int lmprogtexticks = 0;
 
 bool calclight_canceled = false;

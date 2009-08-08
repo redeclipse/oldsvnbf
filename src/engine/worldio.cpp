@@ -406,6 +406,8 @@ void save_mapshot(char *mname)
 	glDeleteTextures(1, &tex);
     glFrontFace(GL_CCW);
 	glViewport(0, 0, screen->w, screen->h);
+
+	reloadtexture(mname);
 }
 ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));
 

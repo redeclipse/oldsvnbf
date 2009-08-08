@@ -184,7 +184,7 @@ struct gui : guient
 	{
 		autotab();
 		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
-		slice_(textureload("textures/progress", 3), curx, cury, size, 0, percent > 0 ? percent : 1, s);
+		slice_(textureload("textures/progress", 3), curx, cury, size, 0, percent, s);
 	}
 
 	//use to set min size (useful when you have progress bars)
@@ -497,40 +497,57 @@ struct gui : guient
 
     void icon_(Texture *t, bool overlaid, bool tiled, int x, int y, int size, bool hit, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL)
 	{
-		float xs, ys, xt, yt;
-		if(tiled)
-		{
-			xt = min(1.0f, t->xs/(float)t->ys),
-			yt = min(1.0f, t->ys/(float)t->xs);
-			xs = size;
-			ys = size;
-		}
-		else
-		{
-			xt = 1.0f;
-			yt = 1.0f;
-			float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
-			xs = t->xs*scale;
-			ys = t->ys*scale;
-			x += int((size-xs)/2);
-			y += int((size-ys)/2);
-		}
-		if(hit && actionon)
-		{
-			glDisable(GL_TEXTURE_2D);
-			notextureshader->set();
-			glColor4f(0, 0, 0, 0.75f);
-			glBegin(GL_QUADS);
-			rect_(x+guishadow, y+guishadow, xs, ys);
-			glEnd();
-			glEnable(GL_TEXTURE_2D);
-			defaultshader->set();
-		}
+		float xr = 0, yr = 0, xs = 0, ys = 0, xt = 0, yt = 0;
 		if(tiled)
 		{
 			static Shader *rgbonlyshader = NULL;
 			if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
 			rgbonlyshader->set();
+		}
+		if(t)
+		{
+			if(tiled)
+			{
+				xt = min(1.0f, t->xs/(float)t->ys),
+				yt = min(1.0f, t->ys/(float)t->xs);
+				xr = t->xs; yr = t->ys;
+				xs = size; ys = size;
+			}
+			else
+			{
+				xt = 1.0f; yt = 1.0f;
+				float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
+				xr = t->xs; yr = t->ys;
+				xs = t->xs*scale; ys = t->ys*scale;
+				x += int((size-xs)/2);
+				y += int((size-ys)/2);
+			}
+			glBindTexture(GL_TEXTURE_2D, t->id);
+		}
+		else
+		{
+			extern GLuint lmprogtex;
+			if(lmprogtex)
+			{
+				xt = 1.0f; yt = 1.0f;
+				float scale = float(size)/256; //scale and preserve aspect ratio
+				xr = 256; yr = 256;
+				xs = 256*scale; ys = 256*scale;
+				x += int((size-xs)/2);
+				y += int((size-ys)/2);
+				glBindTexture(GL_TEXTURE_2D, lmprogtex);
+			}
+			else
+			{
+				if((t = textureload(mapname, 3)) == notexture) t = textureload("textures/nothumb", 3);
+				xt = 1.0f; yt = 1.0f;
+				float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
+				xr = t->xs; yr = t->ys;
+				xs = t->xs*scale; ys = t->ys*scale;
+				x += int((size-xs)/2);
+				y += int((size-ys)/2);
+				glBindTexture(GL_TEXTURE_2D, t->id);
+			}
 		}
         float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
         if(rotate)
@@ -539,9 +556,8 @@ struct gui : guient
             if(rotate >= 2 && rotate <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
             if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
         }
-        loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/t->xs; tc[k][1] = tc[k][1]/yt - float(yoff)/t->ys; }
+        loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
         vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
-        glBindTexture(GL_TEXTURE_2D, t->id);
         glColor3fv(color.v);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(x,    y);
@@ -589,9 +605,10 @@ struct gui : guient
 
     void slice_(Texture *t, int x, int y, int size, float start = 0, float end = 1, const char *text = NULL)
 	{
-		float scale = float(size)/max(t->xs, t->ys), xs = t->xs*scale, ys = t->ys*scale;
+		float scale = float(size)/max(t->xs, t->ys), xs = t->xs*scale, ys = t->ys*scale, fade = 1;
+		if(start == end) { end = 1; fade = 0.5f; }
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glColor3f(1, 1, 1);
+        glColor4f(1, 1, 1, fade);
         int s = max(xs,ys)/2;
 		drawslice(start, end, x+s/2, y+s/2, s);
 		if(text && *text)
@@ -850,7 +867,6 @@ namespace UI
 
 	void render()
 	{
-		if(!ready) return;
 		if(actionon) mousebuttons |= GUI_PRESSED;
 		gui::reset(); guis.setsize(0);
 

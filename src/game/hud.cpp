@@ -795,7 +795,7 @@ namespace hud
 	void drawconsole(int type, int w, int h, int x, int y, int s, float fade)
 	{
 		static vector<int> refs; refs.setsizenodelete(0);
-		bool full = fullconsole || commandmillis > 0;
+		bool full = fullconsole || commandmillis > 0 || (progressing && !UI::ready);
 		pushfont("console");
 		if(type == CON_CHAT)
 		{
@@ -1517,7 +1517,7 @@ namespace hud
 			if(showconsole)
 			{
 				drawconsole(showconsole >= 2 ? CON_INFO : -1, ox, oy, os, os, ox-os*2, fade);
-				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
+				if(showconsole >= 2 && !noview && !progressing) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
 			}
 
 			if(!noview && client::ready() && !texpaneltimer && fade > 0 && !progressing)
@@ -1536,8 +1536,8 @@ namespace hud
 				loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
 				if(showfps)
 				{
-					draw_textx("%d", ox-os*2-is/2, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
-					draw_textx("fps", ox-os*2-is/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+					draw_textx("%d", ox-os*2-is/4, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+					draw_textx("fps", ox-os*2-is/4, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
 					switch(showfps)
 					{
 						case 3:

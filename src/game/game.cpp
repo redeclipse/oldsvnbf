@@ -829,10 +829,9 @@ namespace game
 		maptime = 0;
 		projs::reset();
 		resetworld();
-
 		if(*name)
 		{
-			conoutf("%s by %s", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown");
+			conoutf("%s on %s by %s", server::gamename(gamemode, mutators), *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown");
 			preload();
 		}
 		// reset perma-state
