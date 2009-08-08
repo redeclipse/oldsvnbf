@@ -414,7 +414,7 @@ void resetgl()
     if(!reloadtexture("textures/notexture") ||
 		!reloadtexture("textures/blank") ||
 		!reloadtexture("textures/logo") || !reloadtexture("textures/cube2badge") ||
-		!reloadtexture("textures/progress") || !reloadtexture(kidmode ? "textures/kidback" : loadback))
+		!reloadtexture("textures/progress"))
 			fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
@@ -725,7 +725,7 @@ void rehash(bool reload)
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
-const char *loadback = "textures/loadback", *loadbackinfo = "";
+const char *loadbackinfo = "";
 void eastereggs()
 {
 	time_t ct = time(NULL); // current time
@@ -743,16 +743,8 @@ void eastereggs()
 	tm_isdst	1 if daylight savings is on, zero if not,
 	*/
 	int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
-	if(day == 6 && mday == 13)
-	{
-		loadback = "textures/spookyback";
-		loadbackinfo = "Friday the 13th";
-	}
-	else if(month == 10 && mday == 31)
-	{
-		loadback = "textures/spookyback";
-		loadbackinfo = "Halloween";
-	}
+	if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
+	else if(month == 10 && mday == 31) loadbackinfo = "Halloween";
 	if(month == 2 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
 	if(month == 2 && mday == 9)		loadbackinfo = "Happy Birthday Quin!";
 	if(month == 4 && mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
@@ -941,7 +933,6 @@ int main(int argc, char **argv)
     progress(0, "loading config..");
 	rehash(false);
 	smartmusic(true, false);
-	UI::setup();
 
 	conoutf("\fmloading required data..");
     progress(0, "loading required data..");
@@ -955,8 +946,8 @@ int main(int argc, char **argv)
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
     localconnect(false);
-
 	resetfps();
+	UI::setup();
 
 	for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
 	{

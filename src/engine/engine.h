@@ -488,7 +488,7 @@ enum
 extern int initing;
 
 extern bool progressing;
-extern const char *loadback, *loadbackinfo;
+extern const char *loadbackinfo;
 extern float loadprogress;
 extern void progress(float bar1 = 0, const char *text1 = NULL, float bar2 = 0, const char *text2 = NULL);
 
