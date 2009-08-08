@@ -971,7 +971,7 @@ struct gameent : dynent, gamestate
 {
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
 		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
-			totalshots, smoothmillis, lastnode, respawned, suicided, vschan, dschan, wschan,
+			totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, dschan, wschan,
 				lasthit, lastkill, lastattacker, lastpoints;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
@@ -983,7 +983,7 @@ struct gameent : dynent, gamestate
 	vector<int> airnodes;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
-		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), vschan(-1), dschan(-1), wschan(-1), lastattacker(-1), lastpoints(0), edit(NULL), ai(NULL),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), aschan(-1), vschan(-1), dschan(-1), wschan(-1), lastattacker(-1), lastpoints(0), edit(NULL), ai(NULL),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),  lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
 		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
@@ -999,10 +999,11 @@ struct gameent : dynent, gamestate
 		if(ai) delete ai;
 		removetrackedparticles(this);
 		removetrackedsounds(this);
+		if(issound(aschan)) removesound(aschan);
 		if(issound(vschan)) removesound(vschan);
 		if(issound(dschan)) removesound(dschan);
 		if(issound(wschan)) removesound(wschan);
-		vschan = dschan = wschan = -1;
+		aschan = vschan = dschan = wschan = -1;
 	}
 
 	void stopmoving(bool full)
@@ -1233,7 +1234,7 @@ namespace game
 	extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
 	extern void clientdisconnected(int cn);
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
-	extern void announce(int idx, int targ, const char *msg, ...);
+	extern void announce(int idx, int targ, gameent *d, const char *msg, ...);
 	extern void respawn(gameent *d);
 	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, int fade = 250, float size = 2.f);
 	extern void impulseeffect(gameent *d, bool effect);

@@ -6,9 +6,9 @@ namespace game
 	bool intermission = false;
 	int maptime = 0, minremain = 0, swaymillis = 0;
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
-    int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, lastannounce = 0;
+    int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0;
     bool prevzoom = false, zooming = false;
-	int liquidchan = -1, announcechan = -1, fogdist = 0;
+	int liquidchan = -1, fogdist = 0;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -93,9 +93,6 @@ namespace game
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 2, 2);
-	VARP(announcedelay, 0, 1, INT_MAX-1); // in case you wanna clip announcements to not overlap
-	VARP(announceobits, 0, 2, 2); // 0 = no announcer, 1 = only for self, 2 = everybody
-	VARP(announcefilter, 0, 1, 1); // 0 = don't filter, 1 = only those which effect your team
 
     VARP(rollfade, 0, 10, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
@@ -241,18 +238,20 @@ namespace game
 		else swaydir = swaypush = vec(0, 0, 0);
 	}
 
-	void announce(int idx, int targ, const char *msg, ...)
+	void announce(int idx, int targ, gameent *d, const char *msg, ...)
 	{
-		defvformatstring(text, msg, msg);
-		conoutft(targ, "%s", text);
-		if(idx >= 0 && (!announcedelay || !lastannounce || lastmillis-lastannounce >= announcedelay))
+		if(targ >= 0)
 		{
-			if(issound(announcechan)) removesound(announcechan);
-			playsound(idx, camera1->o, camera1, SND_FORCED, -1, -1, -1, &announcechan);
-			lastannounce = lastmillis;
+			defvformatstring(text, msg, msg);
+			conoutft(targ, "%s", text);
+		}
+		if(idx >= 0)
+		{
+			if(d && issound(d->aschan)) removesound(d->aschan);
+			playsound(idx, !d || d == player1 ? camera1->o : d->o, d == player1 ? camera1 : d, d == player1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
 		}
 	}
-	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, "\fw%s", s));
+	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
 
 	bool tvmode()
 	{
@@ -725,16 +724,7 @@ namespace game
 				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0) show = true; break;
 				case 5: default: show = true; break;
 			}
-			if(show)
-			{
-				if(announceobits && isme) announce(anc, CON_INFO, "\fw%s", d->obit);
-				else
-				{
-					conoutft(CON_INFO, "\fw%s", d->obit);
-					if(announceobits && (announceobits >= 2 || player1->state == CS_SPECTATOR) && anc >= 0)
-						playsound(anc, actor->abovehead(), NULL, 0, -1, getworldsize()/2, actor->radius);
-				}
-			}
+			announce(anc, show ? CON_INFO : -1, d, "\fw%s", d->obit);
 		}
 		if(!kidmode && !noblood && !nogibs)
 		{
