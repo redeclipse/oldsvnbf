@@ -86,19 +86,21 @@ namespace projs
 
 	void reflect(projent &proj, vec &pos)
     {
-    	if(proj.elasticity > 0.f)
+    	bool speed = proj.vel.magnitude() > 0.01f;
+    	float elasticity = speed ? proj.elasticity : 1.f, reflectivity = speed ? proj.reflectivity : 0.f;
+    	if(elasticity > 0.f)
     	{
 			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
-    		float mag = proj.vel.magnitude()*proj.elasticity; // conservation of energy
+    		float mag = proj.vel.magnitude()*elasticity; // conservation of energy
 			loopi(3) if((pos[i] > 0.f && dir[1][i] < 0.f) || (pos[i] < 0.f && dir[1][i] > 0.f))
 				dir[1][i] = fabs(dir[1][i])*pos[i];
-			if(proj.reflectivity > 0.f)
+			if(reflectivity > 0.f)
 			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
 				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
 				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
 				loopi(2)
 				{
-					float rmax = 180.f+proj.reflectivity, rmin = 180.f-proj.reflectivity,
+					float rmax = 180.f+reflectivity, rmin = 180.f-reflectivity,
 						off = aim[i][1]-aim[i][0];
 					if(fabs(off) <= rmax && fabs(off) >= rmin)
 					{
@@ -118,8 +120,7 @@ namespace projs
 
     void bounceeffect(projent &proj)
     {
-        if(proj.movement < 2.f && proj.lastbounce) return;
-        switch(proj.projtype)
+		if(proj.movement >= 2.f && !proj.lastbounce) switch(proj.projtype)
         {
             case PRJ_SHOT:
             {
