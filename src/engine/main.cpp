@@ -793,7 +793,7 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	}
 
 	progressing = true;
-	loopi(2)
+	loopi(bar1 > 0 ? 1 : 2)
 	{
 		drawnoview();
 		swapbuffers();
@@ -930,23 +930,28 @@ int main(int argc, char **argv)
     progress(0, "please wait...");
 
     conoutf("\fmloading gl effects..");
+    progress(0, "loading gl effects..");
     loadshaders();
 
 	conoutf("\fmloading world..");
+    progress(0, "loading world..");
 	emptymap(0, true, NULL, true);
 
 	conoutf("\fmloading config..");
+    progress(0, "loading config..");
 	rehash(false);
 	smartmusic(true, false);
 	UI::setup();
 
 	conoutf("\fmloading required data..");
+    progress(0, "loading required data..");
     preloadtextures();
 	particleinit();
     initdecals();
 
 	trytofindocta();
 	conoutf("\fmloading main..");
+    progress(0, "loading main..");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);
     localconnect(false);
