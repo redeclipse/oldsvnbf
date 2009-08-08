@@ -514,7 +514,7 @@ namespace ctf
 				loopv(st.flags)
 				{
 					ctfstate::flag &g = st.flags[i];
-					if(isctfhome(g, d->team) && (k || (!g.owner && !g.droptime)) &&
+					if(isctfhome(g, ai::owner(d)) && (k || (!g.owner && !g.droptime)) &&
 						(!st.flags.inrange(goal) || g.spawnloc.squaredist(pos) < st.flags[goal].spawnloc.squaredist(pos)))
 					{
 						goal = i;
@@ -548,7 +548,7 @@ namespace ctf
 			{
 				ctfstate::flag &g = st.flags[i];
 				if(g.owner == d) hasflags.add(i);
-				else if(isctfflag(g, d->team) && (ctfstyle >= 2 || (g.owner && g.owner->team != d->team) || g.droptime))
+				else if(isctfflag(g, ai::owner(d)) && (ctfstyle >= 2 || (g.owner && ai::owner(g.owner) != ai::owner(d)) || g.droptime))
 					takenflags.add(i);
 			}
 			if(!hasflags.empty() && ctfstyle <= 1)
@@ -579,7 +579,7 @@ namespace ctf
 		loopvj(st.flags)
 		{
 			ctfstate::flag &f = st.flags[j];
-			bool home = isctfhome(f, d->team);
+			bool home = isctfhome(f, ai::owner(d));
 			if(d->aitype == AI_BOT && (!home || ctfstyle >= 2) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
@@ -588,7 +588,7 @@ namespace ctf
 			if(d->aitype == AI_BOT)
 			{
 				gameent *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
 					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
@@ -669,7 +669,7 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfflag(f, d->team))
+			if(isctfflag(f, ai::owner(d)))
 			{
 				if(d->aitype == AI_BOT)
 				{
@@ -678,7 +678,7 @@ namespace ctf
 				}
 				else if(f.owner && ai::violence(d, b, f.owner, false)) return true;
 			}
-			int walk = f.owner && f.owner->team != d->team ? 1 : 0;
+			int walk = f.owner && ai::owner(f.owner) != ai::owner(d) ? 1 : 0;
 			if(d->aitype == AI_BOT)
 			{
 				int regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
@@ -688,7 +688,7 @@ namespace ctf
 					targets.setsizenodelete(0);
 					ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && d->team == e->team)
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
 					{ // try to guess what non ai are doing
 						vec ep = e->feetpos();
 						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
@@ -712,7 +712,7 @@ namespace ctf
 					ctfstate::flag &g = st.flags[i];
 					if(pos.squaredist(g.pos()) <= mindist)
 					{
-						if(g.owner && g.owner->team == d->team) walk = 1;
+						if(g.owner && ai::owner(g.owner) == ai::owner(d)) walk = 1;
 						if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
 					}
 				}
@@ -727,7 +727,7 @@ namespace ctf
 		if(st.flags.inrange(b.target) && d->aitype == AI_BOT)
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfhome(f, d->team) && ctfstyle <= 1)
+			if(isctfhome(f, ai::owner(d)) && ctfstyle <= 1)
 			{
 				static vector<int> hasflags; hasflags.setsizenodelete(0);
 				loopv(st.flags)
@@ -745,9 +745,9 @@ namespace ctf
 					}
 					return true;
 				}
-				else if(!isctfflag(f, d->team)) return false;
+				else if(!isctfflag(f, ai::owner(d))) return false;
 			}
-			if(isctfflag(f, d->team))
+			if(isctfflag(f, ai::owner(d)))
 			{
 				if(ai::makeroute(d, b, f.pos()))
 					return f.owner ? ai::violence(d, b, f.owner, false) : true;
