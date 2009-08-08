@@ -89,9 +89,6 @@ namespace hud
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.025f, 1000);
 	FVARP(indicatorblend, 0, 0.85f, 1);
-	VARP(teamindicator, 0, 2, 2);
-	FVARP(teamindicatorsize, 0, 0.06f, 1000);
-	FVARP(teamindicatorblend, 0, 0.55f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
@@ -157,7 +154,7 @@ namespace hud
 	TVAR(deltatex, "textures/teamdelta", 3);
 
 	VARP(showclip, 0, 1, 1);
-	FVARP(clipsize, 0, 0.05f, 1000);
+	FVARP(clipsize, 0, 0.045f, 1000);
 	FVARP(clipblend, 0, 0.45f, 1000);
 	FVARP(clipcolour, 0.f, 1.f, 1.f);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
@@ -185,7 +182,7 @@ namespace hud
 	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radaritemsize, 0, 1.f, 1000);
 	FVARP(radarsize, 0, 0.03f, 1000);
-	FVARP(radaroffset, 0, 0.03f, 1000);
+	FVARP(radaroffset, 0, 0.035f, 1000);
 	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
 	VARP(radarcard, 0, 0, 2);
 	VARP(radaritems, 0, 2, 2);
@@ -513,21 +510,6 @@ namespace hud
 			else if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
 		int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
-		if(index > POINTER_GUI && teamindicator && (game::player1->team || teamindicator > 1))
-		{
-			Texture *t = textureload(indicatortex, 3);
-			if(t != notexture)
-			{
-				if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				else glBlendFunc(GL_ONE, GL_ONE);
-				float tr = 1.f, tg = 1.f, tb = 1.f;
-				skewcolour(tr, tg, tb);
-				glColor4f(tr, tg, tb, teamindicatorblend*hudblend);
-				glBindTexture(GL_TEXTURE_2D, t->id);
-				int size = int(teamindicatorsize*hudsize);
-				drawsized(nx-size/2, ny-size/2, size);
-			}
-		}
 		drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
@@ -924,8 +906,8 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(bliptex, 2, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
-			else drawblip(bliptex, 2, w, h, radarplayersize, fade, dir, r, g, b);
+			if(hastv(radarplayernames)) drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
 	}
 
@@ -984,9 +966,9 @@ namespace hud
 			else fade *= radarblipblend;
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
-			if(insel) drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
-			else drawblip(tex, 1, w, h, size, fade*blend, dir, r, g, b);
+			if(insel) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
+			else if(hastv(radaritemnames)) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			else drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b);
 		}
 	}
 
