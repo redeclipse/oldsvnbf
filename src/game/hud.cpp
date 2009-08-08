@@ -1434,10 +1434,10 @@ namespace hud
 
 	void drawhud(int w, int h, bool noview)
 	{
-		float fade = hudblend; vec colour(1, 1, 1);
-		if(progressing) { loopi(3) colour[i] = 0.5f; }
-		else
+		float fade = hudblend;
+		if(!progressing)
 		{
+			vec colour(1, 1, 1);
 			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
 			{
 				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
@@ -1477,15 +1477,15 @@ namespace hud
 					}
 				}
 			}
+			if(colour.x < 1 || colour.y < 1 || colour.z < 1)
+			{
+				usetexturing(false);
+				drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
+				usetexturing(true);
+				fade *= min(colour.x, min(colour.y, colour.z));
+			}
 		}
-		if(colour.x < 1 || colour.y < 1 || colour.z < 1)
-		{
-			usetexturing(false);
-			drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
-			usetexturing(true);
-			fade *= min(colour.x, min(colour.y, colour.z));
-		}
-		if(showhud && !progressing)
+		if(showhud && (!progressing || !UI::ready))
 		{
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1493,7 +1493,7 @@ namespace hud
 			glLoadIdentity();
 			glOrtho(0, ox, oy, 0, -1, 1);
 
-			if(!noview && client::ready() && fade > 0)
+			if(!noview && client::ready() && fade > 0 && !progressing)
 			{
 				if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
 				{
@@ -1518,7 +1518,7 @@ namespace hud
 				if(showconsole >= 2 && !noview) drawconsole(CON_CHAT, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
 			}
 
-			if(!noview && client::ready() && !texpaneltimer && fade > 0)
+			if(!noview && client::ready() && !texpaneltimer && fade > 0 && !progressing)
 			{
 				int bf = int(255*fade*statblend);
 				pushfont("sub");
