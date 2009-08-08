@@ -454,7 +454,7 @@ struct guient
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false) = 0;
     virtual void separator() = 0;
-	virtual void progress(float percent) = 0;
+	virtual void progress(float percent, int size) = 0;
 	virtual void strut(int size) = 0;
 	virtual void pushfont(const char *font) = 0;
 	virtual void popfont() = 0;

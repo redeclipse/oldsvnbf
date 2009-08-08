@@ -180,7 +180,12 @@ struct gui : guient
 	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "default"); }
 
 	void separator() { autotab(); line_(5); }
-	void progress(float percent) { autotab(); line_(FONTH*2/5, percent); }
+	void progress(float percent, int size)
+	{
+		autotab();
+		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
+		slice_(textureload("textures/progress", 3), curx, cury, size, 0, percent > 0 ? percent : 1, s);
+	}
 
 	//use to set min size (useful when you have progress bars)
     void strut(int size) { layout(isvertical() ? size*guibound[0] : 0, isvertical() ? 0 : size*guibound[1]); }
@@ -580,6 +585,21 @@ struct gui : guient
 			rect_(x, y, xs, ys, 0);
 			glEnd();
 		}
+	}
+
+    void slice_(Texture *t, int x, int y, int size, float start = 0, float end = 1, const char *text = NULL)
+	{
+		float scale = float(size)/max(t->xs, t->ys), xs = t->xs*scale, ys = t->ys*scale;
+        glBindTexture(GL_TEXTURE_2D, t->id);
+        glColor3f(1, 1, 1);
+        int s = max(xs,ys)/2;
+		drawslice(start, end, x+s/2, y+s/2, s);
+		if(text && *text)
+		{
+			int w = text_width(text);
+			text_(text, x+s/2-w/2, y+s/2-FONTH/2, 0xFFFFFF, false);
+		}
+		layout(s, s);
 	}
 
 	void line_(int size, float percent = 1.0f)

@@ -235,6 +235,12 @@ static int getvardef(char *var)
     }
 }
 
+void guiprogress(float *percent, int *size)
+{
+	if(!cgui) return;
+	cgui->progress(*percent, *size);
+}
+
 void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
 {
 	if(!cgui) return;
@@ -405,6 +411,7 @@ COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
 COMMAND(guifont,"s");
 COMMAND(guiimage,"ssfiss");
+COMMAND(guiprogress,"fi");
 COMMAND(guislider,"siisi");
 COMMAND(guilistslider, "sssi");
 COMMAND(guiradio,"ssis");
