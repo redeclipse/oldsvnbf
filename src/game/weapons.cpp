@@ -136,14 +136,6 @@ namespace weapons
 					if(d->attacking)
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
-						#if 0 // doesn't really work effectively
-						if(!offset)
-						{
-							offset = max(d->weapload[d->weapselect], 1);
-							d->weapload[d->weapselect] = -d->weapload[d->weapselect];
-							d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
-						}
-						#endif
 						d->setweapstate(d->weapselect, WEAP_S_POWER, 0, lastmillis);
 					}
 					else return;

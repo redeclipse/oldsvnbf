@@ -1547,11 +1547,6 @@ namespace game
 		}
 	}
 
-#if 0
-	vector<gameent *> bestplayers;
-    vector<int> bestteams;
-#endif
-
 	VAR(animoverride, -1, 0, ANIM_MAX-1);
 	VAR(testanims, 0, 0, 1);
 
@@ -1847,13 +1842,6 @@ namespace game
 
 	void render()
 	{
-#if 0
-		if(intermission)
-		{
-			if(m_team(gamemode, mutators)) { bestteams.setsize(0); hud::sb.bestteams(bestteams); }
-			else { bestplayers.setsize(0); hud::sb.bestplayers(bestplayers); }
-		}
-#endif
 		startmodelbatches();
 		gameent *d;
         loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, showtranslucent(d, true));
