@@ -205,6 +205,11 @@ namespace hud
 		{
 			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
+			g.pushlist();
+			g.image(NULL, 5, true);
+			g.space(2);
+			g.pushlist();
+			g.space(1);
 			g.pushfont("super");
 			if(*maptitle) g.textf("%s", 0xFFFFFF, NULL, maptitle);
 			else g.textf("(%s)", 0xFFFFFF, NULL, mapname);
@@ -228,14 +233,12 @@ namespace hud
 			}
 			g.popfont();
 			g.poplist();
-
 			if(game::intermission || showscoresinfo())
 			{
 				float ratio =  game::player1->frags*100.f/float(max(game::player1->deaths, 1)),
 					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
 
-				g.separator();
-
+				g.space(2);
 				g.textf("%s: \fs\fg%d\fS %s(s), \fs\fg%d\fS %s(s), \fs\fy%.1f%%\fS ratio", 0xFFFFFF, NULL, game::player1->name,
 					game::player1->frags, "frag",
 					game::player1->deaths, "death", ratio);
@@ -245,6 +248,7 @@ namespace hud
 				{
 					int pen, score = 0;
 
+					g.space(1);
 					pen = (lastmillis-game::maptime)/1000;
 					score += pen;
 					if(pen)
@@ -269,8 +273,9 @@ namespace hud
 					g.textf("SCORE: \fs\fg%d\fS second(s), best: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
 				}
 			}
-			g.separator();
-
+			g.poplist();
+			g.poplist();
+			g.space(1);
 			loopk(numgroups)
 			{
 				if((k%2)==0) g.pushlist(); // horizontal
@@ -421,7 +426,7 @@ namespace hud
 
 			if(showspectators() && spectators.length())
 			{
-				g.separator();
+				g.space(1);
 				loopv(spectators)
 				{
 					gameent *o = spectators[i];
