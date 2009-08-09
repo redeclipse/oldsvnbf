@@ -114,7 +114,7 @@ struct gui : guient
 	void uibuttons()
 	{
 		cury = -ysize;
-		int x = curx + max(tx, xsize) + guibound[0], y = cury - guibound[1]*3;
+		int x = curx + max(tx, xsize) - guibound[0]*2, y = cury - guibound[1]*3;
 		#define uibtn(a,b) \
 		{ \
 			bool hit = false; \
