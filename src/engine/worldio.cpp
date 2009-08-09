@@ -817,7 +817,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						setvar("lerpsubdiv", chdr.lerpsubdiv); \
 						setvar("lerpsubdivsize", chdr.lerpsubdivsize); \
 					} \
-					setsvar("maptitle", chdr.maptitle); \
+					setsvar("maptitle", chdr.maptitle, true); \
 					ohdr.numvars = 0;
 
 				if(ohdr.version <= 25)
@@ -886,14 +886,14 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						case ID_VAR:
 						{
 							int val = f->getlil<int>();
-							if(exists && id->minval <= id->maxval) setvar(name, val);
+							if(exists && id->minval <= id->maxval) setvar(name, val, true);
 							break;
 						}
 
 						case ID_FVAR:
 						{
 							float val = f->getlil<float>();
-							if(exists && id->minvalf <= id->maxvalf) setfvar(name, val);
+							if(exists && id->minvalf <= id->maxvalf) setfvar(name, val, true);
 							break;
 						}
 
@@ -904,7 +904,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 							f->read(val, min(slen, OCTASTRLEN-1));
 							val[min(slen, OCTASTRLEN-1)] = '\0';
 							if(slen >= OCTASTRLEN) f->seek(slen - (OCTASTRLEN-1), SEEK_CUR);
-							if(exists) setsvar(name, val);
+							if(exists) setsvar(name, val, true);
 							break;
 						}
 					}
