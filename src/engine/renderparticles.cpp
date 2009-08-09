@@ -5,7 +5,7 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARFP(maxparticles, 10, 4096, INT_MAX-1, particleinit());
+VARFP(maxparticles, 10, 2048, INT_MAX-1, particleinit());
 VARA(maxparticledistance, 256, 1024, INT_MAX-1);
 VARP(maxparticletrail, 256, 1024, INT_MAX-1);
 
@@ -15,7 +15,7 @@ VAR(debugparticles, 0, 0, 1);
 
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
-VARA(emitoffset, 0, 950, 1000);
+VARA(emitoffset, 0, 990, 1000);
 static int lastemitframe = 0;
 static bool emit = false;
 
