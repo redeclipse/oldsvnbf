@@ -3655,20 +3655,6 @@ namespace server
 					break;
 				}
 
-#if 0 // i don't think we need this anymore
-				case SV_INITAI:
-				{
-					int lcn = getint(p);
-					loopk(3) getint(p);
-                    getstring(text, p);
-                    getint(p);
-					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-                    QUEUE_MSG;
-					break;
-				}
-#endif
-
 				case SV_AUTHTRY:
 				{
 					getstring(text, p);

@@ -352,13 +352,6 @@ namespace physics
 
     void landing(physent *d, vec &dir, const vec &floor, bool collided)
 	{
-#if 0
-        if(d->physstate == PHYS_FALL)
-        {
-            d->timeinair = 0;
-            if(dir.z < 0.0f) dir.z = d->vel.z = 0.0f;
-        }
-#endif
         switchfloor(d, dir, floor);
         d->timeinair = 0;
         if((d->physstate!=PHYS_STEP_UP && d->physstate!=PHYS_STEP_DOWN) || !collided)

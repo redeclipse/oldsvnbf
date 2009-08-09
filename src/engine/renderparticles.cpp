@@ -15,7 +15,7 @@ VAR(debugparticles, 0, 0, 1);
 
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
-VARP(emitmillis, 1, 17, 1000);
+VARA(emitoffset, 0, 950, 1000);
 static int lastemitframe = 0;
 static bool emit = false;
 
@@ -58,9 +58,6 @@ struct partrenderer
 	virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int grav = 0, int collide = 0, physent *pl = NULL) = NULL;
 	virtual int adddepthfx(vec &bbmin, vec &bbmax) { return 0; }
 	virtual void update() { }
-#if 0
-	virtual void makeflares() { }
-#endif
 	virtual void render() = NULL;
 	virtual bool haswork() = NULL;
 	virtual int count() = NULL; //for debug
@@ -111,19 +108,6 @@ struct partrenderer
 			}
 		}
 	}
-#if 0
-	void makeflare(particle *p)
-	{
-		int blend, ts;
-		calc(p, blend, ts, false);
-		if(blend > 0)
-		{
-			extern void addlensflare(vec &o, uchar r, uchar g, uchar b, bool sparkle, float size);
-			extern int flaresize;
-			addlensflare(o, p->color[0], p->color[1], p->color[2], sparkle, p->size*1.15f*(flaresize/100.f));
-		}
-	}
-#endif
 };
 
 #include "depthfx.h"
@@ -256,13 +240,6 @@ struct listrenderer : partrenderer
 
 		endrender();
 	}
-#if 0
-	void makeflares()
-	{
-		for(T **prev = &list, *p = list; p; p = *prev)
-			makeflare(p);
-	}
-#endif
 };
 
 template<class T> T *listrenderer<T>::parempty = NULL;
@@ -679,17 +656,6 @@ struct varenderer : partrenderer
 			else genverts(p, vs, (p->flags&0x80)!=0);
 		}
 	}
-
-#if 0
-	void makeflares()
-	{
-		loopi(numparts)
-		{
-			particle *p = &parts[i];
-			makeflare(p);
-		}
-	}
-#endif
 
 	void render()
 	{
@@ -1691,22 +1657,16 @@ void makeparticles(extentity &e)
 
 void updateparticles()
 {
-	if(lastmillis - lastemitframe >= emitmillis)
+	int emitmillis = 1000-emitoffset;
+	if(lastmillis-lastemitframe >= emitmillis)
 	{
 		emit = true;
-		lastemitframe = lastmillis - (lastmillis%emitmillis);
+		lastemitframe = lastmillis-(lastmillis%emitmillis);
 	}
 	else emit = false;
 
 	flares.setupflares();
 	entities::drawparticles();
-#if 0
-	if(flareparts) loopi(sizeof(parts)/sizeof(parts[0]))
-	{
-		if(!(parts[i]->lensflare)) continue;
-		parts[i]->makeflares();
-	}
-#endif
 	flares.drawflares(); // do after drawparticles so that we can make flares for them too
 }
 
