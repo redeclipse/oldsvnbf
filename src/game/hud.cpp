@@ -38,8 +38,8 @@ namespace hud
 
 	VARP(commandfade, 0, 500, INT_MAX-1);
 	FVARP(commandfadeamt, 0, 0.75f, 1);
-	VARP(uifade, 0, 500, INT_MAX-1);
-	FVARP(uifadeamt, 0, 0.75f, 1);
+	VARP(uifade, 0, 250, INT_MAX-1);
+	FVARP(uifadeamt, 0, 0.5f, 1);
 
 	int conskip = 0;
 	void setconskip(int *n)

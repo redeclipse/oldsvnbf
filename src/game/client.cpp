@@ -1131,7 +1131,7 @@ namespace client
 
 				case SV_NEWGAME: // server requests next game
 				{
-					if(hud::sb.scoreson) hud::sb.showscores(false);
+					hud::sb.showscores(false);
 					if(!menuactive()) showgui("game");
 					break;
 				}
@@ -1193,7 +1193,7 @@ namespace client
 
 				case SV_ARENAWEAP:
 				{
-					if(hud::sb.scoreson) hud::sb.showscores(false);
+					hud::sb.showscores(false);
 					if(!menuactive()) showgui("arena");
 					break;
 				}
@@ -1614,7 +1614,7 @@ namespace client
 					if(s == game::player1)
 					{
 						if(editmode) toggleedit();
-						if(hud::sb.scoreson) hud::sb.showscores(false);
+						hud::sb.showscores(false);
 					}
 					else if(!s->ai) s->resetinterp();
 					if(s->state == CS_ALIVE) s->lastdeath = lastmillis; // so spawndelay shows properly

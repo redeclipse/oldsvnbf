@@ -2,7 +2,7 @@ namespace hud
 {
 	struct scoreboard : guicb
 	{
-		bool scoreson, shownscores;
+		bool scoreson, scoresoff, shownscores;
 		int menustart;
 
 		struct sline { string s; };
@@ -19,7 +19,7 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
-		IVARP(autoshowscores, 0, 1, 1);
+		IVARP(autoshowscores, 0, 2, 2); // 1 = when dead, 2 = also in spectv
 		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
 		IVARP(showscoresdelay, 0, 3, INT_MAX-1); // otherwise use a static timespan
 		IVARP(showscoresinfo, 0, 1, 1);
@@ -35,17 +35,17 @@ namespace hud
 		IVARP(showspectators, 0, 1, 1);
 		IVARP(showconnecting, 0, 0, 1);
 
-		scoreboard() : scoreson(false), shownscores(false)
+		scoreboard() : scoreson(false), scoresoff(false), shownscores(false)
 		{
-			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0));
+			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0, false, false));
 		}
 
 		bool canshowscores()
 		{
-			if(autoshowscores() && game::player1->state == CS_DEAD && !scoreson && !shownscores)
+			if(!scoresoff && !scoreson && !shownscores && autoshowscores() && (game::player1->state == CS_DEAD || (autoshowscores() >= 2 && game::tvmode())))
 			{
-				if(!showscoresdelay() && !showscoreswait()) return true;
-				else
+				if((!showscoresdelay() && !showscoreswait()) || game::tvmode()) return true;
+				else if(game::player1->state == CS_DEAD)
 				{
 					int delay = showscoreswait() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay()*1000;
 					if(!delay || lastmillis-game::player1->lastdeath >= delay) return true;
@@ -54,11 +54,12 @@ namespace hud
 			return false;
 		}
 
-		void showscores(bool on, bool interm = false)
+		void showscores(bool on, bool interm = false, bool onauto = true)
 		{
 			if(client::ready())
 			{
 				if(!scoreson && on) menustart = starttime();
+				scoresoff = !onauto;
 				scoreson = on;
 				if(interm)
 				{
@@ -82,7 +83,7 @@ namespace hud
 					}
 				}
 			}
-			else scoreson = false;
+			else scoresoff = scoreson = false;
 		}
 
 		static int teamscorecmp(const teamscore *x, const teamscore *y)
@@ -206,10 +207,9 @@ namespace hud
 			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
 			g.pushlist();
-			g.image(NULL, 5, true);
+			g.image(NULL, 6, true);
 			g.space(2);
 			g.pushlist();
-			g.space(1);
 			g.pushfont("super");
 			if(*maptitle) g.textf("%s", 0xFFFFFF, NULL, maptitle);
 			else g.textf("(%s)", 0xFFFFFF, NULL, mapname);
@@ -233,16 +233,77 @@ namespace hud
 			}
 			g.popfont();
 			g.poplist();
-			if(game::intermission || showscoresinfo())
+
+			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
+			{
+				int sdelay = m_spawndelay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
+				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
+				g.space(1);
+				g.pushlist();
+				g.pushfont("super");
+				g.textf("%s", 0xFFFFFF, NULL, msg);
+				g.popfont();
+				g.space(2);
+				SEARCHBINDCACHE(attackkey)("attack", 0);
+				if(delay || m_story(game::gamemode) || m_duke(game::gamemode, game::mutators))
+				{
+					if(!m_story(game::gamemode))
+					{
+						g.pushfont("emphasis");
+						if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
+							g.textf("Waiting for new round", 0xFFFFFF, NULL);
+						else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
+						g.popfont();
+					}
+					g.poplist();
+					if(game::player1->state != CS_WAITING && lastmillis-game::player1->lastdeath > 500)
+					{
+						g.pushfont("sub");
+						g.textf("Press \fs\fc%s\fS to look around", 0xFFFFFF, NULL, attackkey);
+						g.popfont();
+					}
+				}
+				else
+				{
+					g.pushfont("emphasis");
+					g.textf("Ready to respawn", 0xFFFFFF, NULL);
+					g.popfont();
+					g.poplist();
+					if(game::player1->state != CS_WAITING)
+					{
+						g.pushfont("sub");
+						g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
+						g.popfont();
+					}
+				}
+			}
+			else if(game::player1->state == CS_SPECTATOR)
+			{
+				g.space(1);
+				g.pushfont("super");
+				g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating");
+				g.popfont();
+				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
+				g.pushfont("sub");
+				g.textf("Press \fs\fc%s\fS to play", 0xFFFFFF, NULL, speconkey);
+				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
+				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "look around" : "observe");
+				g.popfont();
+			}
+			SEARCHBINDCACHE(scoreboardkey)("showscores", 1);
+			g.pushfont("sub");
+			g.textf("%s \fs\fc%s\fS to close this window", 0xFFFFFF, NULL, scoresoff ? "Release" : "Press", scoreboardkey);
+			g.popfont();
+			if(game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
 			{
 				float ratio =  game::player1->frags*100.f/float(max(game::player1->deaths, 1)),
 					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
 
-				g.space(2);
-				g.textf("%s: \fs\fg%d\fS %s(s), \fs\fg%d\fS %s(s), \fs\fy%.1f%%\fS ratio", 0xFFFFFF, NULL, game::player1->name,
-					game::player1->frags, "frag",
-					game::player1->deaths, "death", ratio);
-				g.textf("damage: \fs\fg%d\fS hp, wasted: \fs\fg%d\fS, accuracy: \fs\fg%.1f%%\fS", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+				g.space(1);
+				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f%%\fS ratio", 0xFFFFFF, NULL,
+					game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
+					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio);
+				g.textf("\fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
 
 				if(m_story(game::gamemode))
 				{

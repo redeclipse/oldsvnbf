@@ -373,7 +373,7 @@ namespace game
 
 	void resetworld()
 	{
-		if(hud::sb.scoreson) hud::sb.showscores(false);
+		hud::sb.showscores(false);
 		cleargui();
 	}
 
