@@ -654,22 +654,27 @@ VARFP(autoadjustlevel, 0, 100, 100, autoadjustset(autoadjustlevel));
 
 void autoadjustcheck(int frames)
 {
-	if(autoadjust && (!lastautoadjust || lastmillis-lastautoadjust > autoadjustrate))
+	if(autoadjust && frames > MAXFPSHISTORY)
 	{
-		if(lastautoadjust && frames > MAXFPSHISTORY)
+		if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
 		{
-			if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
-				setvar("autoadjustlevel", autoadjustmin, true);
-			else
+			setvar("autoadjustlevel", autoadjustmin, true);
+			lastautoadjust = lastmillis;
+		}
+		else
+		{
+			float amt = float(worstfps)/float(minfps);
+			if(amt < 1.f && (!lastautoadjust || lastmillis >= lastautoadjust))
 			{
-				float amt = float(worstfps)/float(minfps);
-				if(amt < 1.f)
-					setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
-				else if(amt > 1.f)
-					setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
+				setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
+				lastautoadjust = lastmillis+autoadjustrate;
+			}
+			if(amt > 1.f && (!lastautoadjust || lastmillis >= lastautoadjust))
+			{
+				setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
+				lastautoadjust = lastmillis+autoadjustrate/4;
 			}
 		}
-		lastautoadjust = lastmillis;
 	}
 }
 
@@ -791,6 +796,7 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 
 	lastoutofloop = SDL_GetTicks();
 	autoadjustlevel = 100;
+	lastautoadjust = lastmillis+autoadjustrate;
 }
 
 void updatetimer()
