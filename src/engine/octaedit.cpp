@@ -1721,10 +1721,10 @@ void texduplicate()
 
 COMMAND(texduplicate, "");
 
-VARP(thumbwidth, 0, 24, 1000);
-VARP(thumbheight, 0, 8, 1000);
-VARP(thumbtime, 0, 50, 1000);
-FVARP(thumbsize, 0, 2, 6);
+VARP(thumbwidth, 0, 16, 1000);
+VARP(thumbheight, 0, 6, 1000);
+VARP(thumbtime, 0, 25, 1000);
+FVARP(thumbsize, 0, 3, 6);
 
 static int lastthumbnail = 0;
 
