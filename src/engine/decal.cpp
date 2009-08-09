@@ -25,8 +25,8 @@ enum
     DF_SATURATE   = 1<<5
 };
 
-VARFP(maxdecaltris, 1, 1024, INT_MAX-1, initdecals());
-VARA(decalfade, 1000, 10000, INT_MAX-1);
+VARFP(maxdecaltris, 1, 512, INT_MAX-1, initdecals());
+VARA(decalfade, 1000, 5000, INT_MAX-1);
 VAR(dbgdec, 0, 0, 1);
 
 struct decalrenderer
