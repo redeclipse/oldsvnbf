@@ -1862,7 +1862,7 @@ namespace entities
 				case LIGHT:
 				{
 					int s = e.attr[0] ? e.attr[0] : hdr.worldsize,
-						colour = ((lightcolour(e,0)>>16)&0xFF)|((lightcolour(e,1)>>8)&0xFF)|(lightcolour(e,2)&0xFF);
+						colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
 					part_radius(e.o, vec(s, s, s), 1, 1, colour);
 					break;
 				}
@@ -1875,7 +1875,7 @@ namespace entities
 						if(!radius) radius = 2*e.o.dist(f.o);
 						vec dir = vec(e.o).sub(f.o).normalize();
 						float angle = max(1, min(90, int(e.attr[1])));
-						int colour = ((lightcolour(f,0)>>16)&0xFF)|((lightcolour(f,1)>>8)&0xFF)|(lightcolour(f,2)&0xFF);
+						int colour = (lightcolour(f,0)<<16)|(lightcolour(f,1)<<8)|(lightcolour(e,2));
 						part_cone(f.o, dir, radius, angle, 1, colour);
 						break;
 					}
@@ -1924,7 +1924,7 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					int colour = ((lightcolour(e,0)>>16)&0xFF)|((lightcolour(e,1)>>8)&0xFF)|(lightcolour(e,2)&0xFF);
+					int colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
 					part_dir(e.o, e.attr[0], e.attr[1], getworldsize()*4, 1, colour);
 				}
 				break;
