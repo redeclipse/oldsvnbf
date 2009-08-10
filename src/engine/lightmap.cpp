@@ -52,7 +52,7 @@ vec &lightposition(const extentity &light)
 	if(light.type == ET_SUNLIGHT)
 	{
 		vec dir; vecfromyawpitch(light.attr[0], light.attr[1], 1, 0, dir);
-		pos.add(dir.normalize().mul(getworldsize()*4));
+		pos.add(dir.normalize().mul(hdr.worldsize*2));
 	}
 	return pos;
 }
@@ -352,7 +352,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
         float mag = ray.magnitude(), radius = (light.type != ET_SUNLIGHT ? light.attr[0] : 0);
         if(!mag) continue;
         float attenuation = 1;
-        if(radius)
+        if(radius > 0)
         {
             attenuation -= mag / float(radius);
             if(attenuation <= 0) continue;
@@ -849,7 +849,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 4, 6, 12, clearlightcache());
+VARF(lightcachesize, 1, 4, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
@@ -2017,13 +2017,13 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		vec ray(target), pos = lightposition(e);
 		ray.sub(pos);
 		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
-		if(radius && mag >= float(radius)) continue;
+		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
 		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
 			continue;
 		float intensity = 1;
-		if(radius) intensity -= mag / float(radius);
+		if(radius > 0) intensity -= mag / float(radius);
 
 		if(!e.links.empty())
 		{
@@ -2086,13 +2086,13 @@ entity *brightestlight(const vec &target, const vec &dir)
 		if(vec(pos).sub(target).dot(dir)<0) continue;
 		ray.sub(pos);
 		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
-		if(radius && mag >= float(radius)) continue;
+		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
 		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
 			continue;
 		float intensity = 1;
-		if(radius) intensity -= mag / float(radius);
+		if(radius > 0) intensity -= mag / float(radius);
 
 		if(!e.links.empty())
 		{
