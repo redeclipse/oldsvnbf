@@ -46,14 +46,15 @@ static int lmprogtexticks = 0;
 bool calclight_canceled = false;
 volatile bool check_calclight_lmprog = false;
 
-vec &lightposition(const extentity &light)
+vec &lightposition(const extentity &light, const vec &target)
 {
-	static vec pos; pos = light.o;
+	static vec pos;
 	if(light.type == ET_SUNLIGHT)
 	{
 		vec dir; vecfromyawpitch(light.attr[0], light.attr[1], 1, 0, dir);
-		pos.add(dir.normalize().mul(hdr.worldsize*2));
+		pos = vec(target != vec(-1, -1, -1) ? target : light.o).add(dir.normalize().mul(hdr.worldsize*2));
 	}
+	else pos = light.o;
 	return pos;
 }
 
@@ -347,7 +348,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 	loopv(lights)
 	{
 		const extentity &light = *lights[i];
-		vec ray = target, pos = lightposition(light);;
+		vec ray = target, pos = lightposition(light, target);
 		ray.sub(pos);
         float mag = ray.magnitude(), radius = (light.type != ET_SUNLIGHT ? light.attr[0] : 0);
         if(!mag) continue;
@@ -865,7 +866,7 @@ void clearlightcache(int e)
 	{
 		const extentity &light = *entities::getents()[e];
 		int radius = light.type != ET_SUNLIGHT ? light.attr[0] : 0;
-		vec pos = lightposition(light);
+		vec pos = lightposition(light, vec(1, 1, 1).mul(hdr.worldsize/2));
         for(int x = int(max(pos.x-radius, 0.0f))>>lightcachesize, ex = int(min(pos.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
         for(int y = int(max(pos.y-radius, 0.0f))>>lightcachesize, ey = int(min(pos.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
 		{
@@ -924,7 +925,7 @@ static inline void addlight(const extentity &light, int cx, int cy, int cz, int 
             return;
     }
 
-	vec pos = lightposition(light);
+	vec pos = lightposition(light, vec(1, 1, 1).mul(hdr.worldsize/2));
     if(!n2)
     {
         loopi(4)
@@ -2014,7 +2015,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		if(e.type != ET_LIGHT && e.type != ET_SUNLIGHT)
 			continue;
 
-		vec ray(target), pos = lightposition(e);
+		vec ray(target), pos = lightposition(e, target);
 		ray.sub(pos);
 		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
 		if(radius > 0 && mag >= float(radius)) continue;
@@ -2082,7 +2083,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 	{
 		extentity &e = *ents[lights[i]];
 		if((e.type != ET_LIGHT && e.type != ET_SUNLIGHT)) continue;
-		vec ray(target), pos = lightposition(e);
+		vec ray(target), pos = lightposition(e, target);
 		if(vec(pos).sub(target).dot(dir)<0) continue;
 		ray.sub(pos);
 		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
