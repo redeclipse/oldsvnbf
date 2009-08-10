@@ -656,8 +656,7 @@ void transplayer()
 }
 
 float curfov = 100, fovy, aspect;
-int farplane;
-int xtraverts, xtravertsva;
+int farplane, xtraverts, xtravertsva;
 
 VARW(fog, 16, 4000, INT_MAX-1);
 HVARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);

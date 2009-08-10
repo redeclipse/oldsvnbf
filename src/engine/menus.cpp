@@ -148,6 +148,34 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 	}
 }
 
+void guislice(char *path, char *action, float *scale, float *start, float *end, char *text, char *altpath, char *altact)
+{
+	if(!cgui) return;
+    Texture *t = path && *path ? textureload(path, 0, true, false) : NULL;
+    if(t == notexture)
+    {
+        if(*altpath) t = textureload(altpath, 0, true, false);
+        if(t == notexture) return;
+    }
+    int ret = cgui->slice(t, *scale, *start, *end, text && *text ? text : NULL);
+	if(ret&GUI_UP)
+	{
+		char *act = NULL;
+		if (*altact && ret&GUI_ALT) act = altact;
+		else if (*action) act = action;
+		if (*act)
+		{
+			executelater.add(newstring(act));
+			if(shouldclearmenu) clearlater = true;
+		}
+	}
+	else if(ret&GUI_ROLLOVER)
+	{
+		setsvar("guirolloverimgpath", path, true);
+		setsvar("guirolloverimgaction", action, true);
+	}
+}
+
 void guitext(char *name, char *icon)
 {
 	if(cgui) cgui->text(name, icon[0] ? 0xFFFFFF : 0xFFFFFF, icon[0] ? icon : NULL);
@@ -237,10 +265,10 @@ static int getvardef(char *var)
     }
 }
 
-void guiprogress(float *percent, int *size)
+void guiprogress(float *percent, float *scale)
 {
 	if(!cgui) return;
-	cgui->progress(*percent, *size);
+	cgui->progress(*percent, *scale);
 }
 
 void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
@@ -413,7 +441,8 @@ COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
 COMMAND(guifont,"s");
 COMMAND(guiimage,"ssfiss");
-COMMAND(guiprogress,"fi");
+COMMAND(guislice,"ssfffsss");
+COMMAND(guiprogress,"ff");
 COMMAND(guislider,"siisi");
 COMMAND(guilistslider, "sssi");
 COMMAND(guiradio,"ssis");

@@ -1395,18 +1395,19 @@ namespace entities
 				// 4	ENVMAP			4	ENVMAP
 				// 5	PARTICLES		5	PARTICLES
 				// 6	MAPSOUND		6	MAPSOUND
-				// 7	SPOTLIGHT		7	SPOTLIGHT
+				// 7	SPOTLIGHT		7	LIGHTFX
+				// 						8	SUNLIGHT
 				case 1: case 2: case 3: case 4: case 5: case 6: case 7:
 				{
 					break;
 				}
 
-				// 8	I_SHELLS		8	WEAPON		WEAP_SHOTGUN
-				// 9	I_BULLETS		8	WEAPON		WEAP_SMG
-				// 10	I_ROCKETS		8	WEAPON		WEAP_PLASMA
-				// 11	I_ROUNDS		8	WEAPON		WEAP_RIFLE
-				// 12	I_GL			8	WEAPON		WEAP_GRENADE
-				// 13	I_CARTRIDGES	8	WEAPON		WEAP_PISTOL
+				// 8	I_SHELLS		9	WEAPON		WEAP_SHOTGUN
+				// 9	I_BULLETS		9	WEAPON		WEAP_SMG
+				// 10	I_ROCKETS		9	WEAPON		WEAP_PLASMA
+				// 11	I_ROUNDS		9	WEAPON		WEAP_RIFLE
+				// 12	I_GL			9	WEAPON		WEAP_GRENADE
+				// 13	I_CARTRIDGES	9	WEAPON		WEAP_PISTOL
 				case 8: case 9: case 10: case 11: case 12: case 13:
 				{
 					int weap = f.type-8, weapmap[6] = {
@@ -1422,7 +1423,7 @@ namespace entities
 					else f.type = NOTUSED;
 					break;
 				}
-				// 18	I_QUAD			8	WEAPON		WEAP_FLAMER
+				// 18	I_QUAD			9	WEAPON		WEAP_FLAMER
 				case 18:
 				{
 					f.type = WEAPON;
@@ -1431,8 +1432,8 @@ namespace entities
 					break;
 				}
 
-				// 19	TELEPORT		9	TELEPORT
-				// 20	TELEDEST		9	TELEPORT (linked)
+				// 19	TELEPORT		10	TELEPORT
+				// 20	TELEDEST		10	TELEPORT (linked)
 				case 19: case 20:
 				{
 					if(f.type == 20)
@@ -1449,26 +1450,26 @@ namespace entities
 					f.type = TELEPORT;
 					break;
 				}
-				// 21	MONSTER			10	NOTUSED
+				// 21	MONSTER			11	NOTUSED
 				case 21:
 				{
 					f.type = NOTUSED;
 					break;
 				}
-				// 22	CARROT			11	TRIGGER		0
+				// 22	CARROT			12	TRIGGER		0
 				case 22:
 				{
 					f.type = NOTUSED;
 					f.attr[0] = f.attr[1] = f.attr[2] = f.attr[3] = f.attr[4] = 0;
 					break;
 				}
-				// 23	JUMPPAD			12	PUSHER
+				// 23	JUMPPAD			13	PUSHER
 				case 23:
 				{
 					f.type = PUSHER;
 					break;
 				}
-				// 24	BASE			13	FLAG		1:idx		TEAM_NEUTRAL
+				// 24	BASE			14	FLAG		1:idx		TEAM_NEUTRAL
 				case 24:
 				{
 					f.type = FLAG;
@@ -1476,13 +1477,13 @@ namespace entities
 					f.attr[1] = TEAM_NEUTRAL; // spawn as neutrals
 					break;
 				}
-				// 25	RESPAWNPOINT	14	CHECKPOINT
+				// 25	RESPAWNPOINT	15	CHECKPOINT
 				case 25:
 				{
 					f.type = CHECKPOINT;
 					break;
 				}
-				// 30	FLAG			13	FLAG		#			2:team
+				// 30	FLAG			14	FLAG		#			2:team
 				case 30:
 				{
 					f.type = FLAG;
@@ -1849,19 +1850,20 @@ namespace entities
 			{
 				case PLAYERSTART:
 				{
-					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2));
+					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.attr[0]].colour);
 					break;
 				}
 				case MAPSOUND:
 				{
-					part_radius(e.o, vec(e.attr[1], e.attr[1], e.attr[1]));
-					part_radius(e.o, vec(e.attr[2], e.attr[2], e.attr[2]));
+					part_radius(e.o, vec(e.attr[1], e.attr[1], e.attr[1]), 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(e.attr[2], e.attr[2], e.attr[2]), 1, 1, 0x00FFFF);
 					break;
 				}
 				case LIGHT:
 				{
-					int s = e.attr[0] ? e.attr[0] : hdr.worldsize;
-					part_radius(e.o, vec(s, s, s));
+					int s = e.attr[0] ? e.attr[0] : hdr.worldsize,
+						colour = ((lightcolour(e,0)>>16)&0xFF)|((lightcolour(e,1)>>8)&0xFF)|(lightcolour(e,2)&0xFF);
+					part_radius(e.o, vec(s, s, s), 1, 1, colour);
 					break;
 				}
 				case LIGHTFX:
@@ -1873,7 +1875,8 @@ namespace entities
 						if(!radius) radius = 2*e.o.dist(f.o);
 						vec dir = vec(e.o).sub(f.o).normalize();
 						float angle = max(1, min(90, int(e.attr[1])));
-						part_cone(f.o, dir, radius, angle);
+						int colour = ((lightcolour(f,0)>>16)&0xFF)|((lightcolour(f,1)>>8)&0xFF)|(lightcolour(f,2)&0xFF);
+						part_cone(f.o, dir, radius, angle, 1, colour);
 						break;
 					}
 					break;
@@ -1883,13 +1886,13 @@ namespace entities
 					float radius = (float)enttype[e.type].radius;
 					part_radius(e.o, vec(radius, radius, radius));
 					radius = radius*2/3; // ctf pickup dist
-					part_radius(e.o, vec(radius, radius, radius));
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attr[0]].colour);
 					break;
 				}
 				case WAYPOINT:
 				{
 					int s = e.attr[4] ? e.attr[4] : enttype[e.type].radius;
-					part_radius(e.o, vec(s, s, s));
+					part_radius(e.o, vec(s, s, s), 1, 1, 0x008888);
 					break;
 				}
 				default:
@@ -1897,9 +1900,9 @@ namespace entities
 					float radius = (float)enttype[e.type].radius;
 					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3])
 						radius = (float)e.attr[3];
-					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius));
+					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius), 1, 1, 0x00FFFF);
 					if(e.type == PUSHER && e.attr[4] && e.attr[4] < e.attr[3])
-						part_radius(e.o, vec(e.attr[4], e.attr[4], e.attr[4]));
+						part_radius(e.o, vec(e.attr[4], e.attr[4], e.attr[4]), 1, 1, 0x00FFFF);
 					break;
 				}
 			}
@@ -1909,17 +1912,26 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, teamtype[e.attr[1]].colour);
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, 0x00FFFF);
+				break;
+			}
+			case SUNLIGHT:
+			{
+				if(showentdir >= level)
+				{
+					int colour = ((lightcolour(e,0)>>16)&0xFF)|((lightcolour(e,1)>>8)&0xFF)|(lightcolour(e,2)&0xFF);
+					part_dir(e.o, e.attr[0], e.attr[1], getworldsize()*4, 1, colour);
+				}
 				break;
 			}
 			case ACTOR:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[2], e.attr[3], 4.f);
+				if(showentdir >= level) part_dir(e.o, e.attr[2], e.attr[3], 4.f, 1, 0xAAAAAA);
 				break;
 			}
 			case TELEPORT:
@@ -1927,8 +1939,8 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 4.f);
-					else part_dir(e.o, e.attr[0], e.attr[1], 8.f);
+					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 4.f, 1, 0x00FFFF);
+					else part_dir(e.o, e.attr[0], e.attr[1], 8.f, 1, 0x00FFFF);
 				}
 				break;
 			}
@@ -1940,7 +1952,7 @@ namespace entities
 					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
 					vectoyawpitch(dir.normalize(), yaw, pitch);
-					part_dir(e.o, yaw, pitch, 4.f+mag);
+					part_dir(e.o, yaw, pitch, 4.f+mag, 1, 0x00FFFF);
 				}
 				break;
 			}
@@ -1981,10 +1993,10 @@ namespace entities
 			else
 			{
 				bool lonely = true;
-				loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type != LIGHT) { lonely = false; break; }
+				loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type != LIGHT && ents[ents[i]->links[k]]->type != SUNLIGHT) { lonely = false; break; }
 				if(!lonely) continue;
 			}
-			loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type == LIGHT)
+			loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && (ents[ents[i]->links[k]]->type == LIGHT || ents[ents[i]->links[k]]->type == SUNLIGHT))
 				makelightfx(*ents[i], *ents[ents[i]->links[k]]);
 		}
 	}
