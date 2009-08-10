@@ -1773,7 +1773,11 @@ struct texturegui : guicb
 							nextslot = ti;
 						}
 					}
-					else g.texture(textureload("textures/blank", 3), thumbsize); //create an empty space
+					else
+					{//create an empty space
+						g.space(thumbsize);
+						g.strut(thumbsize);
+					}
 				}
 				g.poplist();
 			}
@@ -1807,18 +1811,18 @@ struct texturegui : guicb
 				g.pushlist();
 
 				g.pushlist();
+				defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
 				g.pushfont("default");
-				if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+				g.space(4); if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
 				g.space(2); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
 				g.space(2); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
 				g.space(2); if(g.button("dupe", 0x888888)&GUI_UP) { nextslot = duplicateslot(slot); }
 				g.space(4); if(g.button("cull unused", 0x444444)&GUI_UP) { extern void texturecull(bool local); texturecull(true); }
 				g.popfont();
 				g.poplist();
-
-				defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
 				if(!slot.sts.empty())
 				{
+					g.space(1);
 					g.pushlist();
 					g.text("setshader", 0xAAFFAA);
 					{
@@ -1833,7 +1837,6 @@ struct texturegui : guicb
 					{
 						g.pushlist();
 						g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
-						g.space(1);
 						if(slot.params[j].type == SHPARAM_LOOKUP || slot.params[j].type == SHPARAM_UNIFORM)
 						{
 							defformatstring(index)("%s", slot.params[j].name);
@@ -1975,7 +1978,6 @@ struct texturegui : guicb
 				g.texture(textureload("textures/nothumb", 3), 7);
 				g.space(2);
 				g.pushlist();
-				g.space(1);
 				g.title("no texture selected", 0xFFFFFF);
 				g.poplist();
 				g.poplist();

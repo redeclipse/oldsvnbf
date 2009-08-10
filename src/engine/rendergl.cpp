@@ -1627,8 +1627,8 @@ void drawnoview()
 	if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
 	if(progressing)
 	{
-		if(*progresstext) y -= draw_textx("%s [%d%%]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, progresstext, int(progresspart));
-		y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, h*2, *progresstitle ? progresstitle : "please wait...");
+		if(*progresstext) y -= draw_textx("%s %s [\fs\fa%d%%\fS]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...", progresstext, int(progresspart*100));
+		else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
 	}
 	y = h*3-FONTH/2;
 	y -= draw_textx("%s", w*3-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
