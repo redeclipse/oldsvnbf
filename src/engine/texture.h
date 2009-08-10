@@ -406,6 +406,7 @@ struct Slot
         loaded = false;
         grasstex = NULL;
         thumbnail = NULL;
+		if(layermask) DELETEP(layermask);
         loopv(sts)
         {
             Tex &t = sts[i];
