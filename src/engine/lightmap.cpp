@@ -849,7 +849,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 1, 4, 12, clearlightcache());
+VARF(lightcachesize, 1, 2, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
