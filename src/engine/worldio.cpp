@@ -987,6 +987,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(hdr.version <= 21 && e.type >= ET_PARTICLES) e.type++;
 				if(hdr.version <= 22 && e.type >= ET_SOUND) e.type++;
 				if(hdr.version <= 23 && e.type >= ET_LIGHTFX) e.type++;
+				if((maptype == MAP_OCTA || hdr.version <= 35) && e.type >= ET_SUNLIGHT) e.type++;
 				if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
 				{
 					entities::deleteent(ents.pop());
@@ -1021,7 +1022,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					e.attr[1] = angle;
 					e.attr[2] = e.attr[3] = e.attr[4] = 0;
 				}
-				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX)
+				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT)
 					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
 			}
 			if(verbose) conoutf("\fdloaded %d entities", hdr.numents);
@@ -1096,7 +1097,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			{
 				extentity &e = *ents[i];
 
-				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) && ents[i]->type == ET_LIGHTFX)
+				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) && ents[i]->type == ET_LIGHTFX && ents[i]->attr[0] == LFX_SPOTLIGHT)
 				{
 					int closest = -1;
 					float closedist = 1e10f;

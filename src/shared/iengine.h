@@ -253,7 +253,7 @@ extern void part_dir(const vec &o, float yaw, float pitch, float size = 1, int f
 extern void part_trace(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, bool fill = true);
 extern void part_ellipse(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0xFFFFFF, int axis = 0, bool fill = false, int type = PART_ELLIPSE);
 extern void part_radius(const vec &o, const vec &v, float size = 1, int fade = 1, int color = 0x00FFFF, bool fill = false);
-extern void part_cone(const vec &o, const vec &dir, float radius, float angle, float size = 1, int fade = 1, int color = 0x00FFFF, bool fill = false, int type = PART_CONE);
+extern void part_cone(const vec &o, const vec &dir, float radius, float angle = 0.f, float size = 1, int fade = 1, int color = 0x00FFFF, bool fill = false, int type = PART_CONE);
 
 extern void removetrackedparticles(physent *pl = NULL);
 extern int particletext, maxparticledistance;
@@ -452,9 +452,10 @@ struct guient
     virtual int title(const char *text, int color = 0xAAAAAA, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
+    virtual int slice(Texture *t, float scale, float start = 0, float end = 1, const char *text = NULL) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false) = 0;
     virtual void separator() = 0;
-	virtual void progress(float percent, int size) = 0;
+	virtual void progress(float percent, float scale) = 0;
 	virtual void strut(int size) = 0;
 	virtual void pushfont(const char *font) = 0;
 	virtual void popfont() = 0;

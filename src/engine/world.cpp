@@ -160,7 +160,7 @@ static void modifyoctaent(int flags, int id)
 
     e.inoctanode = flags&MODOE_ADD ? 1 : 0;
     modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
-    if(e.type == ET_LIGHT) clearlightcache(id);
+    if(e.type == ET_LIGHT || e.type == ET_SUNLIGHT) clearlightcache(id);
     else if(flags&MODOE_ADD) lightent(e);
 }
 
@@ -529,7 +529,7 @@ bool dropentity(entity &e, int drop = -1)
 	switch(drop)
 	{
 	case 1:
-		if(e.type != ET_LIGHT && e.type != ET_LIGHTFX) dropenttofloor(&e);
+		if(e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT) dropenttofloor(&e);
 		break;
 	case 2:
 	case 3:

@@ -3,7 +3,7 @@
 
 // ET_*: the only static entity types dictated by the engine... rest are gamecode dependent
 
-enum { ET_EMPTY=0, ET_LIGHT, ET_MAPMODEL, ET_PLAYERSTART, ET_ENVMAP, ET_PARTICLES, ET_SOUND, ET_LIGHTFX, ET_GAMESPECIFIC };
+enum { ET_EMPTY=0, ET_LIGHT, ET_MAPMODEL, ET_PLAYERSTART, ET_ENVMAP, ET_PARTICLES, ET_SOUND, ET_LIGHTFX, ET_SUNLIGHT, ET_GAMESPECIFIC };
 enum { LFX_SPOTLIGHT = 0, LFX_DYNLIGHT, LFX_FLICKER, LFX_PULSE, LFX_GLOW, LFX_MAX };
 enum { LFX_S_NONE = 0, LFX_S_RAND1 = 1<<0, LFX_S_RAND2 = 1<<1, LFX_S_MAX = 2 };
 
@@ -53,6 +53,9 @@ struct extentity : entity                       // part of the entity that doesn
 
 extern int efocus, enthover, entorient;
 #define entfocus(i, f)  { int n = efocus = (i); if(n>=0) { extentity &e = *entities::getents()[n]; f; } }
+
+vec &lightposition(const extentity &light);
+#define lightcolour(n,m) n.attr[1+m+(n.type != ET_SUNLIGHT ? 0 : 1)]
 
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_EDITING, CS_SPECTATOR, CS_WAITING };
 

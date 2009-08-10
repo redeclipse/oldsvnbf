@@ -47,6 +47,7 @@ enum								// entity types
 	PARTICLES = ET_PARTICLES,
 	MAPSOUND = ET_SOUND,
 	LIGHTFX = ET_LIGHTFX,
+	SUNLIGHT = ET_SUNLIGHT,
 	WEAPON = ET_GAMESPECIFIC,
 	TELEPORT,
 	ACTOR,
@@ -130,10 +131,17 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHTFX,		59,		0,		EU_NONE,
-			inttobit(LIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			inttobit(LIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"lightfx",
-			{ "type",	"mod",		"min",		"max",	"flags" }
+			{ "type",	"mod",		"min",		"max",		"flags" }
+	},
+	{
+		SUNLIGHT,		160,	0,		EU_NONE,
+			inttobit(LIGHTFX),
+			inttobit(LIGHTFX),
+			false,				"sunlight",
+			{ "yaw",	"pitch",	"red",		"green",	"blue" }
 	},
 	{
 		WEAPON,			59,		16,		EU_ITEM,

@@ -180,12 +180,6 @@ struct gui : guient
 	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "emphasis"); }
 
 	void separator() { autotab(); line_(5); }
-	void progress(float percent, int size)
-	{
-		autotab();
-		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
-		slice_(textureload("textures/progress", 3, true, false), curx, cury, size, 0, percent, s);
-	}
 
 	//use to set min size (useful when you have progress bars)
     void strut(int size) { layout(isvertical() ? size*guibound[0] : 0, isvertical() ? 0 : size*guibound[1]); }
@@ -233,7 +227,7 @@ struct gui : guient
     int image(Texture *t, float scale, bool overlaid)
 	{
 		autotab();
-		if(scale==0) scale = 1;
+		if(scale == 0) scale = 1;
 		int size = (int)(scale*2*guibound[1])-guishadow;
 		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+guishadow, size+guishadow));
 		return layout(size+guishadow, size+guishadow);
@@ -242,11 +236,27 @@ struct gui : guient
     int texture(Texture *t, float scale, int rotate, int xoff, int yoff, Texture *glowtex, const vec &glowcolor, Texture *layertex)
     {
         autotab();
-        if(scale==0) scale = 1;
+        if(scale == 0) scale = 1;
         int size = (int)(scale*2*guibound[1])-guishadow;
         if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
         return layout(size+guishadow, size+guishadow);
     }
+
+    int slice(Texture *t, float scale, float start, float end, const char *text)
+    {
+        autotab();
+        if(scale == 0) scale = 1;
+        int size = (int)(scale*2*guibound[1]);
+        if(t!=notexture && visible()) slice_(t, curx, cury, size, start, end, text);
+        return layout(size, size);
+    }
+
+	void progress(float percent, float scale)
+	{
+		autotab();
+		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
+		slice(textureload("textures/progress", 3, true, false), scale, 0, percent, s);
+	}
 
 	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse)
 	{
@@ -616,7 +626,6 @@ struct gui : guient
 			int w = text_width(text);
 			text_(text, x+s/2-w/2, y+s/2-FONTH/2, 0xFFFFFF, false);
 		}
-		layout(s, s);
 	}
 
 	void line_(int size, float percent = 1.0f)
