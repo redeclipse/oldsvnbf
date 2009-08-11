@@ -1925,7 +1925,6 @@ namespace entities
 				if(showentdir >= level)
 				{
 					int colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
-					part_dir(vec(1, 1, 1).mul(getworldsize()/2), e.attr[0], e.attr[1], getworldsize()*2, 1, colour);
 					part_dir(e.o, e.attr[0], e.attr[1], getworldsize()*2, 1, colour);
 				}
 				break;
