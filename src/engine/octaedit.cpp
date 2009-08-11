@@ -1825,6 +1825,7 @@ struct texturegui : guicb
 					g.space(1);
 					g.pushlist();
 					g.textf("setshader %s", 0xAAFFAA, NULL, slot.shader->name);
+					g.poplist();
 					if(!slot.params.empty()) g.space(1);
 					loopvj(slot.params)
 					{
