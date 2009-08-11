@@ -1199,7 +1199,7 @@ namespace hud
 		}
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
-			int stop = hudsize-s, hover = !entities::ents.inrange(enthover) && !entgroup.empty() ? entgroup[0] : -1;
+			int stop = hudsize-s, hover = entities::ents.inrange(enthover) ? enthover : (!entgroup.empty() ? entgroup[0] : -1);
 			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend*0.25f, 1.f);
 			sy += drawentitem(hover, x, y-sy, s, 1.f, blend*inventoryeditblend);
 			loopv(entgroup) if(entgroup[i] != hover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
