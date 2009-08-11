@@ -135,8 +135,8 @@ namespace entities
 					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
 					addentinfo(trgnames[attr2 < 0 || attr2 >= TR_MAX ? TR_MAX : attr2]);
 					addentinfo(actnames[attr3 < 0 || attr3 >= TA_MAX ? TA_MAX : attr3]);
-					if(attr5 >= 2) addentinfo("game controlled");
-					addentinfo(attr5%2 ? "default on" : "default off");
+					if(attr5 >= 2) addentinfo(attr1 ? "routed" : "inert");
+					addentinfo(attr5%2 ? "on" : "off");
 				}
 				break;
 			}
