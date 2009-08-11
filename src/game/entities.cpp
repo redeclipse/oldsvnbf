@@ -1884,7 +1884,7 @@ namespace entities
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
-					part_radius(e.o, vec(radius, radius, radius));
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attr[0]].colour);
 					radius = radius*2/3; // ctf pickup dist
 					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attr[0]].colour);
 					break;
@@ -1912,7 +1912,7 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, teamtype[e.attr[1]].colour);
+				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, teamtype[e.attr[0]].colour);
 				break;
 			}
 			case MAPMODEL:
