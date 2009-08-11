@@ -654,25 +654,26 @@ VARFP(autoadjustlevel, 0, 100, 100, autoadjustset(autoadjustlevel));
 
 void autoadjustcheck(int frames)
 {
-	if(autoadjust && frames > MAXFPSHISTORY)
+	if(lastautoadjust < 0) lastautoadjust = lastmillis+autoadjustrate*5;
+	else if(frames > MAXFPSHISTORY && (!lastautoadjust || lastmillis >= lastautoadjust))
 	{
 		if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
 		{
 			setvar("autoadjustlevel", autoadjustmin, true);
-			lastautoadjust = lastmillis;
+			lastautoadjust = lastmillis+autoadjustrate/4;
 		}
 		else
 		{
 			float amt = float(worstfps)/float(minfps);
-			if(amt < 1.f && (!lastautoadjust || lastmillis >= lastautoadjust))
+			if(amt < 1.f)
 			{
 				setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
 				lastautoadjust = lastmillis+autoadjustrate;
 			}
-			if(amt > 1.f && (!lastautoadjust || lastmillis >= lastautoadjust))
+			else if(amt > 1.f)
 			{
 				setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
-				lastautoadjust = lastmillis+autoadjustrate/4;
+				lastautoadjust = lastmillis+autoadjustrate/5;
 			}
 		}
 	}
@@ -698,7 +699,7 @@ void updatefps(int frames, int millis)
 	worstfps = fps-worstdiff;
 	worstfpsdiff = worstdiff;
 
-	autoadjustcheck(frames);
+	if(autoadjust) autoadjustcheck(frames);
 }
 
 bool inbetweenframes = false, renderedframe = true;
@@ -795,8 +796,7 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	progressing = false;
 
 	lastoutofloop = SDL_GetTicks();
-	autoadjustlevel = 100;
-	lastautoadjust = lastmillis+autoadjustrate;
+	lastautoadjust = -1;
 }
 
 void updatetimer()
@@ -979,11 +979,8 @@ int main(int argc, char **argv)
 			updatesounds();
 			UI::update();
 			inbetweenframes = renderedframe = false;
-			if(frameloops > 2)
-            {
-                gl_drawframe(screen->w, screen->h);
-                renderedframe = true;
-            }
+			gl_drawframe(screen->w, screen->h);
+			renderedframe = true;
 			swapbuffers();
 			inbetweenframes = true;
 			defformatstring(cap)("%s - %s", game::gametitle(), game::gametext());
