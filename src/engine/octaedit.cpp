@@ -1824,14 +1824,7 @@ struct texturegui : guicb
 				{
 					g.space(1);
 					g.pushlist();
-					g.text("setshader", 0xAAFFAA);
-					{
-						g.space(1);
-						defformatstring(input)("setshader_%d_input", menutex);
-						char *w = g.field(input, 0xFFFFFF, -128, 0, slot.shader->name, EDITORREADONLY);
-						if(w && *w) { copystring(slot.shader->name, w); g.fieldedit(input); }
-						g.poplist();
-					}
+					g.textf("setshader %s", 0xAAFFAA, NULL, slot.shader->name);
 					if(!slot.params.empty()) g.space(1);
 					loopvj(slot.params)
 					{
