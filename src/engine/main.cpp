@@ -673,7 +673,7 @@ void autoadjustcheck(int frames)
 			else if(amt > 1.f)
 			{
 				setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
-				lastautoadjust = lastmillis+autoadjustrate/5;
+				lastautoadjust = lastmillis+autoadjustrate/2;
 			}
 		}
 	}
