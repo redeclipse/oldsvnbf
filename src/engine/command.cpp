@@ -1039,7 +1039,7 @@ ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
 {
     ident *id = newident(var);
     if(id->type!=ID_ALIAS) return;
-    static vector<char *> files; files.setsizenodelete(0);
+    vector<char *> files;
     listfiles(dir, ext[0] ? ext : NULL, files);
     loopv(files)
     {
