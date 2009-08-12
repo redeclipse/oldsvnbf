@@ -1044,9 +1044,9 @@ ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
     loopv(files)
     {
         char *file = files[i];
-        bool redundant = false;
-        loopj(i) if(!strcmp(files[j], file)) { redundant = true; break; }
-        if(redundant) { delete[] files.remove(i--); continue; }
+        //bool redundant = false;
+        //loopj(i) if(!strcmp(files[j], file)) { redundant = true; break; }
+        //if(redundant) { delete[] files.remove(i--); continue; }
         if(i) aliasa(id->name, file);
         else pushident(*id, file);
         execute(body);
