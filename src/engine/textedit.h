@@ -11,6 +11,7 @@ struct editline
     {
         set(init);
     }
+    ~editline() { clear(); }
 
     bool empty() { return len <= 0; }
 
@@ -175,7 +176,6 @@ struct editor
     {
         cx = cy = 0;
         mark(false);
-        loopv(lines) lines[i].clear();
         lines.setsize(0);
         if(init) lines.add().set(init);
     }
@@ -325,7 +325,6 @@ struct editor
 
     void removelines(int start, int count)
     {
-        loopi(count) lines[start+i].clear();
         lines.remove(start, count);
     }
 

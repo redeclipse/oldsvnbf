@@ -850,7 +850,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 1, 2, 12, clearlightcache());
+VARF(lightcachesize, 0, 2, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
@@ -880,11 +880,14 @@ void clearlightcache(int e)
 
 const vector<int> &checklightcache(int x, int y)
 {
-	x >>= lightcachesize;
-	y >>= lightcachesize;
-	lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-	if(lce.x == x && lce.y == y) return lce.lights;
-
+	lightcacheentry &lce = lightcache[0];
+	if(lightcachesize)
+	{
+		x >>= lightcachesize;
+		y >>= lightcachesize;
+		lce = lightcache[LIGHTCACHEHASH(x, y)];
+		if(lce.x == x && lce.y == y) return lce.lights;
+	}
 	lce.lights.setsizenodelete(0);
 	int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
 	const vector<extentity *> &ents = entities::getents();
@@ -895,6 +898,7 @@ const vector<int> &checklightcache(int x, int y)
         {
             case ET_LIGHT:
             {
+            	if(!lightcachesize) break;
                 int radius = light.attr[0];
                 if(radius > 0)
                 {
@@ -904,6 +908,7 @@ const vector<int> &checklightcache(int x, int y)
                 }
                 break;
             }
+            case ET_SUNLIGHT: break;
             default: continue;
         }
 		lce.lights.add(i);
@@ -976,7 +981,7 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
     lights1.setsizenodelete(0);
     lights2.setsizenodelete(0);
     const vector<extentity *> &ents = entities::getents();
-    if(size <= 1<<lightcachesize)
+    if(lightcachesize && size <= 1<<lightcachesize)
     {
         const vector<int> &lights = checklightcache(cx, cy);
         loopv(lights)
