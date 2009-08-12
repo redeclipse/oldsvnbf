@@ -1421,7 +1421,7 @@ namespace hud
 		float fade = hudblend;
 		if(!progressing)
 		{
-			vec colour(1, 1, 1);
+			vec colour = vec(1, 1, 1);
 			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
 			{
 				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
@@ -1454,7 +1454,7 @@ namespace hud
 					float a = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
 					if(a < 3.f)
 					{
-						vec col; skewcolour(col.x, col.y, col.z, true);
+						vec col = vec(1, 1, 1); skewcolour(col.x, col.y, col.z, true);
 						if(a < 1.f) { loopi(3) col[i] *= a; }
 						else { a = (a-1.f)*0.5f; loopi(3) col[i] += (1.f-col[i])*a; }
 						loopi(3) if(col[i] < colour[i]) colour[i] = col[i];

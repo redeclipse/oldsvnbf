@@ -22,8 +22,16 @@ void fixmaptitle()
 	if(author && *author)
 	{
 		char *t = newstring(title, author-title);
-		author += 4; setsvar("maptitle", t); setsvar("mapauthor", author);
-		delete[] t;
+		if(t)
+		{
+			if(*t)
+			{
+				setsvar("maptitle", t);
+				loopi(4) if(*author) author++;
+				if(*author) setsvar("mapauthor", author);
+			}
+			delete[] t;
+		}
 	}
 }
 

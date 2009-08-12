@@ -206,11 +206,19 @@ void guistrut(int *strut, int *alt)
 	}
 }
 
-void guifont(char *font)
+void guifont(char *font, char *body)
 {
 	if(cgui)
 	{
-		if(font && *font) cgui->pushfont(font);
+		if(font && *font)
+		{
+			cgui->pushfont(font);
+			if(body && *body)
+			{
+				execute(body);
+				cgui->popfont();
+			}
+		}
 		else cgui->popfont();
 	}
 }
@@ -439,7 +447,7 @@ COMMAND(guilist, "s");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
-COMMAND(guifont,"s");
+COMMAND(guifont,"ss");
 COMMAND(guiimage,"ssfiss");
 COMMAND(guislice,"ssfffsss");
 COMMAND(guiprogress,"ff");

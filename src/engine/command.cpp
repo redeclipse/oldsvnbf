@@ -1039,14 +1039,14 @@ ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
 {
     ident *id = newident(var);
     if(id->type!=ID_ALIAS) return;
-    vector<char *> files;
+    static vector<char *> files; files.setsizenodelete(0);
     listfiles(dir, ext[0] ? ext : NULL, files);
     loopv(files)
     {
         char *file = files[i];
         bool redundant = false;
         loopj(i) if(!strcmp(files[j], file)) { redundant = true; break; }
-        if(redundant) { delete[] file; continue; }
+        if(redundant) { delete[] files.remove(i--); continue; }
         if(i) aliasa(id->name, file);
         else pushident(*id, file);
         execute(body);
