@@ -45,11 +45,15 @@ namespace projs
 
 	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
 	{
-		proj.hit = d;
-		proj.hitflags = flags;
-		proj.norm = norm;
-		if(!weaptype[proj.weap].explode && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
-		return !(proj.projcollide&COLLIDE_CONT);
+		if(d != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || d != proj.owner))
+		{
+			proj.hit = d;
+			proj.hitflags = flags;
+			proj.norm = norm;
+			if(!weaptype[proj.weap].explode && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+			return proj.projcollide&COLLIDE_CONT ? false : true;
+		}
+		return false;
 	}
 
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
@@ -284,6 +288,8 @@ namespace projs
 		if(proj.owner && proj.relativity) rel.add(vec(proj.owner->vel).add(proj.owner->falling).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
 		proj.spawntime = lastmillis;
+		proj.hit = NULL;
+		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
 
 		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode*0.1f;
@@ -294,8 +300,6 @@ namespace projs
 			float step = 4,
 				  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
 				  dist = 0;
-			proj.hit = NULL;
-			proj.hitflags = HITFLAG_NONE;
 			loopi(maxsteps)
 			{
 				float olddist = dist;
@@ -784,11 +788,7 @@ namespace projs
 		{
 			if(hitplayer)
 			{
-				if(hitplayer != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner))
-				{
-					if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
-				}
-				else return 1;
+				if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
 			}
 			else proj.norm = wall;
 
@@ -818,11 +818,7 @@ namespace projs
         {
             if(hitplayer)
             {
-            	if(hitplayer != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || hitplayer != proj.owner))
-            	{
-					if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
-            	}
-            	else return 1;
+				if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
             }
             else proj.norm = hitsurface;
 

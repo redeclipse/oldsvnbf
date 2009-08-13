@@ -251,11 +251,6 @@ namespace aiman
 					}
 				}
 			}
-			if(!autooverride)
-			{
-				while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
-				while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
-			}
 		}
 		if(!autooverride) // story mode strictly obeys nplayers
 		{
