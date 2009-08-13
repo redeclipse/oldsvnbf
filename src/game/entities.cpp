@@ -1692,9 +1692,11 @@ namespace entities
 					{
 						switch(e.attrs[0])
 						{
-							case 0: case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
-								e.attrs[3] = (((e.attrs[3]&0xF)<<4)|((e.attrs[3]&0xF0)<<8)|((e.attrs[3]&0xF00)<<12))+0x0F0F0F; break;
-							case 3: case 5: case 6:
+							case 0: if(e.attrs[3] <= 0) break;
+							case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15: case 5: case 6:
+								e.attrs[3] = (((e.attrs[3]&0xF)<<4)|((e.attrs[3]&0xF0)<<8)|((e.attrs[3]&0xF00)<<12))+0x0F0F0F;
+								if(e.attrs[0] != 5 && e.attrs[0] != 6) break;
+							case 3:
 								e.attrs[2] = (((e.attrs[2]&0xF)<<4)|((e.attrs[2]&0xF0)<<8)|((e.attrs[2]&0xF00)<<12))+0x0F0F0F; break;
 							default: break;
 						}
