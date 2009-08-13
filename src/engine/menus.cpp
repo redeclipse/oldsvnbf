@@ -393,13 +393,19 @@ void newgui(char *name, char *contents, char *initscript, char *header)
     menu *m = menus.access(name);
     if(!m)
     {
-    	name = newstring(name);
+        name = newstring(name);
         m = &menus[name];
-        DELETEA(m->name); m->name = name;
+        m->name = name;
     }
-    DELETEA(m->contents); m->contents = contents && contents[0] ? newstring(contents) : NULL;
-    DELETEA(m->initscript); m->initscript = initscript && initscript[0] ? newstring(initscript) : NULL;
-    DELETEA(m->header); m->header = header && header[0] ? newstring(header) : NULL;
+    else
+    {
+        DELETEA(m->header);
+        DELETEA(m->contents);
+        DELETEA(m->initscript);
+    }
+    m->contents = contents && contents[0] ? newstring(contents) : NULL;
+    m->initscript = initscript && initscript[0] ? newstring(initscript) : NULL;
+    m->header = header && header[0] ? newstring(header) : NULL;
 }
 
 void guimodify(char *name, char *contents)

@@ -178,7 +178,7 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
         	if(c=='z')
         	{
         		c = *++src;
-        		loopi(2) if(c) c = *++src;
+        		if(c) c = *++src;
         	}
         	continue;
         }
