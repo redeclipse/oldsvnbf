@@ -20,7 +20,7 @@ namespace stf
 			stfstate::flag &b = st.flags[i];
             if(!entities::ents.inrange(b.ent)) continue;
 			const char *flagname = teamtype[b.owner].flag;
-            rendermodel(&entities::ents[b.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, entities::ents[b.ent]->attr[2], entities::ents[b.ent]->attr[3], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED);
+            rendermodel(&entities::ents[b.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, entities::ents[b.ent]->attrs[2], entities::ents[b.ent]->attrs[3], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
 				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
@@ -136,10 +136,10 @@ namespace stf
 		loopv(entities::ents)
 		{
 			extentity *e = entities::ents[i];
-			if(e->type != FLAG || !chkmode(e->attr[3], game::gamemode)) continue;
+			if(e->type != FLAG || !chkmode(e->attrs[3], game::gamemode)) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
-			defformatstring(alias)("flag_%d", e->attr[0]);
+			defformatstring(alias)("flag_%d", e->attrs[0]);
 			const char *name = getalias(alias);
 			if(name[0]) copystring(b.name, name);
 			else formatstring(b.name)("flag %d", st.flags.length());

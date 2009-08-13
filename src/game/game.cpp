@@ -1135,10 +1135,10 @@ namespace game
 				vec pos(e.o);
 				if(e.type == MAPMODEL)
 				{
-					mapmodelinfo &mmi = getmminfo(e.attr[0]);
+					mapmodelinfo &mmi = getmminfo(e.attrs[0]);
 					vec center, radius;
 					mmi.m->collisionbox(0, center, radius);
-					if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attr[1]));
+					if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attrs[1]));
 					pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*3.f;
 				}
 				else if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
@@ -1150,9 +1150,9 @@ namespace game
 					c.ent = i;
 					if(!k)
 					{
-						c.idx = e.attr[0];
-						if(e.attr[1]) c.mindist = e.attr[1];
-						if(e.attr[2]) c.maxdist = e.attr[2];
+						c.idx = e.attrs[0];
+						if(e.attrs[1]) c.mindist = e.attrs[1];
+						if(e.attrs[2]) c.maxdist = e.attrs[2];
 					}
 				}
 			}

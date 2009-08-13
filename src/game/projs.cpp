@@ -372,7 +372,7 @@ namespace projs
 			vec from(d->o), to(d->muzzle);
 			if(entities::ents.inrange(n))
 			{
-				if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attr[1]&WEAP_F_FORCED))
+				if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attrs[1]&WEAP_F_FORCED))
 					create(from, to, local, d, PRJ_ENT, 0, 0, 1, 1, n);
 				d->ammo[g] = -1;
 				d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
@@ -766,7 +766,7 @@ namespace projs
 				{
 					if(entities::ents.inrange(proj.id))
 					{
-						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attr[0], sweap) : entities::ents[proj.id]->attr[0],
+						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 							colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
 						game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[entities::ents[proj.id]->type].radius);
 					}
@@ -1000,7 +1000,7 @@ namespace projs
 			if(proj.owner && proj.state != CS_DEAD)
 			{
 				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
-					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4]);
+					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attrs);
 
 				if(proj.waittime > 0)
 				{

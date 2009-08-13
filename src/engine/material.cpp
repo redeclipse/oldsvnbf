@@ -406,7 +406,7 @@ void setupmaterials(int start, int len)
 		int root = uf.find(i);
 		if(i==root) continue;
 		materialsurface &m = *water[i].m, &n = *water[root].m;
-		if(m.light && (!m.light->attr[0] || !n.light || (n.light->attr[0] && m.light->attr[0] > n.light->attr[0]))) n.light = m.light;
+		if(m.light && (!m.light->attrs[0] || !n.light || (n.light->attrs[0] && m.light->attrs[0] > n.light->attrs[0]))) n.light = m.light;
 		water[root].depth += water[i].depth;
 		water[root].area += water[i].area;
 	}
@@ -431,7 +431,7 @@ void setupmaterials(int start, int len)
     if(hasmat&(1<<MAT_GLASS)) useshaderbyname("glass");
 }
 
-VARP(showmat, 0, 1, 1);
+VARP(showmat, 0, 0, 1);
 
 static int sortdim[3];
 static ivec sortorigin;

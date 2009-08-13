@@ -357,7 +357,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-					if(e.lastemit && e.spawned && e.attr[4]&MMT_HIDE) continue;
+					if(e.lastemit && e.spawned && e.attrs[4]&MMT_HIDE) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -389,14 +389,14 @@ void rendermapmodel(extentity &e)
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0, flags = MDL_CULL_VFC|MDL_CULL_DIST|MDL_DYNLIGHT;
     if(e.lastemit)
     {
-    	if(e.attr[4]&MMT_HIDE && e.spawned) return;
+    	if(e.attrs[4]&MMT_HIDE && e.spawned) return;
 		anim = e.spawned ? ANIM_TRIGGER_ON : ANIM_TRIGGER_OFF;
 		if(e.lastemit > 0 && lastmillis-e.lastemit < entities::triggertime(e)) basetime = e.lastemit;
 		else anim |= ANIM_END;
     }
-	if((e.lastemit || e.attr[4]&MMT_NOSHADOW) && !(e.attr[4]&MMT_NODYNSHADOW)) flags |= MDL_SHADOW;
-	mapmodelinfo &mmi = getmminfo(e.attr[0]);
-	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attr[1]%360), (float)(e.attr[2]%360), (float)(e.attr[3]%360), flags, NULL, NULL, basetime);
+	if((e.lastemit || e.attrs[4]&MMT_NOSHADOW) && !(e.attrs[4]&MMT_NODYNSHADOW)) flags |= MDL_SHADOW;
+	mapmodelinfo &mmi = getmminfo(e.attrs[0]);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attrs[1]%360), (float)(e.attrs[2]%360), (float)(e.attrs[3]%360), flags, NULL, NULL, basetime);
 }
 
 extern int reflectdist;
@@ -430,7 +430,7 @@ void renderreflectedmapmodels()
         loopv(oe->mapmodels)
         {
            extentity &e = *ents[oe->mapmodels[i]];
-           if(e.visible || (e.lastemit && e.spawned && e.attr[4]&MMT_HIDE)) continue;
+           if(e.visible || (e.lastemit && e.spawned && e.attrs[4]&MMT_HIDE)) continue;
            e.visible = true;
         }
     }
@@ -579,7 +579,7 @@ static void disabletexgen(int dims = 2)
     }
 }
 
-HVAR(outline, 0, 0, 0xFFFFFF);
+HVARP(outline, 0, 1, 0xFFFFFF);
 VAR(dtoutline, 0, 1, 1);
 
 void renderoutline()

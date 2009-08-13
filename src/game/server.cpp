@@ -6,13 +6,18 @@ namespace server
 	struct srventity
 	{
 		int type;
-		short attr[ENTATTRS];
 		bool spawned;
 		int millis;
-		vector<int> kin;
+		vector<int> attrs, kin;
 
-		srventity() : type(NOTUSED), spawned(false), millis(0) { kin.setsize(0); loopi(ENTATTRS) attr[i] = 0; }
-		~srventity() { kin.setsize(0); }
+		srventity() : type(NOTUSED), spawned(false), millis(0) { reset(); }
+		~srventity() { reset(); }
+
+		void reset()
+		{
+			attrs.setsize(0);
+			kin.setsize(0);
+		}
 	};
 
     static const int DEATHMILLIS = 300;
@@ -731,15 +736,15 @@ namespace server
 		if(!update) triggerid = 0;
 		else
 		{
-			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attr[4] >= 2 && sents[i].attr[0] >= 0 && sents[i].attr[0] <= TRIGGERIDS)
-				triggers[sents[i].attr[0]].ents.add(i);
+			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attrs[4] >= 2 && sents[i].attrs[0] >= 0 && sents[i].attrs[0] <= TRIGGERIDS)
+				triggers[sents[i].attrs[0]].ents.add(i);
 			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
 			if(!valid.empty())
 			{
 				triggerid = valid[rnd(valid.length())];
 				loopi(TRIGGERIDS) if(triggers[i+1].id != triggerid) loopvk(triggers[i+1].ents)
 				{
-					bool spawn = sents[triggers[i+1].ents[k]].attr[4]%2;
+					bool spawn = sents[triggers[i+1].ents[k]].attrs[4]%2;
 					if(spawn != sents[triggers[i+1].ents[k]].spawned)
 					{
 						sents[triggers[i+1].ents[k]].spawned = spawn;
@@ -760,7 +765,7 @@ namespace server
 	{
 		if(sents[i].spawned) return true;
 		int sweap = m_spawnweapon(gamemode, mutators);
-		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attr[0], sweap), sweap))
+		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
 		{
 			loopvk(clients)
 			{
@@ -810,12 +815,12 @@ namespace server
 				{
 					loopk(3)
 					{
-						loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
+						loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
 						{
-							if(!k && !isteam(gamemode, mutators, sents[i].attr[0], TEAM_FIRST)) continue;
-							else if(k == 1 && sents[i].attr[0] == TEAM_NEUTRAL) continue;
-							else if(k == 2 && sents[i].attr[0] != TEAM_NEUTRAL) continue;
-							spawns[!k && teamgame ? sents[i].attr[0] : TEAM_NEUTRAL].add(i);
+							if(!k && !isteam(gamemode, mutators, sents[i].attrs[0], TEAM_FIRST)) continue;
+							else if(k == 1 && sents[i].attrs[0] == TEAM_NEUTRAL) continue;
+							else if(k == 2 && sents[i].attrs[0] != TEAM_NEUTRAL) continue;
+							spawns[!k && teamgame ? sents[i].attrs[0] : TEAM_NEUTRAL].add(i);
 							totalspawns++;
 						}
 						if(!k && teamgame)
@@ -833,7 +838,7 @@ namespace server
 				}
 				else
 				{ // use all neutral spawns
-					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[0] == TEAM_NEUTRAL && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
+					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[0] == TEAM_NEUTRAL && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
 					{
 						spawns[TEAM_NEUTRAL].add(i);
 						totalspawns++;
@@ -841,7 +846,7 @@ namespace server
 					if(totalspawns) break;
 				}
 				// use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attr[4] == (q ? 0 : triggerid) && chkmode(sents[i].attr[3], gamemode))
+				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
@@ -911,7 +916,7 @@ namespace server
 		int weap = m_spawnweapon(gamemode, mutators), maxhealth = m_maxhealth(gamemode, mutators);
 		if(ci->state.aitype >= AI_START)
 		{
-			bool randweap = sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[4]&AI_F_RANDWEAP;
+			bool randweap = sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attrs[4]&AI_F_RANDWEAP;
 			weap = aitype[ci->state.aitype].weap;
 			if(!isweap(weap) || randweap) weap = rnd(WEAP_TOTAL-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
@@ -1345,7 +1350,7 @@ namespace server
 		if(ci->state.aitype >= AI_START) return TEAM_ENEMY;
 		else if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attr[1]) return sents[ci->state.aientity].attr[1];
+			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attrs[1]) return sents[ci->state.aientity].attrs[1];
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
 			if(balance < 3 && ci->state.aitype >= 0) balance = 1;
 			if(balance || team < 0)
@@ -1475,7 +1480,7 @@ namespace server
 				loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 				{
 					sents[ts.entid[i]].millis = gamemillis;
-					if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attr[1]&WEAP_F_FORCED))
+					if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
 					{
 						ts.dropped.add(ts.entid[i]);
 						droplist &d = drop.add();
@@ -2309,7 +2314,7 @@ namespace server
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
-		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attr[1]&WEAP_F_FORCED))
+		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attrs[1]&WEAP_F_FORCED))
 		{
 			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
 			return;
@@ -2353,10 +2358,10 @@ namespace server
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
 			return;
 		}
-		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attr[0], sweap) : sents[ent].attr[0];
-		if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis))
+		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
+		if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis))
 		{
-			if(!gs.canuse(sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis, WEAP_S_RELOAD))
+			if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, WEAP_S_RELOAD))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
 				return;
@@ -2368,7 +2373,7 @@ namespace server
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
 		}
-		if(!sents[ent].spawned && !(sents[ent].attr[1]&WEAP_F_FORCED))
+		if(!sents[ent].spawned && !(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
 			bool found = false;
 			loopv(clients)
@@ -2396,17 +2401,17 @@ namespace server
 			gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
 			gs.ammo[weap] = gs.entid[weap] = -1;
 		}
-		gs.useitem(ent, sents[ent].type, attr, sents[ent].attr[1], sents[ent].attr[2], sents[ent].attr[3], sents[ent].attr[4], sweap, millis);
+		gs.useitem(ent, sents[ent].type, attr, sents[ent].attrs, sweap, millis);
 		if(sents.inrange(dropped))
 		{
 			gs.dropped.add(dropped);
-			if(!(sents[dropped].attr[1]&WEAP_F_FORCED))
+			if(!(sents[dropped].attrs[1]&WEAP_F_FORCED))
 			{
 				sents[dropped].spawned = false;
 				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
 			}
 		}
-		if(!(sents[ent].attr[1]&WEAP_F_FORCED))
+		if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
 			sents[ent].spawned = false;
 			sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
@@ -2525,7 +2530,7 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attr[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attr[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(i) >= 0)))
+				if(sents[i].attrs[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attrs[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(i) >= 0)))
 				{
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis+(triggertime(i)*2);
@@ -2538,7 +2543,7 @@ namespace server
 				}
 				break;
 			}
-			case WEAPON: if(!chkmode(sents[i].attr[2], gamemode) && (!m_arena(gamemode, mutators) || sents[i].attr[0] == WEAP_GRENADE)) break;
+			case WEAPON: if(!chkmode(sents[i].attrs[2], gamemode) && (!m_arena(gamemode, mutators) || sents[i].attrs[0] == WEAP_GRENADE)) break;
 			default:
 			{
 				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true))
@@ -3215,14 +3220,14 @@ namespace server
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attr[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(ent) >= 0)))
+					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attrs[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(ent) >= 0)))
 					{
 						bool commit = false, kin = false;
-						switch(sents[ent].attr[1])
+						switch(sents[ent].attrs[1])
 						{
 							case TR_TOGGLE:
 							{
-								if(!sents[ent].spawned || sents[ent].attr[2] != TA_AUTO)
+								if(!sents[ent].spawned || sents[ent].attrs[2] != TA_AUTO)
 								{
 									sents[ent].millis = gamemillis+(triggertime(ent)*2);
 									sents[ent].spawned = !sents[ent].spawned;
@@ -3327,24 +3332,25 @@ namespace server
 					int n, np = getint(p);
 					while((n = getint(p)) != -1)
 					{
-						int type = getint(p), attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p), kin = getint(p);
+						int type = getint(p), numattr = getint(p), numkin = getint(p);
 						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == ACTOR || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
+							sents[n].reset();
 							sents[n].type = type;
-							sents[n].attr[0] = attr1;
-							sents[n].attr[1] = attr2;
-							sents[n].attr[2] = attr3;
-							sents[n].attr[3] = attr4;
-							sents[n].attr[4] = attr5;
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
 							if(enttype[sents[n].type].usetype == EU_ITEM)
 								sents[n].millis += GVAR(itemspawndelay)*1000;
-							sents[n].kin.setsize(0);
-							loopk(kin) sents[n].kin.add(getint(p));
+							loopk(numattr) sents[n].attrs.add(getint(p));
+							if(numattr < 5) loopk(5-numattr) sents[n].attrs.add(0);
+							loopk(numkin) sents[n].kin.add(getint(p));
 						}
-						else loopk(kin) getint(p);
+						else
+						{
+							loopk(numattr) getint(p);
+							loopk(numkin) getint(p);
+						}
 					}
 					if(!hasgameinfo) setupgameinfo(np);
 					break;
@@ -3546,11 +3552,9 @@ namespace server
 					loopk(3) getint(p);
 					while(sents.length() <= n) sents.add();
 					sents[n].type = getint(p);
-					sents[n].attr[0] = getint(p);
-					sents[n].attr[1] = getint(p);
-					sents[n].attr[2] = getint(p);
-					sents[n].attr[3] = getint(p);
-					sents[n].attr[4] = getint(p);
+					int numattrs = getint(p);
+					while(sents[n].attrs.length() < numattrs) sents[n].attrs.add(0);
+					loopk(numattrs) sents[n].attrs[k] = getint(p);
 					QUEUE_MSG;
 					loopvk(clients)
 					{

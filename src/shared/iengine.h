@@ -18,7 +18,7 @@ struct generic { const char *name; uchar id; };
 
 extern void lightent(extentity &e, float height = 8);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
-extern entity *brightestlight(const vec &target, const vec &dir);
+extern extentity *brightestlight(const vec &target, const vec &dir);
 
 enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_SKIPFIRST = 32, RAY_EDITMAT = 64, RAY_SHADOW = 128, RAY_PASS = 256 };
 
@@ -104,8 +104,8 @@ extern void showgui(const char *name);
 // world
 extern bool emptymap(int factor, bool force = false, char *mname = NULL, bool nocfg = false);
 extern bool enlargemap(bool force);
-extern int findentity(int type, int index = 0, int attr1 = -1, int attr2 = -1);
-extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local);
+extern int findentity(int type, int index, vector<int> &attr);
+extern void mpeditent(int i, const vec &o, int type, vector<int> &attr, bool local = true);
 extern int getworldsize();
 extern int getmapversion();
 

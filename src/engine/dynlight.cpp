@@ -232,33 +232,33 @@ int setdynlights(vtxarray *va, const ivec &vaorigin)
 
 void makelightfx(extentity &e, extentity &f)
 {
-	if(f.attr[0] && e.attr[0] != LFX_SPOTLIGHT)
+	if(f.attrs[0] && e.attrs[0] != LFX_SPOTLIGHT)
 	{
 		vec colour = vec(lightcolour(f,0), lightcolour(f,1), lightcolour(f,2)).div(255.f);
-		float radius = f.type != ET_SUNLIGHT ? f.attr[0] : getworldsize()*2; int millis = lastmillis-e.emit[2], effect = e.attr[0], interval = e.emit[0]+e.emit[1];
+		float radius = f.type != ET_SUNLIGHT ? f.attrs[0] : getworldsize()*2; int millis = lastmillis-e.emit[2], effect = e.attrs[0], interval = e.emit[0]+e.emit[1];
 		if(!e.emit[2] || millis >= interval) loopi(2)
 		{
-			e.emit[i] = e.attr[i+2] ? e.attr[i+2] : 750;
-			if(e.attr[4]&(1<<i)) e.emit[i] = rnd(e.emit[i]);
+			e.emit[i] = e.attrs[i+2] ? e.attrs[i+2] : 750;
+			if(e.attrs[4]&(1<<i)) e.emit[i] = rnd(e.emit[i]);
 			millis -= interval; e.emit[2] = lastmillis-millis;
 		}
-		if(millis >= e.emit[0]) loopi(LFX_MAX-1) if(e.attr[4]&(1<<(LFX_S_MAX+i))) { effect = i+1; break; }
+		if(millis >= e.emit[0]) loopi(LFX_MAX-1) if(e.attrs[4]&(1<<(LFX_S_MAX+i))) { effect = i+1; break; }
 		#define lightskew float skew = clamp(millis < e.emit[0] ? 1.f-(float(millis)/float(e.emit[0])) : float(millis-e.emit[0])/float(e.emit[1]), 0.f, 1.f);
 		switch(effect)
 		{
 			case LFX_FLICKER:
 			{
-				if(millis >= e.emit[0]) radius -= (e.attr[1] ? e.attr[1] : radius);
+				if(millis >= e.emit[0]) radius -= (e.attrs[1] ? e.attrs[1] : radius);
 				break;
 			}
 			case LFX_PULSE:
 			{
-				lightskew; radius -= (e.attr[1] ? e.attr[1] : radius)*skew;
+				lightskew; radius -= (e.attrs[1] ? e.attrs[1] : radius)*skew;
 				break;
 			}
 			case LFX_GLOW:
 			{
-				lightskew; colour.mul(skew); radius -= e.attr[1]*skew;
+				lightskew; colour.mul(skew); radius -= e.attrs[1]*skew;
 				break;
 			}
 			default: break;

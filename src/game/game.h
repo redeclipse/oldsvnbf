@@ -72,139 +72,120 @@ enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
 struct enttypes
 {
-	int	type,			links,	radius,	usetype,
+	int	type,			links,	radius,	usetype,	numattrs,
 			canlink,
 			reclink;
-	bool	noisy;	const char *name,
-			*attrs[5];
+	bool	noisy;	const char *name,			*attrs[6];
 };
 #ifdef GAMESERVER
 enttypes enttype[] = {
 	{
-		NOTUSED,		0,		0,		EU_NONE,
+		NOTUSED,		0,		0,		EU_NONE,	0,
 			0,
 			0,
-			true,				"none",
-			{ "",		"",			"",			"",			"" }
+			true,				"none",			{ "",		"",			"",			"",			"",			"" }
 	},
 	{
-		LIGHT,			59,		0,		EU_NONE,
+		LIGHT,			59,		0,		EU_NONE,	4,
 			inttobit(LIGHTFX),
 			inttobit(LIGHTFX),
-			false,				"light",
-			{ "radius",	"red",		"green",	"blue",		"" }
+			false,				"light",		{ "radius",	"red",		"green",	"blue",		"",			"" }
 	},
 	{
-		MAPMODEL,		58,		0,		EU_NONE,
+		MAPMODEL,		58,		0,		EU_NONE,	5,
 			inttobit(TRIGGER),
 			inttobit(TRIGGER),
-			false,				"mapmodel",
-			{ "id",		"yaw",		"pitch",	"roll",		"flags" }
+			false,				"mapmodel",		{ "id",		"yaw",		"pitch",	"roll",		"flags",	"" }
 	},
 	{
-		PLAYERSTART,	59,		0,		EU_NONE,
+		PLAYERSTART,	59,		0,		EU_NONE,	5,
 			0,
 			0,
-			false,				"playerstart",
-			{ "team",	"yaw",		"pitch",		"mode",	"id" }
+			false,				"playerstart",	{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		ENVMAP,			0,		0,		EU_NONE,
+		ENVMAP,			0,		0,		EU_NONE,	1,
 			0,
 			0,
-			false,				"envmap",
-			{ "radius",	"",			"",			"",			"" }
+			false,				"envmap",		{ "radius",	"",			"",			"",			"",			"" }
 	},
 	{
-		PARTICLES,		59,		0,		EU_NONE,
+		PARTICLES,		59,		0,		EU_NONE,	5,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"particles",
-			{ "type",	"a",		"b",		"c",		"d" }
+			false,				"particles",	{ "type",	"a",		"b",		"c",		"d",		"" }
 	},
 	{
-		MAPSOUND,		58,		0,		EU_NONE,
+		MAPSOUND,		58,		0,		EU_NONE,	5,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"sound",
-			{ "id",		"maxrad",	"minrad",	"volume",	"flags" }
+			false,				"sound",		{ "id",		"maxrad",	"minrad",	"volume",	"flags",	"" }
 	},
 	{
-		LIGHTFX,		59,		0,		EU_NONE,
+		LIGHTFX,		1,		0,		EU_NONE,	5,
 			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"lightfx",
-			{ "type",	"mod",		"min",		"max",		"flags" }
+			false,				"lightfx",		{ "type",	"mod",		"min",		"max",		"flags",	"" }
 	},
 	{
-		SUNLIGHT,		160,	0,		EU_NONE,
+		SUNLIGHT,		160,	0,		EU_NONE,	5,
 			inttobit(LIGHTFX),
 			inttobit(LIGHTFX),
-			false,				"sunlight",
-			{ "yaw",	"pitch",	"red",		"green",	"blue" }
+			false,				"sunlight",		{ "yaw",	"pitch",	"red",		"green",	"blue",		"" }
 	},
 	{
-		WEAPON,			59,		16,		EU_ITEM,
+		WEAPON,			59,		16,		EU_ITEM,	3,
 			0,
 			0,
-			false,				"weapon",
-			{ "id",		"flags",	"mode",		"",			"" }
+			false,				"weapon",		{ "id",		"flags",	"mode",		"",			"",			"" }
 	},
 	{
-		TELEPORT,		50,		12,		EU_AUTO,
+		TELEPORT,		50,		12,		EU_AUTO,	5,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX)|inttobit(TELEPORT),
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
-			false,				"teleport",
-			{ "yaw",	"pitch",	"push",		"radius",	"colour" }
+			false,				"teleport",		{ "yaw",	"pitch",	"push",		"radius",	"colour",	"" }
 	},
 	{
-		ACTOR,			59,		0,		EU_NONE,
+		ACTOR,			59,		0,		EU_NONE,	5,
 			inttobit(WAYPOINT)|inttobit(FLAG),
 			0,
-			false,				"actor",
-			{ "type",	"mode",		"yaw",		"pitch",	"flags" }
+			false,				"actor",		{ "type",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		TRIGGER,		58,		16,		EU_AUTO,
+		TRIGGER,		58,		16,		EU_AUTO,	5,
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
-			false,				"trigger",
-			{ "id",		"type",		"action",	"radius",	"state" }
+			false,				"trigger",		{ "id",		"type",		"action",	"radius",	"state",	"" }
 	},
 	{
-		PUSHER,			58,		12,		EU_AUTO,
+		PUSHER,			58,		12,		EU_AUTO,	5,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
-			false,				"pusher",
-			{ "zpush",	"ypush",	"xpush",	"radius",	"min" }
+			false,				"pusher",		{ "zpush",	"ypush",	"xpush",	"radius",	"min",		"" }
 	},
 	{
-		FLAG,			48,		32,		EU_NONE,
+		FLAG,			48,		32,		EU_NONE,	5,
 			inttobit(FLAG),
 			0,
-			false,				"flag",
-			{ "team",	"yaw",		"pitch",	"mode",		"id" }
+			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		CHECKPOINT,		48,		16,		EU_NONE,
+		CHECKPOINT,		48,		16,		EU_NONE,	1,
 			inttobit(CHECKPOINT),
 			0,
-			false,				"checkpoint",
-			{ "id",		"",			"",			"",			"" }
+			false,				"checkpoint",	{ "id",		"",			"",			"",			"",			"" }
 	},
 	{
-		CAMERA,			48,		0,		EU_NONE,
+		CAMERA,			48,		0,		EU_NONE,	3,
 			inttobit(CAMERA),
 			0,
-			false,				"camera",
-			{ "id",		"mindist",	"maxdist",	"",			"" }
+			false,				"camera",		{ "id",		"mindist",	"maxdist",	"",			"",			"" }
 	},
 	{
-		WAYPOINT,		1,		16,		EU_NONE,
+		WAYPOINT,		1,		16,		EU_NONE,	5,
 			inttobit(WAYPOINT),
 			0,
-			true,				"waypoint",
-			{ "type",	"state",	"id",		"radius",	"flags" }
+			true,				"waypoint",		{ "type",	"state",	"id",		"radius",	"flags",	"" }
 	}
 };
 #else
@@ -531,7 +512,7 @@ char msgsizelookup(int msg)
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
 		SV_SERVMSG, 0, SV_GAMEINFO, 0, SV_RESUME, 0,
-        SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2,
+        SV_EDITMODE, 2, SV_EDITENT, 0, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2,
         SV_GETMAP, 0, SV_SENDMAP, 0, SV_SENDMAPFILE, 0, SV_SENDMAPSHOT, 0, SV_SENDMAPCONFIG, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_WAITING, 2, SV_SETMASTER, 0, SV_SETTEAM, 0,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
@@ -794,9 +775,9 @@ struct gamestate
 		return false;
 	}
 
-	bool canuse(int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sweap, int millis, int skip = -1)
+	bool canuse(int type, int attr, vector<int> &attrs, int sweap, int millis, int skip = -1)
 	{
-		if((type != TRIGGER || attr3 == TA_AUTO) && enttype[type].usetype == EU_AUTO)
+		if((type != TRIGGER || attrs[2] == TA_AUTO) && enttype[type].usetype == EU_AUTO)
 			return true;
 		if(weapwaited(weapselect, millis, skipwait(weapselect, skip))) switch(type)
 		{
@@ -807,7 +788,7 @@ struct gamestate
 			}
 			case WEAPON:
 			{ // can't use when reloading or firing
-				if(isweap(attr1) && !hasweap(attr1, sweap, 4) && weapwaited(attr1, millis))
+				if(isweap(attr) && !hasweap(attr, sweap, 4) && weapwaited(attr, millis))
 					return true;
 				break;
 			}
@@ -816,16 +797,16 @@ struct gamestate
 		return false;
 	}
 
-	void useitem(int id, int type, int attr1, int attr2, int attr3, int attr4, int attr5, int sweap, int millis)
+	void useitem(int id, int type, int attr, vector<int> &attrs, int sweap, int millis)
 	{
 		switch(type)
 		{
 			case TRIGGER: break;
 			case WEAPON:
 			{
-				weapswitch(attr1, millis, hasweap(attr1, sweap) ? (weapselect != attr1 ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
-				ammo[attr1] = clamp((ammo[attr1] > 0 ? ammo[attr1] : 0)+weaptype[attr1].add, 1, weaptype[attr1].max);
-				entid[attr1] = id;
+				weapswitch(attr, millis, hasweap(attr, sweap) ? (weapselect != attr ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
+				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+weaptype[attr].add, 1, weaptype[attr].max);
+				entid[attr] = id;
 				break;
 			}
 			default: break;
@@ -1282,9 +1263,9 @@ namespace entities
 	extern void setspawn(int n, int m);
 	extern bool tryspawn(dynent *d, const vec &o, short yaw = 0, short pitch = 0);
 	extern void spawnplayer(gameent *d, int ent = -1, bool suicide = false);
-	extern const char *entinfo(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0, bool full = false);
+	extern const char *entinfo(int type, vector<int> &attr, bool full = false);
 	extern void useeffects(gameent *d, int n, bool s, int g, int r);
-	extern const char *entmdlname(int type, int attr1 = 0, int attr2 = 0, int attr3 = 0, int attr4 = 0, int attr5 = 0);
+	extern const char *entmdlname(int type, vector<int> &attr);
 	extern bool clipped(const vec &o, bool aiclip = false);
 	extern void preload();
 	extern void edittoggled(bool edit);

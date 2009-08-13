@@ -7,13 +7,10 @@ enum { ET_EMPTY=0, ET_LIGHT, ET_MAPMODEL, ET_PLAYERSTART, ET_ENVMAP, ET_PARTICLE
 enum { LFX_SPOTLIGHT = 0, LFX_DYNLIGHT, LFX_FLICKER, LFX_PULSE, LFX_GLOW, LFX_MAX };
 enum { LFX_S_NONE = 0, LFX_S_RAND1 = 1<<0, LFX_S_RAND2 = 1<<1, LFX_S_MAX = 2 };
 
-#define ENTATTRS 5
-struct entity                                   // persistent map entity
+struct entbase                                   // persistent map entity
 {
     vec o;                                      // position
-    short attr[ENTATTRS];						// attributes
     uchar type;                                 // type is one of the above
-    uchar reserved;
 };
 
 struct entitylight
@@ -33,19 +30,30 @@ enum
 	MMT_NODYNSHADOW = 1<<3, // doesn't cast a shadow map (trigger)
 };
 
+struct entity : entbase
+{
+	vector<int> attrs, links;
+
+    entity() { reset(); }
+
+    void reset()
+    {
+		attrs.setsize(0);
+		links.setsize(0);
+    }
+};
+
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
-	vector<int> links;
 	int lastemit, emit[3];
 
     extentity() { reset(); }
 
     void reset()
     {
-		loopi(ENTATTRS) attr[i] = 0;
-		links.setsize(0);
+    	entity::reset();
 		spawned = inoctanode = visible = false;
 		lastemit = emit[0] = emit[1] = emit[2] = 0;
     }
@@ -55,7 +63,7 @@ extern int efocus, enthover, entorient;
 #define entfocus(i, f)  { int n = efocus = (i); if(n>=0) { extentity &e = *entities::getents()[n]; f; } }
 
 vec &lightposition(const extentity &light, const vec &target = vec(-1, -1, -1));
-#define lightcolour(n,m) n.attr[1+m+(n.type != ET_SUNLIGHT ? 0 : 1)]
+#define lightcolour(n,m) n.attrs[1+m+(n.type != ET_SUNLIGHT ? 0 : 1)]
 
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_EDITING, CS_SPECTATOR, CS_WAITING };
 
