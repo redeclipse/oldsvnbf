@@ -736,7 +736,7 @@ namespace server
 		if(!update) triggerid = 0;
 		else
 		{
-			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attrs[4] >= 2 && sents[i].attrs[0] >= 0 && sents[i].attrs[0] <= TRIGGERIDS)
+			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attrs[4] >= 2 && sents[i].attrs[0] >= 0 && sents[i].attrs[0] <= TRIGGERIDS+1)
 				triggers[sents[i].attrs[0]].ents.add(i);
 			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
 			if(!valid.empty())
@@ -808,51 +808,47 @@ namespace server
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
 			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
-			loop(q, 2)
+			if(m_fight(gamemode) && m_team(gamemode, mutators))
 			{
-				if(!q && triggerid <= 0) continue;
-				if(m_fight(gamemode) && m_team(gamemode, mutators))
+				loopk(3)
 				{
-					loopk(3)
+					loopv(sents) if(sents[i].type == PLAYERSTART && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && chkmode(sents[i].attrs[3], gamemode))
 					{
-						loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
-						{
-							if(!k && !isteam(gamemode, mutators, sents[i].attrs[0], TEAM_FIRST)) continue;
-							else if(k == 1 && sents[i].attrs[0] == TEAM_NEUTRAL) continue;
-							else if(k == 2 && sents[i].attrs[0] != TEAM_NEUTRAL) continue;
-							spawns[!k && teamgame ? sents[i].attrs[0] : TEAM_NEUTRAL].add(i);
-							totalspawns++;
-						}
-						if(!k && teamgame)
-						{
-							loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
-							{
-								loopj(TEAM_LAST+1) spawns[j].reset();
-								totalspawns = 0;
-								break;
-							}
-						}
-						if(totalspawns) break;
-					}
-					if(totalspawns) break;
-				}
-				else
-				{ // use all neutral spawns
-					loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[0] == TEAM_NEUTRAL && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
-					{
-						spawns[TEAM_NEUTRAL].add(i);
+						if(!k && !isteam(gamemode, mutators, sents[i].attrs[0], TEAM_FIRST)) continue;
+						else if(k == 1 && sents[i].attrs[0] == TEAM_NEUTRAL) continue;
+						else if(k == 2 && sents[i].attrs[0] != TEAM_NEUTRAL) continue;
+						spawns[!k && teamgame ? sents[i].attrs[0] : TEAM_NEUTRAL].add(i);
 						totalspawns++;
 					}
+					if(!k && teamgame)
+					{
+						loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
+						{
+							loopj(TEAM_LAST+1) spawns[j].reset();
+							totalspawns = 0;
+							break;
+						}
+					}
 					if(totalspawns) break;
 				}
-				// use all spawns
-				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[4] == (q ? 0 : triggerid) && chkmode(sents[i].attrs[3], gamemode))
+			}
+			else
+			{ // use all neutral spawns
+				loopv(sents) if(sents[i].type == PLAYERSTART && sents[i].attrs[0] == TEAM_NEUTRAL && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && chkmode(sents[i].attrs[3], gamemode))
 				{
 					spawns[TEAM_NEUTRAL].add(i);
 					totalspawns++;
 				}
-				if(totalspawns) break;
 			}
+			if(!totalspawns)
+			{ // use all spawns
+				loopv(sents) if(sents[i].type == PLAYERSTART && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && chkmode(sents[i].attrs[3], gamemode))
+				{
+					spawns[TEAM_NEUTRAL].add(i);
+					totalspawns++;
+				}
+			}
+
 			if(totalspawns) cplayers = totalspawns/2;
 			else
 			{ // we can cheat and use weapons for spawns
@@ -2528,7 +2524,7 @@ namespace server
 		{
 			case TRIGGER:
 			{
-				if(sents[i].attrs[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attrs[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(i) >= 0)))
+				if(sents[i].attrs[1] == TR_LINK && sents[i].spawned && gamemillis >= sents[i].millis && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]))
 				{
 					sents[i].spawned = false;
 					sents[i].millis = gamemillis+(triggertime(i)*2);
@@ -3218,7 +3214,7 @@ namespace server
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attrs[4] <= 1 || (triggerid > 0 && triggers[triggerid].ents.find(ent) >= 0)))
+					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]))
 					{
 						bool commit = false, kin = false;
 						switch(sents[ent].attrs[1])
