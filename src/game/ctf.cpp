@@ -146,7 +146,7 @@ namespace ctf
 				}
 				else trans = 1.f;
             }
-            rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attr[1], entities::ents[f.ent]->attr[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
+            rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attrs[1], entities::ents[f.ent]->attrs[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
 			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
@@ -236,13 +236,13 @@ namespace ctf
         st.reset();
         #define setupaddflag(a,b) \
         { \
-            index = st.addflag(entities::ents[a]->o, entities::ents[a]->attr[0], b); \
+            index = st.addflag(entities::ents[a]->o, entities::ents[a]->attrs[0], b); \
 			if(st.flags.inrange(index)) st.flags[index].ent = a; \
 			else continue; \
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(entities::ents[a]->type != FLAG || !chkmode(entities::ents[a]->attr[3], game::gamemode) || !isteam(game::gamemode, game::mutators, entities::ents[a]->attr[0], TEAM_NEUTRAL)) \
+			if(entities::ents[a]->type != FLAG || !chkmode(entities::ents[a]->attrs[3], game::gamemode) || !isteam(game::gamemode, game::mutators, entities::ents[a]->attrs[0], TEAM_NEUTRAL)) \
 				continue; \
 			else \
 			{ \
@@ -274,7 +274,7 @@ namespace ctf
 				setupaddflag(entities::ents[i]->links[j], BASE_FLAG); // add link as flag
 				setuphomeflag(i);
 			}
-            if(!added && isteam(game::gamemode, game::mutators, entities::ents[i]->attr[0], TEAM_FIRST)) // not linked and is a team flag
+            if(!added && isteam(game::gamemode, game::mutators, entities::ents[i]->attrs[0], TEAM_FIRST)) // not linked and is a team flag
 				setupaddflag(i, BASE_BOTH); // add as both
         }
         if(!st.flags.empty()) loopi(numteams(game::gamemode, game::mutators))

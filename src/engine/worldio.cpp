@@ -505,12 +505,13 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 		if(verbose) progress(float(i)/float(ents.length()), "saving entities...");
 		if(ents[i]->type!=ET_EMPTY)
 		{
-			entity tmp = *ents[i];
+			entbase tmp = *ents[i];
             lilswap(&tmp.o.x, 3);
-            lilswap(&tmp.attr, ENTATTRS);
-			f->write(&tmp, sizeof(entity));
-			entities::writeent(f, i, *ents[i]);
+			f->write(&tmp, sizeof(entbase));
 			extentity &e = (extentity &)*ents[i];
+			f->putlil<int>(e.attrs.length());
+			loopvk(e.attrs) f->putlil<int>(e.attrs[k]);
+			entities::writeent(f, i);
 			if(entities::maylink(e.type))
 			{
 				vector<int> links;
@@ -970,19 +971,36 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			worldroot = NULL;
 
 			progress(0, "loading entities...");
-
 			vector<extentity *> &ents = entities::getents();
 			loopi(hdr.numents)
 			{
 				if(verbose) progress(float(i)/float(hdr.numents), "loading entities...");
-				extentity &e = *entities::newent();
-				ents.add(&e);
-				f->read(&e, sizeof(entity));
-				lilswap(&e.o.x, 3);
-				lilswap(&e.attr, ENTATTRS);
-				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31))
-					e.attr[4] = 0; // init ever-present attr5
+				extentity &e = *entities::newent(); ents.add(&e);
+				if(maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 36))
+				{
+					entcompat ec;
+					f->read(&ec, sizeof(entcompat));
+					lilswap(&ec.o.x, 3);
+					lilswap(&ec.attr, 5);
+					e.o = ec.o;
+					e.type = ec.type;
+					loopk(5) e.attrs.add(ec.attr[k]);
+				}
+				else
+				{
+					f->read(&e, sizeof(entbase));
+					lilswap(&e.o.x, 3);
+					int numattr = f->getlil<int>();
+					loopk(numattr)
+					{
+						int an = f->getlil<int>();
+						e.attrs.add(an);
+					}
+					if(numattr < 5) loopk(5-numattr) e.attrs.add(0);
+				}
+				if((maptype == MAP_OCTA && hdr.version <= 27) || (maptype == MAP_BFGZ && hdr.version <= 31)) e.attrs[4] = 0; // init ever-present attr5
 				if(maptype == MAP_OCTA) loopj(eif) f->getchar();
+
 				// sauerbraten version increments
 				if(hdr.version <= 10 && e.type >= 7) e.type++;
 				if(hdr.version <= 12 && e.type >= 8) e.type++;
@@ -995,13 +1013,11 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				if(hdr.version <= 21 && e.type >= ET_PARTICLES) e.type++;
 				if(hdr.version <= 22 && e.type >= ET_SOUND) e.type++;
 				if(hdr.version <= 23 && e.type >= ET_LIGHTFX) e.type++;
-				if((maptype == MAP_OCTA || hdr.version <= 35) && e.type >= ET_SUNLIGHT) e.type++;
-				if(!samegame && (e.type>=ET_GAMESPECIFIC || hdr.version<=14))
-				{
-					entities::deleteent(ents.pop());
-					continue;
-				}
-				entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i, e);
+
+				// bloodfrontier version increments
+				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 35)) && e.type >= ET_SUNLIGHT) e.type++;
+
+				entities::readent(f, maptype, hdr.version, hdr.gameid, hdr.gamever, i);
 				if(maptype == MAP_BFGZ && entities::maylink(hdr.gamever <= 49 && e.type >= 10 ? e.type-1 : e.type, hdr.gamever))
 				{
 					int links = f->getlil<int>();
@@ -1012,23 +1028,24 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					}
 					if(verbose >= 2) conoutf("\fdentity %s (%d) loaded %d link(s)", entities::findname(e.type), i, links);
 				}
-				if(maptype == MAP_OCTA && e.type == ET_PARTICLES && e.attr[0] >= 11)
+
+				if(maptype == MAP_OCTA && e.type == ET_PARTICLES && e.attrs[0] >= 11)
 				{
-					if(e.attr[0] <= 12) e.attr[0] += 3;
-					else e.attr[0] = 0; // bork it up
+					if(e.attrs[0] <= 12) e.attrs[0] += 3;
+					else e.attrs[0] = 0; // bork it up
 				}
 				if(hdr.version <= 14 && e.type == ET_MAPMODEL)
 				{
-					e.o.z += e.attr[2];
-					if(e.attr[3] && verbose) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attr[3]);
-					e.attr[2] = e.attr[3] = 0;
+					e.o.z += e.attrs[2];
+					if(e.attrs[3] && verbose) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attrs[3]);
+					e.attrs[2] = e.attrs[3] = 0;
 				}
 				if(hdr.version <= 31 && e.type == ET_MAPMODEL)
 				{
-					int angle = e.attr[0];
-					e.attr[0] = e.attr[1];
-					e.attr[1] = angle;
-					e.attr[2] = e.attr[3] = e.attr[4] = 0;
+					int angle = e.attrs[0];
+					e.attrs[0] = e.attrs[1];
+					e.attrs[1] = angle;
+					e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
 				}
 				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT)
 					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
@@ -1105,7 +1122,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			{
 				extentity &e = *ents[i];
 
-				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) && ents[i]->type == ET_LIGHTFX && ents[i]->attr[0] == LFX_SPOTLIGHT)
+				if((maptype == MAP_OCTA || (maptype == MAP_BFGZ && hdr.version <= 29)) && ents[i]->type == ET_LIGHTFX && ents[i]->attrs[0] == LFX_SPOTLIGHT)
 				{
 					int closest = -1;
 					float closedist = 1e10f;
@@ -1127,9 +1144,9 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 						if(verbose) conoutf("\frWARNING: auto linked spotlight %d to light %d", i, closest);
 					}
 				}
-				if(e.type == ET_MAPMODEL && e.attr[0] >= 0)
+				if(e.type == ET_MAPMODEL && e.attrs[0] >= 0)
 				{
-					if(mapmodels.find(e.attr[0]) < 0) mapmodels.add(e.attr[0]);
+					if(mapmodels.find(e.attrs[0]) < 0) mapmodels.add(e.attrs[0]);
 				}
 			}
 

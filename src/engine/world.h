@@ -9,7 +9,7 @@ enum							// hardcoded texture numbers
 };
 
 #define OCTAVERSION 29			// diverged at ver 25
-#define MAPVERSION 36			// bump if map format changes, see worldio.cpp
+#define MAPVERSION 37			// bump if map format changes, see worldio.cpp
 
 struct binary
 {
@@ -92,6 +92,15 @@ struct bfgzcompat25 : binary
 	int worldsize, numents, lightmaps;
 	int gamever, revision;
 	char maptitle[128], gameid[4];
+};
+
+
+struct entcompat
+{
+    vec o;
+    short attr[5];
+    uchar type;
+    uchar reserved;
 };
 
 #define WATER_AMPLITUDE 0.8f

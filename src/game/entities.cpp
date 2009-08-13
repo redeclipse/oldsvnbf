@@ -25,7 +25,7 @@ namespace entities
 		return 0;
 	}
 
-	const char *entinfo(int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool full)
+	const char *entinfo(int type, vector<int> &attr, bool full)
 	{
 		static string entinfostr; entinfostr[0] = 0;
 		#define addentinfo(s) if(*(s)) { \
@@ -36,21 +36,21 @@ namespace entities
 		{
 			case PLAYERSTART: case FLAG:
 			{
-				if(valteam(attr1, TEAM_FIRST))
+				if(valteam(attr[0], TEAM_FIRST))
 				{
-					defformatstring(str)("team %s", teamtype[attr1].name);
+					defformatstring(str)("team %s", teamtype[attr[0]].name);
 					addentinfo(str);
 				}
-				else if(attr1 < TEAM_MAX)
+				else if(attr[0] < TEAM_MAX)
 				{
-					defformatstring(str)("%s", teamtype[attr1].name);
+					defformatstring(str)("%s", teamtype[attr[0]].name);
 					addentinfo(str);
 				}
-				if(attr4 && attr4 > -G_MAX && attr4 < G_MAX)
+				if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
 				{
 					string ds;
-					if(attr4<0) formatstring(ds)("not %s", gametype[-attr4].name);
-					else formatstring(ds)("%s", gametype[attr4].name);
+					if(attr[3]<0) formatstring(ds)("not %s", gametype[-attr[3]].name);
+					else formatstring(ds)("%s", gametype[attr[3]].name);
 					addentinfo(ds);
 				}
 				break;
@@ -60,71 +60,70 @@ namespace entities
 				if(full)
 				{
 					const char *lfxnames[LFX_MAX+1] = { "spotlight", "dynlight", "flicker", "pulse", "glow", "" };
-					addentinfo(lfxnames[attr1 < 0 || attr1 >= LFX_MAX ? LFX_MAX : attr1]);
-					loopi(LFX_MAX-1) if(attr5&(1<<(LFX_S_MAX+i))) { defformatstring(ds)("+%s", lfxnames[i+1]); addentinfo(ds); break; }
-					if(attr5&LFX_S_RAND1) addentinfo("rnd-min");
-					if(attr5&LFX_S_RAND2) addentinfo("rnd-max");
+					addentinfo(lfxnames[attr[0] < 0 || attr[0] >= LFX_MAX ? LFX_MAX : attr[0]]);
+					loopi(LFX_MAX-1) if(attr[4]&(1<<(LFX_S_MAX+i))) { defformatstring(ds)("+%s", lfxnames[i+1]); addentinfo(ds); break; }
+					if(attr[4]&LFX_S_RAND1) addentinfo("rnd-min");
+					if(attr[4]&LFX_S_RAND2) addentinfo("rnd-max");
 				}
 				break;
 			}
 			case ACTOR:
 			{
-				if(full && attr1 >= AI_START && attr1 < AI_MAX)
+				if(full && attr[0] >= AI_START && attr[0] < AI_MAX)
 				{
-					addentinfo(aitype[attr1].name);
-					if(attr2 && attr2 > -G_MAX && attr2 < G_MAX)
+					addentinfo(aitype[attr[0]].name);
+					if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
 					{
 						string ds;
-						if(attr2<0) formatstring(ds)("not %s", gametype[-attr2].name);
-						else formatstring(ds)("%s", gametype[attr2].name);
+						if(attr[3]<0) formatstring(ds)("not %s", gametype[-attr[3]].name);
+						else formatstring(ds)("%s", gametype[attr[3]].name);
 						addentinfo(ds);
 					}
-					if(attr5&AI_F_RANDWEAP) addentinfo("random weapon");
 				}
 				break;
 			}
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
-				if(isweap(attr))
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(attr[0], sweap);
+				if(isweap(attr1))
 				{
-					defformatstring(str)("\fs%s%s\fS", weaptype[attr].text, weaptype[attr].name);
+					defformatstring(str)("\fs%s%s\fS", weaptype[attr1].text, weaptype[attr1].name);
 					addentinfo(str);
 					if(full)
 					{
-						if(attr3 && attr3 > -G_MAX && attr3 < G_MAX)
+						if(attr[2] && attr[2] > -G_MAX && attr[2] < G_MAX)
 						{
 							string ds;
-							if(attr3<0) formatstring(ds)("not %s", gametype[-attr3].name);
-							else formatstring(ds)("%s", gametype[attr3].name);
+							if(attr[2]<0) formatstring(ds)("not %s", gametype[-attr[2]].name);
+							else formatstring(ds)("%s", gametype[attr[2]].name);
 							addentinfo(ds);
 						}
-						if(attr2&WEAP_F_FORCED) addentinfo("forced");
+						if(attr[3]&WEAP_F_FORCED) addentinfo("forced");
 					}
 				}
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(mapmodels.inrange(attr1)) addentinfo(mapmodels[attr1].name);
+				if(mapmodels.inrange(attr[0])) addentinfo(mapmodels[attr[0]].name);
 				if(full)
 				{
-					if(attr5&MMT_HIDE) addentinfo("hide");
-					if(attr5&MMT_NOCLIP) addentinfo("noclip");
-					if(attr5&MMT_NOSHADOW) addentinfo("noshadow");
-					if(attr5&MMT_NODYNSHADOW) addentinfo("nodynshadow");
+					if(attr[4]&MMT_HIDE) addentinfo("hide");
+					if(attr[4]&MMT_NOCLIP) addentinfo("noclip");
+					if(attr[4]&MMT_NOSHADOW) addentinfo("noshadow");
+					if(attr[4]&MMT_NODYNSHADOW) addentinfo("nodynshadow");
 				}
 				break;
 			}
 			case MAPSOUND:
 			{
-				if(mapsounds.inrange(attr1)) addentinfo(mapsounds[attr1].sample->name);
+				if(mapsounds.inrange(attr[0])) addentinfo(mapsounds[attr[0]].sample->name);
 				if(full)
 				{
-					if(attr5&SND_NOATTEN) addentinfo("noatten");
-					if(attr5&SND_NODELAY) addentinfo("nodelay");
-					if(attr5&SND_NOCULL) addentinfo("nocull");
-					if(attr5&SND_NOPAN) addentinfo("nopan");
+					if(attr[4]&SND_NOATTEN) addentinfo("noatten");
+					if(attr[4]&SND_NODELAY) addentinfo("nodelay");
+					if(attr[4]&SND_NOCULL) addentinfo("nocull");
+					if(attr[4]&SND_NOPAN) addentinfo("nopan");
 				}
 				break;
 			}
@@ -133,10 +132,10 @@ namespace entities
 				if(full)
 				{
 					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
-					addentinfo(trgnames[attr2 < 0 || attr2 >= TR_MAX ? TR_MAX : attr2]);
-					addentinfo(actnames[attr3 < 0 || attr3 >= TA_MAX ? TA_MAX : attr3]);
-					if(attr5 >= 2) addentinfo(attr1 ? "routed" : "inert");
-					addentinfo(attr5%2 ? "on" : "off");
+					addentinfo(trgnames[attr[1] < 0 || attr[1] >= TR_MAX ? TR_MAX : attr[1]]);
+					addentinfo(actnames[attr[2] < 0 || attr[2] >= TA_MAX ? TA_MAX : attr[2]]);
+					if(attr[4] >= 2) addentinfo(attr[4] ? "routed" : "inert");
+					addentinfo(attr[4]%2 ? "on" : "off");
 				}
 				break;
 			}
@@ -145,9 +144,9 @@ namespace entities
 				if(full)
 				{
 					const char *wpnames[WP_MAX+1] = { "common", "player", "enemy", "linked", "camera", "" }, *wpsnames[WP_S_MAX+1] = { "", "defend", "project", "" };
-					addentinfo(wpnames[attr1 < 0 || attr1 >= WP_MAX ? WP_MAX : attr1]);
-					addentinfo(wpsnames[attr2 < 0 || attr2 >= WP_S_MAX ? WP_S_MAX : attr2]);
-					if(attr5&WP_F_CROUCH) addentinfo("crouch");
+					addentinfo(wpnames[attr[0] < 0 || attr[0] >= WP_MAX ? WP_MAX : attr[0]]);
+					addentinfo(wpsnames[attr[1] < 0 || attr[1] >= WP_S_MAX ? WP_S_MAX : attr[1]]);
+					if(attr[4]&WP_F_CROUCH) addentinfo("crouch");
 				}
 				break;
 			}
@@ -156,18 +155,18 @@ namespace entities
 		return entinfostr[0] ? entinfostr : "";
 	}
 
-	const char *entmdlname(int type, int attr1, int attr2, int attr3, int attr4, int attr5)
+	const char *entmdlname(int type, vector<int> &attr)
 	{
 		switch(type)
 		{
-			case PLAYERSTART: return teamtype[attr1].tpmdl;
+			case PLAYERSTART: return teamtype[attr[0]].tpmdl;
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = weapattr(attr1, sweap);
-				return weaptype[attr].item;
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(attr[0], sweap);
+				return weaptype[attr1].item;
 			}
-			case FLAG: return teamtype[attr1].flag;
-			case ACTOR: if(attr1 >= AI_START && attr1 < AI_MAX) return aitype[attr1].mdl;
+			case FLAG: return teamtype[attr[0]].flag;
+			case ACTOR: if(attr[0] >= AI_START && attr[0] < AI_MAX) return aitype[attr[0]].mdl;
 			default: break;
 		}
 		return "";
@@ -195,7 +194,7 @@ namespace entities
 			{
 				loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 			}
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0],
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			if(showentdescs)
 			{
@@ -203,7 +202,7 @@ namespace entities
 				if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
 				else
 				{
-					const char *item = entities::entinfo(e.type, attr, e.attr[1], e.attr[3], e.attr[3], e.attr[4], false);
+					const char *item = entities::entinfo(e.type, e.attrs, false);
 					if(item && *item)
 					{
 						defformatstring(ds)("@%s (%d)", item, e.type);
@@ -221,13 +220,13 @@ namespace entities
 					d->weapselect = g;
 				}
 			}
-			d->useitem(n, e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis);
+			d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
 			game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius);
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
 				gameentity &f = *(gameentity *)ents[r];
-				attr = weapattr(f.attr[0], sweap);
+				attr = weapattr(f.attrs[0], sweap);
 				if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 			}
 			e.spawned = s;
@@ -253,7 +252,7 @@ namespace entities
 		switch(e.type)
 		{
 			case WAYPOINT: return 0;
-			case TRIGGER: case TELEPORT: case PUSHER: if(e.attr[3]) return e.attr[3]; // fall through
+			case TRIGGER: case TELEPORT: case PUSHER: if(e.attrs[3]) return e.attrs[3]; // fall through
 			default: return enttype[e.type].radius;
 		}
 	}
@@ -366,7 +365,7 @@ namespace entities
 
 	bool allowuse(gameent *d, int n)
 	{
-		if(!d || !d->ai || !d->ai->hasprevnode(n)) switch(ents[n]->attr[0])
+		if(!d || !d->ai || !d->ai->hasprevnode(n)) switch(ents[n]->attrs[0])
 		{
 			case WP_COMMON: return true; break;
 			case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
@@ -546,7 +545,7 @@ namespace entities
 			extentity &e = *ents[n]; \
 			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || e.spawned)) \
 			{ \
-				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3] ? e.attr[3] : enttype[e.type].radius; \
+				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attrs[3] ? e.attrs[3] : enttype[e.type].radius; \
 				if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
 				{ \
 					actitem &t = actitems.add(); \
@@ -634,7 +633,7 @@ namespace entities
 		if(lastmillis-e.lastuse >= triggertime(e)/2)
 		{
 			e.lastuse = lastmillis;
-			switch(e.attr[1])
+			switch(e.attrs[1])
 			{
 				case TR_TOGGLE: case TR_LINK: case TR_ONCE:
 				{ // wait for ack
@@ -643,19 +642,19 @@ namespace entities
 				}
 				case TR_SCRIPT:
 				{
-					defformatstring(s)("on_trigger_%d", e.attr[0]);
+					defformatstring(s)("on_trigger_%d", e.attrs[0]);
 					trigger = d; RUNWORLD(s); trigger = NULL;
 					break;
 				}
 				default: break;
 			}
-			if(act && e.attr[2] == TA_ACTION) d->useaction = false;
+			if(act && e.attrs[2] == TA_ACTION) d->useaction = false;
 		}
 	}
 
 	void runtriggers(int n, gameent *d)
 	{
-		loopv(ents) if(ents[i]->type == TRIGGER && ents[i]->attr[0] == n && ents[i]->attr[2] == TA_MANUAL) runtrigger(i, d, false);
+		loopv(ents) if(ents[i]->type == TRIGGER && ents[i]->attrs[0] == n && ents[i]->attrs[2] == TA_MANUAL) runtrigger(i, d, false);
 	}
 	ICOMMAND(exectrigger, "i", (int *n), if(worldidents) runtriggers(*n, trigger ? trigger : game::player1));
 
@@ -668,8 +667,8 @@ namespace entities
 			{
 				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
 				{
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-					if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD))
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -701,11 +700,11 @@ namespace entities
 								d->timeinair = 0;
 								d->falling = vec(0, 0, 0);
 								d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
-								d->yaw = f.attr[0] < 0 ? (lastmillis/5)%360 : f.attr[0];
-								d->pitch = f.attr[1];
+								d->yaw = f.attrs[0] < 0 ? (lastmillis/5)%360 : f.attrs[0];
+								d->pitch = f.attrs[1];
 								if(physics::entinmap(d, true))
 								{
-									float mag = m_speedscale(max(d->vel.magnitude(), f.attr[2] ? float(f.attr[2]) : 50.f));
+									float mag = m_speedscale(max(d->vel.magnitude(), f.attrs[2] ? float(f.attrs[2]) : 50.f));
 									vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 									d->vel.mul(mag);
 									game::fixfullrange(d->yaw, d->pitch, d->roll, true);
@@ -725,13 +724,13 @@ namespace entities
 				case PUSHER:
 				{
 					float mag = m_speedscale(10.f);
-					if(e.attr[4] && e.attr[4] < e.attr[3])
+					if(e.attrs[4] && e.attrs[4] < e.attrs[3])
 					{
 						vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 						float dist = m.dist(e.o);
-						if(dist >= e.attr[4]) mag *= 1.f-clamp((dist-e.attr[4])/float(e.attr[3]-e.attr[4]), 0.f, 1.f);
+						if(dist >= e.attrs[4]) mag *= 1.f-clamp((dist-e.attrs[4])/float(e.attrs[3]-e.attrs[4]), 0.f, 1.f);
 					}
-					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]).mul(mag);
+					vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]).mul(mag);
 					if(d->ai) d->ai->becareful = true;
 					d->falling = vec(0, 0, 0);
 					d->physstate = PHYS_FALL;
@@ -746,7 +745,7 @@ namespace entities
 				}
 				case TRIGGER:
 				{
-					if((e.attr[2] == TA_ACTION && d->useaction && d == game::player1) || e.attr[2] == TA_AUTO) runtrigger(n, d);
+					if((e.attrs[2] == TA_ACTION && d->useaction && d == game::player1) || e.attrs[2] == TA_AUTO) runtrigger(n, d);
 					break;
 				}
 			} break;
@@ -800,12 +799,9 @@ namespace entities
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);
 			putint(p, int(e.type));
-			putint(p, int(e.attr[0]));
-			putint(p, int(e.attr[1]));
-			putint(p, int(e.attr[2]));
-			putint(p, int(e.attr[3]));
-			putint(p, int(e.attr[4]));
+			putint(p, e.attrs.length());
 			putint(p, e.kin.length());
+			loopvj(e.attrs) putint(p, e.attrs[j]);
 			loopvj(e.kin) putint(p, e.kin[j]);
 		}
 	}
@@ -819,7 +815,7 @@ namespace entities
 			if((e.spawned = on) == true) e.lastspawn = lastmillis;
 			if(e.type == TRIGGER)
 			{
-				if((m >= 2 || e.lastemit <= 0 || e.spawned != spawned) && (e.attr[1] == TR_TOGGLE || e.attr[1] == TR_LINK || e.attr[1] == TR_ONCE))
+				if((m >= 2 || e.lastemit <= 0 || e.spawned != spawned) && (e.attrs[1] == TR_TOGGLE || e.attrs[1] == TR_LINK || e.attrs[1] == TR_ONCE))
 				{
 					e.lastemit = m <= 1 ? lastmillis-(e.lastemit ? max(triggertime(e)-(lastmillis-e.lastemit), 0) : triggertime(e)) : -1;
 					execlink(NULL, n, false);
@@ -837,7 +833,7 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attr[0], sweap) : entities::ents[proj.id]->attr[0],
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 						colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
 					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius);
 					proj.beenused = true;
@@ -869,6 +865,9 @@ namespace entities
 	void fixentity(int n)
 	{
 		gameentity &e = *(gameentity *)ents[n];
+		int num = max(5, enttype[e.type].numattrs);
+		while(e.attrs.length() < num) e.attrs.add(0);
+		while(e.attrs.length() > num) e.attrs.pop();
 		loopvrev(e.links)
 		{
 			int ent = e.links[i];
@@ -894,12 +893,12 @@ namespace entities
 		switch(e.type)
 		{
 			case MAPMODEL:
-				while(e.attr[1] < 0) e.attr[1] += 360;
-				while(e.attr[1] >= 360) e.attr[1] -= 360;
-				while(e.attr[2] < -90) e.attr[2] += 180;
-				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] < 0) e.attr[3] += 360;
-				while(e.attr[3] >= 360) e.attr[3] -= 360;
+				while(e.attrs[1] < 0) e.attrs[1] += 360;
+				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
+				while(e.attrs[2] < -90) e.attrs[2] += 180;
+				while(e.attrs[2] > 90) e.attrs[2] -= 180;
+				while(e.attrs[3] < 0) e.attrs[3] += 360;
+				while(e.attrs[3] >= 360) e.attrs[3] -= 360;
 			case PARTICLES:
 			case MAPSOUND:
 			case LIGHTFX:
@@ -907,83 +906,83 @@ namespace entities
 				loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == TRIGGER)
 				{
 					e.lastemit = ents[e.links[i]]->lastemit;
-					e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attr[4]);
+					e.spawned = TRIGSTATE(ents[e.links[i]]->spawned, ents[e.links[i]]->attrs[4]);
 				}
 				break;
 			}
 			case PUSHER:
 			{
-				if(e.attr[3] < 0) e.attr[3] = 0;
-				if(e.attr[4] < 0 || e.attr[4] >= e.attr[3]) e.attr[4] = 0;
+				if(e.attrs[3] < 0) e.attrs[3] = 0;
+				if(e.attrs[4] < 0 || e.attrs[4] >= e.attrs[3]) e.attrs[4] = 0;
 				break;
 			}
 			case TRIGGER:
 			{
-				while(e.attr[1] < 0) e.attr[1] += TR_MAX;
-				while(e.attr[1] >= TR_MAX) e.attr[1] -= TR_MAX;
-				while(e.attr[2] < 0) e.attr[2] += TA_MAX;
-				while(e.attr[2] >= TA_MAX) e.attr[2] -= TA_MAX;
-				while(e.attr[4] < 0) e.attr[4] += 4;
-				while(e.attr[4] >= 4) e.attr[4] -= 4;
-				if(e.attr[4] >= 2)
+				while(e.attrs[1] < 0) e.attrs[1] += TR_MAX;
+				while(e.attrs[1] >= TR_MAX) e.attrs[1] -= TR_MAX;
+				while(e.attrs[2] < 0) e.attrs[2] += TA_MAX;
+				while(e.attrs[2] >= TA_MAX) e.attrs[2] -= TA_MAX;
+				while(e.attrs[4] < 0) e.attrs[4] += 4;
+				while(e.attrs[4] >= 4) e.attrs[4] -= 4;
+				if(e.attrs[4] >= 2)
 				{
-					while(e.attr[0] < 0) e.attr[0] += TRIGGERIDS+1;
-					while(e.attr[0] > TRIGGERIDS) e.attr[0] -= TRIGGERIDS+1;
+					while(e.attrs[0] < 0) e.attrs[0] += TRIGGERIDS+1;
+					while(e.attrs[0] > TRIGGERIDS) e.attrs[0] -= TRIGGERIDS+1;
 				}
 				loopv(e.links) if(ents.inrange(e.links[i]) && (ents[e.links[i]]->type == MAPMODEL || ents[e.links[i]]->type == PARTICLES || ents[e.links[i]]->type == MAPSOUND || ents[e.links[i]]->type == LIGHTFX))
 				{
 					ents[e.links[i]]->lastemit = e.lastemit;
-					ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attr[4]);
+					ents[e.links[i]]->spawned = TRIGSTATE(e.spawned, e.attrs[4]);
 				}
 				break;
 			}
 			case WEAPON:
-				while(e.attr[0] < 0) e.attr[0] += WEAP_TOTAL; // don't allow superimposed weaps
-				while(e.attr[0] >= WEAP_TOTAL) e.attr[0] -= WEAP_TOTAL;
-				while(e.attr[2] <= -G_MAX) e.attr[2] += G_MAX*2;
-				while(e.attr[2] >= G_MAX) e.attr[2] -= G_MAX*2;
+				while(e.attrs[0] < 0) e.attrs[0] += WEAP_TOTAL; // don't allow superimposed weaps
+				while(e.attrs[0] >= WEAP_TOTAL) e.attrs[0] -= WEAP_TOTAL;
+				while(e.attrs[2] <= -G_MAX) e.attrs[2] += G_MAX*2;
+				while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
 				break;
 			case PLAYERSTART:
-				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
-				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
-				while(e.attr[1] < 0) e.attr[1] += 360;
-				while(e.attr[1] >= 360) e.attr[1] -= 360;
-				while(e.attr[2] < -90) e.attr[2] += 180;
-				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] <= -G_MAX) e.attr[3] += G_MAX*2;
-				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX*2;
+				while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
+				while(e.attrs[0] >= TEAM_MAX) e.attrs[0] -= TEAM_MAX;
+				while(e.attrs[1] < 0) e.attrs[1] += 360;
+				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
+				while(e.attrs[2] < -90) e.attrs[2] += 180;
+				while(e.attrs[2] > 90) e.attrs[2] -= 180;
+				while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
+				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
 				break;
 			case ACTOR:
-				while(e.attr[0] < 0) e.attr[0] += AI_MAX;
-				while(e.attr[0] >= AI_MAX) e.attr[0] -= AI_MAX;
-				while(e.attr[1] < 0) e.attr[1] += G_MAX;
-				while(e.attr[1] >= G_MAX) e.attr[1] -= G_MAX;
-				while(e.attr[2] < 0) e.attr[2] += 360;
-				while(e.attr[2] >= 360) e.attr[2] -= 360;
-				while(e.attr[3] < -90) e.attr[3] += 180;
-				while(e.attr[3] > 90) e.attr[3] -= 180;
+				while(e.attrs[0] < 0) e.attrs[0] += AI_MAX;
+				while(e.attrs[0] >= AI_MAX) e.attrs[0] -= AI_MAX;
+				while(e.attrs[1] < 0) e.attrs[2] += 360;
+				while(e.attrs[1] >= 360) e.attrs[2] -= 360;
+				while(e.attrs[2] < -90) e.attrs[3] += 180;
+				while(e.attrs[2] > 90) e.attrs[3] -= 180;
+				while(e.attrs[3] < 0) e.attrs[1] += G_MAX;
+				while(e.attrs[3] >= G_MAX) e.attrs[1] -= G_MAX;
 				break;
 			case FLAG:
-				while(e.attr[0] < 0) e.attr[0] += TEAM_MAX;
-				while(e.attr[0] >= TEAM_MAX) e.attr[0] -= TEAM_MAX;
-				while(e.attr[1] < 0) e.attr[1] += 360;
-				while(e.attr[1] >= 360) e.attr[1] -= 360;
-				while(e.attr[2] < -90) e.attr[2] += 180;
-				while(e.attr[2] > 90) e.attr[2] -= 180;
-				while(e.attr[3] <= -G_MAX) e.attr[3] += G_MAX*2;
-				while(e.attr[3] >= G_MAX) e.attr[3] -= G_MAX*2;
+				while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
+				while(e.attrs[0] >= TEAM_MAX) e.attrs[0] -= TEAM_MAX;
+				while(e.attrs[1] < 0) e.attrs[1] += 360;
+				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
+				while(e.attrs[2] < -90) e.attrs[2] += 180;
+				while(e.attrs[2] > 90) e.attrs[2] -= 180;
+				while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
+				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
 				break;
 			case TELEPORT:
-				while(e.attr[0] < -1) e.attr[0] += 361;
-				while(e.attr[0] >= 360) e.attr[0] -= 360;
-				while(e.attr[2] < -90) e.attr[2] += 180;
-				while(e.attr[2] > 90) e.attr[2] -= 180;
+				while(e.attrs[0] < -1) e.attrs[0] += 361;
+				while(e.attrs[0] >= 360) e.attrs[0] -= 360;
+				while(e.attrs[2] < -90) e.attrs[2] += 180;
+				while(e.attrs[2] > 90) e.attrs[2] -= 180;
 				break;
 			case WAYPOINT:
-				while(e.attr[0] < 0) e.attr[0] += WP_MAX;
-				while(e.attr[0] >= WP_MAX) e.attr[0] -= WP_MAX;
-				while(e.attr[1] < 0) e.attr[1] += WP_S_MAX;
-				while(e.attr[1] >= WP_S_MAX) e.attr[1] -= WP_S_MAX;
+				while(e.attrs[0] < 0) e.attrs[0] += WP_MAX;
+				while(e.attrs[0] >= WP_MAX) e.attrs[0] -= WP_MAX;
+				while(e.attrs[1] < 0) e.attrs[1] += WP_S_MAX;
+				while(e.attrs[1] >= WP_S_MAX) e.attrs[1] -= WP_S_MAX;
 				break;
 			default:
 				break;
@@ -1017,30 +1016,30 @@ namespace entities
 					case MAPMODEL:
 					{
 						ents[i]->lastemit = ents[index]->lastemit;
-						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attrs[4]);
 						break;
 					}
 					case LIGHTFX:
 					case PARTICLES:
 					{
 						ents[i]->lastemit = ents[index]->lastemit;
-						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attrs[4]);
 						else if(local) commit = true;
 						break;
 					}
 					case MAPSOUND:
 					{
 						ents[i]->lastemit = ents[index]->lastemit;
-						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attr[4]);
+						if(ents[index]->type == TRIGGER) ents[i]->spawned = TRIGSTATE(ents[index]->spawned, ents[index]->attrs[4]);
 						else if(local) commit = true;
-						if(mapsounds.inrange(ents[i]->attr[0]) && !issound(((gameentity *)ents[i])->schan))
+						if(mapsounds.inrange(ents[i]->attrs[0]) && !issound(((gameentity *)ents[i])->schan))
 						{
 							int flags = SND_MAP;
-							if(ents[i]->attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-							if(ents[i]->attr[4]&SND_NODELAY) flags |= SND_NODELAY;
-							if(ents[i]->attr[4]&SND_NOCULL) flags |= SND_NOCULL;
-							if(ents[i]->attr[4]&SND_NOPAN) flags |= SND_NOPAN;
-							playsound(ents[i]->attr[0], both ? ents[i]->o : ents[index]->o, NULL, flags, ents[i]->attr[3], ents[i]->attr[1], ents[i]->attr[2], &((gameentity *)ents[i])->schan);
+							if(ents[i]->attrs[4]&SND_NOATTEN) flags |= SND_NOATTEN;
+							if(ents[i]->attrs[4]&SND_NODELAY) flags |= SND_NODELAY;
+							if(ents[i]->attrs[4]&SND_NOCULL) flags |= SND_NOCULL;
+							if(ents[i]->attrs[4]&SND_NOPAN) flags |= SND_NOPAN;
+							playsound(ents[i]->attrs[0], both ? ents[i]->o : ents[index]->o, NULL, flags, ents[i]->attrs[3], ents[i]->attrs[1], ents[i]->attrs[2], &((gameentity *)ents[i])->schan);
 						}
 						break;
 					}
@@ -1067,8 +1066,8 @@ namespace entities
 		{
 			switch(ents[ent]->type)
 			{
-				case ACTOR: if(d->type != ENT_PLAYER && tryspawn(d, ents[ent]->o, ents[ent]->attr[2], ents[ent]->attr[3])) return;
-				case PLAYERSTART: if(tryspawn(d, ents[ent]->o, ents[ent]->attr[1], ents[ent]->attr[2])) return;
+				case ACTOR: if(d->type == ENT_PLAYER) break;
+				case PLAYERSTART: if(tryspawn(d, ents[ent]->o, ents[ent]->attrs[1], ents[ent]->attrs[2])) return;
 				default: if(tryspawn(d, ents[ent]->o, rnd(360), 0)) return;
 			}
 		}
@@ -1080,7 +1079,7 @@ namespace entities
 				switch(k)
 				{
 					case 0: if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
-								loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attr[0] == d->team) spawns.add(i);
+								loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attrs[0] == d->team) spawns.add(i);
 					case 1: if(spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
 					case 2: if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON) spawns.add(i);
 					default: break;
@@ -1089,7 +1088,7 @@ namespace entities
 				{
 					int r = rnd(spawns.length());
 					gameentity &e = *(gameentity *)ents[spawns[r]];
-					if(tryspawn(d, e.o, e.type == PLAYERSTART ? e.attr[1] : rnd(360), e.type == PLAYERSTART ? e.attr[2] : 0))
+					if(tryspawn(d, e.o, e.type == PLAYERSTART ? e.attrs[1] : rnd(360), e.type == PLAYERSTART ? e.attrs[2] : 0))
 						return;
 					spawns.remove(r); // must've really sucked, try another one
 				}
@@ -1108,12 +1107,12 @@ namespace entities
 		fixentity(i);
 		if(m_edit(game::gamemode))
 		{
-			client::addmsg(SV_EDITENT, "ri9i", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]); // FIXME
+			client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
 			clearentcache();
 		}
 	}
 
-	float dropheight(entity &e)
+	float dropheight(extentity &e)
 	{
 		if(e.type==MAPMODEL || e.type==FLAG) return 0.0f;
 		return 4.0f;
@@ -1340,7 +1339,9 @@ namespace entities
 				int cmds = WP_F_NONE;
 				if(physics::iscrouching(d)) cmds |= WP_F_CROUCH;
 				curnode = ents.length();
-				newentity(v, WAYPOINT, WP_COMMON, WP_S_NONE, 0, 0, cmds);
+				static vector<int> attrs; attrs.setsizenodelete(0);
+				attrs.add(int(WP_COMMON)); attrs.add(int(WP_S_NONE)); attrs.add(0); attrs.add(0); attrs.add(cmds);
+				newentity(v, WAYPOINT, attrs);
 				if(d->timeinair) d->airnodes.add(curnode);
 				clearentcache();
 			}
@@ -1380,9 +1381,9 @@ namespace entities
 		}
 	}
 
-	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e)
+	void readent(stream *g, int mtype, int mver, char *gid, int gver, int id)
 	{
-		gameentity &f = (gameentity &)e;
+		gameentity &f = *(gameentity *)ents[id];
 		f.mark = 0;
 		if(mtype == MAP_OCTA)
 		{
@@ -1417,8 +1418,8 @@ namespace entities
 					if(weap >= 0 && weap <= 5)
 					{
 						f.type = WEAPON;
-						f.attr[0] = weapmap[weap];
-						f.attr[1] = 0;
+						f.attrs[0] = weapmap[weap];
+						f.attrs[1] = 0;
 					}
 					else f.type = NOTUSED;
 					break;
@@ -1427,8 +1428,8 @@ namespace entities
 				case 18:
 				{
 					f.type = WEAPON;
-					f.attr[0] = WEAP_FLAMER;
-					f.attr[1] = 0;
+					f.attrs[0] = WEAP_FLAMER;
+					f.attrs[1] = 0;
 					break;
 				}
 
@@ -1438,15 +1439,15 @@ namespace entities
 				{
 					if(f.type == 20)
 					{
-						f.mark = f.attr[1]+1; // needs translating later
-						f.attr[1] = -1;
+						f.mark = f.attrs[1]+1; // needs translating later
+						f.attrs[1] = -1;
 					}
 					else
 					{
-						f.mark = -(f.attr[0]+1);
-						f.attr[0] = -1;
+						f.mark = -(f.attrs[0]+1);
+						f.attrs[0] = -1;
 					}
-					f.attr[2] = f.attr[3] = f.attr[4] = 0;
+					f.attrs[2] = f.attrs[3] = f.attrs[4] = 0;
 					f.type = TELEPORT;
 					break;
 				}
@@ -1460,7 +1461,7 @@ namespace entities
 				case 22:
 				{
 					f.type = NOTUSED;
-					f.attr[0] = f.attr[1] = f.attr[2] = f.attr[3] = f.attr[4] = 0;
+					f.attrs[0] = f.attrs[1] = f.attrs[2] = f.attrs[3] = f.attrs[4] = 0;
 					break;
 				}
 				// 23	JUMPPAD			13	PUSHER
@@ -1473,8 +1474,8 @@ namespace entities
 				case 24:
 				{
 					f.type = FLAG;
-					if(f.attr[0] < 0) f.attr[0] = 0;
-					f.attr[1] = TEAM_NEUTRAL; // spawn as neutrals
+					if(f.attrs[0] < 0) f.attrs[0] = 0;
+					f.attrs[1] = TEAM_NEUTRAL; // spawn as neutrals
 					break;
 				}
 				// 25	RESPAWNPOINT	15	CHECKPOINT
@@ -1487,8 +1488,8 @@ namespace entities
 				case 30:
 				{
 					f.type = FLAG;
-					f.attr[0] = 0;
-					if(f.attr[1] <= 0) f.attr[1] = -1; // needs a team
+					f.attrs[0] = 0;
+					if(f.attrs[1] <= 0) f.attrs[1] = -1; // needs a team
 					break;
 				}
 
@@ -1510,11 +1511,11 @@ namespace entities
 		}
 	}
 
-	void writeent(stream *g, int id, entity &e)
+	void writeent(stream *g, int id)
 	{
 	}
 
-	void importentities(int mtype, int gver)
+	void importentities(int mtype, int mver, int gver)
 	{
 		int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };
 		loopv(ents)
@@ -1544,27 +1545,27 @@ namespace entities
 				{
 					float mindist = float(enttype[WEAPON].radius*enttype[WEAPON].radius*6);
 					int weaps[WEAP_MAX];
-					loopj(WEAP_MAX) weaps[j] = j != e.attr[0] ? 0 : 1;
+					loopj(WEAP_MAX) weaps[j] = j != e.attrs[0] ? 0 : 1;
 					loopvj(ents) if(j != i)
 					{
 						gameentity &f = *(gameentity *)ents[j];
-						if(f.type == WEAPON && e.o.squaredist(f.o) <= mindist && isweap(f.attr[0]))
+						if(f.type == WEAPON && e.o.squaredist(f.o) <= mindist && isweap(f.attrs[0]))
 						{
-							weaps[f.attr[0]]++;
+							weaps[f.attrs[0]]++;
 							f.type = NOTUSED;
-							if(verbose) conoutf("\frWARNING: culled tightly packed weapon %d [%d]", j, f.attr[0]);
+							if(verbose) conoutf("\frWARNING: culled tightly packed weapon %d [%d]", j, f.attrs[0]);
 						}
 					}
-					int best = e.attr[0];
+					int best = e.attrs[0];
 					loopj(WEAP_MAX) if(weaps[j] > weaps[best])
 						best = j;
-					e.attr[0] = best;
+					e.attrs[0] = best;
 					break;
 				}
 				case FLAG: // replace bases/neutral flags near team flags
 				{
-					if(valteam(e.attr[1], TEAM_FIRST)) teams[e.attr[1]-TEAM_FIRST]++;
-					else if(e.attr[1] == TEAM_NEUTRAL)
+					if(valteam(e.attrs[1], TEAM_FIRST)) teams[e.attrs[1]-TEAM_FIRST]++;
+					else if(e.attrs[1] == TEAM_NEUTRAL)
 					{
 						int dest = -1;
 
@@ -1572,7 +1573,7 @@ namespace entities
 						{
 							gameentity &f = *(gameentity *)ents[j];
 
-							if(f.type == FLAG && f.attr[1] != TEAM_NEUTRAL &&
+							if(f.type == FLAG && f.attrs[1] != TEAM_NEUTRAL &&
 								(!ents.inrange(dest) || e.o.dist(f.o) < ents[dest]->o.dist(f.o)) &&
 									e.o.dist(f.o) <= enttype[FLAG].radius*4.f)
 										dest = j;
@@ -1581,11 +1582,11 @@ namespace entities
 						if(ents.inrange(dest))
 						{
 							gameentity &f = *(gameentity *)ents[dest];
-							if(verbose) conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attr[0], e.attr[1], dest, f.attr[0], f.attr[1]);
-							if(!f.attr[0]) f.attr[0] = e.attr[0]; // give it the old base idx
+							if(verbose) conoutf("\frWARNING: old base %d (%d, %d) replaced with flag %d (%d, %d)", i, e.attrs[0], e.attrs[1], dest, f.attrs[0], f.attrs[1]);
+							if(!f.attrs[0]) f.attrs[0] = e.attrs[0]; // give it the old base idx
 							e.type = NOTUSED;
 						}
-						else if(e.attr[0] > flag) flag = e.attr[0]; // find the highest idx
+						else if(e.attrs[0] > flag) flag = e.attrs[0]; // find the highest idx
 					}
 					break;
 				}
@@ -1616,7 +1617,7 @@ namespace entities
 						{
 							gameentity &f = *(gameentity *)ents[dest];
 							if(verbose) conoutf("\frWARNING: replaced teledest %d with closest teleport %d", i, dest);
-							f.attr[0] = e.attr[0]; // copy the yaw
+							f.attrs[0] = e.attrs[0]; // copy the yaw
 							loopvk(e.links) if(f.links.find(e.links[k]) < 0) f.links.add(e.links[k]);
 							loopvj(ents) if(j != i && j != dest)
 							{
@@ -1642,12 +1643,12 @@ namespace entities
 				}
 				case FLAG:
 				{
-					if(!e.attr[0]) e.attr[0] = ++flag; // assign a sane idx
-					if(!valteam(e.attr[1], TEAM_NEUTRAL)) // assign a team
+					if(!e.attrs[0]) e.attrs[0] = ++flag; // assign a sane idx
+					if(!valteam(e.attrs[1], TEAM_NEUTRAL)) // assign a team
 					{
 						int lowest = -1;
 						loopk(TEAM_NUM) if(lowest<0 || teams[k] < teams[lowest]) lowest = i;
-						e.attr[1] = lowest+TEAM_FIRST;
+						e.attrs[1] = lowest+TEAM_FIRST;
 						teams[lowest]++;
 					}
 					break;
@@ -1656,7 +1657,7 @@ namespace entities
 		}
 	}
 
-	void updateoldentities(int mtype, int gver)
+	void updateoldentities(int mtype, int mver, int gver)
 	{
 		loopvj(ents)
 		{
@@ -1668,9 +1669,9 @@ namespace entities
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 159))
 					{
-						e.attr[1] = e.attr[0];
-						e.attr[0] = LFX_SPOTLIGHT;
-						e.attr[2] = e.attr[3] = e.attr[4] = 0;
+						e.attrs[1] = e.attrs[0];
+						e.attrs[0] = LFX_SPOTLIGHT;
+						e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
 					}
 					break;
 				}
@@ -1678,10 +1679,25 @@ namespace entities
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 158))
 					{
-						short yaw = e.attr[0];
-						e.attr[0] = e.attr[1];
-						e.attr[1] = yaw;
-						e.attr[2] = e.attr[3] = e.attr[4] = 0;
+						short yaw = e.attrs[0];
+						e.attrs[0] = e.attrs[1];
+						e.attrs[1] = yaw;
+						e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
+					}
+					break;
+				}
+				case PARTICLES:
+				{
+					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && mver <= 36))
+					{
+						switch(e.attrs[0])
+						{
+							case 0: case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13: case 14: case 15:
+								e.attrs[3] = (((e.attrs[3]&0xF)<<4)|((e.attrs[3]&0xF0)<<8)|((e.attrs[3]&0xF00)<<12))+0x0F0F0F; break;
+							case 3: case 5: case 6:
+								e.attrs[2] = (((e.attrs[2]&0xF)<<4)|((e.attrs[2]&0xF0)<<8)|((e.attrs[2]&0xF00)<<12))+0x0F0F0F; break;
+							default: break;
+						}
 					}
 					break;
 				}
@@ -1689,14 +1705,14 @@ namespace entities
 				{
 					if(mtype == MAP_OCTA)
 					{
-						e.attr[2] = 100; // give a push
-						e.attr[4] = e.attr[1] >= 0 ? 0x2CE : 0;
-						e.attr[1] = e.attr[3] = 0;
+						e.attrs[2] = 100; // give a push
+						e.attrs[4] = e.attrs[1] >= 0 ? 0x2CE : 0;
+						e.attrs[1] = e.attrs[3] = 0;
 						e.o.z += 8; // teleport in BF is at middle
-						if(e.attr[0] >= 0 && clipped(e.o))
+						if(e.attrs[0] >= 0 && clipped(e.o))
 						{
 							vec dir;
-							vecfromyawpitch(e.attr[0], e.attr[1], 1, 0, dir);
+							vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir);
 							e.o.add(dir);
 						}
 						e.mark = 0;
@@ -1707,33 +1723,33 @@ namespace entities
 				{
 					if(mtype == MAP_BFGZ && gver <= 90)
 					{ // move grenade to the end of the weapon array
-						if(e.attr[0] >= 4) e.attr[0]--;
-						else if(e.attr[0] == 3) e.attr[0] = WEAP_GRENADE;
+						if(e.attrs[0] >= 4) e.attrs[0]--;
+						else if(e.attrs[0] == 3) e.attrs[0] = WEAP_GRENADE;
 					}
-					if(mtype == MAP_BFGZ && gver <= 97 && e.attr[0] >= 4)
-						e.attr[0]++; // add in pistol
-					if(mtype != MAP_BFGZ || gver <= 112) e.attr[1] = 0;
+					if(mtype == MAP_BFGZ && gver <= 97 && e.attrs[0] >= 4)
+						e.attrs[0]++; // add in pistol
+					if(mtype != MAP_BFGZ || gver <= 112) e.attrs[1] = 0;
 					break;
 				}
 				case TRIGGER:
 				{
-					if(mtype == MAP_BFGZ && gver <= 158) e.attr[4] = 0;
+					if(mtype == MAP_BFGZ && gver <= 158) e.attrs[4] = 0;
 					break;
 				}
 				case PUSHER:
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95))
-						e.attr[0] = int(e.attr[0]*1.25f);
+						e.attrs[0] = int(e.attrs[0]*1.25f);
 					break;
 				}
 				case FLAG:
 				{
 					if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 158))
 					{
-						e.attr[0] = e.attr[1];
-						e.attr[1] = e.attr[2];
-						e.attr[2] = e.attr[3];
-						e.attr[3] = e.attr[4] = 0;
+						e.attrs[0] = e.attrs[1];
+						e.attrs[1] = e.attrs[2];
+						e.attrs[2] = e.attrs[3];
+						e.attrs[3] = e.attrs[4] = 0;
 					}
 					break;
 				}
@@ -1742,13 +1758,13 @@ namespace entities
 					if(!m_edit(game::gamemode) && clipped(e.o, true)) e.type = NOTUSED;
 					else if(mtype == MAP_BFGZ)
 					{
-						if(gver <= 90) e.attr[0] = e.attr[1] = e.attr[2] = e.attr[3] = e.attr[4] = 0;
+						if(gver <= 90) e.attrs[0] = e.attrs[1] = e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
 						else if(gver <= 159)
 						{
-							e.attr[4] = e.attr[0];
-							e.attr[0] = WP_COMMON;
-							e.attr[1] = WP_S_NONE;
-							e.attr[2] = e.attr[3] = 0;
+							e.attrs[4] = e.attrs[0];
+							e.attrs[0] = WP_COMMON;
+							e.attrs[1] = WP_S_NONE;
+							e.attrs[2] = e.attrs[3] = 0;
 						}
 					}
 					break;
@@ -1758,7 +1774,7 @@ namespace entities
 		}
 	}
 
-	void importwaypoints(int mtype, int gver)
+	void importwaypoints(int mtype, int mver, int gver)
 	{
 		const char *mname = mapname;
 		if(!mname || !*mname) return;
@@ -1782,6 +1798,7 @@ namespace entities
 			extentity *e = NULL;
 			e = newent();
 			ents.add(e);
+			loopk(5) e->attrs.add(0);
 			e->type = !m_edit(game::gamemode) && clipped(o, true) ? NOTUSED : WAYPOINT;
 			e->o = o;
 			int numlinks = clamp(f->getchar(), 0, 6);
@@ -1793,21 +1810,33 @@ namespace entities
 
 	void initents(stream *g, int mtype, int mver, char *gid, int gver)
 	{
-		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, gver);
-		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, gver);
-		if(mtype == MAP_OCTA) importwaypoints(mtype, gver);
-		loopv(ents) fixentity(i);
-		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == TRIGGER)
+		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && mver <= 36)) loopv(ents)
 		{
-			setspawn(i, 0);
-			if(ents[i]->type == TRIGGER) // find shared kin
+			gameentity &e = *(gameentity *)ents[i];
+			int num = max(5, enttype[e.type].numattrs);
+			while(e.attrs.length() < num) e.attrs.add(0);
+			while(e.attrs.length() > num) e.attrs.pop();
+		}
+
+		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, mver, gver);
+		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, mver, gver);
+		if(mtype == MAP_OCTA) importwaypoints(mtype, mver, gver);
+		loopv(ents) fixentity(i);
+		loopv(ents)
+		{
+			gameentity &e = *(gameentity *)ents[i];
+			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
 			{
-				loopvj(ents[i]->links) if(ents.inrange(ents[i]->links[j]))
+				setspawn(i, 0);
+				if(e.type == TRIGGER) // find shared kin
 				{
-					loopvk(ents) if(ents[k]->type == TRIGGER && ents[k]->links.find(ents[i]->links[j]) >= 0)
+					loopvj(e.links) if(ents.inrange(e.links[j]))
 					{
-						if(((gameentity *)ents[i])->kin.find(k) < 0) ((gameentity *)ents[i])->kin.add(k);
-						if(((gameentity *)ents[k])->kin.find(i) < 0) ((gameentity *)ents[k])->kin.add(i);
+						loopvk(ents) if(ents[k]->type == TRIGGER && ents[k]->links.find(e.links[j]) >= 0)
+						{
+							if(((gameentity *)ents[i])->kin.find(k) < 0) ((gameentity *)ents[i])->kin.add(k);
+							if(((gameentity *)ents[k])->kin.find(i) < 0) ((gameentity *)ents[k])->kin.add(i);
+						}
 					}
 				}
 			}
@@ -1850,31 +1879,31 @@ namespace entities
 			{
 				case PLAYERSTART:
 				{
-					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.attr[0]].colour);
+					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.attrs[0]].colour);
 					break;
 				}
 				case MAPSOUND:
 				{
-					part_radius(e.o, vec(e.attr[1], e.attr[1], e.attr[1]), 1, 1, 0x00FFFF);
-					part_radius(e.o, vec(e.attr[2], e.attr[2], e.attr[2]), 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(e.attrs[1], e.attrs[1], e.attrs[1]), 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(e.attrs[2], e.attrs[2], e.attrs[2]), 1, 1, 0x00FFFF);
 					break;
 				}
 				case LIGHT:
 				{
-					int s = e.attr[0] ? e.attr[0] : hdr.worldsize,
+					int s = e.attrs[0] ? e.attrs[0] : hdr.worldsize,
 						colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
 					part_radius(e.o, vec(s, s, s), 1, 1, colour);
 					break;
 				}
 				case LIGHTFX:
 				{
-					if(e.attr[0] == LFX_SPOTLIGHT) loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == LIGHT)
+					if(e.attrs[0] == LFX_SPOTLIGHT) loopv(e.links) if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == LIGHT)
 					{
 						gameentity &f = *(gameentity *)ents[e.links[i]];
-						float radius = f.attr[0];
+						float radius = f.attrs[0];
 						if(!radius) radius = 2*e.o.dist(f.o);
 						vec dir = vec(e.o).sub(f.o).normalize();
-						float angle = max(1, min(90, int(e.attr[1])));
+						float angle = max(1, min(90, int(e.attrs[1])));
 						int colour = (lightcolour(f,0)<<16)|(lightcolour(f,1)<<8)|(lightcolour(e,2));
 						part_cone(f.o, dir, radius, angle, 1, colour);
 						break;
@@ -1884,25 +1913,25 @@ namespace entities
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
-					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attr[0]].colour);
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attrs[0]].colour);
 					radius = radius*2/3; // ctf pickup dist
-					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attr[0]].colour);
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attrs[0]].colour);
 					break;
 				}
 				case WAYPOINT:
 				{
-					int s = e.attr[4] ? e.attr[4] : enttype[e.type].radius;
+					int s = e.attrs[4] ? e.attrs[4] : enttype[e.type].radius;
 					part_radius(e.o, vec(s, s, s), 1, 1, 0x008888);
 					break;
 				}
 				default:
 				{
 					float radius = (float)enttype[e.type].radius;
-					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attr[3])
-						radius = (float)e.attr[3];
+					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attrs[3])
+						radius = (float)e.attrs[3];
 					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius), 1, 1, 0x00FFFF);
-					if(e.type == PUSHER && e.attr[4] && e.attr[4] < e.attr[3])
-						part_radius(e.o, vec(e.attr[4], e.attr[4], e.attr[4]), 1, 1, 0x00FFFF);
+					if(e.type == PUSHER && e.attrs[4] && e.attrs[4] < e.attrs[3])
+						part_radius(e.o, vec(e.attrs[4], e.attrs[4], e.attrs[4]), 1, 1, 0x00FFFF);
 					break;
 				}
 			}
@@ -1912,12 +1941,12 @@ namespace entities
 		{
 			case PLAYERSTART:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, teamtype[e.attr[0]].colour);
+				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.attrs[0]].colour);
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[1], e.attr[2], 4.f, 1, 0x00FFFF);
+				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF);
 				break;
 			}
 			case SUNLIGHT:
@@ -1925,13 +1954,13 @@ namespace entities
 				if(showentdir >= level)
 				{
 					int colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
-					part_dir(e.o, e.attr[0], e.attr[1], getworldsize()*2, 1, colour);
+					part_dir(e.o, e.attrs[0], e.attrs[1], getworldsize()*2, 1, colour);
 				}
 				break;
 			}
 			case ACTOR:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attr[2], e.attr[3], 4.f, 1, 0xAAAAAA);
+				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0xAAAAAA);
 				break;
 			}
 			case TELEPORT:
@@ -1939,8 +1968,8 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					if(e.attr[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attr[1], 4.f, 1, 0x00FFFF);
-					else part_dir(e.o, e.attr[0], e.attr[1], 8.f, 1, 0x00FFFF);
+					if(e.attrs[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attrs[1], 4.f, 1, 0x00FFFF);
+					else part_dir(e.o, e.attrs[0], e.attrs[1], 8.f, 1, 0x00FFFF);
 				}
 				break;
 			}
@@ -1948,7 +1977,7 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					vec dir = vec((int)(char)e.attr[2], (int)(char)e.attr[1], (int)(char)e.attr[0]);
+					vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]);
 					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
 					vectoyawpitch(dir.normalize(), yaw, pitch);
@@ -1966,14 +1995,14 @@ namespace entities
 
 	void renderentlight(gameentity &e)
 	{
-		adddynlight(vec(e.o), float(e.attr[0] ? e.attr[0] : hdr.worldsize)*0.75f, vec(e.attr[1], e.attr[2], e.attr[3]).div(383.f));
+		adddynlight(vec(e.o), float(e.attrs[0] ? e.attrs[0] : hdr.worldsize)*0.75f, vec(e.attrs[1], e.attrs[2], e.attrs[3]).div(383.f));
 	}
 
 	void adddynlights()
 	{
 		if(game::player1->state == CS_EDITING && showlighting)
 		{
-			#define islightable(q) ((q)->type == LIGHT && (q)->attr[0] > 0 && !(q)->links.length())
+			#define islightable(q) ((q)->type == LIGHT && (q)->attrs[0] > 0 && !(q)->links.length())
 			loopv(entgroup)
 			{
 				int n = entgroup[i];
@@ -1983,7 +2012,7 @@ namespace entities
 			if(ents.inrange(enthover) && islightable(ents[enthover]))
 				renderfocus(enthover, renderentlight(e));
 		}
-		loopv(ents) if(ents[i]->type == LIGHTFX && ents[i]->attr[0] != LFX_SPOTLIGHT)
+		loopv(ents) if(ents[i]->type == LIGHTFX && ents[i]->attrs[0] != LFX_SPOTLIGHT)
 		{
 			if(ents[i]->spawned || ents[i]->lastemit)
 			{
@@ -2012,7 +2041,7 @@ namespace entities
 			if(e.type == MAPMODEL || e.type == FLAG) continue;
 			else if(e.type == WEAPON)
 			{
-				int attr = weapattr(e.attr[0], sweap);
+				int attr = weapattr(e.attrs[0], sweap);
 				if(isweap(attr) && !weapf[attr])
 				{
 					weapons::preload(attr);
@@ -2029,14 +2058,14 @@ namespace entities
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			if(e.type == MAPSOUND && e.links.empty() && mapsounds.inrange(e.attr[0]) && !issound(e.schan))
+			if(e.type == MAPSOUND && e.links.empty() && mapsounds.inrange(e.attrs[0]) && !issound(e.schan))
 			{
 				int flags = SND_MAP|SND_LOOP; // ambient sounds loop
-				if(e.attr[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-				if(e.attr[4]&SND_NODELAY) flags |= SND_NODELAY;
-				if(e.attr[4]&SND_NOCULL) flags |= SND_NOCULL;
-				if(e.attr[4]&SND_NOPAN) flags |= SND_NOPAN;
-				playsound(e.attr[0], e.o, NULL, flags, e.attr[3], e.attr[1], e.attr[2], &e.schan);
+				if(e.attrs[4]&SND_NOATTEN) flags |= SND_NOATTEN;
+				if(e.attrs[4]&SND_NODELAY) flags |= SND_NODELAY;
+				if(e.attrs[4]&SND_NOCULL) flags |= SND_NOCULL;
+				if(e.attrs[4]&SND_NOPAN) flags |= SND_NOPAN;
+				playsound(e.attrs[0], e.o, NULL, flags, e.attrs[3], e.attrs[1], e.attrs[2], &e.schan);
 			}
 		}
 	}
@@ -2047,7 +2076,6 @@ namespace entities
 			renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
 		if(!envmapping)
 		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators);
 			loopv(ents)
 			{
 				gameentity &e = *(gameentity *)ents[i];
@@ -2055,8 +2083,7 @@ namespace entities
 				bool active = enttype[e.type].usetype == EU_ITEM && e.spawned && !m_noitems(game::gamemode, game::mutators);
 				if(m_edit(game::gamemode) || active)
 				{
-					int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-					const char *mdlname = entmdlname(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+					const char *mdlname = entmdlname(e.type, e.attrs);
 					vec pos = e.o;
 					if(mdlname && *mdlname)
 					{
@@ -2065,8 +2092,8 @@ namespace entities
 						if(!active)
 						{
 							fade = 0.5f;
-							if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attr[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attr[2]; }
-							else if(e.type == ACTOR) { yaw = e.attr[2]+90; pitch = e.attr[3]; }
+							if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attrs[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attrs[2]; }
+							else if(e.type == ACTOR) { yaw = e.attrs[1]+90; pitch = e.attrs[2]; }
 						}
 						else
 						{
@@ -2082,9 +2109,9 @@ namespace entities
 
 	void maketeleport(gameentity &e)
 	{
-		float yaw = e.attr[0] < 0 ? (lastmillis/5)%360 : e.attr[0], radius = float(e.attr[3] ? e.attr[3] : enttype[e.type].radius);
-		int attr = int(e.attr[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-		part_portal(e.o, radius, yaw, e.attr[1], PART_TELEPORT, 0, colour);
+		float yaw = e.attrs[0] < 0 ? (lastmillis/5)%360 : e.attrs[0], radius = float(e.attrs[3] ? e.attrs[3] : enttype[e.type].radius);
+		int attr = int(e.attrs[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
+		part_portal(e.o, radius, yaw, e.attrs[1], PART_TELEPORT, 0, colour);
 	}
 
 	void drawparticle(gameentity &e, const vec &o, int idx, bool spawned)
@@ -2094,11 +2121,11 @@ namespace entities
 			case PARTICLES:
 				if(idx < 0 || e.links.empty()) makeparticles(e);
 				else if(e.spawned || (e.lastemit > 0 && lastmillis-e.lastemit <= triggertime(e)/2))
-					makeparticle(o, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
+					makeparticle(o, e.attrs);
 				break;
 
 			case TELEPORT:
-				if(e.attr[4]) maketeleport(e);
+				if(e.attrs[4]) maketeleport(e);
 				break;
 		}
 
@@ -2113,30 +2140,23 @@ namespace entities
 			{
 				defformatstring(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
-				if(showentinfo >= 3 || hasent)
+				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
 				{
-					loopk(5)
-					{
-						if(*enttype[e.type].attrs[k])
-						{
-							formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attr[k]);
-							part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
-						}
-						else break;
-					}
+					formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attrs[k]);
+					part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				}
 			}
 		}
 		bool item = showentdescs && enttype[e.type].usetype == EU_ITEM && spawned, notitem = (edit && (showentinfo >= 4 || hasent));
 		if(item || notitem)
 		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attr[0], sweap) : e.attr[0],
+			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
 			if(itext && *itext) part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
 			else
 			{
-				const char *item = entinfo(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], showentinfo >= 5 || hasent);
+				const char *item = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
 				if(item && *item)
 				{
 					defformatstring(ds)("@%s", item);

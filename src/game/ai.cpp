@@ -345,7 +345,7 @@ namespace ai
 			{
 				case WEAPON:
 				{
-					int attr = weapattr(e.attr[0], sweap);
+					int attr = weapattr(e.attrs[0], sweap);
 					if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
@@ -371,7 +371,7 @@ namespace ai
 			{
 				case WEAPON:
 				{
-					int attr = weapattr(e.attr[0], sweap);
+					int attr = weapattr(e.attrs[0], sweap);
 					if(isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						if(proj.owner == d) break;
@@ -565,7 +565,7 @@ namespace ai
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return 0;
-						int attr = weapattr(e.attr[0], sweap);
+						int attr = weapattr(e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -589,7 +589,7 @@ namespace ai
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return 0;
 						gameentity &e = *(gameentity *)entities::ents[proj.id];
-						int attr = weapattr(e.attr[0], sweap);
+						int attr = weapattr(e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -687,7 +687,7 @@ namespace ai
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
-				if(((e.attr[0] & WP_F_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+				if(((e.attrs[0] & WP_F_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
 				{
 					d->crouching = !d->crouching;
 					d->crouchtime = lastmillis;
@@ -788,7 +788,7 @@ namespace ai
 				loopv(entities::ents) if(entities::ents[i]->type == PUSHER)
 				{
 					gameentity &e = *(gameentity *)entities::ents[i];
-					float radius = (e.attr[3] ? e.attr[3] : enttype[e.type].radius)*1.5f; radius *= radius;
+					float radius = (e.attrs[3] ? e.attrs[3] : enttype[e.type].radius)*1.5f; radius *= radius;
 					if(e.o.squaredist(pos) <= radius) { jump = false; break; }
 				}
 			}
@@ -985,8 +985,8 @@ namespace ai
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
 								if(m_noitems(game::gamemode, game::mutators)) continue;
-								int attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-								if(d->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD)) switch(e.type)
+								int attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD)) switch(e.type)
 								{
 									case WEAPON:
 									{
@@ -1107,10 +1107,10 @@ namespace ai
 		}
 		loopv(entities::ents) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
 		{
-			mapmodelinfo &mmi = getmminfo(entities::ents[i]->attr[0]);
+			mapmodelinfo &mmi = getmminfo(entities::ents[i]->attrs[0]);
 			vec center, radius;
 			mmi.m->collisionbox(0, center, radius);
-			if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(entities::ents[i]->attr[1]));
+			if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(entities::ents[i]->attrs[1]));
 			float limit = enttype[WAYPOINT].radius+(max(radius.x, max(radius.y, radius.z))*mmi.m->height);
 			vec pos = entities::ents[i]->o; pos.z += limit*0.5f;
 			obs.avoidnear(NULL, pos, limit);

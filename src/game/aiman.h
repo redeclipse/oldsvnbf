@@ -194,11 +194,11 @@ namespace aiman
 				if(numbots >= GVAR(botlimit)) shiftai(ci, -1);
 			}
 		}
-		loopv(sents) if(sents[i].type == ACTOR && sents[i].attr[0] >= AI_START && sents[i].attr[0] < AI_MAX && chkmode(sents[i].attr[1], gamemode))
+		loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && chkmode(sents[i].attrs[3], gamemode))
 		{
 			bool needent = true;
 			loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-			if(needent) addai(sents[i].attr[0], i, -1, false);
+			if(needent) addai(sents[i].attrs[0], i, -1, false);
 		}
 		int balance = 0;
 		if(m_story(gamemode)) balance = nplayers;

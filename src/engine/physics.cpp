@@ -136,10 +136,10 @@ int hitent, hitorient;
 
 #define mapmodelskip \
 	{ \
-			if(e.attr[4]&MMT_NOCLIP) continue; \
+			if(e.attrs[4]&MMT_NOCLIP) continue; \
 			if(e.lastemit) \
 			{ \
-				if(e.attr[4]&MMT_HIDE) \
+				if(e.attrs[4]&MMT_HIDE) \
 				{ \
 					if(e.spawned) continue; \
 				} \
@@ -212,7 +212,7 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
 		if(!e.inoctanode || &e==t) continue;
-		if(e.lastemit || e.attr[4]&MMT_NOSHADOW) continue;
+		if(e.lastemit || e.attrs[4]&MMT_NOSHADOW) continue;
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}
@@ -680,13 +680,13 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
     {
         extentity &e = *ents[oc.mapmodels[i]];
         mapmodelskip;
-        model *m = loadmodel(NULL, e.attr[0]);
+        model *m = loadmodel(NULL, e.attrs[0]);
         if(!m || !m->collide) continue;
         vec center, radius;
         m->collisionbox(0, center, radius);
         if(d->collidetype==COLLIDE_ELLIPSE)
         {
-            float yaw = 180 + float((e.attr[1]+7)-(e.attr[1]+7)%15);
+            float yaw = 180 + float((e.attrs[1]+7)-(e.attrs[1]+7)%15);
             if(m->ellipsecollide)
             {
                 if(!ellipsecollide(d, dir, e.o, center, yaw, radius.x, radius.y, radius.z, radius.z)) return false;
@@ -695,7 +695,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         }
         else
         {
-            rotatebb(center, radius, e.attr[1]);
+            rotatebb(center, radius, e.attrs[1]);
             if(!rectcollide(d, dir, center.add(e.o), radius.x, radius.y, radius.z, radius.z)) return false;
         }
     }

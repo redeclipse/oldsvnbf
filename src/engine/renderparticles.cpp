@@ -1420,12 +1420,6 @@ static inline vec offsetvec(vec o, int dir, int dist)
 	return v;
 }
 
-//converts a 16bit color to 24bit
-static inline int colorfromattr(int attr)
-{
-	return (((attr&0xF)<<4) | ((attr&0xF0)<<8) | ((attr&0xF00)<<12)) + 0x0F0F0F;
-}
-
 /* Experiments in shapes...
  * dir: (where dir%3 is similar to offsetvec with 0=up)
  * 0..2 circle
@@ -1572,31 +1566,31 @@ void defaultparticles()
 }
 #endif
 
-void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int attr5)
+void makeparticle(const vec &o, vector<int> &attr)
 {
-	switch(attr1)
+	switch(attr[0])
 	{
 		case 0: //fire
 		{
 			//regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f, -10);
 			//regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
-            float radius = attr2 ? float(attr2)/100.0f : 1.5f,
-                  height = attr3 ? float(attr3)/100.0f : radius*3;
-            regularflame(PART_FLAME, o, radius, height, attr4 ? colorfromattr(attr4) : 0xF05010, 3, attr5 > 0 ? attr5/2 : 500, 2.0f, -5, 0, 30);
-            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x101008, 1, attr5 > 0 ? attr5 : 1000, 2.0f, -10, 0, 30);
+            float radius = attr[1] ? float(attr[1])/100.0f : 1.5f,
+                  height = attr[2] ? float(attr[2])/100.0f : radius*3;
+            regularflame(PART_FLAME, o, radius, height, attr[3] ? attr[3] : 0xF05010, 3, attr[4] > 0 ? attr[4]/2 : 500, 2.0f, -5, 0, 30);
+            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x101008, 1, attr[4] > 0 ? attr[4] : 1000, 2.0f, -10, 0, 30);
 			break;
 		}
 		case 1: //smoke vent - <dir>
-			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr2, rnd(10)), 2.4f, -20);
+			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr[1], rnd(10)), 2.4f, -20);
 			break;
 		case 2: //water fountain - <dir>
 		{
 			int color = (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]);
-			regularsplash(PART_SPARK, color, 10, 4, 200, offsetvec(o, attr2, rnd(10)), 0.6f, 10);
+			regularsplash(PART_SPARK, color, 10, 4, 200, offsetvec(o, attr[1], rnd(10)), 0.6f, 10);
 			break;
 		}
 		case 3: //fire ball - <size> <rgb>
-			newparticle(o, vec(0, 0, 1), 1, PART_EXPLOSION, colorfromattr(attr3), 4.0f)->val = 1+attr2;
+			newparticle(o, vec(0, 0, 1), 1, PART_EXPLOSION, attr[2], 4.0f)->val = 1+attr[1];
 			break;
 		case 4:  //tape - <dir> <length> <rgb>
 		case 7:  //lightning
@@ -1610,10 +1604,10 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 			const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
 			const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.25f, 4.f, 2.f, 0.6f, 4.f, 0.5f, 0.2f }, velmap[] = { 50, 0, 0, 20, 30, 30, 50, 20, 10, 20 },
 				gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
-			int type = typemap[attr1-4];
-			float size = sizemap[attr1-4], vel = velmap[attr1-4], grav = gravmap[attr1-4], col = colmap[attr1-4];
-			if(attr2 >= 256) regularshape(type, max(1+attr3, 1), colorfromattr(attr4), attr2-256, 5, attr5 > 0 ? attr5 : 250, o, size, grav, col, vel);
-			else newparticle(o, offsetvec(o, attr2, max(1+attr3, 0)), attr5 > 0 ? attr5 : 1, type, colorfromattr(attr4), size, grav, col);
+			int type = typemap[attr[0]-4];
+			float size = sizemap[attr[0]-4], vel = velmap[attr[0]-4], grav = gravmap[attr[0]-4], col = colmap[attr[0]-4];
+			if(attr[1] >= 256) regularshape(type, max(1+attr[2], 1), attr[3], attr[1]-256, 5, attr[4] > 0 ? attr[4] : 250, o, size, grav, col, vel);
+			else newparticle(o, offsetvec(o, attr[1], max(1+attr[2], 0)), attr[4] > 0 ? attr[4] : 1, type, attr[3], size, grav, col);
 			break;
 		}
 		case 14: // flames <radius> <height> <rgb>
@@ -1621,39 +1615,35 @@ void makeparticle(const vec &o, int attr1, int attr2, int attr3, int attr4, int 
 		{
 			const int typemap[] = { PART_FLAME, PART_SMOKE }, fademap[] = { 500, 1000 }, densitymap[] = { 3, 1 };
 			const float sizemap[] = { 2, 2 }, velmap[] = { 25, 50 }, gravmap[] = { -5, -10 };
-			int type = typemap[attr1-14], density = densitymap[attr1-14], fade = attr5 > 0 ? attr5 : fademap[attr1-14];
-			float size = sizemap[attr1-14], vel = velmap[attr1-14], grav = gravmap[attr1-14];
-			regularflame(type, o, float(attr2)/100.0f, float(attr3)/100.0f, colorfromattr(attr4), density, fade, size, grav, 0, vel);
+			int type = typemap[attr[0]-14], density = densitymap[attr[0]-14], fade = attr[4] > 0 ? attr[4] : fademap[attr[0]-14];
+			float size = sizemap[attr[0]-14], vel = velmap[attr[0]-14], grav = gravmap[attr[0]-14];
+			regularflame(type, o, float(attr[1])/100.0f, float(attr[2])/100.0f, attr[3], density, fade, size, grav, 0, vel);
 			break;
 		}
 		case 6: //meter, metervs - <percent> <rgb> <rgb2>
 		{
-			float length = clamp(attr2, 0, 100)/100.f;
-			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, colorfromattr(attr4), length, 1-length); // fall through
+			float length = clamp(attr[1], 0, 100)/100.f;
+			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, attr[2], length, 1-length); // fall through
 		}
 		case 5:
 		{
-			float length = clamp(attr2, 0, 100)/100.f;
-			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, colorfromattr(attr3), 0, length);
+			float length = clamp(attr[1], 0, 100)/100.f;
+			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, attr[2], 0, length);
 			break;
 		}
 		case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
 		case 33:
 		case 34:
 		case 35:
-			flares.addflare(o, attr2, attr3, attr4, (attr1&0x02)!=0, (attr1&0x01)!=0);
+			flares.addflare(o, attr[1], attr[2], attr[3], (attr[0]&0x02)!=0, (attr[0]&0x01)!=0);
 			break;
 		default:
-			defformatstring(ds)("@%d?", attr1);
+			defformatstring(ds)("@%d?", attr[0]);
 			part_text(o, ds);
 			break;
 	}
 }
-
-void makeparticles(extentity &e)
-{
-	makeparticle(e.o, (int)e.attr[0], (int)e.attr[1], (int)e.attr[2], (int)e.attr[3], (int)e.attr[4]);
-}
+void makeparticles(extentity &e) { makeparticle(e.o, e.attrs); }
 
 void updateparticles()
 {

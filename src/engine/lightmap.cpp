@@ -51,7 +51,7 @@ vec &lightposition(const extentity &light, const vec &target)
 	static vec pos;
 	if(light.type == ET_SUNLIGHT)
 	{
-		vec dir; vecfromyawpitch(light.attr[0], light.attr[1], 1, 0, dir);
+		vec dir; vecfromyawpitch(light.attrs[0], light.attrs[1], 1, 0, dir);
 		pos = vec(target != vec(-1, -1, -1) ? target : light.o).add(dir.normalize().mul(hdr.worldsize*2));
 	}
 	else pos = light.o;
@@ -350,7 +350,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		const extentity &light = *lights[i];
 		vec ray = target, pos = lightposition(light, target);
 		ray.sub(pos);
-        float mag = ray.magnitude(), radius = (light.type != ET_SUNLIGHT ? light.attr[0] : 0);
+        float mag = ray.magnitude(), radius = (light.type != ET_SUNLIGHT ? light.attrs[0] : 0);
         if(!mag) continue;
         float attenuation = 1;
         if(radius > 0)
@@ -367,7 +367,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(light.links)
 			{
-				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_LIGHTFX && ents[light.links[k]]->attr[0] == LFX_SPOTLIGHT)
+				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_LIGHTFX && ents[light.links[k]]->attrs[0] == LFX_SPOTLIGHT)
 				{
 					slight = light.links[k];
 					break;
@@ -377,7 +377,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(pos).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				attenuation *= spotatten;
@@ -854,7 +854,7 @@ VARF(lightcachesize, 0, 2, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
-	if(e < 0 || !entities::getents()[e]->attr[0])
+	if(e < 0 || !entities::getents()[e]->attrs[0])
 	{
 		for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
 		{
@@ -865,7 +865,7 @@ void clearlightcache(int e)
 	else
 	{
 		const extentity &light = *entities::getents()[e];
-		int radius = light.type != ET_SUNLIGHT ? light.attr[0] : 0;
+		int radius = light.type != ET_SUNLIGHT ? light.attrs[0] : 0;
 		vec pos = lightposition(light, vec(1, 1, 1).mul(hdr.worldsize/2));
         for(int x = int(max(pos.x-radius, 0.0f))>>lightcachesize, ex = int(min(pos.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
         for(int y = int(max(pos.y-radius, 0.0f))>>lightcachesize, ey = int(min(pos.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
@@ -899,7 +899,7 @@ const vector<int> &checklightcache(int x, int y)
             case ET_LIGHT:
             {
             	if(!lightcachesize) break;
-                int radius = light.attr[0];
+                int radius = light.attrs[0];
                 if(radius > 0)
                 {
                     if(light.o.x + radius < cx || light.o.x - radius > cx + csize ||
@@ -921,7 +921,7 @@ const vector<int> &checklightcache(int x, int y)
 
 static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
-    int radius = light.type != ET_SUNLIGHT ? light.attr[0] : 0;
+    int radius = light.type != ET_SUNLIGHT ? light.attrs[0] : 0;
     if(radius > 0)
     {
         if(light.o.x + radius < cx || light.o.x - radius > cx + size ||
@@ -1973,7 +1973,7 @@ void lightent(extentity &e, float height)
 	float amb = 0.0f;
 	if(e.type==ET_MAPMODEL)
 	{
-		model *m = loadmodel(NULL, e.attr[0]);
+		model *m = loadmodel(NULL, e.attrs[0]);
 		if(m) height = m->above()*0.75f;
 	}
 	else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
@@ -2022,7 +2022,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 
 		vec ray(target), pos = lightposition(e, target);
 		ray.sub(pos);
-		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
+		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attrs[0] : 0;
 		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
@@ -2037,7 +2037,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attr[0] == LFX_SPOTLIGHT)
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
 				{
 					slight = e.links[k];
 					break;
@@ -2047,7 +2047,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(pos).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;
@@ -2078,7 +2078,7 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	else dir.normalize();
 }
 
-entity *brightestlight(const vec &target, const vec &dir)
+extentity *brightestlight(const vec &target, const vec &dir)
 {
 	const vector<extentity *> &ents = entities::getents();
 	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
@@ -2091,7 +2091,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 		vec ray(target), pos = lightposition(e, target);
 		if(vec(pos).sub(target).dot(dir)<0) continue;
 		ray.sub(pos);
-		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attr[0] : 0;
+		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attrs[0] : 0;
 		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
@@ -2106,7 +2106,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 			const vector<extentity *> &ents = entities::getents();
 			loopvk(e.links)
 			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attr[0] == LFX_SPOTLIGHT)
+				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
 				{
 					slight = e.links[k];
 					break;
@@ -2116,7 +2116,7 @@ entity *brightestlight(const vec &target, const vec &dir)
 			{
 				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(pos).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attr[1])))*RAD);
+				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
 				intensity *= spotatten;

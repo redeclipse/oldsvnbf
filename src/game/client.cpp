@@ -1358,7 +1358,7 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, 1);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attr[0], sweap) : entities::ents[ent]->attr[0],
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
 						colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 					if(entities::showentdescs)
 					{
@@ -1367,7 +1367,7 @@ namespace client
 						if(texname && *texname) part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour);
 						else
 						{
-							const char *item = entities::entinfo(entities::ents[ent]->type, attr, entities::ents[ent]->attr[1], entities::ents[ent]->attr[3], entities::ents[ent]->attr[3], entities::ents[ent]->attr[4], false);
+							const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
 							if(item && *item)
 							{
 								defformatstring(ds)("@%s (%d)", item, entities::ents[ent]->type);
@@ -1501,9 +1501,10 @@ namespace client
 					if(!d) return;
 					int i = getint(p);
 					float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
-					int type = getint(p);
-					int attr1 = getint(p), attr2 = getint(p), attr3 = getint(p), attr4 = getint(p), attr5 = getint(p);
-					mpeditent(i, vec(x, y, z), type, attr1, attr2, attr3, attr4, attr5, false);
+					int type = getint(p), numattrs = getint(p);
+					static vector<int> attrs; attrs.setsizenodelete(0);
+					loopk(numattrs) attrs.add(getint(p));
+					mpeditent(i, vec(x, y, z), type, attrs, false);
 					entities::setspawn(i, 0);
 					entities::clearentcache();
 					break;

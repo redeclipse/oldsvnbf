@@ -47,7 +47,7 @@ void guessshadowdir()
         extentity &e = *ents[i];
         switch(e.type)
         {
-            case ET_LIGHT: if(e.attr[0]) break;
+            case ET_LIGHT: if(e.attrs[0]) break;
             case ET_SUNLIGHT:
 				lightpos.add(lightposition(e, vec(hdr.worldsize/2, hdr.worldsize/2, hdr.worldsize/2)));
 				numlights++;

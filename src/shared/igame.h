@@ -4,10 +4,10 @@ namespace entities
 {
 	extern int triggertime(extentity &e);
 	extern void editent(int i);
-	extern void readent(stream *g, int mtype, int mver, char *gid, int gver, int id, entity &e);
-	extern void writeent(stream *g, int id, entity &e);
+	extern void readent(stream *g, int mtype, int mver, char *gid, int gver, int id);
+	extern void writeent(stream *g, int id);
 	extern void initents(stream *g, int mtype, int mver, char *gid, int gver);
-	extern float dropheight(entity &e);
+	extern float dropheight(extentity &e);
 	extern void fixentity(int n);
 	extern bool cansee(extentity &e);;
 	extern const char *findname(int type);

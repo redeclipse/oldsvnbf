@@ -298,18 +298,18 @@ static inline void yawray(vec &o, vec &ray, float angle)
 
 bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist, int mode, float &dist)
 {
-    model *m = loadmodel(NULL, e.attr[0]);
+    model *m = loadmodel(NULL, e.attrs[0]);
     if(!m) return false;
     if(mode&RAY_SHADOW)
     {
-        if(!m->shadow || e.lastemit || e.attr[4]&MMT_NOSHADOW) return false;
+        if(!m->shadow || e.lastemit || e.attrs[4]&MMT_NOSHADOW) return false;
     }
     else if((mode&RAY_ENTS)!=RAY_ENTS && !m->collide) return false;
     if(!m->bih && !m->setBIH()) return false;
     if(!maxdist) maxdist = 1e16f;
     vec yo(o);
     yo.sub(e.o);
-    float yaw = -180.0f-(float)(e.attr[1]%360);
+    float yaw = -180.0f-(float)(e.attrs[1]%360);
     vec yray(ray);
     if(yaw != 0) yawray(yo, yray, yaw);
     if(m->bih->traverse(yo, yray, maxdist, dist, mode))

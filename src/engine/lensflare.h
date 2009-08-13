@@ -104,10 +104,10 @@ struct flarerenderer : partrenderer
 			const vector<int> &lights = checklightcache(int(camera1->o.x), int(camera1->o.y));
 			loopv(lights)
 			{
-				entity &e = *ents[lights[i]];
+				extentity &e = *ents[lights[i]];
 				if(e.type != ET_LIGHT && e.type != ET_SUNLIGHT) continue;
-				bool sun = (e.attr[0] == 0 || e.type == ET_SUNLIGHT);
-				float radius = (e.type != ET_SUNLIGHT ? e.attr[0] : 0)*(flaresize/100.f);
+				bool sun = (e.attrs[0] == 0 || e.type == ET_SUNLIGHT);
+				float radius = (e.type != ET_SUNLIGHT ? e.attrs[0] : 0)*(flaresize/100.f);
 				vec flaredir = vec(e.o).sub(camera1->o);
 				float len = flaredir.magnitude();
 				if(!sun && (len > radius)) continue;

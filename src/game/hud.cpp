@@ -695,21 +695,22 @@ namespace hud
 										extentity &e = *entities::ents[ent];
 										if(enttype[e.type].usetype == EU_ITEM)
 										{
-											int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attr[0], sweap) : e.attr[0];
-											if(game::player1->canuse(e.type, attr, e.attr[1], e.attr[2], e.attr[3], e.attr[4], sweap, lastmillis, WEAP_S_RELOAD))
+											int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+											if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD))
 											{
 												if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
 													weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
 												if(isweap(drop))
 												{
-													defformatstring(dropweap)("%s", entities::entinfo(WEAPON, drop, 0, 0, 0, 0, false));
-													ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+													static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
+													defformatstring(dropweap)("%s", entities::entinfo(WEAPON, attrs, false));
+													ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false));
 												}
-												else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], false));
+												else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, entities::entinfo(e.type, e.attrs, false));
 												break;
 											}
 										}
-										else if(e.type == TRIGGER && e.attr[2] == TA_ACTION)
+										else if(e.type == TRIGGER && e.attrs[2] == TA_ACTION)
 										{
 											ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey);
 											break;
@@ -932,7 +933,7 @@ namespace hud
 		}
 	}
 
-	void drawentblip(int w, int h, float blend, int n, vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool spawned, int lastspawn, bool insel)
+	void drawentblip(int w, int h, float blend, int n, vec &o, int type, vector<int> &attr, bool spawned, int lastspawn, bool insel)
 	{
 		if(type > NOTUSED && type < MAXENTTYPES && ((enttype[type].usetype == EU_ITEM && spawned) || game::player1->state == CS_EDITING))
 		{
@@ -955,19 +956,19 @@ namespace hud
 			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = radarblipsize;
 			if(type == WEAPON)
 			{
-				int attr = weapattr(attr1, m_spawnweapon(game::gamemode, game::mutators));
-				tex = hud::itemtex(WEAPON, attr);
-				r = (weaptype[attr].colour>>16)/255.f;
-				g = ((weaptype[attr].colour>>8)&0xFF)/255.f;
-				b = (weaptype[attr].colour&0xFF)/255.f;
+				int attr1 = weapattr(attr[0], m_spawnweapon(game::gamemode, game::mutators));
+				tex = hud::itemtex(WEAPON, attr1);
+				r = (weaptype[attr1].colour>>16)/255.f;
+				g = ((weaptype[attr1].colour>>8)&0xFF)/255.f;
+				b = (weaptype[attr1].colour&0xFF)/255.f;
 				fade *= radaritemblend;
 				size = radaritemsize;
 			}
 			else fade *= radarblipblend;
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
-			if(insel) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, insel));
-			else if(hastv(radaritemnames)) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr1, attr2, attr3, attr4, attr5, false));
+			if(insel) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr, insel));
+			else if(hastv(radaritemnames)) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr, false));
 			else drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b);
 		}
 	}
@@ -980,12 +981,12 @@ namespace hud
 			loopv(entgroup) if(entities::ents.inrange(entgroup[i]) && entgroup[i] != hover)
 			{
 				gameentity &e = *(gameentity *)entities::ents[entgroup[i]];
-				drawentblip(w, h, blend, entgroup[i], e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
+				drawentblip(w, h, blend, entgroup[i], e.o, e.type, e.attrs, e.spawned, e.lastspawn, true);
 			}
 			if(entities::ents.inrange(hover))
 			{
 				gameentity &e = *(gameentity *)entities::ents[hover];
-				drawentblip(w, h, blend, hover, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, true);
+				drawentblip(w, h, blend, hover, e.o, e.type, e.attrs, e.spawned, e.lastspawn, true);
 			}
 		}
 		else
@@ -993,13 +994,13 @@ namespace hud
 			loopv(entities::ents)
 			{
 				gameentity &e = *(gameentity *)entities::ents[i];
-				drawentblip(w, h, blend, i, e.o, e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], e.spawned, e.lastspawn, false);
+				drawentblip(w, h, blend, i, e.o, e.type, e.attrs, e.spawned, e.lastspawn, false);
 			}
 			loopv(projs::projs) if(projs::projs[i]->projtype == PRJ_ENT && projs::projs[i]->ready())
 			{
 				projent &proj = *projs::projs[i];
 				if(entities::ents.inrange(proj.id))
-					drawentblip(w, h, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attr[0], entities::ents[proj.id]->attr[1], entities::ents[proj.id]->attr[2], entities::ents[proj.id]->attr[3], entities::ents[proj.id]->attr[4], true, proj.spawntime, false);
+					drawentblip(w, h, blend, -1, proj.o, entities::ents[proj.id]->type, entities::ents[proj.id]->attrs, true, proj.spawntime, false);
 			}
 		}
 	}
@@ -1134,10 +1135,16 @@ namespace hud
 		if(entities::ents.inrange(n))
 		{
 			gameentity &e = *(gameentity *)entities::ents[n];
-			const char *itext = itemtex(e.type, e.attr[0]);
+			const char *itext = itemtex(e.type, e.attrs[0]);
 			int ty = drawitem(itext && *itext ? itext : inventoryenttex, x, y, s, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "%s (%d)", enttype[e.type].name, n);
-			drawitemsubtext(x, y-int(s/3*skew), s, false, skew, "default", fade*inventoryblend, "%d %d %d %d %d", e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4]);
-			drawitemsubtext(x, y, s, false, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attr[0], e.attr[1], e.attr[2], e.attr[3], e.attr[4], true));
+			mkstring(attrstr);
+			loopi(enttype[e.type].numattrs)
+			{
+				defformatstring(s)("%s%d", i ? " " : "", e.attrs[i]);
+				concatstring(attrstr, s);
+			}
+			if(attrstr[0]) drawitemsubtext(x, y-int(s/3*skew), s, false, skew, "default", fade*inventoryblend, "%s", attrstr);
+			drawitemsubtext(x, y, s, false, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attrs, true));
 			return ty;
 		}
 		return 0;

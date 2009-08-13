@@ -635,20 +635,20 @@ void renderwater()
             }
         }
 
-        entity *lastlight = (entity *)-1;
+        extentity *lastlight = (extentity *)-1;
         int lastdepth = -1;
 		bool begin = false;
 		loopvj(ref.matsurfs)
 		{
 			materialsurface &m = *ref.matsurfs[j];
 
-			entity *light = (m.light && m.light->type==ET_LIGHT ? m.light : NULL);
+			extentity *light = (m.light && m.light->type==ET_LIGHT ? m.light : NULL);
 			if(light!=lastlight)
 			{
 				if(begin) { glEnd(); begin = false; }
 				const vec &lightpos = light ? light->o : vec(hdr.worldsize/2, hdr.worldsize/2, hdr.worldsize);
-				float lightrad = light && light->attr[0] ? light->attr[0] : hdr.worldsize*8.0f;
-				const vec &lightcol = (light ? vec(light->attr[1], light->attr[2], light->attr[3]) : vec(amb)).div(255.0f).mul(waterspec/100.0f);
+				float lightrad = light && light->attrs[0] ? light->attrs[0] : hdr.worldsize*8.0f;
+				const vec &lightcol = (light ? vec(light->attrs[1], light->attrs[2], light->attrs[3]) : vec(amb)).div(255.0f).mul(waterspec/100.0f);
 				setlocalparamf("lightpos", SHPARAM_VERTEX, 2, lightpos.x, lightpos.y, lightpos.z);
 				setlocalparamf("lightcolor", SHPARAM_PIXEL, 3, lightcol.x, lightcol.y, lightcol.z);
 				setlocalparamf("lightradius", SHPARAM_PIXEL, 4, lightrad, lightrad, lightrad);
