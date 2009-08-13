@@ -916,9 +916,8 @@ namespace server
 		int weap = m_spawnweapon(gamemode, mutators), maxhealth = m_maxhealth(gamemode, mutators);
 		if(ci->state.aitype >= AI_START)
 		{
-			bool randweap = sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attrs[4]&AI_F_RANDWEAP;
 			weap = aitype[ci->state.aitype].weap;
-			if(!isweap(weap) || randweap) weap = rnd(WEAP_TOTAL-1)+1;
+			if(!isweap(weap)) weap = rnd(WEAP_TOTAL-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
 		}
 		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators));
@@ -1350,7 +1349,6 @@ namespace server
 		if(ci->state.aitype >= AI_START) return TEAM_ENEMY;
 		else if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			if(ci->state.aitype >= AI_START && sents.inrange(ci->state.aientity) && sents[ci->state.aientity].attrs[1]) return sents[ci->state.aientity].attrs[1];
 			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
 			if(balance < 3 && ci->state.aitype >= 0) balance = 1;
 			if(balance || team < 0)

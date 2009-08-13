@@ -1623,7 +1623,7 @@ void makeparticle(const vec &o, vector<int> &attr)
 		case 6: //meter, metervs - <percent> <rgb> <rgb2>
 		{
 			float length = clamp(attr[1], 0, 100)/100.f;
-			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, attr[2], length, 1-length); // fall through
+			part_icon(o, textureload("textures/progress", 3), 1.f, 2, 0, 0, 1, attr[3], length, 1-length); // fall through
 		}
 		case 5:
 		{
