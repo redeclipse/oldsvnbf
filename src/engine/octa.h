@@ -217,7 +217,8 @@ struct editinfo
 	editinfo() : copy(NULL) {}
 };
 
-struct undoent	{ int i, type, attrs[10]; };
+#define UNDOATTRS 6
+struct undoent	{ int i; uchar type; vec o; int attrs[UNDOATTRS]; };
 struct undoblock // undo header, all data sits in payload
 {
     undoblock *prev, *next;

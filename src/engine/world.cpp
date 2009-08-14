@@ -239,7 +239,8 @@ undoblock *newundoent()
     {
         e->i = entgroup[i];
         e->type = entities::getents()[entgroup[i]]->type;
-        loopj(10) e->attrs[i] = entities::getents()[entgroup[i]]->attrs.inrange(j) ? entities::getents()[entgroup[i]]->attrs[j] : 0;
+        e->o = entities::getents()[entgroup[i]]->o;
+        loopj(UNDOATTRS) e->attrs[i] = entities::getents()[entgroup[i]]->attrs.inrange(j) ? entities::getents()[entgroup[i]]->attrs[j] : 0;
         e++;
     }
     return u;
@@ -249,6 +250,7 @@ void makeundoent()
 {
     if(!undonext) return;
     undonext = false;
+    if(!editmode) return;
     oldhover = enthover;
     undoblock *u = newundoent();
     if(u) addundo(u);
@@ -289,7 +291,7 @@ void pasteundoents(undoblock *u)
 {
     undoent *ue = u->ents();
     loopi(u->numents)
-        entedit(ue[i].i, { e.type = ue[i].type; while(e.attrs.length() < 10) e.attrs.add(0); loopj(10) e.attrs[j] = ue[i].attrs[j]; });
+        entedit(ue[i].i, { e.type = ue[i].type; e.o = ue[i].o; while(e.attrs.length() < UNDOATTRS) e.attrs.add(0); loopj(UNDOATTRS) e.attrs[j] = ue[i].attrs[j]; });
 }
 
 void entflip()
@@ -593,16 +595,27 @@ void newentity(int type, vector<int> &attrs)
 	entedit(i, e.type = type);
 }
 
-void newent(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
+void entattrs(const char *str, vector<int> &attrs)
+{
+	int num = listlen(str);
+	loopk(num)
+	{
+		char *a = indexlist(str, k);
+		if(a)
+		{
+			attrs.add(atoi(a));
+			DELETEA(a);
+		}
+	}
+}
+
+void newent(char *what, char *attr)
 {
 	if(noentedit()) return;
 	int type = entities::findtype(what);
-	if(type != ET_EMPTY)
-	{
-		static vector<int> attrs; attrs.setsizenodelete(0);
-		attrs.add(*a1); attrs.add(*a2); attrs.add(*a3); attrs.add(*a4); attrs.add(*a5);
-		newentity(type, attrs);
-	}
+	static vector<int> attrs; attrs.setsizenodelete(0);
+	entattrs(attr, attrs);
+	if(type != ET_EMPTY) newentity(type, attrs);
 }
 
 int entcopygrid;
@@ -638,7 +651,7 @@ void entpaste()
 	groupeditundo(e.type = entcopybuf[j++].type;);
 }
 
-COMMAND(newent, "siiiii");
+COMMAND(newent, "ss");
 COMMAND(delent, "");
 COMMAND(dropent, "");
 COMMAND(entcopy, "");
@@ -675,17 +688,9 @@ COMMAND(entlink, "");
 void entset(char *what, char *attr)
 {
 	if(noentedit()) return;
+	int type = entities::findtype(what);
 	static vector<int> attrs; attrs.setsizenodelete(0);
-	int type = entities::findtype(what), num = listlen(attr);
-	loopk(num)
-	{
-		char *a = indexlist(attr, k);
-		if(a)
-		{
-			attrs.add(atoi(a));
-			DELETEA(a);
-		}
-	}
+	entattrs(attr, attrs);
 	groupedit({
 		e.type = type;
 		while(e.attrs.length() < attrs.length()) e.attrs.add(0);
