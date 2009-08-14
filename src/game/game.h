@@ -147,7 +147,7 @@ enttypes enttype[] = {
 	},
 	{
 		ACTOR,			59,		0,		EU_NONE,	5,
-			inttobit(WAYPOINT)|inttobit(FLAG),
+			inttobit(FLAG),
 			0,
 			false,				"actor",		{ "type",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},

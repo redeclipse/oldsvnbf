@@ -1105,11 +1105,8 @@ namespace entities
 	{
 		extentity &e = *ents[i];
 		fixentity(i);
-		if(m_edit(game::gamemode))
-		{
-			client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
-			clearentcache();
-		}
+		if(m_edit(game::gamemode)) client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
+		clearentcache();
 	}
 
 	float dropheight(extentity &e)
@@ -1339,11 +1336,10 @@ namespace entities
 				int cmds = WP_F_NONE;
 				if(physics::iscrouching(d)) cmds |= WP_F_CROUCH;
 				curnode = ents.length();
-				static vector<int> attrs; attrs.setsizenodelete(0);
-				attrs.add(int(WP_COMMON)); attrs.add(int(WP_S_NONE)); attrs.add(0); attrs.add(0); attrs.add(cmds);
-				newentity(v, WAYPOINT, attrs);
+				static vector<int> wpattrs;
+				if(wpattrs.empty()) { wpattrs.add(int(WP_COMMON)); wpattrs.add(int(WP_S_NONE)); wpattrs.add(0); wpattrs.add(0); wpattrs.add(cmds); }
+				newentity(v, WAYPOINT, wpattrs);
 				if(d->timeinair) d->airnodes.add(curnode);
-				clearentcache();
 			}
 
 			if(ents.inrange(curnode))
