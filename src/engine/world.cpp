@@ -160,7 +160,7 @@ static void modifyoctaent(int flags, int id)
 
     e.inoctanode = flags&MODOE_ADD ? 1 : 0;
     modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
-    if(e.type == ET_LIGHT || e.type == ET_SUNLIGHT) clearlightcache(id);
+    if(e.type == ET_LIGHT) clearlightcache(id);
     else if(flags&MODOE_ADD) lightent(e);
 }
 

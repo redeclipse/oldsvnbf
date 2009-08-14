@@ -123,15 +123,15 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHTFX,		1,		0,		EU_NONE,	5,
-			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			inttobit(LIGHT)|inttobit(SUNLIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(LIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			inttobit(LIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"lightfx",		{ "type",	"mod",		"min",		"max",		"flags",	"" }
 	},
 	{
-		SUNLIGHT,		160,	0,		EU_NONE,	5,
-			inttobit(LIGHTFX),
-			inttobit(LIGHTFX),
-			false,				"sunlight",		{ "yaw",	"pitch",	"red",		"green",	"blue",		"" }
+		SUNLIGHT,		160,	0,		EU_NONE,	6,
+			0,
+			0,
+			false,				"sunlight",		{ "yaw",	"pitch",	"red",		"green",	"blue",		"offset" }
 	},
 	{
 		WEAPON,			59,		16,		EU_ITEM,	3,

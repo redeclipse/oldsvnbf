@@ -105,9 +105,9 @@ struct flarerenderer : partrenderer
 			loopv(lights)
 			{
 				extentity &e = *ents[lights[i]];
-				if(e.type != ET_LIGHT && e.type != ET_SUNLIGHT) continue;
-				bool sun = (e.attrs[0] == 0 || e.type == ET_SUNLIGHT);
-				float radius = (e.type != ET_SUNLIGHT ? e.attrs[0] : 0)*(flaresize/100.f);
+				if(e.type != ET_LIGHT) continue;
+				bool sun = e.attrs[0] == 0;
+				float radius = e.attrs[0]*(flaresize/100.f);
 				vec flaredir = vec(e.o).sub(camera1->o);
 				float len = flaredir.magnitude();
 				if(!sun && (len > radius)) continue;

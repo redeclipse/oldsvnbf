@@ -1951,8 +1951,26 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					int colour = (lightcolour(e,0)<<16)|(lightcolour(e,1)<<8)|(lightcolour(e,2));
-					part_dir(e.o, e.attrs[0], e.attrs[1], getworldsize()*2, 1, colour);
+					int colour = ((lightcolour(e,0)/3)<<16)|((lightcolour(e,1)/3)<<8)|(lightcolour(e,2)/3), offset = e.attrs[5] ? e.attrs[5] : 10;
+					loopk(9)
+					{
+						int yaw = e.attrs[0], pitch = e.attrs[1];
+						switch(k)
+						{
+							case 0: default: break;
+							case 1: pitch += offset; break;
+							case 2: yaw += offset/2; pitch += offset/2; break;
+							case 3: yaw += offset; break;
+							case 4: yaw += offset/2; pitch -= offset/2; break;
+							case 5: pitch -= offset; break;
+							case 6: yaw -= offset/2; pitch -= offset/2; break;
+							case 7: yaw -= offset; break;
+							case 8: yaw -= offset/2; pitch += offset/2; break;
+						}
+						while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+						while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
+						part_dir(e.o, yaw, pitch, getworldsize()*2, 1, colour);
+					}
 				}
 				break;
 			}
@@ -2020,10 +2038,10 @@ namespace entities
 			else
 			{
 				bool lonely = true;
-				loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type != LIGHT && ents[ents[i]->links[k]]->type != SUNLIGHT) { lonely = false; break; }
+				loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type != LIGHT) { lonely = false; break; }
 				if(!lonely) continue;
 			}
-			loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && (ents[ents[i]->links[k]]->type == LIGHT || ents[ents[i]->links[k]]->type == SUNLIGHT))
+			loopvk(ents[i]->links) if(ents.inrange(ents[i]->links[k]) && ents[ents[i]->links[k]]->type == LIGHT)
 				makelightfx(*ents[i], *ents[ents[i]->links[k]]);
 		}
 	}
