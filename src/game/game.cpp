@@ -304,21 +304,21 @@ namespace game
 		}
 	}
 
-	VARA(spawneffectnum, 10, 50, INT_MAX-1);
-	void spawneffect(int type, const vec &o, int colour, int radius, int fade, float size)
+	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size)
 	{
-		regularshape(type, radius*2, colour, 21, spawneffectnum, m_speedtime(fade), o, size, -5, 0, 20.f);
+		regularshape(type, radius, colour, 21, 25, m_speedtime(fade), o, size, -vel, 0, vel*2);
 		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
 	void impulseeffect(gameent *d, bool effect)
 	{
+		int num = effect ? 20 : 5, len = effect ? 200 : 50;
 		if(d->type == ENT_PLAYER)
 		{
-			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->lfoot, 1.5f, -5, 0, 10.f);
-			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->rfoot, 1.5f, -5, 0, 10.f);
+			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, num, m_speedtime(len), d->lfoot, 1.5f, -5, 0, 10.f);
+			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, num, m_speedtime(len), d->rfoot, 1.5f, -5, 0, 10.f);
 		}
-		else regularshape(PART_FIREBALL, int(d->radius)*2, 0x662211, 21, effect ? 15 : 5, m_speedtime(effect ? 150 : 50), d->feetpos(), 1.5f, -5, 0, 10.f);
+		else regularshape(PART_FIREBALL, int(d->radius)*2, 0x662211, 21, num, m_speedtime(len), d->feetpos(), 1.5f, -5, 0, 10.f);
 	}
 
 	gameent *pointatplayer()

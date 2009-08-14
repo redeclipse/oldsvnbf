@@ -425,7 +425,7 @@ namespace ctf
 				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
 				part_text(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
-			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
+			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
 		if(to.x >= 0)
 		{
@@ -434,7 +434,7 @@ namespace ctf
 				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
 				part_text(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
-			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius);
+			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
 		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2.f, -5);
     }

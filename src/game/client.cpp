@@ -1185,7 +1185,7 @@ namespace client
 						f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
 						parsestate(f, p);
 						playsound(S_RESPAWN, f->o, f);
-						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius*2));
 					}
 					else parsestate(NULL, p);
 					break;
@@ -1216,7 +1216,7 @@ namespace client
 						addmsg(SV_SPAWN, "ri", f->clientnum);
 						entities::spawnplayer(f, ent, true);
 						playsound(S_RESPAWN, f->o, f);
-						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius));
+						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius*2));
 					}
 					ai::spawned(f, ent);
 					if(f == game::player1) game::resetcamera();
@@ -1375,7 +1375,7 @@ namespace client
 							}
 						}
 					}
-					game::spawneffect(PART_FIREBALL, entities::ents[ent]->o, entities::ents[ent]->type == WEAPON ? colour : 0x6666FF, enttype[entities::ents[ent]->type].radius);
+					game::spawneffect(PART_FIREBALL, entities::ents[ent]->o, entities::ents[ent]->type == WEAPON ? colour : 0x6666FF, enttype[entities::ents[ent]->type].radius, 5);
 					break;
 				}
 

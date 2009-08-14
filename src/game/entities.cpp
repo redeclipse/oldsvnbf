@@ -221,7 +221,7 @@ namespace entities
 				}
 			}
 			d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
-			game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius);
+			game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius, 5);
 			playsound(S_ITEMPICKUP, d->o, d);
 			if(ents.inrange(r) && ents[r]->type == WEAPON)
 			{
@@ -835,7 +835,7 @@ namespace entities
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
 					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 						colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
-					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius);
+					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius, 5);
 					proj.beenused = true;
 					proj.state = CS_DEAD;
 				}
