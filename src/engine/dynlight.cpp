@@ -235,7 +235,7 @@ void makelightfx(extentity &e, extentity &f)
 	if(f.attrs[0] && e.attrs[0] != LFX_SPOTLIGHT)
 	{
 		vec colour = vec(lightcolour(f,0), lightcolour(f,1), lightcolour(f,2)).div(255.f);
-		float radius = f.type != ET_SUNLIGHT ? f.attrs[0] : getworldsize()*2; int millis = lastmillis-e.emit[2], effect = e.attrs[0], interval = e.emit[0]+e.emit[1];
+		float radius = f.attrs[0]; int millis = lastmillis-e.emit[2], effect = e.attrs[0], interval = e.emit[0]+e.emit[1];
 		if(!e.emit[2] || millis >= interval) loopi(2)
 		{
 			e.emit[i] = e.attrs[i+2] ? e.attrs[i+2] : 750;
@@ -263,6 +263,6 @@ void makelightfx(extentity &e, extentity &f)
 			}
 			default: break;
 		}
-		if(radius > 0) adddynlight(lightposition(f), radius, colour);
+		if(radius > 0) adddynlight(f.o, radius, colour);
 	}
 }

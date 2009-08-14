@@ -38,7 +38,7 @@ static int lmtype, lmbpp, lmorient, lmrotate;
 static uchar lm[4*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
-static vector<const extentity *> lights1, lights2;
+static vector<const extentity *> lights1, lights2, sunlights;
 static uint lmprog = 0;
 GLuint lmprogtex = 0;
 static int lmprogtexticks = 0;
@@ -46,22 +46,23 @@ static int lmprogtexticks = 0;
 bool calclight_canceled = false;
 volatile bool check_calclight_lmprog = false;
 
+void check_calclight_canceled()
+{
+    if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
+	if(!calclight_canceled) check_calclight_lmprog = false;
+}
+
 vec &lightposition(const extentity &light, const vec &target)
 {
 	static vec pos;
 	if(light.type == ET_SUNLIGHT)
 	{
-		vec dir; vecfromyawpitch(light.attrs[0], light.attrs[1], 1, 0, dir);
-		pos = vec(target != vec(-1, -1, -1) ? target : light.o).add(dir.normalize().mul(hdr.worldsize*2));
+		vec dir; vecfromyawpitch(light.attrs[0], light.attrs[1], 1, 0, dir); dir.normalize().mul(hdr.worldsize*2);
+		pos = vec(target != vec(-1, -1, -1) ? target : light.o).add(dir);
+		pos.x = clamp(pos.x, 0.f, float(hdr.worldsize)); pos.y = clamp(pos.y, 0.f, float(hdr.worldsize)); pos.z = clamp(pos.z, 0.f, float(hdr.worldsize));
 	}
 	else pos = light.o;
 	return pos;
-}
-
-void check_calclight_canceled()
-{
-    if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
-	if(!calclight_canceled) check_calclight_lmprog = false;
 }
 
 static int curlumels = 0;
@@ -348,9 +349,8 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 	loopv(lights)
 	{
 		const extentity &light = *lights[i];
-		vec ray = target, pos = lightposition(light, target);
-		ray.sub(pos);
-        float mag = ray.magnitude(), radius = (light.type != ET_SUNLIGHT ? light.attrs[0] : 0);
+		vec ray = target, pos = light.o; ray.sub(pos);
+        float mag = ray.magnitude(), radius = light.attrs[0];
         if(!mag) continue;
         float attenuation = 1;
         if(radius > 0)
@@ -470,10 +470,45 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	int hit = 0;
 	loopi(17) if(normal.dot(rays[i])>=0)
 	{
-		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t)>1e15f) hit++;
+		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+			hit++;
 	}
-
 	loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
+}
+
+void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1, extentity *t = NULL)
+{
+	loopv(sunlights)
+	{
+		const extentity &light = *sunlights[i];
+		bool wantscolour = false;
+		loopk(3) if(slight[k] < lightcolour(light,k)) { wantscolour = true; break; }
+		if(!wantscolour) continue;
+		int offset = light.attrs[5] ? light.attrs[5] : 10, hit = 0;
+		loopk(9)
+		{
+			int yaw = light.attrs[0], pitch = light.attrs[1];
+			switch(k)
+			{
+				case 0: default: break;
+				case 1: pitch += offset; break;
+				case 2: yaw += offset/2; pitch += offset/2; break;
+				case 3: yaw += offset; break;
+				case 4: yaw += offset/2; pitch -= offset/2; break;
+				case 5: pitch -= offset; break;
+				case 6: yaw -= offset/2; pitch -= offset/2; break;
+				case 7: yaw -= offset; break;
+				case 8: yaw -= offset/2; pitch += offset/2; break;
+			}
+			while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+			while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
+			vec dir; vecfromyawpitch(yaw, pitch, 1, 0, dir);
+			if(normal.dot(dir) < 0) continue;
+			if(shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+				hit++;
+		}
+		loopk(3) slight[k] = max(uchar(lightcolour(light,k)*hit/9.f), slight[k]);
+	}
 }
 
 static inline bool hasskylight()
@@ -621,6 +656,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
                 else loopk(3) slight[k] = max(skylightcolor[k], ambientcolor[k]);
             }
             else loopk(3) slight[k] = ambientcolor[k];
+            if(!sunlights.empty()) calcsunlight(u, normal, tolerance, slight, mmshadows);
             if(lmtype&LM_ALPHA) generate_alpha(tolerance, u, slight[3]);
             sample += aasample;
 		}
@@ -693,7 +729,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 			}
 		}
 
-		if(hasskylight())
+		if(hasskylight() || !sunlights.empty())
 		{
 			if(blurskylight && (lm_w>1 || lm_h>1)) blurlightmap(blurskylight);
 		}
@@ -850,7 +886,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 0, 2, 12, clearlightcache());
+VARF(lightcachesize, 0, 4, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
@@ -865,8 +901,7 @@ void clearlightcache(int e)
 	else
 	{
 		const extentity &light = *entities::getents()[e];
-		int radius = light.type != ET_SUNLIGHT ? light.attrs[0] : 0;
-		vec pos = lightposition(light, vec(1, 1, 1).mul(hdr.worldsize/2));
+		int radius = light.attrs[0]; vec pos = light.o;
         for(int x = int(max(pos.x-radius, 0.0f))>>lightcachesize, ex = int(min(pos.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
         for(int y = int(max(pos.y-radius, 0.0f))>>lightcachesize, ey = int(min(pos.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
 		{
@@ -908,7 +943,6 @@ const vector<int> &checklightcache(int x, int y)
                 }
                 break;
             }
-            case ET_SUNLIGHT: break;
             default: continue;
         }
 		lce.lights.add(i);
@@ -921,7 +955,7 @@ const vector<int> &checklightcache(int x, int y)
 
 static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
-    int radius = light.type != ET_SUNLIGHT ? light.attrs[0] : 0;
+    int radius = light.attrs[0];
     if(radius > 0)
     {
         if(light.o.x + radius < cx || light.o.x - radius > cx + size ||
@@ -930,7 +964,7 @@ static inline void addlight(const extentity &light, int cx, int cy, int cz, int 
             return;
     }
 
-	vec pos = lightposition(light, vec(1, 1, 1).mul(hdr.worldsize/2));
+	vec pos = light.o;
     if(!n2)
     {
         loopi(4)
@@ -980,8 +1014,9 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
 {
     lights1.setsizenodelete(0);
     lights2.setsizenodelete(0);
+    sunlights.setsizenodelete(0);
     const vector<extentity *> &ents = entities::getents();
-    if(lightcachesize && size <= 1<<lightcachesize)
+    if(size <= 1<<lightcachesize)
     {
         const vector<int> &lights = checklightcache(cx, cy);
         loopv(lights)
@@ -989,20 +1024,21 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
             const extentity &light = *ents[lights[i]];
             switch(light.type)
             {
-                case ET_LIGHT: case ET_SUNLIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
+                case ET_LIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
             }
         }
     }
-    else loopv(ents)
+    loopv(ents)
     {
         const extentity &light = *ents[i];
         switch(light.type)
         {
-            case ET_LIGHT: case ET_SUNLIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
+            case ET_LIGHT: if(!(size <= 1<<lightcachesize)) addlight(light, cx, cy, cz, size, v, n, n2); break;
+			case ET_SUNLIGHT: sunlights.add(&light); break;
         }
     }
     if(slot.layer && (setblendmaporigin(ivec(cx, cy, cz), size) || slot.layermask)) return true;
-	return lights1.length() || lights2.length() || hasskylight();
+	return lights1.length() || lights2.length() || hasskylight() || sunlights.length();
 }
 
 int setup_surface(plane planes[2], const vec *p, const vec *n, const vec *n2, uchar texcoords[8], bool preview = false)
@@ -1281,7 +1317,7 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
             cn[i].normals[2] = bvec(n[2]);
             cn[i].normals[3] = bvec(numplanes < 2 ? n[3] : n2[2]);
         }
-        if(lights1.empty() && lights2.empty() && (!layer || (!hasblendmap() && !slot.layermask)) && !hasskylight()) continue;
+        if(lights1.empty() && lights2.empty() && (!layer || (!hasblendmap() && !slot.layermask)) && !hasskylight() && sunlights.empty()) continue;
 
         uchar texcoords[8];
 
@@ -2017,17 +2053,14 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	loopv(lights)
 	{
 		extentity &e = *ents[lights[i]];
-		if(e.type != ET_LIGHT && e.type != ET_SUNLIGHT)
-			continue;
+		if(e.type != ET_LIGHT) continue;
 
-		vec ray(target), pos = lightposition(e, target);
-		ray.sub(pos);
+		vec ray(target), pos = e.o; ray.sub(pos);
 		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attrs[0] : 0;
 		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
-		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
-			continue;
+		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag) continue;
 		float intensity = 1;
 		if(radius > 0) intensity -= mag / float(radius);
 
@@ -2074,6 +2107,12 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
         float slight = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
 		color[k] = min(1.5f, max(slight, color[k]));
 	}
+	if(!sunlights.empty())
+	{
+		uchar slight[3]; loopk(3) slight[k] = color[k];
+		calcsunlight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
+		loopk(3) color[k] = slight[k];
+	}
 	if(dir.iszero()) dir = vec(0, 0, 1);
 	else dir.normalize();
 }
@@ -2087,11 +2126,11 @@ extentity *brightestlight(const vec &target, const vec &dir)
 	loopv(lights)
 	{
 		extentity &e = *ents[lights[i]];
-		if((e.type != ET_LIGHT && e.type != ET_SUNLIGHT)) continue;
-		vec ray(target), pos = lightposition(e, target);
+		if(e.type != ET_LIGHT) continue;
+		vec ray(target), pos = e.o;
 		if(vec(pos).sub(target).dot(dir)<0) continue;
 		ray.sub(pos);
-		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attrs[0] : 0;
+		float mag = ray.magnitude(), radius = e.attrs[0];
 		if(radius > 0 && mag >= float(radius)) continue;
 
 		ray.div(mag);
