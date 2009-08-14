@@ -308,7 +308,7 @@ namespace projs
 				if(proj.projcollide&COLLIDE_TRACE)
 				{
 					proj.o = vec(ray).mul(olddist).add(orig);
-					float cdist = tracecollide(proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
+					float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
 					proj.o.add(vec(ray).mul(dist - olddist));
 					if(cdist < 0 || dist >= barrier) break;
 				}
@@ -317,7 +317,7 @@ namespace projs
 					proj.o = vec(ray).mul(dist).add(orig);
 					if(collide(&proj) && !inside) break;
 				}
-				if(hitplayer && hitplayer != proj.hit ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+				if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
 				{
 					if(hitplayer) { if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) continue; }
 					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
@@ -772,7 +772,7 @@ namespace projs
 					{
 						int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 							colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
-						game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[entities::ents[proj.id]->type].radius);
+						game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[entities::ents[proj.id]->type].radius, 5);
 					}
 					if(proj.local) client::addmsg(SV_DESTROY, "ri6", proj.owner->clientnum, lastmillis-game::maptime, -1, proj.id, 0, 0);
 				}
@@ -812,7 +812,7 @@ namespace projs
         float maxdist = ray.magnitude();
         if(maxdist <= 0) return 1; // not moving anywhere, so assume still alive since it was already alive
         ray.mul(1/maxdist);
-        float dist = tracecollide(proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
+        float dist = tracecollide(&proj, proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
         proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
         if(dist >= 0)
         {
@@ -990,8 +990,11 @@ namespace projs
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
-			proj.hit = NULL;
-			proj.hitflags = HITFLAG_NONE;
+			if(proj.projtype == PRJ_SHOT && proj.radial)
+			{
+				proj.hit = NULL;
+				proj.hitflags = HITFLAG_NONE;
+			}
 			hits.setsizenodelete(0);
 			if(proj.owner && proj.state != CS_DEAD)
 			{

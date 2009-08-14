@@ -631,7 +631,7 @@ bool plcollide(physent *d, const vec &dir)	// collide with player or monster
 		loopv(dynents)
 		{
 			physent *o = dynents[i];
-			if(o==d || !physics::issolid(o)) continue;
+			if(o==d || !physics::issolid(o, d)) continue;
 			if(!physics::xcollide(d, dir, o))
 			{
 				hitplayer = o;
@@ -846,7 +846,7 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol)
     return !playercol || plcollide(d, dir);
 }
 
-float pltracecollide(const vec &from, const vec &ray, float maxdist)
+float pltracecollide(physent *d, const vec &from, const vec &ray, float maxdist)
 {
     vec to = vec(ray).mul(maxdist).add(from);
     float x1 = floor(min(from.x, to.x)), y1 = floor(min(from.y, to.y)),
@@ -858,9 +858,9 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(!physics::issolid(o)) continue;
+            if(!physics::issolid(o, d)) continue;
             float dist = 1e16f;
-            if(!physics::xtracecollide(from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
+            if(!physics::xtracecollide(d, from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
             {
                 bestdist = dist;
                 if(dist <= maxdist) { hitplayer = o; bestflags = hitflags; }
@@ -871,7 +871,7 @@ float pltracecollide(const vec &from, const vec &ray, float maxdist)
     return bestdist <= maxdist ? bestdist : -1;
 }
 
-float tracecollide(const vec &o, const vec &ray, float maxdist, int mode, bool playercol)
+float tracecollide(physent *d, const vec &o, const vec &ray, float maxdist, int mode, bool playercol)
 {
     hitsurface = vec(0, 0, 0);
     hitplayer = NULL;
@@ -879,7 +879,7 @@ float tracecollide(const vec &o, const vec &ray, float maxdist, int mode, bool p
     float dist = raycube(o, ray, maxdist+1e-3f, mode);
     if(playercol)
     {
-        float pldist = pltracecollide(o, ray, min(dist, maxdist));
+        float pldist = pltracecollide(d, o, ray, min(dist, maxdist));
         if(pldist >= 0 && pldist < dist) dist = pldist;
     }
     return dist <= maxdist ? dist : -1;

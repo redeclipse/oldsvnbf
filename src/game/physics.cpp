@@ -92,8 +92,12 @@ namespace physics
 	}
 	ICOMMAND(taunt, "", (), { taunt(game::player1); });
 
-	bool issolid(physent *d)
+	bool issolid(physent *d, physent *e)
 	{
+		if(e && e->type == ENT_PROJ)
+		{
+			if(((projent *)e)->hit == d) return false;
+		}
 		if(d->state == CS_ALIVE)
 		{
 			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, spawnprotecttime*1000))
@@ -858,10 +862,10 @@ namespace physics
 		return true;
 	}
 
-	bool xtracecollide(const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o)
+	bool xtracecollide(physent *d, const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o)
 	{
 		hitflags = HITFLAG_NONE;
-		if(o->type == ENT_PLAYER)
+		if(d && d->type == ENT_PROJ && o->type == ENT_PLAYER)
 		{
 			gameent *e = (gameent *)o;
 			if(e->legs.x+e->lrad.x >= x1 && e->legs.y+e->lrad.y >= y1 && e->legs.x-e->lrad.x <= x2 && e->legs.y-e->lrad.y <= y2)
@@ -918,7 +922,7 @@ namespace physics
 				if(i) { y; } \
 				if(collide(d) && !inside) \
 				{ \
-					if(avoidplayers && hitplayer && issolid(hitplayer)) continue; \
+					if(avoidplayers && hitplayer && issolid(hitplayer, d)) continue; \
                     d->resetinterp(); \
 					return true; \
 				} \
