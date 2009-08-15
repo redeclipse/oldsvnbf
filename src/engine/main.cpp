@@ -657,10 +657,11 @@ void autoadjustcheck(int frames)
 	if(lastautoadjust < 0) lastautoadjust = lastmillis+autoadjustrate*5;
 	else if(frames > MAXFPSHISTORY && (!lastautoadjust || lastmillis >= lastautoadjust))
 	{
+		int delay = autoadjustrate;
 		if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
 		{
 			setvar("autoadjustlevel", autoadjustmin, true);
-			lastautoadjust = lastmillis+autoadjustrate/4;
+			delay = autoadjustrate/4;
 		}
 		else
 		{
@@ -668,14 +669,15 @@ void autoadjustcheck(int frames)
 			if(amt < 1.f)
 			{
 				setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
-				lastautoadjust = lastmillis+autoadjustrate;
+				delay = autoadjustrate;
 			}
 			else if(amt > 1.f)
 			{
 				setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
-				lastautoadjust = lastmillis+autoadjustrate/2;
+				delay = autoadjustrate/2;
 			}
 		}
+		lastautoadjust = lastmillis+delay;
 	}
 }
 

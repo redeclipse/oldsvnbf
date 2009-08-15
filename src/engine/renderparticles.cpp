@@ -5,8 +5,8 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARFP(maxparticles, 16, 512, INT_MAX-1, particleinit());
-VARA(maxparticledistance, 256, 1024, INT_MAX-1);
+VARFP(maxparticles, 16, 4096, INT_MAX-1, particleinit());
+VARP(maxparticledistance, 256, 1024, INT_MAX-1);
 VARP(maxparticletrail, 256, 1024, INT_MAX-1);
 
 VARP(particletext, 0, 1, 1);
@@ -15,7 +15,7 @@ VAR(debugparticles, 0, 0, 1);
 
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
-VARA(emitoffset, 0, 990, 1000);
+VARP(emitmillis, 0, 15, INT_MAX-1);
 static int lastemitframe = 0;
 static bool emit = false;
 
@@ -45,12 +45,8 @@ struct partrenderer
 	uint type;
 
 	partrenderer(const char *texname, int type)
-		: tex(NULL), texname(texname), type(type)
-	{
-	}
-	virtual ~partrenderer()
-	{
-	}
+		: tex(NULL), texname(texname), type(type) { }
+	virtual ~partrenderer() { }
 
 	virtual void init(int n) { }
 	virtual void reset() = NULL;
@@ -299,7 +295,7 @@ struct portal : listparticle<portal>
 struct portalrenderer : listrenderer<portal>
 {
 	portalrenderer(const char *texname)
-		: listrenderer<portal>(texname, PT_PORTAL|PT_LERP)
+		: listrenderer<portal>(texname, PT_PORTAL|PT_GLARE|PT_LERP)
 	{}
 
 	void startrender()
@@ -977,16 +973,16 @@ static partrenderer *parts[] =
 	&lineprimitives, &trisprimitives, &loopprimitives, &coneprimitives,
 	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_LERP),
 	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_LERP),
-	new taperenderer("particles/sflare", PT_TAPE|PT_LERP),
-	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_LERP),
+	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE|PT_LERP),
+	new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_LERP),
 	new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
-	new softquadrenderer("particles/hint", PT_PART|PT_LERP),
-	new quadrenderer("particles/hint", PT_PART|PT_LERP),
+	new softquadrenderer("particles/hint", PT_PART|PT_GLARE|PT_LERP),
+	new quadrenderer("particles/hint", PT_PART|PT_GLARE|PT_LERP),
 	new softquadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
-	new softquadrenderer("particles/hint", PT_PART),
-	new quadrenderer("particles/hint", PT_PART),
+	new softquadrenderer("particles/hint", PT_PART|PT_GLARE),
+	new quadrenderer("particles/hint", PT_PART|PT_GLARE),
 	new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE|PT_ONTOP),
@@ -996,9 +992,9 @@ static partrenderer *parts[] =
 	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/fire", PT_PART|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT),
+	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
-	new taperenderer("particles/mflare", PT_TAPE|PT_RND4|PT_VFLIP|PT_GLARE),
+	new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_GLARE),
 	new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/snow", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	&texts, &textontop,
@@ -1647,7 +1643,6 @@ void makeparticles(extentity &e) { makeparticle(e.o, e.attrs); }
 
 void updateparticles()
 {
-	int emitmillis = 1000-emitoffset;
 	if(lastmillis-lastemitframe >= emitmillis)
 	{
 		emit = true;
