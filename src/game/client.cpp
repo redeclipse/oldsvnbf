@@ -1270,14 +1270,16 @@ namespace client
 
 				case SV_REGEN:
 				{
-					int trg = getint(p), amt = getint(p), penalty = getint(p);
-					gameent *target = game::getclient(trg);
-					if(!target) break;
-					if(!target->lastregen || lastmillis-target->lastregen >= 500)
-						playsound(S_REGEN, target->o, target); // maybe only player1?
-					target->health = amt;
-					target->lastregen = lastmillis;
-					if((target->impulsemillis += penalty) < 0) target->impulsemillis = 0;
+					int trg = getint(p), heal = getint(p), amt = getint(p), penalty = getint(p);
+					gameent *f = game::getclient(trg);
+					if(!f) break;
+					if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500))
+					{
+						game::spawneffect(PART_SPARK, vec(f->o).sub(vec(0, 0, f->height*2.f/3.f)), 0xFF4444, int(f->radius*3), 10, 300, 0.25f);
+						playsound(S_REGEN, f->o, f); // maybe only player1?
+					}
+					f->health = heal; f->lastregen = lastmillis;
+					if((f->impulsemillis += penalty) < 0) f->impulsemillis = 0;
 					break;
 				}
 
