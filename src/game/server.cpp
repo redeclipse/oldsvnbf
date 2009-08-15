@@ -2137,6 +2137,7 @@ namespace server
 			else if(actor != target)
 			{
 				int logs = 0;
+				target->state.spree = 0;
 				actor->state.spree++;
 				actor->state.fraglog.add(target->clientnum);
 				if((flags&HIT_PROJ) && (flags&HIT_HEAD))
