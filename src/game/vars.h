@@ -27,7 +27,7 @@ VARG(vampire, 0, 0, 1);
 VARG(regendelay, 0, 3000, INT_MAX-1);
 VARG(regenguard, 0, 1500, INT_MAX-1);
 VARG(regentime, 0, 1000, INT_MAX-1);
-VARG(regenhealth, 0, 10, INT_MAX-1);
+VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 VARG(regenpenalty, 0, 500, INT_MAX-1);
 VARG(regenreward, 0, 100, INT_MAX-1);

@@ -2118,9 +2118,10 @@ namespace server
 			if(smode) smode->regen(actor, total, amt, delay, penalty);
 			if(total && actor->state.health < total)
 			{
-				actor->state.health = min(actor->state.health + realdamage, total);
+				int rgn = actor->state.health, heal = clamp(actor->state.health+realdamage, 0, total), eff = heal-rgn;
+				actor->state.health = heal;
 				actor->state.lastregen = gamemillis;
-				sendf(-1, 1, "ri4", SV_REGEN, actor->clientnum, actor->state.health, 0);
+				sendf(-1, 1, "ri5", SV_REGEN, actor->clientnum, actor->state.health, eff, 0);
 			}
 		}
 
@@ -2604,12 +2605,18 @@ namespace server
 				if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
 				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay), penalty = 0;
 				if(smode) smode->regen(ci, total, amt, delay, penalty);
-				if(delay && (ci->state.health < total || penalty) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
+				if(delay && (ci->state.health < total || ci->state.health > total || penalty) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
 				{
-					if(!penalty) penalty = GVAR(regenpenalty);
-					ci->state.health = min(ci->state.health + amt, total);
-					ci->state.lastregen = gamemillis;
-					sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, penalty);
+					if(ci->state.health < total) { if(!penalty) penalty = GVAR(regenpenalty); }
+					else if(ci->state.health > total) { penalty = 0; amt = -GVAR(regenhealth); total = ci->state.health; }
+					else amt = 0;
+					int rgn = ci->state.health, heal = clamp(ci->state.health+amt, 0, total), eff = heal-rgn;
+					if(eff || penalty)
+					{
+						ci->state.health = heal;
+						ci->state.lastregen = gamemillis;
+						sendf(-1, 1, "ri5", SV_REGEN, ci->clientnum, ci->state.health, eff, penalty);
+					}
 				}
 			}
 			else if(ci->state.state == CS_WAITING)
