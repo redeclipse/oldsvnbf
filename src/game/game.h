@@ -960,10 +960,8 @@ extern const char *serverinfotypes[];
 
 struct gameent : dynent, gamestate
 {
-	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping,
-		attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
-			totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, dschan, wschan,
-				lasthit, lastkill, lastattacker, lastpoints;
+	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
+		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, dschan, wschan, lasthit, lastkill, lastattacker, lastpoints;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
@@ -1024,8 +1022,8 @@ struct gameent : dynent, gamestate
 	{
 		stopmoving(true);
 		clearstate();
-    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = 0;
-    	inliquid = onladder = jumping = crouching = impulsing = impulsejump = false;
+    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = impulsedash = 0;
+    	inliquid = onladder = jumping = crouching = impulsing = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = falling = vec(0, 0, 0);
@@ -1238,6 +1236,7 @@ namespace game
 	extern int mousestyle();
 	extern int deadzone();
 	extern int panspeed();
+	extern void checkzoom();
 	extern bool inzoom();
 	extern bool inzoomswitch();
 	extern int zoominterval();

@@ -1310,7 +1310,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::player1->impulsemillis > 0 ? (impulselength-game::player1->impulsemillis > impulsejump ? "\fy" : "\fw") : "\fg",
+						game::player1->impulsemillis > 0 ? (impulselength-game::player1->impulsemillis > impulsecost ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}

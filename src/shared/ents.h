@@ -92,8 +92,8 @@ struct physent                                  // base entity type, can be affe
     bool inliquid, onladder;
     float submerged;
 
-    bool jumping, crouching, impulsing, impulsejump;
-    int jumptime, crouchtime, impulsetime, impulsemillis;
+    bool jumping, crouching, impulsing;
+    int jumptime, crouchtime, impulsetime, impulsemillis, impulsedash;
 
     char move, strafe;
 
@@ -119,8 +119,8 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = 0;
-    	inliquid = onladder = jumping = crouching = impulsing = impulsejump = false;
+    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = impulsedash = 0;
+    	inliquid = onladder = jumping = crouching = impulsing = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vel = falling = vec(0, 0, 0);
