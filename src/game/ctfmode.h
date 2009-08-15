@@ -116,7 +116,7 @@ struct ctfservmode : ctfstate, servmode
             switch(GVAR(ctfstyle))
             {
             	case 2:
-					if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GVAR(ctfresetdelay)*1000)
+					if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GVAR(ctfresetdelay))
 					{
 						clientinfo *ci = (clientinfo *)getinfo(f.owner);
 						if(f.team != ci->team)
@@ -135,7 +135,7 @@ struct ctfservmode : ctfstate, servmode
 						break;
 					}
             	default:
-					if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= GVAR(ctfresetdelay)*1000)
+					if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= GVAR(ctfresetdelay))
 					{
 						ctfstate::returnflag(i);
 						loopvk(clients) if(isctfflag(f, clients[k]->team)) givepoints(clients[k], -5);
