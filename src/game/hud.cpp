@@ -87,13 +87,13 @@ namespace hud
 	FVARP(damageblend, 0, 0.95f, 1);
 
 	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.025f, 1000);
+	FVARP(indicatorsize, 0, 0.03f, 1000);
 	FVARP(indicatorblend, 0, 0.85f, 1);
 	TVAR(indicatortex, "textures/indicator", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.05f, 1000);
+	FVARP(crosshairsize, 0, 0.04f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
 	FVARP(crosshairblend, 0, 0.65f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
@@ -103,9 +103,9 @@ namespace hud
 	TVAR(editcursortex, "textures/crosshair", 3);
 	TVAR(speccursortex, "textures/crosshair", 3);
 	TVAR(crosshairtex, "textures/crosshair", 3);
-	TVAR(teamcrosshairtex, "textures/teamcrosshair", 3);
+	TVAR(teamcrosshairtex, "", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
-	TVAR(zoomcrosshairtex, "textures/zoomcrosshair", 3);
+	TVAR(zoomcrosshairtex, "textures/crosshair", 3);
 	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
 	FVARP(cursorsize, 0, 0.025f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
@@ -481,12 +481,16 @@ namespace hud
 
 	void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade)
 	{
-		Texture *t = textureload(getpointer(index), 3);
-		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		else glBlendFunc(GL_ONE, GL_ONE);
-		glColor4f(r, g, b, fade);
-		glBindTexture(GL_TEXTURE_2D, t->id);
-		drawsized(index == POINTER_GUI ? x : x-s/2, index == POINTER_GUI ? y : y-s/2, s);
+		const char *tex = getpointer(index);
+		Texture *t = tex && *tex ? textureload(tex, 3) : NULL;
+		if(t && t != notexture)
+		{
+			if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			else glBlendFunc(GL_ONE, GL_ONE);
+			glColor4f(r, g, b, fade);
+			glBindTexture(GL_TEXTURE_2D, t->id);
+			drawsized(index == POINTER_GUI ? x : x-s/2, index == POINTER_GUI ? y : y-s/2, s);
+		}
 	}
 
 	void drawpointer(int w, int h, int index)
