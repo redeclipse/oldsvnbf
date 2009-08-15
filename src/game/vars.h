@@ -37,8 +37,9 @@ VARG(impulsejump, 0, 1500, INT_MAX-1); // cost of impulse jump
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
-VARG(itemspawntime, 1, 30, INT_MAX-1); // secs when items respawn
-VARG(itemspawndelay, 0, 1, INT_MAX-1); // secs after map start items first spawn
+VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
+VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
+VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
@@ -55,7 +56,7 @@ VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(ctfstyle, 0, 1, 2); // 0 = classic touch-and-return, 1 = grab and take home, 2 = dominate and protect
-VARG(ctfresetdelay, 0, 30, INT_MAX-1);
+VARG(ctfresetdelay, 0, 30000, INT_MAX-1);
 
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
 VARG(stffinish, 0, 0, 1); // finish when all bases captured

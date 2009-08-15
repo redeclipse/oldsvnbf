@@ -95,7 +95,7 @@ enttypes enttype[] = {
 		MAPMODEL,		58,		0,		EU_NONE,	5,
 			inttobit(TRIGGER),
 			inttobit(TRIGGER),
-			false,				"mapmodel",		{ "id",		"yaw",		"pitch",	"roll",		"flags",	"" }
+			false,				"mapmodel",		{ "type",	"yaw",		"pitch",	"roll",		"flags",	"" }
 	},
 	{
 		PLAYERSTART,	59,		0,		EU_NONE,	5,
@@ -119,7 +119,7 @@ enttypes enttype[] = {
 		MAPSOUND,		58,		0,		EU_NONE,	5,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
-			false,				"sound",		{ "id",		"maxrad",	"minrad",	"volume",	"flags",	"" }
+			false,				"sound",		{ "type",	"maxrad",	"minrad",	"volume",	"flags",	"" }
 	},
 	{
 		LIGHTFX,		1,		0,		EU_NONE,	5,
@@ -134,10 +134,10 @@ enttypes enttype[] = {
 			false,				"sunlight",		{ "yaw",	"pitch",	"red",		"green",	"blue",		"offset" }
 	},
 	{
-		WEAPON,			59,		16,		EU_ITEM,	3,
+		WEAPON,			59,		16,		EU_ITEM,	4,
 			0,
 			0,
-			false,				"weapon",		{ "id",		"flags",	"mode",		"",			"",			"" }
+			false,				"weapon",		{ "type",	"flags",	"mode",		"id",		"",			"" }
 	},
 	{
 		TELEPORT,		50,		12,		EU_AUTO,	5,
@@ -179,7 +179,7 @@ enttypes enttype[] = {
 		CAMERA,			48,		0,		EU_NONE,	3,
 			inttobit(CAMERA),
 			0,
-			false,				"camera",		{ "id",		"mindist",	"maxdist",	"",			"",			"" }
+			false,				"camera",		{ "type",	"mindist",	"maxdist",	"",			"",			"" }
 	},
 	{
 		WAYPOINT,		1,		16,		EU_NONE,	5,

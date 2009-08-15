@@ -340,7 +340,14 @@ namespace server
 
 	bool demonextmatch = false;
 	stream *demotmp = NULL, *demorecord = NULL, *demoplayback = NULL;
-	int nextplayback = 0;
+	int nextplayback = 0, triggerid = 0;
+	struct triggergrp
+	{
+		int id;
+		vector<int> ents;
+		triggergrp() { reset(); }
+		void reset(int n = 0) { id = n; ents.setsize(0); }
+	} triggers[TRIGGERIDS+1];
 
 	struct servmode
 	{
@@ -721,14 +728,59 @@ namespace server
 		}
 	}
 
-	int triggerid = 0;
-	struct triggergrp
+	bool hasitem(int i)
 	{
-		int id;
-		vector<int> ents;
-		triggergrp() { reset(); }
-		void reset(int n = 0) { id = n; ents.setsize(0); }
-	} triggers[TRIGGERIDS+1];
+		switch(sents[i].type)
+		{
+			case WEAPON:
+				if(sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) return false;
+				if(!chkmode(sents[i].attrs[2], gamemode)) return false;
+				if(m_arena(gamemode, mutators) && sents[i].attrs[0] != WEAP_GRENADE) return false;
+				break;
+			default: break;
+		}
+		return true;
+	}
+
+	bool finditem(int i, bool spawned = true, bool timeit = false)
+	{
+		if(sents[i].spawned) return true;
+		int sweap = m_spawnweapon(gamemode, mutators);
+		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
+		{
+			loopvk(clients)
+			{
+				clientinfo *ci = clients[k];
+				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
+					return true;
+				else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
+			}
+		}
+		if(spawned && timeit && gamemillis < sents[i].millis) return true;
+		return false;
+	}
+
+	int sortitems(int *a, int *b) { return rnd(3)-1; }
+	void setupitems(bool update)
+	{
+		static vector<int> items; items.setsizenodelete(0);
+		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
+		{
+			sents[i].millis += GVAR(itemspawndelay);
+			switch(GVAR(itemspawnstyle))
+			{
+				case 1: items.add(i); break;
+				case 2: sents[i].millis += rnd(GVAR(itemspawntime)); break;
+				default: break;
+			}
+		}
+		if(!items.empty())
+		{
+			int delay = int(GVAR(itemspawntime)/float(items.length()));
+			items.sort(sortitems);
+			loopv(items) sents[items[i]].millis += delay*(i+1);
+		}
+	}
 
 	void setuptriggers(bool update)
 	{
@@ -759,24 +811,6 @@ namespace server
 				}
 			}
 		}
-	}
-
-	bool finditem(int i, bool spawned = true, bool timeit = false)
-	{
-		if(sents[i].spawned) return true;
-		int sweap = m_spawnweapon(gamemode, mutators);
-		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
-		{
-			loopvk(clients)
-			{
-				clientinfo *ci = clients[k];
-				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
-					return true;
-				else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
-			}
-		}
-		if(spawned && timeit && gamemillis < sents[i].millis) return true;
-		return false;
 	}
 
 	struct spawn
@@ -902,6 +936,7 @@ namespace server
 			cp->state.weapreset(false);
 		}
 		setuptriggers(true);
+		setupitems(true);
 		setupspawns(true, m_story(gamemode) ? GVAR(storyplayers) : np);
 		hasgameinfo = aiman::dorefresh = true;
 	}
@@ -1480,8 +1515,7 @@ namespace server
 						droplist &d = drop.add();
 						d.weap = i;
 						d.ent = ts.entid[i];
-						if(weapcarry(i, sweap))
-							sents[ts.entid[i]].millis += GVAR(itemspawntime)*1000;
+						if(weapcarry(i, sweap)) sents[ts.entid[i]].millis += GVAR(itemspawntime);
 					}
 				}
 			}
@@ -2316,7 +2350,7 @@ namespace server
 		int dropped = gs.entid[weap];
 		gs.ammo[weap] = gs.entid[weap] = -1;
 		int nweap = gs.bestweap(sweap, true); // switch to best weapon
-		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+		if(weapcarry(weap, sweap)) sents[dropped].millis = gamemillis+GVAR(itemspawntime);
 		gs.dropped.add(dropped);
 		gs.weapswitch(nweap, millis);
 		sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);
@@ -2402,13 +2436,13 @@ namespace server
 			if(!(sents[dropped].attrs[1]&WEAP_F_FORCED))
 			{
 				sents[dropped].spawned = false;
-				sents[dropped].millis = gamemillis+(GVAR(itemspawntime)*1000);
+				sents[dropped].millis = gamemillis+GVAR(itemspawntime);
 			}
 		}
 		if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
 			sents[ent].spawned = false;
-			sents[ent].millis = gamemillis+(GVAR(itemspawntime)*1000);
+			sents[ent].millis = gamemillis+GVAR(itemspawntime);
 		}
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
 	}
@@ -2537,10 +2571,9 @@ namespace server
 				}
 				break;
 			}
-			case WEAPON: if(!chkmode(sents[i].attrs[2], gamemode) && (!m_arena(gamemode, mutators) || sents[i].attrs[0] == WEAP_GRENADE)) break;
 			default:
 			{
-				if(!m_noitems(gamemode, mutators) && enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, true))
+				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && !finditem(i, true, true))
 				{
 					loopvk(clients)
 					{
@@ -2550,7 +2583,7 @@ namespace server
 							ci->state.entid[j] = -1;
 					}
 					sents[i].spawned = true;
-					sents[i].millis = gamemillis+(GVAR(itemspawntime)*1000);
+					sents[i].millis = gamemillis+GVAR(itemspawntime);
 					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 				}
 				break;
@@ -3334,8 +3367,6 @@ namespace server
 							sents[n].type = type;
 							sents[n].spawned = false; // wait a bit then load 'em up
 							sents[n].millis = gamemillis;
-							if(enttype[sents[n].type].usetype == EU_ITEM)
-								sents[n].millis += GVAR(itemspawndelay)*1000;
 							loopk(numattr) sents[n].attrs.add(getint(p));
 							if(numattr < 5) loopk(5-numattr) sents[n].attrs.add(0);
 							loopk(numkin) sents[n].kin.add(getint(p));
@@ -3561,11 +3592,7 @@ namespace server
 					{
 						sents[n].spawned = false; // wait a bit then load 'em up
 						sents[n].millis = gamemillis;
-						if(enttype[sents[n].type].usetype == EU_ITEM)
-						{
-							if(GVAR(itemspawndelay)) sents[n].millis += GVAR(itemspawndelay)*1000;
-							else sents[n].millis += GVAR(itemspawntime)*500; // half?
-						}
+						if(enttype[sents[n].type].usetype == EU_ITEM) sents[n].millis += GVAR(itemspawntime)/2; // half?
 					}
 					break;
 				}
