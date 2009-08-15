@@ -2,13 +2,10 @@
 #include "game.h"
 namespace game
 {
-	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1;
-	bool intermission = false;
-	int maptime = 0, minremain = 0, swaymillis = 0;
+	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0, swaymillis = 0,
+		lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
+	bool intermission = false, prevzoom = false, zooming = false;
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
-    int lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0;
-    bool prevzoom = false, zooming = false;
-	int liquidchan = -1, fogdist = 0;
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -65,7 +62,6 @@ namespace game
 	VARP(zoomfov, 20, 20, 150);
 	VARP(zoomtime, 1, 250, 10000);
 
-	extern void checkzoom();
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
 	VARP(zoomlevels, 1, 4, 10);
 	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
@@ -253,10 +249,7 @@ namespace game
 	}
 	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
 
-	bool tvmode()
-	{
-		return !m_edit(gamemode) && player1->state == CS_SPECTATOR && specmode == 1;
-	}
+	bool tvmode() { return !m_edit(gamemode) && player1->state == CS_SPECTATOR && specmode == 1; }
 
     bool allowmove(physent *d)
     {
@@ -821,7 +814,7 @@ namespace game
 		resetworld();
 		if(*name)
 		{
-			conoutf("%s on %s by %s", server::gamename(gamemode, mutators), *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown");
+			conoutf("\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
 			preload();
 		}
 		// reset perma-state
@@ -894,9 +887,7 @@ namespace game
 	}
 	ICOMMAND(kill, "",  (), { suicide(player1, 0); });
 
-	void lighteffects(dynent *e, vec &color, vec &dir)
-	{
-	}
+	void lighteffects(dynent *e, vec &color, vec &dir) { }
 
     void particletrack(particle *p, uint type, int &ts,  bool lastpass)
     {
@@ -928,17 +919,12 @@ namespace game
         }
     }
 
-    void dynlighttrack(physent *owner, vec &o)
-    {
-    }
+    void dynlighttrack(physent *owner, vec &o) { }
 
-	void newmap(int size)
-	{
-		client::addmsg(SV_NEWMAP, "ri", size);
-	}
+	void newmap(int size) { client::addmsg(SV_NEWMAP, "ri", size); }
 
-	void loadworld(stream *f, int maptype) {}
-	void saveworld(stream *f) {}
+	void loadworld(stream *f, int maptype) { }
+	void saveworld(stream *f) { }
 
 	void fixfullrange(float &yaw, float &pitch, float &roll, bool full)
 	{
@@ -1620,8 +1606,8 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
+				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->impulsetime; }
 				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->jumptime; }
-				else if(d->timeinair && d->impulsetime && lastmillis-d->impulsetime <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->impulsetime; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->crouching || d->crouchtime<0)
 				{

@@ -508,14 +508,14 @@ namespace physics
 				}
 			}
 		}
-		else if(game::allowmove(pl) && pl->jumping && !pl->impulsejump && canimpulse(pl, impulsejump))
+		else if(game::allowmove(pl) && pl->jumping && !pl->impulsedash && canimpulse(pl, impulsecost))
 		{
 			vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
 			pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
 			pl->falling = vec(0, 0, 0);
 			pl->jumping = false;
-			pl->impulsejump = true;
-			pl->impulsemillis += impulsejump;
+			pl->impulsedash = lastmillis;
+			pl->impulsemillis += impulsecost;
 			if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 			{
 				playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
@@ -539,7 +539,7 @@ namespace physics
 			}
 		}
         if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
-        else pl->impulsejump = false;
+        else pl->impulsedash = 0;
 
 		vec m(0, 0, 0);
         bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);

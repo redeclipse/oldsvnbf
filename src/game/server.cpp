@@ -785,30 +785,33 @@ namespace server
 	void setuptriggers(bool update)
 	{
 		loopi(TRIGGERIDS+1) triggers[i].reset(i);
-		if(!update) triggerid = 0;
-		else
+		if(update)
 		{
 			loopv(sents) if(sents[i].type == TRIGGER && sents[i].attrs[4] >= 2 && sents[i].attrs[0] >= 0 && sents[i].attrs[0] <= TRIGGERIDS+1)
 				triggers[sents[i].attrs[0]].ents.add(i);
-			vector<int> valid; loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
-			if(!valid.empty())
+		}
+		else triggerid = 0;
+
+		if(triggerid <= 0)
+		{
+			static vector<int> valid; valid.setsizenodelete(0);
+			loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
+			if(!valid.empty()) triggerid = valid[rnd(valid.length())];
+		}
+
+		if(triggerid > 0) loopi(TRIGGERIDS) if(triggers[i+1].id != triggerid) loopvk(triggers[i+1].ents)
+		{
+			bool spawn = sents[triggers[i+1].ents[k]].attrs[4]%2;
+			if(spawn != sents[triggers[i+1].ents[k]].spawned)
 			{
-				triggerid = valid[rnd(valid.length())];
-				loopi(TRIGGERIDS) if(triggers[i+1].id != triggerid) loopvk(triggers[i+1].ents)
-				{
-					bool spawn = sents[triggers[i+1].ents[k]].attrs[4]%2;
-					if(spawn != sents[triggers[i+1].ents[k]].spawned)
-					{
-						sents[triggers[i+1].ents[k]].spawned = spawn;
-						sents[triggers[i+1].ents[k]].millis = gamemillis;
-					}
-					sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i+1].ents[k], 1+(spawn ? 2 : 1));
-					loopvj(sents[triggers[i+1].ents[k]].kin) if(sents.inrange(sents[triggers[i+1].ents[k]].kin[j]))
-					{
-						sents[sents[triggers[i+1].ents[k]].kin[j]].spawned = sents[triggers[i+1].ents[k]].spawned;
-						sents[sents[triggers[i+1].ents[k]].kin[j]].millis = sents[triggers[i+1].ents[k]].millis;
-					}
-				}
+				sents[triggers[i+1].ents[k]].spawned = spawn;
+				sents[triggers[i+1].ents[k]].millis = gamemillis;
+			}
+			sendf(-1, 1, "ri3", SV_TRIGGER, triggers[i+1].ents[k], 1+(spawn ? 2 : 1));
+			loopvj(sents[triggers[i+1].ents[k]].kin) if(sents.inrange(sents[triggers[i+1].ents[k]].kin[j]))
+			{
+				sents[sents[triggers[i+1].ents[k]].kin[j]].spawned = sents[triggers[i+1].ents[k]].spawned;
+				sents[sents[triggers[i+1].ents[k]].kin[j]].millis = sents[triggers[i+1].ents[k]].millis;
 			}
 		}
 	}
@@ -2243,8 +2246,7 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id) && !finditem(id, false))
-				sents[id].millis = gamemillis;
+			if(sents.inrange(id) && !finditem(id, false)) sents[id].millis = gamemillis;
 		}
 	}
 
@@ -3574,26 +3576,31 @@ namespace server
 
 				case SV_EDITENT:
 				{
-					int n = getint(p);
+					int n = getint(p), oldtype = NOTUSED;
+					bool tweaked = false;
 					loopk(3) getint(p);
-					while(sents.length() <= n) sents.add();
-					sents[n].type = getint(p);
+					if(sents.inrange(n)) oldtype = sents[n].type;
+					else while(sents.length() <= n) sents.add();
+					if((sents[n].type = getint(p)) != oldtype) tweaked = true;
 					int numattrs = getint(p);
 					while(sents[n].attrs.length() < numattrs) sents[n].attrs.add(0);
 					loopk(numattrs) sents[n].attrs[k] = getint(p);
 					QUEUE_MSG;
-					loopvk(clients)
+					if(tweaked)
 					{
-						clientinfo *cq = clients[k];
-						cq->state.dropped.remove(n);
-						loopj(WEAP_MAX) if(cq->state.entid[j] == n)
-							cq->state.entid[j] = -1;
-					}
-					if(enttype[sents[n].type].usetype == EU_ITEM || sents[n].type == TRIGGER)
-					{
-						sents[n].spawned = false; // wait a bit then load 'em up
+						sents[n].spawned = false;
 						sents[n].millis = gamemillis;
-						if(enttype[sents[n].type].usetype == EU_ITEM) sents[n].millis += GVAR(itemspawntime)/2; // half?
+						if(enttype[sents[n].type].usetype == EU_ITEM)
+						{
+							loopvk(clients)
+							{
+								clientinfo *cq = clients[k];
+								cq->state.dropped.remove(n);
+								loopj(WEAP_MAX) if(cq->state.entid[j] == n) cq->state.entid[j] = -1;
+							}
+							sents[n].millis += GVAR(itemspawndelay)*3;
+						}
+						else if(sents[n].type == TRIGGER) setuptriggers(true);
 					}
 					break;
 				}
