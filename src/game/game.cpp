@@ -227,7 +227,7 @@ namespace game
 		{
 			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
 			float k = pow(0.7f, curtime/float(firstpersonswayspeed));
-			vec vel = vec(d->vel).sub(d->falling);
+			vec vel = vec(d->vel).sub(d->falling).mul(d->impulsing ? 5 : 1);
 			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
 			swaypush.mul(pow(0.5f, curtime/float(firstpersonswaypush)));
 		}
@@ -1606,9 +1606,15 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE<<ANIM_SECONDARY; basetime2 = d->impulsetime; }
+				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulsetime; }
 				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->jumptime; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+				else if(d->impulsing && (d->move || d->strafe))
+				{
+					if(d->move>0)		anim |= (ANIM_IMPULSE_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_IMPULSE_LEFT : ANIM_IMPULSE_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
+					else if(d->move<0)	anim |= (ANIM_IMPULSE_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
+				}
 				else if(d->crouching || d->crouchtime<0)
 				{
 					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
