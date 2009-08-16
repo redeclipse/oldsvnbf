@@ -568,7 +568,7 @@ extentity *newentity(bool local, const vec &o, int type, vector<int> &attrs)
 {
 	extentity &e = *entities::newent();
 	e.o = o;
-	while(e.attrs.length() < attrs.length()) e.attrs.add(0);
+	while(e.attrs.length() < max(5, attrs.length())) e.attrs.add(0);
 	loopv(attrs) e.attrs[i] = attrs[i];
 	e.type = type;
 	e.spawned = false;
@@ -693,7 +693,7 @@ void entset(char *what, char *attr)
 	entattrs(attr, attrs);
 	groupedit({
 		e.type = type;
-		while(e.attrs.length() < attrs.length()) e.attrs.add(0);
+		while(e.attrs.length() < max(5, attrs.length())) e.attrs.add(0);
 		loopvk(attrs) e.attrs[k] = attrs[k];
 	});
 }
@@ -917,7 +917,7 @@ void mpeditent(int i, const vec &o, int type, vector<int> &attr, bool local)
 		removeentity(i);
 		e.type = type;
 		e.o = o;
-		while(e.attrs.length() < attr.length()) e.attrs.add(0);
+		while(e.attrs.length() < max(5, attr.length())) e.attrs.add(0);
 		loopvk(attr) e.attrs[k] = attr[k];
 		addentity(i);
 	}
