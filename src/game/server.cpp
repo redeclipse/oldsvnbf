@@ -3590,7 +3590,7 @@ namespace server
 					else while(sents.length() <= n) sents.add();
 					if((sents[n].type = getint(p)) != oldtype) tweaked = true;
 					int numattrs = getint(p);
-					while(sents[n].attrs.length() < numattrs) sents[n].attrs.add(0);
+					while(sents[n].attrs.length() < max(5, numattrs)) sents[n].attrs.add(0);
 					loopk(numattrs) sents[n].attrs[k] = getint(p);
 					QUEUE_MSG;
 					if(tweaked)
