@@ -62,15 +62,9 @@ struct extentity : entity                       // part of the entity that doesn
 extern int efocus, enthover, entorient;
 #define entfocus(i, f)  { int n = efocus = (i); if(n>=0) { extentity &e = *entities::getents()[n]; f; } }
 
-vec &lightposition(const extentity &light, const vec &target = vec(-1, -1, -1));
-#define lightcolour(n,m) n.attrs[1+m+(n.type != ET_SUNLIGHT ? 0 : 1)]
-
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_EDITING, CS_SPECTATOR, CS_WAITING };
-
 enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_BOUNCE };
-
 enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_PROJ, ENT_RAGDOLL, ENT_DUMMY, ENT_CAMERA };
-
 enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
 #define CROUCHHEIGHT 0.7f

@@ -647,8 +647,8 @@ void renderwater()
 			{
 				if(begin) { glEnd(); begin = false; }
 				const vec &lightpos = light ? light->o : vec(hdr.worldsize/2, hdr.worldsize/2, hdr.worldsize);
-				float lightrad = light && light->attrs[0] ? light->attrs[0] : hdr.worldsize*8.0f;
-				const vec &lightcol = (light ? vec(light->attrs[1], light->attrs[2], light->attrs[3]) : vec(amb)).div(255.0f).mul(waterspec/100.0f);
+				float lightrad = light && light->type == ET_LIGHT && light->attrs[0] ? light->attrs[0] : hdr.worldsize*8.0f;
+				const vec &lightcol = (light ? (light->type == ET_LIGHT ? vec(light->attrs[1], light->attrs[2], light->attrs[3]) : vec(light->attrs[2], light->attrs[3], light->attrs[4])) : vec(amb)).div(255.0f).mul(waterspec/100.0f);
 				setlocalparamf("lightpos", SHPARAM_VERTEX, 2, lightpos.x, lightpos.y, lightpos.z);
 				setlocalparamf("lightcolor", SHPARAM_PIXEL, 3, lightcol.x, lightcol.y, lightcol.z);
 				setlocalparamf("lightradius", SHPARAM_PIXEL, 4, lightrad, lightrad, lightrad);

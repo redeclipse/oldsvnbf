@@ -47,22 +47,35 @@ void guessshadowdir()
         extentity &e = *ents[i];
         switch(e.type)
         {
-            case ET_LIGHT: if(e.attrs[0]) break;
+            case ET_LIGHT:
+            {
+				if(!e.attrs[0])
+				{
+					lightpos.add(e.o);
+					numlights++;
+				}
+				break;
+            }
             case ET_SUNLIGHT:
-				lightpos.add(lightposition(e));
+            {
+				vec dir; vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir); dir.normalize().mul(hdr.worldsize);
+				lightpos.add(vec(1, 1, 1).mul(hdr.worldsize/2).add(dir));
 				numlights++;
                 break;
-
-             case ET_MAPMODEL:
+            }
+			case ET_MAPMODEL:
+			{
                 casterpos.add(e.o);
                 numcasters++;
                 break;
-
-             default:
+			}
+            default:
+            {
                 if(e.type<ET_GAMESPECIFIC) break;
                 casterpos.add(e.o);
                 numcasters++;
                 break;
+            }
          }
     }
     if(!numlights || !numcasters) return;

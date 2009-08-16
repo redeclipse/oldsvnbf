@@ -234,7 +234,7 @@ void makelightfx(extentity &e, extentity &f)
 {
 	if(f.attrs[0] && e.attrs[0] != LFX_SPOTLIGHT)
 	{
-		vec colour = vec(lightcolour(f,0), lightcolour(f,1), lightcolour(f,2)).div(255.f);
+		vec colour = vec(f.attrs[1], f.attrs[2], f.attrs[3]).div(255.f);
 		float radius = f.attrs[0]; int millis = lastmillis-e.emit[2], effect = e.attrs[0], interval = e.emit[0]+e.emit[1];
 		if(!e.emit[2] || millis >= interval) loopi(2)
 		{
