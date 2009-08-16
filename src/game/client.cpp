@@ -1275,7 +1275,7 @@ namespace client
 					if(!f) break;
 					if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500))
 					{
-						game::spawneffect(PART_SPARK, vec(f->o).sub(vec(0, 0, f->height*2.f/3.f)), 0xFF4444, int(f->radius*3), 10, 300, 0.25f);
+						game::spawneffect(PART_SPARK, vec(f->o).sub(vec(0, 0, f->height*2.f/3.f)), 0xFF4444, int(f->radius*4), 2, 500, 0.125f);
 						playsound(S_REGEN, f->o, f); // maybe only player1?
 					}
 					f->health = heal; f->lastregen = lastmillis;
