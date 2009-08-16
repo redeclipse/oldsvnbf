@@ -38,7 +38,7 @@ static int lmtype, lmbpp, lmorient, lmrotate;
 static uchar lm[4*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
-static vector<const extentity *> lights1, lights2, sunlights;
+static vector<extentity *> lights1, lights2, sunlights;
 static uint lmprog = 0;
 GLuint lmprogtex = 0;
 static int lmprogtexticks = 0;
@@ -50,19 +50,6 @@ void check_calclight_canceled()
 {
     if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
 	if(!calclight_canceled) check_calclight_lmprog = false;
-}
-
-vec &lightposition(const extentity &light, const vec &target)
-{
-	static vec pos;
-	if(light.type == ET_SUNLIGHT)
-	{
-		vec dir; vecfromyawpitch(light.attrs[0], light.attrs[1], 1, 0, dir); dir.normalize().mul(hdr.worldsize*2);
-		pos = vec(target != vec(-1, -1, -1) ? target : light.o).add(dir);
-		pos.x = clamp(pos.x, 0.f, float(hdr.worldsize)); pos.y = clamp(pos.y, 0.f, float(hdr.worldsize)); pos.z = clamp(pos.z, 0.f, float(hdr.worldsize));
-	}
-	else pos = light.o;
-	return pos;
 }
 
 static int curlumels = 0;
@@ -342,20 +329,21 @@ void update_lightmap(const surfaceinfo &surface)
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 }
 
-void generate_lumel(const float tolerance, const vector<const extentity *> &lights, const vec &target, const vec &normal, vec &sample, int x, int y)
+void generate_lumel(const float tolerance, const vector<extentity *> &lights, const vec &target, const vec &normal, vec &sample, int x, int y)
 {
 	vec avgray(0, 0, 0);
 	float r = 0, g = 0, b = 0;
 	loopv(lights)
 	{
-		const extentity &light = *lights[i];
-		vec ray = target, pos = light.o; ray.sub(pos);
-        float mag = ray.magnitude(), radius = light.attrs[0];
+		extentity &light = *lights[i];
+		vec ray = target;
+		ray.sub(light.o);
+        float mag = ray.magnitude();
         if(!mag) continue;
         float attenuation = 1;
-        if(radius > 0)
+        if(light.attrs[0])
         {
-            attenuation -= mag / float(radius);
+            attenuation -= mag / float(light.attrs[0]);
             if(attenuation <= 0) continue;
         }
         ray.mul(1.0f / mag);
@@ -375,8 +363,8 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 			}
 			if(ents.inrange(slight))
 			{
-				const extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(pos).normalize());
+				extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(light.o).normalize());
 				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
@@ -386,7 +374,7 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
 		}
 		if(lmshadows && mag)
 		{
-			float dist = shadowray(pos, ray, mag - tolerance, RAY_SHADOW | (mmshadows > 1 ? RAY_ALPHAPOLY : (mmshadows ? RAY_POLY : 0)));
+			float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (mmshadows > 1 ? RAY_ALPHAPOLY : (mmshadows ? RAY_POLY : 0)));
 			if(dist < mag - tolerance) continue;
 		}
 		float intensity;
@@ -400,9 +388,9 @@ void generate_lumel(const float tolerance, const vector<const extentity *> &ligh
                 intensity = angle * attenuation;
 				break;
 		}
-		r += intensity * float(lightcolour(light,0));
-		g += intensity * float(lightcolour(light,1));
-		b += intensity * float(lightcolour(light,2));
+		r += intensity * float(light.attrs[1]);
+		g += intensity * float(light.attrs[2]);
+		b += intensity * float(light.attrs[3]);
 	}
     switch(lmtype&LM_TYPE)
 	{
@@ -470,9 +458,9 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	int hit = 0;
 	loopi(17) if(normal.dot(rays[i])>=0)
 	{
-		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
-			hit++;
+		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t)>1e15f) hit++;
 	}
+
 	loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
 }
 
@@ -480,9 +468,9 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 {
 	loopv(sunlights)
 	{
-		const extentity &light = *sunlights[i];
+		extentity &light = *sunlights[i];
 		bool wantscolour = false;
-		loopk(3) if(slight[k] < lightcolour(light,k)) { wantscolour = true; break; }
+		loopk(3) if(slight[k] < light.attrs[2+k]) { wantscolour = true; break; }
 		if(!wantscolour) continue;
 		int offset = light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		loopk(9)
@@ -507,7 +495,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 			if(shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
 				hit++;
 		}
-		loopk(3) slight[k] = max(uchar(lightcolour(light,k)*hit/9.f), slight[k]);
+		loopk(3) slight[k] = max(uchar(light.attrs[2+k]*hit/9.f), slight[k]);
 	}
 }
 
@@ -619,7 +607,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		{-0.6f, -0.3f},
 	};
 	float tolerance = 0.5 / lpu;
-	vector<const extentity *> &lights = (y1 == 0 ? lights1 : lights2);
+	vector<extentity *> &lights = (y1 == 0 ? lights1 : lights2);
 	vec v = origin;
 	vec offsets[8];
 	loopi(8) loopj(3) offsets[i][j] = aacoords[i][0]*ustep[j] + aacoords[i][1]*vstep[j];
@@ -886,7 +874,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 0, 4, 12, clearlightcache());
+VARF(lightcachesize, 4, 6, 12, clearlightcache());
 
 void clearlightcache(int e)
 {
@@ -900,10 +888,10 @@ void clearlightcache(int e)
 	}
 	else
 	{
-		const extentity &light = *entities::getents()[e];
-		int radius = light.attrs[0]; vec pos = light.o;
-        for(int x = int(max(pos.x-radius, 0.0f))>>lightcachesize, ex = int(min(pos.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
-        for(int y = int(max(pos.y-radius, 0.0f))>>lightcachesize, ey = int(min(pos.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+		extentity &light = *entities::getents()[e];
+		int radius = light.attrs[0];
+        for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+        for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
 		{
 			lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
 			if(lce.x != x || lce.y != y) continue;
@@ -915,25 +903,21 @@ void clearlightcache(int e)
 
 const vector<int> &checklightcache(int x, int y)
 {
-	lightcacheentry &lce = lightcache[0];
-	if(lightcachesize)
-	{
-		x >>= lightcachesize;
-		y >>= lightcachesize;
-		lce = lightcache[LIGHTCACHEHASH(x, y)];
-		if(lce.x == x && lce.y == y) return lce.lights;
-	}
+	x >>= lightcachesize;
+	y >>= lightcachesize;
+	lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+	if(lce.x == x && lce.y == y) return lce.lights;
+
 	lce.lights.setsizenodelete(0);
 	int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
 	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
-		const extentity &light = *ents[i];
+		extentity &light = *ents[i];
         switch(light.type)
         {
             case ET_LIGHT:
             {
-            	if(!lightcachesize) break;
                 int radius = light.attrs[0];
                 if(radius > 0)
                 {
@@ -953,7 +937,7 @@ const vector<int> &checklightcache(int x, int y)
 	return lce.lights;
 }
 
-static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
+static inline void addlight(extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
     int radius = light.attrs[0];
     if(radius > 0)
@@ -964,12 +948,11 @@ static inline void addlight(const extentity &light, int cx, int cy, int cz, int 
             return;
     }
 
-	vec pos = light.o;
     if(!n2)
     {
         loopi(4)
         {
-            vec p(pos);
+            vec p(light.o);
             p.sub(v[i]);
             float dist = p.dot(n[i]);
             if(dist >= 0 && (!radius || dist < radius))
@@ -984,7 +967,7 @@ static inline void addlight(const extentity &light, int cx, int cy, int cz, int 
     bool plane1 = false, plane2 = false;
     loopi(4)
     {
-        vec p(pos);
+        vec p(light.o);
         p.sub(v[i]);
         if(i != 3)
         {
@@ -1021,7 +1004,7 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
         const vector<int> &lights = checklightcache(cx, cy);
         loopv(lights)
         {
-            const extentity &light = *ents[lights[i]];
+            extentity &light = *ents[lights[i]];
             switch(light.type)
             {
                 case ET_LIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
@@ -1030,7 +1013,7 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
     }
     loopv(ents)
     {
-        const extentity &light = *ents[i];
+        extentity &light = *ents[i];
         switch(light.type)
         {
             case ET_LIGHT: if(!(size <= 1<<lightcachesize)) addlight(light, cx, cy, cz, size, v, n, n2); break;
@@ -2053,16 +2036,21 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	loopv(lights)
 	{
 		extentity &e = *ents[lights[i]];
-		if(e.type != ET_LIGHT) continue;
+		if(e.type != ET_LIGHT)
+			continue;
 
-		vec ray(target), pos = e.o; ray.sub(pos);
-		float mag = ray.magnitude(), radius = e.type != ET_SUNLIGHT ? e.attrs[0] : 0;
-		if(radius > 0 && mag >= float(radius)) continue;
+		vec ray(target);
+		ray.sub(e.o);
+		float mag = ray.magnitude();
+		if(e.attrs[0] && mag >= float(e.attrs[0]))
+			continue;
 
 		ray.div(mag);
-		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag) continue;
+		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
+			continue;
 		float intensity = 1;
-		if(radius > 0) intensity -= mag / float(radius);
+		if(e.attrs[0])
+			intensity -= mag / float(e.attrs[0]);
 
 		if(!e.links.empty())
 		{
@@ -2078,8 +2066,8 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			}
 			if(ents.inrange(slight))
 			{
-				const extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(pos).normalize());
+				extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(e.o).normalize());
 				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
@@ -2088,12 +2076,12 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 			else continue;
 		}
 
-		color.add(vec(lightcolour(e,0), lightcolour(e,1), lightcolour(e,2)).div(255).mul(intensity));
+		color.add(vec(e.attrs[1], e.attrs[2], e.attrs[3]).div(255).mul(intensity));
 
-		intensity *= lightcolour(e,0)*lightcolour(e,1)*lightcolour(e,2);
+		intensity *= e.attrs[1]*e.attrs[2]*e.attrs[3];
 
 		if(fabs(mag)<1e-3) dir.add(vec(0, 0, 1));
-		else dir.add(vec(pos).sub(target).mul(intensity/mag));
+		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
 	}
 
 	if(t && hasskylight())
@@ -2109,9 +2097,9 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	}
 	if(!sunlights.empty())
 	{
-		uchar slight[3]; loopk(3) slight[k] = color[k];
+		uchar slight[3] = {0};
 		calcsunlight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
-		loopk(3) color[k] = slight[k];
+		loopk(3) color[k] = min(1.5f, max(color[k], (slight[k]/255.f)*1.5f));
 	}
 	if(dir.iszero()) dir = vec(0, 0, 1);
 	else dir.normalize();
@@ -2126,18 +2114,21 @@ extentity *brightestlight(const vec &target, const vec &dir)
 	loopv(lights)
 	{
 		extentity &e = *ents[lights[i]];
-		if(e.type != ET_LIGHT) continue;
-		vec ray(target), pos = e.o;
-		if(vec(pos).sub(target).dot(dir)<0) continue;
-		ray.sub(pos);
-		float mag = ray.magnitude(), radius = e.attrs[0];
-		if(radius > 0 && mag >= float(radius)) continue;
+		if(e.type != ET_LIGHT || vec(e.o).sub(target).dot(dir)<0)
+			continue;
+
+		vec ray(target);
+		ray.sub(e.o);
+		float mag = ray.magnitude();
+		if(e.attrs[0] && mag >= float(e.attrs[0]))
+			 continue;
 
 		ray.div(mag);
-		if(shadowray(pos, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
+		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
 			continue;
 		float intensity = 1;
-		if(radius > 0) intensity -= mag / float(radius);
+		if(e.attrs[0])
+			intensity -= mag / float(e.attrs[0]);
 
 		if(!e.links.empty())
 		{
@@ -2153,8 +2144,8 @@ extentity *brightestlight(const vec &target, const vec &dir)
 			}
 			if(ents.inrange(slight))
 			{
-				const extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(pos).normalize());
+				extentity &spotlight = *ents[slight];
+				vec spot(vec(spotlight.o).sub(e.o).normalize());
 				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
 				if(spotatten <= 0) continue;
@@ -2163,6 +2154,42 @@ extentity *brightestlight(const vec &target, const vec &dir)
 			else continue;
 		}
 
+		if(!brightest || intensity > bintensity)
+		{
+			brightest = &e;
+			bintensity = intensity;
+		}
+	}
+	loopv(sunlights)
+	{
+		extentity &e = *sunlights[i];
+		if(e.type != ET_SUNLIGHT) continue;
+		int offset = e.attrs[5] ? e.attrs[5] : 10, hit = 0;
+		loopk(9)
+		{
+			int yaw = e.attrs[0], pitch = e.attrs[1];
+			switch(k)
+			{
+				case 0: default: break;
+				case 1: pitch += offset; break;
+				case 2: yaw += offset/2; pitch += offset/2; break;
+				case 3: yaw += offset; break;
+				case 4: yaw += offset/2; pitch -= offset/2; break;
+				case 5: pitch -= offset; break;
+				case 6: yaw -= offset/2; pitch -= offset/2; break;
+				case 7: yaw -= offset; break;
+				case 8: yaw -= offset/2; pitch += offset/2; break;
+			}
+			while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+			while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
+			vec ray; vecfromyawpitch(yaw, pitch, 1, 0, ray);
+			vec pos = vec(ray).mul(hdr.worldsize);
+			if(pos.dot(dir) < 0) continue;
+			pos.add(target);
+			if(shadowray(pos, ray, 1e16f, RAY_SHADOW | RAY_POLY) > 1e15f)
+				hit++;
+		}
+		float intensity = hit/9.f;
 		if(!brightest || intensity > bintensity)
 		{
 			brightest = &e;

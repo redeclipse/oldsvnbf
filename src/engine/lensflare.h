@@ -124,7 +124,7 @@ struct flarerenderer : partrenderer
 					mod = (radius-len)/radius;
 					size = flaresize / 10.0f;
 				}
-				newflare(e.o, center, lightcolour(e,0), lightcolour(e,1), lightcolour(e,2), mod, size, sun, sun);
+				newflare(e.o, center, e.attrs[1], e.attrs[2], e.attrs[3], mod, size, sun, sun);
 			}
     	}
     }
