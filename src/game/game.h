@@ -194,8 +194,9 @@ extern enttypes enttype[];
 
 enum
 {
-	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP, ANIM_IMPULSE, ANIM_SINK,
-	ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
+	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP,
+	ANIM_IMPULSE_FORWARD, ANIM_IMPULSE_BACKWARD, ANIM_IMPULSE_LEFT, ANIM_IMPULSE_RIGHT, ANIM_IMPULSE_DASH,
+	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
@@ -921,9 +922,9 @@ struct actitem
 const char *animnames[] =
 {
 	"idle", "forward", "backward", "left", "right", "dead", "dying", "swim",
-	"mapmodel", "trigger on", "trigger off",
-	"pain", "jump", "impulse", "sink",
-	"edit", "lag", "switch", "taunt", "win", "lose",
+	"mapmodel", "trigger on", "trigger off", "pain", "jump",
+	"impulse forward", "impulse backward", "impulse left", "impulse right", "impulse dash",
+	"sink", "edit", "lag", "switch", "taunt", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"pistol", "pistol shoot", "pistol reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
