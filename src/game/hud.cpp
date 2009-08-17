@@ -217,7 +217,7 @@ namespace hud
 	{
 		quakewobble = clamp(quakewobble+max(n/2, 1), 0, 1000);
 		damageresidue += n*2;
-		vec colour = kidmode || game::noblood ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
+		vec colour = kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
@@ -1501,7 +1501,7 @@ namespace hud
 					}
 				}
 				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(ox, oy);
-				if(showdamage && !kidmode && !game::noblood) drawdamage(ox, oy, os, fade);
+				if(showdamage && !kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
 				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);
 			}

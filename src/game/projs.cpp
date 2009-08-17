@@ -151,7 +151,7 @@ namespace projs
             }
             case PRJ_GIBS:
             {
-            	if(!kidmode && !game::noblood)
+            	if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
             	{
 					if(!proj.lastbounce)
 						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
@@ -192,7 +192,7 @@ namespace projs
 			}
 			case PRJ_GIBS:
 			{
-				if(!kidmode && !game::noblood)
+				if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
 				{
 					if(proj.owner)
 					{
@@ -642,16 +642,16 @@ namespace projs
 			}
 			if(weaptype[proj.weap].radial || weaptype[proj.weap].taper) proj.radius = max(proj.lifesize, 0.1f);
 		}
-		else if(proj.projtype == PRJ_GIBS && !kidmode && !game::noblood)
+		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 		{
 			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtime(500) && proj.lifetime >= min(proj.lifemillis, 1000))
+			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
-				if(!kidmode && !game::noblood) part_create(PART_BLOOD, m_speedtime(5000), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
+				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
 				proj.lasteffect = lastmillis;
 			}
 		}
-		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::noblood)))
+		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
 		{
 			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
 			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);

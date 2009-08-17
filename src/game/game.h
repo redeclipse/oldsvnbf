@@ -1212,7 +1212,8 @@ namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
 			lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
-				noblood, fogdist, aboveheadfade, announcefilter;
+				bloodfade, gibfade, fogdist, aboveheadfade, announcefilter;
+	extern float bloodscale, gibscale;
 	extern bool intermission, zooming;
 	extern vec swaypush, swaydir;
 
