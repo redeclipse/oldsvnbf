@@ -92,10 +92,10 @@ namespace game
 
     VARP(rollfade, 0, 10, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
-	VARP(noblood, 0, 0, 1);
-	VARP(nogibs, 0, 0, 1);
-	FVARP(gibscale, 0, 1.f, 1000);
-	VARP(gibexpire, 0, 5000, INT_MAX-1);
+	FVARP(bloodscale, 0, 1, 1000);
+	VARP(bloodfade, 1, 5000, INT_MAX-1);
+	FVARP(gibscale, 0, 1, 1000);
+	VARP(gibfade, 1, 5000, INT_MAX-1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -460,8 +460,8 @@ namespace game
 			{
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && !noblood && d->aitype != AI_TURRET)
-					part_splash(PART_BLOOD, clamp(damage/2, 2, 10), 5000, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
+				if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
+					part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					string ds;
@@ -719,12 +719,12 @@ namespace game
 			}
 			announce(anc, show ? CON_INFO : -1, d, "\fw%s", d->obit);
 		}
-		if(!kidmode && !noblood && !nogibs)
+		if(!kidmode && bloodscale > 0 && gibscale > 0)
 		{
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs+1)*gibscale);
 			loopi(amt)
-				projs::create(pos, vec(pos).add(d->vel), true, d, d->aitype != AI_TURRET ? PRJ_GIBS : PRJ_DEBRIS, (gibexpire ? rnd(gibexpire)+(gibexpire/10) : 1000), 0, rnd(500)+1, 50);
+				projs::create(pos, vec(pos).add(d->vel), true, d, d->aitype != AI_TURRET ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
