@@ -154,7 +154,7 @@ namespace physics
 		return m_speedscale(max(d->maxspeed,1.f));
 	}
 
-	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR; }
+	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR || (d->state == CS_ALIVE && gravity <= 0 && d->timeinair); }
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {
