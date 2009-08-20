@@ -1547,13 +1547,14 @@ namespace game
 
 	void renderclient(gameent *d, bool third, float trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
-		string mdl;
+		const char *mdl = "";
 		if(d->aitype <= AI_BOT)
 		{
-			if(third) copystring(mdl, teamtype[team].tpmdl);
-			else copystring(mdl, teamtype[team].fpmdl);
+			if(third) mdl = teamtype[team].tpmdl;
+			else mdl = teamtype[team].fpmdl;
 		}
-		else if(d->aitype < AI_MAX) copystring(mdl, aitype[d->aitype].mdl);
+		else if(d->aitype < AI_MAX) mdl = aitype[d->aitype].mdl;
+		else return;
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
 		vec o = vec(third ? d->feetpos() : d->headpos());
