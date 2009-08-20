@@ -263,7 +263,7 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 
 		float mrad = maxrad > 0 ? maxrad : 256, nrad = minrad > 0 ? (minrad <= mrad ? minrad : mrad) : 0;
 		if(dist <= nrad) *curvol = svol;
-		else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/(mrad-nrad))));
+		else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/max(mrad-nrad,1e-16f))));
 		else *curvol = 0;
 	}
 	else { *curvol = svol; *curpan = 127; }
