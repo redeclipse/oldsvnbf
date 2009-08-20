@@ -1,7 +1,7 @@
 Q009's (morph) ambient sound pack
 
-Released under the Creative Commons BY-SA License
-http://creativecommons.org/licenses/by-sa/3.0/
+Released under the Creative Commons BY License
+http://creativecommons.org/licenses/by/3.0/
 
 THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS CREATIVE COMMONS PUBLIC LICENSE ("CCPL" OR "LICENSE"). THE WORK IS PROTECTED BY COPYRIGHT AND/OR OTHER APPLICABLE LAW. ANY USE OF THE WORK OTHER THAN AS AUTHORIZED UNDER THIS LICENSE OR COPYRIGHT LAW IS PROHIBITED.
 
