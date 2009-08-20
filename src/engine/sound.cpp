@@ -219,7 +219,7 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 
 		if(!sample->sound) { conoutf("\frfailed to load sample: %s", sample->name); return -1; }
 	}
-    if(vol < 0 || vol > 255) vol = 255;
+    if(vol <= 0 || vol >= 255) vol = 255;
     if(maxrad <= 0) maxrad = -1;
     if(minrad < 0) minrad = -1;
     if(unique)
