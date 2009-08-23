@@ -146,16 +146,16 @@ namespace weapons
 			d->attacking = false;
 		}
 		else if(!d->attacking) return;
-		if(!offset)
-		{
-			offset = 1+max(d->weapload[d->weapselect], 1);
-			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
-		}
 
 		vec eyeray = vec(d->muzzle).sub(d->o);
 		float eyehit = eyeray.magnitude();
 		if(raycube(d->o, eyeray.normalize(), eyehit, RAY_CLIPMAT|RAY_POLY) < eyehit) return;
 
+		if(!offset)
+		{
+			offset = 1+max(d->weapload[d->weapselect], 1);
+			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
+		}
 		d->reloading = false;
 		int adelay = weaptype[d->weapselect].adelay;
 		if(!weaptype[d->weapselect].fullauto)
