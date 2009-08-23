@@ -108,7 +108,7 @@ struct duelservmode : servmode
 			{
 				vector<clientinfo *> alive;
 				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
-				if(m_lms(gamemode, mutators) || GVAR(duelclear)) clearitems();
+				if(m_survivor(gamemode, mutators) || GVAR(duelclear)) clearitems();
 				allowed.setsize(0);
 				loopv(duelqueue)
 				{
@@ -142,7 +142,7 @@ struct duelservmode : servmode
 					defformatstring(fight)("\fyduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
 					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
 				}
-				else if(m_lms(gamemode, mutators))
+				else if(m_survivor(gamemode, mutators))
 				{
 					defformatstring(fight)("\fylast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
 					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
@@ -154,7 +154,7 @@ struct duelservmode : servmode
 		{
 			vector<clientinfo *> alive;
 			loopv(clients) if(clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
-			if(m_lms(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
+			if(m_survivor(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
 			{
 				bool found = false;
 				loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
