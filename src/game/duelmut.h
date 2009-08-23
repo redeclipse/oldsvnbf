@@ -22,7 +22,7 @@ struct duelservmode : servmode
 				if(ci->state.state != CS_WAITING) waiting(ci);
 				if(m_duel(gamemode, mutators) && allowbroadcast(ci->clientnum))
 				{
-					if(n > 1) srvmsgf(ci->clientnum, "you are \fs\fg#%d\fS in the queue", n);
+					if(n > 1 || m_team(gamemode, mutators)) srvmsgf(ci->clientnum, "you are \fs\fg#%d\fS in the queue", n);
 					else if(n) srvmsgf(ci->clientnum, "you are \fs\fgNEXT\fS in the queue");
 				}
 			}
@@ -116,8 +116,14 @@ struct duelservmode : servmode
 					clientinfo *ci = duelqueue[i];
 					if(ci->state.state != CS_ALIVE)
 					{
-						if(allowed.find(ci) < 0) allowed.add(ci);
 						if(ci->state.state != CS_WAITING) waiting(ci);
+						if(m_duel(gamemode, mutators) && m_team(gamemode, mutators))
+						{
+							bool skip = false;
+							loopv(alive) if(ci->team == alive[i]->team) { skip = true; break; }
+							if(skip) continue;
+						}
+						if(allowed.find(ci) < 0) allowed.add(ci);
 					}
 					else
 					{
@@ -148,7 +154,19 @@ struct duelservmode : servmode
 		{
 			vector<clientinfo *> alive;
 			loopv(clients) if(clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
-			switch(alive.length())
+			if(m_lms(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
+			{
+				bool found = false;
+				loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
+				if(!found)
+				{
+					srvmsgf(-1, "\fyteam \fs%s%s\fS are the victors!", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
+					loopv(alive) if(allowbroadcast(alive[i]->clientnum))
+						sendf(alive[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
+					dueltime = gamemillis+(GVAR(duellimit)*1000);
+				}
+			}
+			else switch(alive.length())
 			{
 				case 0:
 				{
@@ -158,7 +176,7 @@ struct duelservmode : servmode
 				}
 				case 1:
 				{
-					srvmsgf(-1, "\fy%s was the last one left alive", colorname(alive[0]));
+					srvmsgf(-1, "\fy%s was the victor!", colorname(alive[0]));
 					if(allowbroadcast(alive[0]->clientnum))
 						sendf(alive[0]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
 					dueltime = gamemillis+(GVAR(duellimit)*1000);
