@@ -935,7 +935,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
-			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
+			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
 			{
 				loopirev(WEAP_MAX) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 				{
@@ -945,7 +945,7 @@ namespace ai
 					break;
 				}
 			}
-			if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
+			if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
 			{
 				static vector<actitem> actitems;
 				actitems.setsizenodelete(0);
@@ -1006,7 +1006,7 @@ namespace ai
 			}
 		}
 
-		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(); float dist = 0;
