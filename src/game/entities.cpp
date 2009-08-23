@@ -334,6 +334,7 @@ namespace entities
 		entcachedepth = max(entcachedepth, depth);
 	}
 
+	bool docacheclear = false;
 	void clearentcache()
 	{
 		entcache.setsizenodelete(0);
@@ -1106,7 +1107,7 @@ namespace entities
 		extentity &e = *ents[i];
 		fixentity(i);
 		if(m_edit(game::gamemode)) client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
-		clearentcache();
+		docacheclear = true;
 	}
 
 	float dropheight(extentity &e)
@@ -1842,10 +1843,7 @@ namespace entities
 		clearentcache();
 	}
 
-	void edittoggled(bool edit)
-	{
-		clearentcache();
-	}
+	void edittoggled(bool edit) { clearentcache(); }
 
 	#define renderfocus(i,f) { gameentity &e = *(gameentity *)ents[i]; f; }
 
@@ -2083,6 +2081,11 @@ namespace entities
 				if(e.attrs[4]&SND_NOPAN) flags |= SND_NOPAN;
 				playsound(e.attrs[0], e.o, NULL, flags, e.attrs[3], e.attrs[1], e.attrs[2], &e.schan);
 			}
+		}
+		if(docacheclear)
+		{
+			clearentcache();
+			docacheclear = false;
 		}
 	}
 
