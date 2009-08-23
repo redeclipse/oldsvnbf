@@ -402,32 +402,32 @@ enum
 	G_M_TEAM	= 1<<1,
 	G_M_INSTA	= 1<<2,
 	G_M_DUEL	= 1<<3,
-	G_M_LMS		= 1<<4,
+	G_M_SURVIVOR= 1<<4,
 	G_M_ARENA	= 1<<5,
-	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,
+	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,
 	G_M_NUM		= 6
 };
 
 struct gametypes
 {
-	int	type,			mutators,														implied;		const char *name;
+	int	type,			mutators,															implied;		const char *name;
 };
 #ifdef GAMESERVER
 gametypes gametype[] = {
-	{ G_DEMO,			G_M_NONE,														G_M_NONE,				"demo" },
-	{ G_LOBBY,			G_M_NONE,														G_M_NONE,				"lobby" },
-	{ G_EDITMODE,		G_M_NONE,														G_M_NONE,				"editing" },
-	{ G_STORY,			G_M_TEAM|G_M_INSTA,												G_M_TEAM,				"story" },
-	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_NONE,				"deathmatch" },
-	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,							G_M_TEAM,				"secure-the-flag" },
-	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,							G_M_TEAM,				"capture-the-flag" },
+	{ G_DEMO,			G_M_NONE,															G_M_NONE,				"demo" },
+	{ G_LOBBY,			G_M_NONE,															G_M_NONE,				"lobby" },
+	{ G_EDITMODE,		G_M_NONE,															G_M_NONE,				"editing" },
+	{ G_STORY,			G_M_TEAM|G_M_INSTA,													G_M_TEAM,				"story" },
+	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
+	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
+	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"capture-the-flag" },
 }, mutstype[] = {
-	{ G_M_MULTI,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_TEAM|G_M_MULTI,		"multi" },
-	{ G_M_TEAM,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_TEAM,				"team" },
-	{ G_M_INSTA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_INSTA,				"insta" },
-	{ G_M_DUEL,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_DUEL,				"duel" },
-	{ G_M_LMS,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_LMS,				"last-man" },
-	{ G_M_ARENA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_LMS|G_M_ARENA,		G_M_ARENA,				"arena" },
+	{ G_M_MULTI,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM|G_M_MULTI,		"multi" },
+	{ G_M_TEAM,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM,				"team" },
+	{ G_M_INSTA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_INSTA,				"insta" },
+	{ G_M_DUEL,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_DUEL,				"duel" },
+	{ G_M_SURVIVOR,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_SURVIVOR,			"survivor" },
+	{ G_M_ARENA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_ARENA,				"arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -451,10 +451,10 @@ extern gametypes gametype[], mutstype[];
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)		((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)			((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
-#define m_lms(a,b)			((b & G_M_LMS) || (gametype[a].implied & G_M_LMS))
+#define m_survivor(a,b)		((b & G_M_SURVIVOR) || (gametype[a].implied & G_M_SURVIVOR))
 #define m_arena(a,b)		((b & G_M_ARENA) || (gametype[a].implied & G_M_ARENA))
 
-#define m_duke(a,b)			(m_duel(a, b) || m_lms(a, b))
+#define m_duke(a,b)			(m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_spawnweapon(a,b)	(m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
