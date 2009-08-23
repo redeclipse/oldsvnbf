@@ -16,6 +16,7 @@ namespace hud
 	VARP(damageresiduefade, 0, 750, INT_MAX-1);
 
 	VARP(showhud, 0, 1, 1);
+	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
 	VARP(hudsize, 0, 2048, INT_MAX-1);
 	FVARP(hudblend, 0, 1.f, 1);
 	FVARP(gapsize, 0, 0.01f, 1000);
@@ -1437,7 +1438,7 @@ namespace hud
 				else a += (1.f-commandfadeamt);
 				loopi(3) if(a < colour[i]) colour[i] = a;
 			}
-			if(uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
+			if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
 			{
 				float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
 				if(uimillis > 0) a = 1.f-a;
