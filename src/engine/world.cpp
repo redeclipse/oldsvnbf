@@ -240,7 +240,7 @@ undoblock *newundoent()
         e->i = entgroup[i];
         e->type = entities::getents()[entgroup[i]]->type;
         e->o = entities::getents()[entgroup[i]]->o;
-        loopj(UNDOATTRS) e->attrs[i] = entities::getents()[entgroup[i]]->attrs.inrange(j) ? entities::getents()[entgroup[i]]->attrs[j] : 0;
+        loopj(UNDOATTRS) e->attrs[j] = entities::getents()[entgroup[i]]->attrs.inrange(j) ? entities::getents()[entgroup[i]]->attrs[j] : 0;
         e++;
     }
     return u;
