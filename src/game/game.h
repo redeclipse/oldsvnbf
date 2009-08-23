@@ -750,21 +750,22 @@ struct gamestate
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
-	int skipwait(int weap, int skip)
+	int skipwait(int weap, int millis, int skip)
 	{
-		return skip != WEAP_S_RELOAD || ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add) ? skip : -1;
+		return skip != WEAP_S_RELOAD || (millis-weaplast[weap] < weapwait[weap]*3/4 &&
+			(ammo[weap] > weaptype[weap].add || (weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add))) ? skip : -1;
 	}
 
 	bool canswitch(int weap, int sweap, int millis, int skip = -1)
 	{
-		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, skip)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, skip)))
+		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, millis, skip)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, millis, skip)))
 			return true;
 		return false;
 	}
 
 	bool canshoot(int weap, int sweap, int millis, int skip = -1)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skipwait(weap, skip)))
+		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skipwait(weap, millis, skip)))
 			return true;
 		return false;
 	}
@@ -780,7 +781,7 @@ struct gamestate
 	{
 		if((type != TRIGGER || attrs[2] == TA_AUTO) && enttype[type].usetype == EU_AUTO)
 			return true;
-		if(weapwaited(weapselect, millis, skipwait(weapselect, skip))) switch(type)
+		if(weapwaited(weapselect, millis, skipwait(weapselect, millis, skip))) switch(type)
 		{
 			case TRIGGER:
 			{

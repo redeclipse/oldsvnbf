@@ -665,7 +665,7 @@ namespace entities
 		{
 			case EU_ITEM: if(d->useaction && !m_noitems(game::gamemode, game::mutators))
 			{
-				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, WEAP_S_RELOAD)))
+				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
 				{
 					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
 					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD))

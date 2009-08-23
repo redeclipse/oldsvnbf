@@ -105,10 +105,11 @@ namespace hud
 	TVAR(crosshairtex, "textures/crosshair", 3);
 	TVAR(teamcrosshairtex, "", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
-	TVAR(zoomcrosshairtex, "textures/crosshair", 3);
-	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
 	FVARP(cursorsize, 0, 0.025f, 1000);
 	FVARP(cursorblend, 0, 1.f, 1);
+
+	TVAR(zoomcrosshairtex, "", 3);
+	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
 
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
@@ -500,16 +501,12 @@ namespace hud
 		if(index != POINTER_GUI && teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
-			if(index == POINTER_ZOOM)
+			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && weaptype[game::player1->weapselect].zooms)
 			{
-				cs = int(zoomcrosshairsize*hudsize);
-				if(game::inzoom() && weaptype[game::player1->weapselect].zooms)
-				{
-					int frame = lastmillis-game::lastzoom;
-					float amt = frame < game::zoominterval() ? clamp(float(frame)/float(game::zoominterval()), 0.f, 1.f) : 1.f;
-					if(!game::zooming) amt = 1.f-amt;
-					cs = int(cs*amt);
-				}
+				int frame = lastmillis-game::lastzoom, off = int(zoomcrosshairsize*hudsize)-cs;
+				float amt = frame < game::zoominterval() ? clamp(float(frame)/float(game::zoominterval()), 0.f, 1.f) : 1.f;
+				if(!game::zooming) amt = 1.f-amt;
+				cs += int(off*amt);
 			}
 			else if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
 		}
@@ -666,7 +663,7 @@ namespace hud
 					if(shownotices >= 3 && game::allowmove(game::player1))
 					{
 						pushfont("default");
-						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, WEAP_S_RELOAD)))
+						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, lastmillis, WEAP_S_RELOAD)))
 						{
 							static vector<actitem> actitems;
 							actitems.setsizenodelete(0);
