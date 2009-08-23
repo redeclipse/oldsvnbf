@@ -338,8 +338,8 @@ namespace hud
             case POINTER_SPEC: return speccursortex;
             case POINTER_HAIR: return crosshairtex;
             case POINTER_TEAM: return teamcrosshairtex;
-            case POINTER_HIT: return hitcrosshairtex;
-            case POINTER_ZOOM: return zoomcrosshairtex;
+            case POINTER_HIT: return *hitcrosshairtex ? hitcrosshairtex : crosshairtex;
+            case POINTER_ZOOM: return *zoomcrosshairtex ? zoomcrosshairtex : crosshairtex;
             default: break;
         }
         return NULL;
