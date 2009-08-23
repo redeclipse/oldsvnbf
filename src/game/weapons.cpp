@@ -152,6 +152,10 @@ namespace weapons
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
 		}
 
+		vec eyeray = vec(d->muzzle).sub(d->o);
+		float eyehit = eyeray.magnitude();
+		if(raycube(d->o, eyeray.normalize(), eyehit, RAY_CLIPMAT|RAY_POLY) < eyehit) return;
+
 		d->reloading = false;
 		int adelay = weaptype[d->weapselect].adelay;
 		if(!weaptype[d->weapselect].fullauto)
@@ -177,6 +181,7 @@ namespace weapons
 			}
 			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_speedscale(m_speedscale(0.5f))));
 		}
+#if 0
 		// move along the eye ray towards the weap origin, stopping when something is hit
 		// nudge the target a tiny bit forward in the direction of the camera for stability
 		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
@@ -196,6 +201,7 @@ namespace weapons
 			to.mul(barrier);
 			to.add(from);
 		}
+#endif
 
 		vector<vec> vshots;
 		vector<ivec> shots;
