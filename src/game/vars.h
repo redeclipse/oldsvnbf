@@ -6,9 +6,9 @@ VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
 
 SVARG(storymaps, "wishbone");
 SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar eight enigma firehouse forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
-SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma firehouse forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
+SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower warehouse warground venus");
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge wet");
-SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma firehouse forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground wet venus");
+SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground venus");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
