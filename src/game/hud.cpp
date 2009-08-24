@@ -593,7 +593,7 @@ namespace hud
 					int sdelay = m_spawndelay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
 					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, msg);
-					if(obitnotices && game::player1->lastdeath && *game::player1->obit)
+					if(obitnotices && game::player1->lastdeath && (delay || game::player1->state == CS_DEAD) && *game::player1->obit)
 					{
 						pushfont("default");
 						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::player1->obit);
