@@ -131,7 +131,7 @@ namespace entities
 			{
 				if(full)
 				{
-					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
+					const char *trgnames[TR_MAX+1] = { "toggle", "link", "script", "once", "exit", "" }, *actnames[TA_MAX+1] = { "manual", "proximity", "action", "" };
 					addentinfo(trgnames[attr[1] < 0 || attr[1] >= TR_MAX ? TR_MAX : attr[1]]);
 					addentinfo(actnames[attr[2] < 0 || attr[2] >= TA_MAX ? TA_MAX : attr[2]]);
 					if(attr[4] >= 2) addentinfo(attr[4] ? "routed" : "inert");
