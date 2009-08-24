@@ -961,8 +961,8 @@ namespace entities
 				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
 				while(e.attrs[2] < -90) e.attrs[2] += 180;
 				while(e.attrs[2] > 90) e.attrs[2] -= 180;
-				while(e.attrs[3] < 0) e.attrs[3] += G_MAX;
-				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX;
+				while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
+				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
 				break;
 			case FLAG:
 				while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
