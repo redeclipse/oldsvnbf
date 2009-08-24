@@ -97,7 +97,7 @@ struct duelservmode : servmode
 
 		if(dueltime < 0)
 		{
-			dueltime = gamemillis+(GVAR(duellimit)*1000);
+			dueltime = gamemillis+(GVAR(duellimit)*10000);
 			clearqueue();
 		}
 		else cleanup();

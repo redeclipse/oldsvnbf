@@ -1599,7 +1599,7 @@ namespace server
 			}
 		}
 
-		if(m_fight(gamemode) && numclients(-1, false, -1)) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+		if(m_fight(gamemode) && numclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
 		if(m_demo(gamemode)) setupdemoplayback();
 		else if(demonextmatch)
 		{
@@ -1990,7 +1990,7 @@ namespace server
 
         CHECKSPACE(256);
 
-		if(!ci || (m_fight(gamemode) && numclients(-1, false, -1)))
+		if(!ci || (m_fight(gamemode) && numclients()))
 		{
 			putint(p, SV_TIMEUP);
 			putint(p, minremain);
@@ -2646,7 +2646,7 @@ namespace server
 
 	void serverupdate()
 	{
-		if(numclients(-1, false, -1))
+		if(numclients())
 		{
 			gamemillis += curtime;
 			if(m_demo(gamemode)) readdemo();
@@ -2716,7 +2716,7 @@ namespace server
             return DISC_NONE;
         }
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(numclients(-1, false, -1) >= serverclients) return DISC_MAXCLIENTS;
+        if(numclients() >= serverclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         loopv(bannedips) if(bannedips[i].ip == ip) return DISC_IPBAN;
         if(mastermode >= MM_PRIVATE && allowedips.find(ip) < 0) return DISC_PRIVATE;
@@ -2773,7 +2773,7 @@ namespace server
             extqueryreply(req, p);
             return;
         }
-		putint(p, numclients(-1, false, -1));
+		putint(p, numclients());
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
