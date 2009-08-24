@@ -399,7 +399,21 @@ namespace ai
 			if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 			else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 		}
-		if(d->aitype == AI_BOT && m_team(game::gamemode, game::mutators)) assist(d, b, interests);
+		if(d->aitype == AI_BOT)
+		{
+			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests);
+		}
+		else if(entities::ents.inrange(d->aientity))
+		{
+			loopv(entities::ents[d->aientity]->links) if(entities::ents[entities::ents[d->aientity]->links[i]]->type == WAYPOINT)
+			{
+				interest &n = interests.add();
+				n.state = AI_S_DEFEND;
+				n.target = n.node = entities::ents[d->aientity]->links[i];
+				n.targtype = AI_T_NODE;
+				n.score = -1;
+			}
+		}
 		while(!interests.empty())
 		{
 			int q = interests.length()-1;
@@ -500,6 +514,7 @@ namespace ai
 				d->ai->addstate(AI_S_DEFEND, AI_T_NODE, d->ai->route[0]);
 				return 1;
 			} break;
+			default: break;
 		}
 		return 0; // but don't pop the state
 	}
@@ -824,7 +839,7 @@ namespace ai
 		}
 		else d->ai->dontmove = true;
 
-		if(aitype[d->aitype].maxspeed)
+		if(aitype[d->aitype].maxspeed && d->aitype != AI_ZOMBIE)
 		{
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(b.idle == 1 && b.type != AI_S_WAIT)
@@ -1133,7 +1148,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 30000) && (!d->lastdeath || lastmillis-d->lastdeath > 500))
+			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 30000) && (!d->lastdeath || (!m_story(game::gamemode) && lastmillis-d->lastdeath > 500)))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);

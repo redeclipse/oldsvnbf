@@ -3285,6 +3285,12 @@ namespace server
 								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 								break;
 							}
+							case TR_EXIT:
+							{
+								if(sents[ent].spawned || !m_story(gamemode)) break;
+								sents[ent].spawned = true;
+								startintermission();
+							}
 						}
 						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
 						if(kin) loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))

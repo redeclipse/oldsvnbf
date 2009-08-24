@@ -636,8 +636,9 @@ namespace entities
 			e.lastuse = lastmillis;
 			switch(e.attrs[1])
 			{
-				case TR_TOGGLE: case TR_LINK: case TR_ONCE:
+				case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
 				{ // wait for ack
+					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode)) break;
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
 				}
