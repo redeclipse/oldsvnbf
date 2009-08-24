@@ -271,7 +271,7 @@ namespace aiman
 
 	void checkai()
 	{
-		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients(-1, false, -1))
+		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients())
 		{
 			if(hasgameinfo)
 			{

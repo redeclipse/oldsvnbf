@@ -100,7 +100,7 @@ struct ctfservmode : ctfstate, servmode
 		flag &f = flags[i];
 		if(!(f.base&BASE_FLAG) || f.owner >= 0 || !f.droptime || f.votes.find(ci->clientnum) >= 0) return;
 		f.votes.add(ci->clientnum);
-		if(f.votes.length() >= numclients(-1, false, -1)/2)
+		if(f.votes.length() >= numclients()/2)
 		{
 			ctfstate::returnflag(i);
 			sendf(-1, 1, "ri2", SV_RESETFLAG, i);
