@@ -1502,12 +1502,16 @@ namespace game
 		}
 		else if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
-			int len = m_spawndelay(gamemode, mutators), interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
-			if(millis < len)
+			int len = m_spawndelay(gamemode, mutators);
+			if(len)
 			{
-				if(millis > over) total = (1.f-(float(millis-over)/float(interval)))*total;
+				int interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
+				if(millis < len)
+				{
+					if(millis > over) total = (1.f-(float(millis-over)/float(interval)))*total;
+				}
+				else total = 0.f;
 			}
-			else total = 0.f;
 		}
 		if(d == player1 && inzoom())
 		{
