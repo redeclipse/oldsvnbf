@@ -51,7 +51,20 @@ namespace projs
 			proj.hitflags = flags;
 			proj.norm = norm;
 			if(!weaptype[proj.weap].explode && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
-			return proj.projcollide&COLLIDE_CONT ? false : true;
+			if(proj.projcollide&COLLIDE_CONT)
+			{
+				switch(proj.weap)
+				{
+					case WEAP_RIFLE:
+						part_create(PART_SMOKE_LERP, m_speedtime(250), proj.o, 0x444444, weaptype[proj.weap].partsize, -20);
+						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 1.f, 0, 0);
+						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
+						break;
+					default: break;
+				}
+				return false;
+			}
+			return true;
 		}
 		return false;
 	}

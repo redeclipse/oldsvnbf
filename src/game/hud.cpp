@@ -196,7 +196,7 @@ namespace hud
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 1, 2);
 
-	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, + 2 and bots), 5 = verbose
+	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 3000, INT_MAX-1);
 	FVARP(radardamagesize, 0, 2.5f, 1000);
@@ -1042,14 +1042,15 @@ namespace hud
 			{
 				vec pos = vec(a->o).sub(camera1->o).normalize(), dir = vec(pos).rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[a->team].colour>>16)/255.f, g = ((teamtype[a->team].colour>>8)&0xFF)/255.f, b = (teamtype[a->team].colour&0xFF)/255.f;
-				if(dead) drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "%s (%d)", game::colorname(a), a->health);
+				if(dead && a->state == CS_ALIVE)
+					drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "%s (%d)", game::colorname(a), a->health);
 				else
 				{
 					float dist = pos.magnitude();
 					if(dist > 0 && dist <= radarrange())
 					{
 						float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f);
-						drawblip(arrowtex, 3+int(ceil(radardamagesize*fade)), w, h, radardamagesize*fade, blend*radardamageblend*fade, dir, r, g, b, "radar", "%s", game::colorname(a));
+						drawblip(arrowtex, 3+int(ceil(radardamagesize*fade*0.5f)), w, h, radardamagesize*fade*0.5f, blend*radardamageblend*fade, dir, r, g, b, "radar", "%s", game::colorname(a));
 					}
 				}
 			}
