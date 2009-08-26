@@ -14,9 +14,9 @@ int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
 VARP(mastervol, 0, 255, 255);
 VARP(soundvol, 0, 255, 255);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundchans, 0, 64, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundchans, 0, 32, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundbufferlen, 0, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundbufferlen, 128, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
 VARP(musicvol, 0, 64, 255);
 VARP(musicfade, 0, 3000, INT_MAX-1);
