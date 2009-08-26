@@ -646,6 +646,20 @@ namespace projs
 					}
 					break;
 				}
+				case WEAP_GIBS:
+				{
+					proj.lifesize = 1;
+					if(proj.canrender)
+					{
+						part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, weaptype[proj.weap].partsize);
+						if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
+						{
+							part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
+							proj.lasteffect = lastmillis;
+						}
+					}
+					break;
+				}
 				default:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
@@ -657,7 +671,7 @@ namespace projs
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 		{
-			proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+			proj.lifesize = 1;
 			if(proj.canrender && lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
 				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
@@ -770,6 +784,11 @@ namespace projs
 						adddynlight(proj.o, weaptype[proj.weap].partsize*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(200), 10);
 						adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
                         adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
+						break;
+					}
+					case WEAP_GIBS:
+					{
+						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
 						break;
 					}
 				}

@@ -17,15 +17,15 @@ aitypes aitype[] = {
 	},
 	{
 		AI_TURRET,		WEAP_SMG,	 	200,	0,			2,				1.f,	3,			3,			4,			0,
-			false,		true,		true,					"turret",	"actors/player/vwep"
+			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
-		AI_GUARD,		WEAP_PISTOL, 	100,	50,			2,				0.5f,	3,			3,			14,			100,
-			true,		false,		true,					"guard",	"actors/player/beta"
+		AI_GUARD,		WEAP_PISTOL, 	100,	40,			2,				0.75f,	3,			3,			14,			150,
+			true,		false,		true,					"guard",	"actors/player/delta"
 	},
 	{
-		AI_ZOMBIE,		WEAP_RIFLE, 	200,	25,			10,				0.25f,	3,			3,			14,			50,
-			true,		false,		true,					"zombie",	"actors/player/gamma"
+		AI_ZOMBIE,		WEAP_GIBS, 		200,	25,			10,				0.5f,	3,			3,			14,			100,
+			true,		false,		true,					"zombie",	"actors/player/beta"
 	},
 };
 #else

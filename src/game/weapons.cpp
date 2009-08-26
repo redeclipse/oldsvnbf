@@ -212,7 +212,7 @@ namespace weapons
 			int spread = d == game::player1 && weaptype[d->weapselect].zooms && game::inzoom() ? 0 : weaptype[d->weapselect].spread;
 			if(spread) offsetray(from, to, weaptype[d->weapselect].spread, weaptype[d->weapselect].zdiv, dest);
 			else dest = to;
-			if(d->weapselect == WEAP_GRENADE) dest.z += from.dist(dest)/8;
+			if(weaptype[d->weapselect].thrown) dest.z += from.dist(dest)/8;
 			addshot;
 		}
 		projs::shootv(d->weapselect, power, from, vshots, d, true);
