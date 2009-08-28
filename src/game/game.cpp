@@ -88,7 +88,7 @@ namespace game
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
-	VARP(playdamagetones, 0, 2, 2);
+	VARP(playdamagetones, 0, 1, 2);
 
     VARP(rollfade, 0, 10, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
