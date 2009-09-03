@@ -601,7 +601,7 @@ namespace hud
 					}
 					if(shownotices >= 2)
 					{
-						SEARCHBINDCACHE(attackkey)("attack", 0);
+						SEARCHBINDCACHE(attackkey)("action 0", 0);
 						if(delay || m_story(game::gamemode) || m_duke(game::gamemode, game::mutators))
 						{
 							if(!m_story(game::gamemode))
@@ -670,7 +670,7 @@ namespace hud
 							actitems.setsizenodelete(0);
 							if(entities::collateitems(game::player1, actitems))
 							{
-								SEARCHBINDCACHE(actionkey)("action", 0);
+								SEARCHBINDCACHE(actionkey)("action 3", 0);
 								while(!actitems.empty())
 								{
 									actitem &t = actitems.last();
@@ -722,26 +722,24 @@ namespace hud
 								}
 							}
 						}
-						/*
 						if(shownotices >= 4)
 						{
 							if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
 							{
-								SEARCHBINDCACHE(zoomkey)("zoom", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "prone");
+								SEARCHBINDCACHE(altkey)("action 1", 0);
+								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack");
 							}
 							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 							{
-								SEARCHBINDCACHE(attackkey)("attack, 0);
+								SEARCHBINDCACHE(attackkey)("action 1", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
 							}
 							if(game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 							{
-								SEARCHBINDCACHE(reloadkey)("reload", 0);
+								SEARCHBINDCACHE(reloadkey)("action 2", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey);
 							}
 						}
-						*/
 						popfont();
 					}
 				}
