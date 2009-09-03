@@ -67,9 +67,6 @@ enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_
 enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_PROJ, ENT_RAGDOLL, ENT_DUMMY, ENT_CAMERA };
 enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
 
-#define CROUCHHEIGHT 0.7f
-#define CROUCHTIME 200
-
 struct physent                                  // base entity type, can be affected by physics
 {
 	vec o, vel, falling;						// origin and velocity
@@ -85,10 +82,6 @@ struct physent                                  // base entity type, can be affe
 	int inmaterial;
     bool inliquid, onladder;
     float submerged;
-
-    bool jumping, crouching, impulsing;
-    int jumptime, crouchtime, impulsetime, impulsemillis, impulsedash;
-
     char move, strafe;
 
     uchar physstate;                            // one of PHYS_* above
@@ -113,8 +106,8 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = impulsedash = 0;
-    	inliquid = onladder = jumping = crouching = impulsing = false;
+    	inmaterial = timeinair = 0;
+    	inliquid = onladder = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vel = falling = vec(0, 0, 0);

@@ -650,7 +650,7 @@ namespace entities
 				}
 				default: break;
 			}
-			if(act && e.attrs[2] == TA_ACTION) d->useaction = false;
+			if(act && e.attrs[2] == TA_ACTION) d->action[AC_USE] = false;
 		}
 	}
 
@@ -665,7 +665,7 @@ namespace entities
 		gameentity &e = *(gameentity *)ents[n];
 		switch(enttype[e.type].usetype)
 		{
-			case EU_ITEM: if(d->useaction && !m_noitems(game::gamemode, game::mutators))
+			case EU_ITEM: if(d->action[AC_USE] && !m_noitems(game::gamemode, game::mutators))
 			{
 				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
 				{
@@ -674,7 +674,7 @@ namespace entities
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
-						d->useaction = false;
+						d->action[AC_USE] = false;
 					}
 					else tried = true;
 				}
@@ -747,7 +747,7 @@ namespace entities
 				}
 				case TRIGGER:
 				{
-					if((e.attrs[2] == TA_ACTION && d->useaction && d == game::player1) || e.attrs[2] == TA_AUTO) runtrigger(n, d);
+					if((e.attrs[2] == TA_ACTION && d->action[AC_USE] && d == game::player1) || e.attrs[2] == TA_AUTO) runtrigger(n, d);
 					break;
 				}
 			} break;
@@ -785,10 +785,10 @@ namespace entities
 				if(ents.inrange(ent)) execitem(ent, d, tried);
 				actitems.pop();
 			}
-			if(tried && d->useaction && d == game::player1)
+			if(tried && d->action[AC_USE] && d == game::player1)
 			{
 				playsound(S_ERROR, d->o, d);
-				d->useaction = false;
+				d->action[AC_USE] = false;
 			}
 		}
 		if(m_ctf(game::gamemode)) ctf::checkflags(d);

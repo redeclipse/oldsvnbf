@@ -196,7 +196,7 @@ enum
 {
 	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP,
 	ANIM_IMPULSE_FORWARD, ANIM_IMPULSE_BACKWARD, ANIM_IMPULSE_LEFT, ANIM_IMPULSE_RIGHT, ANIM_IMPULSE_DASH,
-	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
+	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
     ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
@@ -261,11 +261,12 @@ enum
 struct weaptypes
 {
 	int	info, 				anim,				colour,			sound, 		esound, 	fsound,		rsound,
-			add,	max,	adelay,	rdelay,	damage,	speed,	power,	time,
-			delay,	explode,	rays,	spread,	zdiv,	collide;
+			add,	max,	sub[2],		adelay[2],		rdelay,	damage[2],		speed[2],			power,		time[2],
+			delay,	explode[2],	rays[2],		spread[2],		zdiv[2],
+			collide[2];
 	bool	radial,	taper,	extinguish,	reloads,	zooms,		fullauto,	thrown;
-	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize,	partlen,
-			kickpush,	hitpush,	maxdist;
+	float	elasticity,	reflectivity,	relativity,	waterfric,	weight,	partsize[2],		partlen[2],
+			kickpush[2],		hitpush[2],		maxdist[2];
 	const char
 			*name, 		*text,	*item,						*vwep,						*proj;
 };
@@ -274,74 +275,82 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x999999,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		100,    1000,	25,		2500,	0,		2000,
-			0,		0,			1,		1,		1,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+			10,		10,		{ 1, 1 },	{ 100, 100, },    1000,	{ 25, 25 },		{ 2500, 2500 },		0,			{ 2000, 2000 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			false,	false,	false,		true,		false,		false,		false,
-			0,			0,				0.05f,		2.0f,		0,		0.5f,		10,
-			2,			150,		768,
+			0,			0,				0.05f,		2.0f,		0,		{ 0.5f, 0.5f },		{ 10, 10 },
+			{ 2, 2 },			{ 150, 150 },		{ 768, 768 },
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		500,	1250,	20,		2500,	0,		1000,
-			0,		0,			20,		40,		1,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
+			1,		8,		{ 1, 4 },	{ 500, 1500 },	1250,	{ 20, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
+			0,		{ 0, 0 },	{ 20, 40 },		{ 40, 80 },		{ 1, 2 },
+			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			false,	false,	false,		true,		false,		false,		false,
-			0.5f,		50,				0.05f,		2.0f,		30,		0.75f,		50,
-			15,			25,			384,
+			0.5f,		50,				0.05f,		2.0f,		30,		{ 0.75f, 0.75f },		{ 50, 50 },
+			{ 15, 15 },			{ 25, 25 },			{ 384, 384 },
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFFAA22,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		75,    1500,	20,		3000,	0,		1000,
-			0,		0,			1,		5,		4,		BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,
+			40,		40,		{ 1, 5 },	{ 75, 250 },	    1500,	{ 20, 20 },		{ 3000, 3000 },		0,			{ 1000, 1000 },
+			0,		{ 0, 0 },	{ 1, 5 },		{ 5, 15 },		{ 4, 2 },
+			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			false,	false,	false,		true,		false,		true,		false,
-			0.75f,		30,				0.05f,		2.0f,		0,		0.5f,		40,
-			3,			100,		512,
+			0.75f,		30,				0.05f,		2.0f,		0,		{ 0.5f, 0.5f },			{ 40, 40 },
+			{ 3, 3 },			{ 100, 100 },		{ 512, 512 },
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		100, 	2000,	15,		200,	0,		500,
-			0,		24,			1,		10,		2,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
+			50,		50,		{ 1, 5 },	{ 100, 500 }, 	2000,	{ 15, 15 },		{ 200, 200 },		0,			{ 500, 500 },
+			0,		{ 24, 24 },	{ 1, 5 },		{ 10, 40 },		{ 2, 1 },
+			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER },
 			true,	false,	true,		true,		false,		true,		false,
-			0.15f,		45,				0.25f,		1.5f,		25,		24,			0,
-			1,			25,			192,
+			0.15f,		45,				0.25f,		1.5f,		25,		{ 24, 24 },				{ 0, 0 },
+			{ 1, 1 },			{ 25, 25 },			{ 192, 192 },
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		350,	1000,	30,		2000,	0,		1000,
-			0,		32,			1,		5,		0,		IMPACT_GEOM|IMPACT_PLAYER,
+			20,		20,		{ 1, 10 },	{ 350, 750 },	1000,	{ 30, 50 },		{ 2000,	350 },		0,			{ 1000, 1000 },
+			0,		{ 32, 64 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
+			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER },
 			true,	true,	true,		true,		false,		true,		false,
-			0,			0,				0.125f,		1.0f,		0,		16,			0,
-			3,			100,		448,
+			0,			0,				0.125f,		1.0f,		0,		{ 16, 48 },				{ 0, 0 },
+			{ 3, 6 },			{ 100, 200 },		{ 448, 384 },
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		750,	1500,	150,	40000,	0,		5000,
-			0,		0,			1,		5,		2,		IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
+			1,		5,		{ 1, 1 },	{ 750, 1000 },	1500,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 10, 0 },		{ 2, 0 },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			false,	false,	false,		true,		true,		false,		false,
-			0,			 0,				0.05f,		2.0f,		0,		0.75f,		5000,
-			5,		500,		0,
+			0,			 0,				0.05f,		2.0f,		0,		{ 0.75f, 0.75f },		{ 5000, 5000 },
+			{ 5, 5 },		{ 200, 500 },		{ 0, 0 },
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		2,		1500,	6000,	300,	350,	3000,	3000,
-			100,	64,			1,		0,		0,		BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
+			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 350, 350 },			3000,	{ 3000, 3000 },
+			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
+			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER },
 			false,	false,	false,		false,		false,		false,		true,
-			0.5f,		0,				1.0f,		2.0f,		50,		4,			0,
-			5,			1000,		768,
+			0.5f,		0,				1.0f,		2.0f,		50,		{ 4, 4 },				{ 0, 0 },
+			{ 5, 5 },		{ 1000, 1000 },		{ 768, 768 },
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
-			1,		1,		500,	500,	25,		500,	0,		1000,
-			100,	0,			1,		0,		0,		IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,
+			1,		1,		{ 1, 1 },	{ 500, 500 },	500,	{ 25, 25 },		{ 500, 500 },			0,		{ 1000, 1000 },
+			100,	{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
+			 { IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			false,	false,	false,		true,		false,		false,		true,
-			0.35f,		0,				1.0f,		2.0f,		35,		2,			0,
-			5,			100,		768,
+			0.35f,		0,				1.0f,		2.0f,		35,		{ 2, 2 },			{ 0, 0 },
+			{ 5, 5 },		{ 100, 100 },		{ 768, 768 },
 			"gibs",		"\fw",	"gibc",						"gibc",						"gibc"
 	},
 };
@@ -352,6 +361,7 @@ extern weaptypes weaptype[];
 enum
 {
 	HIT_NONE 	= 0,
+	HIT_ALT		= 1<<0,
 	HIT_LEGS	= 1<<1,
 	HIT_TORSO	= 1<<2,
 	HIT_HEAD	= 1<<3,
@@ -488,7 +498,7 @@ enum
 	SV_CONNECT = 0, SV_SERVERINIT, SV_WELCOME, SV_CLIENTINIT, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_DISCONNECT,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_POINTS, SV_DAMAGE, SV_SHOTFX,
 	SV_ARENAWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
-	SV_DROP, SV_WEAPSELECT, SV_TAUNT,
+	SV_DROP, SV_WEAPSELECT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
@@ -512,9 +522,9 @@ char msgsizelookup(int msg)
 	{
 		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
-		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 9,
+		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 10,
 		SV_ARENAWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
-		SV_DROP, 0, SV_WEAPSELECT, 0, SV_TAUNT, 2,
+		SV_DROP, 0, SV_WEAPSELECT, 0,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
@@ -594,13 +604,7 @@ teamtypes teamtype[] = {
 #else
 extern teamtypes teamtype[];
 #endif
-enum
-{
-	BASE_NONE = 0,
-	BASE_HOME = 1<<0,
-	BASE_FLAG = 1<<1,
-	BASE_BOTH = BASE_HOME|BASE_FLAG
-};
+enum { BASE_NONE = 0, BASE_HOME = 1<<0, BASE_FLAG = 1<<1, BASE_BOTH = BASE_HOME|BASE_FLAG };
 
 #define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
@@ -608,21 +612,9 @@ enum
 
 #define MAXNAMELEN		16
 
-enum
-{
-	SAY_NONE	= 0,
-	SAY_ACTION	= 1<<0,
-	SAY_TEAM	= 1<<1,
-};
+enum { SAY_NONE	= 0, SAY_ACTION = 1<<0, SAY_TEAM = 1<<1 };
 #define SAY_NUM 2
-
-enum
-{
-	PRIV_NONE = 0,
-	PRIV_MASTER,
-	PRIV_ADMIN,
-	PRIV_MAX
-};
+enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_MAX };
 
 #define MM_MODE 0xF
 #define MM_AUTOAPPROVE 0x1000
@@ -631,38 +623,13 @@ enum
 #define MM_COOPSERV (MM_AUTOAPPROVE | MM_PUBSERV | (1<<MM_LOCKED))
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD };
+enum { CAMERA_NONE = 0, CAMERA_PLAYER, CAMERA_FOLLOW, CAMERA_ENTITY, CAMERA_MAX };
+enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_PING, SINFO_PLAYERS, SINFO_MAXCLIENTS, SINFO_GAME, SINFO_MAP, SINFO_TIME, SINFO_MAX };
+enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, SSTAT_MAX };
 
-enum
-{
-	CAMERA_NONE = 0,
-	CAMERA_PLAYER,
-	CAMERA_FOLLOW,
-	CAMERA_ENTITY,
-	CAMERA_MAX
-};
-
-enum
-{
-	SINFO_STATUS,
-	SINFO_DESC,
-	SINFO_PING,
-	SINFO_PLAYERS,
-	SINFO_MAXCLIENTS,
-	SINFO_GAME,
-	SINFO_MAP,
-	SINFO_TIME,
-	SINFO_MAX
-};
-
-enum
-{
-	SSTAT_OPEN = 0,
-	SSTAT_LOCKED,
-	SSTAT_PRIVATE,
-	SSTAT_FULL,
-	SSTAT_UNKNOWN,
-	SSTAT_MAX
-};
+enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_IMPULSE, AC_CROUCH, AC_TOTAL, AC_MAX = AC_TOTAL };
+#define CROUCHHEIGHT 0.7f
+#define CROUCHTIME 200
 
 #include "ai.h"
 
@@ -769,9 +736,9 @@ struct gamestate
 		return false;
 	}
 
-	bool canshoot(int weap, int sweap, int millis, int skip = -1)
+	bool canshoot(int weap, int flags, int sweap, int millis, int skip = -1)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] > 0 && weapwaited(weap, millis, skipwait(weap, millis, skip)))
+		if(hasweap(weap, sweap) && ammo[weap] >= weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weapwaited(weap, millis, skipwait(weap, millis, skip)))
 			return true;
 		return false;
 	}
@@ -931,7 +898,7 @@ const char *animnames[] =
 	"idle", "forward", "backward", "left", "right", "dead", "dying", "swim",
 	"mapmodel", "trigger on", "trigger off", "pain", "jump",
 	"impulse forward", "impulse backward", "impulse left", "impulse right", "impulse dash",
-	"sink", "edit", "lag", "switch", "taunt", "win", "lose",
+	"sink", "edit", "lag", "switch", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"pistol", "pistol shoot", "pistol reload",
 	"shotgun", "shotgun shoot", "shotgun reload",
@@ -968,14 +935,14 @@ extern const char *serverinfotypes[];
 
 struct gameent : dynent, gamestate
 {
-	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, attacktime, reloadtime, usetime, lasttaunt, lastflag, frags, deaths, totaldamage,
+	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, actiontime[2], impulsemillis, impulsedash,
 		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, dschan, wschan, lasthit, lastkill, lastattacker, lastpoints;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
 	ai::aiinfo *ai;
     vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
-	bool attacking, reloading, useaction, conopen, dominating, dominated, k_up, k_down, k_left, k_right;
+	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
 
@@ -1006,13 +973,17 @@ struct gameent : dynent, gamestate
 	void stopmoving(bool full)
 	{
 		if(full) move = strafe = 0;
-		attacking = reloading = useaction = false;
-		attacktime = reloadtime = usetime = 0;
+		loopi(AC_MAX)
+		{
+			action[i] = false;
+			actiontime[i] = 0;
+		}
+		impulsemillis = impulsedash = 0;
 	}
 
 	void clearstate()
 	{
-        lasttaunt = lasthit = lastkill = 0;
+        lasthit = lastkill = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
@@ -1030,8 +1001,8 @@ struct gameent : dynent, gamestate
 	{
 		stopmoving(true);
 		clearstate();
-    	inmaterial = timeinair = jumptime = crouchtime = impulsetime = impulsemillis = impulsedash = 0;
-    	inliquid = onladder = jumping = crouching = impulsing = false;
+    	inmaterial = timeinair = 0;
+    	inliquid = onladder = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
 		vel = falling = vec(0, 0, 0);
@@ -1098,7 +1069,7 @@ struct projent : dynent
 	bool local, beenused, radial, extinguish, canrender, limited;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int schan, id, weap, colour, hitflags;
+	int schan, id, weap, flags, colour, hitflags;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
@@ -1119,8 +1090,8 @@ struct projent : dynent
 		type = ENT_PROJ;
 		state = CS_ALIVE;
 		norm = vec(0, 0, 1);
-		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = 0;
-		schan = id = -1;
+		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = flags = 0;
+		schan = id = weap = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
 		beenused = radial = extinguish = limited = false;
@@ -1165,10 +1136,10 @@ namespace projs
 
 	extern void reset();
 	extern void update();
-	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int weap = -1);
+	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int weap = -1, int flags = 0);
 	extern void preload();
 	extern void remove(gameent *owner);
-	extern void shootv(int weap, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
+	extern void shootv(int weap, int flags, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
 	extern void drop(gameent *d, int g, int n, bool local = true);
 	extern void adddynlights();
 	extern void render();
@@ -1248,6 +1219,7 @@ namespace game
 	extern void checkzoom();
 	extern bool inzoom();
 	extern bool inzoomswitch();
+	extern void zoomview(bool down);
 	extern int zoominterval();
 	extern bool tvmode();
 	extern void resetcamera();
@@ -1316,8 +1288,8 @@ namespace entities
 				case ENT_PROJ:
 				{
 					projent *p = (projent *)ob.ent;
-					if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
-						ob.above = p->o.z+(weaptype[p->weap].explode*p->lifesize)+1.f;
+					if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0])
+						ob.above = p->o.z+(weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0]*p->lifesize)+1.f;
 					break;
 				}
 			}

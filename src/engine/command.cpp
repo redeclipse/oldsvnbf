@@ -598,7 +598,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
 						case 'f': nstor[n].f = atof(w[++wn]); v[n] = &nstor[n].f; n++; break;
 #ifndef STANDALONE
-						case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
+						case 'D': nstor[n].i = addreleaseaction(cargs = conc(w, numargs, true)) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
 #endif
 						case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
 						case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
