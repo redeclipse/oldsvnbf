@@ -53,7 +53,6 @@ namespace game
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
 	FVARP(zoomsensitivity, 1e-3f, 5.0f, 1000);
-	FVARP(pronesensitivity, 1e-3f, 7.5f, 1000);
 
 	VARP(zoomtype, 0, 0, 1);
 	VARP(zoommousetype, 0, 0, 2);
@@ -65,13 +64,6 @@ namespace game
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
 	VARP(zoomlevels, 1, 4, 10);
 	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
-
-	VARP(pronetype, 0, 0, 1);
-	VARP(pronemousetype, 0, 0, 2);
-	VARP(pronemousedeadzone, 0, 25, 100);
-	VARP(pronemousepanspeed, 1, 10, INT_MAX-1);
-	VARP(pronefov, 70, 70, 150);
-	VARP(pronetime, 1, 150, 10000);
 
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
@@ -127,19 +119,19 @@ namespace game
 
 	int mousestyle()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousetype : pronemousetype;
+		if(inzoom()) return zoommousetype;
 		return mousetype;
 	}
 
 	int deadzone()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousedeadzone : pronemousedeadzone;
+		if(inzoom()) return zoommousedeadzone;
 		return mousedeadzone;
 	}
 
 	int panspeed()
 	{
-		if(inzoom()) return weaptype[player1->weapselect].zooms ? zoommousepanspeed : pronemousepanspeed;
+		if(inzoom()) return zoommousepanspeed;
 		return mousepanspeed;
 	}
 
@@ -182,11 +174,11 @@ namespace game
 
 	bool zoomallow()
 	{
-		if(allowmove(player1)) return true;
+		if(allowmove(player1) && weaptype[player1->weapselect].zooms) return true;
 		zoomset(false, 0);
 		return false;
 	}
-	int zoominterval() { return weaptype[player1->weapselect].zooms ? zoomtime : pronetime; }
+	int zoominterval() { return weaptype[player1->weapselect].zooms ? zoomtime : 0; }
 
 	bool inzoom()
 	{
@@ -203,12 +195,12 @@ namespace game
 		return false;
 	}
 
-	void dozoom(bool down)
+	void zoomview(bool down)
 	{
 		if(zoomallow())
 		{
 			bool on = false;
-			switch(weaptype[player1->weapselect].zooms ? zoomtype : pronetype)
+			switch(zoomtype)
 			{
 				case 1: on = down; break;
 				case 0: default:
@@ -219,7 +211,7 @@ namespace game
 			zoomset(on, lastmillis);
 		}
 	}
-	ICOMMAND(zoom, "D", (int *down), { dozoom(*down!=0); });
+	ICOMMAND(zoom, "D", (int *down), { zoomview(*down!=0); });
 
 	void addsway(gameent *d)
 	{
@@ -227,7 +219,7 @@ namespace game
 		{
 			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
 			float k = pow(0.7f, curtime/float(firstpersonswayspeed));
-			vec vel = vec(d->vel).sub(d->falling).mul(d->impulsing ? 5 : 1);
+			vec vel = vec(d->vel).sub(d->falling).mul(d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
 			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
 			swaypush.mul(pow(0.5f, curtime/float(firstpersonswaypush)));
 		}
@@ -383,7 +375,7 @@ namespace game
 		{
 			if(physics::iscrouching(d))
 			{
-				bool crouching = d->crouching;
+				bool crouching = d->action[AC_CROUCH];
 				float crouchoff = 1.f-CROUCHHEIGHT;
 				if(!crouching)
 				{
@@ -400,15 +392,15 @@ namespace game
 					}
 					if(crouching)
 					{
-						if(d->crouchtime >= 0) d->crouchtime = max(CROUCHTIME-(lastmillis-d->crouchtime), 0)-lastmillis;
+						if(d->actiontime[AC_CROUCH] >= 0) d->actiontime[AC_CROUCH] = max(CROUCHTIME-(lastmillis-d->actiontime[AC_CROUCH]), 0)-lastmillis;
 					}
-					else if(d->crouchtime < 0)
-						d->crouchtime = lastmillis-max(CROUCHTIME-(lastmillis+d->crouchtime), 0);
+					else if(d->actiontime[AC_CROUCH] < 0)
+						d->actiontime[AC_CROUCH] = lastmillis-max(CROUCHTIME-(lastmillis+d->actiontime[AC_CROUCH]), 0);
 					d->o.z = z;
 				}
 				if(d->type == ENT_PLAYER)
 				{
-					int crouchtime = abs(d->crouchtime);
+					int crouchtime = abs(d->actiontime[AC_CROUCH]);
 					float amt = lastmillis-crouchtime < CROUCHTIME ? clamp(float(lastmillis-crouchtime)/CROUCHTIME, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
@@ -502,7 +494,7 @@ namespace game
 		}
 		if(d == player1 || (d->ai && aitype[d->aitype].maxspeed))
 		{
-			float force = (float(damage)/float(weaptype[weap].damage))*(100.f/d->weight)*weaptype[weap].hitpush;
+			float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 			else if(d->health <= 0) force *= deadpushscale;
 			else force *= hitpushscale;
@@ -956,7 +948,7 @@ namespace game
 	{
 		if(inzoom())
 		{
-			int frame = lastmillis-lastzoom, f = weaptype[player1->weapselect].zooms ? zoomfov : pronefov, t = zoominterval();
+			int frame = lastmillis-lastzoom, f = zoomfov, t = zoominterval();
 			checkzoom();
 			if(zoomlevels > 1 && zoomlevel < zoomlevels) f = fov()-(((fov()-zoomfov)/zoomlevels)*zoomlevel);
 			float diff = float(fov()-f), amt = frame < t ? clamp(float(frame)/float(t), 0.f, 1.f) : 1.f;
@@ -998,9 +990,7 @@ namespace game
 			}
 			else if(allowmove(player1))
 			{
-				float scale = inzoom() ?
-						(weaptype[player1->weapselect].zooms? zoomsensitivity : pronesensitivity)
-					: sensitivity;
+				float scale = inzoom() ? zoomsensitivity : sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
 				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
@@ -1611,16 +1601,16 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulsetime; }
-				else if(d->timeinair && d->jumptime && lastmillis-d->jumptime <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->jumptime; }
+				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_IMPULSE]; }
+				else if(d->timeinair && d->actiontime[AC_JUMP] && lastmillis-d->actiontime[AC_JUMP] <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_JUMP]; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-				else if(d->impulsing && (d->move || d->strafe))
+				else if(d->action[AC_IMPULSE] && (d->move || d->strafe))
 				{
 					if(d->move>0)		anim |= (ANIM_IMPULSE_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_IMPULSE_LEFT : ANIM_IMPULSE_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->move<0)	anim |= (ANIM_IMPULSE_BACKWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 				}
-				else if(d->crouching || d->crouchtime<0)
+				else if(d->action[AC_CROUCH] || d->actiontime[AC_CROUCH]<0)
 				{
 					if(d->move>0)		anim |= (ANIM_CRAWL_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_CRAWL_LEFT : ANIM_CRAWL_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1722,12 +1712,6 @@ namespace game
 				}
 			}
 			else if(bestplayers.find(d) >= 0) animflags = ANIM_WIN|ANIM_LOOP;
-		}
-		else if(third && d->lasttaunt && lastmillis-d->lasttaunt <= 1000)
-		{
-			lastaction = d->lasttaunt;
-			animflags = ANIM_TAUNT;
-			animdelay = 1000;
 		}
 #endif
 		else if(third && lastmillis-d->lastpain <= 300)
@@ -1853,7 +1837,7 @@ namespace game
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
         	d->checktags();
-        	if(d->impulsing && d->state == CS_ALIVE) impulseeffect(d, false);
+        	if(d->action[AC_IMPULSE] && (d->move || d->strafe) && d->state == CS_ALIVE) impulseeffect(d, false);
         }
 	}
 
@@ -1867,7 +1851,7 @@ namespace game
 		if(rendernormally && early)
 		{
 			player1->checktags();
-        	if(player1->impulsing && player1->state == CS_ALIVE) impulseeffect(player1, false);
+        	if(player1->action[AC_IMPULSE] && (player1->move || player1->strafe) && player1->state == CS_ALIVE) impulseeffect(player1, false);
 		}
     }
 

@@ -754,7 +754,7 @@ namespace client
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) |
-				((d->crouching ? 1 : 0)<<4) | ((d->impulsing ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
+				((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((d->action[AC_IMPULSE] && (d->move || d->strafe) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
 					((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
 			putuint(q, flags);
             if(flags&0x20)
@@ -918,7 +918,7 @@ namespace client
 				gameent *d = game::getclient(lcn);
                 if(!d || d==game::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
-				d->impulsing = f&0x40 ? true : false;
+				d->action[AC_IMPULSE] = f&0x40 ? true : false;
 				d->conopen = f&0x80 ? true : false;
 				d->yaw = yaw;
 				d->pitch = pitch;
@@ -927,9 +927,9 @@ namespace client
 				d->aimpitch = aimpitch;
 				d->strafe = (f&3)==3 ? -1 : f&3; f >>= 2;
 				d->move = (f&3)==3 ? -1 : f&3; f >>= 2;
-				bool crouch = d->crouching;
-				d->crouching = f&1 ? true : false;
-				if(crouch != d->crouching) d->crouchtime = lastmillis;
+				bool crouch = d->action[AC_CROUCH];
+				d->action[AC_CROUCH] = f&1 ? true : false;
+				if(crouch != d->action[AC_CROUCH]) d->actiontime[AC_CROUCH] = lastmillis;
                 vec oldpos(d->o);
                 //if(game::allowmove(d))
                 //{
@@ -1035,7 +1035,7 @@ namespace client
 						case SPHY_JUMP:
 						{
 							playsound(S_JUMP, t->o, t); regularshape(PART_SMOKE, int(t->radius), 0x111111, 21, 20, 100, t->feetpos(), 1.f, -10, 0, 10.f);
-							t->jumptime = lastmillis;
+							t->actiontime[AC_JUMP] = lastmillis;
 							break;
 						}
 						case SPHY_IMPULSE:
@@ -1225,7 +1225,7 @@ namespace client
 
 				case SV_SHOTFX:
 				{
-					int scn = getint(p), weap = getint(p), power = getint(p);
+					int scn = getint(p), weap = getint(p), flags = getint(p), power = getint(p);
 					vec from;
 					loopk(3) from[k] = getint(p)/DMF;
 					int ls = getint(p);
@@ -1237,8 +1237,8 @@ namespace client
 					}
 					gameent *s = game::getclient(scn);
 					if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
-					s->setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, lastmillis);
-					projs::shootv(weap, power, from, locs, s, false);
+					s->setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], lastmillis);
+					projs::shootv(weap, flags, power, from, locs, s, false);
 					break;
 				}
 
@@ -1326,15 +1326,6 @@ namespace client
 					gameent *target = game::getclient(trg);
 					if(!target || !isweap(weap)) break;
 					weapons::weapselect(target, weap, false);
-					break;
-				}
-
-				case SV_TAUNT:
-				{
-					int lcn = getint(p);
-					gameent *f = game::getclient(lcn);
-					if(!f) break;
-					f->lasttaunt = lastmillis;
 					break;
 				}
 

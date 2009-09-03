@@ -44,7 +44,7 @@ namespace server
 	struct shotevent : timedevent
 	{
         int id;
-		int weap, power, num;
+		int weap, flags, power, num;
 		ivec from;
 		vector<ivec> shots;
 
@@ -91,7 +91,7 @@ namespace server
 	struct destroyevent : timedevent
 	{
         int id;
-		int weap, radial;
+		int weap, flags, radial;
 		vector<hitset> hits;
 
         bool keepable() const { return true; }
@@ -2096,8 +2096,8 @@ namespace server
 			}
 		}
 
-		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE; // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && !weaptype[weap].explode) realflags &= ~HIT_FULL;
+		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		else if((realflags&HIT_FULL) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0]) realflags &= ~HIT_FULL;
 		if(hithurts(realflags))
 		{
 			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
@@ -2240,7 +2240,7 @@ namespace server
 				float size = radial ? (h.flags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
-				int damage = radial ? int(weaptype[weap].damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage;
+				int damage = radial ? int(weaptype[weap].damage[h.flags&HIT_ALT ? 1 : 0]*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage[h.flags&HIT_ALT ? 1 : 0];
 				dodamage(target, ci, damage, weap, h.flags, h.dir);
 			}
 		}
@@ -2264,28 +2264,28 @@ namespace server
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", weap);
 			return;
 		}
-		if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis))
+		if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis))
 		{
-			if(!gs.canshoot(weap, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
+			if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
 			{
-				takeammo(ci, weap, 1);
+				takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
 				return;
 			}
 			else
 			{
-				takeammo(ci, weap, gs.weapload[weap]+1);
+				takeammo(ci, weap, gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 				gs.weapload[weap] = -gs.weapload[weap];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
 		}
-		else takeammo(ci, weap, 1);
-		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, millis);
-		sendf(-1, 1, "ri7ivx", SV_SHOTFX, ci->clientnum,
-			weap, power, from[0], from[1], from[2],
+		else takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
+		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], millis);
+		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum,
+			weap, flags, power, from[0], from[1], from[2],
 					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(),
 						ci->clientnum);
-		gs.shotdamage += weaptype[weap].damage*weap*num;
+		gs.shotdamage += weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*shots.length();
 		loopv(shots) gs.weapshots[weap].add(id);
 	}
 
@@ -2342,7 +2342,7 @@ namespace server
 				nweap = gs.bestweap(sweap, true);
 				gs.weapswitch(nweap, millis);
 			}
-			else gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay, millis);
+			else gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[0], millis);
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
@@ -3164,13 +3164,14 @@ namespace server
                     shotevent *ev = new shotevent;
 					ev->id = getint(p);
 					ev->weap = getint(p);
+					ev->flags = getint(p);
 					ev->power = getint(p);
 					if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id);
 					loopk(3) ev->from[k] = getint(p);
 					ev->num = getint(p);
 					loopj(ev->num)
 					{
-                        if(p.overread() || !isweap(ev->weap) || j >= weaptype[ev->weap].rays) break;
+                        if(p.overread() || !isweap(ev->weap)) break;
 						ivec &dest = ev->shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
@@ -3216,6 +3217,7 @@ namespace server
 					ev->id = getint(p);
 					if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
 					ev->weap = getint(p);
+					ev->flags = getint(p);
 					ev->id = getint(p); // this is the actual id
 					ev->radial = getint(p);
 					int hits = getint(p);

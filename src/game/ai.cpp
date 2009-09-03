@@ -652,7 +652,7 @@ namespace ai
 						if(aitype[d->aitype].maxspeed)
 						{
 							int weap = d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? d->arenaweap : d->weapselect;
-							float mindist = weaptype[weap].explode ? weaptype[weap].explode : NEARDIST, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : FARDIST;
+							float mindist = weaptype[weap].explode[0] ? weaptype[weap].explode[0] : NEARDIST, maxdist = weaptype[weap].maxdist[0] ? weaptype[weap].maxdist[0] : FARDIST;
 							return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
 						}
 						else
@@ -702,10 +702,10 @@ namespace ai
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
-				if(((e.attrs[0] & WP_F_CROUCH && !d->crouching) || d->crouching) && (lastmillis-d->crouchtime >= 500))
+				if(((e.attrs[0] & WP_F_CROUCH && !d->action[AC_CROUCH]) || d->action[AC_CROUCH]) && (lastmillis-d->actiontime[AC_CROUCH] >= 500))
 				{
-					d->crouching = !d->crouching;
-					d->crouchtime = lastmillis;
+					d->action[AC_CROUCH] = !d->action[AC_CROUCH];
+					d->actiontime[AC_CROUCH] = lastmillis;
 				}
 				return true;
 			}
@@ -771,7 +771,7 @@ namespace ai
 	bool weaprange(gameent *d, int weap, float dist)
 	{
 		if(weaptype[weap].extinguish && d->inliquid) return false;
-		float mindist = weaptype[weap].explode ? weaptype[weap].explode : d->radius*3, maxdist = weaptype[weap].maxdist ? weaptype[weap].maxdist : hdr.worldsize;
+		float mindist = weaptype[weap].explode[0] ? weaptype[weap].explode[0] : d->radius*3, maxdist = weaptype[weap].maxdist[0] ? weaptype[weap].maxdist[0] : hdr.worldsize;
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
@@ -780,7 +780,7 @@ namespace ai
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, dist))
 		{
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
@@ -810,8 +810,8 @@ namespace ai
 		}
 		if(jump)
 		{
-			d->jumping = jump;
-			d->jumptime = lastmillis;
+			d->action[AC_JUMP] = jump;
+			d->actiontime[AC_JUMP] = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->jumpseed = lastmillis+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 100 : 50;
@@ -844,11 +844,11 @@ namespace ai
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(b.idle == 1 && b.type != AI_S_WAIT)
 			{
-				bool wascrouching = lastmillis-d->crouchtime <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->crouching;
+				bool wascrouching = lastmillis-d->actiontime[AC_CROUCH] <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->action[AC_CROUCH];
 				if(wascrouching || wantscrouch)
 				{
-					d->crouching = true;
-					if(wantscrouch) d->crouchtime = lastmillis;
+					d->action[AC_CROUCH] = true;
+					if(wantscrouch) d->actiontime[AC_CROUCH] = lastmillis;
 				}
 			}
 		}
@@ -883,11 +883,11 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(!d->ai->becareful && d->canshoot(d->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) &&
+					if(!d->ai->becareful && d->canshoot(d->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) &&
 						hastarget(d, b, e, yaw, pitch, dp.squaredist(ep)))
 					{
-						d->attacking = true;
-						d->ai->lastaction = d->attacktime = lastmillis;
+						d->action[AC_ATTACK] = true;
+						d->ai->lastaction = d->actiontime[AC_ATTACK] = lastmillis;
 						result = 4;
 					}
 					else result = insight ? 3 : 2;
@@ -960,7 +960,7 @@ namespace ai
 					break;
 				}
 			}
-			if(game::allowmove(d) && busy <= 3 && !d->useaction && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
+			if(game::allowmove(d) && busy <= 3 && !d->action[AC_USE] && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
 			{
 				static vector<actitem> actitems;
 				actitems.setsizenodelete(0);
@@ -1006,8 +1006,8 @@ namespace ai
 									case WEAPON:
 									{
 										if(d->hasweap(attr, sweap)) break;
-										d->useaction = true;
-										d->ai->lastaction = d->usetime = lastmillis;
+										d->action[AC_USE] = true;
+										d->ai->lastaction = d->actiontime[AC_USE] = lastmillis;
 										return true;
 										break;
 									}
@@ -1097,7 +1097,7 @@ namespace ai
 				if(d->aitype == AI_BOT) entities::checkitems(d);
             }
         }
-		d->attacking = d->reloading = d->useaction = false;
+		d->action[AC_ATTACK] = d->action[AC_RELOAD] = d->action[AC_USE] = false;
 	}
 
 	void avoid()
@@ -1114,9 +1114,9 @@ namespace ai
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && weaptype[p->weap].explode)
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0])
 			{
-				float limit = enttype[WAYPOINT].radius+(weaptype[p->weap].explode*p->lifesize);
+				float limit = enttype[WAYPOINT].radius+(weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0]*p->lifesize);
                 obs.avoidnear(p, p->o, limit);
 			}
 		}

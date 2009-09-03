@@ -722,6 +722,7 @@ namespace hud
 								}
 							}
 						}
+						/*
 						if(shownotices >= 4)
 						{
 							if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
@@ -729,9 +730,9 @@ namespace hud
 								SEARCHBINDCACHE(zoomkey)("zoom", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, zoomkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "prone");
 							}
-							if(game::player1->canshoot(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 							{
-								SEARCHBINDCACHE(attackkey)("attack", 0);
+								SEARCHBINDCACHE(attackkey)("attack, 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
 							}
 							if(game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
@@ -740,6 +741,7 @@ namespace hud
 								ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey);
 							}
 						}
+						*/
 						popfont();
 					}
 				}

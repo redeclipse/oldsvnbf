@@ -41,56 +41,52 @@ namespace physics
 	imov(right,    strafe, -1, k_right, k_left);
 
 	// inputs
-	#define iput(x,y,t,q,z,a,f) \
-		void do##x(bool down) \
-		{ \
-			if(game::allowmove(game::player1)) \
-			{ \
-				if(q) \
-				{ \
-					if(a > 0) \
-					{ \
-						if(game::player1->y != down) \
-						{ \
-							if(game::player1->t >= 0) game::player1->t = lastmillis-max(a-(lastmillis-game::player1->t), 0); \
-							else if(down) game::player1->t = -game::player1->t; \
-						} \
-					} \
-					else if(a < 0 && !down) return; \
-					else if(down) \
-					{ \
-						if(a < 0 && game::player1->y) down = false; \
-						else game::player1->t = lastmillis; \
-					} \
-				} \
-				game::player1->y = down; \
-				f; \
-			} \
-			else \
-			{ \
-				if(q && a > 0 && game::player1->y && game::player1->t >= 0) \
-					game::player1->t = lastmillis-max(a-(lastmillis-game::player1->t), 0); \
-				game::player1->y = false; \
-				if(z && down) game::respawn(game::player1); \
-			} \
-		} \
-		ICOMMAND(x, "D", (int *n), { do##x(*n!=0); });
-
-	iput(crouch,	crouching,	crouchtime,	true,						false,	CROUCHTIME, );
-	iput(impulse,	impulsing,	impulsetime,true,						false,	0, );
-	iput(jump,		jumping,	jumptime,	!game::player1->timeinair,	false,	0, );
-	iput(attack,	attacking,	attacktime,	true,						true,	0,	{ if(down) game::player1->reloading = game::player1->useaction = false; });
-	iput(reload,	reloading,	reloadtime,	true,						false,	-1,	{ if(down) game::player1->useaction = game::player1->attacking = false; });
-	iput(action,	useaction,	usetime,	true,						false,	0,	{ if(down) game::player1->reloading = game::player1->attacking = false; });
-
-	void taunt(gameent *d)
+	void doaction(int type, bool down)
 	{
-        if(d->state!=CS_ALIVE || d->physstate<PHYS_SLOPE) return;
-		if(lastmillis-d->lasttaunt<1000) return;
-		d->lasttaunt = lastmillis;
-		client::addmsg(SV_TAUNT, "ri", d->clientnum);
+		if(type < AC_TOTAL && type > -1)
+		{
+			if(game::allowmove(game::player1))
+			{
+				if(type == AC_ALTERNATE && weaptype[game::player1->weapselect].zooms)
+				{
+					game::zoomview(down);
+					down = false;
+				}
+				else if(type != AC_JUMP || !game::player1->timeinair)
+				{
+					if(type == AC_CROUCH)
+					{
+						if(game::player1->action[type] != down)
+						{
+							if(game::player1->actiontime[type] >= 0) game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
+							else if(down) game::player1->actiontime[type] = -game::player1->actiontime[type];
+						}
+					}
+					else if(type == AC_RELOAD && !down) return;
+					else if(down)
+					{
+						if(type == AC_RELOAD && game::player1->action[type]) down = false;
+						else game::player1->actiontime[type] = lastmillis;
+					}
+				}
+				game::player1->action[type] = down;
+				if(down && (type == AC_ATTACK || type == AC_RELOAD || type == AC_USE))
+				{
+					if(type != AC_ATTACK) game::player1->action[AC_ATTACK] = false;
+					if(type != AC_RELOAD) game::player1->action[AC_RELOAD] = false;
+					if(type != AC_USE) game::player1->action[AC_USE] = false;
+				}
+			}
+			else
+			{
+				if(type == AC_CROUCH && game::player1->action[type] && game::player1->actiontime[type] >= 0)
+					game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
+				game::player1->action[type] = false;
+				if(type == AC_ATTACK && down) game::respawn(game::player1);
+			}
+		}
 	}
-	ICOMMAND(taunt, "", (), { taunt(game::player1); });
+	ICOMMAND(action, "Di", (int *n, int *i), { doaction(*i, *n!=0); });
 
 	bool issolid(physent *d, physent *e)
 	{
@@ -107,7 +103,12 @@ namespace physics
         return d->state == CS_DEAD || d->state == CS_WAITING;
 	}
 
-	bool iscrouching(physent *d) { return d->crouching || d->crouchtime < 0 || lastmillis-d->crouchtime <= 200; }
+	bool iscrouching(physent *d)
+	{
+		if(d->type == ENT_PLAYER || d->type == ENT_AI)
+			return ((gameent *)d)->action[AC_CROUCH] || ((gameent *)d)->actiontime[AC_CROUCH] < 0 || lastmillis-((gameent *)d)->actiontime[AC_CROUCH] <= 200;
+		return false;
+	}
 	bool liquidcheck(physent *d) { return d->inliquid && d->submerged > 0.8f; }
 
 	float liquidmerge(physent *d, float from, float to)
@@ -134,7 +135,8 @@ namespace physics
 
 	bool canimpulse(physent *d, int cost)
 	{
-		if(impulselength) return d->impulsemillis+cost < m_speedtime(impulselength);
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && impulselength)
+			return ((gameent *)d)->impulsemillis+cost < m_speedtime(impulselength);
 		return false;
 	}
 
@@ -147,7 +149,7 @@ namespace physics
 			else
 			{
 				float speed = iscrouching(d) ? crawlspeed : movespeed;
-				if(impulselength > 0 && d->impulsing && d->impulsemillis < impulselength) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
+				if(impulselength > 0 && ((gameent *)d)->action[AC_IMPULSE] && ((gameent *)d)->impulsemillis < impulselength) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
 				return m_speedscale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
 			}
 		}
@@ -413,7 +415,7 @@ namespace physics
 	{
 		vec old(d->o);
 
-		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !d->jumping)
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !((gameent *)d)->action[AC_JUMP])
 		{
 			float step = dir.magnitude();
 			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
@@ -479,67 +481,71 @@ namespace physics
 
 	void modifyvelocity(physent *pl, bool local, bool floating, int millis)
 	{
-		if(floating)
+		if(pl->type == ENT_PLAYER || pl->type == ENT_AI)
 		{
-			if(game::allowmove(pl) && pl->jumping)
+			if(floating)
 			{
-				pl->vel.z += jumpforce(pl, false);
-				pl->jumping = false;
-				if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+				if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+				{
+					pl->vel.z += jumpforce(pl, false);
+					((gameent *)pl)->action[AC_JUMP] = false;
+					if(local) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+				}
 			}
-		}
-        else if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
-		{
-			if(game::allowmove(pl) && pl->jumping)
+			else if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
 			{
+				if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+				{
+					pl->falling = vec(0, 0, 0);
+					pl->physstate = PHYS_FALL; // cancel out other physstate
+					pl->vel.z += jumpforce(pl, true);
+					if(pl->inliquid)
+					{
+						float scale = liquidmerge(pl, 1.f, liquidspeed);
+						pl->vel.x *= scale; pl->vel.y *= scale;
+					}
+					((gameent *)pl)->action[AC_JUMP] = false;
+					if(local)
+					{
+						playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
+						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+					}
+				}
+			}
+			else if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP] && !((gameent *)pl)->impulsedash && canimpulse(pl, impulsecost))
+			{
+				vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
+				pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
 				pl->falling = vec(0, 0, 0);
-				pl->physstate = PHYS_FALL; // cancel out other physstate
-				pl->vel.z += jumpforce(pl, true);
-				if(pl->inliquid)
+				((gameent *)pl)->action[AC_JUMP] = false;
+				((gameent *)pl)->impulsedash = lastmillis;
+				((gameent *)pl)->impulsemillis += impulsecost;
+				if(local)
 				{
-					float scale = liquidmerge(pl, 1.f, liquidspeed);
-					pl->vel.x *= scale; pl->vel.y *= scale;
-				}
-				pl->jumping = false;
-				if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
-				{
-					playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
-					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+					playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
+					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 				}
 			}
-		}
-		else if(game::allowmove(pl) && pl->jumping && !pl->impulsedash && canimpulse(pl, impulsecost))
-		{
-			vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
-			pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
-			pl->falling = vec(0, 0, 0);
-			pl->jumping = false;
-			pl->impulsedash = lastmillis;
-			pl->impulsemillis += impulsecost;
-			if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
+			if(game::allowmove(pl))
 			{
-				playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
-				client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
+				if(((gameent *)pl)->action[AC_IMPULSE] && (pl->move || pl->strafe))
+				{
+					if(canimpulse(pl, millis)) ((gameent *)pl)->impulsemillis += millis;
+					else ((gameent *)pl)->action[AC_IMPULSE] = false;
+				}
+				else if(((gameent *)pl)->impulsemillis > 0)
+				{
+					int timeslice = millis;
+					if(iscrouching(pl)) timeslice += timeslice/2;
+					if(pl->move || pl->strafe) timeslice -= timeslice/2;
+					if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
+					if((((gameent *)pl)->impulsemillis -= timeslice) < 0) ((gameent *)pl)->impulsemillis = 0;
+				}
 			}
+			if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
+			else ((gameent *)pl)->impulsedash = 0;
 		}
-		if(game::allowmove(pl))
-		{
-			if(pl->impulsing && (pl->move || pl->strafe))
-			{
-				if(canimpulse(pl, millis)) pl->impulsemillis += millis;
-				else pl->impulsing = false;
-			}
-			else if(pl->impulsemillis > 0)
-			{
-				int timeslice = millis;
-				if(iscrouching(pl)) timeslice += timeslice/2;
-				if(pl->move || pl->strafe) timeslice -= timeslice/2;
-				if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
-				if((pl->impulsemillis -= timeslice) < 0) pl->impulsemillis = 0;
-			}
-		}
-        if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
-        else pl->impulsedash = 0;
+		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 
 		vec m(0, 0, 0);
         bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
@@ -560,7 +566,9 @@ namespace physics
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
-			float curb = pl->physstate >= PHYS_SLOPE && !pl->impulsing ? floorcurb : aircurb, fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
+			bool floor = pl->physstate >= PHYS_SLOPE;
+			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) floor = !((gameent *)pl)->action[AC_IMPULSE];
+			float curb = floor ? floorcurb : aircurb, fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 		}
 	}

@@ -733,10 +733,10 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
-					if(!d->impulsing && d->impulsemillis < impulselength*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulsemillis < impulselength*2/3)
 					{
-						d->impulsing = true;
-						d->impulsetime = lastmillis;
+						d->action[AC_IMPULSE] = true;
+						d->actiontime[AC_IMPULSE] = lastmillis;
 					}
 					return true;
 				}
