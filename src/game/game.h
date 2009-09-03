@@ -305,7 +305,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 500 }, 	2000,	{ 15, 15 },		{ 200, 200 },		0,			{ 500, 500 },
+			50,		50,		{ 1, 5 },	{ 100, 500 }, 	2000,	{ 10, 15 },		{ 200, 200 },		0,			{ 500, 500 },
 			0,		{ 24, 24 },	{ 1, 5 },		{ 10, 40 },		{ 2, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER },
 			true,	false,	true,		true,		false,		true,		false,
@@ -315,9 +315,9 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 10 },	{ 350, 750 },	1000,	{ 30, 50 },		{ 2000,	350 },		0,			{ 1000, 1000 },
+			20,		20,		{ 1, 20 },	{ 350, 3500 },	1000,	{ 25, 50 },		{ 2000,	100 },		0,			{ 1000, 3500 },
 			0,		{ 32, 64 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
-			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_CONT },
 			true,	true,	true,		true,		false,		true,		false,
 			0,			0,				0.125f,		1.0f,		0,		{ 16, 48 },				{ 0, 0 },
 			{ 3, 6 },			{ 100, 200 },		{ 448, 384 },

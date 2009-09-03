@@ -45,7 +45,7 @@ namespace projs
 
 	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
 	{
-		if(d != proj.hit && ((proj.projcollide&COLLIDE_OWNER && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000))) || d != proj.owner))
+		if(d != proj.hit && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000)) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
 		{
 			proj.hit = d;
 			proj.hitflags = flags;
@@ -505,7 +505,7 @@ namespace projs
 	void radiate(projent &proj, int radius)
 	{
 		gameent *d = proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL;
-		if((!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtime(250))) && radius > 0)
+		if((!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtime(100))) && radius > 0)
 		{ // for the flamer this results in at most 40 damage per second
 			if(!d)
 			{
@@ -513,11 +513,13 @@ namespace projs
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
 					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+					if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
 					radialeffect(f, proj, false, radius);
 				}
 				proj.lastradial = lastmillis;
 			}
-			else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
+			else if(d->state == CS_ALIVE && physics::issolid(d) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
+				radialeffect(d, proj, false, radius);
 		}
 	}
 
@@ -622,9 +624,9 @@ namespace projs
 					bool soft = true;
 					float resize = 1.f;
 					resize = proj.lifesize = 1.f-clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.05f, 1.f);
-					if(proj.lifemillis-proj.lifetime < m_speedtime(100))
+					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 500 : 100))
 					{
-						resize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(100)), 0.f, 1.f)*0.75f)+0.25f;
+						resize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 500 : 100)), 0.f, 1.f)*0.75f)+0.25f;
 						soft = false;
 					}
 					if(proj.canrender)
@@ -1074,6 +1076,7 @@ namespace projs
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+							if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
 							radialeffect(f, proj, proj.weap == WEAP_GRENADE, radius);
 						}
 					}
