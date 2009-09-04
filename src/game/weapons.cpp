@@ -159,7 +159,8 @@ namespace weapons
 		int adelay = weaptype[d->weapselect].adelay[flags&HIT_ALT ? 1 : 0];
 		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0] || (weaptype[d->weapselect].zooms && flags&HIT_ALT))
 		{
-			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+			d->action[AC_ATTACK] = false;
+			if(!weaptype[d->weapselect].zooms) d->action[AC_ALTERNATE] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
