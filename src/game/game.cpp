@@ -58,7 +58,7 @@ namespace game
 	VARP(zoommousedeadzone, 0, 25, 100);
 	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
 	VARP(zoomfov, 20, 20, 150);
-	VARP(zoomtime, 1, 50, 10000);
+	VARP(zoomtime, 1, 100, 10000);
 
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
 	VARP(zoomlevels, 1, 4, 10);
