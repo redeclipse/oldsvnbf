@@ -1601,7 +1601,7 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_IMPULSE]; }
+				else if(d->timeinair && d->impulsedash && lastmillis-d->impulsedash <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulsedash; }
 				else if(d->timeinair && d->actiontime[AC_JUMP] && lastmillis-d->actiontime[AC_JUMP] <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_JUMP]; }
 				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->action[AC_IMPULSE] && (d->move || d->strafe))
