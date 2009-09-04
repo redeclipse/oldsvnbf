@@ -505,7 +505,7 @@ namespace hud
 			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && weaptype[game::player1->weapselect].zooms)
 			{
 				int frame = lastmillis-game::lastzoom, off = int(zoomcrosshairsize*hudsize)-cs;
-				float amt = frame < game::zoominterval() ? clamp(float(frame)/float(game::zoominterval()), 0.f, 1.f) : 1.f;
+				float amt = frame < game::zoomtime ? clamp(float(frame)/float(game::zoomtime), 0.f, 1.f) : 1.f;
 				if(!game::zooming) amt = 1.f-amt;
 				cs += int(off*amt);
 			}
@@ -1399,7 +1399,7 @@ namespace hud
 	{
 		Texture *t = textureload(zoomtex, 3);
 		int frame = lastmillis-game::lastzoom;
-		float pc = frame < game::zoominterval() ? float(frame)/float(game::zoominterval()) : 1.f;
+		float pc = frame < game::zoomtime ? float(frame)/float(game::zoomtime) : 1.f;
 		if(!game::zooming) pc = 1.f-pc;
 		int x = 0, y = 0, c = 0;
 		if(w > h)
