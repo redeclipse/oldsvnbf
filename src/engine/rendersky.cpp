@@ -7,7 +7,7 @@ void loadsky(const char *basename, Texture *texs[6])
 	bool fail = false;
 	loopi(6)
 	{
-        const char *side = cubemapsides[i].name;
+		const char *side = cubemapsides[i].name;
 		defformatstring(name)("%s_%s", basename, side);
 		if((texs[i] = textureload(name, 3, true, false)) == notexture)
 		{
@@ -22,8 +22,8 @@ Texture *cloudoverlay = NULL;
 Texture *loadskyoverlay(const char *basename)
 {
 	Texture *t = textureload(basename, 0, true, false);
-    if(t == notexture) conoutf("\frcould not load sky overlay texture %s", basename);
-    return t;
+	if(t == notexture) conoutf("\frcould not load sky overlay texture %s", basename);
+	return t;
 }
 
 HVARW(skybgcolour, 0, 0x000000, 0xFFFFFF);
@@ -90,44 +90,44 @@ void draw_envbox_quad(int x0, int y0, int z0,
 
 void draw_envbox(int w, float zclip = 0.0f, int faces = 0x3F, Texture **sky = NULL)
 {
-    float vclip = 1-zclip;
-    int z = int(ceil(2*w*(vclip-0.5f)));
+	float vclip = 1-zclip;
+	int z = int(ceil(2*w*(vclip-0.5f)));
 
-    if(faces&0x01)
-        draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
-                         1.0f, 0.0f, -w,  w, -w,
-                         1.0f, vclip, -w,  w,  z,
-                         0.0f, vclip, -w, -w,  z, sky && sky[0] ? sky[0]->id : notexture->id);
+	if(faces&0x01)
+		draw_envbox_face(0.0f, 0.0f, -w, -w, -w,
+						 1.0f, 0.0f, -w,  w, -w,
+						 1.0f, vclip, -w,  w,  z,
+						 0.0f, vclip, -w, -w,  z, sky && sky[0] ? sky[0]->id : notexture->id);
 
-    if(faces&0x02)
-        draw_envbox_face(1.0f, vclip, +w, -w,  z,
-                         0.0f, vclip, +w,  w,  z,
-                         0.0f, 0.0f, +w,  w, -w,
-                         1.0f, 0.0f, +w, -w, -w, sky && sky[1] ? sky[1]->id : notexture->id);
+	if(faces&0x02)
+		draw_envbox_face(1.0f, vclip, +w, -w,  z,
+						 0.0f, vclip, +w,  w,  z,
+						 0.0f, 0.0f, +w,  w, -w,
+						 1.0f, 0.0f, +w, -w, -w, sky && sky[1] ? sky[1]->id : notexture->id);
 
-    if(faces&0x04)
-        draw_envbox_face(1.0f, vclip, -w, -w,  z,
-                         0.0f, vclip,  w, -w,  z,
-                         0.0f, 0.0f,  w, -w, -w,
-                         1.0f, 0.0f, -w, -w, -w, sky && sky[2] ? sky[2]->id : notexture->id);
+	if(faces&0x04)
+		draw_envbox_face(1.0f, vclip, -w, -w,  z,
+						 0.0f, vclip,  w, -w,  z,
+						 0.0f, 0.0f,  w, -w, -w,
+						 1.0f, 0.0f, -w, -w, -w, sky && sky[2] ? sky[2]->id : notexture->id);
 
-    if(faces&0x08)
-        draw_envbox_face(1.0f, vclip, +w,  w,  z,
-                         0.0f, vclip, -w,  w,  z,
-                         0.0f, 0.0f, -w,  w, -w,
-                         1.0f, 0.0f, +w,  w, -w, sky && sky[3] ? sky[3]->id : notexture->id);
+	if(faces&0x08)
+		draw_envbox_face(1.0f, vclip, +w,  w,  z,
+						 0.0f, vclip, -w,  w,  z,
+						 0.0f, 0.0f, -w,  w, -w,
+						 1.0f, 0.0f, +w,  w, -w, sky && sky[3] ? sky[3]->id : notexture->id);
 
-    if(!zclip && faces&0x10)
-        draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
-                         0.0f, 0.0f, +w,  w,  w,
-                         1.0f, 0.0f, +w, -w,  w,
-                         1.0f, 1.0f, -w, -w,  w, sky && sky[4] ? sky[4]->id : notexture->id);
+	if(!zclip && faces&0x10)
+		draw_envbox_face(0.0f, 1.0f, -w,  w,  w,
+						 0.0f, 0.0f, +w,  w,  w,
+						 1.0f, 0.0f, +w, -w,  w,
+						 1.0f, 1.0f, -w, -w,  w, sky && sky[4] ? sky[4]->id : notexture->id);
 
-    if(faces&0x20)
-        draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
-                         0.0f, 0.0f, -w,  w, -w,
-                         1.0f, 0.0f, -w, -w, -w,
-                         1.0f, 1.0f, +w, -w, -w, sky && sky[5] ? sky[5]->id : notexture->id);
+	if(faces&0x20)
+		draw_envbox_face(0.0f, 1.0f, +w,  w, -w,
+						 0.0f, 0.0f, -w,  w, -w,
+						 1.0f, 0.0f, -w, -w, -w,
+						 1.0f, 1.0f, +w, -w, -w, sky && sky[5] ? sky[5]->id : notexture->id);
 }
 
 void draw_envbox_bg(int w)
@@ -142,30 +142,30 @@ void draw_envbox_bg(int w)
 
 void draw_env_overlay(int w, Texture *overlay = NULL, int colour = 0xFFFFFF, float a = 1.f, float tx = 0, float ty = 0)
 {
-    float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
-    glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
-    float r = (colour>>16)/255.0f, g = ((colour>>8)&255)/255.0f, b = (colour&255)/255.0f;
+	float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
+	glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
+	float r = (colour>>16)/255.0f, g = ((colour>>8)&255)/255.0f, b = (colour&255)/255.0f;
 	glColor4f(r, g, b, a);
-    glBegin(GL_POLYGON);
-    loopi(cloudsubdiv)
-    {
-        vec p(1, 1, 0);
-        p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
-        glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
-    }
-    glEnd();
-    float tsz2 = 0.5f/cloudscale;
-    glBegin(GL_QUAD_STRIP);
-    loopi(cloudsubdiv+1)
-    {
-        vec p(1, 1, 0);
-        p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
-        glColor4f(r, g, b, a);
-        glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
-        glColor4f(r, g, b, 0);
-        glTexCoord2f(tx + p.x*tsz2, ty + p.y*tsz2); glVertex3f(p.x*w, p.y*w, z);
-    }
-    glEnd();
+	glBegin(GL_POLYGON);
+	loopi(cloudsubdiv)
+	{
+		vec p(1, 1, 0);
+		p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
+		glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
+	}
+	glEnd();
+	float tsz2 = 0.5f/cloudscale;
+	glBegin(GL_QUAD_STRIP);
+	loopi(cloudsubdiv+1)
+	{
+		vec p(1, 1, 0);
+		p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
+		glColor4f(r, g, b, a);
+		glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
+		glColor4f(r, g, b, 0);
+		glTexCoord2f(tx + p.x*tsz2, ty + p.y*tsz2); glVertex3f(p.x*w, p.y*w, z);
+	}
+	glEnd();
 }
 
 VARP(sparklyfix, 0, 0, 1);
@@ -174,15 +174,15 @@ VAR(clipsky, 0, 1, 1);
 
 bool drawskylimits(bool explicitonly)
 {
-    nocolorshader->set();
+	nocolorshader->set();
 
-    glDisable(GL_TEXTURE_2D);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    bool rendered = rendersky(explicitonly);
-    glColorMask(COLORMASK, GL_TRUE);
-    glEnable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	bool rendered = rendersky(explicitonly);
+	glColorMask(COLORMASK, GL_TRUE);
+	glEnable(GL_TEXTURE_2D);
 
-    return rendered;
+	return rendered;
 }
 
 void drawskyoutline()
@@ -192,18 +192,18 @@ void drawskyoutline()
 	glDisable(GL_TEXTURE_2D);
 	glDepthMask(GL_FALSE);
 	extern int wireframe;
-    if(!wireframe)
-    {
-        enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
+	if(!wireframe)
+	{
+		enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
 	glColor3f(0.5f, 0.0f, 0.5f);
 	rendersky(true);
-    if(!wireframe)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
-    }
+	if(!wireframe)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
+	}
 	glDepthMask(GL_TRUE);
 	glEnable(GL_TEXTURE_2D);
 
@@ -214,69 +214,71 @@ VAR(clampsky, 0, 1, 1);
 
 static int yawskyfaces(int faces, int yaw = 0, float spin = 0)
 {
-    if(spin || yaw%90) return faces&0x0F ? faces | 0x0F : faces;
-    static const int faceidxs[3][4] =
-    {
-        { 3, 2, 0, 1 },
-        { 1, 0, 3, 2 },
-        { 2, 3, 1, 0 }
-    };
-    yaw /= 90;
-    if(yaw < 1 || yaw > 3) return faces;
-    const int *idxs = faceidxs[yaw - 1];
-    return (faces & ~0x0F) | (((faces>>idxs[0])&1)<<0) | (((faces>>idxs[1])&1)<<1) | (((faces>>idxs[2])&1)<<2) | (((faces>>idxs[3])&1)<<3);
+	if(spin || yaw%90) return faces&0x0F ? faces | 0x0F : faces;
+	static const int faceidxs[3][4] =
+	{
+		{ 3, 2, 0, 1 },
+		{ 1, 0, 3, 2 },
+		{ 2, 3, 1, 0 }
+	};
+	yaw /= 90;
+	if(yaw < 1 || yaw > 3) return faces;
+	const int *idxs = faceidxs[yaw - 1];
+	return (faces & ~0x0F) | (((faces>>idxs[0])&1)<<0) | (((faces>>idxs[1])&1)<<1) | (((faces>>idxs[2])&1)<<2) | (((faces>>idxs[3])&1)<<3);
 }
 
 void drawskybox(int farplane, bool limited)
 {
-    extern int renderedskyfaces, renderedskyclip; // , renderedsky, renderedexplicitsky;
-    bool alwaysrender = editmode || !insideworld(camera1->o) || reflecting,
-         explicitonly = false;
-    if(limited)
-    {
-        explicitonly = alwaysrender || !sparklyfix || refracting;
-        if(!drawskylimits(explicitonly) && !alwaysrender) return;
-        extern int ati_skybox_bug;
-        if(!alwaysrender && !renderedskyfaces && !ati_skybox_bug) explicitonly = false;
-    }
-    else if(!alwaysrender)
-    {
-        extern vtxarray *visibleva;
-        renderedskyfaces = 0;
-        renderedskyclip = INT_MAX;
-        for(vtxarray *va = visibleva; va; va = va->next)
-        {
-            if(va->occluded >= OCCLUDE_BB && va->skyfaces&0x80) continue;
-            renderedskyfaces |= va->skyfaces&0x3F;
-            if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
-            else renderedskyclip = 0;
-        }
-        if(!renderedskyfaces) return;
-    }
+	extern int renderedskyfaces, renderedskyclip; // , renderedsky, renderedexplicitsky;
+	bool alwaysrender = editmode || !insideworld(camera1->o) || reflecting,
+		 explicitonly = false;
+	if(limited)
+	{
+		explicitonly = alwaysrender || !sparklyfix || refracting;
+		if(!drawskylimits(explicitonly) && !alwaysrender) return;
+		extern int ati_skybox_bug;
+		if(!alwaysrender && !renderedskyfaces && !ati_skybox_bug) explicitonly = false;
+	}
+	else if(!alwaysrender)
+	{
+		extern vtxarray *visibleva;
+		renderedskyfaces = 0;
+		renderedskyclip = INT_MAX;
+		for(vtxarray *va = visibleva; va; va = va->next)
+		{
+			if(va->occluded >= OCCLUDE_BB && va->skyfaces&0x80) continue;
+			renderedskyfaces |= va->skyfaces&0x3F;
+			if(!(va->skyfaces&0x1F) || camera1->o.z < va->skyclip) renderedskyclip = min(renderedskyclip, va->skyclip);
+			else renderedskyclip = 0;
+		}
+		if(!renderedskyfaces) return;
+	}
 
-    if(alwaysrender)
-    {
-        renderedskyfaces = 0x3F;
-        renderedskyclip = 0;
-    }
+	if(alwaysrender)
+	{
+		renderedskyfaces = 0x3F;
+		renderedskyclip = 0;
+	}
 
-    float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
-    if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
+	float skyclip = clipsky ? max(renderedskyclip-1, 0) : 0;
+	if(reflectz<hdr.worldsize && reflectz>skyclip) skyclip = reflectz;
 
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
+	if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
 
-    if(limited)
-    {
-        if(explicitonly) glDisable(GL_DEPTH_TEST);
-        else glDepthFunc(GL_GEQUAL);
-    }
-    else glDepthFunc(GL_LEQUAL);
+	if(limited)
+	{
+		if(explicitonly) glDisable(GL_DEPTH_TEST);
+		else glDepthFunc(GL_GEQUAL);
+	}
+	else glDepthFunc(GL_LEQUAL);
 
-    glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
-    if(clampsky) glDepthRange(1, 1);
+	if(clampsky) glDepthRange(1, 1);
 
-	if(!glaring || skybgglare)
+	bool blendsky = skybox[0] && sky[0] && sky[0]->bpp >= 4;
+
+	if((!glaring || skybgglare) && blendsky)
 	{
 		glDisable(GL_TEXTURE_2D);
 		notextureshader->set();
@@ -295,20 +297,23 @@ void drawskybox(int farplane, bool limited)
 		glEnable(GL_TEXTURE_2D);
 	}
 
-    if(glaring)
-    {
-        static Shader *skyboxglareshader = NULL;
-        if(!skyboxglareshader) skyboxglareshader = lookupshaderbyname("skyboxglare");
-        skyboxglareshader->set();
-    }
-    else defaultshader->set();
+	if(glaring)
+	{
+		static Shader *skyboxglareshader = NULL;
+		if(!skyboxglareshader) skyboxglareshader = lookupshaderbyname("skyboxglare");
+		skyboxglareshader->set();
+	}
+	else defaultshader->set();
 
 	if((!glaring || skyglare) && skybox[0])
 	{
 		if(fading) glColorMask(COLORMASK, GL_FALSE);
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		if(blendsky)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
 
 		glPushMatrix();
 		glLoadIdentity();
@@ -321,67 +326,67 @@ void drawskybox(int farplane, bool limited)
 		draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
 		glPopMatrix();
 
-        glDisable(GL_BLEND);
+		if(blendsky) glDisable(GL_BLEND);
 	}
 
-    if((!glaring || cloudglare) && cloudbox[0])
-    {
-        if(fading) glColorMask(COLORMASK, GL_FALSE);
+	if((!glaring || cloudglare) && cloudbox[0])
+	{
+		if(fading) glColorMask(COLORMASK, GL_FALSE);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glPushMatrix();
-        glLoadIdentity();
-        glRotatef(camera1->roll, 0, 0, 1);
-        glRotatef(camera1->pitch, -1, 0, 0);
-        glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
-        glRotatef(90, 1, 0, 0);
-        if(reflecting) glScalef(1, 1, -1);
+		glPushMatrix();
+		glLoadIdentity();
+		glRotatef(camera1->roll, 0, 0, 1);
+		glRotatef(camera1->pitch, -1, 0, 0);
+		glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
+		glRotatef(90, 1, 0, 0);
+		if(reflecting) glScalef(1, 1, -1);
 		glColor4f((cloudcolour>>16)/255.0f, ((cloudcolour>>8)&255)/255.0f, (cloudcolour&255)/255.0f, cloudblend);
-        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
-        glPopMatrix();
+		draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
+		glPopMatrix();
 
-        glDisable(GL_BLEND);
-    }
+		glDisable(GL_BLEND);
+	}
 
-    if((!glaring || cloudlayerglare) && cloudlayer[0] && cloudheight && renderedskyfaces&(cloudheight < 0 ? 0x1F : 0x2F))
-    {
-        if(fading) glColorMask(COLORMASK, GL_FALSE);
+	if((!glaring || cloudlayerglare) && cloudlayer[0] && cloudheight && renderedskyfaces&(cloudheight < 0 ? 0x1F : 0x2F))
+	{
+		if(fading) glColorMask(COLORMASK, GL_FALSE);
 
-        glDisable(GL_CULL_FACE);
+		glDisable(GL_CULL_FACE);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glPushMatrix();
-        glLoadIdentity();
-        glRotatef(camera1->roll, 0, 0, 1);
-        glRotatef(camera1->pitch, -1, 0, 0);
-        glRotatef(camera1->yaw+spincloudlayer*lastmillis/1000.0f+yawcloudlayer, 0, 1, 0);
-        glRotatef(90, 1, 0, 0);
-        if(reflecting) glScalef(1, 1, -1);
-        draw_env_overlay(farplane/2, cloudoverlay, cloudlayercolour, cloudlayerblend, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
-    	glPopMatrix();
+		glPushMatrix();
+		glLoadIdentity();
+		glRotatef(camera1->roll, 0, 0, 1);
+		glRotatef(camera1->pitch, -1, 0, 0);
+		glRotatef(camera1->yaw+spincloudlayer*lastmillis/1000.0f+yawcloudlayer, 0, 1, 0);
+		glRotatef(90, 1, 0, 0);
+		if(reflecting) glScalef(1, 1, -1);
+		draw_env_overlay(farplane/2, cloudoverlay, cloudlayercolour, cloudlayerblend, cloudscrollx * lastmillis/1000.0f, cloudscrolly * lastmillis/1000.0f);
+		glPopMatrix();
 
-        glDisable(GL_BLEND);
+		glDisable(GL_BLEND);
 
-        glEnable(GL_CULL_FACE);
-    }
+		glEnable(GL_CULL_FACE);
+	}
 
-    if(clampsky) glDepthRange(0, 1);
+	if(clampsky) glDepthRange(0, 1);
 
-    glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 
-    if(limited)
-    {
-        if(explicitonly) glEnable(GL_DEPTH_TEST);
-        else glDepthFunc(GL_LESS);
-        if(!reflecting && !refracting && !envmapping && editmode && showsky) drawskyoutline();
-    }
-    else glDepthFunc(GL_LESS);
+	if(limited)
+	{
+		if(explicitonly) glEnable(GL_DEPTH_TEST);
+		else glDepthFunc(GL_LESS);
+		if(!reflecting && !refracting && !envmapping && editmode && showsky) drawskyoutline();
+	}
+	else glDepthFunc(GL_LESS);
 
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
+	if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
 }
 
 VARNW(skytexture, useskytexture, 0, 1, 1);
@@ -391,6 +396,6 @@ double skyarea = 0;
 
 bool limitsky()
 {
-    return (explicitsky && (useskytexture || editmode)) || (sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
+	return (explicitsky && (useskytexture || editmode)) || (sparklyfix && skyarea / (double(hdr.worldsize)*double(hdr.worldsize)*6) < 0.9);
 }
 
