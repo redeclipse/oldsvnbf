@@ -62,6 +62,8 @@ struct duelservmode : servmode
 		{
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, false))
 			{
+				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE)
+					continue;
 				loopvk(clients)
 				{
 					clientinfo *ci = clients[k];
