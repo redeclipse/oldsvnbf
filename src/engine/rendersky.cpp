@@ -321,7 +321,7 @@ void drawskybox(int farplane, bool limited)
 		draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
 		glPopMatrix();
 
-        if(!glaring) glDisable(GL_BLEND);
+        glDisable(GL_BLEND);
 	}
 
     if((!glaring || cloudglare) && cloudbox[0])
