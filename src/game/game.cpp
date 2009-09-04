@@ -1287,7 +1287,7 @@ namespace game
 					if(weaptype[d->weapselect].zooms)
 					{
 						if(state == WEAP_S_SHOOT && lastmillis-d->weaplast[d->weapselect] < d->weapwait[d->weapselect]/4) continue;
-						if(state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > d->weapwait[d->weapselect]/4) state = WEAP_S_IDLE;
+						if(state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > d->weapwait[d->weapselect]-zoomtime) state = WEAP_S_IDLE;
 					}
 					if(zooming && (!weaptype[d->weapselect].zooms || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
 					else if(weaptype[d->weapselect].zooms && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
