@@ -58,7 +58,7 @@ namespace game
 	VARP(zoommousedeadzone, 0, 25, 100);
 	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
 	VARP(zoomfov, 20, 20, 150);
-	VARP(zoomtime, 1, 250, 10000);
+	VARP(zoomtime, 1, 50, 10000);
 
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
 	VARP(zoomlevels, 1, 4, 10);
@@ -1283,8 +1283,11 @@ namespace game
 				checkoften(d, d == player1 || d->ai);
 				if(d == player1)
 				{
-					if(zooming && (!weaptype[d->weapselect].zooms || d->weapstate[d->weapselect] != WEAP_S_IDLE)) zoomset(false, lastmillis);
-					else if(weaptype[d->weapselect].zooms && d->weapstate[d->weapselect] == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+					int state = d->weapstate[d->weapselect];
+					if(weaptype[d->weapselect].zooms && state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > d->weapwait[d->weapselect]/4)
+						state = WEAP_S_IDLE;
+					if(zooming && (!weaptype[d->weapselect].zooms || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
+					else if(weaptype[d->weapselect].zooms && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }

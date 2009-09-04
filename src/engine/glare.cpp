@@ -17,7 +17,7 @@ void cleanupglare()
 }
 
 VARFP(glaresize, 6, 8, 10, cleanupglare());
-VARP(glare, 0, 0, 1);
+VARP(glare, 0, 1, 1);
 VARP(blurglare, 0, 4, 7);
 VARP(blurglaresigma, 1, 50, 200);
 
@@ -38,7 +38,7 @@ void drawglaretex()
     glaretex.render(1<<glaresize, 1<<glaresize, blurglare, blurglaresigma/100.0f);
 }
 
-FVARP(glarescale, 0, 1, 8);
+FVARP(glarescale, 0, 0.25f, 8);
 
 void addglare()
 {

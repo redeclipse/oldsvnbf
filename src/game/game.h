@@ -275,7 +275,7 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x999999,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		{ 1, 1 },	{ 100, 150, },    1000,	{ 25, 25 },		{ 2500, 2500 },		0,			{ 2000, 2000 },
+			10,		10,		{ 1, 1 },	{ 100, 200, },    1000,	{ 25, 25 },		{ 2500, 2500 },		0,			{ 2000, 2000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, true },	{ false, false },
@@ -285,7 +285,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 1000 },	1250,	{ 15, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
+			1,		8,		{ 1, 2 },	{ 500, 750 },	1250,	{ 15, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
 			0,		{ 0, 0 },	{ 20, 40 },		{ 40, 25 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, false },	{ false, false },
@@ -295,37 +295,37 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFFAA22,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		{ 1, 5 },	{ 75, 250 },	    1500,	{ 20, 25 },		{ 3000, 3000 },		0,			{ 1000, 1000 },
+			40,		40,		{ 1, 5 },	{ 75, 200 },	    1500,	{ 20, 25 },		{ 3000, 3000 },		0,			{ 1000, 1000 },
 			0,		{ 0, 0 },	{ 1, 5 },		{ 5, 15 },		{ 4, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ true, true },		{ false, false },
 			{ 0.75f, 0.5f },	{ 30, 30 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 40, 40 },
-			{ 3, 3 },			{ 100, 100 },		{ 512, 512 },
+			{ 0.5f, 3 },		{ 100, 100 },		{ 512, 512 },
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 500 }, 	2000,	{ 10, 15 },		{ 200, 200 },		0,			{ 500, 500 },
+			50,		50,		{ 1, 5 },	{ 100, 200 }, 	2000,	{ 10, 15 },		{ 200, 200 },		0,			{ 500, 500 },
 			0,		{ 24, 20 },	{ 1, 5 },		{ 10, 25 },		{ 2, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER },
 			{ true, true },		{ false, false },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.25f, 0.25f },		{ 1, 1 },		{ 25, 20 },		{ 24, 20 },			{ 0, 0 },
-			{ 1, 1 },			{ 25, 25 },			{ 192, 192 },
+			{ 0.25f, 1 },		{ 25, 25 },			{ 192, 192 },
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 300, 1200 },	3000,	{ 25, 35 },		{ 2000,	20 },		0,			{ 1000, 5000 },
-			0,		{ 24, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_PLAYER|COLLIDE_CONT },
-			{ true, true },		{ true, true },		{ true, true },		true,		false,	{ true, true },		{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },		{ 1, 1 },		{ 0, 0 },		{ 16, 40 },			{ 0, 0 },
+			20,		20,		{ 1, 20 },	{ 350, 1500 },	3500,	{ 25, 35 },		{ 2000,	20 },		0,			{ 1000, 6000 },
+			0,		{ 32, 64 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_CONT },
+			{ true, true },		{ true, true },		{ true, false },	true,		false,	{ true, true },		{ false, false },
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },		{ 1, 1 },		{ 0, 0 },		{ 16, 32 },			{ 0, 0 },
 			{ 3, 6 },			{ 100, 200 },		{ 448, 384 },
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		{ 1, 1 },	{ 750, 1000 },	1500,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
+			1,		5,		{ 1, 1 },	{ 750, 750 },	1500,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 2, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },

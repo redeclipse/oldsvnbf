@@ -2167,21 +2167,18 @@ namespace entities
 				}
 			}
 		}
-		bool item = showentdescs && enttype[e.type].usetype == EU_ITEM && spawned, notitem = (edit && (showentinfo >= 4 || hasent));
-		if(item || notitem)
+		bool notitem = (edit && (showentinfo >= 4 || hasent)),
+			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
+		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
+			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+		if(item) part_create(PART_HINT, 1, e.o, colour, enttype[e.type].radius*0.5f);
+		if((item && showentdescs >= 3) || notitem)
 		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
-				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-			const char *itext = !notitem && item && showentdescs >= 3 ? hud::itemtex(e.type, attr) : NULL;
-			if(itext && *itext) part_icon(pos.add(off), textureload(hud::itemtex(e.type, attr), 3), 1, 1.5f, 1, colour); // a little smaller than the normal ones
-			else
+			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
+			if(itxt && *itxt)
 			{
-				const char *item = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
-				if(item && *item)
-				{
-					defformatstring(ds)("@%s", item);
-					part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
-				}
+				defformatstring(ds)("@%s", itxt);
+				part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
 			}
 		}
 	}
