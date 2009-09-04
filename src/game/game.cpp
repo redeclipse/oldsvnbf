@@ -35,7 +35,7 @@ namespace game
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 100, INT_MAX-1);
 	VARP(firstpersonswayspeed, 0, 25, INT_MAX-1);
-	VARP(firstpersonswaypush, 0, 100, INT_MAX-1);
+	VARP(firstpersonswaypush, 0, 25, INT_MAX-1);
 	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.3f, 10000);
@@ -54,7 +54,6 @@ namespace game
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
 	FVARP(zoomsensitivity, 1e-3f, 5.0f, 1000);
 
-	VARP(zoomtype, 0, 0, 1);
 	VARP(zoommousetype, 0, 0, 2);
 	VARP(zoommousedeadzone, 0, 25, 100);
 	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
@@ -194,24 +193,6 @@ namespace game
 			return true;
 		return false;
 	}
-
-	void zoomview(bool down)
-	{
-		if(zoomallow())
-		{
-			bool on = false;
-			switch(zoomtype)
-			{
-				case 1: on = down; break;
-				case 0: default:
-					if(down) on = !zooming;
-					else on = zooming;
-					break;
-			}
-			zoomset(on, lastmillis);
-		}
-	}
-	ICOMMAND(zoom, "D", (int *down), { zoomview(*down!=0); });
 
 	void addsway(gameent *d)
 	{
@@ -1298,7 +1279,15 @@ namespace game
 
             gameent *d = NULL;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
+            {
 				checkoften(d, d == player1 || d->ai);
+				if(d == player1)
+				{
+					if(zooming && (!weaptype[d->weapselect].zooms || d->weapstate[d->weapselect] != WEAP_S_IDLE)) zoomset(false, lastmillis);
+					else if(weaptype[d->weapselect].zooms && d->weapstate[d->weapselect] == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+						zoomset(d->action[AC_ALTERNATE], lastmillis);
+				}
+            }
 
             physics::update();
             projs::update();
