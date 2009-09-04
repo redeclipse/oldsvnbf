@@ -149,7 +149,7 @@ namespace server
 	{
 		vec o;
 		int state;
-        projectilestate dropped, weapshots[WEAP_MAX];
+        projectilestate dropped, weapshots[WEAP_MAX][2];
 		int score, frags, spree, rewards, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
 		vector<int> fraglog, fragmillis;
@@ -165,7 +165,7 @@ namespace server
 		{
 			if(state != CS_SPECTATOR) state = CS_DEAD;
 			dropped.reset();
-            loopi(WEAP_MAX) weapshots[i].reset();
+            loopi(WEAP_MAX) loopj(2) weapshots[i][j].reset();
 			if(!change) score = timeplayed = 0;
 			else gamestate::mapchange();
             frags = spree = rewards = flags = deaths = teamkills = shotdamage = damage = 0;
@@ -1502,7 +1502,7 @@ namespace server
 			int sweap = m_spawnweapon(gamemode, mutators);
 			if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
 			{
-				ts.weapshots[WEAP_GRENADE].add(-1);
+				ts.weapshots[WEAP_GRENADE][0].add(-1);
 				droplist &d = drop.add();
 				d.weap = WEAP_GRENADE;
 				d.ent = -1;
@@ -2232,16 +2232,16 @@ namespace server
 		servstate &gs = ci->state;
 		if(isweap(weap))
 		{
-			if(gs.weapshots[weap].find(id) < 0) return;
-			if(hits.empty()) gs.weapshots[weap].remove(id);
+			if(gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].find(id) < 0) return;
+			if(hits.empty()) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].remove(id);
 			else loopv(hits)
 			{
 				hitset &h = hits[i];
-				float size = radial ? (h.flags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
+				float size = radial ? ((flags|h.flags)&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 				clientinfo *target = (clientinfo *)getinfo(h.target);
 				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
-				int damage = radial ? int(weaptype[weap].damage[h.flags&HIT_ALT ? 1 : 0]*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage[h.flags&HIT_ALT ? 1 : 0];
-				dodamage(target, ci, damage, weap, h.flags, h.dir);
+				int damage = radial ? int(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
+				dodamage(target, ci, damage, weap, flags|h.flags, h.dir);
 			}
 		}
 		else if(weap == -1)
@@ -2286,7 +2286,7 @@ namespace server
 					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(),
 						ci->clientnum);
 		gs.shotdamage += weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*shots.length();
-		loopv(shots) gs.weapshots[weap].add(id);
+		loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
 	}
 
 	void switchevent::process(clientinfo *ci)
@@ -2335,7 +2335,7 @@ namespace server
 		{
 			int nweap = -1; // try to keep this weapon
 			gs.entid[weap] = -1;
-			gs.weapshots[WEAP_GRENADE].add(-1);
+			gs.weapshots[WEAP_GRENADE][0].add(-1);
 			takeammo(ci, WEAP_GRENADE, 1);
 			if(!gs.hasweap(weap, sweap))
 			{
@@ -3072,7 +3072,7 @@ namespace server
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode)) break;
 					//if(val && ci->state.state != CS_ALIVE) break;
 					ci->state.dropped.reset();
-					loopk(WEAP_MAX) ci->state.weapshots[k].reset();
+					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
 					ci->state.editspawn(gamemillis, m_spawnweapon(gamemode, mutators), m_maxhealth(gamemode, mutators));
 					if(val)
 					{
@@ -3224,7 +3224,7 @@ namespace server
 					loopj(hits)
 					{
                         if(p.overread()) break;
-                        if(!havecn || j >= MAXPLAYERS)
+                        if(!havecn)
                         {
                             loopi(7) getint(p);
                             continue;
