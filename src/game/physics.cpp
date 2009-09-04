@@ -132,7 +132,7 @@ namespace physics
 			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else
 			{
-				float speed = iscrouching(d) ? crawlspeed : movespeed;
+				float speed = iscrouching(d) || (d == game::player1 && game::inzoom()) ? crawlspeed : movespeed;
 				if(impulselength > 0 && ((gameent *)d)->action[AC_IMPULSE] && ((gameent *)d)->impulsemillis < impulselength) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
 				return m_speedscale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
 			}
