@@ -214,7 +214,7 @@ struct stfservmode : stfstate, servmode
 		moveflags(ci->team, oldpos, newpos);
 	}
 
-	void regen(clientinfo *ci, int &total, int &amt, int &delay, int &penalty)
+	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
 		if(hasflaginfo) loopv(flags)
 		{
@@ -224,7 +224,6 @@ struct stfservmode : stfstate, servmode
 				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
 				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
 				if(GVAR(regenextra)) amt = GVAR(regenextra);
-				penalty = -GVAR(regenreward);
 				return;
 			}
 		}

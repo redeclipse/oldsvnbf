@@ -1270,13 +1270,12 @@ namespace client
 
 				case SV_REGEN:
 				{
-					int trg = getint(p), heal = getint(p), amt = getint(p), penalty = getint(p);
+					int trg = getint(p), heal = getint(p), amt = getint(p);
 					gameent *f = game::getclient(trg);
 					if(!f) break;
 					if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500))
 						playsound(S_REGEN, f->o, f);
 					f->health = heal; f->lastregen = lastmillis;
-					if((f->impulsemillis += penalty) < 0) f->impulsemillis = 0;
 					break;
 				}
 

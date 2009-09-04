@@ -372,7 +372,7 @@ namespace server
 		virtual void reset(bool empty) {}
 		virtual void intermission() {}
 		virtual bool damage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0)) { return true; }
-		virtual void regen(clientinfo *ci, int &total, int &amt, int &delay, int &penalty) {}
+		virtual void regen(clientinfo *ci, int &total, int &amt, int &delay) {}
 	};
 
 	vector<srventity> sents;
@@ -2114,14 +2114,14 @@ namespace server
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
 		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
 		{
-			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0, penalty = 0;
-			if(smode) smode->regen(actor, total, amt, delay, penalty);
+			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0;
+			if(smode) smode->regen(actor, total, amt, delay);
 			if(total && actor->state.health < total)
 			{
 				int rgn = actor->state.health, heal = clamp(actor->state.health+realdamage, 0, total), eff = heal-rgn;
 				actor->state.health = heal;
 				actor->state.lastregen = gamemillis;
-				sendf(-1, 1, "ri5", SV_REGEN, actor->clientnum, actor->state.health, eff, 0);
+				sendf(-1, 1, "ri4", SV_REGEN, actor->clientnum, actor->state.health, eff);
 			}
 		}
 
@@ -2603,19 +2603,17 @@ namespace server
 			if(ci->state.state == CS_ALIVE)
 			{
 				if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
-				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay), penalty = 0;
-				if(smode) smode->regen(ci, total, amt, delay, penalty);
-				if(delay && (ci->state.health < total || ci->state.health > total || penalty) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
+				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
+				if(smode) smode->regen(ci, total, amt, delay);
+				if(delay && (ci->state.health < total || ci->state.health > total) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
 				{
-					if(ci->state.health < total) { if(!penalty) penalty = GVAR(regenpenalty); }
-					else if(ci->state.health > total) { penalty = 0; amt = -GVAR(regenhealth); total = ci->state.health; }
-					else amt = 0;
+					if(ci->state.health > total) { amt = -GVAR(regenhealth); total = ci->state.health; }
 					int rgn = ci->state.health, heal = clamp(ci->state.health+amt, 0, total), eff = heal-rgn;
-					if(eff || penalty)
+					if(eff)
 					{
 						ci->state.health = heal;
 						ci->state.lastregen = gamemillis;
-						sendf(-1, 1, "ri5", SV_REGEN, ci->clientnum, ci->state.health, eff, penalty);
+						sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, eff);
 					}
 				}
 			}
