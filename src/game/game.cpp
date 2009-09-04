@@ -38,8 +38,8 @@ namespace game
 	VARP(firstpersonswaypush, 0, 100, INT_MAX-1);
 	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
-	FVARP(firstpersonshift, -10000, 0.25f, 10000);
-	FVARP(firstpersonadjust, -10000, 0.f, 10000);
+	FVARP(firstpersonshift, -10000, 0.3f, 10000);
+	FVARP(firstpersonadjust, -10000, -0.07f, 10000);
 
 	VARP(editfov, 1, 120, 179);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
