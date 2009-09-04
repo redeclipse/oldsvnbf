@@ -163,7 +163,7 @@ namespace game
 		if(on != zooming)
 		{
 			resetcursor();
-			lastzoom = millis;
+			lastzoom = millis-max(zoomtime-(millis-lastzoom), 0);
 			prevzoom = zooming;
 			if(zoomdefault && on) zoomlevel = zoomdefault;
 		}
@@ -177,11 +177,10 @@ namespace game
 		zoomset(false, 0);
 		return false;
 	}
-	int zoominterval() { return weaptype[player1->weapselect].zooms ? zoomtime : 0; }
 
 	bool inzoom()
 	{
-		if(zoomallow() && (zooming || lastmillis-lastzoom < zoominterval()))
+		if(zoomallow() && (zooming || lastmillis-lastzoom < zoomtime))
 			return true;
 		return false;
 	}
@@ -189,7 +188,7 @@ namespace game
 
 	bool inzoomswitch()
 	{
-		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoominterval()/2) || (!zooming && lastmillis-lastzoom < zoominterval()/2)))
+		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoomtime/2) || (!zooming && lastmillis-lastzoom < zoomtime/2)))
 			return true;
 		return false;
 	}
@@ -929,7 +928,7 @@ namespace game
 	{
 		if(inzoom())
 		{
-			int frame = lastmillis-lastzoom, f = zoomfov, t = zoominterval();
+			int frame = lastmillis-lastzoom, f = zoomfov, t = zoomtime;
 			checkzoom();
 			if(zoomlevels > 1 && zoomlevel < zoomlevels) f = fov()-(((fov()-zoomfov)/zoomlevels)*zoomlevel);
 			float diff = float(fov()-f), amt = frame < t ? clamp(float(frame)/float(t), 0.f, 1.f) : 1.f;
@@ -1286,8 +1285,8 @@ namespace game
 					int state = d->weapstate[d->weapselect];
 					if(weaptype[d->weapselect].zooms)
 					{
-						if(state == WEAP_S_SHOOT && lastmillis-d->weaplast[d->weapselect] < d->weapwait[d->weapselect]/4) continue;
-						if(state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > d->weapwait[d->weapselect]-zoomtime) state = WEAP_S_IDLE;
+						if((state == WEAP_S_IDLE || state == WEAP_S_SHOOT) && lastmillis-d->weaplast[d->weapselect] < 250) continue;
+						if(state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > max(d->weapwait[d->weapselect]-zoomtime, 1)) state = WEAP_S_IDLE;
 					}
 					if(zooming && (!weaptype[d->weapselect].zooms || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
 					else if(weaptype[d->weapselect].zooms && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
@@ -1501,7 +1500,7 @@ namespace game
 		if(d == player1 && inzoom())
 		{
 			int frame = lastmillis-lastzoom;
-			float pc = frame < zoominterval() ? float(frame)/float(zoominterval()) : 1.f;
+			float pc = frame < zoomtime ? float(frame)/float(zoomtime) : 1.f;
 			if(!zooming) pc = 1.f-pc;
 			total *= 1.f-pc;
 		}

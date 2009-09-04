@@ -285,7 +285,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 750 },	1250,	{ 15, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
+			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 15, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
 			0,		{ 0, 0 },	{ 20, 40 },		{ 40, 25 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, false },	{ false, false },
@@ -295,7 +295,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFFAA22,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		{ 1, 5 },	{ 75, 200 },	    1500,	{ 20, 25 },		{ 3000, 3000 },		0,			{ 1000, 1000 },
+			40,		40,		{ 1, 5 },	{ 75, 200 },	1500,	{ 20, 25 },		{ 3000, 3000 },		0,			{ 1000, 1000 },
 			0,		{ 0, 0 },	{ 1, 5 },		{ 5, 15 },		{ 4, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ true, true },		{ false, false },
@@ -325,7 +325,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			1,		5,		{ 1, 1 },	{ 750, 750 },	1500,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
+			1,		5,		{ 1, 1 },	{ 500, 750 },	1000,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 8, 0 },		{ 1, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },
@@ -335,7 +335,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 150 },	{ 350, 250 },			3000,	{ 3000, 3000 },
+			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 150 },	{ 350, 350 },			3000,	{ 3000, 3000 },
 			100,	{ 64, 32 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER },
 			{ false, false },	{ false, false },	{ false, false },	false,		false,	{ false, false },	{ true, true },
@@ -1188,7 +1188,7 @@ namespace hud
 namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
+			zoomtime, lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
 				bloodfade, gibfade, fogdist, aboveheadfade, announcefilter;
 	extern float bloodscale, gibscale;
 	extern bool intermission, zooming;
@@ -1219,7 +1219,6 @@ namespace game
 	extern bool inzoom();
 	extern bool inzoomswitch();
 	extern void zoomview(bool down);
-	extern int zoominterval();
 	extern bool tvmode();
 	extern void resetcamera();
 	extern void resetworld();
