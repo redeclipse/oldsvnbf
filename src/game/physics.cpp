@@ -570,7 +570,7 @@ namespace physics
 		else
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
-			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) floor = !((gameent *)pl)->action[AC_IMPULSE];
+			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) floor = !(((gameent *)pl)->action[AC_IMPULSE]);
 			float curb = floor ? floorcurb : aircurb, fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f*speedscale));
 		}

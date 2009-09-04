@@ -1303,7 +1303,7 @@ namespace hud
 			}
 			if(inventoryimpulse && impulselength)
 			{
-				float len = 1.f-clamp(game::player1->impulsemillis/float(m_speedtime(impulselength)), 0.f, 1.f);
+				float len = 1.f-(game::player1->impulsemillis/float(m_speedtime(impulselength)));
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
