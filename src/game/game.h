@@ -978,12 +978,11 @@ struct gameent : dynent, gamestate
 			action[i] = false;
 			actiontime[i] = 0;
 		}
-		impulsemillis = impulsedash = 0;
 	}
 
 	void clearstate()
 	{
-        lasthit = lastkill = 0;
+        lasthit = lastkill = impulsemillis = impulsedash = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}

@@ -492,54 +492,57 @@ namespace physics
 					if(local) client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
 				}
 			}
-			else if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
+			else
 			{
-				if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+				if(game::allowmove(pl))
 				{
-					pl->falling = vec(0, 0, 0);
-					pl->physstate = PHYS_FALL; // cancel out other physstate
-					pl->vel.z += jumpforce(pl, true);
-					if(pl->inliquid)
+					if(((gameent *)pl)->action[AC_IMPULSE] && (pl->move || pl->strafe))
 					{
-						float scale = liquidmerge(pl, 1.f, liquidspeed);
-						pl->vel.x *= scale; pl->vel.y *= scale;
+						if(canimpulse(pl, millis)) ((gameent *)pl)->impulsemillis += millis;
+						else ((gameent *)pl)->action[AC_IMPULSE] = false;
 					}
+					else if(((gameent *)pl)->impulsemillis > 0)
+					{
+						int timeslice = max(millis, 1);
+						if(iscrouching(pl)) timeslice += timeslice/2;
+						if(pl->move || pl->strafe) timeslice -= timeslice/2;
+						if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
+						if((((gameent *)pl)->impulsemillis -= timeslice) < 0) ((gameent *)pl)->impulsemillis = 0;
+					}
+				}
+				if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
+				{
+					if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+					{
+						pl->falling = vec(0, 0, 0);
+						pl->physstate = PHYS_FALL; // cancel out other physstate
+						pl->vel.z += jumpforce(pl, true);
+						if(pl->inliquid)
+						{
+							float scale = liquidmerge(pl, 1.f, liquidspeed);
+							pl->vel.x *= scale; pl->vel.y *= scale;
+						}
+						((gameent *)pl)->action[AC_JUMP] = false;
+						if(local)
+						{
+							playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
+							client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+						}
+					}
+				}
+				else if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP] && !((gameent *)pl)->impulsedash && canimpulse(pl, impulsecost))
+				{
+					vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
+					pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
+					pl->falling = vec(0, 0, 0);
 					((gameent *)pl)->action[AC_JUMP] = false;
+					((gameent *)pl)->impulsedash = lastmillis;
+					((gameent *)pl)->impulsemillis += impulsecost;
 					if(local)
 					{
-						playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
-						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+						playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
+						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
 					}
-				}
-			}
-			else if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP] && !((gameent *)pl)->impulsedash && canimpulse(pl, impulsecost))
-			{
-				vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
-				pl->vel = vec(dir).normalize().mul(impulseforce(pl)+pl->vel.magnitude());
-				pl->falling = vec(0, 0, 0);
-				((gameent *)pl)->action[AC_JUMP] = false;
-				((gameent *)pl)->impulsedash = lastmillis;
-				((gameent *)pl)->impulsemillis += impulsecost;
-				if(local)
-				{
-					playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
-					client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
-				}
-			}
-			if(game::allowmove(pl))
-			{
-				if(((gameent *)pl)->action[AC_IMPULSE] && (pl->move || pl->strafe))
-				{
-					if(canimpulse(pl, millis)) ((gameent *)pl)->impulsemillis += millis;
-					else ((gameent *)pl)->action[AC_IMPULSE] = false;
-				}
-				else if(((gameent *)pl)->impulsemillis > 0)
-				{
-					int timeslice = millis;
-					if(iscrouching(pl)) timeslice += timeslice/2;
-					if(pl->move || pl->strafe) timeslice -= timeslice/2;
-					if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
-					if((((gameent *)pl)->impulsemillis -= timeslice) < 0) ((gameent *)pl)->impulsemillis = 0;
 				}
 			}
 			if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
