@@ -91,12 +91,11 @@ namespace weapons
 	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-
-		if(d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1 && !d->action[AC_ATTACK]  && !d->action[AC_ALTERNATE] && !d->action[AC_RELOAD] && !d->action[AC_USE])
-			d->action[AC_RELOAD] = true;
-
+		bool canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom()), reload = d->action[AC_RELOAD];
+		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1)
+			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
-		else if(d->action[AC_RELOAD] || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
+		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
 	}
 
 	void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
@@ -120,9 +119,9 @@ namespace weapons
 	void shoot(gameent *d, vec &targ, int force)
 	{
 		if(!game::allowmove(d)) return;
-		bool alt = (weaptype[d->weapselect].zooms && game::inzoom()) || (!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE]);
+		bool alt = (d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) || (!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE]);
 		int power = clamp(force, 0, weaptype[d->weapselect].power);
-		if(weaptype[d->weapselect].power)
+		if(weaptype[d->weapselect].power && !weaptype[d->weapselect].zooms)
 		{
 			if(!power)
 			{
@@ -141,7 +140,7 @@ namespace weapons
 			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 			alt = d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]; // filthy hack
 		}
-		else if(!d->action[AC_ATTACK] && !d->action[AC_ALTERNATE]) return;
+		else if(!d->action[AC_ATTACK] && (!d->action[AC_ALTERNATE] || weaptype[d->weapselect].zooms)) return;
 		int flags = alt ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0];
 		if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 		{
@@ -160,7 +159,8 @@ namespace weapons
 		int adelay = weaptype[d->weapselect].adelay[flags&HIT_ALT ? 1 : 0];
 		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0])
 		{
-			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+			d->action[AC_ATTACK] = false;
+			if(!weaptype[d->weapselect].zooms) d->action[AC_ALTERNATE] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
@@ -175,7 +175,7 @@ namespace weapons
 			if(d == game::player1)
 			{
 				if(weaptype[d->weapselect].zooms && game::inzoom()) kick.mul(0.0125f);
-				game::swaypush.add(vec(kick).mul(0.0625f));
+				game::swaypush.add(vec(kick).mul(0.025f));
 				if(!physics::iscrouching(d)) hud::quakewobble = clamp(hud::quakewobble+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
 			}
 			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_speedscale(m_speedscale(0.5f))));

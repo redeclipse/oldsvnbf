@@ -285,7 +285,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 1000 },	1250,	{ 20, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
+			1,		8,		{ 1, 2 },	{ 500, 1000 },	1250,	{ 15, 20 },		{ 2500, 2500 },		0,			{ 1000, 1000 },
 			0,		{ 0, 0 },	{ 20, 40 },		{ 40, 25 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, false },	{ false, false },
@@ -315,7 +315,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 350, 3500 },	1000,	{ 25, 50 },		{ 2000,	100 },		0,			{ 1000, 3500 },
+			20,		20,		{ 1, 20 },	{ 300, 1200 },	3000,	{ 25, 35 },		{ 2000,	20 },		0,			{ 1000, 5000 },
 			0,		{ 24, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_PLAYER|COLLIDE_CONT },
 			{ true, true },		{ true, true },		{ true, true },		true,		false,	{ true, true },		{ false, false },
@@ -335,12 +335,12 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
-			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 350, 350 },			3000,	{ 3000, 3000 },
-			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
+			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 150 },	{ 350, 250 },			3000,	{ 3000, 3000 },
+			100,	{ 64, 32 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER },
 			{ false, false },	{ false, false },	{ false, false },	false,		false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 50, 50 },		{ 4, 4 },			{ 0, 0 },
-			{ 5, 5 },		{ 1000, 1000 },		{ 768, 768 },
+			{ 5, 5 },		{ 1000, 1000 },		{ 768, 512 },
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
 	{

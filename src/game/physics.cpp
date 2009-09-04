@@ -47,12 +47,7 @@ namespace physics
 		{
 			if(game::allowmove(game::player1))
 			{
-				if(type == AC_ALTERNATE && weaptype[game::player1->weapselect].zooms)
-				{
-					game::zoomview(down);
-					down = false;
-				}
-				else if(type != AC_JUMP || !game::player1->timeinair)
+				if(type != AC_JUMP || !game::player1->timeinair)
 				{
 					if(type == AC_CROUCH)
 					{
@@ -62,20 +57,9 @@ namespace physics
 							else if(down) game::player1->actiontime[type] = -game::player1->actiontime[type];
 						}
 					}
-					else if(type == AC_RELOAD && !down) return;
-					else if(down)
-					{
-						if(type == AC_RELOAD && game::player1->action[type]) down = false;
-						else game::player1->actiontime[type] = lastmillis;
-					}
+					else if(down) game::player1->actiontime[type] = lastmillis;
 				}
 				game::player1->action[type] = down;
-				if(down && (type == AC_ATTACK || type == AC_RELOAD || type == AC_USE))
-				{
-					if(type != AC_ATTACK) game::player1->action[AC_ATTACK] = false;
-					if(type != AC_RELOAD) game::player1->action[AC_RELOAD] = false;
-					if(type != AC_USE) game::player1->action[AC_USE] = false;
-				}
 			}
 			else
 			{
