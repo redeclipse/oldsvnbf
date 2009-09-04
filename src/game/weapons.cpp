@@ -158,7 +158,7 @@ namespace weapons
 		}
 		d->action[AC_RELOAD] = false;
 		int adelay = weaptype[d->weapselect].adelay[flags&HIT_ALT ? 1 : 0];
-		if(!weaptype[d->weapselect].fullauto)
+		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0])
 		{
 			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
@@ -174,7 +174,7 @@ namespace weapons
 			vec kick = vec(unitv).mul(-weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]);
 			if(d == game::player1)
 			{
-				if(weaptype[d->weapselect].zooms && game::inzoom()) kick.mul(0.25f);
+				if(weaptype[d->weapselect].zooms && game::inzoom()) kick.mul(0.0125f);
 				game::swaypush.add(vec(kick).mul(0.0625f));
 				if(!physics::iscrouching(d)) hud::quakewobble = clamp(hud::quakewobble+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
 			}
@@ -211,7 +211,7 @@ namespace weapons
 			int spread = weaptype[d->weapselect].spread[flags&HIT_ALT ? 1 : 0];
 			if(spread) offsetray(from, to, weaptype[d->weapselect].spread[flags&HIT_ALT ? 1 : 0], weaptype[d->weapselect].zdiv[flags&HIT_ALT ? 1 : 0], dest);
 			else dest = to;
-			if(weaptype[d->weapselect].thrown) dest.z += from.dist(dest)/8;
+			if(weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0]) dest.z += from.dist(dest)/8;
 			addshot;
 		}
 		projs::shootv(d->weapselect, flags, power, from, vshots, d, true);

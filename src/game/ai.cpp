@@ -54,10 +54,10 @@ namespace ai
 	vec getaimpos(gameent *d, gameent *e)
 	{
 		vec o = e->headpos();
-		if(weaptype[d->weapselect].radial) o.z -= e->height;
+		if(weaptype[d->weapselect].radial[0]) o.z -= e->height;
 		if(d->skill <= 100)
 		{
-			if(weaptype[d->weapselect].radial) o.z += e->height*(1.f/float(d->skill));
+			if(weaptype[d->weapselect].radial[0]) o.z += e->height*(1.f/float(d->skill));
 			else o.z -= e->height*(1.f/float(d->skill));
 			o.x += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 4 : 2))*(1.f/float(d->skill));
 			o.y += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 4 : 2))*(1.f/float(d->skill));
@@ -770,7 +770,7 @@ namespace ai
 
 	bool weaprange(gameent *d, int weap, float dist)
 	{
-		if(weaptype[weap].extinguish && d->inliquid) return false;
+		if(weaptype[weap].extinguish[0] && d->inliquid) return false;
 		float mindist = weaptype[weap].explode[0] ? weaptype[weap].explode[0] : d->radius*3, maxdist = weaptype[weap].maxdist[0] ? weaptype[weap].maxdist[0] : hdr.worldsize;
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}

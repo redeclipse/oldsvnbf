@@ -45,7 +45,7 @@ namespace projs
 
 	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
 	{
-		if(d != proj.hit && (!proj.lifemillis || proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(1000)) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
+		if(d != proj.hit && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
 		{
 			proj.hit = d;
 			proj.hitflags = flags;
@@ -57,7 +57,7 @@ namespace projs
 				{
 					case WEAP_RIFLE:
 						part_create(PART_SMOKE_LERP, m_speedtime(250), proj.o, 0x444444, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0], -20);
-						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 1.f, 0, 0);
+						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2.f, 0, 0);
 						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
 						break;
 					default: break;
@@ -192,14 +192,14 @@ namespace projs
 				if(proj.owner && (proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
 					proj.o = proj.from = proj.owner->muzzle;
 				proj.aboveeye = proj.height = proj.radius = 0.1f;
-				proj.elasticity = weaptype[proj.weap].elasticity;
-				proj.reflectivity = weaptype[proj.weap].reflectivity;
-				proj.relativity = weaptype[proj.weap].relativity;
-				proj.waterfric = weaptype[proj.weap].waterfric;
-				proj.weight = weaptype[proj.weap].weight;
+				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
+				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
+				proj.relativity = weaptype[proj.weap].relativity[proj.flags&HIT_ALT ? 1 : 0];
+				proj.waterfric = weaptype[proj.weap].waterfric[proj.flags&HIT_ALT ? 1 : 0];
+				proj.weight = weaptype[proj.weap].weight[proj.flags&HIT_ALT ? 1 : 0];
 				proj.projcollide = weaptype[proj.weap].collide[proj.flags&HIT_ALT ? 1 : 0];
-				proj.radial = weaptype[proj.weap].radial;
-				proj.extinguish = weaptype[proj.weap].extinguish;
+				proj.radial = weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0];
+				proj.extinguish = weaptype[proj.weap].extinguish[proj.flags&HIT_ALT ? 1 : 0];
 				proj.mdl = weaptype[proj.weap].proj;
 				break;
 			}
@@ -670,7 +670,7 @@ namespace projs
 					break;
 				}
 			}
-			if(weaptype[proj.weap].radial || weaptype[proj.weap].taper) proj.radius = max(proj.lifesize, 0.1f);
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) proj.radius = max(proj.lifesize, 0.1f);
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 		{
@@ -809,7 +809,7 @@ namespace projs
 							colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
 						game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[entities::ents[proj.id]->type].radius, 5);
 					}
-					if(proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, -1, proj.id, 0, 0);
+					if(proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
 				}
 				break;
 			}
@@ -819,14 +819,10 @@ namespace projs
 
 	int bounce(projent &proj, const vec &dir)
 	{
-		if(!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside)
+		if((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
 		{
-			if(hitplayer)
-			{
-				if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
-			}
+			if(hitplayer) { if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1; }
 			else proj.norm = wall;
-
             if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 			{
                 bounceeffect(proj);
@@ -835,7 +831,8 @@ namespace projs
 				proj.lastbounce = lastmillis;
 				return 2; // bounce
 			}
-			return 0; // die on impact
+			else if(proj.projcollide&(hitplayer ? IMPACT_PLAYER : IMPACT_GEOM))
+				return 0; // die on impact
 		}
 		return 1; // live!
 	}
@@ -866,7 +863,8 @@ namespace projs
                 proj.lastbounce = lastmillis;
                 return 2; // bounce
             }
-            return 0; // die on impact
+            else if(proj.projcollide&(hitplayer ? IMPACT_PLAYER : IMPACT_GEOM))
+				return 0; // die on impact
         }
         return 1; // live!
     }
@@ -1071,7 +1069,7 @@ namespace projs
 				{
 					if(!proj.limited && weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 					{
-						radius = weaptype[proj.weap].taper ? max(int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius), 1) : weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
+						radius = weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0] ? max(int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius), 1) : weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);

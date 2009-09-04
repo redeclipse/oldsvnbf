@@ -533,7 +533,7 @@ namespace physics
 					if(canimpulse(pl, millis)) ((gameent *)pl)->impulsemillis += millis;
 					else ((gameent *)pl)->action[AC_IMPULSE] = false;
 				}
-				else if(((gameent *)pl)->impulsemillis > 0)
+				else
 				{
 					int timeslice = millis;
 					if(iscrouching(pl)) timeslice += timeslice/2;
