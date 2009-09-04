@@ -544,7 +544,7 @@ namespace entities
 		#define CHECKITEM(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || e.spawned)) \
+			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || (!m_noitems(game::gamemode, game::mutators) && e.spawned))) \
 			{ \
 				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attrs[3] ? e.attrs[3] : enttype[e.type].radius; \
 				if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
@@ -608,7 +608,7 @@ namespace entities
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
-			if(proj.projtype != PRJ_ENT || !proj.ready()) continue;
+			if(proj.projtype != PRJ_ENT || !proj.ready() || m_noitems(game::gamemode, game::mutators)) continue;
 			if(!ents.inrange(proj.id) || enttype[ents[proj.id]->type].usetype != EU_ITEM) continue;
 			if(!overlapsbox(m, eye, d->radius, proj.o, enttype[ents[proj.id]->type].radius, enttype[ents[proj.id]->type].radius))
 				continue;
