@@ -289,7 +289,7 @@ weaptypes weaptype[WEAP_MAX] =
 			0,		{ 0, 0 },	{ 20, 40 },		{ 40, 25 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, false },	{ false, false },
-			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 30, 30 },		{ 0.75f, 0.75f },	{ 50, 50 },
+			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 30, 30 },		{ 0.75f, 0.75f },{ 50, 50 },
 			{ 15, 15 },			{ 25, 25 },			{ 384, 384 },
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
@@ -326,10 +326,10 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			1,		5,		{ 1, 1 },	{ 750, 750 },	1500,	{ 75, 150 },	{ 20000, 40000 },		0,		{ 5000, 5000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 2, 0 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 8, 0 },		{ 1, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0 },			{ 2, 2 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 5000, 5000 },
+			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.5f, 1 },		{ 512, 4096 },
 			{ 5, 5 },		{ 200, 500 },		{ 0, 0 },
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
