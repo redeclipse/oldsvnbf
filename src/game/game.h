@@ -935,7 +935,7 @@ extern const char *serverinfotypes[];
 
 struct gameent : dynent, gamestate
 {
-	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, actiontime[2], impulsemillis, impulsedash,
+	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, actiontime[AC_MAX], impulsemillis, impulsedash,
 		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, dschan, wschan, lasthit, lastkill, lastattacker, lastpoints;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
