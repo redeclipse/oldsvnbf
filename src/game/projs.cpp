@@ -622,13 +622,13 @@ namespace projs
 				case WEAP_PLASMA:
 				{
 					bool soft = true;
-					float resize = 1.f;
-					resize = proj.lifesize = 1.f-clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.05f, 1.f);
-					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 500 : 100))
+					float resize = 1.f-proj.lifespan*proj.lifespan;
+					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 1000 : 250))
 					{
-						resize = (clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 500 : 100)), 0.f, 1.f)*0.75f)+0.25f;
+						resize *= clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 1000 : 250)), 0.f, 1.f);
 						soft = false;
 					}
+					proj.lifesize = resize;
 					if(proj.canrender)
 					{
 						part_create(soft ? PART_PLASMA_SOFT : PART_PLASMA, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*resize);

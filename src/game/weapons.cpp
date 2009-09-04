@@ -1,7 +1,7 @@
 #include "game.h"
 namespace weapons
 {
-	VARP(autoreloading, 0, 2, 2); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip
+	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
 	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
@@ -92,7 +92,7 @@ namespace weapons
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		bool canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom()), reload = d->action[AC_RELOAD];
-		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading > 1)
+		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2))
 			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
 		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
@@ -157,10 +157,9 @@ namespace weapons
 		}
 		d->action[AC_RELOAD] = false;
 		int adelay = weaptype[d->weapselect].adelay[flags&HIT_ALT ? 1 : 0];
-		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0])
+		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0] || (weaptype[d->weapselect].zooms && flags&HIT_ALT))
 		{
-			d->action[AC_ATTACK] = false;
-			if(!weaptype[d->weapselect].zooms) d->action[AC_ALTERNATE] = false;
+			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
