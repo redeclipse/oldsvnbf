@@ -621,18 +621,11 @@ namespace projs
 				}
 				case WEAP_PLASMA:
 				{
-					bool soft = true;
-					float resize = 1.f-proj.lifespan*proj.lifespan;
-					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 2000 : 200))
-					{
-						resize *= clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 2000 : 200)), 0.f, 1.f);
-						soft = false;
-					}
-					proj.lifesize = resize;
+					proj.lifesize = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.125f) ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 9.f);
 					if(proj.canrender)
 					{
-						part_create(soft ? PART_PLASMA_SOFT : PART_PLASMA, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*resize);
-						part_create(PART_ELECTRIC, 1, proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*resize);
+						part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize);
+						part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.lifesize);
 					}
 					break;
 				}
@@ -783,7 +776,7 @@ namespace projs
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
 						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ?  500 : 250), PART_FLARE, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
-						part_splash(PART_SPARK, 10, m_speedtime(proj.flags&HIT_ALT ? 500 : 750), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 10, 0, 24);
+						part_splash(PART_SPARK, proj.flags&HIT_ALT ? 10 : 25, m_speedtime(proj.flags&HIT_ALT ? 500 : 750), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 10, 0, 24);
 						if(!proj.flags&HIT_ALT)
 						{
 							part_create(PART_PLASMA_SOFT, m_speedtime(500), proj.o, 0x4408AA, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona

@@ -51,13 +51,37 @@ namespace ai
 		return false;
 	}
 
+	bool badhealth(gameent *d)
+	{
+		if(d->skill <= 100) return d->health <= (111-d->skill)/4;
+		return false;
+	}
+
+	bool weaprange(gameent *d, int weap, bool alt, float dist)
+	{
+		if(weaptype[weap].extinguish[alt ? 1 : 0] && d->inliquid) return false;
+		float mindist = weaptype[weap].explode[alt ? 1 : 0] ? weaptype[weap].explode[alt ? 1 : 0] : d->radius*3, maxdist = weaptype[weap].maxdist[alt ? 1 : 0] ? weaptype[weap].maxdist[alt ? 1 : 0] : hdr.worldsize;
+		return dist >= mindist*mindist && dist <= maxdist*maxdist;
+	}
+
 	bool altfire(gameent *d, gameent *e)
 	{
-		if(!weaptype[d->weapselect].zooms)
+		if(e)
 		{
-			if(d->weapselect == WEAP_GRENADE) return true;
-			if(weaptype[d->weapselect].explode[1] && e->o.dist(d->o) < weaptype[d->weapselect].explode[1]+d->radius+e->radius) return false;
-			if(d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD)) return true;
+			float dist = e->o.dist(d->o);
+			if(!weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, dist) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+				return true;
+		}
+		return false;
+	}
+
+	bool hastarget(gameent *d, aistate &b, gameent *e, bool alt, float yaw, float pitch, float dist)
+	{ // add margins of error
+		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
+		if(weaprange(d, d->weapselect, alt, dist))
+		{
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[alt ? 1 : 0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
+			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
 	}
@@ -221,12 +245,6 @@ namespace ai
 	bool randomnode(gameent *d, aistate &b, float guard, float wander)
 	{
 		return randomnode(d, b, d->feetpos(), guard, wander);
-	}
-
-	bool badhealth(gameent *d)
-	{
-		if(d->skill <= 100) return d->health <= (111-d->skill)/4;
-		return false;
 	}
 
 	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, bool pursue = false)
@@ -780,24 +798,6 @@ namespace ai
 		b.override = false;
 		d->ai->clear(false);
 		return anynode(d, b);
-	}
-
-	bool weaprange(gameent *d, int weap, bool alt, float dist)
-	{
-		if(weaptype[weap].extinguish[alt ? 1 : 0] && d->inliquid) return false;
-		float mindist = weaptype[weap].explode[alt ? 1 : 0] ? weaptype[weap].explode[alt ? 1 : 0] : d->radius*3, maxdist = weaptype[weap].maxdist[alt ? 1 : 0] ? weaptype[weap].maxdist[alt ? 1 : 0] : hdr.worldsize;
-		return dist >= mindist*mindist && dist <= maxdist*maxdist;
-	}
-
-	bool hastarget(gameent *d, aistate &b, gameent *e, bool alt, float yaw, float pitch, float dist)
-	{ // add margins of error
-		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
-		if(weaprange(d, d->weapselect, alt, dist))
-		{
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[alt ? 1 : 0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
-			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
-		}
-		return false;
 	}
 
 	void jumpto(gameent *d, aistate &b, const vec &pos)
