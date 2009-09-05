@@ -730,6 +730,7 @@ namespace server
 
 	bool hasitem(int i)
 	{
+		if(m_noitems(gamemode, mutators)) return false;
 		switch(sents[i].type)
 		{
 			case WEAPON:
@@ -744,19 +745,22 @@ namespace server
 
 	bool finditem(int i, bool spawned = true, bool timeit = false)
 	{
-		if(sents[i].spawned) return true;
-		int sweap = m_spawnweapon(gamemode, mutators);
-		if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
+		if(!m_noitems(gamemode, mutators))
 		{
-			loopvk(clients)
+			if(sents[i].spawned) return true;
+			int sweap = m_spawnweapon(gamemode, mutators);
+			if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
 			{
-				clientinfo *ci = clients[k];
-				if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
-					return true;
-				else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
+				loopvk(clients)
+				{
+					clientinfo *ci = clients[k];
+					if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
+						return true;
+					else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
+				}
 			}
+			if(spawned && timeit && gamemillis < sents[i].millis) return true;
 		}
-		if(spawned && timeit && gamemillis < sents[i].millis) return true;
 		return false;
 	}
 
@@ -776,9 +780,8 @@ namespace server
 		}
 		if(!items.empty())
 		{
-			int delay = int(GVAR(itemspawntime)/float(items.length()));
 			items.sort(sortitems);
-			loopv(items) sents[items[i]].millis += delay*(i+1);
+			loopv(items) sents[items[i]].millis += GVAR(itemspawndelay)*i;
 		}
 	}
 
@@ -2075,10 +2078,8 @@ namespace server
 	{
 		servstate &ts = target->state;
 		if(ts.protect(gamemillis, GVAR(spawnprotecttime)*1000)) return; // ignore completely
-
-		int realdamage = damage, realflags = flags, nodamage = !m_play(gamemode) ? 1 : 0;
+		int realdamage = damage, realflags = flags, nodamage = !m_play(gamemode) || (m_insta(gamemode, mutators) && (flags&HIT_EXPLODE || flags&HIT_BURN)) ? 1 : 0;
 		realflags &= ~HIT_SFLAGS;
-
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if(actor == target && !GVAR(selfdamage)) nodamage++;
