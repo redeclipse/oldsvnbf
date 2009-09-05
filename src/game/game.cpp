@@ -546,7 +546,7 @@ namespace game
 						"filled with lead by",
 						"spliced apart by",
 						"fireballed by",
-						"ate a big blue ball of death from",
+						"shown the big blue ball o' light by",
 						"was given laser burn by",
 						"blown to pieces by",
 					},

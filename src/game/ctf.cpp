@@ -136,14 +136,11 @@ namespace ctf
             if(!entities::ents.inrange(f.ent)) continue;
             const char *flagname = teamtype[f.team].flag;
             vec above(f.spawnloc);
-            float trans = 0.25f;
+            float trans = 0.5f;
             if((f.base&BASE_FLAG) && !f.owner && !f.droptime)
             {
 				int millis = lastmillis-f.interptime;
-				if(millis < 1000)
-				{
-					if(millis > 250) trans += float(millis-250)/1000.f;
-				}
+				if(millis < 1000) trans += float(millis)/2000.f;
 				else trans = 1.f;
             }
             rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attrs[1], entities::ents[f.ent]->attrs[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);

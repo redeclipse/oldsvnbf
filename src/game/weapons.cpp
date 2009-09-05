@@ -151,7 +151,8 @@ namespace weapons
 					if(d->canshoot(d->weapselect, 0, sweap, lastmillis) ||  d->canshoot(d->weapselect, 0, sweap, lastmillis, WEAP_S_RELOAD))
 					{
 						alt = false;
-						flags = offset = 0;
+						flags = 0;
+						offset = weaptype[d->weapselect].sub[0];
 					}
 					else return;
 				}
