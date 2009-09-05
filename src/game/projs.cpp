@@ -1076,13 +1076,14 @@ namespace projs
 				{
 					if(!proj.limited && weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 					{
+						bool explode = !proj.radial && weaptype[proj.weap].explode > 0;
 						radius = weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0] ? max(int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius), 1) : weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
 							if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
-							radialeffect(f, proj, proj.weap == WEAP_GRENADE, radius);
+							radialeffect(f, proj, explode, radius);
 						}
 					}
 				}
