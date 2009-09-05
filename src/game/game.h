@@ -330,7 +330,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 5, 0 },		{ 300, 600 },		{ 0, 0 },
+			{ 5, 0 },		{ 400, 600 },		{ 0, 0 },
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
