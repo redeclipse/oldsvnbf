@@ -325,8 +325,8 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 500, 1000 },	3000,	{ 50, 200 },	{ 10000, 40000 },		0,		{ 5000, 5000 },
-			0,		{ 24, 0 },	{ 1, 1 },		{ 10, 0 },		{ 1, 0 },
+			5,		5,		{ 1, 1 },	{ 500, 1000 },	2000,	{ 50, 200 },	{ 10000, 40000 },		0,		{ 5000, 5000 },
+			0,		{ 24, 0 },	{ 1, 1 },		{ 8, 0 },		{ 1, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
