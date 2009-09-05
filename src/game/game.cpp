@@ -531,13 +531,22 @@ namespace game
 			if(d->aitype == AI_TURRET) concatstring(d->obit, "destroyed by");
 			else
 			{
-				static const char *obitnames[3][WEAP_MAX] = {
+				static const char *obitnames[4][WEAP_MAX] = {
 					{
 						"pierced by",
-						"filled with buckshot by",
+						"sprayed with buckshot by",
 						"riddled with holes by",
 						"char-grilled by",
 						"plasmified by",
+						"laser shocked by",
+						"blown to pieces by",
+					},
+					{
+						"pierced by",
+						"filled with lead by",
+						"spliced apart by",
+						"fireballed by",
+						"ate a big blue ball of death from",
 						"was given laser burn by",
 						"blown to pieces by",
 					},
@@ -556,12 +565,12 @@ namespace game
 						"swiss-cheesed by",
 						"made the main course by order of chef",
 						"reduced to ooze by",
-						"laser-scalpeled by",
+						"lasered in half by",
 						"obliterated by",
 					}
 				};
 
-				int o = style&FRAG_OBLITERATE ? 2 : (style&FRAG_HEADSHOT ? 1 : 0);
+				int o = style&FRAG_OBLITERATE ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT ? 1 : 0));
 				concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "killed by");
 			}
 			bool override = false;

@@ -56,7 +56,7 @@ namespace projs
 				switch(proj.weap)
 				{
 					case WEAP_RIFLE:
-						part_create(PART_SMOKE_LERP, m_speedtime(250), proj.o, 0x444444, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0], -20);
+                        part_splash(PART_SPARK, 10, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 10, 0, 24);
 						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2.f, 0, 0);
 						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
 						break;
@@ -145,7 +145,7 @@ namespace projs
                 {
                     case WEAP_SHOTGUN: case WEAP_SMG:
                     {
-                        part_splash(PART_SPARK, 5, m_speedtime(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 10, 0, 8);
+                        part_splash(PART_SPARK, 5, m_speedtime(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 10, 0, 16);
                         if(!proj.lastbounce)
                             adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAP_SHOTGUN ? 3.f : 1.5f);
                         break;
@@ -737,7 +737,7 @@ namespace projs
 								float wobble = weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0]*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])*0.5f;
 								if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
 								hud::quakewobble = clamp(hud::quakewobble + max(int(wobble), 1), 0, 1000);
-								part_fireball(proj.o, float(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.5f), PART_EXPLOSION, m_speedtime(750), 0xAA4400, 1.f);
+								part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.5f, PART_EXPLOSION, m_speedtime(750), 0xAA4400, 1.f);
 								loopi(rnd(21)+20) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.7f, bvec(196, 24, 0));
 							}
@@ -756,7 +756,7 @@ namespace projs
 					{
 						vol = int(255*(1.f-proj.lifespan));
 						if(proj.lifetime)
-							part_splash(PART_SPARK, proj.weap == WEAP_SHOTGUN ? 10 : 20, m_speedtime(500), proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 10, 8);
+							part_splash(PART_SPARK, proj.weap == WEAP_SHOTGUN ? 10 : 20, m_speedtime(500), proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 10, 16);
 						break;
 					}
 					case WEAP_PLASMA:
@@ -781,12 +781,26 @@ namespace projs
 						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], 1.f, min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement));
 						vec dir = dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						part_flare(proj.to, proj.o, m_speedtime(250), PART_FLARE, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
-						part_flare(proj.to, proj.o, m_speedtime(250), PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
-						part_create(PART_SMOKE_LERP, m_speedtime(250), proj.o, 0x444444, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0], -20);
-						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(200), 10);
-						adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
-                        adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
+						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ?  500 : 250), PART_FLARE, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
+						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
+						part_splash(PART_SPARK, 10, m_speedtime(proj.flags&HIT_ALT ? 500 : 750), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 10, 0, 24);
+						if(!proj.flags&HIT_ALT)
+						{
+							part_create(PART_PLASMA_SOFT, m_speedtime(500), proj.o, 0x4408AA, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
+							float wobble = weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0]*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])*0.5f;
+							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
+							hud::quakewobble = clamp(hud::quakewobble + max(int(wobble), 1), 0, 1000);
+							part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, PART_EXPLOSION, m_speedtime(500), 0x2211FF, 1.f);
+							adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], vec(0.4f, 0.05f, 1.f), m_speedtime(500), 10);
+							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 8.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, 4.f, bvec(98, 16, 254));
+						}
+						else
+						{
+							adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
+							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
+						}
 						break;
 					}
 					case WEAP_GIBS:
