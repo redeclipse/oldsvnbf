@@ -509,12 +509,12 @@ namespace game
         	else if(flags && isweap(weap))
         	{
 				static const char *suicidenames[WEAP_MAX] = {
-					"pulled off a seemingly impossible stunt",
+					"at a bullet",
 					"discovered buckshot bounces",
 					"got caught up in their own crossfire",
 					"barbequed themself for dinner",
 					"found out what their plasma tasted like",
-					"pulled off a seemingly impossible stunt",
+					"gave themself a good shock",
 					"decided to kick it, kamikaze style",
 				};
         		concatstring(d->obit, suicidenames[weap]);
@@ -546,7 +546,7 @@ namespace game
 						"filled with lead by",
 						"spliced apart by",
 						"fireballed by",
-						"shown the big blue ball o' light by",
+						"shown the light by",
 						"was given laser burn by",
 						"blown to pieces by",
 					},
