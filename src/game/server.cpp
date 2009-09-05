@@ -2076,9 +2076,7 @@ namespace server
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
-		servstate &ts = target->state;
-		if(ts.protect(gamemillis, GVAR(spawnprotecttime)*1000)) return; // ignore completely
-		int realdamage = damage, realflags = flags, nodamage = !m_play(gamemode) || (m_insta(gamemode, mutators) && (flags&HIT_EXPLODE || flags&HIT_BURN)) ? 1 : 0;
+		int realdamage = damage, realflags = flags, nodamage = 0;
 		realflags &= ~HIT_SFLAGS;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
@@ -2097,22 +2095,15 @@ namespace server
 			}
 		}
 
-		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-		else if((realflags&HIT_FULL) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0]) realflags &= ~HIT_FULL;
-		if(hithurts(realflags))
+		if(nodamage) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		else if(hithurts(realflags))
 		{
-			if(realflags&HIT_FULL || realflags&HIT_HEAD) realdamage = int(realdamage*GVAR(damagescale));
-			else if(realflags&HIT_TORSO) realdamage = int(realdamage*0.5f*GVAR(damagescale));
-			else if(realflags&HIT_LEGS) realdamage = int(realdamage*0.25f*GVAR(damagescale));
-			else realdamage = 0;
-			ts.dodamage(gamemillis, (ts.health -= realdamage));
+			target->state.dodamage(gamemillis, (target->state.health -= realdamage));
 			actor->state.damage += realdamage;
+			if(target->state.health <= 0) realflags |= HIT_KILL;
 		}
-		else realdamage = int(realdamage*GVAR(damagescale));
 
-		if(hithurts(realflags) && realdamage && ts.health <= 0) realflags |= HIT_KILL;
-
-		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, ts.health, hitpush.x, hitpush.y, hitpush.z);
+		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, target->state.health, hitpush.x, hitpush.y, hitpush.z);
 		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
 		{
 			int total = m_maxhealth(gamemode, mutators), amt = 0, delay = 0;
@@ -2204,9 +2195,9 @@ namespace server
 			target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
 			mutate(smuts, mut->died(target, actor));
-			ts.state = CS_DEAD; // don't issue respawn yet until DEATHMILLIS has elapsed
-			ts.lastdeath = gamemillis;
-			ts.weapreset(false);
+			target->state.state = CS_DEAD; // don't issue respawn yet until DEATHMILLIS has elapsed
+			target->state.lastdeath = gamemillis;
+			target->state.weapreset(false);
 		}
 	}
 
@@ -2228,6 +2219,23 @@ namespace server
 		gs.weapreset(false);
 	}
 
+	int calcdamage(int weap, int &flags, int radial, float size, float dist)
+	{
+		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
+		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
+		if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
+		if(hithurts(flags))
+		{
+			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GVAR(damagescale));
+			else if(flags&HIT_TORSO) damage = int(damage*0.5f*GVAR(damagescale));
+			else if(flags&HIT_LEGS) damage = int(damage*0.25f*GVAR(damagescale));
+			else damage = 0;
+		}
+		else damage = int(damage*GVAR(damagescale));
+		return damage;
+	}
+
 	void destroyevent::process(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
@@ -2235,14 +2243,20 @@ namespace server
 		{
 			if(gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].find(id) < 0) return;
 			if(hits.empty()) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].remove(id);
-			else loopv(hits)
+			else if(m_play(gamemode))
 			{
-				hitset &h = hits[i];
-				float size = radial ? ((flags|h.flags)&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
-				clientinfo *target = (clientinfo *)getinfo(h.target);
-				if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size))) continue;
-				int damage = radial ? int(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))) : weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
-				dodamage(target, ci, damage, weap, flags|h.flags, h.dir);
+				loopv(hits)
+				{
+					hitset &h = hits[i];
+					int hflags = flags|h.flags;
+					if(m_insta(gamemode, mutators) && ((hflags&HIT_EXPLODE) || (hflags&HIT_BURN))) continue;
+					float size = radial ? (hflags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
+					clientinfo *target = (clientinfo *)getinfo(h.target);
+					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)*1000))
+						continue;
+					int damage = calcdamage(weap, hflags, radial, size, dist);
+					if(damage > 0 && (hithurts(hflags) || flags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
+				}
 			}
 		}
 		else if(weap == -1)

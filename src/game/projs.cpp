@@ -19,19 +19,43 @@ namespace projs
 	VARP(muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
 	#define muzzlechk(a,b) (a > 0 && (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::player1)))
 
-	void hitpush(gameent *d, projent &proj, int flags = 0, int dist = 0)
+	int calcdamage(int weap, int &flags, int radial, float size, float dist)
 	{
-        if(d != proj.owner && proj.owner == game::player1 && hithurts(flags)) game::player1->lasthit = lastmillis;
-		hitmsg &h = hits.add();
-		h.flags = flags;
-		h.target = d->clientnum;
-		h.id = lastmillis-game::maptime;
-		h.dist = dist;
-		vec dir, middle = d->o;
-		middle.z += (d->aboveeye-d->height)/2;
-		dir = vec(middle).sub(proj.o).normalize();
-		dir.add(vec(proj.vel).normalize()).normalize();
-		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
+		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
+		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
+		if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
+		if(hithurts(flags))
+		{
+			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GVAR(damagescale));
+			else if(flags&HIT_TORSO) damage = int(damage*0.5f*GVAR(damagescale));
+			else if(flags&HIT_LEGS) damage = int(damage*0.25f*GVAR(damagescale));
+			else damage = 0;
+		}
+		else damage = int(damage*GVAR(damagescale));
+		return damage;
+	}
+
+	void hitpush(gameent *d, projent &proj, int flags = 0, int radial = 0, float dist = 0)
+	{
+		if(m_play(game::gamemode) && (!m_insta(game::gamemode, game::mutators) || (!(flags&HIT_EXPLODE) && !(flags&HIT_BURN))))
+		{
+			if(hithurts(flags) && proj.owner && (proj.owner == game::player1 || proj.owner->ai))
+			{
+				int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
+				if(damage > 0 && hithurts(hflags)) game::hiteffect(proj.weap, hflags, damage, d, proj.owner);
+			}
+			hitmsg &h = hits.add();
+			h.flags = flags;
+			h.target = d->clientnum;
+			h.id = lastmillis-game::maptime;
+			h.dist = int(dist*DMF);
+			vec dir, middle = d->o;
+			middle.z += (d->aboveeye-d->height)/2;
+			dir = vec(middle).sub(proj.o).normalize();
+			dir.add(vec(proj.vel).normalize()).normalize();
+			h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
+		}
 	}
 
 	void hitproj(gameent *d, projent &proj)
@@ -75,8 +99,8 @@ namespace projs
 		middle.z += (d->aboveeye-d->height)/2;
 		float dist = middle.dist(proj.o, dir);
 		dir.div(dist); if(dist < 0) dist = 0;
-		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), int(dist*DMF));
-		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, int(dist*DMF));
+		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
+		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
 	}
 
 	void remove(gameent *owner)
