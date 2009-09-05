@@ -1,5 +1,4 @@
 #define GAMEWORLD 1
-#define GAMEWORLD 1
 #include "game.h"
 namespace game
 {
@@ -420,35 +419,30 @@ namespace game
 		}
 	}
 
-	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
+	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor)
 	{
-		if(d->state != CS_ALIVE || intermission) return;
-		if(hithurts(flags))
+		if(d == player1) hud::damage(damage, actor->o, actor, weap);
+		if(d->type == ENT_PLAYER || d->type == ENT_AI)
 		{
-			d->dodamage(millis, health);
-			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
-
-			if(d == player1) hud::damage(damage, actor->o, actor, weap);
-			if(d->type == ENT_PLAYER || d->type == ENT_AI)
+			vec p = d->headpos();
+			p.z += 0.6f*(d->height + d->aboveeye) - d->height;
+			if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
+				part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
+			if(showdamageabovehead > (d != player1 ? 0 : 1))
 			{
-				vec p = d->headpos();
-				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
-					part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
-				if(showdamageabovehead > (d != player1 ? 0 : 1))
-				{
-					string ds;
-					if(showdamageabovehead > 2) formatstring(ds)("@-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
-					else formatstring(ds)("@-%d", damage);
-					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
-				}
-				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
-				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
+				string ds;
+				if(showdamageabovehead > 2) formatstring(ds)("@-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
+				else formatstring(ds)("@-%d", damage);
+				part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 			}
-
-			if(d != actor && playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)) && !issound(actor->dschan))
+			if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
+			if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
+		}
+		if(d != actor)
+		{
+			if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)) && lastmillis-actor->lastdamagetone > 0)
 			{
-				if(m_team(gamemode, mutators) && d->team == actor->team) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
+				if(m_team(gamemode, mutators) && d->team == actor->team) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1);
 				else
 				{
 					int snd = 0;
@@ -459,11 +453,23 @@ namespace game
 					else if(damage >= 50) snd = 3;
 					else if(damage >= 25) snd = 2;
 					else if(damage >= 10) snd = 1;
-					playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
+					playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
 				}
+				actor->lastdamagetone = lastmillis;
 			}
+			actor->lasthit = lastmillis;
+		}
+	}
+
+	void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir)
+	{
+		if(d->state != CS_ALIVE || intermission) return;
+		if(hithurts(flags))
+		{
+			d->dodamage(millis, health);
+			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
+			if(actor != player1 && !actor->ai) hiteffect(weap, flags, damage, d, actor);
 			ai::damaged(d, actor);
-			if(d != actor && actor != player1) actor->lasthit = lastmillis;
 		}
 		if(d == player1 || (d->ai && aitype[d->aitype].maxspeed))
 		{
