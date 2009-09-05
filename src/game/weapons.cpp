@@ -141,10 +141,22 @@ namespace weapons
 			alt = d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]; // filthy hack
 		}
 		else if(!d->action[AC_ATTACK] && (!d->action[AC_ALTERNATE] || weaptype[d->weapselect].zooms)) return;
-		int flags = alt ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0];
-		if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+		int flags = alt ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_spawnweapon(game::gamemode, game::mutators);
+		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
-			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD)) return;
+			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+			{
+				if(flags&HIT_ALT && !weaptype[d->weapselect].zooms && !weaptype[d->weapselect].power)
+				{
+					if(d->canshoot(d->weapselect, 0, sweap, lastmillis) ||  d->canshoot(d->weapselect, 0, sweap, lastmillis, WEAP_S_RELOAD))
+					{
+						alt = false;
+						flags = offset = 0;
+					}
+					else return;
+				}
+				else return;
+			}
 			else offset = 0;
 		}
 		vec eyeray = vec(d->muzzle).sub(d->o);

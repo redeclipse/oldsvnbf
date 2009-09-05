@@ -623,9 +623,9 @@ namespace projs
 				{
 					bool soft = true;
 					float resize = 1.f-proj.lifespan*proj.lifespan;
-					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 1000 : 250))
+					if(proj.lifemillis-proj.lifetime < m_speedtime(proj.flags&HIT_ALT ? 2000 : 200))
 					{
-						resize *= clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 1000 : 250)), 0.f, 1.f);
+						resize *= clamp((proj.lifemillis-proj.lifetime)/float(m_speedtime(proj.flags&HIT_ALT ? 2000 : 200)), 0.f, 1.f);
 						soft = false;
 					}
 					proj.lifesize = resize;
