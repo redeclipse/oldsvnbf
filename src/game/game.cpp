@@ -1,4 +1,5 @@
 #define GAMEWORLD 1
+#define GAMEWORLD 1
 #include "game.h"
 namespace game
 {
@@ -79,7 +80,7 @@ namespace game
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
-	VARP(playdamagetones, 0, 1, 2);
+	VARP(playdamagetones, 0, 1, 3);
 
     VARP(rollfade, 0, 10, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
@@ -445,28 +446,20 @@ namespace game
 				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
 			}
 
-			if(d != actor)
+			if(d != actor && playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)) && !issound(actor->dschan))
 			{
-				if(playdamagetones >= (d == player1 || actor == player1 ? 1 : 2))
+				if(m_team(gamemode, mutators) && d->team == actor->team) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
+				else
 				{
-					if(m_team(gamemode, mutators) && d->team == actor->team)
-					{
-						if(!issound(actor->dschan))
-							playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
-					}
-					else
-					{
-						int snd = 0;
-						if(damage >= 200) snd = 7;
-						else if(damage >= 150) snd = 6;
-						else if(damage >= 100) snd = 5;
-						else if(damage >= 75) snd = 4;
-						else if(damage >= 50) snd = 3;
-						else if(damage >= 25) snd = 2;
-						else if(damage >= 10) snd = 1;
-						if(!issound(actor->dschan))
-							playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
-					}
+					int snd = 0;
+					if(damage >= 200) snd = 7;
+					else if(damage >= 150) snd = 6;
+					else if(damage >= 100) snd = 5;
+					else if(damage >= 75) snd = 4;
+					else if(damage >= 50) snd = 3;
+					else if(damage >= 25) snd = 2;
+					else if(damage >= 10) snd = 1;
+					playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1, &actor->dschan);
 				}
 			}
 			ai::damaged(d, actor);
