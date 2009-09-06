@@ -47,18 +47,15 @@ namespace physics
 		{
 			if(game::allowmove(game::player1))
 			{
-				if(type != AC_JUMP || !game::player1->timeinair)
+				if(type == AC_CROUCH)
 				{
-					if(type == AC_CROUCH)
+					if(game::player1->action[type] != down)
 					{
-						if(game::player1->action[type] != down)
-						{
-							if(game::player1->actiontime[type] >= 0) game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
-							else if(down) game::player1->actiontime[type] = -game::player1->actiontime[type];
-						}
+						if(game::player1->actiontime[type] >= 0) game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
+						else if(down) game::player1->actiontime[type] = -game::player1->actiontime[type];
 					}
-					else if(down) game::player1->actiontime[type] = lastmillis;
 				}
+				else if(down) game::player1->actiontime[type] = lastmillis;
 				game::player1->action[type] = down;
 			}
 			else
@@ -514,9 +511,9 @@ namespace physics
 				{
 					if(canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 500)
 					{
-						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid && d->timeinair > 250 && impulsecount > d->impulse[IM_COUNT])
+						if(d->action[AC_SPECIAL] && d->move > 0 && !d->strafe && !d->inliquid && d->timeinair > 250 && impulsecount > d->impulse[IM_COUNT])
 						{
-							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir); dir.normalize();
+							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, 1, 0, dir); dir.normalize();
 							d->o.add(vec(dir).mul(2));
 							if(!collide(d, dir) || inside)
 							{
@@ -528,7 +525,7 @@ namespace physics
 								if(d->turnyaw > 180) d->turnyaw -= 360;
 								else if(d->turnyaw < -180) d->turnyaw += 360;
 								d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-								d->action[AC_JUMP] = false;
+								d->action[AC_SPECIAL] = false;
 								playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 								client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 							}
