@@ -38,7 +38,7 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int radial = 0, float dist = 0)
 	{
-		if(m_play(game::gamemode) && (!m_insta(game::gamemode, game::mutators) || (!(flags&HIT_EXPLODE) && !(flags&HIT_BURN))))
+		if(m_play(game::gamemode))
 		{
 			vec dir, middle = d->o;
 			middle.z += (d->aboveeye-d->height)/2;
