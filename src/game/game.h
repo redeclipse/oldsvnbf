@@ -221,6 +221,8 @@ enum
 	WEAP_PLASMA,
 	WEAP_RIFLE,
 	WEAP_GRENADE,
+	WEAP_SUPER, // end of item weapon set
+	WEAP_INSTA = WEAP_SUPER,
 	WEAP_TOTAL, // end of selectable weapon set
 	WEAP_GIBS = WEAP_TOTAL,
 	WEAP_MAX,
@@ -342,6 +344,16 @@ weaptypes weaptype[WEAP_MAX] =
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 50, 50 },		{ 4, 4 },			{ 0, 0 },
 			{ 5, 5 },		{ 1000, 750 },		{ 768, 512 },
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
+	},
+	{
+		WEAP_INSTA,			ANIM_RIFLE,			0xBB66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
+			5,		5,		{ 1, 1 },	{ 500, 1000 },	2000,	{ 50, 200 },	{ 10000, 40000 },		0,		{ 5000, 5000 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
+			{ false, false },	{ false, false },	{ false, false },	true,		true,	{ false, false },	{ false, false },
+			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
+			{ 5, 0 },		{ 300, 600 },		{ 0, 0 },
+			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
@@ -818,7 +830,7 @@ struct gamestate
 		if(arena)
 		{
 			int aweap = arenaweap;
-			while(aweap <= WEAP_PISTOL || aweap >= WEAP_TOTAL || aweap == WEAP_GRENADE) aweap = rnd(WEAP_TOTAL-1)+1; // pistol = random
+			while(aweap <= WEAP_PISTOL || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-1)+1; // pistol = random
 			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
 			lastweap = weapselect = aweap;
 		}

@@ -937,8 +937,8 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attrs[0] < 0) e.attrs[0] += WEAP_TOTAL; // don't allow superimposed weaps
-				while(e.attrs[0] >= WEAP_TOTAL) e.attrs[0] -= WEAP_TOTAL;
+				while(e.attrs[0] < 0) e.attrs[0] += WEAP_SUPER; // don't allow superimposed weaps
+				while(e.attrs[0] >= WEAP_SUPER) e.attrs[0] -= WEAP_SUPER;
 				while(e.attrs[2] <= -G_MAX) e.attrs[2] += G_MAX*2;
 				while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
 				break;
