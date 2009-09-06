@@ -512,9 +512,9 @@ namespace physics
 				}
 				else if(game::allowmove(d))
 				{
-					if(canimpulse(d, impulsecost) && impulsecount > d->impulse[IM_COUNT] && lastmillis-d->impulse[IM_TIME] > 500)
+					if(canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 500)
 					{
-						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid && d->timeinair > 250)
+						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid && d->timeinair > 250 && impulsecount > d->impulse[IM_COUNT])
 						{
 							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir); dir.normalize();
 							d->o.add(vec(dir).mul(2));
@@ -534,7 +534,7 @@ namespace physics
 							}
 							else d->o = oldpos;
 						}
-						if(d->action[AC_JUMP])
+						if(!d->impulse[IM_COUNT] && d->action[AC_JUMP])
 						{
 							vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
 							float mag = impulseforce(d)+d->vel.magnitude();
