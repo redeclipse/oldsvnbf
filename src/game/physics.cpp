@@ -509,16 +509,16 @@ namespace physics
 				}
 				else if(game::allowmove(d))
 				{
-					if(canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 500)
+					if(canimpulse(d, impulsecost))
 					{
-						if(d->action[AC_SPECIAL] && d->move > 0 && !d->strafe && !d->inliquid && d->timeinair > 250 && impulsecount > d->impulse[IM_COUNT])
+						if(d->action[AC_SPECIAL] && d->move > 0 && !d->strafe && !d->inliquid && impulsecount > d->impulse[IM_COUNT] && lastmillis-d->impulse[IM_TIME] > 250)
 						{
 							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, 1, 0, dir); dir.normalize();
 							d->o.add(vec(dir).mul(2));
 							if(!collide(d, dir) || inside)
 							{
 								d->o = oldpos; vec push = dir; push.reflect(wall);
-								float mag = impulseforce(d)+d->vel.magnitude()/3;
+								float mag = impulseforce(d)+d->vel.magnitude()/2;
 								d->vel = vec(push).mul(mag); d->vel.z += mag;
 								float yaw = 0, pitch = 0; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
 								d->turnmillis = 250; d->turnpitch = 0; d->turnyaw = yaw-d->aimyaw;
