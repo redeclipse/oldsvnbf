@@ -1113,7 +1113,8 @@ namespace ai
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
 				if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
-				if(d->ai->becareful && !d->timeinair) d->ai->becareful = false;
+				if(d->ai->becareful && (!d->timeinair || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
+					d->ai->becareful = false;
 				if(d->aitype == AI_BOT) entities::checkitems(d);
             }
         }
