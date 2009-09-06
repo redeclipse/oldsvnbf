@@ -329,7 +329,7 @@ namespace projs
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
 
-		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.25f;
+		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
 		if(proj.projcollide)
 		{
 			vec ray = vec(proj.vel).normalize();

@@ -315,11 +315,11 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 350, 2000 },	3500,	{ 25, 35 },		{ 1500,	20 },		0,			{ 1000, 6000 },
+			20,		20,		{ 1, 20 },	{ 350, 2000 },	3500,	{ 25, 35 },		{ 1500,	25 },		0,			{ 1000, 6000 },
 			0,		{ 32, 64 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_CONT },
 			{ true, true },		{ true, true },		{ true, false },	true,		false,	{ true, true },		{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.25f },			{ 1, 1 },		{ 0, 0 },		{ 16, 32 },			{ 0, 0 },
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },			{ 1, 1 },		{ 0, 0 },		{ 16, 32 },			{ 0, 0 },
 			{ 3, 6 },			{ 100, 200 },		{ 448, 128 },
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
