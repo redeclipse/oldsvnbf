@@ -621,8 +621,10 @@ enum { BASE_NONE = 0, BASE_HOME = 1<<0, BASE_FLAG = 1<<1, BASE_BOTH = BASE_HOME|
 #define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
-#define adjustscaled(t,n,s) \
-	if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n <= 0) n = (t)0; }
+#define adjustscaled(t,n,s) { \
+	if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n <= 0) n = (t)0; } \
+	else if(n < 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n >= 0) n = (t)0; } \
+}
 
 #define MAXNAMELEN 24
 enum { SAY_NONE	= 0, SAY_ACTION = 1<<0, SAY_TEAM = 1<<1, SAY_NUM = 2 };
@@ -641,9 +643,9 @@ enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, S
 
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_IMPULSE, AC_CROUCH, AC_SPECIAL, AC_TOTAL, AC_MAX = AC_TOTAL };
 enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_COUNT, IM_MAX };
-enum { IM_T_NONE = 0, IM_T_DASH, IM_T_KICK, IM_T_MAX };
+enum { IM_T_NONE = 0, IM_T_DASH, IM_T_KICK, IM_T_WALL, IM_T_MAX };
 #define CROUCHHEIGHT 0.7f
-#define CROUCHTIME 200
+#define PHYSMILLIS 250
 
 #include "ai.h"
 
@@ -953,7 +955,7 @@ struct gameent : dynent, gamestate
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
-    float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnpitch;
+    float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
     vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;

@@ -32,7 +32,7 @@ VARG(regenextra, 0, 10, INT_MAX-1);
 
 VARG(impulselength, 0, 10000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
-VARG(impulsecount, 0, 3, INT_MAX-1); // number of mid-air impulses allowed
+VARG(impulsecount, 0, 4, INT_MAX-1); // number of impulse actions per air transit
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes

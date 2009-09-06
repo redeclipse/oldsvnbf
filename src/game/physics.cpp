@@ -51,7 +51,7 @@ namespace physics
 				{
 					if(game::player1->action[type] != down)
 					{
-						if(game::player1->actiontime[type] >= 0) game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
+						if(game::player1->actiontime[type] >= 0) game::player1->actiontime[type] = lastmillis-max(PHYSMILLIS-(lastmillis-game::player1->actiontime[type]), 0);
 						else if(down) game::player1->actiontime[type] = -game::player1->actiontime[type];
 					}
 				}
@@ -61,7 +61,7 @@ namespace physics
 			else
 			{
 				if(type == AC_CROUCH && game::player1->action[type] && game::player1->actiontime[type] >= 0)
-					game::player1->actiontime[type] = lastmillis-max(CROUCHTIME-(lastmillis-game::player1->actiontime[type]), 0);
+					game::player1->actiontime[type] = lastmillis-max(PHYSMILLIS-(lastmillis-game::player1->actiontime[type]), 0);
 				game::player1->action[type] = false;
 				if(type == AC_ATTACK && down) game::respawn(game::player1);
 			}
@@ -307,7 +307,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d))
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d) && (((gameent *)d)->impulse[IM_TYPE] != IM_T_WALL || lastmillis-((gameent *)d)->impulse[IM_TIME] > PHYSMILLIS*5))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -328,7 +328,7 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
-        else if(d->onladder)
+        else if(d->onladder || ((d->type == ENT_PLAYER || d->type == ENT_AI) && ((gameent *)d)->impulse[IM_TYPE] == IM_T_WALL && lastmillis-((gameent *)d)->impulse[IM_TIME] <= PHYSMILLIS*5))
         {
             d->timeinair = 0;
             d->physstate = PHYS_FLOOR;
@@ -351,7 +351,7 @@ namespace physics
 		bool found = false;
 		vec moved(d->o);
 		d->o.z -= 0.1f;
-		if(d->onladder)
+		if(d->onladder || ((d->type == ENT_PLAYER || d->type == ENT_AI) && ((gameent *)d)->impulse[IM_TYPE] == IM_T_WALL && lastmillis-((gameent *)d)->impulse[IM_TIME] <= PHYSMILLIS*5))
 		{
 			floor = vec(0, 0, 1);
 			found = true;
@@ -491,7 +491,8 @@ namespace physics
 						if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 					}
 				}
-				if(d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d))
+				int onwall = d->impulse[IM_TYPE] == IM_T_WALL && lastmillis-d->impulse[IM_TIME] <= PHYSMILLIS*5 ? (d->turnroll > 0 ? 1 : -1) : 0;
+				if(!onwall && (d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d)))
 				{
 					if(game::allowmove(d) && d->action[AC_JUMP])
 					{
@@ -507,27 +508,57 @@ namespace physics
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
 					}
 				}
-				else if(game::allowmove(d) && canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 250 && d->impulse[IM_COUNT] < impulsecount)
+				else if(game::allowmove(d))
 				{
-					if(d->action[AC_SPECIAL] && !d->inliquid)
+					bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
+					if((onwall || (allowed && d->action[AC_SPECIAL])) && !d->inliquid)
 					{
-						vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, 1, 0, dir); dir.normalize(); d->o.add(dir);
+						vec oldpos = d->o, dir;
+						vecfromyawpitch(d->aimyaw, 0, 1, onwall, dir);
+						dir.normalize(); d->o.add(dir);
 						if(!collide(d, dir) || inside)
 						{
-							d->o = oldpos; vec push = dir; push.reflect(wall);
-							float mag = impulseforce(d)+d->vel.magnitude()/2;
-							d->vel = vec(push).mul(mag); d->vel.z += mag;
-							float yaw = 0, pitch = 0; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
-							d->turnmillis = 250; d->turnpitch = 0; d->turnyaw = yaw-d->aimyaw;
-							if(d->turnyaw > 180) d->turnyaw -= 360; else if(d->turnyaw < -180) d->turnyaw += 360;
-							d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-							d->action[AC_SPECIAL] = false;
-							playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-							client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+							d->o = oldpos;
+							if(allowed)
+							{
+								vec rft = vec(dir).reflect(wall);
+								float yaw = 0, pitch = 0; vectoyawpitch(rft, yaw, pitch);
+								float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
+								if((onwall && (d->action[AC_JUMP] || d->action[AC_SPECIAL])) || fabs(off) >= 60)
+								{
+									float mag = impulseforce(d)+d->vel.magnitude()/2;
+									d->vel = vec(rft).mul(mag); d->vel.z += mag;
+									d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
+									if(onwall && !d->action[AC_SPECIAL]) d->action[AC_JUMP] = false;
+									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
+									d->action[AC_SPECIAL] = false;
+									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+								}
+								else if(!onwall)
+								{
+									vectoyawpitch(wall, yaw, pitch); if(off < 0) yaw += 90; else yaw -= 90;
+									while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
+									vecfromyawpitch(d->aimyaw, 0, 1, 0, rft);
+									float mag = impulseforce(d)+d->vel.magnitude();
+									d->vel = vec(rft).normalize().mul(mag); d->vel.z += mag/2;
+									d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
+									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = (off < 0 ? -15 : 15)-d->roll;
+									d->action[AC_SPECIAL] = false;
+									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+								}
+							}
 						}
-						else d->o = oldpos;
+						else
+						{
+							if(onwall) d->impulse[IM_TYPE] = 0;
+							d->o = oldpos;
+						}
 					}
-					if((!d->impulse[IM_COUNT] || d->impulse[IM_TYPE] != IM_T_DASH) && d->action[AC_JUMP])
+					else if(onwall) d->impulse[IM_TYPE] = 0;
+					if(allowed && d->impulse[IM_TYPE] != IM_T_DASH && d->action[AC_JUMP])
 					{
 						vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
 						float mag = impulseforce(d)+d->vel.magnitude();
@@ -539,8 +570,8 @@ namespace physics
 					}
 				}
 			}
-			if(d->physstate == PHYS_FALL && !d->onladder) d->timeinair += millis;
-			else d->timeinair = d->turnmillis = d->impulse[IM_COUNT] = 0;
+			if((d->physstate == PHYS_FALL && !d->onladder) || (d->impulse[IM_TYPE] == IM_T_WALL && lastmillis-d->impulse[IM_TIME] <= PHYSMILLIS*5)) d->timeinair += millis;
+			else d->timeinair = d->turnmillis = d->impulse[IM_COUNT] = d->impulse[IM_TYPE] = 0;
 		}
 		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 		else pl->timeinair = 0;
@@ -607,8 +638,8 @@ namespace physics
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)
-				mattrig(bottom, watercol, 0.5f, int(radius), 250, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH2 : S_SPLASH1);
-			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), 500, 1.f, PART_FIREBALL, S_BURNING);
+				mattrig(bottom, watercol, 0.5f, int(radius), PHYSMILLIS, 0.25f, PART_SPARK, curmat != MAT_WATER ? S_SPLASH2 : S_SPLASH1);
+			if(curmat == MAT_LAVA) mattrig(vec(bottom).add(vec(0, 0, radius)), lavacol, 2.f, int(radius), PHYSMILLIS*2, 1.f, PART_FIREBALL, S_BURNING);
 		}
 		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->state == CS_ALIVE && flagmat == MAT_DEATH)
 			game::suicide((gameent *)pl, (curmat == MAT_LAVA ? HIT_MELT : HIT_FALL)|HIT_FULL);
@@ -660,7 +691,8 @@ namespace physics
 		if(pl->type==ENT_PLAYER || pl->type==ENT_AI)
         {
             updatematerial(pl, local, floating);
-            if(!floating && !pl->onladder) modifygravity(pl, millis); // apply gravity
+            if(!floating && !pl->onladder && (((gameent *)pl)->impulse[IM_TYPE] != IM_T_WALL || lastmillis-((gameent *)pl)->impulse[IM_TIME] > PHYSMILLIS*5))
+				modifygravity(pl, millis); // apply gravity
         }
 		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
@@ -687,7 +719,7 @@ namespace physics
 
 			d.mul(f);
 			loopi(moveres) if(!move(pl, d)) { if(++collisions<5) i--; } // discrete steps collision detection & sliding
-			if(pl->type == ENT_PLAYER && !pl->timeinair && timeinair > 1000) // if we land after long time must have been a high jump, make thud sound
+			if(pl->type == ENT_PLAYER && !pl->timeinair && timeinair > PHYSMILLIS*4) // if we land after long time must have been a high jump, make thud sound
 				playsound(S_LAND, pl->o, pl);
 		}
 
@@ -697,17 +729,23 @@ namespace physics
 			if(local)
 			{
 				gameent *d = (gameent *)pl;
-				if(d->turnmillis > 0)
-				{
-					float amt = float(millis)/200.f, yaw = d->turnyaw*amt, pitch = d->turnpitch*amt;
-					d->aimyaw += yaw; d->yaw += yaw; d->aimpitch += pitch; d->pitch += pitch;
-					d->turnmillis -= millis;
-				}
-				else d->turnmillis = 0;
-				if(local && d->o.z < 0)
+				if(d->o.z < 0)
 				{
 					game::suicide(d, HIT_FALL|HIT_FULL);
 					return false;
+				}
+				if(d->turnmillis > 0)
+				{
+					float amt = float(millis)/float(PHYSMILLIS), yaw = d->turnyaw*amt, roll = d->turnroll*amt;
+					if(yaw != 0) { d->aimyaw += yaw; d->yaw += yaw; }
+					if(roll != 0) d->roll += roll;
+					d->turnmillis -= millis;
+				}
+				else
+				{
+					d->turnmillis = 0;
+					if(d->roll != 0 && (d->impulse[IM_TYPE] != IM_T_WALL || lastmillis-d->impulse[IM_TIME] > PHYSMILLIS*5))
+						adjustscaled(float, d->roll, PHYSMILLIS);
 				}
 			}
         }
@@ -840,8 +878,7 @@ namespace physics
 				break;
 			default: break;
 		}
-		if(d->physstate > PHYS_FALL && d->floor.z <= 0) d->floor = vec(0, 0, 1);
-        else if(d->onladder && !foundfloor) d->floor = vec(0, 0, 1);
+		if((d->physstate > PHYS_FALL && d->floor.z <= 0) || (d->onladder && !foundfloor)) d->floor = vec(0, 0, 1);
 		d->o = old;
 	}
 

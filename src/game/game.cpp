@@ -372,16 +372,16 @@ namespace game
 					}
 					if(crouching)
 					{
-						if(d->actiontime[AC_CROUCH] >= 0) d->actiontime[AC_CROUCH] = max(CROUCHTIME-(lastmillis-d->actiontime[AC_CROUCH]), 0)-lastmillis;
+						if(d->actiontime[AC_CROUCH] >= 0) d->actiontime[AC_CROUCH] = max(PHYSMILLIS-(lastmillis-d->actiontime[AC_CROUCH]), 0)-lastmillis;
 					}
 					else if(d->actiontime[AC_CROUCH] < 0)
-						d->actiontime[AC_CROUCH] = lastmillis-max(CROUCHTIME-(lastmillis+d->actiontime[AC_CROUCH]), 0);
+						d->actiontime[AC_CROUCH] = lastmillis-max(PHYSMILLIS-(lastmillis+d->actiontime[AC_CROUCH]), 0);
 					d->o.z = z;
 				}
 				if(d->type == ENT_PLAYER)
 				{
 					int crouchtime = abs(d->actiontime[AC_CROUCH]);
-					float amt = lastmillis-crouchtime < CROUCHTIME ? clamp(float(lastmillis-crouchtime)/CROUCHTIME, 0.f, 1.f) : 1.f;
+					float amt = lastmillis-crouchtime < PHYSMILLIS ? clamp(float(lastmillis-crouchtime)/PHYSMILLIS, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
