@@ -189,7 +189,7 @@ namespace weapons
 			{
 				if(weaptype[d->weapselect].zooms && game::inzoom()) kick.mul(0.0125f);
 				game::swaypush.add(vec(kick).mul(0.025f));
-				if(!physics::iscrouching(d)) hud::quakewobble = clamp(hud::quakewobble+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
+				if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
 			}
 			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_speedscale(m_speedscale(0.5f))));
 		}

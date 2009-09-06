@@ -81,7 +81,7 @@ namespace game
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
 	VARP(playdamagetones, 0, 1, 3);
 
-    VARP(rollfade, 0, 10, INT_MAX-1);
+	VARP(quakefade, 0, 100, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
 	FVARP(bloodscale, 0, 1, 1000);
 	VARP(bloodfade, 1, 5000, INT_MAX-1);
@@ -396,6 +396,7 @@ namespace game
 	void checkoften(gameent *d, bool local)
 	{
 		d->checktags();
+		adjustscaled(int, d->quake, quakefade);
 		if(d->aitype <= AI_BOT) heightoffset(d, local);
 		loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
 		{
@@ -419,6 +420,13 @@ namespace game
 		}
 	}
 
+	void quake(const vec &o, int damage, int radius)
+	{
+		gameent *d;
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
+			d->quake = clamp(d->quake+max(int(damage*(1.f-d->o.dist(o)/EXPLOSIONSCALE/radius)*(m_insta(gamemode, mutators) ? 0.25f : 1.f)), 1), 0, 1000);
+	}
+
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
 	{
 		if(hithurts(flags))
@@ -439,6 +447,7 @@ namespace game
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
+				d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
 			}
 			if(d != actor)
 			{
@@ -1318,14 +1327,7 @@ namespace game
         else if(!menuactive()) showgui("main");
 
 		gets2c();
-
-		#define adjustscaled(t,n,s) \
-			if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n <= 0) n = (t)0; }
-
-		adjustscaled(float, player1->roll, rollfade);
-		adjustscaled(int, hud::quakewobble, hud::quakewobblefade);
 		adjustscaled(int, hud::damageresidue, hud::damageresiduefade);
-
 		if(connected())
 		{
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
@@ -1445,21 +1447,7 @@ namespace game
 				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
 				fixrange(camera1->aimyaw, camera1->aimpitch);
 			}
-
-			if(hud::quakewobble > 0)
-			{
-				float wobble = float(rnd(21)-10)*(float(min(hud::quakewobble, 100))/100.f);
-				switch(player1->state)
-				{
-					case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;
-					case CS_ALIVE: if(physics::iscrouching(player1)) wobble *= 0.5f; break;
-					case CS_DEAD: break;
-					default: wobble = 0; break;
-				}
-				camera1->roll = wobble;
-			}
-			else camera1->roll = 0;
-
+			camera1->roll = player1->calcroll(physics::iscrouching(player1));
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
@@ -1555,7 +1543,7 @@ namespace game
 		else if(d->aitype < AI_MAX) mdl = aitype[d->aitype].mdl;
 		else return;
 
-		float yaw = d->yaw, pitch = d->pitch, roll = d->roll;
+		float yaw = d->yaw, pitch = d->pitch, roll = d->calcroll(physics::iscrouching(d));
 		vec o = vec(third ? d->feetpos() : d->headpos());
 		if(!third)
 		{
