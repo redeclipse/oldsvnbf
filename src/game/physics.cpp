@@ -467,103 +467,104 @@ namespace physics
 	{
 		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 		{
+			gameent *d = (gameent *)pl;
 			if(floating)
 			{
-				if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+				if(game::allowmove(d) && d->action[AC_JUMP])
 				{
-					pl->vel.z += jumpforce(pl, false);
-					((gameent *)pl)->action[AC_JUMP] = false;
+					d->vel.z += jumpforce(d, false);
+					d->action[AC_JUMP] = false;
 				}
 			}
 			else
 			{
-				if(game::allowmove(pl))
+				if(game::allowmove(d))
 				{
-					if(((gameent *)pl)->action[AC_IMPULSE] && (pl->move || pl->strafe))
+					if(d->action[AC_IMPULSE] && (d->move || d->strafe))
 					{
-						if(canimpulse(pl, millis)) ((gameent *)pl)->impulse[IM_METER] += millis;
-						else ((gameent *)pl)->action[AC_IMPULSE] = false;
+						if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
+						else d->action[AC_IMPULSE] = false;
 					}
-					else if(((gameent *)pl)->impulse[IM_METER] > 0)
+					else if(d->impulse[IM_METER] > 0)
 					{
 						int timeslice = max(millis, 1);
-						if(iscrouching(pl)) timeslice += timeslice/2;
-						if(pl->move || pl->strafe) timeslice -= timeslice/2;
-						if(pl->timeinair && pl->physstate == PHYS_FALL && !pl->onladder) timeslice -= timeslice/2;
-						if((((gameent *)pl)->impulse[IM_METER] -= timeslice) < 0) ((gameent *)pl)->impulse[IM_METER] = 0;
+						if(iscrouching(d)) timeslice += timeslice/2;
+						if(d->move || d->strafe) timeslice -= timeslice/2;
+						if(d->timeinair && d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
+						if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 					}
 				}
-				if(pl->physstate >= PHYS_SLOPE || pl->onladder || liquidcheck(pl))
+				if(d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d))
 				{
-					if(game::allowmove(pl) && ((gameent *)pl)->action[AC_JUMP])
+					if(game::allowmove(d) && d->action[AC_JUMP])
 					{
-						pl->resetphys();
-						pl->vel.z += jumpforce(pl, true);
-						if(pl->inliquid)
+						d->resetphys();
+						d->vel.z += jumpforce(d, true);
+						if(d->inliquid)
 						{
-							float scale = liquidmerge(pl, 1.f, liquidspeed);
-							pl->vel.x *= scale; pl->vel.y *= scale;
+							float scale = liquidmerge(d, 1.f, liquidspeed);
+							d->vel.x *= scale; d->vel.y *= scale;
 						}
-						((gameent *)pl)->action[AC_JUMP] = false;
-						playsound(S_JUMP, pl->o, pl); regularshape(PART_SMOKE, int(pl->radius), 0x111111, 21, 20, 100, pl->feetpos(), 1.f, -10, 0, 10.f);
-						client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_JUMP);
+						d->action[AC_JUMP] = false;
+						playsound(S_JUMP, d->o, d); regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1.f, -10, 0, 10.f);
+						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
 					}
 				}
-				else if(game::allowmove(pl))
+				else if(game::allowmove(d))
 				{
-					if(canimpulse(pl, impulsecost) && lastmillis-((gameent *)pl)->impulse[IM_TIME] > 500)
+					if(canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 500)
 					{
-						if(((gameent *)pl)->action[AC_JUMP] && (pl->move || pl->strafe) && !pl->inliquid)
+						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid)
 						{
-							vec oldpos = pl->o, dir; vecfromyawpitch(pl->aimyaw, 0, pl->move, pl->strafe, dir); dir.normalize();
-							pl->o.add(vec(dir).mul(2));
-							if(!collide(pl, dir) || inside)
+							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir); dir.normalize();
+							d->o.add(vec(dir).mul(2));
+							if(!collide(d, dir) || inside)
 							{
 								vec push = dir; push.reflect(wall);
-								pl->o = oldpos; pl->resetphys();
-								float mag = impulseforce(pl)+pl->vel.magnitude()/3;
-								pl->vel = vec(push).mul(mag);
-								pl->vel.z += mag;
-								float yaw = 0, pitch = 0; vectoyawpitch(vec(pl->vel).normalize(), yaw, pitch);
-								((gameent *)pl)->turnmillis = 200;
-								((gameent *)pl)->turnyaw = yaw-pl->aimyaw;
-								((gameent *)pl)->turnpitch = (pitch-pl->aimpitch)/4;
-								if(((gameent *)pl)->turnyaw > 180) ((gameent *)pl)->turnyaw -= 360;
-								else if(((gameent *)pl)->turnyaw < -180) ((gameent *)pl)->turnyaw += 360;
-								((gameent *)pl)->impulse[IM_METER] += impulsecost;
-								((gameent *)pl)->impulse[IM_TYPE] = IM_T_KICK;
-								((gameent *)pl)->impulse[IM_TIME] = lastmillis;
-								((gameent *)pl)->action[AC_JUMP] = false;
-								playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
-								client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
+								d->o = oldpos; d->resetphys();
+								float mag = impulseforce(d)+d->vel.magnitude()/3;
+								d->vel = vec(push).mul(mag);
+								d->vel.z += mag;
+								float yaw = 0, pitch = 0; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+								d->turnmillis = 200;
+								d->turnyaw = yaw-d->aimyaw;
+								d->turnpitch = (pitch-d->aimpitch)/4;
+								if(d->turnyaw > 180) d->turnyaw -= 360;
+								else if(d->turnyaw < -180) d->turnyaw += 360;
+								d->impulse[IM_METER] += impulsecost;
+								d->impulse[IM_TYPE] = IM_T_KICK;
+								d->impulse[IM_TIME] = lastmillis;
+								d->action[AC_JUMP] = false;
+								playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+								client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 							}
-							else pl->o = oldpos;
+							else d->o = oldpos;
 						}
-						if(((gameent *)pl)->action[AC_JUMP])
+						if(d->action[AC_JUMP])
 						{
-							vec dir; vecfromyawpitch(pl->aimyaw, pl->move || pl->strafe ? pl->aimpitch : 90.f, pl->move ? pl->move : 1, pl->strafe, dir);
-							pl->resetphys();
-							float mag = impulseforce(pl)+pl->vel.magnitude();
-							pl->vel = vec(dir).normalize().mul(mag);
-							((gameent *)pl)->impulse[IM_METER] += impulsecost;
-							((gameent *)pl)->impulse[IM_TYPE] = IM_T_DASH;
-							((gameent *)pl)->impulse[IM_TIME] = lastmillis;
-							((gameent *)pl)->action[AC_JUMP] = false;
-							playsound(S_IMPULSE, pl->o, pl); game::impulseeffect((gameent *)pl, true);
-							client::addmsg(SV_PHYS, "ri2", ((gameent *)pl)->clientnum, SPHY_IMPULSE);
+							vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
+							d->resetphys();
+							float mag = impulseforce(d)+d->vel.magnitude();
+							d->vel = vec(dir).normalize().mul(mag);
+							d->impulse[IM_METER] += impulsecost;
+							d->impulse[IM_TYPE] = IM_T_DASH;
+							d->impulse[IM_TIME] = lastmillis;
+							d->action[AC_JUMP] = false;
+							playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+							client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 						}
 					}
-					if(((gameent *)pl)->turnmillis > 0)
+					if(d->turnmillis > 0)
 					{
-						float amt = float(millis)/200.f, yaw = ((gameent *)pl)->turnyaw*amt, pitch = ((gameent *)pl)->turnpitch*amt;
-						pl->aimyaw += yaw; pl->yaw += yaw; pl->aimpitch += pitch; pl->pitch += pitch;
-						((gameent *)pl)->turnmillis -= millis;
+						float amt = float(millis)/200.f, yaw = d->turnyaw*amt, pitch = d->turnpitch*amt;
+						d->aimyaw += yaw; d->yaw += yaw; d->aimpitch += pitch; d->pitch += pitch;
+						d->turnmillis -= millis;
 					}
-					else ((gameent *)pl)->turnmillis = 0;
+					else d->turnmillis = 0;
 				}
 			}
-			if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
-			else  pl->timeinair = ((gameent *)pl)->turnmillis =((gameent *)pl)->impulse[IM_TYPE] = ((gameent *)pl)->impulse[IM_TIME] = 0;
+			if(d->physstate == PHYS_FALL && !d->onladder) d->timeinair += millis;
+			else d->timeinair = d->turnmillis = d->impulse[IM_TYPE] = d->impulse[IM_TIME] = 0;
 		}
 		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 		else pl->timeinair = 0;
