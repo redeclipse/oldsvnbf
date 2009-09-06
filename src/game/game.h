@@ -628,7 +628,7 @@ enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_PING, SINFO_PLAYERS, SINFO_MAXCLIENTS
 enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, SSTAT_MAX };
 
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_IMPULSE, AC_CROUCH, AC_TOTAL, AC_MAX = AC_TOTAL };
-enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_MAX };
+enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_COUNT, IM_MAX };
 enum { IM_T_NONE = 0, IM_T_DASH, IM_T_KICK, IM_T_MAX };
 #define CROUCHHEIGHT 0.7f
 #define CROUCHTIME 200
@@ -1065,7 +1065,7 @@ struct gameent : dynent, gamestate
 		float c = roll;
 		if(quake > 0)
 		{
-			float wobble = float(rnd(21)-10)*(float(min(quake, 100))/100.f);
+			float wobble = float(rnd(15)-7)*(float(min(quake, 100))/100.f);
 			switch(state)
 			{
 				case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;
@@ -1076,6 +1076,15 @@ struct gameent : dynent, gamestate
 			c += wobble;
 		}
 		return c;
+	}
+
+	void doimpulse(int cost, int type, int millis)
+	{
+		impulse[IM_METER] += cost;
+		impulse[IM_TYPE] = type;
+		impulse[IM_TIME] = millis;
+		impulse[IM_COUNT]++;
+		resetphys();
 	}
 };
 
