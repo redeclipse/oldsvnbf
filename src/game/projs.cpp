@@ -215,7 +215,7 @@ namespace projs
 			{
 				if(proj.owner && (proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
 					proj.o = proj.from = proj.owner->muzzle;
-				proj.aboveeye = proj.height = proj.radius = 0.1f;
+				proj.aboveeye = proj.height = proj.radius = 1.f;
 				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.relativity = weaptype[proj.weap].relativity[proj.flags&HIT_ALT ? 1 : 0];
@@ -329,7 +329,7 @@ namespace projs
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
 
-		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.1f;
+		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.25f;
 		if(proj.projcollide)
 		{
 			vec ray = vec(proj.vel).normalize();
@@ -645,7 +645,7 @@ namespace projs
 				}
 				case WEAP_PLASMA:
 				{
-					proj.lifesize = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.125f) ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 9.f);
+					proj.lifesize = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0625f) ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
 					if(proj.canrender)
 					{
 						part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize);
@@ -1100,7 +1100,7 @@ namespace projs
 				{
 					if(!proj.limited && weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 					{
-						bool explode = !proj.radial && weaptype[proj.weap].explode > 0;
+						bool explode = weaptype[proj.weap].explode > 0;
 						radius = weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0] ? max(int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius), 1) : weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
 						loopi(game::numdynents())
 						{
