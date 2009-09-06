@@ -667,7 +667,8 @@ namespace projs
 					break;
 				}
 			}
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) proj.radius = max(proj.lifesize, 0.1f);
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
+				proj.radius = max(proj.lifesize, 1e-3f);
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 		{
