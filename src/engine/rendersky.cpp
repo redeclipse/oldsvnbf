@@ -27,7 +27,7 @@ Texture *loadskyoverlay(const char *basename)
 }
 
 HVARW(skybgcolour, 0, 0x000000, 0xFFFFFF);
-VARW(skybgglare, 0, 1, 1);
+VARW(skybgglare, 0, 0, 1);
 
 SVARFW(skybox, "", { if(skybox[0]) loadsky(skybox, sky); });
 FVARW(skyblend, 0, 1.0f, 1);
