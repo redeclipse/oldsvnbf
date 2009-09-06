@@ -22,6 +22,9 @@ namespace physics
 	FVARP(floatspeed,		1e-3f, 80.f, 10000);
 	FVARP(floatcurb,        0, 1.f, 10000);
 
+	FVARP(impulseroll,      0, 10, 90);
+	FVARP(impulsereflect,   0, 60, 360);
+
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
@@ -524,14 +527,14 @@ namespace physics
 								vec rft = vec(dir).reflect(wall);
 								float yaw = 0, pitch = 0; vectoyawpitch(rft, yaw, pitch);
 								float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-								if((onwall && (d->action[AC_JUMP] || d->action[AC_SPECIAL])) || fabs(off) >= 60)
+								if((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
 								{
 									float mag = impulseforce(d)+d->vel.magnitude()/2;
 									d->vel = vec(rft).mul(mag); d->vel.z += mag;
 									d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-									if(onwall && !d->action[AC_SPECIAL]) d->action[AC_JUMP] = false;
 									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
-									d->action[AC_SPECIAL] = false;
+									if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
+									else d->action[AC_SPECIAL] = false;
 									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 								}
@@ -544,7 +547,7 @@ namespace physics
 									float mag = impulseforce(d)+d->vel.magnitude();
 									d->vel = vec(rft).normalize().mul(mag); d->vel.z += mag/2;
 									d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
-									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = (off < 0 ? -15 : 15)-d->roll;
+									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
 									d->action[AC_SPECIAL] = false;
 									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -558,7 +561,7 @@ namespace physics
 						}
 					}
 					else if(onwall) d->impulse[IM_TYPE] = 0;
-					if(allowed && d->impulse[IM_TYPE] != IM_T_DASH && d->action[AC_JUMP])
+					if(allowed && !onwall && d->impulse[IM_TYPE] != IM_T_DASH && d->action[AC_JUMP])
 					{
 						vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
 						float mag = impulseforce(d)+d->vel.magnitude();
