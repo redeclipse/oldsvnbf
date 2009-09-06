@@ -80,7 +80,7 @@ namespace projs
 			{
 				switch(proj.weap)
 				{
-					case WEAP_RIFLE:
+					case WEAP_RIFLE: case WEAP_INSTA:
                         part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 10, 0, 24);
 						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2.f, 0, 0);
 						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
@@ -486,7 +486,7 @@ namespace projs
 				adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
-			case WEAP_RIFLE:
+			case WEAP_RIFLE: case WEAP_INSTA:
 			{
 				part_create(PART_SMOKE_LERP, 100, from, 0x444444, 0.8f, -40);
 				if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x6611FF, 1.25f, 0, 0, d);
@@ -633,7 +633,7 @@ namespace projs
 					}
 					break;
 				}
-				case WEAP_RIFLE:
+				case WEAP_RIFLE: case WEAP_INSTA:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.canrender)
@@ -771,7 +771,7 @@ namespace projs
 						}
 						break;
 					}
-					case WEAP_RIFLE:
+					case WEAP_RIFLE: case WEAP_INSTA:
 					{
 						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], 1.f, min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement));
 						vec dir = dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
@@ -779,7 +779,7 @@ namespace projs
 						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ?  500 : 250), PART_FLARE, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 						part_flare(proj.to, proj.o, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
 						part_splash(PART_SPARK, proj.flags&HIT_ALT ? 25 : 50, m_speedtime(proj.flags&HIT_ALT ? 500 : 750), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 10, 0, 24);
-						if(!proj.flags&HIT_ALT)
+						if(proj.weap == WEAP_RIFLE && !proj.flags&HIT_ALT)
 						{
 							part_create(PART_PLASMA_SOFT, m_speedtime(500), proj.o, 0x4408AA, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
@@ -1151,7 +1151,7 @@ namespace projs
 					adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.1f*proj.lifesize, col);
 					break;
 				}
-				case WEAP_RIFLE:
+				case WEAP_RIFLE: case WEAP_INSTA:
 				{
 					vec pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
 					adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f));

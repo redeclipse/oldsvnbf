@@ -954,7 +954,7 @@ namespace server
 		if(ci->state.aitype >= AI_START)
 		{
 			weap = aitype[ci->state.aitype].weap;
-			if(!isweap(weap)) weap = rnd(WEAP_TOTAL-1)+1;
+			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
 		}
 		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators));
@@ -2116,8 +2116,9 @@ namespace server
 		if(realflags&HIT_KILL)
 		{
             int fragvalue = target == actor || (m_team(gamemode, mutators) && target->team == actor->team) ? -1 : 1,
-				pointvalue = smode ? smode->points(target, actor) : fragvalue,
-				style = realflags&HIT_EXPLODE || realdamage > m_maxhealth(gamemode, mutators)*3/2 ? FRAG_OBLITERATE : FRAG_NONE;
+				pointvalue = smode ? smode->points(target, actor) : fragvalue, style = FRAG_NONE;
+			if(!m_insta(gamemode, mutators) && (realflags&HIT_EXPLODE || realdamage > m_maxhealth(gamemode, mutators)*3/2))
+				style = FRAG_OBLITERATE;
             actor->state.frags += fragvalue;
 
 			if(m_team(gamemode, mutators) && actor->team == target->team)

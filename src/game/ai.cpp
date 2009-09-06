@@ -6,7 +6,7 @@ namespace ai
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
-    VAR(aiforcegun, -1, -1, WEAP_TOTAL-1);
+    VAR(aiforcegun, -1, -1, WEAP_SUPER-1);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
@@ -501,10 +501,10 @@ namespace ai
 			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
-			else if(forcegun >= 0 && forcegun < WEAP_TOTAL) d->arenaweap = forcegun;
+			else if(forcegun >= 0 && forcegun < WEAP_SUPER) d->arenaweap = forcegun;
 			else while(true)
 			{
-				d->arenaweap = rnd(WEAP_TOTAL);
+				d->arenaweap = rnd(WEAP_SUPER);
 				if(d->arenaweap != WEAP_PISTOL || !rnd(d->skill)) break;
 			}
 			if(d->aitype == AI_BOT)
@@ -967,7 +967,7 @@ namespace ai
 		{
 			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
 			{
-				loopirev(WEAP_MAX) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+				loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 				{
 					client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
 					d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);

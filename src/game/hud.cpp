@@ -371,6 +371,7 @@ namespace hud
 		const char *cliptexs[WEAP_MAX] = {
 			pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
+			riflecliptex, ""
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
 		int ammo = game::player1->ammo[weap], maxammo = weaptype[weap].max;
@@ -1121,7 +1122,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAP_MAX] = {
-					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
+					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
 				if(isweap(stype)) return weaptexs[stype];
 				break;
@@ -1159,7 +1160,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAP_MAX] = {
-					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex,
+					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])

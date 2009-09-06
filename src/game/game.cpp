@@ -246,13 +246,13 @@ namespace game
 			if(*s >= '0' && *s <= '9') weap = atoi(s);
 			else
 			{
-				loopi(WEAP_TOTAL) if(!strcasecmp(weaptype[i].name, s))
+				loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
 				{
 					weap = i;
 					break;
 				}
 			}
-			if(weap < WEAP_PISTOL || weap >= WEAP_TOTAL || weap == WEAP_GRENADE) weap = WEAP_PISTOL;
+			if(weap < WEAP_PISTOL || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_PISTOL;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
 			conoutf("\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
 		}
@@ -522,11 +522,13 @@ namespace game
 				static const char *suicidenames[WEAP_MAX] = {
 					"at a bullet",
 					"discovered buckshot bounces",
-					"got caught up in their own crossfire",
-					"barbequed themself for dinner",
-					"found out what their plasma tasted like",
-					"gave themself a good shock",
-					"decided to kick it, kamikaze style",
+					"got caught in their own crossfire",
+					"spontaneously combusted",
+					"found out plasma tasted like",
+					"got a good shock",
+					"kicked it, kamikaze style",
+					"pulled off an insta-stunt",
+					"was gibbed"
 				};
         		concatstring(d->obit, suicidenames[weap]);
         	}
@@ -551,6 +553,8 @@ namespace game
 						"plasmified by",
 						"laser shocked by",
 						"blown to pieces by",
+						"lasered by",
+						"gibbed"
 					},
 					{
 						"pierced by",
@@ -560,6 +564,8 @@ namespace game
 						"shown the light by",
 						"was given laser burn by",
 						"blown to pieces by",
+						"was given laser burn by",
+						"gibbed"
 					},
 					{
 						"given an extra orifice by",
@@ -569,6 +575,8 @@ namespace game
 						"plasmafied by",
 						"expertly sniped by",
 						"blown to pieces by",
+						"expertly sniped by",
+						"gibbed"
 					},
 					{
 						"skewered by",
@@ -578,6 +586,8 @@ namespace game
 						"reduced to ooze by",
 						"lasered in half by",
 						"obliterated by",
+						"lasered in half by",
+						"gibbed"
 					}
 				};
 
