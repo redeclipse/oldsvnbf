@@ -1301,7 +1301,7 @@ namespace hud
 			}
 			if(inventoryimpulse && impulselength)
 			{
-				float len = 1.f-clamp(game::player1->impulsemillis/float(m_speedtime(impulselength)), 0.f, 1.f);
+				float len = 1.f-clamp(game::player1->impulse[IM_METER]/float(m_speedtime(impulselength)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
@@ -1311,7 +1311,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::player1->impulsemillis > 0 ? (impulselength-game::player1->impulsemillis > impulsecost ? "\fy" : "\fw") : "\fg",
+						game::player1->impulse[IM_METER] > 0 ? (impulselength-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}

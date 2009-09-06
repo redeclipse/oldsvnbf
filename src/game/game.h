@@ -628,6 +628,8 @@ enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_PING, SINFO_PLAYERS, SINFO_MAXCLIENTS
 enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, SSTAT_MAX };
 
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_IMPULSE, AC_CROUCH, AC_TOTAL, AC_MAX = AC_TOTAL };
+enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_MAX };
+enum { IM_T_NONE = 0, IM_T_DASH, IM_T_KICK, IM_T_MAX };
 #define CROUCHHEIGHT 0.7f
 #define CROUCHTIME 200
 
@@ -936,21 +938,19 @@ extern const char *serverinfotypes[];
 
 struct gameent : dynent, gamestate
 {
-	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, actiontime[AC_MAX], impulsemillis, impulsedash,
-		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
-	editinfo *edit;
-    float deltayaw, deltapitch, newyaw, newpitch;
-    float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
-	ai::aiinfo *ai;
+	editinfo *edit; ai::aiinfo *ai;
+	int team, clientnum, privilege, lastnode, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
+		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
+    float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnpitch;
     vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
 
-	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
-		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), aschan(-1), vschan(-1), wschan(-1),
+	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1),
 		lastattacker(-1), lastpoints(0), lastdamagetone(0), quake(0),
-		edit(NULL), ai(NULL), head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
+		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
 		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
 		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
@@ -984,7 +984,8 @@ struct gameent : dynent, gamestate
 
 	void clearstate()
 	{
-        lasthit = lastkill = impulsemillis = impulsedash = lastdamagetone = quake = 0;
+		loopi(IM_MAX) impulse[i] = 0;
+        lasthit = lastkill = lastdamagetone = quake = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
