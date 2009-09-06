@@ -2076,17 +2076,13 @@ namespace server
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
-		int realdamage = damage, realflags = flags, nodamage = 0;
-		realflags &= ~HIT_SFLAGS;
+		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if(actor == target && !GVAR(selfdamage)) nodamage++;
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
-			if(m_story(gamemode))
-			{
-				if(target->team == TEAM_NEUTRAL) nodamage++;
-			}
+			if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
 			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
@@ -2255,7 +2251,7 @@ namespace server
 					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)*1000))
 						continue;
 					int damage = calcdamage(weap, hflags, radial, size, dist);
-					if(damage > 0 && (hithurts(hflags) || flags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
+					if(damage > 0 && (hithurts(hflags) || hflags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
 				}
 			}
 		}

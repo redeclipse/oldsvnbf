@@ -27,12 +27,12 @@ namespace projs
 		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
 		if(hithurts(flags))
 		{
-			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GVAR(damagescale));
-			else if(flags&HIT_TORSO) damage = int(damage*0.5f*GVAR(damagescale));
-			else if(flags&HIT_LEGS) damage = int(damage*0.25f*GVAR(damagescale));
+			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*damagescale);
+			else if(flags&HIT_TORSO) damage = int(damage*0.5f*damagescale);
+			else if(flags&HIT_LEGS) damage = int(damage*0.25f*damagescale);
 			else damage = 0;
 		}
-		else damage = int(damage*GVAR(damagescale));
+		else damage = int(damage*damagescale);
 		return damage;
 	}
 
@@ -40,20 +40,20 @@ namespace projs
 	{
 		if(m_play(game::gamemode) && (!m_insta(game::gamemode, game::mutators) || (!(flags&HIT_EXPLODE) && !(flags&HIT_BURN))))
 		{
-			if(hithurts(flags) && proj.owner && (proj.owner == game::player1 || proj.owner->ai))
+			vec dir, middle = d->o;
+			middle.z += (d->aboveeye-d->height)/2;
+			dir = vec(middle).sub(proj.o).normalize();
+			dir.add(vec(proj.vel).normalize()).normalize();
+			if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 			{
 				int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
-				if(damage > 0 && hithurts(hflags)) game::hiteffect(proj.weap, hflags, damage, d, proj.owner);
+				if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir);
 			}
 			hitmsg &h = hits.add();
 			h.flags = flags;
 			h.target = d->clientnum;
 			h.id = lastmillis-game::maptime;
 			h.dist = int(dist*DMF);
-			vec dir, middle = d->o;
-			middle.z += (d->aboveeye-d->height)/2;
-			dir = vec(middle).sub(proj.o).normalize();
-			dir.add(vec(proj.vel).normalize()).normalize();
 			h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
 		}
 	}
