@@ -43,7 +43,7 @@ namespace projs
 			vec dir, middle = d->o;
 			middle.z += (d->aboveeye-d->height)/2;
 			dir = middle==proj.o ? vec(0, 0, 1) : vec(middle).sub(proj.o).normalize();
-			float speed = proj.vel.magnitude(); 
+			float speed = proj.vel.magnitude();
 			if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
 			if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 			{
@@ -1097,14 +1097,14 @@ namespace projs
 				{
 					if(!proj.limited && weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 					{
-						bool explode = weaptype[proj.weap].explode > 0;
-						radius = weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0] ? max(int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius), 1) : weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
+						radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
+						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(int(radius*proj.radius), 1);
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
 							if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
-							radialeffect(f, proj, explode, radius);
+							radialeffect(f, proj, true, radius);
 						}
 					}
 				}
