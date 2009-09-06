@@ -512,28 +512,22 @@ namespace physics
 				}
 				else if(game::allowmove(d))
 				{
-					if(canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 500)
+					if(canimpulse(d, impulsecost) && impulsecount > d->impulse[IM_COUNT] && lastmillis-d->impulse[IM_TIME] > 500)
 					{
-						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid)
+						if(d->action[AC_JUMP] && (d->move || d->strafe) && !d->inliquid && d->timeinair > 250)
 						{
 							vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, dir); dir.normalize();
 							d->o.add(vec(dir).mul(2));
 							if(!collide(d, dir) || inside)
 							{
-								vec push = dir; push.reflect(wall);
-								d->o = oldpos; d->resetphys();
+								d->o = oldpos; vec push = dir; push.reflect(wall);
 								float mag = impulseforce(d)+d->vel.magnitude()/3;
-								d->vel = vec(push).mul(mag);
-								d->vel.z += mag;
+								d->vel = vec(push).mul(mag); d->vel.z += mag;
 								float yaw = 0, pitch = 0; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
-								d->turnmillis = 200;
-								d->turnyaw = yaw-d->aimyaw;
-								d->turnpitch = (pitch-d->aimpitch)/4;
+								d->turnmillis = 250; d->turnpitch = 0; d->turnyaw = yaw-d->aimyaw;
 								if(d->turnyaw > 180) d->turnyaw -= 360;
 								else if(d->turnyaw < -180) d->turnyaw += 360;
-								d->impulse[IM_METER] += impulsecost;
-								d->impulse[IM_TYPE] = IM_T_KICK;
-								d->impulse[IM_TIME] = lastmillis;
+								d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
 								d->action[AC_JUMP] = false;
 								playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 								client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -543,28 +537,18 @@ namespace physics
 						if(d->action[AC_JUMP])
 						{
 							vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
-							d->resetphys();
 							float mag = impulseforce(d)+d->vel.magnitude();
 							d->vel = vec(dir).normalize().mul(mag);
-							d->impulse[IM_METER] += impulsecost;
-							d->impulse[IM_TYPE] = IM_T_DASH;
-							d->impulse[IM_TIME] = lastmillis;
+							d->doimpulse(impulsecost, IM_T_DASH, lastmillis);
 							d->action[AC_JUMP] = false;
 							playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 							client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 						}
 					}
-					if(d->turnmillis > 0)
-					{
-						float amt = float(millis)/200.f, yaw = d->turnyaw*amt, pitch = d->turnpitch*amt;
-						d->aimyaw += yaw; d->yaw += yaw; d->aimpitch += pitch; d->pitch += pitch;
-						d->turnmillis -= millis;
-					}
-					else d->turnmillis = 0;
 				}
 			}
 			if(d->physstate == PHYS_FALL && !d->onladder) d->timeinair += millis;
-			else d->timeinair = d->turnmillis = d->impulse[IM_TYPE] = d->impulse[IM_TIME] = 0;
+			else d->timeinair = d->turnmillis = d->impulse[IM_COUNT] = 0;
 		}
 		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 		else pl->timeinair = 0;
@@ -715,15 +699,25 @@ namespace physics
 				playsound(S_LAND, pl->o, pl);
 		}
 
-        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && pl->state==CS_ALIVE)
+        if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->state == CS_ALIVE)
         {
-		    updatedynentcache(pl);
-
-            if(local && pl->o.z < 0)
-            {
-                game::suicide((gameent *)pl, HIT_FALL|HIT_FULL);
-                return false;
-            }
+			updatedynentcache(pl);
+			if(local)
+			{
+				gameent *d = (gameent *)pl;
+				if(d->turnmillis > 0)
+				{
+					float amt = float(millis)/200.f, yaw = d->turnyaw*amt, pitch = d->turnpitch*amt;
+					d->aimyaw += yaw; d->yaw += yaw; d->aimpitch += pitch; d->pitch += pitch;
+					d->turnmillis -= millis;
+				}
+				else d->turnmillis = 0;
+				if(local && d->o.z < 0)
+				{
+					game::suicide(d, HIT_FALL|HIT_FULL);
+					return false;
+				}
+			}
         }
 
 		return true;
