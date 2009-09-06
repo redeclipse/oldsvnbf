@@ -699,8 +699,7 @@ namespace entities
 							{
 								int r = e.type == TELEPORT ? rnd(teleports.length()) : 0;
 								gameentity &f = *(gameentity *)ents[teleports[r]];
-								d->timeinair = 0;
-								d->falling = vec(0, 0, 0);
+								d->resetphys();
 								d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
 								d->yaw = f.attrs[0] < 0 ? (lastmillis/5)%360 : f.attrs[0];
 								d->pitch = f.attrs[1];
@@ -734,8 +733,7 @@ namespace entities
 					}
 					vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]).mul(mag);
 					if(d->ai) d->ai->becareful = true;
-					d->falling = vec(0, 0, 0);
-					d->physstate = PHYS_FALL;
+					d->resetphys();
 					if(!d->timeinair) d->timeinair = 1;
 					loopk(3)
 					{
