@@ -2246,7 +2246,6 @@ namespace server
 				{
 					hitset &h = hits[i];
 					int hflags = flags|h.flags;
-					if(m_insta(gamemode, mutators) && ((hflags&HIT_EXPLODE) || (hflags&HIT_BURN))) continue;
 					float size = radial ? (hflags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 					clientinfo *target = (clientinfo *)getinfo(h.target);
 					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)*1000))
