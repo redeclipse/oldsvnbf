@@ -181,7 +181,7 @@ namespace weapons
 		d->totalshots += int(weaptype[d->weapselect].damage[flags&HIT_ALT ? 1 : 0]*damagescale)*weaptype[d->weapselect].rays[flags&HIT_ALT ? 1 : 0];
 		vec to = targ, from = d->muzzle, unitv;
 		float dist = to.dist(from, unitv);
-		unitv.div(dist);
+		if(dist > 0) unitv.div(dist);
 		if(d->aitype <= AI_BOT || d->maxspeed)
 		{
 			vec kick = vec(unitv).mul(-weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]);

@@ -42,8 +42,9 @@ namespace projs
 		{
 			vec dir, middle = d->o;
 			middle.z += (d->aboveeye-d->height)/2;
-			dir = vec(middle).sub(proj.o).normalize();
-			dir.add(vec(proj.vel).normalize()).normalize();
+			dir = middle==proj.o ? vec(0, 0, 1) : vec(middle).sub(proj.o).normalize();
+			float speed = proj.vel.magnitude(); 
+			if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
 			if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 			{
 				int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
@@ -98,7 +99,7 @@ namespace projs
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
 		float dist = middle.dist(proj.o, dir);
-		dir.div(dist); if(dist < 0) dist = 0;
+		if(dist > 0) dir.div(dist); else if(dist < 0) dist = 0;
 		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
 		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
 	}
@@ -549,7 +550,7 @@ namespace projs
 
 	void effect(projent &proj)
 	{
-		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
+		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
 		if(proj.projtype == PRJ_SHOT)
 		{
 			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
@@ -720,7 +721,7 @@ namespace projs
 
 	void destroy(projent &proj)
 	{
-		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(proj.lifemillis), 0.f, 1.f);
+		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
 		switch(proj.projtype)
 		{
 			case PRJ_SHOT:
@@ -1182,3 +1183,4 @@ namespace projs
 		}
 	}
 }
+
