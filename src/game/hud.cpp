@@ -2,7 +2,7 @@
 namespace hud
 {
 	const int NUMSTATS = 12;
-	int damageresidue = 0, quakewobble = 0, hudwidth = 0,
+	int damageresidue = 0, hudwidth = 0,
 		laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	vector<int> teamkills;
 	scoreboard sb;
@@ -12,7 +12,6 @@ namespace hud
         damageloc(int a, int t, int d, const vec &p, const vec &c) : attacker(a), outtime(t), damage(d), dir(p), colour(c) {}
     };
     vector<damageloc> damagelocs;
-	VARP(quakewobblefade, 0, 100, INT_MAX-1);
 	VARP(damageresiduefade, 0, 750, INT_MAX-1);
 
 	VARP(showhud, 0, 1, 1);
@@ -217,7 +216,6 @@ namespace hud
 
 	void damage(int n, const vec &loc, gameent *actor, int weap)
 	{
-		quakewobble = clamp(quakewobble+max(n/2, 1), 0, 1000);
 		damageresidue += n*2;
 		vec colour = kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));

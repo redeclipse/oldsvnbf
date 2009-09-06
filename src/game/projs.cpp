@@ -751,9 +751,7 @@ namespace projs
 							if(proj.weap == WEAP_GRENADE)
 							{
 								part_create(PART_PLASMA_SOFT, m_speedtime(1000), proj.o, 0xDD4400, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
-								float wobble = weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0]*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])*0.5f;
-								if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
-								hud::quakewobble = clamp(hud::quakewobble + max(int(wobble), 1), 0, 1000);
+								game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
 								part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.5f, PART_EXPLOSION, m_speedtime(750), 0xAA4400, 1.f);
 								loopi(rnd(21)+20) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.7f, bvec(196, 24, 0));
@@ -804,9 +802,7 @@ namespace projs
 						if(!proj.flags&HIT_ALT)
 						{
 							part_create(PART_PLASMA_SOFT, m_speedtime(500), proj.o, 0x4408AA, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
-							float wobble = weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0]*(1.f-camera1->o.dist(proj.o)/EXPLOSIONSCALE/weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])*0.5f;
-							if(proj.weap == m_spawnweapon(game::gamemode, game::mutators)) wobble *= 0.25f;
-							hud::quakewobble = clamp(hud::quakewobble + max(int(wobble), 1), 0, 1000);
+							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
 							part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, PART_EXPLOSION, m_speedtime(500), 0x2211FF, 1.f);
 							adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], vec(0.4f, 0.05f, 1.f), m_speedtime(500), 10);
 							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 8.f);

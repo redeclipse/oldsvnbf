@@ -609,11 +609,11 @@ enum { BASE_NONE = 0, BASE_HOME = 1<<0, BASE_FLAG = 1<<1, BASE_BOTH = BASE_HOME|
 #define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
+#define adjustscaled(t,n,s) \
+	if(n > 0) { n = (t)(n/(1.f+sqrtf((float)curtime)/float(s))); if(n <= 0) n = (t)0; }
 
-#define MAXNAMELEN		16
-
-enum { SAY_NONE	= 0, SAY_ACTION = 1<<0, SAY_TEAM = 1<<1 };
-#define SAY_NUM 2
+#define MAXNAMELEN 24
+enum { SAY_NONE	= 0, SAY_ACTION = 1<<0, SAY_TEAM = 1<<1, SAY_NUM = 2 };
 enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_MAX };
 
 #define MM_MODE 0xF
@@ -937,7 +937,7 @@ extern const char *serverinfotypes[];
 struct gameent : dynent, gamestate
 {
 	int team, clientnum, privilege, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, actiontime[AC_MAX], impulsemillis, impulsedash,
-		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone;
+		totalshots, smoothmillis, lastnode, respawned, suicided, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
 	editinfo *edit;
     float deltayaw, deltapitch, newyaw, newpitch;
     float deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch;
@@ -948,8 +948,10 @@ struct gameent : dynent, gamestate
 	vector<int> airnodes;
 
 	gameent() : team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
-		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), aschan(-1), vschan(-1), wschan(-1), lastattacker(-1), lastpoints(0), lastdamagetone(0), edit(NULL), ai(NULL),
-		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),  lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), aschan(-1), vschan(-1), wschan(-1),
+		lastattacker(-1), lastpoints(0), lastdamagetone(0), quake(0),
+		edit(NULL), ai(NULL), head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
+		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
 		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
@@ -982,7 +984,7 @@ struct gameent : dynent, gamestate
 
 	void clearstate()
 	{
-        lasthit = lastkill = impulsemillis = impulsedash = lastdamagetone = 0;
+        lasthit = lastkill = impulsemillis = impulsedash = lastdamagetone = quake = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
@@ -1055,6 +1057,24 @@ struct gameent : dynent, gamestate
 				rfoot = vec(o).add(dir);
 			}
 		}
+	}
+
+	float calcroll(bool crouch)
+	{
+		float c = roll;
+		if(quake > 0)
+		{
+			float wobble = float(rnd(21)-10)*(float(min(quake, 100))/100.f);
+			switch(state)
+			{
+				case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;
+				case CS_ALIVE: if(crouch) wobble *= 0.5f; break;
+				case CS_DEAD: break;
+				default: wobble = 0; break;
+			}
+			c += wobble;
+		}
+		return c;
 	}
 };
 
@@ -1156,7 +1176,7 @@ namespace weapons
 namespace hud
 {
 	extern char *bliptex, *cardtex, *flagtex, *arrowtex;
-	extern int hudwidth, hudsize, damageresidue, damageresiduefade, quakewobble, quakewobblefade, radarflagnames, inventorygame;
+	extern int hudwidth, hudsize, damageresidue, damageresiduefade, radarflagnames, inventorygame;
 	extern float inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
@@ -1222,6 +1242,7 @@ namespace game
 	extern void resetcamera();
 	extern void resetworld();
 	extern void resetstate();
+	extern void quake(const vec &o, int damage, int radius);
 	extern void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir);
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style);
