@@ -1407,7 +1407,7 @@ namespace hud
 			c = h; x += (w-h)/2;
 			usetexturing(false);
 			drawblend(0, 0, x, c, rc, rc, rc, true);
-			drawblend(x+c, 0, x, c, rc, rc, rc, true);
+			drawblend(x+c, 0, x+1, c, rc, rc, rc, true);
 			usetexturing(true);
 		}
 		else if(h > w)
