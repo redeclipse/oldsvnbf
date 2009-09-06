@@ -507,9 +507,9 @@ namespace physics
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
 					}
 				}
-				else if(game::allowmove(d) && canimpulse(d, impulsecost))
+				else if(game::allowmove(d) && canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > 250 && d->impulse[IM_COUNT] < impulsecount)
 				{
-					if(d->action[AC_SPECIAL] && !d->inliquid && impulsecount > d->impulse[IM_COUNT] && lastmillis-d->impulse[IM_TIME] > 250)
+					if(d->action[AC_SPECIAL] && !d->inliquid)
 					{
 						vec oldpos = d->o, dir; vecfromyawpitch(d->aimyaw, 0, 1, 0, dir); dir.normalize(); d->o.add(dir);
 						if(!collide(d, dir) || inside)

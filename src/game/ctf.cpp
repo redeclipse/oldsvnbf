@@ -661,14 +661,18 @@ namespace ctf
 		if(st.flags.inrange(b.target))
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfflag(f, ai::owner(d)))
+			if(isctfflag(f, ai::owner(d)) && f.owner)
 			{
 				if(d->aitype == AI_BOT)
 				{
-					if(ai::makeroute(d, b, f.pos()))
-						return f.owner ? ai::violence(d, b, f.owner, false) : true;
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulselength*2/3)
+					{
+						d->action[AC_IMPULSE] = true;
+						d->actiontime[AC_IMPULSE] = lastmillis;
+					}
+					ai::violence(d, b, f.owner, false);
 				}
-				else if(f.owner && ai::violence(d, b, f.owner, false)) return true;
+				else return true;
 			}
 			int walk = f.owner && ai::owner(f.owner) != ai::owner(d) ? 1 : 0;
 			if(d->aitype == AI_BOT)
