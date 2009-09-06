@@ -330,9 +330,9 @@ namespace projs
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
 
-		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
-		if(proj.projcollide)
+		if(proj.radial && proj.projtype == PRJ_SHOT)
 		{
+			proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
 			vec ray = vec(proj.vel).normalize();
 			int maxsteps = 25;
 			float step = 4,
@@ -356,31 +356,10 @@ namespace projs
 					if(collide(&proj) && !inside) break;
 				}
 				if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
-				{
-					if(hitplayer) { if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) continue; }
-					else proj.norm = proj.projcollide&COLLIDE_TRACE ? hitsurface : wall;
-
-					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM) && i < maxsteps-1)
-					{
-						if(proj.movement)
-						{
-							bounceeffect(proj);
-							reflect(proj, proj.norm);
-							proj.movement = 0;
-							proj.lastbounce = lastmillis;
-							ray = vec(proj.vel).normalize();
-						}
-					}
-					else if(proj.lifemillis)
-					{ // fastfwd to end
-						proj.lifemillis = proj.lifetime = 1;
-						proj.lifespan = proj.lifesize = 1.f;
-						proj.state = CS_DEAD;
-					}
-				}
+					break; // let it get caught post-init
 			}
+			proj.height = proj.radius = 1.f;
 		}
-		if(proj.radial && proj.projtype == PRJ_SHOT) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
