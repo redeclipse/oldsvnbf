@@ -1511,6 +1511,39 @@ namespace entities
 	{
 	}
 
+	void remapents(vector<int> &idxs)
+	{
+		int numents[MAXENTTYPES], numinvalid = 0;
+		memset(numents, 0, sizeof(numents));
+		loopv(ents)
+		{
+			gameentity &e = *(gameentity *)ents[i];
+			if(e.type >= NOTUSED && e.type < MAXENTTYPES) numents[e.type]++;
+			else numinvalid++;
+		}
+		int offsets[MAXENTTYPES];
+		memset(offsets, -1, sizeof(offsets));
+		int priority = INT_MIN, nextpriority = INT_MIN;
+		loopi(MAXENTTYPES) nextpriority = max(nextpriority, enttype[i].priority);
+		int offset = 0;
+		do
+		{
+			priority = nextpriority;
+			loopi(MAXENTTYPES) if(offsets[i] < 0)
+			{
+				if(enttype[i].priority >= priority) { offsets[i] = offset; offset += numents[i]; }
+				else nextpriority = max(nextpriority, enttype[i].priority);
+			}
+		} while(nextpriority < priority); 
+		idxs.setsizenodelete(0);
+		idxs.reserve(offset + numinvalid);
+		loopv(ents)
+		{
+			gameentity &e = *(gameentity *)ents[i];
+			idxs.add(e.type >= NOTUSED && e.type < MAXENTTYPES ? offsets[e.type]++ : offset++);
+		}
+	}
+
 	void importentities(int mtype, int mver, int gver)
 	{
 		int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };

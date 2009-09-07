@@ -104,25 +104,25 @@ void savec(cube *c, stream *f, bool nolms)
 			}
 			else
 			{
-                int numsurfs = 6;
-                loopj(6)
-                {
-                    surfaceinfo &surface = c[i].ext->surfaces[j];
-                    if(surface.lmid >= LMID_RESERVED || surface.layer!=LAYER_TOP)
-                    {
-                        mask |= 1 << j;
-                        if(surface.layer&LAYER_BLEND) numsurfs++;
-                    }
-                }
+				int numsurfs = 6;
+				loopj(6)
+				{
+					surfaceinfo &surface = c[i].ext->surfaces[j];
+					if(surface.lmid >= LMID_RESERVED || surface.layer!=LAYER_TOP)
+					{
+						mask |= 1 << j;
+						if(surface.layer&LAYER_BLEND) numsurfs++;
+					}
+				}
 				f->putchar(mask);
 				if(c[i].ext->material != MAT_AIR) f->putchar(c[i].ext->material);
-                loopj(numsurfs) if(j >= 6 || mask & (1 << j))
-                {
-                    surfaceinfo tmp = c[i].ext->surfaces[j];
-                    lilswap(&tmp.x, 2);
-                    f->write(&tmp, sizeof(surfaceinfo));
-                    if(j < 6 && c[i].ext->normals) f->write(&c[i].ext->normals[j], sizeof(surfacenormals));
-                }
+				loopj(numsurfs) if(j >= 6 || mask & (1 << j))
+				{
+					surfaceinfo tmp = c[i].ext->surfaces[j];
+					lilswap(&tmp.x, 2);
+					f->write(&tmp, sizeof(surfaceinfo));
+					if(j < 6 && c[i].ext->normals) f->write(&c[i].ext->normals[j], sizeof(surfacenormals));
+				}
 			}
 			if(c[i].ext && c[i].ext->merged)
 			{
@@ -169,52 +169,52 @@ void loadc(stream *f, cube &c)
 	else
 	{
 		uchar mask = f->getchar();
-        if(mask & 0x80)
-        {
-            int mat = f->getchar();
-            if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 30))
-            {
-                static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_AICLIP, MAT_DEATH };
-                mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
-            }
-            ext(c).material = mat;
-        }
+		if(mask & 0x80)
+		{
+			int mat = f->getchar();
+			if((maptype == MAP_OCTA && hdr.version <= 26) || (maptype == MAP_BFGZ && hdr.version <= 30))
+			{
+				static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_AICLIP, MAT_DEATH };
+				mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
+			}
+			ext(c).material = mat;
+		}
 		if(mask & 0x3F)
 		{
 			uchar lit = 0, bright = 0;
-            static surfaceinfo surfaces[12];
-            memset(surfaces, 0, 6*sizeof(surfaceinfo));
+			static surfaceinfo surfaces[12];
+			memset(surfaces, 0, 6*sizeof(surfaceinfo));
 			if(mask & 0x40) newnormals(c);
-            int numsurfs = 6;
-            loopi(numsurfs)
+			int numsurfs = 6;
+			loopi(numsurfs)
 			{
-                if(i >= 6 || mask & (1 << i))
+				if(i >= 6 || mask & (1 << i))
 				{
-                    f->read(&surfaces[i], sizeof(surfaceinfo));
-                    lilswap(&surfaces[i].x, 2);
-                    if(hdr.version < 10) ++surfaces[i].lmid;
-                    if(hdr.version < 18)
-                    {
-                        if(surfaces[i].lmid >= LMID_AMBIENT1) ++surfaces[i].lmid;
-                        if(surfaces[i].lmid >= LMID_BRIGHT1) ++surfaces[i].lmid;
-                    }
-                    if(hdr.version < 19)
-                    {
-                        if(surfaces[i].lmid >= LMID_DARK) surfaces[i].lmid += 2;
-                    }
-                    if(i < 6)
-                    {
-                        if(mask & 0x40) f->read(&c.ext->normals[i], sizeof(surfacenormals));
-                        if(surfaces[i].layer != LAYER_TOP) lit |= 1 << i;
-                        else if(surfaces[i].lmid == LMID_BRIGHT) bright |= 1 << i;
-                        else if(surfaces[i].lmid != LMID_AMBIENT) lit |= 1 << i;
-                        if(surfaces[i].layer&LAYER_BLEND) numsurfs++;
-                    }
+					f->read(&surfaces[i], sizeof(surfaceinfo));
+					lilswap(&surfaces[i].x, 2);
+					if(hdr.version < 10) ++surfaces[i].lmid;
+					if(hdr.version < 18)
+					{
+						if(surfaces[i].lmid >= LMID_AMBIENT1) ++surfaces[i].lmid;
+						if(surfaces[i].lmid >= LMID_BRIGHT1) ++surfaces[i].lmid;
+					}
+					if(hdr.version < 19)
+					{
+						if(surfaces[i].lmid >= LMID_DARK) surfaces[i].lmid += 2;
+					}
+					if(i < 6)
+					{
+						if(mask & 0x40) f->read(&c.ext->normals[i], sizeof(surfacenormals));
+						if(surfaces[i].layer != LAYER_TOP) lit |= 1 << i;
+						else if(surfaces[i].lmid == LMID_BRIGHT) bright |= 1 << i;
+						else if(surfaces[i].lmid != LMID_AMBIENT) lit |= 1 << i;
+						if(surfaces[i].layer&LAYER_BLEND) numsurfs++;
+					}
 				}
-                else surfaces[i].lmid = LMID_AMBIENT;
-            }
-            if(lit) newsurfaces(c, surfaces, numsurfs);
-            else if(bright) brightencube(c);
+				else surfaces[i].lmid = LMID_AMBIENT;
+			}
+			if(lit) newsurfaces(c, surfaces, numsurfs);
+			else if(bright) brightencube(c);
 		}
 		if(hdr.version >= 20)
 		{
@@ -232,17 +232,17 @@ void loadc(stream *f, cube &c)
 						c.ext->merges = new mergeinfo[nummerges];
 						loopi(nummerges)
 						{
-                            mergeinfo *m = &c.ext->merges[i];
-                            f->read(m, sizeof(mergeinfo));
-                            lilswap(&m->u1, 4);
-                            if(hdr.version <= 25)
-                            {
-                                int uorigin = m->u1 & 0xE000, vorigin = m->v1 & 0xE000;
-                                m->u1 = (m->u1 - uorigin) << 2;
-                                m->u2 = (m->u2 - uorigin) << 2;
-                                m->v1 = (m->v1 - vorigin) << 2;
-                                m->v2 = (m->v2 - vorigin) << 2;
-                            }
+							mergeinfo *m = &c.ext->merges[i];
+							f->read(m, sizeof(mergeinfo));
+							lilswap(&m->u1, 4);
+							if(hdr.version <= 25)
+							{
+								int uorigin = m->u1 & 0xE000, vorigin = m->v1 & 0xE000;
+								m->u1 = (m->u1 - uorigin) << 2;
+								m->u2 = (m->u2 - uorigin) << 2;
+								m->v1 = (m->v1 - vorigin) << 2;
+								m->v2 = (m->v2 - vorigin) << 2;
+							}
 						}
 					}
 				}
@@ -262,53 +262,53 @@ cube *loadchildren(stream *f)
 
 void saveslotconfig(stream *h, Slot &s, int index)
 {
-    if(index >= 0)
-    {
-        if(s.shader)
-        {
-            h->printf("setshader %s\n", s.shader->name);
-        }
-        loopvj(s.params)
-        {
-            h->printf("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
-            if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) h->printf(" \"%s\"", s.params[j].name);
-            else h->printf(" %d", s.params[j].index);
-            loopk(4) h->printf(" %f", s.params[j].val[k]);
-            h->printf("\n");
-        }
-    }
-    loopvj(s.sts)
-    {
-        h->printf("texture");
-        if(index >= 0) h->printf(" %s", findtexturename(s.sts[j].type));
-        else if(!j) h->printf(" %s", findmaterialname(-index));
-        else h->printf(" 1");
-        h->printf(" \"%s\"", s.sts[j].lname);
-        if(!j)
-        {
-            h->printf(" %d %d %d %f",
-                s.rotation, s.xoffset, s.yoffset, s.scale);
-            if(index >= 0) h->printf(" // %d", index);
-        }
-        h->printf("\n");
-    }
-    if(index >= 0)
-    {
-        if(s.scrollS != 0.f || s.scrollT != 0.f)
-            h->printf("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f);
-        if(s.layer != 0)
-        {
-            if(s.layermaskname) h->printf("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
-            else h->printf("texlayer %d\n", s.layer);
-        }
-        if(s.autograss) h->printf("autograss \"%s\"\n", s.autograss);
-    }
-    h->printf("\n");
+	if(index >= 0)
+	{
+		if(s.shader)
+		{
+			h->printf("setshader %s\n", s.shader->name);
+		}
+		loopvj(s.params)
+		{
+			h->printf("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+			if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) h->printf(" \"%s\"", s.params[j].name);
+			else h->printf(" %d", s.params[j].index);
+			loopk(4) h->printf(" %f", s.params[j].val[k]);
+			h->printf("\n");
+		}
+	}
+	loopvj(s.sts)
+	{
+		h->printf("texture");
+		if(index >= 0) h->printf(" %s", findtexturename(s.sts[j].type));
+		else if(!j) h->printf(" %s", findmaterialname(-index));
+		else h->printf(" 1");
+		h->printf(" \"%s\"", s.sts[j].lname);
+		if(!j)
+		{
+			h->printf(" %d %d %d %f",
+				s.rotation, s.xoffset, s.yoffset, s.scale);
+			if(index >= 0) h->printf(" // %d", index);
+		}
+		h->printf("\n");
+	}
+	if(index >= 0)
+	{
+		if(s.scrollS != 0.f || s.scrollT != 0.f)
+			h->printf("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f);
+		if(s.layer != 0)
+		{
+			if(s.layermaskname) h->printf("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
+			else h->printf("texlayer %d\n", s.layer);
+		}
+		if(s.autograss) h->printf("autograss \"%s\"\n", s.autograss);
+	}
+	h->printf("\n");
 }
 
 static int sortidents(ident **x, ident **y) // not sure if there's a way to extern this when it needs to be static? --quin
 {
-    return strcmp((*x)->name, (*y)->name);
+	return strcmp((*x)->name, (*y)->name);
 }
 
 void save_config(char *mname)
@@ -323,17 +323,17 @@ void save_config(char *mname)
 
 	int vars = 0;
 	h->printf("// Variables stored in map file, may be uncommented here, or changed from editmode.\n");
-    vector<ident *> ids;
-    enumerate(*idents, ident, id, ids.add(&id));
-    ids.sort(sortidents);
-    loopv(ids)
-    {
-        ident &id = *ids[i];
+	vector<ident *> ids;
+	enumerate(*idents, ident, id, ids.add(&id));
+	ids.sort(sortidents);
+	loopv(ids)
+	{
+		ident &id = *ids[i];
 		if(id.flags&IDF_WORLD) switch(id.type)
 		{
-            case ID_VAR: h->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "// %s 0x%.6X\n" : "// %s 0x%X\n") : "// %s %d\n"), id.name, *id.storage.i); vars++;break;
-            case ID_FVAR: h->printf("// %s %s\n", id.name, floatstr(*id.storage.f)); vars++; break;
-            case ID_SVAR: h->printf("// %s ", id.name); writeescapedstring(h, *id.storage.s); h->putchar('\n'); vars++; break;
+			case ID_VAR: h->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "// %s 0x%.6X\n" : "// %s 0x%X\n") : "// %s %d\n"), id.name, *id.storage.i); vars++;break;
+			case ID_FVAR: h->printf("// %s %s\n", id.name, floatstr(*id.storage.f)); vars++; break;
+			case ID_SVAR: h->printf("// %s ", id.name); writeescapedstring(h, *id.storage.s); h->putchar('\n'); vars++; break;
 			default: break;
 		}
 	}
@@ -341,13 +341,13 @@ void save_config(char *mname)
 	if(verbose >= 2) conoutf("\fdwrote %d variable values", vars);
 
 	int aliases = 0;
-    loopv(ids)
-    {
-        ident &id = *ids[i];
+	loopv(ids)
+	{
+		ident &id = *ids[i];
 		if(id.type == ID_ALIAS && id.flags&IDF_WORLD && strlen(id.name) && strlen(id.action))
 		{
 			aliases++;
-            h->printf("\"%s\" = [%s]\n", id.name, id.action);
+			h->printf("\"%s\" = [%s]\n", id.name, id.action);
 		}
 	}
 	if(aliases) h->printf("\n");
@@ -399,11 +399,11 @@ void save_mapshot(char *mname)
 {
 	backup(mname, ifmtexts[imageformat], hdr.revision);
 
-    GLuint tex;
+	GLuint tex;
 	glGenTextures(1, &tex);
 	glViewport(0, 0, mapshotsize, mapshotsize);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    ImageData image(mapshotsize, mapshotsize, 3);
+	ImageData image(mapshotsize, mapshotsize, 3);
 	memset(image.data, 0, 3*mapshotsize*mapshotsize);
 	glFrontFace(GL_CCW);
 	drawcubemap(mapshotsize, 1, camera1->o, camera1->yaw, camera1->pitch, false, false, false);
@@ -412,7 +412,7 @@ void save_mapshot(char *mname)
 	saveimage(mname, image, imageformat, compresslevel, true);
 
 	glDeleteTextures(1, &tex);
-    glFrontFace(GL_CCW);
+	glFrontFace(GL_CCW);
 	glViewport(0, 0, screen->w, screen->h);
 
 	reloadtexture(mname);
@@ -447,18 +447,18 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
-		if(ents[i]->type!=ET_EMPTY || nodata)
+		if(ents[i]->type!=ET_EMPTY || forcesave)
 		{
 			hdr.numents++;
 		}
 	}
 
-    hdr.numpvs = nodata ? 0 : getnumviewcells();
-    hdr.blendmap = nodata ? 0 : shouldsaveblendmap();
+	hdr.numpvs = nodata ? 0 : getnumviewcells();
+	hdr.blendmap = nodata ? 0 : shouldsaveblendmap();
 	hdr.lightmaps = nodata ? 0 : lightmaps.length();
 
 	bfgz tmp = hdr;
-    lilswap(&tmp.version, 7);
+	lilswap(&tmp.version, 7);
 	f->write(&tmp, sizeof(bfgz));
 
 	// world variables
@@ -500,28 +500,32 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 
 	// entities
 	int count = 0;
+	vector<int> remapents;
+	if(!forcesave) entities::remapents(remapents);
 	loopv(ents) // extended
 	{
 		if(verbose) progress(float(i)/float(ents.length()), "saving entities...");
-		if(ents[i]->type!=ET_EMPTY || nodata)
+		int idx = remapents.inrange(i) ? remapents[i] : i;
+		extentity &e = *(extentity *)ents[idx];
+		if(e.type!=ET_EMPTY || forcesave)
 		{
-			entbase tmp = *ents[i];
-            lilswap(&tmp.o.x, 3);
+			entbase tmp = e;
+			lilswap(&tmp.o.x, 3);
 			f->write(&tmp, sizeof(entbase));
-			extentity &e = (extentity &)*ents[i];
 			f->putlil<int>(e.attrs.length());
 			loopvk(e.attrs) f->putlil<int>(e.attrs[k]);
-			entities::writeent(f, i);
+			entities::writeent(f, idx);
 			if(entities::maylink(e.type))
 			{
 				vector<int> links;
 				int n = 0;
 				loopvk(ents)
 				{
-					extentity &f = (extentity &)*ents[k];
-					if(f.type != ET_EMPTY)
+					int kidx = remapents.inrange(k) ? remapents[k] : k;
+					extentity &f = (extentity &)*ents[kidx];
+					if(f.type != ET_EMPTY || forcesave)
 					{
-						if(entities::maylink(f.type) && e.links.find(k) >= 0)
+						if(entities::maylink(f.type) && e.links.find(kidx) >= 0)
 							links.add(n); // align to indices
 						n++;
 					}
@@ -537,34 +541,34 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	if(verbose) conoutf("\fdsaved %d entities", count);
 
 	savec(worldroot, f, nodata);
-    if(!nodata)
-    {
-        loopv(lightmaps)
-        {
-            if(verbose) progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
-            LightMap &lm = lightmaps[i];
-            f->putchar(lm.type | (lm.unlitx>=0 ? 0x80 : 0));
-            if(lm.unlitx>=0)
-            {
-                f->putlil<ushort>(ushort(lm.unlitx));
-                f->putlil<ushort>(ushort(lm.unlity));
-            }
-            f->write(lm.data, lm.bpp*LM_PACKW*LM_PACKH);
-        }
-        if(verbose) conoutf("\fdsaved %d lightmaps", lightmaps.length());
-        if(getnumviewcells()>0)
-        {
-            if(verbose) progress(0, "saving PVS...");
-            savepvs(f);
-            if(verbose) conoutf("\fdsaved %d PVS view cells", getnumviewcells());
-        }
-        if(shouldsaveblendmap())
-        {
-            if(verbose) progress(0, "saving blendmap...");
-            saveblendmap(f);
-            if(verbose) conoutf("\fdsaved blendmap");
-        }
-    }
+	if(!nodata)
+	{
+		loopv(lightmaps)
+		{
+			if(verbose) progress(float(i)/float(lightmaps.length()), "saving lightmaps...");
+			LightMap &lm = lightmaps[i];
+			f->putchar(lm.type | (lm.unlitx>=0 ? 0x80 : 0));
+			if(lm.unlitx>=0)
+			{
+				f->putlil<ushort>(ushort(lm.unlitx));
+				f->putlil<ushort>(ushort(lm.unlity));
+			}
+			f->write(lm.data, lm.bpp*LM_PACKW*LM_PACKH);
+		}
+		if(verbose) conoutf("\fdsaved %d lightmaps", lightmaps.length());
+		if(getnumviewcells()>0)
+		{
+			if(verbose) progress(0, "saving PVS...");
+			savepvs(f);
+			if(verbose) conoutf("\fdsaved %d PVS view cells", getnumviewcells());
+		}
+		if(shouldsaveblendmap())
+		{
+			if(verbose) progress(0, "saving blendmap...");
+			saveblendmap(f);
+			if(verbose) conoutf("\fdsaved blendmap");
+		}
+	}
 
 	progress(0, "saving world...");
 	game::saveworld(f);
@@ -594,12 +598,12 @@ void swapXZ(cube *c)
 
 static void fixoversizedcubes(cube *c, int size)
 {
-    if(size <= VVEC_INT_MASK+1) return;
-    loopi(8)
-    {
-        if(!c[i].children) subdividecube(c[i], true, false);
-        fixoversizedcubes(c[i].children, size>>1);
-    }
+	if(size <= VVEC_INT_MASK+1) return;
+	loopi(8)
+	{
+		if(!c[i].children) subdividecube(c[i], true, false);
+		fixoversizedcubes(c[i].children, size>>1);
+	}
 }
 
 static void sanevars()
@@ -658,7 +662,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					newhdr.lightmaps = chdr.lightmaps;
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
-                    memcpy(&newhdr.gameid, &chdr.gameid, 4);
+					memcpy(&newhdr.gameid, &chdr.gameid, 4);
 					setsvar("maptitle", chdr.maptitle, true);
 				}
 				else if(newhdr.version <= 32)
@@ -668,7 +672,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*4);
 					newhdr.blendmap = 0;
 					memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
-                    memcpy(&newhdr.gameid, &chdr.gameid, 4);
+					memcpy(&newhdr.gameid, &chdr.gameid, 4);
 					setsvar("maptitle", chdr.maptitle, true);
 				}
 				else if(newhdr.version <= 33)
@@ -697,7 +701,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
-                resetmap(false);
+				resetmap(false);
 				hdr = newhdr;
 				progress(0, "please wait...");
 				maptype = MAP_BFGZ;
@@ -864,7 +868,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					return false;
 				}
 
-                resetmap(false);
+				resetmap(false);
 				hdr = newhdr;
 				progress(0, "please wait...");
 				maptype = MAP_OCTA;
@@ -1182,41 +1186,41 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 void writeobj(char *name)
 {
-    defformatstring(fname)("%s.obj", name);
-    stream *f = openfile(fname, "w");
-    if(!f) return;
-    f->printf("# obj file of sauerbraten level\n");
-    extern vector<vtxarray *> valist;
-    loopv(valist)
-    {
-        vtxarray &va = *valist[i];
-        ushort *edata = NULL;
-        uchar *vdata = NULL;
-        if(!readva(&va, edata, vdata)) continue;
-        int vtxsize = VTXSIZE;
-        uchar *vert = vdata;
-        loopj(va.verts)
-        {
-            vec v;
-            if(floatvtx) (v = *(vec *)vert).div(1<<VVEC_FRAC);
-            else v = ((vvec *)vert)->tovec(va.o).add(0x8000>>VVEC_FRAC);
-            if(v.y != floor(v.y)) f->printf("v %.3f ", -v.y); else f->printf("v %d ", int(-v.y));
-            if(v.z != floor(v.z)) f->printf("%.3f ", v.z); else f->printf("%d ", int(v.z));
-            if(v.x != floor(v.x)) f->printf("%.3f\n", v.x); else f->printf("%d\n", int(v.x));
-            vert += vtxsize;
-        }
-        ushort *tri = edata;
-        loopi(va.tris)
-        {
-            f->printf("f");
-            for(int k = 0; k<3; k++) f->printf(" %d", tri[2-k]-va.verts-va.voffset);
-            tri += 3;
-            f->printf("\n");
-        }
-        delete[] edata;
-        delete[] vdata;
-    }
-    delete f;
+	defformatstring(fname)("%s.obj", name);
+	stream *f = openfile(fname, "w");
+	if(!f) return;
+	f->printf("# obj file of sauerbraten level\n");
+	extern vector<vtxarray *> valist;
+	loopv(valist)
+	{
+		vtxarray &va = *valist[i];
+		ushort *edata = NULL;
+		uchar *vdata = NULL;
+		if(!readva(&va, edata, vdata)) continue;
+		int vtxsize = VTXSIZE;
+		uchar *vert = vdata;
+		loopj(va.verts)
+		{
+			vec v;
+			if(floatvtx) (v = *(vec *)vert).div(1<<VVEC_FRAC);
+			else v = ((vvec *)vert)->tovec(va.o).add(0x8000>>VVEC_FRAC);
+			if(v.y != floor(v.y)) f->printf("v %.3f ", -v.y); else f->printf("v %d ", int(-v.y));
+			if(v.z != floor(v.z)) f->printf("%.3f ", v.z); else f->printf("%d ", int(v.z));
+			if(v.x != floor(v.x)) f->printf("%.3f\n", v.x); else f->printf("%d\n", int(v.x));
+			vert += vtxsize;
+		}
+		ushort *tri = edata;
+		loopi(va.tris)
+		{
+			f->printf("f");
+			for(int k = 0; k<3; k++) f->printf(" %d", tri[2-k]-va.verts-va.voffset);
+			tri += 3;
+			f->printf("\n");
+		}
+		delete[] edata;
+		delete[] vdata;
+	}
+	delete f;
 }
 
 COMMAND(writeobj, "s");

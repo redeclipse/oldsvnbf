@@ -30,7 +30,7 @@ enum
 	S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8,
 	S_RESPAWN, S_CHAT, S_ERROR, S_ALARM,
 	S_V_FLAGSECURED, S_V_FLAGOVERTHROWN,
-    S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
+	S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
 	S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT,
 	S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_V_SPREE5, S_V_SPREE6, S_V_MKILL1, S_V_MKILL2, S_V_MKILL3,
 	S_V_REVENGE, S_V_DOMINATE, S_V_YOUWIN, S_V_YOULOSE, S_V_MCOMPLETE, S_V_FRAGGED, S_V_OWNED, S_V_DENIED,
@@ -72,7 +72,7 @@ enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
 struct enttypes
 {
-	int	type,			links,	radius,	usetype,	numattrs,
+	int	type,			priority, links,	radius,	usetype,	numattrs,
 			canlink,
 			reclink;
 	bool	noisy;	const char *name,			*attrs[6];
@@ -80,109 +80,109 @@ struct enttypes
 #ifdef GAMESERVER
 enttypes enttype[] = {
 	{
-		NOTUSED,		0,		0,		EU_NONE,	0,
+		NOTUSED,		-1,  0,		0,		EU_NONE,	0,
 			0,
 			0,
 			true,				"none",			{ "",		"",			"",			"",			"",			"" }
 	},
 	{
-		LIGHT,			59,		0,		EU_NONE,	4,
+		LIGHT,			1,  59,		0,		EU_NONE,	4,
 			inttobit(LIGHTFX),
 			inttobit(LIGHTFX),
 			false,				"light",		{ "radius",	"red",		"green",	"blue",		"",			"" }
 	},
 	{
-		MAPMODEL,		58,		0,		EU_NONE,	5,
+		MAPMODEL,		1,  58,		0,		EU_NONE,	5,
 			inttobit(TRIGGER),
 			inttobit(TRIGGER),
 			false,				"mapmodel",		{ "type",	"yaw",		"pitch",	"roll",		"flags",	"" }
 	},
 	{
-		PLAYERSTART,	59,		0,		EU_NONE,	5,
+		PLAYERSTART,	1,  59,		0,		EU_NONE,	5,
 			0,
 			0,
 			false,				"playerstart",	{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		ENVMAP,			0,		0,		EU_NONE,	1,
+		ENVMAP,			1,  0,		0,		EU_NONE,	1,
 			0,
 			0,
 			false,				"envmap",		{ "radius",	"",			"",			"",			"",			"" }
 	},
 	{
-		PARTICLES,		59,		0,		EU_NONE,	5,
+		PARTICLES,		1,  59,		0,		EU_NONE,	5,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"particles",	{ "type",	"a",		"b",		"c",		"d",		"" }
 	},
 	{
-		MAPSOUND,		58,		0,		EU_NONE,	5,
+		MAPSOUND,		1,  58,		0,		EU_NONE,	5,
 			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"sound",		{ "type",	"maxrad",	"minrad",	"volume",	"flags",	"" }
 	},
 	{
-		LIGHTFX,		1,		0,		EU_NONE,	5,
+		LIGHTFX,		1,  1,		0,		EU_NONE,	5,
 			inttobit(LIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			inttobit(LIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
 			false,				"lightfx",		{ "type",	"mod",		"min",		"max",		"flags",	"" }
 	},
 	{
-		SUNLIGHT,		160,	0,		EU_NONE,	6,
+		SUNLIGHT,		1,  160,	0,		EU_NONE,	6,
 			0,
 			0,
 			false,				"sunlight",		{ "yaw",	"pitch",	"red",		"green",	"blue",		"offset" }
 	},
 	{
-		WEAPON,			59,		16,		EU_ITEM,	4,
+		WEAPON,			2,  59,		16,		EU_ITEM,	4,
 			0,
 			0,
 			false,				"weapon",		{ "type",	"flags",	"mode",		"id",		"",			"" }
 	},
 	{
-		TELEPORT,		50,		12,		EU_AUTO,	5,
+		TELEPORT,		1,  50,		12,		EU_AUTO,	5,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX)|inttobit(TELEPORT),
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"teleport",		{ "yaw",	"pitch",	"push",		"radius",	"colour",	"" }
 	},
 	{
-		ACTOR,			59,		0,		EU_NONE,	5,
+		ACTOR,			1,  59,		0,		EU_NONE,	5,
 			inttobit(FLAG)|inttobit(WAYPOINT),
 			0,
 			false,				"actor",		{ "type",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		TRIGGER,		58,		16,		EU_AUTO,	5,
+		TRIGGER,		1,  58,		16,		EU_AUTO,	5,
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"trigger",		{ "id",		"type",		"action",	"radius",	"state",	"" }
 	},
 	{
-		PUSHER,			58,		12,		EU_AUTO,	5,
+		PUSHER,			1,  58,		12,		EU_AUTO,	5,
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
 			false,				"pusher",		{ "zpush",	"ypush",	"xpush",	"radius",	"min",		"" }
 	},
 	{
-		FLAG,			48,		32,		EU_NONE,	5,
+		FLAG,			1,  48,		32,		EU_NONE,	5,
 			inttobit(FLAG),
 			0,
 			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		CHECKPOINT,		48,		16,		EU_NONE,	1,
+		CHECKPOINT,		1,  48,		16,		EU_NONE,	1,
 			inttobit(CHECKPOINT),
 			0,
 			false,				"checkpoint",	{ "id",		"",			"",			"",			"",			"" }
 	},
 	{
-		CAMERA,			48,		0,		EU_NONE,	3,
+		CAMERA,			1,  48,		0,		EU_NONE,	3,
 			inttobit(CAMERA),
 			0,
 			false,				"camera",		{ "type",	"mindist",	"maxdist",	"",			"",			"" }
 	},
 	{
-		WAYPOINT,		1,		16,		EU_NONE,	5,
+		WAYPOINT,		0,  1,		16,		EU_NONE,	5,
 			inttobit(WAYPOINT),
 			0,
 			true,				"waypoint",		{ "type",	"state",	"id",		"radius",	"flags",	"" }
@@ -198,15 +198,15 @@ enum
 	ANIM_IMPULSE_FORWARD, ANIM_IMPULSE_BACKWARD, ANIM_IMPULSE_LEFT, ANIM_IMPULSE_RIGHT, ANIM_IMPULSE_DASH,
 	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
-    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
-    ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
-    ANIM_SMG, ANIM_SMG_SHOOT, ANIM_SMG_RELOAD,
-    ANIM_GRENADE, ANIM_GRENADE_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADE_POWER,
-    ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
-    ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
-    ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
-    ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
-    ANIM_MAX
+	ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
+	ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
+	ANIM_SMG, ANIM_SMG_SHOOT, ANIM_SMG_RELOAD,
+	ANIM_GRENADE, ANIM_GRENADE_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADE_POWER,
+	ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
+	ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
+	ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
+	ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
+	ANIM_MAX
 };
 
 #define WEAPSWITCHDELAY	750
@@ -277,7 +277,7 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		{ 1, 1 },	{ 100, 200, },    1000,	{ 35, 35 },		{ 2500, 2500 },		0,			{ 2000, 2000 },
+			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 2500, 2500 },		0,			{ 2000, 2000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, true },	{ false, false },
@@ -515,16 +515,16 @@ enum
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
 	SV_SERVMSG, SV_GAMEINFO, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP,
-    SV_GETMAP, SV_SENDMAP, SV_SENDMAPFILE, SV_SENDMAPSHOT, SV_SENDMAPCONFIG,
+	SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP,
+	SV_GETMAP, SV_SENDMAP, SV_SENDMAPFILE, SV_SENDMAPSHOT, SV_SENDMAPCONFIG,
 	SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_WAITING, SV_SETMASTER, SV_SETTEAM,
 	SV_FLAGS, SV_FLAGINFO,
-    SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS, SV_SCORE,
+	SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS, SV_SCORE,
 	SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_RELOAD, SV_REGEN,
 	SV_ADDBOT, SV_DELBOT, SV_INITAI,
-    SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS
+	SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS
 };
 
 #ifdef GAMESERVER
@@ -541,16 +541,16 @@ char msgsizelookup(int msg)
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
 		SV_SERVMSG, 0, SV_GAMEINFO, 0, SV_RESUME, 0,
-        SV_EDITMODE, 2, SV_EDITENT, 0, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2,
-        SV_GETMAP, 0, SV_SENDMAP, 0, SV_SENDMAPFILE, 0, SV_SENDMAPSHOT, 0, SV_SENDMAPCONFIG, 0,
+		SV_EDITMODE, 2, SV_EDITENT, 0, SV_EDITLINK, 4, SV_EDITVAR, 0, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2,
+		SV_GETMAP, 0, SV_SENDMAP, 0, SV_SENDMAPFILE, 0, SV_SENDMAPSHOT, 0, SV_SENDMAPCONFIG, 0,
 		SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_WAITING, 2, SV_SETMASTER, 0, SV_SETTEAM, 0,
 		SV_FLAGS, 0, SV_FLAGINFO, 0,
-        SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0, SV_SCORE, 0,
+		SV_DROPFLAG, 0, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 3, SV_RESETFLAG, 2, SV_INITFLAGS, 0, SV_SCORE, 0,
 		SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
 		SV_DEMOPLAYBACK, 3, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_RELOAD, 0, SV_REGEN, 0,
 		SV_ADDBOT, 0, SV_DELBOT, 0, SV_INITAI, 0,
-        SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
+		SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
 		-1
 	};
 	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
@@ -849,10 +849,10 @@ struct gamestate
 		spawnstate(sweap, heal);
 	}
 
-    int respawnwait(int millis, int delay)
-    {
-        return lastdeath ? max(0, delay-(millis-lastdeath)) : 0;
-    }
+	int respawnwait(int millis, int delay)
+	{
+		return lastdeath ? max(0, delay-(millis-lastdeath)) : 0;
+	}
 
 	// just subtract damage here, can set death, etc. later in code calling this
 	void dodamage(int millis, int heal)
@@ -955,8 +955,8 @@ struct gameent : dynent, gamestate
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
-    float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
-    vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
+	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
+	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
@@ -999,7 +999,7 @@ struct gameent : dynent, gamestate
 	void clearstate()
 	{
 		loopi(IM_MAX) impulse[i] = 0;
-        lasthit = lastkill = lastdamagetone = quake = 0;
+		lasthit = lastkill = lastdamagetone = quake = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
@@ -1017,13 +1017,13 @@ struct gameent : dynent, gamestate
 	{
 		stopmoving(true);
 		clearstate();
-    	inmaterial = timeinair = 0;
-    	inliquid = onladder = false;
-        strafe = move = 0;
-        physstate = PHYS_FALL;
+		inmaterial = timeinair = 0;
+		inliquid = onladder = false;
+		strafe = move = 0;
+		physstate = PHYS_FALL;
 		vel = falling = vec(0, 0, 0);
-        floor = vec(0, 0, 1);
-        resetinterp();
+		floor = vec(0, 0, 1);
+		resetinterp();
 		gamestate::editspawn(millis, sweap, heal);
 		airnodes.setsizenodelete(0);
 	}
@@ -1153,21 +1153,21 @@ struct projent : dynent
 namespace server
 {
 	extern void stopdemo();
-    extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
+	extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
 }
 
 namespace client
 {
 	extern bool demoplayback, sendinfo;
 	extern void addmsg(int type, const char *fmt = NULL, ...);
-    extern void c2sinfo();
+	extern void c2sinfo();
 }
 
 namespace physics
 {
 	extern int smoothmove, smoothdist;
 	extern bool canimpulse(physent *d, int cost);
-    extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
+	extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();
 }
@@ -1302,7 +1302,7 @@ namespace entities
 		{
 			dynent *ent;
 			int numentities;
-            float above;
+			float above;
 
 			obstacle(dynent *ent) : ent(ent), numentities(0), above(-1) {}
 		};
@@ -1345,7 +1345,7 @@ namespace entities
 			entities.add(entity);
 		}
 
-        void avoidnear(dynent *d, const vec &pos, float limit);
+		void avoidnear(dynent *d, const vec &pos, float limit);
 
 		#define loopavoid(v, d, body) \
 			if(!(v).obstacles.empty()) \
@@ -1421,13 +1421,13 @@ namespace entities
 			return n;
 		}
 	};
-    extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
+	extern void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results);
 	extern float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d = NULL, bool check = true);
 }
 #elif defined(GAMESERVER)
 namespace client
 {
-    extern const char *getname();
+	extern const char *getname();
 }
 #endif
 #include "ctf.h"
