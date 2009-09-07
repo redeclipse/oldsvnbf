@@ -613,7 +613,7 @@ void newent(char *what, char *attr)
 {
 	if(noentedit()) return;
 	int type = entities::findtype(what);
-	static vector<int> attrs; attrs.setsizenodelete(0);
+	vector<int> attrs;
 	entattrs(attr, attrs);
 	if(type != ET_EMPTY) newentity(type, attrs);
 }
