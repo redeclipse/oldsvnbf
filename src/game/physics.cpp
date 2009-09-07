@@ -535,7 +535,7 @@ namespace physics
 									if((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
 									{
 										float mag = impulseforce(d)+d->vel.magnitude();
-										d->vel = vec(rft).mul(mag/2); d->vel.z += mag;
+										d->vel = vec(rft).mul(mag); d->vel.z += mag;
 										d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
 										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
 										if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
@@ -550,9 +550,10 @@ namespace physics
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 										vecfromyawpitch(d->aimyaw, 0, 1, 0, rft);
 										float mag = impulseforce(d)+d->vel.magnitude();
-										d->vel = vec(rft).normalize().mul(mag); d->vel.z += mag/2;
+										d->vel = vec(rft).normalize().mul(mag); d->vel.z += mag/4;
 										d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
-										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
+										d->turnmillis = PHYSMILLIS; d->turnyaw = off;
+										d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
 										d->action[AC_SPECIAL] = false;
 										playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 										client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
