@@ -2,6 +2,7 @@
 namespace entities
 {
 	vector<extentity *> ents;
+	int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
 
 	VARP(showentdescs, 0, 2, 3);
 	VARP(showentinfo, 0, 1, 5);
@@ -855,6 +856,8 @@ namespace entities
 	{
 		clearentcache();
 		while(ents.length()) deleteent(ents.pop());
+		memset(lastenttype, 0, sizeof(lastenttype));
+		memset(lastusetype, 0, sizeof(lastusetype));
 	}
 
 	bool cansee(extentity &e)
@@ -1106,6 +1109,11 @@ namespace entities
 		extentity &e = *ents[i];
 		fixentity(i);
 		if(m_edit(game::gamemode)) client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
+		if(e.type >= NOTUSED && e.type < MAXENTTYPES)
+		{
+			lastenttype[e.type] = max(lastenttype[e.type], i+1);
+			lastusetype[enttype[e.type].usetype] = max(lastusetype[enttype[e.type].usetype], i+1);
+		}
 		docacheclear = true;
 	}
 
@@ -1538,10 +1546,11 @@ namespace entities
 		} while(nextpriority < priority); 
 		idxs.setsizenodelete(0);
 		idxs.reserve(offset + numinvalid);
+		while(idxs.length() < offset + numinvalid) idxs.add(-1);
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			idxs.add(e.type >= NOTUSED && e.type < MAXENTTYPES ? offsets[e.type]++ : offset++);
+			idxs[e.type >= NOTUSED && e.type < MAXENTTYPES ? offsets[e.type]++ : offset++] = i;
 		}
 	}
 
@@ -1854,9 +1863,16 @@ namespace entities
 		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, mver, gver);
 		if(mtype == MAP_OCTA) importwaypoints(mtype, mver, gver);
 		loopv(ents) fixentity(i);
+		memset(lastenttype, 0, sizeof(lastenttype));
+		memset(lastusetype, 0, sizeof(lastusetype));
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
+			if(e.type >= NOTUSED && e.type < MAXENTTYPES)
+			{
+				lastenttype[e.type] = max(lastenttype[e.type], i+1);
+				lastusetype[enttype[e.type].usetype] = max(lastusetype[enttype[e.type].usetype], i+1);
+			}
 			if(enttype[e.type].usetype == EU_ITEM || e.type == TRIGGER)
 			{
 				setspawn(i, 0);
@@ -2133,7 +2149,8 @@ namespace entities
 			renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
 		if(!envmapping)
 		{
-			loopv(ents)
+			int numents = m_edit(game::gamemode) ? ents.length() : (m_noitems(game::gamemode, game::mutators) ? 0 : lastusetype[EU_ITEM]);
+			loopi(numents)
 			{
 				gameentity &e = *(gameentity *)ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;

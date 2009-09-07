@@ -1277,6 +1277,7 @@ namespace entities
 {
 	extern int showentdescs;
 	extern vector<extentity *> ents;
+	extern int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
 	extern void clearentcache();
 	extern int closestent(int type, const vec &pos, float mindist, bool links = false, gameent *d = NULL);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
