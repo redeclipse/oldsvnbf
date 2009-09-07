@@ -364,7 +364,7 @@ namespace entities
 
 	vector<entcachenode *> entcachestack;
 
-	bool allowuse(gameent *d, int n)
+	static inline bool allowuse(gameent *d, int n)
 	{
 		if(!d || !d->ai || !d->ai->hasprevnode(n)) switch(ents[n]->attrs[0])
 		{
