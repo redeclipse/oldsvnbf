@@ -1529,6 +1529,7 @@ namespace entities
 		do
 		{
 			priority = nextpriority;
+			nextpriority = INT_MIN;
 			loopi(MAXENTTYPES) if(offsets[i] < 0)
 			{
 				if(enttype[i].priority >= priority) { offsets[i] = offset; offset += numents[i]; }
