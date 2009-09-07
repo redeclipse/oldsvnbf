@@ -619,7 +619,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			if(!tempfile) loopk(2)
 			{
 				defformatstring(s)("temp/%s", k ? mapfile : mapname);
-				copystring(k ? mapfile : mapname, s);
+				setsvar(k ? "mapfile" : "mapname", s);
 			}
 
 			stream *f = opengzfile(mapfile, "rb");
