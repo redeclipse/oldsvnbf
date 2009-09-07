@@ -447,7 +447,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	const vector<extentity *> &ents = entities::getents();
 	loopv(ents)
 	{
-		if(ents[i]->type!=ET_EMPTY)
+		if(ents[i]->type!=ET_EMPTY || nodata)
 		{
 			hdr.numents++;
 		}
@@ -503,7 +503,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	loopv(ents) // extended
 	{
 		if(verbose) progress(float(i)/float(ents.length()), "saving entities...");
-		if(ents[i]->type!=ET_EMPTY)
+		if(ents[i]->type!=ET_EMPTY || nodata)
 		{
 			entbase tmp = *ents[i];
             lilswap(&tmp.o.x, 3);
