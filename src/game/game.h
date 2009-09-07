@@ -970,7 +970,7 @@ struct gameent : dynent, gamestate
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 200; // so we can control the 'gravity' feel
-		maxspeed = 55; // ditto for movement
+		maxspeed = 50; // ditto for movement
 		checktags();
 		respawn(-1, 100);
 	}
