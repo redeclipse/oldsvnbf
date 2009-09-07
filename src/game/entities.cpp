@@ -1865,6 +1865,11 @@ namespace entities
 		}
 	}
 
+	bool shouldshowents(int level)
+	{
+		return max(showentradius, max(showentdir, showentlinks)) >= level || dropwaypoints || ai::aidebug >= 6;
+	}
+
 	void renderentshow(gameentity &e, int idx, int level)
 	{
 		if(e.o.squaredist(camera1->o) > maxparticledistance*maxparticledistance) return;
@@ -2090,7 +2095,7 @@ namespace entities
 
 	void render()
 	{
-		if(rendermainview) loopv(ents) // important, don't render lines and stuff otherwise!
+		if(rendermainview && shouldshowents(game::player1->state == CS_EDITING ? 1 : 3)) loopv(ents) // important, don't render lines and stuff otherwise!
 			renderfocus(i, renderentshow(e, i, game::player1->state == CS_EDITING ? ((entgroup.find(i) >= 0 || enthover == i) ? 1 : 2) : 3));
 		if(!envmapping)
 		{
