@@ -520,11 +520,11 @@ namespace game
         	else if(flags && isweap(weap))
         	{
 				static const char *suicidenames[WEAP_MAX] = {
-					"at a bullet",
+					"ate a bullet",
 					"discovered buckshot bounces",
 					"got caught in their own crossfire",
 					"spontaneously combusted",
-					"found out plasma tasted like",
+					"tried to make out with plasma",
 					"got a good shock",
 					"kicked it, kamikaze style",
 					"pulled off an insta-stunt",
@@ -568,8 +568,8 @@ namespace game
 						"gibbed"
 					},
 					{
-						"given an extra orifice by",
-						"given scrambled brains cooked up by",
+						"capped by",
+						"scrambled by",
 						"air conditioned courtesy of",
 						"char-grilled by",
 						"plasmafied by",
@@ -582,9 +582,9 @@ namespace game
 						"skewered by",
 						"turned into little chunks by",
 						"swiss-cheesed by",
-						"made the main course by order of chef",
+						"barbequed by chef",
 						"reduced to ooze by",
-						"lasered in half by",
+						"given laser shock treatment by",
 						"obliterated by",
 						"lasered in half by",
 						"gibbed"
