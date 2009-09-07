@@ -6,7 +6,7 @@ namespace entities
 	extern void editent(int i);
 	extern void readent(stream *g, int mtype, int mver, char *gid, int gver, int id);
 	extern void writeent(stream *g, int id);
-    extern void remapents(vector<int> &idxs);
+	extern void remapents(vector<int> &idxs);
 	extern void initents(stream *g, int mtype, int mver, char *gid, int gver);
 	extern float dropheight(extentity &e);
 	extern void fixentity(int n);
@@ -17,9 +17,10 @@ namespace entities
 	extern bool canlink(int index, int node, bool msg = false);
 	extern bool linkents(int index, int node, bool add = true, bool local = true, bool toggle = true);
 	extern extentity *newent();
-    extern void deleteent(extentity *e);
-    extern void clearents();
+	extern void deleteent(extentity *e);
+	extern void clearents();
 	extern vector<extentity *> &getents();
+	extern int lastent(int type);
 	extern void drawparticles();
 }
 
@@ -37,8 +38,8 @@ namespace client
 	extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
 	extern void changemap(const char *name);
 	extern bool ready();
-    extern void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address);
-    extern void connectfail();
+	extern void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address);
+	extern void connectfail();
 	extern int state();
 	extern int otherclients();
 	extern int numchannels();
@@ -71,10 +72,10 @@ namespace physics
 	extern bool iscrouching(physent *d);
 	extern bool moveplayer(physent *pl, int moveres, bool local, int millis);
 	extern void interppos(physent *d);
-    extern void updateragdoll(dynent *d, const vec &center, float radius);
-    extern bool xcollide(physent *d, const vec &dir, physent *o);
-    extern bool xtracecollide(physent *d, const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o);
-    extern void complexboundbox(physent *d);
+	extern void updateragdoll(dynent *d, const vec &center, float radius);
+	extern bool xcollide(physent *d, const vec &dir, physent *o);
+	extern bool xtracecollide(physent *d, const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o);
+	extern void complexboundbox(physent *d);
 }
 
 namespace game
@@ -90,7 +91,7 @@ namespace game
 	extern void lighteffects(dynent *d, vec &color, vec &dir);
 	extern void adddynlights();
 	extern void particletrack(particle *p, uint type, int &ts, bool lastpass);
-    extern void dynlighttrack(physent *owner, vec &o);
+	extern void dynlighttrack(physent *owner, vec &o);
 	extern bool mousemove(int dx, int dy, int x, int y, int w, int h);
 	extern void project(int w, int h);
 	extern void recomputecamera(int w, int h);
@@ -115,11 +116,11 @@ namespace server
 	extern void *newinfo();
 	extern void deleteinfo(void *ci);
 	extern int numclients(int exclude = -1, bool nospec = false, int aitype = -1);
-    extern int reserveclients();
+	extern int reserveclients();
 	extern void clientdisconnect(int n, bool local = false);
 	extern int clientconnect(int n, uint ip, bool local = false);
-    extern bool allowbroadcast(int n);
-    extern int peerowner(int n);
+	extern bool allowbroadcast(int n);
+	extern int peerowner(int n);
 	extern void recordpacket(int chan, void *data, int len);
 	extern void parsepacket(int sender, int chan, bool reliable, ucharbuf &p);
 	extern bool sendpackets();

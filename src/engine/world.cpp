@@ -184,7 +184,8 @@ void freeoctaentities(cube &c)
 
 void entitiesinoctanodes()
 {
-    loopv(entities::getents()) modifyoctaent(MODOE_ADD, i);
+    vector<extentity *> &ents = entities::getents();
+    loopv(ents) modifyoctaent(MODOE_ADD, i);
 }
 
 extern bool havesel, selectcorners;

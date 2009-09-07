@@ -911,7 +911,8 @@ const vector<int> &checklightcache(int x, int y)
 	lce.lights.setsizenodelete(0);
 	int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
 	const vector<extentity *> &ents = entities::getents();
-	loopv(ents)
+    int numents = entities::lastent(ET_LIGHT);
+	loopi(numents)
 	{
 		extentity &light = *ents[i];
         switch(light.type)
@@ -1011,7 +1012,8 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
             }
         }
     }
-    loopv(ents)
+    int numents = max(entities::lastent(ET_LIGHT), entities::lastent(ET_SUNLIGHT));
+    loopi(numents)
     {
         extentity &light = *ents[i];
         switch(light.type)
