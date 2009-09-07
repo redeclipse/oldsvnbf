@@ -14,6 +14,7 @@ namespace entities
 	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	vector<extentity *> &getents() { return ents; }
+	 int lastent(int type) { return lastenttype[type]; }
 
 	int triggertime(extentity &e)
 	{
@@ -657,7 +658,7 @@ namespace entities
 
 	void runtriggers(int n, gameent *d)
 	{
-		loopv(ents) if(ents[i]->type == TRIGGER && ents[i]->attrs[0] == n && ents[i]->attrs[2] == TA_MANUAL) runtrigger(i, d, false);
+		loopi(lastenttype[TRIGGER]) if(ents[i]->type == TRIGGER && ents[i]->attrs[0] == n && ents[i]->attrs[2] == TA_MANUAL) runtrigger(i, d, false);
 	}
 	ICOMMAND(exectrigger, "i", (int *n), if(worldidents) runtriggers(*n, trigger ? trigger : game::player1));
 
@@ -1010,7 +1011,8 @@ namespace entities
 		if(ents.inrange(index) && maylink(ents[index]->type))
 		{
 			bool commit = false;
-			loopv(ents) if(ents[i]->links.find(index) >= 0)
+				int numents = max(lastenttype[MAPMODEL], max(lastenttype[LIGHTFX], max(lastenttype[PARTICLES], lastenttype[MAPSOUND])));
+			loopi(numents) if(ents[i]->links.find(index) >= 0)
 			{
 				if(ents.inrange(ignore) && ents[ignore]->links.find(index) >= 0) continue;
 				bool both = ents[index]->links.find(i) >= 0;
@@ -1082,9 +1084,9 @@ namespace entities
 				switch(k)
 				{
 					case 0: if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && !m_stf(game::gamemode))
-								loopv(ents) if(ents[i]->type == PLAYERSTART && ents[i]->attrs[0] == d->team) spawns.add(i);
-					case 1: if(spawns.empty()) loopv(ents) if(ents[i]->type == PLAYERSTART) spawns.add(i);
-					case 2: if(spawns.empty()) loopv(ents) if(ents[i]->type == WEAPON) spawns.add(i);
+								loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART && ents[i]->attrs[0] == d->team) spawns.add(i);
+					case 1: if(spawns.empty()) loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART) spawns.add(i);
+					case 2: if(spawns.empty()) loopi(lastenttype[WEAPON]) if(ents[i]->type == WEAPON) spawns.add(i);
 					default: break;
 				}
 				while(!spawns.empty())
@@ -2080,7 +2082,7 @@ namespace entities
 			if(ents.inrange(enthover) && islightable(ents[enthover]))
 				renderfocus(enthover, renderentlight(e));
 		}
-		loopv(ents) if(ents[i]->type == LIGHTFX && ents[i]->attrs[0] != LFX_SPOTLIGHT)
+		loopi(lastenttype[LIGHTFX]) if(ents[i]->type == LIGHTFX && ents[i]->attrs[0] != LFX_SPOTLIGHT)
 		{
 			if(ents[i]->spawned || ents[i]->lastemit)
 			{
@@ -2123,7 +2125,7 @@ namespace entities
 	{
 		entitycheck(game::player1);
 		loopv(game::players) if(game::players[i]) entitycheck(game::players[i]);
-		loopv(ents)
+		loopi(lastenttype[MAPSOUND])
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			if(e.type == MAPSOUND && e.links.empty() && mapsounds.inrange(e.attrs[0]) && !issound(e.schan))
@@ -2241,7 +2243,8 @@ namespace entities
 	{
 		float maxdist = float(maxparticledistance)*float(maxparticledistance);
 		int ignoretypes = m_edit(game::gamemode) ? NOTUSED : MAXENTTYPES;
-		loopv(ents)
+		  int numents = m_edit(game::gamemode) ? ents.length() : max(lastusetype[EU_ITEM], max(lastenttype[PARTICLES], lastenttype[TELEPORT]));
+		loopi(numents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			switch(e.type)
