@@ -502,13 +502,13 @@ namespace physics
 				{
 					if(game::allowmove(d) && d->action[AC_JUMP])
 					{
-						d->resetphys();
 						d->vel.z += jumpforce(d, true);
 						if(d->inliquid)
 						{
 							float scale = liquidmerge(d, 1.f, liquidspeed);
 							d->vel.x *= scale; d->vel.y *= scale;
 						}
+						d->resetphys();
 						d->action[AC_JUMP] = false;
 						playsound(S_JUMP, d->o, d); regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1.f, -10, 0, 10.f);
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
@@ -529,13 +529,13 @@ namespace physics
 								d->o = oldpos;
 								if(allowed)
 								{
-									vec rft = vec(dir).reflect(wall);
+									vec rft = vec(dir).reflect(wall).normalize();
 									float yaw = 0, pitch = 0; vectoyawpitch(rft, yaw, pitch);
 									float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 									if((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
 									{
-										float mag = impulseforce(d)+d->vel.magnitude();
-										d->vel = vec(rft).mul(mag); d->vel.z += mag;
+										float mag = (impulseforce(d)+d->vel.magnitude())/3;
+										d->vel = vec(rft).mul(mag); d->vel.z += mag*2;
 										d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
 										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
 										if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
@@ -548,9 +548,9 @@ namespace physics
 										vectoyawpitch(wall, yaw, pitch); if(off < 0) yaw += 90; else yaw -= 90;
 										while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-										vecfromyawpitch(d->aimyaw, 0, 1, 0, rft);
-										float mag = impulseforce(d)+d->vel.magnitude();
-										d->vel = vec(rft).normalize().mul(mag); d->vel.z += mag/4;
+										vecfromyawpitch(d->aimyaw, 0, 1, 0, rft); rft.normalize();
+										float mag = (impulseforce(d)+d->vel.magnitude())/3;
+										d->vel = vec(rft).mul(mag*2); d->vel.z += mag;
 										d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
 										d->turnmillis = PHYSMILLIS; d->turnyaw = off;
 										d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
@@ -571,9 +571,7 @@ namespace physics
 					else if(onwall) d->impulse[IM_TYPE] = 0;
 					if(allowed && !onwall && d->impulse[IM_TYPE] != IM_T_DASH && d->action[AC_JUMP])
 					{
-						vec dir; vecfromyawpitch(d->aimyaw, d->move || d->strafe ? d->aimpitch : 90.f, d->move ? d->move : 1, d->strafe, dir);
-						float mag = impulseforce(d)+d->vel.magnitude();
-						d->vel = vec(dir).normalize().mul(mag);
+						d->vel.z += impulseforce(d);
 						d->doimpulse(impulsecost, IM_T_DASH, lastmillis);
 						d->action[AC_JUMP] = false;
 						playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
