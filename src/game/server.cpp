@@ -1936,6 +1936,7 @@ namespace server
 			sendstring(smapname, p);
 		}
         if(!ci) putint(p, 0);
+#if 0
 		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, -1))
 		{
 			ci->wantsmap = true;
@@ -1949,6 +1950,7 @@ namespace server
 			}
 			else putint(p, 0);
 		}
+#endif
 		else
 		{
 			ci->wantsmap = false;
