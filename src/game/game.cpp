@@ -1840,7 +1840,7 @@ namespace game
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
         {
         	d->checktags();
-        	if(d->state == CS_ALIVE && ((d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)) || (d->ai && d->impulse[IM_TYPE] == IM_T_WALL && lastmillis-d->impulse[IM_TIME] <= impulserun)))
+        	if(d->state == CS_ALIVE && ((d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)) || (d->ai && d->impulse[IM_TYPE] == IM_T_SKATE && lastmillis-d->impulse[IM_TIME] <= impulserun)))
 				impulseeffect(d, false);
         }
 	}
@@ -1855,7 +1855,7 @@ namespace game
 		if(rendernormally && early)
 		{
 			player1->checktags();
-        	if(player1->state == CS_ALIVE && ((player1->action[AC_IMPULSE] && (player1->move || player1->strafe)) || (player1->impulse[IM_TYPE] == IM_T_WALL && lastmillis-player1->impulse[IM_TIME] <= impulserun)))
+        	if(player1->state == CS_ALIVE && ((player1->action[AC_IMPULSE] && (player1->move || player1->strafe)) || (player1->impulse[IM_TYPE] == IM_T_SKATE && lastmillis-player1->impulse[IM_TIME] <= impulserun)))
 				impulseeffect(player1, false);
 		}
     }

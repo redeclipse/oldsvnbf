@@ -754,7 +754,7 @@ namespace client
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) |
-				((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((((d->action[AC_IMPULSE] && (d->move || d->strafe)) || (d->impulse[IM_TYPE] == IM_T_WALL && lastmillis-d->impulse[IM_TIME] <= impulserun)) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
+				((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((((d->action[AC_IMPULSE] && (d->move || d->strafe)) || (d->impulse[IM_TYPE] == IM_T_SKATE && lastmillis-d->impulse[IM_TIME] <= impulserun)) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
 					((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
 			putuint(q, flags);
             if(flags&0x20)
