@@ -329,7 +329,7 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
+		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
 		vec ray = vec(proj.vel).normalize();
 		int maxsteps = 25;
 		float step = 4,
@@ -365,7 +365,7 @@ namespace projs
 				break;
 			}
 		}
-		if(proj.projtype == PRJ_SHOT) proj.height = proj.radius = 1.f;
+		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
