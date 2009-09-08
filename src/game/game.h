@@ -1100,6 +1100,11 @@ struct gameent : dynent, gamestate
 		impulse[IM_COUNT]++;
 		resetphys();
 	}
+
+	void dojumpreset()
+	{
+		timeinair = turnmillis = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
+	}
 };
 
 enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
