@@ -539,43 +539,40 @@ namespace physics
 							if(!collide(d, dir) || inside)
 							{
 								d->o = oldpos;
-								if(allowed || onwall)
+								float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
+								float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
+								if(allowed && ((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
 								{
-									float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
-									float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-									if(allowed && ((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
+									float mag = impulseforce(d)+d->vel.magnitude(); d->vel.reflect(wall).normalize();
+									if(onwall) { d->vel.add(wall).normalize().mul(mag/2); d->vel.z += mag/2; }
+									else { d->vel.mul(mag*3/4); d->vel.z += mag/4; }
+									vec rft; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
+									d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
+									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
+									if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
+									else d->action[AC_SPECIAL] = false;
+									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+								}
+								if(onwall || (allowed && d->action[AC_SPECIAL]))
+								{
+									if(off < 0) yaw += 90; else yaw -= 90; while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+									vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
+									if(!onwall)
 									{
-										float mag = impulseforce(d)+d->vel.magnitude(); d->vel.reflect(wall).normalize();
-										if(onwall) { d->vel.add(wall).normalize().mul(mag/2); d->vel.z += mag/2; }
-										else { d->vel.mul(mag*3/4); d->vel.z += mag/4; }
-										vec rft; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+										float mag = d->vel.magnitude(); d->vel.z = 0;
+										d->vel = vec(rft).mul(mag);
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-										d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
-										if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
-										else d->action[AC_SPECIAL] = false;
+										d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
+										d->turnmillis = PHYSMILLIS; d->turnyaw = off;
+										d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
+										d->action[AC_SPECIAL] = false;
 										playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 										client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 									}
-									if(onwall || (allowed && d->action[AC_SPECIAL]))
-									{
-										if(off < 0) yaw += 90; else yaw -= 90; while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-										vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
-										if(!onwall)
-										{
-											float mag = d->vel.magnitude(); d->vel.z = 0;
-											d->vel = vec(rft).mul(mag);
-											off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-											d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
-											d->turnmillis = PHYSMILLIS; d->turnyaw = off;
-											d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
-											d->action[AC_SPECIAL] = false;
-											playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-											client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
-										}
-										else if(d->move > 0) m = rft; // re-project and override
-										else m = vec(0, 0, 0);
-									}
+									else if(d->move > 0) m = rft; // re-project and override
+									else m = vec(0, 0, 0);
 								}
 								break;
 							}
