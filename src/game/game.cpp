@@ -606,7 +606,7 @@ namespace game
 			{
 				if(style&FRAG_REVENGE)
 				{
-					concatstring(d->obit, " a \fs\fzoyvengeful\fS");
+					concatstring(d->obit, " \fs\fzoyvengeful\fS");
 					part_text(az, "@\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 					part_text(dz, "@\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominated = false;
@@ -615,7 +615,7 @@ namespace game
 				}
 				else if(style&FRAG_DOMINATE)
 				{
-					concatstring(d->obit, " a \fs\fzoydominating\fS");
+					concatstring(d->obit, " \fs\fzoydominating\fS");
 					part_text(az, "@\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 					part_text(dz, "@\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominating = true;
@@ -691,7 +691,7 @@ namespace game
 			}
 			else if(style&FRAG_SPREE6)
 			{
-				concatstring(d->obit, " \fs\fzcgunstoppably\fS!");
+				concatstring(d->obit, " who seems \fs\fzcgunstoppable\fS!");
 				part_text(az, "@\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE6;
 				override = true;
