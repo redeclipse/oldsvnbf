@@ -276,7 +276,7 @@ void drawskybox(int farplane, bool limited)
 
 	if(clampsky) glDepthRange(1, 1);
 
-	bool blendsky = skybox[0] && sky[0] && sky[0]->bpp >= 4;
+	bool blendsky = !skybox[0] || !sky[0] || sky[0]->bpp >= 4;
 
 	if((!glaring || skybgglare) && blendsky)
 	{
