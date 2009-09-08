@@ -23,7 +23,7 @@ namespace physics
 	FVARP(floatcurb,        0, 1.f, 10000);
 
 	FVARP(impulseroll,      0, 10, 90);
-	FVARP(impulsereflect,   0, 55, 360);
+	FVARP(impulsereflect,   0, 110, 360);
 
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
@@ -468,6 +468,18 @@ namespace physics
 	void modifyvelocity(physent *pl, bool local, bool floating, int millis)
 	{
 		int onwall = 0;
+		vec m(0, 0, 0);
+        bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
+		if(wantsmove)
+		{
+			vecfromyawpitch(pl->aimyaw, floating || (pl->inliquid && (liquidcheck(pl) || pl->aimpitch < 0.f)) || movepitch(pl) ? pl->aimpitch : 0, pl->move, pl->strafe, m);
+            if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && pl->physstate >= PHYS_SLOPE)
+			{ // move up or down slopes in air but only move up slopes in liquid
+				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
+                m.z = liquidcheck(pl) ? max(m.z, dz) : dz;
+			}
+			m.normalize();
+		}
 		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
 		{
 			gameent *d = (gameent *)pl;
@@ -517,25 +529,27 @@ namespace physics
 				else if(game::allowmove(d))
 				{
 					bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
-					if(((onwall && d->vel.magnitude() > 1) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid)
+					if(((onwall && d->vel.magnitude() > 10) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid)
 					{
-						loopi(onwall ? 3 : 1)
+						loopi(onwall ? 4 : 1)
 						{
 							vec oldpos = d->o, dir;
-							vecfromyawpitch(d->aimyaw, 0, i > 1 ? 0 : (d->move ? d->move : 1), i != 1 ? onwall : 0, dir);
+							vecfromyawpitch(d->aimyaw, 0, i%2 ? -1 : 1, onwall && i > 1 ? onwall : 0, dir);
 							dir.normalize(); d->o.add(dir);
 							if(!collide(d, dir) || inside)
 							{
 								d->o = oldpos;
-								if(allowed)
+								if(allowed || onwall)
 								{
-									vec rft = vec(dir).reflect(wall).normalize();
-									float yaw = 0, pitch = 0; vectoyawpitch(rft, yaw, pitch);
+									float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
 									float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-									if((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
+									if((onwall && allowed && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
 									{
-										float mag = (impulseforce(d)+d->vel.magnitude())/3;
-										d->vel = vec(rft).mul(mag); d->vel.z += mag*2;
+										float mag = impulseforce(d)+d->vel.magnitude(); d->vel.reflect(wall).normalize();
+										if(onwall) { d->vel.add(wall).normalize().mul(mag/2); d->vel.z += mag/2; }
+										else { d->vel.mul(mag*3/4); d->vel.z += mag/4; }
+										vec rft; vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 										d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
 										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
 										if(onwall && d->action[AC_JUMP]) d->action[AC_JUMP] = false;
@@ -543,20 +557,24 @@ namespace physics
 										playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 										client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 									}
-									else if(!onwall)
+									if(onwall || d->action[AC_SPECIAL])
 									{
-										vectoyawpitch(wall, yaw, pitch); if(off < 0) yaw += 90; else yaw -= 90;
-										while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-										vecfromyawpitch(d->aimyaw, 0, 1, 0, rft); rft.normalize();
-										float mag = (impulseforce(d)+d->vel.magnitude())/3;
-										d->vel = vec(rft).mul(mag*2); d->vel.z += mag;
-										d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
-										d->turnmillis = PHYSMILLIS; d->turnyaw = off;
-										d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
-										d->action[AC_SPECIAL] = false;
-										playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-										client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+										if(off < 0) yaw += 90; else yaw -= 90; while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
+										vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
+										if(!onwall)
+										{
+											float mag = d->vel.magnitude(); d->vel.z = 0;
+											d->vel = vec(rft).mul(mag);
+											off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
+											d->doimpulse(impulsecost, IM_T_WALL, lastmillis);
+											d->turnmillis = PHYSMILLIS; d->turnyaw = off;
+											d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
+											d->action[AC_SPECIAL] = false;
+											playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+											client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+										}
+										else if(d->move || d->strafe) m = rft; // re-project and override
+										else m = vec(0, 0, 0);
 									}
 								}
 								break;
@@ -584,21 +602,6 @@ namespace physics
 		}
 		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 		else pl->timeinair = 0;
-
-		vec m(0, 0, 0);
-        bool wantsmove = game::allowmove(pl) && (pl->move || pl->strafe);
-		if(wantsmove)
-		{
-			int strafe = pl->strafe;
-			if(!strafe && onwall) strafe = onwall;
-			vecfromyawpitch(pl->aimyaw, floating || (pl->inliquid && (liquidcheck(pl) || pl->aimpitch < 0.f)) || movepitch(pl) ? pl->aimpitch : 0, pl->move, strafe, m);
-            if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && pl->physstate >= PHYS_SLOPE)
-			{ // move up or down slopes in air but only move up slopes in liquid
-				float dz = -(m.x*pl->floor.x + m.y*pl->floor.y)/pl->floor.z;
-                m.z = liquidcheck(pl) ? max(m.z, dz) : dz;
-			}
-			m.normalize();
-		}
 
 		vec d = vec(m).mul(movevelocity(pl));
         if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && !pl->inliquid)
