@@ -23,7 +23,7 @@ namespace physics
 	FVARP(floatcurb,        0, 1.f, 10000);
 
 	FVARP(impulseroll,      0, 10, 90);
-	FVARP(impulsereflect,   0, 110, 360);
+	FVARP(impulsereflect,   0, 120, 360);
 
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
@@ -543,7 +543,7 @@ namespace physics
 								{
 									float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
 									float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-									if((onwall && allowed && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect))
+									if(allowed && ((onwall && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
 									{
 										float mag = impulseforce(d)+d->vel.magnitude(); d->vel.reflect(wall).normalize();
 										if(onwall) { d->vel.add(wall).normalize().mul(mag/2); d->vel.z += mag/2; }
@@ -557,7 +557,7 @@ namespace physics
 										playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 										client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 									}
-									if(onwall || d->action[AC_SPECIAL])
+									if(onwall || (allowed && d->action[AC_SPECIAL]))
 									{
 										if(off < 0) yaw += 90; else yaw -= 90; while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
 										vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
