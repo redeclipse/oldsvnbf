@@ -573,7 +573,7 @@ namespace physics
 											playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 											client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 										}
-										else if(d->move || d->strafe) m = rft; // re-project and override
+										else if(d->move > 0) m = rft; // re-project and override
 										else m = vec(0, 0, 0);
 									}
 								}
