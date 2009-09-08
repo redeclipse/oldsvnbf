@@ -329,37 +329,43 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-
-		if(proj.radial && proj.projtype == PRJ_SHOT)
+		if(proj.projtype == PRJ_SHOT) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
+		vec ray = vec(proj.vel).normalize();
+		int maxsteps = 25;
+		float step = 4,
+			  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
+			  dist = 0;
+		loopi(maxsteps)
 		{
-			proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
-			vec ray = vec(proj.vel).normalize();
-			int maxsteps = 25;
-			float step = 4,
-				  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
-				  dist = 0;
-			loopi(maxsteps)
+			float olddist = dist;
+			if(dist < barrier && dist + step > barrier) dist = barrier;
+			else dist += step;
+			if(proj.projcollide&COLLIDE_TRACE)
 			{
-				float olddist = dist;
-				if(dist < barrier && dist + step > barrier) dist = barrier;
-				else dist += step;
-				if(proj.projcollide&COLLIDE_TRACE)
-				{
-					proj.o = vec(ray).mul(olddist).add(orig);
-					float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
-					proj.o.add(vec(ray).mul(dist - olddist));
-					if(cdist < 0 || dist >= barrier) break;
-				}
-				else
-				{
-					proj.o = vec(ray).mul(dist).add(orig);
-					if(collide(&proj) && !inside) break;
-				}
-				if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
-					break; // let it get caught post-init
+				proj.o = vec(ray).mul(olddist).add(orig);
+				float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
+				proj.o.add(vec(ray).mul(dist - olddist));
+				if(cdist < 0 || dist >= barrier) break;
 			}
-			proj.height = proj.radius = 1.f;
+			else
+			{
+				proj.o = vec(ray).mul(dist).add(orig);
+				if(collide(&proj) && !inside) break;
+			}
+			if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+			{
+				if(proj.projtype != PRJ_SHOT && (proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM)))
+				{
+					bounceeffect(proj);
+					reflect(proj, proj.norm);
+					proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
+					proj.movement = 0;
+					proj.lastbounce = lastmillis;
+				}
+				break;
+			}
 		}
+		if(proj.projtype == PRJ_SHOT) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
