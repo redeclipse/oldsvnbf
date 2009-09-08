@@ -701,7 +701,7 @@ namespace entities
 							{
 								int r = e.type == TELEPORT ? rnd(teleports.length()) : 0;
 								gameentity &f = *(gameentity *)ents[teleports[r]];
-								d->resetphys();
+								d->resetphys(); d->dojumpreset();
 								d->o = vec(f.o).add(vec(0, 0, d->height*0.5f));
 								d->yaw = f.attrs[0] < 0 ? (lastmillis/5)%360 : f.attrs[0];
 								d->pitch = f.attrs[1];
@@ -735,8 +735,7 @@ namespace entities
 					}
 					vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]).mul(mag);
 					if(d->ai) d->ai->becareful = true;
-					d->resetphys();
-					if(!d->timeinair) d->timeinair = 1;
+					d->resetphys(); d->dojumpreset(); d->timeinair = 1;
 					loopk(3)
 					{
 						if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
@@ -1545,7 +1544,7 @@ namespace entities
 				if(enttype[i].priority >= priority) { offsets[i] = offset; offset += numents[i]; }
 				else nextpriority = max(nextpriority, enttype[i].priority);
 			}
-		} while(nextpriority < priority); 
+		} while(nextpriority < priority);
 		idxs.setsizenodelete(0);
 		idxs.reserve(offset + numinvalid);
 		while(idxs.length() < offset + numinvalid) idxs.add(-1);
