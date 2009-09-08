@@ -529,7 +529,7 @@ namespace client
 		}
 		return;
 	}
-	ICOMMAND(regetmap, "", (), addmsg(SV_GETMAP, "r"));
+	ICOMMAND(getmap, "", (), addmsg(SV_GETMAP, "r"));
 
 	void stopdemo()
 	{
@@ -616,7 +616,7 @@ namespace client
 			else conoutf("\frfailed to open map file: %s", reqfext);
 		}
 	}
-	ICOMMAND(resendmap, "", (), sendmap());
+	ICOMMAND(sendmap, "", (), sendmap());
 
 	void gotoplayer(const char *arg)
 	{
@@ -1111,7 +1111,7 @@ namespace client
 							}
 							case 2:
 							{
-								conoutf("\fcseem to have failed to get map to %s, try /regetmap", hasmap ? text : "<temp>");
+								conoutf("\fcseem to have failed to get map to %s, try /getmap", hasmap ? text : "<temp>");
 								needsmap = false; // we failed sir
 								break;
 							}
@@ -1702,12 +1702,9 @@ namespace client
 					if(!needsmap && !gettingmap) sendmap();
 					else
 					{
-						if(!gettingmap)
-						{
-							conoutf("\frwe don't have the map though, so asking for it instead");
-							addmsg(SV_GETMAP, "r");
-						}
+						if(!gettingmap) conoutf("\frwe don't have the map though, so asking for it instead");
 						else conoutf("\frbut we're in the process of getting it!");
+							addmsg(SV_GETMAP, "r");
 					}
 					break;
 				}
