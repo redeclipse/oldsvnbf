@@ -23,7 +23,7 @@ namespace physics
 	FVARP(floatcurb,        0, 1.f, 10000);
 
 	FVARP(impulseroll,      0, 10, 90);
-	FVARP(impulsereflect,   0, 110, 360);
+	FVARP(impulsereflect,   0, 115, 360);
 
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
@@ -563,7 +563,7 @@ namespace physics
 								{
 									float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
 									d->vel = vec(onwall ? wall : vec(dir).reflect(wall)).add(vec(d->vel).normalize().reflect(wall)).normalize().mul(mag);
-									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += onwall ? mag : mag/4;
+									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += onwall ? mag : mag/2;
 									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 									d->doimpulse(impulsecost, IM_T_KICK, lastmillis); d->action[AC_SPECIAL] = false;
 									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
