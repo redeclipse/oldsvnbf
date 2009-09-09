@@ -1380,7 +1380,8 @@ namespace client
 					int lcn = getint(p), ent = getint(p), spawn = getint(p), weap = getint(p), drop = getint(p);
 					gameent *target = game::getclient(lcn);
 					if(!target) break;
-					entities::useeffects(target, ent, spawn, weap, drop);
+					if(entities::ents.inrange(ent) && enttype[entities::ents[ent]->type].usetype == EU_ITEM)
+						entities::useeffects(target, ent, spawn, weap, drop);
 					break;
 				}
 

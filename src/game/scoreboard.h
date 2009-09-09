@@ -64,7 +64,7 @@ namespace hud
 				if(interm)
 				{
 					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, NULL, "\fwchapter complete!");
-					else if(m_fight(game::gamemode))
+					else if(m_fight(game::gamemode) && !m_race(game::gamemode))
 					{
 						if(!groupplayers()) return;
 						scoregroup &sg = *groups[0];
@@ -494,7 +494,7 @@ namespace hud
 					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
 					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
 					if((i%3)==0) g.pushlist();
-					if(bgcol) g.background(bgcol);
+					if(bgcol) g.background(bgcol, 1);
 					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 						g.textf("%s (%d)", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false), o->clientnum);
 					else g.textf("%s", 0xFFFFFF, "conopen", game::colorname(o, NULL, "", false));
@@ -530,7 +530,7 @@ namespace hud
 
 		int drawinventory(int x, int y, int s, float blend)
 		{
-			if(!m_fight(game::gamemode)) return 0;
+			if(!m_fight(game::gamemode) || m_race(game::gamemode)) return 0;
 			int sy = 0, numgroups = groupplayers(), numout = 0;
 			loopi(2) loopk(numgroups)
 			{

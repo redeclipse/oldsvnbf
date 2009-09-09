@@ -38,25 +38,22 @@ namespace projs
 
 	void hitpush(gameent *d, projent &proj, int flags = 0, int radial = 0, float dist = 0)
 	{
-		if(m_play(game::gamemode))
+		vec dir, middle = d->o;
+		middle.z += (d->aboveeye-d->height)/2;
+		dir = middle==proj.o ? vec(0, 0, 1) : vec(middle).sub(proj.o).normalize();
+		float speed = proj.vel.magnitude();
+		if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
+		if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 		{
-			vec dir, middle = d->o;
-			middle.z += (d->aboveeye-d->height)/2;
-			dir = middle==proj.o ? vec(0, 0, 1) : vec(middle).sub(proj.o).normalize();
-			float speed = proj.vel.magnitude();
-			if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
-			if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
-			{
-				int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
-				if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir);
-			}
-			hitmsg &h = hits.add();
-			h.flags = flags;
-			h.target = d->clientnum;
-			h.id = lastmillis-game::maptime;
-			h.dist = int(dist*DMF);
-			h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
+			int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
+			if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir);
 		}
+		hitmsg &h = hits.add();
+		h.flags = flags;
+		h.target = d->clientnum;
+		h.id = lastmillis-game::maptime;
+		h.dist = int(dist*DMF);
+		h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
 	}
 
 	void hitproj(gameent *d, projent &proj)

@@ -170,10 +170,10 @@ enttypes enttype[] = {
 			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		CHECKPOINT,		1,  48,		16,		EU_NONE,	1,
-			inttobit(CHECKPOINT),
+		CHECKPOINT,		1,  48,		16,		EU_AUTO,	5,
 			0,
-			false,				"checkpoint",	{ "id",		"",			"",			"",			"",			"" }
+			0,
+			false,				"checkpoint",	{ "radius",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
 		CAMERA,			1,  48,		0,		EU_NONE,	3,
@@ -424,6 +424,7 @@ enum
 	G_DEATHMATCH,
 	G_STF,
 	G_CTF,
+	G_RACE,
 	G_MAX
 };
 
@@ -453,6 +454,7 @@ gametypes gametype[] = {
 	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"capture-the-flag" },
+	{ G_RACE,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_NONE,				"race" },
 }, mutstype[] = {
 	{ G_M_MULTI,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM|G_M_MULTI,		"multi" },
 	{ G_M_TEAM,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM,				"team" },
@@ -474,6 +476,7 @@ extern gametypes gametype[], mutstype[];
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
+#define m_race(a)			(a == G_RACE)
 
 #define m_play(a)			(a >= G_STORY)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
@@ -655,10 +658,10 @@ struct gamestate
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, aientity, ownernum, skill, points;
+	int aitype, aientity, ownernum, skill, points, checkpoint;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0) {}
+		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), checkpoint(-1) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -813,6 +816,7 @@ struct gamestate
 	void mapchange()
 	{
 		points = 0;
+		checkpoint = -1;
 	}
 
 	void respawn(int millis, int heal)

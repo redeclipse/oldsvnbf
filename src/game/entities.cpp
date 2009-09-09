@@ -36,17 +36,20 @@ namespace entities
 		}
 		switch(type)
 		{
-			case PLAYERSTART: case FLAG:
+			case PLAYERSTART: case FLAG: case CHECKPOINT:
 			{
-				if(valteam(attr[0], TEAM_FIRST))
+				if(type != CHECKPOINT)
 				{
-					defformatstring(str)("team %s", teamtype[attr[0]].name);
-					addentinfo(str);
-				}
-				else if(attr[0] < TEAM_MAX)
-				{
-					defformatstring(str)("%s", teamtype[attr[0]].name);
-					addentinfo(str);
+					if(valteam(attr[0], TEAM_FIRST))
+					{
+						defformatstring(str)("team %s", teamtype[attr[0]].name);
+						addentinfo(str);
+					}
+					else if(attr[0] < TEAM_MAX)
+					{
+						defformatstring(str)("%s", teamtype[attr[0]].name);
+						addentinfo(str);
+					}
 				}
 				if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
 				{
@@ -179,60 +182,57 @@ namespace entities
 
 	void useeffects(gameent *d, int n, bool s, int g, int r)
 	{
-		if(ents.inrange(n))
+		gameentity &e = *(gameentity *)ents[n];
+		vec pos = e.o;
+		loopv(projs::projs)
 		{
-			gameentity &e = *(gameentity *)ents[n];
-			vec pos = e.o;
-			loopv(projs::projs)
-			{
-				projent &proj = *projs::projs[i];
-				if(proj.projtype != PRJ_ENT || proj.id != n) continue;
-				pos = proj.o;
-				proj.beenused = true;
-				proj.state = CS_DEAD;
-			}
-			gameent *f = NULL;
-			loopi(game::numdynents()) if((f = (gameent *)game::iterdynents(i)) && f->type == ENT_PLAYER)
-			{
-				loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
-			}
-			int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0],
-				colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-			if(showentdescs)
-			{
-				const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
-				if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
-				else
-				{
-					const char *item = entities::entinfo(e.type, e.attrs, false);
-					if(item && *item)
-					{
-						defformatstring(ds)("@%s (%d)", item, e.type);
-						part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
-					}
-				}
-			}
-			if(isweap(g))
-			{
-				d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
-				d->ammo[g] = d->entid[g] = -1;
-				if(d->weapselect != g)
-				{
-					d->lastweap = d->weapselect;
-					d->weapselect = g;
-				}
-			}
-			d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
-			game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius, 5);
-			playsound(S_ITEMPICKUP, d->o, d);
-			if(ents.inrange(r) && ents[r]->type == WEAPON)
-			{
-				gameentity &f = *(gameentity *)ents[r];
-				attr = weapattr(f.attrs[0], sweap);
-				if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
-			}
-			e.spawned = s;
+			projent &proj = *projs::projs[i];
+			if(proj.projtype != PRJ_ENT || proj.id != n) continue;
+			pos = proj.o;
+			proj.beenused = true;
+			proj.state = CS_DEAD;
 		}
+		gameent *f = NULL;
+		loopi(game::numdynents()) if((f = (gameent *)game::iterdynents(i)) && f->type == ENT_PLAYER)
+		{
+			loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
+		}
+		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0],
+			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+		if(showentdescs)
+		{
+			const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
+			if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
+			else
+			{
+				const char *item = entities::entinfo(e.type, e.attrs, false);
+				if(item && *item)
+				{
+					defformatstring(ds)("@%s (%d)", item, e.type);
+					part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
+				}
+			}
+		}
+		if(isweap(g))
+		{
+			d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
+			d->ammo[g] = d->entid[g] = -1;
+			if(d->weapselect != g)
+			{
+				d->lastweap = d->weapselect;
+				d->weapselect = g;
+			}
+		}
+		d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
+		game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius, 5);
+		playsound(S_ITEMPICKUP, d->o, d);
+		if(ents.inrange(r) && ents[r]->type == WEAPON)
+		{
+			gameentity &f = *(gameentity *)ents[r];
+			attr = weapattr(f.attrs[0], sweap);
+			if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
+		}
+		e.spawned = s;
 	}
 
 	struct entcachenode
@@ -254,7 +254,8 @@ namespace entities
 		switch(e.type)
 		{
 			case WAYPOINT: return 0;
-			case TRIGGER: case TELEPORT: case PUSHER: if(e.attrs[3]) return e.attrs[3]; // fall through
+			case TRIGGER: case TELEPORT: case PUSHER: case CHECKPOINT:
+				if(e.attrs[e.type == CHECKPOINT ? 0 : 3]) return e.attrs[e.type == CHECKPOINT ? 0 : 3]; // fall through
 			default: return enttype[e.type].radius;
 		}
 	}
@@ -548,7 +549,7 @@ namespace entities
 			extentity &e = *ents[n]; \
 			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || (!m_noitems(game::gamemode, game::mutators) && e.spawned))) \
 			{ \
-				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attrs[3] ? e.attrs[3] : enttype[e.type].radius; \
+				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3] ? e.attrs[e.type == CHECKPOINT ? 0 : 3] : enttype[e.type].radius; \
 				if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
 				{ \
 					actitem &t = actitems.add(); \
@@ -640,7 +641,7 @@ namespace entities
 			{
 				case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
 				{ // wait for ack
-					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode)) break;
+					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode) && !m_race(game::gamemode) && !m_lobby(game::gamemode)) break;
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
 				}
@@ -749,6 +750,15 @@ namespace entities
 					if((e.attrs[2] == TA_ACTION && d->action[AC_USE] && d == game::player1) || e.attrs[2] == TA_AUTO) runtrigger(n, d);
 					break;
 				}
+				case CHECKPOINT:
+				{
+					if(!chkmode(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_race(game::gamemode)&& !m_lobby(game::gamemode))) break;
+					if(!ents.inrange(d->checkpoint) || n != d->checkpoint)
+					{
+						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
+						d->checkpoint = n;
+					}
+				}
 			} break;
 		}
 	}
@@ -795,7 +805,7 @@ namespace entities
 
 	void putitems(ucharbuf &p)
 	{
-		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == ACTOR || ents[i]->type == TRIGGER)
+		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == CHECKPOINT || ents[i]->type == ACTOR || ents[i]->type == TRIGGER)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			putint(p, i);
@@ -948,6 +958,7 @@ namespace entities
 			case PLAYERSTART:
 				while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
 				while(e.attrs[0] >= TEAM_MAX) e.attrs[0] -= TEAM_MAX;
+			case CHECKPOINT:
 				while(e.attrs[1] < 0) e.attrs[1] += 360;
 				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
 				while(e.attrs[2] < -90) e.attrs[2] += 180;
@@ -1071,7 +1082,7 @@ namespace entities
 			switch(ents[ent]->type)
 			{
 				case ACTOR: if(d->type == ENT_PLAYER) break;
-				case PLAYERSTART: if(tryspawn(d, ents[ent]->o, ents[ent]->attrs[1], ents[ent]->attrs[2])) return;
+				case PLAYERSTART: case CHECKPOINT: if(tryspawn(d, ents[ent]->o, ents[ent]->attrs[1], ents[ent]->attrs[2])) return;
 				default: if(tryspawn(d, ents[ent]->o, rnd(360), 0)) return;
 			}
 		}
@@ -1102,7 +1113,7 @@ namespace entities
 			d->o.x *= 0.5f; d->o.y *= 0.5f;
 			if(physics::entinmap(d, true)) return;
 		}
-		if(!m_edit(game::gamemode) && m_play(game::gamemode) && suicide) game::suicide(d, HIT_SPAWN);
+		if(!m_edit(game::gamemode) && suicide) game::suicide(d, HIT_SPAWN);
 	}
 
 	void editent(int i)
@@ -1930,7 +1941,7 @@ namespace entities
 			{
 				case PLAYERSTART:
 				{
-					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.attrs[0]].colour);
+					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
 					break;
 				}
 				case MAPSOUND:
@@ -1978,8 +1989,8 @@ namespace entities
 				default:
 				{
 					float radius = (float)enttype[e.type].radius;
-					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER) && e.attrs[3])
-						radius = (float)e.attrs[3];
+					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3])
+						radius = (float)e.attrs[e.type == CHECKPOINT ? 0 : 3];
 					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius), 1, 1, 0x00FFFF);
 					if(e.type == PUSHER && e.attrs[4] && e.attrs[4] < e.attrs[3])
 						part_radius(e.o, vec(e.attrs[4], e.attrs[4], e.attrs[4]), 1, 1, 0x00FFFF);
@@ -1990,9 +2001,9 @@ namespace entities
 
 		switch(e.type)
 		{
-			case PLAYERSTART:
+			case PLAYERSTART: case CHECKPOINT:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.attrs[0]].colour);
+				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
 				break;
 			}
 			case MAPMODEL:

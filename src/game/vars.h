@@ -9,6 +9,7 @@ SVARG(mainmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar eight 
 SVARG(ctfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower warehouse warground venus");
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge wet");
 SVARG(stfmaps, "bath bloodgrounds chaos citadel deadsimple deli dualstar enigma forge gladiator hollow longestyard nova panic refuge rivals smouldering tower tranquility warehouse warground venus");
+SVARG(racemaps, "projumps");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
