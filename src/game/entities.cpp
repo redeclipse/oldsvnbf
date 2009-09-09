@@ -1999,7 +1999,7 @@ namespace entities
 			}
 		}
 
-		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, fade, 0x000000); pos.z += 0.1f; part_dir(pos, yaw, pitch, size, fade, colour); }
+		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, fade, 0x000000); }
 		switch(e.type)
 		{
 			case PLAYERSTART: case CHECKPOINT:
