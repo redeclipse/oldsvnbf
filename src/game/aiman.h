@@ -202,7 +202,7 @@ namespace aiman
 		}
 		int balance = 0;
 		if(m_story(gamemode)) balance = nplayers;
-		else if(m_fight(gamemode))
+		else if(m_fight(gamemode) && !m_race(gamemode))
 		{
 			balance = int(nplayers*GVAR(botscale));
 			if(m_team(gamemode, mutators) && GVAR(teambalance))

@@ -27,59 +27,46 @@ namespace server
     struct gameevent
     {
         virtual ~gameevent() {}
-
         virtual bool flush(clientinfo *ci, int fmillis);
         virtual void process(clientinfo *ci) {}
-
         virtual bool keepable() const { return false; }
     };
 
     struct timedevent : gameevent
     {
         int millis;
-
         bool flush(clientinfo *ci, int fmillis);
     };
 
 	struct shotevent : timedevent
 	{
-        int id;
-		int weap, flags, power, num;
+        int id, weap, flags, power, num;
 		ivec from;
 		vector<ivec> shots;
-
         void process(clientinfo *ci);
 	};
 
 	struct switchevent : timedevent
 	{
-		int id;
-		int weap;
-
+		int id, weap;
         void process(clientinfo *ci);
 	};
 
 	struct dropevent : timedevent
 	{
-		int id;
-		int weap;
-
+		int id, weap;
         void process(clientinfo *ci);
 	};
 
 	struct reloadevent : timedevent
 	{
-		int id;
-		int weap;
-
+		int id, weap;
         void process(clientinfo *ci);
 	};
 
 	struct hitset
 	{
-		int flags;
-		int target;
-		int id;
+		int flags, target, id;
 		union
 		{
 			int rays;
@@ -90,43 +77,33 @@ namespace server
 
 	struct destroyevent : timedevent
 	{
-        int id;
-		int weap, flags, radial;
+        int id, weap, flags, radial;
 		vector<hitset> hits;
-
         bool keepable() const { return true; }
-
         void process(clientinfo *ci);
 	};
 
 	struct suicideevent : gameevent
 	{
 		int flags;
-
         void process(clientinfo *ci);
 	};
 
 	struct useevent : timedevent
 	{
-		int id;
-		int ent;
-
+		int id, ent;
         void process(clientinfo *ci);
 	};
 
     struct projectilestate
     {
         vector<int> projs;
-
         projectilestate() { reset(); }
-
         void reset() { projs.setsize(0); }
-
         void add(int val)
         {
 			projs.add(val);
         }
-
         bool remove(int val)
         {
             loopv(projs) if(projs[i]==val)
@@ -136,7 +113,6 @@ namespace server
             }
             return false;
         }
-
         bool find(int val)
         {
             loopv(projs) if(projs[i]==val) return true;
@@ -605,6 +581,7 @@ namespace server
 			if(m_story(gamemode)) maplist = GVAR(storymaps);
 			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+			else if(m_race(gamemode)) maplist = GVAR(racemaps);
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), p = -1, c = -1;
@@ -734,8 +711,7 @@ namespace server
 		switch(sents[i].type)
 		{
 			case WEAPON:
-				if(sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) return false;
-				if(!chkmode(sents[i].attrs[2], gamemode)) return false;
+				if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !chkmode(sents[i].attrs[2], gamemode)) return false;
 				if(m_arena(gamemode, mutators) && sents[i].attrs[0] != WEAP_GRENADE) return false;
 				break;
 			default: break;
@@ -911,23 +887,30 @@ namespace server
 	int pickspawn(clientinfo *ci)
 	{
 		if(ci->state.aitype >= AI_START) return ci->state.aientity;
-		else if(totalspawns && GVAR(spawnrotate))
+		else
 		{
-			int team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
-			if(!spawns[team].ents.empty())
+			if(m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode))
 			{
-				switch(GVAR(spawnrotate))
+				if(sents.inrange(ci->state.checkpoint)) return ci->state.checkpoint;
+			}
+			if(totalspawns && GVAR(spawnrotate))
+			{
+				int team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+				if(!spawns[team].ents.empty())
 				{
-					case 1: default: spawns[team].spawncycle++; break;
-					case 2:
+					switch(GVAR(spawnrotate))
 					{
-						int r = rnd(spawns[team].ents.length());
-						spawns[team].spawncycle = r != spawns[team].spawncycle ? r : r + 1;
-						break;
+						case 1: default: spawns[team].spawncycle++; break;
+						case 2:
+						{
+							int r = rnd(spawns[team].ents.length());
+							spawns[team].spawncycle = r != spawns[team].spawncycle ? r : r + 1;
+							break;
+						}
 					}
+					if(spawns[team].spawncycle >= spawns[team].ents.length()) spawns[team].spawncycle = 0;
+					return spawns[team].ents[spawns[team].spawncycle];
 				}
-				if(spawns[team].spawncycle >= spawns[team].ents.length()) spawns[team].spawncycle = 0;
-				return spawns[team].ents[spawns[team].spawncycle];
 			}
 		}
 		return -1;
@@ -943,7 +926,7 @@ namespace server
 		}
 		setuptriggers(true);
 		setupitems(true);
-		setupspawns(true, m_story(gamemode) ? GVAR(storyplayers) : np);
+		setupspawns(true, m_race(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
 		hasgameinfo = aiman::dorefresh = true;
 	}
 
@@ -1301,6 +1284,7 @@ namespace server
 				if(m_story(gamemode)) maplist = GVAR(storymaps);
 				else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 				else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+				else if(m_race(gamemode)) maplist = GVAR(racemaps);
 				if(maplist && *maplist)
 				{
 					int n = listlen(maplist);
@@ -2242,7 +2226,7 @@ namespace server
 		{
 			if(gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].find(id) < 0) return;
 			if(hits.empty()) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].remove(id);
-			else if(m_play(gamemode))
+			else
 			{
 				loopv(hits)
 				{
@@ -2398,7 +2382,7 @@ namespace server
 	void useevent::process(clientinfo *ci)
 	{
 		servstate &gs = ci->state;
-		if(gs.state != CS_ALIVE || m_noitems(gamemode, mutators) || !sents.inrange(ent))
+		if(gs.state != CS_ALIVE || !sents.inrange(ent) || enttype[sents[ent].type].usetype != EU_ITEM || m_noitems(gamemode, mutators))
 		{
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
 			return;
@@ -3270,46 +3254,57 @@ namespace server
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(sents.inrange(ent) && sents[ent].type == TRIGGER && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]))
+					if(sents.inrange(ent))
 					{
-						bool commit = false, kin = false;
-						switch(sents[ent].attrs[1])
+						if(sents[ent].type == CHECKPOINT)
 						{
-							case TR_TOGGLE:
-							{
-								if(!sents[ent].spawned || sents[ent].attrs[2] != TA_AUTO)
-								{
-									sents[ent].millis = gamemillis+(triggertime(ent)*2);
-									sents[ent].spawned = !sents[ent].spawned;
-									commit = kin = true;
-								}
-								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
-								break;
-							}
-							case TR_ONCE: if(sents[ent].spawned) break;
-							case TR_LINK:
-							{
-								sents[ent].millis = gamemillis+(triggertime(ent)*2); kin = true;
-								if(!sents[ent].spawned)
-								{
-									sents[ent].spawned = true;
-									commit = true;
-								}
-								//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
-								break;
-							}
-							case TR_EXIT:
-							{
-								if(sents[ent].spawned || !m_story(gamemode)) break;
-								sents[ent].spawned = true;
-								startintermission();
-							}
+							if((sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
+								cp->state.checkpoint = ent;
 						}
-						if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
-						if(kin) loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))
+						else if(sents[ent].type == TRIGGER)
 						{
-							sents[sents[ent].kin[j]].spawned = sents[ent].spawned;
-							sents[sents[ent].kin[j]].millis = sents[ent].millis;
+							bool commit = false, kin = false;
+							if(sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) switch(sents[ent].attrs[1])
+							{
+								case TR_TOGGLE:
+								{
+									if(!sents[ent].spawned || sents[ent].attrs[2] != TA_AUTO)
+									{
+										sents[ent].millis = gamemillis+(triggertime(ent)*2);
+										sents[ent].spawned = !sents[ent].spawned;
+										commit = kin = true;
+									}
+									//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+									break;
+								}
+								case TR_ONCE: if(sents[ent].spawned) break;
+								case TR_LINK:
+								{
+									sents[ent].millis = gamemillis+(triggertime(ent)*2); kin = true;
+									if(!sents[ent].spawned)
+									{
+										sents[ent].spawned = true;
+										commit = true;
+									}
+									//else sendf(cp->clientnum, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+									break;
+								}
+								case TR_EXIT:
+								{
+									if(sents[ent].spawned) break;
+									if(m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode))
+									{
+										sents[ent].spawned = true;
+										startintermission();
+									}
+								}
+							}
+							if(commit) sendf(-1, 1, "ri3", SV_TRIGGER, ent, sents[ent].spawned ? 1 : 0);
+							if(kin) loopvj(sents[ent].kin) if(sents.inrange(sents[ent].kin[j]))
+							{
+								sents[sents[ent].kin[j]].spawned = sents[ent].spawned;
+								sents[sents[ent].kin[j]].millis = sents[ent].millis;
+							}
 						}
 					}
 					else if(GVAR(serverdebug)) srvmsgf(cp->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
@@ -3389,7 +3384,7 @@ namespace server
 					while((n = getint(p)) != -1)
 					{
 						int type = getint(p), numattr = getint(p), numkin = getint(p);
-						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == ACTOR || type == TRIGGER))
+						if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == CHECKPOINT || type == ACTOR || type == TRIGGER))
 						{
 							while(sents.length() <= n) sents.add();
 							sents[n].reset();
