@@ -552,7 +552,7 @@ namespace physics
 						loopi(onwall ? 4 : 2)
 						{
 							vec oldpos = d->o, dir;
-							vecfromyawpitch(d->aimyaw, 0, i%2 ? -1 : 1, onwall && i > 1 ? onwall : 0, dir);
+							vecfromyawpitch(d->aimyaw, 0, i%2 ? -1 : 1, onwall && i > 1 ? onwall : d->strafe, dir);
 							dir.normalize(); d->o.add(dir);
 							if((!collide(d, dir) || inside) && !wall.iszero())
 							{
