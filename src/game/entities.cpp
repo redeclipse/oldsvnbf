@@ -1953,7 +1953,7 @@ namespace entities
 				case LIGHT:
 				{
 					int s = e.attrs[0] ? e.attrs[0] : hdr.worldsize,
-						colour = (e.attrs[1]<<16)|(e.attrs[2]<<8)|e.attrs[3];
+						colour = ((e.attrs[1]/2)<<16)|((e.attrs[2]/2)<<8)|(e.attrs[3]/2);
 					part_radius(e.o, vec(s, s, s), 1, 1, colour);
 					break;
 				}
@@ -1966,7 +1966,7 @@ namespace entities
 						if(!radius) radius = 2*e.o.dist(f.o);
 						vec dir = vec(e.o).sub(f.o).normalize();
 						float angle = max(1, min(90, int(e.attrs[1])));
-						int colour = (f.attrs[1]<<16)|(f.attrs[2]<<8)|f.attrs[3];
+						int colour = ((f.attrs[1]/2)<<16)|((f.attrs[2]/2)<<8)|(f.attrs[3]/2);
 						part_cone(f.o, dir, radius, angle, 1, colour);
 						break;
 					}
@@ -1999,23 +1999,24 @@ namespace entities
 			}
 		}
 
+		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, fade, 0x000000); pos.z += 0.1f; part_dir(pos, yaw, pitch, size, fade, colour); }
 		switch(e.type)
 		{
 			case PLAYERSTART: case CHECKPOINT:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
+				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour); }
 				break;
 			}
 			case MAPMODEL:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF);
+				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF); }
 				break;
 			}
 			case SUNLIGHT:
 			{
 				if(showentdir >= level)
 				{
-					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2/3), offset = e.attrs[5] ? e.attrs[5] : 10;
+					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10;
 					loopk(9)
 					{
 						int yaw = e.attrs[0], pitch = e.attrs[1];
@@ -2033,14 +2034,14 @@ namespace entities
 						}
 						while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
 						while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
-						part_dir(e.o, yaw, pitch, getworldsize()*2, 1, colour);
+						entdirpart(e.o, yaw, pitch, getworldsize()*2, 1, colour);
 					}
 				}
 				break;
 			}
 			case ACTOR:
 			{
-				if(showentdir >= level) part_dir(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0xAAAAAA);
+				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0xAAAAAA); }
 				break;
 			}
 			case TELEPORT:
@@ -2048,8 +2049,8 @@ namespace entities
 			{
 				if(showentdir >= level)
 				{
-					if(e.attrs[0] < 0) part_dir(e.o, (lastmillis/5)%360, e.attrs[1], 4.f, 1, 0x00FFFF);
-					else part_dir(e.o, e.attrs[0], e.attrs[1], 8.f, 1, 0x00FFFF);
+					if(e.attrs[0] < 0) { entdirpart(e.o, (lastmillis/5)%360, e.attrs[1], 4.f, 1, 0x00FFFF); }
+					else { entdirpart(e.o, e.attrs[0], e.attrs[1], 8.f, 1, 0x00FFFF); }
 				}
 				break;
 			}
@@ -2061,7 +2062,7 @@ namespace entities
 					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
 					vectoyawpitch(dir.normalize(), yaw, pitch);
-					part_dir(e.o, yaw, pitch, 4.f+mag, 1, 0x00FFFF);
+					entdirpart(e.o, yaw, pitch, 4.f+mag, 1, 0x00FFFF);
 				}
 				break;
 			}
