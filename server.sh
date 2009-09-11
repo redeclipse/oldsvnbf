@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # BF_DIR should refer to the directory in which Blood Frontier is placed.
 #BF_DIR=~/bloodfrontier
 #BF_DIR=/usr/local/bloodfrontier
@@ -11,17 +11,19 @@ if [ -e "bin/bfserver" ]; then
 	exec bin/bfserver ${BF_OPTIONS} "$@"
 else
 	if [ -e "${BF_DIR}/bin/bfserver" ]; then
-		pushd ${BF_DIR}
+		BF_CWD=`pwd`
+		cd ${BF_DIR}
 		exec bin/bfserver ${BF_OPTIONS} "$@"
-		popd
+		cd ${BF_CWD}
 	else
 		echo "Your platform does not have a pre-compiled Blood Frontier server."
 		echo -n "Would you like to build one now? [Yn] "
 		read CC
 		if [ "${CC}" != "n" ]; then
-			pushd src
+			BF_CWD=`pwd`
+			cd src
 			make clean install
-			popd
+			cd ${BF_CWD}
 			echo "Build complete, please try running the script again."
 		else
 			echo "Please follow the following steps to build:"
