@@ -14,6 +14,8 @@ namespace game
 	ICOMMANDG(resetvars, "", (), return); // server side
 
 	VARW(numplayers, 0, 0, MAXCLIENTS);
+	SVARW(obitwater, "");
+	SVARW(obitdeath, "");
 	SVARW(mapmusic, "");
 
 	VARP(mouseinvert, 0, 0, 1);
@@ -513,8 +515,9 @@ namespace game
 		if(d == actor)
         {
         	if(d->aitype == AI_TURRET) concatstring(d->obit, "was destroyed");
+        	else if(flags&HIT_DEATH) concatstring(d->obit, *obitdeath ? obitdeath : "died");
+        	else if(flags&HIT_WATER) concatstring(d->obit, *obitwater ? obitwater : "died");
         	else if(flags&HIT_MELT) concatstring(d->obit, "melted");
-			else if(flags&HIT_FALL) concatstring(d->obit, "thought they could fly");
 			else if(flags&HIT_SPAWN) concatstring(d->obit, "tried to spawn inside solid matter");
 			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
         	else if(flags && isweap(weap))

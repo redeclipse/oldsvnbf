@@ -382,15 +382,16 @@ enum
 	HIT_EXPLODE	= 1<<6,
 	HIT_BURN	= 1<<7,
 	HIT_MELT	= 1<<8,
-	HIT_FALL	= 1<<9,
-	HIT_WAVE	= 1<<10,
-	HIT_SPAWN	= 1<<11,
-	HIT_LOST	= 1<<12,
-	HIT_KILL	= 1<<13,
+	HIT_DEATH	= 1<<9,
+	HIT_WATER	= 1<<10,
+	HIT_WAVE	= 1<<11,
+	HIT_SPAWN	= 1<<12,
+	HIT_LOST	= 1<<13,
+	HIT_KILL	= 1<<14,
 	HIT_SFLAGS	= HIT_KILL,
 };
 
-#define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_FALL)
+#define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
 
 enum
 {
