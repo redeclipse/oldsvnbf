@@ -11,19 +11,15 @@ if [ -e "bin/bfserver" ]; then
 	exec bin/bfserver ${BF_OPTIONS} "$@"
 else
 	if [ -e "${BF_DIR}/bin/bfserver" ]; then
-		BF_CWD=`pwd`
 		cd ${BF_DIR}
 		exec bin/bfserver ${BF_OPTIONS} "$@"
-		cd ${BF_CWD}
 	else
 		echo "Your platform does not have a pre-compiled Blood Frontier server."
 		echo -n "Would you like to build one now? [Yn] "
 		read CC
 		if [ "${CC}" != "n" ]; then
-			BF_CWD=`pwd`
 			cd src
 			make clean install
-			cd ${BF_CWD}
 			echo "Build complete, please try running the script again."
 		else
 			echo "Please follow the following steps to build:"
