@@ -542,7 +542,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 		p += strcspn(p, ";\n\0");
 		cont = *p++!=0;						 // more statements if this isn't the end of the string
 		char *c = w[0];
-		if(!*c) continue;						// empty statement
+		if(!c || !*c) continue;						// empty statement
 
 		DELETEA(retval);
 
