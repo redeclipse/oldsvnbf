@@ -320,7 +320,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d) && !((gameent *)d)->turnside)
+		if(d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d) && ((d->type != ENT_PLAYER && d->type != ENT_AI) || !((gameent *)d)->turnside))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -543,7 +543,7 @@ namespace physics
 						playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 					}
-					if(((d->turnside && d->vel.magnitude() > 10) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
+					if(((d->turnside && d->vel.magnitude() > 5) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
 					{
 						loopi(d->turnside ? 4 : 2)
 						{
@@ -580,7 +580,7 @@ namespace physics
 										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
 									else if(d->move < 0) d->impulse[IM_TYPE] = 0; // cancel
-									else if(!d->strafe) m = rft; // re-project and override
+									else m = rft; // re-project and override
 								}
 								break;
 							}
@@ -753,7 +753,7 @@ namespace physics
 					}
 					else
 					{
-						d->turnmillis = d->turnside = 0;
+						d->turnmillis = 0;
 						if(d->roll != 0 && !d->turnside) adjustscaled(float, d->roll, PHYSMILLIS);
 					}
 				}
