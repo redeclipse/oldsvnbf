@@ -433,9 +433,9 @@ namespace projs
 		{
 			int ends = lastmillis+(d->weapwait[weap]*2);
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-			else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+			else playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else if(!weaptype[weap].time || life) playsound(weaptype[weap].sound, d->o, d);
+		else if(!weaptype[weap].time || life) playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d);
 
 		switch(weap)
 		{
