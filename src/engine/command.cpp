@@ -588,8 +588,9 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
 					char *cargs = NULL;
+                    const char *clast = "";
 					if(id->type==ID_CCOMMAND) v[n++] = id->self;
-					for(const char *a = id->narg; *a; a++, n++) switch((clast = *a))
+					for(const char *a = id->narg; *a; clast = a, a++, n++) switch(*a)
 					{
                         case 's': v[n] = ++wn < numargs ? w[wn] : (char *)""; break;
                         case 'i': nstor[n].i = ++wn < numargs ? parseint(w[wn]) : 0;  v[n] = &nstor[n].i; break;
@@ -602,7 +603,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						default: fatal("builtin declared with illegal type");
 					}
 					char *exargs = NULL;
-					if(clast == 's' && wn < numargs-1) { exargs = conc(w+wn, numargs-wn, true); v[n-1] = exargs; }
+					if(*clast == 's' && wn < numargs-1) { exargs = conc(w+wn, numargs-wn, true); v[n-1] = exargs; }
 					switch(n)
 					{
 						case 0: ((void (__cdecl *)())id->fun)(); break;
