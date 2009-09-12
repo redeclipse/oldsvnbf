@@ -587,13 +587,13 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						float f;
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
-					char *cargs = NULL, clast = 0;
+					char *cargs = NULL;
 					if(id->type==ID_CCOMMAND) v[n++] = id->self;
 					for(const char *a = id->narg; *a; a++, n++) switch((clast = *a))
 					{
-                        case 's': v[n] = ++wn < numargs ? w[wn] : "";; break;
+                        case 's': v[n] = ++wn < numargs ? w[wn] : (char *)""; break;
                         case 'i': nstor[n].i = ++wn < numargs ? parseint(w[wn]) : 0;  v[n] = &nstor[n].i; break;
-                        case 'f': nstor[n].f = ++wn < numargs ? atof(w[++wn]) : 0.0f; v[n] = &nstor[n].f; break;
+                        case 'f': nstor[n].f = ++wn < numargs ? atof(w[wn]) : 0.0f; v[n] = &nstor[n].f; break;
 #ifndef STANDALONE
                         case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; break;
 #endif
