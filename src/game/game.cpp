@@ -479,7 +479,7 @@ namespace game
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 			else if(d->health <= 0) force *= deadpushscale;
 			else force *= hitpushscale;
-			vec push = dir; push.z += 0.25f; push.mul(m_speedscale(force));
+			vec push = dir; push.z += 0.125f; push.mul(m_speedscale(force));
 			d->vel.add(push);
 		}
 	}

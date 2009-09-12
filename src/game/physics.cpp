@@ -514,7 +514,7 @@ namespace physics
 					if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 				}
 				bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
-				onwall = d->impulse[IM_TYPE] == IM_T_SKATE && lastmillis-d->impulse[IM_TIME] <= impulserun ? (d->turnroll > 0 ? 1 : -1) : 0;
+				onwall = d->impulse[IM_TYPE] == IM_T_SKATE && lastmillis-d->impulse[IM_TIME] <= impulserun ? d->turnside : 0;
 				if(d->action[AC_DASH] && !d->action[AC_JUMP] && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && allowed && (d->move || d->strafe))
 				{
 					float mag = impulseforce(d)*(!d->action[AC_IMPULSE] && (!d->move || !d->strafe) ? 1.5f : 0.75f)+max(d->vel.magnitude(), 1.f);
@@ -566,7 +566,8 @@ namespace physics
 									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += onwall ? mag : mag/2;
 									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 									d->doimpulse(impulsecost, IM_T_KICK, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-									d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = 0;
+									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(i%2 ? -1 : 1);
+									d->turnyaw = off; d->turnroll = 0;
 									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 								}
@@ -579,7 +580,8 @@ namespace physics
 										float mag = max(d->vel.magnitude(), 1.f); d->vel.z = 0; d->vel = vec(rft).mul(mag);
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 										d->doimpulse(impulsecost, IM_T_SKATE, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-										d->turnmillis = PHYSMILLIS; d->turnyaw = off; d->turnroll = (off < 0 ? -impulseroll : impulseroll)-d->roll;
+										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(i%2 ? -1 : 1);
+										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
 									else if(d->move < 0) d->impulse[IM_TYPE] = 0; // cancel
 									else if(!d->strafe) m = rft; // re-project and override
