@@ -587,7 +587,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						float f;
 					} nstor[MAXWORDS];
 					int n = 0, wn = 0;
-					char *cargs = NULL;
+					char *cargs = NULL, *dargs = NULL;
                     const char *clast = "";
 					if(id->type==ID_CCOMMAND) v[n++] = id->self;
 					for(const char *a = id->narg; *a; clast = a, a++, n++) switch(*a)
@@ -596,7 +596,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
                         case 'i': nstor[n].i = ++wn < numargs ? parseint(w[wn]) : 0;  v[n] = &nstor[n].i; break;
                         case 'f': nstor[n].f = ++wn < numargs ? atof(w[wn]) : 0.0f; v[n] = &nstor[n].f; break;
 #ifndef STANDALONE
-                        case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; break;
+                        case 'D': nstor[n].i = addreleaseaction(dargs = conc(w, numargs, true)) ? 1 : 0; v[n] = &nstor[n].i; break;
 #endif
                         case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; break;
                         case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n] = cargs; break;
@@ -618,6 +618,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						default: fatal("builtin declared with too many args (use V?)");
 					}
 					if(cargs) delete[] cargs;
+					if(dargs) delete[] dargs;
 					if(exargs) delete[] exargs;
 					setretval(commandret);
 					commandret = NULL;
