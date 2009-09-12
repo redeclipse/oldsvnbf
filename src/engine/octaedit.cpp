@@ -1869,7 +1869,7 @@ struct texturegui : guicb
 						}
 						{
 							defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
-							char *w = g.field(input, 0xFFFFFF, j ? -126 : -100, 0, slot.sts[j].lname, EDITORFOREVER);
+							char *w = g.field(input, 0xFFFFFF, j ? -126 : -96, 0, slot.sts[j].lname, EDITORFOREVER);
 							if(w && *w)
 							{
 								copystring(slot.sts[j].lname, w);
@@ -1891,13 +1891,13 @@ struct texturegui : guicb
 							{
 								defformatstring(index)("%d", slot.xoffset);
 								defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
-								char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
+								char *w = g.field(input, 0xFFFFFF, -6, 0, index, EDITORFOREVER);
 								if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
 							}
 							{
 								defformatstring(index)("%d", slot.yoffset);
 								defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
-								char *w = g.field(input, 0xFFFFFF, -4, 0, index, EDITORFOREVER);
+								char *w = g.field(input, 0xFFFFFF, -6, 0, index, EDITORFOREVER);
 								if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
 							}
 							{

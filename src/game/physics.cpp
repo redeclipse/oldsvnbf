@@ -19,7 +19,7 @@ namespace physics
 	FVARW(stepspeed,		1e-3f, 1.f, 10000);
 	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
 
-	FVARP(floatspeed,		1e-3f, 80.f, 10000);
+	FVARP(floatspeed,		1e-3f, 75, 10000);
 	FVARP(floatcurb,        0, 1.f, 10000);
 
 	FVARP(impulseroll,      0, 10, 90);
@@ -733,29 +733,37 @@ namespace physics
 				playsound(S_LAND, pl->o, pl);
 		}
 
-        if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->state == CS_ALIVE)
+        if(pl->type == ENT_PLAYER || pl->type == ENT_AI)
         {
-			updatedynentcache(pl);
+			if(pl->state == CS_ALIVE) updatedynentcache(pl);
 			if(local)
 			{
 				gameent *d = (gameent *)pl;
-				if(d->o.z < 0)
+				if(d->state == CS_ALIVE)
 				{
-					game::suicide(d, HIT_DEATH|HIT_FULL);
-					return false;
-				}
-				if(d->turnmillis > 0)
-				{
-					float amt = float(millis)/float(PHYSMILLIS), yaw = d->turnyaw*amt, roll = d->turnroll*amt;
-					if(yaw != 0) { d->aimyaw += yaw; d->yaw += yaw; }
-					if(roll != 0) d->roll += roll;
-					d->turnmillis -= millis;
+					if(d->o.z < 0)
+					{
+						game::suicide(d, HIT_DEATH|HIT_FULL);
+						return false;
+					}
+					if(d->turnmillis > 0)
+					{
+						float amt = float(millis)/float(PHYSMILLIS), yaw = d->turnyaw*amt, roll = d->turnroll*amt;
+						if(yaw != 0) { d->aimyaw += yaw; d->yaw += yaw; }
+						if(roll != 0) d->roll += roll;
+						d->turnmillis -= millis;
+					}
+					else
+					{
+						d->turnmillis = 0;
+						if(d->roll != 0 && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulserun))
+							adjustscaled(float, d->roll, PHYSMILLIS);
+					}
 				}
 				else
 				{
 					d->turnmillis = 0;
-					if(d->roll != 0 && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulserun))
-						adjustscaled(float, d->roll, PHYSMILLIS);
+					d->roll = 0;
 				}
 			}
         }
