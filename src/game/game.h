@@ -959,7 +959,7 @@ struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
-		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
+		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
@@ -1004,7 +1004,8 @@ struct gameent : dynent, gamestate
 	void clearstate()
 	{
 		loopi(IM_MAX) impulse[i] = 0;
-		lasthit = lastkill = lastdamagetone = quake = 0;
+		lasthit = lastkill = lastdamagetone = quake = turnmillis = turnside = 0;
+		turnroll = turnyaw = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
 	}
@@ -1108,7 +1109,7 @@ struct gameent : dynent, gamestate
 
 	void dojumpreset()
 	{
-		timeinair = turnmillis = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
+		timeinair = turnmillis = turnside = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
 	}
 };
 
