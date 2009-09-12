@@ -1104,7 +1104,7 @@ struct gameent : dynent, gamestate
 
 	void dojumpreset()
 	{
-		timeinair = turnmillis = turnside = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
+		timeinair = turnside = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
 	}
 };
 
