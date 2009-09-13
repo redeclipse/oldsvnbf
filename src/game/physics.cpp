@@ -575,10 +575,10 @@ namespace physics
 								}
 								break;
 							}
-							else { d->o = oldpos; if(d->turnside && i > 2) d->impulse[IM_TYPE] = 0; }
+							else { d->o = oldpos; if(d->turnside && i > 2) d->turnside = 0; }
 						}
 					}
-					else if(d->turnside) d->impulse[IM_TYPE] = 0;
+					else if(d->turnside) d->turnside = 0;
 				}
 			}
 			d->action[AC_JUMP] = d->action[AC_DASH] = false;

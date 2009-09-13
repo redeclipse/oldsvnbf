@@ -287,24 +287,7 @@ namespace projs
 			}
 			default: break;
 		}
-		if(proj.mdl && *proj.mdl)
-		{
-			setbbfrommodel(&proj, proj.mdl);
-			if(proj.projtype == PRJ_ENT)
-			{
-				proj.radius += 1.f;
-				proj.xradius += 1.f;
-				proj.yradius += 1.f;
-				proj.height += 4.f;
-			}
-			else
-			{
-				proj.radius += 0.5f;
-				proj.xradius += 0.5f;
-				proj.yradius += 0.5f;
-				proj.height += 0.5f;
-			}
-		}
+		if(proj.mdl && *proj.mdl) setbbfrommodel(&proj, proj.mdl);
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
