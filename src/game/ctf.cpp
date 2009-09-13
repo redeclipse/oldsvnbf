@@ -441,7 +441,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
-		game::announce(S_V_FLAGRETURN, CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, float(lastmillis-f.taketime)/1000.f);
+		game::announce(S_V_FLAGRETURN, CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::sb.timetostr(lastmillis-f.taketime));
 		st.returnflag(i); f.interptime = lastmillis;
     }
 
@@ -465,7 +465,7 @@ namespace ctf
         }
         else flageffect(goal, d->team, f.pos(), f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
-		game::announce(S_V_FLAGSCORE, CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%.2f\fS secs)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, float(lastmillis-f.taketime)/1000.f);
+		game::announce(S_V_FLAGSCORE, CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::sb.timetostr(lastmillis-f.taketime));
 		st.returnflag(relay); f.interptime = lastmillis;
     }
 
