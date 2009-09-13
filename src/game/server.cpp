@@ -3373,10 +3373,7 @@ namespace server
 					int reqmode = getint(p), reqmuts = getint(p);
 					if(vote(text, reqmode, reqmuts, sender))
 					{
-						QUEUE_INT(SV_MAPVOTE);
-						QUEUE_STR(text);
-						QUEUE_INT(reqmode);
-						QUEUE_INT(reqmuts);
+						sendf(-1, 1, "ri2si2", SV_MAPVOTE, sender, text, reqmode, reqmuts);
 						relayf(3, "\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(reqmode, reqmuts), text);
 					}
 					break;

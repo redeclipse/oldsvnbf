@@ -16,8 +16,9 @@ namespace client
 		copystring(m->map, text);
 		m->mode = mode;
 		m->muts = muts;
-		SEARCHBINDCACHE(votekey)("showgui votes", 0);
-		conoutf("\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote\fS", game::colorname(d), server::gamename(mode, muts), text, votekey);
+		SEARCHBINDCACHE(votekey)("showgui vote", 0);
+		SEARCHBINDCACHE(gamekey)("showgui game", 0);
+		conoutf("\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
     void getvotes(int vote)
     {
@@ -1671,11 +1672,13 @@ namespace client
 
 				case SV_MAPVOTE:
 				{
+					int vn = getint(p);
+					gameent *v = game::getclient(vn);
 					getstring(text, p);
 					filtertext(text, text);
 					int reqmode = getint(p), reqmuts = getint(p);
-					if(!d) break;
-					vote(d, text, reqmode, reqmuts);
+					if(!v) break;
+					vote(v, text, reqmode, reqmuts);
 					break;
 				}
 
