@@ -161,6 +161,10 @@
 					</div>
 <?php			} ?>
 				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!
+				<div id="copyright">
+					<p>Blood Frontier, Copyright (C) 2006-2009 Anthony Cord, Quinton Reeves, Lee Salzman</p>
+					<p>Cube Engine 2, Copyright (C) 2001-2009 Wouter van Oortmerssen, Lee Salzman, Mike Dysart, Robert Pointon, and Quinton Reeves</p>
+				</div>
 			</div>
 		</div>
 	</body>

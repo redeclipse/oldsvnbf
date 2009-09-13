@@ -181,6 +181,15 @@ body {
 	color: #FF0000;
 	text-decoration: underline;
 }
+#copyright {
+	font-size: 11px;
+	color: #FFFFFF;
+	padding: 24px 0px 16px 0px;
+}
+#copyright p {
+	margin: 0px;
+	padding: 4px 0px 0px 0px;
+}
 #sflogo {
 	margin: 0px 32px;
 	float: right;
