@@ -870,6 +870,7 @@ namespace client
 		else d->state = getint(p);
 		d->frags = getint(p);
         d->health = getint(p);
+        d->cptime = getint(p);
         if(resume && (d == game::player1 || d->ai))
         {
         	d->weapreset(false);
