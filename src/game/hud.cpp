@@ -132,6 +132,7 @@ namespace hud
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
 	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
 	VARP(inventoryimpulse, 0, 2, 2);
+	VARP(inventoryrace, 0, 2, 2);
 
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
@@ -1339,6 +1340,17 @@ namespace hud
 				popfont();
 			}
 			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
+		}
+		if(inventoryrace && m_race(game::gamemode) && (game::player1->cpmillis > 0 || game::player1->cptime) && (game::player1->state == CS_ALIVE || game::player1->state == CS_DEAD || game::player1->state == CS_WAITING))
+		{
+			pushfont("default");
+			if(game::player1->cpmillis > 0)
+			{
+				sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(lastmillis-game::player1->cpmillis));
+				popfont(); pushfont("sub");
+			}
+			if(game::player1->cptime) sy += draw_textx("\fg%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cptime));
+			popfont();
 		}
 		return sy;
 	}

@@ -1619,11 +1619,13 @@ namespace client
 						if(s == game::player1 && editmode) toggleedit();
 						s->state = CS_SPECTATOR;
 						s->checkpoint = -1;
+						s->cpmillis = 0;
 					}
 					else if(s->state == CS_SPECTATOR)
 					{
 						s->state = CS_WAITING;
 						s->checkpoint = -1;
+						s->cpmillis = 0;
 						if(s != game::player1 && !s->ai) s->resetinterp();
 					}
 					break;
@@ -1691,7 +1693,7 @@ namespace client
 					int tn = getint(p), laptime = getint(p), besttime = getint(p);
 					gameent *t = game::getclient(tn);
 					if(!t) break;
-					t->cptime = besttime;
+					t->cptime = besttime; t->cpmillis = t->impulse[IM_METER] = 0;
 					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
 					{
 						defformatstring(best)("%s", hud::sb.timetostr(besttime));

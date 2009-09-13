@@ -2199,6 +2199,11 @@ namespace server
 		int fragvalue = -1, pointvalue = smode ? smode->points(ci, ci) : fragvalue;
         ci->state.frags += fragvalue;
         ci->state.spree = 0;
+        if(!flags)
+        {
+        	ci->state.cpmillis = 0;
+			ci->state.cpnodes.setsize(0);
+        }
         ci->state.deaths++;
 		dropitems(ci); givepoints(ci, pointvalue);
 		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, ci->state.frags, 0, -1, flags, ci->state.health);
