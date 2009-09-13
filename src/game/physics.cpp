@@ -304,8 +304,7 @@ namespace physics
 
 	bool trystepdown(physent *d, vec &dir, float step, float xy, float z)
 	{
-		vec old(d->o);
-		vec dv(dir.x*xy, dir.y*xy, -step*z), v = vec(dv).mul(stairheight/(step*z));
+		vec old(d->o), dv(dir.x*xy, dir.y*xy, -step*z), v = vec(dv).mul(stairheight/(step*z));
 		d->o.add(v);
 		if(!collide(d, vec(0, 0, -1), slopez))
 		{
@@ -407,23 +406,8 @@ namespace physics
 
 	bool move(physent *d, vec &dir)
 	{
-		vec old(d->o);
-
-		if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !((gameent *)d)->action[AC_JUMP])
-		{
-			float step = dir.magnitude();
-			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
-			if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
-			if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
-			d->o.z -= step;
-			if(collide(d, vec(0, 0, -1))) return true;
-			d->o = old;
-			if(!collide(d, vec(0, 0, -1))) d->physstate = PHYS_FALL;
-		}
-
+		vec old(d->o), obstacle; d->o.add(dir);
 		bool collided = false, slidecollide = false;
-		vec obstacle;
-		d->o.add(dir);
 		if(!collide(d, dir))
 		{
             obstacle = wall;
@@ -437,7 +421,7 @@ namespace physics
             d->o = old;
             d->o.z -= stairheight;
             d->zmargin = -stairheight;
-            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate==PHYS_STEP_UP || wall.z>=floorz || d->onladder)))
+            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate == PHYS_STEP_UP || wall.z >= floorz || d->onladder)))
             {
                 d->o = old;
                 d->zmargin = 0;
@@ -448,9 +432,7 @@ namespace physics
                 d->o = old;
                 d->zmargin = 0;
             }
-
-			/* can't step over the obstacle, so just slide against it */
-			collided = true;
+			collided = true; // can't step over the obstacle, so just slide against it
 		}
         else if(d->physstate == PHYS_STEP_UP || d->onladder)
         {
@@ -461,7 +443,16 @@ namespace physics
                 d->o.add(dir);
             }
         }
-
+		else if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !((gameent *)d)->action[AC_JUMP])
+		{
+			d->o = old;
+			float step = dir.magnitude();
+			if(trystepdown(d, dir, step, 0.75f, 0.25f)) return true;
+			if(trystepdown(d, dir, step, 0.5f, 0.5f)) return true;
+			if(trystepdown(d, dir, step, 0.25f, 0.75f)) return true;
+			d->o.z -= step; if(collide(d, vec(0, 0, -1))) return true;
+			d->o = old; d->o.add(dir);
+		}
 		vec floor(0, 0, 0);
 		bool slide = collided, found = findfloor(d, collided, obstacle, slide, floor);
         if(slide || (!collided && floor.z > 0 && floor.z < wallz))
