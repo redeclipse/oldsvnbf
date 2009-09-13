@@ -51,6 +51,11 @@ namespace entities
 						addentinfo(str);
 					}
 				}
+				else
+				{
+					const char *cpnames[CP_MAX+1] = { "respawn", "start", "finish", "" };
+					addentinfo(cpnames[attr[5] < 0 || attr[5] >= CP_MAX ? CP_MAX : attr[5]]);
+				}
 				if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
 				{
 					string ds;
@@ -641,7 +646,7 @@ namespace entities
 			{
 				case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
 				{ // wait for ack
-					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode) && !m_race(game::gamemode) && !m_lobby(game::gamemode)) break;
+					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode) && !m_lobby(game::gamemode)) break;
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
 				}
@@ -757,6 +762,7 @@ namespace entities
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 						d->checkpoint = n;
+						d->cpmillis = lastmillis;
 					}
 				}
 			} break;
@@ -965,6 +971,8 @@ namespace entities
 				while(e.attrs[2] > 90) e.attrs[2] -= 180;
 				while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
 				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
+				while(e.attrs[5] < 0) e.attrs[5] += CP_MAX;
+				while(e.attrs[5] >= CP_MAX) e.attrs[5] -= CP_MAX;
 				break;
 			case ACTOR:
 				while(e.attrs[0] < 0) e.attrs[0] += AI_MAX;

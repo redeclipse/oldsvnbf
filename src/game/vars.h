@@ -3,22 +3,23 @@ VARG(serverdebug, 0, 0, 3);
 SVARG(defaultmap, "");
 VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
 VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
+VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 SVARG(storymaps, "wishbone");
 SVARG(mainmaps, "bath bloodgrounds citadel deadsimple deli eight enigma firehouse forge gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
 SVARG(ctfmaps, "bath bloodgrounds citadel deadsimple deli enigma forge gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge");
 SVARG(stfmaps, "bath bloodgrounds citadel deadsimple deli enigma forge gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
-SVARG(racemaps, "projumps testchamber");
+SVARG(racemaps, "testchamber");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
-VARG(spawnprotecttime, 0, 3, INT_MAX-1);
-VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, survivor)
 VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
-FVARG(instaspawndelay, 0, 2, 1000); // .. in instagib matches
-VARG(storyplayers, 1, 5, MAXPLAYERS);
+VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, survivor)
+VARG(instaspawndelay, 0, 2, INT_MAX-1); // .. in instagib matches
+VARG(racespawndelay, 0, 3, INT_MAX-1); // .. in race matches
+VARG(spawnprotecttime, 0, 3, INT_MAX-1);
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 200, INT_MAX-1);
@@ -44,6 +45,7 @@ VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
+VARG(racelimit, 0, 1, INT_MAX-1);
 VARG(intermlimit, 0, 15, INT_MAX-1); // secs before vote menu comes up
 VARG(votelimit, 0, 30, INT_MAX-1); // secs before vote passes by default
 VARG(duellimit, 0, 3, INT_MAX-1); // secs before duel goes to next round

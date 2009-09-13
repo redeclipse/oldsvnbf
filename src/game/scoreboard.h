@@ -19,6 +19,25 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
+		char *timetostr(int millis)
+		{
+			static string timestr; timestr[0] = 0;
+			int tm = millis, ms = 0, ss = 0, mn = 0;
+			if(tm > 0)
+			{
+				ms = tm%1000;
+				tm = (tm-ms)/1000;
+				if(tm > 0)
+				{
+					ss = tm%60;
+					tm = (tm-ss)/60;
+					if(tm > 0) mn = tm;
+				}
+			}
+			formatstring(timestr)("%d:%02d.%03d", mn, ss, ms);
+			return timestr;
+		}
+
 		IVARP(autoshowscores, 0, 2, 2); // 1 = when dead, 2 = also in spectv
 		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
 		IVARP(showscoresdelay, 0, 3, INT_MAX-1); // otherwise use a static timespan
@@ -28,7 +47,7 @@ namespace hud
 		IVARP(showpj, 0, 0, 1);
 		IVARP(showping, 0, 1, 1);
 		IVARP(showpoints, 0, 1, 1);
-		IVARP(showfrags, 0, 2, 2);
+		IVARP(showscore, 0, 2, 2);
 		IVARP(showclientnum, 0, 1, 1);
 		IVARP(showskills, 0, 1, 1);
 		IVARP(showownernum, 0, 0, 1);
@@ -73,12 +92,14 @@ namespace hud
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
 								game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else if(m_race(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with the lowest laptime of %s", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
 							else game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							game::announce(anc, CON_INFO, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
+							if(m_race(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw%s won the match with the lowest laptime of %s", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
+							else game::announce(anc, CON_INFO, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
 				}
@@ -88,8 +109,16 @@ namespace hud
 
 		static int teamscorecmp(const teamscore *x, const teamscore *y)
 		{
-			if(x->score > y->score) return -1;
-			if(x->score < y->score) return 1;
+			if(m_race(game::gamemode))
+			{
+				if((x->score && !y->score) || (x->score && y->score && x->score < y->score)) return -1;
+				if((y->score && !x->score) || (x->score && y->score && y->score < x->score)) return 1;
+			}
+			else
+			{
+				if(x->score > y->score) return -1;
+				if(x->score < y->score) return 1;
+			}
 			return x->team-y->team;
 		}
 
@@ -101,6 +130,11 @@ namespace hud
 				else return 1;
 			}
 			else if((*b)->state==CS_SPECTATOR) return -1;
+			if(m_race(game::gamemode))
+			{
+				if(((*a)->cptime && !(*b)->cptime) || ((*a)->cptime && (*b)->cptime && (*a)->cptime < (*b)->cptime)) return -1;
+				if(((*b)->cptime && !(*a)->cptime) || ((*a)->cptime && (*b)->cptime && (*b)->cptime < (*a)->cptime)) return 1;
+			}
 			if((*a)->points > (*b)->points) return -1;
 			if((*a)->points < (*b)->points) return 1;
 			if((*a)->frags > (*b)->frags) return -1;
@@ -136,7 +170,8 @@ namespace hud
 				{
 					teamscore *ts = NULL;
 					loopv(teamscores) if(teamscores[i].team == o->team) { ts = &teamscores[i]; break; }
-					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : o->points));
+					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : (m_race(game::gamemode) ? o->cptime : o->points)));
+					else if(m_race(game::gamemode)) { if(o->cptime && (!ts->score || o->cptime < ts->score)) ts->score = o->cptime; }
 					else if(!m_stf(game::gamemode) && !m_ctf(game::gamemode)) ts->score += o->points;
 				}
 			}
@@ -401,12 +436,21 @@ namespace hud
 					g.poplist();
 				}
 
-				if(showfrags() && (showfrags() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
+				if(showscore() && (showscore() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
 				{
 					g.pushlist();
-					g.strut(6);
-					g.text("frags", fgcolor);
-					loopscoregroup(g.textf("%d", 0xFFFFFF, NULL, o->frags));
+					if(m_race(game::gamemode))
+					{
+						g.strut(10);
+						g.text("best lap", fgcolor);
+						loopscoregroup(g.textf("%s", 0xFFFFFF, NULL, o->cptime ? timetostr(o->cptime) : "\fadnf"));
+					}
+					else
+					{
+						g.strut(6);
+						g.text("frags", fgcolor);
+						loopscoregroup(g.textf("%d", 0xFFFFFF, NULL, o->frags));
+					}
 					g.poplist();
 				}
 

@@ -644,6 +644,15 @@ namespace server
 	{
 		if(m_fight(gamemode))
 		{
+			if(m_race(gamemode))
+			{
+				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(racelimit)*60000)
+				{
+					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcrace finishing limit has been reached!");
+					startintermission();
+					return;
+				}
+			}
 			if(GVAR(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000))
 			{
 				if(GVAR(timelimit) != oldtimelimit)
@@ -672,7 +681,7 @@ namespace server
 					}
 				}
 			}
-			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode))
+			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode) && !m_race(gamemode))
 			{
 				if(m_team(gamemode, mutators))
 				{
@@ -2614,6 +2623,7 @@ namespace server
 			else if(ci->state.state == CS_WAITING)
 			{
 				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
+				if(m_race(gamemode) && ci->state.cpmillis < 0) continue;
 				if(ci->state.respawnwait(gamemillis, ci->state.aitype >= AI_START && ci->state.lastdeath ? 30000 : m_spawndelay(gamemode, mutators))) continue;
 				int nospawn = 0;
 				if(smode && !smode->canspawn(ci, false)) { nospawn++; }
@@ -3255,8 +3265,34 @@ namespace server
 					{
 						if(sents[ent].type == CHECKPOINT)
 						{
-							if((sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
+							if(cp->state.checkpoint != ent && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
+							{
 								cp->state.checkpoint = ent;
+								if(m_race(gamemode)) switch(sents[ent].attrs[5])
+								{
+									case CP_RESPAWN: if(cp->state.cpmillis) break;
+									case CP_START:
+									{
+										if(!cp->state.cpmillis)
+										{
+											cp->state.cpmillis = gamemillis;
+											break;
+										}
+									}
+									case CP_FINISH:
+									{
+										int laptime = gamemillis-cp->state.cpmillis;
+										if(cp->state.cptime <= 0 || laptime < cp->state.cptime)
+										{
+											cp->state.cptime = laptime;
+											sendf(-1, 1, "ri3", SV_CHECKPOINT, cp->clientnum, cp->state.cptime);
+											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(ci); }
+										}
+										cp->state.cpmillis = gamemillis;
+										break;
+									}
+								}
+							}
 						}
 						else if(sents[ent].type == TRIGGER)
 						{
@@ -3289,7 +3325,7 @@ namespace server
 								case TR_EXIT:
 								{
 									if(sents[ent].spawned) break;
-									if(m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode))
+									if(m_story(gamemode) || m_lobby(gamemode))
 									{
 										sents[ent].spawned = true;
 										startintermission();
