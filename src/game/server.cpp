@@ -3563,6 +3563,8 @@ namespace server
 						if(cp->state.state == CS_ALIVE) dropitems(cp);
 						if(smode) smode->leavegame(cp);
 						mutate(smuts, mut->leavegame(cp));
+						cp->state.cpnodes.setsize(0);
+						cp->state.cpmillis = 0;
 						cp->state.state = CS_SPECTATOR;
                     	cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 						setteam(cp, TEAM_NEUTRAL, false, true);
@@ -3570,6 +3572,8 @@ namespace server
 					}
 					else if(cp->state.state == CS_SPECTATOR && !val)
 					{
+						cp->state.cpnodes.setsize(0);
+						cp->state.cpmillis = 0;
 						cp->state.state = CS_DEAD;
 	                    cp->state.lasttimeplayed = lastmillis;
 						waiting(cp, 2);

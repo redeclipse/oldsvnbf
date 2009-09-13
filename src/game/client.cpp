@@ -1617,10 +1617,12 @@ namespace client
 					{
 						if(s == game::player1 && editmode) toggleedit();
 						s->state = CS_SPECTATOR;
+						s->checkpoint = -1;
 					}
 					else if(s->state == CS_SPECTATOR)
 					{
 						s->state = CS_WAITING;
+						s->checkpoint = -1;
 						if(s != game::player1 && !s->ai) s->resetinterp();
 					}
 					break;
