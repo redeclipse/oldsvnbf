@@ -1280,10 +1280,10 @@ namespace server
 			case 1: case 2: case 3:
 			{
 				const char *maplist = GVAR(mainmaps);
-				if(m_story(gamemode)) maplist = GVAR(storymaps);
-				else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
-				else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-				else if(m_race(gamemode)) maplist = GVAR(racemaps);
+				if(m_story(reqmode)) maplist = GVAR(storymaps);
+				else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
+				else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+				else if(m_race(reqmode)) maplist = GVAR(racemaps);
 				if(maplist && *maplist)
 				{
 					int n = listlen(maplist);
