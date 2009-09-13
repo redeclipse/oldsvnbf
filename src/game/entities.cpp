@@ -881,7 +881,7 @@ namespace entities
 		return (showentinfo || game::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && game::player1->state == CS_EDITING));
 	}
 
-	void fixentity(int n)
+	void fixentity(int n, bool recurse)
 	{
 		gameentity &e = *(gameentity *)ents[n];
 		int num = max(5, enttype[e.type].numattrs);
@@ -900,7 +900,7 @@ namespace entities
 					if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", n, ent);
 				}
 				else continue;
-				fixentity(ent);
+				if(recurse || ent < n) fixentity(ent, false);
 			}
 			else continue;
 		}
@@ -971,8 +971,11 @@ namespace entities
 				while(e.attrs[2] > 90) e.attrs[2] -= 180;
 				while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
 				while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
-				while(e.attrs[5] < 0) e.attrs[5] += CP_MAX;
-				while(e.attrs[5] >= CP_MAX) e.attrs[5] -= CP_MAX;
+				if(e.type == CHECKPOINT)
+				{
+					while(e.attrs[5] < 0) e.attrs[5] += CP_MAX;
+					while(e.attrs[5] >= CP_MAX) e.attrs[5] -= CP_MAX;
+				}
 				break;
 			case ACTOR:
 				while(e.attrs[0] < 0) e.attrs[0] += AI_MAX;
@@ -1127,7 +1130,7 @@ namespace entities
 	void editent(int i)
 	{
 		extentity &e = *ents[i];
-		fixentity(i);
+		fixentity(i, true);
 		if(m_edit(game::gamemode)) client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
 		if(e.type >= NOTUSED && e.type < MAXENTTYPES)
 		{
@@ -1179,7 +1182,7 @@ namespace entities
 				{
 					e.links.remove(g);
 					if(recip) f.links.remove(h);
-					fixentity(index);
+					fixentity(index, true);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
 					if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
@@ -1188,7 +1191,7 @@ namespace entities
 				{
 					f.links.add(index);
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
-					fixentity(node);
+					fixentity(node, true);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
 					if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
@@ -1198,7 +1201,7 @@ namespace entities
 			{
 				f.links.remove(g);
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
-				fixentity(node);
+				fixentity(node, true);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
 				if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
@@ -1207,7 +1210,7 @@ namespace entities
 			{
 				e.links.add(node);
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
-				fixentity(index);
+				fixentity(index, true);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
 				if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
@@ -1882,7 +1885,7 @@ namespace entities
 		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, mver, gver);
 		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, mver, gver);
 		if(mtype == MAP_OCTA) importwaypoints(mtype, mver, gver);
-		loopv(ents) fixentity(i);
+		loopv(ents) fixentity(i, false);
 		memset(lastenttype, 0, sizeof(lastenttype));
 		memset(lastusetype, 0, sizeof(lastusetype));
 		loopv(ents)
