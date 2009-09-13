@@ -579,7 +579,7 @@ extentity *newentity(bool local, const vec &o, int type, vector<int> &attrs)
 	if(local)
 	{
 		int n = entities::getents().find(&e);
-		if(entities::getents().inrange(n)) entities::fixentity(n);
+		if(entities::getents().inrange(n)) entities::fixentity(n, true);
 	}
 	return &e;
 }
