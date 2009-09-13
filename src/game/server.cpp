@@ -128,7 +128,7 @@ namespace server
         projectilestate dropped, weapshots[WEAP_MAX][2];
 		int score, frags, spree, rewards, flags, deaths, teamkills, shotdamage, damage;
 		int lasttimeplayed, timeplayed, aireinit;
-		vector<int> fraglog, fragmillis;
+		vector<int> fraglog, fragmillis, cpnodes;
 
 		servstate() : state(CS_SPECTATOR), aireinit(0) {}
 
@@ -145,7 +145,7 @@ namespace server
 			if(!change) score = timeplayed = 0;
 			else gamestate::mapchange();
             frags = spree = rewards = flags = deaths = teamkills = shotdamage = damage = 0;
-            fraglog.setsize(0); fragmillis.setsize(0);
+            fraglog.setsize(0); fragmillis.setsize(0); cpnodes.setsize(0);
 			respawn(0, m_maxhealth(server::gamemode, server::mutators));
 		}
 
@@ -898,9 +898,10 @@ namespace server
 		if(ci->state.aitype >= AI_START) return ci->state.aientity;
 		else
 		{
-			if(m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode))
+			if((m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
 			{
-				if(sents.inrange(ci->state.checkpoint)) return ci->state.checkpoint;
+				int checkpoint = ci->state.cpnodes.last();
+				if(sents.inrange(checkpoint)) return checkpoint;
 			}
 			if(totalspawns && GVAR(spawnrotate))
 			{
@@ -3265,33 +3266,29 @@ namespace server
 					{
 						if(sents[ent].type == CHECKPOINT)
 						{
-							if(cp->state.checkpoint != ent && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
+							if(cp->state.cpnodes.find(ent) < 0 && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
 							{
-								cp->state.checkpoint = ent;
 								if(m_race(gamemode)) switch(sents[ent].attrs[5])
 								{
-									case CP_RESPAWN: if(cp->state.cpmillis) break;
-									case CP_START:
-									{
-										if(!cp->state.cpmillis)
-										{
-											cp->state.cpmillis = gamemillis;
-											break;
-										}
-									}
-									case CP_FINISH:
+									case CP_LAST: case CP_FINISH:
 									{
 										int laptime = gamemillis-cp->state.cpmillis;
 										if(cp->state.cptime <= 0 || laptime < cp->state.cptime)
 										{
 											cp->state.cptime = laptime;
-											sendf(-1, 1, "ri3", SV_CHECKPOINT, cp->clientnum, cp->state.cptime);
 											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(ci); }
 										}
-										cp->state.cpmillis = gamemillis;
-										break;
+										sendf(-1, 1, "ri4", SV_CHECKPOINT, cp->clientnum, laptime, cp->state.cptime);
 									}
+									case CP_RESPAWN: if(sents[ent].attrs[5] == CP_RESPAWN && cp->state.cpmillis) break;
+									case CP_START:
+									{
+										cp->state.cpmillis = gamemillis;
+										cp->state.cpnodes.setsize(0);
+									}
+									default: break;
 								}
+								cp->state.cpnodes.add(ent);
 							}
 						}
 						else if(sents[ent].type == TRIGGER)

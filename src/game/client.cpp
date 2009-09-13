@@ -47,7 +47,7 @@ namespace client
     bool messagereliable = false;
 
 	VARP(colourchat, 0, 1, 1);
-	VARP(showlaptimes, 0, 1, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
+	VARP(showlaptimes, 0, 2, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
 	SVARP(serversort, "");
 
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
@@ -1685,12 +1685,15 @@ namespace client
 
 				case SV_CHECKPOINT:
 				{
-					int tn = getint(p), laptime = getint(p);
+					int tn = getint(p), laptime = getint(p), besttime = getint(p);
 					gameent *t = game::getclient(tn);
 					if(!t) break;
-					t->cptime = laptime;
+					t->cptime = besttime;
 					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
-						conoutf("%s scored a lap time of \fg%s", game::colorname(t), hud::sb.timetostr(t->cptime));
+					{
+						defformatstring(best)("%s", hud::sb.timetostr(besttime));
+						conoutf("%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
+					}
 				}
 
 				case SV_SCORE:
