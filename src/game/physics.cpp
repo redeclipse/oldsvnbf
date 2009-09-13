@@ -546,7 +546,7 @@ namespace physics
 								d->o = oldpos; wall.normalize();
 								float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
 								float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-								if(allowed && ((d->turnside && d->action[AC_JUMP]) || (d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
+								if(allowed && ((d->turnside && d->action[AC_JUMP]) || (!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
 								{
 									float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
 									d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall).normalize()).add(vec(d->vel).reflect(wall).normalize()).div(2).mul(mag);
