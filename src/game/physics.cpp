@@ -571,7 +571,11 @@ namespace physics
 										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
 										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
-									else if(d->action[AC_SPECIAL]) d->turnside = 0; // cancel
+									else if(d->action[AC_SPECIAL])
+									{
+										d->turnside = 0; // cancel
+										d->action[AC_SPECIAL] = false;
+									}
 									else m = rft; // re-project and override
 								}
 								break;
