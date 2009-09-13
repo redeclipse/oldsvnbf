@@ -2238,7 +2238,7 @@ namespace entities
 			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
 		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-		if(item) part_create(PART_HINT, 1, o, colour, enttype[e.type].radius*0.3f);
+		if(item) part_create(PART_HINT, 1, o, colour, e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f);
 		if((item && showentdescs >= 3) || notitem)
 		{
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
