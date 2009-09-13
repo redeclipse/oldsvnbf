@@ -952,7 +952,7 @@ namespace server
 		}
 		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators));
 		int spawn = pickspawn(ci);
-		sendf(ci->clientnum, 1, "ri7v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
+		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
 	}
 
@@ -963,6 +963,7 @@ namespace server
         putint(p, gs.state);
         putint(p, gs.frags);
         putint(p, gs.health);
+        putint(p, gs.cptime);
         putint(p, gs.weapselect);
         loopi(WEAP_MAX) putint(p, gs.ammo[i]);
     }
@@ -1815,7 +1816,7 @@ namespace server
     void sendresume(clientinfo *ci)
     {
 		servstate &gs = ci->state;
-		sendf(-1, 1, "ri6vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
+		sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
     }
 
     void sendinitc2s(clientinfo *ci)
