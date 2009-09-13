@@ -287,7 +287,12 @@ namespace projs
 			}
 			default: break;
 		}
-		if(proj.mdl && *proj.mdl) setbbfrommodel(&proj, proj.mdl);
+		if(proj.mdl && *proj.mdl)
+		{
+			setbbfrommodel(&proj, proj.mdl);
+			if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) proj.height += 2.5f;
+			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
+		}
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
