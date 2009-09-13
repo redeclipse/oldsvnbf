@@ -5,6 +5,31 @@ namespace client
 		demoplayback = false, needsmap = false, gettingmap = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
+	vector<mapvote> mapvotes;
+
+	void vote(gameent *d, const char *text, int mode, int muts)
+	{
+		mapvote *m = NULL;
+		loopv(mapvotes) if(mapvotes[i].player == d) { m = &mapvotes[i]; break; }
+		if(!m) m = &mapvotes.add();
+		m->player = d;
+		copystring(m->map, text);
+		m->mode = mode;
+		m->muts = muts;
+		SEARCHBINDCACHE(votekey)("showgui votes", 0);
+		conoutf("\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote\fS", game::colorname(d), server::gamename(mode, muts), text, votekey);
+	}
+    void getvotes(int vote)
+    {
+    	if(!vote) intret(mapvotes.length());
+    	else
+    	{
+			mkstring(text);
+			if(mapvotes.inrange(--vote)) formatstring(text)("%d %d %d %s", mapvotes[vote].player->clientnum, mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
+			result(text);
+    	}
+    }
+    ICOMMAND(getvote, "i", (int *num), getvotes(*num));
 
     int lastauth = 0;
     string authname = "", authkey = "";
@@ -111,6 +136,7 @@ namespace client
 		gettingmap = needsmap = remote = isready = c2sinit = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
+		mapvotes.setsize(0);
         messagereliable = false;
 		projs::remove(game::player1);
         removetrackedparticles(game::player1);
@@ -471,6 +497,7 @@ namespace client
 		game::nextmode = game::gamemode; game::nextmuts = game::mutators;
 		game::minremain = -1;
 		game::maptime = 0;
+		mapvotes.setsize(0);
 		if(editmode && !allowedittoggle(editmode)) toggleedit();
 		if(m_demo(gamemode)) return;
 		needsmap = false;
@@ -1642,6 +1669,16 @@ namespace client
 					break;
 				}
 
+				case SV_MAPVOTE:
+				{
+					getstring(text, p);
+					filtertext(text, text);
+					int reqmode = getint(p), reqmuts = getint(p);
+					if(!d) break;
+					vote(d, text, reqmode, reqmuts);
+					break;
+				}
+
 				case SV_SCORE:
 				{
 					int team = getint(p), total = getint(p);
@@ -1726,6 +1763,7 @@ namespace client
 					int size = getint(p);
 					if(size>=0) emptymap(size, true);
 					else enlargemap(true);
+					mapvotes.setsize(0);
 					needsmap = false;
 					if(d && d!=game::player1)
 					{

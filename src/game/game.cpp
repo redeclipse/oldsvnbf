@@ -783,6 +783,7 @@ namespace game
 		if(!d) return;
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
+		loopv(client::mapvotes) if(client::mapvotes[i].player == d) { client::mapvotes.remove(i); break; }
 		projs::remove(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
         if(m_stf(gamemode)) stf::removeplayer(d);
