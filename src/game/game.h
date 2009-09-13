@@ -62,6 +62,7 @@ enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
 #define TRIGGERIDS		16
 #define TRIGSTATE(a,b)	(b%2 ? !a : a)
 
+enum { CP_RESPAWN = 0, CP_START, CP_FINISH, CP_MAX };
 enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_CAMERA, WP_MAX };
 enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
@@ -165,10 +166,10 @@ enttypes enttype[] = {
 			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
-		CHECKPOINT,		1,  48,		16,		EU_AUTO,	5,
+		CHECKPOINT,		1,  48,		16,		EU_AUTO,	6,
 			0,
 			0,
-			false,				"checkpoint",	{ "radius",	"yaw",		"pitch",	"mode",		"id",		"" }
+			false,				"checkpoint",	{ "radius",	"yaw",		"pitch",	"mode",		"id",		"type" }
 	},
 	{
 		CAMERA,			1,  48,		0,		EU_NONE,	3,
@@ -489,7 +490,7 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_spawnweapon(a,b)	(!m_play(a) || m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))*1000) : 0)
+#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_race(a) ? GVAR(racespawndelay) : ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))))*1000 : 0)
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
@@ -510,7 +511,7 @@ enum
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_POINTS, SV_DAMAGE, SV_SHOTFX,
 	SV_ARENAWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
 	SV_DROP, SV_WEAPSELECT,
-	SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
+	SV_MAPCHANGE, SV_MAPVOTE, SV_CHECKPOINT, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
 	SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
 	SV_SERVMSG, SV_GAMEINFO, SV_RESUME,
@@ -536,7 +537,7 @@ char msgsizelookup(int msg)
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 10,
 		SV_ARENAWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
 		SV_DROP, 0, SV_WEAPSELECT, 0,
-		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
+		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_CHECKPOINT, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
 		SV_TIMEUP, 2, SV_NEWGAME, 1, SV_ITEMACC, 0,
 		SV_SERVMSG, 0, SV_GAMEINFO, 0, SV_RESUME, 0,
@@ -654,10 +655,10 @@ struct gamestate
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, aientity, ownernum, skill, points, checkpoint;
+	int aitype, aientity, ownernum, skill, points, checkpoint, cpmillis, cptime;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), checkpoint(-1) {}
+		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), checkpoint(-1), cpmillis(0), cptime(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -811,7 +812,7 @@ struct gamestate
 
 	void mapchange()
 	{
-		points = 0;
+		points = cpmillis = cptime = 0;
 		checkpoint = -1;
 	}
 
