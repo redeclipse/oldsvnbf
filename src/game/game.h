@@ -62,7 +62,7 @@ enum { TA_MANUAL = 0, TA_AUTO, TA_ACTION, TA_MAX };
 #define TRIGGERIDS		16
 #define TRIGSTATE(a,b)	(b%2 ? !a : a)
 
-enum { CP_RESPAWN = 0, CP_START, CP_FINISH, CP_MAX };
+enum { CP_RESPAWN = 0, CP_START, CP_FINISH, CP_LAST, CP_MAX };
 enum { WP_COMMON = 0, WP_PLAYER, WP_ENEMY, WP_LINKED, WP_CAMERA, WP_MAX };
 enum { WP_S_NONE = 0, WP_S_DEFEND, WP_S_PROJECT, WP_S_MAX };
 
@@ -655,10 +655,10 @@ struct gamestate
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
 	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen;
-	int aitype, aientity, ownernum, skill, points, checkpoint, cpmillis, cptime;
+	int aitype, aientity, ownernum, skill, points, cpmillis, cptime;
 
 	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0),
-		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), checkpoint(-1), cpmillis(0), cptime(0) {}
+		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), cpmillis(0), cptime(0) {}
 	~gamestate() {}
 
 	int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -813,7 +813,6 @@ struct gamestate
 	void mapchange()
 	{
 		points = cpmillis = cptime = 0;
-		checkpoint = -1;
 	}
 
 	void respawn(int millis, int heal)
@@ -954,7 +953,7 @@ extern const char *serverinfotypes[];
 struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
-	int team, clientnum, privilege, lastnode, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
+	int team, clientnum, privilege, lastnode, checkpoint, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
@@ -962,7 +961,7 @@ struct gameent : dynent, gamestate
 	string name, info, obit;
 	vector<int> airnodes;
 
-	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), lastpredict(0), plag(0), ping(0),
+	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1),
 		lastattacker(-1), lastpoints(0), lastdamagetone(0), quake(0),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
@@ -1038,6 +1037,7 @@ struct gameent : dynent, gamestate
 
 	void mapchange(int millis, int heal)
 	{
+		checkpoint = -1;
 		dominating = dominated = false;
 		resetstate(millis, heal);
 		gamestate::mapchange();

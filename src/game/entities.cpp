@@ -53,7 +53,7 @@ namespace entities
 				}
 				else
 				{
-					const char *cpnames[CP_MAX+1] = { "respawn", "start", "finish", "" };
+					const char *cpnames[CP_MAX+1] = { "respawn", "start", "finish", "last", "" };
 					addentinfo(cpnames[attr[5] < 0 || attr[5] >= CP_MAX ? CP_MAX : attr[5]]);
 				}
 				if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
@@ -758,7 +758,7 @@ namespace entities
 				case CHECKPOINT:
 				{
 					if(!chkmode(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_race(game::gamemode)&& !m_lobby(game::gamemode))) break;
-					if(!ents.inrange(d->checkpoint) || n != d->checkpoint)
+					if(d->checkpoint != n)
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 						d->checkpoint = n;
