@@ -3,47 +3,105 @@
 	<head>
 		<title>Blood Frontier, It's Bloody Fun!</title>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<link rel="shortcut icon" href="docs/favicon.ico" />
-		<link rel="stylesheet" type="text/css" href="docs/site.css" />
-		<script type="text/javascript"><!--
-			function setblurb() {
-				var b = document.getElementById('blurb');
-				b.innerHTML = "<i>It's Bloody Fun!</i>";
-			}
-			function resizeframe() {
-				var c = document.getElementById('frame');
-				c.style.display = 'inline';
-				c.height = document.documentElement.clientHeight - c.offsetTop;
-			}
-			window.onresize = resizeframe();
-		--></script>
+		<link rel="shortcut icon" href="src/site/bits/favicon.ico" />
+		<style type="text/css"><!--
+			@charset "utf-8";
+			body { font-family: sans-serif; font-size: 11px; background: #0e0e0e url(src/site/bits/bg_01.jpg) no-repeat scroll center top; margin: 0px; padding: 0px; }
+			#container { margin: 0px auto; width: 820px; padding: 0px; }
+			#header { margin: 19px 0px 0px; padding: 0px; float: left; width: 820px; }
+			#header img { margin: 0px; padding: 0px; float: left; border-style: none; }
+			#links { font-size: 16px; font-weight: bold; color: #FFFFFF; background: #000000 url(src/site/bits/bg_links.jpg) repeat-x center center; margin: 0px; padding: 0px; float: left; height: 75px; width: 740px; }
+			#page { padding: 0px 40px; width: 740px; background: url(src/site/bits/bg_page.png) repeat-y center top; float: left; }
+			#links a { color: #FFFFFF; text-decoration: none; display: block; float: left; margin-left: 20px; text-align: center; margin-top: 25px; height: 24px; padding-top: 3px; width: 70px; }
+			#links a:visited { background: none; color: #FFFFFF; }
+			#links a:hover { background: url(src/site/bits/bg_link.png) no-repeat center top; color: #CCCCCC; }
+			#noticebg { background: #000000 url(src/site/bits/bg_blood.gif) no-repeat center top; margin: 0px; padding: 5px 0px 0px; float: left; width: 738px; height: 235px; }
+			#blockborder { margin: 0px; padding: 0px; float: left; height: 20px; }
+			#redblock { float: left; width: 740px; margin: 0px; margin-left: 3px; padding: 8px 20px 0px 19px; color: #FFFFFF; }
+			#version { font-size: 16px; color: #FFFFFF; float: left; margin: 0px 0px 10px; padding: 0px; width: 690px; }
+			#redblock a { color: #F0F0F0; text-decoration: none; border-bottom: 1px dotted #C0C0C0; }
+			#redblock a:visited { color: #F0F0F0; text-decoration: none; border-bottom: 1px dotted #C0C0C0; }
+			#redblock a:hover { color: #FFFFFF; text-decoration: none; border-bottom: 1px solid #CCCCCC; }
+			#redblock hr { background: url(src/site/bits/bg_hr.png) no-repeat center center; margin: 0px 0px 5px; padding: 0px 0px 10px 0px; float: left; height: 2px; width: 700px; border-style: none; border-width: 0px; }
+			#notice { font-size: 12px; color: #FFFFFF; display: block; margin: 0px; padding: 6px 0px 0px 0px; float: left; width: 680px; }
+			#insert { float: left; width: 92px; display: block; }
+			#footer { font-size: 14px; color: #FFFFFF; background: url(src/site/bits/bg_footer.png) no-repeat center top; margin: 0px; padding: 10px 0px 20px 60px; float: left; height: 44px; width: 760px; }
+			#footer a { color: #CC0000; text-decoration: none; }
+			#footer a:visited { color: #CC0000; text-decoration: none; }
+			#footer a:hover { color: #FF0000; text-decoration: underline; }
+			#sflogo { margin: 0px 32px; float: right; padding: 0px; }
+			#video { background: url(src/site/bits/bg_vid.jpg) no-repeat center center; margin: 0px; padding: 0px; float: left; height: 469px; width: 738px; }
+			#video object { margin: 0px; padding: 0px; }
+			#youtube { margin: 0px; padding: 40px 0px 0px 19px; float: left; height: 385px; width: 480px; }
+			#subtext { color: #FFFFFF; margin: 0px; padding: 0px 30px 0px 0px; float: right; width: 180px; }
+			#subtext img { margin: 0px; padding: 5px 5px 0px 0px; float: right; }
+			#subtext p { width: 180px; margin: 0px 0px 5px; padding: 0px; float: right; display: block; }
+			#subtext a { color: #999999; margin: 0px; padding: 0px; }
+			#subtext h2 { font-size: 16px; font-weight: bold; margin: 0px; padding: 5px 0px 0px 0px; color: #CC0000; float: right; width: 180px; display: block; }
+			#subtext h3 { font-size: 14px; font-weight: bold; margin: 0px; padding: 0px 0px 5px 0px; color: #999999; float: right; width: 180px; display: block; }
+		--></style>
 	</head>
 	<body>
-		<div id="header">
-		<div id="header">
-			<div id="tags">
-				<div id="flink">
-					<a href="/donate">
-						<img id="sfdonate" src="http://images.sourceforge.net/images/project-support.jpg" style="border: none" alt="Support Blood Frontier and Donate" />
+		<div id="container">
+			<div id="header">
+				<a href="http://www.bloodfrontier.com/home"><img src="src/site/bits/logo_bf.png" alt="Blood Frontier" title="Blood Frontier" width="304" height="143" border="0" /></a>
+				<img src="src/site/bits/middle.png" alt="It's Bloody Fun!" title="It's Bloody Fun!" width="323" height="143" border="0" />
+				<a href="http://www.cubeengine.com/"><img src="src/site/bits/logo_c2.png" alt="Built on Cube Engine 2" title="Built on Cube Engine 2" width="193" height="143" border="0" /></a>
 
-					</a>
-					<a href="/project">
-						<img id="sflogo" src="http://sflogo.sourceforge.net/sflogo.php?group_id=198419&amp;type=11" style="border: none" alt="Get Blood Frontier at SourceForge" />
-					</a>
+			</div>
+			<div id="page">
+				<div id="links">
+					<a href="http://www.bloodfrontier.com/home">Home</a>
+					<a href="http://www.bloodfrontier.com/blog">Blog</a>
+					<a href="http://www.bloodfrontier.com/wiki">Wiki</a>
+					<a href="http://www.bloodfrontier.com/forums">Forums</a>
+					<a href="http://www.bloodfrontier.com/chat">Chat</a>
+					<a href="http://www.bloodfrontier.com/gallery">Gallery</a>
+					<a href="http://www.bloodfrontier.com/project">Project</a>
+					<a href="http://www.bloodfrontier.com/svn">SVN</a>
 				</div>
-				<div id="blurb"><i>Loading Article..</i></div>
-			</div>
-			<div id="logo"><a href="http://www.bloodfrontier.com/"><img id="sitelogo" src="docs/logo.png" alt="Blood Frontier" style="border: none" /></a></div>
-			<div id="navbar">
-				<a href="readme.html">README Index</a> |
-				<a href="http://www.bloodfrontier.com/">Home Page</a> | <a href="http://www.bloodfrontier.com/blog">Blog</a> | <a href="http://www.bloodfrontier.com/wiki">Wiki</a> | <a href="http://www.bloodfrontier.com/forums">Forums</a> | <a href="http://www.bloodfrontier.com/chat">Chat</a> | <a href="http://www.bloodfrontier.com/gallery">Gallery</a> | <a href="http://www.bloodfrontier.com/project">Project</a> | <a href="http://www.bloodfrontier.com/donate">Donate</a> | <a href="http://www.bloodfrontier.com/svn">SVN</a>
-			</div>
-		</div>
-		<div id="body" align="center">
-			<iframe id="frame" frameborder="0" scrolling="yes" marginheight="0" marginwidth="0" onload="resizeframe();setblurb();" src="docs/README.html" style="background-color: #FFFFFF; color: #000000">
-				<p>Your browser does not support this feature, to continue visit: <a href="docs/README.html">README</a></p>
-			</iframe>
-		</div>
-	</body>
+				<div id="noticebg">
+					<div id="redblock" align="center">
+						<p id="version">Current Version: <b><a href="http://www.bloodfrontier.com/download">v0.80 (Beta 1)</a></b> released <i>24th February 2009</i></p>
+						<hr />
+						<p id="notice">Blood Frontier is a <a href="http://www.bloodfrontier.com/wiki/Collaborate">Free and Open Source</a> game (see our <a href="http://www.bloodfrontier.com/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="http://www.bloodfrontier.com/download">download a package</a> for <a href="http://www.bloodfrontier.com/download/windows">Windows</a>, <a href="http://www.bloodfrontier.com/download/linux">Linux/BSD</a> or <a href="http://www.bloodfrontier.com/download/macosx">Mac OSX</a>, or grab a development copy from our <a href="http://www.bloodfrontier.com/wiki/SVN">Subversion</a> repository and live on the bleeding edge.</p>
+						<p id="notice">The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="http://www.bloodfrontier.com/wiki">Wiki</a>.</p>
+						<p id="notice">In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.</p>
+					</div>
+				</div>
+				<div id="video">
+					<div id="youtube">
+						<object width="480" height="385" type="application/x-shockwave-flash" data="http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18">
+							<param name="movie" value="http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18" />
+							<param name="allowscriptaccess" value="always" />
+							<param name="allowFullScreen" value="true" />
+						</object>
 
+					</div>
+					<div id="subtext" align="center">
+						<h2>Blood Frontier</h2>
+						<h3>It's Bloody Fun!</h3>
+						<p>In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.</p>
+						<p>
+							<a href="src/site/bits/ss01.jpg"><img src="src/site/bits/ss01t.jpg" alt="Screenshot 01" width="85" height="53" border="0" /></a>
+
+							<a href="src/site/bits/ss02.jpg"><img src="src/site/bits/ss02t.jpg" alt="Screenshot 02" width="85" height="53" border="0" /></a>
+							<a href="src/site/bits/ss03.jpg"><img src="src/site/bits/ss03t.jpg" alt="Screenshot 03" width="85" height="53" border="0" /></a>
+							<a href="src/site/bits/ss04.jpg"><img src="src/site/bits/ss04t.jpg" alt="Screenshot 04" width="85" height="53" border="0" /></a>
+						</p>
+						<p><a href="http://www.bloodfrontier.com/gallery">View Gallery</a></p>
+					</div>
+				</div>
+			</div>
+
+			<div id="footer">
+					<div id="sflogo">
+						<a href="http://www.bloodfrontier.com/project">
+							<img src="http://sflogo.sourceforge.net/sflogo.php?group_id=198419&amp;type=11" alt="Get Blood Frontier at SourceForge" title="Get Blood Frontier at SourceForge" width="120" height="30" border="0" id="sflogo"/>
+						</a>
+					</div>
+				<a href="http://www.bloodfrontier.com/download">Download</a>, <a href="http://www.bloodfrontier.com/wiki">Learn More</a>, <a href="http://www.bloodfrontier.com/forums">Get Help</a>, or <a href="http://www.bloodfrontier.com/chat">Join In</a> today!
+			</div>
+
+		</div>
 </html>
