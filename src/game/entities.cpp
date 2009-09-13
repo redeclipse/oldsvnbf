@@ -762,7 +762,7 @@ namespace entities
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 						d->checkpoint = n;
-						d->cpmillis = lastmillis;
+						if(!d->cpmillis || e.attrs[5] == CP_START) d->cpmillis = lastmillis;
 					}
 				}
 			} break;
