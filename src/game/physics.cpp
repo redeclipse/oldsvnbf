@@ -505,7 +505,7 @@ namespace physics
 				if(d->action[AC_DASH] && !d->action[AC_JUMP] && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && allowed && (d->move || d->strafe))
 				{
 					float mag = impulseforce(d)*(!d->action[AC_IMPULSE] && (!d->move || !d->strafe) ? 1.5f : 0.75f)+max(d->vel.magnitude(), 1.f);
-					vecfromyawpitch(d->aimyaw, 0, d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
+					vecfromyawpitch(d->aimyaw, d->aimpitch, d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
 					d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
 					playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -536,10 +536,11 @@ namespace physics
 					}
 					if(((d->turnside && d->vel.magnitude() > 5) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
 					{
-						loopi(d->turnside ? 4 : 2)
+						loopi(d->turnside ? 3 : 1)
 						{
 							vec oldpos = d->o, dir;
-							vecfromyawpitch(d->aimyaw, 0, i%2 ? -1 : 1, d->turnside && i > 1 ? d->turnside : d->strafe, dir);
+							int move = i ? (i%2 ? 1 : -1) : d->move;
+							vecfromyawpitch(d->aimyaw, 0, move, d->turnside && i > 1 ? d->turnside : d->strafe, dir);
 							dir.normalize(); d->o.add(dir);
 							if((!collide(d, dir) || inside) && !wall.iszero())
 							{
@@ -553,7 +554,7 @@ namespace physics
 									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += d->turnside ? mag : mag/2;
 									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 									d->doimpulse(impulsecost, IM_T_KICK, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(i%2 ? -1 : 1);
+									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
 									d->turnyaw = off; d->turnroll = 0;
 									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -567,15 +568,15 @@ namespace physics
 										float mag = max(d->vel.magnitude(), 1.f); d->vel.z = 0; d->vel = vec(rft).mul(mag);
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 										d->doimpulse(impulsecost, IM_T_SKATE, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(i%2 ? -1 : 1);
+										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
 										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
-									else if(d->move < 0) d->impulse[IM_TYPE] = 0; // cancel
+									else if(d->action[AC_SPECIAL]) d->turnside = 0; // cancel
 									else m = rft; // re-project and override
 								}
 								break;
 							}
-							else { d->o = oldpos; if(d->turnside && i > 2) d->turnside = 0; }
+							else { d->o = oldpos; if(d->turnside && i > 1) d->turnside = 0; }
 						}
 					}
 					else if(d->turnside) d->turnside = 0;
