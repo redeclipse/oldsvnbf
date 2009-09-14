@@ -129,7 +129,7 @@ enum
 
     TEXT_LEFT_UP		= TEXT_UPWARD|TEXT_LEFT_JUSTIFY,
     TEXT_CENTER_UP		= TEXT_UPWARD|TEXT_CENTERED,
-    TEXT_RIGHT_UP		= TEXT_UPWARD|TEXT_RIGHT_JUSTIFY,
+    TEXT_RIGHT_UP		= TEXT_UPWARD|TEXT_RIGHT_JUSTIFY
 };
 
 extern bool setfont(const char *name);
@@ -292,7 +292,7 @@ enum
     DECAL_BLOOD,
     DECAL_BULLET,
     DECAL_ENERGY,
-    DECAL_STAIN,
+    DECAL_STAIN
 };
 
 extern void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);
