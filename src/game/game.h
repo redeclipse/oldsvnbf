@@ -34,25 +34,9 @@ enum
 
 enum								// entity types
 {
-	NOTUSED = ET_EMPTY,
-	LIGHT = ET_LIGHT,
-	MAPMODEL = ET_MAPMODEL,
-	PLAYERSTART = ET_PLAYERSTART,
-	ENVMAP = ET_ENVMAP,
-	PARTICLES = ET_PARTICLES,
-	MAPSOUND = ET_SOUND,
-	LIGHTFX = ET_LIGHTFX,
-	SUNLIGHT = ET_SUNLIGHT,
-	WEAPON = ET_GAMESPECIFIC,
-	TELEPORT,
-	ACTOR,
-	TRIGGER,
-	PUSHER,
-	FLAG,
-	CHECKPOINT,
-	CAMERA,
-	WAYPOINT,
-	MAXENTTYPES
+	NOTUSED = ET_EMPTY, LIGHT = ET_LIGHT, MAPMODEL = ET_MAPMODEL, PLAYERSTART = ET_PLAYERSTART, ENVMAP = ET_ENVMAP, PARTICLES = ET_PARTICLES,
+	MAPSOUND = ET_SOUND, LIGHTFX = ET_LIGHTFX, SUNLIGHT = ET_SUNLIGHT, WEAPON = ET_GAMESPECIFIC,
+	TELEPORT, ACTOR, TRIGGER, PUSHER, FLAG, CHECKPOINT, CAMERA, WAYPOINT, MAXENTTYPES
 };
 
 enum { EU_NONE = 0, EU_ITEM, EU_AUTO, EU_ACT, EU_MAX };
@@ -210,50 +194,19 @@ enum
 
 enum
 {
-	WEAP_PISTOL = 0,
-	WEAP_SHOTGUN,
-	WEAP_SMG,
-	WEAP_FLAMER,
-	WEAP_PLASMA,
-	WEAP_RIFLE,
-	WEAP_GRENADE,
-	WEAP_SUPER, // end of item weapon set
-	WEAP_INSTA = WEAP_SUPER,
-	WEAP_TOTAL, // end of selectable weapon set
-	WEAP_GIBS = WEAP_TOTAL,
-	WEAP_MAX,
+	WEAP_PISTOL = 0, WEAP_SHOTGUN, WEAP_SMG, WEAP_FLAMER, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_SUPER, // end of item weapon set
+	WEAP_INSTA = WEAP_SUPER, WEAP_TOTAL, // end of selectable weapon set
+	WEAP_GIBS = WEAP_TOTAL, WEAP_MAX,
 };
 #define isweap(a)		(a > -1 && a < WEAP_MAX)
 
-enum
-{
-	WEAP_F_NONE = 0,
-	WEAP_F_FORCED = 1<<0, // forced spawned
-};
+enum { WEAP_F_NONE = 0, WEAP_F_FORCED = 1<<0 };
+enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH, WEAP_S_PICKUP, WEAP_S_WAIT, WEAP_S_MAX };
 
 enum
 {
-	WEAP_S_IDLE = 0,
-	WEAP_S_SHOOT,
-	WEAP_S_RELOAD,
-	WEAP_S_POWER,
-	WEAP_S_SWITCH,
-	WEAP_S_PICKUP,
-	WEAP_S_WAIT,
-	WEAP_S_MAX
-};
-
-enum
-{
-	IMPACT_GEOM		= 1<<0,
-	BOUNCE_GEOM		= 1<<1,
-	IMPACT_PLAYER	= 1<<2,
-	BOUNCE_PLAYER	= 1<<3,
-	COLLIDE_TRACE	= 1<<4,
-	COLLIDE_OWNER	= 1<<5,
-	COLLIDE_CONT	= 1<<6,
-	COLLIDE_GEOM	= IMPACT_GEOM | BOUNCE_GEOM,
-	COLLIDE_PLAYER	= IMPACT_PLAYER | BOUNCE_PLAYER,
+	IMPACT_GEOM = 1<<0, BOUNCE_GEOM = 1<<1, IMPACT_PLAYER = 1<<2, BOUNCE_PLAYER = 1<<3, COLLIDE_TRACE = 1<<4, COLLIDE_OWNER = 1<<5, COLLIDE_CONT = 1<<6,
+	COLLIDE_GEOM = IMPACT_GEOM | BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER | BOUNCE_PLAYER,
 };
 
 struct weaptypes
@@ -355,7 +308,7 @@ weaptypes weaptype[WEAP_MAX] =
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
 			1,		1,		{ 1, 1 },	{ 500, 500 },	500,	{ 25, 25 },		{ 500, 500 },			0,		{ 1000, 1000 },
 			100,	{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
-			 { IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	true,		false,	{ false, false },	{ true, true },
 			{ 0.35f, 0.35f },	{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 35, 35 },		{ 2, 2 },			{ 0, 0 },
 			{ 5, 5 },		{ 100, 100 },		{ 768, 768 },			4,
@@ -368,74 +321,28 @@ extern weaptypes weaptype[];
 
 enum
 {
-	HIT_NONE 	= 0,
-	HIT_ALT		= 1<<0,
-	HIT_LEGS	= 1<<1,
-	HIT_TORSO	= 1<<2,
-	HIT_HEAD	= 1<<3,
-	HIT_FULL	= 1<<4,
-	HIT_PROJ	= 1<<5,
-	HIT_EXPLODE	= 1<<6,
-	HIT_BURN	= 1<<7,
-	HIT_MELT	= 1<<8,
-	HIT_DEATH	= 1<<9,
-	HIT_WATER	= 1<<10,
-	HIT_WAVE	= 1<<11,
-	HIT_SPAWN	= 1<<12,
-	HIT_LOST	= 1<<13,
-	HIT_KILL	= 1<<14,
-	HIT_SFLAGS	= HIT_KILL,
+	HIT_NONE = 0, HIT_ALT = 1<<0, HIT_LEGS = 1<<1, HIT_TORSO = 1<<2, HIT_HEAD = 1<<3, HIT_FULL = 1<<4, HIT_PROJ = 1<<5,
+	HIT_EXPLODE = 1<<6, HIT_BURN = 1<<7, HIT_MELT = 1<<8, HIT_DEATH = 1<<9, HIT_WATER = 1<<10, HIT_WAVE = 1<<11, HIT_SPAWN = 1<<12,
+	HIT_LOST = 1<<13, HIT_KILL = 1<<14, HIT_SFLAGS = HIT_KILL
 };
 
 #define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
 
 enum
 {
-	FRAG_NONE		= 0,
-	FRAG_HEADSHOT	= 1<<1,
-	FRAG_OBLITERATE = 1<<2,
-	FRAG_SPREE1		= 1<<3,
-	FRAG_SPREE2		= 1<<4,
-	FRAG_SPREE3		= 1<<5,
-	FRAG_SPREE4		= 1<<6,
-	FRAG_SPREE5		= 1<<7,
-	FRAG_SPREE6		= 1<<8,
-	FRAG_MKILL1		= 1<<9,
-	FRAG_MKILL2		= 1<<10,
-	FRAG_MKILL3		= 1<<11,
-	FRAG_REVENGE	= 1<<12,
-	FRAG_DOMINATE	= 1<<13,
-	FRAG_SPREES		= 6,
-	FRAG_SPREE		= 3,
-	FRAG_MKILL		= 9,
-	FRAG_CHECK		= FRAG_SPREE1|FRAG_SPREE2|FRAG_SPREE3|FRAG_SPREE4|FRAG_SPREE5|FRAG_SPREE6,
-	FRAG_MULTI		= FRAG_MKILL1|FRAG_MKILL2|FRAG_MKILL3,
+	FRAG_NONE = 0, FRAG_HEADSHOT = 1<<1, FRAG_OBLITERATE = 1<<2,
+	FRAG_SPREE1 = 1<<3, FRAG_SPREE2 = 1<<4, FRAG_SPREE3 = 1<<5, FRAG_SPREE4 = 1<<6, FRAG_SPREE5 = 1<<7, FRAG_SPREE6 = 1<<8,
+	FRAG_MKILL1 = 1<<9, FRAG_MKILL2 = 1<<10, FRAG_MKILL3 = 1<<11, FRAG_REVENGE = 1<<12, FRAG_DOMINATE = 1<<13,
+	FRAG_SPREES = 6, FRAG_SPREE = 3, FRAG_MKILL = 9,
+	FRAG_CHECK = FRAG_SPREE1|FRAG_SPREE2|FRAG_SPREE3|FRAG_SPREE4|FRAG_SPREE5|FRAG_SPREE6,
+	FRAG_MULTI = FRAG_MKILL1|FRAG_MKILL2|FRAG_MKILL3,
 };
 
+enum { G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_RACE, G_MAX };
 enum
 {
-	G_DEMO = 0,
-	G_LOBBY,
-	G_EDITMODE,
-	G_STORY,
-	G_DEATHMATCH,
-	G_STF,
-	G_CTF,
-	G_RACE,
-	G_MAX
-};
-
-enum
-{
-	G_M_NONE	= 0,
-	G_M_MULTI	= 1<<0,
-	G_M_TEAM	= 1<<1,
-	G_M_INSTA	= 1<<2,
-	G_M_DUEL	= 1<<3,
-	G_M_SURVIVOR= 1<<4,
-	G_M_ARENA	= 1<<5,
-	G_M_ALL		= G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,
-	G_M_NUM		= 6
+	G_M_NONE = 0, G_M_MULTI = 1<<0, G_M_TEAM = 1<<1, G_M_INSTA = 1<<2, G_M_DUEL = 1<<3, G_M_SURVIVOR= 1<<4, G_M_ARENA = 1<<5,
+	G_M_ALL = G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_NUM = 6
 };
 
 struct gametypes
@@ -497,12 +404,10 @@ extern gametypes gametype[], mutstype[];
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
 #define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
 
-#define weaploads(a,b)		(a == b || weaptype[a].reloads)
-#define weapcarry(a,b)		(a != b && weaptype[a].reloads)
-#define weapattr(a,b)		(a != b ? a : (b != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
-
-enum { FLAGMODE_NONE = 0, FLAGMODE_STF, FLAGMODE_CTF, FLAGMODE_MULTICTF, FLAGMODE_STFMULTICTF, FLAGMODE_NONMULTICTF, FLAGMODE_MAX };
-#define chkmode(a,b)		(!a  || (a < 0 ? -a != b : a == b))
+#define weaploads(a,b)		(a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads)
+#define weapcarry(a,b)		(a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)
+#define weapattr(a,b)		(a != (isweap(b) ? b : WEAP_PISTOL) ? a : ((isweap(b) ? b : WEAP_PISTOL) != WEAP_GRENADE ? WEAP_GRENADE : WEAP_PISTOL))
+#define chkmode(a,b)		(!a || (a < 0 ? -a != b : a == b))
 
 // network messages codes, c2s, c2c, s2c
 enum

@@ -501,7 +501,7 @@ namespace physics
 					if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 				}
 				bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
-				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) d->turnside = 0;
+				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) { d->turnside = 0; d->resetphys(); }
 				if(d->action[AC_DASH] && !d->action[AC_JUMP] && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && allowed && (d->move || d->strafe))
 				{
 					float mag = impulseforce(d)*(!d->action[AC_IMPULSE] && (!d->move || !d->strafe) ? 1.5f : 0.75f)+max(d->vel.magnitude(), 1.f);
@@ -571,19 +571,14 @@ namespace physics
 										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
 										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
-									else if(d->action[AC_SPECIAL])
-									{
-										d->turnside = 0; // cancel
-										d->action[AC_SPECIAL] = false;
-									}
-									else m = rft; // re-project and override
+									else m = vec(rft).mul(d->move); // re-project and override
 								}
 								break;
 							}
-							else { d->o = oldpos; if(d->turnside && i > 1) d->turnside = 0; }
+							else { d->o = oldpos; if(d->turnside && i > 1) { d->turnside = 0; d->resetphys(); } }
 						}
 					}
-					else if(d->turnside) d->turnside = 0;
+					else if(d->turnside) { d->turnside = 0; d->resetphys(); }
 				}
 			}
 			d->action[AC_JUMP] = d->action[AC_DASH] = false;
