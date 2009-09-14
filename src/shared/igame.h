@@ -10,7 +10,7 @@ namespace entities
 	extern void initents(stream *g, int mtype, int mver, char *gid, int gver);
 	extern float dropheight(extentity &e);
 	extern void fixentity(int n, bool recurse = true);
-	extern bool cansee(extentity &e);;
+	extern bool cansee(extentity &e);
 	extern const char *findname(int type);
 	extern int findtype(char *type);
 	extern bool maylink(int type, int ver = 0);
