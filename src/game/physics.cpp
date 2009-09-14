@@ -554,7 +554,7 @@ namespace physics
 									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += d->turnside ? mag : mag/2;
 									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 									d->doimpulse(impulsecost, IM_T_KICK, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
+									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
 									d->turnyaw = off; d->turnroll = 0;
 									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -568,7 +568,7 @@ namespace physics
 										float mag = max(d->vel.magnitude(), 1.f); d->vel.z = 0; d->vel = vec(rft).mul(mag);
 										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
 										d->doimpulse(impulsecost, IM_T_SKATE, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*move;
+										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
 										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
 									}
 									else m = vec(rft).mul(d->move); // re-project and override
