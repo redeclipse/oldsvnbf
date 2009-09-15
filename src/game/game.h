@@ -858,7 +858,7 @@ extern const char *serverinfotypes[];
 struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
-	int team, clientnum, privilege, lastnode, checkpoint, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
+	int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, lastdamagetone, quake;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
@@ -866,7 +866,7 @@ struct gameent : dynent, gamestate
 	string name, info, obit;
 	vector<int> airnodes;
 
-	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), lastupdate(0), lastpredict(0), plag(0), ping(0),
+	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1),
 		lastattacker(-1), lastpoints(0), lastdamagetone(0), quake(0),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
@@ -904,7 +904,7 @@ struct gameent : dynent, gamestate
 	void clearstate()
 	{
 		loopi(IM_MAX) impulse[i] = 0;
-		lasthit = lastkill = lastdamagetone = quake = turnmillis = turnside = 0;
+		cplast = lasthit = lastkill = lastdamagetone = quake = turnmillis = turnside = 0;
 		turnroll = turnyaw = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;

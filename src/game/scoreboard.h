@@ -19,7 +19,7 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
-		char *timetostr(int millis)
+		char *timetostr(int millis, bool limited = false)
 		{
 			static string timestr; timestr[0] = 0;
 			int tm = millis, ms = 0, ss = 0, mn = 0;
@@ -34,7 +34,7 @@ namespace hud
 					if(tm > 0) mn = tm;
 				}
 			}
-			formatstring(timestr)("%d:%02d.%03d", mn, ss, ms);
+			formatstring(timestr)(limited ? "%d:%02d.%d" : "%d:%02d.%03d", mn, ss, limited ? ms/100 : ms);
 			return timestr;
 		}
 
@@ -596,6 +596,26 @@ namespace hud
 						if((numout += 1) > 3) return sy;
 					}
 				}
+			}
+			return sy;
+		}
+
+		int raceinventory(int x, int y, int s, float blend)
+		{
+			int sy = 0;
+			if(groupplayers())
+			{
+				pushfont("sub");
+				scoregroup &sg = *groups[0];
+				if(m_team(game::gamemode, game::mutators))
+				{
+					if(sg.score) sy += draw_textx("\fg%s", x, y, 255, 255, 255, int(blend*255), TEXT_LEFT_UP, -1, -1, timetostr(sg.score));
+				}
+				else if(!sg.players.empty())
+				{
+					if(sg.players[0]->cptime) sy += draw_textx("\fg%s", x, y, 255, 255, 255, int(blend*255), TEXT_LEFT_UP, -1, -1, timetostr(sg.players[0]->cptime));
+				}
+				popfont();
 			}
 			return sy;
 		}
