@@ -331,13 +331,13 @@ namespace hud
 			g.popfont();
 			if(game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
 			{
-				float ratio =  game::player1->frags*100.f/float(max(game::player1->deaths, 1)),
+				float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
 					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
 
 				g.space(1);
-				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f%%\fS ratio", 0xFFFFFF, NULL,
+				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio", 0xFFFFFF, NULL,
 					game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
-					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio);
+					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio);
 				g.textf("\fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
 
 				if(m_story(game::gamemode))
