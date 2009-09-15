@@ -1341,16 +1341,24 @@ namespace hud
 			}
 			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
-		if(inventoryrace && m_race(game::gamemode) && (game::player1->cpmillis > 0 || game::player1->cptime) && (game::player1->state == CS_ALIVE || game::player1->state == CS_DEAD || game::player1->state == CS_WAITING))
+		if(inventoryrace && m_race(game::gamemode))
 		{
-			pushfont("default");
-			if(game::player1->cpmillis > 0)
+			if((game::player1->cpmillis > 0 || game::player1->cptime) && (game::player1->state == CS_ALIVE || game::player1->state == CS_DEAD || game::player1->state == CS_WAITING))
 			{
-				sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(lastmillis-game::player1->cpmillis));
-				popfont(); pushfont("sub");
+				pushfont("default");
+				if(game::player1->cpmillis > 0)
+					sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(lastmillis-game::player1->cpmillis, true));
+				else if(game::player1->cplast)
+					sy += draw_textx("\fzwE%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cplast));
+				popfont();
+				if(game::player1->cptime)
+				{
+					pushfont("sub");
+					sy += draw_textx("\fy%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cptime));
+					popfont();
+				}
 			}
-			if(game::player1->cptime) sy += draw_textx("\fg%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cptime));
-			popfont();
+			sy += hud::sb.raceinventory(x, y-sy, sw, fade);
 		}
 		return sy;
 	}
