@@ -724,15 +724,12 @@ namespace hud
 						}
 						if(shownotices >= 4)
 						{
-							if(game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
-							{
-								SEARCHBINDCACHE(altkey)("action 1", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack");
-							}
 							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 							{
-								SEARCHBINDCACHE(attackkey)("action 1", 0);
+								SEARCHBINDCACHE(attackkey)("action 0", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
+								SEARCHBINDCACHE(altkey)("action 1", 0);
+								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack");
 							}
 							if(game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
 							{
