@@ -261,7 +261,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ true, true },		{ false, false },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.25f, 0.25f },		{ 1, 1 },		{ 32, 24 },		{ 24, 20 },			{ 0, 0 },
-			{ 0.25f, 1 },		{ 20, 40 },			{ 192, 192 },		7,
+			{ 0.25f, 1 },		{ 20, 40 },			{ 192, 256 },		7,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
