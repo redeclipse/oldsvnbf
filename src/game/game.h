@@ -256,9 +256,9 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 200 }, 	2000,	{ 15, 15 },		{ 200, 200 },		0,			{ 500, 500 },
-			0,		{ 32, 24 },	{ 1, 5 },		{ 10, 25 },		{ 2, 1 },
-			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER },
+			50,		50,		{ 1, 5 },	{ 100, 250 }, 	2000,	{ 15, 10 },		{ 200, 150 },		0,			{ 500, 1000 },
+			0,		{ 32, 32 },	{ 1, 5 },		{ 10, 20 },		{ 2, 1 },
+			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ true, true },		{ false, false },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.25f, 0.25f },		{ 1, 1 },		{ 32, 24 },		{ 24, 20 },			{ 0, 0 },
 			{ 0.25f, 1 },		{ 20, 40 },			{ 192, 192 },		7,
@@ -1021,7 +1021,7 @@ struct projent : dynent
 	vec from, to, norm;
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
-	bool local, beenused, radial, extinguish, canrender, limited;
+	bool local, beenused, radial, extinguish, limited;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int schan, id, weap, flags, colour, hitflags;
@@ -1050,7 +1050,6 @@ struct projent : dynent
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
 		beenused = radial = extinguish = limited = false;
-		canrender = true;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
