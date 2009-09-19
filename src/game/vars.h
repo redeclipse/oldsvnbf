@@ -58,7 +58,7 @@ VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number, 2 = by rank, 3 = humans v
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
-VARG(ctfstyle, 0, 1, 2); // 0 = classic touch-and-return, 1 = grab and take home, 2 = dominate and protect
+VARG(ctfstyle, 0, 1, 3); // 0 = classic touch-and-return, 1 = grab and take home, 2 = defend and reset, 3 = dominate and protect
 VARG(ctfresetdelay, 0, 30000, INT_MAX-1);
 
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more

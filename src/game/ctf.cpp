@@ -5,7 +5,7 @@ namespace ctf
 
 	void dropflag(gameent *d)
 	{
-		if(m_ctf(game::gamemode) && ctfstyle <= 1)
+		if(m_ctf(game::gamemode) && ctfstyle <= 2)
 		{
 			vec dir;
 			vecfromyawpitch(d->yaw, d->pitch, -d->move, -d->strafe, dir);
@@ -58,7 +58,7 @@ namespace ctf
 				if(!k)
 				{
 					float dist = dir.magnitude(), diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-					if(isctfhome(f, game::player1->team) && ctfstyle <= 1 && !hasflags.empty())
+					if(isctfhome(f, game::player1->team) && ctfstyle <= 2 && !hasflags.empty())
 					{
 						fade += (1.f-fade)*diff;
 						size += size*diff;
@@ -91,7 +91,7 @@ namespace ctf
 				}
 			}
 			pushfont("super");
-			if(!hasflags.empty() && ctfstyle <= 1) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
+			if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
 			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
 			popfont();
@@ -121,7 +121,7 @@ namespace ctf
 			sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"));
 			if(f.owner) switch(ctfstyle)
 			{
-				case 2: if(f.owner == game::player1) { hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay)*100)); break; }
+				case 3: if(f.owner == game::player1) { hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay)*100)); break; }
 				default: hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner)); break;
 			}
 		}
@@ -151,7 +151,7 @@ namespace ctf
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 				above.z += 2.5f;
             }
-			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 2 && f.taketime && f.owner && f.owner->team != f.team)))
+			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
@@ -201,7 +201,7 @@ namespace ctf
             defformatstring(info)("@%s flag", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 			above.z += 2.5f;
-			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 2 && f.taketime && f.owner && f.owner->team != f.team)))
+			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
@@ -484,7 +484,7 @@ namespace ctf
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
-            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 1 && !f.droptime)) continue;
+            if(!entities::ents.inrange(f.ent) || !(f.base&BASE_FLAG) || f.owner || (f.team == d->team && ctfstyle <= 2 && (ctfstyle == 2 || !f.droptime))) continue;
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
                 if(f.pickup) continue;
@@ -497,7 +497,7 @@ namespace ctf
 
 	bool aihomerun(gameent *d, ai::aistate &b)
 	{
-		if(ctfstyle <= 1)
+		if(ctfstyle <= 2)
 		{
 			vec pos = d->feetpos();
 			loopk(2)
@@ -540,10 +540,10 @@ namespace ctf
 			{
 				ctfstate::flag &g = st.flags[i];
 				if(g.owner == d) hasflags.add(i);
-				else if(isctfflag(g, ai::owner(d)) && (ctfstyle >= 2 || (g.owner && ai::owner(g.owner) != ai::owner(d)) || g.droptime))
+				else if(isctfflag(g, ai::owner(d)) && (ctfstyle >= 3 || (g.owner && ai::owner(g.owner) != ai::owner(d)) || g.droptime))
 					takenflags.add(i);
 			}
-			if(!hasflags.empty() && ctfstyle <= 1)
+			if(!hasflags.empty() && ctfstyle <= 2)
 			{
 				aihomerun(d, b);
 				return true;
@@ -572,10 +572,10 @@ namespace ctf
 		{
 			ctfstate::flag &f = st.flags[j];
 			bool home = isctfhome(f, ai::owner(d));
-			if(d->aitype == AI_BOT && (!home || ctfstyle >= 2) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
+			if(d->aitype == AI_BOT && (!home || ctfstyle >= 3) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 2 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 3 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
 			ai::checkothers(targets, d, home || d->aitype != AI_BOT ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			if(d->aitype == AI_BOT)
 			{
@@ -643,7 +643,7 @@ namespace ctf
 
 	bool aidefend(gameent *d, ai::aistate &b)
 	{
-		if(ctfstyle <= 1 && d->aitype == AI_BOT)
+		if(ctfstyle <= 2 && d->aitype == AI_BOT)
 		{
 			static vector<int> hasflags;
 			hasflags.setsizenodelete(0);
@@ -723,7 +723,7 @@ namespace ctf
 		if(st.flags.inrange(b.target) && d->aitype == AI_BOT)
 		{
 			ctfstate::flag &f = st.flags[b.target];
-			if(isctfhome(f, ai::owner(d)) && ctfstyle <= 1)
+			if(isctfhome(f, ai::owner(d)) && ctfstyle <= 2)
 			{
 				static vector<int> hasflags; hasflags.setsizenodelete(0);
 				loopv(st.flags)

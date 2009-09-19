@@ -54,7 +54,7 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
 				flag &f = flags[k];
-				if(isctfhome(f, ci->team) && (f.owner < 0 || (GVAR(ctfstyle) <= 1 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
+				if(isctfhome(f, ci->team) && (f.owner < 0 || (GVAR(ctfstyle) <= 2 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
 				{
 					ctfstate::returnflag(i);
 					givepoints(ci, 5);
@@ -79,7 +79,7 @@ struct ctfservmode : ctfstate, servmode
     {
         if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || ci->state.aitype >= AI_START) return;
 		flag &f = flags[i];
-		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && GVAR(ctfstyle) <= 1 && !f.droptime)) return;
+		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && GVAR(ctfstyle) <= 2 && (GVAR(ctfstyle) == 2 || !f.droptime))) return;
 		if(!GVAR(ctfstyle) && f.team == ci->team)
 		{
 			ctfstate::returnflag(i);
@@ -115,7 +115,7 @@ struct ctfservmode : ctfstate, servmode
             flag &f = flags[i];
             switch(GVAR(ctfstyle))
             {
-            	case 2:
+            	case 3:
 					if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GVAR(ctfresetdelay))
 					{
 						clientinfo *ci = (clientinfo *)getinfo(f.owner);
