@@ -3,7 +3,7 @@ namespace hud
 	struct scoreboard : guicb
 	{
 		bool scoreson, scoresoff, shownscores;
-		int menustart;
+		int menustart, menulastpress;
 
 		struct sline { string s; };
 		struct teamscore
@@ -54,9 +54,9 @@ namespace hud
 		IVARP(showspectators, 0, 1, 1);
 		IVARP(showconnecting, 0, 0, 1);
 
-		scoreboard() : scoreson(false), scoresoff(false), shownscores(false)
+		scoreboard() : scoreson(false), scoresoff(false), shownscores(false), menulastpress(0)
 		{
-			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0, false, false));
+			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0, false, false, true));
 		}
 
 		bool canshowscores()
@@ -73,10 +73,20 @@ namespace hud
 			return false;
 		}
 
-		void showscores(bool on, bool interm = false, bool onauto = true)
+		void showscores(bool on, bool interm = false, bool onauto = true, bool ispress = false)
 		{
 			if(client::ready())
 			{
+				if(ispress)
+				{
+					bool within = menulastpress && lastmillis-menulastpress < PHYSMILLIS;
+					if(on)
+					{
+						if(within) onauto = true;
+						menulastpress = lastmillis;
+					}
+					else if(within && !scoresoff) { menulastpress = 0; return; }
+				}
 				if(!scoreson && on) menustart = starttime();
 				scoresoff = !onauto;
 				scoreson = on;
@@ -328,6 +338,10 @@ namespace hud
 			SEARCHBINDCACHE(scoreboardkey)("showscores", 1);
 			g.pushfont("sub");
 			g.textf("%s \fs\fc%s\fS to close this window", 0xFFFFFF, NULL, scoresoff ? "Release" : "Press", scoreboardkey);
+			g.pushlist();
+			g.space(3);
+			g.textf("Double-tap to keep the window open", 0xFFFFFF, NULL);
+			g.poplist();
 			g.popfont();
 			if(game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
 			{
