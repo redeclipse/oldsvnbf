@@ -1244,33 +1244,38 @@ void regularsplash(int type, int color, int radius, int num, int fade, const vec
 	splash(type, color, radius, num, fade, p, size, grav, collide);
 }
 
+bool canaddparticles()
+{
+    return !renderedgame && !shadowmapping;
+}
+
 void regular_part_create(int type, int fade, const vec &p, int color, float size, int grav, int collide, physent *pl, int delay)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	regularcreate(type, color, fade, p, size, grav, collide, pl, delay);
 }
 
 void part_create(int type, int fade, const vec &p, int color, float size, int grav, int collide, physent *pl)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	create(type, color, fade, p, size, grav, collide, pl);
 }
 
 void regular_part_splash(int type, int num, int fade, const vec &p, int color, float size, int grav, int collide, int radius, int delay)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	regularsplash(type, color, radius, num, fade, p, size, grav, collide, delay);
 }
 
 void part_splash(int type, int num, int fade, const vec &p, int color, float size, int grav, int collide, int radius)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	splash(type, color, radius, num, fade, p, size, grav, collide);
 }
 
 void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, float size, int grav, int collide)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	vec v;
 	float d = e.dist(s, v);
 	int steps = clamp(int(d*2), 1, maxparticletrail);
@@ -1286,20 +1291,20 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
 
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide, physent *pl)
 {
-	if(shadowmapping || renderedgame || !t[0] || (t[0] == '@' && !t[1])) return;
+	if(!canaddparticles() || !t[0] || (t[0] == '@' && !t[1])) return;
 	if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
 	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide, pl)->text = t[0]=='@' ? newstring(t) : t;
 }
 
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, int grav, int collide, physent *pl)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	newparticle(p, dest, fade, type, color, size, grav, collide, pl);
 }
 
 void part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size, int grav, int collide)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	float growth = maxsize - size;
 	if(fade < 0) fade = int(growth*25);
 	newparticle(dest, vec(0, 0, 1), fade, type, color, size, grav, collide)->val = growth;
@@ -1307,13 +1312,13 @@ void part_fireball(const vec &dest, float maxsize, int type, int fade, int color
 
 void regular_part_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size, int grav, int collide)
 {
-	if(shadowmapping || renderedgame || !emit_particles()) return;
+	if(!canaddparticles() || !emit_particles()) return;
 	part_fireball(dest, maxsize, type, fade, color, size, grav, collide);
 }
 
 void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fade, int color, float size, int grav, int collide)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	loopi(amt)
 	{
 		vec w(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z);
@@ -1324,7 +1329,7 @@ void part_spawn(const vec &o, const vec &v, float z, uchar type, int amt, int fa
 
 void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &w, float z2, uchar type, int amt, int fade, int color, float size, int grav, int collide, physent *pl)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	loopi(amt)
 	{
 		vec from(rnd(int(v.x*2))-int(v.x), rnd(int(v.y*2))-int(v.y), rnd(int(v.z*2))-int(v.z)+z1);
@@ -1339,35 +1344,35 @@ void part_flares(const vec &o, const vec &v, float z1, const vec &d, const vec &
 
 void part_portal(const vec &o, float size, float yaw, float pitch, int type, int fade, int color)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	portalrenderer *p = dynamic_cast<portalrenderer *>(parts[type]);
 	if(p) p->addportal(o, fade, color, size, yaw, pitch);
 }
 
 void part_icon(const vec &o, Texture *tex, float blend, float size, int grav, int collide, int fade, int color, float start, float length, physent *pl)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	iconrenderer *p = dynamic_cast<iconrenderer *>(parts[PART_ICON]);
 	if(p) p->addicon(o, tex, blend, fade, color, size, grav, collide, start, length, pl);
 }
 
 void part_line(const vec &o, const vec &v, float size, int fade, int color, int type)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	lineprimitiverenderer *p = dynamic_cast<lineprimitiverenderer *>(parts[type]);
 	if(p) p->addline(o, v, fade, color, size);
 }
 
 void part_triangle(const vec &o, float yaw, float pitch, float size, int fade, int color, bool fill, int type)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	trisprimitiverenderer *p = dynamic_cast<trisprimitiverenderer *>(parts[type]);
 	if(p) p->addtriangle(o, yaw, pitch, fade, color, size, fill);
 }
 
 void part_dir(const vec &o, float yaw, float pitch, float size, int fade, int color, bool fill)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 
 	vec v; vecfromyawpitch(yaw, pitch, 1, 0, v); v.normalize();
 	part_line(o, vec(v).mul(size+1.f).add(o), 1.f, fade, color);
@@ -1384,14 +1389,14 @@ void part_trace(const vec &o, const vec &v, float size, int fade, int color, boo
 
 void part_ellipse(const vec &o, const vec &v, float size, int fade, int color, int axis, bool fill, int type)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	loopprimitiverenderer *p = dynamic_cast<loopprimitiverenderer *>(parts[type]);
 	if(p) p->addellipse(o, v, fade, color, size, axis, fill);
 }
 
 void part_radius(const vec &o, const vec &v, float size, int fade, int color, bool fill)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	loopprimitiverenderer *p = dynamic_cast<loopprimitiverenderer *>(parts[PART_ELLIPSE]);
 	if(p)
 	{
@@ -1403,7 +1408,7 @@ void part_radius(const vec &o, const vec &v, float size, int fade, int color, bo
 
 void part_cone(const vec &o, const vec &dir, float radius, float angle, float size, int fade, int color, bool fill, int type)
 {
-	if(shadowmapping || renderedgame) return;
+	if(!canaddparticles()) return;
 	coneprimitiverenderer *p = dynamic_cast<coneprimitiverenderer *>(parts[type]);
 	if(p) p->addcone(o, dir, radius, angle, fade, color, size, fill);
 }
