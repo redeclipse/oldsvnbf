@@ -1109,6 +1109,15 @@ void texturedel(int i, bool local)
 		if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
 		loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
 	}
+
+	loopvj(slots)
+	{
+		if(slots[j].layer > i)
+			slots[j].layer--;
+		else if(slots[j].layer == i) //since it's layer no longer exists
+			slots[j].layer = 0;
+	}
+
 	slots[i].reset();
 	slots.remove(i);
 	curtexnum--;
@@ -1137,7 +1146,7 @@ bool findcubetex(cube *c, int i)
 		}
 		else if(!isempty(c[j]))
 		{
-			loopk(6) if(c[j].texture[k] == i) return true;
+			loopk(6) if(c[j].texture[k] == i || (curtexnum-1 >= c[j].texture[k] && c[j].texture[k] >= 0 && slots[c[j].texture[k]].layer == i)) return true;
 		}
 	}
 	return false;
