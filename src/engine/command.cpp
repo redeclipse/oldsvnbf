@@ -387,12 +387,12 @@ char *parseexp(const char *&p, int right)		  // parse any nested set of () or []
             case '\0':
                 p--;
                 conoutf("\frmissing \"%c\"", right);
-                wordbuf.setsize(0);
+                wordbuf.setsizenodelete(0);
                 bufnest--;
                 return NULL;
+            case '(': case '[': if(c==left) brak++; break;
+            case ')': case ']': if(c==right) brak--; break;
         }
-        if(c==left) brak++;
-        else if(c==right) brak--;
         wordbuf.add(c);
 	}
 	wordbuf.pop();
@@ -408,7 +408,7 @@ char *parseexp(const char *&p, int right)		  // parse any nested set of () or []
 	{
 		s = newstring(wordbuf.getbuf(), wordbuf.length());
 	}
-	wordbuf.setsize(0);
+	wordbuf.setsizenodelete(0);
 	bufnest--;
 	return s;
 }
