@@ -361,6 +361,10 @@ char *parseexp(const char *&p, int right)		  // parse any nested set of () or []
 	int left = *p++;
 	for(int brak = 1; brak; )
 	{
+        size_t n = strcspn(p, "\r@\"/()[]");
+        wordbuf.put(p, n);
+        p += n;
+
 		int c = *p++;
         switch(c)
         {
