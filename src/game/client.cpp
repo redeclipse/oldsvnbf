@@ -233,13 +233,13 @@ namespace client
             return n;
         }
         // try case sensitive first
-        loopv(game::players)
+        loopv(game::players) if(game::players[i])
         {
             gameent *o = game::players[i];
             if(!strcmp(arg, o->name)) return o->clientnum;
         }
         // nothing found, try case insensitive
-        loopv(game::players)
+        loopv(game::players) if(game::players[i])
         {
             gameent *o = game::players[i];
             if(!strcasecmp(arg, o->name)) return o->clientnum;
