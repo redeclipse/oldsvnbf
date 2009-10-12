@@ -439,7 +439,7 @@ namespace game
 				vec p = d->headpos();
 				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
 				if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
-					part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 2.f, 50, DECAL_BLOOD, int(d->radius*4));
+					part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					string ds;

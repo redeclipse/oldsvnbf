@@ -637,7 +637,7 @@ namespace projs
 					part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 					if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 					{
-						part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
+						part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 50, DECAL_BLOOD);
 						proj.lasteffect = lastmillis;
 					}
 					break;
@@ -657,7 +657,7 @@ namespace projs
 			proj.lifesize = 1;
 			if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
-				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, 2.f, 50, DECAL_BLOOD);
+				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 50, DECAL_BLOOD);
 				proj.lasteffect = lastmillis;
 			}
 		}
