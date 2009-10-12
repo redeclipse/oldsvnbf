@@ -26,13 +26,13 @@ VARG(extrahealth, 0, 200, INT_MAX-1);
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
 
 VARG(vampire, 0, 0, 1);
-VARG(regendelay, 0, 5000, INT_MAX-1);
-VARG(regenguard, 0, 2500, INT_MAX-1);
-VARG(regentime, 0, 1000, INT_MAX-1);
+VARG(regendelay, 0, 3500, INT_MAX-1);
+VARG(regenguard, 0, 1000, INT_MAX-1);
+VARG(regentime, 0, 1500, INT_MAX-1);
 VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 
-VARG(impulsemeter, 0, 25000, INT_MAX-1); // impulse dash length
+VARG(impulsemeter, 0, 20000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
 VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
