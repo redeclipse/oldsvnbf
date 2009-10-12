@@ -32,7 +32,7 @@ VARG(regentime, 0, 1000, INT_MAX-1);
 VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 
-VARG(impulsemeter, 0, 10000, INT_MAX-1); // impulse dash length
+VARG(impulsemeter, 0, 25000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
 VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last

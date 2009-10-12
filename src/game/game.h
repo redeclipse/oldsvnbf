@@ -268,7 +268,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		{ 1, 20 },	{ 350, 2000 },	3500,	{ 25, 25 },		{ 1500,	25 },		0,			{ 1000, 6000 },
-			0,		{ 32, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
+			0,		{ 24, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, true },		{ true, false },	true,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },			{ 1, 1 },		{ 0, 0 },	{ 16, 32 },			{ 0, 0 },
@@ -288,10 +288,10 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 150 },	{ 350, 350 },			3000,	{ 3000, 3000 },
-			100,	{ 64, 48 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
+			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	false,		false,	{ false, false },	{ true, true },
-			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 50, 50 },		{ 4, 4 },			{ 0, 0 },
+			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 50, 50 },		{ 3, 3 },			{ 0, 0 },
 			{ 5, 5 },		{ 1000, 750 },		{ 768, 512 },			3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"projectiles/grenade"
 	},
