@@ -571,8 +571,8 @@ namespace projs
 				case WEAP_GRENADE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					int col = ((int(224*max(1.f-proj.lifespan,0.375f))<<16)+1)|((int(64*max(1.f-proj.lifespan,0.125f))+1)<<8), interval = lastmillis%1000;
-					float fluc = 0.75f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
+					int col = ((int(254*max(1.f-proj.lifespan,0.5f))<<16)+1)|((int(98*max(1.f-proj.lifespan,0.f))+1)<<8), interval = lastmillis%1000;
+					float fluc = 1.f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*fluc);
 					bool moving = proj.movement > 0.f;
 					if(lastmillis-proj.lasteffect >= m_speedtime(moving ? 200 : 350))
@@ -614,9 +614,11 @@ namespace projs
 				}
 				case WEAP_PLASMA:
 				{
-					proj.lifesize = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0625f) ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
+					bool taper = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0625f);
+					proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
 					part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.radius);
+					if(proj.stuck && !taper) proj.radius = max(proj.lifesize, 1e-3f); // hacky override
 					break;
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
@@ -738,13 +740,13 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtime(250), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*1.25f);
-							part_create(PART_ELECTRIC, m_speedtime(50), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
+							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
+							part_create(PART_ELECTRIC, m_speedtime(75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
 							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, -30);
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(750), 0x5599CC, 1.f);
+							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(250), 0x225599, 1.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));
-							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), m_speedtime(200), 10);
+							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), m_speedtime(proj.flags&HIT_ALT ? 250 : 75), 10);
 						}
 						else vol = 0;
 						break;
@@ -814,7 +816,7 @@ namespace projs
 			{
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius));
+					proj.o.sub(vec(dir).mul(proj.radius+1));
 					proj.stuck = true;
 					return 1;
 				}
@@ -853,7 +855,7 @@ namespace projs
             {
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius));
+					proj.o.sub(vec(dir).mul(proj.radius+1));
 					proj.stuck = true;
 					return 1;
 				}
