@@ -2,6 +2,7 @@
 namespace weapons
 {
 	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
+	VARP(autoswitchattack, 0, 0, 1); // 0 = don't try regular fire when alt fails, 1 = do try it
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
 	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
@@ -146,7 +147,7 @@ namespace weapons
 		{
 			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 			{
-				if(flags&HIT_ALT && !weaptype[d->weapselect].zooms && !weaptype[d->weapselect].power)
+				if(autoswitchattack && flags&HIT_ALT && !weaptype[d->weapselect].zooms && !weaptype[d->weapselect].power)
 				{
 					if(d->canshoot(d->weapselect, 0, sweap, lastmillis) ||  d->canshoot(d->weapselect, 0, sweap, lastmillis, WEAP_S_RELOAD))
 					{
