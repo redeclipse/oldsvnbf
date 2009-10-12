@@ -571,16 +571,14 @@ namespace projs
 				case WEAP_GRENADE:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
-					if(proj.movement > 0.f)
+					int col = ((int(224*max(1.f-proj.lifespan,0.375f))<<16)+1)|((int(64*max(1.f-proj.lifespan,0.125f))+1)<<8), interval = lastmillis%1000;
+					float fluc = 0.75f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*fluc);
+					bool moving = proj.movement > 0.f;
+					if(lastmillis-proj.lasteffect >= m_speedtime(moving ? 200 : 350))
 					{
-						int col = ((int(224*max(1.f-proj.lifespan,0.375f))<<16)+1)|((int(128*max(1.f-proj.lifespan,0.125f))+1)<<8);
-						part_create(PART_HINT_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize);
-						bool moving = proj.movement > 0.f;
-						if(lastmillis-proj.lasteffect >= m_speedtime(moving ? 250 : 500))
-						{
-							part_create(PART_SMOKE_LERP, m_speedtime(moving ? 250 : 750), proj.o, 0x222222, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*(moving ? 0.5f : 1.f), -20);
-							proj.lasteffect = lastmillis;
-						}
+						part_create(PART_SMOKE_LERP, m_speedtime(moving ? 200 : 500), proj.o, 0x222222, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*(moving ? 0.5f : 1.f), -20);
+						proj.lasteffect = lastmillis;
 					}
 					break;
 				}
@@ -617,8 +615,8 @@ namespace projs
 				case WEAP_PLASMA:
 				{
 					proj.lifesize = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0625f) ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize);
-					part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.lifesize);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
+					part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.radius);
 					break;
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
@@ -649,7 +647,7 @@ namespace projs
 					break;
 				}
 			}
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
+			if(!proj.stuck && (weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]))
 				proj.radius = max(proj.lifesize, 1e-3f);
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
@@ -740,17 +738,15 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtime(75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize*0.8f);
-							part_create(PART_ELECTRIC, m_speedtime(50), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize*0.3f);
-							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, 2.4f, -20);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, 6.f, bvec(98, 196, 244));
-							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], vec(0.1f, 0.4f, 0.6f), m_speedtime(200), 10);
+							part_create(PART_PLASMA_SOFT, m_speedtime(250), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*1.25f);
+							part_create(PART_ELECTRIC, m_speedtime(50), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
+							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, -30);
+							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
+							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(750), 0x5599CC, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));
+							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), m_speedtime(200), 10);
 						}
-						else
-						{
-							part_create(PART_SMOKE, m_speedtime(150), proj.o, 0x8899AA, 1.2f, -20);
-							vol = 0;
-						}
+						else vol = 0;
 						break;
 					}
 					case WEAP_RIFLE: case WEAP_INSTA:
@@ -810,8 +806,20 @@ namespace projs
 	{
 		if((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
 		{
-			if(hitplayer) { if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1; }
-			else proj.norm = wall;
+			if(hitplayer)
+			{
+				if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
+			}
+			else
+			{
+				if(proj.projcollide&COLLIDE_STICK)
+				{
+					proj.o.sub(vec(dir).mul(proj.radius));
+					proj.stuck = true;
+					return 1;
+				}
+				proj.norm = wall;
+			}
             if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 			{
                 bounceeffect(proj);
@@ -841,7 +849,16 @@ namespace projs
             {
 				if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
             }
-            else proj.norm = hitsurface;
+            else
+            {
+				if(proj.projcollide&COLLIDE_STICK)
+				{
+					proj.o.sub(vec(dir).mul(proj.radius));
+					proj.stuck = true;
+					return 1;
+				}
+            	proj.norm = hitsurface;
+            }
 
             if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
@@ -951,7 +968,7 @@ namespace projs
         proj.o.z += proj.height;
         loopi(physics::physsteps-1)
         {
-            if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || !move(proj, physics::physframetime))
+            if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, physics::physframetime)))
             {
             	if(proj.lifetime < 0) proj.lifetime = 0;
                 alive = false;
@@ -959,7 +976,7 @@ namespace projs
             }
         }
         proj.deltapos = proj.o;
-        if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || !move(proj, physics::physframetime)))
+        if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, physics::physframetime))))
         {
            	if(proj.lifetime < 0) proj.lifetime = 0;
 			alive = false;
@@ -1025,7 +1042,7 @@ namespace projs
 					int qtime = min(rtime, 30);
 					rtime -= qtime;
 
-					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || !move(proj, qtime))
+					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, qtime)))
 					{
 						if(proj.lifetime < 0) proj.lifetime = 0;
 						proj.state = CS_DEAD;

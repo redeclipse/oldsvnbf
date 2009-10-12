@@ -240,14 +240,14 @@ namespace aiman
 								balance += offset;
 							}
 						}
-						balance -= balance%numt; // just to ensure it is correctly aligned
+						balance += numt-(balance%numt); // just to ensure it is correctly aligned
 					}
 					else balance = max(ppl*numt, numt); // humans vs. bots, just directly balance
 					int bots = balance-ppl;
 					if(bots > GVAR(botlimit))
 					{
 						balance -= bots-GVAR(botlimit);
-						balance -= balance%numt;
+						balance += numt-(balance%numt);
 					}
 				}
 			}

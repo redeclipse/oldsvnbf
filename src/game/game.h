@@ -205,7 +205,8 @@ enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH
 
 enum
 {
-	IMPACT_GEOM = 1<<0, BOUNCE_GEOM = 1<<1, IMPACT_PLAYER = 1<<2, BOUNCE_PLAYER = 1<<3, COLLIDE_TRACE = 1<<4, COLLIDE_OWNER = 1<<5, COLLIDE_CONT = 1<<6,
+	IMPACT_GEOM = 1<<0, BOUNCE_GEOM = 1<<1, IMPACT_PLAYER = 1<<2, BOUNCE_PLAYER = 1<<3,
+	COLLIDE_TRACE = 1<<4, COLLIDE_OWNER = 1<<5, COLLIDE_CONT = 1<<6, COLLIDE_STICK = 1<<7,
 	COLLIDE_GEOM = IMPACT_GEOM | BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER | BOUNCE_PLAYER,
 };
 
@@ -266,11 +267,11 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 350, 2000 },	3500,	{ 25, 35 },		{ 1500,	25 },		0,			{ 1000, 6000 },
-			0,		{ 32, 64 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_CONT },
+			20,		20,		{ 1, 20 },	{ 350, 2000 },	3500,	{ 25, 25 },		{ 1500,	25 },		0,			{ 1000, 6000 },
+			0,		{ 32, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, true },		{ true, false },	true,		false,	{ true, true },		{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },			{ 1, 1 },		{ 0, 0 },		{ 16, 32 },			{ 0, 0 },
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.125f },			{ 1, 1 },		{ 0, 0 },	{ 16, 32 },			{ 0, 0 },
 			{ 3, 6 },			{ 100, 200 },		{ 448, 128 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
@@ -288,7 +289,7 @@ weaptypes weaptype[WEAP_MAX] =
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_WHIRR,	S_TINK,
 			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 150 },	{ 350, 350 },			3000,	{ 3000, 3000 },
 			100,	{ 64, 48 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },
-			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
+			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	false,		false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 50, 50 },		{ 4, 4 },			{ 0, 0 },
 			{ 5, 5 },		{ 1000, 750 },		{ 768, 512 },			3,
@@ -1021,7 +1022,7 @@ struct projent : dynent
 	vec from, to, norm;
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
-	bool local, beenused, radial, extinguish, limited;
+	bool local, beenused, radial, extinguish, limited, stuck;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int schan, id, weap, flags, colour, hitflags;
@@ -1049,7 +1050,7 @@ struct projent : dynent
 		schan = id = weap = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
-		beenused = radial = extinguish = limited = false;
+		beenused = radial = extinguish = limited = stuck = false;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
