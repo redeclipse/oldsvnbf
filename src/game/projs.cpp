@@ -615,10 +615,9 @@ namespace projs
 				case WEAP_PLASMA:
 				{
 					bool taper = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0625f);
-					proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-					part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.radius);
-					if(proj.stuck && !taper) proj.radius = max(proj.lifesize, 1e-3f); // hacky override
+					if(!proj.stuck || !taper) proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 16.f);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize);
+					part_create(PART_ELECTRIC, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.7f*proj.lifesize);
 					break;
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
@@ -649,7 +648,7 @@ namespace projs
 					break;
 				}
 			}
-			if(!proj.stuck && (weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]))
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
 				proj.radius = max(proj.lifesize, 1e-3f);
 		}
 		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
