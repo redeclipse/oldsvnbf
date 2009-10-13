@@ -257,8 +257,8 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 250 }, 	2000,	{ 15, 10 },		{ 200, 150 },		0,			{ 500, 1000 },
-			0,		{ 32, 32 },	{ 1, 5 },		{ 10, 20 },		{ 2, 1 },
+			50,		50,		{ 1, 5 },	{ 100, 250 }, 	2000,	{ 15, 10 },		{ 200, 150 },		0,			{ 350, 750 },
+			0,		{ 32, 24 },	{ 1, 5 },		{ 10, 20 },		{ 2, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ true, true },		{ false, false },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.25f, 0.25f },		{ 1, 1 },		{ 32, 24 },		{ 24, 20 },			{ 0, 0 },

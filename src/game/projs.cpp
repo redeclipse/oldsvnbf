@@ -739,9 +739,9 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-							part_create(PART_ELECTRIC, m_speedtime(75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
-							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, -30);
+							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
+							part_create(PART_ELECTRIC, m_speedtime(75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
+							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, -30);
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
 							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(250), 0x225599, 1.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));
