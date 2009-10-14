@@ -247,7 +247,7 @@ namespace projs
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
-					proj.weight = 75.f;
+					proj.weight = 125.f;
 					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
@@ -279,7 +279,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 125.f;
+				proj.weight = 150.f;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
@@ -526,7 +526,13 @@ namespace projs
 			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
 			if(weaptype[proj.weap].fsound >= 0)
 			{
-				int vol = int(255*(1.f-proj.lifespan));
+				int vol = 255;
+				switch(weaptype[proj.weap].fsound)
+				{
+					case S_BEEP: vol = 55+int(200*proj.lifespan); break;
+					case S_WHIZZ: case S_WHIRR: vol = 55+int(200*(1.f-proj.lifespan)); break;
+					default: break;
+				}
 				if(issound(proj.schan)) sounds[proj.schan].vol = vol;
 				else playsound(weaptype[proj.weap].fsound, proj.o, &proj, SND_LOOP, vol, -1, -1, &proj.schan);
 			}
@@ -534,7 +540,7 @@ namespace projs
 			{
 				case WEAP_PISTOL:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -550,7 +556,7 @@ namespace projs
 				}
 				case WEAP_FLAMER:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan*proj.lifespan, 1e-1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool effect = false;
@@ -560,17 +566,17 @@ namespace projs
 							effect = true;
 							proj.lasteffect = lastmillis;
 						}
-						int col = ((int(254*max((1.f-proj.lifespan),0.3f))<<16)+1)|((int(64*max((1.f-proj.lifespan),0.15f))+1)<<8),
+						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.5f : 0.25f))<<16)+1)|((int(64*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.125f : 0.25f))+1)<<8),
 							len = effect ? max(int(m_speedtime(flamerlength)*max(proj.lifespan, 0.1f)), 0) : 0;
 						if(!len) { effect = false; len = 1; }
-						if(flamerhint) part_create(PART_HINT, max(len/2, 1), proj.o, 0x140434, size*1.25f, -5);
+						if(flamerhint) part_create(PART_HINT, max(len/2, 1), proj.o, 0x240444, size*1.5f, -5);
 						part_create(PART_FIREBALL_SOFT, len, proj.o, col, size, -5);
 					}
 					break;
 				}
 				case WEAP_GRENADE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					int col = ((int(254*max(1.f-proj.lifespan,0.5f))<<16)+1)|((int(98*max(1.f-proj.lifespan,0.f))+1)<<8), interval = lastmillis%1000;
 					float fluc = 1.f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*fluc);
@@ -584,7 +590,7 @@ namespace projs
 				}
 				case WEAP_SHOTGUN:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -599,7 +605,7 @@ namespace projs
 				}
 				case WEAP_SMG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -622,7 +628,7 @@ namespace projs
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], 1.f, min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement));
 					vec dir = dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 					proj.to = vec(proj.o).sub(vec(dir).mul(size));
@@ -643,7 +649,7 @@ namespace projs
 				}
 				default:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.colour, 1.f);
 					break;
 				}
@@ -882,7 +888,7 @@ namespace projs
 		if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
 		bool water = isliquid(mat&MATF_VOLUME);
 		float secs = float(qtime)/1000.f;
-		if(proj.weight > 0.f) proj.vel.z -=  physics::gravityforce(&proj)*secs;
+		if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
 
 		vec dir(proj.vel), pos(proj.o);
 		if(water)

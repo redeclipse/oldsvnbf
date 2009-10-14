@@ -67,8 +67,8 @@ VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
 FVARG(botscale, 0, 1.f, 1000);
-VARG(botminskill, 1, 60, 101);
-VARG(botmaxskill, 1, 90, 101);
+VARG(botminskill, 1, 50, 101);
+VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
 
 FVARG(damagescale, 0, 1.f, 1000);
