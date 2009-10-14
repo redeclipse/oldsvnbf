@@ -755,7 +755,7 @@ void rendermaterials()
 							if(renderpath==R_FIXEDFUNCTION)
 							{
 								glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-								glColor4f(0.8f, 0.9f, 1.0f, 0.25f);
+								glColor4f(0.8f, 0.9f, 1.0f, 0.5f);
 								fogtype = 1;
 							}
 							else
@@ -775,7 +775,7 @@ void rendermaterials()
 								textured = 0;
 							}
 							glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-							glColor3f(0.3f, 0.15f, 0.0f);
+							glColor3f(0.5f, 0.25f, 0.0f);
 							foggednotextureshader->set();
 							fogtype = 0;
 						}
