@@ -1416,14 +1416,14 @@ namespace hud
 	void drawfire(int w, int h, int s, float blend)
 	{
 		int interval = game::player1->lastfire ? lastmillis-game::player1->lastfire : 0;
-		if(interval && interval <= fireburning)
+		if(interval && interval <= fireburntime)
 		{
 			Texture *t = *burntex ? textureload(burntex, 3) : notexture;
 			if(t != notexture)
 			{
-				float pc = float(interval%1000)/500.f; if(pc > 1.f) pc = 2.f-pc;
+				float pc = float(interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(0.85f*max(pc,0.35f), 0.35f*max(pc,0.125f), 0.0625f*pc, blend*burnblend*(interval > fireburning-500 ? pc : min(pc+0.5f, 1.f)));
+				glColor4f(0.85f*max(pc,0.35f), 0.35f*max(pc,0.125f), 0.0625f*pc, blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
 			}
 		}
@@ -1537,7 +1537,7 @@ namespace hud
 				if(showdamage)
 				{
 					if(!kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
-					if(game::player1->state == CS_ALIVE) drawfire(ox, oy, os, fade);
+					if(fireburntime && game::player1->state == CS_ALIVE) drawfire(ox, oy, os, fade);
 				}
 				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);

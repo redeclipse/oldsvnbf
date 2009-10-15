@@ -438,7 +438,7 @@ namespace game
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
 	{
 		bool directional = true;
-		if(weaptype[weap].burns[flags&HIT_ALT ? 1 : 0])
+		if(fireburntime && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0])
 		{
 			if(flags&HIT_FULL) d->lastfire = lastmillis;
 			else directional = false;
@@ -505,7 +505,7 @@ namespace game
 			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
 			ai::damaged(d, actor);
 		}
-		if((actor != player1 && !actor->ai) || (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] && !(flags&HIT_FULL)))
+		if((actor != player1 && !actor->ai) || (fireburntime && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] && !(flags&HIT_FULL)))
 			hiteffect(weap, flags, damage, d, actor, dir);
 	}
 
@@ -1859,7 +1859,7 @@ namespace game
         	d->checktags();
         	if(d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe))))
 				impulseeffect(d, false);
-			if(d->lastfire && lastmillis-d->lastfire <= fireburning)
+			if(fireburntime && d->lastfire && lastmillis-d->lastfire <= fireburntime)
 				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(3-d->height*0.5f), 0x601808, max(d->height-4,1.f), -10, 0);
         }
 	}
@@ -1876,7 +1876,7 @@ namespace game
 			player1->checktags();
         	if(player1->state == CS_ALIVE && (player1->turnside || (player1->action[AC_IMPULSE] && (player1->move || player1->strafe))))
 				impulseeffect(player1, false);
-			if(thirdpersonview() && player1->lastfire && lastmillis-player1->lastfire <= fireburning)
+			if(fireburntime && thirdpersonview() && player1->lastfire && lastmillis-player1->lastfire <= fireburntime)
 				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, player1->headpos(3-player1->height*0.5f), 0x601808, max(player1->height-4,1.f), -10, 0);
 		}
     }
