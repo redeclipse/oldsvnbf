@@ -229,14 +229,13 @@ namespace hud
 		{
 			case 1:
 			{
+				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
 				amt += max(min(hud::damageresidue, 100)/100.f, 1.f-(game::player1->health/float(maxhealth)))*0.75f;
-				if(game::player1->state == CS_ALIVE)
-				{
-					if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
-						amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.25f;
-					if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
-						amt += game::player1->turnside ? 0.25f : 0.5f;
-				}
+				if(game::player1->state != CS_ALIVE) break;
+				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
+					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.25f;
+				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
+					amt += game::player1->turnside ? 0.25f : 0.5f;
 				break;
 			}
 			case 2: amt += motionbluramt; break;
