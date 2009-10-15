@@ -86,7 +86,7 @@ namespace hud
 	TVAR(damagetex, "textures/damage", 3);
 	FVARP(damageblend, 0, 0.75f, 1);
 	TVAR(burntex, "textures/burn", 3);
-	FVARP(burnblend, 0, 0.75f, 1);
+	FVARP(burnblend, 0, 0.65f, 1);
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.03f, 1000);
