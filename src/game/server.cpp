@@ -127,10 +127,10 @@ namespace server
 		int state;
         projectilestate dropped, weapshots[WEAP_MAX][2];
 		int score, frags, spree, rewards, flags, deaths, teamkills, shotdamage, damage;
-		int lasttimeplayed, timeplayed, aireinit;
+		int lasttimeplayed, timeplayed, aireinit, lastfireburn, lastfireowner;
 		vector<int> fraglog, fragmillis, cpnodes;
 
-		servstate() : state(CS_SPECTATOR), aireinit(0) {}
+		servstate() : state(CS_SPECTATOR), aireinit(0), lastfireburn(0), lastfireowner(-1) {}
 
 		bool isalive(int millis)
 		{
@@ -151,6 +151,7 @@ namespace server
 
 		void respawn(int millis, int heal)
 		{
+			lastfireburn = 0; lastfireowner = -1;
 			gamestate::respawn(millis, heal);
 			o = vec(-1e10f, -1e10f, -1e10f);
 		}
@@ -2092,7 +2093,11 @@ namespace server
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
 		}
-
+		if(weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL)
+		{
+			target->state.lastfire = target->state.lastfireburn = gamemillis;
+			target->state.lastfireowner = actor->clientnum;
+		}
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, target->state.health, hitpush.x, hitpush.y, hitpush.z);
 		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
 		{
@@ -2612,6 +2617,20 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
+				if(ci->state.lastfire)
+				{
+					if(gamemillis-ci->state.lastfire <= GVAR(fireburning))
+					{
+						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
+						{
+							clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
+							dodamage(ci, co ? co : ci, GVAR(fireburndamage), WEAP_FLAMER, HIT_BURN);
+							ci->state.lastfireburn += GVAR(fireburndelay);
+						}
+						continue;
+					}
+					else ci->state.lastfire = ci->state.lastfireburn = 0;
+				}
 				if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
 				int total = m_maxhealth(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
 				if(smode) smode->regen(ci, total, amt, delay);
