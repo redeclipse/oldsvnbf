@@ -538,7 +538,7 @@ namespace game
         	if(d->aitype == AI_TURRET) concatstring(d->obit, "was destroyed");
         	else if(flags&HIT_DEATH) concatstring(d->obit, *obitdeath ? obitdeath : "died");
         	else if(flags&HIT_WATER) concatstring(d->obit, *obitwater ? obitwater : "died");
-        	else if(flags&HIT_MELT) concatstring(d->obit, "melted");
+        	else if(flags&HIT_MELT) concatstring(d->obit, "melted into a ball of fire");
 			else if(flags&HIT_SPAWN) concatstring(d->obit, "tried to spawn inside solid matter");
 			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
         	else if(flags && isweap(weap))
