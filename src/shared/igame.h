@@ -51,6 +51,7 @@ namespace hud
 {
 	extern void drawhud(int w, int h, bool noview = false);
 	extern void drawlast(int w, int h);
+	extern float motionblur(float scale);
 	extern bool getcolour(vec &colour);
 	extern void gamemenus();
 }

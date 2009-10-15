@@ -965,9 +965,9 @@ void cleanupmotionblur()
     motionw = motionh = 0;
 }
 
-VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
+VARFP(motionblur, 0, 1, 1, { if(!motionblur) cleanupmotionblur(); });
 VARP(motionblurmillis, 1, 5, 1000);
-FVARP(motionblurscale, 0, 0.5f, 1);
+FVARP(motionblurscale, 0, 1, 1);
 
 void addmotionblur()
 {
@@ -999,7 +999,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, pow(motionblurscale, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)));
+    glColor4f(1, 1, 1, pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)));
     glBegin(GL_QUADS);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
