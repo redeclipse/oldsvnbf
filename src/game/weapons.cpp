@@ -2,7 +2,6 @@
 namespace weapons
 {
 	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
-	VARP(autoswitchattack, 0, 0, 1); // 0 = don't try regular fire when alt fails, 1 = do try it
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
 	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
 	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
@@ -89,18 +88,14 @@ namespace weapons
 	}
 	ICOMMAND(drop, "s", (char *n), drop(game::player1, *n ? atoi(n) : -1));
 
-	void reload(gameent *d, bool force)
+	void reload(gameent *d)
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-		bool canreload = force || (!d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom())), reload = d->action[AC_RELOAD];
-		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && (force || autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2)))
+		bool canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom()), reload = d->action[AC_RELOAD];
+		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2))
 			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
-		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect]))
-		{
-			weapreload(d, d->weapselect);
-			if(force) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
-		}
+		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
 	}
 
 	void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
@@ -151,17 +146,12 @@ namespace weapons
 		{
 			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 			{
-				if(autoswitchattack && flags&HIT_ALT && !weaptype[d->weapselect].zooms && !weaptype[d->weapselect].power)
+				if(autoreloading && d->ammo[d->weapselect] < offset)
 				{
-					if(d->canshoot(d->weapselect, 0, sweap, lastmillis) ||  d->canshoot(d->weapselect, 0, sweap, lastmillis, WEAP_S_RELOAD))
-					{
-						alt = false;
-						flags = 0;
-						offset = weaptype[d->weapselect].sub[0];
-					}
-					else { if(d->ammo[d->weapselect] < weaptype[d->weapselect].sub[0] && autoreloading) reload(d, true); return; }
+					d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+					weapreload(d, d->weapselect);
 				}
-				else { if(d->ammo[d->weapselect] < offset && autoreloading) reload(d, true); return; }
+				return;
 			}
 			else offset = 0;
 		}
