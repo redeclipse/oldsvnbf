@@ -89,14 +89,18 @@ namespace weapons
 	}
 	ICOMMAND(drop, "s", (char *n), drop(game::player1, *n ? atoi(n) : -1));
 
-	void reload(gameent *d)
+	void reload(gameent *d, bool force)
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
-		bool canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom()), reload = d->action[AC_RELOAD];
-		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2))
+		bool canreload = force || (!d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom())), reload = d->action[AC_RELOAD];
+		if(!reload && canreload && d->canreload(d->weapselect, sweap, lastmillis) && weaptype[d->weapselect].add < weaptype[d->weapselect].max && (force || autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2)))
 			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
-		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
+		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect]))
+		{
+			weapreload(d, d->weapselect);
+			if(force) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+		}
 	}
 
 	void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
@@ -155,9 +159,9 @@ namespace weapons
 						flags = 0;
 						offset = weaptype[d->weapselect].sub[0];
 					}
-					else return;
+					else { if(d->ammo[d->weapselect] < weaptype[d->weapselect].sub[0] && autoreloading) reload(d, true); return; }
 				}
-				else return;
+				else { if(d->ammo[d->weapselect] < offset && autoreloading) reload(d, true); return; }
 			}
 			else offset = 0;
 		}
