@@ -89,9 +89,9 @@ namespace game
 	VARP(bloodfade, 1, 5000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
 	VARP(gibfade, 1, 5000, INT_MAX-1);
-	VARP(fireburnfade, 0, 50, INT_MAX-1);
+	VARP(fireburnfade, 0, 75, INT_MAX-1);
 	FVARP(impulsescale, 0, 1, 1000);
-	VARP(impulsefade, 0, 100, INT_MAX-1);
+	VARP(impulsefade, 0, 150, INT_MAX-1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
