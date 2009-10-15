@@ -72,7 +72,15 @@ namespace projs
 			proj.hit = d;
 			proj.hitflags = flags;
 			proj.norm = norm;
-			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0] && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
+			{
+				if((d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+			}
+			else switch(proj.weap)
+			{
+				case WEAP_RIFLE: proj.o.add(vec(proj.vel).normalize().mul(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]/2)); break;
+				default: break;
+			}
 			if(proj.projcollide&COLLIDE_CONT)
 			{
 				switch(proj.weap)
@@ -508,13 +516,11 @@ namespace projs
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
 					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-					if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
 					radialeffect(f, proj, false, radius);
 				}
 				proj.lastradial = lastmillis;
 			}
-			else if(d->state == CS_ALIVE && physics::issolid(d) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
-				radialeffect(d, proj, false, radius);
+			else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
 		}
 	}
 
