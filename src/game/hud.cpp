@@ -229,7 +229,7 @@ namespace hud
 		{
 			case 1:
 			{
-				amt += (min(hud::damageresidue, 100)/100.f)*0.75f;
+				amt += (min(hud::damageresidue, 100)/100.f)*0.65f;
 				if(game::player1->state == CS_ALIVE)
 				{
 					if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)

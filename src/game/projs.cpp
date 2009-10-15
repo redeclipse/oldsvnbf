@@ -561,7 +561,7 @@ namespace projs
 					{
 						bool effect = false;
 						float size = weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize;
-						if(flamertrail && lastmillis-proj.lasteffect >= m_speedtime(flamerdelay*(proj.flags&HIT_ALT ? 1 : 2)))
+						if(flamertrail && lastmillis-proj.lasteffect >= m_speedtime(flamerdelay))
 						{
 							effect = true;
 							proj.lasteffect = lastmillis;
