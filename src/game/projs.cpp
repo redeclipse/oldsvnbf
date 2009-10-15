@@ -67,7 +67,7 @@ namespace projs
 
 	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
 	{
-		if(d != proj.hit && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
+		if(proj.projcollide&COLLIDE_OWNER || d != proj.owner)
 		{
 			proj.hit = d;
 			proj.hitflags = flags;
