@@ -212,8 +212,8 @@ namespace hud
 	VARP(editradarnoisy, 0, 1, 2);
 
 	VARP(motionblurfx, 0, 1, 2); // 0 = off, 1 = on, 2 = override
-	FVARP(motionblurmin, 0, 0.05f, 1); // minimum
-	FVARP(motionblurmax, 0, 0.95f, 1); // maximum
+	FVARP(motionblurmin, 0, 0.1f, 1); // minimum
+	FVARP(motionblurmax, 0, 0.9f, 1); // maximum
 	FVARP(motionbluramt, 0, 0.5f, 1); // used for override
 
 	bool hastv(int val)
@@ -229,11 +229,11 @@ namespace hud
 		{
 			case 1:
 			{
-				amt += min(hud::damageresidue, 100)/100.f;
+				amt += (min(hud::damageresidue, 100)/100.f)*0.75f;
 				if(game::player1->state == CS_ALIVE)
 				{
 					if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
-						amt += float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay);
+						amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.65f;
 					if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
 						amt += game::player1->turnside ? 0.25f : 0.5f;
 				}
