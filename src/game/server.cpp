@@ -2093,7 +2093,7 @@ namespace server
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
 		}
-		if(GVAR(fireburntime) && weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL)
+		if(GVAR(fireburntime) && ((weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL) || realflags&HIT_MELT))
 		{
 			target->state.lastfire = target->state.lastfireburn = gamemillis;
 			target->state.lastfireowner = actor->clientnum;
@@ -2211,6 +2211,11 @@ namespace server
         }
         ci->state.deaths++;
 		dropitems(ci); givepoints(ci, pointvalue);
+		if(GVAR(fireburntime) && (flags&HIT_MELT || flags&HIT_BURN))
+		{
+			ci->state.lastfire = ci->state.lastfireburn = gamemillis;
+			ci->state.lastfireowner = ci->clientnum;
+		}
 		sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, ci->state.frags, 0, -1, flags, ci->state.health);
         ci->position.setsizenodelete(0);
 		if(smode) smode->died(ci, NULL);

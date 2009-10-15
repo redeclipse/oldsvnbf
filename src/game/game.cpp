@@ -437,11 +437,11 @@ namespace game
 
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
 	{
-		bool directional = true;
-		if(fireburntime && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0])
+		bool burning = false;
+		if(fireburntime && (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] || flags&HIT_MELT))
 		{
 			if(flags&HIT_FULL) d->lastfire = lastmillis;
-			else directional = false;
+			else burning = true;
 		}
 		if(hithurts(flags))
 		{
@@ -461,13 +461,16 @@ namespace game
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
-				d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
+				if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
 			}
 			if(d != actor)
 			{
 				if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)) && lastmillis-actor->lastdamagetone > 0)
 				{
-					if(m_team(gamemode, mutators) && d->team == actor->team) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1);
+					if(m_team(gamemode, mutators) && d->team == actor->team)
+					{
+						if(!burning) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1);
+					}
 					else
 					{
 						int snd = 0;
@@ -485,7 +488,7 @@ namespace game
 				actor->lasthit = lastmillis;
 			}
 		}
-		if(directional && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
+		if(!burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
 		{
 			float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -512,14 +515,19 @@ namespace game
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
 	{
 		if(d->type != ENT_PLAYER && d->type != ENT_AI) return;
-
+		bool burning = false;
+		if(fireburntime && (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] || flags&HIT_MELT))
+		{
+			if(flags&HIT_MELT || flags&HIT_FULL) d->lastfire = lastmillis;
+			else burning = true;
+		}
         d->lastregen = 0;
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
 		int anc = -1, dth = -1;
 		if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
-		else if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURNING;
+		else if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
 		else dth = S_DIE1+rnd(2);
 
 		if(d == player1) anc = S_V_FRAGGED;
@@ -900,6 +908,7 @@ namespace game
 	{
 		if((d == player1 || d->ai) && d->state == CS_ALIVE && d->suicided < 0)
 		{
+			if(fireburntime && (flags&HIT_MELT || flags&HIT_BURN)) d->lastfire = lastmillis;
 			client::addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
 			d->suicided = lastmillis;
 		}
