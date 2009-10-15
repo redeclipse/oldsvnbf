@@ -18,7 +18,7 @@ namespace hud
 	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
 	VARP(hudsize, 0, 2048, INT_MAX-1);
 	FVARP(hudblend, 0, 1.f, 1);
-	FVARP(gapsize, 0, 0.01f, 1000);
+	FVARP(gapsize, 0, 0.0125f, 1000);
 
 	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 3, 4);
@@ -62,7 +62,7 @@ namespace hud
 	FVARP(chatconblend, 0, 0.8f, 1);
 	FVARP(fullconblend, 0, 1.f, 1);
 
-	FVARP(noticeoffset, 0.f, 0.4f, 1.f);
+	FVARP(noticeoffset, -1.f, 0.4f, 1.f);
 	FVARP(noticeblend, 0.f, 0.5f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
@@ -120,7 +120,7 @@ namespace hud
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
-	FVARP(inventorysize, 0, 0.06f, 1000);
+	FVARP(inventorysize, 0, 0.07f, 1000);
 	FVARP(inventoryskew, 0, 0.6f, 1);
 	FVARP(inventoryblend, 0, 0.6f, 1);
 
@@ -177,15 +177,15 @@ namespace hud
 	FVARP(radarblend, 0, 1.f, 1);
 	FVARP(radarcardsize, 0, 0.85f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
-	FVARP(radarplayerblend, 0, 0.75f, 1);
+	FVARP(radarplayerblend, 0, 0.5f, 1);
 	FVARP(radarplayersize, 0, 0.5f, 1000);
 	FVARP(radarblipblend, 0, 0.5f, 1);
 	FVARP(radarblipsize, 0, 0.5f, 1000);
 	FVARP(radarflagblend, 0, 1.f, 1);
 	FVARP(radarflagsize, 0, 1.f, 1000);
 	FVARP(radaritemblend, 0, 0.75f, 1);
-	FVARP(radaritemsize, 0, 1.f, 1000);
-	FVARP(radarsize, 0, 0.03f, 1000);
+	FVARP(radaritemsize, 0, 0.9f, 1000);
+	FVARP(radarsize, 0, 0.035f, 1000);
 	FVARP(radaroffset, 0, 0.035f, 1000);
 	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
 	VARP(radarcard, 0, 0, 2);
@@ -1450,7 +1450,7 @@ namespace hud
 			{
 				float pc = float(interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(0.85f*max(pc,0.35f), 0.35f*max(pc,0.125f), 0.0625f*pc, blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
+				glColor4f(0.9f*max(pc,0.3f), 0.3f*pc, 0.0625f*pc, blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
 			}
 		}
