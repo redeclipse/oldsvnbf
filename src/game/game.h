@@ -1111,7 +1111,7 @@ namespace weapons
 	extern int autoreloading;
 	extern bool weapselect(gameent *d, int weap, bool local = true);
 	extern bool weapreload(gameent *d, int weap, int load = -1, int ammo = -1, bool local = true);
-	extern void reload(gameent *d, bool force = false);
+	extern void reload(gameent *d);
 	extern void shoot(gameent *d, vec &targ, int force = 0);
 	extern void preload(int weap = -1);
 }

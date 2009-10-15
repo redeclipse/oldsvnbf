@@ -282,16 +282,26 @@ namespace game
 
 	void impulseeffect(gameent *d, bool effect)
 	{
-		int num = int((effect ? 20 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
-		if(num >0 && len > 0)
+		if(effect || (d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)))))
 		{
-			if(d->type == ENT_PLAYER)
+			int num = int((effect ? 20 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
+			if(num >0 && len > 0)
 			{
-				regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->lfoot, 1.25f, -10, 0, 20.f);
-				regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->rfoot, 1.25f, -10, 0, 20.f);
+				if(d->type == ENT_PLAYER)
+				{
+					regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->lfoot, 1.25f, -10, 0, 20.f);
+					regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->rfoot, 1.25f, -10, 0, 20.f);
+				}
+				else regularshape(PART_FIREBALL, int(d->radius)*2, 0x601820, 21, num, m_speedtime(len), d->feetpos(), 1.25f, -10, 0, 20.f);
 			}
-			else regularshape(PART_FIREBALL, int(d->radius)*2, 0x601820, 21, num, m_speedtime(len), d->feetpos(), 1.25f, -10, 0, 20.f);
 		}
+	}
+
+	const int firecols[4] = { 0x601808, 0x901808, 0x602808, 0x400808 };
+	void fireeffect(gameent *d)
+	{
+		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
+			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.75f), firecols[rnd(4)], d->height*0.75f, -10, 0);
 	}
 
 	gameent *pointatplayer()
@@ -1850,6 +1860,13 @@ namespace game
         renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
+	void rendercheck(gameent *d)
+	{
+		d->checktags();
+		impulseeffect(d, false);
+		fireeffect(d);
+	}
+
 	void render()
 	{
 		startmodelbatches();
@@ -1863,14 +1880,7 @@ namespace game
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
 			d->head = d->torso = d->muzzle = d->waist = d->lfoot = d->rfoot = vec(-1, -1, -1);
 		endmodelbatches();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
-        {
-        	d->checktags();
-        	if(d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe))))
-				impulseeffect(d, false);
-			if(fireburntime && d->lastfire && lastmillis-d->lastfire <= fireburntime)
-				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(3-d->height*0.5f), 0x601808, max(d->height-4,1.f), -10, 0);
-        }
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) rendercheck(d);
 	}
 
     void renderavatar(bool early)
@@ -1880,14 +1890,7 @@ namespace game
 			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
             renderplayer(player1, false, showtranslucent(player1, false), early);
-		if(rendernormally && early)
-		{
-			player1->checktags();
-        	if(player1->state == CS_ALIVE && (player1->turnside || (player1->action[AC_IMPULSE] && (player1->move || player1->strafe))))
-				impulseeffect(player1, false);
-			if(fireburntime && thirdpersonview() && player1->lastfire && lastmillis-player1->lastfire <= fireburntime)
-				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, player1->headpos(3-player1->height*0.5f), 0x601808, max(player1->height-4,1.f), -10, 0);
-		}
+		if(rendernormally && early) rendercheck(player1);
     }
 
 	bool clientoption(char *arg) { return false; }

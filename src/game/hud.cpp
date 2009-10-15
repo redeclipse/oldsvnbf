@@ -230,12 +230,12 @@ namespace hud
 			case 1:
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
-				amt += max(min(hud::damageresidue, 100)/100.f, 1.f-(game::player1->health/float(maxhealth)))*0.75f;
+				amt += max(min(hud::damageresidue, 100)/100.f, 1.f-(game::player1->health/float(maxhealth)))*0.65f;
 				if(game::player1->state != CS_ALIVE) break;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
-					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.25f;
+					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
 				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
-					amt += game::player1->turnside ? 0.25f : 0.5f;
+					amt += game::player1->turnside ? 0.125f : 0.25f;
 				break;
 			}
 			case 2: amt += motionbluramt; break;
@@ -1563,8 +1563,8 @@ namespace hud
 				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(ox, oy);
 				if(showdamage)
 				{
-					if(!kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
 					if(fireburntime && game::player1->state == CS_ALIVE) drawfire(ox, oy, os, fade);
+					if(!kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
 				}
 				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);
