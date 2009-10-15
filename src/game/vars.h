@@ -13,6 +13,7 @@ SVARG(stfmaps, "bath bloodgrounds citadel deadsimple deli enigma forge gladiator
 SVARG(racemaps, "testchamber");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
+VARG(maxcarry, 0, 2, WEAP_MAX-1);
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
@@ -23,7 +24,10 @@ VARG(spawnprotecttime, 0, 3, INT_MAX-1);
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 200, INT_MAX-1);
-VARG(maxcarry, 0, 2, WEAP_MAX-1);
+
+VARG(fireburning, 0, 5000, INT_MAX-1);
+VARG(fireburndelay, 0, 1000, INT_MAX-1);
+VARG(fireburndamage, 0, 5, INT_MAX-1);
 
 VARG(vampire, 0, 0, 1);
 VARG(regendelay, 0, 3500, INT_MAX-1);

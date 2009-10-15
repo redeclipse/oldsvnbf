@@ -89,6 +89,9 @@ namespace game
 	VARP(bloodfade, 1, 5000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
 	VARP(gibfade, 1, 5000, INT_MAX-1);
+	VARP(fireburnfade, 0, 50, INT_MAX-1);
+	FVARP(impulsescale, 0, 1, 1000);
+	VARP(impulsefade, 0, 100, INT_MAX-1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -279,13 +282,16 @@ namespace game
 
 	void impulseeffect(gameent *d, bool effect)
 	{
-		int num = effect ? 20 : 5, len = effect ? 200 : 50;
-		if(d->type == ENT_PLAYER)
+		int num = int((effect ? 20 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
+		if(num >0 && len > 0)
 		{
-			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, num, m_speedtime(len), d->lfoot, 1.5f, -5, 0, 10.f);
-			regularshape(PART_FIREBALL, int(d->radius), 0x662211, 21, num, m_speedtime(len), d->rfoot, 1.5f, -5, 0, 10.f);
+			if(d->type == ENT_PLAYER)
+			{
+				regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->lfoot, 1.25f, -10, 0, 20.f);
+				regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->rfoot, 1.25f, -10, 0, 20.f);
+			}
+			else regularshape(PART_FIREBALL, int(d->radius)*2, 0x601820, 21, num, m_speedtime(len), d->feetpos(), 1.25f, -10, 0, 20.f);
 		}
-		else regularshape(PART_FIREBALL, int(d->radius)*2, 0x662211, 21, num, m_speedtime(len), d->feetpos(), 1.5f, -5, 0, 10.f);
 	}
 
 	gameent *pointatplayer()
@@ -431,9 +437,15 @@ namespace game
 
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
 	{
+		bool directional = true;
+		if(weaptype[weap].burns[flags&HIT_ALT ? 1 : 0])
+		{
+			if(flags&HIT_FULL) d->lastfire = lastmillis;
+			else directional = false;
+		}
 		if(hithurts(flags))
 		{
-			if(d == player1) hud::damage(damage, actor->o, actor, weap);
+			if(directional && d == player1) hud::damage(damage, actor->o, actor, weap);
 			if(d->type == ENT_PLAYER || d->type == ENT_AI)
 			{
 				vec p = d->headpos();
@@ -473,7 +485,7 @@ namespace game
 				actor->lasthit = lastmillis;
 			}
 		}
-		if(d == player1 || (d->ai && aitype[d->aitype].maxspeed))
+		if(directional && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
 		{
 			float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
 			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -493,7 +505,8 @@ namespace game
 			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
 			ai::damaged(d, actor);
 		}
-		if(actor != player1 && !actor->ai) hiteffect(weap, flags, damage, d, actor, dir);
+		if((actor != player1 && !actor->ai) || (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] && !(flags&HIT_FULL)))
+			hiteffect(weap, flags, damage, d, actor, dir);
 	}
 
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
@@ -1846,6 +1859,8 @@ namespace game
         	d->checktags();
         	if(d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe))))
 				impulseeffect(d, false);
+			if(d->lastfire && lastmillis-d->lastfire <= fireburning)
+				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(3-d->height*0.5f), 0x601808, max(d->height-4,1.f), -10, 0);
         }
 	}
 
@@ -1861,6 +1876,8 @@ namespace game
 			player1->checktags();
         	if(player1->state == CS_ALIVE && (player1->turnside || (player1->action[AC_IMPULSE] && (player1->move || player1->strafe))))
 				impulseeffect(player1, false);
+			if(thirdpersonview() && player1->lastfire && lastmillis-player1->lastfire <= fireburning)
+				regular_part_create(PART_FIREBALL_SOFT, fireburnfade, player1->headpos(3-player1->height*0.5f), 0x601808, max(player1->height-4,1.f), -10, 0);
 		}
     }
 
