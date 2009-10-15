@@ -297,11 +297,10 @@ namespace game
 		}
 	}
 
-	const int firecols[4] = { 0x601808, 0x901808, 0x602808, 0x400808 };
 	void fireeffect(gameent *d)
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
-			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.75f), firecols[rnd(4)], d->height*0.75f, -10, 0);
+			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.35f), firecols[rnd(4)], d->height*0.65f, -10, 0);
 	}
 
 	gameent *pointatplayer()
