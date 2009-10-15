@@ -1081,7 +1081,6 @@ namespace projs
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
 							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
-							if(!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner) continue;
 							radialeffect(f, proj, true, radius);
 						}
 					}
