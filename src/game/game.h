@@ -318,6 +318,7 @@ weaptypes weaptype[WEAP_MAX] =
 };
 #else
 extern weaptypes weaptype[];
+const int firecols[4] = { 0x601808, 0x981808, 0x682808, 0x300808 };
 #endif
 
 enum
