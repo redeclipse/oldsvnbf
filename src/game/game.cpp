@@ -445,7 +445,7 @@ namespace game
 		}
 		if(hithurts(flags))
 		{
-			if(directional && d == player1) hud::damage(damage, actor->o, actor, weap);
+			if(d == player1) hud::damage(damage, actor->o, actor, weap);
 			if(d->type == ENT_PLAYER || d->type == ENT_AI)
 			{
 				vec p = d->headpos();

@@ -84,7 +84,9 @@ namespace hud
 
 	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
 	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.95f, 1);
+	FVARP(damageblend, 0, 0.75f, 1);
+	TVAR(burntex, "textures/burn", 3);
+	FVARP(burnblend, 0, 0.75f, 1);
 
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.03f, 1000);
@@ -1405,7 +1407,23 @@ namespace hud
 			if(t != notexture)
 			{
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(1.f, 1.f, 1.f, pc*blend*damageblend);
+				glColor4f(0.85f, 0.09f, 0.09f, pc*blend*damageblend);
+				drawtex(0, 0, w, h);
+			}
+		}
+	}
+
+	void drawfire(int w, int h, int s, float blend)
+	{
+		int interval = game::player1->lastfire ? lastmillis-game::player1->lastfire : 0;
+		if(interval && interval <= fireburning)
+		{
+			Texture *t = *burntex ? textureload(burntex, 3) : notexture;
+			if(t != notexture)
+			{
+				float pc = float(interval%1000)/500.f; if(pc > 1.f) pc = 2.f-pc;
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(0.85f*max(pc,0.35f), 0.35f*max(pc,0.125f), 0.0625f*pc, blend*burnblend*(interval > fireburning-500 ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
 			}
 		}
@@ -1516,7 +1534,11 @@ namespace hud
 					}
 				}
 				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(ox, oy);
-				if(showdamage && !kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
+				if(showdamage)
+				{
+					if(!kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
+					if(game::player1->state == CS_ALIVE) drawfire(ox, oy, os, fade);
+				}
 				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
 				if(showinventory) drawinventory(ox, oy, os, fade);
 			}
