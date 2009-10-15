@@ -212,6 +212,7 @@ namespace hud
 	VARP(editradarnoisy, 0, 1, 2);
 
 	VARP(motionblurfx, 0, 1, 2); // 0 = off, 1 = on, 2 = override
+	FVARP(motionblurmin, 0, 0.05f, 1); // minimum
 	FVARP(motionblurmax, 0, 0.95f, 1); // maximum
 	FVARP(motionbluramt, 0, 0.5f, 1); // used for override
 
@@ -228,11 +229,11 @@ namespace hud
 		{
 			case 1:
 			{
-				amt += (min(hud::damageresidue, 100)/100.f)*0.5f;
+				amt += min(hud::damageresidue, 100)/100.f;
 				if(game::player1->state == CS_ALIVE)
 				{
 					if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
-						amt += (float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.5f;
+						amt += float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay);
 					if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
 						amt += game::player1->turnside ? 0.25f : 0.5f;
 				}
@@ -241,7 +242,7 @@ namespace hud
 			case 2: amt += motionbluramt; break;
 			default: break;
 		}
-		return clamp(amt, 0.f, motionblurmax)*scale;
+		return clamp(amt, motionblurmin, motionblurmax)*scale;
 	}
 
 	void damage(int n, const vec &loc, gameent *actor, int weap)
