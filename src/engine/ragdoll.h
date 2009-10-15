@@ -187,7 +187,7 @@ void ragdolldata::constraindist()
         ragdollskel::distlimit &d = skel->distlimits[i];
         vert &v1 = verts[d.vert[0]], &v2 = verts[d.vert[1]];
         vec dir = vec(v2.pos).sub(v1.pos);
-        float dist = dir.magnitude()*invscale, cdist; 
+        float dist = dir.magnitude()*invscale, cdist;
         if(dist < d.mindist) cdist = d.mindist;
         else if(dist > d.maxdist) cdist = d.maxdist;
         else continue;
@@ -363,7 +363,7 @@ void ragdolldata::move(dynent *pl, float ts)
 }
 
 FVAR(ragdolleyesmooth, 0, 0.5f, 1);
-VAR(ragdolleyesmoothmillis, 1, 250, 10000);
+VAR(ragdolleyesmoothmillis, 1, 50, 10000);
 
 bool validragdoll(dynent *d, int millis)
 {
