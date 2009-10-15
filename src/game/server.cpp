@@ -2093,7 +2093,7 @@ namespace server
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
 		}
-		if(weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL)
+		if(GVAR(fireburntime) && weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL)
 		{
 			target->state.lastfire = target->state.lastfireburn = gamemillis;
 			target->state.lastfireowner = actor->clientnum;
@@ -2617,9 +2617,9 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				if(ci->state.lastfire)
+				if(GVAR(fireburntime) && ci->state.lastfire)
 				{
-					if(gamemillis-ci->state.lastfire <= GVAR(fireburning))
+					if(gamemillis-ci->state.lastfire <= GVAR(fireburntime))
 					{
 						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
 						{

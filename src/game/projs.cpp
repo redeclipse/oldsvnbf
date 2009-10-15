@@ -501,7 +501,7 @@ namespace projs
 	{
 		gameent *d = proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL;
 		if((!proj.lastradial || d || (lastmillis-proj.lastradial >= m_speedtime(100))) && radius > 0)
-		{ // for the flamer this results in at most 40 damage per second
+		{ // for the flamer this results in at most 100 damage per second
 			if(!d)
 			{
 				loopi(game::numdynents())
