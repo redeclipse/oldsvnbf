@@ -279,21 +279,19 @@ struct textrenderer : sharedlistrenderer
 		float scale = p->size/80.0f;
 		glScalef(-scale, scale, -scale);
 		const char *text = p->text+(p->text[0]=='@' ? 1 : 0);
-		char *font = NULL;
+		static string font; font[0] = 0;
 		if(*text == '<')
 		{
-			text++;
 			const char *start = text;
 			while(*text && *text != '>') text++;
-			if(*text) { font = newstring(start, text-start); text++; }
+			if(*text) { int len = text-(start+1); strncpy(font, start+1, len); font[len] = 0; text++; }
 			else text = start;
 		}
 		float xoff = -text_width(text)/2;
 		glTranslatef(xoff, 0, 50);
-		pushfont(font && *font ? font : "default");
+		pushfont(*font ? font : "default");
 		draw_text(text, 0, 0, color[0], color[1], color[2], blend);
 		popfont();
-		if(font) delete[] font;
 		glPopMatrix();
 	}
 };
