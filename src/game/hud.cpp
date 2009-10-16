@@ -1593,8 +1593,8 @@ namespace hud
 				loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
 				if(showfps)
 				{
-					draw_textx("%d", ox-os*2-is/4, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
-					draw_textx("fps", ox-os*2-is/4, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+					draw_textx("%d", ox-(br+FONTW)/2, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+					draw_textx("fps", ox-(br+FONTW)/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
 					switch(showfps)
 					{
 						case 3:
