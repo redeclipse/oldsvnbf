@@ -128,7 +128,7 @@ namespace hud
 	FVARP(inventoryeditblend, 0, 1.f, 1);
 	FVARP(inventoryeditskew, 0, 0.65f, 1);
 
-	VARP(inventoryhealth, 0, 3, 3);
+	VARP(inventoryhealth, 0, 2, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
@@ -1245,28 +1245,31 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;;
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;
 		float fade = inventoryhealthblend*blend;
-		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
 		settexture(healthtex, 3);
-		if(inventoryhealth && (glow || pulse))
+		if(game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 		{
-			int gap = 0;
-			float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
-			if(teamwidgets) skewcolour(r, g, b);
-			if(pulse)
+			bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
+			if(inventoryhealth && (glow || pulse))
 			{
-				int timestep = lastmillis%1000;
-				float skew = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
-				r += (1.f-r)*skew;
-				g -= g*skew;
-				b -= b*skew;
-				bgfade += (1.f-bgfade)*skew;
-				gap += int(x*skew);
+				int gap = 0;
+				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
+				if(teamwidgets) skewcolour(r, g, b);
+				if(pulse)
+				{
+					int timestep = lastmillis%1000;
+					float skew = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
+					r += (1.f-r)*skew;
+					g -= g*skew;
+					b -= b*skew;
+					bgfade += (1.f-bgfade)*skew;
+					gap += int(x*skew);
+				}
+				glColor4f(r, g, b, fade*bgfade);
+				drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
+				sy += size;
 			}
-			glColor4f(r, g, b, fade*bgfade);
-			drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
-			sy += size;
 		}
 		if(game::player1->state == CS_ALIVE)
 		{
@@ -1352,21 +1355,21 @@ namespace hud
 			const char *state = "", *tex = "";
 			switch(game::player1->state)
 			{
-				case CS_EDITING: state = "\fcedit"; break;
-				case CS_WAITING: state = "\fywait"; tex = inventorywaittex; break;
-				case CS_SPECTATOR: state = "\faspec"; tex = inventorychattex; break;
-				case CS_DEAD: default: state = "\frdead"; tex = inventorydeadtex; break;
+				case CS_EDITING: state = "\fwEDIT"; tex = inventorychattex; break;
+				case CS_SPECTATOR: state = "\faSPEC"; tex = inventorychattex; break;
+				case CS_WAITING: state = "\fyWAIT"; tex = inventorywaittex; break;
+				case CS_DEAD: state = "\frDEAD"; tex = inventorydeadtex; break;
 			}
 			if(inventoryhealth >= 3 && *state)
 			{
-				pushfont("default");
+				pushfont("emphasis");
 				int dt = draw_textx("%s", x+width/2, y-(sy ? sy : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
 				if(!sy) sy += dt;
 				popfont();
 			}
 			if(inventorystatus && *tex) sy += drawitem(tex, x+glow, y-sy, sw-glow*2, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
-		if(inventoryrace && m_race(game::gamemode))
+		if(inventoryrace && m_race(game::gamemode) && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 		{
 			if((game::player1->cpmillis > 0 || game::player1->cptime) && (game::player1->state == CS_ALIVE || game::player1->state == CS_DEAD || game::player1->state == CS_WAITING))
 			{
