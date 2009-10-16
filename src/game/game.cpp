@@ -465,8 +465,8 @@ namespace game
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					string ds;
-					if(showdamageabovehead > 2) formatstring(ds)("@-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
-					else formatstring(ds)("@-%d", damage);
+					if(showdamageabovehead > 2) formatstring(ds)("@<sub>-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
+					else formatstring(ds)("@<sub>-%d", damage);
 					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -636,8 +636,8 @@ namespace game
 				if(style&FRAG_REVENGE)
 				{
 					concatstring(d->obit, " \fs\fzoyvengeful\fS");
-					part_text(az, "@\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					part_text(dz, "@\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
+					part_text(az, "@<super>\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					part_text(dz, "@<super>\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominated = false;
 					else if(d == player1) actor->dominating = false;
 					anc = S_V_REVENGE; override = true;
@@ -645,8 +645,8 @@ namespace game
 				else if(style&FRAG_DOMINATE)
 				{
 					concatstring(d->obit, " \fs\fzoydominating\fS");
-					part_text(az, "@\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					part_text(dz, "@\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
+					part_text(az, "@<super>\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					part_text(dz, "@<super>\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominating = true;
 					else if(d == player1) actor->dominated = true;
 					anc = S_V_DOMINATE; override = true;
@@ -657,71 +657,71 @@ namespace game
 				if(style&FRAG_MKILL1)
 				{
 					concatstring(d->obit, " \fs\fzRedouble-killing\fS");
-					part_text(az, "@\fzvrDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "@<super>\fzvrDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@<super>\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL2)
 				{
 					concatstring(d->obit, " \fs\fzRetriple-killing\fS");
-					part_text(az, "@\fzvrTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "@<super>\fzvrTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@<super>\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL3)
 				{
 					concatstring(d->obit, " \fs\fzRemulti-killing\fS");
-					part_text(az, "@\fzvrMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "@\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "@<super>\fzvrMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "@<super>\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 			}
 
 			if(style&FRAG_HEADSHOT)
 			{
-				part_text(az, "@\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_HEADSHOT;
 			}
 
 			if(style&FRAG_SPREE1)
 			{
 				concatstring(d->obit, " in total \fs\fzcgcarnage\fS!");
-				part_text(az, "@\fzcgCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE1;
 				override = true;
 			}
 			else if(style&FRAG_SPREE2)
 			{
 				concatstring(d->obit, " on a \fs\fzcgslaughter\fS!");
-				part_text(az, "@\fzcgSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE2;
 				override = true;
 			}
 			else if(style&FRAG_SPREE3)
 			{
 				concatstring(d->obit, " on a \fs\fzcgmassacre\fS!");
-				part_text(az, "@\fzcgMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE3;
 				override = true;
 			}
 			else if(style&FRAG_SPREE4)
 			{
 				concatstring(d->obit, " in a \fs\fzcgbloodbath\fS!");
-				part_text(az, "@\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE4;
 				override = true;
 			}
 			else if(style&FRAG_SPREE5)
 			{
 				concatstring(d->obit," on a \fs\fzcgrampage\fS!");
-				part_text(az, "@\fzcgRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE5;
 				override = true;
 			}
 			else if(style&FRAG_SPREE6)
 			{
 				concatstring(d->obit, " who seems \fs\fzcgunstoppable\fS!");
-				part_text(az, "@\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "@<super>\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE6;
 				override = true;
 			}
@@ -1820,7 +1820,7 @@ namespace game
 			vec pos = d->abovehead(2);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
 			{
-				const char *name = colorname(d, NULL, "@");
+				const char *name = colorname(d, NULL, d->aitype < 0 ? "@<super>" : "@<default>");
 				if(name && *name && (*name != '@' || name[1]))
 				{
 					part_text(pos, name);

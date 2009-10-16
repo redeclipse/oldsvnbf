@@ -1227,7 +1227,7 @@ namespace ai
 		mkstring(s);
 		if(top)
 		{
-			formatstring(s)("@\fg%s (%d[%d]) %s:%d (%d[%d])",
+			formatstring(s)("@<default>\fg%s (%d[%d]) %s:%d (%d[%d])",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target,
@@ -1237,7 +1237,7 @@ namespace ai
 		}
 		else
 		{
-			formatstring(s)("@\fy%s (%d[%d]) %s:%d",
+			formatstring(s)("@<sub>\fy%s (%d[%d]) %s:%d",
 				bnames[b.type],
 				lastmillis-b.millis, b.next-lastmillis,
 				btypes[b.targtype+1], b.target
