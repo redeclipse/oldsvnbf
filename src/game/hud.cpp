@@ -301,9 +301,9 @@ namespace hud
 
 	void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb)
 	{
-		if(throb && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
+		if(throb && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
-			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
+			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime), 0.f, 1.f);
 			if(skew > 0.5f) skew = 1.f-skew;
 			fade *= 1.f-skew;
 			s += int(s*ss*skew);
@@ -1271,8 +1271,11 @@ namespace hud
 		if(game::player1->state == CS_ALIVE)
 		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
-				fade *= (lastmillis-game::player1->lastregen)/float(regentime*1000);
+			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
+			{
+				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
+				if(amt > 1.f) amt = 2.f-amt; glow *= amt;
+			}
 			if(inventoryhealth >= 2)
 			{
 				const struct healthbarstep
@@ -1416,14 +1419,12 @@ namespace hud
 	void drawdamage(int w, int h, int s, float blend)
 	{
 		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE && hud::damageresidue > 0 ? min(hud::damageresidue, 100)/100.f : 0);
-
-		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
+		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
-			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
-			if(skew > 0.5f) skew = 1.f-skew;
+			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
+			if(skew > 1.f) skew = 2.f-skew;
 			pc += (1.f-pc)*skew;
 		}
-
 		if(pc > 0)
 		{
 			Texture *t = *damagetex ? textureload(damagetex, 3) : notexture;
