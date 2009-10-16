@@ -1352,10 +1352,10 @@ namespace hud
 			const char *state = "", *tex = "";
 			switch(game::player1->state)
 			{
-				case CS_EDITING: state = "\fcEDIT"; break;
-				case CS_WAITING: state = "\fyWAIT"; tex = inventorywaittex; break;
-				case CS_SPECTATOR: state = "\faSPEC"; tex = inventorychattex; break;
-				case CS_DEAD: default: state = "\frDEAD"; tex = inventorydeadtex; break;
+				case CS_EDITING: state = "\fcedit"; break;
+				case CS_WAITING: state = "\fywait"; tex = inventorywaittex; break;
+				case CS_SPECTATOR: state = "\faspec"; tex = inventorychattex; break;
+				case CS_DEAD: default: state = "\frdead"; tex = inventorydeadtex; break;
 			}
 			if(inventoryhealth >= 3 && *state)
 			{
@@ -1364,7 +1364,7 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
+			if(inventorystatus && *tex) sy += drawitem(tex, x+glow, y-sy, sw-glow*2, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
 		if(inventoryrace && m_race(game::gamemode))
 		{
