@@ -15,7 +15,7 @@ VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
-VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
+VARG(spawnweapon, 0, WEAP_FLAMER, WEAP_TOTAL-1);
 VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, survivor)
 VARG(instaspawndelay, 0, 3, INT_MAX-1); // .. in instagib matches
