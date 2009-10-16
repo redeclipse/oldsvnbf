@@ -1247,7 +1247,7 @@ namespace hud
 	{
         int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;;
 		float fade = inventoryhealthblend*blend;
-		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health <= m_maxhealth(game::gamemode, game::mutators)/2;
+		bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
 		settexture(healthtex, 3);
 		if(inventoryhealth && (glow || pulse))
 		{
@@ -1272,11 +1272,7 @@ namespace hud
 		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
 			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime*1000)
-			{
-				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime*1000), 0.f, 1.f);
-				if(amt < 0.5f) amt = 1.f-amt;
-				fade *= amt;
-			}
+				fade *= (lastmillis-game::player1->lastregen)/float(regentime*1000);
 			if(inventoryhealth >= 2)
 			{
 				const struct healthbarstep
