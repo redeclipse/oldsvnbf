@@ -18,7 +18,7 @@ namespace hud
 	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
 	VARP(hudsize, 0, 2048, INT_MAX-1);
 	FVARP(hudblend, 0, 1.f, 1);
-	FVARP(gapsize, 0, 0.0125f, 1000);
+	FVARP(gapsize, 0, 0.01f, 1000);
 
 	VARP(showconsole, 0, 2, 2);
 	VARP(shownotices, 0, 3, 4);
