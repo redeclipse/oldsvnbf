@@ -89,9 +89,9 @@ namespace game
 	VARP(bloodfade, 1, 5000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
 	VARP(gibfade, 1, 5000, INT_MAX-1);
-	VARP(fireburnfade, 0, 75, INT_MAX-1);
+	VARP(fireburnfade, 0, 50, INT_MAX-1);
 	FVARP(impulsescale, 0, 1, 1000);
-	VARP(impulsefade, 0, 150, INT_MAX-1);
+	VARP(impulsefade, 0, 200, INT_MAX-1);
 
 	ICOMMAND(gamemode, "", (), intret(gamemode));
 	ICOMMAND(mutators, "", (), intret(mutators));
@@ -284,15 +284,15 @@ namespace game
 	{
 		if(effect || (d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)))))
 		{
-			int num = int((effect ? 20 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
-			if(num >0 && len > 0)
+			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
+			if(num > 0 && len > 0)
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->lfoot, 1.25f, -10, 0, 20.f);
-					regularshape(PART_FIREBALL, int(d->radius), 0x601820, 21, num, m_speedtime(len), d->rfoot, 1.25f, -10, 0, 20.f);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->lfoot, 1, -5, 0, 15.f);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->rfoot, 1, -5, 0, 15.f);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, 0x601820, 21, num, m_speedtime(len), d->feetpos(), 1.25f, -10, 0, 20.f);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->feetpos(), 1, -5, 0, 15.f);
 			}
 		}
 	}
@@ -300,7 +300,7 @@ namespace game
 	void fireeffect(gameent *d)
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
-			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.35f), firecols[rnd(4)], d->height*0.65f, -10, 0);
+			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
 	}
 
 	gameent *pointatplayer()
@@ -1557,6 +1557,15 @@ namespace game
 			{
 				if(m_ctf(gamemode)) ctf::adddynlights();
 				if(m_stf(gamemode)) stf::adddynlights();
+			}
+			if(fireburntime)
+			{
+				gameent *d = NULL;
+				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
+				{
+					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(0.5f+(pc*0.75f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.25f), 0.5f*pc, 0.125f*pc));
+				}
 			}
 		}
 	}
