@@ -2106,8 +2106,7 @@ namespace server
 			if(total && actor->state.health < total)
 			{
 				int rgn = actor->state.health, heal = clamp(actor->state.health+realdamage, 0, total), eff = heal-rgn;
-				actor->state.health = heal;
-				actor->state.lastregen = gamemillis;
+				actor->state.health = heal; actor->state.lastregen = gamemillis;
 				sendf(-1, 1, "ri4", SV_REGEN, actor->clientnum, actor->state.health, eff);
 			}
 		}
@@ -2641,12 +2640,12 @@ namespace server
 				if(smode) smode->regen(ci, total, amt, delay);
 				if(delay && (ci->state.health < total || ci->state.health > total) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
 				{
-					if(ci->state.health > total) { amt = -GVAR(regenhealth); total = ci->state.health; }
-					int rgn = ci->state.health, heal = clamp(ci->state.health+amt, 0, total), eff = heal-rgn;
+					int low = 0;
+					if(ci->state.health > total) { amt = -GVAR(regenhealth); total = ci->state.health; low = m_maxhealth(gamemode, mutators); }
+					int rgn = ci->state.health, heal = clamp(ci->state.health+amt, low, total), eff = heal-rgn;
 					if(eff)
 					{
-						ci->state.health = heal;
-						ci->state.lastregen = gamemillis;
+						ci->state.health = heal; ci->state.lastregen = gamemillis;
 						sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, eff);
 					}
 				}
