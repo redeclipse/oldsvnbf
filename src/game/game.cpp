@@ -444,6 +444,7 @@ namespace game
 			d->quake = clamp(d->quake+max(int(damage*(1.f-d->o.dist(o)/EXPLOSIONSCALE/radius)*(m_insta(gamemode, mutators) ? 0.25f : 1.f)), 1), 0, 1000);
 	}
 
+	static int alarmchan = -1;
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
 	{
 		bool burning = false;
@@ -474,27 +475,22 @@ namespace game
 			}
 			if(d != actor)
 			{
-				if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)) && lastmillis-actor->lastdamagetone > 0)
+				bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
+				if(sameteam) { if(!burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
+				else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)))
 				{
-					if(m_team(gamemode, mutators) && d->team == actor->team)
-					{
-						if(!burning) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1);
-					}
-					else
-					{
-						int snd = 0;
-						if(damage >= 200) snd = 7;
-						else if(damage >= 150) snd = 6;
-						else if(damage >= 100) snd = 5;
-						else if(damage >= 75) snd = 4;
-						else if(damage >= 50) snd = 3;
-						else if(damage >= 25) snd = 2;
-						else if(damage >= 10) snd = 1;
-						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
-					}
-					actor->lastdamagetone = lastmillis;
+					int snd = 0;
+					if(burning) snd = 8;
+					else if(damage >= 200) snd = 7;
+					else if(damage >= 150) snd = 6;
+					else if(damage >= 100) snd = 5;
+					else if(damage >= 75) snd = 4;
+					else if(damage >= 50) snd = 3;
+					else if(damage >= 25) snd = 2;
+					else if(damage >= 10) snd = 1;
+					playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
 				}
-				actor->lasthit = lastmillis;
+				if(!burning && !sameteam) actor->lasthit = lastmillis;
 			}
 		}
 		if(!burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
