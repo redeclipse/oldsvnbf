@@ -303,7 +303,7 @@ namespace hud
 	{
 		if(throb && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
-			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime), 0.f, 1.f);
+			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
 			if(skew > 0.5f) skew = 1.f-skew;
 			fade *= 1.f-skew;
 			s += int(s*ss*skew);
@@ -1273,8 +1273,8 @@ namespace hud
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
 			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 			{
-				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
-				if(amt > 1.f) amt = 2.f-amt; glow *= amt;
+				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
+				glow *= amt > 1.f ? amt-1.f : 1.f-amt;
 			}
 			if(inventoryhealth >= 2)
 			{
@@ -1421,9 +1421,8 @@ namespace hud
 		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE && hud::damageresidue > 0 ? min(hud::damageresidue, 100)/100.f : 0);
 		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
-			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
-			if(skew > 1.f) skew = 2.f-skew;
-			pc += (1.f-pc)*skew;
+			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
+			pc += (1.f-pc)*(skew > 1.f ? skew-1.f : 1.f-skew);
 		}
 		if(pc > 0)
 		{
@@ -1447,7 +1446,7 @@ namespace hud
 			{
 				float pc = float(interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(0.9f*max(pc,0.3f), 0.3f*pc, 0.0625f*pc, blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
+				glColor4f(0.9f*max(pc,0.5f), 0.3f*pc, 0.0625f*max(pc,0.25f), blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
 			}
 		}
