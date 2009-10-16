@@ -213,7 +213,7 @@ namespace entities
 				const char *item = entities::entinfo(e.type, e.attrs, false);
 				if(item && *item)
 				{
-					defformatstring(ds)("@%s (%d)", item, e.type);
+					defformatstring(ds)("@<super>%s (%d)", item, e.type);
 					part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
 				}
 			}
@@ -2236,7 +2236,7 @@ namespace entities
 			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
 			if(showentinfo >= 2 || game::player1->state == CS_EDITING)
 			{
-				defformatstring(s)("@%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+				defformatstring(s)("@<super>%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
 				{

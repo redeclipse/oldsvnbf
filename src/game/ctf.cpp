@@ -148,7 +148,7 @@ namespace ctf
 			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
-				defformatstring(info)("@%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
+				defformatstring(info)("@<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 				above.z += 2.5f;
             }
@@ -164,7 +164,7 @@ namespace ctf
             {
 				if(f.owner)
 				{
-					defformatstring(info)("@%s", game::colorname(f.owner));
+					defformatstring(info)("@<super>%s", game::colorname(f.owner));
 					part_text(above, info, PART_TEXT, 1);
 					above.z += 1.5f;
 				}
@@ -199,7 +199,7 @@ namespace ctf
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, yaw, 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
 			above.z += enttype[FLAG].radius*2/3;
 			if(f.owner) { above.z += iterflags[f.owner->clientnum]*2; iterflags[f.owner->clientnum]++; }
-            defformatstring(info)("@%s flag", teamtype[f.team].name);
+            defformatstring(info)("@<super>%s flag", teamtype[f.team].name);
 			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 			above.z += 2.5f;
 			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
@@ -420,7 +420,7 @@ namespace ctf
 		{
 			if(effect&1)
 			{
-				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
+				defformatstring(text)("@<super>%s\fzRe%s", teamtype[team].chat, str);
 				part_text(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
@@ -429,7 +429,7 @@ namespace ctf
 		{
 			if(effect&2)
 			{
-				defformatstring(text)("@%s\fzRe%s", teamtype[team].chat, str);
+				defformatstring(text)("@<super>%s\fzRe%s", teamtype[team].chat, str);
 				part_text(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);

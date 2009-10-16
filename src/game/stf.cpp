@@ -23,8 +23,8 @@ namespace stf
             rendermodel(&entities::ents[b.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, entities::ents[b.ent]->attrs[2], entities::ents[b.ent]->attrs[3], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED);
 			int attack = b.enemy ? b.enemy : b.owner, defend = b.owner ? b.owner : b.enemy;
 			if(b.enemy && b.owner)
-				formatstring(b.info)("\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
-			else formatstring(b.info)("\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
+				formatstring(b.info)("<super>\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
+			else formatstring(b.info)("<super>\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f) : 0.f;
 			vec above = b.o;
 			above.z += enttype[FLAG].radius*2/3;
@@ -172,7 +172,7 @@ namespace stf
 				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e->type == ENT_PLAYER && insideflag(b, e))
 					if((d = e) == game::player1) break;
 				game::announce(S_V_FLAGSECURED, CON_INFO, d, "\fateam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
-				defformatstring(text)("@%s\fzReSECURED", teamtype[owner].chat);
+				defformatstring(text)("@<super>%s\fzReSECURED", teamtype[owner].chat);
 				part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 				game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius*2);
 			}
@@ -183,7 +183,7 @@ namespace stf
 				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e->type == ENT_PLAYER && insideflag(b, e))
 					if((d = e) == game::player1) break;
 			game::announce(S_V_FLAGOVERTHROWN, CON_INFO, d, "\fateam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
-			defformatstring(text)("@%s\fzReOVERTHROWN", teamtype[enemy].chat);
+			defformatstring(text)("@<super>%s\fzReOVERTHROWN", teamtype[enemy].chat);
 			part_text(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius*2);
 		}
