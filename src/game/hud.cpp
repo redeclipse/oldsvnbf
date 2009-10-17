@@ -128,7 +128,7 @@ namespace hud
 	FVARP(inventoryeditblend, 0, 1.f, 1);
 	FVARP(inventoryeditskew, 0, 0.65f, 1);
 
-	VARP(inventoryhealth, 0, 2, 3);
+	VARP(inventoryhealth, 0, 3, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
@@ -1248,13 +1248,13 @@ namespace hud
         int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;
 		float fade = inventoryhealthblend*blend;
 		settexture(healthtex, 3);
-		if(game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
+		if(game::player1->state == CS_ALIVE)
 		{
-			bool pulse = inventoryhealthpulse && game::player1->state == CS_ALIVE && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
+			bool pulse = inventoryhealthpulse && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
 			if(inventoryhealth && (glow || pulse))
 			{
 				int gap = 0;
-				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->state == CS_ALIVE ? 0.25f : 0.75f;
+				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000 ? (lastmillis-game::player1->lastspawn)/2000.f : 0.5f;
 				if(teamwidgets) skewcolour(r, g, b);
 				if(pulse)
 				{
@@ -1270,14 +1270,11 @@ namespace hud
 				drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
 				sy += size;
 			}
-		}
-		if(game::player1->state == CS_ALIVE)
-		{
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
 			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 			{
 				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
-				glow *= amt > 1.f ? amt-1.f : 1.f-amt;
+				glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt));
 			}
 			if(inventoryhealth >= 2)
 			{
@@ -1362,12 +1359,12 @@ namespace hud
 			}
 			if(inventoryhealth >= 3 && *state)
 			{
-				pushfont("emphasis");
+				pushfont("super");
 				int dt = draw_textx("%s", x+width/2, y-(sy ? sy : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventorystatus && *tex) sy += drawitem(tex, x+glow, y-sy, sw-glow*2, true, 1.f, 1.f, 1.f, fade, 1.f);
+			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
 		if(inventoryrace && m_race(game::gamemode) && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 		{
