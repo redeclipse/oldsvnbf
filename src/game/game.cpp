@@ -425,14 +425,19 @@ namespace game
 		}
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
-		if(d->lastfire && lastmillis-d->lastfire > fireburntime-500)
+		if(d->lastfire > 0 && lastmillis-d->lastfire > fireburntime-500)
 		{
 			if(lastmillis-d->lastfire > fireburntime)
 			{
 				if(issound(d->fschan)) removesound(d->fschan);
-				d->lastfire = 0;
+				d->fschan = -1; d->lastfire = 0;
 			}
 			else if(issound(d->fschan)) sounds[d->fschan].vol = int(255*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
+		}
+		else if(issound(d->fschan))
+		{
+			removesound(d->fschan);
+			d->fschan = -1;
 		}
 	}
 
@@ -1574,7 +1579,7 @@ namespace game
 				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
 				{
 					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.25f), 0.125f*pc));
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.2f), 0.125f*pc));
 				}
 			}
 		}
