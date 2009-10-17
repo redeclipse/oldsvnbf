@@ -425,14 +425,17 @@ namespace game
 		}
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
-		if(d->lastfire > 0 && lastmillis-d->lastfire > fireburntime-500)
+		if(d->lastfire > 0)
 		{
-			if(lastmillis-d->lastfire > fireburntime)
+			if(lastmillis-d->lastfire > fireburntime-500)
 			{
-				if(issound(d->fschan)) removesound(d->fschan);
-				d->fschan = -1; d->lastfire = 0;
+				if(lastmillis-d->lastfire > fireburntime)
+				{
+					if(issound(d->fschan)) removesound(d->fschan);
+					d->fschan = -1; d->lastfire = 0;
+				}
+				else if(issound(d->fschan)) sounds[d->fschan].vol = int(255*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
 			}
-			else if(issound(d->fschan)) sounds[d->fschan].vol = int(255*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
 		}
 		else if(issound(d->fschan))
 		{
