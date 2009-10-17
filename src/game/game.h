@@ -23,7 +23,7 @@
 enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2, S_SPLASH1, S_SPLASH2, S_UNDERWATER,
-	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_BEEP, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BZAP, S_BZZT, S_RELOAD, S_SWITCH,
+	S_SPLAT, S_SPLOSH, S_DEBRIS, S_TINK, S_RICOCHET, S_WHIZZ, S_WHIRR, S_BEEP, S_EXPLODE, S_ENERGY, S_HUM, S_BURN, S_BURNING, S_BURNFIRE, S_BZAP, S_BZZT, S_RELOAD, S_SWITCH,
 	S_PISTOL, S_PISTOL2, S_SHOTGUN, S_SHOTGUN2, S_SMG, S_SMG2, S_GRENADE, S_GRENADE2, S_FLAMER, S_FLAMER2, S_PLASMA, S_PLASMA2, S_RIFLE, S_RIFLE2,
 	S_ITEMPICKUP, S_ITEMSPAWN, S_REGEN, S_DAMAGE1, S_DAMAGE2, S_DAMAGE3, S_DAMAGE4, S_DAMAGE5, S_DAMAGE6, S_DAMAGE7, S_DAMAGE8, S_BURNDAMAGE,
 	S_RESPAWN, S_CHAT, S_ERROR, S_ALARM, S_V_FLAGSECURED, S_V_FLAGOVERTHROWN, S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
@@ -862,7 +862,7 @@ struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
-		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, lasthit, lastkill, lastattacker, lastpoints, quake;
+		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
@@ -870,7 +870,7 @@ struct gameent : dynent, gamestate
 	vector<int> airnodes;
 
 	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
-		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1),
+		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
 		lastattacker(-1), lastpoints(0), quake(0),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
 		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
@@ -884,14 +884,20 @@ struct gameent : dynent, gamestate
 	}
 	~gameent()
 	{
+		removesounds();
 		freeeditinfo(edit);
 		if(ai) delete ai;
 		removetrackedparticles(this);
 		removetrackedsounds(this);
+	}
+
+	void removesounds()
+	{
 		if(issound(aschan)) removesound(aschan);
 		if(issound(vschan)) removesound(vschan);
 		if(issound(wschan)) removesound(wschan);
-		aschan = vschan = wschan = -1;
+		if(issound(fschan)) removesound(fschan);
+		aschan = vschan = wschan = fschan = -1;
 	}
 
 	void stopmoving(bool full)
@@ -916,6 +922,7 @@ struct gameent : dynent, gamestate
 	void respawn(int millis, int heal)
 	{
 		stopmoving(true);
+		removesounds();
 		clearstate();
 		physent::reset();
 		gamestate::respawn(millis, heal);
@@ -1188,7 +1195,7 @@ namespace game
 	extern void resetworld();
 	extern void resetstate();
 	extern void quake(const vec &o, int damage, int radius);
-	extern void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir);
+	extern void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir, bool local = false);
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style);
 	extern void timeupdate(int timeremain);
