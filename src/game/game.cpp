@@ -300,7 +300,10 @@ namespace game
 	void fireeffect(gameent *d)
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
-			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
+		{
+			float pc = lastmillis-d->lastfire > fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
+			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
+		}
 	}
 
 	gameent *pointatplayer()
@@ -422,10 +425,14 @@ namespace game
 		}
 		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
-		if(d->lastfire && (!fireburntime || lastmillis-d->lastfire > fireburntime))
+		if(d->lastfire && lastmillis-d->lastfire > fireburntime-500)
 		{
-			if(issound(d->fschan)) removesound(d->fschan);
-			d->lastfire = 0;
+			if(lastmillis-d->lastfire > fireburntime)
+			{
+				if(issound(d->fschan)) removesound(d->fschan);
+				d->lastfire = 0;
+			}
+			else if(issound(d->fschan)) sounds[d->fschan].vol = int(255*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
 		}
 	}
 
