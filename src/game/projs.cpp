@@ -325,7 +325,7 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
 		vec ray = vec(proj.vel).normalize();
 		int maxsteps = 25;
-		float step = 4, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
+		float step = 0.1f, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
 		loopi(maxsteps)
 		{
 			float olddist = dist;

@@ -961,8 +961,8 @@ struct gameent : dynent, gamestate
 		}
 		if(type == ENT_PLAYER)
 		{
-			float hsize = max(xradius*0.4f, yradius*0.4f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
-			vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.4f, yradius*0.4f, hsize);
+			float hsize = max(xradius*0.45f, yradius*0.45f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
+			vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.45f, yradius*0.45f, hsize);
 			if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
 			float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
 			float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
