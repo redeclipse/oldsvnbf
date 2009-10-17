@@ -1539,8 +1539,8 @@ namespace game
 		float total = full ? 1.f : (d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playersfade);
 		if(d->state == CS_ALIVE)
 		{
-			int len = spawnprotecttime*1000, millis = d->protect(lastmillis, len); // protect returns time left
-			if(millis > 0) total = (1.f-(float(millis)/float(len)))*total;
+			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
+			if(millis > 0) total = (1.f-(float(millis)/float(spawnprotecttime)))*total;
 		}
 		else if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{

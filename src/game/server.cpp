@@ -636,7 +636,7 @@ namespace server
 		if(smode) smode->intermission();
 		mutate(smuts, mut->intermission());
 		maprequest = false;
-		interm = gamemillis+(GVAR(intermlimit)*1000);
+		interm = gamemillis+GVAR(intermlimit);
 		sendf(-1, 1, "ri2", SV_TIMEUP, 0);
 		aiman::clearai(AI_START);
 	}
@@ -647,7 +647,7 @@ namespace server
 		{
 			if(m_race(gamemode))
 			{
-				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(racelimit)*60000)
+				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(racelimit))
 				{
 					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcrace finishing limit has been reached!");
 					startintermission();
@@ -2256,7 +2256,7 @@ namespace server
 					int hflags = flags|h.flags;
 					float size = radial ? (hflags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 					clientinfo *target = (clientinfo *)getinfo(h.target);
-					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)*1000))
+					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)))
 						continue;
 					int damage = calcdamage(weap, hflags, radial, size, dist);
 					if(damage > 0 && (hithurts(hflags) || hflags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
@@ -2708,7 +2708,7 @@ namespace server
 					if(demorecord) enddemorecord();
 					sendf(-1, 1, "ri", SV_NEWGAME);
 					maprequest = true;
-					interm = gamemillis+(GVAR(votelimit)*1000);
+					interm = gamemillis+GVAR(votelimit);
 				}
 				else
 				{

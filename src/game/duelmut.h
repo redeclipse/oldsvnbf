@@ -99,7 +99,7 @@ struct duelservmode : servmode
 
 		if(dueltime < 0)
 		{
-			dueltime = gamemillis+(GVAR(duellimit)*10000);
+			dueltime = gamemillis+GVAR(duellimit)*10;
 			clearqueue();
 		}
 		else cleanup();
@@ -165,7 +165,7 @@ struct duelservmode : servmode
 					srvmsgf(-1, "\fyteam \fs%s%s\fS are the victors!", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
 					loopv(alive) if(allowbroadcast(alive[i]->clientnum))
 						sendf(alive[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
-					dueltime = gamemillis+(GVAR(duellimit)*1000);
+					dueltime = gamemillis+GVAR(duellimit);
 				}
 			}
 			else switch(alive.length())
@@ -173,7 +173,7 @@ struct duelservmode : servmode
 				case 0:
 				{
 					srvmsgf(-1, "\frhaha, everyone died, fail!");
-					dueltime = gamemillis+(GVAR(duellimit)*1000);
+					dueltime = gamemillis+GVAR(duellimit);
 					break;
 				}
 				case 1:
@@ -181,7 +181,7 @@ struct duelservmode : servmode
 					srvmsgf(-1, "\fy%s was the victor!", colorname(alive[0]));
 					if(allowbroadcast(alive[0]->clientnum))
 						sendf(alive[0]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
-					dueltime = gamemillis+(GVAR(duellimit)*1000);
+					dueltime = gamemillis+GVAR(duellimit);
 					break;
 				}
 				default: break;

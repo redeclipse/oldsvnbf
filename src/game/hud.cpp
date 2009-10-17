@@ -935,10 +935,10 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotecttime*1000);
+			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotecttime);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime*1000), 0.f, 1.f);
+			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime), 0.f, 1.f);
 			if(hastv(radarplayernames)) drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
