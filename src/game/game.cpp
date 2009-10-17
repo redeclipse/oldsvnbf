@@ -465,7 +465,7 @@ namespace game
 				if(showdamageabovehead > (d != player1 ? 0 : 1))
 				{
 					string ds;
-					if(showdamageabovehead > 2) formatstring(ds)("@<sub>-%d (%s)", damage, flags&HIT_HEAD ? "head" : (flags&HIT_TORSO ? "torso" : "legs"));
+					if(showdamageabovehead > 2) formatstring(ds)("@<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
 					else formatstring(ds)("@<sub>-%d", damage);
 					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 				}
