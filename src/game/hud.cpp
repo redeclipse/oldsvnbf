@@ -1448,7 +1448,7 @@ namespace hud
 			Texture *t = *burntex ? textureload(burntex, 3) : notexture;
 			if(t != notexture)
 			{
-				float pc = float(interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
+				float pc = interval > fireburntime-500 ? 1.f+(interval-(fireburntime-500))/500.f : (interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
 				glBindTexture(GL_TEXTURE_2D, t->id);
 				glColor4f(0.9f*max(pc,0.5f), 0.3f*pc, 0.0625f*max(pc,0.25f), blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
