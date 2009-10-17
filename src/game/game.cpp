@@ -289,10 +289,10 @@ namespace game
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->lfoot, 1, -5, 0, 15.f);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->rfoot, 1, -5, 0, 15.f);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)]|0x000028, 21, num, m_speedtime(len), d->feetpos(), 1, -5, 0, 15.f);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, -15, 0, 5);
 			}
 		}
 	}
