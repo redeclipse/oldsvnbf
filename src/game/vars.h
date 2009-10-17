@@ -17,10 +17,10 @@ VARG(maxcarry, 0, 2, WEAP_MAX-1);
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_FLAMER, WEAP_TOTAL-1);
 VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
-VARG(spawndelay, 0, 5, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, survivor)
-VARG(instaspawndelay, 0, 3, INT_MAX-1); // .. in instagib matches
-VARG(racespawndelay, 0, 1, INT_MAX-1); // .. in race matches
-VARG(spawnprotecttime, 0, 3, INT_MAX-1);
+VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes (except non-dm and stf, ctf, duel, survivor)
+VARG(instaspawndelay, 0, 3000, INT_MAX-1); // .. in instagib matches
+VARG(racespawndelay, 0, 1000, INT_MAX-1); // .. in race matches
+VARG(spawnprotecttime, 0, 3000, INT_MAX-1);
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 200, INT_MAX-1);
@@ -49,10 +49,10 @@ VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
-VARG(racelimit, 0, 1, INT_MAX-1);
-VARG(intermlimit, 0, 15, INT_MAX-1); // secs before vote menu comes up
-VARG(votelimit, 0, 30, INT_MAX-1); // secs before vote passes by default
-VARG(duellimit, 0, 3, INT_MAX-1); // secs before duel goes to next round
+VARG(racelimit, 0, 60000, INT_MAX-1);
+VARG(intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
+VARG(votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
+VARG(duellimit, 0, 3000, INT_MAX-1); // .. before duel goes to next round
 VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules

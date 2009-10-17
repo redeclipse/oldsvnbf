@@ -40,7 +40,7 @@ namespace hud
 
 		IVARP(autoshowscores, 0, 2, 2); // 1 = when dead, 2 = also in spectv
 		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
-		IVARP(showscoresdelay, 0, 3, INT_MAX-1); // otherwise use a static timespan
+		IVARP(showscoresdelay, 0, 3000, INT_MAX-1); // otherwise use a static timespan
 		IVARP(showscoresinfo, 0, 1, 1);
 		IVARP(highlightscore, 0, 1, 1);
 
@@ -66,7 +66,7 @@ namespace hud
 				if((!showscoresdelay() && !showscoreswait()) || game::tvmode()) return true;
 				else if(game::player1->state == CS_DEAD)
 				{
-					int delay = showscoreswait() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay()*1000;
+					int delay = showscoreswait() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay();
 					if(!delay || lastmillis-game::player1->lastdeath >= delay) return true;
 				}
 			}

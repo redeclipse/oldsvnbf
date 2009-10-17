@@ -400,7 +400,7 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_spawnweapon(a,b)	(!m_play(a) || m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_race(a) ? GVAR(racespawndelay) : ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay))))*1000 : 0)
+#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_race(a) ? GVAR(racespawndelay) : ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay)))) : 0)
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
