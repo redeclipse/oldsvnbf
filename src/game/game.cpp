@@ -470,7 +470,7 @@ namespace game
 					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
 				}
 				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
-				if(flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
+				if(burning || flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
 				if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
 			}
 			if(d != actor)
@@ -530,11 +530,7 @@ namespace game
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
-		int anc = -1, dth = -1;
-		if(style&FRAG_OBLITERATE) dth = S_SPLOSH;
-		else if(flags&HIT_MELT || flags&HIT_BURN) dth = S_BURN;
-		else dth = S_DIE1+rnd(2);
-
+		int anc = -1, dth = style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
 		if(d == player1) anc = S_V_FRAGGED;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
@@ -629,7 +625,7 @@ namespace game
 			{
 				concatstring(d->obit, " \fs\fzawteam-mate\fS ");
 				concatstring(d->obit, colorname(actor));
-				anc = S_ALARM; override = true;
+				if(actor == game::player1) { anc = S_ALARM; override = true; }
 			}
 			else
 			{

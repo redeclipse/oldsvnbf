@@ -322,12 +322,10 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
+		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
 		vec ray = vec(proj.vel).normalize();
 		int maxsteps = 25;
-		float step = 4,
-			  barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f),
-			  dist = 0;
+		float step = 4, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
 		loopi(maxsteps)
 		{
 			float olddist = dist;
@@ -338,20 +336,20 @@ namespace projs
 				proj.o = vec(ray).mul(olddist).add(orig);
 				float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
 				proj.o.add(vec(ray).mul(dist - olddist));
-				if(cdist < 0 || dist >= barrier) break;
+				if((cdist < 0 || dist >= barrier) && (!hitplayer || hitplayer != proj.owner)) break;
 			}
 			else
 			{
 				proj.o = vec(ray).mul(dist).add(orig);
-				if(collide(&proj) && !inside) break;
+				if(collide(&proj) && !inside && (!hitplayer || hitplayer != proj.owner)) break;
 			}
-			if(hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM)
+			if((!hitplayer || hitplayer != proj.owner) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
 			{
-				if(proj.projtype != PRJ_SHOT && (proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM)))
+				if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 				{
 					bounceeffect(proj);
 					reflect(proj, proj.norm);
-					proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
+					proj.o.add(vec(proj.norm).mul(proj.radius)); // offset from surface slightly to avoid initial collision
 					proj.movement = 0;
 					proj.lastbounce = lastmillis;
 				}
@@ -529,7 +527,7 @@ namespace projs
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
+			if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
 			if(weaptype[proj.weap].fsound >= 0)
 			{
 				int vol = 255;
@@ -698,7 +696,7 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if(proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
+				if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
 				int vol = 255;
 				switch(proj.weap)
 				{
