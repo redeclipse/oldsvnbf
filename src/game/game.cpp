@@ -301,6 +301,7 @@ namespace game
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 			regular_part_create(PART_FIREBALL_SOFT, fireburnfade, d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
+		else if(issound(d->fschan)) removesound(d->fschan);
 	}
 
 	gameent *pointatplayer()
@@ -444,63 +445,71 @@ namespace game
 			d->quake = clamp(d->quake+max(int(damage*(1.f-d->o.dist(o)/EXPLOSIONSCALE/radius)*(m_insta(gamemode, mutators) ? 0.25f : 1.f)), 1), 0, 1000);
 	}
 
-	static int alarmchan = -1;
-	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir)
+	bool fireburn(gameent *d, int weap, int flags)
 	{
-		bool burning = false;
-		if(fireburntime && (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] || flags&HIT_MELT))
+		if(fireburntime && ((isweap(weap) && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0]) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
 		{
-			if(flags&HIT_FULL) d->lastfire = lastmillis;
-			else burning = true;
+			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, -1, -1, -1, &d->fschan);
+			if(flags&HIT_FULL || weap == -1) d->lastfire = lastmillis;
+			else return true;
 		}
-		if(hithurts(flags))
+		return false;
+	}
+
+	static int alarmchan = -1;
+	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir, bool local)
+	{
+		bool burning = fireburn(d, weap, flags);
+		if(!local || burning)
 		{
-			if(d == player1) hud::damage(damage, actor->o, actor, weap);
-			if(d->type == ENT_PLAYER || d->type == ENT_AI)
+			if(hithurts(flags))
 			{
-				vec p = d->headpos();
-				p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-				if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
-					part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
-				if(showdamageabovehead > (d != player1 ? 0 : 1))
+				if(d == player1) hud::damage(damage, actor->o, actor, weap);
+				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
-					string ds;
-					if(showdamageabovehead > 2) formatstring(ds)("@<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
-					else formatstring(ds)("@<sub>-%d", damage);
-					part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
+					vec p = d->headpos();
+					p.z += 0.6f*(d->height + d->aboveeye) - d->height;
+					if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
+						part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
+					if(showdamageabovehead > (d != player1 ? 0 : 1))
+					{
+						string ds;
+						if(showdamageabovehead > 2) formatstring(ds)("@<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
+						else formatstring(ds)("@<sub>-%d", damage);
+						part_text(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
+					}
+					if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
+					if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
 				}
-				if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
-				if(burning || flags&HIT_BURN || flags&HIT_MELT) playsound(S_BURNING, d->o, d, 0, -1, -1, -1);
-				if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
+				if(d != actor)
+				{
+					bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
+					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
+					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)))
+					{
+						int snd = 0;
+						if(burning) snd = 8;
+						else if(damage >= 200) snd = 7;
+						else if(damage >= 150) snd = 6;
+						else if(damage >= 100) snd = 5;
+						else if(damage >= 75) snd = 4;
+						else if(damage >= 50) snd = 3;
+						else if(damage >= 25) snd = 2;
+						else if(damage >= 10) snd = 1;
+						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
+					}
+					if(!burning && !sameteam) actor->lasthit = lastmillis;
+				}
 			}
-			if(d != actor)
+			if(!burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
 			{
-				bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
-				if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
-				else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)))
-				{
-					int snd = 0;
-					if(burning) snd = 8;
-					else if(damage >= 200) snd = 7;
-					else if(damage >= 150) snd = 6;
-					else if(damage >= 100) snd = 5;
-					else if(damage >= 75) snd = 4;
-					else if(damage >= 50) snd = 3;
-					else if(damage >= 25) snd = 2;
-					else if(damage >= 10) snd = 1;
-					playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
-				}
-				if(!burning && !sameteam) actor->lasthit = lastmillis;
+				float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
+				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
+				else if(d->health <= 0) force *= deadpushscale;
+				else force *= hitpushscale;
+				vec push = dir; push.z += 0.125f; push.mul(m_speedscale(force));
+				d->vel.add(push);
 			}
-		}
-		if(!burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
-		{
-			float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
-			if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
-			else if(d->health <= 0) force *= deadpushscale;
-			else force *= hitpushscale;
-			vec push = dir; push.z += 0.125f; push.mul(m_speedscale(force));
-			d->vel.add(push);
 		}
 	}
 
@@ -513,19 +522,13 @@ namespace game
 			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
 			ai::damaged(d, actor);
 		}
-		if((actor != player1 && !actor->ai) || (fireburntime && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] && !(flags&HIT_FULL)))
-			hiteffect(weap, flags, damage, d, actor, dir);
+		hiteffect(weap, flags, damage, d, actor, dir, actor == player1 || actor->ai);
 	}
 
 	void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
 	{
 		if(d->type != ENT_PLAYER && d->type != ENT_AI) return;
-		bool burning = false;
-		if(fireburntime && (weaptype[weap].burns[flags&HIT_ALT ? 1 : 0] || flags&HIT_MELT))
-		{
-			if(flags&HIT_MELT || flags&HIT_FULL) d->lastfire = lastmillis;
-			else burning = true;
-		}
+		bool burning = fireburn(d, weap, flags);
         d->lastregen = 0;
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
@@ -542,7 +545,7 @@ namespace game
         	else if(flags&HIT_MELT) concatstring(d->obit, "melted into a ball of fire");
 			else if(flags&HIT_SPAWN) concatstring(d->obit, "tried to spawn inside solid matter");
 			else if(flags&HIT_LOST) concatstring(d->obit, "got very, very lost");
-        	else if(flags && isweap(weap))
+        	else if(flags && isweap(weap) && !burning)
         	{
 				static const char *suicidenames[WEAP_MAX] = {
 					"ate a bullet",
@@ -557,7 +560,7 @@ namespace game
 				};
         		concatstring(d->obit, suicidenames[weap]);
         	}
-        	else if(flags&HIT_BURN) concatstring(d->obit, "burnt up");
+        	else if(flags&HIT_BURN || burning) concatstring(d->obit, "burned up");
         	else if(style&FRAG_OBLITERATE) concatstring(d->obit, "was obliterated");
         	else concatstring(d->obit, "suicided");
         }
@@ -617,7 +620,7 @@ namespace game
 				};
 
 				int o = style&FRAG_OBLITERATE ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT ? 1 : 0));
-				concatstring(d->obit, isweap(weap) ? obitnames[o][weap] : "killed by");
+				concatstring(d->obit, burning ? "set ablaze by" : (isweap(weap) ? obitnames[o][weap] : "killed by"));
 			}
 			bool override = false;
 			vec az = actor->abovehead(), dz = d->abovehead();
@@ -909,7 +912,7 @@ namespace game
 	{
 		if((d == player1 || d->ai) && d->state == CS_ALIVE && d->suicided < 0)
 		{
-			if(fireburntime && (flags&HIT_MELT || flags&HIT_BURN)) d->lastfire = lastmillis;
+			fireburn(d, -1, flags);
 			client::addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
 			d->suicided = lastmillis;
 		}
@@ -1560,7 +1563,7 @@ namespace game
 				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
 				{
 					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(0.5f+(pc*0.75f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.25f), 0.5f*pc, 0.125f*pc));
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.25f), 0.125f*pc));
 				}
 			}
 		}
