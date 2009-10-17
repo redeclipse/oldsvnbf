@@ -197,7 +197,7 @@ VAR(entediting, 0, 0, 1);
 
 bool noentedit()
 {
-	if(!editmode) { conoutf("\froperation only allowed in edit mode"); return true; }
+	if(!editmode) { conoutft(CON_MESG, "\froperation only allowed in edit mode"); return true; }
 	return !entediting;
 }
 
@@ -681,7 +681,7 @@ void entlink()
 		}
 		else conoutf("\fr%d (%d) is not in range", index, 0);
 	}
-	else conoutf("\frmore than one entity must be selected to link");
+	else conoutft(CON_MESG, "\fomore than one entity must be selected to link");
 }
 COMMAND(entlink, "");
 
@@ -826,7 +826,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 {
 	if(!force && !editmode)
 	{
-		conoutf("\frnewmap only allowed in edit mode");
+		conoutft(CON_MESG, "\frnewmap only allowed in edit mode");
 		return false;
 	}
 
@@ -873,7 +873,7 @@ bool enlargemap(bool force)
 {
 	if(!force && !editmode)
 	{
-		conoutf("\frmapenlarge only allowed in edit mode");
+		conoutft(CON_MESG, "\frmapenlarge only allowed in edit mode");
 		return false;
 	}
 	if(hdr.worldsize >= 1<<20) return false;

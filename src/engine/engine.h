@@ -30,7 +30,7 @@ extern char *masterip;
 
 #include "sound.h"
 
-enum { CON_INFO = 0, CON_GAMESPECIFIC };
+enum { CON_DEBUG = 0, CON_MESG, CON_INFO, CON_SELF, CON_GAMESPECIFIC };
 
 #ifndef STANDALONE
 #include "world.h"

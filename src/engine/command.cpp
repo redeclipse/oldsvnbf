@@ -114,7 +114,7 @@ void resetvar(char *name)
 {
     ident *id = idents->access(name);
     if(!id) return;
-    //if(id->flags&IDF_READONLY) conoutf("variable %s is read-only", id->name);
+    //if(id->flags&IDF_READONLY) conoutft(CON_MESG, "variable %s is read-only", id->name);
     //else
     clearoverride(*id);
 }
@@ -630,7 +630,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 				}
 
 				case ID_VAR:						// game defined variables
-                    if(numargs <= 1) conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fd%s = 0x%.6X" : "\fd%s = 0x%X") : "\fd%s = %d", c, *id->storage.i);      // var with no value just prints its current value
+                    if(numargs <= 1) conoutft(CON_MESG, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fd%s = 0x%.6X" : "\fd%s = 0x%X") : "\fd%s = %d", c, *id->storage.i);      // var with no value just prints its current value
 					else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
@@ -638,7 +638,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						#define WORLDVAR \
 							if (!worldidents && !editmode && id->flags&IDF_WORLD) \
 							{ \
-								conoutf("\frcannot set world variable %s outside editmode", id->name); \
+								conoutft(CON_MESG, "\frcannot set world variable %s outside editmode", id->name); \
 								break; \
 							}
 #endif
@@ -648,7 +648,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 							{ \
 								if(id->flags&IDF_PERSIST) \
 								{ \
-									conoutf("\frcannot override persistent variable %s", id->name); \
+									conoutft(CON_MESG, "\frcannot override persistent variable %s", id->name); \
 									break; \
 								} \
 								if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
@@ -673,7 +673,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						if(i1<id->minval || i1>id->maxval)
 						{
 							i1 = i1<id->minval ? id->minval : id->maxval;				// clamp to valid range
-                            conoutf(
+                            conoutft(CON_MESG,
                                 id->flags&IDF_HEX ?
                                     (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
                                     "\frvalid range for %s is %d..%d",
@@ -688,8 +688,8 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					break;
 
 				case ID_FVAR:
-					if(numargs <= 1) conoutf("\fd%s = %s", c, floatstr(*id->storage.f));
-					else if(id->minvalf>id->maxvalf) conoutf("\frvariable %s is read-only", id->name);
+					if(numargs <= 1) conoutft(CON_MESG, "\fd%s = %s", c, floatstr(*id->storage.f));
+					else if(id->minvalf>id->maxvalf) conoutft(CON_MESG, "\frvariable %s is read-only", id->name);
 					else
 					{
 #ifndef STANDALONE
@@ -700,7 +700,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 						if(f1<id->minvalf || f1>id->maxvalf)
 						{
 							f1 = f1<id->minvalf ? id->minvalf : id->maxvalf;				// clamp to valid range
-							conoutf("\frvalid range for %s is %s..%s", id->name, floatstr(id->minvalf), floatstr(id->maxvalf));
+							conoutft(CON_MESG, "\frvalid range for %s is %s..%s", id->name, floatstr(id->minvalf), floatstr(id->maxvalf));
 						}
 						*id->storage.f = f1;
 						id->changed();
@@ -711,7 +711,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					break;
 
 				case ID_SVAR:
-					if(numargs <= 1) conoutf(strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
+					if(numargs <= 1) conoutft(CON_MESG, strchr(*id->storage.s, '"') ? "%s = [%s]" : "%s = \"%s\"", c, *id->storage.s);
 					else
 					{
 						char *exargs = NULL, *val = w[1];
@@ -1100,7 +1100,7 @@ ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
-ICOMMAND(echo, "C", (char *s), conoutf("\fd%s", s));
+ICOMMAND(echo, "C", (char *s), conoutft(CON_INFO, "\fd%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
 

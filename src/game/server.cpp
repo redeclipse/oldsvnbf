@@ -495,7 +495,7 @@ namespace server
 		formatstring(cname)("\fs%s%s", chat, name);
 		if(!name[0] || ci->state.aitype >= 0 || (dupname && duplicatename(ci, name)))
 		{
-			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype >= 0 ? "\fc" : "\fm", ci->clientnum);
+			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype >= 0 ? "\fm" : "\fc", ci->clientnum);
 			concatstring(cname, s);
 		}
 		concatstring(cname, "\fS");
@@ -649,7 +649,7 @@ namespace server
 			{
 				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(racelimit)*60000)
 				{
-					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcrace finishing limit has been reached!");
+					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcrace finishing limit has been reached!");
 					startintermission();
 					return;
 				}
@@ -671,14 +671,14 @@ namespace server
 					else minremain = -1;
 					if(!minremain)
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fctime limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fctime limit has been reached!");
 						startintermission();
 						return; // bail
 					}
 					else
 					{
 						sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-						if(minremain == 1) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_INFO, "\fconly one minute left of play!");
+						if(minremain == 1) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_SELF, "\fconly one minute left of play!");
 					}
 				}
 			}
@@ -694,7 +694,7 @@ namespace server
 						best = i;
 					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -706,7 +706,7 @@ namespace server
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_INFO, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcfrag limit has been reached!");
 						startintermission();
 						return; // bail
 					}
@@ -1621,7 +1621,7 @@ namespace server
 					char *ret = executeret(s);
 					if(ret)
 					{
-						if(*ret) conoutf("\fm%s returned %s", cmd, ret);
+						if(*ret) conoutft(CON_MESG, "\fo%s returned %s", cmd, ret);
 						delete[] ret;
 					}
 					return true;
@@ -1630,18 +1630,18 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						conoutf(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
+						conoutft(CON_MESG, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fo%s = 0x%.6X" : "\fo%s = 0x%X") : "\fo%s = %d", cmd, *id->storage.i);
 						return true;
 					}
 					if(id->maxval < id->minval)
 					{
-						conoutf("\frcannot override variable: %s", cmd);
+						conoutft(CON_MESG, "\frcannot override variable: %s", cmd);
 						return true;
 					}
 					int ret = atoi(arg);
 					if(ret < id->minval || ret > id->maxval)
 					{
-						conoutf(
+						conoutft(CON_MESG,
 							id->flags&IDF_HEX ?
                                     (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
                                     "\frvalid range for %s is %d..%d", cmd, id->minval, id->maxval);
@@ -1656,13 +1656,13 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						conoutf("\fm%s = %s", cmd, floatstr(*id->storage.f));
+						conoutft(CON_MESG, "\fo%s = %s", cmd, floatstr(*id->storage.f));
 						return true;
 					}
 					float ret = atof(arg);
 					if(ret < id->minvalf || ret > id->maxvalf)
 					{
-						conoutf("\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
+						conoutft(CON_MESG, "\frvalid range for %s is %s..%s", cmd, floatstr(id->minvalf), floatstr(id->maxvalf));
 						return true;
 					}
 					*id->storage.f = ret;
@@ -1674,7 +1674,7 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						conoutf(strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
+						conoutft(CON_MESG, strchr(*id->storage.s, '"') ? "\fo%s = [%s]" : "\fo%s = \"%s\"", cmd, *id->storage.s);
 						return true;
 					}
 					delete[] *id->storage.s;
@@ -1710,8 +1710,8 @@ namespace server
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
 					char *ret = executeret(s);
-					if(ret && *ret) srvoutf(3, "\fm%s executed %s (returned: %s)", colorname(ci), cmd, ret);
-					else srvoutf(3, "\fm%s executed %s", colorname(ci), cmd);
+					if(ret && *ret) srvoutf(3, "\fo%s executed %s (returned: %s)", colorname(ci), cmd, ret);
+					else srvoutf(3, "\fo%s executed %s", colorname(ci), cmd);
 					if(ret) delete[] ret;
 					return;
 				}
@@ -1719,7 +1719,7 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fm%s = 0x%.6X" : "\fm%s = 0x%X") : "\fm%s = %d", cmd, *id->storage.i);
+						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fo%s = 0x%.6X" : "\fo%s = 0x%X") : "\fo%s = %d", cmd, *id->storage.i);
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
@@ -1747,7 +1747,7 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						srvmsgf(ci->clientnum, "\fm%s = %s", cmd, floatstr(*id->storage.f));
+						srvmsgf(ci->clientnum, "\fo%s = %s", cmd, floatstr(*id->storage.f));
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
@@ -1767,7 +1767,7 @@ namespace server
 				{
 					if(nargs <= 1 || !arg)
 					{
-						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fm%s = [%s]" : "\fm%s = \"%s\"", cmd, *id->storage.s);
+						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fo%s = [%s]" : "\fo%s = \"%s\"", cmd, *id->storage.s);
 						return;
 					}
 					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
@@ -1781,7 +1781,7 @@ namespace server
 				default: return;
 			}
 			sendf(-1, 1, "ri2ss", SV_COMMAND, ci->clientnum, &id->name[3], val);
-			relayf(3, "\fm%s set %s to %s", colorname(ci), &id->name[3], val);
+			relayf(3, "\fo%s set %s to %s", colorname(ci), &id->name[3], val);
 		}
 		else srvmsgf(ci->clientnum, "\frunknown command: %s", cmd);
 	}
@@ -3705,14 +3705,14 @@ namespace server
 						case ID_VAR:
 						{
 							int val = getint(p);
-							relayf(3, "\fm%s set worldvar %s to %d", colorname(ci), text, val);
+							relayf(3, "\fo%s set worldvar %s to %d", colorname(ci), text, val);
 							QUEUE_INT(val);
 							break;
 						}
 						case ID_FVAR:
 						{
 							float val = getfloat(p);
-							relayf(3, "\fm%s set worldvar %s to %s", colorname(ci), text, floatstr(val));
+							relayf(3, "\fo%s set worldvar %s to %s", colorname(ci), text, floatstr(val));
 							QUEUE_FLT(val);
 							break;
 						}
@@ -3721,7 +3721,7 @@ namespace server
 						{
 							string val;
 							getstring(val, p);
-							relayf(3, "\fm%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
+							relayf(3, "\fo%s set world%s %s to %s", colorname(ci), t == ID_ALIAS ? "alias" : "var", text, val);
 							QUEUE_STR(val);
 							break;
 						}

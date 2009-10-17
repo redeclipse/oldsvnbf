@@ -788,9 +788,9 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	setfvar("progresspart", bar2);
 	if(verbose >= 4)
 	{
-		if(text2) conoutf("\fm%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if(text1) conoutf("\fm%s [%.2f%%]", text1, bar1*100.f);
-		else conoutf("\fmprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		if(text2) conoutf("\fa%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if(text1) conoutf("\fa%s [%.2f%%]", text1, bar1*100.f);
+		else conoutf("\faprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
 	}
 
 	progressing = true;
@@ -867,15 +867,15 @@ int main(int argc, char **argv)
 
 	initing = NOT_INITING;
 
-	conoutf("\fmloading enet..");
+	conoutf("loading enet..");
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
 
-	conoutf("\fmloading game..");
+	conoutf("loading game..");
 	initgame();
 
-	conoutf("\fmloading sdl..");
+	conoutf("loading sdl..");
     int par = 0;
 	#ifdef _DEBUG
 	par = SDL_INIT_NOPARACHUTE;
@@ -892,7 +892,7 @@ int main(int argc, char **argv)
 	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 	ignoremouse += 3;
 
-	conoutf("\fmloading video mode..");
+	conoutf("loading video mode..");
     const SDL_VideoInfo *video = SDL_GetVideoInfo();
     if(video)
     {
@@ -902,51 +902,51 @@ int main(int argc, char **argv)
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-	conoutf("\fmloading video misc..");
+	conoutf("loading video misc..");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	keyrepeat(false);
 	setcaption("please wait...");
 	eastereggs();
 
-	conoutf("\fmloading gl..");
+	conoutf("loading gl..");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     if(!(notexture = textureload("textures/notexture")) ||
 		!(blanktexture = textureload("textures/blank")))
 		fatal("could not find core textures");
 
-	conoutf("\fmloading sound..");
+	conoutf("loading sound..");
 	initsound();
 
-	conoutf("\fmloading defaults..");
+	conoutf("loading defaults..");
 	persistidents = false;
 	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 	inbetweenframes = true;
     progress(0, "please wait...");
 
-    conoutf("\fmloading gl effects..");
+    conoutf("loading gl effects..");
     progress(0, "loading gl effects..");
     loadshaders();
 
-	conoutf("\fmloading world..");
+	conoutf("loading world..");
     progress(0, "loading world..");
 	emptymap(0, true, NULL, true);
 
-	conoutf("\fmloading config..");
+	conoutf("loading config..");
     progress(0, "loading config..");
 	rehash(false);
 	smartmusic(true, false);
 
-	conoutf("\fmloading required data..");
+	conoutf("loading required data..");
     progress(0, "loading required data..");
     preloadtextures();
 	particleinit();
     initdecals();
 
 	trytofindocta();
-	conoutf("\fmloading main..");
+	conoutf("loading main..");
     progress(0, "loading main..");
 	if(initscript) execute(initscript);
 	if(autograbinput) setvar("grabinput", 1, true);

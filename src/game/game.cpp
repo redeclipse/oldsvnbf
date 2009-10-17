@@ -80,7 +80,7 @@ namespace game
 	TVAR(dominatedtex, "textures/exit", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
-	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_INFO, 2 = CON_CHAT
+	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
 	VARP(playdamagetones, 0, 1, 3);
 
 	VARP(quakefade, 0, 100, INT_MAX-1);
@@ -259,9 +259,9 @@ namespace game
 			}
 			if(weap < WEAP_PISTOL || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_PISTOL;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutf("\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
+			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
 		}
-		else conoutf("\fronly available in arena");
+		else conoutft(CON_SELF, "\foonly available in arena");
 	}
 	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(player1, s));
 
@@ -748,7 +748,7 @@ namespace game
 				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0) show = true; break;
 				case 5: default: show = true; break;
 			}
-			announce(anc, show ? CON_INFO : -1, d, "\fw%s", d->obit);
+			announce(anc, show ? (isme ? CON_SELF : CON_INFO) : -1, d, "\fw%s", d->obit);
 		}
 		if(!kidmode && bloodscale > 0 && gibscale > 0)
 		{
@@ -808,7 +808,7 @@ namespace game
 		gameent *d = players[cn];
 		if(!d) return;
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
-			conoutft(showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fo%s left the game", colorname(d));
+			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
 		loopv(client::mapvotes) if(client::mapvotes[i].player == d) { client::mapvotes.remove(i); break; }
 		projs::remove(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
@@ -846,7 +846,7 @@ namespace game
 		resetworld();
 		if(*name)
 		{
-			conoutf("\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
+			conoutft(CON_INFO, "\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
 			preload();
 		}
 		// reset perma-state
@@ -902,7 +902,7 @@ namespace game
 		formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
 		if(!name[0] || d->aitype >= 0 || (dupname && duplicatename(d, name)))
 		{
-			defformatstring(s)(" [\fs%s%d\fS]", d->aitype >= 0 ? "\fc" : "\fm", d->clientnum);
+			defformatstring(s)(" [\fs%s%d\fS]", d->aitype >= 0 ? "\fm" : "\fc", d->clientnum);
 			concatstring(cname, s);
 		}
 		concatstring(cname, "\fS");

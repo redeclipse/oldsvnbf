@@ -18,7 +18,7 @@ namespace client
 		m->muts = muts;
 		SEARCHBINDCACHE(votekey)("showgui vote", 0);
 		SEARCHBINDCACHE(gamekey)("showgui game", 0);
-		conoutf("\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
+		conoutft(CON_INFO, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
     void getvotes(int vote)
     {
@@ -65,7 +65,7 @@ namespace client
 			string text; copystring(text, name); filtertext(text, text);
 			copystring(game::player1->name, text, MAXNAMELEN);
 		}
-		else conoutf("\fmyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
+		else conoutft(CON_MESG, "\foyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
 	ICOMMAND(name, "s", (char *s), switchname(s));
 
@@ -103,9 +103,9 @@ namespace client
 					game::player1->team = t;
 				}
 			}
-			else conoutf("\frcan only change teams when actually playing in team games");
+			else conoutft(CON_MESG, "\frcan only change teams when actually playing in team games");
 		}
-		else conoutf("\fs\fmyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+		else conoutft(CON_MESG, "\fs\foyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 	}
 	ICOMMAND(team, "s", (char *s), switchteam(s));
 
@@ -178,7 +178,7 @@ namespace client
 	bool allowedittoggle(bool edit)
 	{
 		bool allow = edit || m_edit(game::gamemode); // && game::player1->state == CS_ALIVE);
-		if(!allow) conoutf("\fryou must be in edit mode to start editing");
+		if(!allow) conoutft(CON_MESG, "\fryou must be in edit mode to start editing");
 		return allow;
 	}
 
@@ -294,7 +294,7 @@ namespace client
 				if(t) addmsg(SV_SETTEAM, "ri2", i, t);
 			}
 		}
-		else conoutf("\frcan only change teams in team games");
+		else conoutft(CON_MESG, "\frcan only change teams in team games");
 	}
 	ICOMMAND(setteam, "ss", (char *who, char *team), setteam(who, team));
 
@@ -434,7 +434,7 @@ namespace client
 					char *ret = executeret(s);
 					if(ret)
 					{
-						conoutf("\fm%s: %s", cmd, ret);
+						conoutft(CON_MESG, "\fo%s: %s", cmd, ret);
 						delete[] ret;
 					}
 					return;
@@ -467,9 +467,9 @@ namespace client
 				default: return;
 			}
 			if(d || verbose >= 2)
-				conoutf("\fm%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
+				conoutft(CON_INFO, "\fo%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
 		}
-		else conoutf("\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
+		else conoutft(CON_INFO, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
 
 	bool sendcmd(int nargs, const char *cmd, const char *arg)
@@ -527,7 +527,7 @@ namespace client
 				defformatstring(fname)("%d.dmo", lastmillis);
 				stream *demo = openfile(fname, "wb");
 				if(!demo) return;
-				conoutf("\fmreceived demo \"%s\"", fname);
+				conoutft(CON_MESG, "\foreceived demo \"%s\"", fname);
 				demo->write(data, len);
                 delete demo;
 				break;
@@ -581,15 +581,15 @@ namespace client
 
     void getdemo(int i)
 	{
-		if(i<=0) conoutf("\fmgetting demo...");
-		else conoutf("\fmgetting demo %d...", i);
+		if(i<=0) conoutf("\fogetting demo...");
+		else conoutf("\fogetting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
 	ICOMMAND(getdemo, "i", (int *val), getdemo(*val));
 
 	void listdemos()
 	{
-		conoutf("\fmlisting demos...");
+		conoutf("\folisting demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
 	ICOMMAND(listdemos, "", (), listdemos());
@@ -614,7 +614,7 @@ namespace client
 
 	void sendmap()
 	{
-		conoutf("\fmsending map...");
+		conoutf("\fosending map...");
 		const char *reqmap = mapname;
 		if(!reqmap || !*reqmap) reqmap = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
@@ -1034,13 +1034,13 @@ namespace client
 					int mycn = getint(p), gver = getint(p);
 					if(gver!=GAMEVERSION)
 					{
-						conoutf("\fryou are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
+						conoutft(CON_MESG, "\fryou are using a different game version (you: %d, server: %d)", GAMEVERSION, gver);
 						disconnect();
 						return;
 					}
                     sessionid = getint(p);
 					game::player1->clientnum = mycn;
-                    if(getint(p)) conoutf("\frthe server is password protected");
+                    if(getint(p)) conoutft(CON_MESG, "\frthe server is password protected");
                     else if(verbose) conoutf("\fdthe server welcomes us, yay");
                     sendintro();
 					break;
@@ -1186,13 +1186,13 @@ namespace client
 							copystring(oldname, game::colorname(d, NULL, "", false));
 							copystring(newname, game::colorname(d, text));
 							if(game::showplayerinfo)
-								conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fm%s is now known as %s", oldname, newname);
+								conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fm%s is now known as %s", oldname, newname);
 						}
 					}
 					else					// new client
 					{
 						if(game::showplayerinfo)
-							conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s has joined the game", game::colorname(d, text, "", false));
+							conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s has joined the game", game::colorname(d, text, "", false));
 						loopv(game::players)	// clear copies since new player doesn't have them
 							if(game::players[i]) freeeditinfo(game::players[i]->edit);
 						freeeditinfo(localedit);
@@ -1433,7 +1433,7 @@ namespace client
 								else if(val < id->minval) val = id->minval;
 								setvar(text, val, true);
                                 defformatstring(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
-								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, str);
+								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, str);
 							}
 							break;
 						}
@@ -1445,7 +1445,7 @@ namespace client
 								if(val > id->maxvalf) val = id->maxvalf;
 								else if(val < id->minvalf) val = id->minvalf;
 								setfvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, floatstr(*id->storage.f));
+								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, floatstr(*id->storage.f));
 							}
 							break;
 						}
@@ -1456,7 +1456,7 @@ namespace client
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutf("\fm%s set worldvar %s to %s", game::colorname(d), id->name, *id->storage.s);
+								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1467,7 +1467,7 @@ namespace client
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutf("\fm%s set worldalias %s to %s", game::colorname(d), text, val);
+								conoutft(CON_MESG, "\fo%s set worldalias %s to %s", game::colorname(d), text, val);
 							}
 							break;
 						}
@@ -1512,7 +1512,7 @@ namespace client
 				case SV_REMIP:
 				{
 					if(!d) return;
-					conoutf("\fm%s remipped", game::colorname(d));
+					conoutft(CON_MESG, "\fo%s remipped", game::colorname(d));
 					mpremip(false);
 					break;
 				}
@@ -1699,7 +1699,7 @@ namespace client
 					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
 					{
 						defformatstring(best)("%s", hud::sb.timetostr(besttime));
-						conoutf("%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
+						conoutft(CON_INFO, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
 					}
 				}
 
@@ -1793,7 +1793,7 @@ namespace client
 					{
 						int newsize = 0;
 						while(1<<newsize < getworldsize()) newsize++;
-						conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", game::colorname(d), newsize);
+						conoutft(CON_MESG, size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", game::colorname(d), newsize);
 					}
 					break;
 				}
@@ -1813,12 +1813,11 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					conoutf("server is challenging authentication details..");
+					conoutft(CON_SELF, "server is challenging authentication details..");
 					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
 					{
 						vector<char> buf;
                         answerchallenge(authkey, text, buf);
-						//conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
 						addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
 					}
 					break;
