@@ -46,7 +46,7 @@ namespace projs
 		if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 		{
 			int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
-			if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir, true);
+			if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir, false);
 		}
 		hitmsg &h = hits.add();
 		h.flags = flags;
