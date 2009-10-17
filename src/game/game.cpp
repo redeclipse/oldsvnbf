@@ -476,7 +476,7 @@ namespace game
 			if(d != actor)
 			{
 				bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
-				if(sameteam) { if(!burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
+				if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
 				else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)))
 				{
 					int snd = 0;
