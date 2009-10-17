@@ -495,7 +495,7 @@ namespace server
 		formatstring(cname)("\fs%s%s", chat, name);
 		if(!name[0] || ci->state.aitype >= 0 || (dupname && duplicatename(ci, name)))
 		{
-			defformatstring(s)(" [\fs%s%d\fS]", ci->state.aitype >= 0 ? "\fm" : "\fc", ci->clientnum);
+			defformatstring(s)(" [\fs\fc%s%d\fS]", ci->state.aitype >= 0 ? "\fe" : "", ci->clientnum);
 			concatstring(cname, s);
 		}
 		concatstring(cname, "\fS");
