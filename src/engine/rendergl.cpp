@@ -147,8 +147,8 @@ void gl_checkextensions()
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
     const char *renderer = (const char *)glGetString(GL_RENDERER);
     const char *version = (const char *)glGetString(GL_VERSION);
-    conoutf("\fmRenderer: %s (%s)", renderer, vendor);
-    conoutf("\fmDriver: %s", version);
+    conoutf("renderer: %s (%s)", renderer, vendor);
+    conoutf("driver: %s", version);
 
 #ifdef __APPLE__
     extern int mac_osversion();
@@ -602,15 +602,15 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         if(!hasMT || !hasVP || !hasFP) conoutf("\frWARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
         else if(useshaders<0 && !hasTF) conoutf("\frWARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
         renderpath = R_FIXEDFUNCTION;
-        conoutf("\fmRendering using the OpenGL fixed-function path.");
+        conoutf("rendering using the OpenGL fixed-function path.");
         if(ati_texgen_bug) conoutf("\frWARNING: Using ATI texgen bug workaround. (use \"/ati_texgen_bug 0\" to disable if unnecessary)");
         if(nvidia_texgen_bug) conoutf("\frWARNING: Using NVIDIA texgen bug workaround. (use \"/nvidia_texgen_bug 0\" to disable if unnecessary)");
     }
     else
     {
         renderpath = hasGLSL ? R_GLSLANG : R_ASMSHADER;
-        if(renderpath==R_GLSLANG) conoutf("\fmRendering using the OpenGL GLSL shader path.");
-        else conoutf("\fmRendering using the OpenGL assembly shader path.");
+        if(renderpath==R_GLSLANG) conoutf("rendering using the OpenGL GLSL shader path.");
+        else conoutf("rendering using the OpenGL assembly shader path.");
     }
 
     if(fsaa) glEnable(GL_MULTISAMPLE);

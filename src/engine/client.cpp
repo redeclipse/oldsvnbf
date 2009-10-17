@@ -11,7 +11,7 @@ bool multiplayer(bool msg)
 {
 	// check if we're playing alone
 	int n = client::otherclients();
-	if (n && msg) conoutf("\froperation not available with other clients");
+	if (n && msg) conoutft(CON_MESG, "\froperation not available with other clients");
 	return n > 0;
 }
 

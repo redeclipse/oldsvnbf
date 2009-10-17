@@ -134,8 +134,8 @@ namespace ai
 		{
 			if(showaiinfo && game::showplayerinfo)
 			{
-				if(showaiinfo > 1) conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
-				else conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s joined the game", game::colorname(d, name), m, sk);
+				if(showaiinfo > 1) conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
+				else conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s joined the game", game::colorname(d, name), m, sk);
 			}
 			resetthisguy = true;
 		}
@@ -144,11 +144,11 @@ namespace ai
 			if(d->ownernum != on)
 			{
 				if(showaiinfo && game::showplayerinfo)
-					conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s reassigned to %s", game::colorname(d, name), m);
+					conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s reassigned to %s", game::colorname(d, name), m);
 				resetthisguy = true;
 			}
 			if(d->skill != sk && showaiinfo > 1 && game::showplayerinfo)
-				conoutft(game::showplayerinfo > 1 ? int(CON_CHAT) : int(CON_INFO), "\fg%s changed skill to %d", game::colorname(d, name), sk);
+				conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
 
 		copystring(d->name, name, MAXNAMELEN);

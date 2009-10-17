@@ -61,7 +61,7 @@ void BlendMapNode::cleanup(int type)
 
 #define DEFBMSOLIDS(n) n, n+1, n+2, n+3, n+4, n+5, n+6, n+7, n+8, n+9, n+10, n+11, n+12, n+13, n+14, n+15
 
-static BlendMapSolid bmsolids[256] = 
+static BlendMapSolid bmsolids[256] =
 {
     DEFBMSOLIDS(0x00), DEFBMSOLIDS(0x10), DEFBMSOLIDS(0x20), DEFBMSOLIDS(0x30),
     DEFBMSOLIDS(0x40), DEFBMSOLIDS(0x50), DEFBMSOLIDS(0x60), DEFBMSOLIDS(0x70),
@@ -152,11 +152,11 @@ static uchar lookupblendmap(int x, int y, BlendMapBranch *bm, int bmscale)
         bm = bm->children[n].branch;
     }
 }
-    
+
 uchar lookupblendmap(const vec &pos)
 {
     if(curbm.type==BM_SOLID) return curbm.solid->val;
-    
+
     uchar vals[4], *val = vals;
     float bx = pos.x/(1<<BM_SCALE) - 0.5f, by = pos.y/(1<<BM_SCALE) - 0.5f;
     int ix = (int)floor(bx), iy = (int)floor(by),
@@ -190,7 +190,7 @@ static void fillblendmap(uchar &type, BlendMapNode &node, int size, uchar val, i
         {
             if(x1 < size) fillblendmap(node.branch->type[0], node.branch->children[0], size, val,
                                         x1, y1, min(x2, size), min(y2, size));
-            if(x2 > size) fillblendmap(node.branch->type[1], node.branch->children[1], size, val, 
+            if(x2 > size) fillblendmap(node.branch->type[1], node.branch->children[1], size, val,
                                         max(x1-size, 0), y1, x2-size, min(y2, size));
         }
         if(y2 > size)
@@ -205,7 +205,7 @@ static void fillblendmap(uchar &type, BlendMapNode &node, int size, uchar val, i
         type = BM_SOLID;
         node.solid = &bmsolids[val];
         return;
-    }             
+    }
     else if(type==BM_SOLID)
     {
         uchar oldval = node.solid->val;
@@ -217,12 +217,12 @@ static void fillblendmap(uchar &type, BlendMapNode &node, int size, uchar val, i
             fillblendmap(type, node, size, val, x1, y1, x2, y2);
             return;
         }
- 
+
         type = BM_IMAGE;
         node.image = new BlendMapImage;
         memset(node.image->data, oldval, sizeof(node.image->data));
     }
-    
+
     uchar *dst = &node.image->data[y1*BM_IMAGE_SIZE + x1];
     loopi(y2-y1)
     {
@@ -251,7 +251,7 @@ static void optimizeblendmap(uchar &type, BlendMapNode &node)
             uint val = node.image->data[0];
             val |= val<<8;
             val |= val<<16;
-            for(uint *data = (uint *)node.image->data, *end = &data[sizeof(node.image->data)/sizeof(uint)]; data < end; data++) 
+            for(uint *data = (uint *)node.image->data, *end = &data[sizeof(node.image->data)/sizeof(uint)]; data < end; data++)
                 if(*data != val) return;
             node.cleanup(type);
             type = BM_SOLID;
@@ -324,7 +324,7 @@ static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int 
                 break;
 
             case 2:
-                loopi(x2 - x1) dst[i] = min(dst[i], src[i]); 
+                loopi(x2 - x1) dst[i] = min(dst[i], src[i]);
                 break;
 
             case 3:
@@ -341,7 +341,7 @@ static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int 
         }
         dst += BM_IMAGE_SIZE;
         src += sw;
-    } 
+    }
 }
 
 void blitblendmap(uchar *src, int sx, int sy, int sw, int sh)
@@ -350,7 +350,7 @@ void blitblendmap(uchar *src, int sx, int sy, int sw, int sh)
     if(max(sx, sy) >= bmsize || min(sx+sw, sy+sh) <= 0 || min(sw, sh) <= 0) return;
     blitblendmap(blendmap.type, blendmap, 0, 0, bmsize, src, sx, sy, sw, sh);
 }
-        
+
 void resetblendmap()
 {
     blendmap.cleanup();
@@ -379,7 +379,7 @@ struct BlendBrush
     int w, h;
     uchar *data;
     GLuint tex;
-   
+
     BlendBrush(const char *name, int w, int h) :
       name(newstring(name)), w(w), h(h), data(new uchar[w*h]), tex(0)
     {}
@@ -404,7 +404,7 @@ struct BlendBrush
         uchar *dst = &buf[2*(w+2)], *src = data;
         loopi(h)
         {
-            *dst++ = 0; 
+            *dst++ = 0;
             *dst++ = 0;
             loopj(w)
             {
@@ -418,7 +418,7 @@ struct BlendBrush
         createtexture(tex, w+2, h+2, buf, 3, 1, GL_LUMINANCE_ALPHA);
         delete[] buf;
     }
-    
+
     void reorient(bool flipx, bool flipy, bool swapxy)
     {
         uchar *rdata = new uchar[w*h];
@@ -430,7 +430,7 @@ struct BlendBrush
         loopi(h)
         {
             uchar *curdst = dst;
-            loopj(w) 
+            loopj(w)
             {
                 *curdst = *src++;
                 curdst += stridex;
@@ -441,7 +441,7 @@ struct BlendBrush
         delete[] data;
         data = rdata;
         if(tex) gentex();
-    } 
+    }
 };
 
 static vector<BlendBrush *> brushes;
@@ -460,7 +460,7 @@ void clearblendbrushes()
 
 void delblendbrush(const char *name)
 {
-    loopv(brushes) if(!strcmp(brushes[i]->name, name)) 
+    loopv(brushes) if(!strcmp(brushes[i]->name, name))
     {
         delete brushes[i];
         brushes.remove(i--);
@@ -479,7 +479,7 @@ void addblendbrush(const char *name, const char *imgname)
         conoutf("\frblend brush image size exceeded %dx%d pixels: %s", 1<<12, 1<<12, imgname);
         return;
     }
-    
+
     BlendBrush *brush = new BlendBrush(name, s.w, s.h);
 
     uchar *dst = brush->data, *srcrow = s.data;
@@ -531,12 +531,12 @@ bool canpaintblendmap(bool brush = true, bool sel = false)
     if(noedit(!sel)) return false;
     if(!blendpaintmode)
     {
-        conoutf("\froperation only allowed in blend paint mode");
+        conoutft(CON_MESG, "\froperation only allowed in blend paint mode");
         return false;
     }
     if(brush && !brushes.inrange(curbrush))
     {
-        conoutf("\frno blend brush selected");
+        conoutft(CON_MESG, "\frno blend brush selected");
         return false;
     }
     return true;
@@ -545,7 +545,7 @@ bool canpaintblendmap(bool brush = true, bool sel = false)
 void rotateblendbrush(int *val)
 {
     if(!canpaintblendmap()) return;
-    
+
     int numrots = clamp(*val, 1, 5);
     BlendBrush *brush = brushes[curbrush];
     brush->reorient(numrots>=2 && numrots<=4, numrots<=2 || numrots==5, (numrots&5)==1);
@@ -561,7 +561,7 @@ void paintblendmap()
     int x = (int)floor(clamp(worldpos.x, 0.0f, float(hdr.worldsize))/(1<<BM_SCALE) - 0.5f*brush->w),
         y = (int)floor(clamp(worldpos.y, 0.0f, float(hdr.worldsize))/(1<<BM_SCALE) - 0.5f*brush->h);
     blitblendmap(brush->data, x, y, brush->w, brush->h);
-    previewblends(ivec((x-1)<<BM_SCALE, (y-1)<<BM_SCALE, 0), 
+    previewblends(ivec((x-1)<<BM_SCALE, (y-1)<<BM_SCALE, 0),
                   ivec((brush->w+2)<<BM_SCALE, (brush->h+2)<<BM_SCALE, hdr.worldsize));
 }
 
@@ -660,7 +660,7 @@ void saveblendmap(stream *f, uchar type, BlendMapNode &node)
         case BM_SOLID:
             f->putchar(node.solid->val);
             break;
-        
+
         case BM_IMAGE:
             f->write(node.image->data, sizeof(node.image->data));
             break;
@@ -680,4 +680,4 @@ uchar shouldsaveblendmap()
 {
     return blendmap.solid!=&bmsolids[0xFF] ? 1 : 0;
 }
-    
+

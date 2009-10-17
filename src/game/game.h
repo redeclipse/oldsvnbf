@@ -468,7 +468,7 @@ char msgsizelookup(int msg)
 extern char msgsizelookup(int msg);
 #endif
 enum { SPHY_NONE = 0, SPHY_JUMP, SPHY_IMPULSE, SPHY_POWER, SPHY_MAX };
-enum { CON_CHAT = CON_GAMESPECIFIC, CON_MAX };
+enum { CON_CHAT = CON_GAMESPECIFIC, CON_EVENT, CON_MAX, CON_LO = CON_MESG, CON_HI = CON_SELF, CON_IMPORTANT = CON_SELF };
 
 #define DEMO_MAGIC "BFDZ"
 struct demoheader
