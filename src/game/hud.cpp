@@ -1379,7 +1379,7 @@ namespace hud
 				if(game::player1->cpmillis > 0)
 					sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(lastmillis-game::player1->cpmillis, true));
 				else if(game::player1->cplast)
-					sy += draw_textx("\fzwE%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cplast));
+					sy += draw_textx("\fzwe%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cplast));
 				popfont();
 				if(game::player1->cptime)
 				{
