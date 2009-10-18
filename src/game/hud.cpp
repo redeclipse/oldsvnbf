@@ -302,7 +302,7 @@ namespace hud
 
 	void healthskew(int &s, float &r, float &g, float &b, float &fade, float ss, bool throb)
 	{
-		if(throb && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
+		if(throb && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
 		{
 			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 1.f);
 			if(skew > 0.5f) skew = 1.f-skew;
@@ -411,12 +411,12 @@ namespace hud
 
 		float fade = clipblend*hudblend;
 		int interval = lastmillis-game::player1->weaplast[weap];
-		if(interval < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
+		if(interval <= game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 		{
 			case WEAP_S_SHOOT:
 			{
-				int check = game::player1->weapwait[weap] > 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
-				if(interval < check) fade *= 1.f-clamp(float(interval)/float(check), 0.f, 1.f);
+				int check = game::player1->weapwait[weap] >= 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
+				if(interval <= check) fade *= 1.f-clamp(float(interval)/float(check), 0.f, 1.f);
 				else fade = 0.f;
 				//fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
 				break;
@@ -426,7 +426,7 @@ namespace hud
 				if(game::player1->weapload[weap] > 0)
 				{
 					int check = game::player1->weapwait[weap]/2;
-					if(interval > check) fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
+					if(interval >= check) fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
 					else fade = 0.f;
 					break;
 				}
@@ -455,7 +455,7 @@ namespace hud
 		}
 		glColor4f(r, g, b, fade);
 		glBindTexture(GL_TEXTURE_2D, t->id);
-		if(interval < game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
+		if(interval <= game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 		{
 			case WEAP_S_SHOOT:
 			{
@@ -535,7 +535,7 @@ namespace hud
 			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && weaptype[game::player1->weapselect].zooms)
 			{
 				int frame = lastmillis-game::lastzoom, off = int(zoomcrosshairsize*hudsize)-cs;
-				float amt = frame < game::zoomtime ? clamp(float(frame)/float(game::zoomtime), 0.f, 1.f) : 1.f;
+				float amt = frame <= game::zoomtime ? clamp(float(frame)/float(game::zoomtime), 0.f, 1.f) : 1.f;
 				if(!game::zooming) amt = 1.f-amt;
 				cs += int(off*amt);
 			}
@@ -642,7 +642,7 @@ namespace hud
 								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f);
 								popfont();
 							}
-							if(game::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-game::player1->lastdeath > 500)
+							if(game::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-game::player1->lastdeath >= 500)
 							{
 								pushfont("default");
 								ty += draw_textx("Press \fs\fc%s\fS to look around", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey);
@@ -817,7 +817,7 @@ namespace hud
 				loopvj(conlines) if(conlines[j].type >= CON_CHAT)
 				{
 					int len = conlines[j].type > CON_CHAT ? chatcontime/3 : chatcontime;
-					if(full || lastmillis-conlines[j].reftime < len+chatconfade)
+					if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
 					{
 						if(refs.length() >= numl)
 						{
@@ -830,7 +830,7 @@ namespace hud
 									else
 									{
 										int dur = conlines[refs[i]].type > CON_CHAT ? chatcontime/3 : chatcontime;
-										if(lastmillis-conlines[refs[i]].reftime < dur) conlines[refs[i]].reftime = lastmillis-dur;
+										if(lastmillis-conlines[refs[i]].reftime <= dur) conlines[refs[i]].reftime = lastmillis-dur;
 									}
 									found = true;
 									break;
@@ -843,10 +843,10 @@ namespace hud
 							}
 							if(refs.length() >= numo)
 							{
-								if(lastmillis-conlines[j].reftime < len+chatconfade) conlines[j].reftime = lastmillis-(len+chatconfade);
+								if(lastmillis-conlines[j].reftime <= len+chatconfade) conlines[j].reftime = lastmillis-(len+chatconfade);
 								continue;
 							}
-							if(lastmillis-conlines[j].reftime < len) conlines[j].reftime = lastmillis-len;
+							if(lastmillis-conlines[j].reftime <= len) conlines[j].reftime = lastmillis-len;
 						}
 						refs.add(j);
 					}
@@ -870,7 +870,7 @@ namespace hud
 				loopvj(conlines) if(type ? conlines[j].type >= (confilter && !full ? CON_LO : 0) && conlines[j].type <= CON_HI : conlines[j].type >= (confilter && !full ? CON_LO : 0))
 				{
 					int len = conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
-					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime < len+confade)
+					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime <= len+confade)
 					{
 						if(refs.length() >= numl)
 						{
@@ -883,7 +883,7 @@ namespace hud
 									else
 									{
 										int dur = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
-										if(lastmillis-conlines[refs[i]].reftime < dur) conlines[refs[i]].reftime = lastmillis-dur;
+										if(lastmillis-conlines[refs[i]].reftime <= dur) conlines[refs[i]].reftime = lastmillis-dur;
 									}
 									found = true;
 									break;
@@ -896,10 +896,10 @@ namespace hud
 							}
 							if(refs.length() >= numo)
 							{
-								if(lastmillis-conlines[j].reftime < len+confade) conlines[j].reftime = lastmillis-(len+confade);
+								if(lastmillis-conlines[j].reftime <= len+confade) conlines[j].reftime = lastmillis-(len+confade);
 								continue;
 							}
-							if(lastmillis-conlines[j].reftime < len) conlines[j].reftime = lastmillis-len;
+							if(lastmillis-conlines[j].reftime <= len) conlines[j].reftime = lastmillis-len;
 						}
 						refs.add(j);
 					}
@@ -974,7 +974,7 @@ namespace hud
 		vec dir = d->headpos();
 		dir.sub(camera1->o);
 		float dist = dir.magnitude();
-		if(dist < radarrange())
+		if(dist <= radarrange())
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
@@ -1086,11 +1086,11 @@ namespace hud
 		{
 			damageloc &d = damagelocs[i];
 			int millis = lastmillis-d.outtime;
-			if(millis > radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
+			if(millis >= radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
 			if(game::player1->state == CS_ALIVE)
 			{
 				float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f);
-				if(millis > radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
+				if(millis >= radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
 				else fade *= float(millis)/float(radardamagetime);
 				vec dir = vec(d.dir).normalize().rotate_around_z(-camera1->yaw*RAD);
 				if(radardamage >= 5)
@@ -1104,7 +1104,7 @@ namespace hud
 		if(radardamage >= 2)
 		{
 			bool dead = game::player1->state == CS_DEAD || game::player1->state == CS_WAITING;
-			if(dead && lastmillis-game::player1->lastdeath < m_spawndelay(game::gamemode, game::mutators))
+			if(dead && lastmillis-game::player1->lastdeath <= m_spawndelay(game::gamemode, game::mutators))
 			{
 				vec dir = vec(game::player1->o).sub(camera1->o).normalize().rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[game::player1->team].colour>>16)/255.f, g = ((teamtype[game::player1->team].colour>>8)&0xFF)/255.f, b = (teamtype[game::player1->team].colour&0xFF)/255.f;
@@ -1237,7 +1237,7 @@ namespace hud
 					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
-				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] < game::player1->weapwait[i])
+				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])
 				{
 					float fade = blend*inventoryblend, size = s, skew = 1.f;
 					if(game::player1->weapstate[i] == WEAP_S_SWITCH || game::player1->weapstate[i] == WEAP_S_PICKUP)
@@ -1301,7 +1301,7 @@ namespace hud
 			if(inventoryhealth && (glow || pulse))
 			{
 				int gap = 0;
-				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000 ? (lastmillis-game::player1->lastspawn)/2000.f : 0.5f;
+				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->lastspawn && lastmillis-game::player1->lastspawn <= 1000 ? (lastmillis-game::player1->lastspawn)/2000.f : 0.5f;
 				if(teamwidgets) skewcolour(r, g, b);
 				if(pulse)
 				{
@@ -1317,8 +1317,8 @@ namespace hud
 				drawtex(x-gap, y-size-gap, width+gap*2, size+gap*2);
 				sy += size;
 			}
-			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn < 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
+			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn <= 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
+			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
 			{
 				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
 				glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt));
@@ -1467,7 +1467,7 @@ namespace hud
 	{
 		int heal = m_maxhealth(game::gamemode, game::mutators);
 		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, heal)/float(heal) : 0.f);
-		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
+		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
 		{
 			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
 			pc += (1.f-pc)*(skew > 1.f ? skew-1.f : 1.f-skew);
@@ -1492,9 +1492,9 @@ namespace hud
 			Texture *t = *burntex ? textureload(burntex, 3) : notexture;
 			if(t != notexture)
 			{
-				float pc = interval > fireburntime-500 ? 1.f+(interval-(fireburntime-500))/500.f : (interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
+				float pc = interval >= fireburntime-500 ? 1.f+(interval-(fireburntime-500))/500.f : (interval%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
 				glBindTexture(GL_TEXTURE_2D, t->id);
-				glColor4f(0.9f*max(pc,0.5f), 0.3f*pc, 0.0625f*max(pc,0.25f), blend*burnblend*(interval > fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
+				glColor4f(0.9f*max(pc,0.5f), 0.3f*pc, 0.0625f*max(pc,0.25f), blend*burnblend*(interval >= fireburntime-(fireburndelay/2) ? pc : min(pc+0.5f, 1.f)));
 				drawtex(0, 0, w, h);
 			}
 		}
@@ -1504,7 +1504,7 @@ namespace hud
 	{
 		Texture *t = textureload(zoomtex, 3);
 		int frame = lastmillis-game::lastzoom;
-		float pc = frame < game::zoomtime ? float(frame)/float(game::zoomtime) : 1.f;
+		float pc = frame <= game::zoomtime ? float(frame)/float(game::zoomtime) : 1.f;
 		if(!game::zooming) pc = 1.f-pc;
 		int x = 0, y = 0, c = 0;
 		if(w > h)
@@ -1537,14 +1537,14 @@ namespace hud
 		if(!progressing)
 		{
 			vec colour = vec(1, 1, 1);
-			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) < commandfade))
+			if(commandfade && (commandmillis > 0 || lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis) <= commandfade))
 			{
 				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
 				if(commandmillis > 0) a = 1.f-a;
 				else a += (1.f-commandfadeamt);
 				loopi(3) if(a < colour[i]) colour[i] = a;
 			}
-			if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) < uifade))
+			if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) <= uifade))
 			{
 				float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
 				if(uimillis > 0) a = 1.f-a;
@@ -1554,17 +1554,17 @@ namespace hud
 			}
 			if(!noview)
 			{
-				if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime < titlefade))
+				if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime <= titlefade))
 				{
 					float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
 					loopi(3) if(a < colour[i]) colour[i] = a;
 				}
 				if(specfade && game::tvmode())
 				{
-					float a = game::lastspecchg ? (lastmillis-game::lastspecchg < specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
+					float a = game::lastspecchg ? (lastmillis-game::lastspecchg <= specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
 					loopi(3) if(a < colour[i]) colour[i] = a;
 				}
-				if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn < spawnfade)
+				if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn <= spawnfade)
 				{
 					float a = (lastmillis-game::player1->lastspawn)/float(spawnfade/3);
 					if(a < 3.f)
