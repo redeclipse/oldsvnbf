@@ -504,8 +504,8 @@ namespace physics
 				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) { d->turnside = 0; d->resetphys(); }
 				if(d->action[AC_DASH] && !d->action[AC_JUMP] && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && allowed && (d->move || d->strafe))
 				{
-					float mag = impulseforce(d)*(!d->action[AC_IMPULSE] && (!d->move || !d->strafe) ? 1.5f : 0.75f)+max(d->vel.magnitude(), 1.f);
-					vecfromyawpitch(d->aimyaw, d->aimpitch, d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
+					float mag = impulseforce(d)*(d->action[AC_IMPULSE] ? 1.5f : 1.f)+max(d->vel.magnitude(), 1.f);
+					vecfromyawpitch(d->aimyaw, max(d->aimpitch, 10.f), d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
 					d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
 					playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
@@ -589,7 +589,7 @@ namespace physics
 		else pl->timeinair = 0;
 		vec d = vec(m).mul(movevelocity(pl));
         if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && !pl->inliquid)
-			d.mul((wantsmove ? 1.3f : 1.0f) * (pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? 1.3f : 1.0f));
+			d.mul(pl->move || pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? (pl->strafe || pl->move < 0 ? 1.2f : 1.4f) : 1.0f);
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
