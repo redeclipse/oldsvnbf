@@ -231,7 +231,8 @@ namespace hud
 			case 1:
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
-				amt += max(game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f, 1.f-(max(game::player1->health,0)/float(maxhealth)))*0.65f;
+				int heal = m_maxhealth(game::gamemode, game::mutators);
+				amt += max(game::player1->state == CS_ALIVE ? min(hud::damageresidue, heal)/float(heal) : 1.f, 1.f-(max(game::player1->health,0)/float(heal)))*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
 				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
@@ -246,7 +247,7 @@ namespace hud
 
 	void damage(int n, const vec &loc, gameent *actor, int weap)
 	{
-		damageresidue = clamp(damageresidue+n, 0, 200);
+		damageresidue = clamp(damageresidue+n, 0, m_maxhealth(game::gamemode, game::mutators)*2);
 		vec colour = kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
@@ -1291,12 +1292,12 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16;
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16, heal = m_maxhealth(game::gamemode, game::mutators);
 		float fade = inventoryhealthblend*blend;
 		settexture(healthtex, 3);
 		if(game::player1->state == CS_ALIVE)
 		{
-			bool pulse = inventoryhealthpulse && game::player1->health < m_maxhealth(game::gamemode, game::mutators);
+			bool pulse = inventoryhealthpulse && game::player1->health < heal;
 			if(inventoryhealth && (glow || pulse))
 			{
 				int gap = 0;
@@ -1330,7 +1331,7 @@ namespace hud
 				} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
 				glBegin(GL_QUAD_STRIP);
 				int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
-				float health = clamp(game::player1->health/float(m_maxhealth(game::gamemode, game::mutators)), 0.0f, 1.0f);
+				float health = clamp(game::player1->health/float(heal), 0.0f, 1.0f);
 				const float margin = 0.1f;
 				loopi(4)
 				{
@@ -1464,7 +1465,8 @@ namespace hud
 
 	void drawdamage(int w, int h, int s, float blend)
 	{
-		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 0.f);
+		int heal = m_maxhealth(game::gamemode, game::mutators);
+		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, heal)/float(heal) : 0.f);
 		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
 			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
