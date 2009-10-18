@@ -12,7 +12,7 @@ namespace hud
         damageloc(int a, int t, int d, const vec &p, const vec &c) : attacker(a), outtime(t), damage(d), dir(p), colour(c) {}
     };
     vector<damageloc> damagelocs;
-	VARP(damageresiduefade, 0, 750, INT_MAX-1);
+	VARP(damageresiduefade, 0, 500, INT_MAX-1);
 
 	VARP(showhud, 0, 1, 1);
 	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
@@ -55,16 +55,16 @@ namespace hud
 	VARP(conoverflow, 0, 9, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	VARP(confilter, 0, 1, 1);
-	FVARP(conblend, 0, 0.75f, 1);
+	FVARP(conblend, 0, 0.6f, 1);
 	VARP(chatconsize, 0, 4, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
 	VARP(chatconoverflow, 0, 6, 1);
-	FVARP(chatconblend, 0, 0.8f, 1);
-	FVARP(fullconblend, 0, 1.f, 1);
+	FVARP(chatconblend, 0, 0.75f, 1);
+	FVARP(fullconblend, 0, 0.9f, 1);
 
 	FVARP(noticeoffset, -1.f, 0.4f, 1.f);
-	FVARP(noticeblend, 0.f, 0.5f, 1.f);
+	FVARP(noticeblend, 0.f, 0.6f, 1.f);
 	VARP(obitnotices, 0, 2, 2);
 	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
 	TVAR(inputtex, "textures/menu", 3);
@@ -246,7 +246,7 @@ namespace hud
 
 	void damage(int n, const vec &loc, gameent *actor, int weap)
 	{
-		damageresidue += n*2;
+		damageresidue = clamp(damageresidue+n, 0, 200);
 		vec colour = kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
@@ -813,30 +813,51 @@ namespace hud
 			int numl = chatconsize, numo = chatconsize+chatconoverflow;
 			if(numl)
 			{
-				loopv(conlines) if(conlines[i].type >= CON_CHAT)
+				loopvj(conlines) if(conlines[j].type >= CON_CHAT)
 				{
-					int len = chatcontime; if(conlines[i].type > CON_CHAT) len /= 3;
-					if(full || lastmillis-conlines[i].reftime < len+chatconfade)
+					int len = conlines[j].type > CON_CHAT ? chatcontime/3 : chatcontime;
+					if(full || lastmillis-conlines[j].reftime < len+chatconfade)
 					{
 						if(refs.length() >= numl)
 						{
+							if(conlines[j].type == CON_CHAT)
+							{
+								bool found = false;
+								loopvrev(refs) if(conlines[refs[i]].type > CON_CHAT)
+								{
+									if(refs.length() >= numo) refs.remove(i);
+									else
+									{
+										int dur = conlines[refs[i]].type > CON_CHAT ? chatcontime/3 : chatcontime;
+										if(lastmillis-conlines[refs[i]].reftime < dur) conlines[refs[i]].reftime = lastmillis-dur;
+									}
+									found = true;
+									break;
+								}
+								if(found)
+								{
+									refs.add(j);
+									continue;
+								}
+							}
 							if(refs.length() >= numo)
 							{
-								if(lastmillis-conlines[i].reftime < len+chatconfade) conlines[i].reftime = lastmillis-(len+chatconfade);
+								if(lastmillis-conlines[j].reftime < len+chatconfade) conlines[j].reftime = lastmillis-(len+chatconfade);
 								continue;
 							}
-							if(lastmillis-conlines[i].reftime < len) conlines[i].reftime = lastmillis-len;
+							if(lastmillis-conlines[j].reftime < len) conlines[j].reftime = lastmillis-len;
 						}
-						refs.add(i);
+						refs.add(j);
 					}
 				}
 				int r = x+FONTW, z = y;
-				float blend = chatconblend*hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
-				loopv(refs)
+				float blend = hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
+				loopvj(refs)
 				{
-					int len = chatcontime; if(conlines[refs[i]].type > CON_CHAT) len /= 3;
-					float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[i]].reftime))/float(chatconfade), 0.f, 1.f);
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*blend*f), TEXT_LEFT_UP, -1, s, conlines[refs[i]].cref)*f;
+					int len = conlines[refs[j]].type > CON_CHAT ? chatcontime/3 : chatcontime;
+					float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
+						g = conlines[refs[j]].type > CON_CHAT ? conblend : chatconblend;
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*blend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;
 				}
 			}
 		}
@@ -845,29 +866,50 @@ namespace hud
 			int numl = consize, numo = consize+conoverflow, z = y;
 			if(numl)
 			{
-				loopv(conlines) if(type ? conlines[i].type >= (confilter && !full ? CON_LO : 0) && conlines[i].type <= CON_HI : conlines[i].type >= (confilter && !full ? CON_LO : 0))
+				loopvj(conlines) if(type ? conlines[j].type >= (confilter && !full ? CON_LO : 0) && conlines[j].type <= CON_HI : conlines[j].type >= (confilter && !full ? CON_LO : 0))
 				{
-					int len = contime; if(conlines[i].type < CON_IMPORTANT) len /= 2;
-					if(conskip ? i>=conskip-1 || i>=conlines.length()-numl : full || lastmillis-conlines[i].reftime < len+confade)
+					int len = conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
+					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime < len+confade)
 					{
 						if(refs.length() >= numl)
 						{
+							if(conlines[j].type >= CON_IMPORTANT)
+							{
+								bool found = false;
+								loopvrev(refs) if(conlines[refs[i]].type < CON_IMPORTANT)
+								{
+									if(refs.length() >= numo) refs.remove(i);
+									else
+									{
+										int dur = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
+										if(lastmillis-conlines[refs[i]].reftime < dur) conlines[refs[i]].reftime = lastmillis-dur;
+									}
+									found = true;
+									break;
+								}
+								if(found)
+								{
+									refs.add(j);
+									continue;
+								}
+							}
 							if(refs.length() >= numo)
 							{
-								if(lastmillis-conlines[i].reftime < len+confade) conlines[i].reftime = lastmillis-(len+confade);
+								if(lastmillis-conlines[j].reftime < len+confade) conlines[j].reftime = lastmillis-(len+confade);
 								continue;
 							}
-							if(lastmillis-conlines[i].reftime < len) conlines[i].reftime = lastmillis-len;
+							if(lastmillis-conlines[j].reftime < len) conlines[j].reftime = lastmillis-len;
 						}
-						refs.add(i);
+						refs.add(j);
 					}
 				}
-				float blend = (full ? fullconblend : conblend)*hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
+				float blend = hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
 				loopvrev(refs)
 				{
-					int len = contime; if(conlines[refs[i]].type < CON_IMPORTANT) len /= 2;
-					float f = full || !confade ? 1.f : clamp(((len+confade)-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f);
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*blend*f), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
+					int len = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
+					float f = full || !confade ? 1.f : clamp(((len+confade)-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f),
+						g = full || conlines[refs[i]].type >= CON_IMPORTANT ? fullconblend : conblend;
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*blend*f*g), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 			if(commandmillis > 0)
@@ -1422,7 +1464,7 @@ namespace hud
 
 	void drawdamage(int w, int h, int s, float blend)
 	{
-		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE && hud::damageresidue > 0 ? min(hud::damageresidue, 100)/100.f : 0);
+		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 0.f);
 		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen < regentime)
 		{
 			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
