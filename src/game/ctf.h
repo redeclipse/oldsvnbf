@@ -86,10 +86,11 @@ struct ctfstate
 		flag &f = flags[i];
 		f.owner = owner;
 		f.droptime = 0;
-		f.taketime = t;
+		f.taketime = max(1000-(t-f.taketime), 0)-t;
 #ifdef GAMESERVER
         f.votes.setsize(0);
 #else
+		f.interptime = max(1000-(t-f.interptime), 0)-t;
 		f.lastowner = owner;
 		f.pickup = true;
 #endif
@@ -99,18 +100,19 @@ struct ctfstate
     {
 		flag &f = flags[i];
 		f.droploc = o;
-		f.droptime = t;
+		f.droptime = max(1000-(t-f.droptime), 0)-t;
 		f.taketime = 0;
 #ifdef GAMESERVER
 		f.owner = -1;
 		f.votes.setsize(0);
 #else
+		f.interptime = max(1000-(t-f.interptime), 0)-t;
 		f.pickup = false;
 		f.owner = NULL;
 #endif
 	}
 
-    void returnflag(int i)
+    void returnflag(int i, int t)
     {
 		flag &f = flags[i];
 		f.droptime = 0;
@@ -119,6 +121,7 @@ struct ctfstate
 		f.owner = -1;
 		f.votes.setsize(0);
 #else
+		f.interptime = max(1000-(t-f.interptime), 0)-t;
 		f.pickup = false;
 		f.owner = NULL;
 #endif

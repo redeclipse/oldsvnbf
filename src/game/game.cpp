@@ -185,7 +185,7 @@ namespace game
 
 	bool inzoom()
 	{
-		if(zoomallow() && (zooming || lastmillis-lastzoom < zoomtime))
+		if(zoomallow() && (zooming || lastmillis-lastzoom <= zoomtime))
 			return true;
 		return false;
 	}
@@ -193,7 +193,7 @@ namespace game
 
 	bool inzoomswitch()
 	{
-		if(zoomallow() && ((zooming && lastmillis-lastzoom > zoomtime/2) || (!zooming && lastmillis-lastzoom < zoomtime/2)))
+		if(zoomallow() && ((zooming && lastmillis-lastzoom >= zoomtime/2) || (!zooming && lastmillis-lastzoom <= zoomtime/2)))
 			return true;
 		return false;
 	}
@@ -267,7 +267,7 @@ namespace game
 
 	void respawn(gameent *d)
 	{
-		if(d->state == CS_DEAD && d->respawned < 0 && (!d->lastdeath || lastmillis-d->lastdeath > 500))
+		if(d->state == CS_DEAD && d->respawned < 0 && (!d->lastdeath || lastmillis-d->lastdeath >= 500))
 		{
 			client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 			d->respawned = lastmillis;
@@ -301,7 +301,7 @@ namespace game
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 		{
-			float pc = lastmillis-d->lastfire > fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
+			float pc = lastmillis-d->lastfire >= fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
 			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
 		}
 	}
@@ -401,7 +401,7 @@ namespace game
 				if(d->type == ENT_PLAYER)
 				{
 					int crouchtime = abs(d->actiontime[AC_CROUCH]);
-					float amt = lastmillis-crouchtime < PHYSMILLIS ? clamp(float(lastmillis-crouchtime)/PHYSMILLIS, 0.f, 1.f) : 1.f;
+					float amt = lastmillis-crouchtime <= PHYSMILLIS ? clamp(float(lastmillis-crouchtime)/PHYSMILLIS, 0.f, 1.f) : 1.f;
 					if(!crouching) amt = 1.f-amt;
 					crouchoff *= amt;
 				}
@@ -427,9 +427,9 @@ namespace game
 		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
 		if(d->lastfire > 0)
 		{
-			if(lastmillis-d->lastfire > fireburntime-500)
+			if(lastmillis-d->lastfire >= fireburntime-500)
 			{
-				if(lastmillis-d->lastfire > fireburntime)
+				if(lastmillis-d->lastfire >= fireburntime)
 				{
 					if(issound(d->fschan)) removesound(d->fschan);
 					d->fschan = -1; d->lastfire = 0;
@@ -1364,7 +1364,7 @@ namespace game
 					int state = d->weapstate[d->weapselect];
 					if(weaptype[d->weapselect].zooms)
 					{
-						if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] > max(d->weapwait[d->weapselect]-zoomtime, 1)))
+						if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
 							state = WEAP_S_IDLE;
 					}
 					if(zooming && (!weaptype[d->weapselect].zooms || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
@@ -1392,7 +1392,7 @@ namespace game
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
 				if(player1->ragdoll) moveragdoll(player1, true);
-				else if(lastmillis-player1->lastpain < 2000)
+				else if(lastmillis-player1->lastpain <= 2000)
 					physics::move(player1, 10, false);
 			}
 			else
@@ -1548,17 +1548,14 @@ namespace game
 			if(len)
 			{
 				int interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
-				if(millis < len)
-				{
-					if(millis > over) total = (1.f-(float(millis-over)/float(interval)))*total;
-				}
+				if(millis <= len) { if(millis >= over) total = (1.f-(float(millis-over)/float(interval)))*total; }
 				else total = 0.f;
 			}
 		}
 		if(d == player1 && inzoom())
 		{
 			int frame = lastmillis-lastzoom;
-			float pc = frame < zoomtime ? float(frame)/float(zoomtime) : 1.f;
+			float pc = frame <= zoomtime ? float(frame)/float(zoomtime) : 1.f;
 			if(!zooming) pc = 1.f-pc;
 			total *= 1.f-pc;
 		}
@@ -1664,7 +1661,7 @@ namespace game
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
 				else if(d->timeinair && d->impulse[IM_TYPE] != IM_T_NONE && lastmillis-d->impulse[IM_TIME] <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulse[IM_TIME]; }
 				else if(d->timeinair && d->actiontime[AC_JUMP] && lastmillis-d->actiontime[AC_JUMP] <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_JUMP]; }
-				else if(d->timeinair > 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
+				else if(d->timeinair >= 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(d->action[AC_IMPULSE] && (d->move || d->strafe))
 				{
 					if(d->move>0)		anim |= (ANIM_IMPULSE_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1833,7 +1830,7 @@ namespace game
 			}
 		}
 
-		if(third && d->type == ENT_PLAYER && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) < maxparticledistance*maxparticledistance)
+		if(third && d->type == ENT_PLAYER && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) <= maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead(2);
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
