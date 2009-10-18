@@ -228,7 +228,6 @@ namespace projs
 				proj.waterfric = weaptype[proj.weap].waterfric[proj.flags&HIT_ALT ? 1 : 0];
 				proj.weight = weaptype[proj.weap].weight[proj.flags&HIT_ALT ? 1 : 0];
 				proj.projcollide = weaptype[proj.weap].collide[proj.flags&HIT_ALT ? 1 : 0];
-				proj.radial = weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0];
 				proj.extinguish = weaptype[proj.weap].extinguish[proj.flags&HIT_ALT ? 1 : 0];
 				proj.mdl = weaptype[proj.weap].proj;
 				break;
@@ -322,7 +321,7 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
+		if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
 		vec ray = vec(proj.vel).normalize();
 		int maxsteps = 25;
 		float step = 0.1f, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
@@ -356,7 +355,7 @@ namespace projs
 				break;
 			}
 		}
-		if(proj.projtype == PRJ_SHOT && proj.radial) proj.height = proj.radius = 1.f;
+		if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
@@ -510,13 +509,16 @@ namespace projs
 		{ // for the flamer this results in at most 50 damage per second
 			if(!d)
 			{
+				bool radiated = false;
 				loopi(game::numdynents())
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] < (f != proj.owner ? 1 : 2))
+						continue;
 					radialeffect(f, proj, false, radius);
+					radiated = true;
 				}
-				proj.lastradial = lastmillis;
+				if(radiated) proj.lastradial = lastmillis;
 			}
 			else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
 		}
@@ -1023,7 +1025,7 @@ namespace projs
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
-			if(proj.projtype == PRJ_SHOT && proj.radial)
+			if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0])
 			{
 				proj.hit = NULL;
 				proj.hitflags = HITFLAG_NONE;
@@ -1071,15 +1073,16 @@ namespace projs
 					{
 						radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
 						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(int(radius*proj.radius), 1);
+						bool radlimit = weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] == 1;
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || !physics::issolid(f)) continue;
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (radlimit && f == proj.owner)) continue;
 							radialeffect(f, proj, true, radius);
 						}
 					}
 				}
-				else if(proj.radial)
+				else if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0])
 				{
 					radius = int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
 					if(!proj.limited) radiate(proj, radius);
