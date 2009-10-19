@@ -589,7 +589,7 @@ namespace physics
 		else pl->timeinair = 0;
 		vec d = vec(m).mul(movevelocity(pl));
         if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && !pl->inliquid)
-			d.mul(pl->move || pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? (pl->strafe || pl->move < 0 ? 1.2f : 1.4f) : 1.0f);
+			d.mul(pl->move || pl->strafe || pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? (pl->strafe || pl->move <= 0 ? 1.2f : 1.4f) : 1.0f);
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{

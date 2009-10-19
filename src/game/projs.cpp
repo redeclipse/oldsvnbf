@@ -562,7 +562,7 @@ namespace projs
 				}
 				case WEAP_FLAMER:
 				{
-					proj.lifesize = clamp(proj.lifespan*proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.flags&HIT_ALT ? proj.lifespan*proj.lifespan : proj.lifespan, 0.01f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool effect = false;
@@ -603,7 +603,7 @@ namespace projs
 						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0]*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(124*max(1.f-proj.lifesize,0.1f))+1)<<8);
+						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(144*max(1.f-proj.lifesize,0.15f))+1)<<8);
 						part_flare(proj.to, proj.o, 1, PART_FLARE, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 						part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
 					}
@@ -618,7 +618,7 @@ namespace projs
 						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0]*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16))|((int(100*max(1.f-proj.lifesize,0.1f)))<<8);
+						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16))|((int(64*max(1.f-proj.lifesize,0.1f)))<<8);
 						part_flare(proj.to, proj.o, 1, PART_FLARE, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 						part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
 					}
@@ -751,13 +751,13 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
+							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 300 : 100), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
 							part_create(PART_ELECTRIC, m_speedtime(75), proj.o, 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
 							part_create(PART_SMOKE, m_speedtime(200), proj.o, 0x8896A4, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, -30);
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(250), 0x225599, 1.f);
+							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], PART_EXPLOSION, m_speedtime(200), 0x225599, 1.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));
-							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), m_speedtime(proj.flags&HIT_ALT ? 250 : 75), 10);
+							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), m_speedtime(proj.flags&HIT_ALT ? 300 : 100), 10);
 						}
 						else vol = 0;
 						break;
@@ -827,7 +827,7 @@ namespace projs
 			{
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius+1));
+					proj.o.sub(vec(dir).mul(proj.radius+1.5f));
 					proj.stuck = true;
 					return 1;
 				}
@@ -866,7 +866,7 @@ namespace projs
             {
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius+1));
+					proj.o.sub(vec(dir).mul(proj.radius+1.5f));
 					proj.stuck = true;
 					return 1;
 				}
