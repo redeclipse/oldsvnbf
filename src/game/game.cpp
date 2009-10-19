@@ -59,7 +59,7 @@ namespace game
 	VARP(zoommousetype, 0, 0, 2);
 	VARP(zoommousedeadzone, 0, 25, 100);
 	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
-	VARP(zoomfov, 20, 20, 150);
+	VARP(zoomfov, 1, 10, 150);
 	VARP(zoomtime, 1, 100, 10000);
 
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
@@ -434,7 +434,7 @@ namespace game
 					if(issound(d->fschan)) removesound(d->fschan);
 					d->fschan = -1; d->lastfire = 0;
 				}
-				else if(issound(d->fschan)) sounds[d->fschan].vol = int(255*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
+				else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != player1 ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
 			}
 		}
 		else if(issound(d->fschan))
@@ -468,7 +468,7 @@ namespace game
 	{
 		if(fireburntime && ((isweap(weap) && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0]) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
 		{
-			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, -1, -1, -1, &d->fschan);
+			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, d != player1 ? 128 : 224, -1, -1, &d->fschan);
 			if(flags&HIT_FULL || weap == -1) d->lastfire = lastmillis;
 			else return true;
 		}
