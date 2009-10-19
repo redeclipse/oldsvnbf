@@ -572,7 +572,7 @@ namespace projs
 							effect = true;
 							proj.lasteffect = lastmillis;
 						}
-						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.4f : 0.3f))<<16)+1)|((int(96*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.2f : 0.25f))+1)<<8),
+						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.45f : 0.35f))<<16)+1)|((int(96*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.2f : 0.25f))+1)<<8),
 							len = effect ? max(int(m_speedtime(flamerlength*(proj.flags&HIT_ALT ? 2 : 1))*max(proj.lifespan, 0.1f)), 0) : 0;
 						if(!len) { effect = false; len = 1; }
 						if(flamerhint) part_create(PART_HINT, max(len/2, 1), proj.o, 0x120226, size*1.5f, -5);
@@ -618,9 +618,9 @@ namespace projs
 						float dist = proj.o.dist(proj.from), size = clamp(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0]*(1.f-proj.lifesize), 1.f, iter ? min(weaptype[proj.weap].partlen[proj.flags&HIT_ALT ? 1 : 0], proj.movement) : dist);
 						vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
 						proj.to = vec(proj.o).sub(vec(dir).mul(size));
-						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16))|((int(64*max(1.f-proj.lifesize,0.1f)))<<8);
+						int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16))|((int(80*max(1.f-proj.lifesize,0.1f)))<<8);
 						part_flare(proj.to, proj.o, 1, PART_FLARE, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
-						part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
+						part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f);
 					}
 					break;
 				}
