@@ -80,6 +80,7 @@ namespace game
 	TVAR(dominatedtex, "textures/exit", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
+	VARP(showobitdists, 0, 0, 1);
 	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
 	VARP(playdamagetones, 0, 1, 3);
 
@@ -766,7 +767,9 @@ namespace game
 				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0) show = true; break;
 				case 5: default: show = true; break;
 			}
-			announce(anc, show ? (isme ? CON_SELF : CON_INFO) : -1, d, "\fw%s", d->obit);
+			int target = show ? (isme ? CON_SELF : CON_INFO) : -1;
+			if(showobitdists) announce(anc, target, d, "\fs\fw%s\fS (@\fs\fc%.2f\fSm)", d->obit, actor->o.dist(d->o)/8.f);
+			else announce(anc, target, d, "\fw%s", d->obit);
 		}
 		if(!kidmode && bloodscale > 0 && gibscale > 0)
 		{
