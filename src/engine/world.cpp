@@ -543,7 +543,7 @@ bool dropentity(extentity &e, int drop = -1)
 			cx = (sel.cx ? 1 : -1) * sel.grid / 2;
 			cy = (sel.cy ? 1 : -1) * sel.grid / 2;
 		}
-		e.o = sel.o.v;
+		e.o = sel.o.tovec();
 		int d = dimension(sel.orient), dc = dimcoord(sel.orient);
 		e.o[R[d]] += sel.grid / 2 + cx;
 		e.o[C[d]] += sel.grid / 2 + cy;
@@ -628,7 +628,7 @@ void entcopy()
 	entcopygrid = sel.grid;
 	entcopybuf.setsize(0);
 	loopv(entgroup)
-		entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.v));
+		entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.tovec()));
 }
 
 void entpaste()
