@@ -1817,6 +1817,8 @@ void cleanupva()
 
 void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 {
+    if(!caustictex[0]) loadcaustics(true);
+
     GLfloat s[4] = { 0.011f, 0, 0.0066f, 0 };
     GLfloat t[4] = { 0, 0.011f, 0.0066f, 0 };
     loopk(3)
