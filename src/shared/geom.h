@@ -12,8 +12,8 @@ struct vec
     explicit vec(int a) : x(a), y(a), z(a) {} 
     explicit vec(float a) : x(a), y(a), z(a) {} 
     vec(float a, float b, float c) : x(a), y(b), z(c) {}
-    vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
-    vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
+    explicit vec(int v[3]) : x(v[0]), y(v[1]), z(v[2]) {}
+    explicit vec(float *v) : x(v[0]), y(v[1]), z(v[2]) {}
     explicit vec(const vec4 &v);
 
     vec(float yaw, float pitch) : x(sinf(yaw)*cosf(pitch)), y(-cosf(yaw)*cosf(pitch)), z(sinf(pitch)) {}

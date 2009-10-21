@@ -64,7 +64,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
 	xtraverts += 2*int(xs+ys);
 }
 
-selinfo sel = { 0 }, lastsel;
+selinfo sel, lastsel;
 
 int orient = 0;
 int gridsize = 8;
@@ -140,9 +140,7 @@ bool noedit(bool view)
 	if(!editmode) { conoutf("\froperation only allowed in edit mode"); return true; }
 	if(view || haveselent()) return false;
 	float r = 1.0f;
-	vec o, s;
-	o = sel.o.v;
-	s = sel.s.v;
+	vec o = sel.o.tovec(), s = sel.s.tovec();
 	s.mul(float(sel.grid) / 2.0f);
 	o.add(s);
 	r = float(max(s.x, max(s.y, s.z)));
@@ -302,7 +300,7 @@ void cursorupdate()
 		{
 			v.add(handle);
 			(e = handle).mask(~(sel.grid-1));
-			v.sub(handle = e.v);
+			v.sub(handle = e.tovec());
 			havesel = true;
 		}
 		(e = v).mask(~(sel.grid-1));
