@@ -642,7 +642,7 @@ void entpaste()
 	{
 		entity &c = entcopybuf[i];
 		vec o(c.o);
-		o.mul(m).add(sel.o.v);
+		o.mul(m).add(sel.o.tovec());
 		extentity *e = newentity(true, o, ET_EMPTY, c.attrs);
 		loopvk(c.links) e->links.add(c.links[k]);
 		entities::getents().add(e);
