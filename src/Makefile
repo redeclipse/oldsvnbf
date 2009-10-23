@@ -280,7 +280,7 @@ engine/physics.o: engine/engine.h shared/cube.h shared/tools.h
 engine/physics.o: shared/command.h shared/geom.h shared/ents.h
 engine/physics.o: shared/iengine.h shared/igame.h engine/sound.h
 engine/physics.o: engine/world.h engine/octa.h engine/lightmap.h engine/bih.h
-engine/physics.o: engine/texture.h engine/model.h
+engine/physics.o: engine/texture.h engine/model.h engine/mpr.h
 engine/pvs.o: engine/engine.h shared/cube.h shared/tools.h shared/command.h
 engine/pvs.o: shared/geom.h shared/ents.h shared/iengine.h shared/igame.h
 engine/pvs.o: engine/sound.h engine/world.h engine/octa.h engine/lightmap.h

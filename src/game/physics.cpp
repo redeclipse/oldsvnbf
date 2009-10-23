@@ -902,21 +902,10 @@ namespace physics
 				hitflags |= HITFLAG_HEAD;
 			return hitflags == HITFLAG_NONE;
 		}
-		if(!d->o.reject(o->o, d->radius+o->radius))
-		{
-			if(d->collidetype!=COLLIDE_ELLIPSE || o->collidetype!=COLLIDE_ELLIPSE)
-			{
-				if(!rectcollide(d, dir, o->o, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->xradius, o->collidetype==COLLIDE_ELLIPSE ? o->radius : o->yradius, o->aboveeye, o->height))
-				{
-					if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
-					return false;
-				}
-			}
-			else if(!ellipsecollide(d, dir, o->o, vec(0, 0, 0), o->yaw, o->xradius, o->yradius, o->aboveeye, o->height))
-			{
-				if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
-				return false;
-			}
+        if(!plcollide(d, dir, o))
+        {
+			if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
+			return false;
 		}
 		return true;
 	}
@@ -1056,6 +1045,7 @@ namespace physics
 		if(raycube(o, v, hdr.worldsize) >= hdr.worldsize) return false;
 		physent d;
 		d.type = ENT_DUMMY;
+        d.collidetype = COLLIDE_AABB;
 		d.o = o;
 		d.radius = radius;
 		d.height = height;
