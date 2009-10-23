@@ -265,7 +265,8 @@ void ragdolldata::updatepos()
 {
     static physent d;
     d.type = ENT_RAGDOLL;
-    d.radius = d.height = d.aboveeye = 1;
+    d.collidetype = COLLIDE_AABB;
+    d.radius = d.xradius = d.yradius = d.height = d.aboveeye = 1;
     loopv(skel->verts)
     {
         vert &v = verts[i];
@@ -322,9 +323,10 @@ void ragdolldata::move(dynent *pl, float ts)
     physics::updateragdoll(pl, center, radius);
     float gravity = physics::gravityforce(pl)*ragdollgravity;
 
-    physent d;
+    static physent d;
     d.type = ENT_RAGDOLL;
-    d.radius = d.height = d.aboveeye = 1;
+    d.collidetype = COLLIDE_AABB;
+    d.radius = d.xradius = d.yradius = d.height = d.aboveeye = 1;
     float airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     bool liquid = physics::liquidcheck(pl);
     collisions = 0;

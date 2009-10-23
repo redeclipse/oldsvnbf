@@ -334,6 +334,7 @@ namespace game
 		{
 			camera1->reset();
 			camera1->type = ENT_CAMERA;
+            camera1->collidetype = COLLIDE_AABB;
 			camera1->state = CS_ALIVE;
 			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}

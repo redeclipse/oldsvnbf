@@ -304,9 +304,10 @@ extern void save_world(const char *mname, bool nodata = false, bool forcesave = 
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo);
-extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF, bool collideonly = true, float cutoff = 0);
+extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, float yr,  float hi, float lo, uchar visible = 0xFF);
 extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0, bool playercol = true);
 extern bool plcollide(physent *d, const vec &dir = vec(0, 0, 0));
+extern bool plcollide(physent *d, const vec &dir, physent *o);
 extern float pltracecollide(physent *d, const vec &o, const vec &ray, float maxdist);
 extern float tracecollide(physent *d, const vec &o, const vec &ray, float maxdist, int mode = RAY_CLIPMAT|RAY_ALPHAPOLY, bool playercol = true);
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
