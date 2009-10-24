@@ -332,6 +332,11 @@ struct skelmodel : animmodel
                 vv.tangent = bumpverts[j].tangent;
                 vv.bitangent = bumpverts[j].bitangent;
             }
+            else
+            {
+                vv.tangent = vec(0, 0, 0);
+                vv.bitangent = 0;
+            }
         }
 
         static inline void assignvert(vvertw &vv, int j, vert &v, blendcombo &c)
@@ -353,6 +358,11 @@ struct skelmodel : animmodel
             {
                 vv.tangent = bumpverts[j].tangent;
                 vv.bitangent = bumpverts[j].bitangent;
+            }
+            else
+            {
+                vv.tangent = vec(0, 0, 0);
+                vv.bitangent = 0;
             }
             c.serialize(vv);
         }
@@ -430,9 +440,14 @@ struct skelmodel : animmodel
         {
             if(stride==sizeof(vvertbumpw)) vdata = (uchar *)&((vvertbumpw *)&vdata[voffset*stride])->tangent;
             else vdata = (uchar *)&((vvertbump *)&vdata[voffset*stride])->tangent;
-            loopi(numverts)
+            if(bumpverts) loopi(numverts)
             {
                 ((bumpvert *)vdata)->bitangent = bumpverts[i].bitangent;
+                vdata += stride;
+            }
+            else loopi(numverts)
+            {
+                memset(vdata, 0, sizeof(bumpvert));
                 vdata += stride;
             }
         }
@@ -455,11 +470,15 @@ struct skelmodel : animmodel
 
             if(tangents)
             {
-                IPLOOPMAT(vvertbump, bumpvert &bsrc = bumpverts[i],
+                if(bumpverts)
                 {
-                    dst.norm = m.transformnormal(src.norm);
-                    dst.tangent = m.transformnormal(bsrc.tangent);
-                });
+                    IPLOOPMAT(vvertbump, bumpvert &bsrc = bumpverts[i],
+                    {
+                        dst.norm = m.transformnormal(src.norm);
+                        dst.tangent = m.transformnormal(bsrc.tangent);
+                    });
+                }
+                else { IPLOOPMAT(vvertbump, , dst.norm = m.transformnormal(src.norm)); }
             }
             else if(norms) { IPLOOPMAT(vvertn, , dst.norm = m.transformnormal(src.norm)); }
             else { IPLOOPMAT(vvert, , ); }
@@ -485,11 +504,15 @@ struct skelmodel : animmodel
 
             if(tangents) 
             {
-                IPLOOP(vvertbump, bumpvert &bsrc = bumpverts[i], 
-                { 
-                    dst.norm = d.real.rotate(src.norm);
-                    dst.tangent = d.real.rotate(bsrc.tangent);
-                });
+                if(bumpverts)
+                {
+                    IPLOOP(vvertbump, bumpvert &bsrc = bumpverts[i],
+                    {
+                        dst.norm = d.real.rotate(src.norm);
+                        dst.tangent = d.real.rotate(bsrc.tangent);
+                    });
+                }
+                else { IPLOOP(vvertbump, , dst.norm = d.real.rotate(src.norm)); }
             }
             else if(norms) { IPLOOP(vvertn, , dst.norm = d.real.rotate(src.norm)); }
             else { IPLOOP(vvert, , ); }
