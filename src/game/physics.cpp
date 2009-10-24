@@ -658,8 +658,19 @@ namespace physics
 				}
 			}
 			pl->submerged = found ? found/10.f : 1.f;
-			if(local && pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
-				pl->vel.z = max(pl->vel.z, max(jumpforce(pl, false), max(gravityforce(pl), 50.f)));
+			if(local)
+			{
+				if(curmat == MAT_WATER && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->submerged >= 0.5f && ((gameent *)pl)->lastfire)
+				{
+					gameent *d = (gameent *)pl;
+					if(issound(d->fschan)) removesound(d->fschan);
+					d->fschan = -1; d->lastfire = 0;
+					playsound(S_EXTINGUISH, d->o, d, 0, d != game::player1 ? 128 : 224, -1, -1);
+					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
+				}
+				if(pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
+					pl->vel.z = max(pl->vel.z, max(jumpforce(pl, false), max(gravityforce(pl), 50.f)));
+			}
 		}
 		else pl->submerged = 0;
 		pl->onladder = !floating && flagmat == MAT_LADDER;

@@ -3090,10 +3090,15 @@ namespace server
 
 				case SV_PHYS:
 				{
-					int lcn = getint(p);
-					getint(p);
+					int lcn = getint(p), idx = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(idx == SPHY_EXTINGUISH)
+					{
+						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GVAR(fireburntime))
+							break;
+						cp->state.lastfire = cp->state.lastfireburn = 0;
+					}
 					QUEUE_MSG;
 					break;
 				}
