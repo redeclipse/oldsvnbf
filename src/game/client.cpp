@@ -1078,6 +1078,13 @@ namespace client
 							t->setweapstate(t->weapselect, WEAP_S_POWER, 0, lastmillis);
 							break;
 						}
+						case SPHY_EXTINGUISH:
+						{
+							if(issound(t->fschan)) removesound(t->fschan);
+							t->fschan = -1; t->lastfire = 0;
+							playsound(S_EXTINGUISH, t->o, t, 0, 128, -1, -1);
+							break;
+						}
 						default: break;
 					}
 					break;
