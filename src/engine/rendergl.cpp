@@ -963,6 +963,7 @@ void cleanupmotionblur()
 {
     if(motiontex) { glDeleteTextures(1, &motiontex); motiontex = 0; }
     motionw = motionh = 0;
+    lastmotion = 0;
 }
 
 VARFP(motionblur, 0, 1, 1, { if(!motionblur) cleanupmotionblur(); });
@@ -999,7 +1000,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)));
+    glColor4f(1, 1, 1, lastmotion ? pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
     glBegin(GL_QUADS);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
@@ -1023,7 +1024,6 @@ void addmotionblur()
         lastmotion = lastmillis - lastmillis%motionblurmillis;
 
         glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
-        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
     }
 }
 
