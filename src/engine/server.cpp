@@ -803,9 +803,9 @@ bool findoctadir(const char *name, bool fallback)
 		conoutf("\fgfound octa directory: %s", name);
 		defformatstring(octadata)("%s/data", name);
 		defformatstring(octapaks)("%s/packages", name);
-		addpackagedir(name);
-		addpackagedir(octadata);
-		addpackagedir(octapaks);
+		addpackagedir(name, PACKAGEDIR_OCTA);
+		addpackagedir(octadata, PACKAGEDIR_OCTA);
+		addpackagedir(octapaks, PACKAGEDIR_OCTA);
 		hasoctapaks = fallback ? 1 : 2;
 		return true;
 	}
