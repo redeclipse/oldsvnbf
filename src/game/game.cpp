@@ -54,7 +54,7 @@ namespace game
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(zoomsensitivity, 1e-3f, 5.0f, 1000);
+	FVARP(zoomsensitivity, 1e-3f, 10.0f, 1000);
 
 	VARP(zoommousetype, 0, 0, 2);
 	VARP(zoommousedeadzone, 0, 25, 100);
@@ -1055,7 +1055,7 @@ namespace game
 			}
 			else if(allowmove(player1))
 			{
-				float scale = inzoom() ? zoomsensitivity : sensitivity;
+				float scale = inzoom() ? zoomsensitivity*(1.f-(zoomlevel/float(zoomlevels+1))) : sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
 				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
