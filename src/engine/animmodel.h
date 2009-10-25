@@ -496,7 +496,7 @@ struct animmodel : model
         {
             matrix3x4 t = m;
             t.translate(translate);
-            t.scale(model->scale);
+            t.scale(model->scale*sizescale);
             meshes->calcbb(frame, bbmin, bbmax, t);
             loopv(links)
             {
@@ -510,7 +510,7 @@ struct animmodel : model
         {
             matrix3x4 t = m;
             t.translate(translate);
-            t.scale(model->scale);
+            t.scale(model->scale*sizescale);
             meshes->gentris(frame, skins, tris, t);
             loopv(links)
             {
@@ -716,11 +716,12 @@ struct animmodel : model
                 matrixstack[matrixpos].rotate(pitchamount*RAD, axis);
             }
 
+            float resize = model->scale*sizescale;
             if(!(anim&ANIM_NORENDER))
             {
                 glPushMatrix();
                 glMultMatrixf(matrixstack[matrixpos].v);
-                if(model->scale!=1) glScalef(model->scale, model->scale, model->scale);
+                if(resize!=1) glScalef(resize, resize, resize);
                 if(!translate.iszero()) glTranslatef(translate.x, translate.y, translate.z);
                 if(renderpath!=R_FIXEDFUNCTION && envmaptmu>=0)
                 {
@@ -734,15 +735,15 @@ struct animmodel : model
             {
                 if(renderpath!=R_FIXEDFUNCTION)
                 {
-                    if(fogging) setfogplane(plane(rfogplane).translate(translate).scale(model->scale));
+                    if(fogging) setfogplane(plane(rfogplane).translate(translate).scale(resize));
                     setenvparamf("direction", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
                     vec ocampos(rcampos);
-                    ocampos.div(model->scale).sub(translate);
+                    ocampos.div(resize).sub(translate);
                     setenvparamf("camera", SHPARAM_VERTEX, 1, ocampos.x, ocampos.y, ocampos.z, 1);
                 }
                 else
                 {
-                    if(fogging) refractfogplane = plane(rfogplane).translate(translate).scale(model->scale);
+                    if(fogging) refractfogplane = plane(rfogplane).translate(translate).scale(resize);
                 }
             }
 
@@ -889,7 +890,7 @@ struct animmodel : model
         }
     }
 
-    void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir, float trans)
+    void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir, float trans, float size)
     {
         if(!loaded) return;
 
@@ -926,6 +927,7 @@ struct animmodel : model
             }
 
             transparent = trans;
+            sizescale = size;
             lightcolor = color;
 
             fogplane = plane(0, 0, 1, -reflectz);
@@ -1169,7 +1171,7 @@ struct animmodel : model
     static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enablenormals, enabletangents, enablebones, enablerescale;
     static vec lightcolor;
     static plane refractfogplane;
-    static float transparent, lastalphatest;
+    static float transparent, lastalphatest, sizescale;
     static void *lastvbuf, *lasttcbuf, *lastmtcbuf, *lastnbuf, *lastxbuf, *lastbbuf, *lastsdata, *lastbdata;
     static GLuint lastebuf, lastenvmaptex, closestenvmaptex;
     static Texture *lasttex, *lastmasks, *lastnormalmap;
@@ -1185,7 +1187,7 @@ struct animmodel : model
         lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastmasks = lastnormalmap = NULL;
         envmaptmu = fogtmu = -1;
-        transparent = 1;
+        transparent = sizescale = 1;
 
         if(renderpath==R_FIXEDFUNCTION && lightmodels && !enablelight0)
         {
@@ -1315,7 +1317,7 @@ bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enabl
      animmodel::enablefog = false, animmodel::enablenormals = false, animmodel::enabletangents = false, animmodel::enablebones = false, animmodel::enablerescale = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
-float animmodel::transparent = 1, animmodel::lastalphatest = -1;
+float animmodel::transparent = 1, animmodel::lastalphatest = -1, animmodel::sizescale = 1;
 void *animmodel::lastvbuf = NULL, *animmodel::lasttcbuf = NULL, *animmodel::lastmtcbuf = NULL, *animmodel::lastnbuf = NULL, *animmodel::lastxbuf = NULL, *animmodel::lastbbuf = NULL, *animmodel::lastsdata = NULL, *animmodel::lastbdata = NULL;
 GLuint animmodel::lastebuf = 0, animmodel::lastenvmaptex = 0, animmodel::closestenvmaptex = 0;
 Texture *animmodel::lasttex = NULL, *animmodel::lastmasks = NULL, *animmodel::lastnormalmap = NULL;

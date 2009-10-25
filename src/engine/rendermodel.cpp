@@ -458,7 +458,7 @@ struct batchedmodel
 {
 	vec pos, color, dir;
 	int anim;
-	float yaw, pitch, roll, transparent;
+	float yaw, pitch, roll, transparent, sizescale;
 	int basetime, basetime2, flags;
 	dynent *d;
 	int attached;
@@ -516,7 +516,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
     }
 
-	m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent);
+	m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.sizescale);
 }
 
 struct transparentmodel
@@ -548,7 +548,7 @@ void endmodelbatches()
             {
                 batchedmodel &bm = b.batched[j];
                 if(bm.flags&(MDL_SHADOW|MDL_DYNSHADOW))
-                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.d && bm.d->ragdoll ? bm.d->ragdoll->center : bm.pos, bm.d ? bm.d->radius : max(bbradius.x, bbradius.y), bm.transparent);
+                    renderblob(bm.flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, bm.d && bm.d->ragdoll ? bm.d->ragdoll->center : bm.pos, (bm.d ? bm.d->radius : max(bbradius.x, bbradius.y))*bm.sizescale, bm.transparent);
             }
             flushblobs();
         }
@@ -673,7 +673,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 
 extern int oqfrags;
 
-void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, int basetime2, float trans)
+void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, int basetime2, float trans, float size)
 {
     if(shadowmapping && !(flags&(MDL_SHADOW|MDL_DYNSHADOW))) return;
 	model *m = loadmodel(mdl);
@@ -834,6 +834,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 		b.basetime = basetime;
         b.basetime2 = basetime2;
         b.transparent = trans;
+        b.sizescale = size;
         b.flags = flags & ~(MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
         if(!shadow || reflecting || refracting>0)
         {
@@ -850,7 +851,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
     if(shadow && !reflecting && refracting<=0)
     {
-        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, d && d->ragdoll ? center : o, d ? d->radius : max(bbradius.x, bbradius.y), trans);
+        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, d && d->ragdoll ? center : o, d ? d->radius*size : max(bbradius.x, bbradius.y), trans);
         flushblobs();
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
@@ -873,7 +874,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         if(d->query) startquery(d->query);
     }
 
-	m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, lightcolor, lightdir, trans);
+	m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, lightcolor, lightdir, trans, size);
 
     if(doOQ && d->query) endquery(d->query);
 
@@ -925,7 +926,7 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
     tryload(masks, "<ffmask:25>", "masks");
 }
 
-void setbbfrommodel(dynent *d, const char *mdl)
+void setbbfrommodel(dynent *d, const char *mdl, float size)
 {
 	model *m = loadmodel(mdl);
 	if(!m) return;
@@ -937,10 +938,10 @@ void setbbfrommodel(dynent *d, const char *mdl)
         //d->collidetype = COLLIDE_AABB;
         //rotatebb(center, radius, int(d->yaw));
     }
-	d->xradius	= radius.x + fabs(center.x);
-	d->yradius	= radius.y + fabs(center.y);
-    d->radius    = d->collidetype==COLLIDE_OBB ? sqrtf(d->xradius*d->xradius + d->yradius*d->yradius) : max(d->xradius, d->yradius);
-	d->height = d->zradius = (center.z-radius.z) + radius.z*2*m->height;
-	d->aboveeye  = radius.z*2*(1.0f-m->height);
+	d->xradius	= (radius.x + fabs(center.x))*size;
+	d->yradius	= (radius.y + fabs(center.y))*size;
+    d->radius   = (d->collidetype==COLLIDE_OBB ? sqrtf(d->xradius*d->xradius + d->yradius*d->yradius) : max(d->xradius, d->yradius))*size;
+	d->height   = (d->zradius = (center.z-radius.z) + radius.z*2*m->height)*size;
+	d->aboveeye = radius.z*2*(1.0f-m->height);
 }
 

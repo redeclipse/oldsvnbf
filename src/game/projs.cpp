@@ -661,30 +661,45 @@ namespace projs
 			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
 				proj.radius = max(proj.lifesize, 0.1f);
 		}
-		else if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
+		else
 		{
-			proj.lifesize = 1;
-			if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
+			if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 			{
-				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 100, DECAL_BLOOD);
-				proj.lasteffect = lastmillis;
-			}
-		}
-		else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
-		{
-			proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
-			int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);
-			if(steps && proj.movement > 0.f)
-			{
-				vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
-				loopi(steps)
+				proj.lifesize = 1;
+				if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 				{
-					float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.01f, proj.radius);
-					int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
-					part_create(PART_FIREBALL_SOFT, 1, pos, col, size, -15);
-					pos.add(dir);
-					if(proj.o.dist(pos) > proj.movement) break;
+					part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 100, DECAL_BLOOD);
+					proj.lasteffect = lastmillis;
 				}
+			}
+			else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
+			{
+				proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+				int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);
+				if(steps && proj.movement > 0.f)
+				{
+					vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
+					loopi(steps)
+					{
+						float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.01f, proj.radius);
+						int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
+						part_create(PART_FIREBALL_SOFT, 1, pos, col, size, -15);
+						pos.add(dir);
+						if(proj.o.dist(pos) > proj.movement) break;
+					}
+				}
+			}
+			if(proj.mdl && *proj.mdl) switch(proj.projtype)
+			{
+				case PRJ_ENT: if(!entities::ents.inrange(proj.id)) break;
+				case PRJ_GIBS: case PRJ_DEBRIS:
+					if(proj.lifemillis)
+					{
+						int interval = min(proj.lifemillis, 1000);
+						if(proj.lifetime < interval) setbbfrommodel(&proj, proj.mdl, float(proj.lifetime)/float(interval));
+					}
+					break;
+				default: break;
 			}
 		}
 	}
@@ -1103,19 +1118,19 @@ namespace projs
 		{
 			projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
-			float trans = 1.f;
+			float trans = 1, size = 1;
 			switch(proj.projtype)
 			{
-				case PRJ_GIBS: case PRJ_DEBRIS:
+				case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_ENT:
 					if(proj.lifemillis)
 					{
 						int interval = min(proj.lifemillis, 1000);
-						if(proj.lifetime < interval) trans = float(proj.lifetime)/float(interval);
+						if(proj.lifetime < interval) size = trans = float(proj.lifetime)/float(interval);
 					}
 					break;
 				default: break;
 			}
-			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST, NULL, NULL, 0, 0, trans);
+			rendermodel(&proj.light, proj.mdl, ANIM_MAPMODEL|ANIM_LOOP, proj.o, proj.yaw+90, proj.pitch, proj.roll, MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_DYNSHADOW|MDL_LIGHT|MDL_CULL_DIST, NULL, NULL, 0, 0, trans, size);
 		}
 	}
 

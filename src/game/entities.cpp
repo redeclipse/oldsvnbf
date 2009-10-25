@@ -2186,7 +2186,7 @@ namespace entities
 					if(mdlname && *mdlname)
 					{
 						int flags = MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-						float fade = 1, yaw = 0, pitch = 0;
+						float fade = 1, yaw = 0, pitch = 0, size = 1;
 						if(!active)
 						{
 							fade = 0.5f;
@@ -2196,9 +2196,9 @@ namespace entities
 						else
 						{
 							int millis = lastmillis-e.lastspawn;
-							if(millis < 1000) fade = float(millis)/1000.f;
+							if(millis < 1000) size = fade = float(millis)/1000.f;
 						}
-						rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade);
+						rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade, size);
 					}
 				}
 			}
@@ -2250,7 +2250,13 @@ namespace entities
 		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f;
-		if(item) part_create(PART_HINT_SOFT, 1, o, colour, (e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc);
+		if(item)
+		{
+			float halo = (e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc;
+			int millis = lastmillis-e.lastspawn;
+			if(millis < 1000) halo *= millis/1000.f;
+			part_create(PART_HINT_SOFT, 1, o, colour, halo);
+		}
 		if((item && showentdescs >= 3) || notitem)
 		{
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
