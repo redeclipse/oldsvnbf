@@ -1042,7 +1042,7 @@ struct skelmodel : animmodel
                 {
                     int vert = j.vert[k];
                     vec pos;
-                    matrixstack[matrixpos].transform(m.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale*animmodel::sizescale), pos);
+                    matrixstack[matrixpos].transform(m.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale), pos);
                     d.verts[vert].pos.add(pos);
                 }
             }
@@ -1068,7 +1068,7 @@ struct skelmodel : animmodel
                 {
                     int vert = j.vert[k];
                     vec pos;
-                    matrixstack[matrixpos].transform(q.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale*animmodel::sizescale), pos);
+                    matrixstack[matrixpos].transform(q.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale), pos);
                     d.verts[vert].pos.add(pos);
                 }
             }
@@ -1094,7 +1094,7 @@ struct skelmodel : animmodel
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale*animmodel::sizescale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale).sub(p->translate);
                 sc.mdata[b.interpindex].transposemul(d.tris[j.tri], pos, j.orient);
             }
             loopv(ragdoll->reljoints)
@@ -1116,7 +1116,7 @@ struct skelmodel : animmodel
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale*animmodel::sizescale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale).sub(p->translate);
                 matrix3x4 m;
                 m.transposemul(d.tris[j.tri], pos, j.orient);
                 sc.bdata[b.interpindex] = dualquat(m);
@@ -1134,7 +1134,7 @@ struct skelmodel : animmodel
         void concattagtransform(part *p, int frame, int i, const matrix3x4 &m, matrix3x4 &n)
         {
             matrix3x4 t = bones[tags[i].bone].base;
-            t.translate(vec(p->translate).mul(p->model->scale*animmodel::sizescale));
+            t.translate(vec(p->translate).mul(p->model->scale));
             n.mul(m, t);
         }
 
@@ -1147,9 +1147,9 @@ struct skelmodel : animmodel
                 l.matrix = t;
             }
             else l.matrix = m;
-            l.matrix[12] = (l.matrix[12] + p->translate.x) * p->model->scale*animmodel::sizescale;
-            l.matrix[13] = (l.matrix[13] + p->translate.y) * p->model->scale*animmodel::sizescale;
-            l.matrix[14] = (l.matrix[14] + p->translate.z) * p->model->scale*animmodel::sizescale;
+            l.matrix[12] = (l.matrix[12] + p->translate.x) * p->model->scale * sizescale;
+            l.matrix[13] = (l.matrix[13] + p->translate.y) * p->model->scale * sizescale;
+            l.matrix[14] = (l.matrix[14] + p->translate.z) * p->model->scale * sizescale;
         }
 
         void calctags(skelcacheentry &sc, part *p)
@@ -1705,7 +1705,7 @@ struct skelmodel : animmodel
 
             if(as->anim&ANIM_RAGDOLL && skel->ragdoll && !d->ragdoll)
             {
-                d->ragdoll = new ragdolldata(skel->ragdoll, p->model->scale*animmodel::sizescale);
+                d->ragdoll = new ragdolldata(skel->ragdoll, p->model->scale);
                 if(matskel) skel->initmatragdoll(*d->ragdoll, sc, p);
                 else skel->initragdoll(*d->ragdoll, sc, p);
                 d->ragdoll->init(d);
