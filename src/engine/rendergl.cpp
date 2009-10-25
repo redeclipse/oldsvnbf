@@ -987,7 +987,7 @@ void addmotionblur()
         createtexture(motiontex, motionw, motionh, NULL, 3, 0, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
     }
 
-    float amount = lastmotion ? pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0;
+    float amount = pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f));
     if(amount <= 0)
     {
         lastmotion = 0;
@@ -1012,13 +1012,16 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, amount);
-    glBegin(GL_QUADS);
-    glTexCoord2f(      0,       0); glVertex2f(-1, -1);
-    glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
-    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
-    glTexCoord2f(      0, motionh); glVertex2f(-1,  1);
-    glEnd();
+    if(lastmotion)
+    {
+        glColor4f(1, 1, 1, amount);
+        glBegin(GL_QUADS);
+        glTexCoord2f(      0,       0); glVertex2f(-1, -1);
+        glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
+        glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
+        glTexCoord2f(      0, motionh); glVertex2f(-1,  1);
+        glEnd();
+    }
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
     glEnable(GL_TEXTURE_2D);
