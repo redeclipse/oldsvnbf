@@ -360,6 +360,7 @@ model *loadmodel(const char *name, int i, bool msg)
 			defformatstring(filename)("models/%s", name);
 			progress(loadprogress, filename);
 		}
+        if(name) maskpackagedirs(~PACKAGEDIR_OCTA);
 		loopi(NUMMODELTYPES)
 		{
 			m = modeltypes[i](name);
@@ -368,6 +369,7 @@ model *loadmodel(const char *name, int i, bool msg)
 			if(m->load()) break;
 			DELETEP(m);
 		}
+        if(name) maskpackagedirs(~0);
 		loadingmodel = NULL;
 		if(!m) return NULL;
 		mdllookup.access(m->name(), m);

@@ -10,7 +10,13 @@
 #endif
 
 string homedir = "";
-vector<char *> packagedirs;
+struct packagedir
+{
+    string name;
+    int flags;
+};
+vector<packagedir> packagedirs;
+int packagedirmask = ~0;
 
 char *makefile(const char *s, const char *e, int revision, int start, bool skip)
 {
@@ -188,9 +194,18 @@ void sethomedir(const char *dir)
     fixdir(copystring(homedir, dir));
 }
 
-void addpackagedir(const char *dir)
+int maskpackagedirs(int flags)
 {
-    fixdir(packagedirs.add(newstringbuf(dir)));
+    int oldmask = packagedirmask;
+    packagedirmask = flags;
+    return oldmask;
+}
+
+void addpackagedir(const char *dir, int flags)
+{
+    packagedir &pdir = packagedirs.add();
+    fixdir(copystring(pdir.name, dir));
+    pdir.flags = flags;
 }
 
 const char *findfile(const char *filename, const char *mode)
@@ -219,9 +234,9 @@ const char *findfile(const char *filename, const char *mode)
     }
     copystring(s, filename); path(s); // our own packages take priority
     if(mode[0]=='w' || mode[0]=='a' || fileexists(s, mode)) return s;
-    loopv(packagedirs)
+    loopv(packagedirs) if((packagedirs[i].flags & packagedirmask) == packagedirs[i].flags)
     {
-        formatstring(s)("%s%s", packagedirs[i], filename); path(s);
+        formatstring(s)("%s%s", packagedirs[i].name, filename); path(s);
         if(fileexists(s, mode)) return s;
     }
     copystring(s, filename); path(s);
@@ -276,9 +291,9 @@ int listfiles(const char *dir, const char *ext, vector<char *> &files)
         formatstring(s)("%s%s", homedir, dir);
         if(listdir(s, ext, files)) dirs++;
     }
-    loopv(packagedirs)
+    loopv(packagedirs) if((packagedirs[i].flags & packagedirmask) == packagedirs[i].flags)
     {
-        formatstring(s)("%s%s", packagedirs[i], dir);
+        formatstring(s)("%s%s", packagedirs[i].name, dir);
         if(listdir(s, ext, files)) dirs++;
     }
 #ifndef STANDALONE

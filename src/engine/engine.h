@@ -32,6 +32,11 @@ extern char *masterip;
 
 enum { CON_DEBUG = 0, CON_MESG, CON_INFO, CON_SELF, CON_GAMESPECIFIC };
 
+enum
+{
+    PACKAGEDIR_OCTA = 1<<0
+};
+
 #ifndef STANDALONE
 #include "world.h"
 #include "octa.h"
