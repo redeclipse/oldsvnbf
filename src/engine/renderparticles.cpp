@@ -695,7 +695,7 @@ struct softquadrenderer : quadrenderer
 			float radius = p.size*SQRT2;
 			int blend, ts;
 			calc(&p, blend, ts, false);
-			if(depthfxscissor==2 ? depthfxtex.addscissorbox(p.o, radius) : isvisiblesphere(radius, p.o) < VFC_FOGGED)
+			if(!isfoggedsphere(radius, p.o) && (depthfxscissor!=2 || depthfxtex.addscissorbox(p.o, radius)))
 			{
 				numsoft++;
 				loopk(3)
