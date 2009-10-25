@@ -2265,19 +2265,11 @@ namespace entities
 	void drawparticles()
 	{
 		float maxdist = float(maxparticledistance)*float(maxparticledistance);
-		int ignoretypes = m_edit(game::gamemode) ? NOTUSED : MAXENTTYPES;
-		  int numents = m_edit(game::gamemode) ? ents.length() : max(lastusetype[EU_ITEM], max(lastenttype[PARTICLES], lastenttype[TELEPORT]));
+		int numents = m_edit(game::gamemode) ? ents.length() : max(lastusetype[EU_ITEM], max(lastenttype[PARTICLES], lastenttype[TELEPORT]));
 		loopi(numents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
-			switch(e.type)
-			{
-				case PARTICLES: case TELEPORT:
-					break;
-				default:
-					if(enttype[e.type].usetype != EU_ITEM && e.type <= ignoretypes) continue;
-					break;
-			}
+			if(e.type != PARTICLES && e.type != TELEPORT && !m_edit(game::gamemode) && enttype[e.type].usetype != EU_ITEM) continue;
 			if(e.o.squaredist(camera1->o) > maxdist) continue;
 			int millis = lastmillis-e.lastspawn; float skew = 1;
 			if(millis < 1000) skew *= millis/1000.f;
