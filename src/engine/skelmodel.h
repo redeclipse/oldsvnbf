@@ -80,7 +80,7 @@ struct skelmodel : animmodel
             bones[sorted] = bone;
             return sorted+1;
         }
-        
+
         void finalize(int sorted)
         {
             loopj(4-sorted) { weights[sorted+j] = 0; bones[sorted+j] = 0; }
@@ -125,7 +125,7 @@ struct skelmodel : animmodel
         int millis;
         uchar *partmask;
         ragdolldata *ragdoll;
-    
+
         animcacheentry() : ragdoll(NULL)
         {
             loopk(MAXANIMPARTS) as[k].cur.fr1 = as[k].prev.fr1 = -1;
@@ -146,7 +146,7 @@ struct skelmodel : animmodel
 
         vbocacheentry() : vdata(NULL), vbuf(0), owner(-1) {}
     };
-    
+
     struct skelcacheentry : animcacheentry
     {
         dualquat *bdata;
@@ -248,7 +248,7 @@ struct skelmodel : animmodel
             loopi(numverts)
             {
                 const vec &n = verts[i].norm,
-                          &t = tangent[i], 
+                          &t = tangent[i],
                           &bt = bitangent[i];
                 bumpvert &bv = bumpverts[i];
                 (bv.tangent = t).sub(vec(n).mul(n.dot(t))).normalize();
@@ -411,7 +411,7 @@ struct skelmodel : animmodel
         int genvbo(vector<ushort> &idxs, int offset)
         {
             loopi(numverts) verts[i].interpindex = ((skelmeshgroup *)group)->remapblend(verts[i].blend);
-            
+
             voffset = offset;
             eoffset = idxs.length();
             loopi(numtris)
@@ -431,7 +431,7 @@ struct skelmodel : animmodel
             loopi(numverts)
             {
                 ((float *)vdata)[0] = verts[i].u;
-                ((float *)vdata)[1] = verts[i].v; 
+                ((float *)vdata)[1] = verts[i].v;
                 vdata += stride;
             }
         }
@@ -502,7 +502,7 @@ struct skelmodel : animmodel
                     dotransform; \
                 }
 
-            if(tangents) 
+            if(tangents)
             {
                 if(bumpverts)
                 {
@@ -618,7 +618,7 @@ struct skelmodel : animmodel
         }
     };
 
-       
+
     struct tag
     {
         char *name;
@@ -748,9 +748,9 @@ struct skelmodel : animmodel
         {
             antipodes.setsize(0);
             vector<int> schedule;
-            loopi(numbones) 
+            loopi(numbones)
             {
-                if(bones[i].group >= numbones) 
+                if(bones[i].group >= numbones)
                 {
                     bones[i].scheduled = schedule.length();
                     schedule.add(i);
@@ -1042,7 +1042,7 @@ struct skelmodel : animmodel
                 {
                     int vert = j.vert[k];
                     vec pos;
-                    matrixstack[matrixpos].transform(m.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale), pos);
+                    matrixstack[matrixpos].transform(m.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale*animmodel::sizescale), pos);
                     d.verts[vert].pos.add(pos);
                 }
             }
@@ -1068,7 +1068,7 @@ struct skelmodel : animmodel
                 {
                     int vert = j.vert[k];
                     vec pos;
-                    matrixstack[matrixpos].transform(q.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale), pos);
+                    matrixstack[matrixpos].transform(q.transform(ragdoll->verts[vert].pos).add(p->translate).mul(p->model->scale*animmodel::sizescale), pos);
                     d.verts[vert].pos.add(pos);
                 }
             }
@@ -1094,7 +1094,7 @@ struct skelmodel : animmodel
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale*animmodel::sizescale).sub(p->translate);
                 sc.mdata[b.interpindex].transposemul(d.tris[j.tri], pos, j.orient);
             }
             loopv(ragdoll->reljoints)
@@ -1116,7 +1116,7 @@ struct skelmodel : animmodel
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale*animmodel::sizescale).sub(p->translate);
                 matrix3x4 m;
                 m.transposemul(d.tris[j.tri], pos, j.orient);
                 sc.bdata[b.interpindex] = dualquat(m);
@@ -1134,7 +1134,7 @@ struct skelmodel : animmodel
         void concattagtransform(part *p, int frame, int i, const matrix3x4 &m, matrix3x4 &n)
         {
             matrix3x4 t = bones[tags[i].bone].base;
-            t.translate(vec(p->translate).mul(p->model->scale));
+            t.translate(vec(p->translate).mul(p->model->scale*animmodel::sizescale));
             n.mul(m, t);
         }
 
@@ -1147,9 +1147,9 @@ struct skelmodel : animmodel
                 l.matrix = t;
             }
             else l.matrix = m;
-            l.matrix[12] = (l.matrix[12] + p->translate.x) * p->model->scale;
-            l.matrix[13] = (l.matrix[13] + p->translate.y) * p->model->scale;
-            l.matrix[14] = (l.matrix[14] + p->translate.z) * p->model->scale;
+            l.matrix[12] = (l.matrix[12] + p->translate.x) * p->model->scale*animmodel::sizescale;
+            l.matrix[13] = (l.matrix[13] + p->translate.y) * p->model->scale*animmodel::sizescale;
+            l.matrix[14] = (l.matrix[14] + p->translate.z) * p->model->scale*animmodel::sizescale;
         }
 
         void calctags(skelcacheentry &sc, part *p)
@@ -1269,7 +1269,7 @@ struct skelmodel : animmodel
 
         static const int MAXVBOCACHE = 16;
         vbocacheentry vbocache[MAXVBOCACHE];
- 
+
         ushort *edata;
         GLuint ebuf;
         bool vnorms, vtangents;
@@ -1459,12 +1459,12 @@ struct skelmodel : animmodel
             {
                 if(vnorms || vtangents)
                 {
-                    if(!enablenormals) 
+                    if(!enablenormals)
                     {
                         glEnableClientState(GL_NORMAL_ARRAY);
                         enablenormals = true;
                     }
-                    if(lastnbuf!=lastvbuf) 
+                    if(lastnbuf!=lastvbuf)
                     {
                         glNormalPointer(GL_FLOAT, vertsize, &vverts->norm);
                         lastnbuf = lastvbuf;
@@ -1472,18 +1472,18 @@ struct skelmodel : animmodel
                 }
                 else if(enablenormals) disablenormals();
 
-                if(!enabletc) 
+                if(!enabletc)
                 {
                     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                     enabletc = true;
                 }
-                if(lasttcbuf!=lastvbuf) 
+                if(lasttcbuf!=lastvbuf)
                 {
                     glTexCoordPointer(2, GL_FLOAT, vertsize, &vverts->u);
                     lasttcbuf = lastnbuf;
                 }
             }
-            if(!sc || !skel->usegpuskel) 
+            if(!sc || !skel->usegpuskel)
             {
                 if(enablebones) disablebones();
                 return;
@@ -1681,7 +1681,7 @@ struct skelmodel : animmodel
                     }
                 }
                 if(!skel->usegpuskel && vc.owner!=owner)
-                { 
+                {
                     vc.owner = owner;
                     (animcacheentry &)vc = sc;
                     loopv(meshes)
@@ -1705,7 +1705,7 @@ struct skelmodel : animmodel
 
             if(as->anim&ANIM_RAGDOLL && skel->ragdoll && !d->ragdoll)
             {
-                d->ragdoll = new ragdolldata(skel->ragdoll, p->model->scale);
+                d->ragdoll = new ragdolldata(skel->ragdoll, p->model->scale*animmodel::sizescale);
                 if(matskel) skel->initmatragdoll(*d->ragdoll, sc, p);
                 else skel->initragdoll(*d->ragdoll, sc, p);
                 d->ragdoll->init(d);
@@ -1791,8 +1791,8 @@ struct skelmodel : animmodel
     int linktype(animmodel *m) const
     {
         return type()==m->type() &&
-            ((skelmeshgroup *)parts[0]->meshes)->skel == ((skelmeshgroup *)m->parts[0]->meshes)->skel ? 
-                LINK_REUSE : 
+            ((skelmeshgroup *)parts[0]->meshes)->skel == ((skelmeshgroup *)m->parts[0]->meshes)->skel ?
+                LINK_REUSE :
                 LINK_TAG;
     }
 };

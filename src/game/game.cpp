@@ -25,8 +25,8 @@ namespace game
 	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
-	VARP(dynlightentities, 0, 2, 2);
-	FVARP(playersfade, 0, 1, 1);
+	VARP(dynlightents, 0, 2, 2);
+	FVARP(playerblend, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonfov, 90, 120, 150);
@@ -1544,41 +1544,47 @@ namespace game
 		}
 	}
 
-	float showtranslucent(gameent *d, bool third = true, bool full = false)
+	float deadscale(gameent *d, float amt = 1)
 	{
-		float total = full ? 1.f : (d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playersfade);
-		if(d->state == CS_ALIVE)
-		{
-			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
-			if(millis > 0) total = (1.f-(float(millis)/float(spawnprotecttime)))*total;
-		}
-		else if(d->state == CS_DEAD || d->state == CS_WAITING)
+		float total = amt;
+		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			int len = m_spawndelay(gamemode, mutators);
 			if(len)
 			{
-				int interval = full ? len : min(len/3, 1000), over = full ? 0 : max(len-interval, 0), millis = lastmillis-d->lastdeath;
-				if(millis <= len) { if(millis >= over) total = (1.f-(float(millis-over)/float(interval)))*total; }
-				else total = 0.f;
+				int interval = min(len/3, 1000), over = max(len-interval, 0), millis = lastmillis-d->lastdeath;
+				if(millis <= len) { if(millis >= over) total *= 1.f-(float(millis-over)/float(interval)); }
+				else total = 0;
 			}
 		}
-		if(d == player1 && inzoom())
+		return total;
+	}
+
+	float transscale(gameent *d, bool third = true)
+	{
+		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
+		if(d->state == CS_ALIVE)
 		{
-			int frame = lastmillis-lastzoom;
-			float pc = frame <= zoomtime ? float(frame)/float(zoomtime) : 1.f;
-			if(!zooming) pc = 1.f-pc;
-			total *= 1.f-pc;
+			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
+			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotecttime));
+			if(d == player1 && inzoom())
+			{
+				int frame = lastmillis-lastzoom;
+				float pc = frame <= zoomtime ? float(frame)/float(zoomtime) : 1.f;
+				total *= zooming ? 1.f-pc : pc;
+			}
 		}
+		else total = deadscale(d, total);
 		return total;
 	}
 
 	void adddynlights()
 	{
-		if(dynlightentities)
+		if(dynlightents)
 		{
 			projs::adddynlights();
 			entities::adddynlights();
-			if(dynlightentities > 1)
+			if(dynlightents > 1)
 			{
 				if(m_ctf(gamemode)) ctf::adddynlights();
 				if(m_stf(gamemode)) stf::adddynlights();
@@ -1588,7 +1594,7 @@ namespace game
 				gameent *d = NULL;
 				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
 				{
-					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); if(pc > 1.f) pc = 2.f-pc;
+					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); pc = deadscale(d, pc > 1.f ? 2.f-pc : pc);
 					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.2f), 0.125f*pc));
 				}
 			}
@@ -1607,7 +1613,7 @@ namespace game
 				anims.add(i);
 	}
 
-	void renderclient(gameent *d, bool third, float trans, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
+	void renderclient(gameent *d, bool third, float trans, float size, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		const char *mdl = "";
 		if(d->aitype <= AI_BOT)
@@ -1723,10 +1729,10 @@ namespace game
         if(early) flags |= MDL_NORENDER;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
 		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
-		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, trans);
+		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, trans, size);
 	}
 
-	void renderplayer(gameent *d, bool third, float trans, bool early = false)
+	void renderplayer(gameent *d, bool third, float trans, float size, bool early = false)
 	{
 		if(d->state == CS_SPECTATOR) return;
 #if 0 // not working great?
@@ -1886,7 +1892,7 @@ namespace game
         		a[ai++] = modelattach("tag_rfoot", &d->rfoot);
         	}
         }
-        renderclient(d, third, trans, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
+        renderclient(d, third, trans, 1 /*size*/, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	void rendercheck(gameent *d)
@@ -1900,7 +1906,7 @@ namespace game
 	{
 		startmodelbatches();
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, showtranslucent(d, true));
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, transscale(d, true), deadscale(d));
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
@@ -1916,9 +1922,9 @@ namespace game
     {
     	if(rendernormally && early) player1->head = player1->torso = player1->muzzle = player1->waist = player1->lfoot = player1->rfoot = vec(-1, -1, -1);
         if((thirdpersonview() || !rendernormally))
-			renderplayer(player1, true, showtranslucent(player1, thirdpersonview(true)), early);
+			renderplayer(player1, true, transscale(player1, thirdpersonview(true)), deadscale(player1), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
-            renderplayer(player1, false, showtranslucent(player1, false), early);
+            renderplayer(player1, false, transscale(player1, false), deadscale(player1), early);
 		if(rendernormally && early) rendercheck(player1);
     }
 
