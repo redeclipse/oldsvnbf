@@ -842,6 +842,7 @@ namespace game
 
     void preload()
     {
+		maskpackagedirs(~PACKAGEDIR_OCTA);
     	int n = m_fight(gamemode) && m_team(gamemode, mutators) ? numteams(gamemode, mutators)+1 : 1;
     	loopi(n)
     	{
@@ -853,6 +854,7 @@ namespace game
         entities::preload();
 		if(m_edit(gamemode) || m_stf(gamemode)) stf::preload();
         if(m_edit(gamemode) || m_ctf(gamemode)) ctf::preload();
+		maskpackagedirs(~0);
     }
 
 	void resetmap(bool empty) // called just before a map load
