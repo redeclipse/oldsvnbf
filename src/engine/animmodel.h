@@ -496,7 +496,7 @@ struct animmodel : model
         {
             matrix3x4 t = m;
             t.translate(translate);
-            t.scale(model->scale*sizescale);
+            t.scale(model->scale);
             meshes->calcbb(frame, bbmin, bbmax, t);
             loopv(links)
             {
@@ -510,7 +510,7 @@ struct animmodel : model
         {
             matrix3x4 t = m;
             t.translate(translate);
-            t.scale(model->scale*sizescale);
+            t.scale(model->scale);
             meshes->gentris(frame, skins, tris, t);
             loopv(links)
             {
