@@ -1088,13 +1088,15 @@ struct skelmodel : animmodel
         {
             if(!sc.mdata) sc.mdata = new matrix3x4[numinterpbones];
             if(lastsdata == sc.mdata) lastsdata = NULL;
+            vec trans = d.center;
+            trans.div(p->model->scale).add(p->translate);
             loopv(ragdoll->joints)
             {
                 const ragdollskel::joint &j = ragdoll->joints[i];
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale).sub(trans);
                 sc.mdata[b.interpindex].transposemul(d.tris[j.tri], pos, j.orient);
             }
             loopv(ragdoll->reljoints)
@@ -1110,13 +1112,15 @@ struct skelmodel : animmodel
         {
             if(!sc.bdata) sc.bdata = new dualquat[numinterpbones];
             if(lastsdata == sc.bdata) lastsdata = NULL;
+            vec trans = d.center;
+            trans.div(p->model->scale).add(p->translate);
             loopv(ragdoll->joints)
             {
                 const ragdollskel::joint &j = ragdoll->joints[i];
                 const boneinfo &b = bones[j.bone];
                 vec pos(0, 0, 0);
                 loopk(3) if(j.vert[k]>=0) pos.add(d.verts[j.vert[k]].pos);
-                pos.mul(j.weight/p->model->scale).sub(p->translate);
+                pos.mul(j.weight/p->model->scale).sub(trans);
                 matrix3x4 m;
                 m.transposemul(d.tris[j.tri], pos, j.orient);
                 sc.bdata[b.interpindex] = dualquat(m);
