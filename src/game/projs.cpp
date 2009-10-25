@@ -1004,10 +1004,8 @@ namespace projs
 	void update()
 	{
 		vector<projent *> canremove;
-		loopvrev(projs) if(projs[i]->ready())
-		{
-			if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS) canremove.add(projs[i]);
-		}
+		loopvrev(projs) if(projs[i]->ready() || (projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS))
+			canremove.add(projs[i]);
 		while(!canremove.empty() && canremove.length() > maxprojectiles)
 		{
 			int oldest = 0;

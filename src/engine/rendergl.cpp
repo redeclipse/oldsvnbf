@@ -1705,7 +1705,7 @@ void drawnoview()
 	}
 	y = h*3-FONTH/2;
 	y -= draw_textx("%s", w*3-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
-	y -= draw_textx("v%.2f (%s)", w*3-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
+	y -= draw_textx("v%.2f %s", w*3-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
 	glPopMatrix();
 
     glDisable(GL_BLEND);

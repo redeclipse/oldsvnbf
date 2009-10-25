@@ -99,8 +99,8 @@ namespace game
 	extern void loadworld(stream *f, int maptype);
 	extern void saveworld(stream *f);
 	extern int localplayers();
-	extern char *gametitle();
-	extern char *gametext();
+	extern const char *gametitle();
+	extern const char *gametext();
 	extern int numanims();
 	extern void findanims(const char *pattern, vector<int> &anims);
 	extern void render();
@@ -128,7 +128,7 @@ namespace server
 	extern void queryreply(ucharbuf &req, ucharbuf &p);
 	extern void serverupdate();
 	extern const char *gameid();
-	extern char *gamename(int mode, int muts);
+	extern const char *gamename(int mode, int muts);
 	extern void modecheck(int *mode, int *muts);
 	extern int gamever();
 	extern const char *pickmap(const char *suggest = NULL);
