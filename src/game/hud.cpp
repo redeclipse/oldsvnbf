@@ -1239,14 +1239,15 @@ namespace hud
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])
 				{
-					float fade = blend*inventoryblend, size = s, skew = 1.f;
+					float fade = blend*inventoryblend, size = s, skew = 0.f;
 					if(game::player1->weapstate[i] == WEAP_S_SWITCH || game::player1->weapstate[i] == WEAP_S_PICKUP)
 					{
 						float amt = clamp(float(lastmillis-game::player1->weaplast[i])/float(game::player1->weapwait[i]), 0.f, 1.f);
 						if(i != game::player1->weapselect) skew = game::player1->hasweap(i, sweap) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt;
 						else skew = game::player1->weapstate[i] == WEAP_S_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew));
 					}
-					else if(i != game::player1->weapselect) skew = inventoryskew;
+					else if(game::player1->hasweap(i, sweap)) skew = i != game::player1->weapselect ? inventoryskew : 1.f;
+					else continue;
 					bool instate = (i == game::player1->weapselect || game::player1->weapstate[i] != WEAP_S_PICKUP);
 					float r = 1.f, g = 1.f, b = 1.f;
 					if(teamwidgets >= (inventorycolour ? 2 : 1)) skewcolour(r, g, b);
