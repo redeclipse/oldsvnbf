@@ -490,8 +490,12 @@ namespace game
 				{
 					vec p = d->headpos();
 					p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-					if(!kidmode && bloodscale > 0 && d->aitype != AI_TURRET)
-						part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
+					if(d->aitype != AI_TURRET)
+					{
+						if(!kidmode && bloodscale > 0)
+							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
+						else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 50, DECAL_STAIN, int(d->radius*4));
+					}
 					if(showdamageabovehead > (d != player1 ? 0 : 1))
 					{
 						string ds;
@@ -772,7 +776,7 @@ namespace game
 			if(showobitdists) announce(anc, target, d, "\fs\fw%s\fS (@\fs\fc%.2f\fSm)", d->obit, actor->o.dist(d->o)/8.f);
 			else announce(anc, target, d, "\fw%s", d->obit);
 		}
-		if(!kidmode && bloodscale > 0 && gibscale > 0)
+		if(gibscale > 0)
 		{
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs+1)*gibscale);
