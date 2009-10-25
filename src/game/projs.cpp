@@ -253,7 +253,7 @@ namespace projs
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
 					proj.weight = 125.f;
-					proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-21));
+					proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
 				} // otherwise fall through
@@ -287,7 +287,7 @@ namespace projs
 				proj.weight = 150.f;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
-				proj.vel.add(vec(rnd(40)-21, rnd(40)-21, rnd(40)-11));
+				proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
 				break;
 			}
 			default: break;
@@ -646,7 +646,7 @@ namespace projs
 					part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 					if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 					{
-						part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 50, DECAL_BLOOD);
+						part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 100, DECAL_BLOOD);
 						proj.lasteffect = lastmillis;
 					}
 					break;
@@ -666,7 +666,7 @@ namespace projs
 			proj.lifesize = 1;
 			if(lastmillis-proj.lasteffect >= m_speedtime(game::bloodfade/10) && proj.lifetime >= min(proj.lifemillis, 1000))
 			{
-				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 50, DECAL_BLOOD);
+				part_create(PART_BLOOD, m_speedtime(game::bloodfade), proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 100, DECAL_BLOOD);
 				proj.lasteffect = lastmillis;
 			}
 		}

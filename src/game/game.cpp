@@ -493,7 +493,7 @@ namespace game
 					if(d->aitype != AI_TURRET)
 					{
 						if(!kidmode && bloodscale > 0)
-							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 50, DECAL_BLOOD, int(d->radius*4));
+							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 100, DECAL_BLOOD, int(d->radius*4));
 						else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 50, DECAL_STAIN, int(d->radius*4));
 					}
 					if(showdamageabovehead > (d != player1 ? 0 : 1))
