@@ -693,9 +693,11 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
         }
         else
         {
+            center.mul(size);
             center.rotate_around_z((-180-yaw)*RAD);
             center.add(o);
         }
+        radius *= size;
         if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
 		if(flags&MDL_CULL_VFC)
 		{
@@ -760,6 +762,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 			vec center, radius;
 			if(showboundingbox==1) m->collisionbox(0, center, radius);
 			else m->boundbox(0, center, radius);
+            center.mul(size);
+            radius.mul(size);
 			rotatebb(center, radius, int(yaw));
 			center.add(o);
 			render3dbox(center, radius.z, radius.z, radius.x, radius.y);
@@ -851,7 +855,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
 
     if(shadow && !reflecting && refracting<=0)
     {
-        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, d && d->ragdoll ? center : o, d ? d->radius*size : max(bbradius.x, bbradius.y), trans);
+        renderblob(flags&MDL_DYNSHADOW ? BLOB_DYNAMIC : BLOB_STATIC, d && d->ragdoll ? center : o, (d ? d->radius : max(bbradius.x, bbradius.y)) * size, trans);
         flushblobs();
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }

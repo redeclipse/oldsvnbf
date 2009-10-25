@@ -451,9 +451,9 @@ struct vertmodel : animmodel
             }
             #undef ip_ai_tag
             #undef ip 
-            matrix[12] = (matrix[12] + p->translate.x) * p->model->scale;
-            matrix[13] = (matrix[13] + p->translate.y) * p->model->scale;
-            matrix[14] = (matrix[14] + p->translate.z) * p->model->scale;
+            matrix[12] = (matrix[12] + p->translate.x) * p->model->scale * sizescale;
+            matrix[13] = (matrix[13] + p->translate.y) * p->model->scale * sizescale;
+            matrix[14] = (matrix[14] + p->translate.z) * p->model->scale * sizescale;
             matrix[3] = matrix[7] = matrix[11] = 0.0f;
             matrix[15] = 1.0f;
         }
