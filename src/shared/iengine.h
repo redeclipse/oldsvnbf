@@ -187,6 +187,7 @@ enum
     PT_GLARE	= 1<<14,	// use glare when available
     PT_SOFT		= 1<<15,	// use soft quad rendering when available
     PT_ONTOP	= 1<<16,	// render on top of everything else, remove depth testing
+    PT_FEW      = 1<<17,    // allocate smaller number of particles
 	PT_FLIP		= PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
