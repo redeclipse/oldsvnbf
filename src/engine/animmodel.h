@@ -947,6 +947,11 @@ struct animmodel : model
                 campos.rotate_around_z((-yaw-180.0f)*RAD);
                 campos.rotate_around_x(roll*RAD);
             }
+            else
+            {
+                fogplane.offset += d->ragdoll->center.z;
+                campos.sub(d->ragdoll->center);
+            }
 
             if(envmapped()) envmaptmu = 2;
             else if(a) for(int i = 0; a[i].tag; i++) if(a[i].m && a[i].m->envmapped())
