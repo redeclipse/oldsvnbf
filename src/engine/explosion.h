@@ -429,7 +429,7 @@ struct fireballrenderer : sharedlistrenderer
                   psize = (p->size + pmax * size)*WOBBLE;
             if(2*(p->size + pmax)*WOBBLE < depthfxblend ||
                (!depthfxtex.highprecision() && !depthfxtex.emulatehighprecision() && psize > depthfxscale - depthfxbias) ||
-               isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+               isfoggedsphere(psize, p->o)) continue;
 
             e.o = p->o;
             e.radius = e.xradius = e.yradius = e.height = e.aboveeye = psize;
@@ -474,7 +474,7 @@ struct fireballrenderer : sharedlistrenderer
               size = p->fade ? float(ts)/p->fade : 1,
               psize = p->size + pmax * size;
 
-        if(isvisiblesphere(psize*WOBBLE, p->o) >= VFC_FOGGED) return;
+        if(isfoggedsphere(psize*WOBBLE, p->o)) return;
 
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
