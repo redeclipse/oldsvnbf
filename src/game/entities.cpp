@@ -2212,7 +2212,7 @@ namespace entities
 		part_portal(e.o, radius, yaw, e.attrs[1], PART_TELEPORT, 0, colour);
 	}
 
-	void drawparticle(gameentity &e, const vec &o, int idx, bool spawned)
+	void drawparticle(gameentity &e, const vec &o, int idx, bool spawned, float skew)
 	{
 		switch(e.type)
 		{
@@ -2250,13 +2250,7 @@ namespace entities
 		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f;
-		if(item)
-		{
-			float halo = (e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc;
-			int millis = lastmillis-e.lastspawn;
-			if(millis < 1000) halo *= millis/1000.f;
-			part_create(PART_HINT_SOFT, 1, o, colour, halo);
-		}
+		if(item) part_create(PART_HINT_SOFT, 1, o, colour, max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc)*skew, 0.25f));
 		if((item && showentdescs >= 3) || notitem)
 		{
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
@@ -2285,14 +2279,22 @@ namespace entities
 					break;
 			}
 			if(e.o.squaredist(camera1->o) > maxdist) continue;
-			drawparticle(e, e.o, i, e.spawned);
+			int millis = lastmillis-e.lastspawn; float skew = 1;
+			if(millis < 1000) skew *= millis/1000.f;
+			drawparticle(e, e.o, i, e.spawned, skew);
 		}
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
 			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id)) continue;
 			gameentity &e = *(gameentity *)ents[proj.id];
-			drawparticle(e, proj.o, -1, proj.ready());
+			float skew = 1;
+			if(proj.lifemillis)
+			{
+				int interval = min(proj.lifemillis, 1000);
+				if(proj.lifetime < interval) skew *= float(proj.lifetime)/float(interval);
+			}
+			drawparticle(e, proj.o, -1, proj.ready(), skew);
 		}
 	}
 }
