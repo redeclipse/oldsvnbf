@@ -213,7 +213,7 @@ namespace hud
 	VARP(editradarnoisy, 0, 1, 2);
 
 	VARP(motionblurfx, 0, 1, 2); // 0 = off, 1 = on, 2 = override
-	FVARP(motionblurmin, 0, 0.05f, 1); // minimum
+	FVARP(motionblurmin, 0, 0.0f, 1); // minimum
 	FVARP(motionblurmax, 0, 0.75f, 1); // maximum
 	FVARP(motionbluramt, 0, 0.5f, 1); // used for override
 

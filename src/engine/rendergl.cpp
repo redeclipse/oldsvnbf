@@ -548,6 +548,10 @@ void gl_checkextensions()
         }
     }
 
+    // on DX9 or above class cards with decent performance enable motion blur
+    extern int motionblur;
+    if(hasVP && hasFP && !avoidshaders) motionblur = 1;
+
     GLint val;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
     hwtexsize = val;
@@ -966,7 +970,7 @@ void cleanupmotionblur()
     lastmotion = 0;
 }
 
-VARFP(motionblur, 0, 1, 1, { if(!motionblur) cleanupmotionblur(); });
+VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
 VARP(motionblurmillis, 1, 5, 1000);
 FVARP(motionblurscale, 0, 1, 1);
 
@@ -979,7 +983,21 @@ void addmotionblur()
         if(!motiontex) glGenTextures(1, &motiontex);
         motionw = screen->w;
         motionh = screen->h;
+        lastmotion = 0;
         createtexture(motiontex, motionw, motionh, NULL, 3, 0, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
+    }
+
+    float amount = lastmotion ? pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0;
+    if(amount <= 0)
+    {
+        if(lastmillis - lastmotion >= motionblurmillis)
+        {
+            lastmotion = lastmillis - lastmillis%motionblurmillis;
+
+            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, motiontex);
+            glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
+        }
+        return;
     }
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, motiontex);
@@ -1000,7 +1018,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, lastmotion ? pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
+    glColor4f(1, 1, 1, amount);
     glBegin(GL_QUADS);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
