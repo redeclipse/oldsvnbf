@@ -909,7 +909,13 @@ struct animmodel : model
             matrixstack[0].rotate_around_z((yaw+180)*RAD);
             if(roll) matrixstack[0].rotate_around_x(-roll*RAD);
         }
-        else pitch = 0;
+        else 
+        {
+            matrixstack[0].translate(d->ragdoll->center);
+            pitch = 0;
+        }
+
+        sizescale = size;
 
         if(anim&ANIM_NORENDER)
         {
@@ -927,7 +933,6 @@ struct animmodel : model
             }
 
             transparent = trans;
-            sizescale = size;
             lightcolor = color;
 
             fogplane = plane(0, 0, 1, -reflectz);

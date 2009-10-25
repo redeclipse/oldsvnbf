@@ -1892,7 +1892,7 @@ namespace game
         		a[ai++] = modelattach("tag_rfoot", &d->rfoot);
         	}
         }
-        renderclient(d, third, trans, 1 /*size*/, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
+        renderclient(d, third, trans, size, team, a[0].tag ? a : NULL, secondary, animflags, animdelay, lastaction, early);
 	}
 
 	void rendercheck(gameent *d)
