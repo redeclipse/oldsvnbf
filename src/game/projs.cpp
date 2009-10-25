@@ -167,7 +167,7 @@ namespace projs
 
     void bounceeffect(projent &proj)
     {
-		if(proj.movement >= 2.f && !proj.lastbounce) switch(proj.projtype)
+		if(proj.movement > 1.f && (!proj.lastbounce || lastmillis-proj.lastbounce > 500)) switch(proj.projtype)
         {
             case PRJ_SHOT:
             {
@@ -176,8 +176,7 @@ namespace projs
                     case WEAP_SHOTGUN: case WEAP_SMG:
                     {
                         part_splash(PART_SPARK, 5, m_speedtime(250), proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 10, 0, 16);
-                        if(!proj.lastbounce)
-                            adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAP_SHOTGUN ? 3.f : 1.5f);
+                        adddecal(DECAL_BULLET, proj.o, proj.norm, proj.weap == WEAP_SHOTGUN ? 3.f : 1.5f);
                         break;
                     }
                     case WEAP_FLAMER:
@@ -189,15 +188,14 @@ namespace projs
                     default: break;
                 }
 				int vol = int(255*(1.f-proj.lifespan));
-                if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
+				if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
                 break;
             }
             case PRJ_GIBS:
             {
             	if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
             	{
-					if(!proj.lastbounce)
-						adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
+					adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
 					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
 					break;
@@ -344,9 +342,9 @@ namespace projs
 			}
 			if((!hitplayer || hitplayer != proj.owner) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
 			{
+				bounceeffect(proj);
 				if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 				{
-					bounceeffect(proj);
 					reflect(proj, proj.norm);
 					proj.o.add(vec(proj.norm).mul(proj.radius)); // offset from surface slightly to avoid initial collision
 					proj.movement = 0;
@@ -833,9 +831,9 @@ namespace projs
 				}
 				proj.norm = wall;
 			}
+			bounceeffect(proj);
             if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
 			{
-                bounceeffect(proj);
 				reflect(proj, proj.norm);
 				proj.movement = 0;
 				proj.lastbounce = lastmillis;
@@ -872,10 +870,9 @@ namespace projs
 				}
             	proj.norm = hitsurface;
             }
-
+            bounceeffect(proj);
             if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
-                bounceeffect(proj);
                 reflect(proj, proj.norm);
                 proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
                 proj.movement = 0;
