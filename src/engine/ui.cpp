@@ -107,7 +107,7 @@ struct gui : guient
 			}
             text_(name, x1, y1, tcolor, visible());
 		}
-		tx += w + guibound[0]*3;
+		tx += w + guibound[0]*4;
 		gui::popfont();
 	}
 
@@ -567,7 +567,7 @@ struct gui : guient
             if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
         }
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
-        vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
+        vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
         glColor3fv(color.v);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(x,    y);
@@ -605,8 +605,10 @@ struct gui : guient
 		if(overlaid)
 		{
 			if(!overlaytex) overlaytex = textureload(guioverlaytex, 3, true, false);
+			color = hit ? vec(0.25f, 0.25f, 0.25f) : vec(1, 1, 1);
+			glColor3fv(color.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
-            glColor3fv(light.v);
+            glColor3f(1, 1, 1);
 			glBegin(GL_QUADS);
 			rect_(x, y, xs, ys, 0);
 			glEnd();
@@ -638,13 +640,13 @@ struct gui : guient
 			glBegin(GL_QUADS);
 			if(percent < 0.99f)
 			{
-				glColor4f(light.x, light.y, light.z, 0.375f);
+				glColor4f(1, 1, 1, 0.375f);
 				if(ishorizontal())
 					rect_(curx + guibound[0]/2 - size, cury, size*2, ysize, 0);
 				else
 					rect_(curx, cury + guibound[0]/2 - size, xsize, size*2, 1);
 			}
-			glColor3fv(light.v);
+			glColor3f(1, 1, 1);
 			if(ishorizontal())
 				rect_(curx + guibound[0]/2 - size, cury + ysize*(1-percent), size*2, ysize*percent, 0);
 			else
@@ -688,7 +690,6 @@ struct gui : guient
 
     static float basescale, maxscale;
 	static bool passthrough;
-	static vec light;
 
 	void adjustscale()
 	{
@@ -727,7 +728,6 @@ struct gui : guient
 			glPushMatrix();
 			glTranslatef(origin.x, origin.y, origin.z);
 			glScalef(scale.x, scale.y, scale.z);
-			light = vec(1, 1, 1);
 		}
 	}
 
@@ -766,7 +766,6 @@ TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
 vector<gui::list> gui::lists;
 float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;
 bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
-vec gui::light;
 int gui::curdepth, gui::fontdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
