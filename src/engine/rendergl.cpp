@@ -990,13 +990,7 @@ void addmotionblur()
     float amount = lastmotion ? pow(hud::motionblur(motionblurscale), max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0;
     if(amount <= 0)
     {
-        if(lastmillis - lastmotion >= motionblurmillis)
-        {
-            lastmotion = lastmillis - lastmillis%motionblurmillis;
-
-            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, motiontex);
-            glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
-        }
+        lastmotion = 0;
         return;
     }
 
