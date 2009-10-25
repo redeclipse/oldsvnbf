@@ -1001,6 +1001,7 @@ static partrenderer *parts[] =
 	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
 	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
