@@ -108,8 +108,8 @@ namespace game
 
 	void start() { }
 
-	char *gametitle() { return server::gamename(gamemode, mutators); }
-	char *gametext() { return mapname; }
+	const char *gametitle() { return connected() ? server::gamename(gamemode, mutators) : "ready"; }
+	const char *gametext() { return connected() ? mapname : "not connected"; }
 
 	bool thirdpersonview(bool viewonly)
 	{

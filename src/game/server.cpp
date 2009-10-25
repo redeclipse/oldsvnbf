@@ -504,8 +504,13 @@ namespace server
 
     const char *gameid() { return GAMEID; }
     int gamever() { return GAMEVERSION; }
-    char *gamename(int mode, int muts)
+    const char *gamename(int mode, int muts)
     {
+    	if(!m_game(mode))
+    	{
+			mode = G_DEATHMATCH;
+			muts = gametype[mode].implied;
+    	}
     	static string gname;
     	gname[0] = 0;
     	if(gametype[mode].mutators && muts) loopi(G_M_NUM)

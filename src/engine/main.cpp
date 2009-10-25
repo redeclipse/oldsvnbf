@@ -1,4 +1,5 @@
 // main.cpp: initialisation & main loop
+// main.cpp: initialisation & main loop
 
 #include "engine.h"
 
@@ -29,7 +30,7 @@ void showcursor(bool show)
 void setcaption(const char *text)
 {
     static string caption = "";
-	defformatstring(newcaption)("%s v%.2f (%s)%s%s - %s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "", ENG_URL);
+	defformatstring(newcaption)("%s v%.2f %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
     if(strcmp(caption, newcaption))
     {
         copystring(caption, newcaption);
@@ -128,8 +129,8 @@ bool initwarning(const char *desc, int level, int type)
 #define SCR_MINH 200
 #define SCR_MAXW 10000
 #define SCR_MAXH 10000
-#define SCR_DEFAULTW 1024
-#define SCR_DEFAULTH 768
+#define SCR_DEFAULTW 640
+#define SCR_DEFAULTH 480
 VARF(scr_w, SCR_MINW, -1, SCR_MAXW, initwarning("screen resolution"));
 VARF(scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 VARF(colorbits, 0, 0, 32, initwarning("color depth"));
