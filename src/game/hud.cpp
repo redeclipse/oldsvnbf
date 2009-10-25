@@ -199,10 +199,10 @@ namespace hud
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 1, 2);
 
-	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
-	VARP(radardamagetime, 1, 500, INT_MAX-1);
+	VARP(radardamage, 0, 1, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
+	VARP(radardamagetime, 1, 1000, INT_MAX-1);
 	VARP(radardamagefade, 1, 3000, INT_MAX-1);
-	FVARP(radardamagesize, 0, 2.5f, 1000);
+	FVARP(radardamagesize, 0, 4.f, 1000);
 	FVARP(radardamageblend, 0, 1.f, 1);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
 	VARP(radardamagemax, 1, 100, INT_MAX-1);
@@ -231,8 +231,7 @@ namespace hud
 			case 1:
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
-				int heal = m_maxhealth(game::gamemode, game::mutators);
-				amt += max(game::player1->state == CS_ALIVE ? min(hud::damageresidue, heal)/float(heal) : 1.f, 1.f-(max(game::player1->health,0)/float(heal)))*0.65f;
+				amt += max(game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f, 1.f-(max(game::player1->health, 0)/100.f))*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
 				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
@@ -247,8 +246,8 @@ namespace hud
 
 	void damage(int n, const vec &loc, gameent *actor, int weap)
 	{
-		damageresidue = clamp(damageresidue+n, 0, m_maxhealth(game::gamemode, game::mutators)*2);
-		vec colour = kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0);
+		damageresidue = clamp(damageresidue+n, 0, 200);
+		vec colour = weap == WEAP_FLAMER || weap == WEAP_GRENADE ? vec(1.f, 0.35f, 0.0625f) : (kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0));
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
@@ -1087,23 +1086,24 @@ namespace hud
 			damageloc &d = damagelocs[i];
 			int millis = lastmillis-d.outtime;
 			if(millis >= radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
-			if(game::player1->state == CS_ALIVE)
+			if(game::player1->state == CS_ALIVE || (game::player1->state == CS_DEAD && game::player1->lastdeath))
 			{
-				float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f);
+				float fade = min(max(d.damage, radardamagemin)/float(radardamagemax-radardamagemin), 1.f),
+					size = clamp(fade*radardamagesize, min(radardamagesize*0.25f, 1.f), radardamagesize);
 				if(millis >= radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
 				else fade *= float(millis)/float(radardamagetime);
 				vec dir = vec(d.dir).normalize().rotate_around_z(-camera1->yaw*RAD);
 				if(radardamage >= 5)
 				{
 					gameent *a = game::getclient(d.attacker);
-					drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
+					drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
 				}
-				else drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
+				else drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
 			}
 		}
 		if(radardamage >= 2)
 		{
-			bool dead = game::player1->state == CS_DEAD || game::player1->state == CS_WAITING;
+			bool dead = (game::player1->state == CS_DEAD || game::player1->state == CS_WAITING) && game::player1->lastdeath;
 			if(dead && lastmillis-game::player1->lastdeath <= m_spawndelay(game::gamemode, game::mutators))
 			{
 				vec dir = vec(game::player1->o).sub(camera1->o).normalize().rotate_around_z(-camera1->yaw*RAD);
@@ -1465,8 +1465,7 @@ namespace hud
 
 	void drawdamage(int w, int h, int s, float blend)
 	{
-		int heal = m_maxhealth(game::gamemode, game::mutators);
-		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, heal)/float(heal) : 0.f);
+		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 0.f);
 		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
 		{
 			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
