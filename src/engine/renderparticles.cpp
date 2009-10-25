@@ -5,7 +5,8 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARFP(maxparticles, 16, 4096, INT_MAX-1, particleinit());
+VARFP(maxparticles, 10, 4000, 40000, particleinit());
+VARFP(fewparticles, 10, 100, 40000, particleinit());
 VARA(maxparticledistance, 256, 1024, INT_MAX-1);
 VARA(maxparticletrail, 256, 1024, INT_MAX-1);
 
@@ -1048,7 +1049,7 @@ void particleinit()
 	if(!particlenotextureshader) particlenotextureshader = lookupshaderbyname("particlenotexture");
 	loopi(sizeof(parts)/sizeof(parts[0]))
 	{
-		parts[i]->init(maxparticles);
+		parts[i]->init(parts[i]->type&PT_FEW ? min(fewparticles, maxparticles) : maxparticles);
 		parts[i]->preload();
 	}
 }
