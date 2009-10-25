@@ -120,6 +120,7 @@ namespace stf
 					{
 						float pc = (lastmillis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
 						fade += (1.f-fade)*amt;
+						skew += skew*0.125f*amt;
 					}
 				}
 				else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
