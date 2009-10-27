@@ -1232,6 +1232,8 @@ namespace entities
 		float score() const { return curscore + estscore; }
 	};
 
+    static inline float heapscore(linkq *q) { return q->score(); }
+
 	float route(int node, int goal, vector<int> &route, const avoidset &obstacles, gameent *d, bool check)
 	{
 		if(!ents.inrange(node) || !ents.inrange(goal) || ents[goal]->type != ents[node]->type || goal == node || ents[node]->links.empty())
@@ -1284,9 +1286,7 @@ namespace entities
 		int lowest = -1;
 		while(!queue.empty())
 		{
-			int q = queue.length()-1;
-			loopi(queue.length()-1) if(queue[i]->score() < queue[q]->score()) q = i;
-			linkq *m = queue.removeunordered(q);
+			linkq *m = queue.removeheap();
 			float prevscore = m->curscore;
 			m->curscore = -1.f;
 			int current = int(m-&nodes[0]);
@@ -1309,7 +1309,7 @@ namespace entities
 							lowest = link;
 						n.id = routeid;
 						if(link == goal) goto foundgoal;
-						queue.add(&n);
+						queue.addheap(&n);
 					}
 				}
 			}
