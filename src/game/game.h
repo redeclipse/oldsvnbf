@@ -958,6 +958,7 @@ struct gameent : dynent, gamestate
 		gamestate::mapchange();
 	}
 
+	void cleartags() { head = torso = muzzle = waist = lfoot = rfoot = vec(-1, -1, -1); }
 	void checktags()
 	{
 		if(muzzle == vec(-1, -1, -1))
