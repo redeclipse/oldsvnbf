@@ -1380,6 +1380,8 @@ namespace hud
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
+				glColor4f(r, g, b, fade*0.25f);
+				drawsized(x, y-sy-sw, sw);
 				glColor4f(r, g, b, fade);
 				drawslice(0, len, x+sw/2, y-sy-sw/2, sw/2);
 				if(inventoryimpulse >= 2)

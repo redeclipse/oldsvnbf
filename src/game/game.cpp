@@ -275,6 +275,63 @@ namespace game
 		}
 	}
 
+	float deadscale(gameent *d, float amt = 1, bool timechk = false)
+	{
+		float total = amt;
+		if(d->state == CS_DEAD || d->state == CS_WAITING)
+		{
+			int len = m_spawndelay(gamemode, mutators);
+			if(len && (!timechk || len > 1000))
+			{
+				int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
+				if(millis <= len) { if(millis >= over) total *= 1.f-(float(millis-over)/float(interval)); }
+				else total = 0;
+			}
+		}
+		return total;
+	}
+
+	float transscale(gameent *d, bool third = true)
+	{
+		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
+		if(d->state == CS_ALIVE)
+		{
+			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
+			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotecttime));
+			if(d == player1 && inzoom())
+			{
+				int frame = lastmillis-lastzoom;
+				float pc = frame <= zoomtime ? float(frame)/float(zoomtime) : 1.f;
+				total *= zooming ? 1.f-pc : pc;
+			}
+		}
+		else total = deadscale(d, total);
+		return total;
+	}
+
+	void adddynlights()
+	{
+		if(dynlightents)
+		{
+			projs::adddynlights();
+			entities::adddynlights();
+			if(dynlightents > 1)
+			{
+				if(m_ctf(gamemode)) ctf::adddynlights();
+				if(m_stf(gamemode)) stf::adddynlights();
+			}
+			if(fireburntime)
+			{
+				gameent *d = NULL;
+				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
+				{
+					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); pc = deadscale(d, pc > 1.f ? 2.f-pc : pc);
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.2f), 0.125f*pc));
+				}
+			}
+		}
+	}
+
 	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size)
 	{
 		regularshape(type, radius, colour, 21, 25, m_speedtime(fade), o, size, -vel, 0, vel*2);
@@ -303,7 +360,7 @@ namespace game
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 		{
 			float pc = lastmillis-d->lastfire >= fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
-			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*0.65f, -15, 0);
+			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), -15, 0);
 		}
 	}
 
@@ -1544,63 +1601,6 @@ namespace game
 		}
 	}
 
-	float deadscale(gameent *d, float amt = 1)
-	{
-		float total = amt;
-		if(d->state == CS_DEAD || d->state == CS_WAITING)
-		{
-			int len = m_spawndelay(gamemode, mutators);
-			if(len)
-			{
-				int interval = min(len/3, 1000), over = max(len-interval, 0), millis = lastmillis-d->lastdeath;
-				if(millis <= len) { if(millis >= over) total *= 1.f-(float(millis-over)/float(interval)); }
-				else total = 0;
-			}
-		}
-		return total;
-	}
-
-	float transscale(gameent *d, bool third = true)
-	{
-		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
-		if(d->state == CS_ALIVE)
-		{
-			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
-			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotecttime));
-			if(d == player1 && inzoom())
-			{
-				int frame = lastmillis-lastzoom;
-				float pc = frame <= zoomtime ? float(frame)/float(zoomtime) : 1.f;
-				total *= zooming ? 1.f-pc : pc;
-			}
-		}
-		else total = deadscale(d, total);
-		return total;
-	}
-
-	void adddynlights()
-	{
-		if(dynlightents)
-		{
-			projs::adddynlights();
-			entities::adddynlights();
-			if(dynlightents > 1)
-			{
-				if(m_ctf(gamemode)) ctf::adddynlights();
-				if(m_stf(gamemode)) stf::adddynlights();
-			}
-			if(fireburntime)
-			{
-				gameent *d = NULL;
-				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
-				{
-					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); pc = deadscale(d, pc > 1.f ? 2.f-pc : pc);
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.2f), 0.125f*pc));
-				}
-			}
-		}
-	}
-
 	VAR(animoverride, -1, 0, ANIM_MAX-1);
 	VAR(testanims, 0, 0, 1);
 
@@ -1906,25 +1906,24 @@ namespace game
 	{
 		startmodelbatches();
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, transscale(d, true), deadscale(d));
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, transscale(d, true), deadscale(d, 1, true));
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
         if(m_ctf(gamemode)) ctf::render();
         ai::render();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1)
-			d->head = d->torso = d->muzzle = d->waist = d->lfoot = d->rfoot = vec(-1, -1, -1);
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->cleartags();
 		endmodelbatches();
         if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) rendercheck(d);
 	}
 
     void renderavatar(bool early)
     {
-    	if(rendernormally && early) player1->head = player1->torso = player1->muzzle = player1->waist = player1->lfoot = player1->rfoot = vec(-1, -1, -1);
+    	if(rendernormally && early) player1->cleartags();
         if((thirdpersonview() || !rendernormally))
-			renderplayer(player1, true, transscale(player1, thirdpersonview(true)), deadscale(player1), early);
+			renderplayer(player1, true, transscale(player1, thirdpersonview(true)), deadscale(player1, 1, true), early);
         else if(!thirdpersonview() && player1->state == CS_ALIVE)
-            renderplayer(player1, false, transscale(player1, false), deadscale(player1), early);
+            renderplayer(player1, false, transscale(player1, false), deadscale(player1, 1, true), early);
 		if(rendernormally && early) rendercheck(player1);
     }
 

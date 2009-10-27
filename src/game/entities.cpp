@@ -1327,7 +1327,7 @@ namespace entities
 		}
 
 		if(verbose >= 3)
-			conoutf("\fdroute %d to %d (%d) generated %d nodes in %fs", node, goal, lowest, route.length(), (SDL_GetTicks()-routestart)/1000.0f);
+			conoutf("\fdroute %d to %d (%d) generated %d nodes (%d queued) in %.3fs", node, goal, lowest, route.length(), queue.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return score;
 	}
