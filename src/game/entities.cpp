@@ -1418,26 +1418,26 @@ namespace entities
 			// translate into our format
 			switch(f.type)
 			{
-				// 1	LIGHT			1	LIGHT
-				// 2	MAPMODEL		2	MAPMODEL
-				// 3	PLAYERSTART		3	PLAYERSTART
-				// 4	ENVMAP			4	ENVMAP
-				// 5	PARTICLES		5	PARTICLES
-				// 6	MAPSOUND		6	MAPSOUND
-				// 7	SPOTLIGHT		7	LIGHTFX
-				// 						8	SUNLIGHT
-				case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+				// LIGHT			-	LIGHT
+				// MAPMODEL			-	MAPMODEL
+				// PLAYERSTART		-	PLAYERSTART
+				// ENVMAP			-	ENVMAP
+				// PARTICLES		-	PARTICLES
+				// MAPSOUND			-	MAPSOUND
+				// SPOTLIGHT		-	LIGHTFX
+				// 					-	SUNLIGHT
+				case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
 				{
 					break;
 				}
 
-				// 8	I_SHELLS		9	WEAPON		WEAP_SHOTGUN
-				// 9	I_BULLETS		9	WEAPON		WEAP_SMG
-				// 10	I_ROCKETS		9	WEAPON		WEAP_PLASMA
-				// 11	I_ROUNDS		9	WEAPON		WEAP_RIFLE
-				// 12	I_GL			9	WEAPON		WEAP_GRENADE
-				// 13	I_CARTRIDGES	9	WEAPON		WEAP_PISTOL
-				case 8: case 9: case 10: case 11: case 12: case 13:
+				// I_SHELLS			-	WEAPON		WEAP_SHOTGUN
+				// I_BULLETS		-	WEAPON		WEAP_SMG
+				// I_ROCKETS		-	WEAPON		WEAP_PLASMA
+				// I_ROUNDS			-	WEAPON		WEAP_RIFLE
+				// I_GL				-	WEAPON		WEAP_GRENADE
+				// I_CARTRIDGES		-	WEAPON		WEAP_PISTOL
+				case 9: case 10: case 11: case 12: case 13: case 14:
 				{
 					int weap = f.type-8, weapmap[6] = {
 						WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_PISTOL
@@ -1452,8 +1452,8 @@ namespace entities
 					else f.type = NOTUSED;
 					break;
 				}
-				// 18	I_QUAD			9	WEAPON		WEAP_FLAMER
-				case 18:
+				// I_QUAD			-	WEAPON		WEAP_FLAMER
+				case 19:
 				{
 					f.type = WEAPON;
 					f.attrs[0] = WEAP_FLAMER;
@@ -1461,11 +1461,11 @@ namespace entities
 					break;
 				}
 
-				// 19	TELEPORT		10	TELEPORT
-				// 20	TELEDEST		10	TELEPORT (linked)
-				case 19: case 20:
+				// TELEPORT			-	TELEPORT
+				// TELEDEST			-	TELEPORT (linked)
+				case 20: case 21:
 				{
-					if(f.type == 20)
+					if(f.type == 21)
 					{
 						f.mark = f.attrs[1]+1; // needs translating later
 						f.attrs[1] = -1;
@@ -1479,41 +1479,41 @@ namespace entities
 					f.type = TELEPORT;
 					break;
 				}
-				// 21	MONSTER			11	NOTUSED
-				case 21:
+				// MONSTER			-	NOTUSED
+				case 22:
 				{
 					f.type = NOTUSED;
 					break;
 				}
-				// 22	CARROT			12	TRIGGER		0
-				case 22:
+				// CARROT			-	TRIGGER		0
+				case 23:
 				{
 					f.type = NOTUSED;
 					f.attrs[0] = f.attrs[1] = f.attrs[2] = f.attrs[3] = f.attrs[4] = 0;
 					break;
 				}
-				// 23	JUMPPAD			13	PUSHER
-				case 23:
+				// JUMPPAD			-	PUSHER
+				case 24:
 				{
 					f.type = PUSHER;
 					break;
 				}
-				// 24	BASE			14	FLAG		1:idx		TEAM_NEUTRAL
-				case 24:
+				// BASE				-	FLAG		1:idx		TEAM_NEUTRAL
+				case 25:
 				{
 					f.type = FLAG;
 					if(f.attrs[0] < 0) f.attrs[0] = 0;
 					f.attrs[1] = TEAM_NEUTRAL; // spawn as neutrals
 					break;
 				}
-				// 25	RESPAWNPOINT	15	CHECKPOINT
-				case 25:
+				// RESPAWNPOINT		-	CHECKPOINT
+				case 26:
 				{
 					f.type = CHECKPOINT;
 					break;
 				}
-				// 30	FLAG			14	FLAG		#			2:team
-				case 30:
+				// FLAG				-	FLAG		#			2:team
+				case 31:
 				{
 					f.type = FLAG;
 					f.attrs[0] = 0;
@@ -1521,14 +1521,14 @@ namespace entities
 					break;
 				}
 
-				// 14	I_HEALTH		-	NOTUSED
-				// 15	I_BOOST			-	NOTUSED
-				// 16	I_GREENARMOUR	-	NOTUSED
-				// 17	I_YELLOWARMOUR	-	NOTUSED
-				// 26	BOX				-	NOTUSED
-				// 27	BARREL			-	NOTUSED
-				// 28	PLATFORM		-	NOTUSED
-				// 29	ELEVATOR		-	NOTUSED
+				// I_HEALTH			-	NOTUSED
+				// I_BOOST			-	NOTUSED
+				// I_GREENARMOUR	-	NOTUSED
+				// I_YELLOWARMOUR	-	NOTUSED
+				// BOX				-	NOTUSED
+				// BARREL			-	NOTUSED
+				// PLATFORM		-	NOTUSED
+				// ELEVATOR		-	NOTUSED
 				default:
 				{
 					if(verbose) conoutf("\frWARNING: ignoring entity %d type %d", id, f.type);
