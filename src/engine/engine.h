@@ -708,8 +708,9 @@ extern uchar shouldsaveblendmap();
 // recorder
 namespace recorder
 {
-    void stop();
-    void capture();
+    extern void stop();
+    extern void capture();
+    extern void cleanup();
 }
 #endif // STANDALONE
 
