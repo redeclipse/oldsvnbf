@@ -818,11 +818,20 @@ namespace recorder
         if (file->soundfrequency > 0) Mix_SetPostMix(soundencoder, NULL);
     }
 
+    void cleanup()
+    {
+        if(scalefb) { glDeleteFramebuffers_(1, &scalefb); scalefb = 0; }
+        if(scaletex[0] || scaletex[1]) { glDeleteTextures(2, scaletex); memset(scaletex, 0, sizeof(scaletex)); }
+        scalew = scaleh = 0;
+        if(encodefb) { glDeleteFramebuffers_(1, &encodefb); encodefb = 0; }
+        if(encoderb) { glDeleteRenderbuffers_(1, &encoderb); encoderb = 0; }
+    }
+
     void stop()
     {
-        if (!file) return;
-        if (state == REC_OK) state = REC_USERHALT;
-        if (file->soundfrequency > 0) Mix_SetPostMix(NULL, NULL);
+        if(!file) return;
+        if(state == REC_OK) state = REC_USERHALT;
+        if(file->soundfrequency > 0) Mix_SetPostMix(NULL, NULL);
 
         SDL_LockMutex(videolock); // wakeup thread enough to kill it
         SDL_CondSignal(shouldencode);
@@ -830,27 +839,7 @@ namespace recorder
 
         SDL_WaitThread(thread, NULL); // block until thread is finished
 
-        if (scalefb)
-        {
-            glDeleteFramebuffers_(1, &scalefb);
-            scalefb = 0;
-        }
-        if (scaletex[0] || scaletex[1])
-        {
-            glDeleteTextures(2, scaletex);
-            memset(scaletex, 0, sizeof(scaletex));
-        }
-        scalew = scaleh = 0;
-        if (encodefb)
-        {
-            glDeleteFramebuffers_(1, &encodefb);
-            encodefb = 0;
-        }
-        if (encoderb)
-        {
-            glDeleteRenderbuffers_(1, &encoderb);
-            encoderb = 0;
-        }
+        cleanup();
 
         loopi(MAXVIDEOBUFFERS) videobuffers.data[i].cleanup();
         loopi(MAXSOUNDBUFFERS) soundbuffers.data[i].cleanup();

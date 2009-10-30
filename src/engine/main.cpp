@@ -389,6 +389,7 @@ void resetgl()
     extern void cleanupdepthfx();
     extern void cleanupshaders();
     extern void cleanupgl();
+    recorder::cleanup();
     cleanupva();
     cleanupparticles();
     cleanupmodels();
