@@ -2,7 +2,7 @@
 namespace hud
 {
 	const int NUMSTATS = 12;
-	int damageresidue = 0, hudwidth = 0,
+	int damageresidue = 0, hudwidth = 0, lastteam = 0,
 		laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	vector<int> teamkills;
 	scoreboard sb;
@@ -65,8 +65,8 @@ namespace hud
 
 	FVARP(noticeoffset, -1.f, 0.4f, 1.f);
 	FVARP(noticeblend, 0.f, 0.6f, 1.f);
+	VARP(noticetime, 0, 5000, INT_MAX-1);
 	VARP(obitnotices, 0, 2, 2);
-	VARP(obitnoticetime, 0, 5000, INT_MAX-1);
 	TVAR(inputtex, "textures/menu", 3);
 
 	VARP(teamwidgets, 0, 1, 3); // colour based on team
@@ -75,6 +75,7 @@ namespace hud
 	VARP(teamnotices, 0, 0, 1);
 	VARP(teamkillnum, 0, 3, INT_MAX-1);
 	VARP(teamkilltime, 0, 60, INT_MAX-1);
+	VARP(teamchanges, 0, 1, 1);
 
 	TVAR(underlaytex, "", 3);
 	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
@@ -671,20 +672,26 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
+					if(teamchanges && lastteam && lastmillis-lastteam <= noticetime+spawndelay)
+					{
+						pushfont("emphasis");
+						ty += draw_textx("You are now on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname);
+						popfont();
+					}
+					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
 						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1);
 						if(m_fight(game::gamemode) && shownotices >= 2)
 						{
 							pushfont("emphasis");
-							ty += draw_textx("You are on team \fs%s%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+							ty += draw_textx("You are on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname);
 							popfont();
 							pushfont("default");
 							ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat);
 							popfont();
 						}
 					}
-					if(obitnotices && lastmillis-game::player1->lastkill <= obitnoticetime && *game::player1->obit)
+					if(obitnotices && lastmillis-game::player1->lastkill <= noticetime && *game::player1->obit)
 					{
 						pushfont("default");
 						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::player1->obit);

@@ -100,6 +100,7 @@ namespace client
 				if(t != game::player1->team)
 				{
 					c2sinit = false;
+					if(game::player1->team != t) hud::lastteam = lastmillis;
 					game::player1->team = t;
 				}
 			}
@@ -1205,7 +1206,9 @@ namespace client
 						freeeditinfo(localedit);
 					}
 					copystring(d->name, text, MAXNAMELEN);
-					d->team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
+					int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
+					if(d == game::player1 && d->team != team) hud::lastteam = lastmillis;
+					d->team = team;
 					break;
 				}
 
@@ -1660,6 +1663,7 @@ namespace client
 					int wn = getint(p), tn = getint(p);
 					gameent *w = game::getclient(wn);
 					if(!w) return;
+					if(w == game::player1 && w->team != tn) hud::lastteam = lastmillis;
 					w->team = tn;
 					break;
 				}
