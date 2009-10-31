@@ -486,39 +486,39 @@ struct teamtypes
 {
 	int	type,			colour;	const char	*name,
 		*tpmdl,								*fpmdl,
-		*flag,			*icon,				*chat;
+		*flag,			*icon,				*chat,		*colname;
 };
 #ifdef GAMESERVER
 teamtypes teamtype[] = {
 	{
 		TEAM_NEUTRAL,	0x666666,			"neutral",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fd"
+		"flag",			"team",				"\fd",		"grey"
 	},
 	{
 		TEAM_ALPHA,		0x2222AA,			"alpha",
 		"actors/player/alpha",				"actors/player/alpha/vwep",
-		"flag/alpha",	"teamalpha",		"\fb"
+		"flag/alpha",	"teamalpha",		"\fb",		"blue"
 	},
 	{
 		TEAM_BETA,		0xAA2222,			"beta",
 		"actors/player/beta",				"actors/player/beta/vwep",
-		"flag/beta",	"teambeta",			"\fr"
+		"flag/beta",	"teambeta",			"\fr",		"red"
 	},
 	{
 		TEAM_GAMMA,		0x22AA22,			"gamma",
 		"actors/player/gamma",				"actors/player/gamma/vwep",
-		"flag/gamma",	"teamgamma",		"\fg"
+		"flag/gamma",	"teamgamma",		"\fg",		"green"
 	},
 	{
 		TEAM_DELTA,		0xAAAA22,			"delta",
 		"actors/player/delta",				"actors/player/delta/vwep",
-		"flag/delta",	"teamdelta",		"\fy"
+		"flag/delta",	"teamdelta",		"\fy",		"yellow"
 	},
 	{
 		TEAM_ENEMY,		0x22AAAA,			"enemy",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fc"
+		"flag",			"team",				"\fc",		"cyan"
 	}
 };
 #else
@@ -1129,7 +1129,7 @@ namespace weapons
 namespace hud
 {
 	extern char *bliptex, *cardtex, *flagtex, *arrowtex;
-	extern int hudwidth, hudsize, damageresidue, damageresiduefade, radarflagnames, inventorygame;
+	extern int hudwidth, hudsize, lastteam, damageresidue, damageresiduefade, radarflagnames, inventorygame;
 	extern float inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
