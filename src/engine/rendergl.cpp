@@ -785,7 +785,7 @@ void calcspherescissor(const vec &center, float size, float &sx1, float &sy1, fl
           mvmatrix.transformy(worldpos),
           mvmatrix.transformz(worldpos));
     if(e.z > 2*size) { sx1 = sy1 = 1; sx2 = sy2 = -1; return; }
-    float zzrr = e.z*e.z - size*size, 
+    float zzrr = e.z*e.z - size*size,
           dx = e.x*e.x + zzrr, dy = e.y*e.y + zzrr,
           focaldist = 1.0f/tan(fovy*0.5f*RAD);
     sx1 = sy1 = -1;
@@ -992,7 +992,7 @@ void addmotionblur()
     {
         lastmotion = 0;
         return;
-    }    
+    }
 
     glBindTexture(GL_TEXTURE_RECTANGLE_ARB, motiontex);
 
@@ -1709,12 +1709,12 @@ void drawnoview()
 	glPushMatrix();
 	glScalef(1/3.0f, 1/3.0f, 1);
 	int y = h*3-FONTH/2;
-	if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
 	if(progressing)
 	{
 		if(*progresstext) y -= draw_textx("%s %s [\fs\fa%d%%\fS]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...", progresstext, int(progresspart*100));
 		else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
 	}
+	if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
 	y = h*3-FONTH/2;
 	y -= draw_textx("%s", w*3-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
 	y -= draw_textx("v%.2f %s", w*3-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
