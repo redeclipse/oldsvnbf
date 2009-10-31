@@ -755,7 +755,7 @@ void eastereggs()
 	*/
 	int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
 	if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
-	else if(month == 10 && mday == 31) loadbackinfo = "Halloween";
+	else if(month == 10 && mday == 31) loadbackinfo = "Happy Halloween";
 	if(month == 2 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
 	if(month == 2 && mday == 9)		loadbackinfo = "Happy Birthday Quin!";
 	if(month == 4 && mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
