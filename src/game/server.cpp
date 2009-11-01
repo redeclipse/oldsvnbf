@@ -2094,7 +2094,8 @@ namespace server
 		if(nodamage) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
 		else if(hithurts(realflags))
 		{
-			target->state.dodamage(gamemillis, (target->state.health -= realdamage));
+			target->state.dodamage(target->state.health -= realdamage);
+			target->state.lastpain = gamemillis;
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
 		}

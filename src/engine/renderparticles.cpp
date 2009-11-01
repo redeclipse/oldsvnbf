@@ -1585,8 +1585,6 @@ void makeparticle(const vec &o, vector<int> &attr)
 	{
 		case 0: //fire
 		{
-			//regularsplash(PART_FIREBALL, 0xFFC8C8, 10, 1, 40, o, 4.8f, -10);
-			//regularsplash(PART_SMOKE_LERP, 0x897661, 2, 1, 200,  vec(o.x, o.y, o.z+3.0), 2.4f, -20, 0, 3);
             float radius = attr[1] ? float(attr[1])/100.0f : 1.5f,
                   height = attr[2] ? float(attr[2])/100.0f : radius*3;
             regularflame(PART_FLAME, o, radius, height, attr[3] ? attr[3] : 0xF05010, 3, attr[4] > 0 ? attr[4]/2 : 500, 2.0f, -5, 0, 30);
