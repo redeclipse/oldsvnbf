@@ -28,6 +28,8 @@ namespace physics
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
+	VARP(impulsedash,		0, 1, 2);			// determines how impulsedash works, 0 = off, 1 = double jump with move, 2 = double tap move
+
 	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0;
 
 	#define imov(name,v,u,d,s,os) \
@@ -38,7 +40,7 @@ namespace physics
 			game::player1->v = dir; \
 			if(down) \
 			{ \
-				if(last##v && lastdir##v && dir == lastdir##v && lastmillis-last##v < PHYSMILLIS) \
+				if(impulsedash == 2 && last##v && lastdir##v && dir == lastdir##v && lastmillis-last##v < PHYSMILLIS) \
 				{ \
 					game::player1->action[AC_DASH] = true; \
 					game::player1->actiontime[AC_DASH] = lastmillis; \
@@ -497,12 +499,13 @@ namespace physics
 					int timeslice = max(millis, 1);
 					if(iscrouching(d)) timeslice += timeslice/2;
 					if(d->move || d->strafe) timeslice -= timeslice/2;
-					if(d->timeinair && d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
+					if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
 					if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 				}
 				bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
+				#define WILLIMPULSE (allowed && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL))
 				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) { d->turnside = 0; d->resetphys(); }
-				if(d->action[AC_DASH] && !d->action[AC_JUMP] && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && allowed && (d->move || d->strafe))
+				if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
 				{
 					float mag = impulseforce(d)*(d->action[AC_IMPULSE] ? 1.5f : 1.f)+max(d->vel.magnitude(), 1.f);
 					vecfromyawpitch(d->aimyaw, max(d->aimpitch, 10.f), d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
@@ -527,7 +530,7 @@ namespace physics
 				}
 				else
 				{
-					if(allowed && !d->turnside && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL) && d->action[AC_JUMP])
+					if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
 					{
 						d->vel.z += impulseforce(d);
 						d->doimpulse(impulsecost, IM_T_BOOST, lastmillis); allowed = false;

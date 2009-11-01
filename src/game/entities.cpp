@@ -1371,20 +1371,20 @@ namespace entities
 				static vector<int> wpattrs;
 				if(wpattrs.empty()) { wpattrs.add(int(WP_COMMON)); wpattrs.add(int(WP_S_NONE)); wpattrs.add(0); wpattrs.add(0); wpattrs.add(cmds); }
 				newentity(v, WAYPOINT, wpattrs);
-				if(d->timeinair) d->airnodes.add(curnode);
+				if(d->physstate == PHYS_FALL) d->airnodes.add(curnode);
 			}
 
 			if(ents.inrange(curnode))
 			{
 				if(shoulddrop && ents.inrange(d->lastnode) && d->lastnode != curnode)
-					entitylink(d->lastnode, curnode, !d->timeinair && !d->onladder);
+					entitylink(d->lastnode, curnode, d->physstate != PHYS_FALL && !d->onladder);
 				d->lastnode = curnode;
 			}
 			else if(!ents.inrange(d->lastnode) || entities::ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
 				d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
 
 			if(clip) cleanairnodes = 2;
-			else if(!d->timeinair) cleanairnodes = 1;
+			else if(d->physstate != PHYS_FALL) cleanairnodes = 1;
 			if(d->ai && ents.inrange(prevnode) && d->lastnode != prevnode) d->ai->addprevnode(prevnode);
 		}
 		else

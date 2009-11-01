@@ -803,7 +803,7 @@ namespace ai
 	void jumpto(gameent *d, aistate &b, const vec &pos)
 	{
 		vec off = vec(pos).sub(d->feetpos());
-		bool offground = d->timeinair && !physics::liquidcheck(d) && !d->onladder,
+		bool offground = d->physstate == PHYS_FALL && !physics::liquidcheck(d) && !d->onladder,
 			jumper = off.z >= JUMPMIN && (!offground || (d->timeinair > 500 && physics::canimpulse(d, impulsecost))),
 			jump = (jumper || d->onladder || lastmillis >= d->ai->jumprand) && lastmillis >= d->ai->jumpseed;
 		if(jump)
@@ -1113,7 +1113,7 @@ namespace ai
             	bool ladder = d->onladder;
 				physics::move(d, 1, true);
 				if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
-				if(d->ai->becareful && (!d->timeinair || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
+				if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
 					d->ai->becareful = false;
 				if(d->aitype == AI_BOT) entities::checkitems(d);
             }
