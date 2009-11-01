@@ -45,7 +45,6 @@ namespace ctf
 				vec dir;
 				int colour = teamtype[f.team].colour;
 				const char *tex = hud::flagtex;
-				float size = hud::radarflagsize;
 				bool arrow = false;
 				float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
 				if(k)
@@ -61,15 +60,14 @@ namespace ctf
 					if(isctfhome(f, game::player1->team) && ctfstyle <= 2 && !hasflags.empty())
 					{
 						fade += (1.f-fade)*diff;
-						size += size*diff;
 						tex = hud::arrowtex;
 						arrow = true;
 					}
 					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime) fade *= diff*0.5f;
 				}
 				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
-				if(hud::radarflagnames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h,size, fade, dir, r, g, b, arrow ? "sub" : "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
-				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
+				if(hud::radarflagnames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, arrow ? "sub" : "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");
+				else hud::drawblip(tex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b);
             }
         }
     }
@@ -91,9 +89,9 @@ namespace ctf
 				}
 			}
 			pushfont("super");
-			if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag");
-			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
-			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1);
+			if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag")*hud::noticescale;
+			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
+			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
 			popfont();
 		}
 	}
