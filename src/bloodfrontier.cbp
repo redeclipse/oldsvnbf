@@ -315,6 +315,11 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="engine\depthfx.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="engine\dynlight.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -392,6 +397,10 @@
 			<Option target="server" />
 			<Option target="server-dbg" />
 		</Unit>
+		<Unit filename="engine\master.h">
+			<Option target="server" />
+			<Option target="server-dbg" />
+		</Unit>
 		<Unit filename="engine\material.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
@@ -441,6 +450,11 @@
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="data" />
+			<Option target="client-prof" />
+		</Unit>
+		<Unit filename="engine\obj.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\octa.cpp">
@@ -522,6 +536,11 @@
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="data" />
+			<Option target="client-prof" />
+		</Unit>
+		<Unit filename="engine\scale.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="engine\server.cpp">
@@ -920,6 +939,11 @@
 			<Option target="client-prof" />
 		</Unit>
 		<Unit filename="include\SDL_timer.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
+		<Unit filename="include\SDL_ttf.h">
 			<Option target="client" />
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
