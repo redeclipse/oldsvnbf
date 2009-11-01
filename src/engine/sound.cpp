@@ -4,22 +4,22 @@ hashtable<const char *, soundsample> soundsamples;
 vector<soundslot> gamesounds, mapsounds;
 vector<sound> sounds;
 
-bool nosound = true, playedmusic = false;
+bool nosound = true, changedvol = false;
 Mix_Music *music = NULL;
 SDL_RWops *musicrw = NULL;
 stream *musicstream = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
-int soundsatonce = 0, lastsoundmillis = 0, musictime = -1, oldmusicvol = -1;
+int soundsatonce = 0, lastsoundmillis = 0, musictime = -1;
 
-VARP(mastervol, 0, 255, 255);
+VARFP(mastervol, 0, 255, 255, changedvol = true);
 VARP(soundvol, 0, 255, 255);
 VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundchans, 0, 32, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 128, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
-VARP(musicvol, 0, 64, 255);
-VARP(musicfade, 0, 3000, INT_MAX-1);
+VARFP(musicvol, 0, 64, 255, changedvol = true);
+VARP(musicfade, 0, 5000, INT_MAX-1);
 SVAR(titlemusic, "sounds/loops/title");
 
 void initsound()
@@ -56,19 +56,11 @@ void stopmusic(bool docmd)
 		if(docmd) execute(cmd);
 		delete[] cmd;
 	}
-	musictime = -1;
-	if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
-	playedmusic = false;
 }
 
 void musicdone(bool docmd)
 {
-	if(musicfade && !docmd)
-	{
-		musictime = lastmillis;
-		if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
-		playedmusic = false;
-	}
+	if(musicfade && !docmd) Mix_FadeOutMusic(musicfade);
 	else stopmusic(docmd);
 }
 
@@ -138,8 +130,7 @@ void playmusic(const char *name, const char *cmd)
 					musicfile = newstring(name);
 					if(cmd[0]) musicdonecmd = newstring(cmd);
 					Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-					oldmusicvol = int((mastervol/255.f)*musicvol);
-					Mix_VolumeMusic(int((oldmusicvol/255.f)*MIX_MAX_VOLUME));
+					Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 					found = true;
 				}
 				if(found) break;
@@ -154,14 +145,8 @@ COMMANDN(music, playmusic, "ss");
 
 void smartmusic(bool cond, bool autooff)
 {
-	if(nosound || !mastervol || !musicvol || (!cond && oldmusicvol < 0) || !*titlemusic) return;
-	if(oldmusicvol >= 0) oldmusicvol = int((mastervol/255.f)*musicvol);
-	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic)))
-	{
-		playmusic(titlemusic, "");
-		playedmusic = autooff;
-		if(!cond) oldmusicvol = -1;
-	}
+	if(nosound || !mastervol || !musicvol || (!cond && Mix_PlayingMusic()) || !*titlemusic) return;
+	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic))) playmusic(titlemusic, "");
 	else if(music && Mix_PlayingMusic()) Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 }
 ICOMMAND(smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
@@ -320,30 +305,11 @@ void updatesounds()
 	if(music || Mix_PlayingMusic())
 	{
 		if(nosound || !mastervol || !musicvol) stopmusic(false);
-		else if(playedmusic && oldmusicvol >= 0) musicdone(false);
 		else if(!Mix_PlayingMusic()) musicdone(true);
-		else if(musictime >= 0)
+		else if(changedvol)
 		{
-			if(!musicfade || lastmillis-musictime >= musicfade) stopmusic(false);
-			else
-			{
-				float fade = clamp(float(lastmillis-musictime)/float(musicfade), 0.f, 1.f);
-				int vol = int(((mastervol/255.f)*musicvol)*(1.f-fade));
-				if(vol != oldmusicvol)
-				{
-					Mix_VolumeMusic(int((vol/255.f)*MIX_MAX_VOLUME));
-					oldmusicvol = vol;
-				}
-			}
-		}
-		else
-		{
-			int vol = int((mastervol/255.f)*musicvol);
-			if(vol != oldmusicvol)
-			{
-				Mix_VolumeMusic(int((vol/255.f)*MIX_MAX_VOLUME));
-				oldmusicvol = vol;
-			}
+			Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
+			changedvol = false;
 		}
 	}
 }
