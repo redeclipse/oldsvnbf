@@ -48,6 +48,7 @@ namespace game
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	VARP(specfov, 1, 120, 179);
 	FVARP(spectvspeed, 0, 0.1f, 1000);
+	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
 
 	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
@@ -1478,12 +1479,16 @@ namespace game
 			checkcamera();
 			if(player1->state == CS_DEAD)
 			{
-				vec dir = vec(ragdollcenter(player1)).sub(camera1->o).normalize();
-				float yaw = camera1->yaw, pitch = camera1->pitch;
-				vectoyawpitch(dir, yaw, pitch);
-				if(deathcamspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
-				camera1->aimyaw = camera1->yaw;
-				camera1->aimpitch = camera1->pitch;
+				gameent *a = deathcamstyle ? (deathcamstyle == 2 ? player1 : getclient(player1->lastattacker)) : NULL;
+				if(a)
+				{
+					vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
+					float yaw = camera1->yaw, pitch = camera1->pitch;
+					vectoyawpitch(dir, yaw, pitch);
+					if(deathcamspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
+					camera1->aimyaw = camera1->yaw;
+					camera1->aimpitch = camera1->pitch;
+				}
 			}
 			else if(tvmode()) cameratv();
 			else if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
