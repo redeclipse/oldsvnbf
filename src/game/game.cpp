@@ -562,6 +562,7 @@ namespace game
 					}
 					if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 					if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
+					d->lastpain = lastmillis;
 				}
 				if(d != actor)
 				{
@@ -600,7 +601,7 @@ namespace game
 		if(d->state != CS_ALIVE || intermission) return;
 		if(hithurts(flags))
 		{
-			d->dodamage(millis, health);
+			d->dodamage(health);
 			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
 			ai::damaged(d, actor);
 		}

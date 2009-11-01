@@ -99,7 +99,7 @@ namespace hud
 	VARP(showcrosshair, 0, 1, 1);
 	FVARP(crosshairsize, 0, 0.04f, 1000);
 	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.65f, 1);
+	FVARP(crosshairblend, 0, 0.95f, 1);
 	VARP(crosshairhealth, 0, 2, 2);
 	FVARP(crosshairskew, -1, 0.3f, 1);
 	TVAR(relativecursortex, "textures/crosshair", 3);
