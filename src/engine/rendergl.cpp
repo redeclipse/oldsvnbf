@@ -1596,9 +1596,9 @@ framebuffercopy views[VP_MAX];
 
 VARFP(viewtype, VW_NORMAL, VW_NORMAL, VW_MAX, loopi(VP_MAX) views[i].cleanup());
 VARP(stereoblend, 0, 50, 100);
-FVARP(stereodist, 0, 1.f, 10000);
-FVARP(stereoplane, 1e-3f, 100.f, 1000);
-FVARP(stereonear, 0, 10.f, 10000);
+FVARP(stereodist, 0, 0.5f, 10000);
+FVARP(stereoplane, 1e-3f, 10.f, 1000);
+FVARP(stereonear, 0, 3.f, 10000);
 
 int fogmat = MAT_AIR, abovemat = MAT_AIR;
 float fogblend = 1.0f, causticspass = 0.0f;
