@@ -241,6 +241,7 @@ extern void regular_part_splash(int type, int num, int fade, const vec &p, int c
 extern void part_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0, int radius = 4);
 extern void part_trail(int ptype, int fade, const vec &s, const vec &e, int color = 0xFFFFFF, float size = .8f, int grav = 0, int collide = 0);
 extern void part_text(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
+extern void part_textcopy(const vec &s, const char *t, int type = PART_TEXT, int fade = 1, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void part_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 2, int grav = 0, int collide = 0, physent *pl = NULL);
 extern void regular_part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);
 extern void part_fireball(const vec &dest, float maxsize, int type, int fade = 1, int color = 0xFFFFFF, float size = 4, int grav = 0, int collide = 0);

@@ -213,8 +213,8 @@ namespace entities
 				const char *item = entities::entinfo(e.type, e.attrs, false);
 				if(item && *item)
 				{
-					defformatstring(ds)("@<super>%s (%d)", item, e.type);
-					part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
+					defformatstring(ds)("<super>%s (%d)", item, e.type);
+					part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
 				}
 			}
 		}
@@ -2237,12 +2237,12 @@ namespace entities
 			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
 			if(showentinfo >= 2 || game::player1->state == CS_EDITING)
 			{
-				defformatstring(s)("@<super>%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
-				part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
+				defformatstring(s)("<super>%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
+				part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
 				{
-					formatstring(s)("@%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attrs[k]);
-					part_text(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
+					formatstring(s)("%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attrs[k]);
+					part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				}
 			}
 		}
@@ -2257,8 +2257,8 @@ namespace entities
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
 			if(itxt && *itxt)
 			{
-				defformatstring(ds)("@%s", itxt);
-				part_text(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
+				defformatstring(ds)("%s", itxt);
+				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
 			}
 		}
 	}

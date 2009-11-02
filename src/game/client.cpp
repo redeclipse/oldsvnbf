@@ -396,8 +396,8 @@ namespace client
 
 		if(d->state != CS_SPECTATOR)
 		{
-			defformatstring(ds)("@%s", s);
-			part_text(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, -10, 0, d);
+			defformatstring(ds)("%s", s);
+			part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, -10, 0, d);
 		}
 
 		conoutft(CON_CHAT, "%s", s);
@@ -1399,8 +1399,8 @@ namespace client
 							const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
 							if(item && *item)
 							{
-								defformatstring(ds)("@%s (%d)", item, entities::ents[ent]->type);
-								part_text(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, -10);
+								defformatstring(ds)("%s (%d)", item, entities::ents[ent]->type);
+								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, -10);
 							}
 						}
 					}

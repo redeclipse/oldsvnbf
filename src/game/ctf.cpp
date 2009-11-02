@@ -146,8 +146,8 @@ namespace ctf
 			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
-				defformatstring(info)("@<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
-				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+				defformatstring(info)("<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
+				part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 				above.z += 2.5f;
             }
 			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
@@ -155,18 +155,18 @@ namespace ctf
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
+				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str);
 				above.z += 2.5f;
 			}
             if(f.base&BASE_FLAG && (f.owner || f.droptime))
             {
 				if(f.owner)
 				{
-					defformatstring(info)("@<super>%s", game::colorname(f.owner));
-					part_text(above, info, PART_TEXT, 1);
+					defformatstring(info)("<super>%s", game::colorname(f.owner));
+					part_textcopy(above, info, PART_TEXT, 1);
 					above.z += 1.5f;
 				}
-				defformatstring(info)("@%s", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped");
+				const char *info = f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped";
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
             }
         }
@@ -197,15 +197,15 @@ namespace ctf
             rendermodel(NULL, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, yaw, 0, 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_LIGHT, NULL, NULL, 0, 0, trans);
 			above.z += enttype[FLAG].radius*2/3;
 			if(f.owner) { above.z += iterflags[f.owner->clientnum]*2; iterflags[f.owner->clientnum]++; }
-            defformatstring(info)("@<super>%s flag", teamtype[f.team].name);
-			part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+            defformatstring(info)("<super>%s flag", teamtype[f.team].name);
+			part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour);
 			above.z += 2.5f;
 			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("@%d%%", int(wait*100.f)); part_text(above, str);
+				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str);
 			}
         }
     }
@@ -418,8 +418,8 @@ namespace ctf
 		{
 			if(effect&1)
 			{
-				defformatstring(text)("@<super>%s\fzRe%s", teamtype[team].chat, str);
-				part_text(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
+				part_textcopy(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
@@ -427,8 +427,8 @@ namespace ctf
 		{
 			if(effect&2)
 			{
-				defformatstring(text)("@<super>%s\fzRe%s", teamtype[team].chat, str);
-				part_text(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
+				part_textcopy(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
