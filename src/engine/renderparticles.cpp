@@ -188,6 +188,7 @@ struct listrenderer : partrenderer
 		p->grav = grav;
 		p->collide = collide;
 		p->owner = pl;
+        p->flags = 0;
 		return p;
 	}
 
@@ -263,7 +264,7 @@ struct textrenderer : sharedlistrenderer
 
 	void cleanup(sharedlistparticle *p)
 	{
-		if(p->text && p->text[0]=='@') delete[] p->text;
+		if(p->text && p->flags&1) delete[] p->text;
 	}
 
 	void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
@@ -279,7 +280,7 @@ struct textrenderer : sharedlistrenderer
 		glRotatef(camera1->pitch-90, 1, 0, 0);
 		float scale = p->size/80.0f;
 		glScalef(-scale, scale, -scale);
-		const char *text = p->text+(p->text[0]=='@' ? 1 : 0);
+		const char *text = p->text;
 		static string font; font[0] = 0;
 		if(*text == '<')
 		{
@@ -1303,9 +1304,19 @@ void part_trail(int ptype, int fade, const vec &s, const vec &e, int color, floa
 
 void part_text(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide, physent *pl)
 {
-	if(!canaddparticles() || !t[0] || (t[0] == '@' && !t[1])) return;
+	if(!canaddparticles() || !t[0]) return;
 	if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
-	newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide, pl)->text = t[0]=='@' ? newstring(t) : t;
+	particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide, pl);
+    p->text = t;
+}
+
+void part_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int grav, int collide, physent *pl)
+{
+    if(!canaddparticles() || !t[0]) return;
+    if(!particletext || camera1->o.dist(s) > maxparticledistance) return;
+    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, grav, collide, pl);
+    p->text = newstring(t);
+    p->flags = 1;
 }
 
 void part_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, int grav, int collide, physent *pl)
@@ -1649,8 +1660,8 @@ void makeparticle(const vec &o, vector<int> &attr)
 			flares.addflare(o, attr[1], attr[2], attr[3], (attr[0]&0x02)!=0, (attr[0]&0x01)!=0);
 			break;
 		default:
-			defformatstring(ds)("@%d?", attr[0]);
-			part_text(o, ds);
+			defformatstring(ds)("%d?", attr[0]);
+			part_textcopy(o, ds);
 			break;
 	}
 }
