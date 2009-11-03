@@ -199,13 +199,13 @@ body {
 	font-size: 13px;
 	color: #FFFFFF;
 	margin: 0px;
-	padding: 4px 20px 0px 0px;
+	padding: 8px 20px 0px 0px;
 	float: right;
 	width: 140px;
 }
 #list ul {
 	margin: 0px;
-	padding: 8px 0px 0px 0px;
+	padding: 0px;
 	float: left;
 	list-style: none;
 	width: 140px;
@@ -234,7 +234,15 @@ body {
 #listdonate {
 	margin: 0px;
 	float: left;
-	padding: 10px 0px 0px 15px;
+	padding: 4px 0px 0px 12px;
+}
+#donatemsg {
+	margin: 0px 0px 0px -46px;
+	padding: 4px 0px 0px 4px;
+	font-size: 10px;
+	font-weight: bold;
+	text-align: center;
+	width: 182px;
 }
 #video {
 	background: url(/bits/bg_vid.jpg) no-repeat center center;
