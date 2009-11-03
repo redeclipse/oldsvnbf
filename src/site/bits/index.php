@@ -5,13 +5,13 @@
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['sitenotice'] = array(
-		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for <a href="/download/windows">Windows</a>, <a href="/download/linux">Linux/BSD</a> or <a href="/download/macosx">Mac OSX</a>, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge.',
+		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for <a href="/download/windows">Windows</a>, <a href="/download/linux">Linux/BSD</a>, <a href="/download/macosx">Mac OSX</a>, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge.',
 		'about' => 'The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
 		'outro' => 'In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.'
 	);
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitepaypal'] = "212900";
-	$app['sitedonate'] = "Donate to Quin";
+	$app['sitedonate'] = "Donate to Blood Frontier";
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
@@ -32,7 +32,7 @@
 	$app['deftarg'] = "home";
 	$app['defsearch'] = "%22Blood%20Frontier%22";
 
-	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'nav' => 0, 'redir' => 0));
+	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'nav' => -1, 'redir' => 0));
 	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'nav' => 1, 'redir' => 1);
 	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/index.php?title=', 'nav' => 1, 'redir' => 1);
@@ -42,11 +42,12 @@
 	$app['targets']['gallery'] = array('name' => 'Gallery', 'url' => 'http://sourceforge.net/apps/gallery/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/gallery/'.$app['sfproject'].'/index.php?g2_itemId=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'nav' => 1, 'redir' => 1);
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/?view=rev&amp;rev=', 'nav' => 1, 'redir' => 1);
-	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => 0, 'redir' => 1);
-	$app['targets']['youtube'] = array('name' => 'On YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
-	$app['targets']['google'] = array('name' => 'On Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
-	$app['targets']['facebook'] = array('name' => 'On Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
-	$app['targets']['blackboxbeta'] = array('name' => 'On BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
+	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => -1, 'redir' => 1);
+	$app['targets']['youtube'] = array('name' => 'on YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['google'] = array('name' => 'on Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['facebook'] = array('name' => 'on Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
+	$app['targets']['blackboxbeta'] = array('name' => 'on BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
+	$app['targets']['getdeb'] = array('name' => 'on GetDeb', 'url' => 'http://www.getdeb.net/app/Blood+Frontier', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -69,7 +70,7 @@
 		) : $app['targets'][$app['target']]['url'];
 		$app['navbar'] = ''; // cache the navbar
 		foreach ($app['targets'] as $key => $targ) {
-			if ($key != "" && $targ['name'] != "" && $targ['nav']) {
+			if ($key != "" && $targ['name'] != "" && $targ['nav'] == 1) {
 				$app['navbar'] .= '<a href="/'.$key.'">'. $targ['name'] .'</a> ';
 			}
 		}
@@ -107,16 +108,18 @@
 				<div id="noticebg">
 					<div id="list">
 						<ul>
-							<li><a href="/youtube">on Youtube</a></li>
-							<li><a href="/google">on Google</a></li>
-							<li><a href="/facebook">on Facebook</a></li>
-							<li><a href="/blackboxbeta">on BlackBoxBETA</a></li>
+<?php						foreach ($app['targets'] as $key => $targ) {
+								if ($key != "" && $targ['name'] != "" && $targ['nav'] == 0) {
+									echo "<li><a href=\"/". $key ."\">" . $targ['name'] ."</a></li>";
+								}
+							} ?>
 						</ul>
 						<div id="listdonate">
-							<form method="post" action="https://www.paypal.com/cgi-bin/webscr">
-								<input type="hidden" value="_s-xclick" name="cmd"/>
-								<input type="hidden" value="<?php echo $app['sitepaypal']; ?>" name="hosted_button_id"/>
-								<input type="image" alt="<?php echo $app['sitedonate']; ?>" name="submit" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif"/>
+							<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+								<input type="hidden" name="cmd" value="_s-xclick" />
+								<input type="hidden" name="hosted_button_id" value="<?php echo $app['sitepaypal']; ?>" />
+								<input type="image" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="<?php echo $app['sitedonate']; ?>" />
+								<img alt="<?php echo $app['sitedonate']; ?>" border="0" src="https://www.paypal.com/en_AU/i/scr/pixel.gif" width="1" height="1" />
 							</form>
 						</div>
 					</div>
