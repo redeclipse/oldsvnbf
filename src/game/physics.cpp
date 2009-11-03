@@ -508,7 +508,8 @@ namespace physics
 				if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
 				{
 					float mag = impulseforce(d)*(d->action[AC_IMPULSE] ? 1.5f : 1.f)+max(d->vel.magnitude(), 1.f);
-					vecfromyawpitch(d->aimyaw, max(d->aimpitch, 10.f), d->move, d->strafe, d->vel); d->vel.normalize().mul(mag); d->vel.z += mag/4;
+					vecfromyawpitch(d->aimyaw, impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
+					d->vel.normalize().mul(mag); d->vel.z += mag/4;
 					d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
 					playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
