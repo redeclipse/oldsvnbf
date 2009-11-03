@@ -396,7 +396,7 @@ namespace client
 
 		if(d->state != CS_SPECTATOR)
 		{
-			defformatstring(ds)("%s", s);
+			defformatstring(ds)("<sub>%s", s);
 			part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, -10, 0, d);
 		}
 
@@ -1399,7 +1399,7 @@ namespace client
 							const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
 							if(item && *item)
 							{
-								defformatstring(ds)("%s (%d)", item, entities::ents[ent]->type);
+								defformatstring(ds)("<emphasis>%s (%d)", item, entities::ents[ent]->type);
 								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, -10);
 							}
 						}

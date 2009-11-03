@@ -2257,7 +2257,7 @@ namespace entities
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
 			if(itxt && *itxt)
 			{
-				defformatstring(ds)("%s", itxt);
+				defformatstring(ds)("<emphasis>%s", itxt);
 				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
 			}
 		}
