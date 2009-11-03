@@ -696,11 +696,11 @@ void md5animpart(char *maskstr)
     if(!p->addanimpart(bonemask.getbuf())) conoutf("\frtoo many animation parts");
 }
 
-void md5link(int *parent, int *child, char *tagname)
+void md5link(int *parent, int *child, char *tagname, float *x, float *y, float *z)
 {
     if(!loadingmd5) { conoutf("\frnot loading an md5"); return; }
     if(!loadingmd5->parts.inrange(*parent) || !loadingmd5->parts.inrange(*child)) { conoutf("\frno models loaded to link"); return; }
-    if(!loadingmd5->parts[*parent]->link(loadingmd5->parts[*child], tagname)) conoutf("\frcould not link model %s", loadingmd5->loadname);
+    if(!loadingmd5->parts[*parent]->link(loadingmd5->parts[*child], tagname, vec(*x, *y, *z))) conoutf("\frcould not link model %s", loadingmd5->loadname);
 }
 
 void md5noclip(char *meshname, int *noclip)
@@ -727,6 +727,6 @@ COMMAND(md5shader, "ss");
 COMMAND(md5scroll, "sff");
 COMMAND(md5animpart, "s");
 COMMAND(md5anim, "ssfi");
-COMMAND(md5link, "iis");
+COMMAND(md5link, "iisfff");
 COMMAND(md5noclip, "si");
 
