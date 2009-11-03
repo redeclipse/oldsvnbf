@@ -491,7 +491,10 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				}
 				break;
 			}
+			case 471:
+			case 473:
 			case 474:
+			case 475:
 			{
 				ircchan *c = ircfindchan(n, w[g+2]);
 				if(c)
