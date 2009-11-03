@@ -11,7 +11,7 @@
 	);
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the solar system, to Mars and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitepaypal'] = "212900";
-	$app['sitedonate'] = "Donate to Blood Frontier";
+	$app['sitedonate'] = "Blood Frontier is developed by volunteers, and you get it free of charge; your donations go toward ongoing costs which keep this project alive.";
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
@@ -47,7 +47,7 @@
 	$app['targets']['google'] = array('name' => 'on Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
 	$app['targets']['facebook'] = array('name' => 'on Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
 	$app['targets']['blackboxbeta'] = array('name' => 'on BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
-	$app['targets']['getdeb'] = array('name' => 'on GetDeb', 'url' => 'http://www.getdeb.net/app/Blood+Frontier', 'nav' => 0, 'redir' => 1);
+	//$app['targets']['playdeb'] = array('name' => 'on PlayDeb', 'url' => 'http://www.playdeb.net/updates/?q=Blood+Frontier#bloodfrontier', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -121,6 +121,7 @@
 								<input type="image" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="<?php echo $app['sitedonate']; ?>" />
 								<img alt="<?php echo $app['sitedonate']; ?>" border="0" src="https://www.paypal.com/en_AU/i/scr/pixel.gif" width="1" height="1" />
 							</form>
+							<p id="donatemsg"><i><?php echo $app['sitedonate']; ?></i></p>
 						</div>
 					</div>
 					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" id="blockborder" />
