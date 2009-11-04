@@ -711,7 +711,7 @@ namespace hud
 					if(shownotices >= 3 && game::allowmove(game::player1))
 					{
 						pushfont("default");
-						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, lastmillis, WEAP_S_RELOAD)))
+						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
 						{
 							static vector<actitem> actitems;
 							actitems.setsizenodelete(0);

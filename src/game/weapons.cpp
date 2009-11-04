@@ -51,7 +51,7 @@ namespace weapons
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
 		if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX) return;
-		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD))) return;
+		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD))) return;
 		int s = d->weapselect;
 		loopi(WEAP_MAX) // only loop the amount of times we have weaps for
 		{
@@ -78,7 +78,7 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, lastmillis, WEAP_S_RELOAD)))
+		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
