@@ -47,7 +47,7 @@
 	$app['targets']['google'] = array('name' => 'on Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
 	$app['targets']['facebook'] = array('name' => 'on Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
 	$app['targets']['blackboxbeta'] = array('name' => 'on BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
-	//$app['targets']['playdeb'] = array('name' => 'on PlayDeb', 'url' => 'http://www.playdeb.net/updates/?q=Blood+Frontier#bloodfrontier', 'nav' => 0, 'redir' => 1);
+	$app['targets']['playdeb'] = array('name' => 'on PlayDeb', 'url' => 'http://www.playdeb.net/updates/Blood%20Frontier', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
