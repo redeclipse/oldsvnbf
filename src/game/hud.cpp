@@ -233,7 +233,10 @@ namespace hud
 			case 1:
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
-				amt += max(game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f, 1.f-(max(game::player1->health, 0)/100.f))*0.65f;
+				float damage = game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f,
+					  healthscale = float(m_maxhealth(game::gamemode, game::mutators));
+				if(healthscale > 0) damage = max(damage, 1.f - max(game::player1->health, 0)/healthscale);
+				amt += damage*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
 				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
