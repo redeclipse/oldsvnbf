@@ -976,7 +976,8 @@ FVARP(motionblurscale, 0, 1, 1);
 
 void addmotionblur()
 {
-    if(!motionblur || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
+	extern int viewtype;
+    if(!motionblur || viewtype || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
 
     if(!motiontex || motionw != screen->w || motionh != screen->h)
     {
@@ -1595,10 +1596,10 @@ enum { VP_LEFT, VP_RIGHT, VP_MAX, VP_CAMERA = VP_MAX };
 framebuffercopy views[VP_MAX];
 
 VARFP(viewtype, VW_NORMAL, VW_NORMAL, VW_MAX, loopi(VP_MAX) views[i].cleanup());
-VARP(stereoblend, 0, 50, 100);
+FVARP(stereoblend, 0, 0.5f, 1);
 FVARP(stereodist, 0, 0.5f, 10000);
-FVARP(stereoplane, 1e-3f, 10.f, 1000);
-FVARP(stereonear, 0, 3.f, 10000);
+FVARP(stereoplane, 1e-3f, 40.f, 1000);
+FVARP(stereonear, 0, 2.f, 10000);
 
 int fogmat = MAT_AIR, abovemat = MAT_AIR;
 float fogblend = 1.0f, causticspass = 0.0f;
@@ -1967,7 +1968,7 @@ void gl_drawframe(int w, int h)
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
-				glColor4f(1.f, 1.f, 1.f, stereoblend/100.f); views[VP_RIGHT].draw(0, 0, 1, 1);
+				glColor4f(1.f, 1.f, 1.f, stereoblend); views[VP_RIGHT].draw(0, 0, 1, 1);
 				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 				glDisable(GL_BLEND);
 				break;
