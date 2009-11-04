@@ -1488,7 +1488,8 @@ void cleanuppostfx(bool fullclean)
 
 void renderpostfx()
 {
-    if(postfxpasses.empty() || renderpath==R_FIXEDFUNCTION) return;
+	extern int viewtype;
+    if(postfxpasses.empty() || viewtype || renderpath==R_FIXEDFUNCTION) return;
 
     if(postfxw != screen->w || postfxh != screen->h)
     {

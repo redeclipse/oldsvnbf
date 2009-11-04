@@ -17,7 +17,7 @@ void cleanupglare()
 }
 
 VARFP(glaresize, 6, 8, 10, cleanupglare());
-VARP(glare, 0, 1, 1);
+VARP(glare, 0, 0, 1);
 VARP(blurglare, 0, 4, 7);
 VARP(blurglaresigma, 1, 50, 200);
 
@@ -42,7 +42,8 @@ FVARP(glarescale, 0, 0.25f, 8);
 
 void addglare()
 {
-    if(!glare || renderpath==R_FIXEDFUNCTION) return;
+	extern int viewtype;
+    if(!glare || viewtype || renderpath==R_FIXEDFUNCTION) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
