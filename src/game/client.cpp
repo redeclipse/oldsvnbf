@@ -1313,8 +1313,8 @@ namespace client
 					int trg = getint(p), heal = getint(p), amt = getint(p);
 					gameent *f = game::getclient(trg);
 					if(!f) break;
-					if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500))
-						playsound(S_REGEN, f->o, f);
+					if(amt < 0) f->impulse[IM_METER] = 0;
+					else if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500)) playsound(S_REGEN, f->o, f);
 					f->health = heal; f->lastregen = lastmillis;
 					break;
 				}
