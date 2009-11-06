@@ -956,7 +956,7 @@ namespace server
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
 		}
-		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators));
+		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
