@@ -621,6 +621,8 @@ namespace game
 		if(d == player1) anc = S_V_FRAGGED;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
+		if(d != actor && actor->lastattacker == d->clientnum) actor->lastattacker = -1;
+		d->lastattacker = actor->clientnum;
 		if(d == actor)
         {
         	if(d->aitype == AI_TURRET) concatstring(d->obit, "was destroyed");
@@ -650,8 +652,6 @@ namespace game
         }
 		else
 		{
-			if(actor->lastattacker == d->clientnum) actor->lastattacker = -1;
-			d->lastattacker = actor->clientnum;
 			concatstring(d->obit, "was ");
 			if(d->aitype == AI_TURRET) concatstring(d->obit, "destroyed by");
 			else
