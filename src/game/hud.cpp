@@ -1129,7 +1129,7 @@ namespace hud
 				drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, radardamagesize, blend*radardamageblend, dir, r, g, b, "sub", "you");
 			}
 			gameent *a = game::getclient(game::player1->lastattacker);
-			if(a && (dead || (radardamage >= 3 && (a->aitype < 0 || radardamage >= 4))))
+			if(a && a != game::player1 && (dead || (radardamage >= 3 && (a->aitype < 0 || radardamage >= 4))))
 			{
 				vec pos = vec(a->o).sub(camera1->o).normalize(), dir = vec(pos).rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[a->team].colour>>16)/255.f, g = ((teamtype[a->team].colour>>8)&0xFF)/255.f, b = (teamtype[a->team].colour&0xFF)/255.f;
