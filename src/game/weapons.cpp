@@ -146,7 +146,7 @@ namespace weapons
 		{
 			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
 			{
-				if(autoreloading && d->ammo[d->weapselect] < offset)
+				if(autoreloading && d->ammo[d->weapselect] < offset)// && d->weapstate[d->weapselect] != WEAP_S_RELOAD)
 				{
 					d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 					weapreload(d, d->weapselect);
