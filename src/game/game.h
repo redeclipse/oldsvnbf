@@ -649,8 +649,8 @@ struct gamestate
 
 	int skipwait(int weap, int flags, int millis, int skip)
 	{
-		return skip != WEAP_S_RELOAD || (millis-weaplast[weap] < weapwait[weap]*3/4 && (ammo[weap] > weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] ||
-			(weaptype[weap].add == weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weapload[weap] >= 0 && weapload[weap] < weaptype[weap].add))) ? skip : -1;
+		return skip != WEAP_S_RELOAD || (millis-weaplast[weap] < weapwait[weap]*3/4 && (ammo[weap] > weaptype[weap].add ||
+			(weapload[weap] >= 0 && ammo[weap]-weapload[weap] >= weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]))) ? skip : -1;
 	}
 
 	bool canswitch(int weap, int sweap, int millis, int skip = -1)
