@@ -992,8 +992,11 @@ namespace physics
 				d->o = orig; \
 			} \
 		}
-		vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
-		inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));
+		if(d->type == ENT_PLAYER)
+		{
+			vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
+			inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));
+		}
 		inmapchk(100, d->o.add(vec((rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f)));
 		d->o = orig;
         d->resetinterp();
