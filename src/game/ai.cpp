@@ -247,7 +247,7 @@ namespace ai
 		return randomnode(d, b, d->feetpos(), guard, wander);
 	}
 
-	bool enemy(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, bool pursue = false)
+	bool enemy(gameent *d, aistate &b, const vec &pos, float guard, bool pursue, bool force)
 	{
 		if(game::allowmove(d))
 		{
@@ -267,7 +267,7 @@ namespace ai
 					{
 						t = e; tp = ep;
 						if(!insight && see) insight = see;
-						if(!tooclose && close) tooclose = close;
+						if(!tooclose && close && (see || force)) tooclose = close;
 					}
 				}
 			}
@@ -304,8 +304,9 @@ namespace ai
 
 	bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
 	{
-		bool hasenemy = enemy(d, b, pos, wander, false);
+		bool hasenemy = enemy(d, b, pos, wander, false, false);
 		if(!aitype[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
+		else
 		{
 			if(!walk && d->feetpos().squaredist(pos) <= guard*guard)
 			{
@@ -619,7 +620,7 @@ namespace ai
 							{
 								if(!e.spawned || d->hasweap(attr, sweap)) return 0;
 								float guard = enttype[e.type].radius;
-								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false) ? 2 : 1;
+								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false, false) ? 2 : 1;
 								break;
 							}
 							default: break;
@@ -643,7 +644,7 @@ namespace ai
 							{
 								if(d->hasweap(attr, sweap) || proj.owner == d) return 0;
 								float guard = enttype[e.type].radius;
-								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false) ? 2 : 1;
+								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false, false) ? 2 : 1;
 								break;
 							}
 							default: break;
