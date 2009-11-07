@@ -2,7 +2,7 @@ VARFP(lightmodels, 0, 1, 1, preloadmodelshaders());
 VARFP(envmapmodels, 0, 1, 1, preloadmodelshaders());
 VARFP(glowmodels, 0, 1, 1, preloadmodelshaders());
 VARFP(bumpmodels, 0, 1, 1, preloadmodelshaders());
-VARP(fullbrightmodels, 0, 50, 200);
+VARP(fullbrightmodels, 0, 75, 200);
 
 struct animmodel : model
 {
@@ -914,7 +914,7 @@ struct animmodel : model
             matrixstack[0].rotate_around_z((yaw+180)*RAD);
             if(roll) matrixstack[0].rotate_around_x(-roll*RAD);
         }
-        else 
+        else
         {
             matrixstack[0].translate(d->ragdoll->center);
             pitch = 0;
