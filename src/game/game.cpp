@@ -88,9 +88,9 @@ namespace game
 	VARP(quakefade, 0, 100, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
 	FVARP(bloodscale, 0, 1, 1000);
-	VARP(bloodfade, 1, 5000, INT_MAX-1);
+	VARP(bloodfade, 1, 10000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
-	VARP(gibfade, 1, 5000, INT_MAX-1);
+	VARP(gibfade, 1, 10000, INT_MAX-1);
 	VARP(fireburnfade, 0, 50, INT_MAX-1);
 	FVARP(impulsescale, 0, 1, 1000);
 	VARP(impulsefade, 0, 200, INT_MAX-1);

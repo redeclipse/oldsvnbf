@@ -660,7 +660,7 @@ struct gui : guient
 	{
 		const int padding = 10;
 		if(font && *font) gui::pushfont(font);
-		int w = 0, h = FONTH;
+		int w = 0, h = max((int)FONTH, guibound[1]);
 		if(icon) w += guibound[1];
 		if(icon && text) w += padding;
 		if(text) w += text_width(text);

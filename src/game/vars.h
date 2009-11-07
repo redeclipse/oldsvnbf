@@ -71,6 +71,7 @@ VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
+VARG(botbalance, 0, 1, 2); // 0 = turn off bots, 1 = fill only with enough bots to satisfy play, 2 = populate bots to numplayers
 FVARG(botscale, 0, 1.f, 1000);
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
