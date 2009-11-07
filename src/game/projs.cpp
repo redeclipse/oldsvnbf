@@ -299,6 +299,7 @@ namespace projs
 				proj.height += 2.5f;
 			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
 		}
+		if(proj.projtype != PRJ_SHOT) physics::entinmap(&proj, true);
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
