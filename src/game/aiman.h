@@ -1,7 +1,7 @@
 // server-side ai manager
 namespace aiman
 {
-	int oldteambalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
+	int oldteambalance = -1, oldbotbalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
 	float oldbotscale = -1.f; // lower than it can go
 
 	int findaiclient(int exclude)
@@ -204,8 +204,13 @@ namespace aiman
 		if(m_story(gamemode)) balance = nplayers;
 		else if(m_fight(gamemode) && !m_race(gamemode))
 		{
-			balance = int(nplayers*GVAR(botscale));
-			if(m_team(gamemode, mutators) && GVAR(teambalance))
+			switch(GVAR(botbalance))
+			{
+				case 0: balance = 0; break; // no bots
+				case 1: default: balance = GVAR(botscale) > 0 ? 2 : 0; break; // one bot (or balance teams)
+				case 2: balance = int(nplayers*GVAR(botscale)); break; // use scaled numplayers
+			}
+			if(m_team(gamemode, mutators) && balance > 0)
 			{ // skew this if teams are unbalanced
 				loopvrev(clients)
 				{
@@ -276,7 +281,7 @@ namespace aiman
 			if(hasgameinfo)
 			{
 				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
-				checkold(teambalance); checkold(botscale); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
+				checkold(teambalance); checkold(botbalance); checkold(botscale); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
 				if(dorefresh) { checksetup(); dorefresh = false; }
 				loopvrev(clients) if(clients[i]->state.aitype >= 0) reinitai(clients[i]);
 				while(true) if(!reassignai()) break;
