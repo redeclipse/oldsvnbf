@@ -204,11 +204,11 @@ namespace aiman
 		if(m_story(gamemode)) balance = nplayers;
 		else if(m_fight(gamemode) && !m_race(gamemode))
 		{
-			switch(GVAR(botbalance))
+			if(GVAR(botscale) > 0) switch(GVAR(botbalance))
 			{
 				case 0: balance = 0; break; // no bots
-				case 1: default: balance = GVAR(botscale) > 0 ? 2 : 0; break; // one bot (or balance teams)
-				case 2: balance = int(nplayers*GVAR(botscale)); break; // use scaled numplayers
+				case 1: default: balance = max(numclients(-1, true, -1), 2); break; // one bot (or balance teams)
+				case 2: balance = max(numclients(-1, true, -1), int(nplayers*GVAR(botscale))); break; // use scaled numplayers
 			}
 			if(m_team(gamemode, mutators) && balance > 0)
 			{ // skew this if teams are unbalanced
