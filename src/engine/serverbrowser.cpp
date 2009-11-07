@@ -399,6 +399,7 @@ void checkpings()
         filtertext(si->map, text);
         getstring(text, p);
         filtertext(si->sdesc, text);
+        if(!strcmp(si->sdesc, "unnamed")) copystring(si->sdesc, si->name);
 	}
 }
 
