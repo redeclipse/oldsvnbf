@@ -131,7 +131,7 @@ struct duelservmode : servmode
 					{
 						ci->state.health = m_maxhealth(gamemode, mutators);
 						ci->state.lastregen = gamemillis;
-						sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, -1); // amt = -1 regens impulse
+						sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, 0); // amt = 0 regens impulse
 					}
 					alive.add(ci);
 				}
