@@ -12,6 +12,8 @@ ifeq (,$(findstring -pg,$(CXXFLAGS)))
 endif
 endif
 
+MV=mv
+
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 WINDRES= windres
 CLIENT_INCLUDES= -DINTERFACE -DIRC $(INCLUDES) -Iinclude
@@ -119,7 +121,7 @@ clean-server:
 
 %.h.gch: %.h
 	$(CXX) $(CXXFLAGS) -o $@.tmp $(subst .h.gch,.h,$@)
-	mv $@.tmp $@
+	$(MV) $@.tmp $@
 
 %-standalone.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
