@@ -2249,13 +2249,14 @@ void saveimage(const char *fname, ImageData &image, int format, int compress, bo
             ImageData flipped(image.w, image.h, image.bpp, image.data);
             if(flip) texflip(flipped);
             SDL_Surface *s = wrapsurface(flipped.data, flipped.w, flipped.h, flipped.bpp);
-            if(s)
+            if(!s) break;
+            stream *f = openfile(filename, "wb");
+            if(f)
             {
-                const char *name = findfile(filename, "wb");
-                if(!name) name = filename;
-                SDL_SaveBMP(s, name);
-                SDL_FreeSurface(s);
+                SDL_SaveBMP_RW(s, f->rwops(), 1);
+                delete f;
             }
+            SDL_FreeSurface(s);
             break;
         }
         default: break;
