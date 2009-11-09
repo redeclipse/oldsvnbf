@@ -15,7 +15,7 @@ namespace weapons
 
 	bool weapselect(gameent *d, int weap, bool local)
 	{
-		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 		{
 			if(local) client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			playsound(S_SWITCH, d->o, d);
@@ -51,7 +51,7 @@ namespace weapons
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
 		if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX) return;
-		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD))) return;
+		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))) return;
 		int s = d->weapselect;
 		loopi(WEAP_MAX) // only loop the amount of times we have weaps for
 		{
@@ -78,7 +78,7 @@ namespace weapons
 	void drop(gameent *d, int a = -1)
 	{
 		int weap = isweap(a) ? a : d->weapselect;
-		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
+		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
 		{
 			client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -144,7 +144,7 @@ namespace weapons
 		int flags = alt ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
-			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+			if(!d->canshoot(d->weapselect, flags, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 			{
 				if(autoreloading && d->ammo[d->weapselect] < offset)// && d->weapstate[d->weapselect] != WEAP_S_RELOAD)
 				{

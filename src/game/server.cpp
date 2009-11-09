@@ -2291,7 +2291,7 @@ namespace server
 		}
 		if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis))
 		{
-			if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
+			if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
 				takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
@@ -2323,9 +2323,9 @@ namespace server
 			sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 			return;
 		}
-		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis))
+		if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, (1<<WEAP_S_SWITCH)))
 		{
-			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, WEAP_S_RELOAD))
+			if(!gs.canswitch(weap, m_spawnweapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
 				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
@@ -2416,9 +2416,9 @@ namespace server
 			return;
 		}
 		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
-		if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis))
+		if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_SWITCH)))
 		{
-			if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, WEAP_S_RELOAD))
+			if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_RELOAD)))
 			{
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
 				return;
