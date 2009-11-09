@@ -81,9 +81,11 @@ VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
 
+FVARG(forcegravity, 0, 0, 10000);
+FVARG(forcejumpspeed, 0, 0, 10000);
+FVARG(forceimpulsespeed, 0, 0, 10000);
+
 FVARG(damagescale, 0, 1.f, 1000);
-FVARG(gravityscale, 0, 1.f, 1000);
-FVARG(jumpscale, 0, 1.f, 1000);
 FVARG(speedscale, 1e-3f, 1.f, 1000);
 FVARG(hitpushscale, 0, 1.f, 1000);
 FVARG(deadpushscale, 0, 2.f, 1000);

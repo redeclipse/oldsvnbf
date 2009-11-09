@@ -117,9 +117,9 @@ namespace physics
 		return from;
 	}
 
-	float jumpforce(physent *d, bool liquid) { return m_speedscale(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f)*jumpscale; }
-	float impulseforce(physent *d) { return m_speedscale(impulsespeed)*(d->weight/100.f)*jumpscale; }
-	float gravityforce(physent *d) { return m_speedscale(m_speedscale(gravity))*(d->weight/100.f)*gravityscale; }
+	float jumpforce(physent *d, bool liquid) { return m_speedscale(forcejumpspeed > 0 ? forcejumpspeed : jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f); }
+	float impulseforce(physent *d) { return m_speedscale(forceimpulsespeed > 0 ? forceimpulsespeed : impulsespeed)*(d->weight/100.f); }
+	float gravityforce(physent *d) { return m_speedscale(m_speedscale(forcegravity > 0 ? forcegravity : gravity))*(d->weight/100.f); }
 
 	float stepforce(physent *d, bool up)
 	{
