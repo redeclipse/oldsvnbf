@@ -1037,7 +1037,7 @@ namespace ai
 			}
 		}
 
-		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD))))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(); float dist = 0;

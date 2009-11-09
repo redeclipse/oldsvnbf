@@ -33,7 +33,8 @@ namespace weapons
 			if(local)
 			{
 				client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
-				playsound(S_RELOAD, d->o, d);
+				if(issound(d->wschan)) removesound(d->wschan);
+				playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
 				d->setweapstate(weap, WEAP_S_RELOAD, weaptype[weap].rdelay, lastmillis);
 				int oldammo = d->ammo[weap];
 				ammo = min(max(d->ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);

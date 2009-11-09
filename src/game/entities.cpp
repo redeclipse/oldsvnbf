@@ -230,7 +230,8 @@ namespace entities
 		}
 		d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
 		game::spawneffect(PART_FIREBALL, pos, e.type == WEAPON ? weaptype[attr].colour : 0x6666FF, enttype[e.type].radius, 5);
-		playsound(S_ITEMPICKUP, d->o, d);
+		if(issound(d->wschan)) removesound(d->wschan);
+		playsound(S_ITEMPICKUP, d->o, d, 0, -1, -1, -1, &d->wschan);
 		if(ents.inrange(r) && ents[r]->type == WEAPON)
 		{
 			gameentity &f = *(gameentity *)ents[r];
