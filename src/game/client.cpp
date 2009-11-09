@@ -1354,7 +1354,8 @@ namespace client
 					if(isweap(weap) && target)
 					{
 						target->weapswitch(weap, lastmillis);
-						playsound(S_SWITCH, target->o, target);
+						if(issound(target->wschan)) removesound(target->wschan);
+						playsound(S_SWITCH, target->o, target, 0, -1, -1, -1, &target->wschan);
 					}
 					break;
 				}
