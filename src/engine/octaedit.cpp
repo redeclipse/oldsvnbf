@@ -1719,7 +1719,7 @@ void texduplicate()
 
 COMMAND(texduplicate, "");
 
-VARP(thumbwidth, 0, 16, 1000);
+VARP(thumbwidth, 0, 12, 1000);
 VARP(thumbheight, 0, 6, 1000);
 VARP(thumbtime, 0, 25, 1000);
 FVARP(thumbsize, 0, 3, 6);
