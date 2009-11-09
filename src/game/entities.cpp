@@ -675,10 +675,10 @@ namespace entities
 		{
 			case EU_ITEM: if(d->action[AC_USE] && !m_noitems(game::gamemode, game::mutators))
 			{
-				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
+				if(game::allowmove(d) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
 				{
 					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
-					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD))
+					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -894,7 +894,7 @@ namespace entities
 			else if(ents.inrange(ent))
 			{
 				gameentity &f = *(gameentity *)ents[ent];
-				if(((enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type))) && f.links.find(n) < 0)
+				if(((enttype[e.type].reclink&(1<<f.type)) || (enttype[f.type].reclink&(1<<e.type))) && f.links.find(n) < 0)
 				{
 					f.links.add(n);
 					if(verbose) conoutf("\frWARNING: automatic reciprocal link between %d and %d added", n, ent);
@@ -1158,7 +1158,7 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node))
 		{
 			if(index != node && maylink(ents[index]->type) && maylink(ents[node]->type) &&
-					(enttype[ents[index]->type].canlink&inttobit(ents[node]->type)))
+					(enttype[ents[index]->type].canlink&(1<<ents[node]->type)))
 						return true;
 			if(msg)
 				conoutf("\frentity %s (%d) and %s (%d) are not linkable", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
@@ -1174,7 +1174,7 @@ namespace entities
 		if(ents.inrange(index) && ents.inrange(node) && index != node && canlink(index, node, local && verbose))
 		{
 			gameentity &e = *(gameentity *)ents[index], &f = *(gameentity *)ents[node];
-			bool recip = (enttype[e.type].reclink&inttobit(f.type)) || (enttype[f.type].reclink&inttobit(e.type));
+			bool recip = (enttype[e.type].reclink&(1<<f.type)) || (enttype[f.type].reclink&(1<<e.type));
 			int g = -1, h = -1;
 			if((toggle || !add) && (g = e.links.find(node)) >= 0)
 			{

@@ -711,7 +711,7 @@ namespace hud
 					if(shownotices >= 3 && game::allowmove(game::player1))
 					{
 						pushfont("default");
-						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
+						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
 						{
 							static vector<actitem> actitems;
 							actitems.setsizenodelete(0);
@@ -745,7 +745,7 @@ namespace hud
 										if(enttype[e.type].usetype == EU_ITEM)
 										{
 											int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
-											if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD))
+											if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 											{
 												if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
 													weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
@@ -771,7 +771,7 @@ namespace hud
 						}
 						if(shownotices >= 4)
 						{
-							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 							{
 								SEARCHBINDCACHE(attackkey)("action 0", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;

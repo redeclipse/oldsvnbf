@@ -69,7 +69,7 @@ namespace ai
 		if(e)
 		{
 			float dist = e->o.dist(d->o);
-			if(!weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, dist) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD))
+			if(!weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, dist) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 				return true;
 		}
 		return false;
@@ -899,7 +899,7 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(!d->ai->becareful && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, WEAP_S_RELOAD) &&
+					if(!d->ai->becareful && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)) &&
 						hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)))
 					{
 						d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
@@ -966,7 +966,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
-			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)) && b.type == AI_S_DEFEND && b.idle)
+			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) && b.type == AI_S_DEFEND && b.idle)
 			{
 				loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 				{
@@ -976,7 +976,7 @@ namespace ai
 					break;
 				}
 			}
-			if(game::allowmove(d) && busy <= 3 && !d->action[AC_USE] && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
+			if(game::allowmove(d) && busy <= 3 && !d->action[AC_USE] && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
 			{
 				static vector<actitem> actitems;
 				actitems.setsizenodelete(0);
@@ -1017,7 +1017,7 @@ namespace ai
 							{
 								if(m_noitems(game::gamemode, game::mutators)) continue;
 								int attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
-								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, WEAP_S_RELOAD)) switch(e.type)
+								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
 								{
 									case WEAPON:
 									{
@@ -1037,7 +1037,7 @@ namespace ai
 			}
 		}
 
-		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, WEAP_S_RELOAD)))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(); float dist = 0;

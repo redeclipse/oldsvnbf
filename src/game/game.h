@@ -67,14 +67,14 @@ enttypes enttype[] = {
 	},
 	{
 		LIGHT,			1,  59,		0,		EU_NONE,	4,
-			inttobit(LIGHTFX),
-			inttobit(LIGHTFX),
+			(1<<LIGHTFX),
+			(1<<LIGHTFX),
 			false,				"light",		{ "radius",	"red",		"green",	"blue",		"",			"" }
 	},
 	{
 		MAPMODEL,		1,  58,		0,		EU_NONE,	5,
-			inttobit(TRIGGER),
-			inttobit(TRIGGER),
+			(1<<TRIGGER),
+			(1<<TRIGGER),
 			false,				"mapmodel",		{ "type",	"yaw",		"pitch",	"roll",		"flags",	"" }
 	},
 	{
@@ -91,20 +91,20 @@ enttypes enttype[] = {
 	},
 	{
 		PARTICLES,		1,  59,		0,		EU_NONE,	5,
-			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			inttobit(TRIGGER)|inttobit(PUSHER),
+			(1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
+			(1<<TRIGGER)|(1<<PUSHER),
 			false,				"particles",	{ "type",	"a",		"b",		"c",		"d",		"" }
 	},
 	{
 		MAPSOUND,		1,  58,		0,		EU_NONE,	5,
-			inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			inttobit(TRIGGER)|inttobit(PUSHER),
+			(1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
+			(1<<TRIGGER)|(1<<PUSHER),
 			false,				"sound",		{ "type",	"maxrad",	"minrad",	"volume",	"flags",	"" }
 	},
 	{
 		LIGHTFX,		1,  1,		0,		EU_NONE,	5,
-			inttobit(LIGHT)|inttobit(TELEPORT)|inttobit(TRIGGER)|inttobit(PUSHER),
-			inttobit(LIGHT)|inttobit(TRIGGER)|inttobit(PUSHER),
+			(1<<LIGHT)|(1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
+			(1<<LIGHT)|(1<<TRIGGER)|(1<<PUSHER),
 			false,				"lightfx",		{ "type",	"mod",		"min",		"max",		"flags",	"" }
 	},
 	{
@@ -121,31 +121,31 @@ enttypes enttype[] = {
 	},
 	{
 		TELEPORT,		1,  50,		12,		EU_AUTO,	5,
-			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX)|inttobit(TELEPORT),
-			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
+			(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX)|(1<<TELEPORT),
+			(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
 			false,				"teleport",		{ "yaw",	"pitch",	"push",		"radius",	"colour",	"" }
 	},
 	{
 		ACTOR,			1,  59,		0,		EU_NONE,	5,
-			inttobit(FLAG)|inttobit(WAYPOINT),
+			(1<<FLAG)|(1<<WAYPOINT),
 			0,
 			false,				"actor",		{ "type",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
 	{
 		TRIGGER,		1,  58,		16,		EU_AUTO,	5,
-			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
-			inttobit(MAPMODEL)|inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
+			(1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
+			(1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
 			false,				"trigger",		{ "id",		"type",		"action",	"radius",	"state",	"" }
 	},
 	{
 		PUSHER,			1,  58,		12,		EU_AUTO,	5,
-			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
-			inttobit(MAPSOUND)|inttobit(PARTICLES)|inttobit(LIGHTFX),
+			(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
+			(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
 			false,				"pusher",		{ "zpush",	"ypush",	"xpush",	"radius",	"min",		"" }
 	},
 	{
 		FLAG,			1,  48,		32,		EU_NONE,	5,
-			inttobit(FLAG),
+			(1<<FLAG),
 			0,
 			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
 	},
@@ -157,13 +157,13 @@ enttypes enttype[] = {
 	},
 	{
 		CAMERA,			1,  48,		0,		EU_NONE,	3,
-			inttobit(CAMERA),
+			(1<<CAMERA),
 			0,
 			false,				"camera",		{ "type",	"mindist",	"maxdist",	"",			"",			"" }
 	},
 	{
 		WAYPOINT,		0,  1,		16,		EU_NONE,	5,
-			inttobit(WAYPOINT),
+			(1<<WAYPOINT),
 			0,
 			true,				"waypoint",		{ "type",	"state",	"id",		"radius",	"flags",	"" }
 	}
@@ -201,7 +201,7 @@ enum
 #define isweap(a)		(a > -1 && a < WEAP_MAX)
 
 enum { WEAP_F_NONE = 0, WEAP_F_FORCED = 1<<0 };
-enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH, WEAP_S_PICKUP, WEAP_S_WAIT, WEAP_S_MAX };
+enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH, WEAP_S_PICKUP, WEAP_S_WAIT };
 
 enum
 {
@@ -640,27 +640,28 @@ struct gamestate
 		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
 	}
 
-	bool weapwaited(int weap, int millis, int skip = -1)
+	bool weapwaited(int weap, int millis, int skip = 0)
 	{
-		if(skip >= 0 && weapstate[weap] == skip) return true;
-		if(!weapwait[weap] || weapstate[weap] == WEAP_S_IDLE || weapstate[weap] == WEAP_S_POWER) return true;
+		if(!weapwait[weap] || weapstate[weap] == WEAP_S_IDLE || weapstate[weap] == WEAP_S_POWER || (skip&(1<<weapstate[weap]))) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
 	int skipwait(int weap, int flags, int millis, int skip)
 	{
-		return skip != WEAP_S_RELOAD || (millis-weaplast[weap] < weapwait[weap]*3/4 && (ammo[weap] > weaptype[weap].add ||
-			(weapload[weap] >= 0 && ammo[weap]-weapload[weap] >= weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]))) ? skip : -1;
+		int skipstate = skip;
+		if((skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && (millis-weaplast[weap] >= weapwait[weap]*3/4 || ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]))
+			skipstate &= ~(1<<WEAP_S_RELOAD);
+		return skipstate;
 	}
 
-	bool canswitch(int weap, int sweap, int millis, int skip = -1)
+	bool canswitch(int weap, int sweap, int millis, int skip = 0)
 	{
 		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, 0, millis, skip)))
 			return true;
 		return false;
 	}
 
-	bool canshoot(int weap, int flags, int sweap, int millis, int skip = -1)
+	bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
 	{
 		if(hasweap(weap, sweap) && ammo[weap] >= weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
 			return true;
@@ -674,7 +675,7 @@ struct gamestate
 		return false;
 	}
 
-	bool canuse(int type, int attr, vector<int> &attrs, int sweap, int millis, int skip = -1)
+	bool canuse(int type, int attr, vector<int> &attrs, int sweap, int millis, int skip = 0)
 	{
 		if((type != TRIGGER || attrs[2] == TA_AUTO) && enttype[type].usetype == EU_AUTO)
 			return true;
