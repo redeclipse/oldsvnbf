@@ -972,7 +972,7 @@ void cleanupmotionblur()
 
 VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
 VARP(motionblurmillis, 1, 5, 1000);
-FVARP(motionblurscale, 0, 1, 1);
+FVARP(motionblurscale, 0, 1, 2);
 
 void addmotionblur()
 {
@@ -988,7 +988,7 @@ void addmotionblur()
         createtexture(motiontex, motionw, motionh, NULL, 3, 0, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
     }
 
-    float amount = hud::motionblur(motionblurscale);
+    float amount = min(hud::motionblur(motionblurscale), 1.0f);
     if(amount <= 0)
     {
         lastmotion = 0;
