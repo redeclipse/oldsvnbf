@@ -154,6 +154,7 @@ void writeinitcfg()
 	f->printf("depthbits %d\n", depthbits);
 	f->printf("stencilbits %d\n", stencilbits);
 	f->printf("fsaa %d\n", fsaa);
+	f->printf("aniso %d\n", aniso);
 	f->printf("vsync %d\n", vsync);
 	f->printf("shaders %d\n", useshaders);
 	f->printf("shaderprecision %d\n", shaderprecision);
@@ -846,6 +847,7 @@ int main(int argc, char **argv)
 					case 'd': depthbits = atoi(&argv[i][3]); break;
 					case 'c': colorbits = atoi(&argv[i][3]); break;
 					case 'a': fsaa = atoi(&argv[i][3]); break;
+					case 'n': aniso = atoi(&argv[i][3]); break;
 					case 'v': vsync = atoi(&argv[i][3]); break;
 					case 'f': fullscreen = atoi(&argv[i][3]); break;
 					case 's': stencilbits = atoi(&argv[i][3]); break;
