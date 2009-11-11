@@ -188,7 +188,7 @@ namespace projs
                     default: break;
                 }
 				int vol = int(255*(1.f-proj.lifespan));
-				if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, &proj, 0, vol);
+				if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, NULL, 0, vol);
                 break;
             }
             case PRJ_GIBS:
@@ -197,14 +197,14 @@ namespace projs
             	{
 					adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
 					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-					if(vol) playsound(S_SPLOSH, proj.o, &proj, 0, vol);
+					if(vol) playsound(S_SPLOSH, proj.o, NULL, 0, vol);
 					break;
             	} // otherwise fall through
             }
             case PRJ_DEBRIS:
             {
        	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-                if(vol) playsound(S_DEBRIS, proj.o, &proj, 0, vol);
+                if(vol) playsound(S_DEBRIS, proj.o, NULL, 0, vol);
                 break;
             }
             default: break;
@@ -428,7 +428,8 @@ namespace projs
 			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 			else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 		}
-		else if(!weaptype[weap].time || life) playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d);
+		else if(!weaptype[weap].time || life)
+			playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
 
 		switch(weap)
 		{
