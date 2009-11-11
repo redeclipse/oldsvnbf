@@ -1348,12 +1348,13 @@ namespace server
 	{
 		if(ci->team != team)
 		{
-			bool sm = !reset && ci->state.state == CS_ALIVE;
+			bool sm = false;
 			if(reset) waiting(ci);
-			else if(sm)
+			else if(ci->state.state == CS_ALIVE)
 			{
 				if(smode) smode->leavegame(ci);
 				mutate(smuts, mut->leavegame(ci));
+				sm = true;
 			}
 			ci->team = team;
 			if(sm)
@@ -3608,7 +3609,6 @@ namespace server
 						cp->state.state = CS_SPECTATOR;
                     	cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 						setteam(cp, TEAM_NEUTRAL, false, true);
-						aiman::dorefresh = true;
 					}
 					else if(cp->state.state == CS_SPECTATOR && !val)
 					{
@@ -3619,7 +3619,6 @@ namespace server
 						waiting(cp, 2);
 						if(smode) smode->entergame(cp);
 						mutate(smuts, mut->entergame(cp));
-						aiman::dorefresh = true;
 					}
 					break;
 				}

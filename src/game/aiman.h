@@ -201,17 +201,27 @@ namespace aiman
 			if(needent) addai(sents[i].attrs[0], i, -1, false);
 		}
 		int balance = 0;
-		if(m_story(gamemode)) balance = nplayers;
+		if(m_story(gamemode)) balance = nplayers; // story mode strictly obeys nplayers
 		else if(m_fight(gamemode) && !m_race(gamemode))
 		{
-			if(GVAR(botscale) > 0) switch(GVAR(botbalance))
+			int balstyle = GVAR(teambalance) != 3 ? GVAR(botbalance) : 0, numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
+			if(GVAR(botscale) > 0 && GVAR(botlimit) > 0) switch(balstyle)
 			{
 				case 0: balance = 0; break; // no bots
-				case 1: default: balance = max(numclients(-1, true, -1), 2); break; // one bot (or balance teams)
-				case 2: balance = max(numclients(-1, true, -1), int(nplayers*GVAR(botscale))); break; // use scaled numplayers
+				case 1: default: balance = max(people, 2*numt); break; // balance to at least two
+				case 2: balance = max(people, int(nplayers*GVAR(botscale))); break; // use scaled numplayers
 			}
-			if(m_team(gamemode, mutators) && balance > 0)
+			if(m_team(gamemode, mutators) && (balance > 0 || GVAR(teambalance) == 3))
 			{ // skew this if teams are unbalanced
+				if(!autooverride)
+				{
+					if(GVAR(teambalance) != 3)
+					{
+						int offt = balance%numt; // balance so all teams have even counts
+						if(offt > 0) balance += numt-offt;
+					}
+					else balance = max(people*numt, numt); // humans vs. bots, just directly balance
+				}
 				loopvrev(clients)
 				{
 					clientinfo *ci = clients[i];
@@ -219,45 +229,22 @@ namespace aiman
 					{
 						if(!autooverride && numclients(-1, true, AI_BOT) > balance)
 							shiftai(ci, -1); // temporarily remove and cleanup later
-						else setteam(ci, chooseteam(ci, ci->team), true, true);
-					}
-				}
-				if(!autooverride)
-				{
-					int numt = numteams(gamemode, mutators), ppl = numclients(-1, true, -1);
-					if(GVAR(teambalance) != 3)
-					{ // balance so all teams have even counts
-						int teamcount[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1;
-						loopv(clients)
+						else
 						{
-							clientinfo *cp = clients[i];
-							if(!cp->team || cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING) continue;
-							if((cp->state.aitype >= 0 && cp->state.ownernum < 0) || cp->state.aitype >= AI_START) continue;
-							int idx = cp->team-TEAM_FIRST;
-							teamcount[idx]++;
-							if(highest < 0 || teamcount[idx] > teamcount[highest]) highest = idx;
+							int teamb = chooseteam(ci, ci->team);
+							if(ci->team != teamb) setteam(ci, teamb, true, true);
 						}
-						if(highest >= 0)
-						{
-							loopi(numt) if(teamcount[highest] > teamcount[i])
-							{
-								int offset = teamcount[highest]-teamcount[i];
-								balance += offset;
-							}
-						}
-						balance += numt-(balance%numt); // just to ensure it is correctly aligned
-					}
-					else balance = max(ppl*numt, numt); // humans vs. bots, just directly balance
-					int bots = balance-ppl;
-					if(bots > GVAR(botlimit))
-					{
-						balance -= bots-GVAR(botlimit);
-						balance += numt-(balance%numt);
 					}
 				}
 			}
+			int bots = balance-people;
+			if(bots > GVAR(botlimit))
+			{
+				balance -= bots-GVAR(botlimit);
+				balance -= balance%numt;
+			}
 		}
-		if(!autooverride) // story mode strictly obeys nplayers
+		if(!autooverride)
 		{
 			if(balance > 0)
 			{
