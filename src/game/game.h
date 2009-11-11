@@ -526,7 +526,7 @@ extern teamtypes teamtype[];
 #endif
 enum { BASE_NONE = 0, BASE_HOME = 1<<0, BASE_FLAG = 1<<1, BASE_BOTH = BASE_HOME|BASE_FLAG };
 
-#define numteams(a,b)	(m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2)
+#define numteams(a,b)	(m_team(a,b) ? (m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2) : 1)
 #define isteam(a,b,c,d)	(m_team(a,b) ? (c >= d && c <= numteams(a,b)+(TEAM_FIRST-1)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)	(a >= b && a <= TEAM_NUM)
 #define adjustscaled(t,n,s) { \

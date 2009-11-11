@@ -1701,10 +1701,10 @@ void drawnoview()
 
     settexture("textures/cube2badge", 3);
     glBegin(GL_QUADS); // goes off the edge on purpose
-    glTexCoord2f(0, 0); glVertex2f(w-80, 36);
-    glTexCoord2f(1, 0); glVertex2f(w-16, 36);
-    glTexCoord2f(1, 1); glVertex2f(w-16, 68);
-    glTexCoord2f(0, 1); glVertex2f(w-80, 68);
+    glTexCoord2f(0, 0); glVertex2f(w-104, 48);
+    glTexCoord2f(1, 0); glVertex2f(w-8, 48);
+    glTexCoord2f(1, 1); glVertex2f(w-8, 96);
+    glTexCoord2f(0, 1); glVertex2f(w-104, 96);
     glEnd();
 
 	glPushMatrix();
