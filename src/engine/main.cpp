@@ -470,6 +470,51 @@ void resetcursor(bool warp, bool reset)
 	if(reset) cursorx = cursory = 0.5f;
 }
 
+static inline bool skipmousemotion(SDL_Event &event, bool init = false)
+{
+    if(event.type != SDL_MOUSEMOTION) return true;
+    if(init && ignoremouse) { ignoremouse--; return true; }
+#ifdef __APPLE__
+    if(!(screen->flags&SDL_FULLSCREEN))
+    {
+        if(event.motion.y == 0) return true;  // let mac users drag windows via the title bar
+    }
+#endif
+    if(warpmouse && event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) 
+    {
+        if(init) warpmouse = false;
+        return true;  // ignore any motion events generated SDL_WarpMouse
+    }
+    return false;
+}
+
+static void checkmousemotion(int &dx, int &dy)
+{
+    loopv(events)
+    {
+        SDL_Event &event = events[i];
+        if(skipmousemotion(event))
+        {
+            if(i > 0) events.remove(0, i);
+            return;
+        }
+        dx += event.motion.xrel;
+        dy += event.motion.yrel;
+    }
+    events.setsizenodelete(0);
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
+    {
+        if(skipmousemotion(event))
+        {
+            events.add(event);
+            return;
+        }
+        dx += event.motion.xrel;
+        dy += event.motion.yrel;
+    }
+}
+
 void checkinput()
 {
 	SDL_Event event;
@@ -508,15 +553,12 @@ void checkinput()
 			}
 			case SDL_MOUSEMOTION:
 			{
-				if(grabinput || activewindow)
+				if((grabinput || activewindow) && !skipmousemotion(event, true))
 				{
-#ifdef __APPLE__
-					if(event.motion.y == 0) break;  //let mac users drag windows via the title bar
-#endif
 					//conoutf("mouse: %d %d, %d %d [%s, %d]", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, warpmouse ? "true" : "false", ignoremouse);
-					if(warpmouse && event.motion.x == screen->w/2 && event.motion.y == screen->h/2) warpmouse = false;
-					else if(ignoremouse) ignoremouse--;
-					else if(game::mousemove(event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, screen->w, screen->h))
+                    int dx = event.motion.xrel, dy = event.motion.yrel;
+                    checkmousemotion(dx, dy);
+					if(game::mousemove(dx, dy, event.motion.x, event.motion.y, screen->w, screen->h))
 						resetcursor(true, false); // game controls engine cursor
 				}
 				break;
