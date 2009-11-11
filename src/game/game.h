@@ -649,7 +649,7 @@ struct gamestate
 	int skipwait(int weap, int flags, int millis, int skip)
 	{
 		int skipstate = skip;
-		if((skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && (millis-weaplast[weap] >= weapwait[weap]*3/4 || ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]))
+		if((skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap] && ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0])
 			skipstate &= ~(1<<WEAP_S_RELOAD);
 		return skipstate;
 	}
