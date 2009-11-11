@@ -559,6 +559,16 @@ struct gui : guient
 				glBindTexture(GL_TEXTURE_2D, t->id);
 			}
 		}
+        float xi = x, yi = y, xpad = 0, ypad = 0;   
+        if(overlaid)
+        {
+            xpad = xs/32;
+            ypad = ys/32;
+            xi += xpad;
+            yi += ypad;
+            xs -= 2*xpad;
+            ys -= 2*ypad;
+        }
         float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
         if(rotate)
         {
@@ -570,10 +580,10 @@ struct gui : guient
         vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
         glColor3fv(color.v);
         glBegin(GL_QUADS);
-        glTexCoord2fv(tc[0]); glVertex2f(x,    y);
-        glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
-        glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
-        glTexCoord2fv(tc[3]); glVertex2f(x,    y+ys);
+        glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
+        glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
+        glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
+        glTexCoord2fv(tc[3]); glVertex2f(xi,    yi+ys);
         glEnd();
         if(glowtex)
         {
@@ -582,10 +592,10 @@ struct gui : guient
             if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
             else glColor3fv(glowcolor.v);
             glBegin(GL_QUADS);
-            glTexCoord2fv(tc[0]); glVertex2f(x,    y);
-            glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
-            glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
-            glTexCoord2fv(tc[3]); glVertex2f(x,    y+ys);
+            glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
+            glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
+            glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(xi,    yi+ys);
             glEnd();
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         }
@@ -594,10 +604,10 @@ struct gui : guient
             glBindTexture(GL_TEXTURE_2D, layertex->id);
             glColor3fv(color.v);
             glBegin(GL_QUADS);
-            glTexCoord2fv(tc[0]); glVertex2f(x+xs/2, y+ys/2);
-            glTexCoord2fv(tc[1]); glVertex2f(x+xs,   y+ys/2);
-            glTexCoord2fv(tc[2]); glVertex2f(x+xs,   y+ys);
-            glTexCoord2fv(tc[3]); glVertex2f(x+xs/2, y+ys);
+            glTexCoord2fv(tc[0]); glVertex2f(xi+xs/2, yi+ys/2);
+            glTexCoord2fv(tc[1]); glVertex2f(xi+xs,   yi+ys/2);
+            glTexCoord2fv(tc[2]); glVertex2f(xi+xs,   yi+ys);
+            glTexCoord2fv(tc[3]); glVertex2f(xi+xs/2, yi+ys);
             glEnd();
         }
 
@@ -610,7 +620,7 @@ struct gui : guient
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
             glColor3f(1, 1, 1);
 			glBegin(GL_QUADS);
-			rect_(x, y, xs, ys, 0);
+			rect_(xi - xpad, yi - ypad, xs + 2*xpad, ys + 2*ypad, 0);
 			glEnd();
 		}
 	}
