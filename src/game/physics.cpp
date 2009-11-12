@@ -484,7 +484,7 @@ namespace physics
 			if(trystepdown(d, dir, step, 2, 1)) return true;
 			if(trystepdown(d, dir, step, 1, 1)) return true;
 			if(trystepdown(d, dir, step, 1, 2)) return true;
-			d->o.z -= step; if(collide(d, vec(0, 0, -1))) return true;
+			//d->o.z -= step; if(collide(d, vec(0, 0, -1))) return true;
 			d->o = old; d->o.add(dir);
 		}
 		vec floor(0, 0, 0);
