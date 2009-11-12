@@ -142,6 +142,16 @@ namespace physics
 		return false;
 	}
 
+	bool sticktospecial(physent *d)
+	{
+		if(d->onladder) return true;
+		if(d->type == ENT_PLAYER || d->type == ENT_AI)
+		{
+			if(((gameent *)d)->turnside) return true;
+		}
+		return false;
+	}
+
 	bool canimpulse(physent *d, int cost)
 	{
 		if((d->type == ENT_PLAYER || d->type == ENT_AI) && impulsemeter)
@@ -356,7 +366,7 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
-        else if(d->onladder || ((d->type == ENT_PLAYER || d->type == ENT_AI) && ((gameent *)d)->turnside))
+        else if(sticktospecial(d))
         {
             d->timeinair = 0;
             d->physstate = PHYS_FLOOR;
@@ -379,7 +389,7 @@ namespace physics
 		bool found = false;
 		vec moved(d->o);
 		d->o.z -= 0.1f;
-		if(d->onladder || ((d->type == ENT_PLAYER || d->type == ENT_AI) && ((gameent *)d)->turnside))
+		if(sticktospecial(d))
 		{
 			floor = vec(0, 0, 1);
 			found = true;
@@ -719,8 +729,7 @@ namespace physics
 		if(pl->type==ENT_PLAYER || pl->type==ENT_AI)
         {
             updatematerial(pl, local, floating);
-            if(!floating && !pl->onladder && !((gameent *)pl)->turnside)
-				modifygravity(pl, millis); // apply gravity
+            if(!floating && !sticktospecial(pl)) modifygravity(pl, millis); // apply gravity
         }
 		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
