@@ -735,7 +735,7 @@ namespace ai
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
-				if(((e.attrs[0] & WP_F_CROUCH && !d->action[AC_CROUCH]) || d->action[AC_CROUCH]) && (lastmillis-d->actiontime[AC_CROUCH] >= 500))
+				if(((e.attrs[0] & WP_F_CROUCH && !d->action[AC_CROUCH]) || d->action[AC_CROUCH]) && (lastmillis-d->actiontime[AC_CROUCH] >= PHYSMILLIS*3))
 				{
 					d->action[AC_CROUCH] = !d->action[AC_CROUCH];
 					d->actiontime[AC_CROUCH] = lastmillis;
@@ -825,8 +825,7 @@ namespace ai
 		}
 		if(jump)
 		{
-			d->action[AC_JUMP] = jump;
-			d->actiontime[AC_JUMP] = lastmillis;
+			if((d->action[AC_JUMP] = jump) != false) d->actiontime[AC_JUMP] = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 1 : 5);
 			d->ai->jumpseed = lastmillis+m_speedtime(seed+rnd(seed));
 			seed *= b.idle ? 100 : 50;
