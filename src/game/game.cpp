@@ -66,6 +66,7 @@ namespace game
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
 	VARP(zoomlevels, 1, 5, 10);
 	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
+	VARP(zoomscroll, 0, 0, 1); // 0 = stop at min/max, 1 = go to opposite end
 
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
@@ -160,8 +161,8 @@ namespace game
 	{
 		checkzoom();
 		zoomlevel += level;
-		if(zoomlevel > zoomlevels) zoomlevel = 1;
-		else if(zoomlevel < 1) zoomlevel = zoomlevels;
+		if(zoomlevel > zoomlevels) zoomlevel = zoomscroll ? 1 : zoomlevels;
+		else if(zoomlevel < 1) zoomlevel = zoomscroll ? zoomlevels : 1;
 	}
 	ICOMMAND(setzoom, "i", (int *level), setzoomlevel(*level));
 
