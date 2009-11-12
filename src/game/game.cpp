@@ -55,7 +55,7 @@ namespace game
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(zoomsensitivity, 0, 0.5f, 1000);
+	FVARP(zoomsensitivity, 0, 0.75f, 1);
 
 	VARP(zoommousetype, 0, 0, 2);
 	VARP(zoommousedeadzone, 0, 25, 100);
@@ -1110,18 +1110,13 @@ namespace game
 		}
 		else if(!tvmode())
 		{
-			if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
+			physent *target = player1->state == CS_WAITING || player1->state == CS_SPECTATOR ? camera1 : (allowmove(player1) ? player1 : NULL);
+			if(target)
 			{
-				camera1->yaw += mousesens(dx, w, yawsensitivity*sensitivity);
-				camera1->pitch -= mousesens(dy, h, pitchsensitivity*sensitivity*(!hascursor && mouseinvert ? -1.f : 1.f));
-				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
-			}
-			else if(allowmove(player1))
-			{
-				float scale = (inzoom() && zoomsensitivity > 0 ? 1.f-(zoomlevel/float(zoomlevels+1)*zoomsensitivity) : 1.f)*sensitivity;
-				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
-				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
-				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
+				float scale = (inzoom() && zoomsensitivity > 0 && zoomsensitivity < 1 ? 1.f-(zoomlevel/float(zoomlevels+1)*zoomsensitivity) : 1.f)*sensitivity;
+				target->yaw += mousesens(dx, w, yawsensitivity*scale);
+				target->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
+				fixfullrange(target->yaw, target->pitch, target->roll, false);
 			}
 			return true;
 		}
