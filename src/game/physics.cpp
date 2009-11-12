@@ -128,6 +128,20 @@ namespace physics
 		return 1.f;
 	}
 
+	bool sticktofloor(physent *d)
+	{
+		if(d->type == ENT_PLAYER || d->type == ENT_AI)
+		{
+			gameent *e = (gameent *)d;
+			if(e->onladder ||
+				(e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS) ||
+					(e->actiontime[AC_IMPULSE] && lastmillis-e->actiontime[AC_IMPULSE] <= PHYSMILLIS) ||
+						e->turnside || liquidcheck(e)) return false;
+			return true;
+		}
+		return false;
+	}
+
 	bool canimpulse(physent *d, int cost)
 	{
 		if((d->type == ENT_PLAYER || d->type == ENT_AI) && impulsemeter)
@@ -321,7 +335,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->physstate >= PHYS_FLOOR && !d->onladder && !liquidcheck(d) && ((d->type != ENT_PLAYER && d->type != ENT_AI) || !((gameent *)d)->turnside))
+		if(d->physstate >= PHYS_FLOOR && sticktofloor(d))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
@@ -445,7 +459,7 @@ namespace physics
                 d->o.add(dir);
             }
         }
-		else if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && !d->onladder && !liquidcheck(d) && !((gameent *)d)->action[AC_JUMP])
+		else if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && sticktofloor(d))
 		{
 			d->o = old;
 			float step = dir.magnitude();
