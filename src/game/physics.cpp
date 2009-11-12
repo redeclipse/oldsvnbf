@@ -101,7 +101,10 @@ namespace physics
 	bool iscrouching(physent *d)
 	{
 		if(d->type == ENT_PLAYER || d->type == ENT_AI)
-			return ((gameent *)d)->action[AC_CROUCH] || ((gameent *)d)->actiontime[AC_CROUCH] < 0 || lastmillis-((gameent *)d)->actiontime[AC_CROUCH] <= PHYSMILLIS;
+		{
+			gameent *e = (gameent *)d;
+			return e->action[AC_CROUCH] || e->actiontime[AC_CROUCH] < 0 || lastmillis-e->actiontime[AC_CROUCH] <= PHYSMILLIS;
+		}
 		return false;
 	}
 	bool liquidcheck(physent *d) { return d->inliquid && d->submerged > 0.8f; }
