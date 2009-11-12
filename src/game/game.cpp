@@ -55,7 +55,7 @@ namespace game
 	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
 	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
 	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(zoomsensitivity, 1e-3f, 10.0f, 1000);
+	FVARP(zoomsensitivity, 0, 0.5f, 1000);
 
 	VARP(zoommousetype, 0, 0, 2);
 	VARP(zoommousedeadzone, 0, 25, 100);
@@ -64,7 +64,7 @@ namespace game
 	VARP(zoomtime, 1, 100, 10000);
 
 	VARFP(zoomlevel, 1, 4, 10, checkzoom());
-	VARP(zoomlevels, 1, 4, 10);
+	VARP(zoomlevels, 1, 5, 10);
 	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
 
 	VARP(shownamesabovehead, 0, 2, 2);
@@ -1118,7 +1118,7 @@ namespace game
 			}
 			else if(allowmove(player1))
 			{
-				float scale = inzoom() ? zoomsensitivity*(1.f-(zoomlevel/float(zoomlevels+1))) : sensitivity;
+				float scale = (inzoom() && zoomsensitivity > 0 ? 1.f-(zoomlevel/float(zoomlevels+1)*zoomsensitivity) : 1.f)*sensitivity;
 				player1->yaw += mousesens(dx, w, yawsensitivity*scale);
 				player1->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
 				fixfullrange(player1->yaw, player1->pitch, player1->roll, false);
