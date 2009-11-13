@@ -227,7 +227,7 @@ bool ircnewchan(int type, const char *name, const char *channel, const char *fri
 	ircchan &d = n->channels.add();
 	d.state = IRCC_NONE;
 	d.type = type;
-	d.relay = clamp(relay, 0, 4);
+	d.relay = relay;
 	d.lastjoin = 0;
 	copystring(d.name, channel);
 	copystring(d.friendly, friendly && *friendly ? friendly : channel);
@@ -257,7 +257,7 @@ ICOMMAND(ircrelaychan, "sss", (const char *name, const char *chan, const char *s
 	ircchan *c = ircfindchan(n, chan);
 	if(!c) { conoutf("no such %s channel: %s", n->name, chan); return; }
 	if(!s || !*s) { conoutf("%s channel %s current relay level is: %d", n->name, c->name, c->relay); return; }
-	c->relay = clamp(atoi(s), 0, 4);
+	c->relay = atoi(s);
 });
 ICOMMAND(ircfriendlychan, "sss", (const char *name, const char *chan, const char *s), {
 	ircnet *n = ircfind(name);
