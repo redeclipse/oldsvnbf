@@ -1063,7 +1063,7 @@ namespace recorder
         else totalsize /= 1e3;
 
         float quality = 1.0f - float(dps)/float(dps+file->videofps); // strictly speaking should lock to read dps - 1.0=perfect, 0.5=half of frames are beingdropped
-        draw_textf("recorded %.1f%s %d%%", w*3-10*FONTH, h*3-FONTH-FONTH*3/2, totalsize, unit, int(quality*100));
+        draw_textx("recorded %.1f%s %d%%", w*3-FONTH*3/2, FONTH*3/2, 255, 255, 255, 255, TEXT_RIGHT_JUSTIFY, -1, -1, totalsize, unit, int(quality*100));
 
         glPopMatrix();
 

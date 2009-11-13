@@ -49,11 +49,12 @@ namespace client
 
 namespace hud
 {
-	extern void drawhud(int w, int h, bool noview = false);
-	extern void drawlast(int w, int h);
+	extern void drawhud(bool noview = false);
+	extern void drawlast();
 	extern float motionblur(float scale);
 	extern bool getcolour(vec &colour);
 	extern void gamemenus();
+	extern void update(int w, int h);
 }
 
 namespace physics

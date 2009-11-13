@@ -480,7 +480,7 @@ static inline bool skipmousemotion(SDL_Event &event, bool init = false)
         if(event.motion.y == 0) return true;  // let mac users drag windows via the title bar
     }
 #endif
-    if(warpmouse && event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2) 
+    if(warpmouse && event.motion.x == screen->w / 2 && event.motion.y == screen->h / 2)
     {
         if(init) warpmouse = false;
         return true;  // ignore any motion events generated SDL_WarpMouse
@@ -1019,6 +1019,7 @@ int main(int argc, char **argv)
 		if(frameloops)
 		{
 			game::recomputecamera(screen->w, screen->h);
+			hud::update(screen->w, screen->h);
 			setviewcell(camera1->o);
 			updatetextures();
 			updateparticles();

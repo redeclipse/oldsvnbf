@@ -238,7 +238,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 10 },		{ 2500, 2000 },		0,			{ 1000, 1000 },
-			0,		{ 0, 0 },	{ 20, 40 },		{ 35, 25 },		{ 1, 2 },
+			0,		{ 0, 0 },	{ 20, 40 },		{ 25, 20 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },	{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, false },	{ false, false },
 			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
@@ -272,7 +272,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|COLLIDE_STICK },															{ 2, 2 },
 			{ true, true },		{ true, false },	{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 18, 42 },			{ 0, 0 },
-			{ 3, 6 },			{ 100, 200 },		{ 400, 125 },		5,
+			{ 3, 6 },			{ 50, 200 },		{ 400, 125 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
@@ -282,7 +282,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },					{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 5, 0 },		{ 200, 600 },		{ 0, 0 },				7,
+			{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
@@ -302,7 +302,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },					{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 5, 0 },		{ 300, 600 },		{ 0, 0 },				7,
+			{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
@@ -677,18 +677,14 @@ struct gamestate
 
 	bool canuse(int type, int attr, vector<int> &attrs, int sweap, int millis, int skip = 0)
 	{
-		if((type != TRIGGER || attrs[2] == TA_AUTO) && enttype[type].usetype == EU_AUTO)
-			return true;
-		if(weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip))) switch(type)
+		//if((type != TRIGGER || attrs[2] == TA_AUTO) && enttype[type].usetype == EU_AUTO) return true;
+		//if(weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip)))
+		switch(enttype[type].usetype)
 		{
-			case TRIGGER:
-			{
-				return true;
-				break;
-			}
-			case WEAPON:
+			case EU_AUTO: case EU_ACT: return true; break;
+			case EU_ITEM:
 			{ // can't use when reloading or firing
-				if(isweap(attr) && !hasweap(attr, sweap, 4) && weapwaited(attr, millis))
+				if(isweap(attr) && !hasweap(attr, sweap, 4) && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip)))
 					return true;
 				break;
 			}

@@ -1,4 +1,7 @@
 #include "game.h"
+extern char *progresstitle, *progresstext;
+extern float progresspart;
+
 namespace hud
 {
 	const int NUMSTATS = 12;
@@ -592,7 +595,7 @@ namespace hud
 		return numkilled;
 	}
 
-	void drawlast(int w, int h)
+	void drawlast()
 	{
 		if(showhud)
 		{
@@ -601,7 +604,7 @@ namespace hud
 			glOrtho(0, hudwidth, hudsize, 0, -1, 1);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			drawpointers(w, h);
+			drawpointers(hudwidth, hudsize);
 			if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
 			{
 				pushfont("super");
@@ -626,8 +629,8 @@ namespace hud
 					popfont();
 				}
 
-				if(m_stf(game::gamemode)) stf::drawlast(w, h, tx, ty, tf/255.f);
-				else if(m_ctf(game::gamemode)) ctf::drawlast(w, h, tx, ty, tf/255.f);
+				if(m_stf(game::gamemode)) stf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
+				else if(m_ctf(game::gamemode)) ctf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
 
 				if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 				{
@@ -711,62 +714,59 @@ namespace hud
 					if(shownotices >= 3 && game::allowmove(game::player1))
 					{
 						pushfont("default");
-						if(game::player1->weapwaited(game::player1->weapselect, lastmillis, game::player1->skipwait(game::player1->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
+						static vector<actitem> actitems;
+						actitems.setsizenodelete(0);
+						if(entities::collateitems(game::player1, actitems))
 						{
-							static vector<actitem> actitems;
-							actitems.setsizenodelete(0);
-							if(entities::collateitems(game::player1, actitems))
+							SEARCHBINDCACHE(actionkey)("action 3", 0);
+							while(!actitems.empty())
 							{
-								SEARCHBINDCACHE(actionkey)("action 3", 0);
-								while(!actitems.empty())
+								actitem &t = actitems.last();
+								int ent = -1;
+								switch(t.type)
 								{
-									actitem &t = actitems.last();
-									int ent = -1;
-									switch(t.type)
+									case ITEM_ENT:
 									{
-										case ITEM_ENT:
-										{
-											if(!entities::ents.inrange(t.target)) break;
-											ent = t.target;
-											break;
-										}
-										case ITEM_PROJ:
-										{
-											if(!projs::projs.inrange(t.target)) break;
-											projent &proj = *projs::projs[t.target];
-											ent = proj.id;
-											break;
-										}
-										default: break;
+										if(!entities::ents.inrange(t.target)) break;
+										ent = t.target;
+										break;
 									}
-									if(entities::ents.inrange(ent))
+									case ITEM_PROJ:
 									{
-										extentity &e = *entities::ents[ent];
-										if(enttype[e.type].usetype == EU_ITEM)
-										{
-											int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
-											if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
-											{
-												if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
-													weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
-												if(isweap(drop))
-												{
-													static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
-													defformatstring(dropweap)("%s", entities::entinfo(WEAPON, attrs, false));
-													ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false))*noticescale;
-												}
-												else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, entities::entinfo(e.type, e.attrs, false))*noticescale;
-												break;
-											}
-										}
-										else if(e.type == TRIGGER && e.attrs[2] == TA_ACTION)
-										{
-											ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey)*noticescale;
-											break;
-										}
+										if(!projs::projs.inrange(t.target)) break;
+										projent &proj = *projs::projs[t.target];
+										ent = proj.id;
+										break;
 									}
-									actitems.pop();
+									default: break;
 								}
+								if(entities::ents.inrange(ent))
+								{
+									extentity &e = *entities::ents[ent];
+									if(enttype[e.type].usetype == EU_ITEM)
+									{
+										int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+										if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
+										{
+											if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
+												weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
+											if(isweap(drop))
+											{
+												static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
+												defformatstring(dropweap)("%s", entities::entinfo(WEAPON, attrs, false));
+												ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false))*noticescale;
+											}
+											else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, entities::entinfo(e.type, e.attrs, false))*noticescale;
+											break;
+										}
+									}
+									else if(e.type == TRIGGER && e.attrs[2] == TA_ACTION)
+									{
+										ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey)*noticescale;
+										break;
+									}
+								}
+								actitems.pop();
 							}
 						}
 						if(shownotices >= 4)
@@ -1551,7 +1551,112 @@ namespace hud
 		drawtex(x, y, c, c);
 	}
 
-	void drawhud(int w, int h, bool noview)
+	void drawbackground(int w, int h)
+	{
+		settexture("textures/logo", 3);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, 0); glVertex2f(w-512, 0);
+		glTexCoord2f(1, 0); glVertex2f(w, 0);
+		glTexCoord2f(1, 1); glVertex2f(w, 128);
+		glTexCoord2f(0, 1); glVertex2f(w-512, 128);
+		glEnd();
+
+		settexture("textures/cube2badge", 3);
+		glBegin(GL_QUADS); // goes off the edge on purpose
+		glTexCoord2f(0, 0); glVertex2f(w-208, 96);
+		glTexCoord2f(1, 0); glVertex2f(w-16, 96);
+		glTexCoord2f(1, 1); glVertex2f(w-16, 192);
+		glTexCoord2f(0, 1); glVertex2f(w-208, 192);
+		glEnd();
+
+		pushfont("sub");
+		int y = h-FONTH/2;
+		if(progressing)
+		{
+			if(*progresstext) y -= draw_textx("%s %s [\fs\fa%d%%\fS]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...", progresstext, int(progresspart*100));
+			else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
+		}
+		if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
+		y = h-FONTH/2;
+		y -= draw_textx("%s", w-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
+		y -= draw_textx("v%.2f %s", w-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
+		popfont();
+	}
+
+	void drawheadsup(int w, int h, float fade, int os, int is, int br, int bs, int bx, int by)
+	{
+		if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
+		{
+			Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
+			if(t != notexture)
+			{
+				glBindTexture(GL_TEXTURE_2D, t->id);
+				glColor4f(1.f, 1.f, 1.f, underlayblend*hudblend);
+				drawtex(0, 0, w, h);
+			}
+		}
+		if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(w, h);
+		if(showdamage)
+		{
+			if(fireburntime && game::player1->state == CS_ALIVE) drawfire(w, h, os, fade);
+			if(!kidmode && game::bloodscale > 0) drawdamage(w, h, os, fade);
+		}
+		if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(w, h, fade);
+		if(showinventory) drawinventory(w, h, os, fade);
+
+		if(!texpaneltimer)
+		{
+			int bf = int(255*fade*statblend);
+			pushfont("sub");
+			bx -= FONTW;
+			if(totalmillis-laststats >= statrate)
+			{
+				memcpy(prevstats, curstats, sizeof(prevstats));
+				laststats = totalmillis-(totalmillis%statrate);
+			}
+			int nextstats[NUMSTATS] = {
+				vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
+			};
+			loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
+			if(showfps)
+			{
+				draw_textx("%d", w-(br+FONTW)/2, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
+				draw_textx("fps", w-(br+FONTW)/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
+				switch(showfps)
+				{
+					case 3:
+						if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+						else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps, curstats[9], curstats[10]);
+						break;
+					case 2:
+						if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
+						else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps);
+						break;
+					default: break;
+				}
+			}
+			if(showstats > (m_edit(game::gamemode) ? 0 : 1))
+			{
+				by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6]);
+				by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+				by -= draw_textx("ents:%d(%d) lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, entities::ents.length(), entgroup.length(), lightmaps.length(), curstats[7], getnumviewcells());
+				if(game::player1->state == CS_EDITING)
+				{
+					by -= draw_textx("cube:%s%d corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
+							selchildcount<0 ? "1/" : "", abs(selchildcount), sel.corner, sel.orient, sel.grid);
+					by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
+							sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
+								sel.cx, sel.cxs, sel.cy, sel.cys);
+					by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
+							(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
+							(int)game::player1->yaw, (int)game::player1->pitch);
+				}
+			}
+			popfont();
+		}
+	}
+
+	void drawhud(bool noview)
 	{
 		float fade = hudblend;
 		if(!progressing)
@@ -1599,101 +1704,37 @@ namespace hud
 			if(colour.x < 1 || colour.y < 1 || colour.z < 1)
 			{
 				usetexturing(false);
-				drawblend(0, 0, w, h, colour.x, colour.y, colour.z);
+				drawblend(0, 0, screen->w, screen->h, colour.x, colour.y, colour.z);
 				usetexturing(true);
 				fade *= min(colour.x, min(colour.y, colour.z));
 			}
 		}
-		if(showhud && (!progressing || !UI::ready))
+		int ox = hudwidth, oy = hudsize, os = int(screen->h*gapsize), is = int(oy*inventorysize), br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glLoadIdentity();
+		glOrtho(0, ox, oy, 0, -1, 1);
+		glColor3f(1, 1, 1);
+
+		if(noview) drawbackground(ox, oy);
+		else if(showhud && client::ready() && fade > 0) drawheadsup(ox, oy, fade, os, is, br, bs, bx, by);
+		if(showconsole)
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			int ox = hudwidth, oy = hudsize, os = int(oy*gapsize), is = int(oy*inventorysize);
-			glLoadIdentity();
-			glOrtho(0, ox, oy, 0, -1, 1);
-
-			if(!noview && client::ready() && fade > 0 && !progressing)
-			{
-				if(underlaydisplay >= 2 || (game::player1->state == CS_ALIVE && (underlaydisplay || !game::thirdpersonview(true))))
-				{
-					Texture *t = *underlaytex ? textureload(underlaytex, 3) : notexture;
-					if(t != notexture)
-					{
-						glBindTexture(GL_TEXTURE_2D, t->id);
-						glColor4f(1.f, 1.f, 1.f, underlayblend*hudblend);
-						drawtex(0, 0, ox, oy);
-					}
-				}
-				if(game::player1->state == CS_ALIVE && game::inzoom() && weaptype[game::player1->weapselect].zooms) drawzoom(ox, oy);
-				if(showdamage)
-				{
-					if(fireburntime && game::player1->state == CS_ALIVE) drawfire(ox, oy, os, fade);
-					if(!kidmode && game::bloodscale > 0) drawdamage(ox, oy, os, fade);
-				}
-				if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(ox, oy, fade);
-				if(showinventory) drawinventory(ox, oy, os, fade);
-			}
-
-			int br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
-			if(showconsole)
-			{
-				drawconsole(showconsole >= 2 ? 1 : 0, ox, oy, os, os, ox-os*2, fade);
-				if(showconsole >= 2 && !noview && !progressing) drawconsole(2, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
-			}
-
-			if(!noview && client::ready() && !texpaneltimer && fade > 0 && !progressing)
-			{
-				int bf = int(255*fade*statblend);
-				pushfont("sub");
-				bx -= FONTW;
-				if(totalmillis-laststats >= statrate)
-				{
-					memcpy(prevstats, curstats, sizeof(prevstats));
-					laststats = totalmillis-(totalmillis%statrate);
-				}
-				int nextstats[NUMSTATS] = {
-					vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
-				};
-				loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
-				if(showfps)
-				{
-					draw_textx("%d", ox-(br+FONTW)/2, by-FONTH*2, 255, 255, 255, bf, TEXT_CENTERED, -1, bs, curstats[8]);
-					draw_textx("fps", ox-(br+FONTW)/2, by-FONTH, 255, 255, 255, bf, TEXT_CENTERED, -1, -1);
-					switch(showfps)
-					{
-						case 3:
-							if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-							else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps, curstats[9], curstats[10]);
-							break;
-						case 2:
-							if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-							else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps);
-							break;
-						default: break;
-					}
-				}
-				if(showstats > (m_edit(game::gamemode) ? 0 : 1))
-				{
-					by -= draw_textx("ond:%d va:%d gl:%d(%d) oq:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6]);
-					by -= draw_textx("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
-					by -= draw_textx("ents:%d(%d) lm:%d rp:%d pvs:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, entities::ents.length(), entgroup.length(), lightmaps.length(), curstats[7], getnumviewcells());
-					if(game::player1->state == CS_EDITING)
-					{
-						by -= draw_textx("cube:%s%d corner:%d orient:%d grid:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
-								selchildcount<0 ? "1/" : "", abs(selchildcount), sel.corner, sel.orient, sel.grid);
-						by -= draw_textx("sel:%d,%d,%d %d,%d,%d (%d,%d,%d,%d)", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
-								sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z,
-									sel.cx, sel.cxs, sel.cy, sel.cys);
-						by -= draw_textx("pos:%d,%d,%d yaw:%d pitch:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs,
-								(int)game::player1->o.x, (int)game::player1->o.y, (int)game::player1->o.z,
-								(int)game::player1->yaw, (int)game::player1->pitch);
-					}
-				}
-				popfont();
-			}
-			glDisable(GL_BLEND);
+			drawconsole(showconsole >= 2 ? 1 : 0, ox, oy, os, os, ox-os*2, fade);
+			if(showconsole >= 2 && !noview && !progressing)
+				drawconsole(2, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
 		}
+
+		glDisable(GL_BLEND);
 	}
 
 	void gamemenus() { sb.show(); }
+
+	void update(int w, int h)
+	{
+        aspect = w/float(h);
+        fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
+		hudwidth = int(ceil(hudsize*aspect));
+	}
 }
