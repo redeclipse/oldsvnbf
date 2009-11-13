@@ -89,13 +89,14 @@ namespace ai
 	vec getaimpos(gameent *d, gameent *e, bool alt)
 	{
 		vec o = e->headpos();
+		#define rndaioffset (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 10 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 5 : 2))
+		#define skewaiskill (1.f/float(d->skill/10))
 		if(weaptype[d->weapselect].radial[alt ? 1 : 0]) o.z -= e->height;
 		if(d->skill <= 100)
 		{
-			if(weaptype[d->weapselect].radial[alt ? 1 : 0]) o.z += e->height*(1.f/float(d->skill/10));
-			else o.z -= e->height*(1.f/float(d->skill/10));
-			o.x += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 2))*(1.f/float(d->skill/10));
-			o.y += (rnd(int(e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 4))+1)-e->radius*(d->weapselect == WEAP_PISTOL ? 8 : 2))*(1.f/float(d->skill/10));
+			if(weaptype[d->weapselect].radial[alt ? 1 : 0]) o.z += e->height*skewaiskill;
+			else o.z -= e->height*skewaiskill;
+			o.x += rndaioffset*skewaiskill; o.y += rndaioffset*skewaiskill;
 		}
 		return o;
 	}
