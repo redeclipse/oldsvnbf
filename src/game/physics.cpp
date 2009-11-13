@@ -1,10 +1,10 @@
 #include "game.h"
 namespace physics
 {
-	FVARW(crawlspeed,		0, 20.f, 10000);	// crawl speed
 	FVARW(gravity,			0, 50.f, 10000);	// gravity
 	FVARW(jumpspeed,		0, 50.f, 10000);	// extra velocity to add when jumping
 	FVARW(movespeed,		0, 50.f, 10000);	// speed
+	FVARW(movecrawl,		0, 0.5f, 10000);	// crawl modifier
 	FVARW(impulsespeed,		0, 50.f, 10000);	// extra velocity to add when impulsing
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
@@ -170,7 +170,8 @@ namespace physics
 			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else
 			{
-				float speed = iscrouching(d) || (d == game::player1 && game::inzoom()) ? crawlspeed : movespeed;
+				float speed = forcemovespeed > 0 ? forcemovespeed : movespeed;
+				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= forcemovecrawl > 0 ? forcemovecrawl : movecrawl;
 				if((impulsemeter > 0 && ((gameent *)d)->action[AC_IMPULSE] && ((gameent *)d)->impulse[IM_METER] < impulsemeter) || ((gameent *)d)->turnside)
 					speed += impulsespeed*(!((gameent *)d)->action[AC_IMPULSE] || d->move <= 0 ? 0.5f : 1);
 				return m_speedscale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
@@ -337,7 +338,7 @@ namespace physics
         dv.z = -dv.magnitude2()*z/xy;
         if(!dv.z) return false;
         dv.rescale(step);
- 
+
         vec old(d->o);
 		d->o.add(vec(dv).mul(stairheight/fabs(dv.z))).z -= stairheight;
 		if(!collide(d, vec(0, 0, -1), slopez))
