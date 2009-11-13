@@ -98,7 +98,7 @@ struct gui : guient
 		else
 		{
 			cury = -ysize;
-			int x1 = curx + tx + guibound[0], x2 = x1 + w, y1 = cury - guibound[1]*3, y2 = cury - guibound[1]*3 + FONTH;
+			int x1 = curx + tx + guibound[0], x2 = x1 + w, y1 = cury - guibound[1]*2, y2 = cury - guibound[1]*2 + FONTH;
 			if(visible()) tcolor = 0xFFFFFF;
 			else if(tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2)
 			{
@@ -107,14 +107,14 @@ struct gui : guient
 			}
             text_(name, x1, y1, tcolor, visible());
 		}
-		tx += w + guibound[0]*4;
+		tx += w + guibound[0]*2;
 		gui::popfont();
 	}
 
 	void uibuttons()
 	{
 		cury = -ysize;
-		int x = curx + max(tx, xsize) - guibound[0]*2, y = cury - guibound[1]*3;
+		int x = curx + max(tx, xsize) - guibound[0]*2, y = cury - guibound[1]*2;
 		#define uibtn(a,b) \
 		{ \
 			bool hit = false; \
@@ -559,7 +559,7 @@ struct gui : guient
 				glBindTexture(GL_TEXTURE_2D, t->id);
 			}
 		}
-        float xi = x, yi = y, xpad = 0, ypad = 0;   
+        float xi = x, yi = y, xpad = 0, ypad = 0;
         if(overlaid)
         {
             xpad = xs/32;
