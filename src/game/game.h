@@ -293,7 +293,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,		false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 78, 78 },		{ 2, 2 },			{ 0, 0 },
 			{ 5, 5 },		{ 1000, 750 },		{ 300, 300 },			3,
-			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapon/grenade/proj"
+			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
