@@ -24,7 +24,7 @@ VARG(racespawndelay, 0, 1000, INT_MAX-1); // .. in race matches
 VARG(spawnprotecttime, 0, 3000, INT_MAX-1); // delay before damage can be dealt to spawning player
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
-VARG(extrahealth, 0, 200, INT_MAX-1);
+VARG(extrahealth, 0, 150, INT_MAX-1);
 
 VARG(fireburntime, 0, 5500, INT_MAX-1);
 VARG(fireburndelay, 0, 1000, INT_MAX-1);
@@ -35,7 +35,8 @@ VARG(regendelay, 0, 3000, INT_MAX-1);
 VARG(regenguard, 0, 1000, INT_MAX-1);
 VARG(regentime, 0, 1000, INT_MAX-1);
 VARG(regenhealth, 0, 5, INT_MAX-1);
-VARG(regenextra, 0, 10, INT_MAX-1);
+VARG(regenextra, 0, 5, INT_MAX-1);
+VARG(regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
 VARG(impulsemeter, 0, 20000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
@@ -63,7 +64,7 @@ VARG(teambalance, 0, 1, 3); // 0 = off, 1 = by number then rank, 2 = by rank the
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
 VARG(ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
-VARG(ctfstyle, 0, 1, 3); // 0 = classic touch-and-return, 1 = grab and take home, 2 = defend and reset, 3 = dominate and protect
+VARG(ctfstyle, 0, 0, 3); // 0 = classic touch-and-return, 1 = grab and take home, 2 = defend and reset, 3 = dominate and protect
 VARG(ctfresetdelay, 0, 30000, INT_MAX-1);
 
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more

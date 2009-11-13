@@ -216,7 +216,7 @@ struct stfservmode : stfstate, servmode
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(hasflaginfo) loopv(flags)
+		if(hasflaginfo && GVAR(regenflag)) loopv(flags)
 		{
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o, 2.f))

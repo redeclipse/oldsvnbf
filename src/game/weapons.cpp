@@ -3,7 +3,7 @@ namespace weapons
 {
 	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
 	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
-	VARP(skippistol, 0, 0, 1); // whether to skip pistol when switching
+	VARP(skippistol, 0, 1, 1); // whether to skip pistol when switching
 	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));

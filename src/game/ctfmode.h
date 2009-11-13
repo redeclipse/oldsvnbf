@@ -181,11 +181,11 @@ struct ctfservmode : ctfstate, servmode
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(hasflaginfo) loopv(flags)
+		if(hasflaginfo && GVAR(regenflag)) loopv(flags)
         {
             flag &f = flags[i];
             bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius*2.f);
-            if(insidehome || f.owner == ci->clientnum)
+            if(insidehome || (GVAR(regenflag) == 2 && f.owner == ci->clientnum))
             {
 				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
 				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
