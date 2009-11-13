@@ -36,7 +36,7 @@ VARG(regenguard, 0, 1000, INT_MAX-1);
 VARG(regentime, 0, 1000, INT_MAX-1);
 VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 5, INT_MAX-1);
-VARG(regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
+VARG(regenflag, 0, 0, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
 VARG(impulsemeter, 0, 20000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
