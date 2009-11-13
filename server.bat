@@ -11,7 +11,7 @@ IF EXIST bin\bfclient.exe (
 		bin\bfserver.exe %BF_OPTIONS% %*
 		popd
 	) ELSE (
-		echo Unable to find the Blood Frontier client
+		echo Unable to find the Blood Frontier server binary
 		pause
 	)
 )
