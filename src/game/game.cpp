@@ -1085,9 +1085,6 @@ namespace game
 			curfov = fov()-(amt*diff);
 		}
 		else curfov = float(fov());
-        aspect = w/float(h);
-        fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
-		hud::hudwidth = int(ceil(hud::hudsize*aspect));
 	}
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)

@@ -1667,9 +1667,6 @@ void viewproject(float zscale)
     }
 }
 
-extern char *progresstitle, *progresstext;
-extern float progresspart;
-
 void drawnoview()
 {
     xtravertsva = xtraverts = glde = gbatches = 0;
@@ -1685,47 +1682,13 @@ void drawnoview()
 	glClearColor(0.f, 0.f, 0.f, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-    glEnable(GL_TEXTURE_2D);
-    defaultshader->set();
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor3f(1, 1, 1);
+	glEnable(GL_TEXTURE_2D);
+	defaultshader->set();
 
-    settexture("textures/logo", 3);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2f(w-256, 0);
-    glTexCoord2f(1, 0); glVertex2f(w, 0);
-    glTexCoord2f(1, 1); glVertex2f(w, 64);
-    glTexCoord2f(0, 1); glVertex2f(w-256, 64);
-    glEnd();
-
-    settexture("textures/cube2badge", 3);
-    glBegin(GL_QUADS); // goes off the edge on purpose
-    glTexCoord2f(0, 0); glVertex2f(w-104, 48);
-    glTexCoord2f(1, 0); glVertex2f(w-8, 48);
-    glTexCoord2f(1, 1); glVertex2f(w-8, 96);
-    glTexCoord2f(0, 1); glVertex2f(w-104, 96);
-    glEnd();
-
-	glPushMatrix();
-	glScalef(1/3.0f, 1/3.0f, 1);
-	int y = h*3-FONTH/2;
-	if(progressing)
-	{
-		if(*progresstext) y -= draw_textx("%s %s [\fs\fa%d%%\fS]", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...", progresstext, int(progresspart*100));
-		else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
-	}
-	if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
-	y = h*3-FONTH/2;
-	y -= draw_textx("%s", w*3-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
-	y -= draw_textx("v%.2f %s", w*3-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
-	glPopMatrix();
-
-    glDisable(GL_BLEND);
-
-	hud::drawhud(w, h, true);
+	hud::update(screen->w, screen->h);
+	hud::drawhud(true);
 	if(UI::ready && (progressing || commandmillis<0)) UI::render();
-	if(!progressing) hud::drawlast(w, h);
+	if(!progressing) hud::drawlast();
 
     glDisable(GL_TEXTURE_2D);
 }
@@ -1885,10 +1848,10 @@ void drawview(int targtype)
 
 	glEnable(GL_TEXTURE_2D);
 	defaultshader->set();
-	hud::drawhud(w, h);
+	hud::drawhud();
 	render_texture_panel(w, h);
 	if(commandmillis<0) UI::render();
-	hud::drawlast(w, h);
+	hud::drawlast();
 	glDisable(GL_TEXTURE_2D);
 
 	renderedgame = false;

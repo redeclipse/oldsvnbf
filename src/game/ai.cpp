@@ -965,7 +965,8 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
-			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) && b.type == AI_S_DEFEND && b.idle)
+			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)));
+			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && b.type == AI_S_DEFEND && b.idle)
 			{
 				loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
 				{
@@ -975,7 +976,7 @@ namespace ai
 					break;
 				}
 			}
-			if(game::allowmove(d) && busy <= 3 && !d->action[AC_USE] && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))))
+			if(game::allowmove(d) && busy <= 3 && !d->action[AC_USE] && haswaited)
 			{
 				static vector<actitem> actitems;
 				actitems.setsizenodelete(0);
