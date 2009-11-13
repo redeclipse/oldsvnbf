@@ -1,1 +1,0 @@
-Created for Blood Frontier by Tony "Acord" Cord.

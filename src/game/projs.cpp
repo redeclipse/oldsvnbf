@@ -127,7 +127,7 @@ namespace projs
 	void preload()
 	{
 		loopi(WEAP_MAX) if(*weaptype[i].proj) loadmodel(weaptype[i].proj, -1, true);
-		const char *mdls[] = { "gibc", "gibh", "debris/debris01", "debris/debris02", "debris/debris03", "debris/debris04", "" };
+		const char *mdls[] = { "gibs/gibc", "gibs/gibh", "debris/debris01", "debris/debris02", "debris/debris03", "debris/debris04", "" };
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
@@ -246,7 +246,7 @@ namespace projs
 							return;
 						}
 					}
-					proj.mdl = rnd(2) ? "gibc" : "gibh";
+					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.35f;
 					proj.reflectivity = 0.f;
