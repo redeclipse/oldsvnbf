@@ -1345,12 +1345,10 @@ namespace entities
 
 	bool clipped(const vec &o, bool aiclip)
 	{
-		cube &c = lookupcube(o.x, o.y, o.z);
-		//if(isentirelysolid(c)) return true;
-		int material = c.ext ? c.ext->material : MAT_AIR, clipmat = material&MATF_CLIP;
+		int material = lookupmaterial(o), clipmat = material&MATF_CLIP;
 		if(clipmat == MAT_CLIP || (aiclip && clipmat == MAT_AICLIP)) return true;
-		if(int(material&MATF_FLAGS) == MAT_DEATH) return true;
-		if(int(material&MATF_VOLUME) == MAT_LAVA) return true;
+		if(material&MAT_DEATH) return true;
+		if((material&MATF_VOLUME) == MAT_LAVA) return true;
 		return false;
 	}
 
