@@ -846,7 +846,7 @@ namespace hud
 									if(refs.length() >= numo) refs.remove(i);
 									else
 									{
-										int dur = conlines[refs[i]].type > CON_CHAT ? chatcontime/3 : chatcontime;
+										int dur = conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime;
 										if(lastmillis-conlines[refs[i]].reftime <= dur) conlines[refs[i]].reftime = lastmillis-dur;
 									}
 									found = true;
@@ -872,7 +872,7 @@ namespace hud
 				float blend = hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
 				loopvj(refs)
 				{
-					int len = conlines[refs[j]].type > CON_CHAT ? chatcontime/3 : chatcontime;
+					int len = conlines[refs[j]].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
 						g = conlines[refs[j]].type > CON_CHAT ? conblend : chatconblend;
 					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*blend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;

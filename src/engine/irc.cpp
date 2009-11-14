@@ -287,7 +287,7 @@ void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 			c->lines.add(newstring(str));
 #endif
 			if(n->type == IRCT_RELAY && c->relay >= relay)
-				server::srvmsgf(relay > 1 ? -1 : -2, "\fs\fd[%s]\fS %s", c->friendly, str);
+				server::srvmsgf(relay > 1 ? -2 : -3, "\fs\fd[%s]\fS %s", c->friendly, str);
 		}
 		else
 		{
