@@ -241,7 +241,7 @@ namespace aiman
 			if(bots > GVAR(botlimit))
 			{
 				balance -= bots-GVAR(botlimit);
-				balance -= balance%numt;
+				if(m_team(gamemode, mutators)) balance -= balance%numt;
 			}
 		}
 		if(!autooverride)

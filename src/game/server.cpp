@@ -2067,6 +2067,7 @@ namespace server
 		if(smode) smode->initclient(ci, p, true);
 		mutate(smuts, mut->initclient(ci, p, true));
 		if(ci) ci->online = true;
+		aiman::dorefresh = true;
 		return 1;
 	}
 
