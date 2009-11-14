@@ -2,9 +2,9 @@
 namespace weapons
 {
 	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
-	VARP(skipspawnweapon, 0, 0, 1); // whether to skip spawnweapon when switching
-	VARP(skippistol, 0, 1, 1); // whether to skip pistol when switching
-	VARP(skipgrenade, 0, 0, 1); // whether to skip grenade when switching
+	VARP(skipspawnweapon, 0, 0, 3); // skip spawnweapon; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
+	VARP(skippistol, 0, 2, 3); // skip pistol; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
+	VARP(skipgrenade, 0, 0, 3); // skip grenade; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
 	ICOMMAND(ammo, "s", (char *a),
@@ -64,9 +64,20 @@ namespace weapons
 
 			if(a < 0)
 			{ // weapon skipping when scrolling
-				if(skipspawnweapon && s == m_spawnweapon(game::gamemode, game::mutators)) continue;
-				if(skippistol && s == WEAP_PISTOL) continue;
-				if(skipgrenade && s == WEAP_GRENADE) continue;
+				int p = m_spawnweapon(game::gamemode, game::mutators);
+				#define skipweap(q,w) \
+				{ \
+					if(q && s == w) switch(q) \
+					{ \
+						case 3: break; \
+						case 2: if(d->carry(p, 0) > 1) continue; break; \
+						case 1: if(d->carry(p, 1) > 1) continue; break; \
+						case 0: default: break; \
+					} \
+				}
+				skipweap(skipspawnweapon, p);
+				skipweap(skippistol, WEAP_PISTOL);
+				skipweap(skipgrenade, WEAP_GRENADE);
 			}
 
 			if(weapselect(d, s)) return;

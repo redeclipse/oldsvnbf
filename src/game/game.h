@@ -594,10 +594,10 @@ struct gamestate
 		return weapselect;
 	}
 
-	int carry(int sweap)
+	int carry(int sweap, int level = 1)
 	{
 		int carry = 0;
-		loopi(WEAP_MAX) if(hasweap(i, sweap, 1)) carry++;
+		loopi(WEAP_MAX) if(hasweap(i, sweap, level)) carry++;
 		return carry;
 	}
 
