@@ -992,7 +992,14 @@ namespace server
 		if(cn < 0 || allowbroadcast(cn))
 		{
 			defvformatstring(str, s, s);
-			sendf(cn, 1, "ri2s", SV_SERVMSG, cn > -2 ? int(CON_EVENT) : int(CON_CHAT), str);
+			int conlevel = CON_INFO;
+			switch(cn)
+			{
+				case -3: conlevel = CON_CHAT; break;
+				case -2: conlevel = CON_EVENT; break;
+				default: break;
+			}
+			sendf(cn, 1, "ri2s", SV_SERVMSG, conlevel, str);
 		}
 	}
 
