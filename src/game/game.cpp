@@ -556,6 +556,60 @@ namespace game
 		return false;
 	}
 
+    struct damagetone
+    {
+        enum
+        {
+            BURN = 1<<0
+        };
+
+        gameent *actor;
+        int damage, flags;
+
+        damagetone() {}
+        damagetone(gameent *actor, int damage, int flags) : actor(actor), damage(damage), flags(flags) {}
+
+        bool merge(const damagetone &m) 
+        { 
+            if(actor != m.actor || flags != m.flags) return false;
+            damage += m.damage;
+            return true;
+        }
+
+        void play()
+        {
+            int snd = 0;
+            if(flags & BURN) snd = 8;
+            else if(damage >= 200) snd = 7;
+            else if(damage >= 150) snd = 6;
+            else if(damage >= 100) snd = 5;
+            else if(damage >= 75) snd = 4;
+            else if(damage >= 50) snd = 3;
+            else if(damage >= 25) snd = 2;
+            else if(damage >= 10) snd = 1;
+            playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
+        }
+    };
+    vector<damagetone> damagetones;
+
+    void removedamagetones(gameent *actor)
+    {
+        loopvrev(damagetones) if(damagetones[i].actor == actor) damagetones.removeunordered(i);
+    }
+
+    void mergedamagetone(gameent *actor, int damage, int flags)
+    {
+        damagetone dt(actor, damage, flags);
+        loopv(damagetones) if(damagetones[i].merge(dt)) return;
+        damagetones.add(dt);
+    } 
+            
+    void flushdamagetones()
+    {
+        loopv(damagetones) damagetones[i].play();
+        damagetones.setsizenodelete(0);
+    }
+             
 	static int alarmchan = -1;
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir, bool local)
 	{
@@ -589,20 +643,8 @@ namespace game
 				if(d != actor)
 				{
 					bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
-					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, alarmchan); }
-					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3)))
-					{
-						int snd = 0;
-						if(burning) snd = 8;
-						else if(damage >= 200) snd = 7;
-						else if(damage >= 150) snd = 6;
-						else if(damage >= 100) snd = 5;
-						else if(damage >= 75) snd = 4;
-						else if(damage >= 50) snd = 3;
-						else if(damage >= 25) snd = 2;
-						else if(damage >= 10) snd = 1;
-						playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
-					}
+					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
+					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3))) mergedamagetone(actor, damage, burning ? damagetone::BURN : 0);
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
 				}
 			}
@@ -917,6 +959,7 @@ namespace game
 			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
 		loopv(client::mapvotes) if(client::mapvotes[i].player == d) { client::mapvotes.remove(i); break; }
 		projs::remove(d);
+        removedamagetones(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
         if(m_stf(gamemode)) stf::removeplayer(d);
 		DELETEP(players[cn]);
@@ -1476,6 +1519,7 @@ namespace game
 		adjustscaled(int, hud::damageresidue, hud::damageresiduefade);
 		if(connected())
 		{
+            flushdamagetones(); 
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
 				if(player1->ragdoll) moveragdoll(player1, true);

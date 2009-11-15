@@ -1200,6 +1200,7 @@ namespace game
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style);
 	extern void timeupdate(int timeremain);
+    extern void flushdamagetones();
 }
 
 namespace entities
