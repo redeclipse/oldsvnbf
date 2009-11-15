@@ -140,7 +140,7 @@ namespace hud
 	FVARP(inventoryhealthglow, 0, 0.1f, 1);
 	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
 	VARP(inventoryimpulse, 0, 2, 2);
-	VARP(inventoryrace, 0, 2, 2);
+	VARP(inventorytrial, 0, 2, 2);
 
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
@@ -1441,7 +1441,7 @@ namespace hud
 			}
 			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
 		}
-		if(inventoryrace && m_race(game::gamemode) && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
+		if(inventorytrial && m_trial(game::gamemode) && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 		{
 			if((game::player1->cpmillis > 0 || game::player1->cptime) && (game::player1->state == CS_ALIVE || game::player1->state == CS_DEAD || game::player1->state == CS_WAITING))
 			{
@@ -1458,7 +1458,7 @@ namespace hud
 					popfont();
 				}
 			}
-			sy += hud::sb.raceinventory(x, y-sy, sw, fade);
+			sy += hud::sb.trialinventory(x, y-sy, sw, fade);
 		}
 		return sy;
 	}

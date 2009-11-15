@@ -587,7 +587,7 @@ namespace server
 			if(m_story(gamemode)) maplist = GVAR(storymaps);
 			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-			else if(m_race(gamemode)) maplist = GVAR(racemaps);
+			else if(m_trial(gamemode)) maplist = GVAR(trialmaps);
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), p = -1, c = -1;
@@ -650,11 +650,11 @@ namespace server
 	{
 		if(m_fight(gamemode))
 		{
-			if(m_race(gamemode))
+			if(m_trial(gamemode))
 			{
-				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(racelimit))
+				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(triallimit))
 				{
-					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcrace finishing limit has been reached!");
+					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fctime trial wait period has timed out!");
 					startintermission();
 					return;
 				}
@@ -687,7 +687,7 @@ namespace server
 					}
 				}
 			}
-			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode) && !m_race(gamemode))
+			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode) && !m_trial(gamemode))
 			{
 				if(m_team(gamemode, mutators))
 				{
@@ -904,7 +904,7 @@ namespace server
 		if(ci->state.aitype >= AI_START) return ci->state.aientity;
 		else
 		{
-			if((m_story(gamemode) || m_race(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
+			if((m_story(gamemode) || m_trial(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
 			{
 				int checkpoint = ci->state.cpnodes.last();
 				if(sents.inrange(checkpoint)) return checkpoint;
@@ -942,7 +942,7 @@ namespace server
 		}
 		setuptriggers(true);
 		setupitems(true);
-		setupspawns(true, m_race(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
+		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
 		hasgameinfo = aiman::dorefresh = true;
 	}
 
@@ -1307,7 +1307,7 @@ namespace server
 				if(m_story(reqmode)) maplist = GVAR(storymaps);
 				else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
 				else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-				else if(m_race(reqmode)) maplist = GVAR(racemaps);
+				else if(m_trial(reqmode)) maplist = GVAR(trialmaps);
 				if(maplist && *maplist)
 				{
 					int n = listlen(maplist);
@@ -2669,7 +2669,7 @@ namespace server
 			else if(ci->state.state == CS_WAITING)
 			{
 				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
-				if(m_race(gamemode) && ci->state.cpmillis < 0) continue;
+				if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
 				if(ci->state.respawnwait(gamemillis, ci->state.aitype >= AI_START && ci->state.lastdeath ? 30000 : m_spawndelay(gamemode, mutators))) continue;
 				int nospawn = 0;
 				if(smode && !smode->canspawn(ci, false)) { nospawn++; }
@@ -3318,7 +3318,7 @@ namespace server
 						{
 							if(cp->state.cpnodes.find(ent) < 0 && (sents[ent].attrs[4] == triggerid || !sents[ent].attrs[4]) && chkmode(sents[ent].attrs[3], gamemode))
 							{
-								if(m_race(gamemode)) switch(sents[ent].attrs[5])
+								if(m_trial(gamemode)) switch(sents[ent].attrs[5])
 								{
 									case CP_LAST: case CP_FINISH:
 									{

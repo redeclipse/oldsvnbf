@@ -93,7 +93,7 @@ namespace hud
 				if(interm)
 				{
 					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_INFO, NULL, "\fwchapter complete!");
-					else if(m_fight(game::gamemode) && !m_race(game::gamemode))
+					else if(m_fight(game::gamemode) && !m_trial(game::gamemode))
 					{
 						if(!groupplayers()) return;
 						scoregroup &sg = *groups[0];
@@ -102,13 +102,13 @@ namespace hud
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
 								game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
-							else if(m_race(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with the lowest laptime of %s", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
+							else if(m_trial(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with the lowest laptime of %s", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
 							else game::announce(anc, CON_INFO, NULL, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							if(m_race(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw%s won the match with the lowest laptime of %s", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
+							if(m_trial(game::gamemode)) game::announce(anc, CON_INFO, NULL, "\fw%s won the match with the lowest laptime of %s", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
 							else game::announce(anc, CON_INFO, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
@@ -119,7 +119,7 @@ namespace hud
 
 		static int teamscorecmp(const teamscore *x, const teamscore *y)
 		{
-			if(m_race(game::gamemode))
+			if(m_trial(game::gamemode))
 			{
 				if((x->score && !y->score) || (x->score && y->score && x->score < y->score)) return -1;
 				if((y->score && !x->score) || (x->score && y->score && y->score < x->score)) return 1;
@@ -140,7 +140,7 @@ namespace hud
 				else return 1;
 			}
 			else if((*b)->state==CS_SPECTATOR) return -1;
-			if(m_race(game::gamemode))
+			if(m_trial(game::gamemode))
 			{
 				if(((*a)->cptime && !(*b)->cptime) || ((*a)->cptime && (*b)->cptime && (*a)->cptime < (*b)->cptime)) return -1;
 				if(((*b)->cptime && !(*a)->cptime) || ((*a)->cptime && (*b)->cptime && (*b)->cptime < (*a)->cptime)) return 1;
@@ -180,8 +180,8 @@ namespace hud
 				{
 					teamscore *ts = NULL;
 					loopv(teamscores) if(teamscores[i].team == o->team) { ts = &teamscores[i]; break; }
-					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : (m_race(game::gamemode) ? o->cptime : o->points)));
-					else if(m_race(game::gamemode)) { if(o->cptime && (!ts->score || o->cptime < ts->score)) ts->score = o->cptime; }
+					if(!ts) teamscores.add(teamscore(o->team, m_stf(game::gamemode) || m_ctf(game::gamemode) ? 0 : (m_trial(game::gamemode) ? o->cptime : o->points)));
+					else if(m_trial(game::gamemode)) { if(o->cptime && (!ts->score || o->cptime < ts->score)) ts->score = o->cptime; }
 					else if(!m_stf(game::gamemode) && !m_ctf(game::gamemode)) ts->score += o->points;
 				}
 			}
@@ -453,7 +453,7 @@ namespace hud
 				if(showscore() && (showscore() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
 				{
 					g.pushlist();
-					if(m_race(game::gamemode))
+					if(m_trial(game::gamemode))
 					{
 						g.strut(10);
 						g.text("best lap", fgcolor);
@@ -588,7 +588,7 @@ namespace hud
 
 		int drawinventory(int x, int y, int s, float blend)
 		{
-			if(!m_fight(game::gamemode) || m_race(game::gamemode)) return 0;
+			if(!m_fight(game::gamemode) || m_trial(game::gamemode)) return 0;
 			int sy = 0, numgroups = groupplayers(), numout = 0;
 			loopi(2) loopk(numgroups)
 			{
@@ -614,7 +614,7 @@ namespace hud
 			return sy;
 		}
 
-		int raceinventory(int x, int y, int s, float blend)
+		int trialinventory(int x, int y, int s, float blend)
 		{
 			int sy = 0;
 			if(groupplayers())
