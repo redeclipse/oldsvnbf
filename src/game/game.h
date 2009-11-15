@@ -642,21 +642,24 @@ struct gamestate
 
 	bool weapwaited(int weap, int millis, int skip = 0)
 	{
-		if(!weapwait[weap] || weapstate[weap] == WEAP_S_IDLE || weapstate[weap] == WEAP_S_POWER || (skip&(1<<weapstate[weap]))) return true;
+		if(!weapwait[weap] || weapstate[weap] == WEAP_S_IDLE || weapstate[weap] == WEAP_S_POWER || (skip && skip&(1<<weapstate[weap]))) return true;
 		return millis-weaplast[weap] >= weapwait[weap];
 	}
 
-	int skipwait(int weap, int flags, int millis, int skip)
+	int skipwait(int weap, int flags, int millis, int skip, bool override = false)
 	{
 		int skipstate = skip;
-		if((skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap] && ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0])
-			skipstate &= ~(1<<WEAP_S_RELOAD);
+		if((skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
+		{
+			if(!override && ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0])
+				skipstate &= ~(1<<WEAP_S_RELOAD);
+		}
 		return skipstate;
 	}
 
 	bool canswitch(int weap, int sweap, int millis, int skip = 0)
 	{
-		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, 0, millis, skip)))
+		if(weap != weapselect && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip, true)) && hasweap(weap, sweap) && weapwaited(weap, millis, skipwait(weap, 0, millis, skip, true)))
 			return true;
 		return false;
 	}
@@ -670,7 +673,7 @@ struct gamestate
 
 	bool canreload(int weap, int sweap, int millis)
 	{
-		if(weapwaited(weapselect, millis) && weaploads(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
+		if(weap == weapselect && weaploads(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
@@ -684,7 +687,7 @@ struct gamestate
 			case EU_AUTO: case EU_ACT: return true; break;
 			case EU_ITEM:
 			{ // can't use when reloading or firing
-				if(isweap(attr) && !hasweap(attr, sweap, 4) && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip)))
+				if(isweap(attr) && !hasweap(attr, sweap, 4) && weapwaited(weapselect, millis, skipwait(weapselect, 0, millis, skip, true)))
 					return true;
 				break;
 			}
