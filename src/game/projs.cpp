@@ -547,7 +547,7 @@ namespace projs
 			{
 				case WEAP_PISTOL:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -563,7 +563,7 @@ namespace projs
 				}
 				case WEAP_FLAMER:
 				{
-					proj.lifesize = clamp(proj.flags&HIT_ALT ? proj.lifespan*proj.lifespan : proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.flags&HIT_ALT ? proj.lifespan*proj.lifespan : proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool effect = false;
@@ -583,7 +583,7 @@ namespace projs
 				}
 				case WEAP_GRENADE:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					int col = ((int(254*max(1.f-proj.lifespan,0.5f))<<16)+1)|((int(98*max(1.f-proj.lifespan,0.f))+1)<<8), interval = lastmillis%1000;
 					float fluc = 1.f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*fluc);
@@ -597,7 +597,7 @@ namespace projs
 				}
 				case WEAP_SHOTGUN:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -612,7 +612,7 @@ namespace projs
 				}
 				case WEAP_SMG:
 				{
-					proj.lifesize = clamp(proj.lifespan, 0.01f, 1.f);
+					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
 					if(proj.movement > 0.f)
 					{
 						bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= m_speedtime(200);
@@ -684,7 +684,7 @@ namespace projs
 					vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
 					loopi(steps)
 					{
-						float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.01f, proj.radius);
+						float res = float(steps-i)/float(steps), size = clamp(proj.radius*0.75f*(proj.lifesize+0.1f)*res, 0.1f, proj.radius);
 						int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
 						part_create(PART_FIREBALL_SOFT, 1, pos, col, size, -15);
 						pos.add(dir);

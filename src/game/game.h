@@ -257,7 +257,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 8, 4 },		{ 150, 200 },		0,			{ 400, 600 },
+			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 10, 5 },		{ 150, 200 },		0,			{ 400, 600 },
 			0,		{ 24, 36 },	{ 1, 5 },		{ 40, 15 },		{ 2, 2 },		{ 1, 2 },
 			{ BOUNCE_GEOM, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },															{ 1, 2 },
 			{ false, false },	{ true, true },		{ true, true, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
@@ -341,7 +341,7 @@ enum
 	FRAG_MULTI = FRAG_MKILL1|FRAG_MKILL2|FRAG_MKILL3,
 };
 
-enum { G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_RACE, G_MAX };
+enum { G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX };
 enum
 {
 	G_M_NONE = 0, G_M_MULTI = 1<<0, G_M_TEAM = 1<<1, G_M_INSTA = 1<<2, G_M_DUEL = 1<<3, G_M_SURVIVOR= 1<<4, G_M_ARENA = 1<<5,
@@ -361,7 +361,7 @@ gametypes gametype[] = {
 	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"capture-the-flag" },
-	{ G_RACE,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_NONE,				"race" },
+	{ G_TRIAL,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_NONE,				"time-trial" },
 }, mutstype[] = {
 	{ G_M_MULTI,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM|G_M_MULTI,		"multi" },
 	{ G_M_TEAM,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM,				"team" },
@@ -383,7 +383,7 @@ extern gametypes gametype[], mutstype[];
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
-#define m_race(a)			(a == G_RACE)
+#define m_trial(a)			(a == G_TRIAL)
 
 #define m_play(a)			(a >= G_STORY)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
@@ -400,7 +400,7 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_spawnweapon(a,b)	(!m_play(a) || m_arena(a,b) ? -1 : (m_insta(a,b) ? GVAR(instaspawnweapon) : GVAR(spawnweapon)))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_race(a) ? GVAR(racespawndelay) : ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay)))) : 0)
+#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialspawndelay) : ((m_insta(a, b) ? GVAR(instaspawndelay) : GVAR(spawndelay)))) : 0)
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))

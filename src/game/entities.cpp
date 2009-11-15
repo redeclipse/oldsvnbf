@@ -758,7 +758,7 @@ namespace entities
 				}
 				case CHECKPOINT:
 				{
-					if(!chkmode(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_race(game::gamemode)&& !m_lobby(game::gamemode))) break;
+					if(!chkmode(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
 					if(d->checkpoint != n)
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);

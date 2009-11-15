@@ -10,7 +10,7 @@ SVARG(mainmaps, "bath bloodgrounds citadel deadsimple deli eight enigma firehous
 SVARG(ctfmaps, "bath bloodgrounds citadel deadsimple deli enigma forge gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge");
 SVARG(stfmaps, "bath bloodgrounds citadel deadsimple deli enigma forge gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
-SVARG(racemaps, "testchamber");
+SVARG(trialmaps, "testchamber");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
@@ -20,13 +20,13 @@ VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib, 2 = always
 VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
 VARG(instaspawndelay, 0, 3000, INT_MAX-1); // .. in instagib matches
-VARG(racespawndelay, 0, 1000, INT_MAX-1); // .. in race matches
+VARG(trialspawndelay, 0, 1000, INT_MAX-1); // .. in time trial matches
 VARG(spawnprotecttime, 0, 3000, INT_MAX-1); // delay before damage can be dealt to spawning player
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 100, INT_MAX-1);
 
-VARG(fireburntime, 0, 5500, INT_MAX-1);
+VARG(fireburntime, 0, 7500, INT_MAX-1);
 VARG(fireburndelay, 0, 1000, INT_MAX-1);
 VARG(fireburndamage, 0, 5, INT_MAX-1);
 
@@ -51,7 +51,7 @@ VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
-VARG(racelimit, 0, 60000, INT_MAX-1);
+VARG(triallimit, 0, 60000, INT_MAX-1);
 VARG(intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
 VARG(votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
 VARG(duellimit, 0, 3000, INT_MAX-1); // .. before duel goes to next round
