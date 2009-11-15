@@ -569,8 +569,8 @@ namespace game
         damagetone() {}
         damagetone(gameent *actor, int damage, int flags) : actor(actor), damage(damage), flags(flags) {}
 
-        bool merge(const damagetone &m) 
-        { 
+        bool merge(const damagetone &m)
+        {
             if(actor != m.actor || flags != m.flags) return false;
             damage += m.damage;
             return true;
@@ -587,7 +587,7 @@ namespace game
             else if(damage >= 50) snd = 3;
             else if(damage >= 25) snd = 2;
             else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, actor->o, actor, 0, -1, -1, -1);
+            playsound(S_DAMAGE1+snd, actor->o, actor, SND_NOCULL, -1, -1, -1);
         }
     };
     vector<damagetone> damagetones;
@@ -602,14 +602,14 @@ namespace game
         damagetone dt(actor, damage, flags);
         loopv(damagetones) if(damagetones[i].merge(dt)) return;
         damagetones.add(dt);
-    } 
-            
+    }
+
     void flushdamagetones()
     {
         loopv(damagetones) damagetones[i].play();
         damagetones.setsizenodelete(0);
     }
-             
+
 	static int alarmchan = -1;
 	void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir, bool local)
 	{
@@ -1519,7 +1519,7 @@ namespace game
 		adjustscaled(int, hud::damageresidue, hud::damageresiduefade);
 		if(connected())
 		{
-            flushdamagetones(); 
+            flushdamagetones();
 			if(player1->state == CS_DEAD || player1->state == CS_WAITING)
 			{
 				if(player1->ragdoll) moveragdoll(player1, true);
