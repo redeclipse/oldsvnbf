@@ -2254,7 +2254,7 @@ namespace entities
 		{
 			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc)*skew, 0.25f);
 			part_create(PART_HINT_SOFT, 1, o, colour, radius);
-			regularshape(PART_SPARK, radius+0.125f, colour, 53, 3, 250, o, 0.075f, 1, 0, 5);
+			//regularshape(PART_SPARK, radius+0.125f, colour, 53, 3, 250, o, 0.075f, 1, 0, 5);
 		}
 		if((item && showentdescs >= 3) || notitem)
 		{
