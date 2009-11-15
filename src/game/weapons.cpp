@@ -48,6 +48,7 @@ namespace weapons
 				if(issound(d->wschan)) removesound(d->wschan);
 				playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
 				d->setweapstate(weap, WEAP_S_RELOAD, weaptype[weap].rdelay, lastmillis);
+				if(local) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 			}
 			return true;
 		}
@@ -141,18 +142,16 @@ namespace weapons
 	void shoot(gameent *d, vec &targ, int force)
 	{
 		if(!game::allowmove(d)) return;
-		bool alt = (d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) || (!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE]);
-		int power = clamp(force, 0, weaptype[d->weapselect].power), flags = alt ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0],
-			sweap = m_spawnweapon(game::gamemode, game::mutators);
+		bool secondary = false, pressed = (d->action[AC_ATTACK] || d->action[AC_ALTERNATE]);
+		if(d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) secondary = true;
+		else if(!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
+		else if(d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
+		int power = clamp(force, 0, weaptype[d->weapselect].power), flags = secondary ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, flags, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
 			{
-				if(autoreloading && d->canreload(d->weapselect, sweap, lastmillis))
-				{
-					d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
-					weapreload(d, d->weapselect);
-				}
+				if(autoreloading && d->canreload(d->weapselect, sweap, lastmillis)) weapreload(d, d->weapselect);
 				return;
 			}
 			else offset = 0;
@@ -163,7 +162,7 @@ namespace weapons
 			{
 				if(d->weapstate[d->weapselect] != WEAP_S_POWER)
 				{
-					if(d->action[AC_ATTACK] || d->action[AC_ALTERNATE])
+					if(pressed)
 					{
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
 						d->setweapstate(d->weapselect, WEAP_S_POWER, 0, lastmillis);
@@ -171,10 +170,8 @@ namespace weapons
 					else return;
 				}
 				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, weaptype[d->weapselect].power);
-				if((d->action[AC_ATTACK] || d->action[AC_ALTERNATE]) && power < weaptype[d->weapselect].power) return;
+				if(pressed && power < weaptype[d->weapselect].power) return;
 			}
-			d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
-			//alt = d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]; // filthy hack
 		}
 		else if(!d->action[AC_ATTACK] && (!d->action[AC_ALTERNATE] || weaptype[d->weapselect].zooms)) return;
 		vec eyeray = vec(d->muzzle).sub(d->o);
@@ -185,17 +182,16 @@ namespace weapons
 			offset = max(d->weapload[d->weapselect], 1)+weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0];
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
 		}
-		d->action[AC_RELOAD] = false;
 		int adelay = weaptype[d->weapselect].adelay[flags&HIT_ALT ? 1 : 0];
 		if(!weaptype[d->weapselect].fullauto[flags&HIT_ALT ? 1 : 0] || (weaptype[d->weapselect].zooms && flags&HIT_ALT))
 		{
-			d->action[AC_ATTACK] = false;
-			if(!weaptype[d->weapselect].zooms) d->action[AC_ALTERNATE] = false;
+			if(!secondary || !weaptype[d->weapselect].zooms) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
 		d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 		d->totalshots += int(weaptype[d->weapselect].damage[flags&HIT_ALT ? 1 : 0]*damagescale)*weaptype[d->weapselect].rays[flags&HIT_ALT ? 1 : 0];
+		d->action[AC_RELOAD] = false;
 		vec to = targ, from = d->muzzle, unitv;
 		float dist = to.dist(from, unitv);
 		if(dist > 0) unitv.div(dist);
