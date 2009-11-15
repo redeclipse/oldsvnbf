@@ -579,7 +579,7 @@ namespace physics
 							int move = i ? (i%2 ? 1 : -1) : d->move;
 							vecfromyawpitch(d->aimyaw, 0, move, d->turnside && i > 1 ? d->turnside : d->strafe, dir);
 							dir.normalize(); d->o.add(dir);
-							if((!collide(d, dir) || inside) && !wall.iszero())
+							if(!collide(d, dir) && !wall.iszero())
 							{
 								d->o = oldpos; wall.normalize();
 								float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
