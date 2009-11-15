@@ -966,7 +966,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
-			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)));
+			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true));
 			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && b.type == AI_S_DEFEND && b.idle)
 			{
 				loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
@@ -1038,7 +1038,7 @@ namespace ai
 			}
 		}
 
-		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD))))
+		if(busy <= 3 && d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true)))
 		{
 			int weap = d->hasweap(d->arenaweap, sweap) ? d->arenaweap : -1;
 			vec dp = d->headpos(); float dist = 0;
