@@ -677,7 +677,7 @@ namespace hud
 						}
 						if(game::player1->state == CS_WAITING && shownotices >= 3)
 						{
-							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 1);
+							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
 							pushfont("default");
 							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
 							popfont();
