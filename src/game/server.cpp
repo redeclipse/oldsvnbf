@@ -2559,6 +2559,7 @@ namespace server
 			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
+			if(ci->state.aitype < 0) aiman::dorefresh = true; // get the ai to reorganise
 		}
 	}
 

@@ -204,7 +204,7 @@ namespace aiman
 		if(m_story(gamemode)) balance = nplayers; // story mode strictly obeys nplayers
 		else if(m_fight(gamemode) && !m_race(gamemode))
 		{
-			int balstyle = GVAR(teambalance) != 3 ? GVAR(botbalance) : 0, numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
+			int balstyle = !m_team(gamemode, mutators) || GVAR(teambalance) != 3 ? GVAR(botbalance) : 0, numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
 			if(GVAR(botscale) > 0 && GVAR(botlimit) > 0) switch(balstyle)
 			{
 				case 0: balance = 0; break; // no bots
