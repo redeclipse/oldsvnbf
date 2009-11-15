@@ -1,7 +1,7 @@
 #include "game.h"
 namespace weapons
 {
-	VARP(autoreloading, 0, 2, 3); // 0 = don't autoreload at all, 1 = only reload when gun is empty, 2 = always reload weapons that don't add a full clip, 3 = +autoreload zooming weapons
+	VARP(autoreloading, 0, 2, 4); // 0 = never, 1 = when empty, 2 = weapons that don't add a full clip, 3 = always (+1 zooming weaps too)
 	VARP(skipspawnweapon, 0, 0, 3); // skip spawnweapon; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
 	VARP(skippistol, 0, 2, 3); // skip pistol; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
 	VARP(skipgrenade, 0, 0, 3); // skip grenade; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
@@ -114,7 +114,7 @@ namespace weapons
 	{
 		int sweap = m_spawnweapon(game::gamemode, game::mutators);
 		bool reload = d->action[AC_RELOAD], canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
-		if(!reload && canreload && autoreloading >= (weaptype[d->weapselect].zooms ? 3 : 2))
+		if(!reload && canreload && autoreloading >= (weaptype[d->weapselect].add < weaptype[d->weapselect].max ? 2 : (weaptype[d->weapselect].zooms ? 4 : 3)))
 			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
 		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
