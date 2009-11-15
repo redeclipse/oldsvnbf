@@ -38,7 +38,7 @@ namespace hud
 			return timestr;
 		}
 
-		IVARP(autoshowscores, 0, 2, 2); // 1 = when dead, 2 = also in spectv
+		IVARP(autoshowscores, 0, 2, 3); // 1 = when dead, 2 = also in spectv, 3 = and in waittv too
 		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
 		IVARP(showscoresdelay, 0, 3000, INT_MAX-1); // otherwise use a static timespan
 		IVARP(showscoresinfo, 0, 1, 1);
@@ -61,7 +61,7 @@ namespace hud
 
 		bool canshowscores()
 		{
-			if(!scoresoff && !scoreson && !shownscores && autoshowscores() && (game::player1->state == CS_DEAD || (autoshowscores() >= 2 && game::tvmode())))
+			if(!scoresoff && !scoreson && !shownscores && autoshowscores() && (game::player1->state == CS_DEAD || (autoshowscores() >= (game::player1->state == CS_SPECTATOR ? 2 : 3) && game::tvmode())))
 			{
 				if((!showscoresdelay() && !showscoreswait()) || game::tvmode()) return true;
 				else if(game::player1->state == CS_DEAD)

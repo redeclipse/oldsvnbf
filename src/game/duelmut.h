@@ -131,6 +131,7 @@ struct duelservmode : servmode
 					{
 						ci->state.health = m_maxhealth(gamemode, mutators);
 						ci->state.lastregen = gamemillis;
+						ci->state.lastfire = ci->state.lastfireburn = 0;
 						sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, 0); // amt = 0 regens impulse
 					}
 					alive.add(ci);
@@ -163,8 +164,6 @@ struct duelservmode : servmode
 				if(!found)
 				{
 					srvmsgf(-1, "\fyteam \fs%s%s\fS are the victors!", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
-					loopv(alive) if(allowbroadcast(alive[i]->clientnum))
-						sendf(alive[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
 					dueltime = gamemillis+GVAR(duellimit);
 				}
 			}
@@ -172,15 +171,13 @@ struct duelservmode : servmode
 			{
 				case 0:
 				{
-					srvmsgf(-1, "\frhaha, everyone died, fail!");
+					srvmsgf(-1, "\fyeveryone died, epic fail!");
 					dueltime = gamemillis+GVAR(duellimit);
 					break;
 				}
 				case 1:
 				{
 					srvmsgf(-1, "\fy%s was the victor!", colorname(alive[0]));
-					if(allowbroadcast(alive[0]->clientnum))
-						sendf(alive[0]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, CON_INFO, "\fgyou survived, yay you!");
 					dueltime = gamemillis+GVAR(duellimit);
 					break;
 				}

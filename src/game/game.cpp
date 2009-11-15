@@ -3,7 +3,7 @@
 namespace game
 {
 	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0, swaymillis = 0,
-		lastcamera = 0, lastspec = 0, lastspecchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
+		lastcamera = 0, lasttvcam = 0, lasttvchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
 	bool intermission = false, prevzoom = false, zooming = false;
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
 
@@ -44,10 +44,13 @@ namespace game
 	FVARP(firstpersonadjust, -10000, -0.07f, 10000);
 
 	VARP(editfov, 1, 120, 179);
+	VARP(specfov, 1, 120, 179);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
-	VARP(specfov, 1, 120, 179);
 	FVARP(spectvspeed, 0, 0.1f, 1000);
+	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel, 2 = tv always
+	VARP(waittvtime, 1000, 5000, INT_MAX-1);
+	FVARP(waittvspeed, 0, 0.2f, 1000);
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
 
@@ -103,8 +106,16 @@ namespace game
 	ICOMMAND(specmodeswitch, "", (), {
 		switch(specmode)
 		{
-			case 0: specmode = 1; break;
-			case 1: default: specmode = 0; break;
+			case 0: default: specmode = 1; break;
+			case 1: specmode = 0; break;
+		}
+	});
+	ICOMMAND(waitmodeswitch, "", (), {
+		switch(waitmode)
+		{
+			case 0: default: waitmode = m_duke(gamemode, mutators) ? 1 : 2; break;
+			case 1: waitmode = 2; break;
+			case 2: waitmode = 0; break;
 		}
 	});
 
@@ -229,7 +240,16 @@ namespace game
 	}
 	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
 
-	bool tvmode() { return !m_edit(gamemode) && player1->state == CS_SPECTATOR && specmode == 1; }
+	bool tvmode()
+	{
+		if(!m_edit(gamemode)) switch(player1->state)
+		{
+			case CS_SPECTATOR: return specmode == 1; break;
+			case CS_WAITING: return specmode >= (m_duke(gamemode, mutators) ? 1 : 2); break;
+			default: break;
+		}
+		return false;
+	}
 
     bool allowmove(physent *d)
     {
@@ -397,7 +417,7 @@ namespace game
 			camera1->state = CS_ALIVE;
 			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
-		if(player1->state != CS_WAITING && (player1->state != CS_SPECTATOR || tvmode()))
+		if((player1->state != CS_WAITING && player1->state != CS_SPECTATOR) || tvmode())
 		{
 			camera1->vel = vec(0, 0, 0);
 			camera1->move = camera1->strafe = 0;
@@ -1221,6 +1241,7 @@ namespace game
 
 	void cameratv()
 	{
+		bool isspec = player1->state == CS_SPECTATOR;
 		if(cameras.empty()) loopk(2)
 		{
 			physent d = *player1;
@@ -1253,10 +1274,10 @@ namespace game
 					}
 				}
 			}
-			lastspec = lastspecchg = 0;
+			lasttvcam = lasttvchg = 0;
 			if(!cameras.empty()) break;
 		}
-		#define unsetspectv(q) \
+		#define unsettvmode(q) \
 		{ \
 			if(q) \
 			{ \
@@ -1264,16 +1285,16 @@ namespace game
 				camera1->o.x *= 0.5f; camera1->o.y *= 0.5f; \
 			} \
 			camera1->resetinterp(); \
-			setvar("specmode", 0, true); \
+			setvar(isspec ? "specmode" : "waitmode", 0, true); \
 			return; \
 		}
 
 		if(!cameras.empty())
 		{
 			camstate *cam = &cameras[0];
-			int entidx = cam->ent;
-			bool alter = cam->alter, renew = !lastspec || lastmillis-lastspec >= spectvtime,
-				override = renew || !lastspec || lastmillis-lastspec >= max(spectvtime/10, 1500);
+			int entidx = cam->ent, len = (isspec ? spectvtime : waittvtime);
+			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= len,
+				override = renew || !lasttvcam || lastmillis-lasttvcam >= max(len/10, 1500);
 			#define addcamentity(q,p) \
 			{ \
 				vec trg, pos = p; \
@@ -1367,7 +1388,7 @@ namespace game
 				if(override && !found && (k || !alter))
 				{
 					if(k < 3) renew = true;
-					else unsetspectv(lastspec ? false : true);
+					else unsettvmode(lasttvcam ? false : true);
 				}
 				else break;
 			}
@@ -1375,8 +1396,8 @@ namespace game
 			{
 				cameras.sort(camstate::camsort);
 				cam = &cameras[0];
-				lastspec = lastmillis;
-				if(!lastspecchg || cam->ent != entidx) lastspecchg = lastmillis;
+				lasttvcam = lastmillis;
+				if(!lasttvchg || cam->ent != entidx) lasttvchg = lastmillis;
 			}
 			else if(alter && !cam->cansee.length()) cam->alter = true;
 			camera1->o = cam->pos;
@@ -1386,10 +1407,14 @@ namespace game
 				vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
 			}
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
-			else if(spectvspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, 0.25f);
+			else
+			{
+				float speed = isspec ? spectvspeed : waittvspeed;
+				if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, 0.25f);
+			}
 			camera1->resetinterp();
 		}
-		else unsetspectv(true);
+		else unsettvmode(true);
 	}
 
 	void updateworld()		// main game update loop

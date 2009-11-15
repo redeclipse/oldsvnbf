@@ -1157,7 +1157,7 @@ namespace hud
 namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
-			zoomtime, lastzoom, lastspec, lastspecchg, spectvtime, showplayerinfo,
+			zoomtime, lastzoom, lasttvcam, lasttvchg, spectvtime, waittvtime, showplayerinfo,
 				bloodfade, gibfade, fogdist, aboveheadfade, announcefilter;
 	extern float bloodscale, gibscale;
 	extern bool intermission, zooming;

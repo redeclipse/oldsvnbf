@@ -36,7 +36,7 @@ namespace hud
 	COMMAND(toggleconsole, "");
 
 	VARP(titlefade, 0, 5000, 10000);
-	VARP(specfade, 0, 1000, INT_MAX-1);
+	VARP(tvmodefade, 0, 1000, INT_MAX-1);
 	VARP(spawnfade, 0, 1000, INT_MAX-1);
 
 	VARP(commandfade, 0, 500, INT_MAX-1);
@@ -652,7 +652,7 @@ namespace hud
 							{
 								pushfont("emphasis");
 								if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
-									ty += draw_textx("Waiting for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+									ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f)*noticescale;
 								popfont();
 							}
@@ -674,6 +674,13 @@ namespace hud
 								ty += draw_textx("Press \fs\fc%s\fS to respawn", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;
 								popfont();
 							}
+						}
+						if(game::player1->state == CS_WAITING && shownotices >= 3)
+						{
+							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 1);
+							pushfont("default");
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							popfont();
 						}
 						if(m_arena(game::gamemode, game::mutators))
 						{
@@ -1684,9 +1691,9 @@ namespace hud
 					float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
 					loopi(3) if(a < colour[i]) colour[i] = a;
 				}
-				if(specfade && game::tvmode())
+				if(tvmodefade && game::tvmode())
 				{
-					float a = game::lastspecchg ? (lastmillis-game::lastspecchg <= specfade ? float(lastmillis-game::lastspecchg)/float(specfade) : 1.f) : 0.f;
+					float a = game::lasttvchg ? (lastmillis-game::lasttvchg <= tvmodefade ? float(lastmillis-game::lasttvchg)/float(tvmodefade) : 1.f) : 0.f;
 					loopi(3) if(a < colour[i]) colour[i] = a;
 				}
 				if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn <= spawnfade)
