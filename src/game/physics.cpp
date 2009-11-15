@@ -540,7 +540,7 @@ namespace physics
 				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) { d->turnside = 0; d->resetphys(); }
 				if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
 				{
-					float mag = impulseforce(d)*(d->action[AC_IMPULSE] ? 1.5f : 1.f)+max(d->vel.magnitude(), 1.f);
+					float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
 					vecfromyawpitch(d->aimyaw, impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
 					d->vel.normalize().mul(mag); d->vel.z += mag/4;
 					d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
@@ -566,7 +566,7 @@ namespace physics
 				{
 					if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
 					{
-						d->vel.z += impulseforce(d);
+						d->vel.z += impulseforce(d)*1.5f;
 						d->doimpulse(impulsecost, IM_T_BOOST, lastmillis); allowed = false;
 						playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
