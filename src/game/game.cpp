@@ -235,7 +235,8 @@ namespace game
 		if(idx >= 0)
 		{
 			if(d && issound(d->aschan)) removesound(d->aschan);
-			playsound(idx, !d || d == player1 ? camera1->o : d->o, d == player1 ? camera1 : d, d == player1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
+			physent *t = !d || d == player1 ? camera1 : d;
+			playsound(idx, t->o, t, d == player1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
 		}
 	}
 	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
@@ -587,7 +588,7 @@ namespace game
             else if(damage >= 50) snd = 3;
             else if(damage >= 25) snd = 2;
             else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, actor->o, actor, SND_NOCULL, -1, -1, -1);
+            playsound(S_DAMAGE1+snd, actor->o, actor, SND_FORCED, -1, -1, -1);
         }
     };
     vector<damagetone> damagetones;
