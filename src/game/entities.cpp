@@ -2250,7 +2250,12 @@ namespace entities
 		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f;
-		if(item) part_create(PART_HINT_SOFT, 1, o, colour, max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc)*skew, 0.25f));
+		if(item)
+		{
+			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc)*skew, 0.25f);
+			part_create(PART_HINT_SOFT, 1, o, colour, radius);
+			regularshape(PART_SPARK, radius+0.125f, colour, 53, 3, 250, o, 0.05f, 1, 0, 5);
+		}
 		if((item && showentdescs >= 3) || notitem)
 		{
 			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
