@@ -242,7 +242,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },	{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, false },	{ false, false },
 			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
-			{ 15, 15 },			{ 20, 40 },			{ 80, 200 },		6,
+			{ 15, 15 },			{ 20, 40 },			{ 80, 40 },		6,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
@@ -267,12 +267,12 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 1000, 5000 },
-			0,		{ 24, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
+			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
+			0,		{ 20, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
 			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|COLLIDE_STICK },															{ 2, 2 },
 			{ true, true },		{ true, false },	{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 24, 48 },			{ 0, 0 },
-			{ 3, 6 },			{ 50, 200 },		{ 300, 100 },		5,
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 16, 48 },			{ 0, 0 },
+			{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
