@@ -80,7 +80,7 @@ struct stfstate
 			return !enemies;
 		}
 
-		int occupy(int team, int units, int occupy)
+		int occupy(int team, int units, int occupy, bool instant)
 		{
 			if(enemy != team) return -1;
 			converted += units;
@@ -89,8 +89,8 @@ struct stfstate
                 if(converted<=0) noenemy();
                 return -1;
             }
-            else if(converted<(owner ? 2 : 1)*occupy) return -1;
-			if(owner) { owner = TEAM_NEUTRAL; converted = 0; enemy = team; return 0; }
+            else if(converted<(!instant && owner ? 2 : 1)*occupy) return -1;
+			if(!instant && owner) { owner = TEAM_NEUTRAL; converted = 0; enemy = team; return 0; }
             else { owner = team; securetime = 0; owners = enemies; noenemy(); return 1; }
         }
 	};

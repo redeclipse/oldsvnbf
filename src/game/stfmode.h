@@ -79,7 +79,7 @@ struct stfservmode : stfstate, servmode
 			{
                 if(!b.owners || !b.enemies)
                 {
-                	int pts = b.occupy(b.enemy, GVAR(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GVAR(stfoccupy));
+                	int pts = b.occupy(b.enemy, GVAR(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GVAR(stfoccupy), GVAR(stfstyle) != 0);
                 	if(pts > 0) loopvk(clients) if(clients[k]->state.aitype <= AI_BOT && b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
                 }
 				sendflag(i);
