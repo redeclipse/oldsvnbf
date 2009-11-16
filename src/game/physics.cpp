@@ -354,7 +354,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->physstate >= PHYS_FLOOR && sticktofloor(d))
+		if(d->physstate >= PHYS_FLOOR && d->physstate != PHYS_STEP_DOWN && sticktofloor(d))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
