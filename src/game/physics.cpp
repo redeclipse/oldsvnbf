@@ -334,24 +334,23 @@ namespace physics
 
 	bool trystepdown(physent *d, vec &dir, float step, float xy, float z)
 	{
-		vec dv(dir.x, dir.y, 0);
-        dv.z = -dv.magnitude2()*z/xy;
-        if(!dv.z) return false;
-        dv.rescale(step);
+		vec stepdir(dir.x, dir.y, 0);
+        stepdir.z = -stepdir.magnitude2()*z/xy;
+        if(!stepdir.z) return false;
+        stepdir.normalize();
 
         vec old(d->o);
-		d->o.add(vec(dv).mul(stairheight/fabs(dv.z))).z -= stairheight;
+		d->o.add(vec(stepdir).mul(stairheight/fabs(stepdir.z))).z -= stairheight;
 		if(!collide(d, vec(0, 0, -1), slopez))
 		{
 			d->o = old;
-			d->o.add(dv);
+			d->o.add(vec(stepdir).mul(step));
 			if(collide(d, vec(0, 0, -1)))
             {
-                vec floor(0, 0, 1);
-                dv.normalize();
-                floor.sub(vec(dv).mul(dv.z)).normalize();
-                switchfloor(d, dir, floor);
-                d->floor = floor;
+                stepdir.mul(-stepdir.z).z += 1;
+                stepdir.normalize();
+                switchfloor(d, dir, stepdir);
+                d->floor = stepdir;
                 return true;
             }
 		}
