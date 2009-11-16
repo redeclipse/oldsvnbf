@@ -144,7 +144,7 @@ enttypes enttype[] = {
 			false,				"pusher",		{ "zpush",	"ypush",	"xpush",	"radius",	"min",		"" }
 	},
 	{
-		FLAG,			1,  48,		32,		EU_NONE,	5,
+		FLAG,			1,  48,		36,		EU_NONE,	5,
 			(1<<FLAG),
 			0,
 			false,				"flag",			{ "team",	"yaw",		"pitch",	"mode",		"id",		"" }
@@ -227,7 +227,7 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 3000, 2500 },		0,			{ 2000, 2000 },
+			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 3000, 3000 },		0,			{ 2000, 2000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },								{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, true },	{ false, false },
@@ -237,7 +237,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 15 },		{ 2500, 2000 },		0,			{ 1000, 1000 },
+			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 15 },		{ 2500, 2000 },		0,			{ 300, 100 },
 			0,		{ 0, 0 },	{ 20, 40 },		{ 25, 20 },		{ 1, 2 },		{ 2, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },	{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, false },	{ false, false },
@@ -247,7 +247,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		{ 1, 5 },	{ 75, 300 },	1500,	{ 30, 20 },		{ 2000, 2000 },		0,			{ 1000, 1000 },
+			40,		40,		{ 1, 5 },	{ 75, 300 },	1500,	{ 30, 20 },		{ 2000, 2000 },		0,			{ 500, 500 },
 			0,		{ 0, 0 },	{ 1, 5 },		{ 5, 5 },		{ 4, 2 },		{ 4, 4 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },	{ 0, 0 },
 			{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
@@ -257,22 +257,22 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 10, 5 },		{ 150, 200 },		0,			{ 400, 600 },
+			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 8, 4 },		{ 150, 200 },		0,			{ 400, 600 },
 			0,		{ 24, 36 },	{ 1, 5 },		{ 40, 15 },		{ 2, 2 },		{ 1, 2 },
 			{ BOUNCE_GEOM, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },															{ 1, 2 },
 			{ false, false },	{ true, true },		{ true, true, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.75f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 24, 32 },			{ 0, 0 },
-			{ 0.25f, 1 },		{ 20, 40 },			{ 50, 100 },		7,
+			{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },		7,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 20, 25 },		{ 1500,	35 },		0,			{ 1000, 5000 },
-			0,		{ 16, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
+			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 1000, 5000 },
+			0,		{ 24, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
 			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|COLLIDE_STICK },															{ 2, 2 },
 			{ true, true },		{ true, false },	{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 18, 42 },			{ 0, 0 },
-			{ 3, 6 },			{ 50, 200 },		{ 400, 125 },		5,
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 24, 48 },			{ 0, 0 },
+			{ 3, 6 },			{ 50, 200 },		{ 300, 100 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{

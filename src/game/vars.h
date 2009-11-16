@@ -68,6 +68,7 @@ VARG(ctfstyle, 0, 0, 3); // 0 = classic touch-and-return, 1 = grab and take home
 VARG(ctfresetdelay, 0, 30000, INT_MAX-1);
 
 VARG(stflimit, 0, 0, INT_MAX-1); // finish when score is this or more
+VARG(stfstyle, 0, 1, 1); // 0 = overthrow and secure, 1 = instant secure
 VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
