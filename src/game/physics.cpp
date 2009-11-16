@@ -345,7 +345,15 @@ namespace physics
 		{
 			d->o = old;
 			d->o.add(dv);
-			if(collide(d, vec(0, 0, -1))) return true;
+			if(collide(d, vec(0, 0, -1)))
+            {
+                vec floor(0, 0, 1);
+                dv.normalize();
+                floor.sub(vec(dv).mul(dv.z)).normalize();
+                switchfloor(d, dir, floor);
+                d->floor = floor;
+                return true;
+            }
 		}
 		d->o = old;
 		return false;
@@ -354,7 +362,7 @@ namespace physics
 
     void falling(physent *d, vec &dir, const vec &floor)
 	{
-		if(d->physstate >= PHYS_FLOOR && d->physstate != PHYS_STEP_DOWN && sticktofloor(d))
+		if(d->physstate >= PHYS_FLOOR && (d->physstate != PHYS_STEP_DOWN || dir.z < -0.25f*dir.magnitude2()) && sticktofloor(d))
 		{
 			vec moved(d->o);
 			d->o.z -= stairheight+0.1f;
