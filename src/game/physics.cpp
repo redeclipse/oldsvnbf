@@ -583,8 +583,9 @@ namespace physics
 						loopi(d->turnside ? 3 : 1)
 						{
 							vec oldpos = d->o, dir;
-							int move = i ? (i%2 ? 1 : -1) : d->move;
-							vecfromyawpitch(d->aimyaw, 0, move, i > 1 ? d->turnside : d->strafe, dir);
+							int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i > 1 ? d->turnside : d->strafe;
+                            if(!move && !strafe) continue;
+							vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
 							dir.normalize(); d->o.add(dir);
 							if(!collide(d, dir) && !wall.iszero())
 							{
