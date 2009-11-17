@@ -506,6 +506,149 @@ namespace physics
 		return !collided;
 	}
 
+	void modifyinput(gameent *d, vec &m, bool wantsmove, bool floating, int millis)
+	{
+		if(floating)
+		{
+			if(game::allowmove(d) && d->action[AC_JUMP]) d->vel.z += jumpforce(d, false);
+		}
+		else if(game::allowmove(d))
+		{
+			if(d->action[AC_IMPULSE] && (d->move || d->strafe))
+			{
+				if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
+				else d->action[AC_IMPULSE] = false;
+			}
+			else if(d->impulse[IM_METER] > 0)
+			{
+				int timeslice = max(millis, 1);
+				if(iscrouching(d)) timeslice += timeslice/2;
+				if(d->move || d->strafe) timeslice -= timeslice/2;
+				if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
+				if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
+			}
+			bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
+			#define WILLIMPULSE (allowed && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL))
+			if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate))
+			{
+				d->turnside = 0;
+				d->resetphys();
+			}
+			if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
+			{
+				float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
+				vecfromyawpitch(d->aimyaw, impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
+				d->vel.normalize().mul(mag); d->vel.z += mag/4;
+				d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
+				playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
+				client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+			}
+			if(!d->turnside && (d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d)))
+			{
+				if(d->action[AC_JUMP])
+				{
+					d->vel.z += jumpforce(d, true);
+					if(d->inliquid)
+					{
+						float scale = liquidmerge(d, 1.f, liquidspeed);
+						d->vel.x *= scale;
+						d->vel.y *= scale;
+					}
+					d->resetphys();
+					allowed = false;
+					playsound(S_JUMP, d->o, d);
+					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1.f, -10, 0, 10.f);
+					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
+				}
+			}
+			else
+			{
+				if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
+				{
+					d->vel.z += impulseforce(d);
+					d->doimpulse(impulsecost, IM_T_BOOST, lastmillis);
+					allowed = false;
+					playsound(S_IMPULSE, d->o, d);
+					game::impulseeffect(d, true);
+					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+				}
+				if(((d->turnside && d->vel.magnitude() > 5) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
+				{
+					loopi(d->turnside ? 3 : 1)
+					{
+						vec oldpos = d->o, dir;
+						int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i > 1 ? d->turnside : d->strafe;
+						if(!move && !strafe) continue;
+						vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
+						dir.normalize();
+						d->o.add(dir);
+						if(collide(d, dir) || wall.iszero())
+						{
+							d->o = oldpos;
+							if(d->turnside && i > 1) { d->turnside = 0; d->resetphys(); break; }
+							continue;
+						}
+						d->o = oldpos; wall.normalize();
+						float yaw = 0, pitch = 0;
+						vectoyawpitch(wall, yaw, pitch);
+						float off = yaw-d->aimyaw;
+						if(off > 180) off -= 360;
+						else if(off < -180) off += 360;
+						if(allowed && ((d->turnside && d->action[AC_JUMP]) || (!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
+						{
+							float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
+							d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall).normalize()).add(vec(d->vel).reflect(wall).normalize()).div(2).mul(mag);
+							vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+							d->vel.z += d->turnside ? mag : mag/2;
+							off = yaw-d->aimyaw;
+							if(off > 180) off -= 360;
+							else if(off < -180) off += 360;
+							d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
+							allowed = d->action[AC_SPECIAL] = false;
+							d->turnmillis = PHYSMILLIS;
+							d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
+							d->turnyaw = off;
+							d->turnroll = 0;
+							playsound(S_IMPULSE, d->o, d);
+							game::impulseeffect(d, true);
+							client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+						}
+						else if(d->turnside || (allowed && d->action[AC_SPECIAL]))
+						{
+							if(off < 0) yaw += 90;
+							else yaw -= 90;
+							while(yaw >= 360) yaw -= 360;
+							while(yaw < 0) yaw += 360;
+							vec rft;
+							vecfromyawpitch(yaw, 0, 1, 0, rft);
+							rft.normalize();
+							if(!d->turnside)
+							{
+								float mag = max(d->vel.magnitude(), 1.f);
+								d->vel = vec(rft).mul(mag);
+								off = yaw-d->aimyaw;
+								if(off > 180) off -= 360;
+								else if(off < -180) off += 360;
+								d->doimpulse(impulsecost, IM_T_SKATE, lastmillis);
+								allowed = d->action[AC_SPECIAL] = false;
+								d->turnmillis = PHYSMILLIS;
+								d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
+								d->turnyaw = off;
+								d->turnroll = (impulseroll*d->turnside)-d->roll;
+							}
+							else if(move) m = vec(rft).mul(move); // re-project and override
+						}
+						break;
+					}
+				}
+				else if(d->turnside) { d->turnside = 0; d->resetphys(); }
+			}
+		}
+		d->action[AC_JUMP] = d->action[AC_DASH] = false;
+		if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
+		else d->dojumpreset();
+	}
+
 	void modifyvelocity(physent *pl, bool local, bool floating, int millis)
 	{
 		vec m(0, 0, 0);
@@ -520,121 +663,12 @@ namespace physics
 			}
 			m.normalize();
 		}
-		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI))
-		{
-			gameent *d = (gameent *)pl;
-			if(floating)
-			{
-				if(game::allowmove(d) && d->action[AC_JUMP]) d->vel.z += jumpforce(d, false);
-			}
-			else if(game::allowmove(d))
-			{
-				if(d->action[AC_IMPULSE] && (d->move || d->strafe))
-				{
-					if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
-					else d->action[AC_IMPULSE] = false;
-				}
-				else if(d->impulse[IM_METER] > 0)
-				{
-					int timeslice = max(millis, 1);
-					if(iscrouching(d)) timeslice += timeslice/2;
-					if(d->move || d->strafe) timeslice -= timeslice/2;
-					if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
-					if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
-				}
-				bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
-				#define WILLIMPULSE (allowed && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL))
-				if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate)) { d->turnside = 0; d->resetphys(); }
-				if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
-				{
-					float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
-					vecfromyawpitch(d->aimyaw, impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
-					d->vel.normalize().mul(mag); d->vel.z += mag/4;
-					d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
-					playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
-				}
-				if(!d->turnside && (d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d)))
-				{
-					if(d->action[AC_JUMP])
-					{
-						d->vel.z += jumpforce(d, true);
-						if(d->inliquid)
-						{
-							float scale = liquidmerge(d, 1.f, liquidspeed);
-							d->vel.x *= scale; d->vel.y *= scale;
-						}
-						d->resetphys(); allowed = false;
-						playsound(S_JUMP, d->o, d); regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1.f, -10, 0, 10.f);
-						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
-					}
-				}
-				else
-				{
-					if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
-					{
-						d->vel.z += impulseforce(d);
-						d->doimpulse(impulsecost, IM_T_BOOST, lastmillis); allowed = false;
-						playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-						client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
-					}
-					if(((d->turnside && d->vel.magnitude() > 5) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
-					{
-						loopi(d->turnside ? 3 : 1)
-						{
-							vec oldpos = d->o, dir;
-							int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i > 1 ? d->turnside : d->strafe;
-                            if(!move && !strafe) continue;
-							vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
-							dir.normalize(); d->o.add(dir);
-							if(!collide(d, dir) && !wall.iszero())
-							{
-								d->o = oldpos; wall.normalize();
-								float yaw = 0, pitch = 0; vectoyawpitch(wall, yaw, pitch);
-								float off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-								if(allowed && ((d->turnside && d->action[AC_JUMP]) || (!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
-								{
-									float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
-									d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall).normalize()).add(vec(d->vel).reflect(wall).normalize()).div(2).mul(mag);
-									vectoyawpitch(vec(d->vel).normalize(), yaw, pitch); d->vel.z += d->turnside ? mag : mag/2;
-									off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-									d->doimpulse(impulsecost, IM_T_KICK, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-									d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
-									d->turnyaw = off; d->turnroll = 0;
-									playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-									client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
-								}
-								if(d->turnside || (allowed && d->action[AC_SPECIAL]))
-								{
-									if(off < 0) yaw += 90; else yaw -= 90; while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-									vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
-									if(!d->turnside)
-									{
-										float mag = max(d->vel.magnitude(), 1.f); d->vel = vec(rft).mul(mag);
-										off = yaw-d->aimyaw; if(off > 180) off -= 360; else if(off < -180) off += 360;
-										d->doimpulse(impulsecost, IM_T_SKATE, lastmillis); allowed = d->action[AC_SPECIAL] = false;
-										d->turnmillis = PHYSMILLIS; d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
-										d->turnyaw = off; d->turnroll = (impulseroll*d->turnside)-d->roll;
-									}
-									else if(d->move) m = vec(rft).mul(d->move); // re-project and override
-								}
-								break;
-							}
-							else { d->o = oldpos; if(d->turnside && i > 1) { d->turnside = 0; d->resetphys(); } }
-						}
-					}
-					else if(d->turnside) { d->turnside = 0; d->resetphys(); }
-				}
-			}
-			d->action[AC_JUMP] = d->action[AC_DASH] = false;
-			if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
-			else d->dojumpreset();
-		}
+		if(local && (pl->type == ENT_PLAYER || pl->type == ENT_AI)) modifyinput((gameent *)pl, m, wantsmove, floating, millis);
 		else if(pl->physstate == PHYS_FALL && !pl->onladder) pl->timeinair += millis;
 		else pl->timeinair = 0;
 		vec d = vec(m).mul(movevelocity(pl));
         if((pl->type == ENT_PLAYER || pl->type == ENT_AI) && !floating && !pl->inliquid)
-			d.mul(pl->move || pl->strafe || pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? (pl->strafe || pl->move <= 0 ? 1.2f : 1.4f) : 1.0f);
+			d.mul(pl->move || pl->strafe || pl->physstate == PHYS_FALL || pl->physstate == PHYS_STEP_DOWN ? (pl->strafe || pl->move <= 0 ? 1.25f : 1.5f) : 1.0f);
 		if(floating || pl->type==ENT_CAMERA) pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/floatcurb, 0.0f), millis/20.0f));
 		else
 		{
