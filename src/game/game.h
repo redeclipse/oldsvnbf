@@ -412,7 +412,7 @@ extern gametypes gametype[], mutstype[];
 
 #define m_spawnweapon(a,b)	(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
 #define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
-#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? 2 : 1))
+#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_speedscale(a)		(float(a)*GVAR(speedscale))
 #define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))

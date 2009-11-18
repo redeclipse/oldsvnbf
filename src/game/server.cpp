@@ -956,7 +956,7 @@ namespace server
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
 		}
-		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
+		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1));
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -2088,7 +2088,7 @@ namespace server
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
-		if(actor == target && !GVAR(selfdamage)) nodamage++;
+		if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
 			if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }

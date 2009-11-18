@@ -18,7 +18,7 @@ VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(trialweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
-VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib, 2 = always
+VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(spawndelay, 0, 3000, INT_MAX-1); // delay before spawning in most modes
 VARG(instadelay, 0, 3000, INT_MAX-1); // .. in instagib matches
 VARG(trialdelay, 0, 1000, INT_MAX-1); // .. in time trial matches
@@ -44,7 +44,7 @@ VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
 VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
 
-VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib, 2 = always
+VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
@@ -59,6 +59,7 @@ VARG(duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
 VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
+VARG(trialdamage, 0, 0, 1); // 0 = off, 1 = allow damage in time-trial
 VARG(teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players damage team
 VARG(teambalance, 0, 1, 3); // 0 = off, 1 = by number then rank, 2 = by rank then number, 3 = humans vs. ai
 
