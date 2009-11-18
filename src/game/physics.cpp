@@ -579,7 +579,7 @@ namespace physics
 						vec oldpos = d->o, dir;
 						int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i >= 2 ? d->turnside : d->strafe;
 						if(!move && !strafe) continue;
-						vecfromyawpitch(d->aimyaw, 0, move, strafe, dir); dir.normalize();
+						vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
 						d->o.add(dir);
 						if(collide(d, dir) || wall.iszero())
 						{
@@ -619,7 +619,7 @@ namespace physics
 							else yaw -= 90;
 							while(yaw >= 360) yaw -= 360;
 							while(yaw < 0) yaw += 360;
-							vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
+							vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft);
 							if(!d->turnside)
 							{
 								float mag = max(d->vel.magnitude(), 1.f);
