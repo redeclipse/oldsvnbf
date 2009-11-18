@@ -78,14 +78,6 @@ struct duelservmode : servmode
 		}
 	}
 
-	void clearqueue()
-	{
-		clearitems();
-		duelqueue.setsize(0);
-		loopv(clients) queue(clients[i], false, true);
-		allowed.setsize(0);
-	}
-
 	void cleanup()
 	{
 		loopvrev(duelqueue)
@@ -99,8 +91,16 @@ struct duelservmode : servmode
 
 		if(dueltime < 0)
 		{
-			dueltime = gamemillis+GVAR(duellimit)*10;
-			clearqueue();
+			if(duelqueue.length() >= 2)
+			{
+				clearitems();
+				dueltime = gamemillis+GVAR(duellimit);
+			}
+			else
+			{
+				loopv(clients) queue(clients[i], false, true); // safety
+				return;
+			}
 		}
 		else cleanup();
 

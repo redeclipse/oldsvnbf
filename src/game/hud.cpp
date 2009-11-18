@@ -1427,10 +1427,10 @@ namespace hud
 			const char *state = "", *tex = "";
 			switch(game::player1->state)
 			{
-				case CS_EDITING: state = "\fwEDIT"; tex = inventorychattex; break;
-				case CS_SPECTATOR: state = "\faSPEC"; tex = inventorychattex; break;
-				case CS_WAITING: state = "\fyWAIT"; tex = inventorywaittex; break;
-				case CS_DEAD: state = "\frDEAD"; tex = inventorydeadtex; break;
+				case CS_EDITING: state = "EDIT"; tex = inventorychattex; break;
+				case CS_SPECTATOR: state = "SPEC"; tex = inventorychattex; break;
+				case CS_WAITING: state = "WAIT"; tex = inventorywaittex; break;
+				case CS_DEAD: state = "DEAD"; tex = inventorydeadtex; break;
 			}
 			if(inventoryhealth >= 3 && *state)
 			{
@@ -1716,21 +1716,21 @@ namespace hud
 				fade *= min(colour.x, min(colour.y, colour.z));
 			}
 		}
-		int ox = hudwidth, oy = hudsize, os = int(screen->h*gapsize), is = int(oy*inventorysize), br = is+os*2, bs = (ox-br*2)/2, bx = ox-br, by = oy-os;
 
+		int gap = int(hudsize*gapsize), inv = int(hudsize*inventorysize), br = inv+gap*2, bs = (hudwidth-br*2)/2, bx = hudwidth-br, by = hudsize-gap;
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glLoadIdentity();
-		glOrtho(0, ox, oy, 0, -1, 1);
+		glOrtho(0, hudwidth, hudsize, 0, -1, 1);
 		glColor3f(1, 1, 1);
 
-		if(noview) drawbackground(ox, oy);
-		else if(showhud && client::ready() && fade > 0) drawheadsup(ox, oy, fade, os, is, br, bs, bx, by);
+		if(noview) drawbackground(hudwidth, hudsize);
+		else if(showhud && client::ready() && fade > 0) drawheadsup(hudwidth, hudsize, fade, gap, inv, br, bs, bx, by);
 		if(showconsole)
 		{
-			drawconsole(showconsole >= 2 ? 1 : 0, ox, oy, os, os, ox-os*2, fade);
+			drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudsize, gap, gap, hudwidth-gap*2, fade);
 			if(showconsole >= 2 && !noview && !progressing)
-				drawconsole(2, ox, oy, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-os : (bs-os)*2, fade);
+				drawconsole(2, hudwidth, hudsize, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap : (bs-gap)*2, fade);
 		}
 
 		glDisable(GL_BLEND);

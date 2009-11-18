@@ -572,23 +572,23 @@ namespace physics
 					game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 				}
-				if(((d->turnside && d->vel.magnitude() > 5) || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
+				if((d->turnside || (allowed && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
 				{
 					loopi(d->turnside ? 3 : 1)
 					{
 						vec oldpos = d->o, dir;
-						int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i > 1 ? d->turnside : d->strafe;
+						int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i >= 2 ? d->turnside : d->strafe;
 						if(!move && !strafe) continue;
-						vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
-						dir.normalize();
+						vecfromyawpitch(d->aimyaw, 0, move, strafe, dir); dir.normalize();
 						d->o.add(dir);
 						if(collide(d, dir) || wall.iszero())
 						{
 							d->o = oldpos;
-							if(d->turnside && i > 1) { d->turnside = 0; d->resetphys(); break; }
+							if(i >= (d->turnside ? 2 : 0)) { if(d->turnside) { d->turnside = 0; d->resetphys(); } break; }
 							continue;
 						}
-						d->o = oldpos; wall.normalize();
+						d->o = oldpos;
+						wall.normalize();
 						float yaw = 0, pitch = 0;
 						vectoyawpitch(wall, yaw, pitch);
 						float off = yaw-d->aimyaw;
@@ -619,9 +619,7 @@ namespace physics
 							else yaw -= 90;
 							while(yaw >= 360) yaw -= 360;
 							while(yaw < 0) yaw += 360;
-							vec rft;
-							vecfromyawpitch(yaw, 0, 1, 0, rft);
-							rft.normalize();
+							vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft); rft.normalize();
 							if(!d->turnside)
 							{
 								float mag = max(d->vel.magnitude(), 1.f);
@@ -636,7 +634,8 @@ namespace physics
 								d->turnyaw = off;
 								d->turnroll = (impulseroll*d->turnside)-d->roll;
 							}
-							else if(move) m = vec(rft).mul(move); // re-project and override
+							else if(d->vel.magnitude() >= 3) m = rft; // re-project and override
+							else { d->turnside = 0; d->resetphys(); break; }
 						}
 						break;
 					}
