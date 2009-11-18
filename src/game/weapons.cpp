@@ -2,10 +2,10 @@
 namespace weapons
 {
 	VARP(autoreloading, 0, 2, 4); // 0 = never, 1 = when empty, 2 = weapons that don't add a full clip, 3 = always (+1 zooming weaps too)
-	VARP(skipspawnweapon, 0, 0, 3); // skip spawnweapon; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
-	VARP(skipmelee, 0, 2, 3); // skip melee; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
-	VARP(skippistol, 0, 1, 3); // skip pistol; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
-	VARP(skipgrenade, 0, 0, 3); // skip grenade; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
+	VARP(skipspawnweapon, 0, 0, 6); // skip spawnweapon; 0 = never, 1 = if numweaps > 1 (+1), 3 = if carry > 0 (+2), 6 = always
+	VARP(skipmelee, 0, 7, 10); // skip melee; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
+	VARP(skippistol, 0, 8, 10); // skip pistol; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
+	VARP(skipgrenade, 0, 0, 10); // skip grenade; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
 	ICOMMAND(ammo, "s", (char *a),
@@ -76,9 +76,10 @@ namespace weapons
 				{ \
 					if(q && s == w) switch(q) \
 					{ \
-						case 3: break; \
-						case 2: if(d->carry(p, 0) > 1) continue; break; \
-						case 1: if(d->carry(p, 1) > 1) continue; break; \
+						case 10: continue; break; \
+						case 7: case 8: case 9: if(d->carry(p, 5, w) > (q-7)) continue; break; \
+						case 4: case 5: case 6: if(d->carry(p, 1, w) > (q-3)) continue; break; \
+						case 1: case 2: case 3: if(d->carry(p, 0, w) > q) continue; break; \
 						case 0: default: break; \
 					} \
 				}

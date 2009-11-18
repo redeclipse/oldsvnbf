@@ -1285,7 +1285,7 @@ namespace hud
 						b = (weaptype[i].colour&0xFF)/255.f;
 					}
 					int oldy = y-sy;
-					if(inventoryammo && (instate || inventoryammo > 1) && game::player1->hasweap(i, sweap))
+					if(inventoryammo && (instate || inventoryammo > 1) && i != WEAP_MELEE && game::player1->hasweap(i, sweap))
 						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "super", "%d", game::player1->ammo[i]);
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
 					if(inventoryweapids && (instate || inventoryweapids > 1))
@@ -1303,7 +1303,7 @@ namespace hud
 							}
 							lastweapids = changedkeys;
 						}
-						drawitemsubtext(x, oldy, size, false, skew, "default", fade, "\fs%s%s\fS", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+						drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "%s%s", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 					}
 				}
 			}
