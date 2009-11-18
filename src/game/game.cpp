@@ -281,9 +281,9 @@ namespace game
 					break;
 				}
 			}
-			if(weap <= WEAP_PISTOL || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_MELEE;
+			if(weap < WEAP_OFFSET || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_MELEE;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap > WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
+			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap >= WEAP_OFFSET ? weaptype[weap].name : "random weapons"));
 		}
 		else conoutft(CON_SELF, "\foonly available in arena");
 	}
@@ -781,7 +781,7 @@ namespace game
 			{
 				concatstring(d->obit, " \fs\fzawteam-mate\fS ");
 				concatstring(d->obit, colorname(actor));
-				if(actor == game::player1) { anc = S_ALARM; override = true; }
+				if(actor == player1) { anc = S_ALARM; override = true; }
 			}
 			else
 			{

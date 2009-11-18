@@ -195,9 +195,10 @@ enum
 
 enum
 {
-	WEAP_MELEE = 0, WEAP_PISTOL, WEAP_SHOTGUN, WEAP_SMG, WEAP_FLAMER, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_SUPER, // end of item weapon set
+	WEAP_MELEE = 0, WEAP_PISTOL, WEAP_OFFSET, // end of unselectable weapon set
+	WEAP_SHOTGUN = WEAP_OFFSET, WEAP_SMG, WEAP_FLAMER, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_SUPER, // end of item weapon set
 	WEAP_INSTA = WEAP_SUPER, WEAP_TOTAL, // end of selectable weapon set
-	WEAP_GIBS = WEAP_TOTAL, WEAP_MAX, WEAP_OFFSET = 1, WEAP_AOFFSET = 2
+	WEAP_GIBS = WEAP_TOTAL, WEAP_MAX
 };
 #define isweap(a)		(a > -1 && a < WEAP_MAX)
 
@@ -420,7 +421,7 @@ extern gametypes gametype[], mutstype[];
 
 #define weaploads(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
 #define weapcarry(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)
-#define weapattr(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) ? a : WEAP_GRENADE)
+#define weapattr(g,a,b)		(m_edit(g) || (a >= WEAP_OFFSET && a != (isweap(b) ? b : WEAP_PISTOL)) ? a : WEAP_GRENADE)
 #define chkmode(a,b)		(!a || (a < 0 ? -a != b : a == b))
 
 // network messages codes, c2s, c2c, s2c
@@ -751,7 +752,7 @@ struct gamestate
 		if(arena)
 		{
 			int aweap = arenaweap;
-			while(aweap <= WEAP_PISTOL || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_AOFFSET)+WEAP_AOFFSET; // pistol = random
+			while(aweap < WEAP_OFFSET || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
 			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
 			lastweap = weapselect = aweap;
 		}

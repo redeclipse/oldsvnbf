@@ -1393,7 +1393,7 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, 1);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(game::gamemode, entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
 						colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 					if(entities::showentdescs)
 					{

@@ -754,7 +754,7 @@ namespace hud
 									extentity &e = *entities::ents[ent];
 									if(enttype[e.type].usetype == EU_ITEM)
 									{
-										int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+										int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 										if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 										{
 											if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
@@ -1057,7 +1057,7 @@ namespace hud
 			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = radarblipsize;
 			if(type == WEAPON)
 			{
-				int attr1 = weapattr(attr[0], m_spawnweapon(game::gamemode, game::mutators));
+				int attr1 = weapattr(game::gamemode, attr[0], m_spawnweapon(game::gamemode, game::mutators));
 				tex = hud::itemtex(WEAPON, attr1);
 				r = (weaptype[attr1].colour>>16)/255.f;
 				g = ((weaptype[attr1].colour>>8)&0xFF)/255.f;
@@ -1415,7 +1415,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::player1->impulse[IM_METER] > 0 ? (impulsemeter-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
+						game::player1->impulse[IM_METER] > 0 ? (m_speedtime(impulsemeter)-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}

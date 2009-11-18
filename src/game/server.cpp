@@ -740,7 +740,7 @@ namespace server
 		{
 			if(sents[i].spawned) return true;
 			int sweap = m_spawnweapon(gamemode, mutators);
-			if(sents[i].type != WEAPON || weapcarry(weapattr(sents[i].attrs[0], sweap), sweap))
+			if(sents[i].type != WEAPON || weapcarry(weapattr(gamemode, sents[i].attrs[0], sweap), sweap))
 			{
 				loopvk(clients)
 				{
@@ -2424,7 +2424,7 @@ namespace server
 			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
 			return;
 		}
-		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
+		int sweap = m_spawnweapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? weapattr(gamemode, sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
 		if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_SWITCH)))
 		{
 			if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_RELOAD)))

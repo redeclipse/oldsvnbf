@@ -379,7 +379,7 @@ namespace ai
 			{
 				case WEAPON:
 				{
-					int attr = weapattr(e.attrs[0], sweap);
+					int attr = weapattr(game::gamemode, e.attrs[0], sweap);
 					if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						interest &n = interests.add();
@@ -405,7 +405,7 @@ namespace ai
 			{
 				case WEAPON:
 				{
-					int attr = weapattr(e.attrs[0], sweap);
+					int attr = weapattr(game::gamemode, e.attrs[0], sweap);
 					if(isweap(attr) && !d->hasweap(attr, sweap))
 					{ // go get a weapon upgrade
 						if(proj.owner == d) break;
@@ -507,7 +507,7 @@ namespace ai
 			else while(true)
 			{
 				d->arenaweap = rnd(WEAP_SUPER);
-				if(d->arenaweap > WEAP_PISTOL || !rnd(d->skill)) break;
+				if(d->arenaweap >= WEAP_OFFSET || !rnd(d->skill)) break;
 			}
 			if(d->aitype == AI_BOT)
 			{
@@ -614,7 +614,7 @@ namespace ai
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return 0;
-						int attr = weapattr(e.attrs[0], sweap);
+						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -638,7 +638,7 @@ namespace ai
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return 0;
 						gameentity &e = *(gameentity *)entities::ents[proj.id];
-						int attr = weapattr(e.attrs[0], sweap);
+						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -1017,7 +1017,7 @@ namespace ai
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
 								if(m_noitems(game::gamemode, game::mutators)) continue;
-								int attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+								int attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
 								{
 									case WEAPON:

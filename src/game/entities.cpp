@@ -94,8 +94,8 @@ namespace entities
 			}
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(attr[0], sweap);
-				if(attr1 != WEAP_MELEE && isweap(attr1))
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(game::gamemode, attr[0], sweap);
+				if(isweap(attr1))
 				{
 					defformatstring(str)("\fs%s%s\fS", weaptype[attr1].text, weaptype[attr1].name);
 					addentinfo(str);
@@ -172,7 +172,7 @@ namespace entities
 			case PLAYERSTART: return teamtype[attr[0]].tpmdl;
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(attr[0], sweap);
+				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(game::gamemode, attr[0], sweap);
 				return weaptype[attr1].item;
 			}
 			case FLAG: return teamtype[attr[0]].flag;
@@ -202,7 +202,7 @@ namespace entities
 		{
 			loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 		}
-		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0],
+		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 		if(showentdescs)
 		{
@@ -235,7 +235,7 @@ namespace entities
 		if(ents.inrange(r) && ents[r]->type == WEAPON)
 		{
 			gameentity &f = *(gameentity *)ents[r];
-			attr = weapattr(f.attrs[0], sweap);
+			attr = weapattr(game::gamemode, f.attrs[0], sweap);
 			if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 		}
 		e.spawned = s;
@@ -678,7 +678,7 @@ namespace entities
 			{
 				if(game::allowmove(d))
 				{
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(e.attrs[0], sweap) : e.attrs[0];
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
@@ -851,7 +851,7 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
+					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(game::gamemode, entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 						colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
 					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius, 5);
 					proj.beenused = true;
@@ -882,7 +882,7 @@ namespace entities
 		return (showentinfo || game::player1->state == CS_EDITING) && (!enttype[e.type].noisy || showentnoisy >= 2 || (showentnoisy && game::player1->state == CS_EDITING));
 	}
 
-	void fixentity(int n, bool recurse)
+	void fixentity(int n, bool recurse, bool create)
 	{
 		gameentity &e = *(gameentity *)ents[n];
 		int num = max(5, enttype[e.type].numattrs);
@@ -957,7 +957,8 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attrs[0] <= WEAP_MELEE) e.attrs[0] += WEAP_SUPER-WEAP_OFFSET; // don't allow superimposed weaps
+				if(create && (e.attrs[0] < WEAP_OFFSET || e.attrs[0] >= WEAP_SUPER)) e.attrs[0] = WEAP_OFFSET; // don't be stupid when creating the entity
+				while(e.attrs[0] < WEAP_OFFSET) e.attrs[0] += WEAP_SUPER-WEAP_OFFSET; // don't allow superimposed weaps
 				while(e.attrs[0] >= WEAP_SUPER) e.attrs[0] -= WEAP_SUPER-WEAP_OFFSET;
 				while(e.attrs[2] <= -G_MAX) e.attrs[2] += G_MAX*2;
 				while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
@@ -1439,7 +1440,7 @@ namespace entities
 				case 9: case 10: case 11: case 12: case 13: case 14:
 				{
 					int weap = f.type-8, weapmap[6] = {
-						WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_PISTOL
+						WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_GRENADE
 					};
 
 					if(weap >= 0 && weap <= 5)
@@ -1796,7 +1797,7 @@ namespace entities
 					if(mtype == MAP_BFGZ && gver <= 160)
 					{
 						e.attrs[0]++; // add in melee
-						if(e.attrs[0] <= WEAP_MELEE) e.attrs[0] = WEAP_GRENADE; // cleanup for fixentity
+						if(e.attrs[0] < WEAP_OFFSET) e.attrs[0] = WEAP_GRENADE; // cleanup for fixentity
 					}
 					break;
 				}
@@ -2138,7 +2139,7 @@ namespace entities
 			if(e.type == MAPMODEL || e.type == FLAG) continue;
 			else if(e.type == WEAPON)
 			{
-				int attr = weapattr(e.attrs[0], sweap);
+				int attr = weapattr(game::gamemode, e.attrs[0], sweap);
 				if(isweap(attr) && !weapf[attr])
 				{
 					weapons::preload(attr);
@@ -2252,7 +2253,7 @@ namespace entities
 		}
 		bool notitem = (edit && (showentinfo >= 4 || hasent)),
 			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
-		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON && !edit ? weapattr(e.attrs[0], sweap) : e.attrs[0],
+		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f;
 		if(item)

@@ -148,10 +148,7 @@ namespace physics
 	bool sticktospecial(physent *d)
 	{
 		if(d->onladder) return true;
-		if(d->type == ENT_PLAYER || d->type == ENT_AI)
-		{
-			if(((gameent *)d)->turnside) return true;
-		}
+		if(d->type == ENT_PLAYER || d->type == ENT_AI) { if(((gameent *)d)->turnside) return true; }
 		return false;
 	}
 
