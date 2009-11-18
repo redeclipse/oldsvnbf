@@ -648,12 +648,12 @@ namespace hud
 					if(shownotices >= 2)
 					{
 						SEARCHBINDCACHE(attackkey)("action 0", 0);
-						if(delay || m_story(game::gamemode) || m_duke(game::gamemode, game::mutators))
+						if(delay || m_story(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 						{
 							if(!m_story(game::gamemode))
 							{
 								pushfont("emphasis");
-								if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
+								if(m_duke(game::gamemode, game::mutators))
 									ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f)*noticescale;
 								popfont();
