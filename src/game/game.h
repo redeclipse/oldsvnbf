@@ -592,6 +592,7 @@ struct gamestate
 				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
 				case 3: if(ammo[weap] > 0 && weaploads(weap, sweap)) return true; break; // only reloadable with actual ammo
 				case 4: if(ammo[weap] >= (weaploads(weap, sweap) ? 0 : weaptype[weap].max)) return true; break; // only reloadable or those with < max
+				case 5: if(weapcarry(weap, sweap) || (!weaploads(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
 			}
 		}
 		return false;
@@ -606,10 +607,10 @@ struct gamestate
 		return weapselect;
 	}
 
-	int carry(int sweap, int level = 1)
+	int carry(int sweap, int level = 1, int exclude = -1)
 	{
 		int carry = 0;
-		loopi(WEAP_MAX) if(hasweap(i, sweap, level)) carry++;
+		loopi(WEAP_MAX) if(hasweap(i, sweap, level, exclude)) carry++;
 		return carry;
 	}
 
