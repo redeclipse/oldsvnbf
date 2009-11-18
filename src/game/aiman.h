@@ -2,7 +2,6 @@
 namespace aiman
 {
 	int oldteambalance = -1, oldbotbalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
-	float oldbotscale = -1.f; // lower than it can go
 
 	int findaiclient(int exclude)
 	{
@@ -48,7 +47,7 @@ namespace aiman
 				if(ci->state.ownernum < 0)
 				{ // reuse a slot that was going to removed
 					ci->state.ownernum = findaiclient();
-					ci->state.aireinit = 2;
+					ci->state.aireinit = 1;
 					ci->state.aitype = type;
 					ci->state.aientity = ent;
 					if(req) autooverride = true;
@@ -122,13 +121,15 @@ namespace aiman
 		if(ci->state.ownernum < 0) deleteai(ci);
 		else if(ci->state.aireinit >= 1)
 		{
+			ci->state.dropped.reset();
+			loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
+			sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
 			if(ci->state.aireinit == 2)
 			{
 				waiting(ci, 2);
-				ci->state.dropped.reset();
-				loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
+				if(smode) smode->entergame(ci);
+				mutate(smuts, mut->entergame(ci));
 			}
-			sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
 			ci->state.aireinit = 0;
 		}
 	}
@@ -136,7 +137,7 @@ namespace aiman
 	void shiftai(clientinfo *ci, int cn = -1)
 	{
 		if(cn < 0) { ci->state.aireinit = 0; ci->state.ownernum = -1; }
-		else { ci->state.aireinit = 2; ci->state.ownernum = cn; }
+		else { ci->state.aireinit = 1; ci->state.ownernum = cn; }
 	}
 
 	void removeai(clientinfo *ci, bool complete)
@@ -202,14 +203,14 @@ namespace aiman
 		}
 		int balance = 0;
 		if(m_story(gamemode)) balance = nplayers; // story mode strictly obeys nplayers
-		else if(m_fight(gamemode) && !m_trial(gamemode))
+		else if(m_fight(gamemode) && !m_trial(gamemode) && GVAR(botlimit) > 0)
 		{
-			int balstyle = !m_team(gamemode, mutators) || GVAR(teambalance) != 3 ? GVAR(botbalance) : 0, numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
-			if(GVAR(botscale) > 0 && GVAR(botlimit) > 0) switch(balstyle)
+			int numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
+			switch(GVAR(botbalance))
 			{
-				case 0: balance = 0; break; // no bots
-				case 1: default: balance = max(people, 2*numt); break; // balance to at least two
-				case 2: balance = max(people, int(nplayers*GVAR(botscale))); break; // use scaled numplayers
+				case -1: balance = 0; break; // no bots
+				case  0: balance = max(people, nplayers); break; // use scaled numplayers
+				default: balance = max(people, GVAR(botbalance)*numt); break; // balance to at least this*numteams
 			}
 			if(m_team(gamemode, mutators) && (balance > 0 || GVAR(teambalance) == 3))
 			{ // skew this if teams are unbalanced
@@ -268,7 +269,7 @@ namespace aiman
 			if(hasgameinfo)
 			{
 				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
-				checkold(teambalance); checkold(botbalance); checkold(botscale); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
+				checkold(teambalance); checkold(botbalance); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
 				if(dorefresh) { checksetup(); dorefresh = false; }
 				loopvrev(clients) if(clients[i]->state.aitype >= 0) reinitai(clients[i]);
 				while(true) if(!reassignai()) break;
@@ -281,7 +282,7 @@ namespace aiman
 	{
 		if(haspriv(ci, PRIV_MASTER, "add bots"))
 		{
-			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			if(m_lobby(gamemode) || m_story(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(!addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
@@ -290,7 +291,7 @@ namespace aiman
 	{
 		if(haspriv(ci, PRIV_MASTER, "remove bots"))
 		{
-			if(m_lobby(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			if(m_lobby(gamemode) || m_story(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(!delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
 		}
 	}

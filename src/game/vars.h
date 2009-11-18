@@ -18,7 +18,7 @@ VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaspawnweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib, 2 = always
-VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
+VARG(spawndelay, 0, 3000, INT_MAX-1); // delay before spawning in most modes
 VARG(instaspawndelay, 0, 3000, INT_MAX-1); // .. in instagib matches
 VARG(trialspawndelay, 0, 1000, INT_MAX-1); // .. in time trial matches
 VARG(spawnprotecttime, 0, 3000, INT_MAX-1); // delay before damage can be dealt to spawning player
@@ -54,7 +54,7 @@ VARG(timelimit, 0, 15, INT_MAX-1);
 VARG(triallimit, 0, 60000, INT_MAX-1);
 VARG(intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
 VARG(votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
-VARG(duellimit, 0, 3000, INT_MAX-1); // .. before duel goes to next round
+VARG(duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
 VARG(duelclear, 0, 0, 1); // clear items in duel
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
@@ -74,11 +74,10 @@ VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
 #ifdef STANDALONE
-VARG(botbalance, 0, 1, 2); // 0 = turn off bots, 1 = fill only with enough bots to satisfy play, 2 = populate bots to numplayers
+VARG(botbalance, 0, 2, MAXAI/2); // 0 = populate bots to map defined numplayers, 1 or more = fill only with this*numteams
 #else
-VARG(botbalance, 0, 2, 2);
+VARG(botbalance, 0, 0, 2);
 #endif
-FVARG(botscale, 0, 1.f, 1000);
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
