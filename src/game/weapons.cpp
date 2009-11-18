@@ -3,7 +3,8 @@ namespace weapons
 {
 	VARP(autoreloading, 0, 2, 4); // 0 = never, 1 = when empty, 2 = weapons that don't add a full clip, 3 = always (+1 zooming weaps too)
 	VARP(skipspawnweapon, 0, 0, 3); // skip spawnweapon; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
-	VARP(skippistol, 0, 2, 3); // skip pistol; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
+	VARP(skipmelee, 0, 2, 3); // skip melee; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
+	VARP(skippistol, 0, 1, 3); // skip pistol; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
 	VARP(skipgrenade, 0, 0, 3); // skip grenade; 0 = never, 1 = if carriage > 1 (+1 all weaps), 3 = always
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
@@ -82,6 +83,7 @@ namespace weapons
 					} \
 				}
 				skipweap(skipspawnweapon, p);
+				skipweap(skipmelee, WEAP_MELEE);
 				skipweap(skippistol, WEAP_PISTOL);
 				skipweap(skipgrenade, WEAP_GRENADE);
 			}
@@ -97,7 +99,7 @@ namespace weapons
 	{
 		int weap = isweap(a) ? a : d->weapselect;
 		bool found = false;
-		if(isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])))
+		if(weap != WEAP_MELEE && isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])))
 		{
 			if(d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true)))
 			{
@@ -154,7 +156,7 @@ namespace weapons
 				if(autoreloading && d->canreload(d->weapselect, sweap, lastmillis)) weapreload(d, d->weapselect);
 				return;
 			}
-			else offset = 0;
+			else offset = -1;
 		}
 		if(weaptype[d->weapselect].power && !weaptype[d->weapselect].zooms)
 		{
@@ -174,10 +176,10 @@ namespace weapons
 			}
 		}
 		else if(!d->action[AC_ATTACK] && (!d->action[AC_ALTERNATE] || weaptype[d->weapselect].zooms)) return;
-		vec eyeray = vec(d->muzzle).sub(d->o);
+		vec eyeray = vec(d->muzzlepos(d->weapselect)).sub(d->o);
 		float eyehit = eyeray.magnitude();
 		if(raycube(d->o, eyeray.normalize(), eyehit, RAY_CLIPMAT|RAY_POLY) < eyehit) return;
-		if(!offset)
+		if(offset < 0)
 		{
 			offset = max(d->weapload[d->weapselect], 1)+weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0];
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
@@ -189,10 +191,10 @@ namespace weapons
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
-		d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
+		if(offset > 0) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 		d->totalshots += int(weaptype[d->weapselect].damage[flags&HIT_ALT ? 1 : 0]*damagescale)*weaptype[d->weapselect].rays[flags&HIT_ALT ? 1 : 0];
 		d->action[AC_RELOAD] = false;
-		vec to = targ, from = d->muzzle, unitv;
+		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
 		float dist = to.dist(from, unitv);
 		if(dist > 0) unitv.div(dist);
 		if(d->aitype <= AI_BOT || d->maxspeed)
@@ -250,10 +252,10 @@ namespace weapons
     void preload(int weap)
     {
     	int g = weap < 0 ? m_spawnweapon(game::gamemode, game::mutators) : weap;
-    	if(isweap(g))
+    	if(g != WEAP_MELEE && isweap(g))
         {
-            loadmodel(weaptype[g].item, -1, true);
-			loadmodel(weaptype[g].vwep, -1, true);
+            if(*weaptype[g].item) loadmodel(weaptype[g].item, -1, true);
+			if(*weaptype[g].vwep) loadmodel(weaptype[g].vwep, -1, true);
         }
     }
 }

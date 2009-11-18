@@ -595,7 +595,7 @@ namespace ctf
 					gameent *t;
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						if((t->ai && !t->hasweap(t->arenaweap, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect == WEAP_PISTOL))
+						if((t->ai && !t->hasweap(t->arenaweap, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect <= WEAP_PISTOL))
 						{
 							guard = true;
 							break;

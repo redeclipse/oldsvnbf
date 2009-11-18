@@ -400,12 +400,6 @@ void execbind(keym &k, bool isdown)
 
 void consolekey(int code, bool isdown, int cooked)
 {
-    #ifdef __APPLE__
-        #define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
-    #else
-        #define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
-    #endif
-
     if(isdown)
     {
         switch(code)
@@ -476,6 +470,14 @@ void consolekey(int code, bool isdown, int cooked)
                 if(SDL_GetModState()&MOD_KEYS)
                 {
                 	pasteconsole();
+                	break;
+				}
+                // fall through
+
+            case SDLK_F4:
+                if(SDL_GetModState()&MOD_KEYS)
+                {
+                	quit();
                 	break;
 				}
                 // fall through

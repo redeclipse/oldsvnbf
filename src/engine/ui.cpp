@@ -843,6 +843,13 @@ namespace UI
 			case SDLK_KP_ENTER:
 				if(isdown) fieldmode = FIELDCOMMIT; //signal field commit (handled when drawing field)
 				return true;
+            case SDLK_F4:
+                if(SDL_GetModState()&MOD_KEYS)
+                {
+                	quit();
+                	break;
+				}
+                // fall through
 			case SDLK_HOME:
 			case SDLK_END:
 			case SDLK_PAGEUP:

@@ -507,7 +507,7 @@ namespace ai
 			else while(true)
 			{
 				d->arenaweap = rnd(WEAP_SUPER);
-				if(d->arenaweap != WEAP_PISTOL || !rnd(d->skill)) break;
+				if(d->arenaweap > WEAP_PISTOL || !rnd(d->skill)) break;
 			}
 			if(d->aitype == AI_BOT)
 			{

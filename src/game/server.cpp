@@ -2271,7 +2271,7 @@ namespace server
 					int hflags = flags|h.flags;
 					float size = radial ? (hflags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 					clientinfo *target = (clientinfo *)getinfo(h.target);
-					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotecttime)))
+					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, GVAR(spawnprotect)))
 						continue;
 					int damage = calcdamage(weap, hflags, radial, size, dist);
 					if(damage > 0 && (hithurts(hflags) || hflags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
@@ -2285,10 +2285,7 @@ namespace server
 		}
 	}
 
-	void takeammo(clientinfo *ci, int weap, int amt = 1)
-	{
-		if(isweap(weap) && weaptype[weap].max) ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0);
-	}
+	void takeammo(clientinfo *ci, int weap, int amt = 1) {  }
 
 	void shotevent::process(clientinfo *ci)
 	{
@@ -2302,18 +2299,21 @@ namespace server
 		{
 			if(!gs.canshoot(weap, flags, m_spawnweapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
-				takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
+				if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
+					ci->state.ammo[weap] = max(ci->state.ammo[weap]-weaptype[weap].sub[flags&HIT_ALT ? 1 : 0], 0);
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
 				return;
 			}
 			else
 			{
-				takeammo(ci, weap, gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
+				if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
+					ci->state.ammo[weap] = max(ci->state.ammo[weap]-(gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]), 0);
 				gs.weapload[weap] = -gs.weapload[weap];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
 		}
-		else takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
+		else if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
+			ci->state.ammo[weap] = max(ci->state.ammo[weap]-weaptype[weap].sub[flags&HIT_ALT ? 1 : 0], 0);
 		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], millis);
 		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum,
 			weap, flags, power, from[0], from[1], from[2],
@@ -2461,7 +2461,7 @@ namespace server
 		int weap = -1, dropped = -1;
 		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && weapcarry(attr, sweap) && gs.carry(sweap) >= GVAR(maxcarry))
 			weap = gs.drop(sweap, attr);
-		if(isweap(weap))
+		if(weap != WEAP_MELEE && isweap(weap))
 		{
 			dropped = gs.entid[weap];
 			gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);

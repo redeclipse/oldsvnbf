@@ -105,8 +105,8 @@ void guibutton(char *name, char *action, char *icon, char *altact)
 	if(ret&GUI_UP)
 	{
 		char *act = name;
-		if (*altact && ret&GUI_ALT) act = altact;
-		else if (*action) act = action;
+		if(altact && *altact && ret&GUI_ALT) act = altact;
+		else if(action && *action) act = action;
 		executelater.add(newstring(act));
         if(shouldclearmenu) clearlater = true;
 	}
@@ -133,9 +133,9 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 	if(ret&GUI_UP)
 	{
 		char *act = NULL;
-		if (*altact && ret&GUI_ALT) act = altact;
-		else if (*action) act = action;
-		if (*act)
+		if(altact && *altact && ret&GUI_ALT) act = altact;
+		else if(action && *action) act = action;
+		if(act && *act)
 		{
 			executelater.add(newstring(act));
 			if(shouldclearmenu) clearlater = true;
@@ -161,9 +161,9 @@ void guislice(char *path, char *action, float *scale, float *start, float *end, 
 	if(ret&GUI_UP)
 	{
 		char *act = NULL;
-		if (*altact && ret&GUI_ALT) act = altact;
-		else if (*action) act = action;
-		if (*act)
+		if(altact && *altact && ret&GUI_ALT) act = altact;
+		else if(action && *action) act = action;
+		if(act && *act)
 		{
 			executelater.add(newstring(act));
 			if(shouldclearmenu) clearlater = true;
