@@ -199,7 +199,7 @@ namespace game
 
 	bool inzoom()
 	{
-		if(zoomallow() && (zooming || lastmillis-lastzoom <= zoomtime))
+		if(zoomallow() && lastzoom && (zooming || lastmillis-lastzoom <= zoomtime))
 			return true;
 		return false;
 	}
@@ -207,7 +207,7 @@ namespace game
 
 	bool inzoomswitch()
 	{
-		if(zoomallow() && ((zooming && lastmillis-lastzoom >= zoomtime/2) || (!zooming && lastmillis-lastzoom <= zoomtime/2)))
+		if(zoomallow() && lastzoom && ((zooming && lastmillis-lastzoom >= zoomtime/2) || (!zooming && lastmillis-lastzoom <= zoomtime/2)))
 			return true;
 		return false;
 	}

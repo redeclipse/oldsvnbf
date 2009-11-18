@@ -148,7 +148,7 @@ namespace weapons
 		bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !weaptype[d->weapselect].zooms));
 		if(d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) secondary = true;
 		else if(!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
-		else if(d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
+		else if(weaptype[d->weapselect].power && d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
 		int power = clamp(force, 0, weaptype[d->weapselect].power), flags = secondary ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_spawnweapon(game::gamemode, game::mutators);
 		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
