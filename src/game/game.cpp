@@ -48,7 +48,7 @@ namespace game
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 0.1f, 1000);
-	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel, 2 = tv always
+	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/trial, 2 = tv always
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
 	FVARP(waittvspeed, 0, 0.2f, 1000);
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
@@ -113,7 +113,7 @@ namespace game
 	ICOMMAND(waitmodeswitch, "", (), {
 		switch(waitmode)
 		{
-			case 0: default: waitmode = m_duke(gamemode, mutators) ? 1 : 2; break;
+			case 0: default: waitmode = (m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2; break;
 			case 1: waitmode = 2; break;
 			case 2: waitmode = 0; break;
 		}
@@ -246,7 +246,7 @@ namespace game
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
 			case CS_SPECTATOR: return specmode == 1; break;
-			case CS_WAITING: return specmode >= (m_duke(gamemode, mutators) ? 1 : 2); break;
+			case CS_WAITING: return specmode >= ((m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2); break;
 			default: break;
 		}
 		return false;

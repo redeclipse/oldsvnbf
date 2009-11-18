@@ -290,13 +290,13 @@ namespace hud
 				g.popfont();
 				g.space(2);
 				SEARCHBINDCACHE(attackkey)("attack", 0);
-				if(delay || m_story(game::gamemode) || m_duke(game::gamemode, game::mutators))
+				if(delay || m_story(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
 					if(!m_story(game::gamemode))
 					{
 						g.pushfont("emphasis");
-						if(m_duke(game::gamemode, game::mutators) || !game::player1->lastdeath)
-							g.textf("Waiting for new round", 0xFFFFFF, NULL);
+						if(m_duke(game::gamemode, game::mutators))
+							g.textf("Queued for new round", 0xFFFFFF, NULL);
 						else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
 						g.popfont();
 					}
