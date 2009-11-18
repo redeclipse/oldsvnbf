@@ -501,6 +501,13 @@ struct editor
             case SDLK_RETURN:
                 cooked = '\n';
                 // fall through
+            case SDLK_F4:
+                if(SDL_GetModState()&MOD_KEYS)
+                {
+                	quit();
+                	break;
+				}
+                // fall through
             default:
                 insert(cooked);
                 break;

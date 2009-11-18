@@ -74,27 +74,23 @@ namespace projs
 			proj.norm = norm;
 			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 			{
-				if((d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+				if(d->type == ENT_PLAYER || d->type == ENT_AI) hitproj((gameent *)d, proj);
 			}
 			else switch(proj.weap)
 			{
 				case WEAP_RIFLE: proj.o.add(vec(proj.vel).normalize().mul(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]/2)); break;
 				default: break;
 			}
-			if(proj.projcollide&COLLIDE_CONT)
+			switch(proj.weap)
 			{
-				switch(proj.weap)
-				{
-					case WEAP_RIFLE: case WEAP_INSTA:
-                        part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 10, 0, 24);
-						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2.f, 0, 0);
-						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
-						break;
-					default: break;
-				}
-				return false;
+				default: break;
+				case WEAP_RIFLE: case WEAP_INSTA:
+					part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 10, 0, 24);
+					part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2.f, 0, 0);
+					adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
+					break;
 			}
-			return true;
+			return (proj.projcollide&COLLIDE_CONT)!=0;
 		}
 		return false;
 	}
@@ -106,7 +102,7 @@ namespace projs
 		float dist = middle.dist(proj.o, dir);
 		if(dist > 0) dir.div(dist); else if(dist < 0) dist = 0;
 		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
-		else if(explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
+		else if(proj.weap != WEAP_MELEE && explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
 	}
 
 	void remove(gameent *owner)
@@ -217,8 +213,7 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if(proj.owner && (proj.owner != game::player1 || waited) && proj.owner->muzzle != vec(-1, -1, -1))
-					proj.o = proj.from = proj.owner->muzzle;
+				if(proj.owner && (proj.owner != game::player1 || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
 				proj.aboveeye = proj.height = proj.radius = 1.f;
 				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
@@ -385,9 +380,9 @@ namespace projs
 
 	void drop(gameent *d, int g, int n, bool local)
 	{
-		if(isweap(g))
+		if(g != WEAP_MELEE && isweap(g))
 		{
-			vec from(d->o), to(d->muzzle);
+			vec from(d->o), to(d->muzzlepos(g));
 			if(entities::ents.inrange(n))
 			{
 				if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attrs[1]&WEAP_F_FORCED))
@@ -422,17 +417,21 @@ namespace projs
 			if(!life) millis = delay = 1;
 		}
 
-		if(weap == WEAP_FLAMER && !(flags&HIT_ALT))
+		if(weaptype[weap].sound >= 0)
 		{
-			int ends = lastmillis+(d->weapwait[weap]*2);
-			if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-			else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+			if(weap == WEAP_FLAMER && !(flags&HIT_ALT))
+			{
+				int ends = lastmillis+(d->weapwait[weap]*2);
+				if(issound(d->wschan)) sounds[d->wschan].ends = ends;
+				else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+			}
+			else if(!weaptype[weap].time || life)
+				playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
 		}
-		else if(!weaptype[weap].time || life)
-			playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
 
 		switch(weap)
 		{
+			case WEAP_MELEE: default: break;
 			case WEAP_PISTOL:
 			{
 				part_create(PART_SMOKE_LERP, 200, from, 0xAAAAAA, 1.f, -20);
@@ -514,14 +513,14 @@ namespace projs
 				loopi(game::numdynents())
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] < (f != proj.owner ? 1 : 2))
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner))
 						continue;
 					radialeffect(f, proj, false, radius);
 					radiated = true;
 				}
 				if(radiated) proj.lastradial = lastmillis;
 			}
-			else if(d->state == CS_ALIVE && physics::issolid(d)) radialeffect(d, proj, false, radius);
+			else if(d->state == CS_ALIVE && physics::issolid(d) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner)) radialeffect(d, proj, false, radius);
 		}
 	}
 
@@ -530,7 +529,7 @@ namespace projs
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
+			if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
 			if(weaptype[proj.weap].fsound >= 0)
 			{
 				int vol = 255;
@@ -545,6 +544,7 @@ namespace projs
 			}
 			switch(proj.weap)
 			{
+				case WEAP_MELEE: default: proj.lifesize = 1; break;
 				case WEAP_PISTOL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
@@ -654,12 +654,6 @@ namespace projs
 					}
 					break;
 				}
-				default:
-				{
-					proj.lifesize = clamp(proj.lifespan, 1e-1f, 1.f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.colour, 1.f);
-					break;
-				}
 			}
 			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
 				proj.radius = max(proj.lifesize, 0.1f);
@@ -720,10 +714,11 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner && proj.owner->muzzle != vec(-1, -1, -1)) proj.from = proj.owner->muzzle;
+				if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
 				int vol = 255;
 				switch(proj.weap)
 				{
+					case WEAP_MELEE: default: break;
 					case WEAP_PISTOL:
 					{
 						vol = int(255*(1.f-proj.lifespan));
@@ -1092,11 +1087,10 @@ namespace projs
 					{
 						radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
 						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(int(radius*proj.radius), 1);
-						bool radlimit = weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] == 1;
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (radlimit && f == proj.owner)) continue;
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner)) continue;
 							radialeffect(f, proj, true, radius);
 						}
 					}
@@ -1150,6 +1144,7 @@ namespace projs
 			projent &proj = *projs[i];
 			switch(proj.weap)
 			{
+				case WEAP_MELEE: default: break;
 				case WEAP_PISTOL: adddynlight(proj.o, 4, vec(0.075f, 0.075f, 0.075f)); break;
 				case WEAP_SHOTGUN: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
 				case WEAP_SMG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
@@ -1171,7 +1166,6 @@ namespace projs
 					adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f));
 					break;
 				}
-				default: break;
 			}
 		}
 	}

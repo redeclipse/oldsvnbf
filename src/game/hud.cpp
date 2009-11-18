@@ -142,6 +142,7 @@ namespace hud
 	VARP(inventoryimpulse, 0, 2, 2);
 	VARP(inventorytrial, 0, 2, 2);
 
+	TVAR(meleetex, "textures/melee", 3);
 	TVAR(pistoltex, "textures/pistol", 3);
 	TVAR(shotguntex, "textures/shotgun", 3);
 	TVAR(smgtex, "textures/smg", 3);
@@ -406,8 +407,9 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
+    	if(!isweap(weap) || weap == WEAP_MELEE) return;
 		const char *cliptexs[WEAP_MAX] = {
-			pistolcliptex, shotguncliptex, smgcliptex,
+			"", pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
 			riflecliptex, ""
 		};
@@ -1002,10 +1004,10 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotecttime);
+			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotect);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotecttime), 0.f, 1.f);
+			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotect), 0.f, 1.f);
 			if(hastv(radarplayernames)) drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
@@ -1221,7 +1223,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAP_MAX] = {
-					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
+					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
 				if(isweap(stype)) return weaptexs[stype];
 				break;
@@ -1259,7 +1261,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAP_MAX] = {
-					pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
+					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
 				int sweap = m_spawnweapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])

@@ -91,7 +91,7 @@ namespace physics
 		}
 		if(d->state == CS_ALIVE)
 		{
-			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, spawnprotecttime))
+			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, spawnprotect))
 				return false;
 			return true;
 		}

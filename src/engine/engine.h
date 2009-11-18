@@ -475,6 +475,12 @@ extern ENetHost *clienthost;
 extern ENetPeer *curpeer, *connpeer;
 
 // console
+#ifdef __APPLE__
+	#define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
+#else
+	#define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
+#endif
+
 extern void writebinds(stream *f);
 extern void writecompletions(stream *f);
 extern const char *addreleaseaction(const char *s);
@@ -485,6 +491,7 @@ extern string commandbuf;
 extern char *commandaction, *commandicon;
 extern bool fullconsole;
 // main
+extern void quit();
 enum
 {
     NOT_INITING = 0,

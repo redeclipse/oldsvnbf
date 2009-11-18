@@ -95,7 +95,7 @@ namespace entities
 			case WEAPON:
 			{
 				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(attr[0], sweap);
-				if(isweap(attr1))
+				if(attr1 != WEAP_MELEE && isweap(attr1))
 				{
 					defformatstring(str)("\fs%s%s\fS", weaptype[attr1].text, weaptype[attr1].name);
 					addentinfo(str);
@@ -957,8 +957,8 @@ namespace entities
 				break;
 			}
 			case WEAPON:
-				while(e.attrs[0] < 0) e.attrs[0] += WEAP_SUPER; // don't allow superimposed weaps
-				while(e.attrs[0] >= WEAP_SUPER) e.attrs[0] -= WEAP_SUPER;
+				while(e.attrs[0] <= WEAP_MELEE) e.attrs[0] += WEAP_SUPER-WEAP_OFFSET; // don't allow superimposed weaps
+				while(e.attrs[0] >= WEAP_SUPER) e.attrs[0] -= WEAP_SUPER-WEAP_OFFSET;
 				while(e.attrs[2] <= -G_MAX) e.attrs[2] += G_MAX*2;
 				while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
 				break;
@@ -1793,6 +1793,11 @@ namespace entities
 					if(mtype == MAP_BFGZ && gver <= 97 && e.attrs[0] >= 4)
 						e.attrs[0]++; // add in pistol
 					if(mtype != MAP_BFGZ || gver <= 112) e.attrs[1] = 0;
+					if(mtype == MAP_BFGZ && gver <= 160)
+					{
+						e.attrs[0]++; // add in melee
+						if(e.attrs[0] <= WEAP_MELEE) e.attrs[0] = WEAP_GRENADE; // cleanup for fixentity
+					}
 					break;
 				}
 				case TRIGGER:

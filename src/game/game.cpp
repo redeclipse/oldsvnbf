@@ -281,9 +281,9 @@ namespace game
 					break;
 				}
 			}
-			if(weap < WEAP_PISTOL || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_PISTOL;
+			if(weap <= WEAP_PISTOL || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_MELEE;
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap != WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
+			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap > WEAP_PISTOL ? weaptype[weap].name : "random weapons"));
 		}
 		else conoutft(CON_SELF, "\foonly available in arena");
 	}
@@ -319,8 +319,8 @@ namespace game
 		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
 		if(d->state == CS_ALIVE)
 		{
-			int millis = d->protect(lastmillis, spawnprotecttime); // protect returns time left
-			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotecttime));
+			int millis = d->protect(lastmillis, spawnprotect); // protect returns time left
+			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotect));
 			if(d == player1 && inzoom())
 			{
 				int frame = lastmillis-lastzoom;
@@ -698,6 +698,7 @@ namespace game
         	else if(flags && isweap(weap) && !burning)
         	{
 				static const char *suicidenames[WEAP_MAX] = {
+					"punched themself",
 					"ate a bullet",
 					"discovered buckshot bounces",
 					"got caught in their own crossfire",
@@ -722,6 +723,7 @@ namespace game
 			{
 				static const char *obitnames[4][WEAP_MAX] = {
 					{
+						"smacked down by",
 						"pierced by",
 						"sprayed with buckshot by",
 						"riddled with holes by",
@@ -733,6 +735,7 @@ namespace game
 						"gibbed"
 					},
 					{
+						"smacked down by",
 						"pierced by",
 						"filled with lead by",
 						"spliced apart by",
@@ -744,6 +747,7 @@ namespace game
 						"gibbed"
 					},
 					{
+						"smacked down by",
 						"capped by",
 						"scrambled by",
 						"air conditioned courtesy of",
@@ -755,6 +759,7 @@ namespace game
 						"gibbed"
 					},
 					{
+						"knocked into next week by",
 						"skewered by",
 						"turned into little chunks by",
 						"swiss-cheesed by",
@@ -1077,7 +1082,7 @@ namespace game
     void particletrack(particle *p, uint type, int &ts,  bool lastpass)
     {
         if(!p || !p->owner || (p->owner->type != ENT_PLAYER && p->owner->type != ENT_AI)) return;
-
+		gameent *d = (gameent *)p->owner;
         switch(type&0xFF)
         {
         	case PT_TEXT: case PT_ICON:
@@ -1090,14 +1095,14 @@ namespace game
         	case PT_TAPE: case PT_LIGHTNING:
         	{
         		float dist = p->o.dist(p->d);
-				p->d = p->o = ((gameent *)p->owner)->muzzle;
-        		vec dir; vecfromyawpitch(p->owner->yaw, p->owner->pitch, 1, 0, dir);
+				p->d = p->o = d->muzzlepos(d->weapselect);
+        		vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
         		p->d.add(dir.mul(dist));
 				break;
         	}
         	case PT_PART: case PT_FIREBALL: case PT_FLARE:
         	{
-				p->o = ((gameent *)p->owner)->muzzle;
+				p->o = d->muzzlepos(d->weapselect);
 				break;
         	}
         	default: break;
@@ -1900,9 +1905,12 @@ namespace game
 					}
 					case WEAP_S_RELOAD:
 					{
-						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
-							showweap = false;
-						animflags = weaptype[weap].anim+d->weapstate[weap];
+						if(weap != WEAP_MELEE)
+						{
+							if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+								showweap = false;
+							animflags = weaptype[weap].anim+d->weapstate[weap];
+						}
 						break;
 					}
 					case WEAP_S_IDLE: case WEAP_S_WAIT: default:
@@ -1946,12 +1954,16 @@ namespace game
 				}
 			}
 		}
-		if(showweap) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
+		bool hasweapon = showweap && *weaptype[weap].vwep;
+		if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
         if(rendernormally && (early || d != player1))
         {
-        	const char *muzzle = "tag_muzzle";
-        	//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
-        	a[ai++] = modelattach(muzzle, &d->muzzle);
+        	if(hasweapon)
+        	{
+				const char *muzzle = "tag_muzzle";
+				//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
+				a[ai++] = modelattach(muzzle, &d->muzzle);
+        	}
         	if(third && d->type == ENT_PLAYER)
         	{
         		a[ai++] = modelattach("tag_head", &d->head);
