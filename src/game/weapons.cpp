@@ -144,7 +144,7 @@ namespace weapons
 	void shoot(gameent *d, vec &targ, int force)
 	{
 		if(!game::allowmove(d)) return;
-		bool secondary = false, pressed = (d->action[AC_ATTACK] || d->action[AC_ALTERNATE]);
+		bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !weaptype[d->weapselect].zooms));
 		if(d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) secondary = true;
 		else if(!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
 		else if(d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
@@ -175,7 +175,7 @@ namespace weapons
 				if(pressed && power < weaptype[d->weapselect].power) return;
 			}
 		}
-		else if(!d->action[AC_ATTACK] && (!d->action[AC_ALTERNATE] || weaptype[d->weapselect].zooms)) return;
+		else if(!pressed) return;
 		vec eyeray = vec(d->muzzlepos(d->weapselect)).sub(d->o);
 		float eyehit = eyeray.magnitude();
 		if(raycube(d->o, eyeray.normalize(), eyehit, RAY_CLIPMAT|RAY_POLY) < eyehit) return;

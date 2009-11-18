@@ -398,7 +398,7 @@ namespace ctf
 				break;
 			}
 		}
-		game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, CON_INFO, d, "\fa%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
 		st.dropflag(i, droploc, lastmillis);
 		dodrop(f, i);
     }
@@ -440,7 +440,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
-		game::announce(S_V_FLAGRETURN, CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::sb.timetostr(lastmillis-f.taketime));
+		game::announce(S_V_FLAGRETURN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::sb.timetostr(lastmillis-f.taketime));
 		st.returnflag(i, lastmillis);
     }
 
@@ -449,7 +449,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, 3, "RESET");
-		game::announce(S_V_FLAGRESET, CON_INFO, NULL, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(S_V_FLAGRESET, CON_IMPORTANT, NULL, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
 		st.returnflag(i, lastmillis);
     }
 
@@ -464,7 +464,7 @@ namespace ctf
         }
         else flageffect(goal, d->team, f.pos(), f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
-		game::announce(S_V_FLAGSCORE, CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::sb.timetostr(lastmillis-f.taketime));
+		game::announce(S_V_FLAGSCORE, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::sb.timetostr(lastmillis-f.taketime));
 		st.returnflag(relay, lastmillis);
     }
 
@@ -473,7 +473,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
-		game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		st.takeflag(i, d, lastmillis);
     }
 
@@ -595,7 +595,7 @@ namespace ctf
 					gameent *t;
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						if((t->ai && !t->hasweap(t->arenaweap, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect <= WEAP_PISTOL))
+						if((t->ai && !t->hasweap(t->arenaweap, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect < WEAP_OFFSET))
 						{
 							guard = true;
 							break;
@@ -664,7 +664,7 @@ namespace ctf
 			{
 				if(d->aitype == AI_BOT)
 				{
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_speedtime(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;
@@ -733,7 +733,7 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_speedtime(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;

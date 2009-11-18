@@ -576,10 +576,11 @@ extentity *newentity(bool local, const vec &o, int type, vector<int> &attrs)
 	e.inoctanode = false;
     e.light.color = vec(1, 1, 1);
     e.light.dir = vec(0, 0, 1);
+	entities::getents().add(&e);
 	if(local)
 	{
 		int n = entities::getents().find(&e);
-		if(entities::getents().inrange(n)) entities::fixentity(n, true);
+		if(entities::getents().inrange(n)) entities::fixentity(n, true, true);
 	}
 	return &e;
 }
@@ -588,7 +589,6 @@ void newentity(int type, vector<int> &attrs)
 {
 	extentity *t = newentity(true, camera1->o, type, attrs);
 	dropentity(*t);
-	entities::getents().add(t);
 	int i = entities::getents().length()-1;
 	t->type = ET_EMPTY;
 	enttoggle(i);
@@ -645,7 +645,6 @@ void entpaste()
 		o.mul(m).add(sel.o.tovec());
 		extentity *e = newentity(true, o, ET_EMPTY, c.attrs);
 		loopvk(c.links) e->links.add(c.links[k]);
-		entities::getents().add(e);
 		entadd(++last);
 	}
 	int j = 0;
@@ -908,8 +907,7 @@ void mpeditent(int i, const vec &o, int type, vector<int> &attr, bool local)
 	if(entities::getents().length()<=i)
 	{
 		while(entities::getents().length()<i) entities::getents().add(entities::newent())->type = ET_EMPTY;
-		extentity *e = newentity(local, o, type, attr);
-		entities::getents().add(e);
+		newentity(local, o, type, attr);
 		addentity(i);
 	}
 	else
@@ -927,7 +925,6 @@ void mpeditent(int i, const vec &o, int type, vector<int> &attr, bool local)
 void newentity(vec &v, int type, vector<int> &attrs)
 {
 	extentity *t = newentity(true, v, type, attrs);
-	entities::getents().add(t);
 	int i = entities::getents().length()-1;
 	t->type = ET_EMPTY;
 	enttoggle(i);
