@@ -289,7 +289,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 500, 1000 },	2000,	{ 50, 125 },	{ 4000, 40000 },		0,		{ 5000, 5000 },
+			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 20, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 4, 2 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
@@ -309,7 +309,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 500, 1000 },	2000,	{ 100, 100 },	{ 10000, 40000 },		0,		{ 5000, 5000 },
+			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
