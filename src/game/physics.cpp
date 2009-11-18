@@ -531,10 +531,10 @@ namespace physics
 				d->turnside = 0;
 				d->resetphys();
 			}
-			if(impulsedash && WILLIMPULSE && (d->move || d->strafe) && (impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
+			if((d->ai || impulsedash) && WILLIMPULSE && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
 			{
 				float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
-				vecfromyawpitch(d->aimyaw, impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
+				vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
 				d->vel.normalize().mul(mag); d->vel.z += mag/4;
 				d->doimpulse(impulsecost, IM_T_DASH, lastmillis); allowed = false;
 				playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
