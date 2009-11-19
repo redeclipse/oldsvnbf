@@ -126,8 +126,11 @@ namespace aiman
 		if(ci->state.ownernum < 0) deleteai(ci);
 		else if(ci->state.aireinit >= 1)
 		{
-			ci->state.dropped.reset();
-			loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
+			if(ci->state.aireinit == 2)
+			{
+				ci->state.dropped.reset();
+				loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
+			}
 			sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
 			if(ci->state.aireinit == 2)
 			{

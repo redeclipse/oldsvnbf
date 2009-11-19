@@ -130,6 +130,7 @@ namespace ai
 		string m;
 		if(o) copystring(m, game::colorname(o));
 		else formatstring(m)("\fs\faunknown [\fs\fr%d\fS]\fS", on);
+		bool resetthisguy = false;
 		if(!d->name[0])
 		{
 			if(showaiinfo && game::showplayerinfo)
@@ -137,12 +138,17 @@ namespace ai
 				if(showaiinfo > 1) conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
 				else conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s joined the game", game::colorname(d, name), m, sk);
 			}
+			resetthisguy = true;
 		}
 		else
 		{
-			if(d->ownernum != on && showaiinfo && game::showplayerinfo)
-				conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s reassigned to %s at skill %d", game::colorname(d, name), m, sk);
-			else if(d->skill != sk && showaiinfo > 1 && game::showplayerinfo)
+			if(d->ownernum != on)
+			{
+				if(showaiinfo && game::showplayerinfo)
+					conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s reassigned to %s", game::colorname(d, name), m);
+				resetthisguy = true;
+			}
+			if(d->skill != sk && showaiinfo > 1 && game::showplayerinfo)
 				conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s changed skill to %d", game::colorname(d, name), sk);
 		}
 
@@ -161,7 +167,7 @@ namespace ai
 		d->skill = sk;
 		d->team = tm;
 
-		projs::remove(d);
+		if(resetthisguy) projs::remove(d);
 		if(game::player1->clientnum == d->ownernum) create(d);
 		else if(d->ai) destroy(d);
 	}
