@@ -1719,10 +1719,11 @@ void texduplicate()
 
 COMMAND(texduplicate, "");
 
-VARP(thumbwidth, 0, 11, 1000);
-VARP(thumbheight, 0, 5, 1000);
+VARP(thumbwidth, 0, 30, 1000);
+VARP(thumbheight, 0, 12, 1000);
 VARP(thumbtime, 0, 25, 1000);
-FVARP(thumbsize, 0, 3, 6);
+FVARP(thumbsize, 0, 1, 8);
+FVARP(thumbpreview, 0, 5, 8);
 
 static int lastthumbnail = 0;
 
@@ -1739,7 +1740,7 @@ struct texturegui : guicb
 		g.start(menustart, menuscale, &menutab, true);
 		loopi(1+curtexnum/(thumbwidth*thumbheight))
 		{
-			g.tab(!i ? "Textures" : NULL);
+			g.tab(!i ? "textures" : NULL);
 			if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
 			g.pushlist();
 			g.pushlist();
@@ -1772,9 +1773,9 @@ struct texturegui : guicb
 						}
 					}
 					else
-					{//create an empty space
-						g.space(thumbsize);
-						g.strut(thumbsize);
+					{
+						Texture *tex = textureload("textures/blank", 3);
+						g.image(tex, thumbsize, false); // empty space
 					}
 				}
 				g.poplist();
@@ -1804,27 +1805,21 @@ struct texturegui : guicb
 						lastthumbnail = totalmillis;
 					}
 				}
-				if(g.texture(tex, 7, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
+				if(g.texture(tex, thumbpreview, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
 				g.space(2);
 				g.pushlist();
 
 				g.pushlist();
-				defformatstring(title)("texture slot #%d", menutex); g.title(title, 0xFFFFFF);
-				g.pushfont("default");
-				g.space(4); if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
-				g.space(2); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
-				g.space(2); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
-				g.space(2); if(g.button("dupe", 0x888888)&GUI_UP) { nextslot = duplicateslot(slot); }
-				g.space(4); if(g.button("cull unused", 0x444444)&GUI_UP) { extern void texturecull(bool local); texturecull(true); }
-				g.popfont();
+				g.pushfont("emphasis"); g.textf("#%-3d", 0xFFFFFF, NULL, menutex); g.popfont();
+				g.space(1); if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+				g.space(1); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
+				g.space(1); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
+				g.space(1); if(g.button("dupe", 0x888888)&GUI_UP) { nextslot = duplicateslot(slot); }
+				g.space(1); if(g.button("cull unused", 0x444444)&GUI_UP) { extern void texturecull(bool local); texturecull(true); }
+				g.space(2); g.textf("(\fs\fa%s\fS)", 0xAAFFAA, NULL, slot.shader->name);
 				g.poplist();
 				if(!slot.sts.empty())
 				{
-					g.space(1);
-					g.pushlist();
-					g.textf("setshader %s", 0xAAFFAA, NULL, slot.shader->name);
-					g.poplist();
-					if(!slot.params.empty()) g.space(1);
 					loopvj(slot.params)
 					{
 						g.pushlist();
@@ -1852,8 +1847,8 @@ struct texturegui : guicb
 							if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
 						}
 						g.poplist();
+						g.space(1);
 					}
-					if(!slot.sts.empty()) g.space(1);
 					loopvj(slot.sts)
 					{
 						g.pushlist();
