@@ -88,11 +88,16 @@ namespace aiman
 	void deleteai(clientinfo *ci)
 	{
 		int cn = ci->clientnum;
+		loopv(clients) if(clients[i] != ci)
+		{
+			loopvk(clients[i]->state.fraglog) if(clients[i]->state.fraglog[k] == ci->clientnum)
+				clients[i]->state.fraglog.remove(k--);
+		}
+		if(ci->state.state == CS_ALIVE) dropitems(ci, true);
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci, true));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
 		savescore(ci);
-		dropitems(ci, true);
 		sendf(-1, 1, "ri2", SV_DISCONNECT, cn);
 		clients.removeobj(ci);
 		delclient(cn);
@@ -137,7 +142,7 @@ namespace aiman
 	void shiftai(clientinfo *ci, int cn = -1)
 	{
 		if(cn < 0) { ci->state.aireinit = 0; ci->state.ownernum = -1; }
-		else { ci->state.aireinit = 1; ci->state.ownernum = cn; }
+		else if(ci->state.ownernum != cn) { ci->state.aireinit = 1; ci->state.ownernum = cn; }
 	}
 
 	void removeai(clientinfo *ci, bool complete)
@@ -184,16 +189,12 @@ namespace aiman
 		{
 			clientinfo *ci = clients[i];
 			int o = int(m*aitype[ci->state.aitype].skill), p = int(n*aitype[ci->state.aitype].skill);
-			if(ci->state.skill > o || ci->state.skill < o)
+			if(ci->state.skill > o || ci->state.skill < p)
 			{ // needs re-skilling
 				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);
 				if(!ci->state.aireinit) ci->state.aireinit = 1;
 			}
-			if(ci->state.aitype == AI_BOT)
-			{
-				numbots++;
-				if(numbots >= GVAR(botlimit)) shiftai(ci, -1);
-			}
+			if(ci->state.aitype == AI_BOT && ++numbots >= GVAR(botlimit)) shiftai(ci, -1);
 		}
 		loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && chkmode(sents[i].attrs[3], gamemode))
 		{
@@ -228,8 +229,7 @@ namespace aiman
 					clientinfo *ci = clients[i];
 					if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
 					{
-						if(!autooverride && numclients(-1, true, AI_BOT) > balance)
-							shiftai(ci, -1); // temporarily remove and cleanup later
+						if(!autooverride && numclients(-1, true, AI_BOT) > balance) shiftai(ci, -1);
 						else
 						{
 							int teamb = chooseteam(ci, ci->team);

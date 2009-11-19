@@ -934,12 +934,7 @@ namespace server
 
 	void setupgameinfo(int np)
 	{
-		loopvk(clients)
-		{
-			clientinfo *cp = clients[k];
-			cp->state.dropped.reset();
-			cp->state.weapreset(false);
-		}
+		loopvk(clients) clients[k]->state.dropped.reset();
 		setuptriggers(true);
 		setupitems(true);
 		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
@@ -1531,9 +1526,9 @@ namespace server
 					}
 				}
 			}
-			ts.weapreset(false);
 			if(!discon && !drop.empty())
 				sendf(-1, 1, "ri3iv", SV_DROP, ci->clientnum, -1, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
+			ts.weapreset(false);
 		}
 	}
 
@@ -2208,7 +2203,6 @@ namespace server
 			mutate(smuts, mut->died(target, actor));
 			target->state.state = CS_DEAD; // don't issue respawn yet until DEATHMILLIS has elapsed
 			target->state.lastdeath = gamemillis;
-			target->state.weapreset(false);
 		}
 	}
 
@@ -2238,7 +2232,6 @@ namespace server
 		mutate(smuts, mut->died(ci, NULL));
 		gs.state = CS_DEAD;
 		gs.lastdeath = gamemillis;
-		gs.weapreset(false);
 	}
 
 	int calcdamage(int weap, int &flags, int radial, float size, float dist)
@@ -2561,7 +2554,6 @@ namespace server
 			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
-			if(ci->state.aitype < 0) aiman::dorefresh = true; // get the ai to reorganise
 		}
 	}
 
