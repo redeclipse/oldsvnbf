@@ -3618,6 +3618,7 @@ namespace server
 						cp->state.state = CS_SPECTATOR;
                     	cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
 						setteam(cp, TEAM_NEUTRAL, false, true);
+						aiman::dorefresh = true;
 					}
 					else if(cp->state.state == CS_SPECTATOR && !val)
 					{
@@ -3628,6 +3629,7 @@ namespace server
 						waiting(cp, 2);
 						if(smode) smode->entergame(cp);
 						mutate(smuts, mut->entergame(cp));
+						aiman::dorefresh = true;
 					}
 					break;
 				}

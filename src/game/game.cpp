@@ -111,10 +111,11 @@ namespace game
 		}
 	});
 	ICOMMAND(waitmodeswitch, "", (), {
+		bool alternate = (m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators);
 		switch(waitmode)
 		{
-			case 0: default: waitmode = (m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2; break;
-			case 1: waitmode = 2; break;
+			case 0: default: waitmode = alternate ? 1 : 2; break;
+			case 1: waitmode = alternate ? 0 : 2; break;
 			case 2: waitmode = 0; break;
 		}
 	});
@@ -246,7 +247,7 @@ namespace game
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
 			case CS_SPECTATOR: return specmode == 1; break;
-			case CS_WAITING: return specmode >= ((m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2); break;
+			case CS_WAITING: return waitmode >= ((m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2); break;
 			default: break;
 		}
 		return false;

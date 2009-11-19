@@ -55,8 +55,9 @@ VARG(timelimit, 0, 15, INT_MAX-1);
 VARG(triallimit, 0, 60000, INT_MAX-1);
 VARG(intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
 VARG(votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
-VARG(duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
+VARG(duelreset, 0, 1, 1); // reset winner in duel
 VARG(duelclear, 0, 0, 1); // clear items in duel
+VARG(duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
 
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
 VARG(trialdamage, 0, 0, 1); // 0 = off, 1 = allow damage in time-trial

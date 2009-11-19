@@ -235,7 +235,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0.f, 0.f },		{ 1.f, 1.f },			{ 0, 0 },		{ 0, 0 },		{ 1, 1 },			{ 0, 0 },
 			{ 2, 2 },			{ 500, 500 },		{ 8, 8 },			1,
-			"melee",	"\fw",	"",							"",							""
+			"melee",	"\fd",	"",							"",							""
 	},
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,

@@ -832,9 +832,9 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	setfvar("progresspart", bar2);
 	if(verbose >= 4)
 	{
-		if(text2) conoutf("\fa%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if(text1) conoutf("\fa%s [%.2f%%]", text1, bar1*100.f);
-		else conoutf("\faprogressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		if(text2) conoutf("%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+		else if(text1) conoutf("%s [%.2f%%]", text1, bar1*100.f);
+		else conoutf("progressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
 	}
 
 	progressing = true;
