@@ -1265,7 +1265,7 @@ namespace ai
 					gameentity &e = *(gameentity *)entities::ents[index], &f = *(gameentity *)entities::ents[prev];
 					vec fr = f.o, dr = e.o;
 					fr.z += amt; dr.z += amt;
-					part_trace(fr, dr, 1.f, 1, colour);
+					part_trace(fr, dr, 1, 1, 1, colour);
 				}
 			}
 			last = i;
@@ -1273,11 +1273,11 @@ namespace ai
 		if(aidebug > 4)
 		{
 			vec fr = vec(d->feetpos()).add(vec(0, 0, amt));
-			if(d->ai->spot != vec(0, 0, 0)) part_trace(fr, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1.f, 1, 0x008888);
+			if(d->ai->spot != vec(0, 0, 0)) part_trace(fr, vec(d->ai->spot).add(vec(0, 0, 0.1f)), 1, 1, 1, 0x008888);
 			if(entities::ents.inrange(d->lastnode))
 			{
 				vec dr = vec(entities::ents[d->lastnode]->o).add(vec(0, 0, amt));
-				part_trace(fr, dr, 1.f, 1, 0x884400);
+				part_trace(fr, dr, 1, 1, 1, 0x884400);
 				fr = dr;
 			}
 			loopi(NUMPREVNODES)
@@ -1285,7 +1285,7 @@ namespace ai
 				if(entities::ents.inrange(d->ai->prevnodes[i]))
 				{
 					vec dr = vec(entities::ents[d->ai->prevnodes[i]]->o).add(vec(0, 0, amt));
-					part_trace(dr, fr, 1.f, 1, 0x442200);
+					part_trace(dr, fr, 1, 1, 1, 0x442200);
 					fr = dr;
 				}
 			}
@@ -1328,7 +1328,7 @@ namespace ai
 					{
 						int ent = obs.entities[cur];
 						gameentity &e = *(gameentity *)entities::ents[ent];
-						part_create(PART_EDIT, 1, e.o, 0xFF6600, 2.f);
+						part_create(PART_EDIT, 1, e.o, 0xFF6600, 1.5f);
 					}
 					cur = next;
 				}

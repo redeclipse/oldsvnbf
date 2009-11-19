@@ -32,10 +32,10 @@ namespace stf
 			above.z += 2.5f;
 			if(occupy > 0 && occupy < 1)
 			{
-				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[attack].colour, 0, occupy);
-				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
+				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[attack].colour, 0, occupy);
+				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
+			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
 			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
 		}
 	}
@@ -174,7 +174,7 @@ namespace stf
 					if((d = e) == game::player1) break;
 				game::announce(S_V_FLAGSECURED, d == game::player1 ? CON_SELF : CON_INFO, d, "\fateam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				defformatstring(text)("<super>%s\fzReSECURED", teamtype[owner].chat);
-				part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+				part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 				game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[owner].colour, enttype[FLAG].radius*2);
 			}
 		}
@@ -185,7 +185,7 @@ namespace stf
 					if((d = e) == game::player1) break;
 			game::announce(S_V_FLAGOVERTHROWN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fateam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
 			defformatstring(text)("<super>%s\fzReOVERTHROWN", teamtype[enemy].chat);
-			part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+			part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 			game::spawneffect(PART_FIREBALL, vec(b.o).add(vec(0, 0, enttype[FLAG].radius/2)), teamtype[enemy].colour, enttype[FLAG].radius*2);
 		}
 		b.owner = owner;

@@ -271,9 +271,9 @@ weaptypes weaptype[WEAP_MAX] =
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
 			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 8, 4 },		{ 150, 200 },		0,			{ 400, 600 },
 			0,		{ 24, 36 },	{ 1, 5 },		{ 40, 15 },		{ 2, 2 },		{ 1, 2 },
-			{ BOUNCE_GEOM, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
+			{ BOUNCE_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ true, true },		{ true, true },		{ true, true, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
-			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.75f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 24, 32 },			{ 0, 0 },
+			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.95f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 24, 32 },			{ 0, 0 },
 			{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },		7,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
@@ -1193,7 +1193,7 @@ namespace game
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, int targ, gameent *d, const char *msg, ...);
 	extern void respawn(gameent *d);
-	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, float vel = 10.f, int fade = 250, float size = 1.5f);
+	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, float vel = 10.f, int fade = 250, float size = 1.5f, float blend = 1);
 	extern void impulseeffect(gameent *d, bool effect);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);

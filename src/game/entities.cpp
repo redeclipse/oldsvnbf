@@ -207,14 +207,14 @@ namespace entities
 		if(showentdescs)
 		{
 			const char *texname = showentdescs >= 2 ? hud::itemtex(e.type, attr) : NULL;
-			if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour, 0, 1, d);
+			if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 2, 1, -10, 0, game::aboveheadfade, colour, 0, 1, d);
 			else
 			{
 				const char *item = entities::entinfo(e.type, e.attrs, false);
 				if(item && *item)
 				{
 					defformatstring(ds)("<super>%s (%d)", item, e.type);
-					part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, -10, 0, d);
+					part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, 1, -10, 0, d);
 				}
 			}
 		}
@@ -1938,7 +1938,7 @@ namespace entities
 					both = true;
 					break;
 				}
-				part_trace(e.o, f.o, 1.f, 1, both ? 0xAA44CC : 0x660088);
+				part_trace(e.o, f.o, 1, 1, 1, both ? 0xAA44CC : 0x660088);
 			}
 		}
 	}
@@ -1957,20 +1957,20 @@ namespace entities
 			{
 				case PLAYERSTART:
 				{
-					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
+					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
 					break;
 				}
 				case MAPSOUND:
 				{
-					part_radius(e.o, vec(e.attrs[1], e.attrs[1], e.attrs[1]), 1, 1, 0x00FFFF);
-					part_radius(e.o, vec(e.attrs[2], e.attrs[2], e.attrs[2]), 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(e.attrs[1], e.attrs[1], e.attrs[1]), 1, 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(e.attrs[2], e.attrs[2], e.attrs[2]), 1, 1, 1, 0x00FFFF);
 					break;
 				}
 				case LIGHT:
 				{
 					int s = e.attrs[0] ? e.attrs[0] : hdr.worldsize,
 						colour = ((e.attrs[1]/2)<<16)|((e.attrs[2]/2)<<8)|(e.attrs[3]/2);
-					part_radius(e.o, vec(s, s, s), 1, 1, colour);
+					part_radius(e.o, vec(s, s, s), 1, 1, 1, colour);
 					break;
 				}
 				case LIGHTFX:
@@ -1983,7 +1983,7 @@ namespace entities
 						vec dir = vec(e.o).sub(f.o).normalize();
 						float angle = max(1, min(90, int(e.attrs[1])));
 						int colour = ((f.attrs[1]/2)<<16)|((f.attrs[2]/2)<<8)|(f.attrs[3]/2);
-						part_cone(f.o, dir, radius, angle, 1, colour);
+						part_cone(f.o, dir, radius, angle, 1, 1, colour);
 						break;
 					}
 					break;
@@ -1991,15 +1991,15 @@ namespace entities
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
-					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attrs[0]].colour);
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, 1, teamtype[e.attrs[0]].colour);
 					radius = radius*2/3; // ctf pickup dist
-					part_radius(e.o, vec(radius, radius, radius), 1, 1, teamtype[e.attrs[0]].colour);
+					part_radius(e.o, vec(radius, radius, radius), 1, 1, 1, teamtype[e.attrs[0]].colour);
 					break;
 				}
 				case WAYPOINT:
 				{
 					int s = e.attrs[4] ? e.attrs[4] : enttype[e.type].radius;
-					part_radius(e.o, vec(s, s, s), 1, 1, 0x008888);
+					part_radius(e.o, vec(s, s, s), 1, 1, 1, 0x008888);
 					break;
 				}
 				default:
@@ -2007,15 +2007,15 @@ namespace entities
 					float radius = (float)enttype[e.type].radius;
 					if((e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3])
 						radius = (float)e.attrs[e.type == CHECKPOINT ? 0 : 3];
-					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius), 1, 1, 0x00FFFF);
+					if(radius > 0.f) part_radius(e.o, vec(radius, radius, radius), 1, 1, 1, 0x00FFFF);
 					if(e.type == PUSHER && e.attrs[4] && e.attrs[4] < e.attrs[3])
-						part_radius(e.o, vec(e.attrs[4], e.attrs[4], e.attrs[4]), 1, 1, 0x00FFFF);
+						part_radius(e.o, vec(e.attrs[4], e.attrs[4], e.attrs[4]), 1, 1, 1, 0x00FFFF);
 					break;
 				}
 			}
 		}
 
-		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, fade, 0x000000); }
+		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, 1, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, 1, fade, 0x000000); }
 		switch(e.type)
 		{
 			case PLAYERSTART: case CHECKPOINT:
@@ -2214,7 +2214,7 @@ namespace entities
 	{
 		float yaw = e.attrs[0] < 0 ? (lastmillis/5)%360 : e.attrs[0], radius = float(e.attrs[3] ? e.attrs[3] : enttype[e.type].radius);
 		int attr = int(e.attrs[4]), colour = (((attr&0xF)<<4)|((attr&0xF0)<<8)|((attr&0xF00)<<12))+0x0F0F0F;
-		part_portal(e.o, radius, yaw, e.attrs[1], PART_TELEPORT, 0, colour);
+		part_portal(e.o, radius, 1, yaw, e.attrs[1], PART_TELEPORT, 0, colour);
 	}
 
 	void drawparticle(gameentity &e, const vec &o, int idx, bool spawned, float skew)
@@ -2254,12 +2254,12 @@ namespace entities
 			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
 		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
-		float fluc = interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f;
+		float fluc = interval >= 500 ? (1500-interval)/1000.f : (500+interval)/1000.f;
 		if(item)
 		{
-			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.3f)+fluc)*skew, 0.25f);
-			part_create(PART_HINT_SOFT, 1, o, colour, radius);
-			//regularshape(PART_SPARK, radius+0.125f, colour, 53, 3, 250, o, 0.075f, 1, 0, 5);
+			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.5f)+(fluc*0.5f))*skew, 0.125f);
+			part_create(PART_HINT_SOFT, 1, o, colour, radius, fluc*skew);
+			//regularshape(PART_SPARK, radius+0.125f, colour, 53, 3, 250, o, 0.075f, 1, 1, 0, 5);
 		}
 		if((item && showentdescs >= 3) || notitem)
 		{
