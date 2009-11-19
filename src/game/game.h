@@ -229,12 +229,12 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			1,		1,		{ 0, 0 },	{ 500, 500, },	0,		{ 35, 20 },		{ 150, 150 },	0,				{ 100, 100 },
+			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 35, 20 },		{ 150, 150 },	0,				{ 100, 100 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ false, false },	{ false, false },
-			{ 0, 0 },			{ 0.f, 0.f },		{ 1.f, 1.f },			{ 0, 0 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 0, 0 },
-			{ 2.5f, 2.5f },	{ 2, 2 },			{ 1000, 2000 },		{ 8, 8 },			1,
+			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },	{ false, false },
+			{ 0, 0 },			{ 0.f, 0.f },		{ 1.f, 1.f },			{ 0, 0 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 0, 0 },
+			{ 3.5f, 3.5f },	{ 2, 2 },			{ 1000, 2000 },		{ 8, 8 },			1,
 			"melee",	"\fd",	"",							"",							""
 	},
 	{
@@ -282,7 +282,7 @@ weaptypes weaptype[WEAP_MAX] =
 			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
 			0,		{ 22, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
-			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
+			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,		false,	{ true, false },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 18, 48 },			{ 0, 0 },
 			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
@@ -378,8 +378,8 @@ gametypes gametype[] = {
 	{ G_M_MULTI,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM|G_M_MULTI,		"multi" },
 	{ G_M_TEAM,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_TEAM,				"team" },
 	{ G_M_INSTA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_INSTA,				"insta" },
-	{ G_M_DUEL,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_DUEL,				"duel" },
-	{ G_M_SURVIVOR,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_SURVIVOR,			"survivor" },
+	{ G_M_DUEL,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA,					G_M_DUEL,				"duel" },
+	{ G_M_SURVIVOR,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA,				G_M_SURVIVOR,			"survivor" },
 	{ G_M_ARENA,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_ARENA,				"arena" },
 };
 #else
