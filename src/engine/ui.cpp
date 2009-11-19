@@ -88,8 +88,9 @@ struct gui : guient
 			formatstring(title)("%d", tpos);
 			name = title;
 		}
-		gui::pushfont(visible() ? "super" : "emphasis");
-		int w = text_width(name);
+		defformatstring(tabtitle)("\fs%s[\fS%s%s%s\fs%s]\fS", visible() ? "\fa" : "\fd", visible() ? " " : "", name, visible() ? " " : "", visible() ? "\fa" : "\fd");
+		gui::pushfont(visible() ? "super" : "default");
+		int w = text_width(tabtitle);
 		if(layoutpass)
 		{
 			ty = max(ty, ysize);
@@ -103,9 +104,9 @@ struct gui : guient
 			else if(tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2)
 			{
 				if(!guiclicktab || mousebuttons&GUI_UP) *tcurrent = tpos; // switch tab
-				color = 0xFFFF00;
+				tcolor = 0xFF2222;
 			}
-            text_(name, x1, y1, tcolor, visible());
+            text_(tabtitle, x1, y1, tcolor, visible());
 		}
 		tx += w + guibound[0]*2;
 		gui::popfont();
@@ -291,7 +292,7 @@ struct gui : guient
 				py = y;
 			}
 
-			if(hit) color = 0xFF0000;
+			if(hit) color = 0xFF2222;
 			text_(label, px, py, color, hit && actionon);
 			if(hit && actionon)
 			{
@@ -678,7 +679,7 @@ struct gui : guient
 		if(visible())
 		{
 			bool hit = ishit(w, FONTH);
-			if(hit && clickable) color = 0xFF0000;
+			if(hit && clickable) color = 0xFF2222;
 			int x = curx;
 			if(icon)
 			{
