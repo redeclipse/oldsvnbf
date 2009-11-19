@@ -116,7 +116,7 @@ namespace stf
 				if(f.hasflag)
 				{
 					skew += (millis <= 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
-					if(millis >= 1000)
+					if(millis > 1000)
 					{
 						float pc = (lastmillis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
 						fade += (1.f-fade)*amt;
