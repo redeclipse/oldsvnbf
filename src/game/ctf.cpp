@@ -119,7 +119,7 @@ namespace ctf
 			sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"));
 			if(f.owner) switch(ctfstyle)
 			{
-				case 3: if(f.owner == game::player1) { hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay)*100)); break; }
+				case 3: if(f.owner == game::player1) { hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay))); break; }
 				default: hud::drawitemsubtext(x, oldy, s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner)); break;
 			}
 		}
@@ -440,7 +440,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
-		game::announce(S_V_FLAGRETURN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::sb.timetostr(lastmillis-f.taketime));
+		game::announce(S_V_FLAGRETURN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::sb.timetostr(lastmillis-(ctfstyle%2 ? f.taketime : f.droptime)));
 		st.returnflag(i, lastmillis);
     }
 
@@ -449,7 +449,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, TEAM_NEUTRAL, f.droploc, f.spawnloc, 3, "RESET");
-		game::announce(S_V_FLAGRESET, CON_IMPORTANT, NULL, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(S_V_FLAGRESET, CON_INFO, NULL, "\fathe \fs%s%s\fS flag has been reset", teamtype[f.team].chat, teamtype[f.team].name);
 		st.returnflag(i, lastmillis);
     }
 
@@ -464,7 +464,7 @@ namespace ctf
         }
         else flageffect(goal, d->team, f.pos(), f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
-		game::announce(S_V_FLAGSCORE, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::sb.timetostr(lastmillis-f.taketime));
+		game::announce(S_V_FLAGSCORE, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::sb.timetostr(lastmillis-(ctfstyle%2 ? f.taketime : f.droptime)));
 		st.returnflag(relay, lastmillis);
     }
 
