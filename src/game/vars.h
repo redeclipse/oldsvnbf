@@ -79,7 +79,7 @@ VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 #ifdef STANDALONE
 VARG(botbalance, 0, 2, MAXAI/2); // 0 = populate bots to map defined numplayers, 1 or more = fill only with this*numteams
 #else
-VARG(botbalance, 0, 0, 2);
+VARG(botbalance, 0, 0, MAXAI/2);
 #endif
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
