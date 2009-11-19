@@ -574,7 +574,7 @@ namespace ctf
 			if(d->aitype == AI_BOT && (!home || ctfstyle >= 3) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
 			static vector<int> targets; // build a list of others who are interested in this
 			targets.setsizenodelete(0);
-			bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 3 || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 3 || !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
 			ai::checkothers(targets, d, home || d->aitype != AI_BOT ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 			if(d->aitype == AI_BOT)
 			{
@@ -676,7 +676,7 @@ namespace ctf
 			int walk = f.owner && ai::owner(f.owner) != ai::owner(d) ? 1 : 0;
 			if(d->aitype == AI_BOT)
 			{
-				int regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+				int regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
 				if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
 				{
 					static vector<int> targets; // build a list of others who are interested in this

@@ -222,7 +222,7 @@ namespace stf
 				targets.setsizenodelete(0);
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 				gameent *e = NULL;
-				bool regen = !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+				bool regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
 				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
 				{ // try to guess what non ai are doing
 					vec ep = e->feetpos();
@@ -247,7 +247,7 @@ namespace stf
 		if(st.flags.inrange(b.target))
 		{
 			stfstate::flag &f = st.flags[b.target];
-			bool regen = d->aitype != AI_BOT || !m_regen(game::gamemode, game::mutators) || !extrahealth || d->health >= extrahealth;
+			bool regen = d->aitype != AI_BOT || !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
 			int walk = f.enemy && f.enemy != ai::owner(d) ? 1 : 0;
 			if(regen && (!f.enemy && ai::owner(d) == f.owner))
 			{

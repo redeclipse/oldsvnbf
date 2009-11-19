@@ -341,8 +341,8 @@ enum
 	HIT_LOST = 1<<13, HIT_KILL = 1<<14, HIT_SFLAGS = HIT_KILL
 };
 
-#define hithurts(x) (x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
-
+#define hithurts(x) 	(x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
+#define doesburn(x,y)	(isweap(x) && weaptype[x].burns[y&HIT_ALT ? 1 : 0] && y&HIT_FULL)
 enum
 {
 	FRAG_NONE = 0, FRAG_HEADSHOT = 1<<1, FRAG_OBLITERATE = 1<<2,
