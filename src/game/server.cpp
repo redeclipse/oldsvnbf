@@ -2086,13 +2086,14 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-		if(realflags&HIT_WAVE && realflags&HIT_FULL) realflags &= ~HIT_FULL;
+		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && realflags&HIT_FULL) realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
 			if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
+			else if(weap == WEAP_MELEE) nodamage++;
 			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
@@ -2100,9 +2101,8 @@ namespace server
 				case 0: nodamage++; break;
 			}
 		}
-
-		if(nodamage) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-		else if(hithurts(realflags))
+		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		else
 		{
 			target->state.dodamage(target->state.health -= realdamage);
 			target->state.lastpain = gamemillis;

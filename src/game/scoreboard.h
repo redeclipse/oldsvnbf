@@ -67,7 +67,7 @@ namespace hud
 				else if(game::player1->state == CS_DEAD)
 				{
 					int delay = showscoreswait() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay();
-					if(!delay || lastmillis-game::player1->lastdeath >= delay) return true;
+					if(!delay || lastmillis-game::player1->lastdeath > delay) return true;
 				}
 			}
 			return false;

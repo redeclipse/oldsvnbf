@@ -220,7 +220,7 @@ struct weaptypes
 			collide[2];
 	bool	taper[2],			extinguish[2],		radial[2],			burns[2],			follows[2],			reloads,	zooms,	fullauto[2],		thrown[2];
 	float	elasticity[2],		reflectivity[2],	relativity[2],			waterfric[2],	weight[2],		partsize[2],		partlen[2],
-			kickpush[2],		hitpush[2],		maxdist[2],				halo;
+			radius[2],		kickpush[2],		hitpush[2],		maxdist[2],				halo;
 	const char
 			*name, 		*text,	*item,						*vwep,						*proj;
 };
@@ -229,12 +229,12 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			1,		1,		{ 0, 0 },	{ 500, 500, },	0,		{ 35, 35 },		{ 1, 1 },	0,				{ 1, 1 },
-			0,		{ 18, 18 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
+			1,		1,		{ 0, 0 },	{ 500, 500, },	0,		{ 35, 20 },		{ 150, 150 },	0,				{ 100, 100 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ false, false },	{ false, false },
-			{ 0, 0 },			{ 0.f, 0.f },		{ 1.f, 1.f },			{ 0, 0 },		{ 0, 0 },		{ 1, 1 },			{ 0, 0 },
-			{ 2, 2 },			{ 500, 500 },		{ 8, 8 },			1,
+			{ 0, 0 },			{ 0.f, 0.f },		{ 1.f, 1.f },			{ 0, 0 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 0, 0 },
+			{ 2.5f, 2.5f },	{ 2, 2 },			{ 1000, 2000 },		{ 8, 8 },			1,
 			"melee",	"\fd",	"",							"",							""
 	},
 	{
@@ -244,7 +244,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, true },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 10, 10 },
-			{ 2, 2 },			{ 150, 150 },		{ 600, 600 },		4,
+			{ 1, 1 },		{ 2, 2 },			{ 150, 150 },		{ 600, 600 },		4,
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
@@ -254,7 +254,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, false },	{ false, false },
 			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
-			{ 15, 15 },			{ 20, 40 },			{ 80, 40 },		6,
+			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 80, 40 },			6,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
@@ -264,7 +264,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.75f, 0.5f },	{ 30, 30 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 40, 40 },
-			{ 0.5f, 3 },		{ 100, 120 },		{ 200, 300 },		5,
+			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 200, 300 },		5,
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
@@ -274,27 +274,27 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ true, true },		{ true, true },		{ true, true, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0.15f, 0.f },		{ 45, 0 },			{ 0.95f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 24, 32 },			{ 0, 0 },
-			{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },		7,
+			{ 1, 1 },		{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },			7,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
 			0,		{ 22, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
-			{ IMPACT_GEOM|IMPACT_PLAYER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 18, 48 },			{ 0, 0 },
-			{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		5,
+			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 20, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 4, 2 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
+			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
@@ -304,7 +304,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,		false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 78, 78 },		{ 2, 2 },			{ 0, 0 },
-			{ 5, 5 },		{ 1000, 750 },		{ 300, 300 },			3,
+			{ 1, 1 },		{ 5, 5 },		{ 1000, 750 },		{ 300, 300 },			3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
@@ -314,7 +314,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,		true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
+			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
@@ -324,7 +324,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,		false,	{ false, false },	{ true, true },
 			{ 0.35f, 0.35f },	{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 35, 35 },		{ 2, 2 },			{ 0, 0 },
-			{ 5, 5 },		{ 100, 100 },		{ 500, 500 },			4,
+			{ 2, 2 },		{ 5, 5 },		{ 100, 100 },		{ 500, 500 },			4,
 			"gibs",		"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
 	},
 };
@@ -877,7 +877,7 @@ struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
-		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake;
+		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
@@ -886,7 +886,7 @@ struct gameent : dynent, gamestate
 
 	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
-		lastattacker(-1), lastpoints(0), quake(0),
+		lastattacker(-1), lastpoints(0), quake(0), lastpush(0),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), waist(-1, -1, -1),
 		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
 		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
@@ -928,7 +928,7 @@ struct gameent : dynent, gamestate
 	void clearstate()
 	{
 		loopi(IM_MAX) impulse[i] = 0;
-		cplast = lasthit = lastkill = quake = turnmillis = turnside = 0;
+		cplast = lasthit = lastkill = quake = lastpush = turnmillis = turnside = 0;
 		turnroll = turnyaw = 0;
 		lastflag = respawned = suicided = lastnode = -1;
 		obit[0] = 0;
@@ -981,7 +981,7 @@ struct gameent : dynent, gamestate
 		if(muzzle == vec(-1, -1, -1))
 		{
 			vec dir, right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
-			dir.mul(radius*1.25f); right.mul(radius); dir.z -= height*0.1f;
+			dir.mul(radius); right.mul(radius); dir.z -= height*0.0625f;
 			muzzle = vec(o).add(dir).add(right);
 		}
 		if(type == ENT_PLAYER)

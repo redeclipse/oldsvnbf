@@ -136,7 +136,7 @@ namespace physics
 		if(d->type == ENT_PLAYER || d->type == ENT_AI)
 		{
 			gameent *e = (gameent *)d;
-			if(e->onladder ||
+			if(e->onladder || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS) ||
 				(e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS) ||
 					(e->actiontime[AC_IMPULSE] && lastmillis-e->actiontime[AC_IMPULSE] <= PHYSMILLIS) ||
 						e->turnside || liquidcheck(e)) return false;

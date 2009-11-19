@@ -103,23 +103,6 @@ namespace game
 	ICOMMAND(mutators, "", (), intret(mutators));
 	ICOMMAND(getintermission, "", (), intret(intermission ? 1 : 0));
 
-	ICOMMAND(specmodeswitch, "", (), {
-		switch(specmode)
-		{
-			case 0: default: specmode = 1; break;
-			case 1: specmode = 0; break;
-		}
-	});
-	ICOMMAND(waitmodeswitch, "", (), {
-		bool alternate = (m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators);
-		switch(waitmode)
-		{
-			case 0: default: waitmode = alternate ? 1 : 2; break;
-			case 1: waitmode = alternate ? 0 : 2; break;
-			case 2: waitmode = 0; break;
-		}
-	});
-
 	void start() { }
 
 	const char *gametitle() { return connected() ? server::gamename(gamemode, mutators) : "ready"; }
@@ -246,12 +229,32 @@ namespace game
 	{
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
-			case CS_SPECTATOR: return specmode == 1; break;
-			case CS_WAITING: return waitmode >= ((m_trial(gamemode) && !player1->lastdeath) || m_duke(gamemode, mutators) ? 1 : 2); break;
+			case CS_SPECTATOR: if(specmode == 1) return true; break;
+			case CS_WAITING:
+				if((!player1->lastdeath || lastmillis-player1->lastdeath >= 500) && waitmode >= (m_trial(gamemode) || m_duke(gamemode, mutators) ? 1 : 2))
+					return true;
+				break;
 			default: break;
 		}
 		return false;
 	}
+
+	ICOMMAND(specmodeswitch, "", (), {
+		switch(specmode)
+		{
+			case 0: default: specmode = 1; break;
+			case 1: specmode = 0; break;
+		}
+	});
+	ICOMMAND(waitmodeswitch, "", (), {
+		bool alternate = m_trial(gamemode) || m_duke(gamemode, mutators);
+		switch(waitmode)
+		{
+			case 0: default: waitmode = alternate ? 1 : 2; break;
+			case 1: waitmode = alternate ? 0 : 2; break;
+			case 2: waitmode = 0; break;
+		}
+	});
 
     bool allowmove(physent *d)
     {
@@ -655,6 +658,7 @@ namespace game
 				else force *= hitpushscale;
 				vec push = dir; push.z += 0.125f; push.mul(m_speedscale(force));
 				d->vel.add(push);
+				if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
 			}
 		}
 	}
@@ -1954,6 +1958,7 @@ namespace game
 		}
 		bool hasweapon = showweap && *weaptype[weap].vwep;
 		if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
+		else a[ai++] = modelattach("tag_weapon", &d->muzzle);
         if(rendernormally && (early || d != player1))
         {
         	if(hasweapon)

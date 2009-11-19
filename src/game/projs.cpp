@@ -19,11 +19,24 @@ namespace projs
 	VARP(muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
 	#define muzzlechk(a,b) (a > 0 && (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::player1)))
 
-	int calcdamage(int weap, int &flags, int radial, float size, float dist)
+	int calcdamage(gameent *actor, gameent *target, int weap, int &flags, int radial, float size, float dist)
 	{
-		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
+		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0], nodamage = 0; flags &= ~HIT_SFLAGS;
+		if((flags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0])) && flags&HIT_FULL) flags &= ~HIT_FULL;
 		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
-		if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+		if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
+		else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
+		{
+			if(m_story(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
+			else if(weap == WEAP_MELEE) nodamage++;
+			else if(m_fight(game::gamemode)) switch(teamdamage)
+			{
+				case 2: default: break;
+				case 1: if(actor->aitype < 0) break;
+				case 0: nodamage++; break;
+			}
+		}
+		if(nodamage || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
 		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
 		if(hithurts(flags))
 		{
@@ -45,7 +58,7 @@ namespace projs
 		if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
 		if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 		{
-			int hflags = proj.flags|flags, damage = calcdamage(proj.weap, hflags, radial, float(radial), dist);
+			int hflags = proj.flags|flags, damage = calcdamage(proj.owner, d, proj.weap, hflags, radial, float(radial), dist);
 			if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir, false);
 		}
 		hitmsg &h = hits.add();
@@ -73,20 +86,17 @@ namespace projs
 			proj.hitflags = flags;
 			proj.norm = norm;
 			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0] && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
-			if(proj.projcollide&COLLIDE_CONT)
+			switch(proj.weap)
 			{
-				switch(proj.weap)
-				{
-					case WEAP_RIFLE: case WEAP_INSTA:
-						part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 1, 10, 0, 24);
-						part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2, 1, 0, 0);
-						adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
-						break;
-					default: break;
-				}
-				return false;
+				case WEAP_MELEE: part_create(PART_PLASMA_SOFT, 125, proj.o, 0xFFCC22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]); break;
+				case WEAP_RIFLE: case WEAP_INSTA:
+					part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 1, 10, 0, 24);
+					part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2, 1, 0, 0);
+					adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), m_speedtime(250), 10);
+					break;
+				default: break;
 			}
-			return true;
+			return (proj.projcollide&COLLIDE_CONT) ? false : true;
 		}
 		return false;
 	}
@@ -210,7 +220,7 @@ namespace projs
 			case PRJ_SHOT:
 			{
 				if(proj.owner && (proj.owner != game::player1 || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
-				proj.aboveeye = proj.height = proj.radius = 1.f;
+				proj.aboveeye = proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
 				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.relativity = weaptype[proj.weap].relativity[proj.flags&HIT_ALT ? 1 : 0];
@@ -306,47 +316,52 @@ namespace projs
             vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
         }
 		vec rel = vec(proj.vel).add(dir);
-		if(proj.owner && proj.relativity) rel.add(vec(proj.owner->vel).add(proj.owner->falling).mul(proj.relativity));
+		if(proj.owner && proj.relativity > 0) rel.add(vec(proj.owner->vel).add(proj.owner->falling).mul(proj.relativity));
 		proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
 		proj.spawntime = lastmillis;
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
-		vec ray = vec(proj.vel).normalize();
-		int maxsteps = 25;
-		float step = 0.1f, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
-		loopi(maxsteps)
+		if(proj.projtype == PRJ_SHOT && (proj.projcollide&COLLIDE_OWNER || weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]))
 		{
-			float olddist = dist;
-			if(dist < barrier && dist + step > barrier) dist = barrier;
-			else dist += step;
-			if(proj.projcollide&COLLIDE_TRACE)
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
+				proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
+			vec ray = vec(proj.vel).normalize();
+			int maxsteps = 25;
+			float step = 0.0625f, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
+			loopi(maxsteps)
 			{
-				proj.o = vec(ray).mul(olddist).add(orig);
-				float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
-				proj.o.add(vec(ray).mul(dist - olddist));
-				if((cdist < 0 || dist >= barrier) && (!hitplayer || hitplayer != proj.owner)) break;
-			}
-			else
-			{
-				proj.o = vec(ray).mul(dist).add(orig);
-				if(collide(&proj) && !inside && (!hitplayer || hitplayer != proj.owner)) break;
-			}
-			if((!hitplayer || hitplayer != proj.owner) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
-			{
-				bounceeffect(proj);
-				if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+				float olddist = dist;
+				if(dist < barrier && dist + step > barrier) dist = barrier;
+				else dist += step;
+				if(proj.projcollide&COLLIDE_TRACE)
 				{
-					reflect(proj, proj.norm);
-					proj.o.add(vec(proj.norm).mul(proj.radius)); // offset from surface slightly to avoid initial collision
-					proj.movement = 0;
-					proj.lastbounce = lastmillis;
+					proj.o = vec(ray).mul(olddist).add(orig);
+					float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
+					proj.o.add(vec(ray).mul(dist - olddist));
+					if((cdist < 0 || dist >= barrier) && (!hitplayer || hitplayer != proj.owner)) break;
 				}
-				break;
+				else
+				{
+					proj.o = vec(ray).mul(dist).add(orig);
+					if(collide(&proj) && !inside && (!hitplayer || hitplayer != proj.owner)) break;
+				}
+				if((!hitplayer || hitplayer != proj.owner) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
+				{
+					bounceeffect(proj);
+					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+					{
+						reflect(proj, proj.norm);
+						proj.o.add(vec(proj.norm).mul(proj.radius)); // offset from surface slightly to avoid initial collision
+						proj.movement = 0;
+						proj.lastbounce = lastmillis;
+					}
+					break;
+				}
 			}
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
+				proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
 		}
-		if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = 1.f;
         proj.resetinterp();
 	}
 
@@ -654,7 +669,7 @@ namespace projs
 				default: break;
 			}
 			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
-				proj.radius = max(proj.lifesize, 0.1f);
+				proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*max(proj.lifesize, 0.1f);
 		}
 		else
 		{
