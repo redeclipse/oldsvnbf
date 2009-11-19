@@ -554,7 +554,7 @@ namespace physics
 					d->resetphys();
 					allowed = false;
 					playsound(S_JUMP, d->o, d);
-					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1.f, -10, 0, 10.f);
+					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1, 1, -10, 0, 10.f);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
 				}
 			}
@@ -708,7 +708,7 @@ namespace physics
 			#define mattrig(mo,mcol,ms,mt,mz,mq,mp,mw) \
 			{ \
 				int col = (int(mcol[2]*mq) + (int(mcol[1]*mq) << 8) + (int(mcol[0]*mq) << 16)); \
-				regularshape(mp, mt, col, 21, 20, m_speedtime(mz), mo, ms, 10, 0, 20.f); \
+				regularshape(mp, mt, col, 21, 20, m_speedtime(mz), mo, ms, 1, 10, 0, 20); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)

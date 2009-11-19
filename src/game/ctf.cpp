@@ -147,15 +147,15 @@ namespace ctf
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
 				defformatstring(info)("<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
-				part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+				part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, trans);
 				above.z += 2.5f;
             }
 			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str);
+				part_icon(above, textureload("textures/progress", 3), 4, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload("textures/progress", 3), 4, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, trans);
 				above.z += 2.5f;
 			}
             if(f.base&BASE_FLAG && (f.owner || f.droptime))
@@ -163,11 +163,11 @@ namespace ctf
 				if(f.owner)
 				{
 					defformatstring(info)("<super>%s", game::colorname(f.owner));
-					part_textcopy(above, info, PART_TEXT, 1);
+					part_textcopy(above, info, PART_TEXT, 1, 0xFFFFFF, 2, trans);
 					above.z += 1.5f;
 				}
 				const char *info = f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped";
-				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, trans);
             }
         }
         static vector<int> numflags, iterflags; // dropped/owned
@@ -198,14 +198,14 @@ namespace ctf
 			above.z += enttype[FLAG].radius*2/3;
 			if(f.owner) { above.z += iterflags[f.owner->clientnum]*2; iterflags[f.owner->clientnum]++; }
             defformatstring(info)("<super>%s flag", teamtype[f.team].name);
-			part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour);
+			part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, 1);
 			above.z += 2.5f;
 			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload("textures/progress", 3), 0.25f, 4, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload("textures/progress", 3), 1, 4, 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str);
+				part_icon(above, textureload("textures/progress", 3), 4, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload("textures/progress", 3), 4, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, trans);
 			}
         }
     }
@@ -419,7 +419,7 @@ namespace ctf
 			if(effect&1)
 			{
 				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
-				part_textcopy(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+				part_textcopy(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(from).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
@@ -428,11 +428,11 @@ namespace ctf
 			if(effect&2)
 			{
 				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
-				part_textcopy(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3.f, -10);
+				part_textcopy(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 			}
 			game::spawneffect(PART_FIREBALL, vec(to).add(vec(0, 0, enttype[FLAG].radius*2/3)), teamtype[team].colour, enttype[FLAG].radius*2);
 		}
-		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2.f, -5);
+		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2, 1, -5);
     }
 
     void returnflag(gameent *d, int i)

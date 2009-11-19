@@ -356,10 +356,10 @@ namespace game
 		}
 	}
 
-	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size)
+	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size, float blend)
 	{
-		regularshape(type, radius, colour, 21, 25, m_speedtime(fade), o, size, -vel, 0, vel*2);
-		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), m_speedtime(fade), m_speedtime(fade/3));
+		regularshape(type, radius, colour, 21, 25, m_speedtime(fade), o, size, blend, -vel, 0, vel*2);
+		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), m_speedtime(fade), m_speedtime(fade/3));
 	}
 
 	void impulseeffect(gameent *d, bool effect)
@@ -371,10 +371,10 @@ namespace game
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, 1, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, 1, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, 1, -15, 0, 5);
 			}
 		}
 	}
@@ -384,7 +384,7 @@ namespace game
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 		{
 			float pc = lastmillis-d->lastfire >= fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
-			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), -15, 0);
+			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), 1, -15, 0);
 		}
 	}
 
@@ -625,15 +625,15 @@ namespace game
 					if(d->aitype != AI_TURRET)
 					{
 						if(!kidmode && bloodscale > 0)
-							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 100, DECAL_BLOOD, int(d->radius*4));
-						else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 50, DECAL_STAIN, int(d->radius*4));
+							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 1, 100, DECAL_BLOOD, int(d->radius*4));
+						else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 1, 50, DECAL_STAIN, int(d->radius*4));
 					}
 					if(showdamageabovehead > (d != player1 ? 0 : 1))
 					{
 						string ds;
 						if(showdamageabovehead > 2) formatstring(ds)("<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
 						else formatstring(ds)("<sub>-%d", damage);
-						part_textcopy(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3.f, -10, 0, d);
+						part_textcopy(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3, 1, -10, 0, d);
 					}
 					if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 					if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
@@ -786,8 +786,8 @@ namespace game
 				if(style&FRAG_REVENGE)
 				{
 					concatstring(d->obit, " \fs\fzoyvengeful\fS");
-					part_text(az, "<super>\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					part_text(dz, "<super>\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
+					part_text(az, "<super>\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
+					part_text(dz, "<super>\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominated = false;
 					else if(d == player1) actor->dominating = false;
 					anc = S_V_REVENGE; override = true;
@@ -795,8 +795,8 @@ namespace game
 				else if(style&FRAG_DOMINATE)
 				{
 					concatstring(d->obit, " \fs\fzoydominating\fS");
-					part_text(az, "<super>\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					part_text(dz, "<super>\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4;
+					part_text(az, "<super>\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
+					part_text(dz, "<super>\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4;
 					if(actor == player1) d->dominating = true;
 					else if(d == player1) actor->dominated = true;
 					anc = S_V_DOMINATE; override = true;
@@ -807,71 +807,71 @@ namespace game
 				if(style&FRAG_MKILL1)
 				{
 					concatstring(d->obit, " \fs\fzRedouble-killing\fS");
-					part_text(az, "<super>\fzvrDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "<super>\fzvrDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "<super>\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL2)
 				{
 					concatstring(d->obit, " \fs\fzRetriple-killing\fS");
-					part_text(az, "<super>\fzvrTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "<super>\fzvrTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "<super>\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL3)
 				{
 					concatstring(d->obit, " \fs\fzRemulti-killing\fS");
-					part_text(az, "<super>\fzvrMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, d); dz.z += 4; }
+					part_text(az, "<super>\fzvrMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
+					if(actor == player1) { part_text(dz, "<super>\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 			}
 
 			if(style&FRAG_HEADSHOT)
 			{
-				part_text(az, "<super>\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_HEADSHOT;
 			}
 
 			if(style&FRAG_SPREE1)
 			{
 				concatstring(d->obit, " in total \fs\fzcgcarnage\fS!");
-				part_text(az, "<super>\fzcgCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE1;
 				override = true;
 			}
 			else if(style&FRAG_SPREE2)
 			{
 				concatstring(d->obit, " on a \fs\fzcgslaughter\fS!");
-				part_text(az, "<super>\fzcgSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE2;
 				override = true;
 			}
 			else if(style&FRAG_SPREE3)
 			{
 				concatstring(d->obit, " on a \fs\fzcgmassacre\fS!");
-				part_text(az, "<super>\fzcgMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE3;
 				override = true;
 			}
 			else if(style&FRAG_SPREE4)
 			{
 				concatstring(d->obit, " in a \fs\fzcgbloodbath\fS!");
-				part_text(az, "<super>\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE4;
 				override = true;
 			}
 			else if(style&FRAG_SPREE5)
 			{
 				concatstring(d->obit," on a \fs\fzcgrampage\fS!");
-				part_text(az, "<super>\fzcgRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE5;
 				override = true;
 			}
 			else if(style&FRAG_SPREE6)
 			{
 				concatstring(d->obit, " who seems \fs\fzcgunstoppable\fS!");
-				part_text(az, "<super>\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4.f, -10, 0, actor); az.z += 4;
+				part_text(az, "<super>\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE6;
 				override = true;
 			}
@@ -1924,12 +1924,13 @@ namespace game
 		if(third && d->type == ENT_PLAYER && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) <= maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead(2);
+			float blend = statusaboveheadblend*trans;
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
 			{
 				const char *name = colorname(d, NULL, d->aitype < 0 ? "<super>" : "<default>");
 				if(name && *name)
 				{
-                    part_textcopy(pos, name);
+                    part_textcopy(pos, name, PART_TEXT, 1, 0xFFFFFF, 2, blend);
 					pos.z += 2;
 				}
 			}
@@ -1947,7 +1948,7 @@ namespace game
 				}
 				if(t)
 				{
-					part_icon(pos, t, statusaboveheadblend*trans, 2);
+					part_icon(pos, t, 2, blend);
 					pos.z += 2;
 				}
 			}

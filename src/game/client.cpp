@@ -397,7 +397,7 @@ namespace client
 		if(d->state != CS_SPECTATOR)
 		{
 			defformatstring(ds)("<sub>%s", s);
-			part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, -10, 0, d);
+			part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, 1, -10, 0, d);
 		}
 
 		conoutft(CON_CHAT, "%s", s);
@@ -1065,7 +1065,7 @@ namespace client
 					{
 						case SPHY_JUMP:
 						{
-							playsound(S_JUMP, t->o, t); regularshape(PART_SMOKE, int(t->radius), 0x111111, 21, 20, 100, t->feetpos(), 1.f, -10, 0, 10.f);
+							playsound(S_JUMP, t->o, t); regularshape(PART_SMOKE, int(t->radius), 0x111111, 21, 20, 100, t->feetpos(), 1, 1, -10, 0, 10.f);
 							t->actiontime[AC_JUMP] = lastmillis;
 							break;
 						}
@@ -1399,14 +1399,14 @@ namespace client
 					{
 						vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
 						const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
-						if(texname && *texname) part_icon(pos, textureload(texname, 3), 1, 2, -10, 0, game::aboveheadfade, colour);
+						if(texname && *texname) part_icon(pos, textureload(texname, 3), 2, 1, -10, 0, game::aboveheadfade, colour);
 						else
 						{
 							const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
 							if(item && *item)
 							{
 								defformatstring(ds)("<emphasis>%s (%d)", item, entities::ents[ent]->type);
-								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, -10);
+								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, 1, -10);
 							}
 						}
 					}
