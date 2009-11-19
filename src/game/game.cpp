@@ -1770,7 +1770,7 @@ namespace game
 
 			if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
 			{
-				case ANIM_IDLE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SMG:
+				case ANIM_IDLE: case ANIM_MELEE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SMG:
 				case ANIM_GRENADE: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE:
 				{
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
@@ -1781,9 +1781,8 @@ namespace game
 			}
 		}
 
-        if(third && testanims && d == player1) yaw = 0;
-        else yaw += 90;
-        if(anim == ANIM_DYING) pitch *= max(1.0f - (lastmillis-basetime)/500.0f, 0.0f);
+        if(third && testanims && d == player1) yaw = 0; else yaw += 90;
+        if(anim == ANIM_DYING) pitch *= max(1.f-(lastmillis-basetime)/500.f, 0.f);
 
         if(d->ragdoll && (!ragdolls || anim!=ANIM_DYING)) cleanragdoll(d);
 
@@ -1908,8 +1907,8 @@ namespace game
 							if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 								showweap = false;
 							animflags = weaptype[weap].anim+d->weapstate[weap];
+							break;
 						}
-						break;
 					}
 					case WEAP_S_IDLE: case WEAP_S_WAIT: default:
 					{
