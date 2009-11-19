@@ -5,6 +5,9 @@ scorch.png and the Sauerbraten/Cube 2 Logo
 wait.png created from http://commons.wikimedia.org/wiki/File:Stop_hand_grey.svg
 	Released under the Creative Commons Attribution ShareAlike 3.0 License
 	http://creativecommons.org/licenses/by-sa/3.0/
+
+dead.png, flag.png and melee.png created from http://www.openclipart.org/
+	Released as Public Domain Royalty Free Clipart
 	
 All other files in this directory are:
 	(C) 2007-2008 Anthony "Acord" Cord, all rights reserved.
