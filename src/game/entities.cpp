@@ -1264,10 +1264,9 @@ namespace entities
 			}
 			if(check)
 			{
-				vec pos = d->feetpos();
 				loopavoid(obstacles, d, { if(ents.inrange(ent) && ents[ent]->type == ents[node]->type)
 				{
-					if(ent != node && ent != goal && ents[node]->links.find(ent) < 0 && ents[goal]->links.find(ent) < 0)
+					if(ent != node && ents[node]->links.find(ent) < 0)
 					{
 						nodes[ent].id = routeid;
 						nodes[ent].curscore = -1.f;
