@@ -1129,6 +1129,9 @@ namespace ai
 		loopi(game::numdynents())
 		{
 			gameent *d = (gameent *)game::iterdynents(i);
+			if(!d->ai && !d->airnodes.empty()) loopvj(d->airnodes)
+				if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
+					obs.add(d, d->airnodes[j]);
 			if(!d || d->state != CS_ALIVE || !physics::issolid(d)) continue;
 			vec pos = d->feetpos();
 			float limit = enttype[WAYPOINT].radius+d->radius;
