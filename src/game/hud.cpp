@@ -1356,7 +1356,7 @@ namespace hud
 				const struct healthbarstep
 				{
 					float health, r, g, b;
-				} steps[] = { { 0, 0.5f, 0, 0 }, { 0.25f, 1, 0, 0 }, { 0.75f, 1, 0.5f, 0 }, { 1, 0, 1, 0 } };
+				} steps[] = { { 0, 0.75f, 0, 0 }, { 0.35f, 1, 0.5f, 0 }, { 0.65f, 1, 1, 0 }, { 1, 0, 1, 0 } };
 				glBegin(GL_QUAD_STRIP);
 				int cx = x+glow, cy = y-size+glow, cw = width-glow*2, ch = size-glow*2;
 				float health = clamp(game::player1->health/float(heal), 0.0f, 1.0f);

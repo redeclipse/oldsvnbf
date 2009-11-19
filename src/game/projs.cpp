@@ -88,7 +88,7 @@ namespace projs
 			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0] && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
 			switch(proj.weap)
 			{
-				case WEAP_MELEE: part_create(PART_PLASMA_SOFT, 125, proj.o, 0xFFCC22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]); break;
+				case WEAP_MELEE: part_create(PART_PLASMA_SOFT, m_speedtime(250), proj.o, 0xFFCC22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]); break;
 				case WEAP_RIFLE: case WEAP_INSTA:
 					part_splash(PART_SPARK, 25, m_speedtime(250), proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 1, 10, 0, 24);
 					part_create(PART_PLASMA, m_speedtime(250), proj.o, 0x6611FF, 2, 1, 0, 0);
@@ -720,6 +720,8 @@ namespace projs
 		}
 	}
 
+	VAR(testmelee, 0, 0, 1);
+
 	void destroy(projent &proj)
 	{
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
@@ -731,7 +733,7 @@ namespace projs
 				int vol = 255;
 				switch(proj.weap)
 				{
-					case WEAP_MELEE: break;
+					case WEAP_MELEE: if(testmelee) part_create(PART_PLASMA_SOFT, m_speedtime(300), proj.o, 0xDD4400, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*2); break;
 					case WEAP_PISTOL:
 					{
 						vol = int(255*(1.f-proj.lifespan));

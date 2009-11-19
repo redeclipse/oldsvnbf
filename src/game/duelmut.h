@@ -183,6 +183,7 @@ struct duelservmode : servmode
 				}
 				default: break;
 			}
+			if(GVAR(duelreset) && !alive.empty()) loopv(alive) queue(alive[i], true, true);
 		}
 	}
 
