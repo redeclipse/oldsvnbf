@@ -2086,6 +2086,7 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
+		if(realflags&HIT_WAVE && realflags&HIT_FULL) realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
@@ -2107,11 +2108,11 @@ namespace server
 			target->state.lastpain = gamemillis;
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
-		}
-		if(GVAR(fireburntime) && ((weaptype[weap].burns[realflags&HIT_ALT ? 1 : 0] && realflags&HIT_FULL) || realflags&HIT_MELT))
-		{
-			target->state.lastfire = target->state.lastfireburn = gamemillis;
-			target->state.lastfireowner = actor->clientnum;
+			if(GVAR(fireburntime) && doesburn(weap, flags))
+			{
+				target->state.lastfire = target->state.lastfireburn = gamemillis;
+				target->state.lastfireowner = actor->clientnum;
+			}
 		}
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, target->state.health, hitpush.x, hitpush.y, hitpush.z);
 		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
@@ -2225,6 +2226,7 @@ namespace server
         }
         ci->state.deaths++;
 		dropitems(ci); givepoints(ci, pointvalue);
+		if(!(flags&HIT_FULL)) flags |= HIT_FULL;
 		if(GVAR(fireburntime) && (flags&HIT_MELT || flags&HIT_BURN))
 		{
 			ci->state.lastfire = ci->state.lastfireburn = gamemillis;
@@ -2644,7 +2646,7 @@ namespace server
 						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
 						{
 							clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-							dodamage(ci, co ? co : ci, GVAR(fireburndamage), WEAP_FLAMER, HIT_BURN);
+							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN);
 							ci->state.lastfireburn += GVAR(fireburndelay);
 						}
 						continue;

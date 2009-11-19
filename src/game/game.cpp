@@ -549,10 +549,10 @@ namespace game
 
 	bool fireburn(gameent *d, int weap, int flags)
 	{
-		if(fireburntime && ((isweap(weap) && weaptype[weap].burns[flags&HIT_ALT ? 1 : 0]) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
+		if(fireburntime && (doesburn(weap, flags) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
 		{
 			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, d != player1 ? 128 : 224, -1, -1, &d->fschan);
-			if(flags&HIT_FULL || weap == -1) d->lastfire = lastmillis;
+			if(flags&HIT_FULL) d->lastfire = lastmillis;
 			else return true;
 		}
 		return false;
@@ -560,10 +560,7 @@ namespace game
 
     struct damagetone
     {
-        enum
-        {
-            BURN = 1<<0
-        };
+        enum { BURN = 1<<0 };
 
         gameent *actor;
         int damage, flags;
@@ -650,7 +647,7 @@ namespace game
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
 				}
 			}
-			if(!burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
+			if(isweap(weap) && !burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
 			{
 				float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
