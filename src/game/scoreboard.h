@@ -321,6 +321,20 @@ namespace hud
 						g.popfont();
 					}
 				}
+				if(game::player1->state == CS_WAITING)
+				{
+					SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
+					g.pushfont("default");
+					g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, waitmodekey, game::tvmode() ? "look around" : "observe");
+					g.popfont();
+				}
+				if(m_arena(game::gamemode, game::mutators))
+				{
+					SEARCHBINDCACHE(arenakey)("showgui arena", 0);
+					g.pushfont("default");
+					g.textf("Press \fs\fc%s\fS to change arena weapon", 0xFFFFFF, NULL, arenakey);
+					g.popfont();
+				}
 			}
 			else if(game::player1->state == CS_SPECTATOR)
 			{

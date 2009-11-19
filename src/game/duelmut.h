@@ -22,8 +22,8 @@ struct duelservmode : servmode
 				if(ci->state.state != CS_WAITING) waiting(ci);
 				if(m_duel(gamemode, mutators) && allowbroadcast(ci->clientnum))
 				{
-					if(n > 1 || m_team(gamemode, mutators)) srvmsgf(ci->clientnum, "you are \fs\fg#%d\fS in the queue", n);
-					else if(n) srvmsgf(ci->clientnum, "you are \fs\fgNEXT\fS in the queue");
+					if(n > 1 || m_team(gamemode, mutators)) srvmsgf(ci->clientnum, "\fayou are \fs\fg#%d\fS in the queue", n);
+					else if(n) srvmsgf(ci->clientnum, "\fayou are \fs\fgNEXT\fS in the queue");
 				}
 			}
 		}
@@ -109,7 +109,7 @@ struct duelservmode : servmode
 			if(gamemillis >= dueltime)
 			{
 				vector<clientinfo *> alive;
-				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, clients[i]->state.state != CS_ALIVE);
+				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, GVAR(duelreset) || clients[i]->state.state != CS_ALIVE);
 				if(m_survivor(gamemode, mutators) || GVAR(duelclear)) clearitems();
 				allowed.setsize(0);
 				loopv(duelqueue)
