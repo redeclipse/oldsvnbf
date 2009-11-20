@@ -695,12 +695,8 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamchanges && lastteam && lastmillis-lastteam <= noticetime+spawndelay)
-					{
-						pushfont("emphasis");
-						ty += draw_textx("You are now on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
-						popfont();
-					}
+					if(teamchanges && lastteam && lastmillis-lastteam <= noticetime*2)
+						ty += draw_textx("\fzReYou are now on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
 						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;

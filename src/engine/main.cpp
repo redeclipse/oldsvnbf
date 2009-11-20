@@ -359,7 +359,7 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(fsaa>0 && (config&4)==0) conoutf("\fr%dx anti-aliasing not supported - disabling", fsaa);
 #if SDL_VERSION_ATLEAST(1, 2, 11)
 		SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync); // could be forced on
-		if(vsync != actualvsync) conoutf("\fractual value of vsync is: %s", actualvsync ? "enabled" : "disabled");
+		conoutf("vsync is %s", actualvsync ? "enabled" : "disabled");
 #endif
     }
 
