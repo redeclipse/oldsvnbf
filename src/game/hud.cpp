@@ -137,8 +137,8 @@ namespace hud
 	VARP(inventoryhealth, 0, 3, 3);
 	VARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
-	FVARP(inventoryhealthglow, 0, 0.1f, 1);
-	FVARP(inventoryhealthpulse, 0, 0.1f, 1);
+	FVARP(inventoryhealthglow, 0, 0.125f, 1);
+	FVARP(inventoryhealthpulse, 0, 0.0625f, 1);
 	VARP(inventoryimpulse, 0, 2, 2);
 	VARP(inventorytrial, 0, 2, 2);
 
