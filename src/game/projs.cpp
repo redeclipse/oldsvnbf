@@ -293,14 +293,17 @@ namespace projs
 			}
 			default: break;
 		}
-		if(proj.mdl && *proj.mdl)
+		if(proj.projtype != PRJ_SHOT)
 		{
-			setbbfrommodel(&proj, proj.mdl);
-			if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON)
-				proj.height += 2.5f;
-			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
+			if(proj.mdl && *proj.mdl)
+			{
+				setbbfrommodel(&proj, proj.mdl);
+				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON)
+					proj.height += 2.5f;
+				else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
+			}
+			physics::entinmap(&proj, true);
 		}
-		if(proj.projtype != PRJ_SHOT) physics::entinmap(&proj, true);
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
@@ -860,7 +863,7 @@ namespace projs
 			{
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius+1.5f));
+					proj.o.add(vec(dir).mul(proj.radius*0.25f));
 					proj.stuck = true;
 					return 1;
 				}
@@ -899,7 +902,7 @@ namespace projs
             {
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.sub(vec(dir).mul(proj.radius+1.5f));
+					proj.o.add(vec(dir).mul(proj.radius*0.25f));
 					proj.stuck = true;
 					return 1;
 				}
