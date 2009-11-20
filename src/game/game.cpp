@@ -509,8 +509,8 @@ namespace game
 			if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
 				d->setweapstate(i, WEAP_S_IDLE, 0, lastmillis);
 		}
-		if(d->respawned > 0 && lastmillis-d->respawned >= 3000) d->respawned = -1;
-		if(d->suicided > 0 && lastmillis-d->suicided >= 3000) d->suicided = -1;
+		if(d->respawned > 0 && lastmillis-d->respawned >= PHYSMILLIS*4) d->respawned = -1;
+		if(d->suicided > 0 && lastmillis-d->suicided >= PHYSMILLIS*4) d->suicided = -1;
 		if(d->lastfire > 0)
 		{
 			if(lastmillis-d->lastfire >= fireburntime-500)

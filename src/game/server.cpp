@@ -2210,6 +2210,11 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE) return;
+		if(!(flags&HIT_DEATH) && !(flags&HIT_LOST))
+		{
+			if(smode && !smode->damage(ci, ci, ci->state.health, -1, flags)) { return; }
+			mutate(smuts, if(!mut->damage(ci, ci, ci->state.health, -1, flags)) { return; });
+		}
 		int fragvalue = -1, pointvalue = smode ? smode->points(ci, ci) : fragvalue;
         ci->state.frags += fragvalue;
         ci->state.spree = 0;

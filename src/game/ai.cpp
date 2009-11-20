@@ -1175,7 +1175,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned > 30000) && (!d->lastdeath || (!m_story(game::gamemode) && lastmillis-d->lastdeath > 500)))
+			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || (!m_story(game::gamemode) && lastmillis-d->lastdeath > 500)))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
