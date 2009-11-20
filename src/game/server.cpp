@@ -1344,14 +1344,14 @@ namespace server
 		return true;
 	}
 
-	extern void waiting(clientinfo *ci, int doteam = 0, bool exclude = false);
+	extern void waiting(clientinfo *ci, int doteam = 0, int drop = 2, bool exclude = false);
 
 	void setteam(clientinfo *ci, int team, bool reset = true, bool info = false)
 	{
 		if(ci->team != team)
 		{
 			bool sm = false;
-			if(reset) waiting(ci);
+			if(reset) waiting(ci, 0, 1);
 			else if(ci->state.state == CS_ALIVE)
 			{
 				if(smode) smode->leavegame(ci);
@@ -1496,7 +1496,7 @@ namespace server
 	}
 
 	struct droplist { int weap, ent; };
-	void dropitems(clientinfo *ci, bool discon = false)
+	void dropitems(clientinfo *ci, int level = 2)
 	{
 		if(ci->state.aitype >= AI_START) ci->state.weapreset(false);
 		else
@@ -1504,7 +1504,7 @@ namespace server
 			servstate &ts = ci->state;
 			vector<droplist> drop;
 			int sweap = m_spawnweapon(gamemode, mutators);
-			if(!discon && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
+			if(level >= 2 && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
 			{
 				ts.weapshots[WEAP_GRENADE][0].add(-1);
 				droplist &d = drop.add();
@@ -1516,7 +1516,7 @@ namespace server
 				loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 				{
 					sents[ts.entid[i]].millis = gamemillis;
-					if(!discon && GVAR(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
+					if(level && GVAR(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
 					{
 						ts.dropped.add(ts.entid[i]);
 						droplist &d = drop.add();
@@ -1526,7 +1526,7 @@ namespace server
 					}
 				}
 			}
-			if(!discon && !drop.empty())
+			if(level && !drop.empty())
 				sendf(-1, 1, "ri3iv", SV_DROP, ci->clientnum, -1, drop.length(), drop.length()*sizeof(droplist)/sizeof(int), drop.getbuf());
 			ts.weapreset(false);
 		}
@@ -1599,7 +1599,7 @@ namespace server
             else
 			{
 				ci->state.state = CS_DEAD;
-				waiting(ci, 2);
+				waiting(ci, 2, 1);
 			}
 		}
 
@@ -2030,7 +2030,7 @@ namespace server
             else
 			{
 				ci->state.state = CS_DEAD;
-				waiting(ci, 0, true);
+				waiting(ci, 0, 1, true);
 				putint(p, SV_WAITING);
 				putint(p, ci->clientnum);
                 if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST)) ci->team = chooseteam(ci);
@@ -2536,13 +2536,13 @@ namespace server
         while(ci->events.length() > keep) delete ci->events.pop();
 	}
 
-	void waiting(clientinfo *ci, int doteam, bool exclude)
+	void waiting(clientinfo *ci, int doteam, int drop, bool exclude)
 	{
 		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
 			if(ci->state.state == CS_ALIVE)
 			{
-				dropitems(ci);
+				dropitems(ci, drop);
 				if(smode) smode->died(ci);
 				mutate(smuts, mut->died(ci));
 				ci->state.lastdeath = gamemillis;
@@ -2789,7 +2789,7 @@ namespace server
         		loopvk(clients[i]->state.fraglog) if(clients[i]->state.fraglog[k] == ci->clientnum)
 					clients[i]->state.fraglog.remove(k--);
         	}
-		    if(ci->state.state == CS_ALIVE) dropitems(ci, true);
+		    if(ci->state.state == CS_ALIVE) dropitems(ci, 0);
 		    if(ci->privilege) auth::setmaster(ci, false);
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci, true));
@@ -3147,7 +3147,7 @@ namespace server
 					if(smode) smode->canspawn(cp, true);
 					mutate(smuts, mut->canspawn(cp, true));
 					cp->state.state = CS_DEAD;
-					waiting(cp);
+					waiting(cp, 1, 1);
 					break;
 				}
 
@@ -3320,7 +3320,7 @@ namespace server
 										if(cp->state.cptime <= 0 || laptime < cp->state.cptime)
 										{
 											cp->state.cptime = laptime;
-											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(ci); }
+											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(ci, 0, 0); }
 										}
 										sendf(-1, 1, "ri4", SV_CHECKPOINT, cp->clientnum, laptime, cp->state.cptime);
 									}
@@ -3604,7 +3604,7 @@ namespace server
 					if(cp->state.state != CS_SPECTATOR && val)
 					{
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-						if(cp->state.state == CS_ALIVE) dropitems(cp);
+						if(cp->state.state == CS_ALIVE) dropitems(cp, 1);
 						if(smode) smode->leavegame(cp);
 						mutate(smuts, mut->leavegame(cp));
 						cp->state.cpnodes.setsize(0);
@@ -3620,7 +3620,7 @@ namespace server
 						cp->state.cpmillis = 0;
 						cp->state.state = CS_DEAD;
 	                    cp->state.lasttimeplayed = lastmillis;
-						waiting(cp, 2);
+						waiting(cp, 2, 1);
 						if(smode) smode->entergame(cp);
 						mutate(smuts, mut->entergame(cp));
 						aiman::dorefresh = true;

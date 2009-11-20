@@ -93,7 +93,7 @@ namespace aiman
 			loopvk(clients[i]->state.fraglog) if(clients[i]->state.fraglog[k] == ci->clientnum)
 				clients[i]->state.fraglog.remove(k--);
 		}
-		if(ci->state.state == CS_ALIVE) dropitems(ci, true);
+		if(ci->state.state == CS_ALIVE) dropitems(ci, 0);
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci, true));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
@@ -134,7 +134,7 @@ namespace aiman
 			sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
 			if(ci->state.aireinit == 2)
 			{
-				waiting(ci, 2);
+				waiting(ci, 1, 2);
 				if(smode) smode->entergame(ci);
 				mutate(smuts, mut->entergame(ci));
 			}

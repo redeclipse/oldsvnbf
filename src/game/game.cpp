@@ -211,7 +211,7 @@ namespace game
 
 	void announce(int idx, int targ, gameent *d, const char *msg, ...)
 	{
-		if(targ >= 0)
+		if(targ >= 0 && msg && *msg)
 		{
 			defvformatstring(text, msg, msg);
 			conoutft(targ, "%s", text);
@@ -220,7 +220,7 @@ namespace game
 		{
 			if(d && issound(d->aschan)) removesound(d->aschan);
 			physent *t = !d || d == player1 ? camera1 : d;
-			playsound(idx, t->o, t, d == player1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
+			playsound(idx, t->o, t, t == camera1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
 		}
 	}
 	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
@@ -684,7 +684,7 @@ namespace game
 		d->state = CS_DEAD;
 		d->deaths++;
 		int anc = -1, dth = style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
-		if(d == player1) anc = S_V_FRAGGED;
+		if(d == player1) anc = !m_duke(gamemode, mutators) && !m_trial(gamemode) ? S_V_FRAGGED : -1;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
 		if(d != actor && actor->lastattacker == d->clientnum) actor->lastattacker = -1;
