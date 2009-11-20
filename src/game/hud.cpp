@@ -627,7 +627,7 @@ namespace hud
 					if(*mapauthor) ty += draw_textx("by %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, mapauthor)*noticescale;
 					popfont();
 					pushfont("sub");
-					ty += draw_textx("[ %s ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(game::gamemode, game::mutators))*noticescale;
+					ty += draw_textx("[ \fs\fa%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(game::gamemode, game::mutators))*noticescale;
 					popfont();
 				}
 
@@ -681,7 +681,7 @@ namespace hud
 						{
 							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
 							popfont();
 						}
 						if(m_arena(game::gamemode, game::mutators))
@@ -794,16 +794,16 @@ namespace hud
 				}
 				else if(game::player1->state == CS_SPECTATOR)
 				{
-					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, game::tvmode() ? "SpecTV" : "Spectating")*noticescale;
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::tvmode() ? "SpecTV" : "Spectating")*noticescale;
 					if(shownotices >= 2)
 					{
 						SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 						pushfont("default");
-						ty += draw_textx("Press \fs\fc%s\fS to play", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, speconkey)*noticescale;
+						ty += draw_textx("Press \fs\fc%s\fS to play", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, speconkey)*noticescale;
 						if(shownotices >= 3)
 						{
 							SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, specmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, specmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
 						}
 						popfont();
 					}

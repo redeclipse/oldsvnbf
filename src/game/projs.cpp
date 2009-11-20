@@ -539,6 +539,7 @@ namespace projs
 		}
 	}
 
+	VAR(testmelee, 0, 0, 1);
 	void effect(projent &proj)
 	{
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
@@ -559,7 +560,7 @@ namespace projs
 			}
 			switch(proj.weap)
 			{
-				case WEAP_MELEE: proj.lifesize = 1; break;
+				case WEAP_MELEE: proj.lifesize = 1.f-proj.lifespan; if(testmelee) part_create(PART_PLASMA_SOFT, 1, proj.o, 0xDD4400, weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize); break;
 				case WEAP_PISTOL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
@@ -723,8 +724,6 @@ namespace projs
 		}
 	}
 
-	VAR(testmelee, 0, 0, 1);
-
 	void destroy(projent &proj)
 	{
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
@@ -736,7 +735,7 @@ namespace projs
 				int vol = 255;
 				switch(proj.weap)
 				{
-					case WEAP_MELEE: if(testmelee) part_create(PART_PLASMA_SOFT, m_speedtime(300), proj.o, 0xDD4400, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*2); break;
+					case WEAP_MELEE: if(testmelee) part_create(PART_PLASMA_SOFT, m_speedtime(300), proj.o, 0x220000, weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]); break;
 					case WEAP_PISTOL:
 					{
 						vol = int(255*(1.f-proj.lifespan));
