@@ -950,7 +950,7 @@ int main(int argc, char **argv)
 	ncursor = SDL_GetCursor();
 	showcursor(false);
 	keyrepeat(false);
-	setcaption("please wait...");
+	setcaption("please wait..");
 	eastereggs();
 
 	conoutf("loading gl..");
@@ -968,7 +968,7 @@ int main(int argc, char **argv)
 	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 	inbetweenframes = true;
-    progress(0, "please wait...");
+    progress(0, "please wait..");
 
     conoutf("loading gl effects..");
     progress(0, "loading gl effects..");

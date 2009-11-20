@@ -826,10 +826,10 @@ namespace hud
 		}
 	}
 
-	void drawconsole(int type, int w, int h, int x, int y, int s, float fade)
+	void drawconsole(int type, int w, int h, int x, int y, int s)
 	{
 		static vector<int> refs; refs.setsizenodelete(0);
-		bool full = fullconsole || commandmillis > 0 || (progressing && !UI::ready);
+		bool full = fullconsole || commandmillis > 0;
 		pushfont("console");
 		if(type >= 2)
 		{
@@ -874,13 +874,13 @@ namespace hud
 					}
 				}
 				int r = x+FONTW, z = y;
-				float blend = hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
+				//float blend = full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade;
 				loopvj(refs)
 				{
 					int len = conlines[refs[j]].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
 						g = conlines[refs[j]].type > CON_CHAT ? conblend : chatconblend;
-					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*blend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;
+					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*hudblend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;
 				}
 			}
 		}
@@ -926,13 +926,13 @@ namespace hud
 						refs.add(j);
 					}
 				}
-				float blend = hudblend*(full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade);
+				//float blend = full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade;
 				loopvrev(refs)
 				{
 					int len = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
 					float f = full || !confade ? 1.f : clamp(((len+confade)-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f),
 						g = full || conlines[refs[i]].type >= CON_IMPORTANT ? fullconblend : conblend;
-					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*blend*f*g), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
+					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*hudblend*f*g), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
 				}
 			}
 			if(commandmillis > 0)
@@ -1680,7 +1680,7 @@ namespace hud
 				if(uimillis > 0) a = 1.f-a;
 				else a += (1.f-uifadeamt);
 				loopi(3) if(a < colour[i]) colour[i] = a;
-				if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
+				//if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
 			}
 			if(!noview)
 			{
@@ -1724,11 +1724,11 @@ namespace hud
 
 		if(noview) drawbackground(hudwidth, hudsize);
 		else if(showhud && client::ready() && fade > 0) drawheadsup(hudwidth, hudsize, fade, gap, inv, br, bs, bx, by);
-		if(showconsole)
+		if(UI::ready && showconsole)
 		{
-			drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudsize, gap, gap, hudwidth-gap*2, fade);
+			drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudsize, gap, gap, hudwidth-gap*2);
 			if(showconsole >= 2 && !noview && !progressing)
-				drawconsole(2, hudwidth, hudsize, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap : (bs-gap)*2, fade);
+				drawconsole(2, hudwidth, hudsize, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap : (bs-gap)*2);
 		}
 
 		glDisable(GL_BLEND);

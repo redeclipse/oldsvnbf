@@ -703,7 +703,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 				resetmap(false);
 				hdr = newhdr;
-				progress(0, "please wait...");
+				progress(0, "please wait..");
 				maptype = MAP_BFGZ;
 
 				if(hdr.version <= 24) copystring(hdr.gameid, "bfa", 4); // all previous maps were bfa-fps
@@ -870,7 +870,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 				resetmap(false);
 				hdr = newhdr;
-				progress(0, "please wait...");
+				progress(0, "please wait..");
 				maptype = MAP_OCTA;
 
 				strncpy(hdr.head, ohdr.head, 4);
