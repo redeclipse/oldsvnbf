@@ -39,8 +39,7 @@ namespace hud
 		}
 
 		IVARP(autoshowscores, 0, 2, 3); // 1 = when dead, 2 = also in spectv, 3 = and in waittv too
-		IVARP(showscoreswait, 0, 1, 1); // this uses spawndelay instead
-		IVARP(showscoresdelay, 0, 3000, INT_MAX-1); // otherwise use a static timespan
+		IVARP(showscoresdelay, 0, 0, INT_MAX-1); // otherwise use a static timespan
 		IVARP(showscoresinfo, 0, 1, 1);
 		IVARP(highlightscore, 0, 1, 1);
 
@@ -63,10 +62,10 @@ namespace hud
 		{
 			if(!scoresoff && !scoreson && !shownscores && autoshowscores() && (game::player1->state == CS_DEAD || (autoshowscores() >= (game::player1->state == CS_SPECTATOR ? 2 : 3) && game::tvmode())))
 			{
-				if((!showscoresdelay() && !showscoreswait()) || game::tvmode()) return true;
+				if(game::tvmode()) return true;
 				else if(game::player1->state == CS_DEAD)
 				{
-					int delay = showscoreswait() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay();
+					int delay = !showscoresdelay() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay();
 					if(!delay || lastmillis-game::player1->lastdeath > delay) return true;
 				}
 			}
@@ -285,68 +284,58 @@ namespace hud
 				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
 				g.space(1);
 				g.pushlist();
-				g.pushfont("super");
-				g.textf("%s", 0xFFFFFF, NULL, msg);
-				g.popfont();
+				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();
 				g.space(2);
-				SEARCHBINDCACHE(attackkey)("attack", 0);
+				SEARCHBINDCACHE(attackkey)("action 0", 0);
+				g.pushfont("sub");
 				if(delay || m_story(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
 					if(!m_story(game::gamemode))
 					{
-						g.pushfont("emphasis");
 						if(m_duke(game::gamemode, game::mutators))
 							g.textf("Queued for new round", 0xFFFFFF, NULL);
 						else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
-						g.popfont();
 					}
 					g.poplist();
 					if(game::player1->state != CS_WAITING && lastmillis-game::player1->lastdeath > 500)
-					{
-						g.pushfont("sub");
 						g.textf("Press \fs\fc%s\fS to look around", 0xFFFFFF, NULL, attackkey);
-						g.popfont();
-					}
 				}
 				else
 				{
-					g.pushfont("emphasis");
 					g.textf("Ready to respawn", 0xFFFFFF, NULL);
-					g.popfont();
 					g.poplist();
-					if(game::player1->state != CS_WAITING)
-					{
-						g.pushfont("sub");
-						g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
-						g.popfont();
-					}
+					if(game::player1->state != CS_WAITING) g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
 				}
 				if(game::player1->state == CS_WAITING)
 				{
 					SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
-					g.pushfont("default");
 					g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, waitmodekey, game::tvmode() ? "look around" : "observe");
-					g.popfont();
 				}
 				if(m_arena(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(arenakey)("showgui arena", 0);
-					g.pushfont("default");
 					g.textf("Press \fs\fc%s\fS to change arena weapon", 0xFFFFFF, NULL, arenakey);
-					g.popfont();
 				}
+				g.popfont();
 			}
 			else if(game::player1->state == CS_SPECTATOR)
 			{
 				g.space(1);
-				g.pushfont("super");
-				g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating");
-				g.popfont();
+				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating"); g.popfont();
 				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 				g.pushfont("sub");
 				g.textf("Press \fs\fc%s\fS to play", 0xFFFFFF, NULL, speconkey);
 				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
 				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "look around" : "observe");
+				g.popfont();
+			}
+			else
+			{
+				g.space(1);
+				g.pushfont("super");
+				if(m_team(game::gamemode, game::mutators))
+					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+				else g.textf("Free for All", 0xFFFFFF, NULL);
 				g.popfont();
 			}
 			SEARCHBINDCACHE(scoreboardkey)("showscores", 1);
@@ -357,48 +346,20 @@ namespace hud
 			g.textf("Double-tap to keep the window open", 0xFFFFFF, NULL);
 			g.poplist();
 			g.popfont();
+			g.poplist();
+			g.poplist();
 			if(game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
 			{
 				float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
 					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
-
 				g.space(1);
-				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio", 0xFFFFFF, NULL,
+				g.pushfont("sub");
+				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio, \fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL,
 					game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
-					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio);
-				g.textf("\fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL, game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
-
-				if(m_story(game::gamemode))
-				{
-					int pen, score = 0;
-
-					g.space(1);
-					pen = (lastmillis-game::maptime)/1000;
-					score += pen;
-					if(pen)
-						g.textf("time taken: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
-
-					pen = game::player1->deaths*60;
-					score += pen;
-					if(pen)
-						g.textf("penalty for \fs\fg%d\fS deaths: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
-
-					pen = 100-accuracy;
-					score += pen;
-					if(pen)
-						g.textf("penalty for missed shots: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", pen);
-
-					defformatstring(aname)("bestscore_%s", mapname);
-					const char *bestsc = getalias(aname);
-					int bestscore = *bestsc ? atoi(bestsc) : score;
-					if(score<bestscore) bestscore = score;
-					defformatstring(nscore)("%d", bestscore);
-					alias(aname, nscore);
-					g.textf("SCORE: \fs\fg%d\fS second(s), best: \fs\fg%d\fS second(s)", 0xFFFFFF, "info", score, bestscore);
-				}
+					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio,
+					game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+				g.popfont();
 			}
-			g.poplist();
-			g.poplist();
 			g.space(1);
 			loopk(numgroups)
 			{
