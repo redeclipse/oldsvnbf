@@ -60,7 +60,8 @@ namespace ai
 	bool weaprange(gameent *d, int weap, bool alt, float dist)
 	{
 		if(weaptype[weap].extinguish[alt ? 1 : 0] && d->inliquid) return false;
-		float mindist = weaptype[weap].explode[alt ? 1 : 0] ? weaptype[weap].explode[alt ? 1 : 0] : d->radius*3, maxdist = weaptype[weap].maxdist[alt ? 1 : 0] ? weaptype[weap].maxdist[alt ? 1 : 0] : hdr.worldsize;
+		float mindist = weaptype[weap].explode[alt ? 1 : 0] ? weaptype[weap].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? d->radius*2 : 0),
+			maxdist = weaptype[weap].maxdist[alt ? 1 : 0] ? weaptype[weap].maxdist[alt ? 1 : 0] : hdr.worldsize;
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
@@ -80,6 +81,7 @@ namespace ai
 		if(d->skill <= 100 && !rnd(d->skill*10)) return true; // random margin of error
 		if(weaprange(d, d->weapselect, alt, dist))
 		{
+			if(d->weapselect == WEAP_MELEE) return true;
 			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[alt ? 1 : 0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
@@ -255,7 +257,7 @@ namespace ai
 			gameent *t = NULL, *e = NULL;
 			vec dp = d->headpos(), tp(0, 0, 0);
 			bool insight = false, tooclose = false;
-			float mindist = guard*guard;
+			float mindist = d->weapselect != WEAP_MELEE ? guard*guard : 0;
 			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 			{
 				bool alt = altfire(d, e);
@@ -323,7 +325,8 @@ namespace ai
 	{
 		if(e && targetable(d, e, true))
 		{
-			if(pursue) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(pursue || (d->weapselect == WEAP_MELEE && (b.type != AI_S_PURSUE || b.targtype == AI_T_PLAYER)) || (b.type == AI_S_INTEREST && b.targtype == AI_T_NODE))
+				d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -686,7 +689,8 @@ namespace ai
 						bool alt = altfire(d, e);
 						if(aitype[d->aitype].maxspeed)
 						{
-							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : NEARDIST, maxdist = weaptype[d->weapselect].maxdist[alt ? 1 : 0] ? weaptype[d->weapselect].maxdist[alt ? 1 : 0] : FARDIST;
+							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? NEARDIST : 0),
+								maxdist = weaptype[d->weapselect].maxdist[alt ? 1 : 0] ? weaptype[d->weapselect].maxdist[alt ? 1 : 0] : FARDIST;
 							return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
 						}
 						else
@@ -847,7 +851,7 @@ namespace ai
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
 		}
-		else if(hunt(d, b))
+		else if(hunt(d, b, d->weapselect != WEAP_MELEE ? 0 : 2))
 		{
 			game::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
 			d->ai->lasthunt = lastmillis;
@@ -872,22 +876,27 @@ namespace ai
 		bool enemyok = e && targetable(d, e, true);
 		if(!enemyok || d->skill > 70)
 		{
-			e = game::intersectclosest(dp, d->ai->target, d);
-			if(!targetable(d, e, true))
-				e = enemyok ? game::getclient(d->ai->enemy) : NULL;
+			gameent *f = game::intersectclosest(dp, d->ai->target, d);
+			if(!targetable(d, f, true) && !enemyok) e = NULL;
 		}
 		if(e && e->state == CS_ALIVE)
 		{
 			bool alt = altfire(d, e);
 			vec ep = getaimpos(d, e, alt);
+			float yaw, pitch;
+			game::getyawpitch(dp, ep, yaw, pitch);
+			game::fixrange(yaw, pitch);
 			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime((d->skill*50)+1000),
-				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime(skmod);
+				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime(skmod), targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
+			if(d->weapselect == WEAP_MELEE && targeted)
+			{
+				d->ai->spot = e->feetpos();
+				game::getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
+				b.idle = 0; d->ai->dontmove = false; insight = true;
+			}
 			if(insight) d->ai->enemyseen = lastmillis;
 			if(b.idle || insight || hasseen)
 			{
-				float yaw, pitch;
-				game::getyawpitch(dp, ep, yaw, pitch);
-				game::fixrange(yaw, pitch);
 				float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
 				if(b.idle == 1)
 				{
@@ -899,8 +908,8 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if(insight || quick)
 				{
-					if(!d->ai->becareful && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)) &&
-						hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)))
+					bool careful = d->weapselect != WEAP_MELEE ? d->ai->becareful : false;
+					if(!careful && targeted && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 					{
 						d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
 						d->ai->lastaction = d->actiontime[alt ? AC_ALTERNATE : AC_ATTACK] = lastmillis;
