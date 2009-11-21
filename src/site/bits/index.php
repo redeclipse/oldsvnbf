@@ -3,7 +3,7 @@
 	$app['siteblurb'] = "It's Bloody Fun!";
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
-	$app['sitevideo'] = "http://www.youtube.com/v/DHNXAwVXF8g&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
+	$app['sitevideo'] = "http://www.youtube.com/v/uKnLsAiCVLk&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['sitenotice'] = array(
 		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for <a href="/download/windows">Windows</a>, <a href="/download/linux">Linux/BSD</a>, <a href="/download/macosx">Mac OSX</a>, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge. If you\'re an Ubuntu user, you might like to use the <a href="/playdeb">easy-to-install package available on PlayDeb.net</a>.',
 		'about' => 'The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
@@ -16,9 +16,13 @@
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
 	$app['sitemiddle'] = "/bits/middle.png";
-	$app['siteaddname'] = "Built on Cube Engine 2";
-	$app['siteaddurl'] = "http://www.cubeengine.com/";
-	$app['siteaddlogo'] = "/bits/logo_c2.png";
+	$app['siterightname'] = "Built on Cube Engine 2";
+	$app['siterighturl'] = "http://www.cubeengine.com/";
+	$app['siterightlogo'] = "/bits/logo_c2.png";
+	$app['sitecopyright'] = array(
+		'bf' => 'Blood Frontier, Copyright (C) 2006-2009 Anthony Cord, Quinton Reeves, Lee Salzman',
+		'c2' => 'Cube Engine 2, Copyright (C) 2001-2009 Wouter van Oortmerssen, Lee Salzman, Mike Dysart, Robert Pointon, and Quinton Reeves'
+	);
 
 	$app['sfproject'] = "bloodfrontier";
 	$app['sfgroupid'] = 198419;
@@ -101,7 +105,7 @@
 			<div id="header">
 				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" title="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
 				<img src="<?php echo $app['sitemiddle']; ?>" alt="<?php echo $app['siteblurb']; ?>" title="<?php echo $app['siteblurb']; ?>" width="323" height="143" border="0" />
-				<a href="<?php echo $app['siteaddurl']; ?>"><img src="<?php echo $app['siteaddlogo']; ?>" alt="<?php echo $app['siteaddname']; ?>" title="<?php echo $app['siteaddname']; ?>" width="193" height="143" border="0" /></a>
+				<a href="<?php echo $app['siterighturl']; ?>"><img src="<?php echo $app['siterightlogo']; ?>" alt="<?php echo $app['siterightname']; ?>" title="<?php echo $app['siterightname']; ?>" width="193" height="143" border="0" /></a>
 			</div>
 			<div id="page">
 				<div id="links"><?php echo $app['navbar']; ?></div>
@@ -135,8 +139,8 @@
 					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
 				<div id="video">
-					<div id="youtube">
-						<object width="480" height="385" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
+					<div id="player">
+						<object width="500" height="308" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
 							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
 							<param name="allowscriptaccess" value="always" />
 							<param name="allowFullScreen" value="true" />
@@ -144,15 +148,8 @@
 					</div>
 					<div id="subtext" align="center">
 						<h2><?php echo $app['sitename']; ?></h2>
-						<h3><?php echo $app['siteblurb']; ?></h3>
+						<h3><i><?php echo $app['siteblurb']; ?></i></h3>
 						<p><?php echo $app['siteinfo']; ?></p>
-						<p>
-							<a href="/bits/ss01.jpg"><img src="/bits/ss01t.jpg" alt="Screenshot 01" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss02.jpg"><img src="/bits/ss02t.jpg" alt="Screenshot 02" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss03.jpg"><img src="/bits/ss03t.jpg" alt="Screenshot 03" width="85" height="53" border="0" /></a>
-							<a href="/bits/ss04.jpg"><img src="/bits/ss04t.jpg" alt="Screenshot 04" width="85" height="53" border="0" /></a>
-						</p>
-						<p><a href="/gallery">View Gallery</a></p>
 					</div>
 				</div>
 			</div>
@@ -166,8 +163,9 @@
 <?php			} ?>
 				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!
 				<div id="copyright">
-					<p>Blood Frontier, Copyright (C) 2006-2009 Anthony Cord, Quinton Reeves, Lee Salzman</p>
-					<p>Cube Engine 2, Copyright (C) 2001-2009 Wouter van Oortmerssen, Lee Salzman, Mike Dysart, Robert Pointon, and Quinton Reeves</p>
+<?php				foreach ($app['sitecopyright'] as $key => $targ) {
+						echo "<p>" . $targ . "</p>";
+					} ?>
 				</div>
 			</div>
 		</div>

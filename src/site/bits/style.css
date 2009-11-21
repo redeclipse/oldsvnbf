@@ -160,7 +160,7 @@ body {
 	text-decoration: none;
 }
 #footer {
-	font-size: 14px;
+	font-size: 16px;
 	color: #FFFFFF;
 	background: url(/bits/bg_footer.png) no-repeat center top;
 	margin: 0px;
@@ -182,13 +182,13 @@ body {
 	text-decoration: underline;
 }
 #copyright {
-	font-size: 11px;
-	color: #FFFFFF;
+	font-size: 10px;
+	color: #999999;
 	padding: 24px 0px 16px 0px;
 }
 #copyright p {
 	margin: 0px;
-	padding: 4px 0px 0px 0px;
+	padding: 4px 0px 0px 4px;
 }
 #sflogo {
 	margin: 0px 32px;
@@ -249,24 +249,25 @@ body {
 	margin: 0px;
 	padding: 0px;
 	float: left;
-	height: 469px;
+	height: 380px;
 	width: 738px;
 }
 #video object {
 	margin: 0px;
 	padding: 0px;
 }
-#youtube {
+#player {
 	margin: 0px;
-	padding: 40px 0px 0px 19px;
+	padding: 30px 0px 0px 10px;
 	float: left;
-	height: 385px;
-	width: 480px;
+	height: 308px;
+	width: 500px;
 }
 #subtext {
+	font-size: 11px;
 	color: #FFFFFF;
 	margin: 0px;
-	padding: 0px 30px 0px 0px;
+	padding: 18px 30px 0px 0px;
 	float: right;
 	width: 180px;
 }
@@ -277,7 +278,7 @@ body {
 }
 #subtext p {
 	width: 180px;
-	margin: 0px 0px 5px;
+	margin: 8px 0px 5px 0px;
 	padding: 0px;
 	float: right;
 	display: block;
@@ -289,7 +290,7 @@ body {
 	padding: 0px;
 }
 #subtext h2 {
-	font-size: 16px;
+	font-size: 22px;
 	font-weight: bold;
 	margin: 0px;
 	padding: 5px 0px 0px 0px;
@@ -299,7 +300,7 @@ body {
 	display: block;
 }
 #subtext h3 {
-	font-size: 14px;
+	font-size: 16px;
 	font-weight: bold;
 	margin: 0px;
 	padding: 0px 0px 5px 0px;
