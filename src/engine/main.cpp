@@ -30,7 +30,7 @@ void showcursor(bool show)
 void setcaption(const char *text)
 {
     static string caption = "";
-	defformatstring(newcaption)("%s v%.2f %s%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
+	defformatstring(newcaption)("%s v%.2f (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, text ? ": " : "", text ? text : "");
     if(strcmp(caption, newcaption))
     {
         copystring(caption, newcaption);

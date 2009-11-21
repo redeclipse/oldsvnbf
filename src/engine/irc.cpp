@@ -347,7 +347,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 							ircprintf(n, 4, g ? w[g+1] : NULL, "\fr%s requests: %s %s", user[0], q, r);
 
 							if(!strcasecmp(q, "VERSION"))
-								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f %s IRC interface, %s %s\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, ENG_BLURB, ENG_URL);
+								ircsend(n, "NOTICE %s :\001VERSION %s v%.2f (%s), %s %s\001", user[0], ENG_NAME, float(ENG_VERSION)/100.f, ENG_RELEASE, ENG_BLURB, ENG_URL);
 							else if(!strcasecmp(q, "PING")) // eh, echo back
 								ircsend(n, "NOTICE %s :\001PING %s\001", user[0], r);
 						}
