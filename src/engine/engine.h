@@ -3,12 +3,12 @@
 
 #include "cube.h"
 
-#define ENG_VERSION			84
+#define ENG_VERSION			85
 #define ENG_NAME			"Blood Frontier"
-#define ENG_RELEASE			"Development"
+#define ENG_RELEASE			"Beta 2"
 #define ENG_URL				"www.bloodfrontier.com"
 #define ENG_BLURB			"It's bloody fun!"
-#define ENG_DEVEL			true
+#define ENG_DEVEL			false
 
 #define ENG_SERVER_PORT		28795
 #define ENG_QUERY_PORT		28796
