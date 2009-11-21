@@ -5,7 +5,7 @@ FVARP(grassstep, 0.5, 1, 8);
 FVARP(grasstaper, 0, 0.1, 1);
 
 VAR(dbggrass, 0, 0, 1);
-VARA(grassdist, 64, 512, 4096);
+VARP(grassdist, 0, 256, 10000);
 VARW(grassheight, 1, 4, 64);
 
 struct grasswedge
@@ -213,7 +213,7 @@ static inline int comparegrassgroups(const grassgroup *x, const grassgroup *y)
 
 void generategrass()
 {
-    if(!grass) return;
+    if(!grass || !grassdist) return;
 
 	checkgrass();
 
@@ -241,7 +241,7 @@ void generategrass()
 
 void rendergrass()
 {
-    if(!grass || grassgroups.empty() || dbggrass) return;
+    if(!grass || !grassdist || grassgroups.empty() || dbggrass) return;
 
 	checkgrass();
 
