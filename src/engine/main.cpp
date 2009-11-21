@@ -60,6 +60,11 @@ void cleanup()
 {
     recorder::stop();
 	cleanupserver();
+#ifdef WIN32
+	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 1, NULL, 0);
+	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, 1, NULL, 0);
+	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, 1, NULL, 0);
+#endif
 	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
     SDL_WM_GrabInput(SDL_GRAB_OFF);
@@ -949,6 +954,11 @@ int main(int argc, char **argv)
 	conoutf("loading video misc..");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
+#ifdef WIN32
+	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, NULL, 0);
+	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, 0, NULL, 0);
+	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, 0, NULL, 0);
+#endif
 	keyrepeat(false);
 	setcaption("please wait..");
 	eastereggs();
