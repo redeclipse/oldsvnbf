@@ -2,6 +2,7 @@
 // main.cpp: initialisation & main loop
 
 #include "engine.h"
+#include <signal.h>
 
 SDL_Surface *screen = NULL;
 SDL_Cursor *scursor = NULL, *ncursor = NULL;
@@ -56,15 +57,20 @@ void inputgrab(bool on)
 VARF(grabinput, 0, 0, 1, inputgrab(grabinput!=0));
 VARP(autograbinput, 0, 1, 1);
 
+void setscreensaver(bool active)
+{
+#ifdef WIN32
+	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, active ? 1 : 0, NULL, 0);
+	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, active ? 1 : 0, NULL, 0);
+	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, active ? 1 : 0, NULL, 0);
+#endif
+}
+
 void cleanup()
 {
     recorder::stop();
 	cleanupserver();
-#ifdef WIN32
-	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 1, NULL, 0);
-	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, 1, NULL, 0);
-	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, 1, NULL, 0);
-#endif
+	setscreensaver(true);
 	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
     SDL_WM_GrabInput(SDL_GRAB_OFF);
@@ -89,18 +95,16 @@ void quit()					 // normal exit
 	exit(EXIT_SUCCESS);
 }
 
+volatile int errors = 0;
 void fatal(const char *s, ...)    // failure exit
 {
-    static int errors = 0;
-    errors++;
-
-    if(errors <= 2) // print up to one extra recursive error
+    if(++errors <= 2) // print up to one extra recursive error
     {
-        defvformatstring(msg,s,s);
-        printf("%s\n", msg);
-
+        defvformatstring(msg, s, s);
+        fprintf(stderr, "%s\n", msg);
         if(errors <= 1) // avoid recursion
         {
+			setscreensaver(true);
             if(SDL_WasInit(SDL_INIT_VIDEO))
             {
                 showcursor(true);
@@ -108,13 +112,22 @@ void fatal(const char *s, ...)    // failure exit
                 SDL_SetGamma(1, 1, 1);
             }
             #ifdef WIN32
-                MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
+			MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
             SDL_Quit();
         }
     }
-
     exit(EXIT_FAILURE);
+}
+
+volatile bool fatalsig = false;
+void fatalsignal(int signum)
+{
+    if(!fatalsig)
+    {
+    	fatalsig = true;
+    	fatal("Received fatal signal %d", signum);
+    }
 }
 
 int initing = NOT_INITING;
@@ -954,13 +967,23 @@ int main(int argc, char **argv)
 	conoutf("loading video misc..");
 	ncursor = SDL_GetCursor();
 	showcursor(false);
-#ifdef WIN32
-	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, 0, NULL, 0);
-	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, 0, NULL, 0);
-	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, 0, NULL, 0);
-#endif
+	setscreensaver(false);
 	keyrepeat(false);
 	setcaption("please wait..");
+
+    signal(SIGINT, fatalsignal);
+    signal(SIGILL, fatalsignal);
+    signal(SIGABRT, fatalsignal);
+    signal(SIGFPE, fatalsignal);
+    signal(SIGSEGV, fatalsignal);
+    signal(SIGTERM, fatalsignal);
+#if !defined(WIN32) && !defined(__APPLE__)
+    signal(SIGQUIT, fatalsignal);
+    signal(SIGKILL, fatalsignal);
+    signal(SIGPIPE, fatalsignal);
+    signal(SIGALRM, fatalsignal);
+    signal(SIGSTOP, fatalsignal);
+#endif
 	eastereggs();
 
 	conoutf("loading gl..");
