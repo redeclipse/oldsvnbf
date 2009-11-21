@@ -230,7 +230,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
 			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 35, 20 },		{ 125, 125 },	0,				{ 100, 100 },
-			1,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
+			1,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 0, 0 },
 			{ IMPACT_PLAYER, IMPACT_PLAYER },
 			{ true, true },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 1 },				{ 0, 0 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 0, 0 },
@@ -240,7 +240,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 3000, 3000 },		0,			{ 2000, 2000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 5, 5 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 10, 10 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, true },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 10, 10 },
@@ -280,7 +280,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
-			0,		{ 22, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 5, 3 },
+			0,		{ 22, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 6, 2 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,	false,	{ true, false },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 18, 48 },			{ 0, 0 },
@@ -290,7 +290,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 20, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 4, 2 },
+			0,		{ 20, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 2, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
@@ -300,7 +300,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
 			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 225, 225 },			3000,	{ 3000, 3000 },
-			100,	{ 68, 68 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 2 },
+			100,	{ 68, 68 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 78, 78 },		{ 2, 2 },			{ 0, 0 },

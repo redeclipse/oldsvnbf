@@ -1477,8 +1477,9 @@ namespace game
 			else if(maptime < 0)
 			{
 				maptime = lastmillis;
-				if(m_lobby(gamemode)) smartmusic(true, false);
-				else if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
+				//if(m_lobby(gamemode)) smartmusic(true, false);
+				//else
+				if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
 				else musicdone(false);
 				RUNWORLD("on_start");
 				return;

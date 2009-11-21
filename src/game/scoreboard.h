@@ -89,7 +89,7 @@ namespace hud
 				if(!scoreson && on) menustart = starttime();
 				scoresoff = !onauto;
 				scoreson = on;
-				if(interm)
+				if(m_play(game::gamemode) && interm)
 				{
 					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_IMPORTANT, NULL, "\fwchapter complete!");
 					else if(m_fight(game::gamemode) && !m_trial(game::gamemode))
@@ -270,7 +270,7 @@ namespace hud
 			g.pushlist();
 			g.pushfont("sub");
 			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
-			if((m_fight(game::gamemode) || client::demoplayback) && game::minremain >= 0)
+			if((m_play(game::gamemode) || client::demoplayback) && game::minremain >= 0)
 			{
 				if(!game::minremain) g.textf(", intermission", 0xFFFFFF, NULL);
 				else g.textf(", %d %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "minute" : "minutes");
@@ -333,7 +333,10 @@ namespace hud
 			{
 				g.space(1);
 				g.pushfont("super");
-				if(m_team(game::gamemode, game::mutators))
+				if(m_lobby(game::gamemode)) g.textf("Free Roam", 0xFFFFFF, NULL);
+				else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
+				else if(m_story(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
+				else if(m_team(game::gamemode, game::mutators))
 					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 				else g.textf("Free for All", 0xFFFFFF, NULL);
 				g.popfont();
@@ -348,7 +351,7 @@ namespace hud
 			g.popfont();
 			g.poplist();
 			g.poplist();
-			if(game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
+			if(m_play(game::gamemode) && game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
 			{
 				float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
 					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
