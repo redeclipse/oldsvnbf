@@ -48,7 +48,7 @@ namespace game
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 0.1f, 1000);
-	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/trial, 2 = tv always
+	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
 	FVARP(waittvspeed, 0, 0.2f, 1000);
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
@@ -229,32 +229,15 @@ namespace game
 	{
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
-			case CS_SPECTATOR: if(specmode == 1) return true; break;
-			case CS_WAITING:
-				if((!player1->lastdeath || lastmillis-player1->lastdeath >= 500) && waitmode >= (m_trial(gamemode) || m_duke(gamemode, mutators) ? 1 : 2))
-					return true;
-				break;
+			case CS_SPECTATOR: if(specmode) return true; break;
+			case CS_WAITING: if(waitmode && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500)) return true; break;
 			default: break;
 		}
 		return false;
 	}
 
-	ICOMMAND(specmodeswitch, "", (), {
-		switch(specmode)
-		{
-			case 0: default: specmode = 1; break;
-			case 1: specmode = 0; break;
-		}
-	});
-	ICOMMAND(waitmodeswitch, "", (), {
-		bool alternate = m_trial(gamemode) || m_duke(gamemode, mutators);
-		switch(waitmode)
-		{
-			case 0: default: waitmode = alternate ? 1 : 2; break;
-			case 1: waitmode = alternate ? 0 : 2; break;
-			case 2: waitmode = 0; break;
-		}
-	});
+	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1);
+	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1);
 
     bool allowmove(physent *d)
     {
