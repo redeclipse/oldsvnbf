@@ -1600,17 +1600,17 @@ void makeparticle(const vec &o, vector<int> &attr)
 		{
             float radius = attr[1] ? float(attr[1])/100.0f : 1.5f,
                   height = attr[2] ? float(attr[2])/100.0f : radius*3;
-            regularflame(PART_FLAME, o, radius, height, attr[3] ? attr[3] : 0xF05010, 3, attr[4] > 0 ? attr[4]/2 : 500, 2.0f, -5, 0, 30);
-            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 4.0f*min(radius, height)), radius, height, 0x101008, 1, attr[4] > 0 ? attr[4] : 1000, 2.0f, -10, 0, 30);
+            regularflame(PART_FLAME, o, radius, height, attr[3] ? attr[3] : 0xF05010, 3, attr[4] > 0 ? attr[4]/2 : 500, 2.0f, 1, -5, 0, 30);
+            regularflame(PART_SMOKE, vec(o.x, o.y, o.z + 2.f*min(radius, height)), radius, height, 0x101008, 1, attr[4] > 0 ? attr[4] : 1000, 2.0f, 1, -10, 0, 30);
 			break;
 		}
 		case 1: //smoke vent - <dir>
-			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr[1], rnd(10)), 2.4f, -20);
+			regularsplash(PART_SMOKE, 0x897661, 2, 1, 200,  offsetvec(o, attr[1], rnd(10)), 2.4f, 1, -20);
 			break;
 		case 2: //water fountain - <dir>
 		{
 			int color = (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]);
-			regularsplash(PART_SPARK, color, 10, 4, 200, offsetvec(o, attr[1], rnd(10)), 0.6f, 10);
+			regularsplash(PART_SPARK, color, 10, 4, 200, offsetvec(o, attr[1], rnd(10)), 0.6f, 1, 10);
 			break;
 		}
 		case 3: //fire ball - <size> <rgb>
