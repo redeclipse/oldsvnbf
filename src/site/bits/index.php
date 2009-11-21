@@ -4,6 +4,10 @@
 	$app['siterelver'] = "v0.80 (Beta 1)";
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/uKnLsAiCVLk&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
+	$app['sitevidlo'] = array (
+		'watch' => 'Watch this video on <a href="http://www.youtube.com/watch?v=uKnLsAiCVLk">Youtube</a>, <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a>, or download the MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a>, <a href="/bits/bfb2_hifi.mp4">Hi-fi</a>.',
+		'creds' => 'Created with <a href="http://animoto.com/">Animoto</a>, the end of slideshows! Proud affiliate of Blood Frontier.'
+	);
 	$app['sitenotice'] = array(
 		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for <a href="/download/windows">Windows</a>, <a href="/download/linux">Linux/BSD</a>, <a href="/download/macosx">Mac OSX</a>, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge. If you\'re an Ubuntu user, you might like to use the <a href="/playdeb">easy-to-install package available on PlayDeb.net</a>.',
 		'about' => 'The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
@@ -139,6 +143,11 @@
 					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
 				<div id="video">
+					<div id="subtext" align="center">
+						<h2><?php echo $app['sitename']; ?></h2>
+						<h3><i><?php echo $app['siteblurb']; ?></i></h3>
+						<p><?php echo $app['siteinfo']; ?></p>
+					</div>
 					<div id="player">
 						<object width="500" height="308" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
 							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
@@ -146,10 +155,10 @@
 							<param name="allowFullScreen" value="true" />
 						</object>
 					</div>
-					<div id="subtext" align="center">
-						<h2><?php echo $app['sitename']; ?></h2>
-						<h3><i><?php echo $app['siteblurb']; ?></i></h3>
-						<p><?php echo $app['siteinfo']; ?></p>
+					<div id="vidlow" align="center">
+<?php					foreach ($app['sitevidlo'] as $key => $targ) {
+							echo "<p>" . $targ . "</p>";
+						} ?>
 					</div>
 				</div>
 			</div>
@@ -162,11 +171,11 @@
 					</div>
 <?php			} ?>
 				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!
-				<div id="copyright">
+			</div>
+			<div id="copyright" align="center">
 <?php				foreach ($app['sitecopyright'] as $key => $targ) {
-						echo "<p>" . $targ . "</p>";
-					} ?>
-				</div>
+					echo "<p>" . $targ . "</p>";
+				} ?>
 			</div>
 		</div>
 	</body>
