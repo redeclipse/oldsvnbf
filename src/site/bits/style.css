@@ -166,7 +166,7 @@ body {
 	margin: 0px;
 	padding: 10px 0px 20px 60px;
 	float: left;
-	height: 44px;
+	height: 16px;
 	width: 760px;
 }
 #footer a {
@@ -184,11 +184,15 @@ body {
 #copyright {
 	font-size: 10px;
 	color: #999999;
-	padding: 24px 0px 16px 0px;
+	margin: 0px;
+	padding: 2px 2px 8px 2px;
+	float: left;
+	height: 32px;
+	width: 760px;
 }
 #copyright p {
 	margin: 0px;
-	padding: 4px 0px 0px 4px;
+	padding: 4px 0px 0px 0px;
 }
 #sflogo {
 	margin: 0px 32px;
@@ -258,31 +262,52 @@ body {
 }
 #player {
 	margin: 0px;
-	padding: 30px 0px 0px 10px;
+	padding: 12px 0px 0px 10px;
 	float: left;
 	height: 308px;
 	width: 500px;
+}
+#vidlow {
+	font-size: 11px;
+	color: #FFFFFF;
+	margin: 0px;
+	padding: 5px 0px 0px 10px;
+	float: left;
+	height: 16px;
+	width: 500px;
+}
+#vidlow p{
+	color: #ffffff;
+	text-decoration: none;
+	margin: 0px;
+	padding: 5px 0px 0px 0px;
+}
+#vidlow a {
+	color: #CC0000;
+	text-decoration: none;
+}
+#vidlow a:visited {
+	color: #CC0000;
+	text-decoration: none;
+}
+#vidlow a:hover {
+	color: #FF0000;
+	text-decoration: underline;
 }
 #subtext {
 	font-size: 11px;
 	color: #FFFFFF;
 	margin: 0px;
-	padding: 18px 30px 0px 0px;
+	padding: 4px 30px 0px 0px;
 	float: right;
 	width: 180px;
-}
-#subtext img {
-	margin: 0px;
-	padding: 5px 5px 0px 0px;
-	float: right;
 }
 #subtext p {
 	width: 180px;
-	margin: 8px 0px 5px 0px;
+	margin: 0px;
 	padding: 0px;
 	float: right;
 	display: block;
-
 }
 #subtext a {
 	color: #999999;
@@ -293,7 +318,7 @@ body {
 	font-size: 22px;
 	font-weight: bold;
 	margin: 0px;
-	padding: 5px 0px 0px 0px;
+	padding: 0px 0px 4px 0px;
 	color: #CC0000;
 	float: right;
 	width: 180px;
@@ -303,7 +328,7 @@ body {
 	font-size: 16px;
 	font-weight: bold;
 	margin: 0px;
-	padding: 0px 0px 5px 0px;
+	padding: 0px 0px 8px 0px;
 	color: #999999;
 	float: right;
 	width: 180px;
