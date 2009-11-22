@@ -2015,22 +2015,22 @@ namespace entities
 			}
 		}
 
-		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, 1, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, 1, fade, 0x000000); }
-		switch(e.type)
+		if(showentdir >= level)
 		{
-			case PLAYERSTART: case CHECKPOINT:
+			#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, 1, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, 1, fade, 0x000000); }
+			switch(e.type)
 			{
-				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour); }
-				break;
-			}
-			case MAPMODEL:
-			{
-				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF); }
-				break;
-			}
-			case SUNLIGHT:
-			{
-				if(showentdir >= level)
+				case PLAYERSTART: case CHECKPOINT:
+				{
+					entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
+					break;
+				}
+				case MAPMODEL:
+				{
+					entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF);
+					break;
+				}
+				case SUNLIGHT:
 				{
 					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10;
 					loopk(9)
@@ -2052,42 +2052,34 @@ namespace entities
 						while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
 						entdirpart(e.o, yaw, pitch, getworldsize()*2, 1, colour);
 					}
+					break;
 				}
-				break;
-			}
-			case ACTOR:
-			{
-				if(showentdir >= level) { entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0xAAAAAA); }
-				break;
-			}
-			case TELEPORT:
-			case CAMERA:
-			{
-				if(showentdir >= level)
+				case ACTOR:
+				{
+					entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0xAAAAAA);
+					break;
+				}
+				case TELEPORT:
+				case CAMERA:
 				{
 					if(e.attrs[0] < 0) { entdirpart(e.o, (lastmillis/5)%360, e.attrs[1], 4.f, 1, 0x00FFFF); }
 					else { entdirpart(e.o, e.attrs[0], e.attrs[1], 8.f, 1, 0x00FFFF); }
+					break;
 				}
-				break;
-			}
-			case PUSHER:
-			{
-				if(showentdir >= level)
+				case PUSHER:
 				{
 					vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]);
 					float mag = dir.magnitude();
 					float yaw = 0.f, pitch = 0.f;
 					vectoyawpitch(dir.normalize(), yaw, pitch);
 					entdirpart(e.o, yaw, pitch, 4.f+mag, 1, 0x00FFFF);
+					break;
 				}
-				break;
+				default: break;
 			}
-			default: break;
 		}
-
-		if(enttype[e.type].links)
-			if(showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6)))
-				renderlinked(e, idx);
+		if(enttype[e.type].links && (showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6))))
+			renderlinked(e, idx);
 	}
 
 	void renderentlight(gameentity &e)
