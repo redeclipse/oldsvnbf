@@ -1,4 +1,8 @@
-Unless otherwise specified, files in this directory are released under the Creative Commons license:
+theme.ogg - Opposing Force (C) 2009 Michael A. "MitaMAN" Poeschl (mitaman1@optonline.net) 02-06-09
+	Exclusive for use in the game Blood Frontier; Redistribution, modification, or repacking outside the context of the game is strictly prohibited.
+	Source material is a combination of original music/sounds/loops performed and recorded by the author, with extracted recordings from the original instrumental band "Chronic Fatigue".
+
+All others files in this directory, unless otherwise specified, are released under the Creative Commons license:
 
 	Attribution-ShareAlike 3.0
 
