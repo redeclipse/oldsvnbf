@@ -5,7 +5,7 @@
 	$app['sitereldate'] = "24th February 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/uKnLsAiCVLk&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['sitevidlo'] = array (
-		'watch' => 'Watch this video on <a href="http://www.youtube.com/watch?v=uKnLsAiCVLk">Youtube</a>, <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a>, or download the MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a>, <a href="/bits/bfb2_hifi.mp4">Hi-fi</a>.',
+		'watch' => 'Watch this video on <a href="http://www.youtube.com/watch?v=uKnLsAiCVLk">YouTube</a>, <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a>, or download the MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a>, <a href="/bits/bfb2_hifi.mp4">Hi-fi</a>.',
 		'creds' => 'Created with <a href="http://animoto.com/">Animoto</a>, the end of slideshows! Proud affiliate of Blood Frontier.'
 	);
 	$app['sitenotice'] = array(
