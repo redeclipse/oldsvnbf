@@ -123,33 +123,6 @@ body {
 	float: left;
 	width: 500px;
 }
-#right {
-	color: #FFFFFF;
-	text-align: center;
-	margin: 0px;
-	padding: 0px 0px 0px 10px;
-	float: left;
-	width: 92px;
-}
-#right form {
-	margin: 0px 0px 10px;
-	padding: 0px;
-	float: left;
-	width: 92px;
-	display: block;
-}
-#right img {
-	float: left;
-	margin: 0px 0px 5px;
-	display: block;
-}
-#right input {
-	margin: 0px;
-	padding: 0px;
-	float: left;
-	display: block;
-	width: 92px;
-}
 #insert {
 	float: left;
 	width: 92px;
@@ -200,16 +173,16 @@ body {
 	padding: 0px;
 }
 #list {
-	font-size: 12px;
+	font-size: 10px;
 	color: #FFFFFF;
 	margin: 0px;
-	padding: 8px 20px 0px 0px;
+	padding: 18px 20px 0px 0px;
 	float: right;
 	width: 140px;
 }
 #list ul {
 	margin: 0px;
-	padding: 0px;
+	padding: 0px 0px 0px 12px;
 	float: left;
 	list-style: none;
 	width: 140px;
@@ -217,7 +190,7 @@ body {
 }
 #list li {
 	margin: 0px;
-	padding: 4px 0px 4px 20px;
+	padding: 0px 0px 4px 20px;
 	float: left;
 	background: url(/bits/bg_li.png) no-repeat left center;
 	display: block;
@@ -238,11 +211,15 @@ body {
 #listdonate {
 	margin: 0px;
 	float: left;
-	padding: 4px 0px 0px 12px;
+	padding: 14px 0px 0px 12px;
+}
+#listdonate form {
+	margin: 0px;
+	padding: 0px 0px 0px 4px;
 }
 #donatemsg {
 	margin: 0px 0px 0px -46px;
-	padding: 4px 0px 0px 4px;
+	padding: 10px 0px 0px 4px;
 	font-size: 10px;
 	font-weight: bold;
 	text-align: center;

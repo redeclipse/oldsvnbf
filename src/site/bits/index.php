@@ -170,7 +170,7 @@
 						</a>
 					</div>
 <?php			} ?>
-				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, <a href="/forums">Get Help</a>, or <a href="/chat">Join In</a> today!
+				<a href="/download">Download</a>, <a href="/wiki">Learn More</a>, or <a href="/chat">Get Help</a> today.
 			</div>
 			<div id="copyright" align="center">
 <?php				foreach ($app['sitecopyright'] as $key => $targ) {
