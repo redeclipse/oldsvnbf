@@ -1983,7 +1983,7 @@ namespace entities
 						vec dir = vec(e.o).sub(f.o).normalize();
 						float angle = max(1, min(90, int(e.attrs[1])));
 						int colour = ((f.attrs[1]/2)<<16)|((f.attrs[2]/2)<<8)|(f.attrs[3]/2);
-						part_cone(f.o, dir, radius, angle, 1, 1, colour);
+						part_cone(f.o, dir, radius, angle, 1, 1, 1, colour);
 						break;
 					}
 					break;
