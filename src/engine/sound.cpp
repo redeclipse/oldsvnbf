@@ -21,7 +21,7 @@ VARF(soundbufferlen, 128, 1024, INT_MAX-1, initwarning("sound configuration", IN
 VARFP(musicvol, 0, 64, 255, changedvol = true);
 VARP(musicfadein, 0, 250, INT_MAX-1);
 VARP(musicfadeout, 0, 5000, INT_MAX-1);
-SVAR(titlemusic, "sounds/loops/title");
+SVAR(titlemusic, "sounds/theme");
 
 void initsound()
 {
