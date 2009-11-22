@@ -40,7 +40,7 @@
 	$app['deftarg'] = "home";
 	$app['defsearch'] = "%22Blood%20Frontier%22";
 
-	$app['targets'] = array('home' => array('name' => 'Home', 'url' => '/', 'alturl' => '', 'nav' => -1, 'redir' => 0));
+	$app['targets'] = array('home' => array('name' => '', 'url' => '/', 'alturl' => '', 'nav' => -1, 'redir' => 0));
 	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'nav' => 1, 'redir' => 1);
 	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/index.php?title=', 'nav' => 1, 'redir' => 1);
@@ -86,7 +86,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
 	<head>
-		<title><?php echo $app['sitename'].": ".($app['targets'][$app['target']]['name'] != "" ? $app['targets'][$app['target']]['name'] : "Welcome"); ?></title>
+		<title><?php echo $app['sitename'].($app['targets'][$app['target']]['name'] != "" ? ": ".$app['targets'][$app['target']]['name'] : ", ".$app['siteblurb']); ?></title>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="shortcut icon" href="<?php echo $app['siteico']; ?>" />
 		<link rel="stylesheet" type="text/css" href="<?php echo $app['sitecss']; ?>" />
