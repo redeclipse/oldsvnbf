@@ -972,7 +972,7 @@ void cleanupmotionblur()
 
 VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
 VARP(motionblurmillis, 1, 5, 1000);
-FVARP(motionblurscale, 0, 1, 2);
+FVARP(motionblurscale, 0, 1, 1);
 
 void addmotionblur()
 {
