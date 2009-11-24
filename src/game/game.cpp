@@ -47,10 +47,12 @@ namespace game
 	VARP(specfov, 1, 120, 179);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
-	FVARP(spectvspeed, 0, 0.1f, 1000);
+	FVARP(spectvspeed, 0, 0.25f, 1000);
+	FVARP(spectvpitch, 0, 1, 1000);
 	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
-	FVARP(waittvspeed, 0, 0.2f, 1000);
+	FVARP(waittvspeed, 0, 0.25f, 1000);
+	FVARP(waittvpitch, 0, 1, 1000);
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
 
@@ -1443,8 +1445,8 @@ namespace game
 			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			else
 			{
-				float speed = isspec ? spectvspeed : waittvspeed;
-				if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, 0.25f);
+				float speed = isspec ? spectvspeed : waittvspeed, scale = isspec ? spectvpitch : waittvpitch;
+				if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, scale);
 			}
 			camera1->resetinterp();
 		}
