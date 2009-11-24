@@ -234,7 +234,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_PLAYER, IMPACT_PLAYER },
 			{ true, true },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 1 },				{ 0, 0 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 0, 0 },
-			{ 6, 6 },		{ 2, 4 },			{ 1000, 2000 },		{ 24, 24 },			1,
+			{ 6, 6 },		{ 2, 4 },			{ 1000, 2000 },		{ 25, 25 },			1,
 			"melee",	"\fd",	"",							"",							""
 	},
 	{
@@ -254,7 +254,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	{ false, false },
 			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
-			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 80, 40 },			6,
+			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 200, 100 },			6,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
@@ -264,7 +264,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ true, true },		{ false, false },
 			{ 0.75f, 0.5f },	{ 30, 30 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 40, 40 },
-			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 200, 300 },		5,
+			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 400, 100 },		5,
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
@@ -294,17 +294,17 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				7,
+			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },			{ 0, 0 },			7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
-			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 225, 225 },			3000,	{ 3000, 3000 },
+			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 250, 250 },			3000,	{ 3000, 3000 },
 			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },	{ true, true },
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 68, 68 },		{ 2, 2 },			{ 0, 0 },
-			{ 1, 1 },		{ 5, 5 },		{ 1000, 750 },		{ 300, 300 },			3,
+			{ 1, 1 },		{ 5, 5 },		{ 1000, 750 },		{ 200, 200 },			3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
@@ -324,7 +324,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	{ true, true },
 			{ 0.35f, 0.35f },	{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 35, 35 },		{ 2, 2 },			{ 0, 0 },
-			{ 2, 2 },		{ 5, 5 },		{ 100, 100 },		{ 500, 500 },			4,
+			{ 2, 2 },		{ 5, 5 },		{ 100, 100 },		{ 200, 200 },			4,
 			"gibs",		"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
 	},
 };

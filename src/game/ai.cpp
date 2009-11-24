@@ -67,11 +67,15 @@ namespace ai
 
 	bool altfire(gameent *d, gameent *e)
 	{
-		if(e)
+		if(e && !weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 		{
-			float dist = e->o.dist(d->o);
-			if(!weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, dist) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
-				return true;
+			switch(d->weapselect)
+			{
+				case WEAP_MELEE: return false; break;
+				case WEAP_SHOTGUN: case WEAP_SMG: if(rnd(d->skill*3) <= d->skill) return false;
+				case WEAP_PISTOL: default: break;
+			}
+			return true;
 		}
 		return false;
 	}
