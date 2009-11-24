@@ -2,8 +2,7 @@
 
 rem set SDL_VIDEO_WINDOW_POS=0,0
 set BF_DIR=.
-set BF_HOME=home
-set BF_OPTIONS=-h%BF_HOME% -rinit.cfg
+set BF_OPTIONS=-r
 
 IF EXIST bin\bfclient.exe (
 	start bin\bfclient.exe %BF_OPTIONS% %* 

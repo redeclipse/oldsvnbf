@@ -756,9 +756,9 @@ bool serveroption(char *opt)
 	switch(opt[1])
 	{
 		case 'k': kidmode = atoi(opt+2); return true;
-		case 'h': printf("Using home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
+		case 'h': printf("set home directory: %s\n", &opt[2]); sethomedir(&opt[2]); return true;
 		case 'o': setsvar("octadir", &opt[2]); return true;
-		case 'p': printf("Adding package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
+		case 'p': printf("add package directory: %s\n", &opt[2]); addpackagedir(&opt[2]); return true;
 		case 'v': setvar("verbose", atoi(opt+2)); return true;
 		case 's':
 		{
@@ -834,11 +834,58 @@ void trytofindocta(bool fallback)
 	}
 }
 
+#ifdef WIN32
+#include <shlobj.h>
+#endif
+
+void setlocations(bool wanthome)
+{
+	addpackagedir("data");
+	extern string homedir;
+	if(wanthome && !homedir[0])
+	{
+#if defined(WIN32)
+		#if 0 // --- not supported by mingw yet ---
+		OSVERSIONINFO ver;
+		if(GetVersionEx((OSVERSIONINFO *)&ver))
+		{
+			if(ver.dwMajorVersion >= 6)
+			{
+				char *dir = NULL;
+				if(SHGetKnownFolderPath(FOLDERID_Games, 0, NULL, dir) == S_OK)
+				{
+					defformatstring(s)("%s\\My Games\\Blood Frontier", dir);
+					sethomedir(s);
+				}
+			}
+			else
+		}
+		#endif
+		mkstring(dir);
+		if(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, dir) == S_OK)
+		{
+			defformatstring(s)("%s\\My Games\\Blood Frontier", dir);
+			sethomedir(s);
+			return;
+		}
+#elif !defined(__APPLE__)
+		const char *dir = getenv("HOME");
+		if(dir && *dir)
+		{
+			defformatstring(s)("%s/.bloodfrontier", dir);
+			sethomedir(s);
+			return;
+		}
+#endif
+		sethomedir("home");
+	}
+}
+
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
-	addpackagedir("data");
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
+	setlocations(false);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);

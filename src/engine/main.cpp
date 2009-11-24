@@ -889,9 +889,6 @@ int main(int argc, char **argv)
 
 	char *initscript = NULL;
 	initing = INIT_RESET;
-
-	addpackagedir("data");
-
 	for(int i = 1; i<argc; i++)
 	{
 		if(argv[i][0]=='-') switch(argv[i][1])
@@ -926,6 +923,7 @@ int main(int argc, char **argv)
 		}
 		else gameargs.add(argv[i]);
 	}
+	setlocations(true);
 
 	initing = NOT_INITING;
 
