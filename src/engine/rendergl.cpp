@@ -531,8 +531,9 @@ void gl_checkextensions()
     if(strstr(exts, "GL_EXT_gpu_shader4") && !avoidshaders)
     {
         // on DX10 or above class cards (i.e. GF8 or RadeonHD) enable expensive features
-        extern int grass, glare, maxdynlights, depthfxsize, depthfxrect, depthfxfilter, blurdepthfx;
+        extern int grass, motionblur, glare, maxdynlights, depthfxsize, depthfxrect, depthfxfilter, blurdepthfx;
         grass = 1;
+        motionblur = 1;
         if(hasOQ)
         {
             waterfallrefract = 1;
@@ -547,10 +548,6 @@ void gl_checkextensions()
             }
         }
     }
-
-    // on DX9 or above class cards with decent performance enable motion blur
-    extern int motionblur;
-    if(hasVP && hasFP && !avoidshaders) motionblur = 1;
 
     GLint val;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
