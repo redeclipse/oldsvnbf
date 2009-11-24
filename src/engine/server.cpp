@@ -845,7 +845,7 @@ void setlocations(bool wanthome)
 	if(wanthome && !homedir[0])
 	{
 #if defined(WIN32)
-		#if 0 // --- not supported by mingw yet ---
+		#ifndef __GNUC__ // not supported by mingw
 		OSVERSIONINFO ver;
 		if(GetVersionEx((OSVERSIONINFO *)&ver))
 		{
@@ -854,13 +854,24 @@ void setlocations(bool wanthome)
 				char *dir = NULL;
 				if(SHGetKnownFolderPath(FOLDERID_Games, 0, NULL, dir) == S_OK)
 				{
-					defformatstring(s)("%s\\My Games\\Blood Frontier", dir);
+					defformatstring(s)("%s\\Blood Frontier", dir);
 					sethomedir(s);
+					DELETEP(dir);
+					return;
 				}
 			}
 			else
+			{
+				mkstring(dir);
+				if(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, dir) == S_OK)
+				{
+					defformatstring(s)("%s\\My Games\\Blood Frontier", dir);
+					sethomedir(s);
+					return;
+				}
+			}
 		}
-		#endif
+		#else
 		mkstring(dir);
 		if(SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, dir) == S_OK)
 		{
@@ -868,6 +879,7 @@ void setlocations(bool wanthome)
 			sethomedir(s);
 			return;
 		}
+		#endif
 #elif !defined(__APPLE__)
 		const char *dir = getenv("HOME");
 		if(dir && *dir)
