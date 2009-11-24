@@ -229,18 +229,18 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 35, 20 },		{ 125, 125 },	0,				{ 100, 100 },
+			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 40, 20 },		{ 125, 125 },	0,				{ 100, 100 },
 			1,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 0, 0 },
 			{ IMPACT_PLAYER, IMPACT_PLAYER },
 			{ true, true },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },		{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 1 },				{ 0, 0 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 0, 0 },
-			{ 6, 6 },		{ 2, 4 },			{ 1000, 2000 },		{ 12, 12 },			1,
+			{ 6, 6 },		{ 2, 4 },			{ 1000, 2000 },		{ 24, 24 },			1,
 			"melee",	"\fd",	"",							"",							""
 	},
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
 			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 3000, 3000 },		0,			{ 2000, 2000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 10, 10 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 16, 16 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, true },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 10, 10 },
@@ -249,7 +249,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 15 },		{ 2500, 2000 },		0,			{ 300, 100 },
+			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 16 },		{ 2500, 2000 },		0,			{ 300, 100 },
 			0,		{ 0, 0 },	{ 20, 40 },		{ 25, 20 },		{ 1, 2 },		{ 2, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	{ false, false },
@@ -289,8 +289,8 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 20, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 2, 1 },
+			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
+			0,		{ 24, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 2, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
@@ -300,16 +300,16 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
 			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 225, 225 },			3000,	{ 3000, 3000 },
-			100,	{ 68, 68 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
+			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },	{ true, true },
-			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 78, 78 },		{ 2, 2 },			{ 0, 0 },
+			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 68, 68 },		{ 2, 2 },			{ 0, 0 },
 			{ 1, 1 },		{ 5, 5 },		{ 1000, 750 },		{ 300, 300 },			3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 1250 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
+			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	{ false, false },
