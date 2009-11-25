@@ -36,17 +36,14 @@ x86_64)
 	MACHINE_SUFFIX=_64
 	;;
 *)
-	if [ ${SYSTEM_SUFFIX} != _native ]
-	then
-		SYSTEM_SUFFIX=_native
-	fi
+	SYSTEM_SUFFIX=
 	MACHINE_SUFFIX=
 	;;
 esac
 
-if [ -x ${BF_BIN}/bfclient_native ]
+if [ -x ${BF_BIN}/bfclient ]
 then
-	SYSTEM_SUFFIX=_native
+	SYSTEM_SUFFIX=
 	MACHINE_SUFFIX=
 fi
 
