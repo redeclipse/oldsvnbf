@@ -12,7 +12,7 @@ namespace projs
 	VARA(maxprojectiles, 32, 256, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
 	VARP(flamerdelay, 1, 100, INT_MAX-1);
-	VARA(flamerlength, 50, 250, INT_MAX-1);
+	VARA(flamerlength, 50, 100, INT_MAX-1);
 	VARP(flamerhint, 0, 1, 1);
 
 	VARP(muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
@@ -485,7 +485,7 @@ namespace projs
 			case WEAP_FLAMER:
 			{
 				part_create(PART_SMOKE_LERP, 100, from, 0x333333, 2, 1, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 50, from, firecols[rnd(FIRECOLOURS)], 1.5f, 1, -15, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 50, from, firecols[rnd(FIRECOLOURS)], 1.5f, 0.75f, -15, 0, d);
 				adddynlight(from, 48, vec(1.1f, 0.3f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
@@ -584,16 +584,11 @@ namespace projs
 					{
 						bool effect = false;
 						float size = weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize;
-						if(flamertrail && lastmillis-proj.lasteffect >= m_speedtime(flamerdelay))
-						{
-							effect = true;
-							proj.lasteffect = lastmillis;
-						}
-						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.5f : 0.4f))<<16)+1)|((int(112*max((1.f-proj.lifespan),0.25f))+1)<<8),
-							len = effect ? max(int(m_speedtime(flamerlength*(proj.flags&HIT_ALT ? 2 : 1))*max(proj.lifespan, 0.1f)), 0) : 0;
-						if(!len) { effect = false; len = 1; }
-						if(flamerhint) part_create(PART_HINT_SOFT, max(len/2, 1), proj.o, 0x120226, size*1.5f, clamp(1.25f-proj.lifespan, 0.5f, 1.f)*(proj.flags&HIT_ALT ? 0.75f : 1.f), -5);
-						part_create(PART_FIREBALL_SOFT, len, proj.o, col, size, clamp(1.25f-proj.lifespan, 0.5f, 1.f), -15);
+						if(flamertrail && lastmillis-proj.lasteffect >= m_speedtime(flamerdelay)) { effect = true; proj.lasteffect = lastmillis; }
+						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.6f : 0.4f))<<16)+1)|((int(112*max((1.f-proj.lifespan),0.25f))+1)<<8),
+							len = effect ? max(int(m_speedtime(flamerlength*(proj.flags&HIT_ALT ? 2 : 1))*max(proj.lifespan, 0.1f)), 1) : 1;
+						if(flamerhint) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, clamp(1.25f-proj.lifespan, 0.5f, 1.f)*(proj.flags&HIT_ALT ? 0.75f : 1.f));
+						part_create(PART_FIREBALL_SOFT, len, proj.o, col, size, clamp(1.25f-proj.lifespan, 0.55f, 0.85f), -15);
 					}
 					break;
 				}
@@ -697,7 +692,7 @@ namespace projs
 					{
 						float res = float(steps-i)/float(steps), size = clamp(proj.radius*(proj.lifesize+0.1f)*res, 0.1f, proj.radius);
 						int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
-						part_create(PART_FIREBALL_SOFT, 1, pos, col, size, clamp(1.25f-proj.lifespan, 0.5f, 1.f), -15);
+						part_create(PART_FIREBALL_SOFT, 1, pos, col, size, clamp(1.5f-proj.lifespan, 0.5f, 1.f), -15);
 						pos.add(dir);
 						if(proj.o.dist(pos) > proj.movement) break;
 					}
@@ -750,16 +745,16 @@ namespace projs
 						{
 							if(proj.weap == WEAP_FLAMER)
 							{
-								part_create(PART_FIREBALL_SOFT, m_speedtime(proj.flags&HIT_ALT ? 500 : 300), proj.o, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 0.5f, -15);
-								part_create(PART_SMOKE_LERP_SOFT, m_speedtime(proj.flags&HIT_ALT ? 750 : 50), proj.o, 0x666666, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 0.5f, -25);
+								part_create(PART_FIREBALL_SOFT, m_speedtime(proj.flags&HIT_ALT ? 650 : 150), proj.o, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 0.5f, -15);
+								part_create(PART_SMOKE_LERP_SOFT, m_speedtime(proj.flags&HIT_ALT ? 750 : 250), proj.o, 0x666666, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 0.5f, -25);
 							}
 							else
 							{
-								int deviation = int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f);
-								loopi(rnd(10)+5)
+								int deviation = int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f);
+								loopi(rnd(15)+5)
 								{
 									vec to(proj.o); loopk(3) to.v[k] += rnd(deviation*2)-deviation;
-									part_create(PART_FIREBALL_SOFT, m_speedtime(1500), to, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 1, -15);
+									part_create(PART_FIREBALL_SOFT, m_speedtime(1500), to, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 0.75f, -15);
 								}
 								part_create(PART_PLASMA_SOFT, m_speedtime(1000), proj.o, 0xDD4400, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
 								game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);

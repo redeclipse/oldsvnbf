@@ -97,7 +97,7 @@ namespace game
 	VARP(bloodfade, 1, 10000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
 	VARP(gibfade, 1, 10000, INT_MAX-1);
-	VARP(fireburnfade, 0, 50, INT_MAX-1);
+	VARP(fireburnfade, 0, 75, INT_MAX-1);
 	FVARP(impulsescale, 0, 1, 1000);
 	VARP(impulsefade, 0, 200, INT_MAX-1);
 
@@ -359,10 +359,10 @@ namespace game
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, 1, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, 1, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, 0.5f, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, 1, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, 0.5f, -15, 0, 5);
 			}
 		}
 	}
@@ -372,7 +372,7 @@ namespace game
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 		{
 			float pc = lastmillis-d->lastfire >= fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
-			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), 1, -15, 0);
+			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), 0.75f, -15, 0);
 		}
 	}
 
