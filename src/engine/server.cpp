@@ -909,8 +909,8 @@ void setlocations(bool wanthome)
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {
+    setlocations(false);
 	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
-	setlocations(false);
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);

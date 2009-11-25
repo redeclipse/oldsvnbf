@@ -376,8 +376,8 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(stencilbits && (config&2)==0) conoutf("\frStencil buffer not supported - disabling");
         if(fsaa>0 && (config&4)==0) conoutf("\fr%dx anti-aliasing not supported - disabling", fsaa);
 #if SDL_VERSION_ATLEAST(1, 2, 11)
-		SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync); // could be forced on
-		conoutf("vsync is %s", actualvsync ? "enabled" : "disabled");
+		if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync) >= 0 && actualvsync >= 0) // could be forced on
+			conoutf("vsync is %s", actualvsync ? "enabled" : "disabled");
 #endif
     }
 
@@ -887,6 +887,8 @@ int main(int argc, char **argv)
 	#endif
 	#endif
 
+    setlocations(true);
+
 	char *initscript = NULL;
 	initing = INIT_RESET;
 	for(int i = 1; i<argc; i++)
@@ -923,7 +925,6 @@ int main(int argc, char **argv)
 		}
 		else gameargs.add(argv[i]);
 	}
-	setlocations(true);
 
 	initing = NOT_INITING;
 
