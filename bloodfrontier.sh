@@ -51,7 +51,7 @@ fi
 if [ -x ${BF_BIN}/bfclient${SYSTEM_SUFFIX}${MACHINE_SUFFIX} ]; 
 then
 	cd ${BF_DATA}
-	exec ${BF_BIN}/bfclient${SYSTEM_SUFFIX}{$MACHINE_SUFFIX} ${BF_OPTIONS} "$@"
+	exec ${BF_BIN}/bfclient${SYSTEM_SUFFIX}${MACHINE_SUFFIX} ${BF_OPTIONS} "$@"
 else
 	echo "Your platform does not have a pre-compiled Blood Frontier client."
 	echo -n "Would you like to build one now? [Yn] "
