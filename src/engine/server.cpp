@@ -833,7 +833,7 @@ void trytofindocta(bool fallback)
 			if(findoctadir(s, true)) return;
 		}
 #elif defined(__APPLE__)
-		#error Please put MacOSX specific code here to find the Sauerbraten directory.
+		#warning Please put MacOSX specific code here to find the Sauerbraten directory.
 #endif
 		const char *tryoctadirs[4] = { // by no means an accurate or definitive list either..
 			"../Sauerbraten", "../sauerbraten", "../sauer",
@@ -863,7 +863,7 @@ void setlocations(bool wanthome)
 			if(ver.dwMajorVersion >= 6)
 			{
 				char *dir = NULL;
-				if(SHGetKnownFolderPath(FOLDERID_Games, 0, NULL, dir) == S_OK)
+				if(SHGetKnownFolderPath(FOLDERID_SavedGames, 0, NULL, dir) == S_OK)
 				{
 					defformatstring(s)("%s\\Blood Frontier", dir);
 					sethomedir(s);
@@ -892,7 +892,7 @@ void setlocations(bool wanthome)
 		}
 		#endif
 #elif defined(__APPLE__)
-		#error Please put MacOSX specific code here to find the personal directory.
+		#warning Please put MacOSX specific code here to find the personal directory.
 #else
 		const char *dir = getenv("HOME");
 		if(dir && *dir)
