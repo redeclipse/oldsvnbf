@@ -2,6 +2,9 @@
 // runs dedicated or as client coroutine
 
 #include "engine.h"
+#ifdef WIN32
+#include <shlobj.h>
+#endif
 
 VAR(version, 1, ENG_VERSION, -1); // for scripts
 int kidmode = 0;
@@ -797,13 +800,14 @@ bool serveroption(char *opt)
 
 bool findoctadir(const char *name, bool fallback)
 {
-	defformatstring(octalogo)("%s/data/default_map_settings.cfg", name);
+	mkstring(s); copystring(s, name); path(s);
+	defformatstring(octalogo)("%s/data/default_map_settings.cfg", s);
 	if(fileexists(findfile(octalogo, "r"), "r"))
 	{
-		conoutf("\fgfound octa directory: %s", name);
-		defformatstring(octadata)("%s/data", name);
-		defformatstring(octapaks)("%s/packages", name);
-		addpackagedir(name, PACKAGEDIR_OCTA);
+		conoutf("\fgfound octa directory: %s", s);
+		defformatstring(octadata)("%s/data", s);
+		defformatstring(octapaks)("%s/packages", s);
+		addpackagedir(s, PACKAGEDIR_OCTA);
 		addpackagedir(octadata, PACKAGEDIR_OCTA);
 		addpackagedir(octapaks, PACKAGEDIR_OCTA);
 		hasoctapaks = fallback ? 1 : 2;
@@ -811,6 +815,7 @@ bool findoctadir(const char *name, bool fallback)
 	}
 	return false;
 }
+
 void trytofindocta(bool fallback)
 {
 	if(!octadir || !*octadir)
@@ -820,7 +825,17 @@ void trytofindocta(bool fallback)
 	}
 	if((!octadir || !*octadir || !findoctadir(octadir, false)) && fallback)
 	{ // user hasn't specifically set it, try some common locations alongside our folder
-		const char *tryoctadirs[4] = { // by no means a definitive list either..
+#if defined(WIN32)
+		mkstring(dir);
+		if(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, dir) == S_OK)
+		{
+			defformatstring(s)("%s\\Sauerbraten", dir);
+			if(findoctadir(s, true)) return;
+		}
+#elif defined(__APPLE__)
+		#error Please put MacOSX specific code here to find the Sauerbraten directory.
+#endif
+		const char *tryoctadirs[4] = { // by no means an accurate or definitive list either..
 			"../Sauerbraten", "../sauerbraten", "../sauer",
 #if defined(WIN32)
 			"/Program Files/Sauerbraten"
@@ -830,13 +845,9 @@ void trytofindocta(bool fallback)
 			"/usr/games/sauerbraten"
 #endif
 		};
-		loopi(4) if(findoctadir(tryoctadirs[i], true)) break;
+		loopi(4) if(findoctadir(tryoctadirs[i], true)) return;
 	}
 }
-
-#ifdef WIN32
-#include <shlobj.h>
-#endif
 
 void setlocations(bool wanthome)
 {
@@ -880,7 +891,9 @@ void setlocations(bool wanthome)
 			return;
 		}
 		#endif
-#elif !defined(__APPLE__)
+#elif defined(__APPLE__)
+		#error Please put MacOSX specific code here to find the personal directory.
+#else
 		const char *dir = getenv("HOME");
 		if(dir && *dir)
 		{
