@@ -3,6 +3,8 @@ CXXFLAGS= -O3 -fomit-frame-pointer
 override CXXFLAGS+= -Wall -fsigned-char
 
 PLATFORM= $(shell uname -s)
+PLATFORM_SUFFIX= _native
+
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include
 
 STRIP=
@@ -164,12 +166,10 @@ ifneq (,$(STRIP))
 endif
 
 install-client: client
-	cp -v bfclient ../bin/bfclient
-	chmod +x ../bin/bfclient ../bloodfrontier.sh
+	cp bfclient ../bin/bfclient$(PLATFORM_SUFFIX)
 
 install-server: server
-	cp -v bfserver ../bin/bfserver
-	chmod +x ../bin/bfserver
+	cp bfserver ../bin/bfserver$(PLATFORM_SUFFIX)
 endif
 
 install: install-client install-server
