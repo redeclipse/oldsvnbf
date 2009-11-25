@@ -2285,7 +2285,10 @@ namespace server
 		}
 	}
 
-	void takeammo(clientinfo *ci, int weap, int amt = 1) {  }
+	void takeammo(clientinfo *ci, int weap, int amt = 1)
+	{
+		if(weap != WEAP_MELEE) ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0);
+	}
 
 	void shotevent::process(clientinfo *ci)
 	{
@@ -2304,21 +2307,17 @@ namespace server
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
 				return;
 			}
-			else
+			else if(gs.weapload[weap] > 0)
 			{
-				if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
-					ci->state.ammo[weap] = max(ci->state.ammo[weap]-(gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]), 0);
+				takeammo(ci, weap, gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 				gs.weapload[weap] = -gs.weapload[weap];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
+			else return;
 		}
-		else if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
-			ci->state.ammo[weap] = max(ci->state.ammo[weap]-weaptype[weap].sub[flags&HIT_ALT ? 1 : 0], 0);
+		else takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], millis);
-		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum,
-			weap, flags, power, from[0], from[1], from[2],
-					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(),
-						ci->clientnum);
+		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum, weap, flags, power, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
 		gs.shotdamage += weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*shots.length();
 		loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
 	}
@@ -2340,12 +2339,13 @@ namespace server
 				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 				return;
 			}
-			else
+			else if(gs.weapload[gs.weapselect] > 0)
 			{
 				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
 				gs.weapload[gs.weapselect] = -gs.weapload[gs.weapselect];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
+			else return;
 		}
 		gs.weapswitch(weap, millis);
 		sendf(-1, 1, "ri3x", SV_WEAPSELECT, ci->clientnum, weap, ci->clientnum);
@@ -2432,12 +2432,13 @@ namespace server
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
 				return;
 			}
-			else
+			else if(gs.weapload[gs.weapselect] > 0)
 			{
 				takeammo(ci, gs.weapselect, gs.weapload[gs.weapselect]);
 				gs.weapload[gs.weapselect] = -gs.weapload[gs.weapselect];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, gs.weapselect, gs.weapload[gs.weapselect], gs.ammo[gs.weapselect]);
 			}
+			else return;
 		}
 		if(!sents[ent].spawned && !(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
