@@ -624,7 +624,7 @@ namespace projs
 					if(!proj.stuck || !taper) proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 80.f);
 					if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f*proj.lifesize, PART_EXPLOSION, 1, 0x225599, 1.f, 0.75f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
-					part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.65f*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
+					part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
 					break;
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
@@ -764,7 +764,7 @@ namespace projs
 						if(!proj.limited)
 						{
 							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 500 : 150), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-							part_create(PART_ELECTRIC_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.65f);
+							part_create(PART_ELECTRIC_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.5f);
 							part_create(PART_SMOKE, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f, 1, -30);
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
 							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.5f, PART_EXPLOSION, m_speedtime(150), 0x225599, 1.f);
