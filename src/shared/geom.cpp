@@ -138,3 +138,13 @@ bool linecylinderintersect(const vec &from, const vec &to, const vec &start, con
     return dist >= 0 && dist <= 1;
 }
 
+vec closestpointcylinder(const vec &center, const vec &start, const vec &end, float radius)
+{
+    vec dir = vec(end).sub(start), relcenter = vec(center).sub(start);
+    float height = relcenter.dot(dir) / dir.squaredlen();
+    vec raddir = vec(relcenter).sub(vec(dir).mul(height));
+    float radlen = raddir.magnitude();
+    if(radlen > radius) raddir.mul(radius/radlen);
+    return dir.mul(clamp(height, 0.0f, 1.0f)).add(start).add(raddir);
+}
+
