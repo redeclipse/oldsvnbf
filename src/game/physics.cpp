@@ -28,7 +28,7 @@ namespace physics
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
-	VARP(impulsedash,		0, 1, 2);			// determines how impulsedash works, 0 = off, 1 = double jump with move, 2 = double tap move
+	VARP(impulsedash,		0, 1, 3);			// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
 	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0;
 
@@ -531,7 +531,7 @@ namespace physics
 				d->turnside = 0;
 				d->resetphys();
 			}
-			if((d->ai || impulsedash) && WILLIMPULSE && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
+			if((d->ai || (impulsedash > 0 && impulsedash < 3)) && WILLIMPULSE && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
 			{
 				float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
 				vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
