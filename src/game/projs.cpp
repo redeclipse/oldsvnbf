@@ -851,7 +851,7 @@ namespace projs
 			{
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.add(vec(dir).mul(proj.radius*0.25f));
+					proj.o.sub(vec(dir).mul(proj.radius*0.125f));
 					proj.stuck = true;
 					return 1;
 				}
@@ -890,7 +890,7 @@ namespace projs
             {
 				if(proj.projcollide&COLLIDE_STICK)
 				{
-					proj.o.add(vec(dir).mul(proj.radius*0.25f));
+					proj.o.sub(vec(dir).mul(proj.radius*0.125f));
 					proj.stuck = true;
 					return 1;
 				}
