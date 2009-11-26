@@ -194,6 +194,7 @@ namespace weapons
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
 		if(offset > 0) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
 		d->totalshots += int(weaptype[d->weapselect].damage[flags&HIT_ALT ? 1 : 0]*damagescale)*weaptype[d->weapselect].rays[flags&HIT_ALT ? 1 : 0];
+		d->weapshot[d->weapselect] = offset;
 		d->action[AC_RELOAD] = false;
 		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
 		float dist = to.dist(from, unitv);
@@ -239,14 +240,12 @@ namespace weapons
 			int spread = weaptype[d->weapselect].spread[flags&HIT_ALT ? 1 : 0];
 			if(spread) offsetray(from, to, weaptype[d->weapselect].spread[flags&HIT_ALT ? 1 : 0], weaptype[d->weapselect].zdiv[flags&HIT_ALT ? 1 : 0], dest);
 			else dest = to;
-			if(weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0]) dest.z += from.dist(dest)/8;
+			if(weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0] > 0)
+				dest.z += from.dist(dest)*weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0];
 			addshot;
 		}
 		projs::shootv(d->weapselect, flags, power, from, vshots, d, true);
-		client::addmsg(SV_SHOOT, "ri8iv",
-			d->clientnum, lastmillis-game::maptime, d->weapselect, flags, power,
-				int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
-					shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
+		client::addmsg(SV_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, d->weapselect, flags, power, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
 	}
 
     void preload(int weap)

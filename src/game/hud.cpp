@@ -468,16 +468,17 @@ namespace hud
 		{
 			case WEAP_S_SHOOT:
 			{
-				switch(weap)
+				int shot = game::player1->weapshot[weap] ? game::player1->weapshot[weap] : weaptype[weap].sub[0];
+				if(shot) switch(weap)
 				{
 					case WEAP_FLAMER:
-						drawslice(ammo/float(maxammo), 1/float(maxammo), x, y, s);
+						drawslice(ammo/float(maxammo), shot/float(maxammo), x, y, s);
 						break;
 					case WEAP_GRENADE:
-						drawslice(0.25f/maxammo+ammo/float(maxammo), 1/float(maxammo), x, y, s);
+						drawslice(0.25f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, s);
 						break;
 					default:
-						drawslice(0.5f/maxammo+ammo/float(maxammo), 1/float(maxammo), x, y, s);
+						drawslice(0.5f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, s);
 						break;
 				}
 				glColor4f(r, g, b, clipblend*hudblend);
