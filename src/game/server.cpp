@@ -2318,6 +2318,7 @@ namespace server
 		else takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
 		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], millis);
 		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum, weap, flags, power, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
+		gs.weapshot[weap] = weaptype[weap].sub[flags&HIT_ALT ? 1 : 0];
 		gs.shotdamage += weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*shots.length();
 		loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
 	}

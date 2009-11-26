@@ -852,8 +852,7 @@ void trytofindocta(bool fallback)
 void setlocations(bool wanthome)
 {
 	addpackagedir("data");
-	extern string homedir;
-	if(wanthome && !homedir[0])
+	if(wanthome)
 	{
 #if defined(WIN32)
 		#ifndef __GNUC__ // not supported by mingw
