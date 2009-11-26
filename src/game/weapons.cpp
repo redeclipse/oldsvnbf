@@ -177,9 +177,6 @@ namespace weapons
 			}
 		}
 		else if(!pressed) return;
-		vec eyeray = vec(d->muzzlepos(d->weapselect)).sub(d->o);
-		float eyehit = eyeray.magnitude();
-		if(raycube(d->o, eyeray.normalize(), eyehit, RAY_CLIPMAT|RAY_POLY) < eyehit) return;
 		if(offset < 0)
 		{
 			offset = max(d->weapload[d->weapselect], 1)+weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0];

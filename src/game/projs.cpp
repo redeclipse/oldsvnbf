@@ -325,18 +325,16 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT && (proj.projcollide&COLLIDE_OWNER || weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]))
+		if(proj.projtype == PRJ_SHOT && proj.projcollide&COLLIDE_OWNER)
 		{
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
-				proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.0625f;
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
 			vec ray = vec(proj.vel).normalize();
 			int maxsteps = 25;
-			float step = 0.0625f, dist = 0, barrier = max(raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY))-0.1f, 1e-3f);
+			float step = 0.125f, dist = 0, barrier = raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY));
 			loopi(maxsteps)
 			{
 				float olddist = dist;
-				if(dist < barrier && dist + step > barrier) dist = barrier;
-				else dist += step;
+				if(dist < barrier && dist + step > barrier) dist = barrier; else dist += step;
 				if(proj.projcollide&COLLIDE_TRACE)
 				{
 					proj.o = vec(ray).mul(olddist).add(orig);
@@ -362,8 +360,7 @@ namespace projs
 					break;
 				}
 			}
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
-				proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
+			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
 		}
         proj.resetinterp();
 	}
