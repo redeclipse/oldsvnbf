@@ -336,6 +336,17 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
+		if(proj.projtype == PRJ_SHOT && proj.owner)     
+		{   
+			vec eyedir = vec(proj.o).sub(proj.owner->o);	
+			float eyedist = eyedir.magnitude();	 
+			if(eyedist >= 1e-3f)	
+			{   
+				eyedir.div(eyedist);	
+				float blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist);	
+				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked).add(proj.owner->o);	  
+			}   
+		}   
         proj.resetinterp();
 	}
 
