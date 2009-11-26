@@ -339,7 +339,7 @@ namespace projs
 		if(proj.projtype == PRJ_SHOT && proj.owner)
 		{
 			vec eyedir = vec(proj.o).sub(proj.owner->o);
-			float eyedist = eyedir.magnitude(); 
+			float eyedist = eyedir.magnitude();
 			if(eyedist >= 1e-3f)
 			{
 				eyedir.div(eyedist);
@@ -801,8 +801,8 @@ namespace projs
 						if(!proj.limited)
 						{
 							part_create(PART_PLASMA_SOFT, m_speedtime(proj.flags&HIT_ALT ? 500 : 150), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-							part_create(PART_ELECTRIC_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f);
-							part_create(PART_SMOKE, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.3f, 1, -30);
+							part_create(PART_ELECTRIC_SOFT, m_speedtime(proj.flags&HIT_ALT ? 250 : 75), proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.65f);
+							part_create(PART_SMOKE, m_speedtime(proj.flags&HIT_ALT ? 500 : 250), proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f, 1, -30);
 							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
 							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.5f, PART_EXPLOSION, m_speedtime(150), 0x225599, 1.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));

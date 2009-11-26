@@ -27,9 +27,9 @@ VARG(spawnprotect, 0, 3000, INT_MAX-1); // delay before damage can be dealt to s
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 100, INT_MAX-1);
 
-VARG(fireburntime, 0, 7500, INT_MAX-1);
+VARG(fireburntime, 0, 5500, INT_MAX-1);
 VARG(fireburndelay, 0, 1000, INT_MAX-1);
-VARG(fireburndamage, 0, 5, INT_MAX-1);
+VARG(fireburndamage, 0, 7, INT_MAX-1);
 
 VARG(vampire, 0, 0, 1);
 VARG(regendelay, 0, 3000, INT_MAX-1);
