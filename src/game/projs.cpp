@@ -239,6 +239,7 @@ namespace projs
 				proj.projcollide = weaptype[proj.weap].collide[proj.flags&HIT_ALT ? 1 : 0];
 				proj.extinguish = weaptype[proj.weap].extinguish[proj.flags&HIT_ALT ? 1 : 0];
 				proj.mdl = weaptype[proj.weap].proj;
+				proj.escaped = !proj.owner;
 				break;
 			}
 			case PRJ_GIBS:
@@ -335,55 +336,6 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		float blocked = -1;
-		if(proj.projtype == PRJ_SHOT && proj.owner)
-		{
-			vec eyedir = vec(proj.o).sub(proj.owner->o);
-			float eyedist = eyedir.magnitude();
-			if(eyedist >= 1e-3f)
-			{
-				eyedir.div(eyedist);
-				blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist, proj.owner);
-				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked).add(proj.owner->o);
-			}
-		}
-		if(proj.projtype == PRJ_SHOT && proj.projcollide&COLLIDE_OWNER && blocked < 0)
-		{
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.125f;
-			vec ray = vec(proj.vel).normalize();
-			int maxsteps = 25;
-			float step = 0.125f, dist = 0, barrier = raycube(proj.o, ray, step*maxsteps, RAY_CLIPMAT|(proj.projcollide&COLLIDE_TRACE ? RAY_ALPHAPOLY : RAY_POLY));
-			loopi(maxsteps)
-			{
-				float olddist = dist;
-				if(dist < barrier && dist + step > barrier) dist = barrier; else dist += step;
-				if(proj.projcollide&COLLIDE_TRACE)
-				{
-					proj.o = vec(ray).mul(olddist).add(orig);
-					float cdist = tracecollide(&proj, proj.o, ray, dist - olddist, RAY_CLIPMAT | RAY_ALPHAPOLY);
-					proj.o.add(vec(ray).mul(dist - olddist));
-					if((cdist < 0 || dist >= barrier) && (!hitplayer || hitplayer != proj.owner)) break;
-				}
-				else
-				{
-					proj.o = vec(ray).mul(dist).add(orig);
-					if(collide(&proj) && !inside && (!hitplayer || hitplayer != proj.owner)) break;
-				}
-				if((!hitplayer || hitplayer != proj.owner) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
-				{
-					bounceeffect(proj);
-					if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
-					{
-						reflect(proj, proj.norm);
-						proj.o.add(vec(proj.norm).mul(proj.radius)); // offset from surface slightly to avoid initial collision
-						proj.movement = 0;
-						proj.lastbounce = lastmillis;
-					}
-					break;
-				}
-			}
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0]) proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
-		}
         proj.resetinterp();
 	}
 
@@ -937,6 +889,20 @@ namespace projs
         return 1; // live!
     }
 
+	void checkescaped(projent &proj, const vec &pos, const vec &dir)
+	{
+		if(lastmillis - proj.spawntime > 350 || proj.lastbounce || proj.stuck) proj.escaped = true;
+		else if(proj.projcollide&COLLIDE_TRACE)
+		{
+			vec to = vec(pos).add(dir);
+			float x1 = floor(min(pos.x, to.x)), y1 = floor(min(pos.y, to.y)),
+		  		  x2 = ceil(max(pos.x, to.x)), y2 = ceil(max(pos.y, to.y)),
+				  maxdist = dir.magnitude(), dist = 1e16f;
+			if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
+		}
+		else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
+	}
+
 	bool move(projent &proj, int qtime)
 	{
 		int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
@@ -957,6 +923,8 @@ namespace projs
 		}
 		dir.mul(secs);
 
+		if(!proj.escaped && proj.owner) checkescaped(proj, pos, dir);
+				 
         bool blocked = false;
         if(proj.projcollide&COLLIDE_TRACE)
         {

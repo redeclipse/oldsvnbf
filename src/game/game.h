@@ -1072,7 +1072,7 @@ struct projent : dynent
 	vec from, to, norm;
 	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
 	float movement, roll, lifespan, lifesize;
-	bool local, beenused, extinguish, limited, stuck;
+	bool local, beenused, extinguish, limited, stuck, escaped;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int schan, id, weap, flags, colour, hitflags;
@@ -1101,6 +1101,7 @@ struct projent : dynent
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
 		beenused = extinguish = limited = stuck = false;
+		escaped = true;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
