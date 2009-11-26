@@ -1182,7 +1182,9 @@ bool intersect(physent *d, const vec &from, const vec &to, float &dist)   // if 
     vec bottom(d->o), top(d->o);
     bottom.z -= d->height;
     top.z += d->aboveeye;
-    return linecylinderintersect(from, to, bottom, top, d->radius, dist);
+    if(!linecylinderintersect(from, to, bottom, top, d->radius, dist)) return false; 
+    dist *= from.dist(to);
+    return true;
 }
 
 bool overlapsbox(const vec &d, float h1, float r1, const vec &v, float h2, float r2)

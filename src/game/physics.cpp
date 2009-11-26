@@ -1003,22 +1003,25 @@ namespace physics
 		if(d && d->type == ENT_PROJ && o->type == ENT_PLAYER)
 		{
 			gameent *e = (gameent *)o;
+			float bestdist = 1e16f;
 			if(e->legs.x+e->lrad.x >= x1 && e->legs.y+e->lrad.y >= y1 && e->legs.x-e->lrad.x <= x2 && e->legs.y-e->lrad.y <= y2)
 			{
 				vec bottom(e->legs), top(e->legs); bottom.z -= e->lrad.z; top.z += e->lrad.z; float d = 1e16f;
-				if(linecylinderintersect(from, to, bottom, top, max(e->lrad.x, e->lrad.y), d)) { hitflags |= HITFLAG_LEGS; if(d < dist) dist = d; }
+				if(linecylinderintersect(from, to, bottom, top, max(e->lrad.x, e->lrad.y), d)) { hitflags |= HITFLAG_LEGS; bestdist = min(bestdist, d); }
 			}
 			if(e->torso.x+e->trad.x >= x1 && e->torso.y+e->trad.y >= y1 && e->torso.x-e->trad.x <= x2 && e->torso.y-e->trad.y <= y2)
 			{
 				vec bottom(e->torso), top(e->torso); bottom.z -= e->trad.z; top.z += e->trad.z; float d = 1e16f;
-				if(linecylinderintersect(from, to, bottom, top, max(e->trad.x, e->trad.y), d)) { hitflags |= HITFLAG_TORSO; if(d < dist) dist = d; }
+				if(linecylinderintersect(from, to, bottom, top, max(e->trad.x, e->trad.y), d)) { hitflags |= HITFLAG_TORSO; bestdist = min(bestdist, d); }
 			}
 			if(e->head.x+e->hrad.x >= x1 && e->head.y+e->hrad.y >= y1 && e->head.x-e->hrad.x <= x2 && e->head.y-e->hrad.y <= y2)
 			{
 				vec bottom(e->head), top(e->head); bottom.z -= e->hrad.z; top.z += e->hrad.z; float d = 1e16f;
-				if(linecylinderintersect(from, to, bottom, top, max(e->hrad.x, e->hrad.y), d)) { hitflags |= HITFLAG_HEAD; if(d < dist) dist = d; }
+				if(linecylinderintersect(from, to, bottom, top, max(e->hrad.x, e->hrad.y), d)) { hitflags |= HITFLAG_HEAD; bestdist = min(bestdist, d); }
 			}
-			return hitflags == HITFLAG_NONE;
+			if(hitflags == HITFLAG_NONE) return true;
+			dist = bestdist*from.dist(to);
+			return false;
 		}
 		if(o->o.x+o->radius >= x1 && o->o.y+o->radius >= y1 && o->o.x-o->radius <= x2 && o->o.y-o->radius <= y2 && intersect(o, from, to, dist))
 		{
