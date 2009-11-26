@@ -1944,15 +1944,11 @@ namespace game
 		}
 		bool hasweapon = showweap && *weaptype[weap].vwep;
 		if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
-		else a[ai++] = modelattach("tag_weapon", &d->muzzle);
         if(rendernormally && (early || d != player1))
         {
-        	if(hasweapon)
-        	{
-				const char *muzzle = "tag_muzzle";
-				//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
-				a[ai++] = modelattach(muzzle, &d->muzzle);
-        	}
+			const char *muzzle = hasweapon ? "tag_muzzle" : "tag_weapon";
+			//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
+			a[ai++] = modelattach(muzzle, &d->muzzle);
         	if(third && d->type == ENT_PLAYER)
         	{
         		a[ai++] = modelattach("tag_head", &d->head);
