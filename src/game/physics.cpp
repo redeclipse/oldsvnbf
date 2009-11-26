@@ -87,7 +87,9 @@ namespace physics
 	{
 		if(e && e->type == ENT_PROJ)
 		{
-			if(((projent *)e)->hit == d) return false;
+			projent *p = (projent *)e;
+			if(p->hit == d) return false;
+			if(p->owner == d && !p->escaped) return false;
 		}
 		if(d->state == CS_ALIVE)
 		{
