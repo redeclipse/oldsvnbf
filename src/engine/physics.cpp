@@ -1110,7 +1110,7 @@ float pltracecollide(physent *d, const vec &from, const vec &ray, float maxdist,
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(!physics::issolid(o, d) || d==exclude) continue;
+            if(!physics::issolid(o, d) || o==exclude) continue;
             float dist = 1e16f;
             if(!physics::xtracecollide(d, from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
             {
