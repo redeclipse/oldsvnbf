@@ -336,17 +336,17 @@ namespace projs
 		proj.hit = NULL;
 		proj.hitflags = HITFLAG_NONE;
 		proj.movement = 1;
-		if(proj.projtype == PRJ_SHOT && proj.owner)     
-		{   
-			vec eyedir = vec(proj.o).sub(proj.owner->o);	
-			float eyedist = eyedir.magnitude();	 
-			if(eyedist >= 1e-3f)	
-			{   
-				eyedir.div(eyedist);	
-				float blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist);	
-				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked).add(proj.owner->o);	  
-			}   
-		}   
+		if(proj.projtype == PRJ_SHOT && proj.owner)
+		{
+			vec eyedir = vec(proj.o).sub(proj.owner->o);
+			float eyedist = eyedir.magnitude();
+			if(eyedist >= 1e-3f)
+			{
+				eyedir.div(eyedist);
+				float blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist);
+				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked).add(proj.owner->o);
+			}
+		}
         proj.resetinterp();
 	}
 
@@ -622,7 +622,7 @@ namespace projs
 				{
 					bool taper = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0125f);
 					if(!proj.stuck || !taper) proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 80.f);
-					if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.65f*proj.lifesize, PART_EXPLOSION, 1, 0x225599, 1.f, 0.75f);
+					if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f*proj.lifesize, PART_EXPLOSION, 1, 0x225599, 1.f, 0.75f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
 					part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.65f*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
 					break;
@@ -935,7 +935,7 @@ namespace projs
 		dir.mul(secs);
 
 		if(!proj.escaped && proj.owner) checkescaped(proj, pos, dir);
-				 
+
         bool blocked = false;
         if(proj.projcollide&COLLIDE_TRACE)
         {

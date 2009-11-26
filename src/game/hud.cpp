@@ -62,7 +62,7 @@ namespace hud
 	VARP(chatconsize, 0, 4, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
-	VARP(chatconoverflow, 0, 6, 1);
+	VARP(chatconoverflow, 0, 6, INT_MAX-1);
 	FVARP(chatconblend, 0, 0.75f, 1);
 	FVARP(fullconblend, 0, 0.9f, 1);
 
@@ -839,7 +839,7 @@ namespace hud
 			{
 				loopvj(conlines) if(conlines[j].type >= CON_CHAT)
 				{
-					int len = conlines[j].type > CON_CHAT ? chatcontime/3 : chatcontime;
+					int len = conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
 					{
 						if(refs.length() >= numl)
@@ -847,7 +847,7 @@ namespace hud
 							if(conlines[j].type == CON_CHAT)
 							{
 								bool found = false;
-								loopvrev(refs) if(conlines[refs[i]].type > CON_CHAT)
+								loopvrev(refs) if(i > 0 && conlines[refs[i]].type > CON_CHAT)
 								{
 									if(refs.length() >= numo) refs.remove(i);
 									else
@@ -900,7 +900,7 @@ namespace hud
 							if(conlines[j].type >= CON_IMPORTANT)
 							{
 								bool found = false;
-								loopvrev(refs) if(conlines[refs[i]].type < CON_IMPORTANT)
+								loopvrev(refs) if(i > 0 && conlines[refs[i]].type < CON_IMPORTANT)
 								{
 									if(refs.length() >= numo) refs.remove(i);
 									else
