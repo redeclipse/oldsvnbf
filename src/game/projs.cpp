@@ -53,9 +53,18 @@ namespace projs
 	{
 		vec dir, middle = d->o;
 		middle.z += (d->aboveeye-d->height)/2;
-		dir = middle==proj.o ? vec(0, 0, 1) : vec(middle).sub(proj.o).normalize();
-		float speed = proj.vel.magnitude();
-		if(speed > 1e-6f) dir.add(vec(proj.vel).div(speed)).normalize();
+        dir = vec(middle).sub(proj.o);
+        float dmag = dir.magnitude();
+        if(dmag > 1e-3f) dir.div(dmag);
+        else dir = vec(0, 0, 1);
+        float speed = proj.vel.magnitude();
+        if(speed > 1e-6f)
+        {
+            dir.add(vec(proj.vel).div(speed));
+            dmag = dir.magnitude();
+            if(dmag > 1e-3f) dir.div(dmag);
+            else dir = vec(0, 0, 1);
+        }
 		if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
 		{
 			int hflags = proj.flags|flags, damage = calcdamage(proj.owner, d, proj.weap, hflags, radial, float(radial), dist);
@@ -103,10 +112,11 @@ namespace projs
 
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
 	{
-		vec dir, middle = d->o;
-		middle.z += (d->aboveeye-d->height)/2;
-		float dist = middle.dist(proj.o, dir);
-		if(dist > 0) dir.div(dist); else if(dist < 0) dist = 0;
+        vec bottom(d->o), top(d->o);
+        bottom.z -= d->height;
+        top.z += d->aboveeye;
+        vec impact = closestpointcylinder(proj.o, bottom, top, d->radius);
+        float dist = impact.dist(proj.o);
 		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
 		else if(proj.weap != WEAP_MELEE && explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
 	}
