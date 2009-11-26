@@ -2,10 +2,11 @@
 namespace ai
 {
 	entities::avoidset obs;
-    int updatemillis = 0, updateiters = 0, forcegun = -1;
+    int updatemillis = 0, updateiters = 0;
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
+    VAR(aisuspend, 0, 0, 1);
     VAR(aiforcegun, -1, -1, WEAP_SUPER-1);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
@@ -184,7 +185,7 @@ namespace ai
         if(updating)
         {
         	avoid();
-        	forcegun = multiplayer(false) ? -1 : aiforcegun;
+        	if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; }
         }
 		loopv(game::players) if(game::players[i] && game::players[i]->ai)
 		{
@@ -513,7 +514,7 @@ namespace ai
 			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
-			else if(forcegun >= 0 && forcegun < WEAP_SUPER) d->arenaweap = forcegun;
+			else if(aiforcegun >= 0 && aiforcegun < WEAP_SUPER) d->arenaweap = aiforcegun;
 			else while(true)
 			{
 				d->arenaweap = rnd(WEAP_SUPER);
@@ -521,7 +522,7 @@ namespace ai
 			}
 			if(d->aitype == AI_BOT)
 			{
-				d->ai->suspended = false;
+				if(!aisuspend) d->ai->suspended = false;
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
@@ -1126,14 +1127,22 @@ namespace ai
 		else
         {
             if(d->ragdoll) cleanragdoll(d);
-            if(d->state == CS_ALIVE && !game::intermission && !d->ai->suspended)
+            if(d->state == CS_ALIVE && !game::intermission)
             {
-            	bool ladder = d->onladder;
-				physics::move(d, 1, true);
-				if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
-				if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
-					d->ai->becareful = false;
-				if(d->aitype == AI_BOT) entities::checkitems(d);
+            	if(!d->ai->suspended)
+            	{
+					bool ladder = d->onladder;
+					physics::move(d, 1, true);
+					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
+					if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
+						d->ai->becareful = false;
+					if(d->aitype == AI_BOT) entities::checkitems(d);
+            	}
+            	else
+            	{
+            		d->move = d->strafe = 0;
+            		physics::move(d, 1, true);
+            	}
             }
         }
 		d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = d->action[AC_RELOAD] = d->action[AC_USE] = false;
@@ -1181,6 +1190,7 @@ namespace ai
 		// others spawn new commands to the stack the ai reads the top command from the stack and executes
 		// it or pops the stack and goes back along the history until it finds a suitable command to execute
 		if(d->ai->state.empty()) setup(d, false, d->aientity);
+		if(d->ai->suspended != (aisuspend ? true : false)) d->ai->suspended = aisuspend ? true : false;
 		bool cleannext = false;
 		loopvrev(d->ai->state)
 		{
@@ -1229,7 +1239,7 @@ namespace ai
 				}
 				else
 				{
-					d->ai->suspended = false;
+					if(!aisuspend) d->ai->suspended = false;
 					c.next = lastmillis+m_speedtime(500+rnd(500));
 				}
 			}
