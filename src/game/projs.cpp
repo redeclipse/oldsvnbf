@@ -113,20 +113,28 @@ namespace projs
 	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
 	{
 		float maxdist = proj.weap != WEAP_MELEE && explode ? radius*wavepusharea : radius, dist = 1e16f;
-		if(!proj.o.reject(d->legs, maxdist+max(d->lrad.x, d->lrad.y)))
+		if(d->type == ENT_PLAYER)
 		{
-			vec bottom(d->legs), top(d->legs); bottom.z -= d->lrad.z; top.z += d->lrad.z;
-			dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->lrad.x, d->lrad.y)).dist(proj.o));
+			if(!proj.o.reject(d->legs, maxdist+max(d->lrad.x, d->lrad.y)))
+			{
+				vec bottom(d->legs), top(d->legs); bottom.z -= d->lrad.z; top.z += d->lrad.z;
+				dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->lrad.x, d->lrad.y)).dist(proj.o));
+			}
+			if(!proj.o.reject(d->torso, maxdist+max(d->trad.x, d->trad.y)))
+			{
+				vec bottom(d->torso), top(d->torso); bottom.z -= d->trad.z; top.z += d->trad.z;
+				dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->trad.x, d->trad.y)).dist(proj.o));
+			}
+			if(!proj.o.reject(d->head, maxdist+max(d->hrad.x, d->hrad.y)))
+			{
+				vec bottom(d->head), top(d->head); bottom.z -= d->hrad.z; top.z += d->hrad.z;
+				dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->hrad.x, d->hrad.y)).dist(proj.o));
+			}
 		}
-		if(!proj.o.reject(d->torso, maxdist+max(d->trad.x, d->trad.y)))
+		else
 		{
-			vec bottom(d->torso), top(d->torso); bottom.z -= d->trad.z; top.z += d->trad.z;
-            dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->trad.x, d->trad.y)).dist(proj.o));
-		}
-		if(!proj.o.reject(d->head, maxdist+max(d->hrad.x, d->hrad.y)))
-		{
-			vec bottom(d->head), top(d->head); bottom.z -= d->hrad.z; top.z += d->hrad.z;
-            dist = min(dist, closestpointcylinder(proj.o, bottom, top, max(d->hrad.x, d->hrad.y)).dist(proj.o));
+			vec bottom(d->o), top(d->o); bottom.z -= d->height; top.z += d->aboveeye;
+			dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
 		}
 		if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
 		else if(proj.weap != WEAP_MELEE && explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
