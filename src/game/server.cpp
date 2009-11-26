@@ -1198,7 +1198,7 @@ namespace server
 		if(GVAR(resetbansonend) >= 2) bannedips.setsize(0);
 	}
 
-	void checkvotes(bool force = false)
+	bool checkvotes(bool force = false)
 	{
         shouldcheckvotes = false;
 
@@ -1259,7 +1259,9 @@ namespace server
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
 				changemap(map, gamemode, mutators);
 			}
+			return true;
 		}
+		return false;
 	}
 
 	bool vote(char *map, int &reqmode, int &reqmuts, int sender)
@@ -1340,8 +1342,7 @@ namespace server
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 			return false;
 		}
-		checkvotes();
-		return true;
+		return checkvotes() ? false : true;
 	}
 
 	extern void waiting(clientinfo *ci, int doteam = 0, int drop = 2, bool exclude = false);
@@ -2078,7 +2079,7 @@ namespace server
 		delete ci->events.remove(0);
 	}
 
-	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
+	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
 		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && realflags&HIT_FULL) realflags &= ~HIT_FULL;
@@ -2645,7 +2646,7 @@ namespace server
 						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
 						{
 							clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN);
+							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN, ivec(0, 0, 0));
 							ci->state.lastfireburn += GVAR(fireburndelay);
 						}
 						continue;
