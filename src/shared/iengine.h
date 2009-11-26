@@ -310,7 +310,7 @@ extern bool rectcollide(physent *d, const vec &dir, const vec &o, float xr, floa
 extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0, bool playercol = true);
 extern bool plcollide(physent *d, const vec &dir = vec(0, 0, 0));
 extern bool plcollide(physent *d, const vec &dir, physent *o);
-extern float pltracecollide(physent *d, const vec &o, const vec &ray, float maxdist);
+extern float pltracecollide(physent *d, const vec &o, const vec &ray, float maxdist, physent *exclude = NULL);
 extern float tracecollide(physent *d, const vec &o, const vec &ray, float maxdist, int mode = RAY_CLIPMAT|RAY_ALPHAPOLY, bool playercol = true);
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);

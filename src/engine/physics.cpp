@@ -1098,7 +1098,7 @@ bool collide(physent *d, const vec &dir, float cutoff, bool playercol)
     return !playercol || plcollide(d, dir);
 }
 
-float pltracecollide(physent *d, const vec &from, const vec &ray, float maxdist)
+float pltracecollide(physent *d, const vec &from, const vec &ray, float maxdist, physent *exclude)
 {
     vec to = vec(ray).mul(maxdist).add(from);
     float x1 = floor(min(from.x, to.x)), y1 = floor(min(from.y, to.y)),
@@ -1110,7 +1110,7 @@ float pltracecollide(physent *d, const vec &from, const vec &ray, float maxdist)
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(!physics::issolid(o, d)) continue;
+            if(!physics::issolid(o, d) || d==exclude) continue;
             float dist = 1e16f;
             if(!physics::xtracecollide(d, from, to, x1, x2, y1, y2, maxdist, dist, o) && dist < bestdist)
             {
