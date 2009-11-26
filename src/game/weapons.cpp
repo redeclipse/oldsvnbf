@@ -137,7 +137,7 @@ namespace weapons
 			dest = to;
 			dest.add(v);
 			vec dir = vec(dest).sub(from).normalize();
-			raycubepos(from, dir, dest, 0, RAY_CLIPMAT|RAY_POLY);
+			raycubepos(from, dir, dest, 0, RAY_CLIPMAT|RAY_ALPHAPOLY);
 			return;
 		}
 	}
@@ -209,23 +209,26 @@ namespace weapons
 		}
 
 		// move along the eye ray towards the weap origin, stopping when something is hit
-		// nudge the target a tiny bit forward in the direction of the camera for stability
-		float barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_POLY);
-        if(barrier <= 1e-3f)
+		// nudge the target a tiny bit forward in the direction of the target for stability
+        vec eyedir(from);
+        eyedir.sub(d->o);
+        float eyedist = eyedir.magnitude();
+        eyedir.div(eyedist);
+        float barrier = raycube(d->o, eyedir, eyedist, RAY_CLIPMAT);
+        if(barrier < eyedist)
         {
-            vec eyedir(from);
-            eyedir.sub(d->o);
-            float eyedist = eyedir.magnitude();
-            eyedir.div(eyedist);
-            eyedist = raycube(d->o, eyedir, eyedist, RAY_CLIPMAT);
-            (from = eyedir).mul(eyedist).add(d->o);
-            (to = camdir).mul(1e-3f).add(from);
+            (from = eyedir).mul(barrier).add(d->o);
+            (to = targ).sub(from).rescale(1e-3f).add(from);
         }
-		else if(barrier < dist)
-		{
-			to = unitv;
-			to.mul(barrier);
-			to.add(from);
+        else
+        {
+		    barrier = raycube(from, unitv, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
+		    if(barrier < dist)
+		    {
+			    to = unitv;
+			    to.mul(barrier);
+			    to.add(from);
+            }
 		}
 
 		vector<vec> vshots;
