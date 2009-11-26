@@ -83,8 +83,8 @@ namespace game
 	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
 	TVAR(conopentex, "textures/conopen", 3);
 	TVAR(deadtex, "textures/dead", 3);
-	TVAR(dominatingtex, "textures/arrow", 3);
-	TVAR(dominatedtex, "textures/exit", 3);
+	TVAR(dominatingtex, "textures/dominating", 3);
+	TVAR(dominatedtex, "textures/dominated", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showobitdists, 0, 0, 1);
