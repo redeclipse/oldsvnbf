@@ -75,9 +75,9 @@ namespace game
 
 	VARP(shownamesabovehead, 0, 2, 2);
 	VARP(showstatusabovehead, 0, 2, 2);
-	FVARP(statusaboveheadblend, 0.f, 0.75f, 1.f);
 	VARP(showteamabovehead, 0, 1, 3);
 	VARP(showdamageabovehead, 0, 0, 3);
+	FVARP(aboveheadblend, 0.f, 0.75f, 1.f);
 	FVAR(aboveheadsmooth, 0, 0.5f, 1);
 	VAR(aboveheadsmoothmillis, 1, 200, 10000);
 	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
@@ -1913,7 +1913,7 @@ namespace game
 		if(third && d->type == ENT_PLAYER && !shadowmapping && !envmapping && trans > 1e-16f && d->o.squaredist(camera1->o) <= maxparticledistance*maxparticledistance)
 		{
 			vec pos = d->abovehead(2);
-			float blend = statusaboveheadblend*trans;
+			float blend = aboveheadblend*trans;
 			if(shownamesabovehead > (d != player1 ? 0 : 1))
 			{
 				const char *name = colorname(d, NULL, d->aitype < 0 ? "<super>" : "<default>");

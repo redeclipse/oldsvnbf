@@ -270,27 +270,27 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
 			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 8, 4 },		{ 150, 200 },		0,			{ 400, 600 },
-			0,		{ 24, 36 },	{ 1, 5 },		{ 40, 15 },		{ 2, 2 },		{ 1, 2 },
+			0,		{ 20, 24 },	{ 1, 5 },		{ 40, 20 },		{ 0, 0 },		{ 1, 2 },
 			{ BOUNCE_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ true, true },		{ true, true },		{ true, true, },	{ true, true },		true,	false,	{ true, true },
-			{ 0.15f, 0 },		{ 45, 0 },			{ 0.95f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 24, 32 },			{ 0, 0 },
+			{ 0.15f, 0 },		{ 45, 0 },			{ 0.95f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 22, 26 },			{ 0, 0 },
 			{ 1, 1 },		{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },			{ 0, 0 },				7,
 			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
-			0,		{ 20, 48 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 6, 2 },
+			0,		{ 16, 40 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 6, 2 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,	false,	{ true, false },
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 14, 48 },			{ 0, 0 },
+			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 16, 42 },			{ 0, 0 },
 			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		{ 0, 0 },				5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 16, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 2, 1 },
+			0,		{ 16, 0 },	{ 1, 1 },		{ 3, 0 },		{ 10, 0 },		{ 2, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
@@ -300,11 +300,11 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
 			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 250, 250 },			3000,	{ 3000, 3000 },
-			100,	{ 64, 64 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
+			100,	{ 60, 60 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },
-			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 68, 68 },		{ 2, 2 },			{ 0, 0 },
-			{ 1, 1 },		{ 5, 5 },		{ 1000, 750 },		{ 200, 200 },			{ 0.0625f, 0.0625f },	3,
+			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 64, 64 },		{ 2, 2 },			{ 0, 0 },
+			{ 1, 1 },		{ 5, 5 },		{ 1000, 1000 },		{ 200, 200 },			{ 0.0625f, 0.0625f },	3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
