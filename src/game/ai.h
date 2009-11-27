@@ -111,10 +111,17 @@ namespace ai
 
 		aiinfo()
 		{
+			cleartimers();
 			reset();
 			loopk(3) views[k] = 0.f;
 		}
 		~aiinfo() {}
+
+		void cleartimers()
+		{
+			blocktime = huntseq = blockseq = targtime = targseq = 0;
+			targnode = targlast = -1;
+		}
 
 		void clear(bool prev = true)
 		{
@@ -137,8 +144,8 @@ namespace ai
 			if(!tryit)
 			{
 				spot = target = vec(0, 0, 0);
-				enemy = targnode = targlast = -1;
-				lastaction = lasthunt = enemyseen = enemymillis = blocktime = huntseq = blockseq = targtime = targseq = 0;
+				enemy = -1;
+				lastaction = lasthunt = enemyseen = enemymillis;
 				lastrun = jumpseed = lastmillis;
 				jumprand = lastmillis+5000;
 				dontmove = false;

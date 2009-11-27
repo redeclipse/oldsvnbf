@@ -531,7 +531,14 @@ namespace ai
 		}
 	}
 
-	void spawned(gameent *d, int ent) { setup(d, false, ent); }
+	void spawned(gameent *d, int ent)
+	{
+		if(d->ai)
+		{
+			d->ai->cleartimers();
+			setup(d, false, ent);
+		}
+	}
 	void killed(gameent *d, gameent *e) { if(d->ai) d->ai->reset(); }
 
 	bool check(gameent *d, aistate &b)
@@ -1101,12 +1108,13 @@ namespace ai
 			{
 				switch(d->ai->blockseq)
 				{
-					case 0: case 1:
+					case 0: case 1: case 2:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
 						d->ai->clear(false);
 						break;
-					case 2: d->ai->reset(false); break;
-					case 3: d->ai->reset(false); game::suicide(d, HIT_LOST); return; break;
+					case 3: d->ai->reset(true); break;
+					case 4: d->ai->reset(false); break;
+					case 5: game::suicide(d, HIT_LOST); return; break;
 					default: break;
 				}
 				d->ai->blockseq++;
@@ -1121,8 +1129,9 @@ namespace ai
 			{
 				switch(d->ai->huntseq)
 				{
-					case 1: game::suicide(d, HIT_LOST); d->ai->reset(false); return; break; // better off doing something than nothing
-					case 0: setup(d, true, d->aientity); break;
+					case 0: d->ai->reset(true); break;
+					case 1: d->ai->reset(false); break;
+					case 2: game::suicide(d, HIT_LOST); return; break;
 					default: break;
 				}
 				d->ai->huntseq++;
@@ -1135,12 +1144,13 @@ namespace ai
 			{
 				switch(d->ai->targseq)
 				{
-					case 0: case 1:
+					case 0: case 1: case 2:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
 						d->ai->clear(false);
 						break;
-					case 2: d->ai->reset(false); break;
-					case 3: d->ai->reset(false); game::suicide(d, HIT_LOST); return; break;
+					case 3: d->ai->reset(true); break;
+					case 4: d->ai->reset(false); break;
+					case 5: game::suicide(d, HIT_LOST); return; break;
 					default: break;
 				}
 				d->ai->targseq++;
@@ -1239,7 +1249,11 @@ namespace ai
 		// the state stack works like a chain of commands, certain commands simply replace each other
 		// others spawn new commands to the stack the ai reads the top command from the stack and executes
 		// it or pops the stack and goes back along the history until it finds a suitable command to execute
-		if(d->ai->state.empty()) setup(d, false, d->aientity);
+		if(d->ai->state.empty())
+		{
+			d->ai->cleartimers();
+			setup(d, false, d->aientity);
+		}
 		if(d->ai->suspended != (aisuspend ? true : false)) d->ai->suspended = aisuspend ? true : false;
 		bool cleannext = false;
 		loopvrev(d->ai->state)
@@ -1284,13 +1298,13 @@ namespace ai
 					else
 					{
 						if(d->aitype >= AI_START) d->ai->suspended = true;
-						c.next = lastmillis+m_speedtime(1000+rnd(1000));
+						c.next = lastmillis+m_speedtime(250+rnd(250));
 					}
 				}
 				else
 				{
 					if(!aisuspend) d->ai->suspended = false;
-					c.next = lastmillis+m_speedtime(500+rnd(500));
+					c.next = lastmillis+m_speedtime(125+rnd(125));
 				}
 			}
 			logic(d, c, run);
