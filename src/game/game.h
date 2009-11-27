@@ -354,7 +354,11 @@ enum
 	FRAG_MULTI = FRAG_MKILL1|FRAG_MKILL2|FRAG_MKILL3,
 };
 
-enum { G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX };
+enum
+{
+	G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX,
+	G_START = G_LOBBY, G_PLAY = G_STORY, G_FIGHT = G_DEATHMATCH, G_RAND = G_CTF-G_DEATHMATCH+1
+};
 enum
 {
 	G_M_NONE = 0, G_M_MULTI = 1<<0, G_M_TEAM = 1<<1, G_M_INSTA = 1<<2, G_M_DUEL = 1<<3, G_M_SURVIVOR= 1<<4, G_M_ARENA = 1<<5,
@@ -398,9 +402,9 @@ extern gametypes gametype[], mutstype[];
 #define m_ctf(a)			(a == G_CTF)
 #define m_trial(a)			(a == G_TRIAL)
 
-#define m_play(a)			(a >= G_STORY)
+#define m_play(a)			(a >= G_PLAY)
 #define m_flag(a)			(m_stf(a) || m_ctf(a))
-#define m_fight(a)			(a >= G_DEATHMATCH)
+#define m_fight(a)			(a >= G_FIGHT)
 
 #define m_multi(a,b)		((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
 #define m_team(a,b)			((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))

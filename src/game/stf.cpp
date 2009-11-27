@@ -25,17 +25,17 @@ namespace stf
 			if(b.enemy && b.owner)
 				formatstring(b.info)("<super>\fs%s%s\fS vs. \fs%s%s\fS", teamtype[b.owner].chat, teamtype[b.owner].name, teamtype[b.enemy].chat, teamtype[b.enemy].name);
 			else formatstring(b.info)("<super>\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
-			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((b.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f) : 0.f;
+			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((!stfstyle && b.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : 1.f) : 0.f;
 			vec above = b.o;
 			above.z += enttype[FLAG].radius*2/3;
 			part_text(above, b.info);
 			above.z += 2.5f;
 			if(occupy > 0 && occupy < 1)
 			{
-				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[attack].colour, 0, occupy);
-				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[defend].colour, occupy, 1-occupy);
+				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
+				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[defend].colour);
+			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour);
 			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
 		}
 	}
@@ -71,7 +71,7 @@ namespace stf
 			float size = hud::radarflagsize*(f.hasflag ? 2 : 1);
 			if(hud::radarflagnames > (f.hasflag ? 0 : 1))
 			{
-				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
 				if(occupy < 1.f)
 					hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, f.hasflag ? "sub" : "radar", "%s%d%%", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, int(occupy*100.f));
@@ -89,7 +89,7 @@ namespace stf
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("super");
-				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((f.owner?2:1) * stfoccupy), 0.f, 1.f) : 1.f;
+				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
 				ty += draw_textx("\fzwa%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f))*hud::noticescale;
 				popfont();
@@ -111,7 +111,7 @@ namespace stf
 			{
 				int prevsy = sy, colour = teamtype[f.owner].colour;
 				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
-					occupy = f.enemy ? clamp(f.converted/float((f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
+					occupy = f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 				if(f.hasflag)
 				{
