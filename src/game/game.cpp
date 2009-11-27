@@ -1874,7 +1874,7 @@ namespace game
 							else weap = d->lastweap;
 						}
 						else if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
-						animflags = ANIM_SWITCH;
+						animflags = ANIM_SWITCH+(d->weapstate[weap]-WEAP_S_SWITCH);
 						break;
 					}
 					case WEAP_S_POWER:
