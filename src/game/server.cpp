@@ -2079,7 +2079,7 @@ namespace server
 		delete ci->events.remove(0);
 	}
 
-	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush)
+	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
 		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && realflags&HIT_FULL) realflags &= ~HIT_FULL;
@@ -2646,7 +2646,7 @@ namespace server
 						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
 						{
 							clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN, ivec(0, 0, 0));
+							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN);
 							ci->state.lastfireburn += GVAR(fireburndelay);
 						}
 						continue;
