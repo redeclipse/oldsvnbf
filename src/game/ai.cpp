@@ -74,6 +74,7 @@ namespace ai
 			{
 				case WEAP_MELEE: return false; break;
 				case WEAP_SHOTGUN: case WEAP_SMG: if(rnd(d->skill*3) <= d->skill) return false;
+				case WEAP_GRENADE: if(rnd(d->skill*3) >= d->skill) return false;
 				case WEAP_PISTOL: default: break;
 			}
 			return true;
@@ -509,6 +510,7 @@ namespace ai
 		if(d->ai)
 		{
 			d->ai->reset(tryreset);
+			d->ai->lastrun = lastmillis;
 			aistate &b = d->ai->getstate();
 			b.next = lastmillis+m_speedtime(((111-d->skill)*10)+rnd((111-d->skill)*10));
 			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
@@ -748,6 +750,7 @@ namespace ai
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
 				d->ai->spot = epos;
+				d->ai->targnode = n;
 				if(((e.attrs[0] & WP_F_CROUCH && !d->action[AC_CROUCH]) || d->action[AC_CROUCH]) && (lastmillis-d->actiontime[AC_CROUCH] >= PHYSMILLIS*3))
 				{
 					d->action[AC_CROUCH] = !d->action[AC_CROUCH];
@@ -974,7 +977,6 @@ namespace ai
 			d->aimyaw -= ad.offset;
 			game::fixrange(d->aimyaw, d->aimpitch);
 		}
-		d->ai->lastrun = lastmillis;
 		return result;
 	}
 
@@ -1090,6 +1092,67 @@ namespace ai
 		return busy >= 2;
 	}
 
+	void timeouts(gameent *d, aistate &b)
+	{
+		if(d->blocked)
+		{
+			d->ai->blocktime += lastmillis-d->ai->lastrun;
+			if(d->ai->blocktime > m_speedtime((d->ai->blockseq+1)*1000))
+			{
+				switch(d->ai->blockseq)
+				{
+					case 0: case 1:
+						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
+						d->ai->clear(false);
+						break;
+					case 2: d->ai->reset(false); break;
+					case 3: d->ai->reset(false); game::suicide(d, HIT_LOST); return; break;
+					default: break;
+				}
+				d->ai->blockseq++;
+			}
+		}
+		else d->ai->blocktime = d->ai->blockseq = 0;
+		if(d->ai->lasthunt)
+		{
+			int millis = lastmillis-d->ai->lasthunt;
+			if(millis <= 2000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
+			else if(millis > m_speedtime((d->ai->huntseq+1)*2000))
+			{
+				switch(d->ai->huntseq)
+				{
+					case 1: game::suicide(d, HIT_LOST); d->ai->reset(false); return; break; // better off doing something than nothing
+					case 0: setup(d, true, d->aientity); break;
+					default: break;
+				}
+				d->ai->huntseq++;
+			}
+		}
+		if(d->ai->targnode == d->ai->targlast)
+		{
+			d->ai->targtime += lastmillis-d->ai->lastrun;
+			if(d->ai->targtime > m_speedtime((d->ai->targseq+1)*4000))
+			{
+				switch(d->ai->targseq)
+				{
+					case 0: case 1:
+						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
+						d->ai->clear(false);
+						break;
+					case 2: d->ai->reset(false); break;
+					case 3: d->ai->reset(false); game::suicide(d, HIT_LOST); return; break;
+					default: break;
+				}
+				d->ai->targseq++;
+			}
+		}
+		else
+		{
+			d->ai->targtime = d->ai->targseq = 0;
+			d->ai->targlast = d->ai->targnode;
+		}
+	}
+
 	void logic(gameent *d, aistate &b, bool run)
 	{
 		if(!d->ai->suspended)
@@ -1102,20 +1165,6 @@ namespace ai
 			{
 				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
 				weapons::shoot(d, d->ai->target);
-				if(d->ai->lasthunt && aitype[d->aitype].maxspeed)
-				{
-					int millis = lastmillis-d->ai->lasthunt;
-					if(millis < m_speedtime(2500)) d->ai->tryreset = false;
-					else if(millis < m_speedtime(5000))
-					{
-						if(!d->ai->tryreset) setup(d, true, d->aientity);
-					}
-					else if(d->ai->tryreset)
-					{
-						game::suicide(d, HIT_LOST); // better off doing something than nothing
-						d->ai->reset(false);
-					}
-				}
 			}
 		}
         if(d->state == CS_DEAD || d->state == CS_WAITING)
@@ -1133,6 +1182,7 @@ namespace ai
             	{
 					bool ladder = d->onladder;
 					physics::move(d, 1, true);
+					if(aitype[d->aitype].maxspeed) timeouts(d, b);
 					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
 					if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
 						d->ai->becareful = false;
@@ -1247,6 +1297,7 @@ namespace ai
 			break;
 		}
 		if(d->ai->trywipe) d->ai->wipe();
+		d->ai->lastrun = lastmillis;
 	}
 
 	void drawstate(gameent *d, aistate &b, bool top, int above)

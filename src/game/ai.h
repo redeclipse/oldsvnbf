@@ -97,15 +97,15 @@ namespace ai
 		}
 	};
 
-	const int NUMPREVNODES = 8;
+	const int NUMPREVNODES = 6;
 
 	struct aiinfo
 	{
 		vector<aistate> state;
 		vector<int> route;
 		vec target, spot;
-		int enemy, enemyseen, enemymillis, prevnodes[NUMPREVNODES],
-			lastrun, lasthunt, lastaction, jumpseed, jumprand;
+		int enemy, enemyseen, enemymillis, prevnodes[NUMPREVNODES], targnode, targlast, targtime, targseq,
+			lastrun, lasthunt, lastaction, jumpseed, jumprand, blocktime, huntseq, blockseq;
 		float targyaw, targpitch, views[3];
 		bool suspended, dontmove, becareful, tryreset, trywipe;
 
@@ -137,8 +137,8 @@ namespace ai
 			if(!tryit)
 			{
 				spot = target = vec(0, 0, 0);
-				enemy = -1;
-				lastaction = lasthunt = enemyseen = enemymillis = 0;
+				enemy = targnode = targlast = -1;
+				lastaction = lasthunt = enemyseen = enemymillis = blocktime = huntseq = blockseq = targtime = targseq = 0;
 				lastrun = jumpseed = lastmillis;
 				jumprand = lastmillis+5000;
 				dontmove = false;

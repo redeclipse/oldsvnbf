@@ -80,7 +80,7 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
 	int inmaterial;
-    bool inliquid, onladder;
+    bool blocked, inliquid, onladder;
     float submerged;
     char move, strafe;
 
@@ -107,7 +107,7 @@ struct physent                                  // base entity type, can be affe
     void reset()
     {
     	inmaterial = timeinair = 0;
-    	inliquid = onladder = false;
+    	blocked = inliquid = onladder = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vel = falling = vec(0, 0, 0);
