@@ -39,10 +39,11 @@ VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 VARG(regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
-VARG(impulsemeter, 0, 20000, INT_MAX-1); // impulse dash length
+VARG(impulsemeter, 0, 30000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
 VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
+FVARG(impulseregen, 0, 2, 10000); // impulse regen multiplier
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes

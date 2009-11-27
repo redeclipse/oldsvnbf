@@ -176,7 +176,7 @@ enum
 {
 	ANIM_PAIN = ANIM_GAMESPECIFIC, ANIM_JUMP,
 	ANIM_IMPULSE_FORWARD, ANIM_IMPULSE_BACKWARD, ANIM_IMPULSE_LEFT, ANIM_IMPULSE_RIGHT, ANIM_IMPULSE_DASH,
-	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_WIN, ANIM_LOSE,
+	ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_PICKUP, ANIM_WIN, ANIM_LOSE,
 	ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
 	ANIM_MELEE, ANIM_MELEE_ATTACK,
 	ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
@@ -190,7 +190,8 @@ enum
 	ANIM_MAX
 };
 
-#define WEAPSWITCHDELAY	750
+#define WEAPSWITCHDELAY	PHYSMILLIS*2
+#define WEAPPICKUPDELAY	PHYSMILLIS*2
 #define EXPLOSIONSCALE	16.f
 
 enum
@@ -647,10 +648,11 @@ struct gamestate
 
 	void weapswitch(int weap, int millis, int state = WEAP_S_SWITCH)
 	{
+		int delay = state == WEAP_S_PICKUP ? WEAPPICKUPDELAY : WEAPSWITCHDELAY;
 		lastweap = weapselect;
-		setweapstate(lastweap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);
+		setweapstate(lastweap, state, delay, millis);
 		weapselect = weap;
-		setweapstate(weap, state, WEAPSWITCHDELAY, millis);
+		setweapstate(weap, state, delay, millis);
 	}
 
 	bool weapwaited(int weap, int millis, int skip = 0)
@@ -836,7 +838,7 @@ const char *animnames[] =
 	"idle", "forward", "backward", "left", "right", "dead", "dying", "swim",
 	"mapmodel", "trigger on", "trigger off", "pain", "jump",
 	"impulse forward", "impulse backward", "impulse left", "impulse right", "impulse dash",
-	"sink", "edit", "lag", "switch", "win", "lose",
+	"sink", "edit", "lag", "switch", "pickup", "win", "lose",
 	"crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
 	"melee", "melee attack",
 	"pistol", "pistol shoot", "pistol reload",

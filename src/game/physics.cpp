@@ -139,9 +139,8 @@ namespace physics
 		{
 			gameent *e = (gameent *)d;
 			if(e->onladder || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS) ||
-				(e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS) ||
-					(e->actiontime[AC_IMPULSE] && lastmillis-e->actiontime[AC_IMPULSE] <= PHYSMILLIS) ||
-						e->turnside || liquidcheck(e)) return false;
+				(e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS) || e->turnside || liquidcheck(e))
+					return false;
 			return true;
 		}
 		return false;
@@ -519,10 +518,10 @@ namespace physics
 				if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
 				else d->action[AC_IMPULSE] = false;
 			}
-			else if(d->impulse[IM_METER] > 0)
+			else if(d->impulse[IM_METER] > 0 && impulseregen > 0)
 			{
-				int timeslice = max(millis, 1);
-				if(iscrouching(d)) timeslice += timeslice/2;
+				int timeslice = max(int(millis*impulseregen), 1);
+				if(iscrouching(d)) timeslice += timeslice;
 				if(d->move || d->strafe) timeslice -= timeslice/2;
 				if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
 				if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
@@ -565,7 +564,7 @@ namespace physics
 			{
 				if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
 				{
-					d->vel.z += impulseforce(d);
+					d->vel.z += impulseforce(d)*1.5f;
 					d->doimpulse(impulsecost, IM_T_BOOST, lastmillis);
 					allowed = false;
 					playsound(S_IMPULSE, d->o, d);
