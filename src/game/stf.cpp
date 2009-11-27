@@ -33,9 +33,9 @@ namespace stf
 			if(occupy > 0 && occupy < 1)
 			{
 				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[attack].colour, 0, occupy);
-				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour, occupy, 1-occupy);
+				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[defend].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner ? b.owner : TEAM_NEUTRAL].colour);
+			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[defend].colour);
 			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
 		}
 	}
