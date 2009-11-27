@@ -189,7 +189,14 @@ struct duelservmode : servmode
 				{
 					srvmsgf(-1, "\fateam \fs%s%s\fS are the victors!", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
 					loopv(playing) if(allowbroadcast(playing[i]->clientnum))
-						sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, playing[i]->team == alive[0]->team ? S_V_YOUWIN : S_V_YOULOSE, -1, "");
+					{
+						if(playing[i]->team == alive[0]->team)
+						{
+							sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, -1, "");
+							givepoints(playing[i], 5);
+						}
+						else sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOULOSE, -1, "");
+					}
 					clear();
 				}
 			}
@@ -207,7 +214,14 @@ struct duelservmode : servmode
 				{
 					srvmsgf(-1, "\fa%s was the victor!", colorname(alive[0]));
 					loopv(playing) if(allowbroadcast(playing[i]->clientnum))
-						sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, playing[i] == alive[0] ? S_V_YOUWIN : S_V_YOULOSE, -1, "");
+					{
+						if(playing[i] == alive[0])
+						{
+							sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, -1, "");
+							givepoints(playing[i], 5);
+						}
+						else sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOULOSE, -1, "");
+					}
 					clear();
 					break;
 				}

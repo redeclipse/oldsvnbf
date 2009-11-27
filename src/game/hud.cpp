@@ -198,7 +198,7 @@ namespace hud
 	VARP(radarcard, 0, 0, 2);
 	VARP(radaritems, 0, 2, 2);
 	VARP(radaritemspawn, 0, 1, 1);
-	VARP(radaritemtime, 0, 3000, INT_MAX-1);
+	VARP(radaritemtime, 0, 5000, INT_MAX-1);
 	VARP(radaritemnames, 0, 0, 2);
 	VARP(radarplayers, 0, 1, 2);
 	VARP(radarplayernames, 0, 0, 2);

@@ -575,6 +575,26 @@ namespace server
 	}
 	ICOMMAND(mutscheck, "iii", (int *g, int *m), intret(mutscheck(*g, *m)));
 
+	void changemode(int *mode, int *muts)
+	{
+		if(mode < 0)
+		{
+			if(GVAR(defaultmode) >= G_DEMO) *mode = GVAR(defaultmode);
+			else *mode = rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH;
+		}
+		if(muts < 0)
+		{
+			if(GVAR(defaultmuts) >= G_M_NONE) *muts = GVAR(defaultmuts);
+			else
+			{
+				int rmut = rnd(G_M_NUM+1);
+				if(rmut) *muts = 1<<(rmut-1);
+				else *muts = 0;
+			}
+		}
+		modecheck(mode, muts);
+	}
+
 	const char *choosemap(const char *suggest, int mode, int muts, int force)
 	{
 		static string mapchosen;
@@ -1254,9 +1274,7 @@ namespace server
 			}
 			else
 			{
-				int mode = GVAR(defaultmode) < 0 ? rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH+1 : gamemode,
-					muts = GVAR(defaultmuts) < 0 ? mutators = 1<<(rnd(G_M_NUM)+1) : mutators;
-				modecheck(&mode, &muts);
+				int mode = gamemode, muts = mutators; changemode(&mode, &muts);
 				const char *map = choosemap(smapname, mode, muts);
 				srvoutf(3, "\fcserver chooses: \fs\fw%s on map %s\fS", gamename(mode, muts), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, mode, muts);
@@ -1546,9 +1564,7 @@ namespace server
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
 		aiman::dorefresh = true;
         stopdemo();
-		if((gamemode = mode >= 0 ? mode : GVAR(defaultmode)) < 0) gamemode = rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH+1;
-		if((mutators = muts >= 0 ? muts : GVAR(defaultmuts)) < 0) mutators = 1<<(rnd(G_M_NUM)+1);
-		modecheck(&gamemode, &mutators);
+		gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
 		nplayers = gamemillis = interm = 0;
 		oldtimelimit = GVAR(timelimit);
 		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;

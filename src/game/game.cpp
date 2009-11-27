@@ -47,11 +47,11 @@ namespace game
 	VARP(specfov, 1, 120, 179);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
-	FVARP(spectvspeed, 0, 0.25f, 1000);
+	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
 	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
-	FVARP(waittvspeed, 0, 0.25f, 1000);
+	FVARP(waittvspeed, 0, 1, 1000);
 	FVARP(waittvpitch, 0, 1, 1000);
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);

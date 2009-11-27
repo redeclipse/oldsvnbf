@@ -213,8 +213,8 @@ namespace aiman
 			switch(GVAR(botbalance))
 			{
 				case -1: balance = 0; break; // no bots
-				case  0: balance = max(people, nplayers); break; // use scaled numplayers
-				default: balance = max(people, GVAR(botbalance)*numt); break; // balance to at least this*numteams
+				case  0: balance = max(people, nplayers); break; // use distributed numplayers
+				default: balance = max(people, GVAR(botbalance)); break; // balance to at least this
 			}
 			if(m_team(gamemode, mutators) && (balance > 0 || GVAR(teambalance) == 3))
 			{ // skew this if teams are unbalanced

@@ -2,7 +2,7 @@ VARG(serverdebug, 0, 0, 3);
 
 SVARG(defaultmap, "");
 VARG(defaultmode, -1, -1, G_MAX-1);
-VARG(defaultmuts, -1, G_M_NONE, G_M_ALL);
+VARG(defaultmuts, -1, -1, G_M_ALL);
 VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 SVARG(storymaps, "wishbone");
@@ -22,7 +22,7 @@ VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 =
 VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
 VARG(instadelay, 0, 3000, INT_MAX-1); // .. in instagib matches
 VARG(trialdelay, 0, 1000, INT_MAX-1); // .. in time trial matches
-VARG(spawnprotect, 0, 3000, INT_MAX-1); // delay before damage can be dealt to spawning player
+VARG(spawnprotect, 0, 5000, INT_MAX-1); // delay before damage can be dealt to spawning player
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
 VARG(extrahealth, 0, 100, INT_MAX-1);
@@ -43,7 +43,7 @@ VARG(impulsemeter, 0, 30000, INT_MAX-1); // impulse dash length
 VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
 VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
-FVARG(impulseregen, 0, 2, 10000); // impulse regen multiplier
+FVARG(impulseregen, 0, 5, 10000); // impulse regen multiplier
 
 VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
@@ -77,11 +77,7 @@ VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
-#ifdef STANDALONE
-VARG(botbalance, 0, 2, MAXAI/2); // 0 = populate bots to map defined numplayers, 1 or more = fill only with this*numteams
-#else
-VARG(botbalance, 0, 0, MAXAI/2);
-#endif
+VARG(botbalance, 0, 0, MAXAI/2); // 0 = populate bots to map defined numplayers, 1 or more = fill only with this*numteams
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
