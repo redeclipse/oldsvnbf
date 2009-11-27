@@ -370,10 +370,10 @@ namespace server
 			case 2: mastermask = MM_COOPSERV; break;
 		}
 	});
-	VAR(modelimit, 0, G_STORY, G_MAX-1);
-	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher (+1 locked completely)
-	VAR(mapslock, 0, 2, 3); // 0 = off, 1 = master can only select non-list maps (+1 admin, +2 completely)
-	VAR(varslock, 0, 1, 2); // 0 = off, 1 = admin only, 2 = nobody
+	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
+	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher, 4 = no mode selection
+	VAR(mapslock, 0, 2, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
+	VAR(varslock, 0, 1, 2); // 0 = master, 1 = admin only, 2 = nobody
 	VAR(votewait, 0, 3000, INT_MAX-1);
 
 	ICOMMAND(gameid, "", (), result(gameid()));
@@ -577,12 +577,12 @@ namespace server
 
 	void changemode(int *mode, int *muts)
 	{
-		if(mode < 0)
+		if(*mode < 0)
 		{
-			if(GVAR(defaultmode) >= G_DEMO) *mode = GVAR(defaultmode);
-			else *mode = rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH;
+			if(GVAR(defaultmode) >= G_START) *mode = GVAR(defaultmode);
+			else *mode = rnd(G_RAND)+G_FIGHT;
 		}
-		if(muts < 0)
+		if(*muts < 0)
 		{
 			if(GVAR(defaultmuts) >= G_M_NONE) *muts = GVAR(defaultmuts);
 			else
@@ -1274,7 +1274,8 @@ namespace server
 			}
 			else
 			{
-				int mode = gamemode, muts = mutators; changemode(&mode, &muts);
+				int mode = GVAR(defaultmode) >= 0 ? gamemode : -1, muts = GVAR(defaultmuts) >= 0 ? mutators : -1;
+				changemode(&mode, &muts);
 				const char *map = choosemap(smapname, mode, muts);
 				srvoutf(3, "\fcserver chooses: \fs\fw%s on map %s\fS", gamename(mode, muts), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, mode, muts);
@@ -1316,40 +1317,46 @@ namespace server
 				break;
 			}
 		}
-		if(reqmode != G_EDITMODE) switch(mapslock)
+		if(reqmode != G_EDITMODE && mapslock)
 		{
-			case 0: default: break;
-			case 1: case 2: case 3:
+			const char *maplist = NULL;
+			switch(mapslock)
 			{
-				const char *maplist = GVAR(mainmaps);
-				if(m_story(reqmode)) maplist = GVAR(storymaps);
-				else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
-				else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-				else if(m_trial(reqmode)) maplist = GVAR(trialmaps);
-				if(maplist && *maplist)
+				default: break;
+				case 1: case 2: maplist = GVAR(allowmaps); break;
+				case 3: case 4:
 				{
-					int n = listlen(maplist);
-					bool found = false;
-					string maploc;
-					if(strpbrk(map, "/\\")) copystring(maploc, map);
-					else formatstring(maploc)("maps/%s", map);
-					loopi(n)
-					{
-						char *maptxt = indexlist(maplist, i);
-						if(maptxt)
-						{
-							string cmapname;
-							if(strpbrk(maptxt, "/\\")) copystring(cmapname, maptxt);
-							else formatstring(cmapname)("maps/%s", maptxt);
-							if(!strcmp(maploc, cmapname)) found = true;
-							DELETEA(maptxt);
-						}
-						if(found) break;
-					}
-					if(!found && !haspriv(ci, mapslock == 1 ? PRIV_MASTER : (mapslock == 2 ? PRIV_ADMIN : PRIV_MAX), "select a custom maps"))
-						return false;
+					if(m_story(reqmode)) maplist = GVAR(storymaps);
+					else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
+					else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+					else if(m_trial(reqmode)) maplist = GVAR(trialmaps);
+					else if(m_fight(reqmode)) maplist = GVAR(mainmaps);
+					else maplist = GVAR(allowmaps);
+					break;
 				}
-				break;
+				case 5: if(!haspriv(ci, PRIV_MAX, "select a custom maps")) return false; break;
+			}
+			if(maplist && *maplist)
+			{
+				int n = listlen(maplist);
+				bool found = false;
+				string maploc;
+				if(strpbrk(map, "/\\")) copystring(maploc, map);
+				else formatstring(maploc)("maps/%s", map);
+				loopi(n)
+				{
+					char *maptxt = indexlist(maplist, i);
+					if(maptxt)
+					{
+						string cmapname;
+						if(strpbrk(maptxt, "/\\")) copystring(cmapname, maptxt);
+						else formatstring(cmapname)("maps/%s", maptxt);
+						if(!strcmp(maploc, cmapname)) found = true;
+						DELETEA(maptxt);
+					}
+					if(found) break;
+				}
+				if(!found && !haspriv(ci, mapslock%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return false;
 			}
 		}
 		copystring(ci->mapvote, map);
@@ -2098,18 +2105,19 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && realflags&HIT_FULL) realflags &= ~HIT_FULL;
+		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && (realflags&HIT_FULL))
+			realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
-			if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
-			else if(weap == WEAP_MELEE) nodamage++;
+			if(weap == WEAP_MELEE) nodamage++;
+			else if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
 			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
-				case 1: if(actor->state.aitype < 0) break;
+				case 1: if(actor == target || actor->state.aitype < 0) break;
 				case 0: nodamage++; break;
 			}
 		}
@@ -2151,7 +2159,7 @@ namespace server
 			{
 				if(actor != target) actor->state.teamkills++;
 				actor->state.spree = 0;
-				pointvalue *= 3;
+				pointvalue *= 2;
 			}
 			else if(actor != target)
 			{
@@ -2162,7 +2170,7 @@ namespace server
 				if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 				{
 					style |= FRAG_HEADSHOT;
-					pointvalue *= 3;
+					pointvalue *= 2;
 				}
 				if(GVAR(multikilldelay))
 				{
@@ -2181,7 +2189,7 @@ namespace server
 						{
 							style |= type;
 							actor->state.rewards |= type;
-							pointvalue *= offset+2;
+							pointvalue *= offset+1;
 							//loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
 						}
 					}
@@ -2193,7 +2201,7 @@ namespace server
 					{
 						style |= type;
 						actor->state.rewards |= type;
-						pointvalue *= offset+2;
+						pointvalue *= offset+1;
 					}
 				}
 				logs = 0;

@@ -193,7 +193,7 @@ struct duelservmode : servmode
 						if(playing[i]->team == alive[0]->team)
 						{
 							sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, -1, "");
-							givepoints(playing[i], 5);
+							givepoints(playing[i], playing.length());
 						}
 						else sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOULOSE, -1, "");
 					}
@@ -218,7 +218,7 @@ struct duelservmode : servmode
 						if(playing[i] == alive[0])
 						{
 							sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOUWIN, -1, "");
-							givepoints(playing[i], 5);
+							givepoints(playing[i], playing.length());
 						}
 						else sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOULOSE, -1, "");
 					}
