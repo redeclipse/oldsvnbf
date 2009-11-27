@@ -448,7 +448,7 @@ namespace physics
 	bool move(physent *d, vec &dir)
 	{
 		vec old(d->o), obstacle; d->o.add(dir);
-		bool collided = false, slidecollide = false;
+		bool collided = false, slidecollide = false, stepping = false;
 		if(!collide(d, dir))
 		{
             obstacle = wall;
@@ -466,21 +466,22 @@ namespace physics
             {
                 d->o = old;
                 d->zmargin = 0;
-                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || d->onladder ? d->floor : vec(wall))) return true;
+                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || d->onladder ? d->floor : vec(wall)))
+					stepping = true;
             }
             else
             {
                 d->o = old;
                 d->zmargin = 0;
             }
-			collided = true; // can't step over the obstacle, so just slide against it
+			if(!stepping) collided = true; // can't step over the obstacle, so just slide against it
 		}
         else if(d->physstate == PHYS_STEP_UP || d->onladder)
         {
             if(!collide(d, vec(0, 0, -1), slopez))
             {
                 d->o = old;
-                if(trystepup(d, dir, vec(0, 0, 1), stairheight, d->onladder ? d->floor : vec(wall))) return true;
+                if(trystepup(d, dir, vec(0, 0, 1), stairheight, d->onladder ? d->floor : vec(wall))) stepping = true;
                 d->o.add(dir);
             }
         }
@@ -488,17 +489,17 @@ namespace physics
 		{
 			d->o = old;
 			float step = dir.magnitude();
-			if(trystepdown(d, dir, step, 2, 1)) return true;
-			if(trystepdown(d, dir, step, 1, 1)) return true;
-			if(trystepdown(d, dir, step, 1, 2)) return true;
-			//d->o.z -= step; if(collide(d, vec(0, 0, -1))) return true;
-			d->o = old; d->o.add(dir);
+			if(trystepdown(d, dir, step, 2, 1)) stepping = true;
+			else if(trystepdown(d, dir, step, 1, 1)) stepping = true;
+			else if(trystepdown(d, dir, step, 1, 2)) stepping = true;
+			else { d->o = old; d->o.add(dir); }
 		}
 		vec floor(0, 0, 0);
 		bool slide = collided, found = findfloor(d, collided, obstacle, slide, floor);
         if(slide || (!collided && floor.z > 0 && floor.z < wallz))
         {
             slideagainst(d, dir, slide ? obstacle : floor, found, slidecollide);
+            d->blocked = true;
 		}
 		if(found) landing(d, dir, floor, collided);
 		else falling(d, dir, floor);
@@ -775,6 +776,7 @@ namespace physics
 		bool floating = pl->type == ENT_CAMERA || (pl->type == ENT_PLAYER && pl->state == CS_EDITING);
 		float secs = millis/1000.f;
 
+		pl->blocked = false;
 		if(pl->type==ENT_PLAYER || pl->type==ENT_AI)
         {
             updatematerial(pl, local, floating);

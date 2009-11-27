@@ -141,33 +141,33 @@ namespace ctf
 				if(millis <= 1000) trans += float(millis)/1000.f;
 				else trans = 1.f;
             }
-            else if((f.base&BASE_HOME) && !f.team) trans = 0.25f;
+            else if(f.base&BASE_HOME) trans = f.team ? 0.125f : 0.25f;
             if(trans > 0) rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attrs[1], entities::ents[f.ent]->attrs[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
 			above.z += enttype[FLAG].radius*2/3;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
 				defformatstring(info)("<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
-				part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, trans);
+				part_textcopy(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, max(trans, 0.5f));
 				above.z += 2.5f;
             }
 			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload("textures/progress", 3), 4, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload("textures/progress", 3), 4, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, trans);
+				part_icon(above, textureload("textures/progress", 3), 4, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload("textures/progress", 3), 4, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f));
 				above.z += 2.5f;
 			}
-            if(f.base&BASE_FLAG && (f.owner || f.droptime))
+            if((f.base&BASE_FLAG) && (f.owner || f.droptime))
             {
 				if(f.owner)
 				{
 					defformatstring(info)("<super>%s", game::colorname(f.owner));
-					part_textcopy(above, info, PART_TEXT, 1, 0xFFFFFF, 2, trans);
+					part_textcopy(above, info, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f));
 					above.z += 1.5f;
 				}
 				const char *info = f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped";
-				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, trans);
+				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, max(trans, 0.5f));
             }
         }
         static vector<int> numflags, iterflags; // dropped/owned
