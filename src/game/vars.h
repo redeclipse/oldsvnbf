@@ -1,8 +1,8 @@
 VARG(serverdebug, 0, 0, 3);
 
 SVARG(defaultmap, "");
-VARG(defaultmode, G_LOBBY, G_CTF, G_MAX-1);
-VARG(defaultmuts, G_M_NONE, G_M_NONE, G_M_ALL);
+VARG(defaultmode, -1, -1, G_MAX-1);
+VARG(defaultmuts, -1, G_M_NONE, G_M_ALL);
 VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 SVARG(storymaps, "wishbone");

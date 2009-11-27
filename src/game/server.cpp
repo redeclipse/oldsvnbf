@@ -415,10 +415,10 @@ namespace server
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
 
-	const char *pickmap(const char *suggest)
+	const char *pickmap(const char *suggest, int mode, int muts)
 	{
 		const char *map = GVAR(defaultmap);
-		if(!map || !*map) map = choosemap(suggest, GVAR(maprotate) ? GVAR(maprotate) : 2);
+		if(!map || !*map) map = choosemap(suggest, mode, muts, GVAR(maprotate) ? GVAR(maprotate) : 2);
 		return map;
 	}
 
@@ -575,7 +575,7 @@ namespace server
 	}
 	ICOMMAND(mutscheck, "iii", (int *g, int *m), intret(mutscheck(*g, *m)));
 
-	const char *choosemap(const char *suggest, int force)
+	const char *choosemap(const char *suggest, int mode, int muts, int force)
 	{
 		static string mapchosen;
 		if(suggest && *suggest) copystring(mapchosen, suggest);
@@ -584,10 +584,10 @@ namespace server
 		if(rotate)
 		{
 			const char *maplist = GVAR(mainmaps);
-			if(m_story(gamemode)) maplist = GVAR(storymaps);
-			else if(m_stf(gamemode)) maplist = GVAR(stfmaps);
-			else if(m_ctf(gamemode)) maplist = m_multi(gamemode, mutators) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-			else if(m_trial(gamemode)) maplist = GVAR(trialmaps);
+			if(m_story(mode)) maplist = GVAR(storymaps);
+			else if(m_stf(mode)) maplist = GVAR(stfmaps);
+			else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
+			else if(m_trial(mode)) maplist = GVAR(trialmaps);
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), p = -1, c = -1;
@@ -624,7 +624,7 @@ namespace server
 				}
 			}
 		}
-		return *mapchosen ? mapchosen : pickmap(suggest);
+		return *mapchosen ? mapchosen : pickmap(suggest, mode, muts);
 	}
 
 	bool canload(const char *type)
@@ -1254,10 +1254,13 @@ namespace server
 			}
 			else
 			{
-				const char *map = choosemap(smapname);
-				srvoutf(3, "\fcserver chooses: \fs\fw%s on map %s\fS", gamename(gamemode, mutators), map);
-				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, gamemode, mutators);
-				changemap(map, gamemode, mutators);
+				int mode = GVAR(defaultmode) < 0 ? rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH+1 : gamemode,
+					muts = GVAR(defaultmuts) < 0 ? mutators = 1<<(rnd(G_M_NUM)+1) : mutators;
+				modecheck(&mode, &muts);
+				const char *map = choosemap(smapname, mode, muts);
+				srvoutf(3, "\fcserver chooses: \fs\fw%s on map %s\fS", gamename(mode, muts), map);
+				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, mode, muts);
+				changemap(map, mode, muts);
 			}
 			return true;
 		}
@@ -1543,8 +1546,8 @@ namespace server
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
 		aiman::dorefresh = true;
         stopdemo();
-		gamemode = mode >= 0 ? mode : GVAR(defaultmode);
-		mutators = muts >= 0 ? muts : GVAR(defaultmuts);
+		if((gamemode = mode >= 0 ? mode : GVAR(defaultmode)) < 0) gamemode = rnd(G_MAX-((G_MAX-G_TRIAL)+1))+G_DEATHMATCH+1;
+		if((mutators = muts >= 0 ? muts : GVAR(defaultmuts)) < 0) mutators = 1<<(rnd(G_M_NUM)+1);
 		modecheck(&gamemode, &mutators);
 		nplayers = gamemillis = interm = 0;
 		oldtimelimit = GVAR(timelimit);
@@ -1553,7 +1556,7 @@ namespace server
 		sents.setsize(0); scores.setsize(0);
 		setuptriggers(false); setupspawns(false);
 
-		const char *reqmap = name && *name ? name : pickmap(smapname);
+		const char *reqmap = name && *name ? name : pickmap(smapname, gamemode, mutators);
 #ifdef STANDALONE // interferes with savemap on clients, in which case we can just use the auto-request
 		loopi(3)
 		{
@@ -2074,10 +2077,7 @@ namespace server
 		return 1;
 	}
 
-	void clearevent(clientinfo *ci)
-	{
-		delete ci->events.remove(0);
-	}
+	void clearevent(clientinfo *ci) { delete ci->events.remove(0); }
 
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
