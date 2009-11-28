@@ -21,7 +21,7 @@ namespace entities
 		switch(e.type)
 		{
 			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case LIGHTFX: case TELEPORT: case PUSHER:
-				return m_speedtime(1000); break;
+				return m_time(1000); break;
 			default: break;
 		}
 		return 0;
@@ -94,7 +94,7 @@ namespace entities
 			}
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(game::gamemode, attr[0], sweap);
+				int sweap = m_weapon(game::gamemode, game::mutators), attr1 = w_attr(game::gamemode, attr[0], sweap);
 				if(isweap(attr1))
 				{
 					defformatstring(str)("\fs%s%s\fS", weaptype[attr1].text, weaptype[attr1].name);
@@ -172,7 +172,7 @@ namespace entities
 			case PLAYERSTART: return teamtype[attr[0]].tpmdl;
 			case WEAPON:
 			{
-				int sweap = m_spawnweapon(game::gamemode, game::mutators), attr1 = weapattr(game::gamemode, attr[0], sweap);
+				int sweap = m_weapon(game::gamemode, game::mutators), attr1 = w_attr(game::gamemode, attr[0], sweap);
 				return weaptype[attr1].item;
 			}
 			case FLAG: return teamtype[attr[0]].flag;
@@ -202,7 +202,7 @@ namespace entities
 		{
 			loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 		}
-		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
+		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 		if(showentdescs)
 		{
@@ -235,7 +235,7 @@ namespace entities
 		if(ents.inrange(r) && ents[r]->type == WEAPON)
 		{
 			gameentity &f = *(gameentity *)ents[r];
-			attr = weapattr(game::gamemode, f.attrs[0], sweap);
+			attr = w_attr(game::gamemode, f.attrs[0], sweap);
 			if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 		}
 		e.spawned = s;
@@ -678,7 +678,7 @@ namespace entities
 			{
 				if(game::allowmove(d))
 				{
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
+					int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 					if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 					{
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
@@ -714,7 +714,7 @@ namespace entities
 								d->pitch = f.attrs[1];
 								if(physics::entinmap(d, true))
 								{
-									float mag = m_speedscale(max(d->vel.magnitude(), f.attrs[2] ? float(f.attrs[2]) : 50.f));
+									float mag = m_scale(max(d->vel.magnitude(), f.attrs[2] ? float(f.attrs[2]) : 50.f));
 									vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 									d->vel.mul(mag);
 									game::fixfullrange(d->yaw, d->pitch, d->roll, true);
@@ -733,7 +733,7 @@ namespace entities
 				}
 				case PUSHER:
 				{
-					float mag = m_speedscale(10.f);
+					float mag = m_scale(10.f);
 					if(e.attrs[4] && e.attrs[4] < e.attrs[3])
 					{
 						vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
@@ -758,7 +758,7 @@ namespace entities
 				}
 				case CHECKPOINT:
 				{
-					if(!chkmode(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
+					if(!m_check(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
 					if(d->checkpoint != n)
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
@@ -851,7 +851,7 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? weapattr(game::gamemode, entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
+					int sweap = m_weapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? w_attr(game::gamemode, entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
 						colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
 					game::spawneffect(PART_FIREBALL, proj.o, colour, enttype[ents[proj.id]->type].radius, 5);
 					proj.beenused = true;
@@ -2122,7 +2122,7 @@ namespace entities
 	void preload()
 	{
 		static bool weapf[WEAP_MAX];
-		int sweap = m_spawnweapon(game::gamemode, game::mutators);
+		int sweap = m_weapon(game::gamemode, game::mutators);
 		loopi(WEAP_MAX) weapf[i] = (i == sweap ? true : false);
 		loopv(ents)
 		{
@@ -2130,7 +2130,7 @@ namespace entities
 			if(e.type == MAPMODEL || e.type == FLAG) continue;
 			else if(e.type == WEAPON)
 			{
-				int attr = weapattr(game::gamemode, e.attrs[0], sweap);
+				int attr = w_attr(game::gamemode, e.attrs[0], sweap);
 				if(isweap(attr) && !weapf[attr])
 				{
 					weapons::preload(attr);
@@ -2244,7 +2244,7 @@ namespace entities
 		}
 		bool notitem = (edit && (showentinfo >= 4 || hasent)),
 			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
-		int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
+		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval >= 500 ? (1500-interval)/1000.f : (500+interval)/1000.f;
 		if(item)

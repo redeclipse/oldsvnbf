@@ -68,7 +68,7 @@ namespace ai
 
 	bool altfire(gameent *d, gameent *e)
 	{
-		if(e && !weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+		if(e && !weaptype[d->weapselect].zooms && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 		{
 			switch(d->weapselect)
 			{
@@ -182,7 +182,7 @@ namespace ai
 
 	void update()
 	{
-		bool updating = lastmillis-updatemillis > m_speedtime(100); // fixed rate logic at 10fps
+		bool updating = lastmillis-updatemillis > m_time(100); // fixed rate logic at 10fps
         if(updating)
         {
         	avoid();
@@ -338,7 +338,7 @@ namespace ai
 			d->ai->enemyseen = lastmillis;
 			bool alt = altfire(d, e);
 			vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-			if(!cansee(d, dp, ep)) d->ai->enemyseen -= m_speedtime(((111-d->skill)*10)+10); // so we don't "quick"
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= m_time(((111-d->skill)*10)+10); // so we don't "quick"
 			return true;
 		}
 		return false;
@@ -372,7 +372,7 @@ namespace ai
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
 		}
 	}
 
@@ -385,12 +385,12 @@ namespace ai
 			{
 				gameentity &e = *(gameentity *)entities::ents[j];
 				if(enttype[e.type].usetype != EU_ITEM) continue;
-				int sweap = m_spawnweapon(game::gamemode, game::mutators);
+				int sweap = m_weapon(game::gamemode, game::mutators);
 				switch(e.type)
 				{
 					case WEAPON:
 					{
-						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
+						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
 						if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
@@ -411,12 +411,12 @@ namespace ai
 				projent &proj = *projs::projs[j];
 				if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) continue;
 				gameentity &e = *(gameentity *)entities::ents[proj.id];
-				int sweap = m_spawnweapon(game::gamemode, game::mutators);
+				int sweap = m_weapon(game::gamemode, game::mutators);
 				switch(e.type)
 				{
 					case WEAPON:
 					{
-						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
+						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
 						if(isweap(attr) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							if(proj.owner == d) break;
@@ -440,7 +440,7 @@ namespace ai
 		static vector<interest> interests; interests.setsizenodelete(0);
 		if(m_fight(game::gamemode))
 		{ // don't let bots consume items in story mode (yet?)
-			if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
+			if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)))
 				items(d, b, interests);
 			if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 			else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
@@ -512,10 +512,10 @@ namespace ai
 			d->ai->reset(tryreset);
 			d->ai->lastrun = lastmillis;
 			aistate &b = d->ai->getstate();
-			b.next = lastmillis+m_speedtime(((111-d->skill)*10)+rnd((111-d->skill)*10));
+			b.next = lastmillis+m_time(((111-d->skill)*10)+rnd((111-d->skill)*10));
 			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
-				d->arenaweap = m_spawnweapon(game::gamemode, game::mutators);
+				d->arenaweap = m_weapon(game::gamemode, game::mutators);
 			else if(aiforcegun >= 0 && aiforcegun < WEAP_SUPER) d->arenaweap = aiforcegun;
 			else while(true)
 			{
@@ -613,7 +613,7 @@ namespace ai
 	{
 		if(d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
 		{
-			int sweap = m_spawnweapon(game::gamemode, game::mutators);
+			int sweap = m_weapon(game::gamemode, game::mutators);
 			switch(b.targtype)
 			{
 				case AI_T_NODE:
@@ -634,7 +634,7 @@ namespace ai
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
 						if(enttype[e.type].usetype != EU_ITEM) return 0;
-						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
+						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -658,7 +658,7 @@ namespace ai
 						projent &proj = *projs::projs[j];
 						if(!entities::ents.inrange(proj.id) || enttype[entities::ents[proj.id]->type].usetype != EU_ITEM) return 0;
 						gameentity &e = *(gameentity *)entities::ents[proj.id];
-						int attr = weapattr(game::gamemode, e.attrs[0], sweap);
+						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
 						switch(e.type)
 						{
 							case WEAPON:
@@ -713,7 +713,7 @@ namespace ai
 						else
 						{
 							vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime((d->skill*50)+1000));
+							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time((d->skill*50)+1000));
 						}
 					}
 					break;
@@ -850,9 +850,9 @@ namespace ai
 		{
 			if((d->action[AC_JUMP] = jump) != false) d->actiontime[AC_JUMP] = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 2 : 8);
-			d->ai->jumpseed = lastmillis+m_speedtime(seed+rnd(seed));
+			d->ai->jumpseed = lastmillis+m_time(seed+rnd(seed));
 			seed *= b.idle ? 200 : 100;
-			d->ai->jumprand = lastmillis+m_speedtime(seed+rnd(seed));
+			d->ai->jumprand = lastmillis+m_time(seed+rnd(seed));
 		}
 	}
 
@@ -904,8 +904,8 @@ namespace ai
 			float yaw, pitch;
 			game::getyawpitch(dp, ep, yaw, pitch);
 			game::fixrange(yaw, pitch);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime((d->skill*50)+1000),
-				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_speedtime(skmod), targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time((d->skill*50)+1000),
+				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time(skmod), targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
 			if(d->weapselect == WEAP_MELEE && targeted)
 			{
 				d->ai->spot = e->feetpos();
@@ -927,7 +927,7 @@ namespace ai
 				if(insight || quick)
 				{
 					bool careful = d->weapselect != WEAP_MELEE ? d->ai->becareful : false;
-					if(!careful && targeted && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+					if(!careful && targeted && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 					{
 						d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
 						d->ai->lastaction = d->actiontime[alt ? AC_ALTERNATE : AC_ATTACK] = lastmillis;
@@ -989,7 +989,7 @@ namespace ai
 
 	bool request(gameent *d, aistate &b)
 	{
-		int busy = process(d, b), sweap = m_spawnweapon(game::gamemode, game::mutators);
+		int busy = process(d, b), sweap = m_weapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
 			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true));
@@ -1043,7 +1043,7 @@ namespace ai
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
 								if(m_noitems(game::gamemode, game::mutators)) continue;
-								int attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
+								int attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
 								{
 									case WEAPON:
@@ -1104,7 +1104,7 @@ namespace ai
 		if(d->blocked)
 		{
 			d->ai->blocktime += lastmillis-d->ai->lastrun;
-			if(d->ai->blocktime > m_speedtime((d->ai->blockseq+1)*1000))
+			if(d->ai->blocktime > m_time((d->ai->blockseq+1)*1000))
 			{
 				switch(d->ai->blockseq)
 				{
@@ -1125,7 +1125,7 @@ namespace ai
 		{
 			int millis = lastmillis-d->ai->lasthunt;
 			if(millis <= 2000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
-			else if(millis > m_speedtime((d->ai->huntseq+1)*2000))
+			else if(millis > m_time((d->ai->huntseq+1)*2000))
 			{
 				switch(d->ai->huntseq)
 				{
@@ -1140,7 +1140,7 @@ namespace ai
 		if(d->ai->targnode == d->ai->targlast)
 		{
 			d->ai->targtime += lastmillis-d->ai->lastrun;
-			if(d->ai->targtime > m_speedtime((d->ai->targseq+1)*4000))
+			if(d->ai->targtime > m_time((d->ai->targseq+1)*4000))
 			{
 				switch(d->ai->targseq)
 				{
@@ -1298,13 +1298,13 @@ namespace ai
 					else
 					{
 						if(d->aitype >= AI_START) d->ai->suspended = true;
-						c.next = lastmillis+m_speedtime(250+rnd(250));
+						c.next = lastmillis+m_time(250+rnd(250));
 					}
 				}
 				else
 				{
 					if(!aisuspend) d->ai->suspended = false;
-					c.next = lastmillis+m_speedtime(125+rnd(125));
+					c.next = lastmillis+m_time(125+rnd(125));
 				}
 			}
 			logic(d, c, run);

@@ -185,7 +185,7 @@ namespace client
 
 	void edittoggled(bool edit)
 	{
-		game::player1->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
+		game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators));
 		game::player1->state = edit ? CS_EDITING : CS_ALIVE;
 		game::player1->resetinterp();
 		game::resetstate();
@@ -1223,7 +1223,7 @@ namespace client
 					gameent *f = game::newclient(lcn);
 					if(f && f != game::player1 && !f->ai)
 					{
-						f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
+						f->respawn(lastmillis, m_health(game::gamemode, game::mutators));
 						parsestate(f, p);
 						playsound(S_RESPAWN, f->o, f);
 						game::spawneffect(PART_FIREBALL, vec(f->o).sub(vec(0, 0, f->height/2.f)), teamtype[f->team].colour, int(f->radius*2));
@@ -1249,7 +1249,7 @@ namespace client
                         break;
                     }
 					if(f == game::player1 && editmode) toggleedit();
-					f->respawn(lastmillis, m_maxhealth(game::gamemode, game::mutators));
+					f->respawn(lastmillis, m_health(game::gamemode, game::mutators));
 					parsestate(f, p);
 					f->state = CS_ALIVE;
 					if(f == game::player1 || f->ai)
@@ -1384,7 +1384,7 @@ namespace client
 						int lcn = getint(p);
 						if(p.overread() || lcn < 0) break;
 						gameent *f = game::newclient(lcn);
-						if(f && f!=game::player1 && !f->ai) f->respawn(0, m_maxhealth(game::gamemode, game::mutators));
+						if(f && f!=game::player1 && !f->ai) f->respawn(0, m_health(game::gamemode, game::mutators));
 						parsestate(f, p, true);
 					}
 					break;
@@ -1396,7 +1396,7 @@ namespace client
 					if(!entities::ents.inrange(ent)) break;
 					entities::setspawn(ent, 1);
 					playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-					int sweap = m_spawnweapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? weapattr(game::gamemode, entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
+					int sweap = m_weapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? w_attr(game::gamemode, entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
 						colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 					if(entities::showentdescs)
 					{
@@ -1621,7 +1621,7 @@ namespace client
 					else
 					{
 						d->state = CS_ALIVE;
-						d->editspawn(lastmillis, m_spawnweapon(game::gamemode, game::mutators), m_maxhealth(game::gamemode, game::mutators));
+						d->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators));
 					}
 					d->resetinterp();
 					projs::remove(d);

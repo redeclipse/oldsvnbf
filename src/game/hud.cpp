@@ -238,7 +238,7 @@ namespace hud
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
 				float damage = game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f,
-					  healthscale = float(m_maxhealth(game::gamemode, game::mutators));
+					  healthscale = float(m_health(game::gamemode, game::mutators));
 				if(healthscale > 0) damage = max(damage, 1.f - max(game::player1->health, 0)/healthscale);
 				amt += damage*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
@@ -317,7 +317,7 @@ namespace hud
 			fade *= 1.f-skew;
 			s += int(s*ss*skew);
 		}
-		int total = m_maxhealth(game::gamemode, game::mutators);
+		int total = m_health(game::gamemode, game::mutators);
 		bool full = game::player1->health >= total;
 		if(full)
 		{
@@ -555,7 +555,7 @@ namespace hud
 		drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
 		if(index > POINTER_GUI)
 		{
-			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators)))
+			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_weapon(game::gamemode, game::mutators)))
 			{
 				if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
 				if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WEAP_S_POWER)
@@ -637,7 +637,7 @@ namespace hud
 
 				if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 				{
-					int sdelay = m_spawndelay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
+					int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
 					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, msg)*noticescale;
 					if(obitnotices && game::player1->lastdeath && (delay || game::player1->state == CS_DEAD) && *game::player1->obit)
@@ -751,11 +751,11 @@ namespace hud
 									extentity &e = *entities::ents[ent];
 									if(enttype[e.type].usetype == EU_ITEM)
 									{
-										int drop = -1, sweap = m_spawnweapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? weapattr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
+										int drop = -1, sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 										if(game::player1->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 										{
-											if(e.type == WEAPON && weapcarry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
-												weapcarry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
+											if(e.type == WEAPON && w_carry(game::player1->weapselect, sweap) && game::player1->ammo[attr] < 0 &&
+												w_carry(attr, sweap) && game::player1->carry(sweap) >= maxcarry) drop = game::player1->drop(sweap, attr);
 											if(isweap(drop))
 											{
 												static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
@@ -777,14 +777,14 @@ namespace hud
 						}
 						if(shownotices >= 4)
 						{
-							if(game::player1->canshoot(game::player1->weapselect, 0, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+							if(game::player1->canshoot(game::player1->weapselect, 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 							{
 								SEARCHBINDCACHE(attackkey)("action 0", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;
 								SEARCHBINDCACHE(altkey)("action 1", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack")*noticescale;
 							}
-							if(game::player1->canreload(game::player1->weapselect, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+							if(game::player1->canreload(game::player1->weapselect, m_weapon(game::gamemode, game::mutators), lastmillis))
 							{
 								SEARCHBINDCACHE(reloadkey)("action 2", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey)*noticescale;
@@ -1001,10 +1001,10 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int colour = teamtype[d->team].colour, delay = d->protect(lastmillis, spawnprotect);
+			int prot = m_protect(game::gamemode, game::mutators), colour = teamtype[d->team].colour, delay = d->protect(lastmillis, prot);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(delay > 0) fade *= clamp(float(delay)/float(spawnprotect), 0.f, 1.f);
+			if(delay > 0) fade *= clamp(float(delay)/float(prot), 0.f, 1.f);
 			if(hastv(radarplayernames)) drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
@@ -1054,7 +1054,7 @@ namespace hud
 			float r = 1.f, g = 1.f, b = 1.f, fade = insel ? 1.f : clamp(1.f-(dist/radarrange()), 0.1f, 1.f), size = radarblipsize;
 			if(type == WEAPON)
 			{
-				int attr1 = weapattr(game::gamemode, attr[0], m_spawnweapon(game::gamemode, game::mutators));
+				int attr1 = w_attr(game::gamemode, attr[0], m_weapon(game::gamemode, game::mutators));
 				tex = hud::itemtex(WEAPON, attr1);
 				r = (weaptype[attr1].colour>>16)/255.f;
 				g = ((weaptype[attr1].colour>>8)&0xFF)/255.f;
@@ -1128,7 +1128,7 @@ namespace hud
 		if(radardamage >= 2)
 		{
 			bool dead = (game::player1->state == CS_DEAD || game::player1->state == CS_WAITING) && game::player1->lastdeath;
-			if(dead && lastmillis-game::player1->lastdeath <= m_spawndelay(game::gamemode, game::mutators))
+			if(dead && lastmillis-game::player1->lastdeath <= m_delay(game::gamemode, game::mutators))
 			{
 				vec dir = vec(game::player1->o).sub(camera1->o).normalize().rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[game::player1->team].colour>>16)/255.f, g = ((teamtype[game::player1->team].colour>>8)&0xFF)/255.f, b = (teamtype[game::player1->team].colour&0xFF)/255.f;
@@ -1260,7 +1260,7 @@ namespace hud
 				const char *hudtexs[WEAP_MAX] = {
 					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
 				};
-				int sweap = m_spawnweapon(game::gamemode, game::mutators);
+				int sweap = m_weapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])
 				{
 					float fade = blend*inventoryblend, size = s, skew = 0.f;
@@ -1317,7 +1317,7 @@ namespace hud
 
 	int drawhealth(int x, int y, int s, float blend)
 	{
-        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16, heal = m_maxhealth(game::gamemode, game::mutators);
+        int size = s+s/2, width = s-s/4, glow = int(width*inventoryhealthglow), sy = 0, sw = width+s/16, heal = m_health(game::gamemode, game::mutators);
 		float fade = inventoryhealthblend*blend;
 		settexture(healthtex, 3);
 		if(game::player1->state == CS_ALIVE)
@@ -1400,7 +1400,7 @@ namespace hud
 			}
 			if(inventoryimpulse && impulsemeter)
 			{
-				float len = 1.f-clamp(game::player1->impulse[IM_METER]/float(m_speedtime(impulsemeter)), 0.f, 1.f);
+				float len = 1.f-clamp(game::player1->impulse[IM_METER]/float(m_time(impulsemeter)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
@@ -1412,7 +1412,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::player1->impulse[IM_METER] > 0 ? (m_speedtime(impulsemeter)-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
+						game::player1->impulse[IM_METER] > 0 ? (m_time(impulsemeter)-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}

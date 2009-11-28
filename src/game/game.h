@@ -392,6 +392,7 @@ extern gametypes gametype[], mutstype[];
 #endif
 
 #define m_game(a)			(a > -1 && a < G_MAX)
+#define m_check(a,b)		(!a || (a < 0 ? -a != b : a == b))
 
 #define m_demo(a)			(a == G_DEMO)
 #define m_lobby(a)			(a == G_LOBBY)
@@ -416,18 +417,18 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)			(m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
-#define m_spawnweapon(a,b)	(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
-#define m_spawndelay(a,b)	(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
+#define m_weapon(a,b)		(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
+#define m_delay(a,b)		(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
+#define m_protect(a,b)		(m_duke(a, b) || m_insta(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
-#define m_maxhealth(a,b)	(m_insta(a,b) ? 1 : GVAR(maxhealth))
-#define m_speedscale(a)		(float(a)*GVAR(speedscale))
-#define m_speedlerp(a)		(float(a)*(1.f/GVAR(speedscale)))
-#define m_speedtime(a)		(max(int(m_speedlerp(a)), 1))
+#define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
+#define m_scale(a)			(float(a)*GVAR(speedscale))
+#define m_lerp(a)			(float(a)*(1.f/GVAR(speedscale)))
+#define m_time(a)			(max(int(m_lerp(a)), 1))
 
-#define weaploads(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
-#define weapcarry(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)
-#define weapattr(g,a,b)		(m_edit(g) || (a >= WEAP_OFFSET && a != (isweap(b) ? b : WEAP_PISTOL)) ? a : WEAP_GRENADE)
-#define chkmode(a,b)		(!a || (a < 0 ? -a != b : a == b))
+#define w_reload(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
+#define w_carry(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)
+#define w_attr(g,a,b)		(m_edit(g) || (a >= WEAP_OFFSET && a != (isweap(b) ? b : WEAP_PISTOL)) ? a : WEAP_GRENADE)
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -590,14 +591,14 @@ struct gamestate
 	{
 		if(isweap(weap) && weap != exclude)
 		{
-			if(ammo[weap] > 0 || (weaploads(weap, sweap) && !ammo[weap])) switch(level)
+			if(ammo[weap] > 0 || (w_reload(weap, sweap) && !ammo[weap])) switch(level)
 			{
 				case 0: default: return true; break; // has weap at all
-				case 1: if(weapcarry(weap, sweap)) return true; break; // only carriable
+				case 1: if(w_carry(weap, sweap)) return true; break; // only carriable
 				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
-				case 3: if(ammo[weap] > 0 && weaploads(weap, sweap)) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[weap] >= (weaploads(weap, sweap) ? 0 : weaptype[weap].max)) return true; break; // only reloadable or those with < max
-				case 5: if(weapcarry(weap, sweap) || (!weaploads(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
+				case 3: if(ammo[weap] > 0 && w_reload(weap, sweap)) return true; break; // only reloadable with actual ammo
+				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : weaptype[weap].max)) return true; break; // only reloadable or those with < max
+				case 5: if(w_carry(weap, sweap) || (!w_reload(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
 			}
 		}
 		return false;
@@ -692,7 +693,7 @@ struct gamestate
 
 	bool canreload(int weap, int sweap, int millis)
 	{
-		if(weap == weapselect && weaploads(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
+		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
