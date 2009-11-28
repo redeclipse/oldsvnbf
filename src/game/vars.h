@@ -24,10 +24,10 @@ VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
 VARG(instadelay, 0, 3000, INT_MAX-1); // .. in instagib matches
 VARG(trialdelay, 0, 1000, INT_MAX-1); // .. in time trial matches
 VARG(spawnprotect, 0, 5000, INT_MAX-1); // delay before damage can be dealt to spawning player
-VARG(instaprotect, 0, 1000, INT_MAX-1); // .. in instagib matches
+VARG(instaprotect, 0, 3000, INT_MAX-1); // .. in instagib matches
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
-VARG(extrahealth, 0, 100, INT_MAX-1);
+VARG(extrahealth, 0, 120, INT_MAX-1);
 
 VARG(fireburntime, 0, 5500, INT_MAX-1);
 VARG(fireburndelay, 0, 1000, INT_MAX-1);

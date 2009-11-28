@@ -230,7 +230,7 @@ weaptypes weaptype[WEAP_MAX] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 40, 20 },		{ 125, 125 },	0,				{ 100, 100 },
+			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 50, 25 },		{ 125, 125 },	0,				{ 100, 100 },
 			1,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 0, 0 },
 			{ IMPACT_PLAYER, IMPACT_PLAYER },
 			{ true, true },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },
@@ -291,7 +291,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 16, 0 },	{ 1, 1 },		{ 3, 0 },		{ 10, 0 },		{ 2, 1 },
+			0,		{ 16, 0 },	{ 1, 1 },		{ 1, 0 },		{ 0, 0 },		{ 2, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
@@ -311,7 +311,7 @@ weaptypes weaptype[WEAP_MAX] =
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 5, 0 },		{ 10, 0 },		{ 1, 1 },
+			0,		{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
@@ -419,7 +419,7 @@ extern gametypes gametype[], mutstype[];
 
 #define m_weapon(a,b)		(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
 #define m_delay(a,b)		(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
-#define m_protect(a,b)		(m_duke(a, b) || m_insta(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
+#define m_protect(a,b)		(m_insta(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 #define m_scale(a)			(float(a)*GVAR(speedscale))
