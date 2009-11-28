@@ -2,9 +2,10 @@
 #include "game.h"
 namespace game
 {
-	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0, swaymillis = 0,
+	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0, 
 		lastcamera = 0, lasttvcam = 0, lasttvchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
 	bool intermission = false, prevzoom = false, zooming = false;
+	float swayfade = 0, swayspeed = 0, swaydist = 0;
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
 
 	gameent *player1 = new gameent();
@@ -35,9 +36,10 @@ namespace game
 
 	VARP(firstpersonmodel, 0, 1, 1);
 	VARP(firstpersonfov, 90, 100, 150);
-	VARP(firstpersonsway, 0, 100, INT_MAX-1);
-	VARP(firstpersonswayspeed, 0, 25, INT_MAX-1);
-	VARP(firstpersonswaypush, 0, 25, INT_MAX-1);
+	VARP(firstpersonsway, 0, 1, 1);
+	FVARP(firstpersonswaystep, 1, 18.0f, 100);
+	FVARP(firstpersonswayside, 0, 0.04f, 1);
+	FVARP(firstpersonswayup, 0, 0.05f, 1);
 	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.3f, 10000);
@@ -202,13 +204,31 @@ namespace game
 	{
 		if(firstpersonsway)
 		{
-			if(d->physstate >= PHYS_SLOPE) swaymillis += curtime;
-			float k = pow(0.7f, curtime/float(firstpersonswayspeed));
-			vec vel = vec(d->vel).sub(d->falling).mul(d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
-			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), physics::movevelocity(d)))));
-			swaypush.mul(pow(0.5f, curtime/float(firstpersonswaypush)));
+			float maxspeed = physics::movevelocity(d);
+			if(d->physstate >= PHYS_SLOPE)
+			{
+				swayspeed = min(sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y), maxspeed);
+				swaydist += swayspeed*curtime/1000.0f;
+				swaydist = fmod(swaydist, 2*firstpersonswaystep);
+				swayfade = 1;
+			}
+			else if(swayfade > 0)
+			{
+				swaydist += swayspeed*swayfade*curtime/1000.0f;
+				swaydist = fmod(swaydist, 2*firstpersonswaystep);
+				swayfade -= 0.5f*(curtime*maxspeed)/(firstpersonswaystep*1000.0f);
+			}
+
+			float k = pow(0.7f, curtime/25.0f);
+			vec vel = vec(d->vel).add(d->falling).mul(d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
+			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), maxspeed))));
+			swaypush.mul(pow(0.5f, curtime/25.0f));
 		}
-		else swaydir = swaypush = vec(0, 0, 0);
+		else 
+		{
+			swaydir = swaypush = vec(0, 0, 0);
+			swayfade = swayspeed = swaydist = 0;
+		}
 	}
 
 	void announce(int idx, int targ, gameent *d, const char *msg, ...)
@@ -1691,19 +1711,13 @@ namespace game
 		if(!third)
 		{
 			vec dir;
-			if(firstpersonsway != 0.f)
+			if(firstpersonsway)
 			{
-				vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
-				float swayspeed = min(4.f, sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y));
-				dir.mul(swayspeed);
-				float swayxy = sinf(swaymillis/115.0f)/float(firstpersonsway),
-					  swayz = cosf(swaymillis/115.0f)/float(firstpersonsway);
-				swap(dir.x, dir.y);
-				dir.x *= -swayxy;
-				dir.y *= swayxy;
-				dir.z = -fabs(swayspeed*swayz);
-				dir.add(swaydir).add(swaypush);
-				o.add(dir);
+				vecfromyawpitch(d->yaw, 0, 0, 1, dir);
+				float steps = swaydist/firstpersonswaystep*M_PI;
+				dir.mul(firstpersonswayside*cosf(steps));
+				dir.z = firstpersonswayup*(fabs(sinf(steps)) - 1);
+				o.add(dir).add(swaydir).add(swaypush);
 			}
 			if(firstpersondist != 0.f)
 			{
