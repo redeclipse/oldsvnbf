@@ -191,7 +191,7 @@ namespace aiman
 		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
-			int o = int(m*aitype[ci->state.aitype].skill), p = int(n*aitype[ci->state.aitype].skill);
+			int o = clamp(int(m*aitype[ci->state.aitype].skill), 1, 101), p = clamp(int(n*aitype[ci->state.aitype].skill), 1, 101);
 			if(ci->state.skill > o || ci->state.skill < p)
 			{ // needs re-skilling
 				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);
