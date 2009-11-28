@@ -2,7 +2,7 @@
 #include "game.h"
 namespace game
 {
-	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0, 
+	int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0,
 		lastcamera = 0, lasttvcam = 0, lasttvchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
 	bool intermission = false, prevzoom = false, zooming = false;
 	float swayfade = 0, swayspeed = 0, swaydist = 0;
@@ -224,7 +224,7 @@ namespace game
 			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), maxspeed))));
 			swaypush.mul(pow(0.5f, curtime/25.0f));
 		}
-		else 
+		else
 		{
 			swaydir = swaypush = vec(0, 0, 0);
 			swayfade = swayspeed = swaydist = 0;
@@ -312,7 +312,7 @@ namespace game
 		float total = amt;
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
-			int len = m_spawndelay(gamemode, mutators);
+			int len = m_delay(gamemode, mutators);
 			if(len && (!timechk || len > 1000))
 			{
 				int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
@@ -328,8 +328,8 @@ namespace game
 		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
 		if(d->state == CS_ALIVE)
 		{
-			int millis = d->protect(lastmillis, spawnprotect); // protect returns time left
-			if(millis > 0) total *= 1.f-(float(millis)/float(spawnprotect));
+			int prot = m_protect(gamemode, mutators), millis = d->protect(lastmillis, prot); // protect returns time left
+			if(millis > 0) total *= 1.f-(float(millis)/float(prot));
 			if(d == player1 && inzoom())
 			{
 				int frame = lastmillis-lastzoom;
@@ -366,8 +366,8 @@ namespace game
 
 	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size, float blend)
 	{
-		regularshape(type, radius, colour, 21, 25, m_speedtime(fade), o, size, blend, -vel, 0, vel*2);
-		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), m_speedtime(fade), m_speedtime(fade/3));
+		regularshape(type, radius, colour, 21, 25, m_time(fade), o, size, blend, -vel, 0, vel*2);
+		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), m_time(fade), m_time(fade/3));
 	}
 
 	void impulseeffect(gameent *d, bool effect)
@@ -379,10 +379,10 @@ namespace game
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->lfoot, 1, 0.5f, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->rfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->lfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->rfoot, 1, 0.5f, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_speedtime(len), d->feetpos(), 1, 0.5f, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->feetpos(), 1, 0.5f, -15, 0, 5);
 			}
 		}
 	}
@@ -661,7 +661,7 @@ namespace game
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 				else if(d->health <= 0) force *= deadpushscale;
 				else force *= hitpushscale;
-				vec push = dir; push.z += 0.125f; push.mul(m_speedscale(force));
+				vec push = dir; push.z += 0.125f; push.mul(m_scale(force));
 				d->vel.add(push);
 				if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
 			}
@@ -1016,7 +1016,7 @@ namespace game
 		// reset perma-state
 		gameent *d;
 		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
-			d->mapchange(lastmillis, m_maxhealth(gamemode, mutators));
+			d->mapchange(lastmillis, m_health(gamemode, mutators));
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
 		if(!empty) client::sendinfo = true;
@@ -1884,10 +1884,10 @@ namespace game
 					{
 						if(lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3)
 						{
-							if(!d->hasweap(d->lastweap, m_spawnweapon(gamemode, mutators))) showweap = false;
+							if(!d->hasweap(d->lastweap, m_weapon(gamemode, mutators))) showweap = false;
 							else weap = d->lastweap;
 						}
-						else if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
+						else if(!d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
 						animflags = ANIM_SWITCH+(d->weapstate[weap]-WEAP_S_SWITCH);
 						break;
 					}
@@ -1899,7 +1899,7 @@ namespace game
 					}
 					case WEAP_S_SHOOT:
 					{
-						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
@@ -1908,7 +1908,7 @@ namespace game
 					{
 						if(weap != WEAP_MELEE)
 						{
-							if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 								showweap = false;
 							animflags = weaptype[weap].anim+d->weapstate[weap];
 							break;
@@ -1916,7 +1916,7 @@ namespace game
 					}
 					case WEAP_S_IDLE: case WEAP_S_WAIT: default:
 					{
-						if(!d->hasweap(weap, m_spawnweapon(gamemode, mutators))) showweap = false;
+						if(!d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
 						animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}

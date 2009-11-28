@@ -65,7 +65,7 @@ namespace hud
 				if(game::tvmode()) return true;
 				else if(game::player1->state == CS_DEAD)
 				{
-					int delay = !showscoresdelay() ? m_spawndelay(game::gamemode, game::mutators) : showscoresdelay();
+					int delay = !showscoresdelay() ? m_delay(game::gamemode, game::mutators) : showscoresdelay();
 					if(!delay || lastmillis-game::player1->lastdeath > delay) return true;
 				}
 			}
@@ -280,7 +280,7 @@ namespace hud
 
 			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 			{
-				int sdelay = m_spawndelay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
+				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
 				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
 				g.space(1);
 				g.pushlist();

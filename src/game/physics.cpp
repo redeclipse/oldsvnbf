@@ -93,7 +93,7 @@ namespace physics
 		}
 		if(d->state == CS_ALIVE)
 		{
-			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, spawnprotect))
+			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, m_protect(game::gamemode, game::mutators)))
 				return false;
 			return true;
 		}
@@ -122,9 +122,9 @@ namespace physics
 		return from;
 	}
 
-	float jumpforce(physent *d, bool liquid) { return m_speedscale(forcejumpspeed > 0 ? forcejumpspeed : jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f); }
-	float impulseforce(physent *d) { return m_speedscale(forceimpulsespeed > 0 ? forceimpulsespeed : impulsespeed)*(d->weight/100.f); }
-	float gravityforce(physent *d) { return m_speedscale(m_speedscale(forcegravity > 0 ? forcegravity : gravity))*(d->weight/100.f); }
+	float jumpforce(physent *d, bool liquid) { return m_scale(forcejumpspeed > 0 ? forcejumpspeed : jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f); }
+	float impulseforce(physent *d) { return m_scale(forceimpulsespeed > 0 ? forceimpulsespeed : impulsespeed)*(d->weight/100.f); }
+	float gravityforce(physent *d) { return m_scale(m_scale(forcegravity > 0 ? forcegravity : gravity))*(d->weight/100.f); }
 
 	float stepforce(physent *d, bool up)
 	{
@@ -156,7 +156,7 @@ namespace physics
 	bool canimpulse(physent *d, int cost)
 	{
 		if((d->type == ENT_PLAYER || d->type == ENT_AI) && impulsemeter)
-			return ((gameent *)d)->impulse[IM_METER]+cost < m_speedtime(impulsemeter);
+			return ((gameent *)d)->impulse[IM_METER]+cost < m_time(impulsemeter);
 		return false;
 	}
 
@@ -172,10 +172,10 @@ namespace physics
 				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= forcemovecrawl > 0 ? forcemovecrawl : movecrawl;
 				if(impulsemeter > 0 && ((gameent *)d)->action[AC_IMPULSE] && ((gameent *)d)->impulse[IM_METER] < impulsemeter)
 					speed += impulsespeed*(!((gameent *)d)->action[AC_IMPULSE] || d->move <= 0 ? 0.5f : 1);
-				return m_speedscale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
+				return m_scale(max(d->maxspeed,1.f))*(d->weight/100.f)*(speed/100.f);
 			}
 		}
-		return m_speedscale(max(d->maxspeed,1.f));
+		return m_scale(max(d->maxspeed,1.f));
 	}
 
 	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR || (d->state == CS_ALIVE && gravity <= 0 && d->timeinair); }
@@ -710,7 +710,7 @@ namespace physics
 			#define mattrig(mo,mcol,ms,mt,mz,mq,mp,mw) \
 			{ \
 				int col = (int(mcol[2]*mq) + (int(mcol[1]*mq) << 8) + (int(mcol[0]*mq) << 16)); \
-				regularshape(mp, mt, col, 21, 20, m_speedtime(mz), mo, ms, 1, 10, 0, 20); \
+				regularshape(mp, mt, col, 21, 20, m_time(mz), mo, ms, 1, 10, 0, 20); \
 				if(mw >= 0) playsound(mw, mo, pl); \
 			}
 			if(curmat == MAT_WATER || oldmat == MAT_WATER)

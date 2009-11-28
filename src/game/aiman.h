@@ -199,7 +199,7 @@ namespace aiman
 			}
 			if(ci->state.aitype == AI_BOT && ++numbots >= GVAR(botlimit)) shiftai(ci, -1);
 		}
-		loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && chkmode(sents[i].attrs[3], gamemode))
+		loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
 		{
 			bool needent = true;
 			loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }

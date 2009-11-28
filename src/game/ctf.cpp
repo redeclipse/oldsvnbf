@@ -238,7 +238,7 @@ namespace ctf
         }
 		#define setupchkflag(a,b) \
 		{ \
-			if(entities::ents[a]->type != FLAG || !chkmode(entities::ents[a]->attrs[3], game::gamemode) || !isteam(game::gamemode, game::mutators, entities::ents[a]->attrs[0], TEAM_NEUTRAL)) \
+			if(entities::ents[a]->type != FLAG || !m_check(entities::ents[a]->attrs[3], game::gamemode) || !isteam(game::gamemode, game::mutators, entities::ents[a]->attrs[0], TEAM_NEUTRAL)) \
 				continue; \
 			else \
 			{ \
@@ -590,12 +590,12 @@ namespace ctf
 			{
 				bool guard = false;
 				if(f.owner || f.droptime || targets.empty()) guard = true;
-				else if(d->hasweap(d->arenaweap, m_spawnweapon(game::gamemode, game::mutators)))
+				else if(d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)))
 				{ // see if we can relieve someone who only has a piece of crap
 					gameent *t;
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						if((t->ai && !t->hasweap(t->arenaweap, m_spawnweapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect < WEAP_OFFSET))
+						if((t->ai && !t->hasweap(t->arenaweap, m_weapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect < WEAP_OFFSET))
 						{
 							guard = true;
 							break;
@@ -664,7 +664,7 @@ namespace ctf
 			{
 				if(d->aitype == AI_BOT)
 				{
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_speedtime(impulsemeter)*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_time(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;
@@ -677,7 +677,7 @@ namespace ctf
 			if(d->aitype == AI_BOT)
 			{
 				int regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
-				if(regen && lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
+				if(regen && lastmillis-b.millis >= m_time((201-d->skill)*33))
 				{
 					static vector<int> targets; // build a list of others who are interested in this
 					targets.setsizenodelete(0);
@@ -733,7 +733,7 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_speedtime(impulsemeter)*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_time(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;

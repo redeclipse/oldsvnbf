@@ -16,7 +16,7 @@ namespace weapons
 
 	bool weapselect(gameent *d, int weap, bool local)
 	{
-		if(!local || d->canswitch(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
+		if(!local || d->canswitch(weap, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
 		{
 			if(local) client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 			playsound(S_SWITCH, d->o, d);
@@ -29,7 +29,7 @@ namespace weapons
 
 	bool weapreload(gameent *d, int weap, int load, int ammo, bool local)
 	{
-		if(!local || d->canreload(weap, m_spawnweapon(game::gamemode, game::mutators), lastmillis))
+		if(!local || d->canreload(weap, m_weapon(game::gamemode, game::mutators), lastmillis))
 		{
 			bool doact = false;
 			if(local)
@@ -71,7 +71,7 @@ namespace weapons
 
 			if(a < 0)
 			{ // weapon skipping when scrolling
-				int p = m_spawnweapon(game::gamemode, game::mutators);
+				int p = m_weapon(game::gamemode, game::mutators);
 				#define skipweap(q,w) \
 				{ \
 					if(q && s == w) switch(q) \
@@ -116,7 +116,7 @@ namespace weapons
 
 	void reload(gameent *d)
 	{
-		int sweap = m_spawnweapon(game::gamemode, game::mutators);
+		int sweap = m_weapon(game::gamemode, game::mutators);
 		bool reload = d->action[AC_RELOAD], canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
 		if(!reload && canreload && autoreloading >= (weaptype[d->weapselect].add < weaptype[d->weapselect].max ? 2 : (weaptype[d->weapselect].zooms ? 4 : 3)))
 			reload = true;
@@ -149,7 +149,7 @@ namespace weapons
 		if(d == game::player1 && weaptype[d->weapselect].zooms && game::zooming && game::inzoomswitch()) secondary = true;
 		else if(!weaptype[d->weapselect].zooms && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
 		else if(weaptype[d->weapselect].power && d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
-		int power = clamp(force, 0, weaptype[d->weapselect].power), flags = secondary ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_spawnweapon(game::gamemode, game::mutators);
+		int power = clamp(force, 0, weaptype[d->weapselect].power), flags = secondary ? HIT_ALT : 0, offset = weaptype[d->weapselect].sub[flags&HIT_ALT ? 1 : 0], sweap = m_weapon(game::gamemode, game::mutators);
 		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, flags, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
@@ -205,7 +205,7 @@ namespace weapons
 				game::swaypush.add(vec(kick).mul(0.025f));
 				if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
 			}
-			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_speedscale(m_speedscale(0.5f))));
+			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_scale(m_scale(0.5f))));
 		}
 
 		// move along the eye ray towards the weap origin, stopping when something is hit
@@ -250,7 +250,7 @@ namespace weapons
 
     void preload(int weap)
     {
-    	int g = weap < 0 ? m_spawnweapon(game::gamemode, game::mutators) : weap;
+    	int g = weap < 0 ? m_weapon(game::gamemode, game::mutators) : weap;
     	if(g != WEAP_MELEE && isweap(g))
         {
             if(*weaptype[g].item) loadmodel(weaptype[g].item, -1, true);

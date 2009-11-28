@@ -137,7 +137,7 @@ namespace stf
 		loopv(entities::ents)
 		{
 			extentity *e = entities::ents[i];
-			if(e->type != FLAG || !chkmode(e->attrs[3], game::gamemode)) continue;
+			if(e->type != FLAG || !m_check(e->attrs[3], game::gamemode)) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
 			defformatstring(alias)("flag_%d", e->attrs[0]);
@@ -266,7 +266,7 @@ namespace stf
 				}
 				if(!targets.empty())
 				{
-					if(lastmillis-b.millis >= m_speedtime((201-d->skill)*33))
+					if(lastmillis-b.millis >= m_time((201-d->skill)*33))
 					{
 						d->ai->trywipe = true; // re-evaluate so as not to herd
 						return true;
