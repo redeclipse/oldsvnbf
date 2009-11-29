@@ -81,7 +81,7 @@ VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(servermaster, ENG_MASTER_HOST);
 SVAR(serverip, "");
 
-int curtime = 0, totalmillis = 1, lastmillis = 1;
+int curtime = 0, totalmillis = 1, lastmillis = 1, timescale = 100, paused = 0, timeerr = 0;
 const char *load = NULL;
 vector<char *> gameargs;
 
@@ -658,6 +658,43 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 		}
     }
 	if(server::sendpackets()) enet_host_flush(serverhost);
+}
+
+#ifndef STANDALONE
+int clockrealbase = 0, clockvirtbase = 0;
+void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
+VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
+VARFP(clockfix, 0, 0, 1, clockreset());
+#endif
+
+void updatetimer()
+{
+#ifdef STANDALONE
+	int millis = (int)enet_time_get();
+#else
+	int millis = SDL_GetTicks() - clockrealbase;
+	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
+	millis += clockvirtbase;
+	if(millis<totalmillis) millis = totalmillis;
+	extern void limitfps(int &millis, int curmillis);
+	limitfps(millis, totalmillis);
+#endif
+	int elapsed = millis-totalmillis;
+	if(paused) curtime = 0;
+	else if(timescale != 100)
+	{
+		int scaledtime = elapsed*timescale + timeerr;
+		curtime = scaledtime/100;
+		timeerr = scaledtime%100;
+		if(curtime>200) curtime = 200;
+	}
+	else
+	{
+		curtime = elapsed + timeerr;
+		timeerr = 0;
+	}
+	lastmillis += curtime;
+	totalmillis = millis;
 }
 
 void serverloop()

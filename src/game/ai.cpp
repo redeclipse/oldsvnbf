@@ -182,7 +182,7 @@ namespace ai
 
 	void update()
 	{
-		bool updating = lastmillis-updatemillis > m_time(100); // fixed rate logic at 10fps
+		bool updating = lastmillis-updatemillis > 100; // fixed rate logic at 10fps
         if(updating)
         {
         	avoid();
@@ -338,7 +338,7 @@ namespace ai
 			d->ai->enemyseen = lastmillis;
 			bool alt = altfire(d, e);
 			vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-			if(!cansee(d, dp, ep)) d->ai->enemyseen -= m_time(((111-d->skill)*10)+10); // so we don't "quick"
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
 			return true;
 		}
 		return false;
@@ -512,7 +512,7 @@ namespace ai
 			d->ai->reset(tryreset);
 			d->ai->lastrun = lastmillis;
 			aistate &b = d->ai->getstate();
-			b.next = lastmillis+m_time(((111-d->skill)*10)+rnd((111-d->skill)*10));
+			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
 			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_weapon(game::gamemode, game::mutators);
@@ -713,7 +713,7 @@ namespace ai
 						else
 						{
 							vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time((d->skill*50)+1000));
+							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000);
 						}
 					}
 					break;
@@ -850,9 +850,9 @@ namespace ai
 		{
 			if((d->action[AC_JUMP] = jump) != false) d->actiontime[AC_JUMP] = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 2 : 8);
-			d->ai->jumpseed = lastmillis+m_time(seed+rnd(seed));
+			d->ai->jumpseed = lastmillis+seed+rnd(seed);
 			seed *= b.idle ? 200 : 100;
-			d->ai->jumprand = lastmillis+m_time(seed+rnd(seed));
+			d->ai->jumprand = lastmillis+seed+rnd(seed);
 		}
 	}
 
@@ -904,8 +904,8 @@ namespace ai
 			float yaw, pitch;
 			game::getyawpitch(dp, ep, yaw, pitch);
 			game::fixrange(yaw, pitch);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time((d->skill*50)+1000),
-				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= m_time(skmod), targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
+			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
+				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod, targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
 			if(d->weapselect == WEAP_MELEE && targeted)
 			{
 				d->ai->spot = e->feetpos();
@@ -1104,7 +1104,7 @@ namespace ai
 		if(d->blocked)
 		{
 			d->ai->blocktime += lastmillis-d->ai->lastrun;
-			if(d->ai->blocktime > m_time((d->ai->blockseq+1)*1000))
+			if(d->ai->blocktime > (d->ai->blockseq+1)*1000)
 			{
 				switch(d->ai->blockseq)
 				{
@@ -1125,7 +1125,7 @@ namespace ai
 		{
 			int millis = lastmillis-d->ai->lasthunt;
 			if(millis <= 2000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
-			else if(millis > m_time((d->ai->huntseq+1)*2000))
+			else if(millis > (d->ai->huntseq+1)*2000)
 			{
 				switch(d->ai->huntseq)
 				{
@@ -1140,7 +1140,7 @@ namespace ai
 		if(d->ai->targnode == d->ai->targlast)
 		{
 			d->ai->targtime += lastmillis-d->ai->lastrun;
-			if(d->ai->targtime > m_time((d->ai->targseq+1)*4000))
+			if(d->ai->targtime > (d->ai->targseq+1)*4000)
 			{
 				switch(d->ai->targseq)
 				{
@@ -1298,13 +1298,13 @@ namespace ai
 					else
 					{
 						if(d->aitype >= AI_START) d->ai->suspended = true;
-						c.next = lastmillis+m_time(250+rnd(250));
+						c.next = lastmillis+250+rnd(250);
 					}
 				}
 				else
 				{
 					if(!aisuspend) d->ai->suspended = false;
-					c.next = lastmillis+m_time(125+rnd(125));
+					c.next = lastmillis+125+rnd(125);
 				}
 			}
 			logic(d, c, run);

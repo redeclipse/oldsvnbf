@@ -774,11 +774,6 @@ static bool findarg(int argc, char **argv, const char *str)
 	return false;
 }
 
-static int clockrealbase = 0, clockvirtbase = 0;
-static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
-VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
-VARFP(clockfix, 0, 0, 1, clockreset());
-
 void rehash(bool reload)
 {
 	if(reload) writecfg();
@@ -861,19 +856,6 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 
 	lastoutofloop = SDL_GetTicks();
 	lastautoadjust = -1;
-}
-
-void updatetimer()
-{
-	int millis = SDL_GetTicks() - clockrealbase;
-	if(clockfix) millis = int(millis*(double(clockerror)/1000000));
-	millis += clockvirtbase;
-	if(millis<totalmillis) millis = totalmillis;
-	limitfps(millis, totalmillis);
-	int elapsed = millis-totalmillis;
-	curtime = elapsed;
-	lastmillis += curtime;
-	totalmillis = millis;
 }
 
 int main(int argc, char **argv)

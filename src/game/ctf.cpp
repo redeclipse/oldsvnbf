@@ -664,7 +664,7 @@ namespace ctf
 			{
 				if(d->aitype == AI_BOT)
 				{
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_time(impulsemeter)*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;
@@ -677,7 +677,7 @@ namespace ctf
 			if(d->aitype == AI_BOT)
 			{
 				int regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
-				if(regen && lastmillis-b.millis >= m_time((201-d->skill)*33))
+				if(regen && lastmillis-b.millis >= (201-d->skill)*33)
 				{
 					static vector<int> targets; // build a list of others who are interested in this
 					targets.setsizenodelete(0);
@@ -733,7 +733,7 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < m_time(impulsemeter)*2/3)
+					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;

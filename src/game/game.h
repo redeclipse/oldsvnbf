@@ -422,9 +422,6 @@ extern gametypes gametype[], mutstype[];
 #define m_protect(a,b)		(m_insta(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
-#define m_scale(a)			(float(a)*GVAR(speedscale))
-#define m_lerp(a)			(float(a)*(1.f/GVAR(speedscale)))
-#define m_time(a)			(max(int(m_lerp(a)), 1))
 
 #define w_reload(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
 #define w_carry(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)

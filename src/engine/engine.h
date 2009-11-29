@@ -136,7 +136,6 @@ extern const uchar fvmasks[64];
 extern const uchar faceedgesidx[6][4];
 extern bool inbetweenframes, renderedframe;
 
-extern int curtime, lastmillis, totalmillis;
 extern SDL_Surface *screen;
 extern int zpass, glowpass;
 
@@ -678,8 +677,7 @@ extern void conline(int type, const char *sf, int n);
 extern char *gettime(char *format);
 
 // rendergl
-extern int dynentsize, axfps, lastmillis, totalmillis;
-extern int watercolour, lavacolour;
+extern int dynentsize, watercolour, lavacolour;
 extern bvec ambientcolor, skylightcolor;
 extern float curfov, fovy, aspect;
 

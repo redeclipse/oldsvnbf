@@ -266,7 +266,7 @@ namespace stf
 				}
 				if(!targets.empty())
 				{
-					if(lastmillis-b.millis >= m_time((201-d->skill)*33))
+					if(lastmillis-b.millis >= (201-d->skill)*33)
 					{
 						d->ai->trywipe = true; // re-evaluate so as not to herd
 						return true;

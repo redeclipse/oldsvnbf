@@ -84,6 +84,9 @@ VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
 
+VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
+VARFG(gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
+
 FVARG(forcegravity, 0, 0, 10000);
 FVARG(forcemovespeed, 0, 0, 10000);
 FVARG(forcemovecrawl, 0, 0, 10000);
@@ -91,7 +94,6 @@ FVARG(forcejumpspeed, 0, 0, 10000);
 FVARG(forceimpulsespeed, 0, 0, 10000);
 
 FVARG(damagescale, 0, 1, 1000);
-FVARG(speedscale, 1e-3f, 1, 1000);
 FVARG(hitpushscale, 0, 1, 1000);
 FVARG(deadpushscale, 0, 2, 1000);
 
