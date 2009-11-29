@@ -381,7 +381,7 @@ namespace ai
 		if(!m_noitems(game::gamemode, game::mutators))
 		{
 			vec pos = d->feetpos();
-			loopvj(entities::ents)
+			loopj(entities::lastusetype[EU_ITEM])
 			{
 				gameentity &e = *(gameentity *)entities::ents[j];
 				if(enttype[e.type].usetype != EU_ITEM) continue;
@@ -838,7 +838,7 @@ namespace ai
 			d->o = old;
 			if(jump)
 			{
-				loopv(entities::ents) if(entities::ents[i]->type == PUSHER)
+				loopi(entities::lastenttype[PUSHER]) if(entities::ents[i]->type == PUSHER)
 				{
 					gameentity &e = *(gameentity *)entities::ents[i];
 					float radius = (e.attrs[3] ? e.attrs[3] : enttype[e.type].radius)*1.5f; radius *= radius;
@@ -1232,7 +1232,7 @@ namespace ai
                 obs.avoidnear(p, p->o, limit);
 			}
 		}
-		loopv(entities::ents) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
+		loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
 		{
 			mapmodelinfo &mmi = getmminfo(entities::ents[i]->attrs[0]);
 			vec center, radius;
