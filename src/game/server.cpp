@@ -3269,6 +3269,7 @@ namespace server
 					QUEUE_BUF(100,
 					{
 						putint(buf, SV_SPAWN);
+						putint(buf, cp->clientnum);
 						sendstate(cp->state, buf);
 					});
 					break;
