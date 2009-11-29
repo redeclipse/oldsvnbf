@@ -223,8 +223,10 @@ namespace game
 			}
 
 			float k = pow(0.7f, curtime/25.0f);
+			swaydir.mul(k);
 			vec vel = vec(d->vel).add(d->falling).mul(d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
-			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), maxspeed))));
+			float speedscale = max(vel.magnitude(), maxspeed);
+			if(speedscale > 0) swaydir.add(vec(vel).mul((1-k)/(15*speedscale)));
 			swaypush.mul(pow(0.5f, curtime/25.0f));
 		}
 		else resetsway();
