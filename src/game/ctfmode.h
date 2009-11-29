@@ -146,7 +146,7 @@ struct ctfservmode : ctfstate, servmode
         }
     }
 
-    void initclient(clientinfo *ci, ucharbuf &p, bool connecting)
+    void initclient(clientinfo *ci, packetbuf &p, bool connecting)
     {
 		if(connecting)
         {

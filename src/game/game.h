@@ -450,13 +450,16 @@ enum
 	SV_DEMOPLAYBACK, SV_RECORDDEMO, SV_STOPDEMO, SV_CLEARDEMOS,
 	SV_CLIENT, SV_RELOAD, SV_REGEN,
 	SV_ADDBOT, SV_DELBOT, SV_INITAI,
-	SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS
+    SV_MAPCRC, SV_CHECKMAPS,
+	SV_SWITCHNAME, SV_SWITCHTEAM,
+	SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS,
+    NUMSV
 };
 
 #ifdef GAMESERVER
 char msgsizelookup(int msg)
 {
-	char msgsizesl[] =				// size inclusive message token, 0 for variable or not-checked sizes
+	static const int msgsizes[] =				// size inclusive message token, 0 for variable or not-checked sizes
 	{
 		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
@@ -476,11 +479,18 @@ char msgsizelookup(int msg)
 		SV_DEMOPLAYBACK, 3, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
 		SV_CLIENT, 0, SV_RELOAD, 0, SV_REGEN, 0,
 		SV_ADDBOT, 0, SV_DELBOT, 0, SV_INITAI, 0,
+        SV_MAPCRC, 0, SV_CHECKMAPS, 1,
+		SV_SWITCHNAME, 0, SV_SWITCHTEAM, 0,
 		SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
 		-1
 	};
-	for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
-	return -1;
+	static int sizetable[NUMSV] = { -1 };
+	if(sizetable[0] < 0)
+	{
+		memset(sizetable, -1, sizeof(sizetable));
+		for(const int *p = msgsizes; *p >= 0; p += 2) sizetable[p[0]] = p[1];
+	}
+	return msg >= 0 && msg < NUMSV ? sizetable[msg] : -1;
 }
 #else
 extern char msgsizelookup(int msg);
@@ -1135,7 +1145,7 @@ namespace client
 		int mode, muts;
 	};
 	extern vector<mapvote> mapvotes;
-	extern bool demoplayback, sendinfo;
+	extern bool demoplayback, sendinfo, sendcrc;
 	extern void addmsg(int type, const char *fmt = NULL, ...);
 	extern void c2sinfo();
 }
@@ -1213,6 +1223,7 @@ namespace game
 	extern float bloodscale, gibscale;
 	extern bool intermission, zooming;
 	extern vec swaypush, swaydir;
+    extern string clientmap;
 
 	extern gameent *player1;
 	extern vector<gameent *> players;
@@ -1259,7 +1270,7 @@ namespace entities
 	extern int closestent(int type, const vec &pos, float mindist, bool links = false, gameent *d = NULL);
 	extern bool collateitems(gameent *d, vector<actitem> &actitems);
 	extern void checkitems(gameent *d);
-	extern void putitems(ucharbuf &p);
+	extern void putitems(packetbuf &p);
 	extern void execlink(gameent *d, int index, bool local, int ignore = -1);
 	extern void setspawn(int n, int m);
 	extern bool tryspawn(dynent *d, const vec &o, short yaw = 0, short pitch = 0);

@@ -810,7 +810,7 @@ namespace entities
 		if(m_ctf(game::gamemode)) ctf::checkflags(d);
 	}
 
-	void putitems(ucharbuf &p)
+	void putitems(packetbuf &p)
 	{
 		loopv(ents) if(enttype[ents[i]->type].usetype == EU_ITEM || ents[i]->type == PLAYERSTART || ents[i]->type == CHECKPOINT || ents[i]->type == ACTOR || ents[i]->type == TRIGGER)
 		{

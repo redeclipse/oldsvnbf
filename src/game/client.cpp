@@ -1,8 +1,8 @@
 #include "game.h"
 namespace client
 {
-	bool c2sinit = false, sendinfo = false, isready = false, remote = false,
-		demoplayback = false, needsmap = false, gettingmap = false;
+	bool sendinfo = false, isready = false, remote = false,
+		demoplayback = false, needsmap = false, gettingmap = false, sendcrc = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
 	vector<mapvote> mapvotes;
@@ -61,9 +61,9 @@ namespace client
 	{
 		if(name[0])
 		{
-			c2sinit = false;
-			string text; copystring(text, name); filtertext(text, text);
+			string text; filtertext(text, name);
 			copystring(game::player1->name, text, MAXNAMELEN);
+			addmsg(SV_SWITCHNAME, "rs", game::player1->name);
 		}
 		else conoutft(CON_MESG, "\foyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
@@ -99,9 +99,9 @@ namespace client
 				int t = teamname(team);
 				if(t != game::player1->team)
 				{
-					c2sinit = false;
 					if(game::player1->team != t) hud::lastteam = lastmillis;
 					game::player1->team = t;
+					addmsg(SV_SWITCHTEAM, "ri", game::player1->team);
 				}
 			}
 			else conoutft(CON_MESG, "\frcan only change teams when actually playing in team games");
@@ -136,7 +136,7 @@ namespace client
 	void gamedisconnect(int clean)
 	{
 		if(editmode) toggleedit();
-		gettingmap = needsmap = remote = isready = c2sinit = sendinfo = false;
+		gettingmap = needsmap = remote = isready = sendinfo = false;
         sessionid = 0;
 		messages.setsize(0);
 		mapvotes.setsize(0);
@@ -174,6 +174,10 @@ namespace client
 				}
 			}
 		});
+		if(clean)
+		{
+			game::clientmap[0] = '\0';
+		}
 	}
 
 	bool allowedittoggle(bool edit)
@@ -742,8 +746,7 @@ namespace client
 
     void sendintro()
     {
-        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        ucharbuf p(packet->data, packet->dataLength);
+		packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         putint(p, SV_CONNECT);
         sendstring(game::player1->name, p);
         mkstring(hash);
@@ -753,8 +756,7 @@ namespace client
             memset(connectpass, 0, sizeof(connectpass));
         }
         sendstring(hash, p);
-        enet_packet_resize(packet, p.length());
-        sendclientpacket(packet, 1);
+        sendclientpacket(p.finalize(), 1);
     }
 
 	void updateposition(gameent *d)
@@ -762,8 +764,7 @@ namespace client
         if((d->state==CS_ALIVE || d->state==CS_EDITING) && (!d->ai || !d->ai->suspended))
 		{
 			// send position updates separately so as to not stall out aiming
-			ENetPacket *packet = enet_packet_create(NULL, 100, 0);
-			ucharbuf q(packet->data, packet->dataLength);
+			packetbuf q(100);
 			putint(q, SV_POS);
 			putint(q, d->clientnum);
 			putuint(q, (int)(d->o.x*DMF));			  // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
@@ -792,29 +793,24 @@ namespace client
                 putuint(q, (int)d->aimyaw);
                 putint(q, (int)d->aimpitch);
             }
-			enet_packet_resize(packet, q.length());
-			sendclientpacket(packet, 0);
+			sendclientpacket(q.finalize(), 0);
 		}
 	}
 
     void sendmessages(gameent *d)
     {
-        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
-        ucharbuf p(packet->data, packet->dataLength);
-
-        #define CHECKSPACE(n) do { \
-            int space = (n); \
-            if(p.remaining() < space) \
-            { \
-                enet_packet_resize(packet, packet->dataLength + max(MAXTRANS, space - p.remaining())); \
-                p.buf = (uchar *)packet->data; \
-                p.maxlen = packet->dataLength; \
-            } \
-        } while(0)
-
+		packetbuf p(MAXTRANS);
+		if(sendcrc)
+		{
+			p.reliable();
+			sendcrc = false;
+			putint(p, SV_MAPCRC);
+			sendstring(game::clientmap, p);
+			putint(p, game::clientmap[0] ? getmapcrc() : 0);
+		}
 		if(sendinfo && !needsmap)
 		{
-            packet->flags |= ENET_PACKET_FLAG_RELIABLE;
+            p.reliable();
 			putint(p, SV_GAMEINFO);
 			putint(p, game::numplayers);
 			entities::putitems(p);
@@ -823,33 +819,21 @@ namespace client
             else if(m_ctf(game::gamemode)) ctf::sendflags(p);
 			sendinfo = false;
 		}
-		if(!c2sinit)	// tell other clients who I am
-		{
-			packet->flags |= ENET_PACKET_FLAG_RELIABLE;
-			c2sinit = true;
-            CHECKSPACE(10 + 2*(strlen(d->name) + 1));
-			putint(p, SV_CLIENTINIT);
-			sendstring(d->name, p);
-			putint(p, d->team);
-		}
         if(messages.length())
         {
-            CHECKSPACE(messages.length());
             p.put(messages.getbuf(), messages.length());
             messages.setsizenodelete(0);
-            if(messagereliable) packet->flags |= ENET_PACKET_FLAG_RELIABLE;
+            if(messagereliable) p.reliable();
             messagereliable = false;
         }
 		if(lastmillis-lastping>250)
 		{
-            CHECKSPACE(10);
 			putint(p, SV_PING);
 			putint(p, lastmillis);
 			lastping = lastmillis;
 		}
 
-        enet_packet_resize(packet, p.length());
-        sendclientpacket(packet, 1);
+        sendclientpacket(p.finalize(), 1);
 	}
 
     void c2sinfo() // send update to the server
@@ -1175,9 +1159,26 @@ namespace client
 					break;
 				}
 
+				case SV_SWITCHNAME:
+					getstring(text, p);
+					if(!d) break;
+					filtertext(text, text, true, MAXNAMELEN);
+					if(!text[0]) copystring(text, "unnamed");
+					if(strcmp(d->name, text))
+					{
+						string oldname, newname;
+						copystring(oldname, game::colorname(d, NULL, "", false));
+						copystring(newname, game::colorname(d, text));
+						if(game::showplayerinfo)
+							conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fm%s is now known as %s", oldname, newname);
+					}
+					copystring(d->name, text, MAXNAMELEN+1);
+					break;
+
 				case SV_CLIENTINIT: // another client either connected or changed name/team
 				{
-					d = game::newclient(cn);
+					int cn = getint(p);
+					gameent *d = game::newclient(cn);
 					if(!d)
 					{
 						getstring(text, p);
@@ -1185,7 +1186,7 @@ namespace client
 						break;
 					}
 					getstring(text, p);
-					filtertext(text, text);
+					filtertext(text, text, true, MAXNAMELEN);
 					if(!text[0]) copystring(text, "unnamed");
 					if(d->name[0])		  // already connected
 					{
@@ -1206,7 +1207,7 @@ namespace client
 							if(game::players[i]) freeeditinfo(game::players[i]->edit);
 						freeeditinfo(localedit);
 					}
-					copystring(d->name, text, MAXNAMELEN);
+					copystring(d->name, text, MAXNAMELEN+1);
 					int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
 					if(d == game::player1 && d->team != team) hud::lastteam = lastmillis;
 					d->team = team;
@@ -2004,7 +2005,7 @@ namespace client
 		return strcmp(a->name, b->name);
 	}
 
-	void parsepacketclient(int chan, ucharbuf &p)	// processes any updates from the server
+	void parsepacketclient(int chan, packetbuf &p)	// processes any updates from the server
 	{
 		switch(chan)
 		{

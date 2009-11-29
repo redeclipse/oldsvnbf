@@ -60,8 +60,7 @@ void conoutf(const char *s, ...)
 VARP(verbose, 0, 0, 6);
 
 #ifdef STANDALONE
-void servertoclient(int chan, uchar *buf, int len) {}
-void localservertoclient(int chan, uchar *buf, int len) {}
+void localservertoclient(int chan, ENetPacket *packet) {}
 void fatal(const char *s, ...)
 {
     void cleanupserver();
@@ -88,63 +87,72 @@ vector<char *> gameargs;
 
 // all network traffic is in 32bit ints, which are then compressed using the following simple scheme (assumes that most values are small).
 
-void putint(ucharbuf &p, int n)
+template<class T>
+static inline void putint_(T &p, int n)
 {
-	if(n<128 && n>-127) p.put(n);
-	else if(n<0x8000 && n>=-0x8000) { p.put(0x80); p.put(n); p.put(n>>8); }
-	else { p.put(0x81); p.put(n); p.put(n>>8); p.put(n>>16); p.put(n>>24); }
+    if(n<128 && n>-127) p.put(n);
+    else if(n<0x8000 && n>=-0x8000) { p.put(0x80); p.put(n); p.put(n>>8); }
+    else { p.put(0x81); p.put(n); p.put(n>>8); p.put(n>>16); p.put(n>>24); }
 }
+void putint(ucharbuf &p, int n) { putint_(p, n); }
+void putint(packetbuf &p, int n) { putint_(p, n); }
 
 int getint(ucharbuf &p)
 {
-	int c = (char)p.get();
-	if(c==-128) { int n = p.get(); n |= char(p.get())<<8; return n; }
-	else if(c==-127) { int n = p.get(); n |= p.get()<<8; n |= p.get()<<16; return n|(p.get()<<24); }
-	else return c;
+    int c = (char)p.get();
+    if(c==-128) { int n = p.get(); n |= char(p.get())<<8; return n; }
+    else if(c==-127) { int n = p.get(); n |= p.get()<<8; n |= p.get()<<16; return n|(p.get()<<24); }
+    else return c;
 }
 
 // much smaller encoding for unsigned integers up to 28 bits, but can handle signed
-void putuint(ucharbuf &p, int n)
+template<class T>
+static inline void putuint_(T &p, int n)
 {
-	if(n < 0 || n >= (1<<21))
-	{
-		p.put(0x80 | (n & 0x7F));
-		p.put(0x80 | ((n >> 7) & 0x7F));
-		p.put(0x80 | ((n >> 14) & 0x7F));
-		p.put(n >> 21);
-	}
-	else if(n < (1<<7)) p.put(n);
-	else if(n < (1<<14))
-	{
-		p.put(0x80 | (n & 0x7F));
-		p.put(n >> 7);
-	}
-	else
-	{
-		p.put(0x80 | (n & 0x7F));
-		p.put(0x80 | ((n >> 7) & 0x7F));
-		p.put(n >> 14);
-	}
+    if(n < 0 || n >= (1<<21))
+    {
+        p.put(0x80 | (n & 0x7F));
+        p.put(0x80 | ((n >> 7) & 0x7F));
+        p.put(0x80 | ((n >> 14) & 0x7F));
+        p.put(n >> 21);
+    }
+    else if(n < (1<<7)) p.put(n);
+    else if(n < (1<<14))
+    {
+        p.put(0x80 | (n & 0x7F));
+        p.put(n >> 7);
+    }
+    else
+    {
+        p.put(0x80 | (n & 0x7F));
+        p.put(0x80 | ((n >> 7) & 0x7F));
+        p.put(n >> 14);
+    }
 }
+void putuint(ucharbuf &p, int n) { putuint_(p, n); }
+void putuint(packetbuf &p, int n) { putuint_(p, n); }
 
 int getuint(ucharbuf &p)
 {
-	int n = p.get();
-	if(n & 0x80)
-	{
-		n += (p.get() << 7) - 0x80;
-		if(n & (1<<14)) n += (p.get() << 14) - (1<<14);
-		if(n & (1<<21)) n += (p.get() << 21) - (1<<21);
-		if(n & (1<<28)) n |= 0xF0000000;
-	}
-	return n;
+    int n = p.get();
+    if(n & 0x80)
+    {
+        n += (p.get() << 7) - 0x80;
+        if(n & (1<<14)) n += (p.get() << 14) - (1<<14);
+        if(n & (1<<21)) n += (p.get() << 21) - (1<<21);
+        if(n & (1<<28)) n |= 0xF0000000;
+    }
+    return n;
 }
 
-void putfloat(ucharbuf &p, float f)
+template<class T>
+static inline void putfloat_(T &p, float f)
 {
     lilswap(&f, 1);
     p.put((uchar *)&f, sizeof(float));
 }
+void putfloat(ucharbuf &p, float f) { putfloat_(p, f); }
+void putfloat(packetbuf &p, float f) { putfloat_(p, f); }
 
 float getfloat(ucharbuf &p)
 {
@@ -153,11 +161,14 @@ float getfloat(ucharbuf &p)
     return lilswap(f);
 }
 
-void sendstring(const char *t, ucharbuf &p)
+template<class T>
+static inline void sendstring_(const char *t, T &p)
 {
-	while(*t) putint(p, *t++);
-	putint(p, 0);
+    while(*t) putint(p, *t++);
+    putint(p, 0);
 }
+void sendstring(const char *t, ucharbuf &p) { sendstring_(t, p); }
+void sendstring(const char *t, packetbuf &p) { sendstring_(t, p); }
 
 void getstring(char *text, ucharbuf &p, int len)
 {
@@ -248,7 +259,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 		}
         case ST_LOCAL:
         {
-            localservertoclient(chan, packet->data, (int)packet->dataLength);
+            localservertoclient(chan, packet);
             break;
         }
 		default: break;
@@ -348,14 +359,11 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
     file->read(&packet->data[p.length()], len);
     enet_packet_resize(packet, p.length()+len);
 
-    if(cn >= 0)
-    {
-        sendpacket(cn, chan, packet, -1);
-        if(!packet->referenceCount) enet_packet_destroy(packet);
-    }
+    if(cn >= 0) sendpacket(cn, chan, packet, -1);
 #ifndef STANDALONE
     else sendclientpacket(packet, chan);
 #endif
+	if(!packet->referenceCount) enet_packet_destroy(packet);
 }
 
 const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server is full", "connection timed out" };
@@ -381,8 +389,8 @@ void kicknonlocalclients(int reason)
 
 void process(ENetPacket *packet, int sender, int chan)	// sender may be -1
 {
-	ucharbuf p(packet->data, (int)packet->dataLength);
-	server::parsepacket(sender, chan, (packet->flags&ENET_PACKET_FLAG_RELIABLE)!=0, p);
+	packetbuf p(packet);
+	server::parsepacket(sender, chan, p);
 	if(p.overread()) { disconnect_client(sender, DISC_EOP); return; }
 }
 
