@@ -526,8 +526,7 @@ namespace server
     	gname[0] = 0;
     	if(gametype[mode].mutators && muts) loopi(G_M_NUM)
 		{
-			if ((gametype[mode].mutators & mutstype[i].type) && (muts & mutstype[i].type) &&
-				(!gametype[mode].implied || !(gametype[mode].implied & mutstype[i].type)))
+			if((gametype[mode].mutators&mutstype[i].type) && (muts&mutstype[i].type) && (!gametype[mode].implied || !(gametype[mode].implied&mutstype[i].type)))
 			{
 				defformatstring(name)("%s%s%s", *gname ? gname : "", *gname ? "-" : "", mutstype[i].name);
 				copystring(gname, name);
@@ -539,52 +538,52 @@ namespace server
     }
 	ICOMMAND(gamename, "iii", (int *g, int *m), result(gamename(*g, *m)));
 
-    void modecheck(int *mode, int *muts)
+    void modecheck(int *mode, int *muts, int trying)
     {
 		if(!m_game(*mode))
 		{
 			*mode = G_DEATHMATCH;
 			*muts = gametype[*mode].implied;
 		}
-
-		#define modecheckreset(a) { i = 0; a; }
-		if(gametype[*mode].mutators && *muts) loopi(G_M_NUM)
+		#define modecheckreset(a) { if(*muts && ++count < G_M_NUM*4) { i = 0; a; } else { *muts = 0; break; } }
+		if(!gametype[*mode].mutators) *muts = G_M_NONE;
+		else
 		{
-			if(!(gametype[*mode].mutators & mutstype[i].type) && (*muts & mutstype[i].type))
+			int count = 0;
+			if(gametype[*mode].implied) *muts |= gametype[*mode].implied;
+			if(*muts) loopi(G_M_NUM)
 			{
-				*muts &= ~mutstype[i].type;
-				modecheckreset(continue);
-			}
-			if(gametype[*mode].implied && (gametype[*mode].implied & mutstype[i].type) && !(*muts & mutstype[i].type))
-			{
-				*muts |= mutstype[i].type;
-				modecheckreset(continue);
-			}
-			if(*muts & mutstype[i].type) loopj(G_M_NUM)
-			{
-				if(mutstype[i].mutators && !(mutstype[i].mutators & mutstype[j].type) && (*muts & mutstype[j].type))
+				if(trying && !(gametype[*mode].mutators&mutstype[i].type) && (trying&mutstype[i].type)) trying &= ~mutstype[i].type;
+				if(!(gametype[*mode].mutators&mutstype[i].type) && (*muts&mutstype[i].type))
 				{
-					*muts &= ~mutstype[j].type;
-					modecheckreset(break);
+					*muts &= ~mutstype[i].type;
+					modecheckreset(continue);
 				}
-				if(mutstype[i].implied && (mutstype[i].implied & mutstype[j].type) && !(*muts & mutstype[j].type))
+				if(*muts&mutstype[i].type) loopj(G_M_NUM)
 				{
-					*muts |= mutstype[j].type;
-					modecheckreset(break);
+					if(mutstype[i].mutators && !(mutstype[i].mutators&mutstype[j].type) && (*muts&mutstype[j].type))
+					{
+						if(trying && (trying&mutstype[j].type) && !(gametype[*mode].implied&mutstype[i].type)) *muts &= ~mutstype[i].type;
+						else *muts &= ~mutstype[j].type;
+						modecheckreset(break);
+					}
+					if(mutstype[i].implied && (mutstype[i].implied&mutstype[j].type) && !(*muts&mutstype[j].type))
+					{
+						*muts |= mutstype[j].type;
+						modecheckreset(break);
+					}
 				}
 			}
 		}
-		else *muts = G_M_NONE;
-        *muts |= gametype[*mode].implied;
     }
 
-	int mutscheck(int mode, int muts)
+	int mutscheck(int mode, int muts, int trying)
 	{
 		int gm = mode, mt = muts;
-		modecheck(&gm, &mt);
+		modecheck(&gm, &mt, trying);
 		return mt;
 	}
-	ICOMMAND(mutscheck, "iii", (int *g, int *m), intret(mutscheck(*g, *m)));
+	ICOMMAND(mutscheck, "iii", (int *g, int *m, int *t), intret(mutscheck(*g, *m, *t)));
 
 	void changemode(int *mode, int *muts)
 	{
@@ -598,9 +597,13 @@ namespace server
 			if(GVAR(defaultmuts) >= G_M_NONE) *muts = GVAR(defaultmuts);
 			else
 			{
-				int rmut = rnd(G_M_NUM+1);
-				if(rmut) *muts = 1<<(rmut-1);
-				else *muts = 0;
+				*muts = G_M_NONE;
+				int num = rnd(G_M_NUM+1);
+				if(num) loopi(num)
+				{
+					int rmut = rnd(G_M_NUM+1);
+					if(rmut) *muts |= 1<<(rmut-1);
+				}
 			}
 		}
 		modecheck(mode, muts);
