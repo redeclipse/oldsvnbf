@@ -196,6 +196,7 @@ namespace weapons
 		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
 		float dist = to.dist(from, unitv);
 		if(dist > 0) unitv.div(dist);
+		else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
 		if(d->aitype <= AI_BOT || d->maxspeed)
 		{
 			vec kick = vec(unitv).mul(-weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]);
