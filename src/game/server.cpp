@@ -834,19 +834,21 @@ namespace server
 	{
 		int spawncycle;
 		vector<int> ents;
+		vector<int> cycle;
 
 		spawn() { reset(); }
 		~spawn() {}
 
 		void reset()
 		{
-			spawncycle = 0;
 			ents.setsize(0);
+			cycle.setsize(0);
+			spawncycle = 0;
 		}
 		void add(int n)
 		{
 			ents.add(n);
-			spawncycle = rnd(ents.length());
+			cycle.add(0);
 		}
 	} spawns[TEAM_LAST+1];
 	int nplayers, totalspawns;
@@ -931,21 +933,41 @@ namespace server
 			}
 			if(totalspawns && GVAR(spawnrotate))
 			{
-				int team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+				int cycle = -1, team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 				if(!spawns[team].ents.empty())
 				{
 					switch(GVAR(spawnrotate))
 					{
-						case 1: default: spawns[team].spawncycle++; break;
 						case 2:
 						{
-							int r = rnd(spawns[team].ents.length());
-							spawns[team].spawncycle = r != spawns[team].spawncycle ? r : r + 1;
+							int num = 0, lowest = -1;
+							loopv(spawns[team].cycle) if(lowest < 0 || spawns[team].cycle[i] < lowest) lowest = spawns[team].cycle[i];
+							loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest) num++;
+							if(num > 0)
+							{
+								int r = rnd(num+1), n = 0;
+								loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest)
+								{
+									if(n == r)
+									{
+										spawns[team].cycle[i]++;
+										spawns[team].spawncycle = cycle = i;
+										break;
+									}
+									n++;
+								}
+								break;
+							}
+							// fall through if this fails..
+						}
+						case 1: default:
+						{
+							if(++spawns[team].spawncycle >= spawns[team].ents.length()) spawns[team].spawncycle = 0;
+							cycle = spawns[team].spawncycle;
 							break;
 						}
 					}
-					if(spawns[team].spawncycle >= spawns[team].ents.length()) spawns[team].spawncycle = 0;
-					return spawns[team].ents[spawns[team].spawncycle];
+					if(spawns[team].ents.inrange(cycle)) return spawns[team].ents[cycle];
 				}
 			}
 		}
