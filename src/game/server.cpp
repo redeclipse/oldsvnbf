@@ -1052,7 +1052,7 @@ namespace server
 		if(cn < 0 || allowbroadcast(cn))
 		{
 			defvformatstring(str, s, s);
-			int conlevel = CON_IMPORTANT;
+			int conlevel = CON_SELF;
 			switch(cn)
 			{
 				case -3: conlevel = CON_CHAT; break;

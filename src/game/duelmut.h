@@ -18,11 +18,10 @@ struct duelservmode : servmode
 					n -= GVAR(duelreset) ? 2 : 1;
 					if(n < 0) return;
 				}
-				if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fdyou are \fs\fgQUEUED\fS for the next round");
-				else if(m_team(gamemode, mutators)) srvmsgf(ci->clientnum, "\fdyou are \fs\fgQUEUED\fS for team \fs%s%s\fS", teamtype[ci->team].chat, teamtype[ci->team].name);
+				if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fdyou are \fs\fgqueued\fS for the next round");
 				else
 				{
-					if(n > 1) srvmsgf(ci->clientnum, "\fdyou are \fs\fg#%d\fS in the queue", n);
+					if(m_team(gamemode, mutators) || n > 1) srvmsgf(ci->clientnum, "\fdyou are \fs\fg#%d\fS in the queue", n);
 					else if(n) srvmsgf(ci->clientnum, "\fdyou are \fs\fgNEXT\fS in the queue");
 				}
 			}
@@ -166,12 +165,12 @@ struct duelservmode : servmode
 						defformatstring(namea)("%s", colorname(alive[0]));
 						defformatstring(nameb)("%s", colorname(alive[1]));
 						defformatstring(fight)("\faduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_SELF, fight);
 					}
 					else if(m_survivor(gamemode, mutators))
 					{
 						defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_INFO, fight);
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_SELF, fight);
 					}
 					dueltime = 0;
 				}

@@ -18,7 +18,7 @@ namespace client
 		m->muts = muts;
 		SEARCHBINDCACHE(votekey)("showgui vote", 0);
 		SEARCHBINDCACHE(gamekey)("showgui game", 0);
-		conoutft(CON_INFO, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
+		conoutft(CON_SELF, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
     void getvotes(int vote)
     {
@@ -472,9 +472,9 @@ namespace client
 				default: return;
 			}
 			if(d || verbose >= 2)
-				conoutft(CON_INFO, "\fg%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
+				conoutft(d != game::player1 ? CON_INFO : CON_SELF, "\fg%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
 		}
-		else conoutft(CON_INFO, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
+		else conoutft(d != game::player1 ? CON_INFO : CON_SELF, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
 
 	bool sendcmd(int nargs, const char *cmd, const char *arg)
@@ -1720,7 +1720,7 @@ namespace client
 					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
 					{
 						defformatstring(best)("%s", hud::sb.timetostr(besttime));
-						conoutft(CON_INFO, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
+						conoutft(t != game::player1 ? CON_INFO : CON_SELF, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
 					}
 				}
 

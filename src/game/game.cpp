@@ -1007,7 +1007,7 @@ namespace game
 		resetworld();
 		if(*name)
 		{
-			conoutft(CON_INFO, "\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
+			conoutft(CON_SELF, "\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
 			preload();
 		}
 		// reset perma-state
