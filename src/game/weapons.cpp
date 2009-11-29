@@ -205,7 +205,7 @@ namespace weapons
 				game::swaypush.add(vec(kick).mul(0.025f));
 				if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(weaptype[d->weapselect].kickpush[flags&HIT_ALT ? 1 : 0]), 1), 0, 1000);
 			}
-			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(m_scale(m_scale(0.5f))));
+			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(0.5f));
 		}
 
 		// move along the eye ray towards the weap origin, stopping when something is hit

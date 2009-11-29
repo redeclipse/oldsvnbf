@@ -20,8 +20,7 @@ namespace entities
 	{
 		switch(e.type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case LIGHTFX: case TELEPORT: case PUSHER:
-				return m_time(1000); break;
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case LIGHTFX: case TELEPORT: case PUSHER: return 1000; break;
 			default: break;
 		}
 		return 0;
@@ -714,7 +713,7 @@ namespace entities
 								d->pitch = f.attrs[1];
 								if(physics::entinmap(d, true))
 								{
-									float mag = m_scale(max(d->vel.magnitude(), f.attrs[2] ? float(f.attrs[2]) : 50.f));
+									float mag = max(d->vel.magnitude(), f.attrs[2] ? float(f.attrs[2]) : 50.f);
 									vecfromyawpitch(d->yaw, d->pitch, 1, 0, d->vel);
 									d->vel.mul(mag);
 									game::fixfullrange(d->yaw, d->pitch, d->roll, true);
@@ -733,7 +732,7 @@ namespace entities
 				}
 				case PUSHER:
 				{
-					float mag = m_scale(10.f);
+					float mag = 10.f;
 					if(e.attrs[4] && e.attrs[4] < e.attrs[3])
 					{
 						vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));

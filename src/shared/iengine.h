@@ -1,12 +1,13 @@
 // the interface the game uses to access the engine
 
-extern int kidmode, verbose, curtime, lastmillis, totalmillis;
+extern int kidmode, verbose, curtime, lastmillis, totalmillis, timescale, paused;
 extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
 extern void console(int type, const char *s, ...);
 extern void conoutft(int type, const char *s, ...);
 extern void conoutf(const char *s, ...);
+extern void updatetimer();
 
 #ifdef __GNUC__
 #define _dbg_ fprintf(stderr, "%s:%d:%s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__);

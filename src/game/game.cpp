@@ -367,8 +367,8 @@ namespace game
 
 	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size, float blend)
 	{
-		regularshape(type, radius, colour, 21, 25, m_time(fade), o, size, blend, -vel, 0, vel*2);
-		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), m_time(fade), m_time(fade/3));
+		regularshape(type, radius, colour, 21, 25, fade, o, size, blend, -vel, 0, vel*2);
+		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), fade, fade/3);
 	}
 
 	void impulseeffect(gameent *d, bool effect)
@@ -380,10 +380,10 @@ namespace game
 			{
 				if(d->type == ENT_PLAYER)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->lfoot, 1, 0.5f, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->rfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, 1, 0.5f, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, m_time(len), d->feetpos(), 1, 0.5f, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->feetpos(), 1, 0.5f, -15, 0, 5);
 			}
 		}
 	}
@@ -662,7 +662,7 @@ namespace game
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 				else if(d->health <= 0) force *= deadpushscale;
 				else force *= hitpushscale;
-				vec push = dir; push.z += 0.125f; push.mul(m_scale(force));
+				vec push = dir; push.z += 0.125f; push.mul(force);
 				d->vel.add(push);
 				if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
 			}

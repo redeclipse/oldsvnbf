@@ -430,6 +430,11 @@ namespace server
 
 	void cleanup()
 	{
+		if(sv_gamepaused)
+		{
+			setvar("sv_gamepaused", 0, true);
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "sv_gamepaused", 0);
+		}
 		if(GVAR(resetvarsonend)) resetgamevars(true);
 		if(GVAR(resetbansonend)) bannedips.setsize(0);
 		changemap();
@@ -660,8 +665,18 @@ namespace server
 		return false;
 	}
 
+	void setpause(bool on = false)
+	{
+		if(sv_gamepaused != on ? 1 : 0)
+		{
+			setvar("sv_gamepaused", on ? 1 : 0, true);
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "sv_gamepaused", on ? 1 : 0);
+		}
+	}
+
 	void startintermission()
 	{
+		setpause(false);
 		minremain = 0;
 		gamelimit = min(gamelimit, gamemillis);
 		if(smode) smode->intermission();
@@ -1234,6 +1249,7 @@ namespace server
 
 	void endmatch()
 	{
+		setpause(false);
 		if(demorecord) enddemorecord();
 		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
 		if(GVAR(resetbansonend) >= 2) bannedips.setsize(0);
@@ -2630,8 +2646,7 @@ namespace server
 	{
 		if(sents.inrange(i)) switch(sents[i].type)
 		{
-			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT: case PUSHER:
-				return m_time(1000); break;
+			case TRIGGER: case MAPMODEL: case PARTICLES: case MAPSOUND: case TELEPORT: case PUSHER: return 1000; break;
 			default: break;
 		}
 		return 0;
@@ -2825,7 +2840,13 @@ namespace server
         ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
         ci->local = local;
 		connects.add(ci);
-        if(!local && m_demo(gamemode)) return DISC_PRIVATE;
+        if(!local)
+        {
+        	if(m_demo(gamemode) || servertype <= 0) return DISC_PRIVATE;
+        	bool haslocal = false;
+        	loopv(clients) if(clients[i]->local) { haslocal = true; break; }
+        	if(!haslocal) return DISC_PRIVATE;
+        }
         sendservinit(ci);
 		return DISC_NONE;
 	}
