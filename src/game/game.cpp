@@ -197,6 +197,12 @@ namespace game
 		return false;
 	}
 
+	void resetsway()
+	{
+		swaydir = swaypush = vec(0, 0, 0);
+		swayfade = swayspeed = swaydist = 0;
+	}
+	
 	void addsway(gameent *d)
 	{
 		if(firstpersonsway)
@@ -221,11 +227,7 @@ namespace game
 			swaydir.mul(k).add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), maxspeed))));
 			swaypush.mul(pow(0.5f, curtime/25.0f));
 		}
-		else
-		{
-			swaydir = swaypush = vec(0, 0, 0);
-			swayfade = swayspeed = swaydist = 0;
-		}
+		else resetsway();
 	}
 
 	void announce(int idx, int targ, gameent *d, const char *msg, ...)
@@ -1019,6 +1021,7 @@ namespace game
 		if(!empty) client::sendinfo = client::sendcrc = true;
 		fogdist = max(getvar("fog")-16, 64);
         copystring(clientmap, reqname ? reqname : (name ? name : ""));
+		resetsway();
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)
