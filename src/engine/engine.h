@@ -464,11 +464,11 @@ extern void localdisconnect();
 extern void addserver(const char *name, int port, int qport);
 
 // client
-extern void servertoclient(int chan, uchar *buf, int len);
-extern void localservertoclient(int chan, uchar *buf, int len);
+extern void localservertoclient(int chan, ENetPacket *packet);
 extern bool connected(bool attempt = true);
-extern void connects(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, const char *password = NULL);
-extern void reconnect(), lanconnect();
+extern void connectserv(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, const char *password = NULL);
+extern void reconnect();
+extern void lanconnect();
 extern void abortconnect(bool msg = true);
 extern void clientkeepalive();
 extern ENetHost *clienthost;

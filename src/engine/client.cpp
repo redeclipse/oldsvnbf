@@ -71,7 +71,7 @@ void trydisconnect()
 }
 
 char *lastaddress = NULL;
-void connects(const char *name, int port, int qport, const char *password)
+void connectserv(const char *name, int port, int qport, const char *password)
 {
     abortconnect();
 
@@ -157,17 +157,16 @@ void disconnect(int onlyclean, int async)
     if(!onlyclean) localconnect(false);
 }
 
-ICOMMAND(connect, "siis", (char *n, int *a, int *b, char *pwd), connects(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT, pwd));
+ICOMMAND(connect, "siis", (char *n, int *a, int *b, char *pwd), connectserv(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT, pwd));
 COMMANDN(disconnect, trydisconnect, "");
 
-ICOMMAND(lanconnect, "", (), connects());
+ICOMMAND(lanconnect, "", (), connectserv());
 ICOMMAND(localconnect, "i", (int *n), localconnect(*n ? false : true));
 
 void reconnect()
 {
 	disconnect(1);
-	SDL_Delay(1000);
-	connects(lastaddress && *lastaddress ? lastaddress : NULL);
+	connectserv(lastaddress && *lastaddress ? lastaddress : NULL);
 }
 COMMAND(reconnect, "");
 
@@ -177,7 +176,6 @@ void sendclientpacket(ENetPacket *packet, int chan)
 {
 	if(curpeer) enet_peer_send(curpeer, chan, packet);
 	else localclienttoserver(chan, packet);
-    if(!packet->referenceCount) enet_packet_destroy(packet);
 }
 
 void flushclient()
@@ -191,15 +189,10 @@ void neterr(const char *s)
 	disconnect();
 }
 
-void servertoclient(int chan, uchar *buf, int len)	// processes any updates from the server
+void localservertoclient(int chan, ENetPacket *packet)	// processes any updates from the server
 {
-	ucharbuf p(buf, len);
+	packetbuf p(packet);
 	client::parsepacketclient(chan, p);
-}
-
-void localservertoclient(int chan, uchar *buf, int len)
-{
-    servertoclient(chan, buf, len);
 }
 
 void clientkeepalive()
@@ -240,7 +233,7 @@ void gets2c()			// get updates from the server
 
 		case ENET_EVENT_TYPE_RECEIVE:
 			if(discmillis) conoutf("\fdattempting to disconnect...");
-			else servertoclient(event.channelID, event.packet->data, (int)event.packet->dataLength);
+			else localservertoclient(event.channelID, event.packet);
 			enet_packet_destroy(event.packet);
 			break;
 

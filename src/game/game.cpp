@@ -7,6 +7,7 @@ namespace game
 	bool intermission = false, prevzoom = false, zooming = false;
 	float swayfade = 0, swayspeed = 0, swaydist = 0;
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
+    string clientmap = "";
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
@@ -1002,7 +1003,7 @@ namespace game
 		if(!empty) smartmusic(true, false);
 	}
 
-	void startmap(const char *name, bool empty)	// called just after a map load
+	void startmap(const char *name, const char *reqname, bool empty)	// called just after a map load
 	{
 		intermission = false;
 		maptime = 0;
@@ -1019,8 +1020,9 @@ namespace game
 			d->mapchange(lastmillis, m_health(gamemode, mutators));
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
-		if(!empty) client::sendinfo = true;
+		if(!empty) client::sendinfo = client::sendcrc = true;
 		fogdist = max(getvar("fog")-16, 64);
+        copystring(clientmap, reqname ? reqname : (name ? name : ""));
 	}
 
 	gameent *intersectclosest(vec &from, vec &to, gameent *at)

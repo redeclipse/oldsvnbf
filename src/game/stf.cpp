@@ -148,7 +148,7 @@ namespace stf
 		}
 	}
 
-	void sendflags(ucharbuf &p)
+	void sendflags(packetbuf &p)
 	{
 		putint(p, SV_FLAGS);
 		putint(p, st.flags.length());

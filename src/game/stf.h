@@ -176,7 +176,7 @@ struct stfstate
 namespace stf
 {
 	extern stfstate st;
-	extern void sendflags(ucharbuf &p);
+	extern void sendflags(packetbuf &p);
 	extern void updateflag(int i, int owner, int enemy, int converted);
 	extern void setscore(int team, int total);
 	extern void setupflags();

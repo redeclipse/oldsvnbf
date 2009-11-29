@@ -580,6 +580,10 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? mname : mapname));
 ICOMMAND(savecurrentmap, "", (), save_world(mapname));
 
+static uint mapcrc = 0;
+
+uint getmapcrc() { return mapcrc; }
+
 void swapXZ(cube *c)
 {
 	loopi(8)
@@ -1100,6 +1104,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 
 			if(verbose) conoutf("\fdloaded %d lightmaps", hdr.lightmaps);
 
+			mapcrc = f->getcrc();
 			progress(0, "loading world...");
 			game::loadworld(f, maptype);
 			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
@@ -1177,7 +1182,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			allchanged(true);
 
 			progress(0, "starting world...");
-			game::startmap(mapname);
+			game::startmap(mapname, mname);
 			return true;
 		}
 	}

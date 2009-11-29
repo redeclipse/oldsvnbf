@@ -864,7 +864,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	    persistidents = true;
 	    overrideidents = worldidents = false;
     }
-	game::startmap(nocfg ? "" : "maps/untitled", true);
+	game::startmap(nocfg ? "" : "maps/untitled", NULL, true);
 	return true;
 }
 

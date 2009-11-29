@@ -144,7 +144,7 @@ struct ctfstate
 namespace ctf
 {
 	extern ctfstate st;
-	extern void sendflags(ucharbuf &p);
+	extern void sendflags(packetbuf &p);
 	extern void parseflags(ucharbuf &p, bool commit);
 	extern void dropflag(gameent *d, int i, const vec &droploc);
 	extern void scoreflag(gameent *d, int relay, int goal, int score);

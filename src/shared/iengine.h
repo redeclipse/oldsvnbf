@@ -303,6 +303,7 @@ extern void adddecal(int type, const vec &center, const vec &surface, float radi
 extern void setnames(const char *fname, int type);
 extern bool load_world(const char *mname, bool temp = false);
 extern void save_world(const char *mname, bool nodata = false, bool forcesave = false);
+extern uint getmapcrc();
 
 // physics
 extern bool ellipsecollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo);
@@ -365,12 +366,16 @@ extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern int getnumclients();
 extern uint getclientip(int n);
 extern void putint(ucharbuf &p, int n);
+extern void putint(packetbuf &p, int n);
 extern int getint(ucharbuf &p);
 extern void putuint(ucharbuf &p, int n);
+extern void putuint(packetbuf &p, int n);
 extern int getuint(ucharbuf &p);
 extern void putfloat(ucharbuf &p, float f);
+extern void putfloat(packetbuf &p, float f);
 extern float getfloat(ucharbuf &p);
 extern void sendstring(const char *t, ucharbuf &p);
+extern void sendstring(const char *t, packetbuf &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);

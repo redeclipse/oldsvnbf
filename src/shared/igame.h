@@ -27,7 +27,7 @@ namespace entities
 namespace client
 {
 	extern void gamedisconnect(int clean);
-	extern void parsepacketclient(int chan, ucharbuf &p);
+	extern void parsepacketclient(int chan, packetbuf &p);
 	extern void gameconnect(bool _remote);
 	extern bool allowedittoggle(bool edit);
 	extern void edittoggled(bool edit);
@@ -86,7 +86,7 @@ namespace game
 	extern void updateworld();
 	extern void newmap(int size);
 	extern void resetmap(bool empty);
-	extern void startmap(const char *name, bool empty = false);
+	extern void startmap(const char *name, const char *reqname, bool empty = false);
 	extern bool allowmove(physent *d);
 	extern dynent *iterdynents(int i);
 	extern int numdynents();
@@ -124,7 +124,7 @@ namespace server
 	extern bool allowbroadcast(int n);
 	extern int peerowner(int n);
 	extern void recordpacket(int chan, void *data, int len);
-	extern void parsepacket(int sender, int chan, bool reliable, ucharbuf &p);
+	extern void parsepacket(int sender, int chan, packetbuf &p);
 	extern bool sendpackets();
 	extern void queryreply(ucharbuf &req, ucharbuf &p);
 	extern void serverupdate();
