@@ -680,7 +680,7 @@ void entlink()
 		}
 		else conoutf("\fr%d (%d) is not in range", index, 0);
 	}
-	else conoutft(CON_MESG, "\fomore than one entity must be selected to link");
+	else conoutft(CON_MESG, "\frmore than one entity must be selected to link");
 }
 COMMAND(entlink, "");
 

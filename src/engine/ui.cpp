@@ -683,7 +683,7 @@ struct gui : guient
 			int x = curx;
 			if(icon)
 			{
-				defformatstring(tname)("textures/%s", icon);
+				defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
 				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], clickable && hit);
 				x += guibound[1];
 			}

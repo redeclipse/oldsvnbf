@@ -43,8 +43,8 @@ namespace auth
 			if(!ci->privilege) return;
 			ci->privilege = PRIV_NONE;
 		}
-        if(val && authname) srvoutf(2, "%s claimed %s as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
-        else srvoutf(2, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
+        if(val && authname) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
+        else srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
 		masterupdate = true;
 	}
 

@@ -84,10 +84,6 @@ namespace game
 	FVAR(aboveheadsmooth, 0, 0.5f, 1);
 	VAR(aboveheadsmoothmillis, 1, 200, 10000);
 	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
-	TVAR(conopentex, "textures/conopen", 3);
-	TVAR(deadtex, "textures/dead", 3);
-	TVAR(dominatingtex, "textures/dominating", 3);
-	TVAR(dominatedtex, "textures/dominated", 3);
 
 	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
 	VARP(showobitdists, 0, 0, 1);
@@ -295,7 +291,7 @@ namespace game
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
 			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap >= WEAP_OFFSET ? weaptype[weap].name : "random weapons"));
 		}
-		else conoutft(CON_SELF, "\foonly available in arena");
+		else conoutft(CON_SELF, "\foweapon selection is only available in arena");
 	}
 	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(player1, s));
 
@@ -1942,14 +1938,14 @@ namespace game
 			if(showstatusabovehead > (d != player1 ? 0 : 1))
 			{
 				Texture *t = NULL;
-				if(d->state == CS_DEAD || d->state == CS_WAITING) t = textureload(deadtex, 3);
+				if(d->state == CS_DEAD || d->state == CS_WAITING) t = textureload(hud::deadtex, 3);
 				else if(d->state == CS_ALIVE)
 				{
-					if(d->conopen) t = textureload(conopentex, 3);
+					if(d->conopen) t = textureload(hud::conopentex, 3);
 					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != player1->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
-					else if(d->dominating) t = textureload(dominatingtex, 3);
-					else if(d->dominated) t = textureload(dominatedtex, 3);
+					else if(d->dominating) t = textureload(hud::dominatingtex, 3);
+					else if(d->dominated) t = textureload(hud::dominatedtex, 3);
 				}
 				if(t)
 				{
