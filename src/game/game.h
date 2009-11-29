@@ -1183,7 +1183,7 @@ namespace weapons
 
 namespace hud
 {
-	extern char *bliptex, *cardtex, *flagtex, *arrowtex;
+	extern char *conopentex, *playertex, *deadtex, *dominatingtex, *dominatedtex, *inputtex, *bliptex, *cardtex, *flagtex, *arrowtex;
 	extern int hudwidth, hudsize, lastteam, damageresidue, damageresiduefade, radarflagnames, inventorygame;
 	extern float noticescale, inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;

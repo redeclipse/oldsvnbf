@@ -600,9 +600,9 @@ namespace projs
 					float fluc = 1.f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
 					part_create(PART_PLASMA_SOFT, 1, proj.o, col, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*fluc);
 					bool moving = proj.movement > 0.f;
-					if(lastmillis-proj.lasteffect >= moving ? 200 : 350)
+					if(lastmillis-proj.lasteffect >= (moving ? 50 : 100))
 					{
-						part_create(PART_SMOKE_LERP, moving ? 200 : 500, proj.o, 0x222222, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*(moving ? 0.5f : 1.f), 1, -20);
+						part_create(PART_SMOKE_LERP, 250, proj.o, 0x222222, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*(moving ? 0.5f : 1.f), 1, -20);
 						proj.lasteffect = lastmillis;
 					}
 					break;

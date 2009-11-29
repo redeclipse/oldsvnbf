@@ -461,7 +461,7 @@ void localdisconnect()
     loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL)
     {
         clientdata &c = *clients[i];
-        conoutf("\folocal client %d disconnected", c.num);
+        conoutf("\frlocal client %d disconnected", c.num);
         server::clientdisconnect(c.num, true);
         c.type = ST_EMPTY;
         server::deleteinfo(c.info);
@@ -645,7 +645,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 			{
 				clientdata *c = (clientdata *)event.peer->data;
 				if(!c) break;
-				conoutf("\fodisconnected client (%s)", c->hostname);
+				conoutf("\frdisconnected client (%s)", c->hostname);
 				server::clientdisconnect(c->num);
 				c->type = ST_EMPTY;
 				event.peer->data = NULL;

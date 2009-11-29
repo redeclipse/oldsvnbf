@@ -53,7 +53,7 @@ namespace client
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
 	ICOMMAND(getname, "", (), result(game::player1->name));
 	ICOMMAND(getteam, "", (), result(teamtype[game::player1->team].name));
-    ICOMMAND(getteamicon, "", (), result(teamtype[game::player1->team].icon));
+    ICOMMAND(getteamicon, "", (), result(hud::teamtex(game::player1->team)));
 
     const char *getname() { return game::player1->name; }
 
@@ -65,7 +65,7 @@ namespace client
 			copystring(game::player1->name, text, MAXNAMELEN);
 			addmsg(SV_SWITCHNAME, "rs", game::player1->name);
 		}
-		else conoutft(CON_MESG, "\foyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
+		else conoutft(CON_MESG, "\fgyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
 	ICOMMAND(name, "s", (char *s), switchname(s));
 
@@ -106,7 +106,7 @@ namespace client
 			}
 			else conoutft(CON_MESG, "\frcan only change teams when actually playing in team games");
 		}
-		else conoutft(CON_MESG, "\fs\foyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+		else conoutft(CON_MESG, "\fs\fgyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 	}
 	ICOMMAND(team, "s", (char *s), switchteam(s));
 
@@ -439,7 +439,7 @@ namespace client
 					char *ret = executeret(s);
 					if(ret)
 					{
-						conoutft(CON_MESG, "\fo%s: %s", cmd, ret);
+						conoutft(CON_MESG, "\fg%s: %s", cmd, ret);
 						delete[] ret;
 					}
 					return;
@@ -472,7 +472,7 @@ namespace client
 				default: return;
 			}
 			if(d || verbose >= 2)
-				conoutft(CON_INFO, "\fo%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
+				conoutft(CON_INFO, "\fg%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
 		}
 		else conoutft(CON_INFO, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
@@ -532,7 +532,7 @@ namespace client
 				defformatstring(fname)("%d.dmo", lastmillis);
 				stream *demo = openfile(fname, "wb");
 				if(!demo) return;
-				conoutft(CON_MESG, "\foreceived demo \"%s\"", fname);
+				conoutft(CON_MESG, "received demo \"%s\"", fname);
 				demo->write(data, len);
                 delete demo;
 				break;
@@ -586,15 +586,15 @@ namespace client
 
     void getdemo(int i)
 	{
-		if(i<=0) conoutf("\fogetting demo...");
-		else conoutf("\fogetting demo %d...", i);
+		if(i<=0) conoutf("getting demo...");
+		else conoutf("getting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
 	ICOMMAND(getdemo, "i", (int *val), getdemo(*val));
 
 	void listdemos()
 	{
-		conoutf("\folisting demos...");
+		conoutf("listing demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
 	ICOMMAND(listdemos, "", (), listdemos());
@@ -619,7 +619,7 @@ namespace client
 
 	void sendmap()
 	{
-		conoutf("\fosending map...");
+		conoutf("sending map...");
 		const char *reqmap = mapname;
 		if(!reqmap || !*reqmap) reqmap = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
@@ -1011,7 +1011,7 @@ namespace client
 		{
 			prevtype = type;
 			type = getint(p);
-			if(verbose > 5) conoutf("\fo[client] msg: %d, prev: %d", type, prevtype);
+			if(verbose > 5) conoutf("[client] msg: %d, prev: %d", type, prevtype);
 			switch(type)
 			{
 				case SV_SERVERINIT:					// welcome messsage from the server
@@ -1453,7 +1453,7 @@ namespace client
 								else if(val < id->minval) val = id->minval;
 								setvar(text, val, true);
                                 defformatstring(str)(id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id->storage.i);
-								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, str);
+								conoutft(CON_MESG, "\fg%s set worldvar %s to %s", game::colorname(d), id->name, str);
 							}
 							break;
 						}
@@ -1465,7 +1465,7 @@ namespace client
 								if(val > id->maxvalf) val = id->maxvalf;
 								else if(val < id->minvalf) val = id->minvalf;
 								setfvar(text, val, true);
-								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, floatstr(*id->storage.f));
+								conoutft(CON_MESG, "\fg%s set worldvar %s to %s", game::colorname(d), id->name, floatstr(*id->storage.f));
 							}
 							break;
 						}
@@ -1476,7 +1476,7 @@ namespace client
 							if(commit)
 							{
 								setsvar(text, val, true);
-								conoutft(CON_MESG, "\fo%s set worldvar %s to %s", game::colorname(d), id->name, *id->storage.s);
+								conoutft(CON_MESG, "\fg%s set worldvar %s to %s", game::colorname(d), id->name, *id->storage.s);
 							}
 							break;
 						}
@@ -1487,7 +1487,7 @@ namespace client
 							if(commit || !id) // set aliases anyway
 							{
 								worldalias(text, val);
-								conoutft(CON_MESG, "\fo%s set worldalias %s to %s", game::colorname(d), text, val);
+								conoutft(CON_MESG, "\fg%s set worldalias %s to %s", game::colorname(d), text, val);
 							}
 							break;
 						}
@@ -1532,7 +1532,7 @@ namespace client
 				case SV_REMIP:
 				{
 					if(!d) return;
-					conoutft(CON_MESG, "\fo%s remipped", game::colorname(d));
+					conoutft(CON_MESG, "%s remipped", game::colorname(d));
 					mpremip(false);
 					break;
 				}

@@ -71,6 +71,12 @@ namespace hud
 	FVARP(noticescale, 1e-3f, 1.f, 1.f);
 	VARP(noticetime, 0, 5000, INT_MAX-1);
 	VARP(obitnotices, 0, 2, 2);
+
+	TVAR(conopentex, "textures/conopen", 3);
+	TVAR(playertex, "textures/player", 3);
+	TVAR(deadtex, "textures/dead", 3);
+	TVAR(dominatingtex, "textures/dominating", 3);
+	TVAR(dominatedtex, "textures/dominated", 3);
 	TVAR(inputtex, "textures/menu", 3);
 
 	VARP(teamwidgets, 0, 1, 3); // colour based on team
@@ -697,7 +703,7 @@ namespace hud
 				else if(game::player1->state == CS_ALIVE)
 				{
 					if(teamchanges && lastteam && lastmillis-lastteam <= noticetime*2)
-						ty += draw_textx("\fzReYou are now on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+						ty += draw_textx("\fzReYou are now on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
 						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
