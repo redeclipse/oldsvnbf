@@ -670,7 +670,7 @@ namespace server
 		if(sv_gamepaused != on ? 1 : 0)
 		{
 			setvar("sv_gamepaused", on ? 1 : 0, true);
-			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "sv_gamepaused", on ? 1 : 0);
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "gamepaused", on ? 1 : 0);
 		}
 	}
 
