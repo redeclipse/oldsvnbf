@@ -362,7 +362,8 @@ enum
 enum
 {
 	G_M_NONE = 0, G_M_MULTI = 1<<0, G_M_TEAM = 1<<1, G_M_INSTA = 1<<2, G_M_DUEL = 1<<3, G_M_SURVIVOR= 1<<4, G_M_ARENA = 1<<5,
-	G_M_ALL = G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_NUM = 6
+	G_M_ALL = G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_SOME = G_M_INSTA|G_M_ARENA,
+	G_M_NUM = 6
 };
 
 struct gametypes
@@ -372,8 +373,8 @@ struct gametypes
 #ifdef GAMESERVER
 gametypes gametype[] = {
 	{ G_DEMO,			G_M_NONE,															G_M_NONE,				"demo" },
-	{ G_LOBBY,			G_M_NONE,															G_M_NONE,				"lobby" },
-	{ G_EDITMODE,		G_M_NONE,															G_M_NONE,				"editing" },
+	{ G_LOBBY,			G_M_SOME,															G_M_NONE,				"lobby" },
+	{ G_EDITMODE,		G_M_SOME,															G_M_NONE,				"editing" },
 	{ G_STORY,			G_M_TEAM|G_M_INSTA,													G_M_TEAM,				"story" },
 	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
