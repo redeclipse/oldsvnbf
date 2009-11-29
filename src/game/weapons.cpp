@@ -214,8 +214,8 @@ namespace weapons
         vec eyedir(from);
         eyedir.sub(d->o);
         float eyedist = eyedir.magnitude();
-        eyedir.div(eyedist);
-        float barrier = raycube(d->o, eyedir, eyedist, RAY_CLIPMAT);
+        if(eyedist > 0) eyedir.div(eyedist);
+        float barrier = eyedist > 0 ? raycube(d->o, eyedir, eyedist, RAY_CLIPMAT) : eyedist;
         if(barrier < eyedist)
         {
             (from = eyedir).mul(barrier).add(d->o);
