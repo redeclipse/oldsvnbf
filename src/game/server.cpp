@@ -2846,9 +2846,11 @@ namespace server
         if(!local)
         {
         	if(m_demo(gamemode) || servertype <= 0) return DISC_PRIVATE;
+#ifndef STANDALONE
         	bool haslocal = false;
         	loopv(clients) if(clients[i]->local) { haslocal = true; break; }
         	if(!haslocal) return DISC_PRIVATE;
+#endif
         }
         sendservinit(ci);
 		return DISC_NONE;
