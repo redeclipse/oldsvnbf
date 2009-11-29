@@ -3091,16 +3091,11 @@ namespace server
 		}
 		if(p.packet->flags&ENET_PACKET_FLAG_RELIABLE) reliablemessages = true;
 		#define QUEUE_MSG { while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
-        #define QUEUE_BUF(size, body) { \
-            curmsg = p.length(); \
-            ucharbuf buf = ci->messages.reserve(size); \
-            { body; } \
-            ci->messages.addbuf(buf); \
-        }
-        #define QUEUE_INT(n) QUEUE_BUF(5, putint(buf, n))
-        #define QUEUE_UINT(n) QUEUE_BUF(4, putuint(buf, n))
-        #define QUEUE_FLT(n) QUEUE_BUF(4, putfloat(buf, n))
-        #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
+		#define QUEUE_BUF(body) { curmsg = p.length(); body; }
+        #define QUEUE_INT(n) QUEUE_BUF(putint(ci->messages, n))
+        #define QUEUE_UINT(n) QUEUE_BUF(putuint(ci->messages, n))
+        #define QUEUE_FLT(n) QUEUE_BUF(putfloat(ci->messages, n))
+        #define QUEUE_STR(text) QUEUE_BUF(sendstring(text, ci->messages))
 
 		int curmsg;
         while((curmsg = p.length()) < p.maxlen)
@@ -3266,11 +3261,10 @@ namespace server
 					cp->state.state = CS_ALIVE;
 					if(smode) smode->spawned(cp);
 					mutate(smuts, mut->spawned(cp););
-					QUEUE_BUF(100,
-					{
-						putint(buf, SV_SPAWN);
-						putint(buf, cp->clientnum);
-						sendstate(cp->state, buf);
+					QUEUE_BUF({
+						putint(ci->messages, SV_SPAWN);
+						putint(ci->messages, cp->clientnum);
+						sendstate(cp->state, ci->messages);
 					});
 					break;
 				}
