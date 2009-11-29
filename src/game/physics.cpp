@@ -596,8 +596,8 @@ namespace physics
 						if(allowed && ((d->turnside && d->action[AC_JUMP]) || (!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
 						{
 							float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
-							d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall).normalize()).add(vec(d->vel).reflect(wall).normalize()).div(2).mul(mag);
-							vectoyawpitch(vec(d->vel).normalize(), yaw, pitch);
+							d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
+							vectoyawpitch(d->vel, yaw, pitch);
 							d->vel.z += d->turnside ? mag : mag/2;
 							off = yaw-d->aimyaw;
 							if(off > 180) off -= 360;
