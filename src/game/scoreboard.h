@@ -91,7 +91,7 @@ namespace hud
 				scoreson = on;
 				if(m_play(game::gamemode) && interm)
 				{
-					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_IMPORTANT, NULL, "\fwchapter complete!");
+					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_SELF, NULL, "\fwchapter complete!");
 					else if(m_fight(game::gamemode) && !m_trial(game::gamemode))
 					{
 						if(!groupplayers()) return;
@@ -100,15 +100,15 @@ namespace hud
 						{
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
-								game::announce(anc, CON_IMPORTANT, NULL, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
-							else if(m_trial(game::gamemode)) game::announce(anc, CON_IMPORTANT, NULL, "\fw\fs%s%s\fS team won the match with the lowest laptime of %s", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
-							else game::announce(anc, CON_IMPORTANT, NULL, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+								game::announce(anc, CON_SELF, NULL, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else if(m_trial(game::gamemode)) game::announce(anc, CON_SELF, NULL, "\fw\fs%s%s\fS team won the match with the lowest laptime of %s", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
+							else game::announce(anc, CON_SELF, NULL, "\fw\fs%s%s\fS team won the match with a total score of %d", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							if(m_trial(game::gamemode)) game::announce(anc, CON_IMPORTANT, NULL, "\fw%s won the match with the lowest laptime of %s", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
-							else game::announce(anc, CON_IMPORTANT, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
+							if(m_trial(game::gamemode)) game::announce(anc, CON_SELF, NULL, "\fw%s won the match with the lowest laptime of %s", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
+							else game::announce(anc, CON_SELF, NULL, "\fw%s won the match with a total score of %d", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
 				}

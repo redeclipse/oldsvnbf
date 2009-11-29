@@ -945,7 +945,7 @@ void explodelist(const char *s, vector<char *> &elems)
 char *indexlist(const char *s, int pos)
 {
 	whitespaceskip;
-    loopi(pos) 
+    loopi(pos)
     {
         elementskip;
         whitespaceskip;
@@ -1105,7 +1105,7 @@ ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
-ICOMMAND(echo, "C", (char *s), conoutft(CON_INFO, "\fd%s", s));
+ICOMMAND(echo, "C", (char *s), conoutft(CON_SELF, "%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
 
