@@ -46,6 +46,15 @@ namespace auth
         if(val && authname) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
         else srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
 		masterupdate = true;
+        if(paused)
+        {
+            int vars = 0;
+			if(varslock < 2)
+			{
+				loopv(clients) if(clients[i]->privilege >= (varslock ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
+			}
+            if(!vars) setpause(false);
+        }
 	}
 
     bool isconnected() { return socket != ENET_SOCKET_NULL; }

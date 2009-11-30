@@ -35,7 +35,7 @@ namespace hud
 	void toggleconsole() { fullconsole = !fullconsole; }
 	COMMAND(toggleconsole, "");
 
-	VARP(titlefade, 0, 5000, 10000);
+	VARP(titlefade, 0, 2500, 10000);
 	VARP(tvmodefade, 0, 1000, INT_MAX-1);
 	VARP(spawnfade, 0, 1000, INT_MAX-1);
 
@@ -128,12 +128,14 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventorygame, 0, 1, 2);
+	VARP(inventoryteam, 0, 1, 1);
 	VARP(inventorystatus, 0, 2, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
 	VARP(inventorycolour, 0, 2, 2);
 	FVARP(inventorysize, 0, 0.07f, 1000);
 	FVARP(inventoryskew, 1e-3f, 0.6f, 1);
+	FVARP(inventorygrow, 1e-3f, 0.75f, 1);
 	FVARP(inventoryblend, 0, 0.6f, 1);
 
 	VARP(inventoryedit, 0, 1, 1);
@@ -627,7 +629,7 @@ namespace hud
 					tx = int(tx*(1.f/noticescale));
 				}
 				if(teamnotices) skewcolour(tr, tg, tb);
-				if(lastmillis-game::maptime <= titlefade*2)
+				if(lastmillis-game::maptime <= titlefade*3)
 				{
 
 					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, *maptitle ? maptitle : mapname)*noticescale;
@@ -703,8 +705,12 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamchanges && lastteam && lastmillis-lastteam <= noticetime*2)
-						ty += draw_textx("\fzReYou are now on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+					if(teamchanges && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					{
+						if(!lastteam) lastteam = lastmillis;
+						if(lastmillis-lastteam <= 4000)
+							ty += draw_textx("\fzReNow on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+					}
 					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
 						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
@@ -966,7 +972,7 @@ namespace hud
 		return dist;
 	}
 
-	void drawblip(const char *tex, int area, int w, int h, float s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
+	void drawblip(const char *tex, float area, int w, int h, float s, float blend, vec &dir, float r, float g, float b, const char *font, const char *text, ...)
 	{
 		float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
 			size = max(w, h)/2, tx = w/2, ty = h/2, ts = size*radarsize, tp = ts*s, tq = tp/2, tr = (size*radaroffset)+(ts*area);
@@ -993,7 +999,7 @@ namespace hud
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
 			int width, height; text_bounds(str, width, height, -1, TEXT_CENTERED|TEXT_NO_INDENT);
-			pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1.f-(-y))*height/2 : height/2+(y*height/2)));
+			pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1+y)*height/2 : height/2+(y*height/2)));
 			draw_textx("%s", int(pos.x), int(pos.y), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
@@ -1119,7 +1125,7 @@ namespace hud
 			if(millis >= radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
 			if(game::player1->state == CS_ALIVE || (game::player1->state == CS_DEAD && game::player1->lastdeath))
 			{
-				float fade = min(max(d.damage, radardamagemin)/float(max(radardamagemax-radardamagemin, 1)), 1.f),
+				float fade = clamp(max(d.damage, radardamagemin)/float(max(radardamagemax-radardamagemin, 1)), radardamagemin/100.f, 1.f),
 					size = clamp(fade*radardamagesize, min(radardamagesize*radardamagemin/100.f, 1.f), radardamagesize);
 				if(millis >= radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
 				else fade *= float(millis)/float(radardamagetime);
@@ -1127,9 +1133,9 @@ namespace hud
 				if(radardamage >= 5)
 				{
 					gameent *a = game::getclient(d.attacker);
-					drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
+					drawblip(arrowtex, 4+size, w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
 				}
-				else drawblip(arrowtex, 3+int(ceil(radardamagesize)), w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
+				else drawblip(arrowtex, 4+size, w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
 			}
 		}
 		if(radardamage >= 2)
@@ -1139,23 +1145,17 @@ namespace hud
 			{
 				vec dir = vec(game::player1->o).sub(camera1->o).normalize().rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[game::player1->team].colour>>16)/255.f, g = ((teamtype[game::player1->team].colour>>8)&0xFF)/255.f, b = (teamtype[game::player1->team].colour&0xFF)/255.f;
-				drawblip(arrowtex, 3+int(ceil(radardamagetrack)), w, h, radardamagetrack, blend*radardamageblend, dir, r, g, b, "sub", "you");
+				drawblip(arrowtex, 4+radardamagetrack, w, h, radardamagetrack, blend*radardamageblend, dir, r, g, b, "radar", "you");
 			}
 			gameent *a = game::getclient(game::player1->lastattacker);
 			if(a && a != game::player1 && (dead || (radardamage >= 3 && (a->aitype < 0 || radardamage >= 4))))
 			{
 				vec pos = vec(a->o).sub(camera1->o).normalize(), dir = vec(pos).rotate_around_z(-camera1->yaw*RAD);
 				float r = (teamtype[a->team].colour>>16)/255.f, g = ((teamtype[a->team].colour>>8)&0xFF)/255.f, b = (teamtype[a->team].colour&0xFF)/255.f;
-				if(dead && a->state == CS_ALIVE)
-					drawblip(arrowtex, 3+int(ceil(radardamagetrack)), w, h, radardamagetrack, blend*radardamageblend, dir, r, g, b, "sub", "%s (%d)", game::colorname(a), a->health);
-				else
+				if(dead && (a->state == CS_ALIVE || a->state == CS_DEAD || a->state == CS_WAITING))
 				{
-					float dist = pos.magnitude();
-					if(dist > 0 && dist <= radarrange())
-					{
-						float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f);
-						drawblip(arrowtex, 3+int(ceil(radardamagetrack*fade*0.5f)), w, h, radardamagetrack*fade*0.5f, blend*radardamageblend*fade, dir, r, g, b, "radar", "%s", game::colorname(a));
-					}
+					if(a->state == CS_ALIVE) drawblip(arrowtex, 4+radardamagetrack, w, h, radardamagetrack, blend*radardamageblend, dir, r, g, b, "radar", "%s (%d)", game::colorname(a), a->health);
+					else drawblip(arrowtex, 4+radardamagetrack, w, h, radardamagetrack, blend*radardamageblend, dir, r, g, b, "radar", "%s", game::colorname(a));
 				}
 			}
 		}
@@ -1163,19 +1163,19 @@ namespace hud
 
 	void drawradar(int w, int h, float blend)
 	{
-		if(radardamage) drawdamageblips(w, h, blend*radarblend);
-		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode));
-		if(hastv(radarplayers) || m_edit(game::gamemode))
-		{
-			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
-				drawplayerblip(game::players[i], w, h, blend*radarblend);
-		}
-		if(hastv(radaritems) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend);
-		if(hastv(radarflags))
+		if(hastv(radaritems) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend); // 2
+		if(hastv(radarflags)) // 3
 		{
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
+		if(hastv(radarplayers) || m_edit(game::gamemode)) // 4
+		{
+			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
+				drawplayerblip(game::players[i], w, h, blend*radarblend);
+		}
+		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
+		if(radardamage) drawdamageblips(w, h, blend*radarblend); // 5+
 	}
 
 	int drawitem(const char *tex, int x, int y, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
@@ -1257,7 +1257,7 @@ namespace hud
 		return 0;
 	}
 
-	int drawselection(int x, int y, int s, float blend)
+	int drawselection(int x, int y, int s, int m, float blend)
 	{
 		int sy = 0;
 		if(game::player1->state == CS_ALIVE)
@@ -1270,6 +1270,7 @@ namespace hud
 				int sweap = m_weapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])
 				{
+					if(y-sy-s < m) break;
 					float fade = blend*inventoryblend, size = s, skew = 0.f;
 					if(game::player1->weapstate[i] == WEAP_S_SWITCH || game::player1->weapstate[i] == WEAP_S_PICKUP)
 					{
@@ -1314,10 +1315,14 @@ namespace hud
 		}
 		else if(game::player1->state == CS_EDITING && inventoryedit)
 		{
-			int stop = hudsize-s, hover = entities::ents.inrange(enthover) ? enthover : (!entgroup.empty() ? entgroup[0] : -1);
-			sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend*0.25f, 1.f);
-			sy += drawentitem(hover, x, y-sy, s, 1.f, blend*inventoryeditblend);
-			loopv(entgroup) if(entgroup[i] != hover && (sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend)) >= stop) break;
+			int hover = entities::ents.inrange(enthover) ? enthover : (!entgroup.empty() ? entgroup[0] : -1);
+			if(y-sy-s >= m) sy += drawitem(inventoryedittex, x, y-sy, s-s/4, false, 1.f, 1.f, 1.f, blend*inventoryblend*0.25f, 1.f);
+			if(y-sy-s >= m) sy += drawentitem(hover, x, y-sy, s, 1.f, blend*inventoryeditblend);
+			loopv(entgroup) if(entgroup[i] != hover)
+			{
+				if(y-sy-s >= m) break;
+				sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend);
+			}
 		}
 		return sy;
 	}
@@ -1481,15 +1486,44 @@ namespace hud
 			}
 			case 1:
 			{
+				int cm = edge;
 				if(!texpaneltimer)
 				{
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
-					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-					if((cc = drawselection(cx[i], cy[i], cs, blend)) > 0) cy[i] -= cc+cr;
+					if(inventoryteam && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					{
+						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
+						if(lastteam)
+						{
+							float skew = hud::inventoryskew, fade = blend*inventoryblend, rescale = 1;
+							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*hud::inventoryskew) }, s = cs;
+							if(millis <= 4000)
+							{
+								int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
+								if(millis <= 2000)
+								{
+									float tweak = millis <= 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f) : 1.f;
+									skew += tweak*inventorygrow;
+									loopk(2) pos[k] = off[k]+(s/2*tweak*skew);
+									skew *= tweak; fade *= tweak; rescale = 0;
+								}
+								else
+								{
+									float tweak = clamp(float(millis-2000)/2000.f, 0.f, 1.f);
+									skew += (1.f-tweak)*inventorygrow;
+									loopk(2) pos[k] -= int((pos[k]-(off[k]+s/2*skew))*(1.f-tweak));
+									rescale = tweak;
+								}
+							}
+							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], s, false, 1, 1, 1, fade, skew, "emphasis", "%s", teamtype[game::player1->team].name)*rescale);
+						}
+					}
+					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
+					if((cc = drawselection(cx[i], cy[i], cs, cm, blend)) > 0) cy[i] -= cc+cr;
 					if(inventorygame)
 					{
-						if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
-						else if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, blend)) > 0)) cy[i] -= cc+cr;
+						if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
+						else if(m_ctf(game::gamemode) && ((cc = ctf::drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
 					}
 				}
 				break;

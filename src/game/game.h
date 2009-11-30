@@ -1186,7 +1186,7 @@ namespace hud
 {
 	extern char *conopentex, *playertex, *deadtex, *dominatingtex, *dominatedtex, *inputtex, *bliptex, *cardtex, *flagtex, *arrowtex;
 	extern int hudwidth, hudsize, lastteam, damageresidue, damageresiduefade, radarflagnames, inventorygame;
-	extern float noticescale, inventoryblend, inventoryskew, radarflagblend, radarblipblend, radarflagsize;
+	extern float noticescale, inventoryblend, inventoryskew, inventorygrow, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool hastv(int val);
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
@@ -1202,7 +1202,7 @@ namespace hud
 	extern void drawpointer(int w, int h, int index);
 	extern int numteamkills();
 	extern float radarrange();
-	extern void drawblip(const char *tex, int area, int w, int h, float s, float blend, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", const char *text = NULL, ...);
+	extern void drawblip(const char *tex, float area, int w, int h, float s, float blend, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", const char *text = NULL, ...);
 	extern int drawitem(const char *tex, int x, int y, float size, bool left = false, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, const char *text = NULL, ...);
 	extern void drawitemsubtext(int x, int y, float size, bool left = false, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);

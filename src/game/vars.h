@@ -80,7 +80,7 @@ VARG(stffinish, 0, 0, 1); // finish when all bases captured
 VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
-VARG(botbalance, -1, 0, MAXAI/2); // -1 = don't balance, 0 = populate bots to map defined numplayers, 1 or more = fill only with this*numteams
+VARG(botbalance, -1, -1, MAXAI/2); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
 VARG(botminskill, 1, 50, 101);
 VARG(botmaxskill, 1, 75, 101);
 VARG(botlimit, 0, 16, MAXAI/2);

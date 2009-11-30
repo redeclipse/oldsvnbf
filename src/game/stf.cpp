@@ -73,9 +73,8 @@ namespace stf
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::player1->team;
-				if(occupy < 1.f)
-					hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, f.hasflag ? "sub" : "radar", "%s%d%%", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, int(occupy*100.f));
-				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, f.hasflag ? "sub" : "radar", "%s%s", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, teamtype[f.owner].name);
+				if(occupy < 1.f) hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%d%%", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, int(occupy*100.f));
+				else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b, "radar", "%s%s", f.hasflag ? (overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : teamtype[f.owner].chat, teamtype[f.owner].name);
 			}
 			else hud::drawblip(tex, 3, w, h, size, fade, dir, r, g, b);
 		}
@@ -98,11 +97,12 @@ namespace stf
 		}
 	}
 
-    int drawinventory(int x, int y, int s, float blend)
+    int drawinventory(int x, int y, int s, int m, float blend)
     {
 		int sy = 0;
 		loopv(st.flags)
 		{
+			if(y-sy-s < m) break;
 			stfstate::flag &f = st.flags[i];
 			bool hasflag = game::player1->state == CS_ALIVE && insideflag(f, game::player1);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(1000-(lastmillis-f.lasthad), 0); }

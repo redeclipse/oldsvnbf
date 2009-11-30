@@ -1,7 +1,7 @@
 // server-side ai manager
 namespace aiman
 {
-	int oldteambalance = -1, oldbotbalance = -1, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
+	int oldteambalance = -1, oldbotbalance = -2, oldbotminskill = -1, oldbotmaxskill = -1, oldbotlimit = -1;
 
 	int findaiclient(int exclude)
 	{
@@ -212,8 +212,8 @@ namespace aiman
 			int numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
 			switch(GVAR(botbalance))
 			{
-				case -1: balance = 0; break; // no bots
-				case  0: balance = max(people, m_duel(gamemode, mutators) ? 2 : nplayers); break; // use distributed numplayers
+				case -1: balance = max(people, m_duel(gamemode, mutators) ? 2 : nplayers); break; // use distributed numplayers
+				case  0: balance = 0; break; // no bots
 				default: balance = max(people, m_duel(gamemode, mutators) ? 2 : GVAR(botbalance)); break; // balance to at least this
 			}
 			if(m_team(gamemode, mutators) && (balance > 0 || GVAR(teambalance) == 3))

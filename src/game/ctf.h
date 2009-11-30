@@ -156,7 +156,7 @@ namespace ctf
 	extern void checkflags(gameent *d);
 	extern void drawlast(int w, int h, int &tx, int &ty, float blend);
 	extern void drawblips(int w, int h, float blend);
-	extern int drawinventory(int x, int y, int s, float blend);
+	extern int drawinventory(int x, int y, int s, int m, float blend);
 	extern void preload();
 	extern void render();
 	extern void adddynlights();

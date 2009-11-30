@@ -141,41 +141,41 @@ struct stfservmode : stfstate, servmode
 		int maxscore = GVAR(stflimit) ? GVAR(stflimit) : INT_MAX-1;
 		loopi(numteams(gamemode, mutators))
 		{
-			int lastteam = i+TEAM_FIRST;
-			if(findscore(lastteam).total >= maxscore)
+			int steam = i+TEAM_FIRST;
+			if(findscore(steam).total >= maxscore)
 			{
-				findscore(lastteam).total = maxscore;
+				findscore(steam).total = maxscore;
 				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcsecure limit has been reached!");
-				winner(lastteam, maxscore);
+				winner(steam, maxscore);
 				return;
 			}
 		}
 		if(GVAR(stffinish))
 		{
-			int lastteam = TEAM_NEUTRAL;
+			int steam = TEAM_NEUTRAL;
 			loopv(flags)
 			{
 				flag &b = flags[i];
 				if(b.owner)
 				{
-					if(!lastteam) lastteam = b.owner;
-					else if(lastteam != b.owner)
+					if(!steam) steam = b.owner;
+					else if(steam != b.owner)
 					{
-						lastteam = TEAM_NEUTRAL;
+						steam = TEAM_NEUTRAL;
 						break;
 					}
 				}
 				else
 				{
-					lastteam = TEAM_NEUTRAL;
+					steam = TEAM_NEUTRAL;
 					break;
 				}
 			}
-			if(lastteam)
+			if(steam)
 			{
-				findscore(lastteam).total = INT_MAX-1;
+				findscore(steam).total = INT_MAX-1;
 				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcall flags have been secured!");
-				winner(lastteam, INT_MAX-1);
+				winner(steam, INT_MAX-1);
 				return;
 			}
 		}
