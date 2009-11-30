@@ -1521,10 +1521,12 @@ namespace hud
 						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
 						if(lastteam)
 						{
+							const char *pre = "";
 							float skew = hud::inventoryskew, fade = blend*inventoryblend, rescale = 1;
 							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*hud::inventoryskew) }, s = cs;
 							if(millis <= 4000)
 							{
+								pre = "\fzRw";
 								int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
 								if(millis <= 2000)
 								{
@@ -1541,7 +1543,7 @@ namespace hud
 									rescale = tweak;
 								}
 							}
-							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], s, false, 1, 1, 1, fade, skew, "emphasis", "%s", teamtype[game::player1->team].name)*rescale);
+							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], s, false, 1, 1, 1, fade, skew, "emphasis", "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
 						}
 					}
 					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
