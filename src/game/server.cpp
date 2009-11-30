@@ -428,13 +428,18 @@ namespace server
 		return map;
 	}
 
+	void setpause(bool on = false)
+	{
+		if(sv_gamepaused != on ? 1 : 0)
+		{
+			setvar("sv_gamepaused", on ? 1 : 0, true);
+			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "gamepaused", on ? 1 : 0);
+		}
+	}
+
 	void cleanup()
 	{
-		if(sv_gamepaused)
-		{
-			setvar("sv_gamepaused", 0, true);
-			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "sv_gamepaused", 0);
-		}
+		setpause(false);
 		if(GVAR(resetvarsonend)) resetgamevars(true);
 		if(GVAR(resetbansonend)) bannedips.setsize(0);
 		changemap();
@@ -667,15 +672,6 @@ namespace server
 		if(!strcmp(type, gameid()) || !strcmp(type, "fps") || !strcmp(type, "bfg"))
 			return true;
 		return false;
-	}
-
-	void setpause(bool on = false)
-	{
-		if(sv_gamepaused != on ? 1 : 0)
-		{
-			setvar("sv_gamepaused", on ? 1 : 0, true);
-			sendf(-1, 1, "ri2ss", SV_COMMAND, -1, "gamepaused", on ? 1 : 0);
-		}
 	}
 
 	void startintermission()
@@ -1172,7 +1168,7 @@ namespace server
 
 	void readdemo()
 	{
-		if(!demoplayback) return;
+		if(!demoplayback || paused) return;
 		while(gamemillis>=nextplayback)
 		{
 			int chan, len;
@@ -1843,8 +1839,7 @@ namespace server
 				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
-					if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
+					if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					string s;
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
@@ -1861,8 +1856,7 @@ namespace server
 						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fg%s = 0x%.6X" : "\fg%s = 0x%X") : "\fg%s = %d", cmd, *id->storage.i);
 						return;
 					}
-					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
+					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					if(id->maxval < id->minval)
 					{
 						srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
@@ -1889,8 +1883,7 @@ namespace server
 						srvmsgf(ci->clientnum, "\fg%s = %s", cmd, floatstr(*id->storage.f));
 						return;
 					}
-					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
+					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					float ret = atof(arg);
 					if(ret < id->minvalf || ret > id->maxvalf)
 					{
@@ -1909,8 +1902,7 @@ namespace server
 						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fg%s = [%s]" : "\fg%s = \"%s\"", cmd, *id->storage.s);
 						return;
 					}
-					else if(varslock >= 2) { srvmsgf(ci->clientnum, "\frvariables on this server are locked"); return; }
-					else if(!haspriv(ci, varslock ? PRIV_ADMIN : PRIV_MASTER, "change variables")) return;
+					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
@@ -2764,20 +2756,20 @@ namespace server
 	{
 		if(numclients())
 		{
-			gamemillis += curtime;
+			if(!paused) gamemillis += curtime;
 			if(m_demo(gamemode)) readdemo();
-			else if(!interm)
+			else if(!paused && !interm)
 			{
 				processevents();
 				checkents();
 				checklimits();
 				checkclients();
+				aiman::checkai();
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
 			cleanbans();
-			loopv(connects) if(totalmillis-connects[i]->connectmillis>15000)
-				disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
+			loopv(connects) if(totalmillis-connects[i]->connectmillis > 15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
 			if(masterupdate)
 			{
@@ -2804,7 +2796,6 @@ namespace server
 		}
 		else if(!GVAR(resetbansonend)) cleanbans();
 		auth::update();
-		aiman::checkai();
 	}
 
     bool allowbroadcast(int n)

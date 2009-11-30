@@ -571,12 +571,13 @@ namespace hud
 			return sy;
 		}
 
-		int drawinventory(int x, int y, int s, float blend)
+		int drawinventory(int x, int y, int s, int m, float blend)
 		{
 			if(!m_fight(game::gamemode) || m_trial(game::gamemode)) return 0;
 			int sy = 0, numgroups = groupplayers(), numout = 0;
 			loopi(2) loopk(numgroups)
 			{
+				if(y-sy-s < m) break;
 				scoregroup &sg = *groups[k];
 				if(m_team(game::gamemode, game::mutators))
 				{

@@ -1479,7 +1479,6 @@ namespace game
 
 	void updateworld()		// main game update loop
 	{
-		if(!curtime) return;
 		if(connected())
 		{
 			if(!maptime) { maptime = -1; return; } // skip the first loop
@@ -1494,6 +1493,7 @@ namespace game
 				return;
 			}
 		}
+        if(!curtime) { gets2c(); if(player1->clientnum >= 0) client::c2sinfo(); return; }
 
        	if(!*player1->name && !menuactive()) showgui("name");
         if(connected())

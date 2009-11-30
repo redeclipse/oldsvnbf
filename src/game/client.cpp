@@ -99,7 +99,7 @@ namespace client
 				int t = teamname(team);
 				if(t != game::player1->team)
 				{
-					if(game::player1->team != t) hud::lastteam = lastmillis;
+					if(game::player1->team != t) hud::lastteam = 0;
 					game::player1->team = t;
 					addmsg(SV_SWITCHTEAM, "ri", game::player1->team);
 				}
@@ -1208,7 +1208,7 @@ namespace client
 					}
 					copystring(d->name, text, MAXNAMELEN+1);
 					int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
-					if(d == game::player1 && d->team != team) hud::lastteam = lastmillis;
+					if(d == game::player1 && d->team != team) hud::lastteam = 0;
 					d->team = team;
 					break;
 				}
@@ -1672,7 +1672,7 @@ namespace client
 					int wn = getint(p), tn = getint(p);
 					gameent *w = game::getclient(wn);
 					if(!w) return;
-					if(w == game::player1 && w->team != tn) hud::lastteam = lastmillis;
+					if(w == game::player1 && w->team != tn) hud::lastteam = 0;
 					w->team = tn;
 					break;
 				}

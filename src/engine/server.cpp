@@ -605,7 +605,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 	{
 		laststatus = totalmillis;
 		if(bsend || brec || server::numclients())
-			conoutf("status: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(-1, false, true), bsend/60.0f/1024, brec/60.0f/1024);
+			conoutf("status: %d clients, %.1f send, %.1f rec (K/sec)", server::numclients(), bsend/60.0f/1024, brec/60.0f/1024);
 		bsend = brec = 0;
 	}
 
