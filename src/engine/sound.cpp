@@ -419,6 +419,7 @@ void resetsound()
         }
         if(musicstream) musicstream->seek(0, SEEK_SET);
         Mix_CloseAudio();
+        nosound = true;
     }
     initsound();
     if(nosound)
