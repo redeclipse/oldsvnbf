@@ -245,7 +245,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, true },	true,
 			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 10, 10 },
-			{ 1, 1 },		{ 2, 2 },			{ 150, 150 },		{ 600, 600 },		{ 0, 0 },				4,
+			{ 1, 1 },		{ 2, 2 },			{ 150, 150 },		{ 300, 300 },		{ 0, 0 },				4,
 			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
@@ -255,7 +255,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	true,
 			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
-			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 200, 100 },			{ 0, 0 },			6,
+			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 150, 300 },			{ 0, 0 },			6,
 			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
@@ -265,7 +265,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ true, true },		true,
 			{ 0.75f, 0.5f },	{ 30, 30 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 40, 40 },
-			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 400, 100 },		{ 0, 0 },				5,
+			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 300, 400 },		{ 0, 0 },				5,
 			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
@@ -285,7 +285,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,	false,	{ true, false },	true,
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 16, 42 },			{ 0, 0 },
-			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 100 },		{ 0, 0 },				5,
+			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 50 },		{ 0, 0 },				5,
 			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
@@ -305,7 +305,7 @@ weaptypes weaptype[WEAP_MAX] =
 			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
 			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },	false,
 			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 64, 64 },		{ 2, 2 },			{ 0, 0 },
-			{ 1, 1 },		{ 5, 5 },		{ 1000, 1000 },		{ 200, 200 },			{ 0.0625f, 0.0625f },	3,
+			{ 1, 1 },		{ 5, 5 },		{ 1000, 1000 },		{ 400, 400 },			{ 0.0625f, 0.0625f },	3,
 			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
@@ -421,7 +421,7 @@ extern gametypes gametype[], mutstype[];
 #define m_weapon(a,b)		(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
 #define m_delay(a,b)		(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) || m_arena(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
 #define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
-#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
+#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? (m_arena(a,b) ? 2 : 3) : (m_trial(a) ? 3 : 1)))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
 #define w_reload(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
@@ -1203,6 +1203,7 @@ namespace hud
 	extern int numteamkills();
 	extern float radarrange();
 	extern void drawblip(const char *tex, float area, int w, int h, float s, float blend, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", const char *text = NULL, ...);
+	extern int drawprogress(int x, int y, float start, float length, float size, bool left, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, const char *text = NULL, ...);
 	extern int drawitem(const char *tex, int x, int y, float size, bool left = false, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, const char *text = NULL, ...);
 	extern void drawitemsubtext(int x, int y, float size, bool left = false, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);

@@ -1647,12 +1647,12 @@ void makeparticle(const vec &o, vector<int> &attr)
 		case 6: //meter, metervs - <percent> <rgb> <rgb2>
 		{
 			float length = clamp(attr[1], 0, 100)/100.f;
-			part_icon(o, textureload("textures/progress", 3), 2, 1, 0, 0, 1, attr[3], length, 1-length); // fall through
+			part_icon(o, textureload(hud::progresstex, 3), 2, 1, 0, 0, 1, attr[3], length, 1-length); // fall through
 		}
 		case 5:
 		{
 			float length = clamp(attr[1], 0, 100)/100.f;
-			part_icon(o, textureload("textures/progress", 3), 2, 1, 0, 0, 1, attr[2], 0, length);
+			part_icon(o, textureload(hud::progresstex, 3), 2, 1, 0, 0, 1, attr[2], 0, length);
 			break;
 		}
 		case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>

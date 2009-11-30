@@ -49,6 +49,7 @@ namespace client
 
 namespace hud
 {
+	extern char *progresstex;
 	extern void drawhud(bool noview = false);
 	extern void drawlast();
 	extern float motionblur(float scale);

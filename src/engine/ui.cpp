@@ -256,7 +256,7 @@ struct gui : guient
 	{
 		autotab();
 		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
-		slice(textureload("textures/progress", 3, true, false), scale, 0, percent, s);
+		slice(textureload(hud::progresstex, 3, true, false), scale, 0, percent, s);
 	}
 
 	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse)

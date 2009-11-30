@@ -432,11 +432,8 @@ void resetgl()
     extern void reloadshaders();
 
     inbetweenframes = false;
-    if(!reloadtexture("textures/notexture") ||
-		!reloadtexture("textures/blank") ||
-		!reloadtexture("textures/logo") || !reloadtexture("textures/cube2badge") ||
-		!reloadtexture("textures/progress"))
-			fatal("failed to reload core textures");
+    if(!reloadtexture("textures/notexture") || !reloadtexture("textures/blank") || !reloadtexture("textures/logo") || !reloadtexture("textures/cube2badge"))
+		fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
     progress(0, "initializing...");

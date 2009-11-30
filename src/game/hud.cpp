@@ -1182,6 +1182,28 @@ namespace hud
 		if(radardamage) drawdamageblips(w, h, blend*radarblend); // 5+
 	}
 
+	int drawprogress(int x, int y, float start, float length, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
+	{
+		if(skew <= 0.f) return 0;
+		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)/2, cx = left ? x+cs : x-cs, cy = y-cs;
+		settexture(progresstex, 3);
+		glColor4f(cr, cg, cb, f);
+		if(length < 1) drawslice(start, length, cx, cy, cs);
+		else drawsized(left ? x : x-int(s), y-int(s), int(s));
+		if(text && *text)
+		{
+			glPushMatrix();
+			glScalef(skew, skew, 1);
+			if(font && *font) pushfont(font);
+			int tx = int(cx*(1.f/skew)), ty = int((cy-FONTH/2)*(1.f/skew)), ti = int(255.f*f);
+			defvformatstring(str, text, text);
+			draw_textx("%s", tx, ty, 255, 255, 255, ti, TEXT_CENTERED, -1, -1, str);
+			if(font && *font) popfont();
+			glPopMatrix();
+		}
+		return int(s);
+	}
+
 	int drawitem(const char *tex, int x, int y, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
