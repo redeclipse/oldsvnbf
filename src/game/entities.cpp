@@ -391,8 +391,6 @@ namespace entities
 
 		entcachestack.setsizenodelete(0);
 
-		int closest = -1;
-		entcachenode *curnode = &entcache[0];
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
@@ -402,7 +400,8 @@ namespace entities
 				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
 			} \
 		} while(0)
-		loop(force, 2) for(;;)
+        int closest = -1;
+		loop(force, 2) for(entcachenode *curnode = &entcache[0];;)
 		{
 			int axis = curnode->axis();
 			float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
@@ -433,7 +432,7 @@ namespace entities
 				curnode = &entcache[curnode->childindex(0)];
 				continue;
 			}
-			if(entcachestack.empty()) return closest;
+			if(entcachestack.empty()) { if(closest >= 0) return closest; else break; }
 			curnode = entcachestack.pop();
 		}
 		return -1;
