@@ -419,8 +419,8 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_weapon(a,b)		(!m_play(a) || m_arena(a,b) ? -1 : (m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
-#define m_delay(a,b)		(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
-#define m_protect(a,b)		(m_insta(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
+#define m_delay(a,b)		(!m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) || m_arena(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
+#define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
