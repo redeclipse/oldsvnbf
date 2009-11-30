@@ -3,8 +3,8 @@ Options +FollowSymLinks -Multiviews
 
 RewriteEngine on
 RewriteCond %{HTTP_HOST} ^bloodfrontier.sourceforge.net$ [OR,NC]
-RewriteCond %{HTTP_HOST} ^bloodfrontier.com$
-RewriteRule ^(.*)$ http://www.bloodfrontier.com/$1 [R=301,L,NC]
+RewriteCond %{HTTP_HOST} ^www.bloodfrontier.com$
+RewriteRule ^(.*)$ http://bloodfrontier.com/$1 [R=301,L,NC]
 
 RewriteRule ^download/default$ /bits/index.php?target=download&title=13226 [QSA,L,NC]
 RewriteRule ^download/windows$ /bits/index.php?target=download&title=13227 [QSA,L,NC]
