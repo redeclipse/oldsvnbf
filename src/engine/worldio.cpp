@@ -1049,12 +1049,21 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					if(e.attrs[3] && verbose) conoutf("\frWARNING: mapmodel ent (index %d) uses texture slot %d", i, e.attrs[3]);
 					e.attrs[2] = e.attrs[3] = 0;
 				}
-				if(hdr.version <= 31 && e.type == ET_MAPMODEL)
+				if(e.type == ET_MAPMODEL)
 				{
-					int angle = e.attrs[0];
-					e.attrs[0] = e.attrs[1];
-					e.attrs[1] = angle;
-					e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
+					if(maptype == MAP_OCTA || hdr.version <= 31)
+					{
+						int angle = e.attrs[0];
+						e.attrs[0] = e.attrs[1];
+						e.attrs[1] = angle;
+						e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
+					}
+					if(maptype == MAP_OCTA || hdr.version <= 37)
+					{
+						e.attrs[2] = e.attrs[3];
+						e.attrs[5] = e.attrs[4];
+						e.attrs[3] = e.attrs[4] = 0;
+					}
 				}
 				if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT)
 					conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
