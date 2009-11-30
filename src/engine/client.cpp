@@ -45,7 +45,7 @@ void abortconnect(bool msg)
 {
 	if(!connpeer) return;
     client::connectfail();
-    if(msg) conoutf("\fdaborting connection attempt");
+    if(msg) conoutft(CON_MESG, "\fdaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
     if(curpeer) return;
@@ -64,10 +64,10 @@ void trydisconnect()
 	if(connpeer) abortconnect();
     else if(curpeer || connectedlocally)
     {
-        if(verbose) conoutf("\fdattempting to disconnect...");
+        if(verbose) conoutft(CON_MESG, "\fdattempting to disconnect...");
         disconnect(0, !discmillis);
     }
-    else conoutf("\frnot connected");
+    else conoutft(CON_MESG, "\frnot connected");
 }
 
 char *lastaddress = NULL;
@@ -87,10 +87,10 @@ void connectserv(const char *name, int port, int qport, const char *password)
 	if(name && *name)
 	{
 		addserver(name, port, qport);
-		conoutf("\fdattempting to connect to %s:[%d]", name, port);
+		conoutft(CON_MESG, "\fdattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
 		{
-			conoutf("\frcould not resolve host %s", name);
+			conoutft(CON_MESG, "\frcould not resolve host %s", name);
             connectfail();
 			return;
 		}
@@ -98,7 +98,7 @@ void connectserv(const char *name, int port, int qport, const char *password)
 	}
 	else
 	{
-		conoutf("\fdattempting to connect to a local server");
+		conoutft(CON_MESG, "\fdattempting to connect to a local server");
 		address.host = ENET_HOST_BROADCAST;
 	}
 
@@ -111,11 +111,11 @@ void connectserv(const char *name, int port, int qport, const char *password)
 		connmillis = totalmillis;
 		connattempts = 0;
         client::connectattempt(name ? name : "", port, qport, password ? password : "", address);
-		conoutf("\fgconnecting to %s:[%d]", name != NULL ? name : "local server", port);
+		conoutft(CON_MESG, "\fgconnecting to %s:[%d]", name != NULL ? name : "local server", port);
 	}
 	else
     {
-        conoutf("\frfailed creating client socket");
+        conoutft(CON_MESG, "\frfailed creating client socket");
         connectfail();
     }
 }
@@ -141,7 +141,7 @@ void disconnect(int onlyclean, int async)
 			curpeer = NULL;
 		}
 		discmillis = 0;
-		conoutf("\frdisconnected");
+		conoutft(CON_MESG, "\frdisconnected");
 		cleanup = true;
 	}
 	if(!connpeer && clienthost)
@@ -185,7 +185,7 @@ void flushclient()
 
 void neterr(const char *s)
 {
-	conoutf("\frillegal network message (%s)", s);
+	conoutft(CON_MESG, "\frillegal network message (%s)", s);
 	disconnect();
 }
 
@@ -212,11 +212,11 @@ void gets2c()			// get updates from the server
 		++connattempts;
 		if(connattempts > 3)
 		{
-            conoutf("\frcould not connect to server");
+            conoutft(CON_MESG, "\frcould not connect to server");
 			connectfail();
 			return;
 		}
-        else conoutf("\fdconnection attempt %d", connattempts);
+        else conoutft(CON_MESG, "\fdconnection attempt %d", connattempts);
 	}
 	while(clienthost && enet_host_service(clienthost, &event, 0)>0)
 	switch(event.type)
@@ -225,14 +225,14 @@ void gets2c()			// get updates from the server
 			disconnect(1);
 			curpeer = connpeer;
 			connpeer = NULL;
-			conoutf("\fgconnected to server");
+			conoutft(CON_MESG, "\fgconnected to server");
 			throttle();
 			if(rate) setrate(rate);
 			client::gameconnect(true);
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			if(discmillis) conoutf("\fdattempting to disconnect...");
+			if(discmillis) conoutft(CON_MESG, "\fdattempting to disconnect...");
 			else localservertoclient(event.channelID, event.packet);
 			enet_packet_destroy(event.packet);
 			break;
@@ -242,12 +242,12 @@ void gets2c()			// get updates from the server
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
             if(event.peer==connpeer)
             {
-                conoutf("\frcould not connect to server");
+                conoutft(CON_MESG, "\frcould not connect to server");
                 connectfail();
             }
             else
             {
-                if(!discmillis || event.data) conoutf("\frserver network error, disconnecting (%s) ...", disc_reasons[event.data]);
+                if(!discmillis || event.data) conoutft(CON_MESG, "\frserver network error, disconnecting (%s) ...", disc_reasons[event.data]);
                 disconnect();
             }
 			return;

@@ -164,13 +164,13 @@ struct duelservmode : servmode
 					{
 						defformatstring(namea)("%s", colorname(alive[0]));
 						defformatstring(nameb)("%s", colorname(alive[1]));
-						defformatstring(fight)("\faduel between %s and %s, round \fs\fr#%d\fS.. FIGHT!", namea, nameb, duelround);
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_SELF, fight);
+						defformatstring(fight)("\faduel between %s and %s, round \fs\fr#%d\fS", namea, nameb, duelround);
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
 					}
 					else if(m_survivor(gamemode, mutators))
 					{
-						defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS.. FIGHT!", duelround);
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_SELF, fight);
+						defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS", duelround);
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
 					}
 					dueltime = 0;
 				}
@@ -186,7 +186,7 @@ struct duelservmode : servmode
 				loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
 				if(!found)
 				{
-					srvmsgf(-1, "\fateam \fs%s%s\fS are the victors!", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
+					srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
 					loopv(playing) if(allowbroadcast(playing[i]->clientnum))
 					{
 						if(playing[i]->team == alive[0]->team)
@@ -203,7 +203,7 @@ struct duelservmode : servmode
 			{
 				case 0:
 				{
-					srvmsgf(-1, "\faeveryone died, epic fail!");
+					srvmsgf(-1, "\faeveryone died, epic fail");
 					loopv(playing) if(allowbroadcast(playing[i]->clientnum))
 						sendf(playing[i]->clientnum, 1, "ri3s", SV_ANNOUNCE, S_V_YOULOSE, -1, "");
 					clear();
@@ -211,7 +211,7 @@ struct duelservmode : servmode
 				}
 				case 1:
 				{
-					srvmsgf(-1, "\fa%s was the victor!", colorname(alive[0]));
+					srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
 					loopv(playing) if(allowbroadcast(playing[i]->clientnum))
 					{
 						if(playing[i] == alive[0])

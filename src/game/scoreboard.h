@@ -91,7 +91,7 @@ namespace hud
 				scoreson = on;
 				if(m_play(game::gamemode) && interm)
 				{
-					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_SELF, game::player1, "\fwchapter complete!");
+					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_MESG, game::player1, "\fwmission completed");
 					else if(m_fight(game::gamemode) && !m_trial(game::gamemode))
 					{
 						if(!groupplayers()) return;
@@ -100,15 +100,15 @@ namespace hud
 						{
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
-								game::announce(anc, CON_SELF, game::player1, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
-							else if(m_trial(game::gamemode)) game::announce(anc, CON_SELF, game::player1, "\fw\fs%s%s\fS team won the match with the fastest lap: \fs\fc%s\fS", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
-							else game::announce(anc, CON_SELF, game::player1, "\fw\fs%s%s\fS team won the match with a total score of: \fs\fc%d\fS", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
+								game::announce(anc, CON_MESG, game::player1, "\fw\fs%s%s\fS team secured all flags", teamtype[sg.team].chat, teamtype[sg.team].name);
+							else if(m_trial(game::gamemode)) game::announce(anc, CON_MESG, game::player1, "\fw\fs%s%s\fS team won the match with the fastest lap: \fs\fc%s\fS", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score ? timetostr(sg.score) : "dnf");
+							else game::announce(anc, CON_MESG, game::player1, "\fw\fs%s%s\fS team won the match with a total score of: \fs\fc%d\fS", teamtype[sg.team].chat, teamtype[sg.team].name, sg.score);
 						}
 						else
 						{
 							int anc = sg.players[0] == game::player1 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
-							if(m_trial(game::gamemode)) game::announce(anc, CON_SELF, game::player1, "\fw%s won the match with the fastest lap: \fs\fc%s\fS", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
-							else game::announce(anc, CON_SELF, game::player1, "\fw%s won the match with a total score of: \fs\fc%d\fS", game::colorname(sg.players[0]), sg.players[0]->points);
+							if(m_trial(game::gamemode)) game::announce(anc, CON_MESG, game::player1, "\fw%s won the match with the fastest lap: \fs\fc%s\fS", game::colorname(sg.players[0]), sg.players[0]->cptime ? timetostr(sg.players[0]->cptime) : "dnf");
+							else game::announce(anc, CON_MESG, game::player1, "\fw%s won the match with a total score of: \fs\fc%d\fS", game::colorname(sg.players[0]), sg.players[0]->points);
 						}
 					}
 				}
@@ -282,7 +282,7 @@ namespace hud
 			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 			{
 				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
-				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
+				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
 				g.space(1);
 				g.pushlist();
 				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();

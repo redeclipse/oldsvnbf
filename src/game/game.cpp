@@ -295,7 +295,7 @@ namespace game
 			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
 			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap >= WEAP_OFFSET ? weaptype[weap].name : "random weapons"));
 		}
-		else conoutft(CON_SELF, "\foweapon selection is only available in arena");
+		else conoutft(CON_MESG, "\foweapon selection is only available in arena");
 	}
 	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(player1, s));
 
@@ -846,42 +846,42 @@ namespace game
 
 			if(style&FRAG_SPREE1)
 			{
-				concatstring(d->obit, " in total \fs\fzcgcarnage\fS!");
+				concatstring(d->obit, " in total \fs\fzcgcarnage\fS");
 				part_text(az, "<super>\fzcgCARNAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE1;
 				override = true;
 			}
 			else if(style&FRAG_SPREE2)
 			{
-				concatstring(d->obit, " on a \fs\fzcgslaughter\fS!");
+				concatstring(d->obit, " on a \fs\fzcgslaughter\fS");
 				part_text(az, "<super>\fzcgSLAUGHTER", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE2;
 				override = true;
 			}
 			else if(style&FRAG_SPREE3)
 			{
-				concatstring(d->obit, " on a \fs\fzcgmassacre\fS!");
+				concatstring(d->obit, " on a \fs\fzcgmassacre\fS");
 				part_text(az, "<super>\fzcgMASSACRE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE3;
 				override = true;
 			}
 			else if(style&FRAG_SPREE4)
 			{
-				concatstring(d->obit, " in a \fs\fzcgbloodbath\fS!");
+				concatstring(d->obit, " in a \fs\fzcgbloodbath\fS");
 				part_text(az, "<super>\fzcgBLOODBATH", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE4;
 				override = true;
 			}
 			else if(style&FRAG_SPREE5)
 			{
-				concatstring(d->obit," on a \fs\fzcgrampage\fS!");
+				concatstring(d->obit," on a \fs\fzcgrampage\fS");
 				part_text(az, "<super>\fzcgRAMPAGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE5;
 				override = true;
 			}
 			else if(style&FRAG_SPREE6)
 			{
-				concatstring(d->obit, " who seems \fs\fzcgunstoppable\fS!");
+				concatstring(d->obit, " who seems \fs\fzcgunstoppable\fS");
 				part_text(az, "<super>\fzcgUNSTOPPABLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 				if(!override) anc = S_V_SPREE6;
 				override = true;
@@ -940,7 +940,8 @@ namespace game
 	{
 		if(cn < 0 || cn >= MAXPLAYERS)
 		{
-			neterr("clientnum");
+			defformatstring(cnmsg)("clientnum [%d]", cn);
+			neterr(cnmsg);
 			return NULL;
 		}
 
@@ -1012,7 +1013,7 @@ namespace game
 		resetworld();
 		if(*name)
 		{
-			conoutft(CON_SELF, "\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
+			conoutft(CON_MESG, "\fs\fw%s by %s [\fa%s\fS]", *maptitle ? maptitle : "Untitled", *mapauthor ? mapauthor : "Unknown", server::gamename(gamemode, mutators));
 			preload();
 		}
 		// reset perma-state

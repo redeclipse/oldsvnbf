@@ -145,7 +145,7 @@ struct stfservmode : stfstate, servmode
 			if(findscore(steam).total >= maxscore)
 			{
 				findscore(steam).total = maxscore;
-				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcsecure limit has been reached!");
+				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcsecure limit has been reached");
 				winner(steam, maxscore);
 				return;
 			}
@@ -174,7 +174,7 @@ struct stfservmode : stfstate, servmode
 			if(steam)
 			{
 				findscore(steam).total = INT_MAX-1;
-				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcall flags have been secured!");
+				sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcall flags have been secured");
 				winner(steam, INT_MAX-1);
 				return;
 			}

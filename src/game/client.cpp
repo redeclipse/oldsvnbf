@@ -18,7 +18,7 @@ namespace client
 		m->muts = muts;
 		SEARCHBINDCACHE(votekey)("showgui vote", 0);
 		SEARCHBINDCACHE(gamekey)("showgui game", 0);
-		conoutft(CON_SELF, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
+		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
     void getvotes(int vote)
     {
@@ -472,9 +472,9 @@ namespace client
 				default: return;
 			}
 			if(d || verbose >= 2)
-				conoutft(d != game::player1 ? CON_INFO : CON_SELF, "\fg%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
+				conoutft(d != game::player1 ? CON_INFO : CON_MESG, "\fg%s set %s to %s", d ? game::colorname(d) : "the server", cmd, val);
 		}
-		else conoutft(d != game::player1 ? CON_INFO : CON_SELF, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
+		else conoutft(d != game::player1 ? CON_INFO : CON_MESG, "\fr%s sent unknown command: %s", d ? game::colorname(d) : "the server", cmd);
 	}
 
 	bool sendcmd(int nargs, const char *cmd, const char *arg)
@@ -1785,7 +1785,7 @@ namespace client
 					else
 					{
 						if(!gettingmap) conoutf("\frwe don't have the map though, so asking for it instead");
-						else conoutf("\frbut we're in the process of getting it!");
+						else conoutf("\frbut we're in the process of getting it");
 							addmsg(SV_GETMAP, "r");
 					}
 					break;
@@ -1833,7 +1833,7 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					conoutft(CON_SELF, "server is challenging authentication details..");
+					conoutft(CON_MESG, "server is challenging authentication details..");
 					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
 					{
 						vector<char> buf;
