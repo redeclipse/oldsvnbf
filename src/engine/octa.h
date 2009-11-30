@@ -37,7 +37,7 @@ struct materialsurface
 	uchar material, orient;
 	union
 	{
-		extentity *light;
+		const extentity *light;
 		ushort envmap;
 		uchar ends;
 	};

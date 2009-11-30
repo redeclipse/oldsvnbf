@@ -635,14 +635,14 @@ void renderwater()
             }
         }
 
-        extentity *lastlight = (extentity *)-1;
+        const extentity *lastlight = (const extentity *)-1;
         int lastdepth = -1;
 		bool begin = false;
 		loopvj(ref.matsurfs)
 		{
 			materialsurface &m = *ref.matsurfs[j];
 
-			extentity *light = (m.light && m.light->type==ET_LIGHT ? m.light : NULL);
+			const extentity *light = (m.light && m.light->type==ET_LIGHT ? m.light : NULL);
 			if(light!=lastlight)
 			{
 				if(begin) { glEnd(); begin = false; }

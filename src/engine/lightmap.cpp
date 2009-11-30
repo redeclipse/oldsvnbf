@@ -38,7 +38,7 @@ static int lmtype, lmbpp, lmorient, lmrotate;
 static uchar lm[4*LM_MAXW*LM_MAXH];
 static vec lm_ray[LM_MAXW*LM_MAXH];
 static int lm_w, lm_h;
-static vector<extentity *> lights1, lights2, sunlights;
+static vector<const extentity *> lights1, lights2, sunlights;
 static uint lmprog = 0;
 GLuint lmprogtex = 0;
 static int lmprogtexticks = 0;
@@ -329,13 +329,15 @@ void update_lightmap(const surfaceinfo &surface)
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 }
 
-void generate_lumel(const float tolerance, const vector<extentity *> &lights, const vec &target, const vec &normal, vec &sample, int x, int y)
+uint generate_lumel(const float tolerance, uint lightmask, const vector<const extentity *> &lights, const vec &target, const vec &normal, vec &sample, int x, int y)
 {
 	vec avgray(0, 0, 0);
 	float r = 0, g = 0, b = 0;
+	uint lightused = 0;
 	loopv(lights)
 	{
-		extentity &light = *lights[i];
+		if(lightmask&(1<<i)) continue;
+		const extentity &light = *lights[i];
 		vec ray = target;
 		ray.sub(light.o);
         float mag = ray.magnitude();
@@ -377,6 +379,7 @@ void generate_lumel(const float tolerance, const vector<extentity *> &lights, co
 			float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (mmshadows > 1 ? RAY_ALPHAPOLY : (mmshadows ? RAY_POLY : 0)));
 			if(dist < mag - tolerance) continue;
 		}
+		lightused |= 1<<i;
 		float intensity;
         switch(lmtype&LM_TYPE)
 		{
@@ -409,6 +412,7 @@ void generate_lumel(const float tolerance, const vector<extentity *> &lights, co
     sample.x = min(255.0f, max(r, float(ambientcolor[0])));
     sample.y = min(255.0f, max(g, float(ambientcolor[1])));
     sample.z = min(255.0f, max(b, float(ambientcolor[2])));
+	return lightused;
 }
 
 bool lumel_sample(const vec &sample, int aasample, int stride)
@@ -468,7 +472,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 {
 	loopv(sunlights)
 	{
-		extentity &light = *sunlights[i];
+		const extentity &light = *sunlights[i];
 		bool wantscolour = false;
 		loopk(3) if(slight[k] < light.attrs[2+k]) { wantscolour = true; break; }
 		if(!wantscolour) continue;
@@ -576,7 +580,7 @@ static inline void generate_alpha(float tolerance, const vec &pos, uchar &alpha)
 }
 
 VARW(edgetolerance, 1, 4, 8);
-VARW(adaptivesample, 0, 1, 1);
+VARW(adaptivesample, 0, 2, 2);
 
 enum
 {
@@ -607,7 +611,8 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		{-0.6f, -0.3f},
 	};
 	float tolerance = 0.5 / lpu;
-	vector<extentity *> &lights = (y1 == 0 ? lights1 : lights2);
+	vector<const extentity *> &lights = (y1 == 0 ? lights1 : lights2);
+	uint lightmask = 0, lightused = 0;
 	vec v = origin;
 	vec offsets[8];
 	loopi(8) loopj(3) offsets[i][j] = aacoords[i][0]*ustep[j] + aacoords[i][1]*vstep[j];
@@ -636,7 +641,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), slight += lmbpp)
 		{
             CHECK_PROGRESS(return NO_SURFACE);
-            generate_lumel(tolerance, lights, u, vec(normal).normalize(), *sample, x, y);
+            generate_lumel(tolerance, 0, lights, u, vec(normal).normalize(), *sample, x, y);
             if(hasskylight())
             {
                 if((lmtype&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<skylightcolor[0] || sample->y<skylightcolor[1] || sample->z<skylightcolor[2])
@@ -650,6 +655,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		}
 		sample += aasample;
 	}
+	if(adaptivesample > 1 && max(lm_w, lm_h) > 2) lightmask = ~lightused;
 	v = origin;
 	sample = &samples[stride*y1];
 	initlerpbounds(lv, numv, start, end);
@@ -675,13 +681,13 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 				vec n(normal);
 				n.normalize();
 				loopi(aasample-1)
-					generate_lumel(EDGE_TOLERANCE(i+1) * tolerance, lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
+					generate_lumel(EDGE_TOLERANCE(i+1) * tolerance, lightmask, lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
 				if(aalights == 3)
 				{
 					loopi(4)
 					{
 						vec s;
-						generate_lumel(EDGE_TOLERANCE(i+4) * tolerance, lights, vec(u).add(offsets[i+4]), n, s, x, y);
+						generate_lumel(EDGE_TOLERANCE(i+4) * tolerance, lightmask, lights, vec(u).add(offsets[i+4]), n, s, x, y);
 						center.add(s);
 					}
 					center.div(5);
@@ -691,9 +697,9 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		if(aasample > 1)
 		{
 			normal.normalize();
-			generate_lumel(tolerance, lights, vec(u).add(offsets[1]), normal, sample[1], lm_w-1, y);
+			generate_lumel(tolerance, lightmask, lights, vec(u).add(offsets[1]), normal, sample[1], lm_w-1, y);
 			if(aasample > 2)
-				generate_lumel(edgetolerance * tolerance, lights, vec(u).add(offsets[3]), normal, sample[3], lm_w-1, y);
+				generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(u).add(offsets[3]), normal, sample[3], lm_w-1, y);
 		}
 		sample += aasample;
 	}
@@ -710,9 +716,9 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
                 CHECK_PROGRESS(return NO_SURFACE);
 				vec n(normal);
 				n.normalize();
-				generate_lumel(edgetolerance * tolerance, lights, vec(v).add(offsets[1]), n, sample[1], min(x, lm_w-1), lm_h-1);
+				generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[1]), n, sample[1], min(x, lm_w-1), lm_h-1);
 				if(aasample > 2)
-					generate_lumel(edgetolerance * tolerance, lights, vec(v).add(offsets[2]), n, sample[2], min(x, lm_w-1), lm_h-1);
+					generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[2]), n, sample[2], min(x, lm_w-1), lm_h-1);
 				sample += aasample;
 			}
 		}
@@ -2107,15 +2113,15 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	else dir.normalize();
 }
 
-extentity *brightestlight(const vec &target, const vec &dir)
+const extentity *brightestlight(const vec &target, const vec &dir)
 {
 	const vector<extentity *> &ents = entities::getents();
 	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
-	extentity *brightest = NULL;
+	const extentity *brightest = NULL;
 	float bintensity = 0;
 	loopv(lights)
 	{
-		extentity &e = *ents[lights[i]];
+		const extentity &e = *ents[lights[i]];
 		if(e.type != ET_LIGHT || vec(e.o).sub(target).dot(dir)<0)
 			continue;
 
@@ -2146,7 +2152,7 @@ extentity *brightestlight(const vec &target, const vec &dir)
 			}
 			if(ents.inrange(slight))
 			{
-				extentity &spotlight = *ents[slight];
+				const extentity &spotlight = *ents[slight];
 				vec spot(vec(spotlight.o).sub(e.o).normalize());
 				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
 				float spotatten = 1-(1-ray.dot(spot))/maxatten;
@@ -2156,42 +2162,6 @@ extentity *brightestlight(const vec &target, const vec &dir)
 			else continue;
 		}
 
-		if(!brightest || intensity > bintensity)
-		{
-			brightest = &e;
-			bintensity = intensity;
-		}
-	}
-	loopv(sunlights)
-	{
-		extentity &e = *sunlights[i];
-		if(e.type != ET_SUNLIGHT) continue;
-		int offset = e.attrs[5] ? e.attrs[5] : 10, hit = 0;
-		loopk(9)
-		{
-			int yaw = e.attrs[0], pitch = e.attrs[1];
-			switch(k)
-			{
-				case 0: default: break;
-				case 1: pitch += offset; break;
-				case 2: yaw += offset/2; pitch += offset/2; break;
-				case 3: yaw += offset; break;
-				case 4: yaw += offset/2; pitch -= offset/2; break;
-				case 5: pitch -= offset; break;
-				case 6: yaw -= offset/2; pitch -= offset/2; break;
-				case 7: yaw -= offset; break;
-				case 8: yaw -= offset/2; pitch += offset/2; break;
-			}
-			while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-			while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
-			vec ray; vecfromyawpitch(yaw, pitch, 1, 0, ray);
-			vec pos = vec(ray).mul(hdr.worldsize);
-			if(pos.dot(dir) < 0) continue;
-			pos.add(target);
-			if(shadowray(pos, ray, 1e16f, RAY_SHADOW | RAY_POLY) > 1e15f)
-				hit++;
-		}
-		float intensity = hit/9.f;
 		if(!brightest || intensity > bintensity)
 		{
 			brightest = &e;
