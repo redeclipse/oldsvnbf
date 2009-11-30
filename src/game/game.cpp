@@ -202,7 +202,7 @@ namespace game
 		swaydir = swaypush = vec(0, 0, 0);
 		swayfade = swayspeed = swaydist = 0;
 	}
-	
+
 	void addsway(gameent *d)
 	{
 		if(firstpersonsway)
@@ -444,6 +444,7 @@ namespace game
 		camera1->o = player1->o;
 		camera1->yaw = player1->yaw;
 		camera1->pitch = player1->pitch;
+		camera1->roll = player1->calcroll(false);
 		camera1->resetinterp();
 		player1->resetinterp();
 	}
@@ -1503,7 +1504,7 @@ namespace game
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
             gameent *d = NULL;
-            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && d->type == ENT_PLAYER)
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
             {
 				checkoften(d, d == player1 || d->ai);
 				if(d == player1)
