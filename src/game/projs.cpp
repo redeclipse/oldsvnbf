@@ -927,7 +927,7 @@ namespace projs
 
 	void checkescaped(projent &proj, const vec &pos, const vec &dir)
 	{
-		if(lastmillis-proj.spawntime > 350 || proj.lastbounce || proj.stuck) proj.escaped = true;
+		if(lastmillis-proj.spawntime > 500 || (proj.reflectivity > 0 && proj.lastbounce) || proj.stuck) proj.escaped = true;
 		else if(proj.projcollide&COLLIDE_TRACE)
 		{
 			vec to = vec(pos).add(dir);
