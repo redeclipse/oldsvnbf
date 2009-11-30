@@ -226,7 +226,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, int retries)
 	{
-		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true, d);
+		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true);
 		return makeroute(d, b, node, changed, retries);
 	}
 
