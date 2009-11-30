@@ -998,8 +998,12 @@ namespace hud
 		{
 			if(font && *font) pushfont(font);
 			defvformatstring(str, text, text);
-			int width, height; text_bounds(str, width, height, -1, TEXT_CENTERED|TEXT_NO_INDENT);
-			pos.x -= x*tq; pos.y -= y*(tq+(y < 0 ? (1+y)*height/2 : height/2+(y*height/2)));
+			pos.x -= x*tq; pos.y -= y*tq*0.75f;
+			if(y > 0)
+			{
+				int width, height; text_bounds(str, width, height, -1, TEXT_CENTERED|TEXT_NO_INDENT);
+				pos.y -= y*height;
+			}
 			draw_textx("%s", int(pos.x), int(pos.y), 255, 255, 255, int(blend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, str);
 			if(font && *font) popfont();
 		}
