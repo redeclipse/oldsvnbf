@@ -352,9 +352,9 @@ namespace projs
 		if(proj.owner && proj.relativity > 0)
 		{
 			vec r = vec(proj.owner->vel).add(proj.owner->falling);
-			if((r.x >= 0 && rel.x < 0) || (r.x <= 0 && rel.x > 0)) r.x = 0;
-			if((r.y >= 0 && rel.y < 0) || (r.y <= 0 && rel.y > 0)) r.y = 0;
-			if((r.z >= 0 && rel.z < 0) || (r.z <= 0 && rel.z > 0)) r.z = 0;
+			if(r.x*rel.x < 0) r.x = 0;
+			if(r.y*rel.y < 0) r.y = 0;
+			if(r.z*rel.z < 0) r.z = 0;
 			rel.add(r.mul(proj.relativity));
 		}
 		proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
