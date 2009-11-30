@@ -37,6 +37,7 @@ enum
 	WP_F_NONE = 0,
 	WP_F_CROUCH = 1<<0,
 };
+namespace entities { struct avoidset; };
 
 namespace ai
 {
@@ -201,6 +202,7 @@ namespace ai
 		}
 	};
 
+	extern entities::avoidset obs;
 	extern vec aitarget;
 	extern int aidebug, showaiinfo;
 

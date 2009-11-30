@@ -372,9 +372,9 @@ namespace entities
 
 	vector<entcachenode *> entcachestack;
 
-	static inline bool allowuse(gameent *d, int n)
+	static inline bool allowuse(gameent *d, int n, bool force = true)
 	{
-		if(!d || !d->ai || !d->ai->hasprevnode(n)) switch(ents[n]->attrs[0])
+		if(!d || !d->ai || force || (!d->ai->hasprevnode(n) && !ai::obs.find(n, d))) switch(ents[n]->attrs[0])
 		{
 			case WP_COMMON: return true; break;
 			case WP_PLAYER: if(d->type == ENT_PLAYER) return true; break;
@@ -396,13 +396,13 @@ namespace entities
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n)) \
+			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force)) \
 			{ \
 				float dist = e.o.squaredist(pos); \
 				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
 			} \
 		} while(0)
-		for(;;)
+		loop(force, 2) for(;;)
 		{
 			int axis = curnode->axis();
 			float dist1 = pos[axis] - curnode->split[0], dist2 = curnode->split[1] - pos[axis];
@@ -436,6 +436,7 @@ namespace entities
 			if(entcachestack.empty()) return closest;
 			curnode = entcachestack.pop();
 		}
+		return -1;
 	}
 
 	void findentswithin(int type, const vec &pos, float mindist, float maxdist, vector<int> &results)
@@ -1296,7 +1297,7 @@ namespace entities
 			loopv(links)
 			{
 				int link = links[i];
-				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()) && allowuse(d, link))
+				if(ents.inrange(link) && ents[link]->type == ents[node]->type && (link == node || link == goal || !ents[link]->links.empty()) && allowuse(d, link, !check))
 				{
 					linkq &n = nodes[link];
 					float curscore = prevscore + ents[link]->o.dist(ent.o);
