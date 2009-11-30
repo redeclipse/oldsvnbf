@@ -84,7 +84,7 @@ namespace hud
 	VARP(teamcrosshair, 0, 1, 2);
 	VARP(teamnotices, 0, 0, 1);
 	VARP(teamkillnum, 0, 3, INT_MAX-1);
-	VARP(teamkilltime, 0, 60, INT_MAX-1);
+	VARP(teamkilltime, 0, 60000, INT_MAX-1);
 	VARP(teamchanges, 0, 1, 1);
 
 	TVAR(underlaytex, "", 3);
@@ -601,7 +601,7 @@ namespace hud
 		int numkilled = 0;
 		loopvrev(teamkills)
 		{
-			if(lastmillis-teamkills[i] <= teamkilltime*1000) numkilled++;
+			if(lastmillis-teamkills[i] <= teamkilltime) numkilled++;
 			else teamkills.remove(i);
 		}
 		return numkilled;
