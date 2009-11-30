@@ -21,13 +21,13 @@ VARG(instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(trialweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
 VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
-VARG(instadelay, 0, 3000, INT_MAX-1); // .. in instagib matches
+VARG(instadelay, 0, 2500, INT_MAX-1); // .. in instagib/arena matches
 VARG(trialdelay, 0, 1000, INT_MAX-1); // .. in time trial matches
-VARG(spawnprotect, 0, 5000, INT_MAX-1); // delay before damage can be dealt to spawning player
-VARG(instaprotect, 0, 3000, INT_MAX-1); // .. in instagib matches
+VARG(spawnprotect, 0, 3000, INT_MAX-1); // delay before damage can be dealt to spawning player
+VARG(instaprotect, 0, 1500, INT_MAX-1); // .. in instagib/arena matches
 
 VARG(maxhealth, 0, 100, INT_MAX-1);
-VARG(extrahealth, 0, 120, INT_MAX-1);
+VARG(extrahealth, 0, 100, INT_MAX-1);
 
 VARG(fireburntime, 0, 5500, INT_MAX-1);
 VARG(fireburndelay, 0, 1000, INT_MAX-1);
