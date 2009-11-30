@@ -171,7 +171,7 @@ namespace projs
 			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
     		float mag = proj.vel.magnitude()*elasticity; // conservation of energy
 			dir[1].reflect(pos);
-			if(reflectivity > 0.f)
+			if(!proj.lastbounce && reflectivity > 0.f)
 			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
 				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
 				loopi(2) vectoyawpitch(dir[i], aim[0][i], aim[1][i]);
