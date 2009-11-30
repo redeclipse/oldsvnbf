@@ -170,7 +170,7 @@ namespace projs
     	{
 			vec dir[2]; dir[0] = dir[1] = vec(proj.vel).normalize();
     		float mag = proj.vel.magnitude()*elasticity; // conservation of energy
-			loopi(3) if(pos[i]*dir[1][i] < 0) dir[1][i] = fabs(dir[1][i])*pos[i];
+			dir[1].reflect(pos);
 			if(reflectivity > 0.f)
 			{ // if projectile returns at 180 degrees [+/-]reflectivity, skew the reflection
 				float aim[2][2] = { { 0.f, 0.f }, { 0.f, 0.f } };
