@@ -48,7 +48,7 @@ VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transi
 VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
 FVARG(impulseregen, 0, 5, 10000); // impulse regen multiplier
 
-VARG(itemsallowed, 0, 1, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
+VARG(itemsallowed, 0, 2, 3); // 0 = never, 1 = all but instagib/time-trial, 2 = override insta if arena, 3 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn

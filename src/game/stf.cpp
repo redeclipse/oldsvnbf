@@ -30,12 +30,12 @@ namespace stf
 			above.z += enttype[FLAG].radius*2/3;
 			part_text(above, b.info);
 			above.z += 2.5f;
-			if(occupy > 0 && occupy < 1)
+			if(b.enemy)
 			{
-				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
-				part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload("textures/progress", 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour);
+			else part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour);
 			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
 		}
 	}
@@ -109,23 +109,34 @@ namespace stf
 			int millis = lastmillis-f.lasthad;
 			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 || f.hasflag || millis <= 1000)
 			{
-				int prevsy = sy, colour = teamtype[f.owner].colour;
+				int prevsy = sy, colour = teamtype[f.owner].colour; bool skewed = false;
 				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 				if(f.hasflag)
 				{
+					skewed = true;
 					skew += (millis <= 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew) : 1.f-skew);
 					if(millis > 1000)
 					{
 						float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
 						fade += (1.f-fade)*amt;
-						skew += skew*0.125f*amt;
 					}
 				}
-				else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
-				sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew, "super", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
-				if(f.enemy) hud::drawitem(hud::teamtex(f.enemy), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
+				else if(millis <= 1000)
+				{
+					skewed = true;
+					skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
+				}
+				sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew);
+				if(f.enemy)
+				{
+					int colour2 = teamtype[f.enemy].colour;
+					float r2 = (colour2>>16)/255.f, g2 = ((colour2>>8)&0xFF)/255.f, b2 = (colour2&0xFF)/255.f;
+					hud::drawprogress(x, y-prevsy, 0, occupy, int(s*0.5f), false, r2, g2, b2, fade, skew);
+					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r, g, b, fade, skew, !skewed && (game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2) ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+				}
+				else if(f.owner) hud::drawitem(hud::teamtex(f.owner), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 			}
 		}
         return sy;
@@ -223,11 +234,15 @@ namespace stf
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 				gameent *e = NULL;
 				bool regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
 				{ // try to guess what non ai are doing
-					vec ep = e->feetpos();
-					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
-						targets.add(e->clientnum);
+					bool alt = ai::altfire(d, e);
+					if(ai::targetable(d, e, alt, false))
+					{
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+							targets.add(e->clientnum);
+					}
 				}
 				if((!regen && f.owner == ai::owner(d)) || (targets.empty() && (f.owner != ai::owner(d) || f.enemy)))
 				{
@@ -257,11 +272,15 @@ namespace stf
 				if(d->aitype == AI_BOT)
 				{
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
 					{ // try to guess what non ai are doing
-						vec ep = e->feetpos();
-						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
-							targets.add(e->clientnum);
+						bool alt = ai::altfire(d, e);
+						if(ai::targetable(d, e, alt, false))
+						{
+							vec ep = e->feetpos();
+							if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
+								targets.add(e->clientnum);
+						}
 					}
 				}
 				if(!targets.empty())

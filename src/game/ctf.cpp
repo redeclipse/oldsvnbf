@@ -140,6 +140,12 @@ namespace ctf
 			}
 			else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
 			sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"))*rescale);
+			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
+			{
+				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
+				if(wait < 1) hud::drawprogress(pos[0], pos[1], wait, 1-wait, int(s*0.5f), false, r, g, b, fade*0.25f, skew);
+				hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew);
+			}
 			if(f.owner) switch(ctfstyle)
 			{
 				case 3: if(f.owner == game::player1) { hud::drawitemsubtext(pos[0], pos[1], s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay))); break; }
@@ -176,8 +182,8 @@ namespace ctf
 			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload("textures/progress", 3), 4, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload("textures/progress", 3), 4, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				part_icon(above, textureload(hud::progresstex, 3), 4, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 4, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f));
 				above.z += 2.5f;
 			}
@@ -226,8 +232,8 @@ namespace ctf
 			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload("textures/progress", 3), 4, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload("textures/progress", 3), 4, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				part_icon(above, textureload(hud::progresstex, 3), 4, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 4, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, trans);
 			}
         }
@@ -602,11 +608,15 @@ namespace ctf
 			if(d->aitype == AI_BOT)
 			{
 				gameent *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
 				{ // try to guess what non ai are doing
-					vec ep = e->feetpos();
-					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-						targets.add(e->clientnum);
+					bool alt = ai::altfire(d, e);
+					if(ai::targetable(d, e, alt, false))
+					{
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+							targets.add(e->clientnum);
+					}
 				}
 			}
 			if(home)
@@ -706,11 +716,15 @@ namespace ctf
 					targets.setsizenodelete(0);
 					ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && ai::owner(d) == ai::owner(e))
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
 					{ // try to guess what non ai are doing
-						vec ep = e->feetpos();
-						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-							targets.add(e->clientnum);
+						bool alt = ai::altfire(d, e);
+						if(ai::targetable(d, e, alt, false))
+						{
+							vec ep = e->feetpos();
+							if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+								targets.add(e->clientnum);
+						}
 					}
 					if(!targets.empty())
 					{
