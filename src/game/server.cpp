@@ -619,6 +619,7 @@ namespace server
 		{
 			const char *maplist = GVAR(mainmaps);
 			if(m_story(mode)) maplist = GVAR(storymaps);
+			else if(m_duel(mode, muts)) maplist = GVAR(duelmaps);
 			else if(m_stf(mode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 			else if(m_trial(mode)) maplist = GVAR(trialmaps);
@@ -1369,6 +1370,7 @@ namespace server
 				case 3: case 4:
 				{
 					if(m_story(reqmode)) maplist = GVAR(storymaps);
+					else if(m_duel(reqmode, reqmuts)) maplist = GVAR(duelmaps);
 					else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
 					else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
 					else if(m_trial(reqmode)) maplist = GVAR(trialmaps);

@@ -349,7 +349,14 @@ namespace projs
             vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
         }
 		vec rel = vec(proj.vel).add(dir);
-		if(proj.owner && proj.relativity > 0) rel.add(vec(proj.owner->vel).add(proj.owner->falling).mul(proj.relativity));
+		if(proj.owner && proj.relativity > 0)
+		{
+			vec r = vec(proj.owner->vel).add(proj.owner->falling);
+			if((r.x >= 0 && rel.x < 0) || (r.x <= 0 && rel.x > 0)) r.x = 0;
+			if((r.y >= 0 && rel.y < 0) || (r.y <= 0 && rel.y > 0)) r.y = 0;
+			if((r.z >= 0 && rel.z < 0) || (r.z <= 0 && rel.z > 0)) r.z = 0;
+			rel.add(r.mul(proj.relativity));
+		}
 		proj.vel = vec(rel).add(vec(dir).mul(physics::movevelocity(&proj)));
 		proj.spawntime = lastmillis;
 		proj.hit = NULL;
@@ -921,7 +928,7 @@ namespace projs
 
 	void checkescaped(projent &proj, const vec &pos, const vec &dir)
 	{
-		if(lastmillis - proj.spawntime > 350 || proj.lastbounce || proj.stuck) proj.escaped = true;
+		if(lastmillis-proj.spawntime > 350 || proj.lastbounce || proj.stuck) proj.escaped = true;
 		else if(proj.projcollide&COLLIDE_TRACE)
 		{
 			vec to = vec(pos).add(dir);
@@ -931,6 +938,8 @@ namespace projs
 			if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
 		}
 		else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
+		if(proj.owner == game::player1 && proj.projtype == PRJ_SHOT)
+			conoutft(CON_SELF, "%s: %d %d (%s)", proj.escaped ? "escaped" : "waiting", lastmillis-proj.spawntime, proj.lastbounce, proj.stuck ? "stuck" : "free");
 	}
 
 	bool move(projent &proj, int qtime)
