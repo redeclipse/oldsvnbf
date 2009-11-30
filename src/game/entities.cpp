@@ -117,10 +117,10 @@ namespace entities
 				if(mapmodels.inrange(attr[0])) addentinfo(mapmodels[attr[0]].name);
 				if(full)
 				{
-					if(attr[4]&MMT_HIDE) addentinfo("hide");
-					if(attr[4]&MMT_NOCLIP) addentinfo("noclip");
-					if(attr[4]&MMT_NOSHADOW) addentinfo("noshadow");
-					if(attr[4]&MMT_NODYNSHADOW) addentinfo("nodynshadow");
+					if(attr[5]&MMT_HIDE) addentinfo("hide");
+					if(attr[5]&MMT_NOCLIP) addentinfo("noclip");
+					if(attr[5]&MMT_NOSHADOW) addentinfo("noshadow");
+					if(attr[5]&MMT_NODYNSHADOW) addentinfo("nodynshadow");
 				}
 				break;
 			}
@@ -914,10 +914,11 @@ namespace entities
 			case MAPMODEL:
 				while(e.attrs[1] < 0) e.attrs[1] += 360;
 				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
-				while(e.attrs[2] < -90) e.attrs[2] += 180;
-				while(e.attrs[2] > 90) e.attrs[2] -= 180;
-				while(e.attrs[3] < 0) e.attrs[3] += 360;
-				while(e.attrs[3] >= 360) e.attrs[3] -= 360;
+				while(e.attrs[2] < 0) e.attrs[2] += 360;
+				while(e.attrs[2] >= 360) e.attrs[2] -= 360;
+				while(e.attrs[3] < 0) e.attrs[3] += 101;
+				while(e.attrs[3] >= 101) e.attrs[3] -= 101;
+				if(e.attrs[4] < 0) e.attrs[4] = 0;
 			case PARTICLES:
 			case MAPSOUND:
 			case LIGHTFX:
@@ -2026,7 +2027,7 @@ namespace entities
 				}
 				case MAPMODEL:
 				{
-					entdirpart(e.o, e.attrs[1], e.attrs[2], 4.f, 1, 0x00FFFF);
+					entdirpart(e.o, e.attrs[1], 360-e.attrs[2], 4.f, 1, 0x00FFFF);
 					break;
 				}
 				case SUNLIGHT:
@@ -2236,8 +2237,25 @@ namespace entities
 				part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
 				{
-					formatstring(s)("%s%s:%d", hasent ? "\fw" : "\fd", enttype[e.type].attrs[k], e.attrs[k]);
-					part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
+					const char *attrname = enttype[e.type].attrs[k];
+					if(e.type == PARTICLES) switch(e.attrs[0])
+					{
+						case 0: switch(k) { case 1: attrname = "length"; break; case 2: attrname = "height"; break; case 3: attrname = "colour"; break; case 4: attrname = "fade"; break; default: attrname = ""; } break;
+						case 1: switch(k) { case 1: attrname = "dir"; break; default: attrname = ""; } break;
+						case 2: switch(k) { case 1: attrname = "dir"; break; default: attrname = ""; } break;
+						case 3: switch(k) { case 1: attrname = "size"; break; case 2: attrname = "colour"; break; default: attrname = ""; } break;
+						case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13: switch(k) { case 1: attrname = "dir"; break; case 2: attrname = "length"; break; case 3: attrname = "colour"; break; case 4: attrname = "fade"; break; default: attrname = ""; break; } break;
+						case 14: case 15: switch(k) { case 1: attrname = "radius"; break; case 2: attrname = "height"; break; case 3: attrname = "colour"; break; case 4: attrname = "fade"; break; default: attrname = ""; } break;
+						case 6: switch(k) { case 1: attrname = "amt"; break; case 2: attrname = "colour"; break; case 3: attrname = "colour2"; break; default: attrname = ""; } break;
+						case 5: switch(k) { case 1: attrname = "amt"; break; case 2: attrname = "colour"; break; default: attrname = ""; } break;
+						case 32: case 33: case 34: case 35: switch(k) { case 1: attrname = "red"; break; case 2: attrname = "green"; break; case 3: attrname = "blue"; break; default: attrname = ""; } break;
+						default: attrname = ""; break;
+					}
+					if(attrname && *attrname)
+					{
+						formatstring(s)("%s%s:%d", hasent ? "\fw" : "\fd", attrname, e.attrs[k]);
+						part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
+					}
 				}
 			}
 		}

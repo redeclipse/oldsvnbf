@@ -377,7 +377,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 				loopv(oe->mapmodels)
 				{
 					extentity &e = *ents[oe->mapmodels[i]];
-					if(e.lastemit && e.spawned && e.attrs[4]&MMT_HIDE) continue;
+					if(e.lastemit && e.spawned && e.attrs[5]&MMT_HIDE) continue;
                     e.visible = true;
 					++visible;
 				}
@@ -409,14 +409,14 @@ void rendermapmodel(extentity &e)
 	int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0, flags = MDL_CULL_VFC|MDL_CULL_DIST|MDL_DYNLIGHT;
     if(e.lastemit)
     {
-    	if(e.attrs[4]&MMT_HIDE && e.spawned) return;
+    	if(e.attrs[5]&MMT_HIDE && e.spawned) return;
 		anim = e.spawned ? ANIM_TRIGGER_ON : ANIM_TRIGGER_OFF;
 		if(e.lastemit > 0 && lastmillis-e.lastemit < entities::triggertime(e)) basetime = e.lastemit;
 		else anim |= ANIM_END;
     }
-	if((e.lastemit || e.attrs[4]&MMT_NOSHADOW) && !(e.attrs[4]&MMT_NODYNSHADOW)) flags |= MDL_SHADOW;
+	if((e.lastemit || e.attrs[5]&MMT_NOSHADOW) && !(e.attrs[5]&MMT_NODYNSHADOW)) flags |= MDL_SHADOW;
 	mapmodelinfo &mmi = getmminfo(e.attrs[0]);
-	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attrs[1]%360), (float)(e.attrs[2]%360), (float)(e.attrs[3]%360), flags, NULL, NULL, basetime);
+	if(&mmi) rendermodel(&e.light, mmi.name, anim, e.o, (float)(e.attrs[1]%360), 0, (float)(e.attrs[2]%360), flags, NULL, NULL, basetime, 0, e.attrs[3] ? min(e.attrs[3]/100.f, 1.f) : 1.f, e.attrs[4] ? max(e.attrs[4]/100.f, 1e-3f) : 1.f);
 }
 
 extern int reflectdist;

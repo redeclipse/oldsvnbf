@@ -130,10 +130,10 @@ int hitent, hitorient;
 
 #define mapmodelskip \
 	{ \
-			if(e.attrs[4]&MMT_NOCLIP) continue; \
+			if(e.attrs[5]&MMT_NOCLIP) continue; \
 			if(e.lastemit) \
 			{ \
-				if(e.attrs[4]&MMT_HIDE) \
+				if(e.attrs[5]&MMT_HIDE) \
 				{ \
 					if(e.spawned) continue; \
 				} \
@@ -206,7 +206,7 @@ static float shadowent(octaentities *oc, octaentities *last, const vec &o, const
 	{
 		extentity &e = *ents[oc->mapmodels[i]];
 		if(!e.inoctanode || &e==t) continue;
-		if(e.lastemit || e.attrs[4]&MMT_NOSHADOW) continue;
+		if(e.lastemit || e.attrs[5]&MMT_NOSHADOW) continue;
 		if(!mmintersect(e, o, ray, radius, mode, f)) continue;
 		if(f>0 && f<dist) dist = f;
 	}
@@ -745,7 +745,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
                     //if(!mmcollide<mpr::EntCylinder, mpr::ModelEllipse>(d, dir, e, center, radius, yaw)) return false;
                     if(!ellipsecollide(d, dir, e.o, center, yaw, radius.x, radius.y, radius.z, radius.z)) return false;
                 }
-                //else if(!mmcollide<mpr::EntCylinder, mpr::ModelOBB>(d, dir, e, center, radius, yaw)) return false;           
+                //else if(!mmcollide<mpr::EntCylinder, mpr::ModelOBB>(d, dir, e, center, radius, yaw)) return false;
                 else if(!ellipserectcollide(d, dir, e.o, center, yaw, radius.x, radius.y, radius.z, radius.z)) return false;
                 break;
             case COLLIDE_OBB:
@@ -1174,7 +1174,7 @@ bool intersect(physent *d, const vec &from, const vec &to, float &dist)   // if 
     vec bottom(d->o), top(d->o);
     bottom.z -= d->height;
     top.z += d->aboveeye;
-    if(!linecylinderintersect(from, to, bottom, top, d->radius, dist)) return false; 
+    if(!linecylinderintersect(from, to, bottom, top, d->radius, dist)) return false;
     dist *= from.dist(to);
     return true;
 }
