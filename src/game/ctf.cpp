@@ -89,9 +89,9 @@ namespace ctf
 				}
 			}
 			pushfont("super");
-			if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s, return to base!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag")*hud::noticescale;
-			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
-			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped, go get it!", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
+			if(!hasflags.empty() && ctfstyle <= 2) ty += draw_textx("\fzwaYou have \fs\fc%d\fS %s", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, hasflags.length(), hasflags.length() > 1 ? "flags" : "flag")*hud::noticescale;
+			if(!takenflags.empty()) ty += draw_textx("\fzwaFlag has been taken", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
+			if(!droppedflags.empty()) ty += draw_textx("\fzwaFlag has been dropped", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1)*hud::noticescale;
 			popfont();
 		}
 	}

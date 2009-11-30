@@ -695,7 +695,7 @@ namespace server
 			{
 				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(triallimit))
 				{
-					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fctime trial wait period has timed out!");
+					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fctime trial wait period has timed out");
 					startintermission();
 					return;
 				}
@@ -717,14 +717,14 @@ namespace server
 					else minremain = -1;
 					if(!minremain)
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fctime limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fctime limit has been reached");
 						startintermission();
 						return; // bail
 					}
 					else
 					{
 						sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-						if(minremain == 1) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_SELF, "\fconly one minute left of play!");
+						if(minremain == 1) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_MESG, "\fcone minute remains");
 					}
 				}
 			}
@@ -740,7 +740,7 @@ namespace server
 						best = i;
 					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcfrag limit has been reached");
 						startintermission();
 						return; // bail
 					}
@@ -752,7 +752,7 @@ namespace server
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
-						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_SELF, "\fcfrag limit has been reached!");
+						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcfrag limit has been reached");
 						startintermission();
 						return; // bail
 					}
@@ -1051,7 +1051,7 @@ namespace server
 		if(cn < 0 || allowbroadcast(cn))
 		{
 			defvformatstring(str, s, s);
-			int conlevel = CON_SELF;
+			int conlevel = CON_MESG;
 			switch(cn)
 			{
 				case -3: conlevel = CON_CHAT; break;
@@ -1955,14 +1955,17 @@ namespace server
 	{
         if(ci->state.aitype >= 0)
         {
-			putint(p, SV_INITAI);
-			putint(p, ci->clientnum);
-			putint(p, ci->state.ownernum);
-			putint(p, ci->state.aitype);
-			putint(p, ci->state.aientity);
-			putint(p, ci->state.skill);
-			sendstring(ci->name, p);
-			putint(p, ci->team);
+        	if(ci->state.ownernum >= 0)
+        	{
+				putint(p, SV_INITAI);
+				putint(p, ci->clientnum);
+				putint(p, ci->state.ownernum);
+				putint(p, ci->state.aitype);
+				putint(p, ci->state.aientity);
+				putint(p, ci->state.skill);
+				sendstring(ci->name, p);
+				putint(p, ci->team);
+        	}
         }
         else
         {
@@ -2764,7 +2767,6 @@ namespace server
 				checkents();
 				checklimits();
 				checkclients();
-				aiman::checkai();
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
@@ -2795,6 +2797,7 @@ namespace server
             if(shouldcheckvotes) checkvotes();
 		}
 		else if(!GVAR(resetbansonend)) cleanbans();
+		aiman::checkai();
 		auth::update();
 	}
 
@@ -2936,7 +2939,7 @@ namespace server
 		}
 		if(!len)
 		{
-			srvmsgf(sender, "you sent a zero length packet for map data!");
+			srvmsgf(sender, "you sent a zero length packet for map data");
 			return false;
 		}
 		mapdata[n] = opentempfile(((const char *[3]){ "mapdata", "mapshot", "mapconf" })[n], "w+b");

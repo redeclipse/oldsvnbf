@@ -181,7 +181,7 @@ void gl_checkextensions()
         hasMT = true;
         if(dbgexts) conoutf("\frUsing GL_ARB_multitexture extension.");
     }
-    else conoutf("\frWARNING: No multitexture extension!");
+    else conoutf("\frWARNING: No multitexture extension");
 
     if(strstr(exts, "GL_ARB_vertex_buffer_object"))
     {
@@ -466,7 +466,7 @@ void gl_checkextensions()
         hasNP2 = true;
         if(dbgexts) conoutf("\frUsing GL_ARB_texture_non_power_of_two extension.");
     }
-    else if(usenp2) conoutf("\frWARNING: Non-power-of-two textures not supported!");
+    else if(usenp2) conoutf("\frWARNING: Non-power-of-two textures not supported");
 
     if(strstr(exts, "GL_ARB_texture_compression") && strstr(exts, "GL_EXT_texture_compression_s3tc"))
     {

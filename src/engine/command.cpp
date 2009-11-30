@@ -630,7 +630,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 				}
 
 				case ID_VAR:						// game defined variables
-                    if(numargs <= 1) conoutft(CON_MESG, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fd%s = 0x%.6X" : "\fd%s = 0x%X") : "\fd%s = %d", c, *id->storage.i);      // var with no value just prints its current value
+                    if(numargs <= 1) conoutft(CON_MESG, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fg%s = 0x%.6X" : "\fg%s = 0x%X") : "\fg%s = %d", c, *id->storage.i);      // var with no value just prints its current value
 					else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
 					else
 					{
@@ -688,7 +688,7 @@ char *executeret(const char *p)			   // all evaluation happens here, recursively
 					break;
 
 				case ID_FVAR:
-					if(numargs <= 1) conoutft(CON_MESG, "\fd%s = %s", c, floatstr(*id->storage.f));
+					if(numargs <= 1) conoutft(CON_MESG, "\fg%s = %s", c, floatstr(*id->storage.f));
 					else if(id->minvalf>id->maxvalf) conoutft(CON_MESG, "\frvariable %s is read-only", id->name);
 					else
 					{
@@ -1101,7 +1101,7 @@ ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
-ICOMMAND(echo, "C", (char *s), conoutft(CON_SELF, "%s", s));
+ICOMMAND(echo, "C", (char *s), conoutft(CON_MESG, "%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
 

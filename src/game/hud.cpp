@@ -647,7 +647,7 @@ namespace hud
 				if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 				{
 					int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
-					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged!" : "Please Wait";
+					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, msg)*noticescale;
 					if(obitnotices && game::player1->lastdeath && (delay || game::player1->state == CS_DEAD) && *game::player1->obit)
 					{
@@ -713,14 +713,14 @@ namespace hud
 					}
 					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
 					{
-						ty += draw_textx("\fzryDon't shoot team mates!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+						ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 						if(m_fight(game::gamemode) && shownotices >= 2)
 						{
 							pushfont("emphasis");
 							ty += draw_textx("You are on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 							popfont();
 							pushfont("default");
-							ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS!", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat)*noticescale;
+							ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat)*noticescale;
 							popfont();
 						}
 					}
@@ -1518,7 +1518,7 @@ namespace hud
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
 					if(inventoryteam && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
 					{
-						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || numteamkills() >= teamkillnum)) lastteam = lastmillis;
 						if(lastteam)
 						{
 							const char *pre = "";
