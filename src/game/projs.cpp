@@ -89,7 +89,7 @@ namespace projs
 
 	bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
 	{
-		if(proj.projtype == PRJ_SHOT && (proj.projcollide&COLLIDE_OWNER || d != proj.owner))
+		if(proj.projtype == PRJ_SHOT && physics::issolid(d, &proj))
 		{
 			proj.hit = d;
 			proj.hitflags = flags;
@@ -248,7 +248,7 @@ namespace projs
 			case PRJ_SHOT:
 			{
 				if(proj.owner && (proj.owner != game::player1 || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
-				proj.aboveeye = proj.height = proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
+				proj.height = proj.radius = proj.xradius = proj.yradius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
 				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
 				proj.relativity = weaptype[proj.weap].relativity[proj.flags&HIT_ALT ? 1 : 0];
@@ -535,8 +535,7 @@ namespace projs
 				loopi(game::numdynents())
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner))
-						continue;
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner)) continue;
 					radialeffect(f, proj, false, radius);
 					radiated = true;
 				}
@@ -676,7 +675,7 @@ namespace projs
 				default: break;
 			}
 			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
-				proj.radius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*max(proj.lifesize, 0.1f);
+				proj.height = proj.radius = proj.xradius = proj.yradius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*max(proj.lifesize, 0.1f);
 		}
 		else
 		{
@@ -855,7 +854,7 @@ namespace projs
 
 	int bounce(projent &proj, const vec &dir)
 	{
-		if((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER && hitplayer != proj.owner : proj.projcollide&COLLIDE_GEOM))
+		if((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM))
 		{
 			if(hitplayer)
 			{
@@ -894,7 +893,7 @@ namespace projs
         ray.mul(1/maxdist);
         float dist = tracecollide(&proj, proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
         proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
-        if(dist >= 0)
+        if(dist >= 0 && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM))
         {
             if(hitplayer)
             {
@@ -927,7 +926,7 @@ namespace projs
 
 	void checkescaped(projent &proj, const vec &pos, const vec &dir)
 	{
-		if(lastmillis-proj.spawntime > 500 || (proj.reflectivity > 0 && proj.lastbounce) || proj.stuck) proj.escaped = true;
+		if(lastmillis-proj.spawntime > 500 || proj.lastbounce || proj.stuck) proj.escaped = true;
 		else if(proj.projcollide&COLLIDE_TRACE)
 		{
 			vec to = vec(pos).add(dir);
