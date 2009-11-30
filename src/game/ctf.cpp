@@ -74,7 +74,7 @@ namespace ctf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::player1->state == CS_ALIVE && hud::inventorygame <= 1)
+		if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
 		{
 			static vector<int> hasflags, takenflags, droppedflags;
 			hasflags.setsizenodelete(0); takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
@@ -99,57 +99,59 @@ namespace ctf
     int drawinventory(int x, int y, int s, int m, float blend)
     {
 		int sy = 0;
-		loopv(st.flags) if(st.flags[i].base&BASE_FLAG && (game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 || st.flags[i].lastowner == game::player1))
+		loopv(st.flags) if(st.flags[i].base&BASE_FLAG)
 		{
 			if(y-sy-s < m) break;
 			ctfstate::flag &f = st.flags[i];
-			int millis = lastmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
-			float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
-				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
-			if(f.owner || f.droptime)
+			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.team == TEAM_NEUTRAL || f.team == game::player1->team ? 1 : 2) || f.lastowner == game::player1)
 			{
-				if(f.owner == game::player1)
+				const char *pre = "";
+				int millis = lastmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
+				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
+					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
+				if(f.owner || f.droptime)
 				{
-					skew = 1; // override it
-					if(millis <= 2000)
+					if(f.owner == game::player1)
 					{
-						int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
-						if(millis <= 1000)
+						pre = "\fzRw";
+						skew = 1; // override it
+						if(millis <= 2000)
 						{
-							float tweak = millis <= 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
-							skew += tweak*hud::inventorygrow;
-							loopk(2) pos[k] = off[k]+(s/2*tweak*skew);
-							skew *= tweak; fade *= tweak; rescale = 0;
+							int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
+							if(millis <= 1000)
+							{
+								float tweak = millis <= 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
+								skew += tweak*hud::inventorygrow;
+								loopk(2) pos[k] = off[k]+(s/2*tweak*skew);
+								skew *= tweak; fade *= tweak; rescale = 0;
+							}
+							else
+							{
+								float tweak = clamp(float(millis-1000)/1000.f, 0.f, 1.f);
+								skew += (1.f-tweak)*hud::inventorygrow;
+								loopk(2) pos[k] -= int((pos[k]-(off[k]+s/2*skew))*(1.f-tweak));
+								rescale = tweak;
+							}
 						}
 						else
 						{
-							float tweak = clamp(float(millis-1000)/1000.f, 0.f, 1.f);
-							skew += (1.f-tweak)*hud::inventorygrow;
-							loopk(2) pos[k] -= int((pos[k]-(off[k]+s/2*skew))*(1.f-tweak));
-							rescale = tweak;
+							float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
+							fade += (1.f-fade)*amt;
 						}
 					}
-					else
-					{
-						float pc = (millis%1000)/500.f, amt = pc > 1 ? 2.f-pc : pc;
-						fade += (1.f-fade)*amt;
-					}
+					else if(millis <= 1000) skew += (1.f-skew)*clamp(float(millis)/1000.f, 0.f, 1.f);
+					else skew = 1;
 				}
-				else if(millis <= 1000) skew += (1.f-skew)*clamp(float(millis)/1000.f, 0.f, 1.f);
-				else skew = 1;
-			}
-			else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
-			sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : (f.droptime ? "\fodropped" : "\fgsafe"))*rescale);
-			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
-			{
-				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				if(wait < 1) hud::drawprogress(pos[0], pos[1], wait, 1-wait, int(s*0.5f), false, r, g, b, fade*0.25f, skew);
-				hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew);
-			}
-			if(f.owner) switch(ctfstyle)
-			{
-				case 3: if(f.owner == game::player1) { hud::drawitemsubtext(pos[0], pos[1], s, false, skew, "sub", fade, "%d%%", int((lastmillis-f.taketime)/float(ctfresetdelay))); break; }
-				default: hud::drawitemsubtext(pos[0], pos[1], s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner)); break;
+				else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
+				sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fy%ssecured" : "\fr%staken") : (f.droptime ? "\fo%sdropped" : "\fg%ssafe"), pre)*rescale);
+				if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
+				{
+					float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
+					if(wait < 1) hud::drawprogress(pos[0], pos[1], wait, 1-wait, int(s*0.5f), false, r, g, b, fade*0.25f, skew);
+					if(f.owner) hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "radar", "\fs%s\fS (%d%%)", game::colorname(f.owner), int(wait*100.f));
+					else hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "sub", "%d%%", int(wait*100.f));
+				}
+				else if(f.owner) hud::drawitemsubtext(pos[0], pos[1], s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
 			}
 		}
 		return sy;

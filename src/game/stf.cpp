@@ -82,7 +82,7 @@ namespace stf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::player1->state == CS_ALIVE && !hud::inventorygame)
+		if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
 		{
 			loopv(st.flags) if(insideflag(st.flags[i], game::player1) && (st.flags[i].owner == game::player1->team || st.flags[i].enemy == game::player1->team))
 			{
