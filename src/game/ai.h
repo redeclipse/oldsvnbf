@@ -21,7 +21,7 @@ aitypes aitype[] = {
 	},
 	{
 		AI_GUARD,		WEAP_PISTOL, 	100,	40,			2,				0.75f,	3,			3,			14,			150,
-			true,		false,		true,					"guard",	"actors/player/delta"
+			true,		false,		true,					"guard",	"actors/player/gamma"
 	},
 	{
 		AI_ZOMBIE,		WEAP_GIBS, 		50,		25,			10,				0.5f,	3,			3,			14,			100,
