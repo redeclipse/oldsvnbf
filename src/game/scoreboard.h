@@ -459,7 +459,7 @@ namespace hud
 					g.strut(5);
 					g.text("pj", fgcolor);
 					loopscoregroup({
-						g.textf("%s%d", 0xFFFFFF, NULL, lastmillis-o->lastupdate > 1000 ? "\fo" : "", o->plag);
+						g.textf("%d", 0xFFFFFF, NULL, o->plag);
 					});
 					g.poplist();
 				}
@@ -498,7 +498,7 @@ namespace hud
 					g.text("sk", fgcolor);
 					loopscoregroup({
 						if(o->aitype >= 0) g.textf("%d", 0xFFFFFF, NULL, o->skill);
-						else g.space(1);
+						else g.textf("%d", 0xFFFFFF, NULL, int(game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1))*100));
 					});
 					g.poplist();
 				}
