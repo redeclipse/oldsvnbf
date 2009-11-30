@@ -16,7 +16,7 @@ aitypes aitype[] = {
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	200,	0,			2,				1.f,	3,			3,			4,			0,
+		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				1.f,	3,			3,			4,			0,
 			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
@@ -24,7 +24,7 @@ aitypes aitype[] = {
 			true,		false,		true,					"guard",	"actors/player/delta"
 	},
 	{
-		AI_ZOMBIE,		WEAP_GIBS, 		200,	25,			10,				0.5f,	3,			3,			14,			100,
+		AI_ZOMBIE,		WEAP_GIBS, 		50,		25,			10,				0.5f,	3,			3,			14,			100,
 			true,		false,		true,					"zombie",	"actors/player/beta"
 	},
 };
@@ -114,6 +114,7 @@ namespace ai
 			cleartimers();
 			reset();
 			loopk(3) views[k] = 0.f;
+			suspended = true;
 		}
 		~aiinfo() {}
 
@@ -135,7 +136,6 @@ namespace ai
 			state.setsizenodelete(0);
 			addstate(AI_S_WAIT);
 			trywipe = becareful = false;
-			suspended = true;
 		}
 
 		void reset(bool tryit = false)

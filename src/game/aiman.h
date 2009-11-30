@@ -75,7 +75,7 @@ namespace aiman
 				ci->state.lasttimeplayed = lastmillis;
 				copystring(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
 				ci->state.state = CS_DEAD;
-				ci->team = TEAM_NEUTRAL;
+				ci->team = type == AI_BOT ? TEAM_NEUTRAL : TEAM_ENEMY;
 				ci->online = ci->connected = true;
 				if(req) autooverride = true;
 				return true;

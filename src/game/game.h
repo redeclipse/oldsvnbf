@@ -320,8 +320,8 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
-			1,		1,		{ 1, 1 },	{ 500, 500 },	500,	{ 25, 25 },		{ 500, 500 },			0,		{ 1000, 1000 },
-			100,	{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 2, 2 },
+			2,		2,		{ 1, 1 },	{ 500, 500 },	500,	{ 25, 25 },		{ 250, 250 },			0,		{ 1500, 1500 },
+			100,	{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	false,
 			{ 0.35f, 0.35f },	{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 35, 35 },		{ 2, 2 },			{ 0, 0 },
@@ -1055,10 +1055,10 @@ struct gameent : dynent, gamestate
 			float wobble = float(rnd(15)-7)*(float(min(quake, 100))/100.f);
 			switch(state)
 			{
-				case CS_SPECTATOR: case CS_WAITING: wobble *= 0.5f; break;
+				case CS_SPECTATOR: case CS_WAITING: c = 0; wobble *= 0.5f; break;
 				case CS_ALIVE: if(crouch) wobble *= 0.5f; break;
-				case CS_DEAD: break;
-				default: wobble = 0; break;
+				case CS_DEAD: c = 0; break;
+				default: c = wobble = 0; break;
 			}
 			c += wobble;
 		}

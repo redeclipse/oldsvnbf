@@ -838,12 +838,11 @@ namespace client
 
     void c2sinfo() // send update to the server
     {
-        static int lastupdate = -1000, numupdates = 0;
+        static int lastupdate = -1000;
         if(totalmillis-lastupdate < 40) return;    // don't update faster than 25fps
         lastupdate = totalmillis;
         updateposition(game::player1);
-        loopv(game::players) if(game::players[i] && game::players[i]->ai && (game::players[i]->type == ENT_PLAYER || !numupdates)) updateposition(game::players[i]);
-		if(++numupdates >= 2) numupdates = 0;
+        loopv(game::players) if(game::players[i] && game::players[i]->ai) updateposition(game::players[i]);
         sendmessages(game::player1);
         flushclient();
     }

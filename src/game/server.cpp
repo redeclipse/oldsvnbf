@@ -1002,7 +1002,7 @@ namespace server
 	{
 		loopvk(clients) clients[k]->state.dropped.reset();
 		setuptriggers(true);
-		setupitems(true);
+		if(m_fight(gamemode)) setupitems(true);
 		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
 		hasgameinfo = aiman::dorefresh = true;
 	}
@@ -1011,13 +1011,15 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
+		bool grenades = GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1);
 		if(ci->state.aitype >= AI_START)
 		{
 			weap = aitype[ci->state.aitype].weap;
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
+			grenades = false;
 		}
-		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1));
+		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), grenades);
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;

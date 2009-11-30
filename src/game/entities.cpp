@@ -107,7 +107,7 @@ namespace entities
 							else formatstring(ds)("%s", gametype[attr[2]].name);
 							addentinfo(ds);
 						}
-						if(attr[3]&WEAP_F_FORCED) addentinfo("forced");
+						if(attr[1]&WEAP_F_FORCED) addentinfo("forced");
 					}
 				}
 				break;

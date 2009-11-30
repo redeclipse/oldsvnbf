@@ -2,7 +2,7 @@
 namespace ai
 {
 	entities::avoidset obs;
-    int updatemillis = 0, updateiters = 0;
+    int updatemillis = 0;
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
@@ -190,14 +190,8 @@ namespace ai
         }
 		loopv(game::players) if(game::players[i] && game::players[i]->ai)
 		{
-			bool doupdate = updating && (game::players[i]->aitype >= AI_START ? !updateiters : true);
-			if(!game::intermission) think(game::players[i], doupdate);
+			if(!game::intermission) think(game::players[i], updating);
 			else game::players[i]->stopmoving(true);
-		}
-		if(updating)
-		{
-			updatemillis = lastmillis;
-			if(++updateiters >= 5) updateiters = 0;
 		}
 	}
 
@@ -438,16 +432,15 @@ namespace ai
 	bool find(gameent *d, aistate &b)
 	{
 		static vector<interest> interests; interests.setsizenodelete(0);
-		if(m_fight(game::gamemode))
-		{ // don't let bots consume items in story mode (yet?)
-			if(d->aitype == AI_BOT && !d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)))
-				items(d, b, interests);
-			if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
-			else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
-		}
 		if(d->aitype == AI_BOT)
 		{
-			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests);
+			if(!d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators))) items(d, b, interests);
+			if(m_fight(game::gamemode))
+			{ // don't let bots consume items in story mode (yet?)
+				if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
+				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
+			}
+			if(m_story(game::gamemode) || m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode) ? true : false);
 		}
 		else if(entities::ents.inrange(d->aientity))
 		{
@@ -496,7 +489,7 @@ namespace ai
 		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 		{
 			gameent *t;
-			loopv(targets) if((t = game::getclient(targets[i])) && t->ai && game::allowmove(t) && targetable(t, e, true))
+			loopv(targets) if((t = game::getclient(targets[i])) && t->ai && game::allowmove(t) && targetable(t, e, true) && !t->ai->suspended)
 			{
 				aistate &c = t->ai->getstate();
 				if(violence(t, c, e, false)) return;
@@ -524,7 +517,7 @@ namespace ai
 			}
 			if(d->aitype == AI_BOT)
 			{
-				if(!aisuspend) d->ai->suspended = false;
+				d->ai->suspended = false;
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
@@ -543,8 +536,11 @@ namespace ai
 
 	bool check(gameent *d, aistate &b)
 	{
-		if(m_stf(game::gamemode) && stf::aicheck(d, b)) return true;
-		else if(m_ctf(game::gamemode) && ctf::aicheck(d, b)) return true;
+		if(d->aitype == AI_BOT)
+		{
+			if(m_stf(game::gamemode) && stf::aicheck(d, b)) return true;
+			else if(m_ctf(game::gamemode) && ctf::aicheck(d, b)) return true;
+		}
 		return false;
 	}
 
@@ -552,13 +548,12 @@ namespace ai
 	{
 		if(!m_edit(game::gamemode))
 		{
-			if(check(d, b)) return 1;
-			if(find(d, b)) return 1;
-			if(target(d, b, true, true)) return 1;
+			if(check(d, b) || find(d, b)) return 1;
+			if(target(d, b, true, m_fight(game::gamemode) && !d->ai->suspended ? true : false)) return 1;
 		}
-		switch(d->aitype)
+		if(!d->ai->suspended) switch(d->aitype)
 		{
-			case AI_BOT: if(randomnode(d, b, NEARDIST, 1e16f))
+			case AI_BOT: if(m_fight(game::gamemode) && randomnode(d, b, NEARDIST, 1e16f))
 			{
 				d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
 				return 1;
@@ -575,7 +570,7 @@ namespace ai
 
 	int dodefend(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE)
+		if(!d->ai->suspended && d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
@@ -611,7 +606,7 @@ namespace ai
 
 	int dointerest(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
+		if(!d->ai->suspended && d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
 		{
 			int sweap = m_weapon(game::gamemode, game::mutators);
 			switch(b.targtype)
@@ -683,7 +678,7 @@ namespace ai
 
 	int dopursue(gameent *d, aistate &b)
 	{
-		if(d->state == CS_ALIVE)
+		if(!d->ai->suspended && d->state == CS_ALIVE)
 		{
 			switch(b.targtype)
 			{
@@ -876,7 +871,7 @@ namespace ai
 		}
 		else d->ai->dontmove = true;
 
-		if(aitype[d->aitype].maxspeed && d->aitype != AI_ZOMBIE)
+		if(d->aitype == AI_BOT)
 		{
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(b.idle == 1 && b.type != AI_S_WAIT)
@@ -1188,7 +1183,7 @@ namespace ai
             if(d->ragdoll) cleanragdoll(d);
             if(d->state == CS_ALIVE && !game::intermission)
             {
-            	if(!d->ai->suspended)
+            	if(!aisuspend && !d->ai->suspended)
             	{
 					bool ladder = d->onladder;
 					physics::move(d, 1, true);
@@ -1254,7 +1249,6 @@ namespace ai
 			d->ai->cleartimers();
 			setup(d, false, d->aientity);
 		}
-		if(d->ai->suspended != (aisuspend ? true : false)) d->ai->suspended = aisuspend ? true : false;
 		bool cleannext = false;
 		loopvrev(d->ai->state)
 		{
@@ -1303,7 +1297,7 @@ namespace ai
 				}
 				else
 				{
-					if(!aisuspend) d->ai->suspended = false;
+					if(d->aitype >= AI_START) d->ai->suspended = false;
 					c.next = lastmillis+125+rnd(125);
 				}
 			}
