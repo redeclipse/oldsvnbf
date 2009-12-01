@@ -1022,7 +1022,7 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(prot), 0.f, 1.f);
-			if(chkcond(radarplayernames, m_duel(game::gamemode, game::mutators) || game::tvmode()))
+			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
@@ -1174,7 +1174,7 @@ namespace hud
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(chkcond(radarplayers, game::tvmode()) || m_edit(game::gamemode)) // 4
+		if(chkcond(radarplayers,  m_duel(game::gamemode, game::mutators) || game::tvmode()) || m_edit(game::gamemode)) // 4
 		{
 			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
