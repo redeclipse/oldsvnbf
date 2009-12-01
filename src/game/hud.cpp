@@ -232,9 +232,9 @@ namespace hud
 	FVARP(motionblurmax, 0, 0.75f, 1); // maximum
 	FVARP(motionbluramt, 0, 0.5f, 1); // used for override
 
-	bool hastv(int val)
+	bool chkcond(int val, bool cond)
 	{
-		if(val == 2 || (val && game::tvmode())) return true;
+		if(val == 2 || (val && cond)) return true;
 		return false;
 	}
 
@@ -1022,7 +1022,8 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(delay > 0) fade *= clamp(float(delay)/float(prot), 0.f, 1.f);
-			if(hastv(radarplayernames)) drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			if(chkcond(radarplayernames, m_duel(game::gamemode, game::mutators) || game::tvmode()))
+				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
 		}
 	}
@@ -1083,7 +1084,7 @@ namespace hud
 			if(game::player1->state != CS_EDITING && !insel && inspawn > 0.f)
 				fade = radaritemspawn ? 1.f-inspawn : fade+((1.f-fade)*(1.f-inspawn));
 			if(insel) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s %s", enttype[type].name, entities::entinfo(type, attr, insel));
-			else if(hastv(radaritemnames)) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr, false));
+			else if(chkcond(radaritemnames, game::tvmode())) drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b, "radar", "%s", entities::entinfo(type, attr, false));
 			else drawblip(tex, 2, w, h, size, fade*blend, dir, r, g, b);
 		}
 	}
@@ -1167,18 +1168,18 @@ namespace hud
 
 	void drawradar(int w, int h, float blend)
 	{
-		if(hastv(radaritems) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend); // 2
-		if(hastv(radarflags)) // 3
+		if(chkcond(radaritems, game::tvmode()) || m_edit(game::gamemode)) drawentblips(w, h, blend*radarblend); // 2
+		if(chkcond(radarflags, game::tvmode())) // 3
 		{
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(hastv(radarplayers) || m_edit(game::gamemode)) // 4
+		if(chkcond(radarplayers, game::tvmode()) || m_edit(game::gamemode)) // 4
 		{
 			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
 		}
-		if(hastv(radarcard) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
+		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
 		if(radardamage) drawdamageblips(w, h, blend*radarblend); // 5+
 	}
 
@@ -1676,7 +1677,7 @@ namespace hud
 			if(fireburntime && game::player1->state == CS_ALIVE) drawfire(w, h, os, fade);
 			if(!kidmode && game::bloodscale > 0) drawdamage(w, h, os, fade);
 		}
-		if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : hastv(showradar))) drawradar(w, h, fade);
+		if(!UI::hascursor() && (game::player1->state == CS_EDITING ? showeditradar > 0 : chkcond(showradar, game::tvmode()))) drawradar(w, h, fade);
 		if(showinventory) drawinventory(w, h, os, fade);
 
 		if(!texpaneltimer)
