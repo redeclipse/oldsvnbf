@@ -181,8 +181,8 @@ static struct domevert
     }
     domevert(const domevert &v0, const domevert &v1) : pos(vec(v0.pos).add(v1.pos).normalize())
     {
-        memcpy(color, fogcolor.v, 3);
-        color[3] = uchar((int(v0.color[3]) + int(v1.color[3]))/2);
+        memcpy(color, v0.color, 4);
+        if(v0.pos.z != v1.pos.z) color[3] += uchar((v1.color[3] - v0.color[3]) * (pos.z - v0.pos.z) / (v1.pos.z - v0.pos.z));
     }
 } *domeverts = NULL;
 static GLushort *domeindices = NULL;
@@ -285,7 +285,7 @@ static void deletedome()
     DELETEA(domeindices);
 }
 
-FVARW(fogdomeheight, 0, 0, 1);
+FVARW(fogdomeheight, -1, -0.05f, 1);
 FVARW(fogdomemin, 0, 0, 1);
 FVARW(fogdomemax, 0, 0, 1);
 VARW(fogdomecap, 0, 0, 1);
@@ -554,8 +554,8 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-        glTranslatef(0, 0, farplane*(0.5f - fogdomeheight));
-        glScalef(farplane/2, farplane/2, -farplane*(1-fogdomeheight));
+        glTranslatef(0, 0, -farplane*fogdomeheight*0.5f);
+        glScalef(farplane/2, farplane/2, -farplane*(0.5f - fogdomeheight*0.5f));
         drawdome();
         glPopMatrix();
 
