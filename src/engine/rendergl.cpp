@@ -663,7 +663,11 @@ float curfov = 100, fovy, aspect;
 int farplane, xtraverts, xtravertsva;
 
 VARW(fog, 16, 4000, INT_MAX-1);
-HVARW(fogcolour, 0, 0x8099B3, 0xFFFFFF);
+bvec fogcolor(0x80, 0x99, 0xB3);
+HVARFW(fogcolour, 0, 0x8099B3, 0xFFFFFF,
+{
+    fogcolor = bvec((fogcolour>>16)&0xFF, (fogcolour>>8)&0xFF, fogcolour&0xFF);
+});
 
 void vecfromcursor(float x, float y, float z, vec &dir)
 {
@@ -931,9 +935,7 @@ static void blendfog(int fogmat, float blend, float logblend, float &start, floa
             break;
 
         default:
-            fogc[0] += blend*(fogcolour>>16)/255.0f;
-            fogc[1] += blend*((fogcolour>>8)&255)/255.0f;
-            fogc[2] += blend*(fogcolour&255)/255.0f;
+            loopk(3) fogc[k] += blend*fogcolor[k]/255.0f;
             start += logblend*(fog+64)/8;
             end += logblend*fog;
             break;
@@ -1169,7 +1171,7 @@ VARP(reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
-	float fogc[4] = { watercol[0]/256.0f, watercol[1]/256.0f, watercol[2]/256.0f, 1.0f };
+	float fogc[4] = { watercol[0]/255.0f, watercol[1]/255.0f, watercol[2]/255.0f, 1.0f };
 
 	if(refract && !waterfog)
 	{
@@ -1202,7 +1204,7 @@ void drawreflection(float z, bool refract, bool clear)
         {
             glFogi(GL_FOG_START, (fog+64)/8);
             glFogi(GL_FOG_END, fog);
-            float fogc[4] = { (fogcolour>>16)/255.0f, ((fogcolour>>8)&255)/255.0f, (fogcolour&255)/255.0f, 1.0f };
+            float fogc[4] = { fogcolor.x/255.0f, fogcolor.y/255.0f, fogcolor.z/255.0f, 1.0f };
             glFogfv(GL_FOG_COLOR, fogc);
         }
     }

@@ -225,6 +225,7 @@ extern int hasstencil;
 
 extern bool envmapping, renderedgame;
 extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
+extern bvec fogcolor;
 
 extern float cursorx, cursory;
 extern vec cursordir;
