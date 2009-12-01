@@ -1174,7 +1174,7 @@ namespace hud
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(chkcond(radarplayers,  m_duel(game::gamemode, game::mutators) || game::tvmode()) || m_edit(game::gamemode)) // 4
+		if(chkcond(radarplayers,  m_duke(game::gamemode, game::mutators) || game::tvmode()) || m_edit(game::gamemode)) // 4
 		{
 			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
