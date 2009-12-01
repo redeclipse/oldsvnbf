@@ -424,7 +424,7 @@ namespace server
 	const char *pickmap(const char *suggest, int mode, int muts)
 	{
 		const char *map = GVAR(defaultmap);
-		if(!map || !*map) map = choosemap(suggest, mode, muts, GVAR(maprotate) ? GVAR(maprotate) : 2);
+		if(!map || !*map) map = choosemap(suggest, mode, muts, m_story(gamemode) ? 1 : GVAR(maprotate));
 		return map;
 	}
 
