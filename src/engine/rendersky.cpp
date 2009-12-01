@@ -285,7 +285,7 @@ static void deletedome()
     DELETEA(domeindices);
 }
 
-FVARW(fogdomeheight, -1, -0.05f, 1);
+FVARW(fogdomeheight, -1, -0.5f, 1);
 FVARW(fogdomemin, 0, 0, 1);
 FVARW(fogdomemax, 0, 0, 1);
 VARW(fogdomecap, 0, 0, 1);
