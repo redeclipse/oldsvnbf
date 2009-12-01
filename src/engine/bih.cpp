@@ -179,7 +179,7 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
 /*
     sorttris = tris;
     sortaxis = axis;
-    qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
+    quicksort(indices, numindices, bihsort);
     tri &median = tris[numindices/2];
     float split = min(median.a[axis], min(median.b[axis], median.c[axis]));
 */
@@ -210,7 +210,7 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     {
         sorttris = tris;
         sortaxis = axis;
-        qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
+        quicksort(indices, numindices, bihsort);
 
         left = right = numindices/2;
         splitleft = SHRT_MIN;
