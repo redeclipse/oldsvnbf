@@ -385,7 +385,7 @@ namespace ai
 					case WEAPON:
 					{
 						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-						if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
+						if(e.spawned && isweap(attr) && !d->hasweap(d->arenaweap, sweap) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
@@ -411,7 +411,7 @@ namespace ai
 					case WEAPON:
 					{
 						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-						if(isweap(attr) && !d->hasweap(attr, sweap))
+						if(isweap(attr) && !d->hasweap(d->arenaweap, sweap) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							if(proj.owner == d) break;
 							interest &n = interests.add();
@@ -1011,7 +1011,7 @@ namespace ai
 		int busy = process(d, b), sweap = m_weapon(game::gamemode, game::mutators);
 		if(d->aitype == AI_BOT)
 		{
-			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true));
+			bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
 			if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->arenaweap, sweap) ? d->arenaweap : d->weapselect) > 0)
 			{
 				loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->arenaweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
@@ -1061,7 +1061,7 @@ namespace ai
 							extentity &e = *entities::ents[ent];
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
-								if(m_noitems(game::gamemode, game::mutators)) continue;
+								if(m_noitems(game::gamemode, game::mutators) || (e.type == WEAPON && d->hasweap(d->arenaweap, sweap))) continue;
 								int attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
 								{
