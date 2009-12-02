@@ -566,8 +566,8 @@ namespace hud
 				case 3: colour = "\fr"; break;
 				default: break;
 			}
-			int sy = hud::drawitem(hud::teamtex(team), x, y, s-s/4, false, 1.f, 1.f, 1.f, fade*inventoryblend, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
-			hud::drawitemsubtext(x, y, s-s/4, false, skew, "sub", fade*inventoryblend, "%s%s", teamtype[team].chat, name);
+			int sy = hud::drawitem(hud::teamtex(team), x, y, s-s/4, false, 1.f, 1.f, 1.f, fade, skew, "default", "\fs%s[\fS%d\fs%s]\fS", colour, score, colour);
+			hud::drawitemsubtext(x, y, s, TEXT_RIGHT_UP, skew, "sub", fade, "%s%s", teamtype[team].chat, name);
 			return sy;
 		}
 
@@ -582,7 +582,8 @@ namespace hud
 				if(m_team(game::gamemode, game::mutators))
 				{
 					if(!sg.team || ((sg.team != game::player1->team) == !i)) continue;
-					sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, k, sg.team, sg.score, teamtype[sg.team].name);
+					if(!sy) sy += s/8;
+					sy += drawinventoryitem(x, y-sy, s-s/4, 1.25f-clamp(numout,1,3)*0.25f*inventoryskew, blend*inventoryblend, k, sg.team, sg.score, teamtype[sg.team].name);
 					if((numout += 1) > 3) return sy;
 				}
 				else
@@ -592,7 +593,8 @@ namespace hud
 					{
 						gameent *d = sg.players[j];
 						if((d != game::player1) == !i) continue;
-						sy += drawinventoryitem(x, y-sy, s, 1.25f-clamp(numout,1,3)*0.25f, blend, j, sg.team, d->points, game::colorname(d, NULL, "", false));
+						if(!sy) sy += s/8;
+						sy += drawinventoryitem(x, y-sy, s-s/4, 1.25f-clamp(numout,1,3)*0.25f*inventoryskew, blend*inventoryblend, j, sg.team, d->points, game::colorname(d, NULL, "", false));
 						if((numout += 1) > 3) return sy;
 					}
 				}

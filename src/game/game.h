@@ -1205,7 +1205,7 @@ namespace hud
 	extern void drawblip(const char *tex, float area, int w, int h, float s, float blend, vec &dir, float r = 1.f, float g = 1.f, float b = 1.f, const char *font = "sub", const char *text = NULL, ...);
 	extern int drawprogress(int x, int y, float start, float length, float size, bool left, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, const char *text = NULL, ...);
 	extern int drawitem(const char *tex, int x, int y, float size, bool left = false, float r = 1.f, float g = 1.f, float b = 1.f, float fade = 1.f, float skew = 1.f, const char *font = NULL, const char *text = NULL, ...);
-	extern void drawitemsubtext(int x, int y, float size, bool left = false, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
+	extern int drawitemsubtext(int x, int y, float size, int align = TEXT_RIGHT_UP, float skew = 1.f, const char *font = NULL, float blend = 1.f, const char *text = NULL, ...);
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);
 	extern int drawhealth(int x, int y, int s, float blend = 1.f);
 	extern void drawinventory(int w, int h, int edge, float blend = 1.f);
