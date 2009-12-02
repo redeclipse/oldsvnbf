@@ -881,7 +881,6 @@ namespace server
 		if(update)
 		{
 			int numt = numteams(gamemode, mutators), cplayers = 0;
-			bool teamgame = m_team(gamemode, mutators) && !m_stf(gamemode);
 			if(m_fight(gamemode) && m_team(gamemode, mutators))
 			{
 				loopk(3)
@@ -891,10 +890,10 @@ namespace server
 						if(!k && !isteam(gamemode, mutators, sents[i].attrs[0], TEAM_FIRST)) continue;
 						else if(k == 1 && sents[i].attrs[0] == TEAM_NEUTRAL) continue;
 						else if(k == 2 && sents[i].attrs[0] != TEAM_NEUTRAL) continue;
-						spawns[!k && teamgame ? sents[i].attrs[0] : TEAM_NEUTRAL].add(i);
+						spawns[!k && m_team(gamemode, mutators) ? sents[i].attrs[0] : TEAM_NEUTRAL].add(i);
 						totalspawns++;
 					}
-					if(!k && teamgame)
+					if(!k && m_team(gamemode, mutators))
 					{
 						loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
 						{
@@ -954,7 +953,7 @@ namespace server
 			}
 			if(totalspawns && GVAR(spawnrotate))
 			{
-				int cycle = -1, team = m_fight(gamemode) && m_team(gamemode, mutators) && !m_stf(gamemode) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
+				int cycle = -1, team = m_fight(gamemode) && m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 				if(!spawns[team].ents.empty())
 				{
 					switch(GVAR(spawnrotate))
