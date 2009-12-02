@@ -46,10 +46,10 @@ namespace ai
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
-	bool targetable(gameent *d, gameent *e, bool alt, bool z)
+	bool targetable(gameent *d, gameent *e, bool z)
 	{
 		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode))
-			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e)) && weaprange(d, d->weapselect, alt, d->o.squaredist(e->o));
+			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e));
 		return false;
 	}
 
@@ -257,22 +257,18 @@ namespace ai
 			vec dp = d->headpos(), tp(0, 0, 0);
 			bool insight = false, tooclose = false;
 			float mindist = d->weapselect != WEAP_MELEE ? guard*guard : 0;
-			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d)
+			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 			{
-				bool alt = altfire(d, e);
-				if(targetable(d, e, alt, true))
+				vec ep = getaimpos(d, e, altfire(d, e));
+				bool close = ep.squaredist(pos) < mindist;
+				if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
 				{
-					vec ep = getaimpos(d, e, alt);
-					bool close = ep.squaredist(pos) < mindist;
-					if(!t || ep.squaredist(dp) < tp.squaredist(dp) || close)
+					bool see = cansee(d, dp, ep);
+					if(!insight || see || close)
 					{
-						bool see = cansee(d, dp, ep);
-						if(!insight || see || close)
-						{
-							t = e; tp = ep;
-							if(!insight && see) insight = see;
-							if(!tooclose && close && (see || force)) tooclose = close;
-						}
+						t = e; tp = ep;
+						if(!insight && see) insight = see;
+						if(!tooclose && close && (see || force)) tooclose = close;
 					}
 				}
 			}
@@ -325,20 +321,20 @@ namespace ai
 
 	bool violence(gameent *d, aistate &b, gameent *e, bool pursue)
 	{
-		if(e)
+		if(e && targetable(d, e, true))
 		{
-			bool alt = altfire(d, e);
-			if(targetable(d, e, alt, true))
+			bool pursuit = pursue;
+			if(pursue || (d->weapselect == WEAP_MELEE && b.type != AI_S_PURSUE))
 			{
-				if(pursue || (d->weapselect == WEAP_MELEE && (b.type != AI_S_PURSUE || b.targtype == AI_T_PLAYER)) || (b.type == AI_S_INTEREST && b.targtype == AI_T_NODE))
-					d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
-				if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
-				d->ai->enemy = e->clientnum;
-				d->ai->enemyseen = lastmillis;
-				vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-				if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
-				return true;
+				d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+				pursuit = true;
 			}
+			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
+			d->ai->enemy = e->clientnum;
+			d->ai->enemyseen = lastmillis;
+			vec dp = d->headpos(), ep = getaimpos(d, e, altfire(d, e));
+			if(!cansee(d, dp, ep)) d->ai->enemyseen -= ((111-d->skill)*10)+10; // so we don't "quick"
+			return true;
 		}
 		return false;
 	}
@@ -347,17 +343,13 @@ namespace ai
 	{
 		gameent *t = NULL, *e = NULL;
 		vec dp = d->headpos(), tp(0, 0, 0);
-		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d)
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
-			bool alt = altfire(d, e);
-			if(targetable(d, e, alt, true))
+			vec ep = getaimpos(d, e, altfire(d, e));
+			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
 			{
-				vec ep = getaimpos(d, e, alt);
-				if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
-				{
-					t = e;
-					tp = ep;
-				}
+				t = e;
+				tp = ep;
 			}
 		}
 		if(t) return violence(d, b, t, pursue);
@@ -374,7 +366,7 @@ namespace ai
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)) ? 10.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)) ? 75.f : 1.f);
 		}
 	}
 
@@ -448,7 +440,7 @@ namespace ai
 				if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			}
-			if(m_story(game::gamemode) || m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode) ? true : false);
+			if(m_story(game::gamemode) || m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode));
 		}
 		else if(entities::ents.inrange(d->aientity))
 		{
@@ -489,25 +481,39 @@ namespace ai
 	{
 		if(d->ai && game::allowmove(d)) // see if this ai is interested in a grudge
 		{
-			bool alt = altfire(d, e);
-			if(targetable(d, e, alt, true))
+			d->ai->suspended = false;
+			if(d->aitype <= AI_BOT || !m_story(game::gamemode))
 			{
 				aistate &b = d->ai->getstate();
-				if(violence(d, b, e, false)) return;
+				violence(d, b, e, false);
 			}
 		}
-		static vector<int> targets; // check if one of our ai is defending them
-		targets.setsizenodelete(0);
-		if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
+		if(d->aitype >= AI_START) // alert the horde
 		{
-			gameent *t;
-			loopv(targets) if((t = game::getclient(targets[i])) && t->ai && game::allowmove(t) && !t->ai->suspended)
+			gameent *t = NULL;
+			vec dp = d->headpos();
+			loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended)
 			{
-				bool alt = altfire(t, e);
-				if(targetable(t, e, alt, true))
+				vec tp = t->headpos();
+				if(cansee(d, tp, dp) || tp.squaredist(dp) <= NEARDIST)
 				{
+					t->ai->suspended = false;
 					aistate &c = t->ai->getstate();
 					if(violence(t, c, e, false)) return;
+				}
+			}
+		}
+		else
+		{
+			static vector<int> targets; // check if one of our ai is defending them
+			targets.setsizenodelete(0);
+			if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
+			{
+				gameent *t;
+				loopv(targets) if((t = game::getclient(targets[i])) && t->ai && t->aitype == AI_BOT && game::allowmove(t) && !t->ai->suspended)
+				{
+					aistate &c = t->ai->getstate();
+					violence(t, c, e, false);
 				}
 			}
 		}
@@ -533,10 +539,10 @@ namespace ai
 			}
 			if(d->aitype == AI_BOT)
 			{
-				d->ai->suspended = false;
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
+			d->ai->suspended = d->aitype == AI_BOT || !m_story(game::gamemode) ? false : true;
 		}
 	}
 
@@ -902,31 +908,29 @@ namespace ai
 		}
 
 		gameent *e = game::getclient(d->ai->enemy);
-		bool alt = altfire(d, e), enemyok = e && targetable(d, e, alt, true);
+		bool enemyok = e && targetable(d, e, true);
 		if(!enemyok || d->skill > 70)
 		{
 			gameent *f = game::intersectclosest(dp, d->ai->target, d);
-			if(f)
-			{
-				alt = altfire(d, f);
-				if(!targetable(d, f, alt, true) && !enemyok) e = NULL;
-			}
+			if(f && targetable(d, f, true)) e = f;
 			else if(!enemyok) e = NULL;
 		}
 		if(e && e->state == CS_ALIVE)
 		{
-			alt = altfire(d, e);
+			bool alt = altfire(d, e);
 			vec ep = getaimpos(d, e, alt);
 			float yaw, pitch;
 			game::getyawpitch(dp, ep, yaw, pitch);
 			game::fixrange(yaw, pitch);
-			bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000,
-				quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod, targeted = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep));
-			if(d->weapselect == WEAP_MELEE && targeted)
+			bool insight = cansee(d, dp, ep) && weaprange(d, d->weapselect, alt, dp.squaredist(ep)), targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)),
+				hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000, quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
+			if(d->weapselect == WEAP_MELEE)
 			{
-				d->ai->spot = e->feetpos();
-				game::getyawpitch(dp, d->ai->spot, d->ai->targyaw, d->ai->targpitch);
-				b.idle = 0; d->ai->dontmove = false; insight = true;
+				d->ai->targyaw = yaw;
+				d->ai->targpitch = pitch;
+				b.idle = 0;
+				d->ai->dontmove = false;
+				insight = true;
 			}
 			if(insight) d->ai->enemyseen = lastmillis;
 			if(b.idle || insight || hasseen)
@@ -936,14 +940,13 @@ namespace ai
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!insight) frame /= 4.f;
+					if(!insight) frame /= 6.f;
 				}
 				else if(!insight) frame /= 2.f;
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
-				if(insight || quick)
+				if(((insight && targeting) || quick) && (d->weapselect != WEAP_MELEE || !d->ai->becareful))
 				{
-					bool careful = d->weapselect != WEAP_MELEE ? d->ai->becareful : false;
-					if(!careful && targeted && d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+					if(d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 					{
 						d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
 						d->ai->lastaction = d->actiontime[alt ? AC_ALTERNATE : AC_ATTACK] = lastmillis;
@@ -1268,7 +1271,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || (!m_story(game::gamemode) && lastmillis-d->lastdeath > 500)))
+			if(d->state == CS_DEAD && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > 500))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
@@ -1298,11 +1301,7 @@ namespace ai
 						}
 						continue; // shouldn't interfere
 					}
-					else
-					{
-						if(d->aitype >= AI_START) d->ai->suspended = true;
-						c.next = lastmillis+250+rnd(250);
-					}
+					else c.next = lastmillis+250+rnd(250);
 				}
 				else
 				{
