@@ -16,15 +16,15 @@ aitypes aitype[] = {
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				1.f,	3,			3,			4,			0,
+		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				0.95f,	3,			3,			4,			0,
 			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
-		AI_GUARD,		WEAP_PISTOL, 	100,	40,			2,				0.75f,	3,			3,			14,			150,
+		AI_GUARD,		WEAP_PISTOL, 	100,	40,			2,				0.925f,	3,			3,			14,			150,
 			true,		false,		true,					"guard",	"actors/player/gamma"
 	},
 	{
-		AI_ZOMBIE,		WEAP_GIBS, 		50,		25,			10,				0.5f,	3,			3,			14,			100,
+		AI_ZOMBIE,		WEAP_GIBS, 		50,		25,			10,				0.9f,	3,			3,			14,			100,
 			true,		false,		true,					"zombie",	"actors/player/beta"
 	},
 };
@@ -209,7 +209,7 @@ namespace ai
 	extern float viewdist(int x = 101);
 	extern float viewfieldx(int x = 101);
 	extern float viewfieldy(int x = 101);
-	extern bool targetable(gameent *d, gameent *e, bool alt, bool z = true);
+	extern bool targetable(gameent *d, gameent *e, bool z = true);
 	extern bool cansee(gameent *d, vec &x, vec &y, vec &targ = aitarget);
 	extern bool altfire(gameent *d, gameent *e);
 	extern int owner(gameent *d);
@@ -224,7 +224,7 @@ namespace ai
 	extern bool randomnode(gameent *d, aistate &b, float guard = NEARDIST, float wander = FARDIST);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
 	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 0);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = CLOSEDIST, float wander = NEARDIST, int walk = 0);
 
 	extern void spawned(gameent *d, int ent);
 	extern void damaged(gameent *d, gameent *e);

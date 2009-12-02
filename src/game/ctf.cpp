@@ -610,15 +610,11 @@ namespace ctf
 			if(d->aitype == AI_BOT)
 			{
 				gameent *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
-				{ // try to guess what non ai are doing
-					bool alt = ai::altfire(d, e);
-					if(ai::targetable(d, e, alt, false))
-					{
-						vec ep = e->feetpos();
-						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-							targets.add(e->clientnum);
-					}
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e) && ai::targetable(d, e, false))
+				{
+					vec ep = e->feetpos();
+					if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+						targets.add(e->clientnum);
 				}
 			}
 			if(home)
@@ -664,7 +660,7 @@ namespace ctf
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
 						ai::interest &n = interests.add();
-						n.state = ai::AI_S_DEFEND;
+						n.state = ai::owner(d) == ai::owner(t) ? ai::AI_S_PURSUE : ai::AI_S_DEFEND;
 						n.node = t->lastnode;
 						n.target = t->clientnum;
 						n.targtype = ai::AI_T_PLAYER;
@@ -718,15 +714,11 @@ namespace ctf
 					targets.setsizenodelete(0);
 					ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
-					{ // try to guess what non ai are doing
-						bool alt = ai::altfire(d, e);
-						if(ai::targetable(d, e, alt, false))
-						{
-							vec ep = e->feetpos();
-							if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
-								targets.add(e->clientnum);
-						}
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e) && ai::targetable(d, e, false))
+					{
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (enttype[FLAG].radius*enttype[FLAG].radius*4) || f.owner == e))
+							targets.add(e->clientnum);
 					}
 					if(!targets.empty())
 					{
@@ -751,7 +743,7 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), f.owner ? ai::NEARDIST : float(enttype[FLAG].radius*2), f.owner ? ai::FARDIST : float(enttype[FLAG].radius*(2+(walk*2))), walk);
+			return ai::defend(d, b, f.pos(), f.owner ? ai::CLOSEDIST : float(enttype[FLAG].radius), f.owner ? ai::NEARDIST : float(enttype[FLAG].radius*(1+walk)), walk);
 		}
 		return false;
 	}

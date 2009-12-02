@@ -234,15 +234,11 @@ namespace stf
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 				gameent *e = NULL;
 				bool regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
-				{ // try to guess what non ai are doing
-					bool alt = ai::altfire(d, e);
-					if(ai::targetable(d, e, alt, false))
-					{
-						vec ep = e->feetpos();
-						if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
-							targets.add(e->clientnum);
-					}
+				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e) && ai::targetable(d, e, false))
+				{
+					vec ep = e->feetpos();
+					if(targets.find(e->clientnum) < 0 && ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius))
+						targets.add(e->clientnum);
 				}
 				if((!regen && f.owner == ai::owner(d)) || (targets.empty() && (f.owner != ai::owner(d) || f.enemy)))
 				{
@@ -272,15 +268,11 @@ namespace stf
 				if(d->aitype == AI_BOT)
 				{
 					gameent *e = NULL;
-					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e))
-					{ // try to guess what non ai are doing
-						bool alt = ai::altfire(d, e);
-						if(ai::targetable(d, e, alt, false))
-						{
-							vec ep = e->feetpos();
-							if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
-								targets.add(e->clientnum);
-						}
+					loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e) && ai::targetable(d, e, false))
+					{
+						vec ep = e->feetpos();
+						if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.o) <= (enttype[FLAG].radius*enttype[FLAG].radius*4)))
+							targets.add(e->clientnum);
 					}
 				}
 				if(!targets.empty())
@@ -294,7 +286,7 @@ namespace stf
 				}
 				else walk = 1;
 			}
-			return ai::defend(d, b, f.o, !f.enemy ? ai::CLOSEDIST : float(enttype[FLAG].radius), !f.enemy ? ai::FARDIST : float(enttype[FLAG].radius*(2+(walk*2))), walk);
+			return ai::defend(d, b, f.o, !f.enemy ? ai::CLOSEDIST : float(enttype[FLAG].radius), !f.enemy ? ai::NEARDIST : float(enttype[FLAG].radius*(1+walk)), walk);
 		}
 		return false;
 	}
