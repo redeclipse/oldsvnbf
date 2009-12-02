@@ -23,7 +23,7 @@ namespace physics
 	FVARP(floatcurb,        0, 1.f, 10000);
 
 	FVARP(impulseroll,      0, 10, 90);
-	FVARP(impulsereflect,   0, 115, 360);
+	FVARP(impulsereflect,   0, 155, 360);
 
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
@@ -526,14 +526,15 @@ namespace physics
 				if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
 				if((d->impulse[IM_METER] -= timeslice) < 0) d->impulse[IM_METER] = 0;
 			}
-			bool allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
+			bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d),
+				allowed = canimpulse(d, impulsecost) && lastmillis-d->impulse[IM_TIME] > PHYSMILLIS && d->impulse[IM_COUNT] < impulsecount;
 			#define WILLIMPULSE (allowed && (!d->impulse[IM_TYPE] || d->impulse[IM_TYPE] >= IM_T_WALL))
 			if(d->turnside && (d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > impulseskate))
 			{
 				d->turnside = 0;
 				d->resetphys();
 			}
-			if((d->ai || (impulsedash > 0 && impulsedash < 3)) && WILLIMPULSE && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] && !d->action[AC_JUMP] : d->action[AC_JUMP] && d->physstate == PHYS_FALL && !d->onladder))
+			if((d->ai || (impulsedash > 0 && impulsedash < 3)) && WILLIMPULSE && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] : d->action[AC_JUMP] && !onfloor))
 			{
 				float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
 				vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
@@ -542,7 +543,7 @@ namespace physics
 				playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 				client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 			}
-			if(!d->turnside && (d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d)))
+			if(!d->turnside && onfloor)
 			{
 				if(d->action[AC_JUMP])
 				{
@@ -562,7 +563,7 @@ namespace physics
 			}
 			else
 			{
-				if(!d->turnside && WILLIMPULSE && d->action[AC_JUMP])
+				if(!d->turnside && !onfloor && WILLIMPULSE && d->action[AC_JUMP])
 				{
 					d->vel.z += impulseforce(d)*1.5f;
 					d->doimpulse(impulsecost, IM_T_BOOST, lastmillis);
@@ -593,7 +594,8 @@ namespace physics
 						float off = yaw-d->aimyaw;
 						if(off > 180) off -= 360;
 						else if(off < -180) off += 360;
-						if(allowed && ((d->turnside && d->action[AC_JUMP]) || (!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect)))
+						int key = (d->turnside && d->action[AC_JUMP]) ? AC_JUMP : ((!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect) ? AC_SPECIAL : -1);
+						if(allowed && key >= 0)
 						{
 							float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
 							d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
@@ -603,7 +605,7 @@ namespace physics
 							if(off > 180) off -= 360;
 							else if(off < -180) off += 360;
 							d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-							allowed = d->action[AC_SPECIAL] = false;
+							allowed = d->action[key] = false;
 							d->turnmillis = PHYSMILLIS;
 							d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
 							d->turnyaw = off;
@@ -621,7 +623,7 @@ namespace physics
 							vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft);
 							if(!d->turnside)
 							{
-								float mag = max(d->vel.magnitude(), 1.f);
+								float mag = max(d->vel.magnitude(), 3.f);
 								d->vel = vec(rft).mul(mag);
 								off = yaw-d->aimyaw;
 								if(off > 180) off -= 360;
