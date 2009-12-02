@@ -1061,13 +1061,13 @@ namespace ai
 							extentity &e = *entities::ents[ent];
 							if(enttype[e.type].usetype == EU_ITEM)
 							{
-								if(m_noitems(game::gamemode, game::mutators) || (e.type == WEAPON && d->hasweap(d->arenaweap, sweap))) continue;
+								if(m_noitems(game::gamemode, game::mutators)) continue;
 								int attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
 								if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH))) switch(e.type)
 								{
 									case WEAPON:
 									{
-										if(d->hasweap(attr, sweap)) break;
+										if(d->hasweap(d->arenaweap, sweap) || d->hasweap(attr, sweap)) break;
 										d->action[AC_USE] = true;
 										d->ai->lastaction = d->actiontime[AC_USE] = lastmillis;
 										return true;
