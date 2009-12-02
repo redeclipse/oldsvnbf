@@ -294,12 +294,14 @@ VARW(fogdomecap, 0, 0, 1);
 
 static void drawdome()
 {
-    if(!domenumverts || domecolor != fogcolor || domeminalpha != fogdomemin || domemaxalpha != fogdomemax)
+    float capsize = fogdomecap && fogdomeheight < 1 ? (1 + fogdomeheight) / (1 - fogdomeheight) : -1;
+    if(!domenumverts || domecolor != fogcolor || domeminalpha != fogdomemin || domemaxalpha != fogdomemax || domecapsize != capsize)
     {
-        initdome(min(fogdomemin, fogdomemax), fogdomemax);
+        initdome(min(fogdomemin, fogdomemax), fogdomemax, capsize);
         domecolor = fogcolor;
         domeminalpha = fogdomemin;
         domemaxalpha = fogdomemax;
+        domecapsize = capsize;
     }
 
     if(hasVBO)
