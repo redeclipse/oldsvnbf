@@ -394,7 +394,7 @@ namespace entities
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
 			extentity &e = *ents[n]; \
-			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force)) \
+			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force!=0)) \
 			{ \
 				float dist = e.o.squaredist(pos); \
 				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
