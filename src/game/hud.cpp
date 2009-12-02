@@ -85,7 +85,6 @@ namespace hud
 	VARP(teamnotices, 0, 0, 1);
 	VARP(teamkillnum, 0, 3, INT_MAX-1);
 	VARP(teamkilltime, 0, 60000, INT_MAX-1);
-	VARP(teamchanges, 0, 1, 1);
 
 	TVAR(underlaytex, "", 3);
 	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
@@ -128,7 +127,7 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventorygame, 0, 1, 2);
-	VARP(inventoryteam, 0, 1, 1);
+	VARP(inventoryteams, 0, 4000, INT_MAX-1);
 	VARP(inventorystatus, 0, 2, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
@@ -705,24 +704,12 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamchanges && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+					if(inventoryteams && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
 					{
-						if(!lastteam) lastteam = lastmillis;
-						if(lastmillis-lastteam <= 4000)
-							ty += draw_textx("\fzReNow on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
-					}
-					else if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum)
-					{
-						ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-						if(m_fight(game::gamemode) && shownotices >= 2)
-						{
-							pushfont("emphasis");
-							ty += draw_textx("You are on team \fs%s%s\fS (\fs%s%s\fS)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
-							popfont();
-							pushfont("default");
-							ty += draw_textx("Shoot anyone not the \fs%ssame colour\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat)*noticescale;
-							popfont();
-						}
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(lastmillis-lastteam <= inventoryteams)
+							ty += draw_textx("\fzReYou are on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 					}
 					if(obitnotices && lastmillis-game::player1->lastkill <= noticetime && *game::player1->obit)
 					{
@@ -1226,17 +1213,18 @@ namespace hud
 		return int(s);
 	}
 
-	void drawitemsubtext(int x, int y, float size, bool left, float skew, const char *font, float blend, const char *text, ...)
+	int drawitemsubtext(int x, int y, float size, int align, float skew, const char *font, float blend, const char *text, ...)
 	{
-		if(skew <= 0.f) return;
+		if(skew <= 0.f) return 0;
 		glPushMatrix();
 		glScalef(skew, skew, 1);
 		if(font && *font) pushfont(font);
-		int tx = int(x*(1.f/skew)), ty = int((y-size/32)*(1.f/skew)), ti = int(255.f*blend*clamp(skew, 0.f, 1.f));
+		int sy = int(FONTH*skew), tx = int(x*(1.f/skew)), ty = int((y-size/32)*(1.f/skew)), ti = int(255.f*blend*clamp(skew, 0.f, 1.f));
 		defvformatstring(str, text, text);
-		draw_textx("%s", tx, ty, 255, 255, 255, ti, left ? TEXT_LEFT_UP : TEXT_RIGHT_UP, -1, -1, str);
+		draw_textx("%s", tx, ty, 255, 255, 255, ti, align, -1, -1, str);
 		if(font && *font) popfont();
 		glPopMatrix();
+		return sy;
 	}
 
 	const char *teamtex(int team)
@@ -1277,8 +1265,8 @@ namespace hud
 				defformatstring(s)("%s%d", i ? " " : "", e.attrs[i]);
 				concatstring(attrstr, s);
 			}
-			if(attrstr[0]) drawitemsubtext(x, y-int(s/3*skew), s, false, skew, "default", fade*inventoryblend, "%s", attrstr);
-			drawitemsubtext(x, y, s, false, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attrs, true));
+			if(attrstr[0]) drawitemsubtext(x, y-int(s/3*skew), s, TEXT_RIGHT_UP, skew, "default", fade*inventoryblend, "%s", attrstr);
+			drawitemsubtext(x, y, s, TEXT_RIGHT_UP, skew, "default", fade*inventoryblend, "%s", entities::entinfo(e.type, e.attrs, true));
 			return ty;
 		}
 		return 0;
@@ -1335,7 +1323,7 @@ namespace hud
 							}
 							lastweapids = changedkeys;
 						}
-						drawitemsubtext(x, oldy, size, false, skew, "sub", fade, "%s%s", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
+						drawitemsubtext(x, oldy, size, TEXT_RIGHT_UP, skew, "sub", fade, "%s%s", inventorycolour >= 2 ? weaptype[i].text : "\fa", weapids[i]);
 					}
 				}
 			}
@@ -1347,7 +1335,7 @@ namespace hud
 			if(y-sy-s >= m) sy += drawentitem(hover, x, y-sy, s, 1.f, blend*inventoryeditblend);
 			loopv(entgroup) if(entgroup[i] != hover)
 			{
-				if(y-sy-s >= m) break;
+				if(y-sy-s < m) break;
 				sy += drawentitem(entgroup[i], x, y-sy, s, inventoryeditskew, blend*inventoryeditblend);
 			}
 		}
@@ -1517,38 +1505,39 @@ namespace hud
 				if(!texpaneltimer)
 				{
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
-					if(inventoryteam && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					if(inventoryteams && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || numteamkills() >= teamkillnum)) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && numteamkills() >= teamkillnum))) lastteam = lastmillis;
 						if(lastteam)
 						{
 							const char *pre = "";
 							float skew = hud::inventoryskew, fade = blend*inventoryblend, rescale = 1;
-							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*hud::inventoryskew) }, s = cs;
-							if(millis <= 4000)
+							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*hud::inventoryskew) };
+							if(millis <= inventoryteams)
 							{
 								pre = "\fzRw";
 								int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
-								if(millis <= 2000)
+								if(millis <= inventoryteams/2)
 								{
-									float tweak = millis <= 1000 ? clamp(float(millis)/1000.f, 0.f, 1.f) : 1.f;
+									float tweak = millis <= inventoryteams/4 ? clamp(float(millis)/float(inventoryteams/4), 0.f, 1.f) : 1.f;
 									skew += tweak*inventorygrow;
-									loopk(2) pos[k] = off[k]+(s/2*tweak*skew);
+									loopk(2) pos[k] = off[k]+(cs/2*tweak*skew);
 									skew *= tweak; fade *= tweak; rescale = 0;
 								}
 								else
 								{
-									float tweak = clamp(float(millis-2000)/2000.f, 0.f, 1.f);
+									float tweak = clamp(float(millis-(inventoryteams/2))/float(inventoryteams/2), 0.f, 1.f);
 									skew += (1.f-tweak)*inventorygrow;
-									loopk(2) pos[k] -= int((pos[k]-(off[k]+s/2*skew))*(1.f-tweak));
+									loopk(2) pos[k] -= int((pos[k]-(off[k]+cs/2*skew))*(1.f-tweak));
 									rescale = tweak;
 								}
 							}
-							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], s, false, 1, 1, 1, fade, skew, "emphasis", "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
+							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
+							cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
 						}
 					}
-					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
 					if((cc = drawselection(cx[i], cy[i], cs, cm, blend)) > 0) cy[i] -= cc+cr;
+					if(!m_edit(game::gamemode) && inventoryscore && ((cc = sb.drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;
 					if(inventorygame)
 					{
 						if(m_stf(game::gamemode) && ((cc = stf::drawinventory(cx[i], cy[i], cs, cm, blend)) > 0)) cy[i] -= cc+cr;

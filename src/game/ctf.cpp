@@ -151,7 +151,7 @@ namespace ctf
 					if(f.owner) hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "radar", "\fs%s\fS (%d%%)", game::colorname(f.owner), int(wait*100.f));
 					else hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "sub", "%d%%", int(wait*100.f));
 				}
-				else if(f.owner) hud::drawitemsubtext(pos[0], pos[1], s, false, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
+				else if(f.owner) hud::drawitemsubtext(pos[0], pos[1], s, TEXT_RIGHT_UP, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
 			}
 		}
 		return sy;
