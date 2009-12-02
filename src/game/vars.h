@@ -81,8 +81,8 @@ VARG(stfpoints, 0, 1, INT_MAX-1); // points added to score
 VARG(stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
 
 VARG(botbalance, -1, -1, MAXAI/2); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
-VARG(botminskill, 1, 50, 101);
-VARG(botmaxskill, 1, 75, 101);
+VARG(botminskill, 1, 75, 101);
+VARG(botmaxskill, 1, 85, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
 
 VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
