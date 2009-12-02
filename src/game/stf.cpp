@@ -151,7 +151,7 @@ namespace stf
 			if(e->type != FLAG || !m_check(e->attrs[3], game::gamemode)) continue;
 			stfstate::flag &b = st.flags.add();
 			b.o = e->o;
-			defformatstring(alias)("flag_%d", e->attrs[0]);
+			defformatstring(alias)("flag_%d", e->attrs[4]);
 			const char *name = getalias(alias);
 			if(name[0]) copystring(b.name, name);
 			else formatstring(b.name)("flag %d", st.flags.length());
