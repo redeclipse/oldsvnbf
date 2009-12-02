@@ -20,11 +20,11 @@ aitypes aitype[] = {
 			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
-		AI_GUARD,		WEAP_PISTOL, 	100,	40,			2,				0.925f,	3,			3,			14,			150,
+		AI_GUARD,		WEAP_PISTOL, 	100,	50,			2,				0.9f,	3,			3,			14,			175,
 			true,		false,		true,					"guard",	"actors/player/gamma"
 	},
 	{
-		AI_ZOMBIE,		WEAP_GIBS, 		50,		25,			10,				0.9f,	3,			3,			14,			100,
+		AI_ZOMBIE,		WEAP_MELEE,		50,		50,			3,				0.8f,	3,			3,			14,			150,
 			true,		false,		true,					"zombie",	"actors/player/beta"
 	},
 };
@@ -204,7 +204,7 @@ namespace ai
 
 	extern entities::avoidset obs;
 	extern vec aitarget;
-	extern int aidebug, showaiinfo;
+	extern int aidebug, aideadfade, showaiinfo;
 
 	extern float viewdist(int x = 101);
 	extern float viewfieldx(int x = 101);

@@ -314,6 +314,7 @@ namespace game
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
 			int len = m_delay(gamemode, mutators);
+			if(!len && d->aitype >= AI_START) len = ai::aideadfade;
 			if(len && (!timechk || len > 1000))
 			{
 				int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
