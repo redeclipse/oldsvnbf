@@ -1960,6 +1960,12 @@ namespace entities
 					part_radius(vec(e.o).add(vec(0, 0, game::player1->zradius/2)), vec(game::player1->xradius, game::player1->yradius, game::player1->zradius/2), 1, 1, 1, teamtype[e.type == PLAYERSTART ? e.attrs[0] : TEAM_NEUTRAL].colour);
 					break;
 				}
+				case ACTOR:
+				{
+					part_radius(vec(e.o).add(vec(0, 0, aitype[e.attrs[0]].height/2)), vec(aitype[e.attrs[0]].xradius, aitype[e.attrs[0]].height/2), 1, 1, 1, 0x888888);
+					part_radius(e.o, vec(ai::FARDIST, ai::FARDIST, ai::FARDIST), 1, 1, 1, 0x00FFFF);
+					break;
+				}
 				case MAPSOUND:
 				{
 					part_radius(e.o, vec(e.attrs[1], e.attrs[1], e.attrs[1]), 1, 1, 1, 0x00FFFF);

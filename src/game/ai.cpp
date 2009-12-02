@@ -8,6 +8,7 @@ namespace ai
 	VAR(aidebug, 0, 0, 6);
     VAR(aisuspend, 0, 0, 1);
     VAR(aiforcegun, -1, -1, WEAP_SUPER-1);
+    VARP(aideadfade, 0, 10000, 30000);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
@@ -48,8 +49,8 @@ namespace ai
 
 	bool targetable(gameent *d, gameent *e, bool z)
 	{
-		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode))
-			return e->state == CS_ALIVE && (!z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e));
+		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode) && e->state == CS_ALIVE && physics::issolid(e))
+			return !z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e);
 		return false;
 	}
 
@@ -226,7 +227,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, int retries)
 	{
-		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true);
+		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true, d);
 		return makeroute(d, b, node, changed, retries);
 	}
 
@@ -323,12 +324,7 @@ namespace ai
 	{
 		if(e && targetable(d, e, true))
 		{
-			bool pursuit = pursue;
-			if(pursue || (d->weapselect == WEAP_MELEE && b.type != AI_S_PURSUE))
-			{
-				d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
-				pursuit = true;
-			}
+			if(pursue) d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -495,11 +491,11 @@ namespace ai
 			loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended)
 			{
 				vec tp = t->headpos();
-				if(cansee(d, tp, dp) || tp.squaredist(dp) <= NEARDIST)
+				if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST)
 				{
 					t->ai->suspended = false;
 					aistate &c = t->ai->getstate();
-					if(violence(t, c, e, false)) return;
+					if(violence(t, c, e, true)) return;
 				}
 			}
 		}
@@ -554,7 +550,7 @@ namespace ai
 			setup(d, false, ent);
 		}
 	}
-	void killed(gameent *d, gameent *e) { if(d->ai) d->ai->reset(); }
+	void killed(gameent *d, gameent *e) { if(d->ai) { d->ai->reset(); if(d->aitype >= AI_START) d->ai->suspended = true; } }
 
 	bool check(gameent *d, aistate &b)
 	{
@@ -886,7 +882,7 @@ namespace ai
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
 		}
-		else if(hunt(d, b, d->weapselect != WEAP_MELEE ? 0 : 2))
+		else if(hunt(d, b))
 		{
 			game::getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->height)), d->ai->targyaw, d->ai->targpitch);
 			d->ai->lasthunt = lastmillis;
@@ -922,29 +918,22 @@ namespace ai
 			float yaw, pitch;
 			game::getyawpitch(dp, ep, yaw, pitch);
 			game::fixrange(yaw, pitch);
-			bool insight = cansee(d, dp, ep) && weaprange(d, d->weapselect, alt, dp.squaredist(ep)), targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)),
+			bool targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)), insight = cansee(d, dp, ep) && targeting,
 				hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000, quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
-			if(d->weapselect == WEAP_MELEE)
-			{
-				d->ai->targyaw = yaw;
-				d->ai->targpitch = pitch;
-				b.idle = 0;
-				d->ai->dontmove = false;
-				insight = true;
-			}
 			if(insight) d->ai->enemyseen = lastmillis;
 			if(b.idle || insight || hasseen)
 			{
 				float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-				if(b.idle == 1)
+				if(b.idle == 1 || d->weapselect == WEAP_MELEE)
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!insight) frame /= 6.f;
+					if(!insight && d->weapselect != WEAP_MELEE) frame /= 6.f;
+					d->ai->becareful = false;
 				}
 				else if(!insight) frame /= 2.f;
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
-				if(((insight && targeting) || quick) && (d->weapselect != WEAP_MELEE || !d->ai->becareful))
+				if((insight || quick) && !d->ai->becareful)
 				{
 					if(d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 					{
