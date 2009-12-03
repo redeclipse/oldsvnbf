@@ -290,12 +290,12 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
+			5,		5,		{ 1, 1 },	{ 750, 750 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 16, 0 },	{ 1, 1 },		{ 1, 0 },		{ 0, 0 },		{ 2, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	true,
 			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },			{ 0, 0 },			{ 0, 0 },				7,
+			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },			{ 600, 0 },			{ 0, 0 },				7,
 			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
@@ -310,7 +310,7 @@ weaptypes weaptype[WEAP_MAX] =
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 1000 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
+			5,		5,		{ 1, 1 },	{ 750, 750 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
 			0,		{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
 			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
 			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	true,
@@ -542,9 +542,9 @@ teamtypes teamtype[] = {
 		"flag/delta",	"teamdelta",		"\fy",		"yellow"
 	},
 	{
-		TEAM_ENEMY,		0x22AAAA,			"enemy",
+		TEAM_ENEMY,		0x666666,			"enemy",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fc",		"cyan"
+		"flag",			"team",				"\fd",		"grey"
 	}
 };
 #else
@@ -1011,7 +1011,7 @@ struct gameent : dynent, gamestate
 	void checktags()
 	{
 		checkmeleepos();
-		if(type == ENT_PLAYER)
+		if(type == ENT_PLAYER || (type == ENT_AI && (!isaitype(aitype) || aistyle[aitype].maxspeed)))
 		{
 			float hsize = max(xradius*0.45f, yradius*0.45f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
 			vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.45f, yradius*0.45f, hsize);

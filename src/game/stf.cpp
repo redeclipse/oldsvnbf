@@ -192,9 +192,9 @@ namespace stf
 		}
 		else if(b.owner)
 		{
-				gameent *d = NULL, *e = NULL;
-				loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e->type == ENT_PLAYER && insideflag(b, e))
-					if((d = e) == game::player1) break;
+			gameent *d = NULL, *e = NULL;
+			loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e->type == ENT_PLAYER && insideflag(b, e))
+				if((d = e) == game::player1) break;
 			game::announce(S_V_FLAGOVERTHROWN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fateam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
 			defformatstring(text)("<super>%s\fzReOVERTHROWN", teamtype[enemy].chat);
 			part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);

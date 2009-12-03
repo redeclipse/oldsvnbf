@@ -981,7 +981,7 @@ namespace physics
 	bool xcollide(physent *d, const vec &dir, physent *o)
 	{
 		hitflags = HITFLAG_NONE;
-		if(d->type == ENT_PROJ && o->type == ENT_PLAYER)
+		if(d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].maxspeed))))
 		{
 			gameent *e = (gameent *)o;
 			if(!d->o.reject(e->legs, d->radius+max(e->lrad.x, e->lrad.y)) && !ellipsecollide(d, dir, e->legs, vec(0, 0, 0), e->yaw, e->lrad.x, e->lrad.y, e->lrad.z, e->lrad.z))
@@ -994,7 +994,7 @@ namespace physics
 		}
         if(!plcollide(d, dir, o))
         {
-			if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
+			hitflags |= HITFLAG_TORSO;
 			return false;
 		}
 		return true;
@@ -1003,7 +1003,7 @@ namespace physics
 	bool xtracecollide(physent *d, const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o)
 	{
 		hitflags = HITFLAG_NONE;
-		if(d && d->type == ENT_PROJ && o->type == ENT_PLAYER)
+		if(d && d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].maxspeed))))
 		{
 			gameent *e = (gameent *)o;
 			float bestdist = 1e16f;
@@ -1028,7 +1028,7 @@ namespace physics
 		}
 		if(o->o.x+o->radius >= x1 && o->o.y+o->radius >= y1 && o->o.x-o->radius <= x2 && o->o.y-o->radius <= y2 && intersect(o, from, to, dist))
 		{
-			if(o->type == ENT_AI) hitflags |= HITFLAG_TORSO;
+			hitflags |= HITFLAG_TORSO;
 			return false;
 		}
 		return true;
@@ -1038,7 +1038,7 @@ namespace physics
 	{
 		render3dbox(d->o, d->height, d->aboveeye, d->radius);
 		renderellipse(d->o, d->xradius, d->yradius, d->yaw);
-		if(d->type == ENT_PLAYER)
+		if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].maxspeed)))
 		{
 			gameent *e = (gameent *)d;
 			render3dbox(e->head, e->hrad.z, e->hrad.z, max(e->hrad.x, e->hrad.y));
@@ -1070,7 +1070,7 @@ namespace physics
 				d->o = orig; \
 			} \
 		}
-		if(d->type == ENT_PLAYER)
+		if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].maxspeed)))
 		{
 			vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
 			inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));

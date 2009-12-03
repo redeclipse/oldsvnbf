@@ -1,35 +1,47 @@
 struct gameent;
 
-enum { AI_BOT, AI_TURRET, AI_GUARD, AI_ZOMBIE, AI_MAX, AI_START = AI_TURRET };
+enum { AI_BOT, AI_TURRET, AI_ZOMBIE, AI_GUARD, AI_HEAVY, AI_PYRO, AI_SNIPER, AI_MAX, AI_START = AI_TURRET };
 enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 #define isaitype(a)	(a >= 0 && a <= AI_MAX-1)
 
-struct aitypes
+struct aistyles
 {
 	int	type,			weap,			health,	maxspeed,	frame;	float	skill,	xradius,	yradius,	height,		weight;
 	bool	canmove,	canfight,	useweap;	const char	*name,		*mdl;
 };
 #ifdef GAMESERVER
-aitypes aitype[] = {
+aistyles aistyle[] = {
 	{
 		AI_BOT,			-1, 			0,		50,			1,				1.f,	0,			0, 			0,			200,
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				0.95f,	3,			3,			4,			0,
+		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				0.9f,	3,			3,			4,			0,
 			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
-		AI_GUARD,		WEAP_PISTOL, 	100,	50,			2,				0.9f,	3,			3,			14,			175,
+		AI_ZOMBIE,		WEAP_MELEE,		50,		45,			3,				0.8f,	3,			3,			14,			150,
+			true,		false,		true,					"zombie",	"actors/player/beta"
+	},
+	{
+		AI_GUARD,		WEAP_PISTOL, 	50,		40,			2,				0.85f,	3,			3,			14,			165,
 			true,		false,		true,					"guard",	"actors/player/gamma"
 	},
 	{
-		AI_ZOMBIE,		WEAP_MELEE,		50,		50,			3,				0.8f,	3,			3,			14,			150,
-			true,		false,		true,					"zombie",	"actors/player/beta"
+		AI_HEAVY,		WEAP_SHOTGUN, 	200,	30,			2,				0.8f,	3,			3,			14,			200,
+			true,		false,		true,					"heavy",	"actors/player/gamma"
+	},
+	{
+		AI_PYRO,		WEAP_FLAMER, 	150,	50,			2,				0.85f,	3,			3,			14,			175,
+			true,		false,		true,					"pyro",		"actors/player/gamma"
+	},
+	{
+		AI_SNIPER,		WEAP_RIFLE, 	100,	40,			2,				0.95f,	3,			3,			14,			175,
+			true,		false,		true,					"sniper",	"actors/player/gamma"
 	},
 };
 #else
-extern aitypes aitype[];
+extern aistyles aistyle[];
 #endif
 
 enum

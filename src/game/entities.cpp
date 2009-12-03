@@ -80,7 +80,7 @@ namespace entities
 			{
 				if(full && attr[0] >= AI_START && attr[0] < AI_MAX)
 				{
-					addentinfo(aitype[attr[0]].name);
+					addentinfo(aistyle[attr[0]].name);
 					if(attr[3] && attr[3] > -G_MAX && attr[3] < G_MAX)
 					{
 						string ds;
@@ -175,7 +175,7 @@ namespace entities
 				return weaptype[attr1].item;
 			}
 			case FLAG: return teamtype[attr[0]].flag;
-			case ACTOR: if(attr[0] >= AI_START && attr[0] < AI_MAX) return aitype[attr[0]].mdl;
+			case ACTOR: if(attr[0] >= AI_START && attr[0] < AI_MAX) return aistyle[attr[0]].mdl;
 			default: break;
 		}
 		return "";
@@ -983,8 +983,8 @@ namespace entities
 				}
 				break;
 			case ACTOR:
-				while(e.attrs[0] < 0) e.attrs[0] += AI_MAX;
-				while(e.attrs[0] >= AI_MAX) e.attrs[0] -= AI_MAX;
+				while(e.attrs[0] <= 0) e.attrs[0] += AI_MAX-1;
+				while(e.attrs[0] >= AI_MAX) e.attrs[0] -= AI_MAX-1;
 				while(e.attrs[1] < 0) e.attrs[1] += 360;
 				while(e.attrs[1] >= 360) e.attrs[1] -= 360;
 				while(e.attrs[2] < -90) e.attrs[2] += 180;
@@ -1965,7 +1965,7 @@ namespace entities
 				}
 				case ACTOR:
 				{
-					part_radius(vec(e.o).add(vec(0, 0, aitype[e.attrs[0]].height/2)), vec(aitype[e.attrs[0]].xradius, aitype[e.attrs[0]].height/2), 1, 1, 1, 0x888888);
+					part_radius(vec(e.o).add(vec(0, 0, aistyle[e.attrs[0]].height/2)), vec(aistyle[e.attrs[0]].xradius, aistyle[e.attrs[0]].height/2), 1, 1, 1, 0x888888);
 					part_radius(e.o, vec(ai::FARDIST, ai::FARDIST, ai::FARDIST), 1, 1, 1, 0x00FFFF);
 					break;
 				}

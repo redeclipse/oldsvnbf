@@ -75,6 +75,7 @@ namespace ai
 				case WEAP_MELEE: return false; break;
 				case WEAP_SHOTGUN: case WEAP_SMG: if(rnd(d->skill*3) <= d->skill) return false;
 				case WEAP_GRENADE: if(rnd(d->skill*3) >= d->skill) return false;
+				case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false;
 				case WEAP_PISTOL: default: break;
 			}
 			return true;
@@ -88,7 +89,7 @@ namespace ai
 		if(weaprange(d, d->weapselect, alt, dist))
 		{
 			if(d->weapselect == WEAP_MELEE) return true;
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aitype[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[alt ? 1 : 0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*weaptype[d->weapselect].rdelay/2000.f)+(d->skill*weaptype[d->weapselect].adelay[alt ? 1 : 0]/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
@@ -165,11 +166,11 @@ namespace ai
 		{
 			d->type = ENT_AI;
 			d->aientity = et;
-			d->maxspeed = aitype[d->aitype].maxspeed;
-			d->weight = aitype[d->aitype].weight;
-			d->xradius = aitype[d->aitype].xradius;
-			d->yradius = aitype[d->aitype].yradius;
-			d->zradius = d->height = aitype[d->aitype].height;
+			d->maxspeed = aistyle[d->aitype].maxspeed;
+			d->weight = aistyle[d->aitype].weight;
+			d->xradius = aistyle[d->aitype].xradius;
+			d->yradius = aistyle[d->aitype].yradius;
+			d->zradius = d->height = aistyle[d->aitype].height;
 		}
 		d->ownernum = on;
 		d->skill = sk;
@@ -281,7 +282,7 @@ namespace ai
 
 	bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
 	{
-		if(aitype[d->aitype].maxspeed)
+		if(aistyle[d->aitype].maxspeed)
 		{
 			vec feet = d->feetpos();
 			if(walk == 2 || b.override || (walk && feet.squaredist(pos) <= guard*guard) || !makeroute(d, b, pos))
@@ -308,7 +309,7 @@ namespace ai
 	bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
 	{
 		bool hasenemy = enemy(d, b, pos, wander, false, false);
-		if(!aitype[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
+		if(!aistyle[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
 		else
 		{
 			if(!walk && d->feetpos().squaredist(pos) <= guard*guard)
@@ -465,7 +466,7 @@ namespace ai
 					break;
 				default: break;
 			}
-			if(proceed && (!aitype[d->aitype].maxspeed || makeroute(d, b, n.node, false)))
+			if(proceed && (!aistyle[d->aitype].maxspeed || makeroute(d, b, n.node, false)))
 			{
 				d->ai->addstate(n.state, n.targtype, n.target);
 				return true;
@@ -525,7 +526,7 @@ namespace ai
 			d->ai->lastrun = lastmillis;
 			aistate &b = d->ai->getstate();
 			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
-			if(d->aitype >= AI_START && aitype[d->aitype].weap >= 0) d->arenaweap = aitype[d->aitype].weap;
+			if(d->aitype >= AI_START && aistyle[d->aitype].weap >= 0) d->arenaweap = aistyle[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->arenaweap = m_weapon(game::gamemode, game::mutators);
 			else if(aiforcegun >= 0 && aiforcegun < WEAP_SUPER) d->arenaweap = aiforcegun;
@@ -625,7 +626,7 @@ namespace ai
 
 	int dointerest(gameent *d, aistate &b)
 	{
-		if(!d->ai->suspended && d->state == CS_ALIVE && aitype[d->aitype].maxspeed)
+		if(!d->ai->suspended && d->state == CS_ALIVE && aistyle[d->aitype].maxspeed)
 		{
 			int sweap = m_weapon(game::gamemode, game::mutators);
 			switch(b.targtype)
@@ -703,7 +704,7 @@ namespace ai
 			{
 				case AI_T_AFFINITY:
 				{
-					if(aitype[d->aitype].maxspeed)
+					if(aistyle[d->aitype].maxspeed)
 					{
 						if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
 						else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
@@ -718,7 +719,7 @@ namespace ai
 					if(e && e->state == CS_ALIVE)
 					{
 						bool alt = altfire(d, e);
-						if(aitype[d->aitype].maxspeed)
+						if(aistyle[d->aitype].maxspeed)
 						{
 							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? NEARDIST : 0);
 							return patrol(d, b, e->feetpos(), mindist, FARDIST) ? 1 : 0;
@@ -872,10 +873,10 @@ namespace ai
 	int process(gameent *d, aistate &b)
 	{
 		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
-		float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aitype[d->aitype].frame);
+		float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aistyle[d->aitype].frame);
 		vec dp = d->headpos();
 
-		bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aitype[d->aitype].maxspeed || d->ai->suspended;
+		bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aistyle[d->aitype].maxspeed || d->ai->suspended;
 		d->ai->dontmove = false;
 		if(idle)
 		{
@@ -1203,7 +1204,7 @@ namespace ai
             	{
 					bool ladder = d->onladder;
 					physics::move(d, 1, true);
-					if(aitype[d->aitype].maxspeed) timeouts(d, b);
+					if(aistyle[d->aitype].maxspeed) timeouts(d, b);
 					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
 					entities::checkitems(d);
             	}
@@ -1403,7 +1404,7 @@ namespace ai
 				{
 					aistate &b = d->ai->state[i];
 					drawstate(d, b, top, above += 2);
-					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aitype[d->aitype].maxspeed)
+					if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aistyle[d->aitype].maxspeed)
 						drawroute(d, b, 4.f*(float(amt[1])/float(amt[0])));
 					if(top)
 					{
