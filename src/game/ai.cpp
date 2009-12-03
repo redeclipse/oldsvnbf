@@ -921,11 +921,11 @@ namespace ai
 			if(idle || insight || hasseen)
 			{
 				float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-				if(idle || d->weapselect == WEAP_MELEE)
+				if(idle || (insight && d->weapselect == WEAP_MELEE))
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!insight && d->weapselect != WEAP_MELEE) frame /= 4.f;
+					frame /= !insight ? 4.f : 2.f;
 					d->ai->becareful = false;
 				}
 				else if(!insight) frame /= 2.f;
