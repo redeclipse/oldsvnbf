@@ -1010,9 +1010,9 @@ namespace server
 		bool grenades = GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
 		if(ci->state.aitype >= AI_START)
 		{
-			weap = aitype[ci->state.aitype].weap;
+			weap = aistyle[ci->state.aitype].weap;
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
-			maxhealth = aitype[ci->state.aitype].health;
+			maxhealth = aistyle[ci->state.aitype].health;
 			arena = grenades = false;
 		}
 		gs.spawnstate(weap, maxhealth, arena, grenades);

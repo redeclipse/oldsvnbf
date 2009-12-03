@@ -63,7 +63,7 @@ namespace aiman
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = int(max(GVAR(botmaxskill), GVAR(botminskill))*aitype[type].skill), n = int(min(GVAR(botminskill), m)*aitype[type].skill);
+				int s = skill, m = int(max(GVAR(botmaxskill), GVAR(botminskill))*aistyle[type].skill), n = int(min(GVAR(botminskill), m)*aistyle[type].skill);
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.ownernum = findaiclient();
@@ -73,7 +73,7 @@ namespace aiman
 				ci->state.skill = clamp(s, 1, 101);
 				clients.add(ci);
 				ci->state.lasttimeplayed = lastmillis;
-				copystring(ci->name, aitype[ci->state.aitype].name, MAXNAMELEN);
+				copystring(ci->name, aistyle[ci->state.aitype].name, MAXNAMELEN);
 				ci->state.state = CS_DEAD;
 				ci->team = type == AI_BOT ? TEAM_NEUTRAL : TEAM_ENEMY;
 				ci->online = ci->connected = true;
@@ -191,7 +191,7 @@ namespace aiman
 		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
-			int o = clamp(int(m*aitype[ci->state.aitype].skill), 1, 101), p = clamp(int(n*aitype[ci->state.aitype].skill), 1, 101);
+			int o = clamp(int(m*aistyle[ci->state.aitype].skill), 1, 101), p = clamp(int(n*aistyle[ci->state.aitype].skill), 1, 101);
 			if(ci->state.skill > o || ci->state.skill < p)
 			{ // needs re-skilling
 				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);

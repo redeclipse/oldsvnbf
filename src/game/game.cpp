@@ -264,13 +264,13 @@ namespace game
 
     bool allowmove(physent *d)
     {
-        if(d->type == ENT_PLAYER)
+		if(d == player1)
+		{
+			if(UI::hascursor(true)) return false;
+			if(tvmode()) return false;
+		}
+        if(d->type == ENT_PLAYER || d->type == ENT_AI)
         {
-        	if(d == player1)
-        	{
-        		if(UI::hascursor(true)) return false;
-				if(tvmode()) return false;
-        	}
 			if(d->state == CS_DEAD || d->state == CS_WAITING || d->state == CS_SPECTATOR || intermission)
 				return false;
         }
@@ -379,7 +379,7 @@ namespace game
 			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
 			if(num > 0 && len > 0)
 			{
-				if(d->type == ENT_PLAYER)
+				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
 					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, 1, 0.5f, -15, 0, 5);
 					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, 1, 0.5f, -15, 0, 5);
@@ -492,7 +492,7 @@ namespace game
 						d->actiontime[AC_CROUCH] = lastmillis-max(PHYSMILLIS-(lastmillis+d->actiontime[AC_CROUCH]), 0);
 					d->o.z = z;
 				}
-				if(d->type == ENT_PLAYER)
+				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
 					int crouchtime = abs(d->actiontime[AC_CROUCH]);
 					float amt = lastmillis-crouchtime <= PHYSMILLIS ? clamp(float(lastmillis-crouchtime)/PHYSMILLIS, 0.f, 1.f) : 1.f;
@@ -633,7 +633,7 @@ namespace game
 				{
 					vec p = d->headpos();
 					p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-					if(d->aitype != AI_TURRET)
+					if(!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)
 					{
 						if(!kidmode && bloodscale > 0)
 							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 1, 100, DECAL_BLOOD, int(d->radius*4));
@@ -658,7 +658,7 @@ namespace game
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
 				}
 			}
-			if(isweap(weap) && !burning && (d == player1 || (d->ai && aitype[d->aitype].maxspeed)))
+			if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
 			{
 				float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -919,7 +919,7 @@ namespace game
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 10), amt = int((rnd(gibs)+gibs+1)*gibscale);
 			loopi(amt)
-				projs::create(pos, vec(pos).add(d->vel), true, d, d->aitype != AI_TURRET ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
+				projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
 		if((m_team(gamemode, mutators) || m_story(gamemode)) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
@@ -1019,7 +1019,7 @@ namespace game
 		}
 		// reset perma-state
 		gameent *d;
-		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->type == ENT_PLAYER)
+		loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->type == ENT_PLAYER || d->type == ENT_AI))
 			d->mapchange(lastmillis, m_health(gamemode, mutators));
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
@@ -1709,7 +1709,7 @@ namespace game
 			if(third) mdl = teamtype[team].tpmdl;
 			else mdl = teamtype[team].fpmdl;
 		}
-		else if(d->aitype < AI_MAX) mdl = aitype[d->aitype].mdl;
+		else if(d->aitype < AI_MAX) mdl = aistyle[d->aitype].mdl;
 		else return;
 
 		float yaw = d->yaw, pitch = d->pitch, roll = d->calcroll(physics::iscrouching(d));
@@ -1753,7 +1753,7 @@ namespace game
 		}
 		else
 		{
-			if(secondary && (d->aitype <= AI_BOT || aitype[d->aitype].maxspeed))
+			if(secondary && (d->aitype <= AI_BOT || aistyle[d->aitype].maxspeed))
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1826,7 +1826,7 @@ namespace game
         modelattach a[8];
 		int ai = 0, team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
-		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aitype[d->aitype].useweap;
+		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aistyle[d->aitype].useweap;
 
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
@@ -1966,7 +1966,7 @@ namespace game
 			const char *muzzle = hasweapon ? "tag_muzzle" : "tag_weapon";
 			//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
 			a[ai++] = modelattach(muzzle, &d->muzzle);
-        	if(third && d->type == ENT_PLAYER)
+        	if(third && (d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed))))
         	{
         		a[ai++] = modelattach("tag_head", &d->head);
         		a[ai++] = modelattach("tag_torso", &d->torso);
