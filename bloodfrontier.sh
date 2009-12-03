@@ -8,7 +8,6 @@ BF_DATA=.
 BF_BIN=${BF_DATA}/bin
 
 # BF_OPTIONS contains any command line options you would like to start Blood Frontier with.
-#BF_OPTIONS="-f"
 BF_OPTIONS="-r"
 
 # SYSTEM_NAME should be set to the name of your operating system.
