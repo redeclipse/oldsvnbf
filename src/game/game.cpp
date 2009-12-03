@@ -646,7 +646,7 @@ namespace game
 						else formatstring(ds)("<sub>-%d", damage);
 						part_textcopy(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3, 1, -10, 0, d);
 					}
-					if(!issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
+					if(d->aitype < AI_START && !issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
 					if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
 					d->lastpain = lastmillis;
 				}
@@ -691,7 +691,7 @@ namespace game
         d->lastpain = lastmillis;
 		d->state = CS_DEAD;
 		d->deaths++;
-		int anc = -1, dth = style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
+		int anc = -1, dth = d->aitype >= AI_START || style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
 		if(d == player1) anc = !m_duke(gamemode, mutators) && !m_trial(gamemode) ? S_V_FRAGGED : -1;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
@@ -921,7 +921,7 @@ namespace game
 			loopi(amt)
 				projs::create(pos, vec(pos).add(d->vel), true, d, d->aitype != AI_TURRET ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
-		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
+		if((m_team(gamemode, mutators) || m_story(gamemode)) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
 	}
 
