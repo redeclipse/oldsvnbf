@@ -903,7 +903,6 @@ namespace ai
 			}
 		}
 
-		bool reorient = false;
 		gameent *e = game::getclient(d->ai->enemy);
 		bool enemyok = e && targetable(d, e, true);
 		if(!enemyok || d->skill > 70)
@@ -931,7 +930,6 @@ namespace ai
 					d->ai->targpitch = pitch;
 					frame /= !insight ? 4.f : 2.f;
 					d->ai->becareful = false;
-					reorient = true;
 				}
 				else if(!insight) frame /= 2.f;
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
@@ -972,7 +970,7 @@ namespace ai
 
 		if(d->ai->becareful)
 		{
-			if(d->physstate != PHYS_FALL || reorient) d->ai->becareful = false;
+			if(d->physstate != PHYS_FALL) d->ai->becareful = false;
 			else
 			{
 				float yaw, pitch;
