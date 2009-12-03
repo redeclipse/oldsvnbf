@@ -3420,7 +3420,7 @@ namespace server
 										if(cp->state.cptime <= 0 || laptime < cp->state.cptime)
 										{
 											cp->state.cptime = laptime;
-											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(ci, 0, 0); }
+											if(sents[ent].attrs[5] == CP_FINISH) { cp->state.cpmillis = -gamemillis; waiting(cp, 0, 0); }
 										}
 										sendf(-1, 1, "ri4", SV_CHECKPOINT, cp->clientnum, laptime, cp->state.cptime);
 									}
