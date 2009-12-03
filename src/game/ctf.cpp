@@ -103,11 +103,12 @@ namespace ctf
 		{
 			if(y-sy-s < m) break;
 			ctfstate::flag &f = st.flags[i];
-			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.team == TEAM_NEUTRAL || f.team == game::player1->team ? 1 : 2) || f.lastowner == game::player1)
+			bool headsup = game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.team == TEAM_NEUTRAL || f.team == game::player1->team ? 1 : 2);
+			if(headsup || f.lastowner == game::player1)
 			{
 				const char *pre = "";
 				int millis = lastmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
-				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
+				float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
 				if(f.owner || f.droptime)
 				{

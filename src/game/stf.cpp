@@ -107,10 +107,11 @@ namespace stf
 			bool hasflag = game::player1->state == CS_ALIVE && insideflag(f, game::player1);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(1000-(lastmillis-f.lasthad), 0); }
 			int millis = lastmillis-f.lasthad;
-			if(game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 || f.hasflag || millis <= 1000)
+			bool headsup = game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.owner == game::player1->team || st.flags.length() == 1 ? 1 : 2);
+			if(headsup || f.hasflag || millis <= 1000)
 			{
 				int prevsy = sy, colour = teamtype[f.owner].colour; bool skewed = false;
-				float skew = game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2 ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
+				float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 				if(f.hasflag)
@@ -134,7 +135,7 @@ namespace stf
 					int colour2 = teamtype[f.enemy].colour;
 					float r2 = (colour2>>16)/255.f, g2 = ((colour2>>8)&0xFF)/255.f, b2 = (colour2&0xFF)/255.f;
 					hud::drawprogress(x, y-prevsy, 0, occupy, int(s*0.5f), false, r2, g2, b2, fade, skew);
-					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r, g, b, fade, skew, !skewed && (game::player1->state == CS_SPECTATOR || hud::inventorygame >= 2) ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r, g, b, fade, skew, !skewed && headsup ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 				}
 				else if(f.owner) hud::drawitem(hud::teamtex(f.owner), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 			}
