@@ -726,7 +726,7 @@ namespace ai
 						else
 						{
 							vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000);
+							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000) ? 1 : 0;
 						}
 					}
 					break;
@@ -1192,7 +1192,7 @@ namespace ai
 					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
 					if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
 						d->ai->becareful = false;
-					if(d->aitype == AI_BOT) entities::checkitems(d);
+					entities::checkitems(d);
             	}
             	else
             	{
