@@ -143,7 +143,7 @@ namespace ctf
 					else skew = 1;
 				}
 				else if(millis <= 1000) skew += (1.f-skew)-(clamp(float(millis)/1000.f, 0.f, 1.f)*(1.f-skew));
-				sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fy%ssecured" : "\fr%staken") : (f.droptime ? "\fo%sdropped" : "\fg%ssafe"), pre)*rescale);
+				sy += int(hud::drawitem(hud::flagtex, pos[0], pos[1], s, false, r, g, b, fade, skew, "sub", f.owner ? (f.team == f.owner->team ? "\fy%ssecured by" : "\fr%staken by") : (f.droptime ? "\fo%sdropped" : "\fg%ssafe"), pre)*rescale);
 				if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 				{
 					float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
@@ -197,7 +197,7 @@ namespace ctf
 					part_textcopy(above, info, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f));
 					above.z += 1.5f;
 				}
-				const char *info = f.owner ? (f.team == f.owner->team ? "\fysecured" : "\frtaken") : "\fodropped";
+				const char *info = f.owner ? (f.team == f.owner->team ? "\fysecured by" : "\frtaken by") : "\fodropped";
 				part_text(above, info, PART_TEXT, 1, teamtype[f.team].colour, 2, max(trans, 0.5f));
             }
         }
