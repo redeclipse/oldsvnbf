@@ -476,38 +476,41 @@ namespace ai
 
 	void damaged(gameent *d, gameent *e)
 	{
-		if(d->ai && game::allowmove(d)) // see if this ai is interested in a grudge
+		if(d != e)
 		{
-			d->ai->suspended = false;
-			aistate &b = d->ai->getstate();
-			violence(d, b, e, d->aitype == AI_BOT ? false : true);
-		}
-		if(d->aitype >= AI_START) // alert the horde
-		{
-			gameent *t = NULL;
-			vec dp = d->headpos();
-			loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended)
+			if(d->ai && game::allowmove(d)) // see if this ai is interested in a grudge
 			{
-				vec tp = t->headpos();
-				if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST)
+				d->ai->suspended = false;
+				aistate &b = d->ai->getstate();
+				violence(d, b, e, d->aitype == AI_BOT ? false : true);
+			}
+			if(d->aitype >= AI_START) // alert the horde
+			{
+				gameent *t = NULL;
+				vec dp = d->headpos();
+				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended)
 				{
-					t->ai->suspended = false;
-					aistate &c = t->ai->getstate();
-					if(violence(t, c, e, true)) return;
+					vec tp = t->headpos();
+					if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST)
+					{
+						t->ai->suspended = false;
+						aistate &c = t->ai->getstate();
+						if(violence(t, c, e, true)) return;
+					}
 				}
 			}
-		}
-		else
-		{
-			static vector<int> targets; // check if one of our ai is defending them
-			targets.setsizenodelete(0);
-			if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
+			else
 			{
-				gameent *t;
-				loopv(targets) if((t = game::getclient(targets[i])) && t->ai && t->aitype == AI_BOT && game::allowmove(t) && !t->ai->suspended)
+				static vector<int> targets; // check if one of our ai is defending them
+				targets.setsizenodelete(0);
+				if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
 				{
-					aistate &c = t->ai->getstate();
-					violence(t, c, e, false);
+					gameent *t;
+					loopv(targets) if((t = game::getclient(targets[i])) && t->ai && t->aitype == AI_BOT && game::allowmove(t) && !t->ai->suspended)
+					{
+						aistate &c = t->ai->getstate();
+						violence(t, c, e, false);
+					}
 				}
 			}
 		}
@@ -900,6 +903,7 @@ namespace ai
 			}
 		}
 
+		bool reorient = false;
 		gameent *e = game::getclient(d->ai->enemy);
 		bool enemyok = e && targetable(d, e, true);
 		if(!enemyok || d->skill > 70)
@@ -927,6 +931,7 @@ namespace ai
 					d->ai->targpitch = pitch;
 					frame /= !insight ? 4.f : 2.f;
 					d->ai->becareful = false;
+					reorient = true;
 				}
 				else if(!insight) frame /= 2.f;
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
@@ -965,7 +970,22 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(d->ai->dontmove || (d->ai->becareful && d->vel.magnitude() >= physics::gravityforce(d))) d->move = d->strafe = 0;
+		if(d->ai->becareful)
+		{
+			if(d->physstate != PHYS_FALL || reorient) d->ai->becareful = false;
+			else
+			{
+				float yaw, pitch;
+				vec v = vec(d->vel).normalize();
+				vectoyawpitch(v, yaw, pitch);
+				yaw -= d->aimyaw; pitch -= d->aimpitch;
+				game::fixrange(yaw, pitch);
+				if(yaw >= 90 || pitch >= 90) d->ai->becareful = false;
+				else d->ai->dontmove = true;
+			}
+		}
+
+		if(d->ai->dontmove) d->move = d->strafe = 0;
 		else
 		{ // our guys move one way.. but turn another?! :)
 			const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1187,8 +1207,6 @@ namespace ai
 					physics::move(d, 1, true);
 					if(aitype[d->aitype].maxspeed) timeouts(d, b);
 					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
-					if(d->ai->becareful && (d->physstate != PHYS_FALL || d->vel.magnitude()-d->falling.magnitude() < physics::gravityforce(d)))
-						d->ai->becareful = false;
 					entities::checkitems(d);
             	}
             	else
