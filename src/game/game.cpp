@@ -1816,20 +1816,17 @@ namespace game
 	void renderplayer(gameent *d, bool third, float trans, float size, bool early = false)
 	{
 		if(d->state == CS_SPECTATOR) return;
-#if 0 // not working great?
 		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
 			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
 				trans = 1e-16f; // we need tag_muzzle/tag_waist
 			else return; // screw it, don't render them
 		}
-#endif
 
         modelattach a[8];
 		int ai = 0, team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aitype[d->aitype].useweap;
-
 
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
