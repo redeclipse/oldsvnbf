@@ -128,7 +128,7 @@ struct duelservmode : servmode
 			if(gamemillis >= dueltime)
 			{
 				vector<clientinfo *> alive;
-				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE, GVAR(duelreset) || clients[i]->state.state != CS_ALIVE, true);
+				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GVAR(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
 				allowed.setsize(0); playing.setsize(0);
 				if(!duelqueue.empty())
 				{
@@ -156,8 +156,11 @@ struct duelservmode : servmode
 							ci->state.lastfire = ci->state.lastfireburn = 0;
 							sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, 0); // amt = 0 regens impulse
 						}
-						alive.add(ci);
-						playing.add(ci);
+						if(ci->state.aitype < AI_START)
+						{
+							alive.add(ci);
+							playing.add(ci);
+						}
 					}
 					duelround++;
 					if(m_duel(gamemode, mutators))
@@ -179,7 +182,7 @@ struct duelservmode : servmode
 		else if(allowed.empty())
 		{
 			vector<clientinfo *> alive;
-			loopv(clients) if(clients[i]->state.state == CS_ALIVE) alive.add(clients[i]);
+			loopv(clients) if(clients[i]->state.state == CS_ALIVE && clients[i]->state.aitype < AI_START) alive.add(clients[i]);
 			if(m_survivor(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
 			{
 				bool found = false;
