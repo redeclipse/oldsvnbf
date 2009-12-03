@@ -871,13 +871,13 @@ namespace ai
 
 	int process(gameent *d, aistate &b)
 	{
-		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = (111-d->skill)*10;
-		float frame = float(lastmillis-d->ai->lastrun)/float(skmod/2*aitype[d->aitype].frame);
+		int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
+		float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aitype[d->aitype].frame);
 		vec dp = d->headpos();
 
-		bool wasdontmove = d->ai->dontmove;
+		bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aitype[d->aitype].maxspeed || d->ai->suspended;
 		d->ai->dontmove = false;
-		if(b.idle == 1 || (stupify && stupify <= skmod) || !aitype[d->aitype].maxspeed)
+		if(idle)
 		{
 			d->ai->lastaction = d->ai->lasthunt = lastmillis;
 			d->ai->dontmove = true;
@@ -892,7 +892,7 @@ namespace ai
 		if(d->aitype == AI_BOT)
 		{
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
-			if(b.idle == 1 && b.type != AI_S_WAIT)
+			if(idle)
 			{
 				bool wascrouching = lastmillis-d->actiontime[AC_CROUCH] <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->action[AC_CROUCH];
 				if(wascrouching || wantscrouch)
@@ -919,16 +919,16 @@ namespace ai
 			game::getyawpitch(dp, ep, yaw, pitch);
 			game::fixrange(yaw, pitch);
 			bool targeting = hastarget(d, b, e, alt, yaw, pitch, dp.squaredist(ep)), insight = cansee(d, dp, ep) && targeting,
-				hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000, quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
+				hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000, quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod;
 			if(insight) d->ai->enemyseen = lastmillis;
-			if(b.idle || insight || hasseen)
+			if(idle || insight || hasseen)
 			{
 				float sskew = insight ? 2.f : (hasseen ? 1.f : 0.5f);
-				if(b.idle == 1 || d->weapselect == WEAP_MELEE)
+				if(idle || d->weapselect == WEAP_MELEE)
 				{
 					d->ai->targyaw = yaw;
 					d->ai->targpitch = pitch;
-					if(!insight && d->weapselect != WEAP_MELEE) frame /= 6.f;
+					if(!insight && d->weapselect != WEAP_MELEE) frame /= 4.f;
 					d->ai->becareful = false;
 				}
 				else if(!insight) frame /= 2.f;
