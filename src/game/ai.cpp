@@ -214,6 +214,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, int node, bool changed, int retries)
 	{
+		if(d->lastnode < 0) return false;
 		if(changed && !d->ai->route.empty() && d->ai->route[0] == node) return true;
 		if(entities::route(d->lastnode, node, d->ai->route, obs, d, retries <= 1) > 0)
 		{
@@ -355,7 +356,7 @@ namespace ai
 	void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
 	{
 		gameent *e = NULL;
-		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && owner(d) == owner(e))
+		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && owner(d) == owner(e) && e->lastnode >= 0)
 		{
 			interest &n = interests.add();
 			n.state = AI_S_DEFEND;
@@ -478,11 +479,8 @@ namespace ai
 		if(d->ai && game::allowmove(d)) // see if this ai is interested in a grudge
 		{
 			d->ai->suspended = false;
-			if(d->aitype <= AI_BOT || !m_story(game::gamemode))
-			{
-				aistate &b = d->ai->getstate();
-				violence(d, b, e, false);
-			}
+			aistate &b = d->ai->getstate();
+			violence(d, b, e, d->aitype == AI_BOT ? false : true);
 		}
 		if(d->aitype >= AI_START) // alert the horde
 		{
@@ -567,7 +565,7 @@ namespace ai
 		if(!m_edit(game::gamemode))
 		{
 			if(check(d, b) || find(d, b)) return 1;
-			if(target(d, b, true, m_fight(game::gamemode) && !d->ai->suspended ? true : false)) return 1;
+			if(target(d, b, true, !d->ai->suspended ? true : false)) return 1;
 		}
 		if(!d->ai->suspended) switch(d->aitype)
 		{
@@ -719,14 +717,13 @@ namespace ai
 						bool alt = altfire(d, e);
 						if(aitype[d->aitype].maxspeed)
 						{
-							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? NEARDIST : 0),
-								maxdist = weaptype[d->weapselect].maxdist[alt ? 1 : 0] ? weaptype[d->weapselect].maxdist[alt ? 1 : 0] : FARDIST;
-							return patrol(d, b, e->feetpos(), mindist, maxdist) ? 1 : 0;
+							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? NEARDIST : 0);
+							return patrol(d, b, e->feetpos(), mindist, FARDIST) ? 1 : 0;
 						}
 						else
 						{
 							vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+1000) ? 1 : 0;
+							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000) ? 1 : 0;
 						}
 					}
 					break;
@@ -811,7 +808,7 @@ namespace ai
 
 	bool hunt(gameent *d, aistate &b, int retries = 0)
 	{
-		if(!d->ai->route.empty())
+		if(!d->ai->route.empty() && d->lastnode >= 0)
 		{
 			int n = retries%2 ? d->ai->route.find(d->lastnode) : closenode(d, retries >= 2);
 			if(retries%2 && d->ai->route.inrange(n))
