@@ -704,12 +704,19 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-					if(inventoryteams && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					if(teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+					if(inventoryteams)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
 						if(lastmillis-lastteam <= inventoryteams)
-							ty += draw_textx("\fzReYou are on team \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+						{
+							if(game::player1->team == TEAM_NEUTRAL)
+							{
+								if(m_story(game::gamemode)) ty += draw_textx("Story campaign", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+								else ty += draw_textx("\fzReFree-for-all deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+							}
+							else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+						}
 					}
 					if(obitnotices && lastmillis-game::player1->lastkill <= noticetime && *game::player1->obit)
 					{
@@ -1505,9 +1512,9 @@ namespace hud
 				if(!texpaneltimer)
 				{
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
-					if(inventoryteams && !m_story(game::gamemode) && m_team(game::gamemode, game::mutators))
+					if(inventoryteams)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
 						if(lastteam)
 						{
 							const char *pre = "";
@@ -1533,7 +1540,12 @@ namespace hud
 								}
 							}
 							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
-							cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
+							if(game::player1->team == TEAM_NEUTRAL)
+							{
+								if(m_story(game::gamemode)) cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
+								else cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%sffa", teamtype[game::player1->team].chat, pre)*rescale);
+							}
+							else cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
 						}
 					}
 					if((cc = drawselection(cx[i], cy[i], cs, cm, blend)) > 0) cy[i] -= cc+cr;
