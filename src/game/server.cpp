@@ -1007,15 +1007,15 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
-		bool grenades = GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1);
+		bool grenades = GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
 		if(ci->state.aitype >= AI_START)
 		{
 			weap = aitype[ci->state.aitype].weap;
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aitype[ci->state.aitype].health;
-			grenades = false;
+			arena = grenades = false;
 		}
-		gs.spawnstate(weap, maxhealth, m_arena(gamemode, mutators), grenades);
+		gs.spawnstate(weap, maxhealth, arena, grenades);
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
