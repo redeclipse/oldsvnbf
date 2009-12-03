@@ -954,7 +954,7 @@ namespace projs
 				proj.limited = true;
 				return false; // gets "put out"
 			}
-			dir.div(proj.waterfric);
+			if(proj.waterfric > 0) dir.div(proj.waterfric);
 		}
 		dir.mul(secs);
 
