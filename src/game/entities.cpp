@@ -646,14 +646,17 @@ namespace entities
 			{
 				case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
 				{ // wait for ack
-					if(e.attrs[1] == TR_EXIT && !m_story(game::gamemode) && !m_lobby(game::gamemode)) break;
+					if(e.attrs[1] == TR_EXIT && (d->aitype >= AI_BOT || (!m_story(game::gamemode) && !m_lobby(game::gamemode)))) break;
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
 				}
 				case TR_SCRIPT:
 				{
-					defformatstring(s)("on_trigger_%d", e.attrs[0]);
-					trigger = d; RUNWORLD(s); trigger = NULL;
+					if(d == game::player1)
+					{
+						defformatstring(s)("on_trigger_%d", e.attrs[0]);
+						trigger = d; RUNWORLD(s); trigger = NULL;
+					}
 					break;
 				}
 				default: break;
