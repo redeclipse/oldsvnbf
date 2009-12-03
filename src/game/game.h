@@ -375,7 +375,7 @@ gametypes gametype[] = {
 	{ G_DEMO,			G_M_NONE,															G_M_NONE,				"demo" },
 	{ G_LOBBY,			G_M_SOME,															G_M_NONE,				"lobby" },
 	{ G_EDITMODE,		G_M_SOME,															G_M_NONE,				"editing" },
-	{ G_STORY,			G_M_TEAM|G_M_INSTA,													G_M_TEAM,				"story" },
+	{ G_STORY,			G_M_TEAM|G_M_SOME,													G_M_TEAM|G_M_ARENA,		"story" },
 	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"capture-the-flag" },
