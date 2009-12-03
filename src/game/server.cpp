@@ -3501,7 +3501,7 @@ namespace server
 					if(!m_fight(gamemode) || !m_team(gamemode, mutators) || !(flags&SAY_TEAM))
 					{
 						if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
-						else relayf(0, "\fd<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
+						else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
 					}
 					break;
 				}

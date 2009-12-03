@@ -519,7 +519,7 @@ teamtypes teamtype[] = {
 	{
 		TEAM_NEUTRAL,	0x666666,			"neutral",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fd",		"grey"
+		"flag",			"team",				"\fa",		"grey"
 	},
 	{
 		TEAM_ALPHA,		0x2222AA,			"alpha",
@@ -542,9 +542,9 @@ teamtypes teamtype[] = {
 		"flag/delta",	"teamdelta",		"\fy",		"yellow"
 	},
 	{
-		TEAM_ENEMY,		0x666666,			"enemy",
+		TEAM_ENEMY,		0x222222,			"enemy",
 		"actors/player",					"actors/player/vwep",
-		"flag",			"team",				"\fd",		"grey"
+		"flag",			"team",				"\fd",		"dark grey"
 	}
 };
 #else

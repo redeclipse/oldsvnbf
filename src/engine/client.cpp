@@ -45,7 +45,7 @@ void abortconnect(bool msg)
 {
 	if(!connpeer) return;
     client::connectfail();
-    if(msg) conoutft(CON_MESG, "\fdaborting connection attempt");
+    if(msg) conoutft(CON_MESG, "\faaborting connection attempt");
 	if(connpeer->state!=ENET_PEER_STATE_DISCONNECTED) enet_peer_reset(connpeer);
 	connpeer = NULL;
     if(curpeer) return;
@@ -64,7 +64,7 @@ void trydisconnect()
 	if(connpeer) abortconnect();
     else if(curpeer || connectedlocally)
     {
-        if(verbose) conoutft(CON_MESG, "\fdattempting to disconnect...");
+        if(verbose) conoutft(CON_MESG, "\faattempting to disconnect...");
         disconnect(0, !discmillis);
     }
     else conoutft(CON_MESG, "\frnot connected");
@@ -87,7 +87,7 @@ void connectserv(const char *name, int port, int qport, const char *password)
 	if(name && *name)
 	{
 		addserver(name, port, qport);
-		conoutft(CON_MESG, "\fdattempting to connect to %s:[%d]", name, port);
+		conoutft(CON_MESG, "\faattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
 		{
 			conoutft(CON_MESG, "\frcould not resolve host %s", name);
@@ -98,7 +98,7 @@ void connectserv(const char *name, int port, int qport, const char *password)
 	}
 	else
 	{
-		conoutft(CON_MESG, "\fdattempting to connect to a local server");
+		conoutft(CON_MESG, "\faattempting to connect to a local server");
 		address.host = ENET_HOST_BROADCAST;
 	}
 
@@ -216,7 +216,7 @@ void gets2c()			// get updates from the server
 			connectfail();
 			return;
 		}
-        else conoutft(CON_MESG, "\fdconnection attempt %d", connattempts);
+        else conoutft(CON_MESG, "\faconnection attempt %d", connattempts);
 	}
 	while(clienthost && enet_host_service(clienthost, &event, 0)>0)
 	switch(event.type)
@@ -232,7 +232,7 @@ void gets2c()			// get updates from the server
 			break;
 
 		case ENET_EVENT_TYPE_RECEIVE:
-			if(discmillis) conoutft(CON_MESG, "\fdattempting to disconnect...");
+			if(discmillis) conoutft(CON_MESG, "\faattempting to disconnect...");
 			else localservertoclient(event.channelID, event.packet);
 			enet_packet_destroy(event.packet);
 			break;
