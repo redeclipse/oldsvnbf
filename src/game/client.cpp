@@ -396,7 +396,7 @@ namespace client
 			concatstring(m, t);
 		}
 		if(flags&SAY_ACTION) formatstring(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
-		else formatstring(s)("\fd<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
+		else formatstring(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
 		if(d->state != CS_SPECTATOR)
 		{
@@ -1025,7 +1025,7 @@ namespace client
                     sessionid = getint(p);
 					game::player1->clientnum = mycn;
                     if(getint(p)) conoutft(CON_MESG, "\frthe server is password protected");
-                    else if(verbose) conoutf("\fdthe server welcomes us, yay");
+                    else if(verbose) conoutf("\fathe server welcomes us, yay");
                     sendintro();
 					break;
 				}
@@ -1584,7 +1584,7 @@ namespace client
 					else loopi(demos)
 					{
 						getstring(text, p);
-						conoutf("\fd%d. %s", i+1, text);
+						conoutf("\fa%d. %s", i+1, text);
 					}
 					break;
 				}

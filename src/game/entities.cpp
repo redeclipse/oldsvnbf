@@ -1189,7 +1189,7 @@ namespace entities
 					if(recip) f.links.remove(h);
 					fixentity(index, true);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
-					if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+					if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 					return true;
 				}
 				else if(toggle && canlink(node, index))
@@ -1198,7 +1198,7 @@ namespace entities
 					if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
 					fixentity(node, true);
 					if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
-					if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+					if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 					return true;
 				}
 			}
@@ -1208,7 +1208,7 @@ namespace entities
 				if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
 				fixentity(node, true);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
-				if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
+				if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
 				return true;
 			}
 			else if(toggle || add)
@@ -1217,7 +1217,7 @@ namespace entities
 				if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
 				fixentity(index, true);
 				if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
-				if(verbose > 2) conoutf("\fdentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
+				if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
 				return true;
 			}
 		}
@@ -1331,7 +1331,7 @@ namespace entities
 		}
 
 		if(verbose >= 3)
-			conoutf("\fdroute %d to %d (%d) generated %d nodes (%d queued) in %.3fs", node, goal, lowest, route.length(), queue.length(), (SDL_GetTicks()-routestart)/1000.0f);
+			conoutf("\faroute %d to %d (%d) generated %d nodes (%d queued) in %.3fs", node, goal, lowest, route.length(), queue.length(), (SDL_GetTicks()-routestart)/1000.0f);
 
 		return score;
 	}

@@ -277,7 +277,7 @@ void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 		ircchan *c = ircfindchan(n, target);
 		if(c)
 		{
-			formatstring(s)("\fs\fd[%s:%s]\fS", n->name, c->name);
+			formatstring(s)("\fs\fa[%s:%s]\fS", n->name, c->name);
 #ifndef STANDALONE
 			while(c->lines.length() >= 100)
 			{
@@ -287,11 +287,11 @@ void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 			c->lines.add(newstring(str));
 #endif
 			if(n->type == IRCT_RELAY && c->relay >= relay)
-				server::srvmsgf(relay > 1 ? -2 : -3, "\fs\fd[%s]\fS %s", c->friendly, str);
+				server::srvmsgf(relay > 1 ? -2 : -3, "\fs\fa[%s]\fS %s", c->friendly, str);
 		}
 		else
 		{
-			formatstring(s)("\fs\fd[%s:%s]\fS", n->name, target);
+			formatstring(s)("\fs\fa[%s:%s]\fS", n->name, target);
 #ifndef STANDALONE
 			while(n->lines.length() >= 100)
 			{
@@ -304,7 +304,7 @@ void ircprintf(ircnet *n, int relay, const char *target, const char *msg, ...)
 	}
 	else
 	{
-		formatstring(s)("\fs\fd[%s]\fS", n->name);
+		formatstring(s)("\fs\fa[%s]\fS", n->name);
 #ifndef STANDALONE
 		while(n->lines.length() >= 100)
 		{
@@ -362,9 +362,9 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				{
 					const char *p = &w[g+2][strlen(n->nick)];
 					while(p && (*p == ':' || *p == ';' || *p == ',' || *p == '.' || *p == ' ' || *p == '\t')) p++;
-					if(p && *p) ircprintf(n, 0, w[g+1], "\fd<\fw%s\fd>\fw %s", user[0], p);
+					if(p && *p) ircprintf(n, 0, w[g+1], "\fa<\fw%s\fa>\fw %s", user[0], p);
 				}
-				else ircprintf(n, 1, g ? w[g+1] : NULL, "\fd<\fw%s\fd>\fw %s", user[0], w[g+2]);
+				else ircprintf(n, 1, g ? w[g+1] : NULL, "\fa<\fw%s\fa>\fw %s", user[0], w[g+2]);
 			}
 			else ircprintf(n, 2, g ? w[g+1] : NULL, "\fo-%s- %s", user[0], w[g+2]);
 		}
@@ -717,7 +717,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 	else
 	{
 		ircsend(n, "%s", p);
-		ircprintf(n, 4, NULL, "\fd>%s< %s", n->nick, p);
+		ircprintf(n, 4, NULL, "\fa>%s< %s", n->nick, p);
 	}
 }
 

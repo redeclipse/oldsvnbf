@@ -18,11 +18,11 @@ struct duelservmode : servmode
 					n -= GVAR(duelreset) ? 2 : 1;
 					if(n < 0) return;
 				}
-				if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fdyou are \fs\fgqueued\fS for the next round");
+				if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fayou are \fs\fgqueued\fS for the next round");
 				else
 				{
-					if(m_team(gamemode, mutators) || n > 1) srvmsgf(ci->clientnum, "\fdyou are \fs\fg#%d\fS in the queue", n+(m_team(gamemode, mutators) ? 1 : 0));
-					else if(n) srvmsgf(ci->clientnum, "\fdyou are \fs\fgNEXT\fS in the queue");
+					if(m_team(gamemode, mutators) || n > 1) srvmsgf(ci->clientnum, "\fayou are \fs\fg#%d\fS in the queue", n+(m_team(gamemode, mutators) ? 1 : 0));
+					else if(n) srvmsgf(ci->clientnum, "\fayou are \fs\fgNEXT\fS in the queue");
 				}
 			}
 		}
