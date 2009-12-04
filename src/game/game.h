@@ -1155,7 +1155,7 @@ namespace client
 
 namespace physics
 {
-	extern float gravity, jumpspeed, movespeed, movecrawl, impulsespeed, impulseregen;
+	extern float gravity, jumpspeed, movespeed, movecrawl, impulsespeed, impulseregen, liquidspeed, liquidcurb, floorcurb, aircurb;
 	extern int impulsestyle, impulsemeter, impulsecost, impulsecount, impulseskate;
 	extern int smoothmove, smoothdist;
 	extern bool canimpulse(physent *d, int cost = 0);
