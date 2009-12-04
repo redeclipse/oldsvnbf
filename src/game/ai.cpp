@@ -438,7 +438,7 @@ namespace ai
 				if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			}
-			if(m_story(game::gamemode) || m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode));
+			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode));
 		}
 		else if(entities::ents.inrange(d->aientity))
 		{

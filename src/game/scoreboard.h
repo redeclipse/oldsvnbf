@@ -96,7 +96,7 @@ namespace hud
 					{
 						if(!groupplayers()) return;
 						scoregroup &sg = *groups[0];
-						if(m_team(game::gamemode, game::mutators))
+						if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 						{
 							int anc = sg.players.find(game::player1) >= 0 ? S_V_YOUWIN : (game::player1->state != CS_SPECTATOR ? S_V_YOULOSE : -1);
 							if(m_stf(game::gamemode) && sg.score==INT_MAX)
@@ -579,7 +579,7 @@ namespace hud
 			{
 				if(y-sy-s < m) break;
 				scoregroup &sg = *groups[k];
-				if(m_team(game::gamemode, game::mutators))
+				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					if(!sg.team || ((sg.team != game::player1->team) == !i)) continue;
 					if(!sy) sy += s/8;
