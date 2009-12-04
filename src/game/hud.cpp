@@ -707,7 +707,7 @@ namespace hud
 					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 					if(inventoryteams)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
 						if(lastmillis-lastteam <= inventoryteams)
 						{
 							if(game::player1->team == TEAM_NEUTRAL)
@@ -1512,9 +1512,9 @@ namespace hud
 				if(!texpaneltimer)
 				{
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
-					if(inventoryteams)
+					if(inventoryteams && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
 						if(lastteam)
 						{
 							const char *pre = "";
