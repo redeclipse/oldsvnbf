@@ -901,10 +901,10 @@ namespace game
 			if(issound(d->vschan)) removesound(d->vschan);
 			playsound(dth, d->o, d, 0, -1, -1, -1, &d->vschan);
 		}
-		if(showobituaries)
+		if(showobituaries && (d->aitype < AI_START || actor->aitype < (d->aitype >= AI_START ? AI_BOT : AI_START)))
 		{
 			bool isme = (d == player1 || actor == player1), show = false;
-			if(!m_fight(gamemode) && anc >= 0 && !isme) anc = -1;
+			if(((!m_fight(gamemode) && !isme) || actor->aitype >= AI_START) && anc >= 0) anc = -1;
 			if(flags&HIT_LOST) show = true;
 			else switch(showobituaries)
 			{
