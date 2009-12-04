@@ -1966,7 +1966,7 @@ namespace entities
 				case ACTOR:
 				{
 					part_radius(vec(e.o).add(vec(0, 0, aistyle[e.attrs[0]].height/2)), vec(aistyle[e.attrs[0]].xradius, aistyle[e.attrs[0]].height/2), 1, 1, 1, 0x888888);
-					part_radius(e.o, vec(ai::FARDIST, ai::FARDIST, ai::FARDIST), 1, 1, 1, 0x00FFFF);
+					part_radius(e.o, vec(ai::FARDIST*2, ai::FARDIST*2, ai::FARDIST*2), 1, 1, 1, 0x888888);
 					break;
 				}
 				case MAPSOUND:
