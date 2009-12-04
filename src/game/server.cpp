@@ -507,8 +507,7 @@ namespace server
 	{
 		if(!name) name = ci->name;
 		static string cname;
-		const char *chat = team && m_team(gamemode, mutators) ? teamtype[ci->team].chat : teamtype[TEAM_NEUTRAL].chat;
-		formatstring(cname)("\fs%s%s", chat, name);
+		formatstring(cname)("\fs%s%s", teamtype[ci->team].chat, name);
 		if(!name[0] || ci->state.aitype >= 0 || (dupname && duplicatename(ci, name)))
 		{
 			defformatstring(s)(" [\fs\fc%s%d\fS]", ci->state.aitype >= 0 ? "\fe" : "", ci->clientnum);
@@ -3537,7 +3536,7 @@ namespace server
 				case SV_SWITCHTEAM:
 				{
 					int team = getint(p);
-					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST))
+					if(((ci->state.state == CS_SPECTATOR || ci->state.state == CS_EDITING) && team != TEAM_NEUTRAL) || !isteam(gamemode, mutators, team, TEAM_FIRST) || ci->state.aitype >= AI_START)
 						team = chooseteam(ci, team);
 					if(ci->team != team)
 					{
@@ -3739,7 +3738,7 @@ namespace server
 					int who = getint(p), team = getint(p);
 					if(who<0 || who>=getnumclients() || !haspriv(ci, PRIV_MASTER, "change the team of others")) break;
 					clientinfo *cp = (clientinfo *)getinfo(who);
-					if(!cp || !m_team(gamemode, mutators) || !m_fight(gamemode)) break;
+					if(!cp || !m_team(gamemode, mutators) || !m_fight(gamemode) || cp->state.aitype >= AI_START) break;
 					if(cp->state.state == CS_SPECTATOR || cp->state.state == CS_EDITING || !isteam(gamemode, mutators, team, TEAM_FIRST)) break;
 					setteam(cp, team, true, true);
 					break;
