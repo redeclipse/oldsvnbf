@@ -42,12 +42,6 @@ VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 VARG(regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
-VARG(impulsemeter, 0, 30000, INT_MAX-1); // impulse dash length
-VARG(impulsecost, 0, 1000, INT_MAX-1); // cost of impulse jump
-VARG(impulsecount, 0, 5, INT_MAX-1); // number of impulse actions per air transit
-VARG(impulseskate, 0, 1000, INT_MAX-1); // length of time a run along a wall can last
-FVARG(impulseregen, 0, 5, 10000); // impulse regen multiplier
-
 VARG(itemsallowed, 0, 2, 3); // 0 = never, 1 = all but instagib/time-trial, 2 = override insta if arena, 3 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
@@ -88,11 +82,18 @@ VARG(botlimit, 0, 16, MAXAI/2);
 VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
 VARFG(gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
 
-FVARG(forcegravity, 0, 0, 10000);
-FVARG(forcemovespeed, 0, 0, 10000);
-FVARG(forcemovecrawl, 0, 0, 10000);
-FVARG(forcejumpspeed, 0, 0, 10000);
-FVARG(forceimpulsespeed, 0, 0, 10000);
+FVARG(forcegravity, -1, -1, 10000);
+FVARG(forcejumpspeed, -1, -1, 10000);
+FVARG(forcemovespeed, -1, -1, 10000);
+FVARG(forcemovecrawl, -1, -1, 10000);
+FVARG(forceimpulsespeed, -1, -1, 10000);
+
+VARG(forceimpulsestyle, -1, -1, 3);
+VARG(forceimpulsemeter, -1, -1, INT_MAX-1);
+VARG(forceimpulsecost, -1, -1, INT_MAX-1);
+VARG(forceimpulsecount, -1, -1, INT_MAX-1);
+VARG(forceimpulseskate, -1, -1, INT_MAX-1);
+FVARG(forceimpulseregen, -1, -1, 10000);
 
 FVARG(damagescale, 0, 1, 1000);
 FVARG(hitpushscale, 0, 1, 1000);

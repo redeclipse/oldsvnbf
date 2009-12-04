@@ -251,7 +251,7 @@ namespace hud
 				amt += damage*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
-				if(game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe)))
+				if(FWV(impulsestyle) && (game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe))))
 					amt += game::player1->turnside ? 0.125f : 0.25f;
 				break;
 			}
@@ -1432,9 +1432,9 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(inventoryimpulse && impulsemeter)
+			if(FWV(impulsestyle) && FWV(impulsemeter) && inventoryimpulse)
 			{
-				float len = 1.f-clamp(game::player1->impulse[IM_METER]/float(impulsemeter), 0.f, 1.f);
+				float len = 1.f-clamp(game::player1->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
@@ -1446,7 +1446,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::player1->impulse[IM_METER] > 0 ? (impulsemeter-game::player1->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
+						game::player1->impulse[IM_METER] > 0 ? (FWV(impulsemeter)-game::player1->impulse[IM_METER] > FWV(impulsecost) ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}

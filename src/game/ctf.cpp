@@ -696,7 +696,7 @@ namespace ctf
 			{
 				if(d->aitype == AI_BOT)
 				{
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
+					if(FWV(impulsestyle) && !d->action[AC_IMPULSE] && d->impulse[IM_METER] < FWV(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;
@@ -765,7 +765,7 @@ namespace ctf
 				if(!hasflags.empty())
 				{
 					ai::makeroute(d, b, f.spawnloc);
-					if(!d->action[AC_IMPULSE] && d->impulse[IM_METER] < impulsemeter*2/3)
+					if(FWV(impulsestyle) && !d->action[AC_IMPULSE] && d->impulse[IM_METER] < FWV(impulsemeter)*2/3)
 					{
 						d->action[AC_IMPULSE] = true;
 						d->actiontime[AC_IMPULSE] = lastmillis;

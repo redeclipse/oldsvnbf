@@ -14,6 +14,7 @@ static bool fieldsactive = false;
 VARP(guishadow, 0, 2, 8);
 VARP(guiautotab, 6, 16, 40);
 VARP(guiclicktab, 0, 1, 1);
+VARP(guiblend, 1, 156, 255);
 
 static bool needsinput = false;
 
@@ -99,14 +100,15 @@ struct gui : guient
 		else
 		{
 			cury = -ysize;
-			int x1 = curx + tx + guibound[0], x2 = x1 + w, y1 = cury - guibound[1]*2, y2 = cury - guibound[1]*2 + FONTH;
-			if(visible()) tcolor = 0xFFFFFF;
+			int x1 = curx + tx + guibound[0], x2 = x1 + w, y1 = cury - guibound[1]*2, y2 = cury - guibound[1]*2 + FONTH, alpha = guiblend;
+			if(visible()) { tcolor = 0xFFFFFF; alpha = 255; }
 			else if(tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2)
 			{
 				if(!guiclicktab || mousebuttons&GUI_UP) *tcurrent = tpos; // switch tab
 				tcolor = 0xFF2222;
+				alpha = 255;
 			}
-            text_(tabtitle, x1, y1, tcolor, visible());
+            text_(tabtitle, x1, y1, tcolor, alpha, visible());
 		}
 		tx += w + guibound[0]*2;
 		gui::popfont();
@@ -291,9 +293,7 @@ struct gui : guient
                 else px = x + guibound[0]/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
 				py = y;
 			}
-
-			if(hit) color = 0xFF2222;
-			text_(label, px, py, color, hit && actionon);
+			text_(label, px, py, hit ? 0xFF2222 : color, hit ? 255 : guiblend, hit && actionon);
 			if(hit && actionon)
 			{
                 int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
@@ -466,10 +466,10 @@ struct gui : guient
 		xtraverts += 4;
 	}
 
-	void text_(const char *text, int x, int y, int color, bool shadow)
+	void text_(const char *text, int x, int y, int color, int alpha, bool shadow)
 	{
-		if(shadow) draw_text(text, x+guishadow, y+guishadow, 0x00, 0x00, 0x00, 0xC0);
-		draw_text(text, x, y, color>>16, (color>>8)&0xFF, color&0xFF);
+		if(shadow) draw_text(text, x+guishadow, y+guishadow, 0x00, 0x00, 0x00, 0xC0*alpha/255);
+		draw_text(text, x, y, color>>16, (color>>8)&0xFF, color&0xFF, alpha);
 	}
 
     void background(int color, int inheritw, int inherith)
@@ -637,7 +637,7 @@ struct gui : guient
 		if(text && *text)
 		{
 			int w = text_width(text);
-			text_(text, x+s/2-w/2, y+s/2-FONTH/2, 0xFFFFFF, false);
+			text_(text, x+s/2-w/2, y+s/2-FONTH/2, 0xFFFFFF, guiblend, false);
 		}
 	}
 
@@ -688,7 +688,7 @@ struct gui : guient
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;
-			if(text) text_(text, x, cury, color, hit && clickable && actionon);
+			if(text) text_(text, x, cury, color, hit || !clickable ? 255 : guiblend, hit && clickable);
 		}
 		if(font && *font) gui::popfont();
 		return layout(w, h);
