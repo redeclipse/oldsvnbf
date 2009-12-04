@@ -1393,7 +1393,7 @@ namespace game
 					updatecamorient; \
 				} \
 			}
-			loopk(4)
+			loopk(2)
 			{
 				int found = 0;
 				loopvj(cameras)
@@ -1403,17 +1403,17 @@ namespace game
 					c.reset();
 					switch(k)
 					{
-						case 0: case 1: default:
+						case 0: default:
 						{
 							gameent *d;
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 								addcamentity(i, d->feetpos());
 							break;
 						}
-						case 2: case 3:
+						case 1:
 						{
 							c.alter = true;
-							loopv(entities::ents) if((k == 3 && !enttype[entities::ents[i]->type].noisy) || entities::ents[i]->type == WEAPON)
+							loopv(entities::ents) if(entities::ents[i]->type == WEAPON || entities::ents[i]->type == FLAG)
 								addcamentity(i, entities::ents[i]->o);
 							break;
 						}
@@ -1422,14 +1422,14 @@ namespace game
 					updatecamorient;
 					switch(k)
 					{
-						case 0: case 1: default:
+						case 0: default:
 						{
 							gameent *d;
 							loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
 								dircamentity(i, d->feetpos());
 							break;
 						}
-						case 2: case 3:
+						case 1:
 						{
 							loopvrev(c.cansee) if(entities::ents.inrange(c.cansee[i]))
 								dircamentity(i, entities::ents[c.cansee[i]]->o);
@@ -1452,7 +1452,7 @@ namespace game
 				}
 				if(override && !found && (k || !alter))
 				{
-					if(k < 3) renew = true;
+					if(!k) renew = true;
 					else unsettvmode(lasttvcam ? false : true);
 				}
 				else break;
