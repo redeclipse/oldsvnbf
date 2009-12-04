@@ -224,7 +224,7 @@ namespace game
 
 			float k = pow(0.7f, curtime/25.0f);
 			swaydir.mul(k);
-			vec vel = vec(d->vel).add(d->falling).mul(d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
+			vec vel = vec(d->vel).add(d->falling).mul(FWV(impulsestyle) && d->action[AC_IMPULSE] && (d->move || d->strafe) ? 5 : 1);
 			float speedscale = max(vel.magnitude(), maxspeed);
 			if(speedscale > 0) swaydir.add(vec(vel).mul((1-k)/(15*speedscale)));
 			swaypush.mul(pow(0.5f, curtime/25.0f));
@@ -374,7 +374,7 @@ namespace game
 
 	void impulseeffect(gameent *d, bool effect)
 	{
-		if(effect || (d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)))))
+		if(effect || (FWV(impulsestyle) && d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)))))
 		{
 			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
 			if(num > 0 && len > 0)
@@ -1766,10 +1766,10 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->physstate == PHYS_FALL && !d->onladder && d->impulse[IM_TYPE] != IM_T_NONE && lastmillis-d->impulse[IM_TIME] <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulse[IM_TIME]; }
+				else if(d->physstate == PHYS_FALL && !d->onladder && FWV(impulsestyle) && d->impulse[IM_TYPE] != IM_T_NONE && lastmillis-d->impulse[IM_TIME] <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulse[IM_TIME]; }
 				else if(d->physstate == PHYS_FALL && !d->onladder && d->actiontime[AC_JUMP] && lastmillis-d->actiontime[AC_JUMP] <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_JUMP]; }
 				else if(d->physstate == PHYS_FALL && !d->onladder && d->timeinair >= 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-				else if(d->action[AC_IMPULSE] && (d->move || d->strafe))
+				else if(FWV(impulsestyle) && d->action[AC_IMPULSE] && (d->move || d->strafe))
 				{
 					if(d->move>0)		anim |= (ANIM_IMPULSE_FORWARD|ANIM_LOOP)<<ANIM_SECONDARY;
 					else if(d->strafe)	anim |= ((d->strafe>0 ? ANIM_IMPULSE_LEFT : ANIM_IMPULSE_RIGHT)|ANIM_LOOP)<<ANIM_SECONDARY;

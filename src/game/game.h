@@ -19,6 +19,11 @@
 #define GVAR(name)			(sv_##name)
 #else
 #define GVAR(name)			(name)
+#ifdef GAMEPHYSICS
+#define FWV(name)			(force##name >= 0 ? force##name : name)
+#else
+#define FWV(name)			(force##name >= 0 ? force##name : physics::name)
+#endif
 #endif
 enum
 {
@@ -1150,8 +1155,10 @@ namespace client
 
 namespace physics
 {
+	extern float gravity, jumpspeed, movespeed, movecrawl, impulsespeed, impulseregen;
+	extern int impulsestyle, impulsemeter, impulsecost, impulsecount, impulseskate;
 	extern int smoothmove, smoothdist;
-	extern bool canimpulse(physent *d, int cost);
+	extern bool canimpulse(physent *d, int cost = 0);
 	extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
 	extern void update();
