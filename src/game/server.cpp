@@ -2740,7 +2740,16 @@ namespace server
 			{
 				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
 				if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
-				if(ci->state.respawnwait(gamemillis, ci->state.aitype >= AI_START && ci->state.lastdeath ? 30000 : m_delay(gamemode, mutators))) continue;
+				int delay = m_delay(gamemode, mutators);
+				if(ci->state.aitype >= AI_START)
+				{
+					if(ci->state.lastdeath)
+					{
+						if(m_story(gamemode)) continue;
+						else if(!m_duke(gamemode, mutators)) delay = 30000;
+					}
+				}
+				if(delay && ci->state.respawnwait(gamemillis, delay)) continue;
 				int nospawn = 0;
 				if(smode && !smode->canspawn(ci, false)) { nospawn++; }
 				mutate(smuts, if (!mut->canspawn(ci, false)) { nospawn++; });
