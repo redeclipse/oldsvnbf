@@ -925,7 +925,11 @@ namespace game
 			loopi(amt)
 				projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
-		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
+		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
+		{
+			hud::teamkills.add(lastmillis);
+			if(hud::numteamkills() >= hud::teamkillnum) hud::lastteam = lastmillis;
+		}
 		ai::killed(d, actor);
 	}
 
