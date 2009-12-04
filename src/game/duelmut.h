@@ -141,7 +141,7 @@ struct duelservmode : servmode
 						if(ci->state.state != CS_ALIVE)
 						{
 							if(ci->state.state != CS_WAITING) waiting(ci, 1, 1);
-							if(m_duel(gamemode, mutators) && m_team(gamemode, mutators))
+							if(ci->state.aitype < AI_START && m_duel(gamemode, mutators) && m_team(gamemode, mutators))
 							{
 								bool skip = false;
 								loopv(alive) if(ci->team == alive[i]->team) { skip = true; break; }

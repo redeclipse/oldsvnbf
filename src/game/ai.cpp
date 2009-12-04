@@ -34,7 +34,7 @@ namespace ai
 		if(entities::ents.inrange(d->aientity))
 		{
 			if(m_stf(game::gamemode)) return stf::aiowner(d);
-			else if(m_stf(game::gamemode)) return stf::aiowner(d);
+			else if(m_ctf(game::gamemode)) return ctf::aiowner(d);
 		}
 		return d->team;
 	}
@@ -489,10 +489,10 @@ namespace ai
 			{
 				gameent *t = NULL;
 				vec dp = d->headpos();
-				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended)
+				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended && targetable(t, e, true))
 				{
 					vec tp = t->headpos();
-					if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST)
+					if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST*2)
 					{
 						t->ai->suspended = false;
 						aistate &c = t->ai->getstate();
@@ -1274,7 +1274,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->aitype == AI_BOT || !m_story(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT ? 500 : 30000)))
+			if(d->state == CS_DEAD && (d->aitype == AI_BOT || !m_story(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);

@@ -1072,8 +1072,7 @@ namespace game
 	{
 		if(!name) name = d->name;
 		static string cname;
-		const char *chat = team && m_team(gamemode, mutators) ? teamtype[d->team].chat : teamtype[TEAM_NEUTRAL].chat;
-		formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", chat, name);
+		formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", teamtype[d->team].chat, name);
 		if(!name[0] || d->aitype >= 0 || (dupname && duplicatename(d, name)))
 		{
 			defformatstring(s)(" [\fs\fc%s%d\fS]", d->aitype >= 0 ? "\fe" : "", d->clientnum);
