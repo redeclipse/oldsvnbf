@@ -733,7 +733,7 @@ namespace server
 				if(m_team(gamemode, mutators))
 				{
 					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 };
-					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 						teamscores[clients[i]->team-TEAM_FIRST] += clients[i]->state.frags;
 					int best = -1;
 					loopi(TEAM_NUM) if(best < 0 || teamscores[i] > teamscores[best])
@@ -2194,66 +2194,75 @@ namespace server
 
 			if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
-				if(actor != target) actor->state.teamkills++;
 				actor->state.spree = 0;
-				pointvalue *= 2;
+				if(actor->state.aitype < AI_START)
+				{
+					if(actor != target) actor->state.teamkills++;
+					pointvalue *= 2;
+				}
 			}
 			else if(actor != target)
 			{
 				int logs = 0;
 				target->state.spree = 0;
-				actor->state.spree++;
-				actor->state.fraglog.add(target->clientnum);
-				if((flags&HIT_PROJ) && (flags&HIT_HEAD))
+				if(actor->state.aitype < AI_START)
 				{
-					style |= FRAG_HEADSHOT;
-					pointvalue *= 2;
-				}
-				if(GVAR(multikilldelay))
-				{
-					logs = 0;
-					loopv(actor->state.fragmillis)
+					actor->state.spree++;
+					actor->state.fraglog.add(target->clientnum);
+					if((flags&HIT_PROJ) && (flags&HIT_HEAD))
 					{
-						if(lastmillis-actor->state.fragmillis[i] > GVAR(multikilldelay)) actor->state.fragmillis.remove(i--);
-						else logs++;
+						style |= FRAG_HEADSHOT;
+						pointvalue *= 2;
 					}
-					if(!logs) actor->state.rewards &= ~FRAG_MULTI;
-					actor->state.fragmillis.add(lastmillis); logs++;
-					if(logs >= 2)
+					if(m_fight(gamemode) && GVAR(multikilldelay))
 					{
-						int offset = clamp(logs-2, 0, 2), type = 1<<(FRAG_MKILL+offset); // double, triple, multi..
+						logs = 0;
+						loopv(actor->state.fragmillis)
+						{
+							if(lastmillis-actor->state.fragmillis[i] > GVAR(multikilldelay)) actor->state.fragmillis.remove(i--);
+							else logs++;
+						}
+						if(!logs) actor->state.rewards &= ~FRAG_MULTI;
+						actor->state.fragmillis.add(lastmillis); logs++;
+						if(logs >= 2)
+						{
+							int offset = clamp(logs-2, 0, 2), type = 1<<(FRAG_MKILL+offset); // double, triple, multi..
+							if(!(actor->state.rewards&type))
+							{
+								style |= type;
+								actor->state.rewards |= type;
+								pointvalue *= offset+1;
+								//loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
+							}
+						}
+					}
+					if(actor->state.spree <= GVAR(spreecount)*FRAG_SPREES && !(actor->state.spree%GVAR(spreecount)))
+					{
+						int offset = clamp((actor->state.spree/GVAR(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
 						if(!(actor->state.rewards&type))
 						{
 							style |= type;
 							actor->state.rewards |= type;
 							pointvalue *= offset+1;
-							//loopv(actor->state.fragmillis) actor->state.fragmillis[i] = lastmillis;
 						}
 					}
-				}
-				if(actor->state.spree <= GVAR(spreecount)*FRAG_SPREES && !(actor->state.spree%GVAR(spreecount)))
-				{
-					int offset = clamp((actor->state.spree/GVAR(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
-					if(!(actor->state.rewards&type))
+					if(m_fight(gamemode))
 					{
-						style |= type;
-						actor->state.rewards |= type;
-						pointvalue *= offset+1;
+						logs = 0;
+						loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
+						if(logs >= GVAR(dominatecount))
+						{
+							style |= FRAG_REVENGE;
+							pointvalue *= GVAR(dominatecount);
+						}
+						logs = 0;
+						loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
+						if(logs == GVAR(dominatecount))
+						{
+							style |= FRAG_DOMINATE;
+							pointvalue *= GVAR(dominatecount);
+						}
 					}
-				}
-				logs = 0;
-				loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-				if(logs >= GVAR(dominatecount))
-				{
-					style |= FRAG_REVENGE;
-					pointvalue *= GVAR(dominatecount);
-				}
-				logs = 0;
-				loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-				if(logs == GVAR(dominatecount))
-				{
-					style |= FRAG_DOMINATE;
-					pointvalue *= GVAR(dominatecount);
 				}
 			}
 			else actor->state.spree = 0;
@@ -3491,18 +3500,14 @@ namespace server
 					getstring(text, p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(flags&SAY_TEAM && cp->state.state==CS_SPECTATOR) break;
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
-						if(t == cp || t->state.aitype >= 0 || (flags&SAY_TEAM && (t->state.state==CS_SPECTATOR || cp->team != t->team))) continue;
+						if(t == cp || !allowbroadcast(t->clientnum) || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(!m_fight(gamemode) || !m_team(gamemode, mutators) || !(flags&SAY_TEAM))
-					{
-						if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
-						else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
-					}
+					if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
+					else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
 					break;
 				}
 

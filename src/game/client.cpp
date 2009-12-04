@@ -388,7 +388,7 @@ namespace client
 	{
 		if(!colourchat) filtertext(text, text);
 		mkstring(s);
-		bool team = m_fight(game::gamemode) && m_team(game::gamemode, game::mutators) && flags&SAY_TEAM;
+		bool team = flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
 		if(team)
 		{

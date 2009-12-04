@@ -704,10 +704,10 @@ namespace hud
 				}
 				else if(game::player1->state == CS_ALIVE)
 				{
-					if(teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+					if(teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum) ty += draw_textx("\fzryDon't shoot team mates", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 					if(inventoryteams)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
 						if(lastmillis-lastteam <= inventoryteams)
 						{
 							if(game::player1->team == TEAM_NEUTRAL)
@@ -1514,7 +1514,7 @@ namespace hud
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
 					if(inventoryteams)
 					{
-						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && (m_team(game::gamemode, game::mutators) || m_story(game::gamemode)) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
+						if(game::player1->state == CS_ALIVE && (!lastteam || (teamkillnum && m_team(game::gamemode, game::mutators) && numteamkills() >= teamkillnum))) lastteam = lastmillis;
 						if(lastteam)
 						{
 							const char *pre = "";

@@ -789,11 +789,14 @@ namespace game
 			vec az = actor->abovehead(), dz = d->abovehead();
 			if(m_team(gamemode, mutators) && d->team == actor->team)
 			{
-				concatstring(d->obit, " \fs\fzawteam-mate\fS ");
-				concatstring(d->obit, colorname(actor));
-				if(actor == player1) { anc = S_ALARM; override = true; }
+				if(actor->aitype < AI_START)
+				{
+					concatstring(d->obit, " \fs\fzawteam-mate\fS ");
+					concatstring(d->obit, colorname(actor));
+					if(actor == player1) { anc = S_ALARM; override = true; }
+				}
 			}
-			else
+			else if(m_fight(gamemode))
 			{
 				if(style&FRAG_REVENGE)
 				{
@@ -901,13 +904,14 @@ namespace game
 		if(showobituaries)
 		{
 			bool isme = (d == player1 || actor == player1), show = false;
+			if(!m_fight(gamemode) && anc >= 0 && !isme) anc = -1;
 			if(flags&HIT_LOST) show = true;
 			else switch(showobituaries)
 			{
-				case 1: if(isme) show = true; break;
-				case 2: if(isme || anc >= 0) show = true; break;
-				case 3: if(isme || d->aitype < 0 || anc >= 0) show = true; break;
-				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0) show = true; break;
+				case 1: if(isme || m_duke(gamemode, mutators)) show = true; break;
+				case 2: if(isme || anc >= 0 || m_duke(gamemode, mutators)) show = true; break;
+				case 3: if(isme || d->aitype < 0 || anc >= 0 || m_duke(gamemode, mutators)) show = true; break;
+				case 4: if(isme || d->aitype < 0 || actor->aitype < 0 || anc >= 0 || m_duke(gamemode, mutators)) show = true; break;
 				case 5: default: show = true; break;
 			}
 			int target = show ? (isme ? CON_SELF : CON_INFO) : -1;
@@ -921,7 +925,7 @@ namespace game
 			loopi(amt)
 				projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
-		if((m_team(gamemode, mutators) || m_story(gamemode)) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
+		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1) hud::teamkills.add(lastmillis);
 		ai::killed(d, actor);
 	}
 
