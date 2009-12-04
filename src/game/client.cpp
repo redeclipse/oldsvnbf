@@ -189,7 +189,7 @@ namespace client
 
 	void edittoggled(bool edit)
 	{
-		game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators));
+		game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
 		game::player1->state = edit ? CS_EDITING : CS_ALIVE;
 		game::player1->resetinterp();
 		game::resetstate();
@@ -1621,7 +1621,7 @@ namespace client
 					else
 					{
 						d->state = CS_ALIVE;
-						d->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators));
+						d->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
 					}
 					d->resetinterp();
 					projs::remove(d);

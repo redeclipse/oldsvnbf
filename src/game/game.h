@@ -781,10 +781,10 @@ struct gamestate
 		if(grenades && weapselect != WEAP_GRENADE) ammo[WEAP_GRENADE] = weaptype[WEAP_GRENADE].max;
 	}
 
-	void editspawn(int millis, int sweap, int heal)
+	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
 	{
 		clearstate();
-		spawnstate(sweap, heal);
+		spawnstate(sweap, heal, arena, grenades);
 	}
 
 	int respawnwait(int millis, int delay)
@@ -959,7 +959,7 @@ struct gameent : dynent, gamestate
 		airnodes.setsizenodelete(0);
 	}
 
-	void editspawn(int millis, int sweap, int heal)
+	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
 	{
 		stopmoving(true);
 		clearstate();
@@ -970,7 +970,7 @@ struct gameent : dynent, gamestate
 		vel = falling = vec(0, 0, 0);
 		floor = vec(0, 0, 1);
 		resetinterp();
-		gamestate::editspawn(millis, sweap, heal);
+		gamestate::editspawn(millis, sweap, heal, arena, grenades);
 		airnodes.setsizenodelete(0);
 	}
 
