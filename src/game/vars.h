@@ -95,6 +95,11 @@ VARG(forceimpulsecount, -1, -1, INT_MAX-1);
 VARG(forceimpulseskate, -1, -1, INT_MAX-1);
 FVARG(forceimpulseregen, -1, -1, 10000);
 
+FVARG(forceliquidspeed, -1, -1, 1);
+FVARG(forceliquidcurb, -1, -1, 10000);
+FVARG(forcefloorcurb, -1, -1, 10000);
+FVARG(forceaircurb, -1, -1, 10000);
+
 FVARG(damagescale, 0, 1, 1000);
 FVARG(hitpushscale, 0, 1, 1000);
 FVARG(deadpushscale, 0, 2, 1000);

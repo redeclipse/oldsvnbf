@@ -126,7 +126,7 @@ struct gui : guient
 				if(mousebuttons&GUI_UP) { b; } \
 				hit = true; \
 			} \
-			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], hit); \
+			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], !hit); \
 			y += guibound[1]*3/2; \
 		}
 		uibtn("textures/exit", cleargui(1));
@@ -232,7 +232,7 @@ struct gui : guient
 		autotab();
 		if(scale == 0) scale = 1;
 		int size = (int)(scale*2*guibound[1])-guishadow;
-		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+guishadow, size+guishadow));
+		if(visible()) icon_(t, overlaid, false, curx, cury, size, !ishit(size+guishadow, size+guishadow));
 		return layout(size+guishadow, size+guishadow);
 	}
 
@@ -241,7 +241,7 @@ struct gui : guient
         autotab();
         if(scale == 0) scale = 1;
         int size = (int)(scale*2*guibound[1])-guishadow;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
+        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, !ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
         return layout(size+guishadow, size+guishadow);
     }
 
@@ -684,7 +684,7 @@ struct gui : guient
 			if(icon)
 			{
 				defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
-				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], clickable && hit);
+				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], clickable && !hit);
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;

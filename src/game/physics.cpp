@@ -130,7 +130,7 @@ namespace physics
 		return from;
 	}
 
-	float jumpforce(physent *d, bool liquid) { return FWV(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, liquidspeed) : 1.f); }
+	float jumpforce(physent *d, bool liquid) { return FWV(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, FWV(liquidspeed)) : 1.f); }
 	float impulseforce(physent *d) { return FWV(impulsespeed)*(d->weight/100.f); }
 	float gravityforce(physent *d) { return FWV(gravity)*(d->weight/100.f); }
 
@@ -571,7 +571,7 @@ namespace physics
 					d->vel.z += jumpforce(d, true);
 					if(d->inliquid)
 					{
-						float scale = liquidmerge(d, 1.f, liquidspeed);
+						float scale = liquidmerge(d, 1.f, FWV(liquidspeed));
 						d->vel.x *= scale;
 						d->vel.y *= scale;
 					}
@@ -694,7 +694,7 @@ namespace physics
 			bool floor = pl->physstate >= PHYS_SLOPE;
 			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((FWV(impulsemeter) && ((gameent *)pl)->action[AC_IMPULSE] && ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter))))
 				floor = false;
-			float curb = floor ? floorcurb : aircurb, fric = pl->inliquid ? liquidmerge(pl, curb, liquidcurb) : curb;
+			float curb = floor ? FWV(floorcurb) : FWV(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, FWV(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
 		}
 	}
@@ -715,7 +715,7 @@ namespace physics
 
         if(liquidcheck(pl) || pl->physstate >= PHYS_SLOPE)
         {
-            float fric = liquidcheck(pl) ? liquidmerge(pl, aircurb, liquidcurb) : floorcurb,
+            float fric = liquidcheck(pl) ? liquidmerge(pl, FWV(aircurb), FWV(liquidcurb)) : FWV(floorcurb),
                   c = liquidcheck(pl) ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
             pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f));
         }
@@ -805,7 +805,7 @@ namespace physics
 		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
 		vec d(pl->vel);
-        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, liquidspeed));
+        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, FWV(liquidspeed)));
         d.add(pl->falling);
 		d.mul(secs);
 
