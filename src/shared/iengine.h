@@ -449,11 +449,11 @@ struct guient
         defvformatstring(str, icon, fmt);
         return text(str, color, icon);
     }
-    virtual int button(const char *text, int color, const char *icon = NULL) = 0;
-    int buttonf(const char *fmt, int color, const char *icon = NULL, ...)
+    virtual int button(const char *text, int color, const char *icon = NULL, bool faded = true) = 0;
+    int buttonf(const char *fmt, int color, const char *icon = NULL, bool faded = true, ...)
     {
-        defvformatstring(str, icon, fmt);
-        return button(str, color, icon);
+        defvformatstring(str, faded, fmt);
+        return button(str, color, icon, faded);
     }
     virtual void background(int color, int parentw = 0, int parenth = 0) = 0;
 
@@ -462,8 +462,8 @@ struct guient
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
-	virtual void tab(const char *name = NULL, int color = 0xAAAAAA) = 0;
-    virtual int title(const char *text, int color = 0xAAAAAA, const char *icon = NULL) = 0;
+	virtual void tab(const char *name = NULL, int color = 0xFFFFFF) = 0;
+    virtual int title(const char *text, int color = 0xFFFFFF, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
     virtual int slice(Texture *t, float scale, float start = 0, float end = 1, const char *text = NULL) = 0;

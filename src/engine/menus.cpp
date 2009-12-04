@@ -326,7 +326,7 @@ void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
 		int vdef = getvardef(var);
 		vmax = vdef > vmin ? vdef*3 : vmin*4;
 	}
-	cgui->slider(val, vmin, vmax, 0xAAAAAA, NULL, *reverse ? true : false);
+	cgui->slider(val, vmin, vmax, 0xFFFFFF, NULL, *reverse ? true : false);
 	if(val != oldval) updateval(var, val, onchange);
 }
 
@@ -345,14 +345,14 @@ void guilistslider(char *var, char *list, char *onchange, int *reverse)
 	int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
 	loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
 	defformatstring(label)("%d", val);
-	cgui->slider(offset, 0, vals.length()-1, 0xAAAAAA, label, *reverse ? true : false);
+	cgui->slider(offset, 0, vals.length()-1, 0xFFFFFF, label, *reverse ? true : false);
 	if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
 void guicheckbox(char *name, char *var, float *on, int *off, char *onchange)
 {
 	bool enabled = getfval(var)!=*off;
-	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox")&GUI_UP)
+	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox", enabled ? false : true)&GUI_UP)
 	{
 		updatefval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
 	}
@@ -361,7 +361,7 @@ void guicheckbox(char *name, char *var, float *on, int *off, char *onchange)
 void guiradio(char *name, char *var, float *n, char *onchange)
 {
 	bool enabled = getfval(var)==*n;
-	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "radioboxon" : "radiobox")&GUI_UP)
+	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "radioboxon" : "radiobox", enabled ? false : true)&GUI_UP)
 	{
 		if(!enabled) updatefval(var, *n, onchange);
 	}
@@ -371,7 +371,7 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 {
     int val = getval(var);
     bool enabled = (val & *mask) != 0;
-    if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox")&GUI_UP)
+    if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox", enabled ? false : true)&GUI_UP)
     {
         updateval(var, enabled ? val & ~*mask : val | *mask, onchange);
     }

@@ -2025,7 +2025,7 @@ namespace client
     void serverstartcolumn(guient *g, int i)
     {
 		g->pushlist();
-		if(g->buttonf("%s ", 0xFFFFFF, NULL, i ? serverinfotypes[i] : "") & GUI_UP)
+		if(g->buttonf("%s ", 0xFFFFFF, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
 		{
 			mkstring(st);
 			bool invert = false;
@@ -2072,44 +2072,44 @@ namespace client
 			case SINFO_DESC:
 			{
 				copystring(text, si->sdesc, 24);
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
 				formatstring(text)("%d", si->ping);
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
 				formatstring(text)("%d", si->numplayers);
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAXCLIENTS:
 			{
 				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%d", si->attr[4]);
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
 				if(si->attr.length() > 1) formatstring(text)("%s", server::gamename(si->attr[1], si->attr[2]));
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
 				copystring(text, si->map, 18);
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
 				if(si->attr.length() > 3 && si->attr[3] >= 0)
 					formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
-				if(g->buttonf("%s ", colour, NULL, text) & GUI_UP) return true;
+				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			default:

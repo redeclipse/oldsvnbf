@@ -89,7 +89,7 @@ struct gui : guient
 			formatstring(title)("%d", tpos);
 			name = title;
 		}
-		defformatstring(tabtitle)("\fs%s[\fS%s%s%s\fs%s]\fS", visible() ? "\fa" : "\fd", visible() ? " " : "", name, visible() ? " " : "", visible() ? "\fa" : "\fd");
+		defformatstring(tabtitle)("\fs\fd[\fS%s%s%s\fs\fd]\fS", visible() ? " " : "", name, visible() ? " " : "");
 		gui::pushfont(visible() ? "super" : "default");
 		int w = text_width(tabtitle);
 		if(layoutpass)
@@ -106,7 +106,7 @@ struct gui : guient
 			{
 				if(!guiclicktab || mousebuttons&GUI_UP) *tcurrent = tpos; // switch tab
 				tcolor = 0xFF2222;
-				alpha = 255;
+				alpha = max(guiblend, 200);
 			}
             text_(tabtitle, x1, y1, tcolor, alpha, visible());
 		}
@@ -178,9 +178,9 @@ struct gui : guient
 		}
 	}
 
-	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false); }
-	int button(const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, true); }
-	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, "emphasis"); }
+	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false); }
+	int button(const char *text, int color, const char *icon, bool faded) { autotab(); return button_(text, color, icon, true, faded); }
+	int title (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false, "emphasis"); }
 
 	void separator() { autotab(); line_(5); }
 
@@ -468,6 +468,8 @@ struct gui : guient
 
 	void text_(const char *text, int x, int y, int color, int alpha, bool shadow)
 	{
+		if(FONTH < guibound[1]) y += (guibound[1]-FONTH)/2;
+		else if(FONTH > guibound[1]) y -= (FONTH-guibound[1])/2;
 		if(shadow) draw_text(text, x+guishadow, y+guishadow, 0x00, 0x00, 0x00, 0xC0*alpha/255);
 		draw_text(text, x, y, color>>16, (color>>8)&0xFF, color&0xFF, alpha);
 	}
@@ -667,7 +669,7 @@ struct gui : guient
 		layout(ishorizontal() ? guibound[0] : 0, ishorizontal() ? 0 : guibound[1]);
 	}
 
-	int button_(const char *text, int color, const char *icon, bool clickable, const char *font = "")
+	int button_(const char *text, int color, const char *icon, bool clickable, bool faded, const char *font = "")
 	{
 		const int padding = 10;
 		if(font && *font) gui::pushfont(font);
@@ -684,11 +686,11 @@ struct gui : guient
 			if(icon)
 			{
 				defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
-				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], clickable && !hit);
+				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;
-			if(text) text_(text, x, cury, color, hit || !clickable ? 255 : guiblend, hit && clickable);
+			if(text) text_(text, x, cury, color, hit || !faded || !clickable ? 255 : guiblend, hit && clickable);
 		}
 		if(font && *font) gui::popfont();
 		return layout(w, h);
