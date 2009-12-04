@@ -787,16 +787,18 @@ namespace game
 			}
 			bool override = false;
 			vec az = actor->abovehead(), dz = d->abovehead();
-			if(m_team(gamemode, mutators) && d->team == actor->team)
+			if(!m_fight(gamemode) || actor->aitype >= AI_START)
 			{
-				if(actor->aitype < AI_START)
-				{
-					concatstring(d->obit, " \fs\fzawteam-mate\fS ");
-					concatstring(d->obit, colorname(actor));
-					if(actor == player1) { anc = S_ALARM; override = true; }
-				}
+				concatstring(d->obit, " ");
+				concatstring(d->obit, colorname(actor));
 			}
-			else if(m_fight(gamemode))
+			else if(m_team(gamemode, mutators) && d->team == actor->team)
+			{
+				concatstring(d->obit, " \fs\fzawteam-mate\fS ");
+				concatstring(d->obit, colorname(actor));
+				if(actor == player1) { anc = S_ALARM; override = true; }
+			}
+			else
 			{
 				if(style&FRAG_REVENGE)
 				{
