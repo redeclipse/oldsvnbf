@@ -694,16 +694,8 @@ namespace ctf
 			ctfstate::flag &f = st.flags[b.target];
 			if(isctfflag(f, ai::owner(d)) && f.owner)
 			{
-				if(d->aitype == AI_BOT)
-				{
-					if(FWV(impulsestyle) && !d->action[AC_IMPULSE] && d->impulse[IM_METER] < FWV(impulsemeter)*2/3)
-					{
-						d->action[AC_IMPULSE] = true;
-						d->actiontime[AC_IMPULSE] = lastmillis;
-					}
-					ai::violence(d, b, f.owner, false);
-				}
-				else return true;
+				ai::violence(d, b, f.owner, false);
+				if(d->aitype != AI_BOT) return true;
 			}
 			int walk = f.owner && ai::owner(f.owner) != ai::owner(d) ? 1 : 0;
 			if(d->aitype == AI_BOT)
@@ -754,6 +746,7 @@ namespace ctf
 		if(st.flags.inrange(b.target) && d->aitype == AI_BOT)
 		{
 			ctfstate::flag &f = st.flags[b.target];
+			b.idle = -1;
 			if(isctfhome(f, ai::owner(d)) && ctfstyle <= 2)
 			{
 				static vector<int> hasflags; hasflags.setsizenodelete(0);
@@ -764,21 +757,12 @@ namespace ctf
 				}
 				if(!hasflags.empty())
 				{
-					ai::makeroute(d, b, f.spawnloc);
-					if(FWV(impulsestyle) && !d->action[AC_IMPULSE] && d->impulse[IM_METER] < FWV(impulsemeter)*2/3)
-					{
-						d->action[AC_IMPULSE] = true;
-						d->actiontime[AC_IMPULSE] = lastmillis;
-					}
+					if(ai::makeroute(d, b, f.spawnloc)) b.idle = -1;
 					return true;
 				}
 				else if(!isctfflag(f, ai::owner(d))) return false;
 			}
-			if(isctfflag(f, ai::owner(d)))
-			{
-				if(ai::makeroute(d, b, f.pos()))
-					return f.owner ? ai::violence(d, b, f.owner, false) : true;
-			}
+			if(isctfflag(f, ai::owner(d))) return f.owner ? ai::violence(d, b, f.owner, true) : ai::makeroute(d, b, f.pos());
 			else return ai::makeroute(d, b, f.pos());
 		}
 		return false;
