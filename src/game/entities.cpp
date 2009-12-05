@@ -2247,7 +2247,7 @@ namespace entities
 				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
 				{
 					const char *attrname = enttype[e.type].attrs[k];
-					if(e.type == PARTICLES) switch(e.attrs[0])
+					if(e.type == PARTICLES && k) switch(e.attrs[0])
 					{
 						case 0: switch(k) { case 1: attrname = "length"; break; case 2: attrname = "height"; break; case 3: attrname = "colour"; break; case 4: attrname = "fade"; break; default: attrname = ""; } break;
 						case 1: switch(k) { case 1: attrname = "dir"; break; default: attrname = ""; } break;
