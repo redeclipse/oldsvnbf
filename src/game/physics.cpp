@@ -188,10 +188,10 @@ namespace physics
 			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else
 			{
-				float speed = forcemovespeed > 0 ? forcemovespeed : movespeed;
-				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= forcemovecrawl > 0 ? forcemovecrawl : movecrawl;
-				if(FWV(impulsestyle) && ((gameent *)d)->action[AC_IMPULSE] && (!FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter)))
-					speed += FWV(impulsespeed)*(!((gameent *)d)->action[AC_IMPULSE] || d->move <= 0 ? 0.5f : 1);
+				float speed = FWV(movespeed);
+				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= FWV(movecrawl);
+				if(FWV(impulsestyle) && ((gameent *)d)->action[AC_IMPULSE] && (d->move || d->strafe) && (!FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter)))
+					speed += FWV(impulsespeed)*(d->move < 0 ? 0.5f : 1);
 				return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
 			}
 		}
