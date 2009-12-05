@@ -165,14 +165,14 @@ namespace physics
 		if((d->type == ENT_PLAYER || d->type == ENT_AI) && FWV(impulsestyle))
 		{
 			gameent *e = (gameent *)d;
-			if(FWV(impulsemeter) && e->impulse[IM_METER]+(cost ? cost : FWV(impulsecost)) > FWV(impulsemeter)) return false;
-			if(!cost)
+			if(FWV(impulsemeter) && e->impulse[IM_METER]+(cost > 0 ? cost : FWV(impulsecost)) > FWV(impulsemeter)) return false;
+			if(cost <= 0)
 			{
 				if(e->impulse[IM_TIME] && lastmillis-e->impulse[IM_TIME] <= PHYSMILLIS) return false;
 				if(FWV(gravity) > 0)
 				{
 					if(FWV(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= FWV(impulsecount)) return false;
-					if(FWV(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
+					if(cost == 0 && FWV(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
 				}
 			}
 			return true;
@@ -598,7 +598,7 @@ namespace physics
 					game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 				}
-				if(FWV(impulsestyle) && (d->turnside || (canimpulse(d) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
+				if(FWV(impulsestyle) && (d->turnside || (canimpulse(d, -1) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
 				{
 					loopi(d->turnside ? 3 : 1)
 					{
@@ -621,7 +621,7 @@ namespace physics
 						if(off > 180) off -= 360;
 						else if(off < -180) off += 360;
 						int key = (d->turnside && d->action[AC_JUMP]) ? AC_JUMP : ((!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect) ? AC_SPECIAL : -1);
-						if(key >= 0 && canimpulse(d))
+						if(key >= 0 && canimpulse(d, -1))
 						{
 							float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
 							d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
@@ -640,7 +640,7 @@ namespace physics
 							game::impulseeffect(d, true);
 							client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 						}
-						else if(d->turnside || (d->action[AC_SPECIAL] && canimpulse(d)))
+						else if(d->turnside || (d->action[AC_SPECIAL] && canimpulse(d, -1)))
 						{
 							if(off < 0) yaw += 90;
 							else yaw -= 90;
