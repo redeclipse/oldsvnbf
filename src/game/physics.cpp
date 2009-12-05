@@ -143,12 +143,11 @@ namespace physics
 
 	bool sticktofloor(physent *d)
 	{
-		if(d->type == ENT_PLAYER || d->type == ENT_AI)
+		if(!d->onladder && !liquidcheck(d) && (d->type == ENT_PLAYER || d->type == ENT_AI) && FWV(gravity) > 0)
 		{
 			gameent *e = (gameent *)d;
-			if(e->onladder || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS) ||
-				(e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS) || e->turnside || liquidcheck(e))
-					return false;
+			if(e->turnside || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS) || (e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS))
+				return false;
 			return true;
 		}
 		return false;
@@ -170,8 +169,11 @@ namespace physics
 			if(!cost)
 			{
 				if(e->impulse[IM_TIME] && lastmillis-e->impulse[IM_TIME] <= PHYSMILLIS) return false;
-				if(FWV(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= FWV(impulsecount)) return false;
-				if(FWV(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
+				if(FWV(gravity) > 0)
+				{
+					if(FWV(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= FWV(impulsecount)) return false;
+					if(FWV(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
+				}
 			}
 			return true;
 		}
@@ -196,7 +198,12 @@ namespace physics
 		return max(d->maxspeed,1.f);
 	}
 
-	bool movepitch(physent *d) { return d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR || (d->state == CS_ALIVE && gravity <= 0 && d->timeinair); }
+	bool movepitch(physent *d)
+	{
+		if(d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR) return true;
+		if(d->state == CS_ALIVE && FWV(gravity) <= 0 && d->physstate == PHYS_FALL) return true;
+		return false;
+	}
 
     void recalcdir(physent *d, const vec &oldvel, vec &dir)
     {
@@ -703,16 +710,19 @@ namespace physics
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
-        if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
-        else if(pl->floor.z > 0 && pl->floor.z < floorz)
+        if(FWV(gravity) > 0)
         {
-            g.z = -1;
-            g.project(pl->floor);
-            g.normalize();
-            g.mul(gravityforce(pl)*secs);
+			if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
+			else if(pl->floor.z > 0 && pl->floor.z < floorz)
+			{
+				g.z = -1;
+				g.project(pl->floor);
+				g.normalize();
+				g.mul(gravityforce(pl)*secs);
+			}
+			if(!liquidcheck(pl) || (!pl->move && !pl->strafe)) pl->falling.add(g);
         }
-        if(!liquidcheck(pl) || (!pl->move && !pl->strafe)) pl->falling.add(g);
-
+        else pl->falling = g;
         if(liquidcheck(pl) || pl->physstate >= PHYS_SLOPE)
         {
             float fric = liquidcheck(pl) ? liquidmerge(pl, FWV(aircurb), FWV(liquidcurb)) : FWV(floorcurb),
