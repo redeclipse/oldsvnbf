@@ -6,10 +6,10 @@ RewriteCond %{HTTP_HOST} ^bloodfrontier.sourceforge.net$ [OR,NC]
 RewriteCond %{HTTP_HOST} ^www.bloodfrontier.com$
 RewriteRule ^(.*)$ http://bloodfrontier.com/$1 [R=301,L,NC]
 
-RewriteRule ^download/default$ /bits/index.php?target=download&title=13226 [QSA,L,NC]
-RewriteRule ^download/windows$ /bits/index.php?target=download&title=13227 [QSA,L,NC]
-RewriteRule ^download/linux$ /bits/index.php?target=download&title=13228 [QSA,L,NC]
-RewriteRule ^download/macosx$ /bits/index.php?target=download&title=13887 [QSA,L,NC]
+RewriteRule ^download/windows$ /bits/index.php?target=download&title=Blood%20Frontier/Blood%20Frontier%20Beta%202/bloodfrontier-B2-setup.exe/download [QSA,L,NC]
+RewriteRule ^download/linux$ /bits/index.php?target=download&title=Blood%20Frontier/Blood%20Frontier%20Beta%202/bloodfrontier-B2-linux.tar.bz2/download [QSA,L,NC]
+RewriteRule ^download/macosx$ /bits/index.php?target=download&title=Blood%20Frontier/Blood%20Frontier%20Beta%202/bloodfrontier-B2-osx.dmg/download [QSA,L,NC]
+
 RewriteRule ^(blog|wiki|gallery|forums|chat|svn|repo|project|google|youtube|blackboxbeta|playdeb)/(.+)$ /bits/index.php?target=$1&title=$2 [QSA,L,NC]
 RewriteRule ^(download|blog|wiki|gallery|forums|chat|svn|repo|project|facebook|google|youtube|blackboxbeta|playdeb)$ /bits/index.php?target=$1 [QSA,L,NC]
 RewriteRule ^(home)$ /bits/index.php?target=$1 [QSA,L,NC]

@@ -1,8 +1,8 @@
 <?php
 	$app['sitename'] = "Blood Frontier";
 	$app['siteblurb'] = "It's Bloody Fun!";
-	$app['siterelver'] = "v0.80 (Beta 1)";
-	$app['sitereldate'] = "24th February 2009";
+	$app['siterelver'] = "v0.85 (Beta 2)";
+	$app['sitereldate'] = "6th December 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/uKnLsAiCVLk&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['sitevidlo'] = array (
 		'watch' => 'Watch this video on <a href="http://www.youtube.com/watch?v=uKnLsAiCVLk">YouTube</a>, <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a>, or download the MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a>, <a href="/bits/bfb2_hifi.mp4">Hi-fi</a>.',
@@ -41,7 +41,7 @@
 	$app['defsearch'] = "%22Blood%20Frontier%22";
 
 	$app['targets'] = array('home' => array('name' => '', 'url' => '/', 'alturl' => '', 'nav' => -1, 'redir' => 0));
-	$app['targets']['download'] = array('name' => 'Download', 'url' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'], 'alturl' => 'http://sourceforge.net/project/platformdownload.php?group_id='.$app['sfgroupid'].'&amp;sel_platform=', 'nav' => 1, 'redir' => 1);
+	$app['targets']['download'] = array('name' => 'Download', 'url' => 'https://sourceforge.net/projects/bloodfrontier/files/', 'alturl' => 'https://sourceforge.net/projects/bloodfrontier/files/', 'nav' => 1, 'redir' => 1);
 	$app['targets']['blog'] = array('name' => 'Blog', 'url' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/wordpress/'.$app['sfproject'].'/', 'nav' => 1, 'redir' => 1);
 	$app['targets']['wiki'] = array('name' => 'Wiki', 'url' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/mediawiki/'.$app['sfproject'].'/index.php?title=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['forums'] = array('name' => 'Forums', 'url' => 'http://sourceforge.net/apps/phpbb/'.$app['sfproject'].'/', 'alturl' => 'http://sourceforge.net/apps/phpbb/'.$app['sfproject'].'/viewforum.php?f=', 'nav' => 1, 'redir' => 1);
