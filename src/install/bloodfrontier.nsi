@@ -1,6 +1,6 @@
 Name "BloodFrontier"
 
-OutFile "bloodfrontier-B1-RC1-setup.exe"
+OutFile "bloodfrontier-B2-setup.exe"
 
 InstallDir $PROGRAMFILES\BloodFrontier
 
@@ -43,7 +43,6 @@ Section "Start Menu Shortcuts"
   CreateShortCut "$INSTDIR\BloodFrontier.lnk"                "$INSTDIR\bloodfrontier.bat" "" "$INSTDIR\bin\bfclient.exe" 0
   CreateShortCut "$SMPROGRAMS\BloodFrontier\BloodFrontier.lnk" "$INSTDIR\bloodfrontier.bat" "" "$INSTDIR\bin\bfclient.exe" 0
   CreateShortCut "$SMPROGRAMS\BloodFrontier\Uninstall.lnk"   "$INSTDIR\uninstall.exe"   "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\BloodFrontier\README.lnk"      "$INSTDIR\readme.html"     "" "$INSTDIR\readme.html" 0
   
 SectionEnd
 
