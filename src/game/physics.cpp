@@ -8,7 +8,7 @@ namespace physics
 	FVARW(movecrawl,		0, 0.5f, 10000);		// crawl modifier
 	FVARW(impulsespeed,		0, 50.f, 10000);		// extra velocity to add when impulsing
 
-	VARW(impulsestyle,		0, 1, 4);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = meter only, 4 = freestyle
+	VARW(impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 	VARW(impulsemeter,		0, 30000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
 	VARW(impulsecost,		0, 1000, INT_MAX-1);	// cost of impulse jump
 	VARW(impulsecount,		0, 5, INT_MAX-1);		// number of impulse actions per air transit

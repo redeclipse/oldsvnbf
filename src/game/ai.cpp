@@ -285,7 +285,9 @@ namespace ai
 		if(aistyle[d->aitype].maxspeed)
 		{
 			vec feet = d->feetpos();
-			if(walk == 2 || b.override || (walk && feet.squaredist(pos) <= guard*guard) || !makeroute(d, b, pos))
+			float dist = feet.squaredist(pos);
+			if(dist >= guard*guard) b.idle = -1;
+			if(walk == 2 || b.override || (walk && dist <= guard*guard) || !makeroute(d, b, pos))
 			{ // run away and back to keep ourselves busy
 				if(!b.override && randomnode(d, b, pos, guard, wander))
 				{
@@ -312,7 +314,7 @@ namespace ai
 		if(!aistyle[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
 		else
 		{
-			if(!walk && d->feetpos().squaredist(pos) <= guard*guard)
+			if(!walk && pos.squaredist(d->feetpos()) <= guard*guard)
 			{
 				b.idle = hasenemy ? 2 : 1;
 				return true;
@@ -657,6 +659,7 @@ namespace ai
 								if(!e.spawned || d->hasweap(attr, sweap)) return 0;
 								float guard = enttype[e.type].radius;
 								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false, false) ? 2 : 1;
+								else b.idle = -1;
 								break;
 							}
 							default: break;
@@ -681,6 +684,7 @@ namespace ai
 								if(d->hasweap(attr, sweap) || proj.owner == d) return 0;
 								float guard = enttype[e.type].radius;
 								if(d->feetpos().squaredist(e.o) <= guard*guard) b.idle = enemy(d, b, e.o, guard*4, false, false) ? 2 : 1;
+								else b.idle = -1;
 								break;
 							}
 							default: break;
@@ -727,7 +731,12 @@ namespace ai
 						else
 						{
 							vec dp = d->headpos(), ep = getaimpos(d, e, alt);
-							return cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000) ? 1 : 0;
+							if(cansee(d, dp, ep) || (e->clientnum == d->ai->enemy && d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*50)+3000))
+							{
+								b.idle = -1;
+								return 1;
+							}
+							return 0;
 						}
 					}
 					break;
@@ -895,7 +904,7 @@ namespace ai
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(idle)
 			{
-				bool wascrouching = lastmillis-d->actiontime[AC_CROUCH] <= 500, wantscrouch = d->ai->dontmove && !wasdontmove && !d->action[AC_CROUCH];
+				bool wascrouching = lastmillis-d->actiontime[AC_CROUCH] <= PHYSMILLIS*2, wantscrouch = d->ai->dontmove && !wasdontmove && !d->action[AC_CROUCH];
 				if(wascrouching || wantscrouch)
 				{
 					d->action[AC_CROUCH] = true;
@@ -956,7 +965,7 @@ namespace ai
 		}
 		else
 		{
-			if(!b.idle && !enemyok)
+			if(!enemyok)
 			{
 				d->ai->enemy = -1;
 				d->ai->enemymillis = 0;
@@ -969,20 +978,25 @@ namespace ai
 		d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
 		if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-		if(d->ai->becareful)
+		bool wantsimpulse = false;
+		if(d->aitype == AI_BOT && b.idle == -1 && !d->ai->dontmove)
+			wantsimpulse = (d->action[AC_IMPULSE] || !d->actiontime[AC_IMPULSE] || lastmillis-d->actiontime[AC_IMPULSE] > PHYSMILLIS*2);
+		if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
 		{
-			if(d->physstate != PHYS_FALL) d->ai->becareful = false;
-			else
+			float offyaw, offpitch;
+			vec v = vec(d->vel).normalize();
+			vectoyawpitch(v, offyaw, offpitch);
+			offyaw -= d->aimyaw; offpitch -= d->aimpitch;
+			if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
+			else if(d->ai->becareful)
 			{
-				float yaw, pitch;
-				vec v = vec(d->vel).normalize();
-				vectoyawpitch(v, yaw, pitch);
-				yaw -= d->aimyaw; pitch -= d->aimpitch;
-				game::fixrange(yaw, pitch);
-				if(yaw >= 90 || pitch >= 90) d->ai->becareful = false;
-				else d->ai->dontmove = true;
+				d->ai->dontmove = true;
+				wantsimpulse = false;
 			}
 		}
+		else d->ai->becareful = false;
+		if(d->action[AC_IMPULSE] != wantsimpulse)
+			if((d->action[AC_IMPULSE] = !d->action[AC_IMPULSE]) == true) d->actiontime[AC_IMPULSE] = lastmillis;
 
 		if(d->ai->dontmove) d->move = d->strafe = 0;
 		else
@@ -1185,7 +1199,7 @@ namespace ai
 			if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
 			if(d->state == CS_ALIVE && allowmove)
 			{
-				if(!request(d, b)) target(d, b, false, b.idle ? true : false);
+				if(!request(d, b)) target(d, b, false, b.idle > 0 ? true : false);
 				weapons::shoot(d, d->ai->target);
 			}
 		}
@@ -1282,8 +1296,7 @@ namespace ai
 			}
 			else if(d->state == CS_ALIVE && run && lastmillis >= c.next)
 			{
-				int result = 0;
-				c.idle = 0;
+				int result = 0; c.idle = 0;
 				switch(c.type)
 				{
 					case AI_S_WAIT: result = dowait(d, c); break;
