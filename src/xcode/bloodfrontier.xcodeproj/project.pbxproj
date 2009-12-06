@@ -78,13 +78,18 @@
 		B9AC7B0E0D06DB44005506F8 /* geom.h in Headers */ = {isa = PBXBuildFile; fileRef = B9AC7AC60D06DB44005506F8 /* geom.h */; };
 		B9AC7B0F0D06DB44005506F8 /* iengine.h in Headers */ = {isa = PBXBuildFile; fileRef = B9AC7AC70D06DB44005506F8 /* iengine.h */; };
 		B9AC7B100D06DB44005506F8 /* igame.h in Headers */ = {isa = PBXBuildFile; fileRef = B9AC7AC80D06DB44005506F8 /* igame.h */; };
-		B9AC7B110D06DB44005506F8 /* pch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9AC7AC90D06DB44005506F8 /* pch.cpp */; };
-		B9AC7B120D06DB44005506F8 /* pch.h in Headers */ = {isa = PBXBuildFile; fileRef = B9AC7ACA0D06DB44005506F8 /* pch.h */; };
 		B9AC7B150D06DB44005506F8 /* tools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9AC7ACD0D06DB44005506F8 /* tools.cpp */; };
 		B9AC7B160D06DB44005506F8 /* tools.h in Headers */ = {isa = PBXBuildFile; fileRef = B9AC7ACE0D06DB44005506F8 /* tools.h */; };
 		B9CACA2509209A5800A13F04 /* bloodfrontier.icns in Resources */ = {isa = PBXBuildFile; fileRef = B97E99CE085F4B3E002F9BC6 /* bloodfrontier.icns */; };
 		D116C0AB0D9F7DB500E8B945 /* rendertarget.h in Headers */ = {isa = PBXBuildFile; fileRef = D116C0AA0D9F7DB500E8B945 /* rendertarget.h */; };
 		D118DEB60D979281000E8C4C /* glare.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D118DEB50D979281000E8C4C /* glare.cpp */; };
+		D11B5A6510CBB4D8003F0098 /* ai.h in Headers */ = {isa = PBXBuildFile; fileRef = D11B5A6310CBB4D8003F0098 /* ai.h */; };
+		D11B5A6610CBB4D8003F0098 /* game.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D11B5A6410CBB4D8003F0098 /* game.cpp */; };
+		D11B5A6A10CBB500003F0098 /* movie.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D11B5A6810CBB500003F0098 /* movie.cpp */; };
+		D11B5A6B10CBB500003F0098 /* mpr.h in Headers */ = {isa = PBXBuildFile; fileRef = D11B5A6910CBB500003F0098 /* mpr.h */; };
+		D11B5A8210CBB637003F0098 /* crypto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D11B5A7F10CBB637003F0098 /* crypto.cpp */; };
+		D11B5A8310CBB637003F0098 /* stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D11B5A8010CBB637003F0098 /* stream.cpp */; };
+		D11B5A8410CBB637003F0098 /* zip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D11B5A8110CBB637003F0098 /* zip.cpp */; };
 		D167A1970C493AED007F7D96 /* Nomap.png in Resources */ = {isa = PBXBuildFile; fileRef = D167A1960C493AED007F7D96 /* Nomap.png */; };
 		D16A83480F130E9500EABB1F /* ai.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A83360F130E9500EABB1F /* ai.cpp */; };
 		D16A83490F130E9500EABB1F /* client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A83370F130E9500EABB1F /* client.cpp */; };
@@ -102,18 +107,15 @@
 		D16A83560F130E9500EABB1F /* stf.h in Headers */ = {isa = PBXBuildFile; fileRef = D16A83440F130E9500EABB1F /* stf.h */; };
 		D16A83570F130E9500EABB1F /* vars.h in Headers */ = {isa = PBXBuildFile; fileRef = D16A83450F130E9500EABB1F /* vars.h */; };
 		D16A83580F130E9500EABB1F /* weapons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A83460F130E9500EABB1F /* weapons.cpp */; };
-		D16A83590F130E9500EABB1F /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A83470F130E9500EABB1F /* world.cpp */; };
 		D16A83710F130EBC00EABB1F /* blend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A836A0F130EBC00EABB1F /* blend.cpp */; };
 		D16A83720F130EBC00EABB1F /* blob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A836B0F130EBC00EABB1F /* blob.cpp */; };
 		D16A83760F130EBC00EABB1F /* scale.h in Headers */ = {isa = PBXBuildFile; fileRef = D16A836F0F130EBC00EABB1F /* scale.h */; };
 		D16A83770F130EBC00EABB1F /* ui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16A83700F130EBC00EABB1F /* ui.cpp */; };
-		D16A83870F130FE700EABB1F /* hash.h in Headers */ = {isa = PBXBuildFile; fileRef = D16A83860F130FE700EABB1F /* hash.h */; };
 		D16BD00D0D7000EA0053CECE /* dynlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D16BD00C0D7000EA0053CECE /* dynlight.cpp */; };
 		D16C16920E04812500A522EB /* obj.h in Headers */ = {isa = PBXBuildFile; fileRef = D16C16900E04812500A522EB /* obj.h */; };
 		D16C16930E04812500A522EB /* textedit.h in Headers */ = {isa = PBXBuildFile; fileRef = D16C16910E04812500A522EB /* textedit.h */; };
 		D1776F1F0E485DC5004CC402 /* depthfx.h in Headers */ = {isa = PBXBuildFile; fileRef = D1776F190E485DC5004CC402 /* depthfx.h */; };
 		D1776F230E485DC5004CC402 /* sound.h in Headers */ = {isa = PBXBuildFile; fileRef = D1776F1D0E485DC5004CC402 /* sound.h */; };
-		D1776F330E485DF2004CC402 /* attrs.h in Headers */ = {isa = PBXBuildFile; fileRef = D1776F310E485DF2004CC402 /* attrs.h */; };
 		D17E0F2C0BAF1FA9008BB696 /* Keys.gif in Resources */ = {isa = PBXBuildFile; fileRef = D17E0F280BAF1FA9008BB696 /* Keys.gif */; };
 		D17E0F2E0BAF1FA9008BB696 /* Server.gif in Resources */ = {isa = PBXBuildFile; fileRef = D17E0F2A0BAF1FA9008BB696 /* Server.gif */; };
 		D17E0F310BAF2031008BB696 /* Help.tiff in Resources */ = {isa = PBXBuildFile; fileRef = D17E0F300BAF2031008BB696 /* Help.tiff */; };
@@ -131,8 +133,6 @@
 		D1D88A8D0F350E31000680E4 /* ragdoll.h in Headers */ = {isa = PBXBuildFile; fileRef = D1D88A8C0F350E31000680E4 /* ragdoll.h */; };
 		D1D88AB80F350EDE000680E4 /* irc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1D88AB60F350EDE000680E4 /* irc.cpp */; };
 		D1D88AB90F350EDE000680E4 /* irc.h in Headers */ = {isa = PBXBuildFile; fileRef = D1D88AB70F350EDE000680E4 /* irc.h */; };
-		D1D88B110F3510AD000680E4 /* crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = D1D88B000F3510AD000680E4 /* crypto.h */; };
-		D1D88B120F3510AD000680E4 /* hash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D1D88B010F3510AD000680E4 /* hash.cpp */; };
 		D1DB53E80D70F1CD003AE25C /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1DB53E70D70F1CD003AE25C /* Localizable.strings */; };
 		D1E605B90E2416150045244E /* bloodfrontier.icns in Resources */ = {isa = PBXBuildFile; fileRef = B97E99CE085F4B3E002F9BC6 /* bloodfrontier.icns */; };
 		D1F0AC200BB0688A00CE4E84 /* Maps.gif in Resources */ = {isa = PBXBuildFile; fileRef = D1F0AC1F0BB0688A00CE4E84 /* Maps.gif */; };
@@ -225,14 +225,19 @@
 		B9AC7AC60D06DB44005506F8 /* geom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geom.h; sourceTree = "<group>"; };
 		B9AC7AC70D06DB44005506F8 /* iengine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iengine.h; sourceTree = "<group>"; };
 		B9AC7AC80D06DB44005506F8 /* igame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = igame.h; sourceTree = "<group>"; };
-		B9AC7AC90D06DB44005506F8 /* pch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pch.cpp; sourceTree = "<group>"; };
-		B9AC7ACA0D06DB44005506F8 /* pch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pch.h; sourceTree = "<group>"; };
 		B9AC7ACD0D06DB44005506F8 /* tools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tools.cpp; sourceTree = "<group>"; };
 		B9AC7ACE0D06DB44005506F8 /* tools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tools.h; sourceTree = "<group>"; };
 		B9CACA12092099DF00A13F04 /* launcher-Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; path = "launcher-Info.plist"; sourceTree = "<group>"; };
 		B9CACA14092099E700A13F04 /* bloodfrontier-Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; path = "bloodfrontier-Info.plist"; sourceTree = "<group>"; };
 		D116C0AA0D9F7DB500E8B945 /* rendertarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rendertarget.h; sourceTree = "<group>"; };
 		D118DEB50D979281000E8C4C /* glare.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = glare.cpp; sourceTree = "<group>"; };
+		D11B5A6310CBB4D8003F0098 /* ai.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ai.h; sourceTree = "<group>"; };
+		D11B5A6410CBB4D8003F0098 /* game.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = game.cpp; sourceTree = "<group>"; };
+		D11B5A6810CBB500003F0098 /* movie.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = movie.cpp; sourceTree = "<group>"; };
+		D11B5A6910CBB500003F0098 /* mpr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mpr.h; sourceTree = "<group>"; };
+		D11B5A7F10CBB637003F0098 /* crypto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crypto.cpp; sourceTree = "<group>"; };
+		D11B5A8010CBB637003F0098 /* stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stream.cpp; sourceTree = "<group>"; };
+		D11B5A8110CBB637003F0098 /* zip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = zip.cpp; sourceTree = "<group>"; };
 		D167A1960C493AED007F7D96 /* Nomap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Nomap.png; sourceTree = "<group>"; };
 		D16A83360F130E9500EABB1F /* ai.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ai.cpp; sourceTree = "<group>"; };
 		D16A83370F130E9500EABB1F /* client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = client.cpp; sourceTree = "<group>"; };
@@ -250,18 +255,15 @@
 		D16A83440F130E9500EABB1F /* stf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stf.h; sourceTree = "<group>"; };
 		D16A83450F130E9500EABB1F /* vars.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vars.h; sourceTree = "<group>"; };
 		D16A83460F130E9500EABB1F /* weapons.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = weapons.cpp; sourceTree = "<group>"; };
-		D16A83470F130E9500EABB1F /* world.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = world.cpp; sourceTree = "<group>"; };
 		D16A836A0F130EBC00EABB1F /* blend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blend.cpp; sourceTree = "<group>"; };
 		D16A836B0F130EBC00EABB1F /* blob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blob.cpp; sourceTree = "<group>"; };
 		D16A836F0F130EBC00EABB1F /* scale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scale.h; sourceTree = "<group>"; };
 		D16A83700F130EBC00EABB1F /* ui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ui.cpp; sourceTree = "<group>"; };
-		D16A83860F130FE700EABB1F /* hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hash.h; sourceTree = "<group>"; };
 		D16BD00C0D7000EA0053CECE /* dynlight.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dynlight.cpp; sourceTree = "<group>"; };
 		D16C16900E04812500A522EB /* obj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = obj.h; sourceTree = "<group>"; };
 		D16C16910E04812500A522EB /* textedit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = textedit.h; sourceTree = "<group>"; };
 		D1776F190E485DC5004CC402 /* depthfx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = depthfx.h; sourceTree = "<group>"; };
 		D1776F1D0E485DC5004CC402 /* sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
-		D1776F310E485DF2004CC402 /* attrs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = attrs.h; sourceTree = "<group>"; };
 		D17E0F280BAF1FA9008BB696 /* Keys.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = Keys.gif; sourceTree = "<group>"; };
 		D17E0F2A0BAF1FA9008BB696 /* Server.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = Server.gif; sourceTree = "<group>"; };
 		D17E0F300BAF2031008BB696 /* Help.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = Help.tiff; sourceTree = "<group>"; };
@@ -279,8 +281,6 @@
 		D1D88A8C0F350E31000680E4 /* ragdoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ragdoll.h; sourceTree = "<group>"; };
 		D1D88AB60F350EDE000680E4 /* irc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = irc.cpp; sourceTree = "<group>"; };
 		D1D88AB70F350EDE000680E4 /* irc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = irc.h; sourceTree = "<group>"; };
-		D1D88B000F3510AD000680E4 /* crypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypto.h; sourceTree = "<group>"; };
-		D1D88B010F3510AD000680E4 /* hash.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hash.cpp; sourceTree = "<group>"; };
 		D1DB53E50D70F1C3003AE25C /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		D1F0AC1F0BB0688A00CE4E84 /* Maps.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = Maps.gif; sourceTree = "<group>"; };
 		F5A47A9D01A0482F01D3D55B /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = SOURCE_ROOT; };
@@ -427,6 +427,8 @@
 		B9AC7A830D06DB44005506F8 /* engine */ = {
 			isa = PBXGroup;
 			children = (
+				D11B5A6810CBB500003F0098 /* movie.cpp */,
+				D11B5A6910CBB500003F0098 /* mpr.h */,
 				D1D88AB60F350EDE000680E4 /* irc.cpp */,
 				D1D88AB70F350EDE000680E4 /* irc.h */,
 				D1D88A8C0F350E31000680E4 /* ragdoll.h */,
@@ -496,10 +498,9 @@
 		B9AC7AC10D06DB44005506F8 /* shared */ = {
 			isa = PBXGroup;
 			children = (
-				D1D88B000F3510AD000680E4 /* crypto.h */,
-				D1D88B010F3510AD000680E4 /* hash.cpp */,
-				D16A83860F130FE700EABB1F /* hash.h */,
-				D1776F310E485DF2004CC402 /* attrs.h */,
+				D11B5A7F10CBB637003F0098 /* crypto.cpp */,
+				D11B5A8010CBB637003F0098 /* stream.cpp */,
+				D11B5A8110CBB637003F0098 /* zip.cpp */,
 				B9AC7AC20D06DB44005506F8 /* command.h */,
 				B9AC7AC30D06DB44005506F8 /* cube.h */,
 				B9AC7AC40D06DB44005506F8 /* ents.h */,
@@ -507,8 +508,6 @@
 				B9AC7AC60D06DB44005506F8 /* geom.h */,
 				B9AC7AC70D06DB44005506F8 /* iengine.h */,
 				B9AC7AC80D06DB44005506F8 /* igame.h */,
-				B9AC7AC90D06DB44005506F8 /* pch.cpp */,
-				B9AC7ACA0D06DB44005506F8 /* pch.h */,
 				B9AC7ACD0D06DB44005506F8 /* tools.cpp */,
 				B9AC7ACE0D06DB44005506F8 /* tools.h */,
 			);
@@ -519,6 +518,8 @@
 		D16A83350F130E9500EABB1F /* game */ = {
 			isa = PBXGroup;
 			children = (
+				D11B5A6310CBB4D8003F0098 /* ai.h */,
+				D11B5A6410CBB4D8003F0098 /* game.cpp */,
 				D1CEB4060F548C0B004FD11F /* aiman.h */,
 				D1CEB4070F548C0B004FD11F /* ctfmode.h */,
 				D1CEB4080F548C0B004FD11F /* duelmut.h */,
@@ -540,7 +541,6 @@
 				D16A83440F130E9500EABB1F /* stf.h */,
 				D16A83450F130E9500EABB1F /* vars.h */,
 				D16A83460F130E9500EABB1F /* weapons.cpp */,
-				D16A83470F130E9500EABB1F /* world.cpp */,
 			);
 			name = game;
 			path = ../game;
@@ -570,7 +570,6 @@
 				B9AC7B0E0D06DB44005506F8 /* geom.h in Headers */,
 				B9AC7B0F0D06DB44005506F8 /* iengine.h in Headers */,
 				B9AC7B100D06DB44005506F8 /* igame.h in Headers */,
-				B9AC7B120D06DB44005506F8 /* pch.h in Headers */,
 				B9AC7B160D06DB44005506F8 /* tools.h in Headers */,
 				B91D401F0D525FD3004EF78A /* animmodel.h in Headers */,
 				B91D40230D525FE9004EF78A /* md5.h in Headers */,
@@ -583,7 +582,6 @@
 				D16C16930E04812500A522EB /* textedit.h in Headers */,
 				D1776F1F0E485DC5004CC402 /* depthfx.h in Headers */,
 				D1776F230E485DC5004CC402 /* sound.h in Headers */,
-				D1776F330E485DF2004CC402 /* attrs.h in Headers */,
 				D16A834B0F130E9500EABB1F /* ctf.h in Headers */,
 				D16A834E0F130E9500EABB1F /* extinfo.h in Headers */,
 				D16A834F0F130E9500EABB1F /* game.h in Headers */,
@@ -591,15 +589,15 @@
 				D16A83560F130E9500EABB1F /* stf.h in Headers */,
 				D16A83570F130E9500EABB1F /* vars.h in Headers */,
 				D16A83760F130EBC00EABB1F /* scale.h in Headers */,
-				D16A83870F130FE700EABB1F /* hash.h in Headers */,
 				D1D88A8B0F350DFE000680E4 /* auth.h in Headers */,
 				D1D88A8D0F350E31000680E4 /* ragdoll.h in Headers */,
 				D1D88AB90F350EDE000680E4 /* irc.h in Headers */,
-				D1D88B110F3510AD000680E4 /* crypto.h in Headers */,
 				D1CEB40A0F548C0B004FD11F /* aiman.h in Headers */,
 				D1CEB40B0F548C0B004FD11F /* ctfmode.h in Headers */,
 				D1CEB40C0F548C0B004FD11F /* duelmut.h in Headers */,
 				D1CEB40D0F548C0B004FD11F /* stfmode.h in Headers */,
+				D11B5A6510CBB4D8003F0098 /* ai.h in Headers */,
+				D11B5A6B10CBB500003F0098 /* mpr.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -751,7 +749,6 @@
 				B9AC7AF50D06DB44005506F8 /* world.cpp in Sources */,
 				B9AC7AF70D06DB44005506F8 /* worldio.cpp in Sources */,
 				B9AC7B0D0D06DB44005506F8 /* geom.cpp in Sources */,
-				B9AC7B110D06DB44005506F8 /* pch.cpp in Sources */,
 				B9AC7B150D06DB44005506F8 /* tools.cpp in Sources */,
 				B91D40210D525FE0004EF78A /* decal.cpp in Sources */,
 				D1C660CA0D5467C8002E52C1 /* pvs.cpp in Sources */,
@@ -767,12 +764,15 @@
 				D16A83540F130E9500EABB1F /* server.cpp in Sources */,
 				D16A83550F130E9500EABB1F /* stf.cpp in Sources */,
 				D16A83580F130E9500EABB1F /* weapons.cpp in Sources */,
-				D16A83590F130E9500EABB1F /* world.cpp in Sources */,
 				D16A83710F130EBC00EABB1F /* blend.cpp in Sources */,
 				D16A83720F130EBC00EABB1F /* blob.cpp in Sources */,
 				D16A83770F130EBC00EABB1F /* ui.cpp in Sources */,
 				D1D88AB80F350EDE000680E4 /* irc.cpp in Sources */,
-				D1D88B120F3510AD000680E4 /* hash.cpp in Sources */,
+				D11B5A6610CBB4D8003F0098 /* game.cpp in Sources */,
+				D11B5A6A10CBB500003F0098 /* movie.cpp in Sources */,
+				D11B5A8210CBB637003F0098 /* crypto.cpp in Sources */,
+				D11B5A8310CBB637003F0098 /* stream.cpp in Sources */,
+				D11B5A8410CBB637003F0098 /* zip.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
