@@ -990,7 +990,7 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 					entcompat ec;
 					f->read(&ec, sizeof(entcompat));
 					lilswap(&ec.o.x, 3);
-					lilswap(&ec.attr, 5);
+					lilswap((short*)&ec.attr, 5);
 					e.o = ec.o;
 					e.type = ec.type;
 					loopk(5) e.attrs.add(ec.attr[k]);
