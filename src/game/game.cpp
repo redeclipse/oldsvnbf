@@ -315,7 +315,7 @@ namespace game
 		{
 			int len = m_delay(gamemode, mutators);
 			if(!len && d->aitype >= AI_START) len = ai::aideadfade;
-			if(len && (!timechk || len > 1000))
+			if(len > 0 && (!timechk || len > 1000))
 			{
 				int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
 				if(millis <= len) { if(millis >= over) total *= 1.f-(float(millis-over)/float(interval)); }
