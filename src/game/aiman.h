@@ -259,9 +259,9 @@ namespace aiman
 		}
 	}
 
-	void clearai(int type)
+	void clearai(bool all)
 	{ // clear and remove all ai immediately
-		loopvrev(clients) if(clients[i]->state.aitype >= type) deleteai(clients[i]);
+		loopvrev(clients) if(all || clients[i]->state.aitype != AI_BOT) deleteai(clients[i]);
 		dorefresh = autooverride = false;
 	}
 
@@ -269,7 +269,7 @@ namespace aiman
 	{
 		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients())
 		{
-			if(hasgameinfo)
+			if(hasgameinfo && !interm)
 			{
 				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
 				checkold(teambalance); checkold(botbalance); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
