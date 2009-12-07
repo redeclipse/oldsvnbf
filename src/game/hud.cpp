@@ -189,7 +189,7 @@ namespace hud
 	TVAR(flagtex, "textures/flag", 3);
 	TVAR(arrowtex, "textures/arrow", 3);
 	FVARP(radarblend, 0, 1.f, 1);
-	FVARP(radarcardsize, 0, 0.85f, 1000);
+	FVARP(radarcardsize, 0, 0.5f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
 	FVARP(radarplayersize, 0, 0.5f, 1000);
@@ -1012,10 +1012,23 @@ namespace hud
 		{
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
-			int prot = m_protect(game::gamemode, game::mutators), colour = teamtype[d->team].colour, delay = d->protect(lastmillis, prot);
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
-				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(delay > 0) fade *= clamp(float(prot-delay)/float(prot), 0.f, 1.f);
+			int colour = teamtype[d->team].colour;
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f), r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+			if(d->state == CS_DEAD || d->state == CS_WAITING)
+			{
+				int millis = lastmillis-d->lastdeath;
+				if(millis > 0)
+				{
+					int len = m_delay(game::gamemode, game::mutators);
+					if(!len && d->aitype >= AI_START) len = ai::aideadfade;
+					if(len > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
+				}
+			}
+			else
+			{
+				int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
+				if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
+			}
 			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
@@ -1027,19 +1040,25 @@ namespace hud
 		loopi(4)
 		{
 			const char *card = "";
-			vec dir(camera1->o);
+			vec dir(0, 0, 0);
 			switch(i)
 			{
-				case 0: dir.sub(vec(0, 1, 0)); card = altcard ? "0" : "N"; break;
-				case 1: dir.add(vec(1, 0, 0)); card = altcard ? "90" : "E"; break;
-				case 2: dir.add(vec(0, 1, 0)); card = altcard ? "180" : "S"; break;
-				case 3: dir.sub(vec(1, 0, 0)); card = altcard ? "270" : "W"; break;
+				case 0: dir = vec(0, -1, 0); card = altcard ? "0" : "N"; break;
+				case 1: dir = vec(1, 0, 0); card = altcard ? "90" : "E"; break;
+				case 2: dir = vec(0, 1, 0); card = altcard ? "180" : "S"; break;
+				case 3: dir = vec(-1, 0, 0); card = altcard ? "270" : "W"; break;
 				default: break;
 			}
-			dir.sub(camera1->o);
-			dir.rotate_around_z(-camera1->yaw*RAD);
-			dir.normalize();
-			drawblip(cardtex, 4, w, h, radarcardsize, blend*radarcardblend, dir, 1.f, 1.f, 1.f, "radar", "%s", card);
+			if(!dir.iszero())
+			{
+				dir.rotate_around_z(-camera1->yaw*RAD);
+				dir.normalize();
+				float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
+					size = max(w, h)/2, tx = w/2, ty = h/2, ts = size*radarsize, tp = ts*radarcardsize, tr = (size*radaroffset)+(ts*4);
+				pushfont("radar");
+				draw_textx("%s", int(tx+(tr*x)+(tp*0.5f)), int(ty+(tr*y)+(ts-FONTH)), 255, 255, 255, int(blend*radarcardblend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, card);
+				popfont();
+			}
 		}
 	}
 
@@ -1170,7 +1189,7 @@ namespace hud
 		}
 		if(chkcond(radarplayers,  m_duke(game::gamemode, game::mutators) || game::tvmode()) || m_edit(game::gamemode)) // 4
 		{
-			loopv(game::players) if(game::players[i] && game::players[i]->state == CS_ALIVE)
+			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR)
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
 		}
 		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
