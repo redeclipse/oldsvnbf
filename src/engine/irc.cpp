@@ -104,7 +104,7 @@ int ircrecv(ircnet *n, int timeout)
 
 void ircnewnet(int type, const char *name, const char *serv, int port, const char *nick, const char *ip, const char *passkey)
 {
-	if(!name || !serv || !port || !nick) return;
+	if(!name || !*name || !serv || !*serv || !port || !nick || !*nick) return;
 	ircnet *m = ircfind(name);
 	if(m)
 	{
@@ -211,7 +211,7 @@ bool ircenterchan(ircnet *n, const char *name)
 
 bool ircnewchan(int type, const char *name, const char *channel, const char *friendly, const char *passkey, int relay)
 {
-	if(!name || !channel) return false;
+	if(!name || !*name || !channel || !*channel) return false;
 	ircnet *n = ircfind(name);
 	if(!n)
 	{
@@ -728,11 +728,11 @@ bool ircchangui(guient *g, ircnet *n, ircchan *c, bool tab)
 	defformatstring(cwindow)("%s_%s_window", n->name, c->name);
 	g->fieldclear(cwindow);
 	loopvk(c->lines) g->fieldline(cwindow, c->lines[k]);
-	g->field(cwindow, 0xFFFFFF, -150, 50, NULL, EDITORREADONLY);
+	g->field(cwindow, 0xFFFFFF, -120, 30, NULL, EDITORREADONLY);
 	g->fieldscroll(cwindow);
 
 	defformatstring(cinput)("%s_%s_input", n->name, c->name);
-	char *v = g->field(cinput, 0xFFFFFF, -150, 0, "", EDITORFOREVER);
+	char *v = g->field(cinput, 0xFFFFFF, -120, 0, "", EDITORFOREVER);
 	if(v && *v)
 	{
 		irccmd(n, c, v);
@@ -749,11 +749,11 @@ bool ircnetgui(guient *g, ircnet *n, bool tab)
 	defformatstring(window)("%s_window", n->name);
 	g->fieldclear(window);
 	loopvk(n->lines) g->fieldline(window, n->lines[k]);
-	g->field(window, 0xFFFFFF, -150, 50, NULL, EDITORREADONLY);
+	g->field(window, 0xFFFFFF, -120, 30, NULL, EDITORREADONLY);
 	g->fieldscroll(window);
 
 	defformatstring(input)("%s_input", n->name);
-	char *w = g->field(input, 0xFFFFFF, -150, 0, "", EDITORFOREVER);
+	char *w = g->field(input, 0xFFFFFF, -120, 0, "", EDITORFOREVER);
 	if(w && *w)
 	{
 		irccmd(n, NULL, w);
@@ -773,7 +773,7 @@ bool ircnetgui(guient *g, ircnet *n, bool tab)
 bool ircgui(guient *g, const char *s)
 {
 	g->allowautotab(false);
-	g->strut(151);
+	g->strut(121);
 	if(s && *s)
 	{
 		ircnet *n = ircfind(s);
@@ -820,5 +820,6 @@ void guiirc(const char *s)
 	}
 }
 ICOMMAND(ircgui, "s", (char *s), guiirc(s));
+ICOMMAND(ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i].state >= IRC_ATTEMPT) num++; intret(num); });
 #endif
 #endif
