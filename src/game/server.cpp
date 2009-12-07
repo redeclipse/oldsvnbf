@@ -287,7 +287,7 @@ namespace server
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
-		extern void clearai(int type = AI_BOT);
+		extern void clearai(bool all = true);
 		extern void checkai();
 		extern void reqadd(clientinfo *ci, int skill);
 		extern void reqdel(clientinfo *ci);
@@ -683,7 +683,6 @@ namespace server
 		maprequest = false;
 		interm = gamemillis+GVAR(intermlimit);
 		sendf(-1, 1, "ri2", SV_TIMEUP, 0);
-		aiman::clearai(AI_START);
 	}
 
 	void checklimits()
@@ -1607,6 +1606,7 @@ namespace server
 	void changemap(const char *name, int mode, int muts)
 	{
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
+		aiman::clearai(false);
 		aiman::dorefresh = true;
         stopdemo();
 		gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
