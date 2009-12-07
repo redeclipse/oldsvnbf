@@ -1015,7 +1015,7 @@ namespace hud
 			int prot = m_protect(game::gamemode, game::mutators), colour = teamtype[d->team].colour, delay = d->protect(lastmillis, prot);
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f),
 				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
-			if(delay > 0) fade *= clamp(float(delay)/float(prot), 0.f, 1.f);
+			if(delay > 0) fade *= clamp(float(prot-delay)/float(prot), 0.f, 1.f);
 			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
