@@ -882,14 +882,16 @@ void trytofindocta(bool fallback)
 			if(findoctadir(s, true)) return;
 		}
 #elif defined(__APPLE__)
-		#warning Please put MacOSX specific code here to find the Sauerbraten directory.
+        extern const char *mac_sauerbratendir();
+        const char *dir = mac_sauerbratendir();
+        if(dir && findoctadir(dir, true)) return;
 #endif
 		const char *tryoctadirs[4] = { // by no means an accurate or definitive list either..
 			"../Sauerbraten", "../sauerbraten", "../sauer",
 #if defined(WIN32)
 			"/Program Files/Sauerbraten"
 #elif defined(__APPLE__)
-			"/Volumes/Play/sauerbraten"
+            "/Applications/sauerbraten.app/Contents/gamedata"
 #else
 			"/usr/games/sauerbraten"
 #endif
@@ -940,7 +942,13 @@ void setlocations(bool wanthome)
 		}
 		#endif
 #elif defined(__APPLE__)
-		#warning Please put MacOSX specific code here to find the personal directory.
+        extern const char *mac_personaldir();
+		const char *dir = mac_personaldir(); // typically  /Users/<name>/Application Support/
+        if(dir) {
+            defformatstring(s)("%s/bloodfrontier", dir);
+			sethomedir(s);
+            return;
+        }
 #else
 		const char *dir = getenv("HOME");
 		if(dir && *dir)
