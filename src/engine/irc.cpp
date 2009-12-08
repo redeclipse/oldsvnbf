@@ -32,8 +32,8 @@ void ircestablish(ircnet *n)
 	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
 	if(n->sock != ENET_SOCKET_NULL && *n->ip && enet_socket_bind(n->sock, &address) < 0)
 	{
-		conoutf("failed to bind connection socket", n->ip);
-		n->sock = ENET_SOCKET_NULL;
+		conoutf("failed to bind connection socket: %s", n->ip);
+		address.host = ENET_HOST_ANY;
 	}
 	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address) < 0)
 	{
@@ -481,7 +481,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 				if(n->state == IRC_CONN)
 				{
 					n->state = IRC_ONLINE;
-					ircprintf(n, 4, NULL, "\fbNow connected to %s as %s", user[0], n->nick);
+					ircprintf(n, 4, NULL, "\fbnow connected to %s as %s", user[0], n->nick);
 				}
 				break;
 			}
@@ -505,7 +505,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					c->state = IRCC_BANNED;
 					c->lastjoin = lastmillis;
 					if(c->type == IRCCT_AUTO)
-						ircprintf(n, 4, w[g+2], "\fbWaiting 5 mins to rejoin %s", c->name);
+						ircprintf(n, 4, w[g+2], "\fbwaiting 5 mins to rejoin %s", c->name);
 				}
 				break;
 			}
@@ -593,7 +593,7 @@ void ircparse(ircnet *n, char *reply)
 void ircdiscon(ircnet *n)
 {
 	if(!n) return;
-	ircprintf(n, 4, NULL, "Disconnected");
+	ircprintf(n, 4, NULL, "disconnected from %s (%s:[%d])", n->name, n->serv, n->port);
 	enet_socket_destroy(n->sock);
 	n->state = IRC_DISC;
 	n->sock = ENET_SOCKET_NULL;
@@ -647,7 +647,7 @@ void ircslice()
 				{
 					if(lastmillis-n->lastattempt >= 60000)
 					{
-						ircprintf(n, 4, NULL, "Connection attempt timed out");
+						ircprintf(n, 4, NULL, "connection attempt timed out");
 						ircdiscon(n);
 					}
 					else switch(ircrecv(n))
@@ -691,7 +691,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 					ircsend(n, "PRIVMSG %s :\001ACTION %s\001", c->name, r);
 					ircprintf(n, 1, c->name, "\fm* %s %s", n->nick, r);
 				}
-				else ircprintf(n, 4, NULL, "\fbYou are not on a channel");
+				else ircprintf(n, 4, NULL, "\fcyou are not on a channel");
 			}
 			else if(!strcasecmp(q, "JOIN"))
 			{
@@ -711,7 +711,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 			DELETEA(q); DELETEA(r);
 			return;
 		}
-		ircprintf(n, 4, c ? c->name : NULL, "\fbYou are not on a channel");
+		ircprintf(n, 4, c ? c->name : NULL, "\fcyou are not on a channel");
 	}
 	else if(c)
 	{
