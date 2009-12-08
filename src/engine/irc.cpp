@@ -645,7 +645,12 @@ void ircslice()
 				}
 				case IRC_CONN:
 				{
-					switch(ircrecv(n))
+					if(lastmillis-n->lastattempt >= 60000)
+					{
+						ircprintf(n, 4, NULL, "Connection attempt timed out");
+						ircdiscon(n);
+					}
+					else switch(ircrecv(n))
 					{
 						case -1: ircdiscon(n); break; // fail
 						case 0: break;
