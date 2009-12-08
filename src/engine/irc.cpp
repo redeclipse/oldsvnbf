@@ -30,8 +30,11 @@ void ircestablish(ircnet *n)
 	ENetAddress address = { ENET_HOST_ANY,  n->port };
 	if(*n->ip && enet_address_set_host(&address, n->ip) < 0) conoutf("failed to bind address: %s", n->ip);
 	n->sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
-	if(*n->ip && n->sock != ENET_SOCKET_NULL && enet_socket_bind(n->sock, &address) < 0)
+	if(n->sock != ENET_SOCKET_NULL && *n->ip && enet_socket_bind(n->sock, &address) < 0)
+	{
 		conoutf("failed to bind connection socket", n->ip);
+		n->sock = ENET_SOCKET_NULL;
+	}
 	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address) < 0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);
@@ -661,11 +664,7 @@ void ircslice()
 				}
 			}
 		}
-		else
-		{
-			if(!n->lastattempt || lastmillis-n->lastattempt >= 60000)
-				ircestablish(n);
-		}
+		else if(!n->lastattempt || lastmillis-n->lastattempt >= 60000) ircestablish(n);
 	}
 }
 #ifndef STANDALONE
