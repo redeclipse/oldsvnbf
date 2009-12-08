@@ -1014,18 +1014,21 @@ namespace hud
 			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f), r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(d->state == CS_DEAD || d->state == CS_WAITING)
 			{
-				int millis = lastmillis-d->lastdeath;
+				int millis = d->lastdeath ? lastmillis-d->lastdeath : 0;
 				if(millis > 0)
 				{
 					int len = m_delay(game::gamemode, game::mutators);
 					if(!len && d->aitype >= AI_START) len = ai::aideadfade;
 					if(len > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
+					else return;
 				}
+				else return;
 			}
 			else
 			{
 				int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
 				if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
+				else return;
 			}
 			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
