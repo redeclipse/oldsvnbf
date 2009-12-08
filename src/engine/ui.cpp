@@ -552,7 +552,7 @@ struct gui : guient
 			}
 			else
 			{
-				if((t = textureload(mapname, 3, true, false)) == notexture) t = textureload("textures/nothumb", 3, true, false);
+				if((t = textureload(mapname, 3, true, false)) == notexture) t = textureload("textures/emblem", 3, true, false);
 				xt = 1.0f; yt = 1.0f;
 				float scale = float(size)/max(t->xs, t->ys); //scale and preserve aspect ratio
 				xr = t->xs; yr = t->ys;

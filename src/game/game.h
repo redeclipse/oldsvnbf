@@ -577,7 +577,7 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_MAX };
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD };
 enum { CAMERA_NONE = 0, CAMERA_PLAYER, CAMERA_FOLLOW, CAMERA_ENTITY, CAMERA_MAX };
-enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_PING, SINFO_PLAYERS, SINFO_MAXCLIENTS, SINFO_GAME, SINFO_MAP, SINFO_TIME, SINFO_MAX };
+enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_PING, SINFO_PLAYERS, SINFO_GAME, SINFO_MAP, SINFO_TIME, SINFO_MAX };
 enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, SSTAT_MAX };
 
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_IMPULSE, AC_CROUCH, AC_SPECIAL, AC_TOTAL, AC_DASH = AC_TOTAL, AC_MAX };
@@ -878,14 +878,14 @@ struct serverstatuses
 };
 #ifdef GAMEWORLD
 serverstatuses serverstatus[] = {
-	{ SSTAT_OPEN,			0xDDDDDD,	"server" },
-	{ SSTAT_LOCKED,			0xDD8800,	"serverlock" },
-	{ SSTAT_PRIVATE,		0x8888DD,	"serverpriv" },
-	{ SSTAT_FULL,			0xDD8888,	"serverfull" },
+	{ SSTAT_OPEN,			0xFFFFFF,	"server" },
+	{ SSTAT_LOCKED,			0xFF8844,	"serverlock" },
+	{ SSTAT_PRIVATE,		0x8888FF,	"serverpriv" },
+	{ SSTAT_FULL,			0xFF8888,	"serverfull" },
 	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
 };
 const char *serverinfotypes[] = {
-	"",	"desc", "ping", "pl", "max", "game", "map", "time"
+	"",	"description", "ping", "players", "game type", "map", "time"
 };
 #else
 extern serverstatuses serverstatus[];
