@@ -1949,10 +1949,7 @@ namespace client
 				case SINFO_PLAYERS:
 				{
 					retsw(aa->numplayers, ab->numplayers, false);
-					break;
-				}
-				case SINFO_MAXCLIENTS:
-				{
+
 					if(aa->attr.length() > 4) ac = aa->attr[4];
 					else ac = 0;
 
@@ -2025,7 +2022,7 @@ namespace client
     void serverstartcolumn(guient *g, int i)
     {
 		g->pushlist();
-		if(g->buttonf("%s ", 0xFFFFFF, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
+		if(g->buttonf("%s ", 0x888888, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
 		{
 			mkstring(st);
 			bool invert = false;
@@ -2060,7 +2057,7 @@ namespace client
     {
 		mkstring(text);
 		int status = serverstat(si), colour = serverstatus[status].colour;
-		if(status == SSTAT_OPEN && !strcmp(si->sdesc, servermaster)) colour |= 0x222222;
+		if(status == SSTAT_OPEN && strcmp(si->sdesc, servermaster)) colour &= ~0x444444;
 		switch(i)
 		{
 			case SINFO_STATUS:
@@ -2071,49 +2068,46 @@ namespace client
 			}
 			case SINFO_DESC:
 			{
-				copystring(text, si->sdesc, 24);
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+				copystring(text, si->sdesc, 32);
+				if(g->buttonf("%-32s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PING:
 			{
-				formatstring(text)("%d", si->ping);
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+				if(g->buttonf("%-3d ", colour, NULL, true, si->ping) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_PLAYERS:
 			{
-				formatstring(text)("%d", si->numplayers);
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_MAXCLIENTS:
-			{
-				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%d", si->attr[4]);
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+				if(si->attr.length() > 4 && si->attr[4] >= 0)
+				{
+					if(g->buttonf("%-3d\fs\fd/\fS%3d ", colour, NULL, true, si->numplayers, si->attr[4]) & GUI_UP) return true;
+				}
+				else if(g->buttonf("%-7d ", colour, NULL, true, si->numplayers) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
-				if(si->attr.length() > 1) formatstring(text)("%s", server::gamename(si->attr[1], si->attr[2]));
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+				copystring(text, server::gamename(si->attr[1], si->attr[2]), 48);
+				if(g->buttonf("%-48s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
-				copystring(text, si->map, 18);
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+				copystring(text, si->map, 24);
+				if(g->buttonf("%-24s ", colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
 				if(si->attr.length() > 3 && si->attr[3] >= 0)
+				{
 					formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
-				if(g->buttonf("%s ", colour, NULL, true, text) & GUI_UP) return true;
+					if(g->buttonf("%-8s ", colour, NULL, true, text) & GUI_UP) return true;
+				}
 				break;
 			}
-			default:
-				break;
+			default: break;
 		}
 		return false;
     }
@@ -2123,7 +2117,7 @@ namespace client
 		if(servers.empty())
 		{
 			g->pushlist();
-			g->text("No servers, press UPDATE to see some..", 0xFFFFFF);
+			g->text("No servers listed, \fs\fgupdate\fS to see some.", 0xFFFFFF);
 			g->poplist();
 			return -1;
 		}
@@ -2132,12 +2126,12 @@ namespace client
 			if(servers[i]->attr[0] > GAMEVERSION)
 			{
 				g->pushlist();
-				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fb%s\fS for more information.", 0xFFFFFF, "info", ENG_URL);
+				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fc%s\fS for more information.", 0xFFFFFF, "info", ENG_URL);
 				g->poplist();
 			}
 			break;
 		}
-		int n = -1;
+		int n = -1, m = 0;
 		for(int start = 0; start < servers.length();)
 		{
 			if(start > 0) g->tab();
@@ -2153,12 +2147,19 @@ namespace client
 					if(si->ping < 999 && si->attr.length() && si->attr[0] == GAMEVERSION)
 					{
 						if(serverentry(g, i, si)) n = j;
+						m++; // cheap, i dunno
 					}
 				}
 				serverendcolumn(g, i);
 			}
 			g->poplist();
 			start = end;
+		}
+		if(!m)
+		{
+			g->pushlist();
+			g->textf("Waiting for response from %d %s", 0xFFFFFF, "info", servers.length(), servers.length() != 1 ? "servers" : "server");
+			g->poplist();
 		}
 		return n;
 	}
