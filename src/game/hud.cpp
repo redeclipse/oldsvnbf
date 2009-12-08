@@ -1028,7 +1028,6 @@ namespace hud
 			{
 				int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
 				if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
-				else return;
 			}
 			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
