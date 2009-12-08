@@ -846,12 +846,12 @@ namespace hud
 			{
 				loopvj(conlines) if(conlines[j].type >= CON_CHAT)
 				{
-					int len = conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
+					int len = !full && conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
 					{
 						if(refs.length() >= numl)
 						{
-							if(conlines[j].type == CON_CHAT)
+							if(!full)
 							{
 								bool found = false;
 								loopvrev(refs) if(i > 0 && conlines[refs[i]].type > CON_CHAT)
@@ -882,10 +882,9 @@ namespace hud
 					}
 				}
 				int r = x+FONTW, z = y;
-				//float blend = full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade;
 				loopvj(refs)
 				{
-					int len = conlines[refs[j]].type > CON_CHAT ? chatcontime/2 : chatcontime;
+					int len = !full && conlines[refs[j]].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					float f = full || !chatconfade ? 1.f : clamp(((len+chatconfade)-(lastmillis-conlines[refs[j]].reftime))/float(chatconfade), 0.f, 1.f),
 						g = conlines[refs[j]].type > CON_CHAT ? conblend : chatconblend;
 					z -= draw_textx("%s", r, z, 255, 255, 255, int(255*hudblend*f*g), TEXT_LEFT_UP, -1, s, conlines[refs[j]].cref)*f;
@@ -899,12 +898,12 @@ namespace hud
 			{
 				loopvj(conlines) if(type ? conlines[j].type >= (confilter && !full ? CON_LO : 0) && conlines[j].type <= CON_HI : conlines[j].type >= (confilter && !full ? CON_LO : 0))
 				{
-					int len = conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
+					int len = !full && conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
 					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime <= len+confade)
 					{
 						if(refs.length() >= numl)
 						{
-							if(conlines[j].type >= CON_IMPORTANT)
+							if(!full && conlines[j].type >= CON_IMPORTANT)
 							{
 								bool found = false;
 								loopvrev(refs) if(i > 0 && conlines[refs[i]].type < CON_IMPORTANT)
@@ -934,10 +933,9 @@ namespace hud
 						refs.add(j);
 					}
 				}
-				//float blend = full || (UI::hascursor(false) && !UI::hascursor(true)) ? 1.f : fade;
 				loopvrev(refs)
 				{
-					int len = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
+					int len = !full && conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
 					float f = full || !confade ? 1.f : clamp(((len+confade)-(lastmillis-conlines[refs[i]].reftime))/float(confade), 0.f, 1.f),
 						g = full || conlines[refs[i]].type >= CON_IMPORTANT ? fullconblend : conblend;
 					z += draw_textx("%s", concenter ? x+s/2 : x, z, 255, 255, 255, int(255*hudblend*f*g), concenter ? TEXT_CENTERED : TEXT_LEFT_JUSTIFY, -1, s, conlines[refs[i]].cref)*f;
