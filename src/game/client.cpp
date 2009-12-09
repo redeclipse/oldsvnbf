@@ -2092,7 +2092,7 @@ namespace client
 			case SINFO_PLAYERS:
 			{
 				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%-3d\fs\fd/\fS%3d ", si->numplayers, si->attr[4]);
-				else formatstring(text)("%-7d ", si->numplayers);
+				else formatstring(text)("%-3d\fs\fd/\fS ?? ", si->numplayers);
 				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
