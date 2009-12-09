@@ -1929,7 +1929,7 @@ namespace client
 				ab = a;
 			}
 
-			switch (style)
+			switch(style)
 			{
 				case SINFO_STATUS:
 				{
@@ -1939,24 +1939,6 @@ namespace client
 				case SINFO_DESC:
 				{
 					retcp(strcmp(aa->sdesc, ab->sdesc));
-					break;
-				}
-				case SINFO_PING:
-				{
-					retsw(aa->ping, ab->ping, true);
-					break;
-				}
-				case SINFO_PLAYERS:
-				{
-					retsw(aa->numplayers, ab->numplayers, false);
-
-					if(aa->attr.length() > 4) ac = aa->attr[4];
-					else ac = 0;
-
-					if(ab->attr.length() > 4) bc = ab->attr[4];
-					else bc = 0;
-
-					retsw(ac, bc, false);
 					break;
 				}
 				case SINFO_GAME:
@@ -1994,8 +1976,25 @@ namespace client
 					retsw(ac, bc, false);
 					break;
 				}
-				default:
+				case SINFO_PLAYERS:
+				{
+					retsw(aa->numplayers, ab->numplayers, false);
+
+					if(aa->attr.length() > 4) ac = aa->attr[4];
+					else ac = 0;
+
+					if(ab->attr.length() > 4) bc = ab->attr[4];
+					else bc = 0;
+
+					retsw(ac, bc, false);
 					break;
+				}
+				case SINFO_PING:
+				{
+					retsw(aa->ping, ab->ping, true);
+					break;
+				}
+				default: break;
 			}
 		}
 		return strcmp(a->name, b->name);
@@ -2022,7 +2021,7 @@ namespace client
     void serverstartcolumn(guient *g, int i)
     {
 		g->pushlist();
-		if(g->buttonf("%s ", 0x888888, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
+		if(g->buttonf(i ? serverinfoformats[i] : "", 0x888888, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
 		{
 			mkstring(st);
 			bool invert = false;
@@ -2062,49 +2061,45 @@ namespace client
 		{
 			case SINFO_STATUS:
 			{
-				if(g->button("", colour, serverstatus[status].icon) & GUI_UP)
-					return true;
+				if(g->button("", colour, serverstatus[status].icon) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_DESC:
 			{
 				copystring(text, si->sdesc, 32);
-				if(g->buttonf("%-32s ", colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_PING:
-			{
-				if(g->buttonf("%-3d ", colour, NULL, true, si->ping) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_PLAYERS:
-			{
-				if(si->attr.length() > 4 && si->attr[4] >= 0)
-				{
-					if(g->buttonf("%-3d\fs\fd/\fS%3d ", colour, NULL, true, si->numplayers, si->attr[4]) & GUI_UP) return true;
-				}
-				else if(g->buttonf("%-7d ", colour, NULL, true, si->numplayers) & GUI_UP) return true;
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_GAME:
 			{
 				copystring(text, server::gamename(si->attr[1], si->attr[2]), 48);
-				if(g->buttonf("%-48s ", colour, NULL, true, text) & GUI_UP) return true;
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_MAP:
 			{
 				copystring(text, si->map, 24);
-				if(g->buttonf("%-24s ", colour, NULL, true, text) & GUI_UP) return true;
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			case SINFO_TIME:
 			{
-				if(si->attr.length() > 3 && si->attr[3] >= 0)
-				{
-					formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
-					if(g->buttonf("%-8s ", colour, NULL, true, text) & GUI_UP) return true;
-				}
+				if(si->attr.length() > 3 && si->attr[3] >= 0) formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
+				else formatstring(text)("?? mins");
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
+				break;
+			}
+			case SINFO_PLAYERS:
+			{
+				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%-3d\fs\fd/\fS%3d ", si->numplayers, si->attr[4]);
+				else formatstring(text)("%-7d ", si->numplayers);
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
+				break;
+			}
+			case SINFO_PING:
+			{
+				formatstring(text)("%d ", si->ping);
+				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
 				break;
 			}
 			default: break;
