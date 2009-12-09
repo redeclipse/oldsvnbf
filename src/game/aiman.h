@@ -87,6 +87,7 @@ namespace aiman
 
 	void deleteai(clientinfo *ci)
 	{
+		if(ci->state.aitype < 0) return;
 		int cn = ci->clientnum;
 		loopv(clients) if(clients[i] != ci)
 		{
@@ -123,6 +124,7 @@ namespace aiman
 
 	void reinitai(clientinfo *ci)
 	{
+		if(ci->state.aitype < 0) return;
 		if(ci->state.ownernum < 0) deleteai(ci);
 		else if(ci->state.aireinit >= 1)
 		{
@@ -261,7 +263,7 @@ namespace aiman
 
 	void clearai(bool all)
 	{ // clear and remove all ai immediately
-		loopvrev(clients) if(all || clients[i]->state.aitype != AI_BOT) deleteai(clients[i]);
+		loopvrev(clients) if(clients[i]->state.aitype >= (all ? AI_BOT : AI_START)) deleteai(clients[i]);
 		dorefresh = autooverride = false;
 	}
 
