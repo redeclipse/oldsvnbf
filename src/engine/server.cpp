@@ -47,7 +47,7 @@ void conoutft(int type, const char *s, ...)
 #ifdef IRC
 	string osf;
 	filtertext(osf, sf);
-	ircoutf(4, "%s", osf);
+	ircoutf(5, "%s", osf);
 #endif
 }
 
@@ -601,7 +601,7 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 
 	sendpongs();
 
-	if(servertype >= 2 && totalmillis-laststatus > 60*1000)	// display bandwidth stats, useful for server ops
+	if(servertype >= 2 && totalmillis-laststatus >= 60000)	// display bandwidth stats, useful for server ops
 	{
 		laststatus = totalmillis;
 		if(bsend || brec || server::numclients())
