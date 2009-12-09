@@ -2112,7 +2112,7 @@ namespace client
 		if(servers.empty())
 		{
 			g->pushlist();
-			g->text("No servers listed, \fs\fgupdate\fS to see some.", 0xFFFFFF);
+			g->text("No servers listed, \fs\fgupdate\fS to see some.", 0xFFFFFF, "info");
 			g->poplist();
 			return -1;
 		}
@@ -2121,7 +2121,7 @@ namespace client
 			if(servers[i]->attr[0] > GAMEVERSION)
 			{
 				g->pushlist();
-				g->textf("\fs\fgNEW VERSION RELEASED!\fS Please visit \fs\fc%s\fS for more information.", 0xFFFFFF, "info", ENG_URL);
+				g->textf("\fs\fyNEW VERSION RELEASED!\fS Please visit \fs\fc%s\fS for more information.", 0xFFFFFF, "info", ENG_URL);
 				g->poplist();
 			}
 			break;
