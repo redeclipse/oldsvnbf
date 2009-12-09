@@ -352,6 +352,8 @@ namespace client
 	}
 	ICOMMAND(spectator, "is", (int *val, char *who), togglespectator(*val, who));
 
+    ICOMMAND(checkmaps, "", (), addmsg(SV_CHECKMAPS, "r"));
+
 	void addmsg(int type, const char *fmt, ...)
 	{
 		static uchar buf[MAXTRANS];
