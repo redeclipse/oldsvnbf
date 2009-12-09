@@ -426,7 +426,6 @@ void clearservers()
     resolverclear();
     servers.deletecontentsp();
 	lastinfo = 0;
-	reqmaster = false;
 }
 
 COMMAND(clearservers, "");
