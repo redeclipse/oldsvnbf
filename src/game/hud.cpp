@@ -619,7 +619,8 @@ namespace hud
 			if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
 			{
 				pushfont("super");
-				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255;
+				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
+					tw = hudwidth-(int(hudsize*gapsize)*2+int(hudsize*inventorysize)*2);
 				if(noticescale < 1)
 				{
 					glPushMatrix();
@@ -631,12 +632,12 @@ namespace hud
 				if(lastmillis-game::maptime <= titlefade*3)
 				{
 
-					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, *maptitle ? maptitle : mapname)*noticescale;
+					ty += draw_textx("%s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, tw, *maptitle ? maptitle : mapname)*noticescale;
 					pushfont("default");
-					if(*mapauthor) ty += draw_textx("by %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, mapauthor)*noticescale;
+					if(*mapauthor) ty += draw_textx("by %s", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, tw, mapauthor)*noticescale;
 					popfont();
 					pushfont("sub");
-					ty += draw_textx("[ \fs\fa%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, -1, server::gamename(game::gamemode, game::mutators))*noticescale;
+					ty += draw_textx("[ \fs\fa%s\fS ]", tx, ty, 255, 255, 255, tf, TEXT_CENTERED, -1, tw, server::gamename(game::gamemode, game::mutators))*noticescale;
 					popfont();
 				}
 
@@ -647,11 +648,11 @@ namespace hud
 				{
 					int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
 					const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, msg)*noticescale;
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, msg)*noticescale;
 					if(obitnotices && game::player1->lastdeath && (delay || game::player1->state == CS_DEAD) && *game::player1->obit)
 					{
 						pushfont("default");
-						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::player1->obit)*noticescale;
+						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::player1->obit)*noticescale;
 						popfont();
 					}
 					if(shownotices >= 2)
@@ -664,13 +665,13 @@ namespace hud
 								pushfont("emphasis");
 								if(m_duke(game::gamemode, game::mutators))
 									ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, delay/1000.f)*noticescale;
+								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, delay/1000.f)*noticescale;
 								popfont();
 							}
 							if(game::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-game::player1->lastdeath >= 500)
 							{
 								pushfont("default");
-								ty += draw_textx("Press \fs\fc%s\fS to look around", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to look around", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
 						}
@@ -682,7 +683,7 @@ namespace hud
 							if(game::player1->state != CS_WAITING && shownotices >= 3)
 							{
 								pushfont("default");
-								ty += draw_textx("Press \fs\fc%s\fS to respawn", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to respawn", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
 						}
@@ -690,14 +691,14 @@ namespace hud
 						{
 							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
 							popfont();
 						}
 						if(m_arena(game::gamemode, game::mutators))
 						{
 							SEARCHBINDCACHE(arenakey)("showgui arena", 0);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to change arena weapon", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, arenakey)*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to change arena weapon", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, arenakey)*noticescale;
 							popfont();
 						}
 					}
@@ -715,13 +716,13 @@ namespace hud
 								if(m_story(game::gamemode)) ty += draw_textx("Story campaign", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 								else ty += draw_textx("\fzReFree-for-all deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 							}
-							else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
+							else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 						}
 					}
 					if(obitnotices && lastmillis-game::player1->lastkill <= noticetime && *game::player1->obit)
 					{
 						pushfont("default");
-						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::player1->obit)*noticescale;
+						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::player1->obit)*noticescale;
 						popfont();
 					}
 					if(shownotices >= 3 && game::allowmove(game::player1))
@@ -767,15 +768,15 @@ namespace hud
 											{
 												static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
 												defformatstring(dropweap)("%s", entities::entinfo(WEAPON, attrs, false));
-												ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false))*noticescale;
+												ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false))*noticescale;
 											}
-											else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey, entities::entinfo(e.type, e.attrs, false))*noticescale;
+											else ty += draw_textx("Press \fs\fc%s\fS to pickup \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, actionkey, entities::entinfo(e.type, e.attrs, false))*noticescale;
 											break;
 										}
 									}
 									else if(e.type == TRIGGER && e.attrs[2] == TA_ACTION)
 									{
-										ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, actionkey)*noticescale;
+										ty += draw_textx("Press \fs\fc%s\fS to interact", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, actionkey)*noticescale;
 										break;
 									}
 								}
@@ -787,14 +788,14 @@ namespace hud
 							if(game::player1->canshoot(game::player1->weapselect, 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 							{
 								SEARCHBINDCACHE(attackkey)("action 0", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, attackkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								SEARCHBINDCACHE(altkey)("action 1", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack")*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, altkey, weaptype[game::player1->weapselect].zooms ? "zoom" : "alt-attack")*noticescale;
 							}
 							if(game::player1->canreload(game::player1->weapselect, m_weapon(game::gamemode, game::mutators), lastmillis))
 							{
 								SEARCHBINDCACHE(reloadkey)("action 2", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, reloadkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to reload ammo", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, reloadkey)*noticescale;
 							}
 						}
 						popfont();
@@ -802,16 +803,16 @@ namespace hud
 				}
 				else if(game::player1->state == CS_SPECTATOR)
 				{
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, game::tvmode() ? "SpecTV" : "Spectating")*noticescale;
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::tvmode() ? "SpecTV" : "Spectating")*noticescale;
 					if(shownotices >= 2)
 					{
 						SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 						pushfont("default");
-						ty += draw_textx("Press \fs\fc%s\fS to play", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, speconkey)*noticescale;
+						ty += draw_textx("Press \fs\fc%s\fS to play", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, speconkey)*noticescale;
 						if(shownotices >= 3)
 						{
 							SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1, specmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
 						}
 						popfont();
 					}
