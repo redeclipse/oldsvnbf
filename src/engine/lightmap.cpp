@@ -473,7 +473,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	loopv(sunlights)
 	{
 		const extentity &light = *sunlights[i];
-		if(slight[0] <= light.attrs[2] && slight[1] <= light.attrs[3] && slight[2] <= light.attrs[4]) continue;
+		if(slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4]) continue;
 		int offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		loopk(9)
 		{
