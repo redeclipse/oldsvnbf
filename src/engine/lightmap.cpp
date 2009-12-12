@@ -476,7 +476,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		bool wantscolour = false;
 		loopk(3) if(slight[k] < light.attrs[2+k]) { wantscolour = true; break; }
 		if(!wantscolour) continue;
-		int offset = light.attrs[5] ? light.attrs[5] : 10, hit = 0;
+		int offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		loopk(9)
 		{
 			int yaw = light.attrs[0], pitch = light.attrs[1];
