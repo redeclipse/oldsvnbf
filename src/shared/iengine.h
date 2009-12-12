@@ -396,6 +396,7 @@ extern void setlocations(bool wanthome = true);
 // client
 struct serverinfo
 {
+    enum { WAITING = 999 };
     enum { UNRESOLVED = 0, RESOLVING, RESOLVED };
 
     string name;
@@ -406,7 +407,7 @@ struct serverinfo
     ENetAddress address;
 
     serverinfo(uint ip, int port, int qport)
-     : numplayers(0), ping(999), resolved(ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED), port(port), qport(qport)
+     : numplayers(0), ping(WAITING), resolved(ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED), port(port), qport(qport)
     {
         name[0] = map[0] = sdesc[0] = '\0';
         address.host = ip;
