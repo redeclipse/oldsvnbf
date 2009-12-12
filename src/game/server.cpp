@@ -1606,7 +1606,7 @@ namespace server
 	void changemap(const char *name, int mode, int muts)
 	{
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
-		aiman::clearai(false);
+		aiman::clearai(m_play(mode) ? false : true);
 		aiman::dorefresh = true;
         stopdemo();
 		gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
@@ -2010,7 +2010,6 @@ namespace server
 			sendstring(smapname, p);
 		}
         if(!ci) putint(p, 0);
-#if 0
 		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, -1))
 		{
 			ci->wantsmap = true;
@@ -2024,7 +2023,6 @@ namespace server
 			}
 			else putint(p, 0);
 		}
-#endif
 		else
 		{
 			ci->wantsmap = false;
@@ -3802,6 +3800,7 @@ namespace server
 					int numattrs = getint(p);
 					while(sents[n].attrs.length() < max(5, numattrs)) sents[n].attrs.add(0);
 					loopk(numattrs) sents[n].attrs[k] = getint(p);
+					hasgameinfo = true;
 					QUEUE_MSG;
 					if(tweaked)
 					{
