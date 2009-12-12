@@ -473,9 +473,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	loopv(sunlights)
 	{
 		const extentity &light = *sunlights[i];
-		bool wantscolour = false;
-		loopk(3) if(slight[k] < light.attrs[2+k]) { wantscolour = true; break; }
-		if(!wantscolour) continue;
+		if(slight[0] <= light.attrs[2] && slight[1] <= light.attrs[3] && slight[2] <= light.attrs[4]) continue;
 		int offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		loopk(9)
 		{
@@ -2090,23 +2088,24 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
 	}
 
+	vec slight(0, 0, 0);
 	if(t && hasskylight())
 	{
-		uchar slight[3];
-		calcskylight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
-		loopk(3) color[k] = min(1.5f, max(max(slight[k]/255.0f, ambient), color[k]));
+		uchar col[3];
+		calcskylight(target, vec(0, 0, 0), 0.5f, col, 1, t);
+		loopk(3) slight[k] = max(col[k]/255.0f, ambient);
 	}
 	else loopk(3)
 	{
-        float slight = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
-		color[k] = min(1.5f, max(slight, color[k]));
+        slight[k] = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
 	}
 	if(!sunlights.empty())
 	{
-		uchar slight[3] = {0};
-		calcsunlight(target, vec(0, 0, 0), 0.5f, slight, 1, t);
-		loopk(3) color[k] = min(1.5f, max(color[k], (slight[k]/255.f)*1.5f));
+		uchar col[3] = {0, 0, 0};
+		calcsunlight(target, vec(0, 0, 0), 0.5f, col, 1, t);
+		loopk(3) slight[k] = max(slight[k], col[k]/255.0f);
 	}
+	loopk(3) color[k] = clamp(color[k], slight[k], 1.5f);
 	if(dir.iszero()) dir = vec(0, 0, 1);
 	else dir.normalize();
 }
