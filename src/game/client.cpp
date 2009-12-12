@@ -1903,8 +1903,8 @@ namespace client
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
 		if(!serversort || !*serversort) resetserversort();
-		int ac = a->address.host == ENET_HOST_ANY || a->ping >= 999 || a->attr.empty() || a->attr[0] != GAMEVERSION ? -1 : 0,
-			bc = b->address.host == ENET_HOST_ANY || b->ping >= 999 || b->attr.empty() || b->attr[0] != GAMEVERSION ? -1 : 0;
+		int ac = a->address.host == ENET_HOST_ANY || a->ping >= serverinfo::WAITING || a->attr.empty() || a->attr[0] != GAMEVERSION ? -1 : 0,
+			bc = b->address.host == ENET_HOST_ANY || b->ping >= serverinfo::WAITING || b->attr.empty() || b->attr[0] != GAMEVERSION ? -1 : 0;
 		if(!ac)
 		{
 			if(!strcmp(a->sdesc, servermaster)) ac = 3;
@@ -2142,7 +2142,7 @@ namespace client
 			}
 			break;
 		}
-		int n = -1, m = 0;
+		int n = -1, waiting = 0;
 		for(int start = 0; start < servers.length();)
 		{
 			if(start > 0) g->tab();
@@ -2155,10 +2155,13 @@ namespace client
 				{
 					if(!i && g->shouldtab()) { end = j; break; }
 					serverinfo *si = servers[j];
-					if(si->ping < 999 && si->attr.length() && si->attr[0] == GAMEVERSION)
+					if(si->ping == serverinfo::WAITING && si->attr.empty())
+					{
+						if(!i) waiting++;
+					}
+					else if(si->ping < serverinfo::WAITING && si->attr.length() && si->attr[0] == GAMEVERSION)
 					{
 						if(serverentry(g, i, si)) n = j;
-						m++; // cheap, i dunno
 					}
 				}
 				serverendcolumn(g, i);
@@ -2166,10 +2169,10 @@ namespace client
 			g->poplist();
 			start = end;
 		}
-		if(!m)
+		if(waiting)
 		{
 			g->pushlist();
-			g->textf("Waiting for response from %d %s", 0xFFFFFF, "info", servers.length(), servers.length() != 1 ? "servers" : "server");
+			g->textf("Waiting for response from %d %s", 0xFFFFFF, "info", waiting, waiting != 1 ? "servers" : "server");
 			g->poplist();
 		}
 		return n;
