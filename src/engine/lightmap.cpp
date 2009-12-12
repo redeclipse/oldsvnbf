@@ -641,7 +641,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), slight += lmbpp)
 		{
             CHECK_PROGRESS(return NO_SURFACE);
-            generate_lumel(tolerance, 0, lights, u, vec(normal).normalize(), *sample, x, y);
+            lightused |= generate_lumel(tolerance, 0, lights, u, vec(normal).normalize(), *sample, x, y);
             if(hasskylight())
             {
                 if((lmtype&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<skylightcolor[0] || sample->y<skylightcolor[1] || sample->z<skylightcolor[2])
