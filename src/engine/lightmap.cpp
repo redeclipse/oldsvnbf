@@ -492,9 +492,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 				case 7: yaw -= offset; break;
 				case 8: yaw -= offset/2; pitch += offset/2; break;
 			}
-			while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-			while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
-			vec dir; vecfromyawpitch(yaw, pitch, 1, 0, dir);
+			vec dir(yaw*RAD, pitch*RAD);
 			if(normal.dot(dir) < 0) continue;
 			if(shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
 				hit++;
