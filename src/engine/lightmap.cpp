@@ -474,26 +474,25 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	{
 		const extentity &light = *sunlights[i];
 		if(slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4]) continue;
-		int offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
-		loopk(9)
+		int yaw = light.attrs[0], pitch = light.attrs[1], offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
+		vec dir(yaw*RAD, pitch*RAD);
+		if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+			hit++;		
+		matrix3x3 rot;
+		rot.rotate(90*RAD, dir);
+		vec spoke(yaw*RAD, (pitch + offset)*RAD);
+		loopk(4)
 		{
-			int yaw = light.attrs[0], pitch = light.attrs[1];
-			switch(k)
-			{
-				case 0: default: break;
-				case 1: pitch += offset; break;
-				case 2: yaw += offset/2; pitch += offset/2; break;
-				case 3: yaw += offset; break;
-				case 4: yaw += offset/2; pitch -= offset/2; break;
-				case 5: pitch -= offset; break;
-				case 6: yaw -= offset/2; pitch -= offset/2; break;
-				case 7: yaw -= offset; break;
-				case 8: yaw -= offset/2; pitch += offset/2; break;
-			}
-			vec dir(yaw*RAD, pitch*RAD);
-			if(normal.dot(dir) < 0) continue;
-			if(shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
 				hit++;
+			spoke = rot.transform(spoke);
+		}
+		spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate(45*RAD, dir);
+		loopk(4)
+		{
+			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+				hit++;
+			spoke = rot.transform(spoke);
 		}
 		loopk(3) slight[k] = max(uchar(light.attrs[2+k]*hit/9.f), slight[k]);
 	}

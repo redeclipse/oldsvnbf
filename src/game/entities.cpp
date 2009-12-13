@@ -2041,25 +2041,16 @@ namespace entities
 				}
 				case SUNLIGHT:
 				{
-					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10;
+					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10, yaw = e.attrs[0], pitch = e.attrs[1];
+					vec dir(yaw*RAD, pitch*RAD);
+					static const float offsets[9][2] = { { 0, 0 }, { 0, 1 }, { 90, 1 }, { 180, 1 }, { 270, 1 }, { 45, 0.5f }, { 135, 0.5f }, { 225, 0.5f }, { 315, 0.5f } };
 					loopk(9)
 					{
-						int yaw = e.attrs[0], pitch = e.attrs[1];
-						switch(k)
-						{
-							case 0: default: break;
-							case 1: pitch += offset; break;
-							case 2: yaw += offset/2; pitch += offset/2; break;
-							case 3: yaw += offset; break;
-							case 4: yaw += offset/2; pitch -= offset/2; break;
-							case 5: pitch -= offset; break;
-							case 6: yaw -= offset/2; pitch -= offset/2; break;
-							case 7: yaw -= offset; break;
-							case 8: yaw -= offset/2; pitch += offset/2; break;
-						}
-						while(yaw >= 360) yaw -= 360; while(yaw < 0) yaw += 360;
-						while(pitch >= 180) pitch -= 360; while(pitch < -180) pitch += 360;
-						entdirpart(e.o, yaw, pitch, getworldsize()*2, 1, colour);
+						vec spoke(yaw*RAD, (pitch + offset*offsets[k][1])*RAD);
+						spoke.rotate(offsets[k][0]*RAD, dir);
+						float syaw, spitch;
+						vectoyawpitch(spoke, syaw, spitch);
+						entdirpart(e.o, syaw, spitch, getworldsize()*2, 1, colour);
 					}
 					break;
 				}
