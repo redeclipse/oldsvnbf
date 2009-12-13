@@ -1,0 +1,25 @@
+= Code =
+* Make submerging extinguish at a lower level.
+* Re-balance shotgun (more spread/less bullets?)
+* Port Cube 2 ban list functionality, add global master ban list
+* Make glass more visible/look better (combined texture?)
+* Send points along with spawn state (like frags are)
+* Elaborate and refine Story mode/AI
+
+= Models =
+* New player model (tag_affinity, tag_camera, tag_weapon)
+* Zombie/Turret/Pyro/Heavy models
+
+= Art =
+* Melee icon
+* Dominated/Dominating icons
+
+= Sounds =
+* Domination/Revenge
+* Double/Triple/Multi kill
+* Spree 5/6
+* Team-alert and damage tones
+
+= Maps =
+* Fix gravity in 'wet'
+* Ladderify 'dualstar'
