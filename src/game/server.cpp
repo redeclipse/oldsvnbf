@@ -3678,9 +3678,9 @@ namespace server
                             {
                                 loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
                             }
-							srvoutf(3, "mastermode is now %d (%s)", mastermode, mastermodename(mm));
+							srvoutf(3, "\fymastermode is now \fs\fc%d\fS (\fs\fc%s\fS)", mastermode, mastermodename(mm));
 						}
-						else srvmsgf(sender, "mastermode %d (%s) is disabled on this server", mm, mastermodename(mm));
+						else srvmsgf(sender, "\frmastermode %d (%s) is disabled on this server", mm, mastermodename(mm));
 					}
 					break;
 				}
@@ -3759,7 +3759,7 @@ namespace server
 					int val = getint(p);
 					if(!haspriv(ci, PRIV_ADMIN, "record demos")) break;
 					demonextmatch = val!=0;
-					srvoutf(4, "demo recording is %s for next match", demonextmatch ? "enabled" : "disabled");
+					srvoutf(4, "\fodemo recording is \fs\fc%s\fS for next match", demonextmatch ? "enabled" : "disabled");
 					break;
 				}
 
