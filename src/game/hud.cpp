@@ -1057,7 +1057,7 @@ namespace hud
 				float yaw = -(float)atan2(dir.x, dir.y)/RAD + 180, x = sinf(RAD*yaw), y = -cosf(RAD*yaw),
 					size = max(w, h)/2, tx = w/2, ty = h/2, ts = size*radarsize, tp = ts*radarcardsize, tr = (size*radaroffset)+(ts*4);
 				pushfont("radar");
-				draw_textx("%s", int(tx+(tr*x)+(tp*0.5f)), int(ty+(tr*y)+(ts-FONTH)), 255, 255, 255, int(blend*radarcardblend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, card);
+				draw_textx("%s", int(tx+(tr*x)+(tp*0.5f)), int(ty+(tr*y)-(FONTH*y*0.5f)), 255, 255, 255, int(blend*radarcardblend*255.f), TEXT_CENTERED|TEXT_NO_INDENT, -1, -1, card);
 				popfont();
 			}
 		}
