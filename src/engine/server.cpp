@@ -966,13 +966,23 @@ void setlocations(bool wanthome)
 int main(int argc, char* argv[])
 {
     setlocations(false);
-	for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
+	char *initscript = NULL;
+	for(int i = 1; i<argc; i++)
+	{
+		if(argv[i][0]=='-') switch(argv[i][1])
+		{
+			case 'x': initscript = &argv[i][2]; break;
+			default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
+		}
+		else gameargs.add(argv[i]);
+	}
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
 	atexit(enet_deinitialize);
 	atexit(cleanupserver);
 	enet_time_set(0);
 	initgame();
 	trytofindocta();
+	if(initscript) execute(initscript);
 	serverloop();
 	return 0;
 }
