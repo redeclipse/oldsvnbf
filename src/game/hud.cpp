@@ -93,7 +93,8 @@ namespace hud
 	VARP(overlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
 	FVARP(overlayblend, 0, 0.5f, 1);
 
-	VARP(showdamage, 0, 1, 2); // 1 shows just damage, 2 includes regen
+	VARP(showdamage, 0, 1, 2); // 1 shows just damage texture, 2 blends as well
+	VARP(damagefade, 0, 0, 1);
 	TVAR(damagetex, "textures/damage", 3);
 	FVARP(damageblend, 0, 0.75f, 1);
 	TVAR(burntex, "textures/burn", 3);
@@ -1584,11 +1585,6 @@ namespace hud
 	void drawdamage(int w, int h, int s, float blend)
 	{
 		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 0.f);
-		if(showdamage > 1 && game::player1->state == CS_ALIVE && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
-		{
-			float skew = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
-			pc += (1.f-pc)*(skew > 1.f ? skew-1.f : 1.f-skew);
-		}
 		if(pc > 0)
 		{
 			Texture *t = *damagetex ? textureload(damagetex, 3) : notexture;
@@ -1764,14 +1760,14 @@ namespace hud
 				float a = min(float(lastmillis-(commandmillis > 0 ? commandmillis : -commandmillis))/float(commandfade), 1.f)*commandfadeamt;
 				if(commandmillis > 0) a = 1.f-a;
 				else a += (1.f-commandfadeamt);
-				loopi(3) if(a < colour[i]) colour[i] = a;
+				loopi(3) if(a < colour[i]) colour[i] *= a;
 			}
 			if(huduioverride >= (game::intermission ? 2 : 1) && uifade && (uimillis > 0 || lastmillis-(uimillis > 0 ? uimillis : -uimillis) <= uifade))
 			{
 				float n = min(float(lastmillis-(uimillis > 0 ? uimillis : -uimillis))/float(uifade), 1.f), a = n*uifadeamt;
 				if(uimillis > 0) a = 1.f-a;
 				else a += (1.f-uifadeamt);
-				loopi(3) if(a < colour[i]) colour[i] = a;
+				loopi(3) if(a < colour[i]) colour[i] *= a;
 				//if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
 			}
 			if(!noview)
@@ -1779,12 +1775,12 @@ namespace hud
 				if(titlefade && (!client::ready() || game::maptime <= 0 || lastmillis-game::maptime <= titlefade))
 				{
 					float a = client::ready() && game::maptime > 0 ? float(lastmillis-game::maptime)/float(titlefade) : 0.f;
-					loopi(3) if(a < colour[i]) colour[i] = a;
+					loopi(3) if(a < colour[i]) colour[i] *= a;
 				}
 				if(tvmodefade && game::tvmode())
 				{
 					float a = game::lasttvchg ? (lastmillis-game::lasttvchg <= tvmodefade ? float(lastmillis-game::lasttvchg)/float(tvmodefade) : 1.f) : 0.f;
-					loopi(3) if(a < colour[i]) colour[i] = a;
+					loopi(3) if(a < colour[i]) colour[i] *= a;
 				}
 				if(spawnfade && game::player1->state == CS_ALIVE && game::player1->lastspawn && lastmillis-game::player1->lastspawn <= spawnfade)
 				{
@@ -1794,8 +1790,13 @@ namespace hud
 						vec col = vec(1, 1, 1); skewcolour(col.x, col.y, col.z, true);
 						if(a < 1.f) { loopi(3) col[i] *= a; }
 						else { a = (a-1.f)*0.5f; loopi(3) col[i] += (1.f-col[i])*a; }
-						loopi(3) if(col[i] < colour[i]) colour[i] = col[i];
+						loopi(3) if(col[i] < colour[i]) colour[i] *= col[i];
 					}
+				}
+				if(showdamage >= 2 && hud::damageresidue > 0)
+				{
+					float pc = min(hud::damageresidue, 100)/100.f;
+					loopi(2) if(colour[i+1] > 0) colour[i+1] -= colour[i+1]*pc;
 				}
 			}
 			if(colour.x < 1 || colour.y < 1 || colour.z < 1)
