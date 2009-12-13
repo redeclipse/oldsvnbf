@@ -5,6 +5,7 @@
 * Make glass more visible/look better (combined texture?)
 * Send points along with spawn state (like frags are)
 * Elaborate and refine Story mode/AI
+* Port NEWUI code
 
 = Models =
 * New player model (tag_affinity, tag_camera, tag_weapon)
@@ -13,6 +14,7 @@
 = Art =
 * Melee icon
 * Dominated/Dominating icons
+* NEWUI widgets
 
 = Sounds =
 * Domination/Revenge
