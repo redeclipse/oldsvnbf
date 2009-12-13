@@ -481,13 +481,14 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		matrix3x3 rot;
 		rot.rotate(90*RAD, dir);
 		vec spoke(yaw*RAD, (pitch + offset)*RAD);
+		spoke.rotate(21*RAD, dir);
 		loopk(4)
 		{
 			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
 				hit++;
 			spoke = rot.transform(spoke);
 		}
-		spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate(45*RAD, dir);
+		spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate((66-21)*RAD, dir);
 		loopk(4)
 		{
 			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
