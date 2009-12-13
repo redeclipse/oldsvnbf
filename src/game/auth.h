@@ -20,7 +20,11 @@ namespace auth
 			if(ci->privilege >= (haspass || authname || ci->local ? PRIV_ADMIN : PRIV_MASTER)) return;
 			if(haspass || authname || ci->local)
 			{
-				loopv(clients) if(ci != clients[i] && clients[i]->privilege <= PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
+				loopv(clients) if(ci != clients[i] && clients[i]->privilege == PRIV_MASTER)
+				{
+					clients[i]->privilege = PRIV_NONE;
+					mastermode = MM_OPEN;
+				}
 				privilege = ci->privilege = PRIV_ADMIN;
 			}
             else if(!(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
@@ -42,6 +46,7 @@ namespace auth
 		{
 			if(!ci->privilege) return;
 			ci->privilege = PRIV_NONE;
+			mastermode = MM_OPEN;
 		}
         if(val && authname) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
         else srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
