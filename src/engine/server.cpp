@@ -705,9 +705,11 @@ void serverloop()
 	conoutf("\fgdedicated server started, waiting for clients... [Ctrl-C to exit]");
 	for(;;)
 	{
-		int _lastmillis = lastmillis;
-		lastmillis = totalmillis = (int)enet_time_get();
-		curtime = lastmillis-_lastmillis;
+		//int _lastmillis = lastmillis;
+		//lastmillis = totalmillis = (int)enet_time_get();
+		//curtime = lastmillis-_lastmillis;
+		int prevmillis = (int)enet_time_get();
+		updatetimer();
 
 #ifdef MASTERSERVER
 		checkmaster();
@@ -717,7 +719,7 @@ void serverloop()
 		ircslice();
 #endif
 
-		if((int)enet_time_get()-lastmillis <= 0)
+		if((int)enet_time_get()-prevmillis <= 0)
 		{
 			#ifdef WIN32
 			Sleep(1);
