@@ -376,7 +376,8 @@ namespace server
 			case 2: mastermask = MM_COOPSERV; break;
 		}
 	});
-	VAR(modelimit, 0, G_DEATHMATCH, G_MAX-1);
+
+	VAR(modelimit, 0, G_LOBBY, G_MAX-1);
 	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher, 4 = no mode selection
 	VAR(mapslock, 0, 2, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
 	VAR(varslock, 0, 1, 2); // 0 = master, 1 = admin only, 2 = nobody
@@ -440,6 +441,7 @@ namespace server
 	void cleanup()
 	{
 		setpause(false);
+		if(GVAR(resetmmonend)) mastermode = MM_OPEN;
 		if(GVAR(resetvarsonend)) resetgamevars(true);
 		if(GVAR(resetbansonend)) bannedips.setsize(0);
 		changemap();
@@ -1250,6 +1252,7 @@ namespace server
 	{
 		setpause(false);
 		if(demorecord) enddemorecord();
+		if(GVAR(resetmmonend) >= 2) mastermode = MM_OPEN;
 		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
 		if(GVAR(resetbansonend) >= 2) bannedips.setsize(0);
 	}
