@@ -2115,6 +2115,16 @@ namespace server
 			}
 			putint(p, -1);
             welcomeinitclient(p, ci ? ci->clientnum : -1);
+			loopv(clients)
+			{
+				clientinfo *oi = clients[i];
+				if(oi->state.aitype >= 0 || !oi->mapvote[0] || (ci && oi->clientnum == ci->clientnum)) continue;
+				putint(p, SV_MAPVOTE);
+				putint(p, oi->clientnum);
+				sendstring(oi->mapvote, p);
+				putint(p, oi->modevote);
+				putint(p, oi->mutsvote);
+			}
 		}
 
 		if(*servermotd)
