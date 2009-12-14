@@ -1283,23 +1283,18 @@ namespace server
 		int morethanone = 0;
 		loopv(votes) if(!best || votes[i].count >= best->count)
 		{
-			if(best && votes[i].count == best->count)
-				morethanone++;
+			if(best && votes[i].count == best->count) morethanone++;
 			else morethanone = 0;
 			best = &votes[i];
 		}
 		bool gotvotes = best && best->count >= min(max(maxvotes/2, force ? 1 : 2), force ? 1 : maxvotes);
 		if(force && gotvotes && morethanone)
 		{
-			int c = best->count, r = rnd(morethanone), n = 0;
-			loopv(votes) if(votes[i].count == c)
+			int r = rnd(morethanone+1), n = 0;
+			loopv(votes) if(votes[i].count == best->count)
 			{
 				if(n != r) n++;
-				else
-				{
-					best = &votes[i];
-					break;
-				}
+				else { best = &votes[i]; break; }
 			}
 		}
 		if(force || gotvotes)
@@ -1325,15 +1320,15 @@ namespace server
 		return false;
 	}
 
-	bool vote(char *map, int &reqmode, int &reqmuts, int sender)
+	bool vote(char *reqmap, int &reqmode, int &reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
-        if(!ci || !m_game(reqmode) || !map || !*map) return false;
+        if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return false;
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
         if(!hasveto)
         {
         	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return false;
-        	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, map)) return false;
+        	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return false;
         }
 		if(reqmode < G_LOBBY && !ci->local)
 		{
@@ -1381,8 +1376,8 @@ namespace server
 				int n = listlen(maplist);
 				bool found = false;
 				string maploc;
-				if(strpbrk(map, "/\\")) copystring(maploc, map);
-				else formatstring(maploc)("maps/%s", map);
+				if(strpbrk(reqmap, "/\\")) copystring(maploc, reqmap);
+				else formatstring(maploc)("maps/%s", reqmap);
 				loopi(n)
 				{
 					char *maptxt = indexlist(maplist, i);
@@ -1399,13 +1394,13 @@ namespace server
 				if(!found && !haspriv(ci, mapslock%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return false;
 			}
 		}
-		copystring(ci->mapvote, map);
+		copystring(ci->mapvote, reqmap);
 		ci->modevote = reqmode;
 		ci->mutsvote = reqmuts;
 		if(hasveto)
 		{
 			endmatch();
-			srvoutf(3, "%s forced: \fs\fc%s\fS on map \fs\fc%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), map);
+			srvoutf(3, "%s forced: \fs\fc%s\fS on map \fs\fc%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 			return false;
@@ -3560,6 +3555,11 @@ namespace server
 				{
 					getstring(text, p);
 					filtertext(text, text);
+					if(!strncmp(text, "maps/", 5))
+					{
+						defformatstring(map)("%s", &text[5]);
+						copystring(text, map);
+					}
 					int reqmode = getint(p), reqmuts = getint(p);
 					if(vote(text, reqmode, reqmuts, sender))
 					{
