@@ -3555,7 +3555,7 @@ namespace server
 				{
 					getstring(text, p);
 					filtertext(text, text);
-					if(!strncmp(text, "maps/", 5))
+					if(!strncasecmp(text, "maps/", 5) || !strncasecmp(text, "maps\\", 5))
 					{
 						defformatstring(map)("%s", &text[5]);
 						copystring(text, map);
