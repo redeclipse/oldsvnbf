@@ -2025,7 +2025,7 @@ namespace server
 		{
 			ci->wantsmap = false;
 			if(ci->online) putint(p, 2); // we got a temp map eh?
-			else putint(p, 0);
+			else putint(p, ci->local ? -1 : 0);
 		}
 		putint(p, gamemode);
 		putint(p, mutators);
@@ -2080,25 +2080,12 @@ namespace server
 
         if(ci)
         {
-			//if(m_play(gamemode) || mastermode >= MM_LOCKED)
-            //{
-                ci->state.state = CS_SPECTATOR;
-                ci->team = TEAM_NEUTRAL;
-                putint(p, SV_SPECTATOR);
-                putint(p, ci->clientnum);
-                putint(p, 1);
-                sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
-            /*
-            }
-            else
-			{
-				ci->state.state = CS_DEAD;
-				waiting(ci, 0, 1, true);
-				putint(p, SV_WAITING);
-				putint(p, ci->clientnum);
-                if(!isteam(gamemode, mutators, ci->team, TEAM_FIRST)) ci->team = chooseteam(ci);
-			}
-			*/
+			ci->state.state = CS_SPECTATOR;
+			ci->team = TEAM_NEUTRAL;
+			putint(p, SV_SPECTATOR);
+			putint(p, ci->clientnum);
+			putint(p, 1);
+			sendf(-1, 1, "ri3x", SV_SPECTATOR, ci->clientnum, 1, ci->clientnum);
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
             putint(p, ci->team);
