@@ -301,7 +301,7 @@ namespace server
 	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
-	int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
+	int mastermode = MM_OPEN, mastermask = MM_OPENSERV;
 	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	stream *mapdata[3] = { NULL, NULL, NULL };
 
@@ -368,12 +368,13 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-    VARF(serveropen, 0, 1, 2, {
+    VARF(serveropen, 0, 1, 3, {
 		switch(serveropen)
 		{
-			case 0: default: mastermask = MM_PRIVSERV; break;
-			case 1: mastermask = MM_PUBSERV; break;
+			case 0: default: mastermask = MM_FREESERV; break;
+			case 1: mastermask = MM_OPENSERV; break;
 			case 2: mastermask = MM_COOPSERV; break;
+			case 3: mastermask = MM_VETOSERV; break;
 		}
 	});
 
