@@ -1,4 +1,5 @@
 = Code =
+* Keep an eye out for the elusive grenade bugs.
 * Make submerging extinguish at a lower level.
 * Re-balance shotgun (more spread/less bullets?)
 * Port Cube 2 ban list functionality, add global master ban list
