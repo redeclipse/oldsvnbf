@@ -966,7 +966,7 @@ namespace server
 							loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest) num++;
 							if(num > 0)
 							{
-								int r = rnd(num), n = 0;
+								int r = rnd(num+1), n = 0;
 								loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest)
 								{
 									if(n == r)
