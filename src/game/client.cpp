@@ -568,7 +568,7 @@ namespace client
 				stream *f = openfile(reqfext, "wb");
 				if(!f)
 				{
-					conoutf("\frfailed to open map file: %s", reqfext);
+					conoutft(CON_MESG, "\frfailed to open map file: %s", reqfext);
 					return;
 				}
 				gettingmap = true;
@@ -602,15 +602,15 @@ namespace client
 
     void getdemo(int i)
 	{
-		if(i<=0) conoutf("getting demo...");
-		else conoutf("getting demo %d...", i);
+		if(i<=0) conoutft(CON_MESG, "getting demo...");
+		else conoutft(CON_MESG, "getting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
 	ICOMMAND(getdemo, "i", (int *val), getdemo(*val));
 
 	void listdemos()
 	{
-		conoutf("listing demos...");
+		conoutft(CON_MESG, "listing demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
 	ICOMMAND(listdemos, "", (), listdemos());
@@ -635,7 +635,7 @@ namespace client
 
 	void sendmap()
 	{
-		conoutf("sending map...");
+		conoutft(CON_MESG, "sending map...");
 		const char *reqmap = mapname;
 		if(!reqmap || !*reqmap) reqmap = "maps/untitled";
 		bool edit = m_edit(game::gamemode);
@@ -659,11 +659,11 @@ namespace client
 			stream *f = openfile(reqfext, "rb");
 			if(f)
 			{
-				conoutf("\fgtransmitting file: %s", reqfext);
+				conoutft(CON_MESG, "\fgtransmitting file: %s", reqfext);
 				sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
                 delete f;
 			}
-			else conoutf("\frfailed to open map file: %s", reqfext);
+			else conoutft(CON_MESG, "\frfailed to open map file: %s", reqfext);
 		}
 	}
 	ICOMMAND(sendmap, "", (), sendmap());
@@ -1141,18 +1141,18 @@ namespace client
 					{
 						case 0:
 						{
-							conoutf("\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
+							conoutft(CON_MESG, "\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
 							addmsg(SV_GETMAP, "r");
 							break;
 						}
 						case 1:
 						{
-							conoutf("\fcserver is requesting the map from another client for us");
+							conoutft(CON_MESG, "\fcserver is requesting the map from another client for us");
 							break;
 						}
 						case 2:
 						{
-							conoutf("\fcseem to have failed to get map to %s, try /getmap", hasmap ? text : "<temp>");
+							conoutft(CON_MESG, "\fcseem to have failed to get map to %s, try /getmap", hasmap ? text : "<temp>");
 							needsmap = false; // we failed sir
 							break;
 						}
@@ -1598,11 +1598,11 @@ namespace client
 				case SV_SENDDEMOLIST:
 				{
 					int demos = getint(p);
-					if(!demos) conoutf("\frno demos available");
+					if(!demos) conoutft(CON_MESG, "\frno demos available");
 					else loopi(demos)
 					{
 						getstring(text, p);
-						conoutf("\fa%d. %s", i+1, text);
+						conoutft(CON_MESG, "\fa%d. %s", i+1, text);
 					}
 					break;
 				}
@@ -1798,12 +1798,12 @@ namespace client
 
 				case SV_GETMAP:
 				{
-					conoutf("\fcserver has requested we send the map..");
+					conoutft(CON_MESG, "\fcserver has requested we send the map..");
 					if(!needsmap && !gettingmap) sendmap();
 					else
 					{
-						if(!gettingmap) conoutf("\frwe don't have the map though, so asking for it instead");
-						else conoutf("\frbut we're in the process of getting it");
+						if(!gettingmap) conoutft(CON_MESG, "\frwe don't have the map though, so asking for it instead");
+						else conoutft(CON_MESG, "\frbut we're in the process of getting it");
 							addmsg(SV_GETMAP, "r");
 					}
 					break;
@@ -1811,10 +1811,10 @@ namespace client
 
 				case SV_SENDMAP:
 				{
-					conoutf("\fcmap data has been uploaded");
+					conoutft(CON_MESG, "\fcmap data has been uploaded");
 					if(needsmap && !gettingmap)
 					{
-						conoutf("\frwe want the map too, so asking for it");
+						conoutft(CON_MESG, "\frwe want the map too, so asking for it");
 						addmsg(SV_GETMAP, "r");
 					}
 					break;
