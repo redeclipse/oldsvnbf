@@ -1946,6 +1946,7 @@ namespace server
     {
 		servstate &gs = ci->state;
 		sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
+		sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, 0, ci->state.points);
     }
 
 	void putinitclient(clientinfo *ci, packetbuf &p)
@@ -2106,12 +2107,19 @@ namespace server
 			loopv(clients)
 			{
 				clientinfo *oi = clients[i];
-				if(oi->state.aitype >= 0 || !oi->mapvote[0] || (ci && oi->clientnum == ci->clientnum)) continue;
-				putint(p, SV_MAPVOTE);
+				if(oi->state.aitype >= 0 || (ci && oi->clientnum == ci->clientnum)) continue;
+				putint(p, SV_POINTS);
 				putint(p, oi->clientnum);
-				sendstring(oi->mapvote, p);
-				putint(p, oi->modevote);
-				putint(p, oi->mutsvote);
+				putint(p, 0);
+				putint(p, oi->state.points);
+				if(oi->mapvote[0])
+				{
+					putint(p, SV_MAPVOTE);
+					putint(p, oi->clientnum);
+					sendstring(oi->mapvote, p);
+					putint(p, oi->modevote);
+					putint(p, oi->mutsvote);
+				}
 			}
 		}
 
