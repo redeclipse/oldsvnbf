@@ -366,12 +366,6 @@ namespace game
 		}
 	}
 
-	void spawneffect(int type, const vec &o, int colour, int radius, float vel, int fade, float size, float blend)
-	{
-		regularshape(type, radius, colour, 21, 25, fade, o, size, blend, -vel, 0, vel*2);
-		adddynlight(vec(o).add(vec(0, 0, radius)), radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF).mul(blend), fade, fade/3);
-	}
-
 	void impulseeffect(gameent *d, bool effect)
 	{
 		if(effect || (FWV(impulsestyle) && d->state == CS_ALIVE && (d->turnside || (d->action[AC_IMPULSE] && (!d->ai || d->move || d->strafe)))))

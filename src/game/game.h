@@ -1241,7 +1241,6 @@ namespace game
 	extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
 	extern void announce(int idx, int targ, gameent *d, const char *msg, ...);
 	extern void respawn(gameent *d);
-	extern void spawneffect(int type, const vec &o, int colour = 0xFFFFFF, int radius = 4, float vel = 10.f, int fade = 250, float size = 1.5f, float blend = 1);
 	extern void impulseeffect(gameent *d, bool effect);
 	extern void suicide(gameent *d, int flags);
 	extern void fixrange(float &yaw, float &pitch);
