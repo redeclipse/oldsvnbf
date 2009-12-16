@@ -36,7 +36,8 @@ namespace physics
 	VARP(physframetime,		5, 5, 20);
 	VARP(physinterp,		0, 1, 1);
 
-	VARP(impulsedash,		0, 1, 3);			// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
+	VARP(impulseaction,		0, 1, 2);				// determines if impulse remains active when pushed, 0 = off, 1 = only if no gravity or impulsestyle requires no ground contact, 2 = always
+	VARP(impulsedash,		0, 1, 3);				// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
 	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0;
 
@@ -582,6 +583,7 @@ namespace physics
 						d->vel.x *= scale;
 						d->vel.y *= scale;
 					}
+					d->action[AC_JUMP] = false;
 					d->resetphys();
 					playsound(S_JUMP, d->o, d);
 					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1, 1, -10, 0, 10.f);
@@ -670,7 +672,8 @@ namespace physics
 				else if(d->turnside) { d->turnside = 0; d->resetphys(); }
 			}
 		}
-		d->action[AC_JUMP] = d->action[AC_DASH] = false;
+		if(d->action[AC_JUMP] && impulseaction >= (FWV(gravity) > 0 && FWV(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
+		d->action[AC_DASH] = false;
 		if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
 		else d->dojumpreset();
 	}
