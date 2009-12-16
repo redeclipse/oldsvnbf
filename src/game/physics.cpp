@@ -672,7 +672,7 @@ namespace physics
 				else if(d->turnside) { d->turnside = 0; d->resetphys(); }
 			}
 		}
-		if(d->action[AC_JUMP] && impulseaction >= (FWV(gravity) > 0 && FWV(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
+		if(d->action[AC_JUMP] && impulseaction < (FWV(gravity) > 0 && FWV(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
 		d->action[AC_DASH] = false;
 		if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
 		else d->dojumpreset();
