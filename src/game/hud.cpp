@@ -250,7 +250,7 @@ namespace hud
 					  healthscale = float(m_health(game::gamemode, game::mutators));
 				if(healthscale > 0) damage = max(damage, 1.f - max(game::player1->health, 0)/healthscale);
 				amt += damage*0.65f;
-				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire <= fireburntime)
+				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire < fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
 				if(FWV(impulsestyle) && (game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe))))
 					amt += game::player1->turnside ? 0.125f : 0.25f;
@@ -1600,7 +1600,7 @@ namespace hud
 	void drawfire(int w, int h, int s, float blend)
 	{
 		int interval = game::player1->lastfire ? lastmillis-game::player1->lastfire : 0;
-		if(interval && interval <= fireburntime)
+		if(interval && interval < fireburntime)
 		{
 			Texture *t = *burntex ? textureload(burntex, 3) : notexture;
 			if(t != notexture)
