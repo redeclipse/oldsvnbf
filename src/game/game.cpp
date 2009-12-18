@@ -27,7 +27,7 @@ namespace game
 	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
-	VARP(dynlightents, 0, 2, 2);
+	VARP(dynlighteffects, 0, 2, 2);
 	FVARP(playerblend, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
@@ -345,11 +345,11 @@ namespace game
 
 	void adddynlights()
 	{
-		if(dynlightents)
+		if(dynlighteffects)
 		{
 			projs::adddynlights();
 			entities::adddynlights();
-			if(dynlightents > 1)
+			if(dynlighteffects >= 2)
 			{
 				if(m_ctf(gamemode)) ctf::adddynlights();
 				if(m_stf(gamemode)) stf::adddynlights();
@@ -359,8 +359,11 @@ namespace game
 				gameent *d = NULL;
 				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
 				{
-					float pc = float((lastmillis-d->lastfire)%fireburndelay)/float(fireburndelay/2); pc = deadscale(d, pc > 1.f ? 2.f-pc : pc);
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.5f*max(pc,0.2f), 0.125f*pc));
+					int millis = lastmillis-d->lastfire; float pc = 1;
+					if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
+					else if((pc = float(millis%fireburndelay)/float(fireburndelay/2)) > 1.f) pc = 2.f-pc;
+					pc = deadscale(d, pc);
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc));
 				}
 			}
 		}
@@ -387,8 +390,10 @@ namespace game
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
 		{
-			float pc = lastmillis-d->lastfire >= fireburntime-500 ? 1.f-((lastmillis-d->lastfire-(fireburntime-500))/500.f) : 1.f;
-			regular_part_create(PART_FIREBALL_SOFT, max(int(fireburnfade*pc),1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.65f), 0.75f, -15, 0);
+			int millis = lastmillis-d->lastfire; float pc = 1;
+			if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
+			else if((pc = float(millis%fireburndelay)/float(fireburndelay/2)) > 1.f) pc = 2.f-pc;
+			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.5f+(pc*0.25f)+(rnd(25)/100.f)), 0.75f, -15, 0);
 		}
 	}
 

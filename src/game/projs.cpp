@@ -836,15 +836,13 @@ namespace projs
 			}
 			case PRJ_ENT:
 			{
-				if(!proj.beenused)
+				if(entities::ents.inrange(proj.id) && proj.beenused < 2)
 				{
-					if(entities::ents.inrange(proj.id))
-					{
-						int sweap = m_weapon(game::gamemode, game::mutators), attr = entities::ents[proj.id]->type == WEAPON ? w_attr(game::gamemode, entities::ents[proj.id]->attrs[0], sweap) : entities::ents[proj.id]->attrs[0],
-							colour = entities::ents[proj.id]->type == WEAPON ? weaptype[attr].colour : 0x6666FF;
-					}
-					if(proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
+					int colour = 0xFFFFFF;
+					if(entities::ents[proj.id]->type == WEAPON) colour = weaptype[w_attr(game::gamemode, entities::ents[proj.id]->attrs[0], m_weapon(game::gamemode, game::mutators))].colour;
+					adddynlight(proj.o, enttype[entities::ents[proj.id]->type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
 				}
+				if(!proj.beenused && proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
 				break;
 			}
 			default: break;

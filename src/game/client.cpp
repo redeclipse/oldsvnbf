@@ -1243,7 +1243,12 @@ namespace client
 					{
 						f->respawn(lastmillis, m_health(game::gamemode, game::mutators));
 						parsestate(f, p);
-						playsound(S_RESPAWN, f->o, f);
+						if(f->aitype <= AI_BOT)
+						{
+							playsound(S_RESPAWN, f->o, f);
+							if(game::dynlighteffects)
+								adddynlight(f->headpos(), f->height*2, vec(teamtype[f->team].colour>>16, (teamtype[f->team].colour>>8)&0xFF, teamtype[f->team].colour&0xFF).mul(2.f/0xFF), 250, 250);
+						}
 					}
 					else parsestate(NULL, p);
 					break;
@@ -1273,7 +1278,12 @@ namespace client
 					{
 						addmsg(SV_SPAWN, "ri", f->clientnum);
 						entities::spawnplayer(f, ent, true);
-						playsound(S_RESPAWN, f->o, f);
+						if(f->aitype <= AI_BOT)
+						{
+							playsound(S_RESPAWN, f->o, f);
+							if(game::dynlighteffects)
+								adddynlight(f->headpos(), f->height*2, vec(teamtype[f->team].colour>>16, (teamtype[f->team].colour>>8)&0xFF, teamtype[f->team].colour&0xFF).mul(2.f/0xFF), 250, 250);
+						}
 					}
 					ai::spawned(f, ent);
 					if(f == game::player1) game::resetcamera();
@@ -1429,6 +1439,8 @@ namespace client
 							}
 						}
 					}
+					if(game::dynlighteffects)
+						adddynlight(entities::ents[ent]->o, enttype[entities::ents[ent]->type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
 					break;
 				}
 
