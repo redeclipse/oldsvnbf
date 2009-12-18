@@ -357,13 +357,13 @@ namespace game
 			if(fireburntime)
 			{
 				gameent *d = NULL;
-				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire <= fireburntime)
+				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire < fireburntime)
 				{
 					int millis = lastmillis-d->lastfire; float pc = 1;
 					if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
-					else if((pc = float(millis%fireburndelay)/float(fireburndelay/2)) > 1.f) pc = 2.f-pc;
+					else pc = 0.5f+(float(millis%fireburndelay)/float(fireburndelay*2));
 					pc = deadscale(d, pc);
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.f+(pc*0.5f)+(rnd(50)/100.f)), vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc));
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.5f+(rnd(100)/100.f))*pc, vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc));
 				}
 			}
 		}
@@ -388,12 +388,12 @@ namespace game
 
 	void fireeffect(gameent *d)
 	{
-		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire <= fireburntime)
+		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
 		{
 			int millis = lastmillis-d->lastfire; float pc = 1;
 			if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
-			else if((pc = float(millis%fireburndelay)/float(fireburndelay/2)) > 1.f) pc = 2.f-pc;
-			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, 0.5f+(pc*0.25f)+(rnd(25)/100.f)), 0.75f, -15, 0);
+			else pc = 0.75f+(float(millis%fireburndelay)/float(fireburndelay*4));
+			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, (0.5f+(rnd(50)/100.f))*pc), 0.75f, -15, 0);
 		}
 	}
 
