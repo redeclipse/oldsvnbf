@@ -193,7 +193,7 @@ namespace entities
 			projent &proj = *projs::projs[i];
 			if(proj.projtype != PRJ_ENT || proj.id != n) continue;
 			pos = proj.o;
-			proj.beenused = true;
+			proj.beenused = 2;
 			proj.state = CS_DEAD;
 		}
 		gameent *f = NULL;
@@ -209,7 +209,7 @@ namespace entities
 			if(texname && *texname) part_icon(d->abovehead(), textureload(texname, 3), 2, 1, -10, 0, game::aboveheadfade, colour, 0, 1, d);
 			else
 			{
-				const char *item = entities::entinfo(e.type, e.attrs, false);
+				const char *item = entinfo(e.type, e.attrs, false);
 				if(item && *item)
 				{
 					defformatstring(ds)("<super>%s (%d)", item, e.type);
@@ -230,6 +230,7 @@ namespace entities
 		d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
 		if(issound(d->wschan)) removesound(d->wschan);
 		playsound(S_ITEMPICKUP, d->o, d, 0, -1, -1, -1, &d->wschan);
+		if(game::dynlighteffects) adddynlight(pos, enttype[e.type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
 		if(ents.inrange(r) && ents[r]->type == WEAPON)
 		{
 			gameentity &f = *(gameentity *)ents[r];
@@ -852,7 +853,7 @@ namespace entities
 				{
 					projent &proj = *projs::projs[i];
 					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
-					proj.beenused = true;
+					proj.beenused = 1;
 					proj.state = CS_DEAD;
 				}
 				gameent *d = NULL;
@@ -1378,7 +1379,7 @@ namespace entities
 					entitylink(d->lastnode, curnode, d->physstate != PHYS_FALL && !d->onladder);
 				d->lastnode = curnode;
 			}
-			else if(!ents.inrange(d->lastnode) || entities::ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
+			else if(!ents.inrange(d->lastnode) || ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
 				d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
 
 			if(clip) cleanairnodes = 2;

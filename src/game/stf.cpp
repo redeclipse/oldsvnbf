@@ -187,6 +187,7 @@ namespace stf
 				game::announce(S_V_FLAGSECURED, d == game::player1 ? CON_SELF : CON_INFO, d, "\fateam \fs%s%s\fS secured %s", teamtype[owner].chat, teamtype[owner].name, b.name);
 				defformatstring(text)("<super>%s\fzReSECURED", teamtype[owner].chat);
 				part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
+				if(game::dynlighteffects) adddynlight(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(teamtype[owner].colour>>16, (teamtype[owner].colour>>8)&0xFF, teamtype[owner].colour&0xFF).mul(2.f/0xFF), 500, 250);
 			}
 		}
 		else if(b.owner)
@@ -197,6 +198,7 @@ namespace stf
 			game::announce(S_V_FLAGOVERTHROWN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fateam \fs%s%s\fS overthrew %s", teamtype[enemy].chat, teamtype[enemy].name, b.name);
 			defformatstring(text)("<super>%s\fzReOVERTHROWN", teamtype[enemy].chat);
 			part_textcopy(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
+			if(game::dynlighteffects) adddynlight(vec(b.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(teamtype[enemy].colour>>16, (teamtype[enemy].colour>>8)&0xFF, teamtype[enemy].colour&0xFF).mul(2.f/0xFF), 500, 250);
 		}
 		b.owner = owner;
 		b.enemy = enemy;

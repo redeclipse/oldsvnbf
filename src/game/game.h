@@ -1090,9 +1090,9 @@ enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
 struct projent : dynent
 {
 	vec from, to, norm;
-	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce;
+	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce, beenused;
 	float movement, roll, lifespan, lifesize;
-	bool local, beenused, extinguish, limited, stuck, escaped;
+	bool local, extinguish, limited, stuck, escaped;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
 	int schan, id, weap, flags, colour, hitflags;
@@ -1116,11 +1116,11 @@ struct projent : dynent
 		type = ENT_PROJ;
 		state = CS_ALIVE;
 		norm = vec(0, 0, 1);
-		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = flags = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = beenused = flags = 0;
 		schan = id = weap = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		colour = 0xFFFFFF;
-		beenused = extinguish = limited = stuck = false;
+		extinguish = limited = stuck = false;
 		escaped = true;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
@@ -1225,7 +1225,7 @@ namespace game
 {
 	extern int numplayers, gamemode, mutators, nextmode, nextmuts, minremain, maptime,
 			zoomtime, lastzoom, lasttvcam, lasttvchg, spectvtime, waittvtime, showplayerinfo,
-				bloodfade, gibfade, fogdist, aboveheadfade, announcefilter;
+				bloodfade, gibfade, fogdist, aboveheadfade, announcefilter, dynlighteffects;
 	extern float bloodscale, gibscale;
 	extern bool intermission, zooming;
 	extern vec swaypush, swaydir;

@@ -453,6 +453,7 @@ namespace ctf
 				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
 				part_textcopy(vec(from).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 			}
+			if(game::dynlighteffects) adddynlight(vec(from).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(teamtype[team].colour>>16, (teamtype[team].colour>>8)&0xFF, teamtype[team].colour&0xFF).mul(2.f/0xFF), 500, 250);
 		}
 		if(to.x >= 0)
 		{
@@ -461,6 +462,7 @@ namespace ctf
 				defformatstring(text)("<super>%s\fzRe%s", teamtype[team].chat, str);
 				part_textcopy(vec(to).add(vec(0, 0, enttype[FLAG].radius)), text, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 3, 1, -10);
 			}
+			if(game::dynlighteffects) adddynlight(vec(to).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(teamtype[team].colour>>16, (teamtype[team].colour>>8)&0xFF, teamtype[team].colour&0xFF).mul(2.f/0xFF), 500, 250);
 		}
 		if(from.x >= 0 && to.x >= 0) part_trail(PART_FIREBALL, 250, from, to, teamtype[team].colour, 2, 1, -5);
     }
