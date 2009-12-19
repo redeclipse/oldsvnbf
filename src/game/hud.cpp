@@ -53,16 +53,16 @@ namespace hud
 	COMMANDN(conskip, setconskip, "i");
 
 	VARP(consize, 0, 6, 100);
-	VARP(contime, 0, 20000, INT_MAX-1);
+	VARP(contime, 0, 30000, INT_MAX-1);
 	VARP(confade, 0, 1000, INT_MAX-1);
 	VARP(conoverflow, 0, 9, INT_MAX-1);
 	VARP(concenter, 0, 0, 1);
 	VARP(confilter, 0, 1, 1);
 	FVARP(conblend, 0, 0.6f, 1);
-	VARP(chatconsize, 0, 4, 100);
+	VARP(chatconsize, 0, 5, 100);
 	VARP(chatcontime, 0, 30000, INT_MAX-1);
 	VARP(chatconfade, 0, 1000, INT_MAX-1);
-	VARP(chatconoverflow, 0, 6, INT_MAX-1);
+	VARP(chatconoverflow, 0, 5, INT_MAX-1);
 	FVARP(chatconblend, 0, 0.75f, 1);
 	FVARP(fullconblend, 0, 0.9f, 1);
 
