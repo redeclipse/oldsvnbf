@@ -47,8 +47,17 @@ namespace stf
         {
             stfstate::flag &f = st.flags[i];
             if(!entities::ents.inrange(f.ent)) continue;
-            int colour = teamtype[f.enemy && lastmillis%600 >= 400 ? f.enemy : f.owner].colour;
-			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*1.5f, vec((colour>>16), ((colour>>8)&0xFF), (colour&0xFF)).div(255.f));
+			float r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f;
+            if(f.enemy)
+            {
+				float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
+					amt = float(lastmillis%1000)/500.f;
+				if(amt > 1.f) amt = 2.f-amt;
+            	r += (r2-r)*amt;
+            	g += (g2-g)*amt;
+            	b += (b2-b)*amt;
+            }
+			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(r, g, b));
         }
     }
 
@@ -58,8 +67,16 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[i];
 			vec dir(f.o); dir.sub(camera1->o);
-			int colour = teamtype[f.enemy && lastmillis%600 >= 400 ? f.enemy : f.owner].colour;
-			float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
+			float r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
+            if(f.enemy)
+            {
+				float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
+					amt = float(lastmillis%1000)/500.f;
+				if(amt > 1.f) amt = 2.f-amt;
+            	r += (r2-r)*amt;
+            	g += (g2-g)*amt;
+            	b += (b2-b)*amt;
+            }
 			if(f.owner != game::player1->team && f.enemy != game::player1->team)
 			{
 				float dist = dir.magnitude(),
@@ -110,10 +127,19 @@ namespace stf
 			bool headsup = game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.owner == game::player1->team || st.flags.length() == 1 ? 1 : 2);
 			if(headsup || f.hasflag || millis <= 1000)
 			{
-				int prevsy = sy, colour = teamtype[f.owner].colour; bool skewed = false;
+				int prevsy = sy; bool skewed = false;
 				float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
-					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+					r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f;
+				if(f.enemy)
+				{
+					float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
+						amt = float(lastmillis%1000)/500.f;
+					if(amt > 1.f) amt = 2.f-amt;
+					r += (r2-r)*amt;
+					g += (g2-g)*amt;
+					b += (b2-b)*amt;
+				}
 				if(f.hasflag)
 				{
 					skewed = true;
@@ -132,8 +158,7 @@ namespace stf
 				sy += hud::drawitem(hud::flagtex, x, y-sy, s, false, r, g, b, fade, skew);
 				if(f.enemy)
 				{
-					int colour2 = teamtype[f.enemy].colour;
-					float r2 = (colour2>>16)/255.f, g2 = ((colour2>>8)&0xFF)/255.f, b2 = (colour2&0xFF)/255.f;
+					float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f;
 					hud::drawprogress(x, y-prevsy, 0, occupy, int(s*0.5f), false, r2, g2, b2, fade, skew);
 					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r, g, b, fade, skew, !skewed && headsup ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 				}
