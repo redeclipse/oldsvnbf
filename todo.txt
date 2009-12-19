@@ -1,6 +1,8 @@
 = Code =
-* Keep an eye out for the elusive grenade bugs.
-* Make submerging extinguish at a lower level.
+* Try to balance kamikaze grenades better (timer? penalty?)
+* Don't destroy (certain?) projectiles entering death material
+* Keep an eye out for the elusive grenade bugs
+* Make submerging extinguish at a lower level
 * Re-balance shotgun (more spread/less bullets?)
 * Port Cube 2 ban list functionality, add global master ban list
 * Make glass more visible/look better (combined texture?)
@@ -26,3 +28,4 @@
 = Maps =
 * Fix gravity in 'wet'
 * Ladderify 'dualstar'
+* Post-freeze: Update to new version of 'darkness'
