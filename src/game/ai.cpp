@@ -899,7 +899,11 @@ namespace ai
 		}
 		else d->ai->dontmove = true;
 
-		if(d->aitype == AI_BOT)
+		if(d->aitype > AI_BOT)
+		{ // because they don't jump, per-se
+			if(d->ai->spot.z-d->feetpos().z >= enttype[WAYPOINT].radius) d->ai->spot.z = d->feetpos().z;
+		}
+		else
 		{
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(idle)
@@ -1238,7 +1242,7 @@ namespace ai
 		loopi(game::numdynents())
 		{
 			gameent *d = (gameent *)game::iterdynents(i);
-			if(!d) continue;
+			if(!d || d->aitype > AI_BOT) continue;
 			if(!d->ai && !d->airnodes.empty()) loopvj(d->airnodes)
 				if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
 					obs.add(d, d->airnodes[j]);
