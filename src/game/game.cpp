@@ -1033,7 +1033,7 @@ namespace game
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
 		if(!empty) client::sendinfo = client::sendcrc = true;
-		fogdist = max(getvar("fog")-16, 64);
+		fogdist = max(getvar("fog")-enttype[WAYPOINT].radius, 64);
         copystring(clientmap, reqname ? reqname : (name ? name : ""));
 		resetsway();
 	}
