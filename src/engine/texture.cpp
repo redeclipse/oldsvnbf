@@ -904,6 +904,7 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
             if(renderpath==R_FIXEDFUNCTION && !hasTE) raw = true;
         }
         else if(!strncmp(cmd, "dds", len)) dds = true;
+        else if(!strncmp(cmd, "thumbnail", len)) raw = true;
     }
 
     if(msg) progress(loadprogress, file);
@@ -1446,7 +1447,7 @@ Texture *loadthumbnail(Slot &slot)
         texturedata(s, NULL, &slot.sts[0], false);
         if(glow >= 0) texturedata(g, NULL, &slot.sts[glow], false);
         if(layer) texturedata(l, NULL, &layer->sts[0], false);
-        if(!s.data) slot.thumbnail = notexture;
+        if(!s.data) t = slot.thumbnail = notexture;
         else
         {
             int xs = s.w, ys = s.h;
