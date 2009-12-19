@@ -47,8 +47,8 @@ namespace stf
         {
             stfstate::flag &f = st.flags[i];
             if(!entities::ents.inrange(f.ent)) continue;
-			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*1.5f,
-				vec((teamtype[f.owner].colour>>16), ((teamtype[f.owner].colour>>8)&0xFF), (teamtype[f.owner].colour&0xFF)).div(255.f));
+            int colour = teamtype[f.enemy && lastmillis%600 >= 400 ? f.enemy : f.owner].colour;
+			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*1.5f, vec((colour>>16), ((colour>>8)&0xFF), (colour&0xFF)).div(255.f));
         }
     }
 
