@@ -1189,9 +1189,9 @@ namespace hud
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(chkcond(radarplayers,  m_duke(game::gamemode, game::mutators) || game::tvmode()) || m_edit(game::gamemode)) // 4
+		if(chkcond(radarplayers, m_story(game::gamemode) || m_duke(game::gamemode, game::mutators) || m_edit(game::gamemode) || game::tvmode())) // 4
 		{
-			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR)
+			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR && game::players[i]->aitype <= AI_BOT && (!m_story(game::gamemode) || game::players[i]->team == game::player1->team))
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
 		}
 		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
