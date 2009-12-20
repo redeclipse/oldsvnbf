@@ -379,9 +379,10 @@ namespace server
 	});
 
 	VAR(modelimit, 0, G_LOBBY, G_MAX-1);
-	VAR(modelock, 0, 3, 4); // 0 = off, 1 = master only (+1 admin only), 3 = non-admin can only set limited mode and higher, 4 = no mode selection
+	VAR(modelock, 0, 3, 5); // 0 = off, 1 = master only (+1 admin only), 3 = master can only set limited mode and higher (+1 admin), 5 = no mode selection
 	VAR(mapslock, 0, 2, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
 	VAR(varslock, 0, 1, 2); // 0 = master, 1 = admin only, 2 = nobody
+	VAR(votelock, 0, 2, 5); // 0 = off, 1 = master can select same game (+1 admin), 3 = master only can vote (+1 admin), 5 = no voting
 	VAR(votewait, 0, 3000, INT_MAX-1);
 
 	ICOMMAND(gameid, "", (), result(gameid()));
@@ -1325,6 +1326,12 @@ namespace server
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return false;
+        switch(votelock)
+        {
+        	case 1: case 2: if(reqmode == gamemode && reqmuts == mutators && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same game again")) return false; break;
+			case 3: case 4: if(!haspriv(ci, votelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return false; break;
+			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return false; break;
+        }
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
         if(!hasveto)
         {
@@ -1339,18 +1346,9 @@ namespace server
 		switch(modelock)
 		{
 			case 0: default: break;
-			case 1: case 2:
-			{
-				if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes"))
-					return false;
-				break;
-			}
-			case 3: case 4:
-			{
-				if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_ADMIN : PRIV_MAX, "change to a locked game mode"))
-					return false;
-				break;
-			}
+			case 1: case 2: if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return false; break;
+			case 3: case 4: if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return false; break;
+			case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return false; break;
 		}
 		if(reqmode != G_EDITMODE && mapslock)
 		{
