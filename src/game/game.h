@@ -1192,10 +1192,11 @@ namespace weapons
 namespace hud
 {
 	extern char *conopentex, *playertex, *deadtex, *dominatingtex, *dominatedtex, *inputtex, *bliptex, *cardtex, *flagtex, *arrowtex;
-	extern int hudwidth, hudsize, lastteam, damageresidue, damageresiduefade, shownotices, radarflagnames, inventorygame, teamkillnum;
+	extern int hudwidth, hudsize, lastteam, lastnewgame, damageresidue, damageresiduefade, shownotices, radarflagnames, inventorygame, teamkillnum;
 	extern float noticescale, inventoryblend, inventoryskew, inventorygrow, radarflagblend, radarblipblend, radarflagsize;
 	extern vector<int> teamkills;
 	extern bool chkcond(int val, bool cond);
+	extern char *timetostr(int millis, bool limited = false);
 	extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1);
 	extern void drawtex(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 	extern void drawsized(float x, float y, float s);
