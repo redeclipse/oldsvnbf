@@ -271,7 +271,7 @@ namespace hud
 				amt += damage*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire < fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
-				if(FWV(impulsestyle) && (game::player1->turnside || (game::player1->action[AC_IMPULSE] && (game::player1->move || game::player1->strafe))))
+				if(FWV(impulsestyle) && (game::player1->turnside || (game::player1->action[AC_SPRINT] && (game::player1->move || game::player1->strafe))))
 					amt += game::player1->turnside ? 0.125f : 0.25f;
 				break;
 			}

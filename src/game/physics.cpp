@@ -39,7 +39,10 @@ namespace physics
 	VARP(impulseaction,		0, 1, 2);				// determines if impulse remains active when pushed, 0 = off, 1 = only if no gravity or impulsestyle requires no ground contact, 2 = always
 	VARP(impulsedash,		0, 1, 3);				// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
-	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0;
+	VARP(crouchstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
+	VARP(sprintstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
+
+	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0, lastcrouch = 0, lastsprint = 0;
 
 	#define imov(name,v,u,d,s,os) \
 		void do##name(bool down) \
@@ -72,6 +75,39 @@ namespace physics
 		{
 			if(game::allowmove(game::player1))
 			{
+				int style = 0, *last = NULL;
+				switch(type)
+				{
+					case AC_CROUCH: style = crouchstyle; last = &lastcrouch; break;
+					case AC_SPRINT: style = sprintstyle; last = &lastsprint; break;
+					default: break;
+				}
+				switch(style)
+				{
+					case 1:
+					{
+						if(!down && game::player1->action[type])
+						{
+							if(*last && lastmillis-*last < PHYSMILLIS) return;
+							*last = lastmillis;
+						}
+						break;
+					}
+					case 2:
+					{
+						if(!down)
+						{
+							if(*last)
+							{
+								*last = 0;
+								return;
+							}
+							*last = lastmillis;
+						}
+						break;
+					}
+					default: break;
+				}
 				if(type == AC_CROUCH)
 				{
 					if(game::player1->action[type] != down)
@@ -191,7 +227,7 @@ namespace physics
 			{
 				float speed = FWV(movespeed);
 				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= FWV(movecrawl);
-				if(FWV(impulsestyle) && ((gameent *)d)->action[AC_IMPULSE] && (d->move || d->strafe) && (!FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter)))
+				if(FWV(impulsestyle) && ((gameent *)d)->action[AC_SPRINT] && (d->move || d->strafe) && (!FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter)))
 					speed += FWV(impulsespeed)*(d->move < 0 ? 0.5f : 1);
 				return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
 			}
@@ -542,10 +578,10 @@ namespace physics
 			bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d);
 			if(millis && FWV(impulsestyle))
 			{
-				if(d->action[AC_IMPULSE] && (d->move || d->strafe))
+				if(d->action[AC_SPRINT] && (d->move || d->strafe))
 				{
 					if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
-					else d->action[AC_IMPULSE] = false;
+					else d->action[AC_SPRINT] = false;
 				}
 				else if(d->impulse[IM_METER] > 0 && FWV(impulseregen) > 0)
 				{
@@ -702,7 +738,7 @@ namespace physics
 		else
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
-			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((FWV(impulsemeter) && ((gameent *)pl)->action[AC_IMPULSE] && ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter))))
+			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((FWV(impulsemeter) && ((gameent *)pl)->action[AC_SPRINT] && ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter))))
 				floor = false;
 			float curb = floor ? FWV(floorcurb) : FWV(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, FWV(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
