@@ -1164,6 +1164,11 @@ namespace projs
 					{
 						int interval = min(proj.lifemillis, 1000);
 						if(proj.lifetime < interval) size = trans = float(proj.lifetime)/float(interval);
+						else if(proj.lifemillis > interval)
+						{
+							interval = min(proj.lifemillis-interval, 1000);
+							if(proj.lifemillis-proj.lifetime < interval) size = trans = float(proj.lifemillis-proj.lifetime)/float(interval);
+						}
 					}
 					break;
 				default: break;
