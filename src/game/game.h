@@ -769,7 +769,7 @@ struct gamestate
 	{
 		health = heal;
 		weapreset(true);
-		if(!isweap(sweap)) sweap = WEAP_PISTOL;
+		if(!isweap(sweap)) sweap = WEAP_MELEE;
 		ammo[sweap] = weaptype[sweap].reloads ? weaptype[sweap].add : weaptype[sweap].max;
 		if(arena)
 		{
@@ -784,7 +784,7 @@ struct gamestate
 			lastweap = weapselect = sweap;
 		}
 		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = weaptype[WEAP_MELEE].max;
-		if(grenades && weapselect != WEAP_GRENADE) ammo[WEAP_GRENADE] = weaptype[WEAP_GRENADE].max;
+		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = weaptype[WEAP_GRENADE].max;
 	}
 
 	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
