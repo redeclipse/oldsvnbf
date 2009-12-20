@@ -2619,6 +2619,13 @@ namespace server
 	{
 		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
+			if(m_story(gamemode) && ci->state.cpnodes.empty())
+			{
+				int maxnodes = -1;
+				loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype <= AI_BOT && (!clients.inrange(maxnodes) || clients[i]->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
+					maxnodes = i;
+				if(clients.inrange(maxnodes)) loopv(clients[maxnodes]->state.cpnodes) ci->state.cpnodes.add(clients[maxnodes]->state.cpnodes[i]);
+			}
 			if(ci->state.state == CS_ALIVE)
 			{
 				dropitems(ci, drop);
