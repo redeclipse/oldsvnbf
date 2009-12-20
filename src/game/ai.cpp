@@ -984,7 +984,7 @@ namespace ai
 
 		bool wantsimpulse = false;
 		if(d->aitype == AI_BOT && b.idle == -1 && !d->ai->dontmove)
-			wantsimpulse = (d->action[AC_IMPULSE] || !d->actiontime[AC_IMPULSE] || lastmillis-d->actiontime[AC_IMPULSE] > PHYSMILLIS*2);
+			wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
 		if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
 		{
 			float offyaw, offpitch;
@@ -999,8 +999,8 @@ namespace ai
 			}
 		}
 		else d->ai->becareful = false;
-		if(d->action[AC_IMPULSE] != wantsimpulse)
-			if((d->action[AC_IMPULSE] = !d->action[AC_IMPULSE]) == true) d->actiontime[AC_IMPULSE] = lastmillis;
+		if(d->action[AC_SPRINT] != wantsimpulse)
+			if((d->action[AC_SPRINT] = !d->action[AC_SPRINT]) == true) d->actiontime[AC_SPRINT] = lastmillis;
 
 		if(d->ai->dontmove) d->move = d->strafe = 0;
 		else

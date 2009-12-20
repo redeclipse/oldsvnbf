@@ -801,7 +801,7 @@ namespace client
             if(d->falling.z) putint(q, (int)(d->falling.z*DVELF));
 			// pack rest in almost always 1 byte: strafe:2, move:2, crouching: 1, aimyaw/aimpitch: 1
 			uint flags = (d->strafe&3) | ((d->move&3)<<2) |
-				((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((FWV(impulsestyle) && (d->turnside || ((d->action[AC_IMPULSE] && (d->move || d->strafe)))) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
+				((d->action[AC_CROUCH] ? 1 : 0)<<4) | ((FWV(impulsestyle) && (d->turnside || ((d->action[AC_SPRINT] && (d->move || d->strafe)))) ? 1 : 0)<<6) | ((d->conopen ? 1 : 0)<<7) |
 					((int)d->aimyaw!=(int)d->yaw || (int)d->aimpitch!=(int)d->pitch ? 0x20 : 0);
 			putuint(q, flags);
             if(flags&0x20)
@@ -948,7 +948,7 @@ namespace client
 				gameent *d = game::getclient(lcn);
                 if(!d || d==game::player1 || d->ai) continue;
                 float oldyaw = d->yaw, oldpitch = d->pitch, oldaimyaw = d->aimyaw, oldaimpitch = d->aimpitch;
-				d->action[AC_IMPULSE] = FWV(impulsestyle) && f&0x40 ? true : false;
+				d->action[AC_SPRINT] = FWV(impulsestyle) && f&0x40 ? true : false;
 				d->conopen = f&0x80 ? true : false;
 				d->yaw = yaw;
 				d->pitch = pitch;
