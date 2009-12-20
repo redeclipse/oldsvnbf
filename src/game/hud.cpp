@@ -5,7 +5,7 @@ extern float progresspart;
 namespace hud
 {
 	const int NUMSTATS = 12;
-	int damageresidue = 0, hudwidth = 0, lastteam = 0,
+	int damageresidue = 0, hudwidth = 0, lastteam = 0, lastnewgame = 0,
 		laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	vector<int> teamkills;
 	scoreboard sb;
@@ -238,6 +238,25 @@ namespace hud
 		return false;
 	}
 
+	char *timetostr(int millis, bool limited)
+	{
+		static string timestr; timestr[0] = 0;
+		int tm = millis, ms = 0, ss = 0, mn = 0;
+		if(tm > 0)
+		{
+			ms = tm%1000;
+			tm = (tm-ms)/1000;
+			if(tm > 0)
+			{
+				ss = tm%60;
+				tm = (tm-ss)/60;
+				if(tm > 0) mn = tm;
+			}
+		}
+		formatstring(timestr)(limited ? "%d:%02d.%d" : "%d:%02d.%03d", mn, ss, limited ? ms/100 : ms);
+		return timestr;
+	}
+
 	float motionblur(float scale)
 	{
 		float amt = 0.f;
@@ -246,7 +265,7 @@ namespace hud
 			case 1:
 			{
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
-				float damage = game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 1.f,
+				float damage = game::player1->state == CS_ALIVE ? min(damageresidue, 100)/100.f : 1.f,
 					  healthscale = float(m_health(game::gamemode, game::mutators));
 				if(healthscale > 0) damage = max(damage, 1.f - max(game::player1->health, 0)/healthscale);
 				amt += damage*0.65f;
@@ -1088,7 +1107,7 @@ namespace hud
 			if(type == WEAPON)
 			{
 				int attr1 = w_attr(game::gamemode, attr[0], m_weapon(game::gamemode, game::mutators));
-				tex = hud::itemtex(WEAPON, attr1);
+				tex = itemtex(WEAPON, attr1);
 				r = (weaptype[attr1].colour>>16)/255.f;
 				g = ((weaptype[attr1].colour>>8)&0xFF)/255.f;
 				b = (weaptype[attr1].colour&0xFF)/255.f;
@@ -1489,8 +1508,7 @@ namespace hud
 			if(inventoryhealth >= 3 && *state)
 			{
 				pushfont("super");
-				int dt = draw_textx("%s", x+width/2, y-(sy ? sy : FONTH), 255, 255, 255, int(fade*255)/2, TEXT_CENTERED, -1, -1, state);
-				if(!sy) sy += dt;
+				sy += draw_textx("%s", x+width/2, y-sy, 255, 255, 255, int(fade*255)/2, TEXT_CENTER_UP, -1, -1, state);
 				popfont();
 			}
 			if(inventorystatus && *tex) sy += drawitem(tex, x, y-sy, sw, true, 1.f, 1.f, 1.f, fade, 1.f);
@@ -1501,18 +1519,18 @@ namespace hud
 			{
 				pushfont("default");
 				if(game::player1->cpmillis > 0)
-					sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(lastmillis-game::player1->cpmillis, true));
+					sy += draw_textx("%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(lastmillis-game::player1->cpmillis, true));
 				else if(game::player1->cplast)
-					sy += draw_textx("\fzwe%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cplast));
+					sy += draw_textx("\fzwe%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(game::player1->cplast));
 				popfont();
 				if(game::player1->cptime)
 				{
 					pushfont("sub");
-					sy += draw_textx("\fy%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, hud::sb.timetostr(game::player1->cptime));
+					sy += draw_textx("\fy%s", x, y-sy, 255, 255, 255, int(fade*255), TEXT_LEFT_UP, -1, -1, timetostr(game::player1->cptime));
 					popfont();
 				}
 			}
-			sy += hud::sb.trialinventory(x, y-sy, sw, fade);
+			sy += sb.trialinventory(x, y-sy, sw, fade);
 		}
 		return sy;
 	}
@@ -1536,15 +1554,31 @@ namespace hud
 					if(inventoryteams && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 					{
 						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
-						if(lastteam)
+						if(lastnewgame)
+						{
+							if(!game::intermission) lastnewgame = 0;
+							else
+							{
+								int millis = votelimit-(lastmillis-lastnewgame);
+								float amt = float(millis)/float(votelimit);
+								const char *col = "\fw";
+								if(amt > 0.75f) col = "\fg";
+								else if(amt > 0.5f) col = "\fy";
+								else if(amt > 0.25f) col = "\fo";
+								else col = "\fr";
+								hud::drawprogress(cx[i], cm+cs, 0, 1, cs, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
+								cm += hud::drawprogress(cx[i], cm+cs, 0, amt, cs, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
+							}
+						}
+						if(!lastnewgame && lastteam)
 						{
 							const char *pre = "";
-							float skew = hud::inventoryskew, fade = blend*inventoryblend, rescale = 1;
-							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*hud::inventoryskew) };
+							float skew = inventoryskew, fade = blend*inventoryblend, rescale = 1;
+							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*inventoryskew) };
 							if(millis <= inventoryteams)
 							{
 								pre = "\fzRw";
-								int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
+								int off[2] = { hudwidth/2, hudsize/4 };
 								if(millis <= inventoryteams/2)
 								{
 									float tweak = millis <= inventoryteams/4 ? clamp(float(millis)/float(inventoryteams/4), 0.f, 1.f) : 1.f;
@@ -1560,13 +1594,13 @@ namespace hud
 									rescale = tweak;
 								}
 							}
-							cm += int(hud::drawitem(hud::teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
+							cm += int(drawitem(teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
 							if(game::player1->team == TEAM_NEUTRAL)
 							{
-								if(m_story(game::gamemode)) cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
-								else cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%sffa", teamtype[game::player1->team].chat, pre)*rescale);
+								if(m_story(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
+								else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%sffa", teamtype[game::player1->team].chat, pre)*rescale);
 							}
-							else cm += int(hud::drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
+							else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
 						}
 					}
 					if((cc = drawselection(cx[i], cy[i], cs, cm, blend)) > 0) cy[i] -= cc+cr;
@@ -1584,7 +1618,7 @@ namespace hud
 
 	void drawdamage(int w, int h, int s, float blend)
 	{
-		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(hud::damageresidue, 100)/100.f : 0.f);
+		float pc = game::player1->state == CS_DEAD ? 0.5f : (game::player1->state == CS_ALIVE ? min(damageresidue, 100)/100.f : 0.f);
 		if(pc > 0)
 		{
 			Texture *t = *damagetex ? textureload(damagetex, 3) : notexture;
@@ -1793,9 +1827,9 @@ namespace hud
 						loopi(3) if(col[i] < colour[i]) colour[i] *= col[i];
 					}
 				}
-				if(showdamage >= 2 && hud::damageresidue > 0)
+				if(showdamage >= 2 && damageresidue > 0)
 				{
-					float pc = min(hud::damageresidue, 100)/100.f;
+					float pc = min(damageresidue, 100)/100.f;
 					loopi(2) if(colour[i+1] > 0) colour[i+1] -= colour[i+1]*pc;
 				}
 			}

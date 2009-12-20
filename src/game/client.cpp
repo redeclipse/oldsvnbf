@@ -1173,6 +1173,7 @@ namespace client
 				{
 					hud::sb.showscores(false);
 					if(!menuactive()) showgui("game");
+					if(game::intermission) hud::lastnewgame = lastmillis;
 					break;
 				}
 
@@ -1745,8 +1746,8 @@ namespace client
 					t->cpmillis = t->impulse[IM_METER] = 0;
 					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
 					{
-						defformatstring(best)("%s", hud::sb.timetostr(besttime));
-						conoutft(t != game::player1 ? CON_INFO : CON_SELF, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::sb.timetostr(laptime), best);
+						defformatstring(best)("%s", hud::timetostr(besttime));
+						conoutft(t != game::player1 ? CON_INFO : CON_SELF, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::timetostr(laptime), best);
 					}
 				}
 

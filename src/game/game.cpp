@@ -1018,7 +1018,7 @@ namespace game
 	void startmap(const char *name, const char *reqname, bool empty)	// called just after a map load
 	{
 		intermission = false;
-		maptime = 0;
+		maptime = hud::lastnewgame = 0;
 		projs::reset();
 		resetworld();
 		if(*name)

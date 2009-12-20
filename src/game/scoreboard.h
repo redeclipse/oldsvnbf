@@ -19,25 +19,6 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
-		char *timetostr(int millis, bool limited = false)
-		{
-			static string timestr; timestr[0] = 0;
-			int tm = millis, ms = 0, ss = 0, mn = 0;
-			if(tm > 0)
-			{
-				ms = tm%1000;
-				tm = (tm-ms)/1000;
-				if(tm > 0)
-				{
-					ss = tm%60;
-					tm = (tm-ss)/60;
-					if(tm > 0) mn = tm;
-				}
-			}
-			formatstring(timestr)(limited ? "%d:%02d.%d" : "%d:%02d.%03d", mn, ss, limited ? ms/100 : ms);
-			return timestr;
-		}
-
 		IVARP(autoshowscores, 0, 2, 3); // 1 = when dead, 2 = also in spectv, 3 = and in waittv too
 		IVARP(showscoresdelay, 0, 0, INT_MAX-1); // otherwise use a static timespan
 		IVARP(showscoresinfo, 0, 1, 1);
@@ -483,7 +464,7 @@ namespace hud
 				if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 				{
 					g.pushlist();
-					g.strut(3);
+					g.strut(4);
 					g.text("cn", fgcolor);
 					loopscoregroup({
 						g.textf("%d", 0xFFFFFF, NULL, o->clientnum);
