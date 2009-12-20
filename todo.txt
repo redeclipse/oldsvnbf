@@ -1,4 +1,5 @@
 = Code =
+* Allow premature detonation by firing/exploding certain weapons at plasma/grenades.
 * Try to balance kamikaze grenades better (timer? penalty?)
 * Don't destroy (certain?) projectiles entering death material
 * Keep an eye out for the elusive grenade bugs
@@ -11,7 +12,7 @@
 * Port NEWUI code
 
 = Models =
-* New player model (tag_affinity, tag_camera, tag_weapon)
+* New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso)
 * Zombie/Turret/Pyro/Heavy models
 
 = Art =
@@ -22,7 +23,7 @@
 = Sounds =
 * Domination/Revenge
 * Double/Triple/Multi kill
-* Spree 5/6
+* Spree 5/6 (7/8/9/10?)
 * Team-alert and damage tones
 
 = Maps =
