@@ -272,12 +272,8 @@ namespace hud
 				g.pushfont("sub");
 				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
-					if(!m_campaign(game::gamemode))
-					{
-						if(m_duke(game::gamemode, game::mutators))
-							g.textf("Queued for new round", 0xFFFFFF, NULL);
-						else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
-					}
+					if(m_duke(game::gamemode, game::mutators)) g.textf("Queued for new round", 0xFFFFFF, NULL);
+					else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
 					g.poplist();
 					if(game::player1->state != CS_WAITING && lastmillis-game::player1->lastdeath > 500)
 						g.textf("Press \fs\fc%s\fS to look around", 0xFFFFFF, NULL, attackkey);

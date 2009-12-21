@@ -737,8 +737,10 @@ struct gamestate
 			case TRIGGER: break;
 			case WEAPON:
 			{
+				int prev = ammo[attr];
 				weapswitch(attr, millis, hasweap(attr, sweap) ? (weapselect != attr ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
 				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+weaptype[attr].add, 1, weaptype[attr].max);
+				weapload[attr] = ammo[attr]-prev;
 				entid[attr] = id;
 				break;
 			}
