@@ -17,9 +17,9 @@
 * Zombie/Turret/Pyro/Heavy models
 
 = Art =
-* Melee icon
-* Dominated/Dominating icons
+* Dead, Arrow, Melee, Dominated/Dominating icons
 * NEWUI widgets
+* Current "widgets" need glow removed so they are not clipped by image dimensions
 
 = Sounds =
 * Domination/Revenge
