@@ -344,7 +344,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
 					if(ismsg)
 					{
 						if(!strcasecmp(q, "ACTION"))
-							ircprintf(n, 1, g ? w[g+1] : NULL, "\fm* %s %s", user[0], r);
+							ircprintf(n, 1, g ? w[g+1] : NULL, "\fv* %s %s", user[0], r);
 						else
 						{
 							ircprintf(n, 4, g ? w[g+1] : NULL, "\fr%s requests: %s %s", user[0], q, r);
@@ -689,7 +689,7 @@ void irccmd(ircnet *n, ircchan *c, char *s)
 				if(c)
 				{
 					ircsend(n, "PRIVMSG %s :\001ACTION %s\001", c->name, r);
-					ircprintf(n, 1, c->name, "\fm* %s %s", n->nick, r);
+					ircprintf(n, 1, c->name, "\fv* %s %s", n->nick, r);
 				}
 				else ircprintf(n, 4, NULL, "\fcyou are not on a channel");
 			}

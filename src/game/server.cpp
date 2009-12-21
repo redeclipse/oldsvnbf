@@ -3521,8 +3521,14 @@ namespace server
 						if(t == cp || !allowbroadcast(t->clientnum) || (flags&SAY_TEAM && cp->team != t->team)) continue;
 						sendf(t->clientnum, 1, "ri3s", SV_TEXT, cp->clientnum, flags, text);
 					}
-					if(flags&SAY_ACTION) relayf(0, "\fm* \fs%s\fS \fs\fm%s\fS", colorname(cp), text);
-					else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", colorname(cp), text);
+					defformatstring(m)("%s", colorname(cp));
+					if(flags&SAY_TEAM)
+					{
+						defformatstring(t)(" (\fs%s%s\fS)", teamtype[cp->team].chat, teamtype[cp->team].name);
+						concatstring(m, t);
+					}
+					if(flags&SAY_ACTION) relayf(0, "\fv* \fs%s\fS \fs\fv%s\fS", m, text);
+					else relayf(0, "\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 					break;
 				}
 

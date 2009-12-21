@@ -404,14 +404,13 @@ namespace client
 	{
 		if(!colourchat) filtertext(text, text);
 		mkstring(s);
-		bool team = flags&SAY_TEAM;
 		defformatstring(m)("%s", game::colorname(d));
-		if(team)
+		if(flags&SAY_TEAM)
 		{
 			defformatstring(t)(" (\fs%s%s\fS)", teamtype[d->team].chat, teamtype[d->team].name);
 			concatstring(m, t);
 		}
-		if(flags&SAY_ACTION) formatstring(s)("\fm* \fs%s\fS \fs\fm%s\fS", m, text);
+		if(flags&SAY_ACTION) formatstring(s)("\fv* \fs%s\fS \fs\fv%s\fS", m, text);
 		else formatstring(s)("\fa<\fs\fw%s\fS> \fs\fw%s\fS", m, text);
 
 		if(d->state != CS_SPECTATOR)
