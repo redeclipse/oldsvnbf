@@ -20,7 +20,7 @@ namespace hud
 	VARP(showhud, 0, 1, 1);
 	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
 	VARP(hudsize, 0, 2048, INT_MAX-1);
-	FVARP(hudblend, 0, 1.f, 1);
+	FVARP(hudblend, 0, 1, 1);
 	FVARP(gapsize, 0, 0.01f, 1000);
 
 	VARP(showconsole, 0, 2, 2);
@@ -66,9 +66,9 @@ namespace hud
 	FVARP(chatconblend, 0, 0.75f, 1);
 	FVARP(fullconblend, 0, 0.9f, 1);
 
-	FVARP(noticeoffset, -1.f, 0.4f, 1.f);
-	FVARP(noticeblend, 0.f, 0.6f, 1.f);
-	FVARP(noticescale, 1e-3f, 1.f, 1.f);
+	FVARP(noticeoffset, -1, 0.4f, 1);
+	FVARP(noticeblend, 0, 0.6f, 1);
+	FVARP(noticescale, 1e-3f, 1, 1);
 	VARP(noticetime, 0, 5000, INT_MAX-1);
 	VARP(obitnotices, 0, 2, 2);
 
@@ -120,7 +120,7 @@ namespace hud
 	TVAR(teamcrosshairtex, "", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
 	FVARP(cursorsize, 0, 0.025f, 1000);
-	FVARP(cursorblend, 0, 1.f, 1);
+	FVARP(cursorblend, 0, 1, 1);
 
 	TVAR(zoomcrosshairtex, "", 3);
 	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
@@ -139,7 +139,7 @@ namespace hud
 	FVARP(inventoryblend, 0, 0.6f, 1);
 
 	VARP(inventoryedit, 0, 1, 1);
-	FVARP(inventoryeditblend, 0, 1.f, 1);
+	FVARP(inventoryeditblend, 0, 1, 1);
 	FVARP(inventoryeditskew, 1e-3f, 0.65f, 1);
 
 	VARP(inventoryhealth, 0, 3, 3);
@@ -172,10 +172,10 @@ namespace hud
 	TVAR(gammatex, "textures/teamgamma", 3);
 	TVAR(deltatex, "textures/teamdelta", 3);
 
-	VARP(showclip, 0, 1, 1);
+	VARP(showclips, 0, 2, 2);
 	FVARP(clipsize, 0, 0.045f, 1000);
 	FVARP(clipblend, 0, 0.45f, 1000);
-	FVARP(clipcolour, 0.f, 1.f, 1.f);
+	FVARP(clipcolour, 0, 1, 1);
 	TVAR(pistolcliptex, "textures/pistolclip", 3);
 	TVAR(shotguncliptex, "textures/shotgunclip", 3);
 	TVAR(smgcliptex, "textures/smgclip", 3);
@@ -183,21 +183,28 @@ namespace hud
 	TVAR(flamercliptex, "textures/flamerclip", 3);
 	TVAR(plasmacliptex, "textures/plasmaclip", 3);
 	TVAR(riflecliptex, "textures/rifleclip", 3);
+	FVARP(pistolclipskew, 0, 0.85f, 1);
+	FVARP(shotgunclipskew, 0, 1, 1);
+	FVARP(smgclipskew, 0, 0.85f, 1);
+	FVARP(grenadeclipskew, 0, 1.25f, 1);
+	FVARP(flamerclipskew, 0, 0.85f, 1);
+	FVARP(plasmaclipskew, 0, 0.85f, 1);
+	FVARP(rifleclipskew, 0, 1, 1);
 
 	VARP(showradar, 0, 2, 2);
 	TVAR(bliptex, "textures/blip", 3);
 	TVAR(cardtex, "textures/card", 3);
 	TVAR(flagtex, "textures/flag", 3);
 	TVAR(arrowtex, "textures/arrow", 3);
-	FVARP(radarblend, 0, 1.f, 1);
+	FVARP(radarblend, 0, 1, 1);
 	FVARP(radarcardsize, 0, 0.5f, 1000);
 	FVARP(radarcardblend, 0, 0.75f, 1);
 	FVARP(radarplayerblend, 0, 0.5f, 1);
 	FVARP(radarplayersize, 0, 0.5f, 1000);
 	FVARP(radarblipblend, 0, 0.5f, 1);
 	FVARP(radarblipsize, 0, 0.5f, 1000);
-	FVARP(radarflagblend, 0, 1.f, 1);
-	FVARP(radarflagsize, 0, 1.f, 1000);
+	FVARP(radarflagblend, 0, 1, 1);
+	FVARP(radarflagsize, 0, 1, 1000);
 	FVARP(radaritemblend, 0, 0.75f, 1);
 	FVARP(radaritemsize, 0, 0.9f, 1000);
 	FVARP(radarsize, 0, 0.035f, 1000);
@@ -216,9 +223,9 @@ namespace hud
 	VARP(radardamage, 0, 2, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 2000, INT_MAX-1);
-	FVARP(radardamagesize, 0, 4.f, 1000);
-	FVARP(radardamagetrack, 0, 1.f, 1000);
+	FVARP(radardamagesize, 0, 4, 1000);
 	FVARP(radardamageblend, 0, 1.f, 1);
+	FVARP(radardamagetrack, 0, 1, 1000);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
 	VARP(radardamagemax, 1, 100, INT_MAX-1);
 
@@ -446,7 +453,12 @@ namespace hud
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
-		float fade = clipblend*hudblend;
+		const float clipskew[WEAP_MAX] = {
+			0, pistolclipskew, shotgunclipskew, smgclipskew,
+			flamerclipskew, plasmaclipskew, rifleclipskew, grenadeclipskew, // end of regular weapons
+			rifleclipskew, 0
+		};
+		float fade = clipblend*hudblend, size = s*clipskew[weap];
 		int interval = lastmillis-game::player1->weaplast[weap];
 		if(interval <= game::player1->weapwait[weap]) switch(game::player1->weapstate[weap])
 		{
@@ -471,15 +483,10 @@ namespace hud
 			}
 			case WEAP_S_PICKUP: case WEAP_S_SWITCH:
 			{
-				fade *= clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
+				float amt = clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f); fade *= amt;
+				if(showclips >= 2 && (game::player1->weapstate[weap] == WEAP_S_PICKUP || game::player1->weapstate[weap] == WEAP_S_SWITCH)) size *= amt;
 				break;
 			}
-			default: break;
-		}
-		switch(weap)
-		{
-			case WEAP_PISTOL: case WEAP_FLAMER: case WEAP_SMG: case WEAP_PLASMA: s *= 0.85f; break;
-			case WEAP_GRENADE: s *= 1.25f; break;
 			default: break;
 		}
 		float r = clipcolour, g = clipcolour, b = clipcolour;
@@ -500,13 +507,13 @@ namespace hud
 				if(shot) switch(weap)
 				{
 					case WEAP_FLAMER:
-						drawslice(ammo/float(maxammo), shot/float(maxammo), x, y, s);
+						drawslice(ammo/float(maxammo), shot/float(maxammo), x, y, size);
 						break;
 					case WEAP_GRENADE:
-						drawslice(0.25f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, s);
+						drawslice(0.25f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, size);
 						break;
 					default:
-						drawslice(0.5f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, s);
+						drawslice(0.5f/maxammo+ammo/float(maxammo), shot/float(maxammo), x, y, size);
 						break;
 				}
 				glColor4f(r, g, b, clipblend*hudblend);
@@ -520,13 +527,13 @@ namespace hud
 					switch(weap)
 					{
 						case WEAP_FLAMER:
-							drawslice(ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+							drawslice(ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, size);
 							break;
 						case WEAP_GRENADE:
-							drawslice(0.25f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+							drawslice(0.25f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, size);
 							break;
 						default:
-							drawslice(0.5f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, s);
+							drawslice(0.5f/maxammo+ammo/float(maxammo), game::player1->weapload[weap]/float(maxammo), x, y, size);
 							break;
 					}
 					glColor4f(r, g, b, clipblend*hudblend);
@@ -538,13 +545,13 @@ namespace hud
 		if(ammo > 0) switch(weap)
 		{
 			case WEAP_FLAMER:
-				drawslice(0, ammo/float(maxammo), x, y, s);
+				drawslice(0, ammo/float(maxammo), x, y, size);
 				break;
 			case WEAP_GRENADE:
-				drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, s);
+				drawslice(0.25f/maxammo, ammo/float(maxammo), x, y, size);
 				break;
 			default:
-				drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, s);
+				drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, size);
 				break;
 		}
     }
@@ -585,7 +592,7 @@ namespace hud
 		{
 			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_weapon(game::gamemode, game::mutators)))
 			{
-				if(showclip) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
+				if(showclips) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
 				if(showindicator && weaptype[game::player1->weapselect].power && game::player1->weapstate[game::player1->weapselect] == WEAP_S_POWER)
 					drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
