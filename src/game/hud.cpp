@@ -695,14 +695,10 @@ namespace hud
 						SEARCHBINDCACHE(attackkey)("action 0", 0);
 						if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 						{
-							if(!m_campaign(game::gamemode))
-							{
-								pushfont("emphasis");
-								if(m_duke(game::gamemode, game::mutators))
-									ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-								else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, delay/1000.f)*noticescale;
-								popfont();
-							}
+							pushfont("emphasis");
+							if(m_duke(game::gamemode, game::mutators)) ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+							else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, delay/1000.f)*noticescale;
+							popfont();
 							if(game::player1->state != CS_WAITING && shownotices >= 3 && lastmillis-game::player1->lastdeath >= 500)
 							{
 								pushfont("default");
