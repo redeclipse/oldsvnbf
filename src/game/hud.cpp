@@ -37,7 +37,7 @@ namespace hud
 
 	VARP(titlefade, 0, 3000, 10000);
 	VARP(tvmodefade, 0, 1000, INT_MAX-1);
-	VARP(spawnfade, 0, 3000, INT_MAX-1);
+	VARP(spawnfade, 0, 1500, INT_MAX-1);
 
 	VARP(commandfade, 0, 250, INT_MAX-1);
 	FVARP(commandfadeamt, 0, 0.75f, 1);
