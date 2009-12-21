@@ -101,25 +101,6 @@ static int draw_char(int c, int x, int y)
     return info.w;
 }
 
-//stack[sp] is current color index
-SVARP(savecolour, "\fs");
-SVARP(restorecolour, "\fS");
-SVARP(green, "\fg");
-SVARP(blue, "\fb");
-SVARP(yellow, "\fy");
-SVARP(red, "\fr");
-SVARP(grey, "\fa");
-SVARP(magenta, "\fm");
-SVARP(orange, "\fo");
-SVARP(white, "\fw");
-SVARP(black, "\fk");
-SVARP(cyan, "\fc");
-SVARP(violet, "\fv");
-SVARP(purple, "\fp");
-SVARP(brown, "\fn");
-SVARP(darkgray, "\fd");
-SVARP(defcolour, "\fu");
-
 static void text_color(char c, char *stack, int size, int &sp, bvec &color, int r, int g, int b, int a)
 {
 	char d = c;
