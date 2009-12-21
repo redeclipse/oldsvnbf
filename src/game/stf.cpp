@@ -130,7 +130,8 @@ namespace stf
 				int prevsy = sy; bool skewed = false;
 				float skew = headsup ? hud::inventoryskew : 0.f, fade = blend*hud::inventoryblend,
 					occupy = f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : (f.owner ? 1.f : 0.f),
-					r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f;
+					r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f,
+						r1 = r, g1 = g, b1 = b;
 				if(f.enemy)
 				{
 					float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
@@ -160,7 +161,7 @@ namespace stf
 				{
 					float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f;
 					hud::drawprogress(x, y-prevsy, 0, occupy, int(s*0.5f), false, r2, g2, b2, fade, skew);
-					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r, g, b, fade, skew, !skewed && headsup ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r1, g1, b1, fade, skew, !skewed && headsup ? "sub" : "radar", "%s%d%%", hasflag ? (f.owner && f.enemy == game::player1->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 				}
 				else if(f.owner) hud::drawitem(hud::teamtex(f.owner), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 			}
