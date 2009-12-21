@@ -385,7 +385,7 @@ namespace ai
 					case WEAPON:
 					{
 						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-						if(e.spawned && isweap(attr) && !d->hasweap(d->arenaweap, sweap) && !d->hasweap(attr, sweap))
+						if(e.spawned && isweap(attr) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
@@ -411,7 +411,7 @@ namespace ai
 					case WEAPON:
 					{
 						int attr = w_attr(game::gamemode, e.attrs[0], sweap);
-						if(isweap(attr) && !d->hasweap(d->arenaweap, sweap) && !d->hasweap(attr, sweap))
+						if(isweap(attr) && !d->hasweap(attr, sweap))
 						{ // go get a weapon upgrade
 							if(proj.owner == d) break;
 							interest &n = interests.add();
@@ -436,7 +436,7 @@ namespace ai
 		{
 			if(!d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators))) items(d, b, interests);
 			if(m_fight(game::gamemode))
-			{ // don't let bots consume items in campaigns (yet?)
+			{
 				if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			}
@@ -542,7 +542,7 @@ namespace ai
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
-			d->ai->suspended = d->aitype == AI_BOT || !m_campaign(game::gamemode) ? false : true;
+			d->ai->suspended = m_campaign(game::gamemode);
 		}
 	}
 
@@ -570,8 +570,18 @@ namespace ai
 	{
 		if(!m_edit(game::gamemode))
 		{
+			if(m_campaign(game::gamemode) && d->aitype == AI_BOT && d->ai->suspended)
+			{ // bots idle until a human is around
+				gameent *t = NULL;
+				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype < 0 && t->state == CS_ALIVE)
+				{
+					d->ai->suspended = false;
+					break;
+				}
+				if(d->ai->suspended) return 0;
+			}
 			if(check(d, b) || find(d, b)) return 1;
-			if(target(d, b, true, !d->ai->suspended ? true : false)) return 1;
+			if(target(d, b, true, d->ai->suspended ? false : true)) return 1;
 		}
 		if(!d->ai->suspended) switch(d->aitype)
 		{
@@ -1325,7 +1335,7 @@ namespace ai
 				}
 				else
 				{
-					if(d->aitype >= AI_START) d->ai->suspended = false;
+					if(d->ai->suspended) d->ai->suspended = false;
 					c.next = lastmillis+125+rnd(125);
 				}
 			}
