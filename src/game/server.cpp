@@ -1647,10 +1647,10 @@ namespace server
 		mutate(smuts, mut->reset(false));
 
 		if(m_demo(gamemode)) kicknonlocalclients(DISC_PRIVATE);
+		loopv(clients) clients[i]->mapchange(true);
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-			ci->mapchange(true);
             if(ci->state.state == CS_SPECTATOR) continue;
             else if(ci->state.aitype < 0 && m_play(gamemode))
             {
@@ -2288,7 +2288,7 @@ namespace server
 		int fragvalue = -1, pointvalue = smode ? smode->points(ci, ci) : fragvalue;
         ci->state.frags += fragvalue;
         ci->state.spree = 0;
-        if(!flags)
+        if(!flags && (m_trial(gamemode) || m_lobby(gamemode)))
         {
         	ci->state.cpmillis = 0;
 			ci->state.cpnodes.setsize(0);
