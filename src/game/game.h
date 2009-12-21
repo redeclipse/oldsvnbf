@@ -403,7 +403,7 @@ extern gametypes gametype[], mutstype[];
 #define m_demo(a)			(a == G_DEMO)
 #define m_lobby(a)			(a == G_LOBBY)
 #define m_edit(a)			(a == G_EDITMODE)
-#define m_campaign(a)			(a == G_CAMPAIGN)
+#define m_campaign(a)		(a == G_CAMPAIGN)
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
@@ -424,7 +424,7 @@ extern gametypes gametype[], mutstype[];
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
 #define m_weapon(a,b)		(m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
-#define m_delay(a,b)		(m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) || m_arena(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
+#define m_delay(a,b)		(m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
 #define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? (m_arena(a,b) ? 2 : 3) : (m_trial(a) ? 3 : 1)))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))

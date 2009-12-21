@@ -735,7 +735,7 @@ namespace server
 				if(m_team(gamemode, mutators))
 				{
 					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 };
-					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+					loopv(clients) if(clients[i]->state.aitype < AI_START && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 						teamscores[clients[i]->team-TEAM_FIRST] += clients[i]->state.frags;
 					int best = -1;
 					loopi(TEAM_NUM) if(best < 0 || teamscores[i] > teamscores[best])
@@ -750,7 +750,7 @@ namespace server
 				else
 				{
 					int best = -1;
-					loopv(clients) if(clients[i]->state.aitype <= AI_BOT && (best < 0 || clients[i]->state.frags > clients[best]->state.frags))
+					loopv(clients) if(clients[i]->state.aitype < AI_START && (best < 0 || clients[i]->state.frags > clients[best]->state.frags))
 						best = i;
 					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
 					{
@@ -2204,7 +2204,8 @@ namespace server
 			{
 				int logs = 0;
 				target->state.spree = 0;
-				if(actor->state.aitype < AI_START)
+				if(actor->state.aitype >= AI_START) pointvalue *= -3;
+				else
 				{
 					actor->state.spree++;
 					actor->state.fraglog.add(target->clientnum);
@@ -2266,7 +2267,8 @@ namespace server
 			}
 			else actor->state.spree = 0;
 			target->state.deaths++;
-			dropitems(target); givepoints(actor, pointvalue);
+			dropitems(target);
+			if(actor != target && actor->state.aitype >= AI_START) givepoints(target, pointvalue); else givepoints(actor, pointvalue);
 			sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, style, weap, realflags, realdamage);
 			target->position.setsizenodelete(0);
 			if(smode) smode->died(target, actor);
@@ -2620,8 +2622,12 @@ namespace server
 			if(m_campaign(gamemode) && ci->state.cpnodes.empty())
 			{
 				int maxnodes = -1;
-				loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype <= AI_BOT && (!clients.inrange(maxnodes) || clients[i]->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
-					maxnodes = i;
+				loopv(clients)
+				{
+					clientinfo *oi = clients[i];
+					if(oi->clientnum >= 0 && oi->name[0] && oi->state.aitype < AI_START && (!clients.inrange(maxnodes) || oi->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
+						maxnodes = i;
+				}
 				if(clients.inrange(maxnodes)) loopv(clients[maxnodes]->state.cpnodes) ci->state.cpnodes.add(clients[maxnodes]->state.cpnodes[i]);
 			}
 			if(ci->state.state == CS_ALIVE)
