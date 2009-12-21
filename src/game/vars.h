@@ -12,7 +12,7 @@ SVARG(ctfmaps, "bath citadel darkness deadsimple deli enigma forge gladiator nov
 SVARG(mctfmaps, "bloodgrounds deadsimple enigma refuge");
 SVARG(stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator nova panic refuge rivals smouldering tower warground venus");
 SVARG(trialmaps, "testchamber");
-SVARG(storymaps, "wishbone");
+SVARG(storymaps, "wishbone storytest");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(maxcarry, 0, 2, WEAP_MAX-1);
