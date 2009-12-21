@@ -213,7 +213,7 @@ namespace entities
 				if(item && *item)
 				{
 					defformatstring(ds)("<super>%s (%d)", item, e.type);
-					part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, colour, 2, 1, -10, 0, d);
+					part_textcopy(d->abovehead(), ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, 1, -10, 0, d);
 				}
 			}
 		}
@@ -1107,9 +1107,9 @@ namespace entities
 				switch(k)
 				{
 					case 0: if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
-								loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART && ents[i]->attrs[0] == d->team) spawns.add(i);
-					case 1: if(spawns.empty()) loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART) spawns.add(i);
-					case 2: if(spawns.empty()) loopi(lastenttype[WEAPON]) if(ents[i]->type == WEAPON) spawns.add(i);
+								loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART && ents[i]->attrs[0] == d->team && m_check(ents[i]->attrs[3], game::gamemode)) spawns.add(i);
+					case 1: if(spawns.empty()) loopi(lastenttype[PLAYERSTART]) if(ents[i]->type == PLAYERSTART && m_check(ents[i]->attrs[3], game::gamemode)) spawns.add(i);
+					case 2: if(spawns.empty()) loopi(lastenttype[WEAPON]) if(ents[i]->type == WEAPON && m_check(ents[i]->attrs[2], game::gamemode)) spawns.add(i);
 					default: break;
 				}
 				while(!spawns.empty())
@@ -2272,7 +2272,7 @@ namespace entities
 			if(itxt && *itxt)
 			{
 				defformatstring(ds)("<emphasis>%s", itxt);
-				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, colour);
+				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, 0xFFFFFF);
 			}
 		}
 	}

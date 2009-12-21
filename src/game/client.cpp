@@ -1434,8 +1434,8 @@ namespace client
 							const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
 							if(item && *item)
 							{
-								defformatstring(ds)("<emphasis>%s (%d)", item, entities::ents[ent]->type);
-								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, colour, 2, 1, -10);
+								defformatstring(ds)("<emphasis>%s", item);
+								part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, 1, -10);
 							}
 						}
 					}
