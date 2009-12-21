@@ -16,7 +16,7 @@ struct stfservmode : stfstate, servmode
 	void stealflag(int n, int team)
 	{
 		flag &b = flags[n];
-		loopv(clients) if(clients[i]->state.aitype <= AI_BOT)
+		loopv(clients) if(clients[i]->state.aitype < AI_START)
 		{
 			server::clientinfo *ci = clients[i];
 			if(ci->state.state==CS_ALIVE && ci->team && ci->team == team && insideflag(b, ci->state.o))
@@ -60,7 +60,7 @@ struct stfservmode : stfstate, servmode
 	{
 		if(!n) return;
 		flag &b = flags[i];
-		loopvk(clients) if(clients[k]->state.aitype <= AI_BOT && team == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
+		loopvk(clients) if(clients[k]->state.aitype < AI_START && team == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
 		score &cs = findscore(team);
 		cs.total += n;
 		sendf(-1, 1, "ri3", SV_SCORE, team, cs.total);
@@ -80,7 +80,7 @@ struct stfservmode : stfstate, servmode
                 if(!b.owners || !b.enemies)
                 {
                 	int pts = b.occupy(b.enemy, GVAR(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GVAR(stfoccupy), GVAR(stfstyle) != 0);
-                	if(pts > 0) loopvk(clients) if(clients[k]->state.aitype <= AI_BOT && b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
+                	if(pts > 0) loopvk(clients) if(clients[k]->state.aitype < AI_START && b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
                 }
 				sendflag(i);
 			}

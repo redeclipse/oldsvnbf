@@ -510,7 +510,7 @@ namespace game
 	{
 		d->checktags();
 		adjustscaled(int, d->quake, quakefade);
-		if(d->aitype <= AI_BOT) heightoffset(d, local);
+		if(d->aitype < AI_START) heightoffset(d, local);
 		loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
 		{
 			if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
@@ -1712,7 +1712,7 @@ namespace game
 	void renderclient(gameent *d, bool third, float trans, float size, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
 	{
 		const char *mdl = "";
-		if(d->aitype <= AI_BOT)
+		if(d->aitype < AI_START)
 		{
 			if(third) mdl = teamtype[team].tpmdl;
 			else mdl = teamtype[team].fpmdl;
@@ -1761,7 +1761,7 @@ namespace game
 		}
 		else
 		{
-			if(secondary && (d->aitype <= AI_BOT || aistyle[d->aitype].maxspeed))
+			if(secondary && (d->aitype < AI_START || aistyle[d->aitype].maxspeed))
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
@@ -1834,7 +1834,7 @@ namespace game
         modelattach a[8];
 		int ai = 0, team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
 			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
-		bool secondary = false, showweap = d->aitype <= AI_BOT ? isweap(weap) : aistyle[d->aitype].useweap;
+		bool secondary = false, showweap = d->aitype < AI_START ? isweap(weap) : aistyle[d->aitype].useweap;
 
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{

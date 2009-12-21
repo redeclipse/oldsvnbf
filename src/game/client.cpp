@@ -1243,7 +1243,7 @@ namespace client
 					{
 						f->respawn(lastmillis, m_health(game::gamemode, game::mutators));
 						parsestate(f, p);
-						if(f->aitype <= AI_BOT)
+						if(f->aitype < AI_START)
 						{
 							playsound(S_RESPAWN, f->o, f);
 							if(game::dynlighteffects)
@@ -1278,7 +1278,7 @@ namespace client
 					{
 						addmsg(SV_SPAWN, "ri", f->clientnum);
 						entities::spawnplayer(f, ent, true);
-						if(f->aitype <= AI_BOT)
+						if(f->aitype < AI_START)
 						{
 							playsound(S_RESPAWN, f->o, f);
 							if(game::dynlighteffects)
