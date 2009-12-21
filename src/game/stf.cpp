@@ -124,7 +124,7 @@ namespace stf
 			bool hasflag = game::player1->state == CS_ALIVE && insideflag(f, game::player1);
 			if(f.hasflag != hasflag) { f.hasflag = hasflag; f.lasthad = lastmillis-max(1000-(lastmillis-f.lasthad), 0); }
 			int millis = lastmillis-f.lasthad;
-			bool headsup = game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.owner == game::player1->team || st.flags.length() == 1 ? 1 : 2);
+			bool headsup = hud::chkcond(hud::inventorygame, game::player1->state == CS_SPECTATOR || f.owner == game::player1->team || st.flags.length() == 1);
 			if(headsup || f.hasflag || millis <= 1000)
 			{
 				int prevsy = sy; bool skewed = false;

@@ -103,7 +103,7 @@ namespace ctf
 		{
 			if(y-sy-s < m) break;
 			ctfstate::flag &f = st.flags[i];
-			bool headsup = game::player1->state == CS_SPECTATOR || hud::inventorygame >= (f.team == TEAM_NEUTRAL || f.team == game::player1->team ? 1 : 2);
+			bool headsup = hud::chkcond(hud::inventorygame, game::player1->state == CS_SPECTATOR || f.team == TEAM_NEUTRAL || f.team == game::player1->team);
 			if(headsup || f.lastowner == game::player1)
 			{
 				const char *pre = "";
