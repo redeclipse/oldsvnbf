@@ -69,7 +69,7 @@ void fatal(const char *s, ...)
     printf("ERROR: %s\n", msg);
     exit(EXIT_FAILURE);
 }
-int servertype = 3;
+VAR(servertype, 1, 3, 3); // 1: private, 2: public, 3: dedicated
 #else
 VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
 #endif
@@ -823,9 +823,7 @@ bool serveroption(char *opt)
 				case 'i': setsvar("serverip", opt+3); return true;
 				case 'm': setsvar("servermaster", opt+3); return true;
 				case 'l': load = opt+3; return true;
-#ifndef STANDALONE
 				case 's': setvar("servertype", atoi(opt+3)); return true;
-#endif
 				case 'p': setvar("serverport", atoi(opt+3)); return true;
 				case 'q': setvar("serverqueryport", atoi(opt+3)); return true;
 				case 'a': setvar("servermasterport", atoi(opt+3)); return true;
