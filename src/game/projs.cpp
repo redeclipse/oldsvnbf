@@ -27,7 +27,7 @@ namespace projs
 		if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
 		else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
 		{
-			if(m_story(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
+			if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
 			else if(weap == WEAP_MELEE) nodamage++;
 			else if(m_fight(game::gamemode)) switch(teamdamage)
 			{

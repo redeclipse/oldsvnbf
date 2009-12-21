@@ -208,7 +208,7 @@ namespace aiman
 			if(needent) addai(sents[i].attrs[0], i, -1, false);
 		}
 		int balance = 0;
-		if(m_story(gamemode)) balance = nplayers; // story mode strictly obeys nplayers
+		if(m_campaign(gamemode)) balance = nplayers; // campaigns strictly obeys nplayers
 		else if(m_fight(gamemode) && !m_trial(gamemode) && GVAR(botlimit) > 0)
 		{
 			int numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
@@ -287,7 +287,7 @@ namespace aiman
 	{
 		if(haspriv(ci, PRIV_MASTER, "add bots"))
 		{
-			if(m_lobby(gamemode) || m_story(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			if(m_lobby(gamemode) || m_campaign(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(!addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
 		}
 	}
@@ -296,7 +296,7 @@ namespace aiman
 	{
 		if(haspriv(ci, PRIV_MASTER, "remove bots"))
 		{
-			if(m_lobby(gamemode) || m_story(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
+			if(m_lobby(gamemode) || m_campaign(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
 			else if(!delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
 		}
 	}

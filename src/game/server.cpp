@@ -427,7 +427,7 @@ namespace server
 	const char *pickmap(const char *suggest, int mode, int muts)
 	{
 		const char *map = GVAR(defaultmap);
-		if(!map || !*map) map = choosemap(suggest, mode, muts, m_story(gamemode) ? 1 : GVAR(maprotate));
+		if(!map || !*map) map = choosemap(suggest, mode, muts, m_campaign(gamemode) ? 1 : GVAR(maprotate));
 		return map;
 	}
 
@@ -626,7 +626,7 @@ namespace server
 		if(rotate)
 		{
 			const char *maplist = GVAR(mainmaps);
-			if(m_story(mode)) maplist = GVAR(storymaps);
+			if(m_campaign(mode)) maplist = GVAR(storymaps);
 			else if(m_duel(mode, muts)) maplist = GVAR(duelmaps);
 			else if(m_stf(mode)) maplist = GVAR(stfmaps);
 			else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
@@ -948,7 +948,7 @@ namespace server
 		if(ci->state.aitype >= AI_START) return ci->state.aientity;
 		else
 		{
-			if((m_story(gamemode) || m_trial(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
+			if((m_campaign(gamemode) || m_trial(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
 			{
 				int checkpoint = ci->state.cpnodes.last();
 				if(sents.inrange(checkpoint)) return checkpoint;
@@ -1001,7 +1001,7 @@ namespace server
 		loopvk(clients) clients[k]->state.dropped.reset();
 		setuptriggers(true);
 		if(m_fight(gamemode)) setupitems(true);
-		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_story(gamemode) ? GVAR(storyplayers) : np));
+		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GVAR(storyplayers) : np));
 		hasgameinfo = aiman::dorefresh = true;
 	}
 
@@ -1359,7 +1359,7 @@ namespace server
 				case 1: case 2: maplist = GVAR(allowmaps); break;
 				case 3: case 4:
 				{
-					if(m_story(reqmode)) maplist = GVAR(storymaps);
+					if(m_campaign(reqmode)) maplist = GVAR(storymaps);
 					else if(m_duel(reqmode, reqmuts)) maplist = GVAR(duelmaps);
 					else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
 					else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
@@ -2149,7 +2149,7 @@ namespace server
 		else if(m_team(gamemode, mutators) && actor->team == target->team)
 		{
 			if(weap == WEAP_MELEE) nodamage++;
-			else if(m_story(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
+			else if(m_campaign(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
 			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
 			{
 				case 2: default: break;
@@ -2617,7 +2617,7 @@ namespace server
 	{
 		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			if(m_story(gamemode) && ci->state.cpnodes.empty())
+			if(m_campaign(gamemode) && ci->state.cpnodes.empty())
 			{
 				int maxnodes = -1;
 				loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype <= AI_BOT && (!clients.inrange(maxnodes) || clients[i]->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
@@ -2752,7 +2752,7 @@ namespace server
 				{
 					if(ci->state.lastdeath)
 					{
-						if(m_story(gamemode)) continue;
+						if(m_campaign(gamemode)) continue;
 						else if(!m_duke(gamemode, mutators)) delay = 30000;
 					}
 				}
@@ -3490,7 +3490,7 @@ namespace server
 								case TR_EXIT:
 								{
 									if(sents[ent].spawned) break;
-									if(m_story(gamemode) || m_lobby(gamemode))
+									if(m_campaign(gamemode) || m_lobby(gamemode))
 									{
 										sents[ent].spawned = true;
 										startintermission();
