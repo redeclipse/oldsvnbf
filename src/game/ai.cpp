@@ -436,11 +436,11 @@ namespace ai
 		{
 			if(!d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators))) items(d, b, interests);
 			if(m_fight(game::gamemode))
-			{ // don't let bots consume items in story mode (yet?)
+			{ // don't let bots consume items in campaigns (yet?)
 				if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
 				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			}
-			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_story(game::gamemode));
+			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_campaign(game::gamemode));
 		}
 		else if(entities::ents.inrange(d->aientity))
 		{
@@ -542,7 +542,7 @@ namespace ai
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
-			d->ai->suspended = d->aitype == AI_BOT || !m_story(game::gamemode) ? false : true;
+			d->ai->suspended = d->aitype == AI_BOT || !m_campaign(game::gamemode) ? false : true;
 		}
 	}
 
@@ -1292,7 +1292,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->aitype == AI_BOT || !m_story(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
+			if(d->state == CS_DEAD && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);

@@ -678,9 +678,9 @@ namespace hud
 					if(shownotices >= 2)
 					{
 						SEARCHBINDCACHE(attackkey)("action 0", 0);
-						if(delay || m_story(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
+						if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 						{
-							if(!m_story(game::gamemode))
+							if(!m_campaign(game::gamemode))
 							{
 								pushfont("emphasis");
 								if(m_duke(game::gamemode, game::mutators))
@@ -733,8 +733,8 @@ namespace hud
 						{
 							if(game::player1->team == TEAM_NEUTRAL)
 							{
-								if(m_story(game::gamemode)) ty += draw_textx("Story campaign", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
-								else ty += draw_textx("\fzReFree-for-all deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+								if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+								else ty += draw_textx("\fzReFree-for-all Deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 							}
 							else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
 						}
@@ -1208,9 +1208,9 @@ namespace hud
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(chkcond(radarplayers, m_story(game::gamemode) || m_duke(game::gamemode, game::mutators) || m_edit(game::gamemode) || game::tvmode())) // 4
+		if(chkcond(radarplayers, m_campaign(game::gamemode) || m_duke(game::gamemode, game::mutators) || m_edit(game::gamemode) || game::tvmode())) // 4
 		{
-			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR && game::players[i]->aitype <= AI_BOT && (!m_story(game::gamemode) || game::players[i]->team == game::player1->team))
+			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR && game::players[i]->aitype <= AI_BOT && (!m_campaign(game::gamemode) || game::players[i]->team == game::player1->team))
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
 		}
 		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
@@ -1597,7 +1597,7 @@ namespace hud
 							cm += int(drawitem(teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
 							if(game::player1->team == TEAM_NEUTRAL)
 							{
-								if(m_story(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
+								if(m_campaign(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
 								else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%sffa", teamtype[game::player1->team].chat, pre)*rescale);
 							}
 							else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);

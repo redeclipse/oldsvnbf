@@ -72,7 +72,7 @@ namespace hud
 				scoreson = on;
 				if(m_play(game::gamemode) && interm)
 				{
-					if(m_story(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_MESG, game::player1, "\fwmission completed");
+					if(m_campaign(game::gamemode)) game::announce(S_V_MCOMPLETE, CON_MESG, game::player1, "\fwmission completed");
 					else if(m_fight(game::gamemode) && !m_trial(game::gamemode))
 					{
 						if(!groupplayers()) return;
@@ -270,9 +270,9 @@ namespace hud
 				g.space(2);
 				SEARCHBINDCACHE(attackkey)("action 0", 0);
 				g.pushfont("sub");
-				if(delay || m_story(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
+				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
-					if(!m_story(game::gamemode))
+					if(!m_campaign(game::gamemode))
 					{
 						if(m_duke(game::gamemode, game::mutators))
 							g.textf("Queued for new round", 0xFFFFFF, NULL);
@@ -317,7 +317,7 @@ namespace hud
 				g.pushfont("super");
 				if(m_lobby(game::gamemode)) g.textf("Free Roam", 0xFFFFFF, NULL);
 				else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
-				else if(m_story(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
+				else if(m_campaign(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
 				else if(m_team(game::gamemode, game::mutators))
 					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 				else g.textf("Free for All", 0xFFFFFF, NULL);

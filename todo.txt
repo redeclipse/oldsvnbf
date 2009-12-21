@@ -1,5 +1,6 @@
 = Code =
-* Allow premature detonation by firing/exploding certain weapons at plasma/grenades.
+* Rename 'storyplayers' and 'storymaps' to campaign
+* Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
 * Don't destroy (certain?) projectiles entering death material
 * Keep an eye out for the elusive grenade bugs

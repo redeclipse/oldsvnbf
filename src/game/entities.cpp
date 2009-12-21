@@ -646,7 +646,7 @@ namespace entities
 			{
 				case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
 				{ // wait for ack
-					if(e.attrs[1] == TR_EXIT && (d->aitype >= AI_BOT || (!m_story(game::gamemode) && !m_lobby(game::gamemode)))) break;
+					if(e.attrs[1] == TR_EXIT && (d->aitype >= AI_BOT || (!m_campaign(game::gamemode) && !m_lobby(game::gamemode)))) break;
 					client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
 					break;
 				}
@@ -760,7 +760,7 @@ namespace entities
 				}
 				case CHECKPOINT:
 				{
-					if(!m_check(e.attrs[3], game::gamemode) || (!m_story(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
+					if(!m_check(e.attrs[3], game::gamemode) || (!m_campaign(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
 					if(d->checkpoint != n)
 					{
 						client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);

@@ -361,8 +361,8 @@ enum
 
 enum
 {
-	G_DEMO = 0, G_LOBBY, G_EDITMODE, G_STORY, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX,
-	G_START = G_LOBBY, G_PLAY = G_STORY, G_FIGHT = G_DEATHMATCH, G_RAND = G_CTF-G_DEATHMATCH+1
+	G_DEMO = 0, G_LOBBY, G_EDITMODE, G_CAMPAIGN, G_DEATHMATCH, G_STF, G_CTF, G_TRIAL, G_MAX,
+	G_START = G_LOBBY, G_PLAY = G_CAMPAIGN, G_FIGHT = G_DEATHMATCH, G_RAND = G_CTF-G_DEATHMATCH+1
 };
 enum
 {
@@ -380,7 +380,7 @@ gametypes gametype[] = {
 	{ G_DEMO,			G_M_NONE,															G_M_NONE,				"demo" },
 	{ G_LOBBY,			G_M_SOME,															G_M_NONE,				"lobby" },
 	{ G_EDITMODE,		G_M_SOME,															G_M_NONE,				"editing" },
-	{ G_STORY,			G_M_TEAM|G_M_SOME,													G_M_TEAM|G_M_ARENA,		"story" },
+	{ G_CAMPAIGN,		G_M_TEAM|G_M_SOME,													G_M_TEAM|G_M_ARENA,		"campaign" },
 	{ G_DEATHMATCH,		G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,		G_M_NONE,				"deathmatch" },
 	{ G_STF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"secure-the-flag" },
 	{ G_CTF,			G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,								G_M_TEAM,				"capture-the-flag" },
@@ -403,7 +403,7 @@ extern gametypes gametype[], mutstype[];
 #define m_demo(a)			(a == G_DEMO)
 #define m_lobby(a)			(a == G_LOBBY)
 #define m_edit(a)			(a == G_EDITMODE)
-#define m_story(a)			(a == G_STORY)
+#define m_campaign(a)			(a == G_CAMPAIGN)
 #define m_dm(a)				(a == G_DEATHMATCH)
 #define m_stf(a)			(a == G_STF)
 #define m_ctf(a)			(a == G_CTF)
