@@ -224,7 +224,7 @@ namespace hud
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 2000, INT_MAX-1);
 	FVARP(radardamagesize, 0, 4, 1000);
-	FVARP(radardamageblend, 0, 1.f, 1);
+	FVARP(radardamageblend, 0, 1, 1);
 	FVARP(radardamagetrack, 0, 1, 1000);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
 	VARP(radardamagemax, 1, 100, INT_MAX-1);
@@ -266,7 +266,7 @@ namespace hud
 
 	float motionblur(float scale)
 	{
-		float amt = 0.f;
+		float amt = 0;
 		switch(motionblurfx)
 		{
 			case 1:
@@ -274,7 +274,7 @@ namespace hud
 				if(game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR || game::player1->state == CS_EDITING) break;
 				float damage = game::player1->state == CS_ALIVE ? min(damageresidue, 100)/100.f : 1.f,
 					  healthscale = float(m_health(game::gamemode, game::mutators));
-				if(healthscale > 0) damage = max(damage, 1.f - max(game::player1->health, 0)/healthscale);
+				if(healthscale > 0) damage = max(damage, 1.f-max(game::player1->health, 0)/healthscale);
 				amt += damage*0.65f;
 				if(fireburntime && game::player1->lastfire && lastmillis-game::player1->lastfire < fireburntime)
 					amt += 0.25f+(float((lastmillis-game::player1->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
@@ -324,7 +324,7 @@ namespace hud
 	{
 		if(skew >= 2.f)
 		{ // fully overcharged to green
-			r = b = 0.f;
+			r = b = 0;
 		}
 		else if(skew >= 1.f)
 		{ // overcharge to yellow
@@ -339,7 +339,7 @@ namespace hud
 		else
 		{ // fade to red
 			g *= skew;
-			b = 0.f;
+			b = 0;
 		}
 	}
 
@@ -423,7 +423,7 @@ namespace hud
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 		int millis = lastmillis-game::player1->weaplast[weap];
-		float r = 1.f, g = 1.f, b = 1.f, amt = 0.f;
+		float r = 1, g = 1, b = 1, amt = 0;
 		switch(game::player1->weapstate[weap])
 		{
 			case WEAP_S_POWER:
@@ -432,7 +432,7 @@ namespace hud
 				colourskew(r, g, b, 1.f-amt);
 				break;
 			}
-			default: amt = 0.f; break;
+			default: amt = 0; break;
 		}
 		glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
 		glColor4f(r, g, b, indicatorblend*hudblend);
@@ -464,10 +464,8 @@ namespace hud
 		{
 			case WEAP_S_SHOOT:
 			{
-				int check = game::player1->weapwait[weap] >= 100 ? game::player1->weapwait[weap]/2 : game::player1->weapwait[weap];
-				if(interval <= check) fade *= 1.f-clamp(float(interval)/float(check), 0.f, 1.f);
-				else fade = 0.f;
-				//fade *= 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f);
+				float amt = 1.f-clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f); fade *= amt;
+				if(showclips >= 2) size *= amt;
 				break;
 			}
 			case WEAP_S_RELOAD:
@@ -475,8 +473,16 @@ namespace hud
 				if(game::player1->weapload[weap] > 0)
 				{
 					int check = game::player1->weapwait[weap]/2;
-					if(interval >= check) fade *= clamp(float(interval-check)/float(check), 0.f, 1.f);
-					else fade = 0.f;
+					if(interval >= check)
+					{
+						float amt = clamp(float(interval-check)/float(check), 0.f, 1.f); fade *= amt;
+						if(showclips >= 2) size *= amt;
+					}
+					else
+					{
+						fade = 0.f;
+						if(showclips >= 2) size = 0;
+					}
 					break;
 				}
 				// falls through
@@ -484,7 +490,7 @@ namespace hud
 			case WEAP_S_PICKUP: case WEAP_S_SWITCH:
 			{
 				float amt = clamp(float(interval)/float(game::player1->weapwait[weap]), 0.f, 1.f); fade *= amt;
-				if(showclips >= 2 && (game::player1->weapstate[weap] == WEAP_S_PICKUP || game::player1->weapstate[weap] == WEAP_S_SWITCH)) size *= amt;
+				if(showclips >= 2 && game::player1->weapstate[weap] != WEAP_S_RELOAD) size *= amt;
 				break;
 			}
 			default: break;
@@ -517,6 +523,7 @@ namespace hud
 						break;
 				}
 				glColor4f(r, g, b, clipblend*hudblend);
+				size = s*clipskew[weap];
 				break;
 			}
 			case WEAP_S_RELOAD:
@@ -537,6 +544,7 @@ namespace hud
 							break;
 					}
 					glColor4f(r, g, b, clipblend*hudblend);
+					size = s*clipskew[weap];
 				}
 				break;
 			}
@@ -573,7 +581,7 @@ namespace hud
 	void drawpointer(int w, int h, int index)
 	{
 		int cs = int((index == POINTER_GUI ? cursorsize : crosshairsize)*hudsize);
-		float r = 1.f, g = 1.f, b = 1.f, fade = (index == POINTER_GUI ? cursorblend : crosshairblend)*hudblend;
+		float r = 1, g = 1, b = 1, fade = (index == POINTER_GUI ? cursorblend : crosshairblend)*hudblend;
 		if(index != POINTER_GUI && teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
@@ -597,7 +605,7 @@ namespace hud
 					drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
 			if(game::mousestyle() >= 1) // renders differently
-				drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1.f, 1.f, 1.f, crosshairblend*hudblend);
+				drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1, 1, 1, crosshairblend*hudblend);
 		}
 	}
 
