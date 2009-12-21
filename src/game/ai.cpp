@@ -1222,7 +1222,7 @@ namespace ai
             	{
 					bool ladder = d->onladder;
 					physics::move(d, 1, true);
-					if(aistyle[d->aitype].maxspeed) timeouts(d, b);
+					if(aistyle[d->aitype].maxspeed && !b.idle) timeouts(d, b);
 					if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
 					entities::checkitems(d);
             	}
