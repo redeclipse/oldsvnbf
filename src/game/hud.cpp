@@ -35,11 +35,11 @@ namespace hud
 	void toggleconsole() { fullconsole = !fullconsole; }
 	COMMAND(toggleconsole, "");
 
-	VARP(titlefade, 0, 2500, 10000);
+	VARP(titlefade, 0, 3000, 10000);
 	VARP(tvmodefade, 0, 1000, INT_MAX-1);
-	VARP(spawnfade, 0, 1000, INT_MAX-1);
+	VARP(spawnfade, 0, 3000, INT_MAX-1);
 
-	VARP(commandfade, 0, 500, INT_MAX-1);
+	VARP(commandfade, 0, 250, INT_MAX-1);
 	FVARP(commandfadeamt, 0, 0.75f, 1);
 	VARP(uifade, 0, 250, INT_MAX-1);
 	FVARP(uifadeamt, 0, 0.5f, 1);
@@ -143,10 +143,10 @@ namespace hud
 	FVARP(inventoryeditskew, 1e-3f, 0.65f, 1);
 
 	VARP(inventoryhealth, 0, 3, 3);
-	VARP(inventoryhealththrob, 0, 1, 1);
+	FVARP(inventoryhealththrob, 0, 1, 1);
 	FVARP(inventoryhealthblend, 0, 0.95f, 1);
 	FVARP(inventoryhealthglow, 0, 0.125f, 1);
-	FVARP(inventoryhealthpulse, 0, 0.0625f, 1);
+	FVARP(inventoryhealthflash, 0, 1, 1);
 	VARP(inventoryimpulse, 0, 2, 2);
 	VARP(inventorytrial, 0, 2, 2);
 
@@ -1396,16 +1396,16 @@ namespace hud
 		settexture(healthtex, 3);
 		if(game::player1->state == CS_ALIVE)
 		{
-			bool pulse = inventoryhealthpulse && game::player1->health < heal;
+			bool pulse = inventoryhealthflash > 0 && game::player1->health < heal;
 			if(inventoryhealth && (glow || pulse))
 			{
 				int gap = 0;
-				float  r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->lastspawn && lastmillis-game::player1->lastspawn <= 1000 ? (lastmillis-game::player1->lastspawn)/2000.f : 0.5f;
+				float r = 1.f, g = 1.f, b = 1.f, bgfade = game::player1->lastspawn && lastmillis-game::player1->lastspawn <= 1000 ? (lastmillis-game::player1->lastspawn)/2000.f : 0.5f;
 				if(teamwidgets) skewcolour(r, g, b);
 				if(pulse)
 				{
 					int timestep = lastmillis%1000;
-					float skew = timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f;
+					float skew = clamp((timestep <= 500 ? timestep/500.f : (1000-timestep)/500.f)*(float(heal-game::player1->health)/float(heal))*inventoryhealthflash, 0.f, 1.f);
 					r += (1.f-r)*skew;
 					g -= g*skew;
 					b -= b*skew;
@@ -1417,10 +1417,10 @@ namespace hud
 				sy += size;
 			}
 			if(game::player1->lastspawn && lastmillis-game::player1->lastspawn <= 1000) fade *= (lastmillis-game::player1->lastspawn)/1000.f;
-			else if(inventoryhealththrob && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
+			else if(inventoryhealththrob > 0 && regentime && game::player1->lastregen && lastmillis-game::player1->lastregen <= regentime)
 			{
 				float amt = clamp((lastmillis-game::player1->lastregen)/float(regentime/2), 0.f, 2.f);
-				glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt));
+				glow = int(glow*(amt > 1.f ? amt-1.f : 1.f-amt)*inventoryhealththrob);
 			}
 			if(inventoryhealth >= 2)
 			{
