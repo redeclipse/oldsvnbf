@@ -535,13 +535,13 @@ namespace projs
 				loopi(game::numdynents())
 				{
 					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner)) continue;
+					if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
 					radialeffect(f, proj, false, radius);
 					radiated = true;
 				}
 				if(radiated) proj.lastradial = lastmillis;
 			}
-			else if(d->state == CS_ALIVE && physics::issolid(d) && (proj.projcollide&COLLIDE_OWNER || d != proj.owner)) radialeffect(d, proj, false, radius);
+			else if(d->state == CS_ALIVE && physics::issolid(d, &proj, false)) radialeffect(d, proj, false, radius);
 		}
 	}
 
@@ -1125,7 +1125,7 @@ namespace projs
 						loopi(game::numdynents())
 						{
 							gameent *f = (gameent *)game::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || !physics::issolid(f) || (!(proj.projcollide&COLLIDE_OWNER) && f == proj.owner)) continue;
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
 							radialeffect(f, proj, true, radius);
 						}
 					}

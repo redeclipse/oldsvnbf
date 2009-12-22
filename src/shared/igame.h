@@ -66,7 +66,7 @@ namespace physics
 	extern bool liquidcheck(physent *d);
 	extern float gravityforce(physent *d);
 	extern float movevelocity(physent *d);
-	extern bool issolid(physent *d, physent *e = NULL);
+	extern bool issolid(physent *d, physent *e = NULL, bool esc = true);
 	extern bool move(physent *d, vec &dir);
 	extern void move(physent *d, int moveres = 10, bool local = true);
 	extern bool entinmap(physent *d, bool avoidplayers);
