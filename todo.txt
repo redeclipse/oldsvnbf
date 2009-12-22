@@ -1,4 +1,5 @@
 = Code =
+* Create "assisted deaths" (make server aware of floor state too for assisted falling?)
 * Instead of wall 'kick', retool into a wall/ceiling 'grab', then use jump to 'kick'
 * Rename 'storyplayers' and 'storymaps' to campaign
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
