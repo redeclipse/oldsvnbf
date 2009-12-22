@@ -1044,7 +1044,7 @@ namespace game
 		float bestdist = 1e16f;
 		loopi(numdynents()) if((o = (gameent *)iterdynents(i)))
 		{
-            if(!o || o==at || o->state!=CS_ALIVE || !physics::issolid(o)) continue;
+            if(!o || o==at || o->state!=CS_ALIVE || !physics::issolid(o, at)) continue;
             float dist;
 			if(intersect(o, from, to, dist) && dist < bestdist)
 			{

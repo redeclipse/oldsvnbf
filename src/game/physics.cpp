@@ -128,7 +128,7 @@ namespace physics
 	}
 	ICOMMAND(action, "Di", (int *n, int *i), { doaction(*i, *n!=0); });
 
-	bool issolid(physent *d, physent *e)
+	bool issolid(physent *d, physent *e, bool esc)
 	{
 		bool projectile = false, actor = false;
 		if(e) switch(e->type)
@@ -138,7 +138,7 @@ namespace physics
 			{
 				projent *p = (projent *)e;
 				if(p->hit == d || !(p->projcollide&COLLIDE_PLAYER)) return false;
-				if(p->owner == d && (!(p->projcollide&COLLIDE_OWNER) || !p->escaped)) return false;
+				if(p->owner == d && (!(p->projcollide&COLLIDE_OWNER) || (esc && !p->escaped))) return false;
 				projectile = true;
 				break;
 			}

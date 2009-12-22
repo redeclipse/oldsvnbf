@@ -1351,7 +1351,7 @@ namespace ai
 				c.override = false;
 				cleannext = false;
 			}
-			if(d->state == CS_DEAD && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
+			if((d->state == CS_DEAD || d->state == CS_WAITING) && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
 			{
 				if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
