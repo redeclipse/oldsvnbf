@@ -659,12 +659,7 @@ namespace ai
 				{
 					if(m_campaign(game::gamemode))
 					{
-						if(entities::ents.inrange(b.target))
-						{
-							gameentity &e = *(gameentity *)entities::ents[b.target];
-							if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
-								return makeroute(d, b, e.o) ? 1 : 0;
-						}
+						if(aicampaign && entities::ents.inrange(b.target)) return defend(d, b, entities::ents[b.target]->o) ? 1 : 0;
 					}
 					else if(m_stf(game::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
 					else if(m_ctf(game::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
@@ -696,8 +691,7 @@ namespace ai
 					if(entities::ents.inrange(b.target))
 					{
 						gameentity &e = *(gameentity *)entities::ents[b.target];
-						if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
-							return makeroute(d, b, e.o) ? 1 : 0;
+						if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST) return makeroute(d, b, e.o) ? 1 : 0;
 					}
 					break;
 				}
@@ -767,12 +761,7 @@ namespace ai
 				{
 					if(m_campaign(game::gamemode))
 					{
-						if(entities::ents.inrange(b.target))
-						{
-							gameentity &e = *(gameentity *)entities::ents[b.target];
-							if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
-								return makeroute(d, b, e.o) ? 1 : 0;
-						}
+						if(aicampaign && entities::ents.inrange(b.target)) return defend(d, b, entities::ents[b.target]->o) ? 1 : 0;
 					}
 					else if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
 					else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
@@ -1206,24 +1195,50 @@ namespace ai
 			{
 				switch(d->ai->blockseq)
 				{
-					case 0: case 1: case 2: case 3:
+					case 1: case 2: case 3:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
 						d->ai->clear(false);
 						break;
 					case 4: d->ai->reset(true); break;
 					case 5: d->ai->reset(false); break;
 					case 6: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
-					default: break;
+					case 0: default: break;
 				}
 				d->ai->blockseq++;
 			}
 		}
 		else d->ai->blocktime = d->ai->blockseq = 0;
+
+		if(d->ai->targnode == d->ai->targlast)
+		{
+			d->ai->targtime += lastmillis-d->ai->lastrun;
+			if(d->ai->targtime > (d->ai->targseq+1)*1000)
+			{
+				switch(d->ai->targseq)
+				{
+					case 1: case 2: case 3:
+						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
+						d->ai->clear(false);
+						break;
+					case 4: d->ai->reset(true); break;
+					case 5: d->ai->reset(false); break;
+					case 6: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
+					case 0: default: break;
+				}
+				d->ai->targseq++;
+			}
+		}
+		else
+		{
+			d->ai->targtime = d->ai->targseq = 0;
+			d->ai->targlast = d->ai->targnode;
+		}
+
 		if(d->ai->lasthunt)
 		{
 			int millis = lastmillis-d->ai->lasthunt;
-			if(millis <= 1000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
-			else if(millis > (d->ai->huntseq+1)*1000)
+			if(millis <= 3000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
+			else if(millis > (d->ai->huntseq+1)*3000)
 			{
 				switch(d->ai->huntseq)
 				{
@@ -1234,30 +1249,6 @@ namespace ai
 				}
 				d->ai->huntseq++;
 			}
-		}
-		if(d->ai->targnode == d->ai->targlast)
-		{
-			d->ai->targtime += lastmillis-d->ai->lastrun;
-			if(d->ai->targtime > (d->ai->targseq+1)*2000)
-			{
-				switch(d->ai->targseq)
-				{
-					case 0: case 1: case 2: case 3:
-						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
-						d->ai->clear(false);
-						break;
-					case 4: d->ai->reset(true); break;
-					case 5: d->ai->reset(false); break;
-					case 6: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
-					default: break;
-				}
-				d->ai->targseq++;
-			}
-		}
-		else
-		{
-			d->ai->targtime = d->ai->targseq = 0;
-			d->ai->targlast = d->ai->targnode;
 		}
 	}
 
