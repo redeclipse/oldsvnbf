@@ -17,7 +17,7 @@ VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 VARG(maxcarry, 0, 1, WEAP_MAX-1);
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
-VARG(spawnweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
+VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(trialweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
 VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
