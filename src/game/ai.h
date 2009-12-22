@@ -176,7 +176,7 @@ namespace ai
 
 		void addprevnode(int n)
 		{
-			if(prevnodes[0] != n)
+			if(!hasprevnode(n))
 			{
 				memmove(&prevnodes[1], prevnodes, sizeof(prevnodes) - sizeof(prevnodes[0]));
 				prevnodes[0] = n;
