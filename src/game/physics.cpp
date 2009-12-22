@@ -130,20 +130,27 @@ namespace physics
 
 	bool issolid(physent *d, physent *e)
 	{
-		bool projectile = e && e->type == ENT_PROJ;
-		if(projectile)
+		bool projectile = false, actor = false;
+		if(e) switch(e->type)
 		{
-			projent *p = (projent *)e;
-			if(p->hit == d || !(p->projcollide&COLLIDE_PLAYER)) return false;
-			if(p->owner == d && (!(p->projcollide&COLLIDE_OWNER) || !p->escaped)) return false;
+			case ENT_PLAYER: case ENT_AI: if(((gameent *)e)->aitype >= 0) actor = true; break;
+			case ENT_PROJ:
+			{
+				projent *p = (projent *)e;
+				if(p->hit == d || !(p->projcollide&COLLIDE_PLAYER)) return false;
+				if(p->owner == d && (!(p->projcollide&COLLIDE_OWNER) || !p->escaped)) return false;
+				projectile = true;
+				break;
+			}
+			default: break;
 		}
 		if(d->state == CS_ALIVE)
 		{
 			if(d->type == ENT_PLAYER || d->type == ENT_AI)
 			{
-				gameent *p = (gameent *)d;
-				if(!projectile && p->aitype >= AI_START && !p->move && !p->strafe && !p->action[AC_CROUCH]) return false;
-				if(p->protect(lastmillis, m_protect(game::gamemode, game::mutators))) return false;
+				gameent *f = (gameent *)d;
+				if(!projectile && !actor && f->aitype >= AI_START && !f->move && !f->strafe && !f->action[AC_CROUCH]) return false;
+				if(f->protect(lastmillis, m_protect(game::gamemode, game::mutators))) return false;
 			}
 			return true;
 		}
