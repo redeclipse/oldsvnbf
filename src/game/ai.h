@@ -54,8 +54,6 @@ namespace entities { struct avoidset; };
 namespace ai
 {
 	const float CLOSEDIST		= float(enttype[WAYPOINT].radius);	// is close
-	const float NEARDIST		= CLOSEDIST*8.f;					// is near
-	const float FARDIST			= CLOSEDIST*24.f;					// too far
 	const float JUMPMIN			= CLOSEDIST*0.25f;					// decides to jump
 	const float JUMPMAX			= CLOSEDIST*1.5f;					// max jump
 	const float SIGHTMIN		= CLOSEDIST*2.f;					// minimum line of sight
@@ -232,11 +230,11 @@ namespace ai
 	extern bool checkothers(vector<int> &targets, gameent *d = NULL, int state = -1, int targtype = -1, int target = -1, bool teams = false);
 	extern bool makeroute(gameent *d, aistate &b, int node, bool changed = true, int retries = 0);
 	extern bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed = true, int retries = 0);
-	extern bool randomnode(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST);
-	extern bool randomnode(gameent *d, aistate &b, float guard = NEARDIST, float wander = FARDIST);
+	extern bool randomnode(gameent *d, aistate &b, const vec &pos, float guard = SIGHTMIN, float wander = SIGHTMAX);
+	extern bool randomnode(gameent *d, aistate &b, float guard = SIGHTMIN, float wander = SIGHTMAX);
 	extern bool violence(gameent *d, aistate &b, gameent *e, bool pursue = false);
-	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = NEARDIST, float wander = FARDIST, int walk = 1, bool retry = false);
-	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = CLOSEDIST, float wander = NEARDIST, int walk = 0);
+	extern bool patrol(gameent *d, aistate &b, const vec &pos, float guard = SIGHTMIN, float wander = SIGHTMAX, int walk = 1, bool retry = false);
+	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = SIGHTMIN, float wander = SIGHTMAX, int walk = 0);
 
 	extern void spawned(gameent *d, int ent);
 	extern void damaged(gameent *d, gameent *e);
