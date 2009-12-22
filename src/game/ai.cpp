@@ -50,7 +50,7 @@ namespace ai
 
 	bool targetable(gameent *d, gameent *e, bool z)
 	{
-		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode) && e->state == CS_ALIVE && physics::issolid(e))
+		if(e && d != e && game::allowmove(d) && !m_edit(game::gamemode) && e->state == CS_ALIVE && physics::issolid(e, d))
 			return !z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e);
 		return false;
 	}
