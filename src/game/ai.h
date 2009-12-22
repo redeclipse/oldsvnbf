@@ -131,7 +131,9 @@ namespace ai
 
 		void cleartimers()
 		{
-			blocktime = huntseq = blockseq = targtime = targseq = 0;
+			lastaction = lasthunt = enemyseen = enemymillis = blocktime = huntseq = blockseq = targtime = targseq = 0;
+			lastrun = jumpseed = lastmillis;
+			jumprand = lastmillis+5000;
 			targnode = targlast = -1;
 		}
 
@@ -146,25 +148,25 @@ namespace ai
 			clear(true);
 			state.setsizenodelete(0);
 			addstate(AI_S_WAIT);
-			trywipe = becareful = false;
+			trywipe = false;
 		}
 
-		void reset(bool tryit = false)
+		void clean(bool tryit = false)
 		{
-			wipe();
 			if(!tryit)
 			{
 				spot = target = vec(0, 0, 0);
 				enemy = -1;
-				lastaction = lasthunt = enemyseen = enemymillis;
-				lastrun = jumpseed = lastmillis;
-				jumprand = lastmillis+5000;
-				dontmove = false;
+				becareful = dontmove = false;
+				cleartimers();
 			}
 			targyaw = rnd(360);
 			targpitch = 0.f;
 			tryreset = tryit;
 		}
+
+		void reset(bool tryit = false) { wipe(); clean(tryit); }
+		void unsuspend() { suspended = false; clean(false); }
 
 		bool hasprevnode(int n) const
 		{

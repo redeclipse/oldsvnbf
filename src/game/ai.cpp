@@ -8,7 +8,8 @@ namespace ai
 	VAR(aidebug, 0, 0, 6);
     VAR(aisuspend, 0, 0, 1);
     VAR(aiforcegun, -1, -1, WEAP_SUPER-1);
-    VARP(aideadfade, 0, 10000, 30000);
+    VAR(aicampaign, 0, 0, 1);
+    VARP(aideadfade, 0, 30000, INT_MAX-1);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
@@ -184,12 +185,12 @@ namespace ai
 	void update()
 	{
 		if(game::intermission) { loopv(game::players) if(game::players[i] && game::players[i]->ai) game::players[i]->stopmoving(true); }
-		else // fixed rate logic done out-of-sequence
+		else // fixed rate logic done out-of-sequence at 4 frames per second
 		{
-			if(!updateiteration && lastmillis-updatemillis > 100)
+			if(!updateiteration && lastmillis-updatemillis > 250)
 			{
 				avoid();
-				if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; }
+				if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; aicampaign = 0; }
 				updateiteration = 1;
 				updatemillis = lastmillis;
 			}
@@ -289,7 +290,7 @@ namespace ai
 		{
 			vec feet = d->feetpos();
 			float dist = feet.squaredist(pos);
-			if(dist > (m_campaign(game::gamemode) ? wander*wander : guard*guard)) b.idle = -1;
+			if(dist > guard*guard) b.idle = -1;
 			if(walk == 2 || b.override || (walk && dist <= guard*guard) || !makeroute(d, b, pos))
 			{ // run away and back to keep ourselves busy
 				if(!b.override && randomnode(d, b, pos, guard, wander))
@@ -369,7 +370,7 @@ namespace ai
 			n.node = e->lastnode;
 			n.target = e->clientnum;
 			n.targtype = AI_T_PLAYER;
-			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)) ? 75.f : 1.f);
+			n.score = e->o.squaredist(d->o)/(force || d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)) ? 100.f : 1.f);
 		}
 	}
 
@@ -444,6 +445,18 @@ namespace ai
 				else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
 			}
 			if(m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_campaign(game::gamemode));
+			if(m_campaign(game::gamemode) && aicampaign)
+			{
+				loopi(entities::lastent(TRIGGER)) if(entities::ents[i]->type == TRIGGER && entities::ents[i]->attrs[1] == TR_EXIT)
+				{
+					interest &n = interests.add();
+					n.state = AI_S_PURSUE;
+					n.target = i;
+					n.node = entities::closestent(WAYPOINT, entities::ents[i]->o, SIGHTMIN, true);
+					n.targtype = AI_T_AFFINITY;
+					n.score = d->o.squaredist(entities::ents[i]->o)/1000.f;
+				}
+			}
 		}
 		else if(entities::ents.inrange(d->aientity))
 		{
@@ -464,7 +477,7 @@ namespace ai
 			bool proceed = true;
 			static vector<int> targets;
 			targets.setsizenodelete(0);
-			if(m_fight(game::gamemode) && d->aitype == AI_BOT) switch(n.state)
+			if(m_fight(game::gamemode) && !m_campaign(game::gamemode) && d->aitype == AI_BOT) switch(n.state)
 			{
 				case AI_S_DEFEND: // don't get into herds
 					proceed = !checkothers(targets, d, n.state, n.targtype, n.target, true);
@@ -486,7 +499,7 @@ namespace ai
 		{
 			if(d->ai && game::allowmove(d)) // see if this ai is interested in a grudge
 			{
-				d->ai->suspended = false;
+				d->ai->unsuspend();
 				aistate &b = d->ai->getstate();
 				violence(d, b, e, d->aitype == AI_BOT ? false : true);
 			}
@@ -499,7 +512,7 @@ namespace ai
 					vec tp = t->headpos();
 					if(cansee(t, tp, dp) || tp.squaredist(dp) <= SIGHTMAX*2)
 					{
-						t->ai->suspended = false;
+						d->ai->unsuspend();
 						aistate &c = t->ai->getstate();
 						if(violence(t, c, e, true)) return;
 					}
@@ -545,7 +558,7 @@ namespace ai
 				if(m_arena(game::gamemode, game::mutators) && d->arenaweap == WEAP_GRENADE)
 					d->arenaweap = WEAP_PISTOL;
 			}
-			d->ai->suspended = m_campaign(game::gamemode);
+			d->ai->suspended = true;
 		}
 	}
 
@@ -573,32 +586,54 @@ namespace ai
 	{
 		if(!m_edit(game::gamemode))
 		{
-			if(m_campaign(game::gamemode) && d->aitype == AI_BOT && d->ai->suspended)
+			if(d->aitype == AI_BOT && d->ai->suspended)
 			{ // bots idle until a human is around
-				gameent *t = NULL;
-				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype < 0 && t->state == CS_ALIVE)
+				if(!m_campaign(game::gamemode) || aicampaign || !entities::ents.inrange(d->aientity) || entities::ents[d->aientity]->type != PLAYERSTART)
+					d->ai->unsuspend();
+				else
 				{
-					d->ai->suspended = false;
+					gameent *t = NULL;
+					loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype < 0 && t->state == CS_ALIVE)
+					{
+						d->ai->unsuspend();
+						break;
+					}
+					if(d->ai->suspended) return 0;
+				}
+			}
+			if(!d->ai->suspended && (check(d, b) || find(d, b))) return 1;
+			if(target(d, b, true, false)) return 1;
+		}
+		else if(d->aitype == AI_BOT && d->ai->suspended) d->ai->unsuspend();
+
+		if(!d->ai->suspended)
+		{
+			switch(d->aitype)
+			{
+				case AI_BOT:
+				{
+					if(randomnode(d, b, SIGHTMIN, 1e16f))
+					{
+						d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
+						return 1;
+					}
+					if(target(d, b, true, true)) return 1;
 					break;
 				}
-				if(d->ai->suspended) return 0;
+				case AI_TURRET:
+				{
+					if(target(d, b, true, true)) return 1;
+					if(randomnode(d, b, SIGHTMIN, SIGHTMAX))
+					{
+						d->ai->addstate(AI_S_DEFEND, AI_T_NODE, d->ai->route[0]);
+						return 1;
+					}
+					break;
+				}
+				default: break;
 			}
-			if(check(d, b) || find(d, b)) return 1;
-			if(target(d, b, true, d->ai->suspended ? false : true)) return 1;
-		}
-		if(!d->ai->suspended) switch(d->aitype)
-		{
-			case AI_BOT: if(m_fight(game::gamemode) && randomnode(d, b, SIGHTMIN, 1e16f))
-			{
-				d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
-				return 1;
-			} break;
-			case AI_TURRET: if(randomnode(d, b, SIGHTMIN, SIGHTMAX))
-			{
-				d->ai->addstate(AI_S_DEFEND, AI_T_NODE, d->ai->route[0]);
-				return 1;
-			} break;
-			default: break;
+			d->ai->suspended = true; // fine then..
+			d->ai->clean(true);
 		}
 		return 0; // but don't pop the state
 	}
@@ -622,7 +657,16 @@ namespace ai
 				}
 				case AI_T_AFFINITY:
 				{
-					if(m_stf(game::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
+					if(m_campaign(game::gamemode))
+					{
+						if(entities::ents.inrange(b.target))
+						{
+							gameentity &e = *(gameentity *)entities::ents[b.target];
+							if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
+								return makeroute(d, b, e.o) ? 1 : 0;
+						}
+					}
+					else if(m_stf(game::gamemode)) return stf::aidefend(d, b) ? 1 : 0;
 					else if(m_ctf(game::gamemode)) return ctf::aidefend(d, b) ? 1 : 0;
 					break;
 				}
@@ -721,11 +765,17 @@ namespace ai
 			{
 				case AI_T_AFFINITY:
 				{
-					if(aistyle[d->aitype].maxspeed)
+					if(m_campaign(game::gamemode))
 					{
-						if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
-						else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
+						if(entities::ents.inrange(b.target))
+						{
+							gameentity &e = *(gameentity *)entities::ents[b.target];
+							if(vec(e.o).sub(d->feetpos()).magnitude() > CLOSEDIST)
+								return makeroute(d, b, e.o) ? 1 : 0;
+						}
 					}
+					else if(m_stf(game::gamemode)) return stf::aipursue(d, b) ? 1 : 0;
+					else if(m_ctf(game::gamemode)) return ctf::aipursue(d, b) ? 1 : 0;
 					break;
 				}
 
@@ -933,9 +983,17 @@ namespace ai
 		{
 			gameent *f = game::intersectclosest(dp, d->ai->target, d);
 			if(f && targetable(d, f, true)) e = f;
-			else if(!enemyok) e = NULL;
+			else if(!enemyok)
+			{
+				if(target(d, b, false, false))
+				{
+					e = game::getclient(d->ai->enemy);
+					enemyok = e && targetable(d, e, true);
+				}
+				else enemyok = false;
+			}
 		}
-		if(e && e->state == CS_ALIVE)
+		if(enemyok)
 		{
 			bool alt = altfire(d, e);
 			vec ep = getaimpos(d, e, alt);
@@ -1150,7 +1208,6 @@ namespace ai
 				{
 					case 0: case 1: case 2: case 3:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
-						else if(entities::ents.inrange(d->lastnode)) d->ai->addprevnode(d->lastnode);
 						d->ai->clear(false);
 						break;
 					case 4: d->ai->reset(true); break;
@@ -1181,13 +1238,12 @@ namespace ai
 		if(d->ai->targnode == d->ai->targlast)
 		{
 			d->ai->targtime += lastmillis-d->ai->lastrun;
-			if(d->ai->targtime > (d->ai->targseq+1)*1000)
+			if(d->ai->targtime > (d->ai->targseq+1)*2000)
 			{
 				switch(d->ai->targseq)
 				{
 					case 0: case 1: case 2: case 3:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
-						else if(entities::ents.inrange(d->lastnode)) d->ai->addprevnode(d->lastnode);
 						d->ai->clear(false);
 						break;
 					case 4: d->ai->reset(true); break;
@@ -1337,7 +1393,7 @@ namespace ai
 				}
 				else
 				{
-					if(d->ai->suspended) d->ai->suspended = false;
+					if(d->ai->suspended) d->ai->unsuspend();
 					c.next = lastmillis+125+rnd(125);
 				}
 			}

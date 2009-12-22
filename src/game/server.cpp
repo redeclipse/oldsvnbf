@@ -2145,16 +2145,18 @@ namespace server
 			realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
-		if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
-		else if(m_team(gamemode, mutators) && actor->team == target->team)
+		if(actor->state.aitype < AI_START)
 		{
-			if(weap == WEAP_MELEE) nodamage++;
-			else if(m_campaign(gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
-			else if(m_fight(gamemode)) switch(GVAR(teamdamage))
+			if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
+			else if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
-				case 2: default: break;
-				case 1: if(actor == target || actor->state.aitype < 0) break;
-				case 0: nodamage++; break;
+				if(weap == WEAP_MELEE) nodamage++;
+				else if(m_play(gamemode)) switch(GVAR(teamdamage))
+				{
+					case 2: default: break;
+					case 1: if((actor == target && !GVAR(selfdamage)) || actor->state.aitype < 0) break;
+					case 0: nodamage++; break;
+				}
 			}
 		}
 		if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
