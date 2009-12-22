@@ -130,7 +130,8 @@ namespace physics
 
 	bool issolid(physent *d, physent *e)
 	{
-		if(e && e->type == ENT_PROJ)
+		bool projectile = e && e->type == ENT_PROJ;
+		if(projectile)
 		{
 			projent *p = (projent *)e;
 			if(p->hit == d || !(p->projcollide&COLLIDE_PLAYER)) return false;
@@ -138,8 +139,12 @@ namespace physics
 		}
 		if(d->state == CS_ALIVE)
 		{
-			if(d->type == ENT_PLAYER && ((gameent *)d)->protect(lastmillis, m_protect(game::gamemode, game::mutators)))
-				return false;
+			if(d->type == ENT_PLAYER || d->type == ENT_AI)
+			{
+				gameent *p = (gameent *)d;
+				if(!projectile && p->aitype >= AI_START && !p->move && !p->strafe && !p->action[AC_CROUCH]) return false;
+				if(p->protect(lastmillis, m_protect(game::gamemode, game::mutators))) return false;
+			}
 			return true;
 		}
         return d->state == CS_DEAD || d->state == CS_WAITING;
