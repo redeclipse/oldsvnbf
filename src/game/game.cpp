@@ -259,8 +259,8 @@ namespace game
 		return false;
 	}
 
-	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1);
-	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1);
+	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false));
+	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1; hud::sb.showscores(false));
 
     bool allowmove(physent *d)
     {
