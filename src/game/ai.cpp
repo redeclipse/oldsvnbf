@@ -2,7 +2,7 @@
 namespace ai
 {
 	entities::avoidset obs;
-    int updatemillis = 0;
+    int updatemillis = 0, updateiteration = 0;
     vec aitarget(0, 0, 0);
 
 	VAR(aidebug, 0, 0, 6);
@@ -183,16 +183,19 @@ namespace ai
 
 	void update()
 	{
-		bool updating = lastmillis-updatemillis > 100; // fixed rate logic at 10fps
-        if(updating)
-        {
-        	avoid();
-        	if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; }
-        }
-		loopv(game::players) if(game::players[i] && game::players[i]->ai)
+		if(game::intermission) { loopv(game::players) if(game::players[i] && game::players[i]->ai) game::players[i]->stopmoving(true); }
+		else // fixed rate logic done out-of-sequence
 		{
-			if(!game::intermission) think(game::players[i], updating);
-			else game::players[i]->stopmoving(true);
+			if(!updateiteration && lastmillis-updatemillis > 100)
+			{
+				avoid();
+				if(multiplayer(false)) { aiforcegun = -1; aisuspend = 0; }
+				updateiteration = 1;
+				updatemillis = lastmillis;
+			}
+			int count = 0;
+			loopv(game::players) if(game::players[i] && game::players[i]->ai) think(game::players[i], ++count == updateiteration ? true : false);
+			if(++updateiteration > count) updateiteration = 0;
 		}
 	}
 
@@ -229,7 +232,7 @@ namespace ai
 
 	bool makeroute(gameent *d, aistate &b, const vec &pos, bool changed, int retries)
 	{
-		int node = entities::closestent(WAYPOINT, pos, NEARDIST, true, d);
+		int node = entities::closestent(WAYPOINT, pos, SIGHTMIN, true, d);
 		return makeroute(d, b, node, changed, retries);
 	}
 
@@ -286,7 +289,7 @@ namespace ai
 		{
 			vec feet = d->feetpos();
 			float dist = feet.squaredist(pos);
-			if(dist >= guard*guard) b.idle = -1;
+			if(dist > (m_campaign(game::gamemode) ? wander*wander : guard*guard)) b.idle = -1;
 			if(walk == 2 || b.override || (walk && dist <= guard*guard) || !makeroute(d, b, pos))
 			{ // run away and back to keep ourselves busy
 				if(!b.override && randomnode(d, b, pos, guard, wander))
@@ -389,7 +392,7 @@ namespace ai
 						{ // go get a weapon upgrade
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
-							n.node = entities::closestent(WAYPOINT, e.o, NEARDIST, true);
+							n.node = entities::closestent(WAYPOINT, e.o, SIGHTMIN, true);
 							n.target = j;
 							n.targtype = AI_T_ENTITY;
 							n.score = pos.squaredist(e.o)/(force || attr == d->arenaweap ? 1000.f : (d->carry(sweap, 1) <= 0 ? 100.f : 1.f));
@@ -416,7 +419,7 @@ namespace ai
 							if(proj.owner == d) break;
 							interest &n = interests.add();
 							n.state = AI_S_INTEREST;
-							n.node = entities::closestent(WAYPOINT, proj.o, NEARDIST, true);
+							n.node = entities::closestent(WAYPOINT, proj.o, SIGHTMIN, true);
 							n.target = proj.id;
 							n.targtype = AI_T_DROP;
 							n.score = pos.squaredist(proj.o)/(force || attr == d->arenaweap ? 100.f : 1.f);
@@ -494,7 +497,7 @@ namespace ai
 				loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->ai && t->state == CS_ALIVE && t->aitype >= AI_START && t->ai->suspended && targetable(t, e, true))
 				{
 					vec tp = t->headpos();
-					if(cansee(t, tp, dp) || tp.squaredist(dp) <= FARDIST*2)
+					if(cansee(t, tp, dp) || tp.squaredist(dp) <= SIGHTMAX*2)
 					{
 						t->ai->suspended = false;
 						aistate &c = t->ai->getstate();
@@ -585,12 +588,12 @@ namespace ai
 		}
 		if(!d->ai->suspended) switch(d->aitype)
 		{
-			case AI_BOT: if(m_fight(game::gamemode) && randomnode(d, b, NEARDIST, 1e16f))
+			case AI_BOT: if(m_fight(game::gamemode) && randomnode(d, b, SIGHTMIN, 1e16f))
 			{
 				d->ai->addstate(AI_S_INTEREST, AI_T_NODE, d->ai->route[0]);
 				return 1;
 			} break;
-			case AI_TURRET: if(randomnode(d, b, NEARDIST, FARDIST))
+			case AI_TURRET: if(randomnode(d, b, SIGHTMIN, SIGHTMAX))
 			{
 				d->ai->addstate(AI_S_DEFEND, AI_T_NODE, d->ai->route[0]);
 				return 1;
@@ -735,8 +738,8 @@ namespace ai
 						bool alt = altfire(d, e);
 						if(aistyle[d->aitype].maxspeed)
 						{
-							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? NEARDIST : 0);
-							return patrol(d, b, e->feetpos(), mindist, FARDIST) ? 1 : 0;
+							float mindist = weaptype[d->weapselect].explode[alt ? 1 : 0] ? weaptype[d->weapselect].explode[alt ? 1 : 0] : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
+							return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
 						}
 						else
 						{
@@ -761,7 +764,7 @@ namespace ai
 	{
 		vec pos = d->feetpos();
 		int node = -1;
-		float mindist = FARDIST*FARDIST;
+		float mindist = SIGHTMAX*SIGHTMAX;
 		loopvrev(d->ai->route) if(entities::ents.inrange(d->ai->route[i]))
 		{
 			gameentity &e = *(gameentity *)entities::ents[d->ai->route[i]];
@@ -789,6 +792,7 @@ namespace ai
 			int entid = obs.remap(d, n, epos);
 			if(entities::ents.inrange(entid) && (force || entid == n || !d->ai->hasprevnode(entid)))
 			{
+				if(d->aitype >= AI_START && epos.z-d->feetpos().z > JUMPMIN) epos.z = d->feetpos().z;
 				d->ai->spot = epos;
 				d->ai->targnode = n;
 				if(((e.attrs[0] & WP_F_CROUCH && !d->action[AC_CROUCH]) || d->action[AC_CROUCH]) && (lastmillis-d->actiontime[AC_CROUCH] >= PHYSMILLIS*3))
@@ -909,11 +913,7 @@ namespace ai
 		}
 		else d->ai->dontmove = true;
 
-		if(d->aitype >= AI_START)
-		{ // because they don't jump, per-se
-			if(d->ai->spot.z-d->feetpos().z >= enttype[WAYPOINT].radius) d->ai->spot.z = d->feetpos().z;
-		}
-		else
+		if(d->aitype == AI_BOT)
 		{
 			if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 			if(idle)
@@ -1144,17 +1144,18 @@ namespace ai
 		if(d->blocked)
 		{
 			d->ai->blocktime += lastmillis-d->ai->lastrun;
-			if(d->ai->blocktime > (d->ai->blockseq+1)*1000)
+			if(d->ai->blocktime > (d->ai->blockseq+1)*500)
 			{
 				switch(d->ai->blockseq)
 				{
-					case 0: case 1: case 2:
+					case 0: case 1: case 2: case 3:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
+						else if(entities::ents.inrange(d->lastnode)) d->ai->addprevnode(d->lastnode);
 						d->ai->clear(false);
 						break;
-					case 3: d->ai->reset(true); break;
-					case 4: d->ai->reset(false); break;
-					case 5: game::suicide(d, HIT_LOST); return; break;
+					case 4: d->ai->reset(true); break;
+					case 5: d->ai->reset(false); break;
+					case 6: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
 					default: break;
 				}
 				d->ai->blockseq++;
@@ -1164,14 +1165,14 @@ namespace ai
 		if(d->ai->lasthunt)
 		{
 			int millis = lastmillis-d->ai->lasthunt;
-			if(millis <= 2000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
-			else if(millis > (d->ai->huntseq+1)*2000)
+			if(millis <= 1000) { d->ai->tryreset = false; d->ai->huntseq = 0; }
+			else if(millis > (d->ai->huntseq+1)*1000)
 			{
 				switch(d->ai->huntseq)
 				{
 					case 0: d->ai->reset(true); break;
 					case 1: d->ai->reset(false); break;
-					case 2: game::suicide(d, HIT_LOST); return; break;
+					case 2: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
 					default: break;
 				}
 				d->ai->huntseq++;
@@ -1180,17 +1181,18 @@ namespace ai
 		if(d->ai->targnode == d->ai->targlast)
 		{
 			d->ai->targtime += lastmillis-d->ai->lastrun;
-			if(d->ai->targtime > (d->ai->targseq+1)*4000)
+			if(d->ai->targtime > (d->ai->targseq+1)*1000)
 			{
 				switch(d->ai->targseq)
 				{
-					case 0: case 1: case 2:
+					case 0: case 1: case 2: case 3:
 						if(entities::ents.inrange(d->ai->targnode)) d->ai->addprevnode(d->ai->targnode);
+						else if(entities::ents.inrange(d->lastnode)) d->ai->addprevnode(d->lastnode);
 						d->ai->clear(false);
 						break;
-					case 3: d->ai->reset(true); break;
-					case 4: d->ai->reset(false); break;
-					case 5: game::suicide(d, HIT_LOST); return; break;
+					case 4: d->ai->reset(true); break;
+					case 5: d->ai->reset(false); break;
+					case 6: game::suicide(d, HIT_LOST); return; break; // this is our last resort..
 					default: break;
 				}
 				d->ai->targseq++;
@@ -1252,7 +1254,7 @@ namespace ai
 		loopi(game::numdynents())
 		{
 			gameent *d = (gameent *)game::iterdynents(i);
-			if(!d || d->aitype >= AI_START) continue;
+			if(!d) continue; // || d->aitype >= AI_START) continue;
 			if(!d->ai && !d->airnodes.empty()) loopvj(d->airnodes)
 				if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
 					obs.add(d, d->airnodes[j]);

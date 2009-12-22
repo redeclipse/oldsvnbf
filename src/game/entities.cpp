@@ -1359,7 +1359,7 @@ namespace entities
 		{
 			vec v = d->feetpos();
 			bool clip = clipped(v, true), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
-			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : (d->ai ? ai::JUMPMIN : ai::NEARDIST));
+			float dist = float(shoulddrop ? enttype[WAYPOINT].radius : (d->ai ? ai::JUMPMIN : ai::SIGHTMIN));
 			int curnode = closestent(WAYPOINT, v, dist, false, d), prevnode = d->lastnode;
 
 			if(!ents.inrange(curnode) && shoulddrop)
@@ -1380,7 +1380,7 @@ namespace entities
 				d->lastnode = curnode;
 			}
 			else if(!ents.inrange(d->lastnode) || ents[d->lastnode]->o.squaredist(v) > ai::CLOSEDIST*ai::CLOSEDIST)
-				d->lastnode = closestent(WAYPOINT, v, ai::FARDIST, false, d);
+				d->lastnode = closestent(WAYPOINT, v, ai::SIGHTMAX, false, d);
 
 			if(clip) cleanairnodes = 2;
 			else if(d->physstate != PHYS_FALL) cleanairnodes = 1;
@@ -1963,7 +1963,7 @@ namespace entities
 				case ACTOR:
 				{
 					part_radius(vec(e.o).add(vec(0, 0, aistyle[e.attrs[0]].height/2)), vec(aistyle[e.attrs[0]].xradius, aistyle[e.attrs[0]].height/2), 1, 1, 1, 0x888888);
-					part_radius(e.o, vec(ai::FARDIST*2, ai::FARDIST*2, ai::FARDIST*2), 1, 1, 1, 0x888888);
+					part_radius(e.o, vec(ai::SIGHTMAX*2, ai::SIGHTMAX*2, ai::SIGHTMAX*2), 1, 1, 1, 0x888888);
 					break;
 				}
 				case MAPSOUND:

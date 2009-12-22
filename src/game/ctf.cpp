@@ -637,7 +637,7 @@ namespace ctf
 				{ // defend the flag
 					ai::interest &n = interests.add();
 					n.state = ai::AI_S_DEFEND;
-					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
+					n.node = entities::closestent(WAYPOINT, f.pos(), ai::SIGHTMIN, true);
 					n.target = j;
 					n.targtype = ai::AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos())/(!regen ? 100.f : 1.f);
@@ -649,7 +649,7 @@ namespace ctf
 				{ // attack the flag
 					ai::interest &n = interests.add();
 					n.state = d->aitype == AI_BOT ? ai::AI_S_PURSUE : ai::AI_S_DEFEND;
-					n.node = entities::closestent(WAYPOINT, f.pos(), ai::NEARDIST, true);
+					n.node = entities::closestent(WAYPOINT, f.pos(), ai::SIGHTMIN, true);
 					n.target = j;
 					n.targtype = ai::AI_T_AFFINITY;
 					n.score = pos.squaredist(f.pos());
@@ -735,7 +735,7 @@ namespace ctf
 					}
 				}
 			}
-			return ai::defend(d, b, f.pos(), f.owner ? ai::CLOSEDIST : float(enttype[FLAG].radius), f.owner ? ai::NEARDIST : float(enttype[FLAG].radius*(1+walk)), walk);
+			return ai::defend(d, b, f.pos(), f.owner ? ai::CLOSEDIST : float(enttype[FLAG].radius), f.owner ? ai::SIGHTMIN : float(enttype[FLAG].radius*(1+walk)), walk);
 		}
 		return false;
 	}
