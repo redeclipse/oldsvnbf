@@ -270,6 +270,20 @@ body {
 	color: #FF0000;
 	text-decoration: underline;
 }
+#screen {
+	font-size: 11px;
+	color: #FFFFFF;
+	background-color: #000000;
+	margin: 0px;
+	padding: 0px;
+	height: 140px;
+	width: 738px;
+	text-align: center;
+	float: left;
+}
+#screen img {
+	border: none;
+}
 #subtext {
 	font-size: 11px;
 	color: #FFFFFF;
