@@ -734,7 +734,7 @@ namespace server
 			{
 				if(m_team(gamemode, mutators))
 				{
-					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 };
+					int teamscores[TEAM_NUM] = {0};
 					loopv(clients) if(clients[i]->state.aitype < AI_START && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 						teamscores[clients[i]->team-TEAM_FIRST] += clients[i]->state.frags;
 					int best = -1;

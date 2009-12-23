@@ -1567,7 +1567,7 @@ namespace entities
 
 	void importentities(int mtype, int mver, int gver)
 	{
-		int flag = 0, teams[TEAM_NUM] = { 0, 0, 0, 0 };
+		int flag = 0, teams[TEAM_NUM] = {0};
 		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];

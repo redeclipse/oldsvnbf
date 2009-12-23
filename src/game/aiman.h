@@ -226,26 +226,25 @@ namespace aiman
 					{
 						int offt = balance%numt;
 						if(offt > 0) balance += numt-offt; // balance so all teams have even counts
+						int teamscores[TEAM_NUM] = {0}, highest = -1;
+						loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+						{
+							int team = clients[i]->team-TEAM_FIRST;
+							teamscores[team]++;
+							if(highest < 0 || teamscores[team] > teamscores[highest]) highest = team;
+						}
+						if(highest >= 0)
+						{
+							int bots = balance-people, offb = 0;
+							loopi(TEAM_NUM) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
+							{
+								if(bots > 0) bots--;
+								else offb++;
+							}
+							balance += offb;
+						}
 					}
 					else balance = max(people*numt, numt); // humans vs. bots, just directly balance
-					int teamscores[TEAM_NUM] = { 0, 0, 0, 0 }, highest = -1, players = 0;
-					loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
-					{
-						int team = clients[i]->team-TEAM_FIRST;
-						teamscores[team]++;
-						players++;
-						if(highest < 0 || teamscores[team] > teamscores[highest]) highest = team;
-					}
-					if(highest >= 0)
-					{
-						int offp = balance-players, offt = 0;
-						loopi(TEAM_NUM) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
-						{
-							if(offp > 0) offp--;
-							else offt++;
-						}
-						balance += offt;
-					}
 				}
 				loopvrev(clients)
 				{

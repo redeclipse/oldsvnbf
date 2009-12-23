@@ -6,7 +6,7 @@ namespace hud
 {
 	const int NUMSTATS = 12;
 	int damageresidue = 0, hudwidth = 0, lastteam = 0, lastnewgame = 0,
-		laststats = 0, prevstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, curstats[NUMSTATS] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		laststats = 0, prevstats[NUMSTATS] = {0}, curstats[NUMSTATS] = {0};
 	vector<int> teamkills;
 	scoreboard sb;
     struct damageloc
