@@ -224,8 +224,6 @@ namespace aiman
 				{
 					if(GVAR(teambalance) != 3)
 					{
-						int offt = balance%numt;
-						if(offt > 0) balance += numt-offt; // balance so all teams have even counts
 						int teamscores[TEAM_NUM] = {0}, highest = -1;
 						loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 						{
