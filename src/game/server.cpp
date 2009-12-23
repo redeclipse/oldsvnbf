@@ -2515,9 +2515,9 @@ namespace server
 			}
 			else return;
 		}
-		if(!sents[ent].spawned && !(sents[ent].attrs[1]&WEAP_F_FORCED))
+		if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
-			bool found = false;
+			bool found = sents[ent].spawned;
 			loopv(clients)
 			{
 				clientinfo *cp = clients[i];
