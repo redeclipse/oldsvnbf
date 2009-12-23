@@ -652,8 +652,7 @@ struct gamestate
 		{
 			weapstate[i] = WEAP_S_IDLE;
 			weapwait[i] = weaplast[i] = weapload[i] = weapshot[i] = 0;
-			if(full) ammo[i] = -1;
-			entid[i] = -1;
+			if(full) ammo[i] = entid[i] = -1;
 		}
 		if(full) lastweap = weapselect = -1;
 	}

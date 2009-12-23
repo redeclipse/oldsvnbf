@@ -187,19 +187,12 @@ namespace entities
 	void useeffects(gameent *d, int n, bool s, int g, int r)
 	{
 		gameentity &e = *(gameentity *)ents[n];
-		vec pos = e.o;
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
-			if(proj.projtype != PRJ_ENT || proj.id != n) continue;
-			pos = proj.o;
+			if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
 			proj.beenused = 2;
 			proj.state = CS_DEAD;
-		}
-		gameent *f = NULL;
-		loopi(game::numdynents()) if((f = (gameent *)game::iterdynents(i)) && f->type == ENT_PLAYER)
-		{
-			loopk(WEAP_MAX) if(f->entid[k] == n) f->entid[k] = -1;
 		}
 		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
@@ -220,7 +213,7 @@ namespace entities
 		if(isweap(g))
 		{
 			d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
-			d->ammo[g] = d->entid[g] = -1;
+			d->ammo[g] = -1;
 			if(d->weapselect != g)
 			{
 				d->lastweap = d->weapselect;
@@ -230,7 +223,7 @@ namespace entities
 		d->useitem(n, e.type, attr, e.attrs, sweap, lastmillis);
 		if(issound(d->wschan)) removesound(d->wschan);
 		playsound(S_ITEMPICKUP, d->o, d, 0, -1, -1, -1, &d->wschan);
-		if(game::dynlighteffects) adddynlight(pos, enttype[e.type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
+		if(game::dynlighteffects) adddynlight(d->o, enttype[e.type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
 		if(ents.inrange(r) && ents[r]->type == WEAPON)
 		{
 			gameentity &f = *(gameentity *)ents[r];
@@ -852,14 +845,9 @@ namespace entities
 				loopv(projs::projs)
 				{
 					projent &proj = *projs::projs[i];
-					if(proj.projtype != PRJ_ENT || proj.id != n || !ents.inrange(proj.id)) continue;
+					if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
 					proj.beenused = 1;
-					proj.state = CS_DEAD;
-				}
-				gameent *d = NULL;
-				loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)) && d->type == ENT_PLAYER)
-				{
-					loopk(WEAP_MAX) if(d->entid[k] == n) d->entid[k] = -1;
+					proj.lifetime = min(proj.lifetime, 1000);
 				}
 			}
 		}

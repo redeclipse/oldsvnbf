@@ -777,19 +777,20 @@ namespace server
 		return true;
 	}
 
-	bool finditem(int i, bool spawned = true, bool timeit = false)
+	bool finditem(int i, bool spawned = true, bool timeit = false, bool override = false)
 	{
 		if(!m_noitems(gamemode, mutators))
 		{
 			if(sents[i].spawned) return true;
 			int sweap = m_weapon(gamemode, mutators);
-			if(sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap))
+			if(sents[i].type == WEAPON && w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap))
 			{
 				loopvk(clients)
 				{
 					clientinfo *ci = clients[k];
 					if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
 						return true;
+					else if(override) return false;
 					else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
 				}
 			}
@@ -2355,7 +2356,7 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id) && !finditem(id, false)) sents[id].millis = gamemillis;
+			if(sents.inrange(id) && hasitem(id) && !finditem(id, false)) sents[id].millis = gamemillis;
 		}
 	}
 
@@ -2443,7 +2444,6 @@ namespace server
 		if(weap == WEAP_GRENADE)
 		{
 			int nweap = -1; // try to keep this weapon
-			gs.entid[weap] = -1;
 			gs.weapshots[WEAP_GRENADE][0].add(-1);
 			takeammo(ci, WEAP_GRENADE, 1);
 			if(!gs.hasweap(weap, sweap))
@@ -2678,6 +2678,10 @@ namespace server
 
 	void checkents()
 	{
+		int items[MAXENTTYPES] = {0}, sweap = m_weapon(gamemode, mutators);
+		loopv(sents)
+			if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && finditem(i, true, true))
+				items[sents[i].type]++;
 		loopv(sents) switch(sents[i].type)
 		{
 			case TRIGGER:
@@ -2697,18 +2701,18 @@ namespace server
 			}
 			default:
 			{
-				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && !finditem(i, true, true))
+				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 				{
-					loopvk(clients)
+					bool override = false;
+					if(m_fight(gamemode) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && sents[i].millis-gamemillis < PHYSMILLIS*6 && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold)))
+						override = true;
+					if(!finditem(i, true, true, override))
 					{
-						clientinfo *ci = clients[k];
-						ci->state.dropped.remove(i);
-						loopj(WEAP_MAX) if(ci->state.entid[j] == i)
-							ci->state.entid[j] = -1;
+						sents[i].spawned = true;
+						sents[i].millis = gamemillis+GVAR(itemspawntime);
+						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+						items[sents[i].type]++;
 					}
-					sents[i].spawned = true;
-					sents[i].millis = gamemillis+GVAR(itemspawntime);
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 				}
 				break;
 			}
@@ -3834,17 +3838,7 @@ namespace server
 					{
 						sents[n].spawned = false;
 						sents[n].millis = gamemillis;
-						if(enttype[sents[n].type].usetype == EU_ITEM)
-						{
-							loopvk(clients)
-							{
-								clientinfo *cq = clients[k];
-								cq->state.dropped.remove(n);
-								loopj(WEAP_MAX) if(cq->state.entid[j] == n) cq->state.entid[j] = -1;
-							}
-							sents[n].millis += GVAR(itemspawndelay)*3;
-						}
-						else if(sents[n].type == TRIGGER) setuptriggers(true);
+						if(sents[n].type == TRIGGER) setuptriggers(true);
 					}
 					break;
 				}
