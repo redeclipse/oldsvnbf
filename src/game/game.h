@@ -213,9 +213,9 @@ enum { WEAP_S_IDLE = 0, WEAP_S_SHOOT, WEAP_S_RELOAD, WEAP_S_POWER, WEAP_S_SWITCH
 
 enum
 {
-	IMPACT_GEOM = 1<<0, BOUNCE_GEOM = 1<<1, IMPACT_PLAYER = 1<<2, BOUNCE_PLAYER = 1<<3,
-	COLLIDE_TRACE = 1<<4, COLLIDE_OWNER = 1<<5, COLLIDE_CONT = 1<<6, COLLIDE_STICK = 1<<7,
-	COLLIDE_GEOM = IMPACT_GEOM | BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER | BOUNCE_PLAYER,
+	IMPACT_GEOM = 1<<0, BOUNCE_GEOM = 1<<1, IMPACT_PLAYER = 1<<2, BOUNCE_PLAYER = 1<<3, RADIAL_PLAYER = 1<<4,
+	COLLIDE_TRACE = 1<<5, COLLIDE_OWNER = 1<<6, COLLIDE_CONT = 1<<7, COLLIDE_STICK = 1<<8,
+	COLLIDE_GEOM = IMPACT_GEOM|BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER, HIT_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER|RADIAL_PLAYER
 };
 
 struct weaptypes
@@ -287,7 +287,7 @@ weaptypes weaptype[WEAP_MAX] =
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
 			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
 			0,		{ 16, 40 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 6, 2 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
+			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK },
 			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,	false,	{ true, false },	true,
 			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 16, 42 },			{ 0, 0 },
 			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 50 },		{ 0, 0 },				5,
@@ -571,10 +571,10 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_MAX };
 
 #define MM_MODE 0xF
 #define MM_AUTOAPPROVE 0x1000
-#define MM_FREESERV (MM_AUTOAPPROVE | MM_MODE)
-#define MM_VETOSERV ((1<<MM_OPEN) | (1<<MM_VETO))
-#define MM_COOPSERV (MM_AUTOAPPROVE | MM_VETOSERV | (1<<MM_LOCKED))
-#define MM_OPENSERV (MM_AUTOAPPROVE | (1<<MM_OPEN))
+#define MM_FREESERV (MM_AUTOAPPROVE|MM_MODE)
+#define MM_VETOSERV ((1<<MM_OPEN)|(1<<MM_VETO))
+#define MM_COOPSERV (MM_AUTOAPPROVE|MM_VETOSERV|(1<<MM_LOCKED))
+#define MM_OPENSERV (MM_AUTOAPPROVE|(1<<MM_OPEN))
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD };
 enum { CAMERA_NONE = 0, CAMERA_PLAYER, CAMERA_FOLLOW, CAMERA_ENTITY, CAMERA_MAX };
@@ -771,7 +771,8 @@ struct gamestate
 	{
 		health = heal;
 		weapreset(true);
-		if(!isweap(sweap)) sweap = WEAP_MELEE;
+		if(!isweap(sweap)) sweap = WEAP_PISTOL;
+		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = weaptype[WEAP_MELEE].max;
 		ammo[sweap] = weaptype[sweap].reloads ? weaptype[sweap].add : weaptype[sweap].max;
 		if(arena)
 		{
@@ -785,7 +786,6 @@ struct gamestate
 			arenaweap = -1;
 			lastweap = weapselect = sweap;
 		}
-		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = weaptype[WEAP_MELEE].max;
 		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = weaptype[WEAP_GRENADE].max;
 	}
 

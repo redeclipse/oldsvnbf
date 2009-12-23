@@ -137,7 +137,7 @@ namespace physics
 			case ENT_PROJ:
 			{
 				projent *p = (projent *)e;
-				if(p->hit == d || !(p->projcollide&COLLIDE_PLAYER)) return false;
+				if(p->hit == d || !(p->projcollide&HIT_PLAYER)) return false;
 				if(p->owner == d && (!(p->projcollide&COLLIDE_OWNER) || (esc && !p->escaped))) return false;
 				projectile = true;
 				break;
