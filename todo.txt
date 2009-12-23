@@ -15,7 +15,7 @@
 * Port NEWUI code
 
 = Models =
-* New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso)
+* New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso, tag_hat)
 * Zombie/Turret/Pyro/Heavy models
 
 = Art =
