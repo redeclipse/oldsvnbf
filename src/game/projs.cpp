@@ -110,7 +110,7 @@ namespace projs
 		return false;
 	}
 
-	void radialeffect(gameent *d, projent &proj, bool explode, int radius)
+	void radialeffect(gameent *d, projent &proj, bool explode, float radius)
 	{
 		float maxdist = proj.weap != WEAP_MELEE && explode ? radius*wavepusharea : radius, dist = 1e16f;
 		if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)))
@@ -392,7 +392,6 @@ namespace projs
 		proj.id = id ? id : lastmillis;
         proj.weap = weap;
         proj.flags = flags;
-		proj.lastradial = lastmillis;
 		proj.movement = 0;
 		proj.owner = d;
 		if(!proj.waittime) init(proj, false);
@@ -521,27 +520,6 @@ namespace projs
 		{
 			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, weaptype[weap].time[flags&HIT_ALT ? 1 : 0], millis, speed, 0, weap, flags);
 			millis += delay;
-		}
-	}
-
-	void radiate(projent &proj, int radius)
-	{
-		gameent *d = proj.hit && (proj.hit->type == ENT_PLAYER || proj.hit->type == ENT_AI) ? (gameent *)proj.hit : NULL;
-		if((!proj.lastradial || d || (lastmillis-proj.lastradial >= 100)) && radius > 0)
-		{ // for the flamer this results in at most 50 damage per second
-			if(!d)
-			{
-				bool radiated = false;
-				loopi(game::numdynents())
-				{
-					gameent *f = (gameent *)game::iterdynents(i);
-					if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
-					radialeffect(f, proj, false, radius);
-					radiated = true;
-				}
-				if(radiated) proj.lastradial = lastmillis;
-			}
-			else if(d->state == CS_ALIVE && physics::issolid(d, &proj, false)) radialeffect(d, proj, false, radius);
 		}
 	}
 
@@ -1115,30 +1093,44 @@ namespace projs
 			else proj.state = CS_DEAD;
 			if(proj.local && proj.projtype == PRJ_SHOT)
 			{
-				int radius = 0;
+				float radius = 0;
 				if(proj.state == CS_DEAD)
 				{
-					if(!proj.limited && weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
+					if(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
 					{
+						if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
 						radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
-						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(int(radius*proj.radius), 1);
-						loopi(game::numdynents())
+						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(radius*proj.radius, 1.f);
+						if(!proj.limited && radius > 0)
 						{
-							gameent *f = (gameent *)game::iterdynents(i);
-							if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
-							radialeffect(f, proj, true, radius);
+							loopj(game::numdynents())
+							{
+								gameent *f = (gameent *)game::iterdynents(j);
+								if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
+								radialeffect(f, proj, true, radius);
+							}
 						}
 					}
 				}
 				else if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0])
 				{
-					radius = int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-					if(!proj.limited) radiate(proj, radius);
+					if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
+					radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius;
+					if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 100))
+					{
+						loopj(game::numdynents())
+						{
+							gameent *f = (gameent *)game::iterdynents(j);
+							if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
+							radialeffect(f, proj, false, radius);
+							proj.lastradial = lastmillis;
+						}
+					}
 				}
 				if(!hits.empty())
 				{
 					client::addmsg(SV_DESTROY, "ri6iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id,
-							radius, hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+							int(radius), hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
 				}
 			}
 			if(proj.state == CS_DEAD)
