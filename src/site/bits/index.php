@@ -1,4 +1,5 @@
 <?php
+	$app['theme'] = "festive";
 	$app['sitename'] = "Blood Frontier";
 	$app['siteblurb'] = "It's Bloody Fun!";
 	$app['siterelver'] = "v0.85 (Beta 2)";
@@ -19,7 +20,13 @@
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
-	$app['sitemiddle'] = "/bits/middle.png";
+	if ($app['theme'] != "default") {
+		$app['sitebg'] = "/bits/bg_". $app['theme'] .".jpg";
+		$app['sitemiddle'] = "/bits/middle_". $app['theme'] .".png";
+	} else {
+		$app['sitemiddle'] = "/bits/bg_01.jpg";
+		$app['sitemiddle'] = "/bits/middle.png";
+	}
 	$app['siterightname'] = "Built on Cube Engine 2";
 	$app['siterighturl'] = "http://www.cubeengine.com/";
 	$app['siterightlogo'] = "/bits/logo_c2.png";
@@ -104,7 +111,7 @@
 		<object><noscript><p><img src="http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
 <?php } ?>
 	</head>
-	<body>
+	<body style="background-image: url(<?php echo $app['sitebg']; ?>)">
 		<div id="container">
 			<div id="header">
 				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" title="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
