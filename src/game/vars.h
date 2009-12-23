@@ -47,6 +47,7 @@ VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
 VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
+FVARG(itemthreshold, 0, 2, 1000); // if numspawned < numclients*this, spawn one of this type
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
