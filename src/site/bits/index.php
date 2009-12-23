@@ -11,13 +11,14 @@
 	);
 	$app['sitenotice'] = array(
 		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for Windows, Linux/BSD, Mac OSX, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge. If you\'re an Ubuntu user, you might like to use the <a href="/playdeb">easy-to-install package available on PlayDeb.net</a>.',
-		'about' => 'The game is a single-player and multi-player first-person shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
+		'about' => 'The game is a single-player and multi-player first-person ego-shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of tactics and low gravity. For more information, please see our <a href="/wiki">Wiki</a>.',
 		'outro' => 'In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.'
 	);
 	$app['siteinfo'] = "In the distant future, humanity has spread throughout the universe, to ends of the galaxy and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitepaypal'] = "212900";
 	$app['sitedonate'] = "Blood Frontier is developed by volunteers, and you get it free of charge; your donations go toward ongoing costs which keep this project alive.";
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
+	$app['sitescreen'] = "/bits/main_bloodfrontier.jpg";
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
 	if ($app['theme'] != "default") {
@@ -149,6 +150,7 @@
 					</div>
 					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
+				<div id="screen"><a href="/gallery"><img align="center" alt="Screenshot Gallery" src="<?php echo $app['sitescreen']; ?>" /></a></div>
 				<div id="video">
 					<div id="subtext" align="center">
 						<h2><?php echo $app['sitename']; ?></h2>
