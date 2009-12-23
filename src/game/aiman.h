@@ -233,13 +233,12 @@ namespace aiman
 						}
 						if(highest >= 0)
 						{
-							int bots = balance-people, offb = 0;
-							loopi(TEAM_NUM) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
+							int bots = balance-people;
+							loopi(numt) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
 							{
 								if(bots > 0) bots--;
-								else offb++;
+								else balance++;
 							}
-							balance += offb;
 						}
 					}
 					else balance = max(people*numt, numt); // humans vs. bots, just directly balance
