@@ -2154,7 +2154,7 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-		if((realflags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[realflags&HIT_ALT ? 1 : 0])) && (realflags&HIT_FULL))
+		if((realflags&HIT_WAVE || (isweap(weap) && !WPB(int, weap, explode, realflags&HIT_ALT))) && (realflags&HIT_FULL))
 			realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
@@ -2328,10 +2328,10 @@ namespace server
 
 	int calcdamage(int weap, int &flags, int radial, float size, float dist)
 	{
-		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0];
+		int damage = WPB(int, weap, damage, flags&HIT_ALT);
 		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
 		if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
+		else if((flags&HIT_FULL) && !WPB(int, weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
 		if(hithurts(flags))
 		{
 			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GVAR(damagescale));
@@ -2385,24 +2385,24 @@ namespace server
 		{
 			if(!gs.canshoot(weap, flags, m_weapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
-				if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weaptype[weap].max)
-					ci->state.ammo[weap] = max(ci->state.ammo[weap]-weaptype[weap].sub[flags&HIT_ALT ? 1 : 0], 0);
+				if(WPB(int, weap, sub, flags&HIT_ALT) && WPA(int, weap, max))
+					ci->state.ammo[weap] = max(ci->state.ammo[weap]-WPB(int, weap, sub, flags&HIT_ALT), 0);
 				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
 				return;
 			}
 			else if(gs.weapload[weap] > 0)
 			{
-				takeammo(ci, weap, gs.weapload[weap]+weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
+				takeammo(ci, weap, gs.weapload[weap]+WPB(int, weap, sub, flags&HIT_ALT));
 				gs.weapload[weap] = -gs.weapload[weap];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
 			else return;
 		}
-		else takeammo(ci, weap, weaptype[weap].sub[flags&HIT_ALT ? 1 : 0]);
-		gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[flags&HIT_ALT ? 1 : 0], millis);
+		else takeammo(ci, weap, WPB(int, weap, sub, flags&HIT_ALT));
+		gs.setweapstate(weap, WEAP_S_SHOOT, WPB(int, weap, adelay, flags&HIT_ALT), millis);
 		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum, weap, flags, power, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
-		gs.weapshot[weap] = weaptype[weap].sub[flags&HIT_ALT ? 1 : 0];
-		gs.shotdamage += weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]*shots.length();
+		gs.weapshot[weap] = WPB(int, weap, sub, flags&HIT_ALT);
+		gs.shotdamage += WPB(int, weap, damage, flags&HIT_ALT)*shots.length();
 		loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
 	}
 
@@ -2459,7 +2459,7 @@ namespace server
 				nweap = gs.bestweap(sweap, true);
 				gs.weapswitch(nweap, millis);
 			}
-			else gs.setweapstate(weap, WEAP_S_SHOOT, weaptype[weap].adelay[0], millis);
+			else gs.setweapstate(weap, WEAP_S_SHOOT, WPB(int, weap, adelay, false), millis);
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
@@ -2492,9 +2492,9 @@ namespace server
 			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
-		gs.setweapstate(weap, WEAP_S_RELOAD, weaptype[weap].rdelay, millis);
+		gs.setweapstate(weap, WEAP_S_RELOAD, WPA(int, weap, rdelay), millis);
 		int oldammo = gs.ammo[weap];
-		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + weaptype[weap].add, weaptype[weap].max);
+		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + WPA(int, weap, add), WPA(int, weap, max));
 		gs.weapload[weap] = gs.ammo[weap]-oldammo;
 		sendf(-1, 1, "ri5x", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap], ci->clientnum);
 	}
@@ -2766,7 +2766,7 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{
-				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0) continue;
+				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
 				if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
 				int delay = m_delay(gamemode, mutators);
 				if(ci->state.aitype >= AI_START)

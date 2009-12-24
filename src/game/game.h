@@ -214,124 +214,175 @@ enum
 	COLLIDE_GEOM = IMPACT_GEOM|BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER, HIT_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER|RADIAL_PLAYER
 };
 
+#define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh) \
+	VARG(name##add, 0, w0, INT_MAX-1);			VARG(name##max, 0, w1, INT_MAX-1); \
+	VARG(name##sub1, 0, w2, INT_MAX-1);			VARG(name##sub2, 0, w3, INT_MAX-1); \
+	VARG(name##adelay1, 0, w4, INT_MAX-1);		VARG(name##adelay2, 0, w5, INT_MAX-1);		VARG(name##rdelay, 0, w6, INT_MAX-1); \
+	VARG(name##damage1, 0, w7, INT_MAX-1);		VARG(name##damage2, 0, w8, INT_MAX-1); \
+	VARG(name##speed1, 0, w9, INT_MAX-1);		VARG(name##speed2, 0, wa, INT_MAX-1); \
+	VARG(name##power, 0, wb, INT_MAX-1); \
+	VARG(name##time1, 0, wc, INT_MAX-1);		VARG(name##time2, 0, wd, INT_MAX-1); \
+	VARG(name##pdelay, 0, we, INT_MAX-1); \
+	VARG(name##explode1, 0, wf, INT_MAX-1);		VARG(name##explode2, 0, wg, INT_MAX-1); \
+	VARG(name##rays1, 0, wh, INT_MAX-1);		VARG(name##rays2, 0, wi, INT_MAX-1); \
+	VARG(name##spread1, 0, wj, INT_MAX-1);		VARG(name##spread2, 0, wk, INT_MAX-1); \
+	VARG(name##zdiv1, 0, wl, INT_MAX-1);		VARG(name##zdiv2, 0, wm, INT_MAX-1); \
+	VARG(name##aiskew1, 0, wn, INT_MAX-1);		VARG(name##aiskew2, 0, wo, INT_MAX-1); \
+	VARG(name##collide1, 0, wp, INT_MAX-1);		VARG(name##collide2, 0, wq, INT_MAX-1); \
+	VARG(name##taper1, 0, x0, 1);				VARG(name##taper2, 0, x1, 1); \
+	VARG(name##extinguish1, 0, x2, 1);			VARG(name##extinguish2, 0, x3, 1); \
+	VARG(name##radial1, 0, x4, 1);				VARG(name##radial2, 0, x5, 1); \
+	VARG(name##burns1, 0, x6, 1);				VARG(name##burns2, 0, x7, 1); \
+	VARG(name##reloads, 0, x8, 1);				VARG(name##zooms, 0, x9, 1); \
+	VARG(name##fullauto1, 0, xa, 1);			VARG(name##fullauto2, 0, xb, 1); \
+	FVARG(name##elasticity1, 0, y0, 1);			FVARG(name##elasticity2, 0, y1, 1); \
+	FVARG(name##reflectivity1, 0, y2, 360);		FVARG(name##reflectivity2, 0, y3, 360); \
+	FVARG(name##relativity1, 0, y4, 10000);		FVARG(name##relativity2, 0, y5, 10000); \
+	FVARG(name##waterfric1, 0, y6, 10000);		FVARG(name##waterfric2, 0, y7, 10000); \
+	FVARG(name##weight1, -10000, y8, 10000);	FVARG(name##weight2, -10000, y9, 10000); \
+	FVARG(name##radius1, -10000, ya, 10000);	FVARG(name##radius2, -10000, yb, 10000); \
+	FVARG(name##kickpush1, -10000, yc, 10000);	FVARG(name##kickpush2, -10000, yd, 10000); \
+	FVARG(name##hitpush1, -10000, ye, 10000);	FVARG(name##hitpush2, -10000, yf, 10000); \
+	FVARG(name##maxdist1, 0, yg, 10000);		FVARG(name##maxdist2, 0, yh, 10000);
+
+WEAPON(melee,
+	1, 1, 0, 0, 300, 300, 0, 50, 25, 150, 150, 0, 100, 100, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+	IMPACT_PLAYER, IMPACT_PLAYER,
+	1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+	0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 6, 6, 2, 4, 100, 500, 25, 25
+);
+WEAPON(pistol,
+	10, 10, 1, 1, 100, 200, 1000, 35, 35, 3000, 3000, 0, 2000, 2000, 0, 0, 0, 1, 1, 1, 1, 1, 1, 16, 16,
+	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+	0, 0, 0, 0, 0.05f, 0.05f, 2, 2, 0, 0, 1, 1, 2, 2, 150, 150, 300, 300
+);
+WEAPON(shotgun,
+	1, 8, 1, 2, 500, 750, 1000, 20, 16, 2500, 2000, 0, 300, 100, 0, 0, 0, 20, 40, 25, 20, 1, 2, 2, 2,
+	BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	0.5f, 0.35f, 50, 50, 0.05f, 0.05f, 2, 2, 25, 25, 1, 1, 15, 15, 20, 40, 150, 300
+);
+WEAPON(smg,
+	40, 40, 1, 5, 75, 300, 1500, 30, 20, 2000, 2000, 0, 500, 500, 0, 0, 0, 1, 5, 5, 5, 4, 2, 4, 4,
+	BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1,
+	0.75f, 0.5f, 30, 30, 0.05f, 0.05f, 2, 2, 0, 0, 1, 1, 0.5f, 3, 100, 120, 300, 400
+);
+WEAPON(flamer,
+	50, 50, 1, 5, 100, 750, 2000, 8, 4, 150, 200, 0, 400, 600, 0, 20, 24, 1, 5, 40, 20, 0, 0, 1, 2,
+	BOUNCE_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
+	0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+	0.15f, 0, 45, 0, 0.95f, 0.5f, 1, 1, -300, 50, 1, 1, 0.25f, 1, 20, 40, 40, 80
+);
+WEAPON(plasma,
+	20, 20, 1, 20, 500, 2000, 3000, 25, 25, 1500, 35, 0, 750, 5000, 0, 16, 40, 1, 1, 5, 5, 0, 0, 6, 2,
+	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
+	1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0,
+	0, 0, 0, 0, 0.125f, 0.175f, 1, 1, 0, 0, 1, 1, 3, 6, 50, 200, 200, 50
+);
+WEAPON(rifle,
+	5, 5, 1, 1, 750, 750, 2000, 50, 125, 5000, 50000, 0, 5000, 5000, 0, 16, 0, 1, 1, 1, 0, 0, 0, 2, 1,
+	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
+	0, 0, 0, 0, 1, 0, 2, 2, 0, 0, 1, 1, 5, 0, 100, 200, 600, 0
+);
+WEAPON(grenade,
+	1, 2, 1, 1, 1500, 1500, 6000, 300, 300, 250, 250, 3000, 3000, 3000, 100, 60, 60, 1, 1, 0, 0, 0, 0, 1, 1,
+	BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
+	0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+	0.5f, 0, 0, 0, 1, 1, 2, 2, 64, 64, 1, 1, 5, 5, 1000, 1000, 400, 400
+);
+WEAPON(insta,
+	5, 5, 1, 1, 750, 750, 2000, 100, 100, 10000, 50000, 0, 5000, 5000, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1,
+	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
+	0, 0, 0, 0, 1, 0, 2, 2, 0, 0, 1, 1, 5, 0, 100, 200, 0, 0
+);
+WEAPON(gibs,
+	2, 2, 1, 1, 500, 500, 500, 25, 25, 250, 250, 0, 1500, 1500, 100, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1,
+	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	0.35f, 0.35f, 0, 0, 1, 1, 2, 2, 35, 35, 2, 2, 5, 5, 100, 100, 200, 200
+);
+
 struct weaptypes
 {
-	int	info, 				anim,				colour,			sound, 		esound, 	fsound,		rsound,
-			add,	max,	sub[2],		adelay[2],		rdelay,	damage[2],		speed[2],			power,		time[2],
-			delay,	explode[2],	rays[2],		spread[2],		zdiv[2],		aiskew[2],
-			collide[2];
-	bool	taper[2],			extinguish[2],		radial[2],			burns[2],		follows[2],			reloads,	zooms,	fullauto[2],		muzzle;
-	float	elasticity[2],		reflectivity[2],	relativity[2],			waterfric[2],	weight[2],		partsize[2],		partlen[2],
-			radius[2],		kickpush[2],		hitpush[2],			maxdist[2],			thrown[2],				halo;
-	const char
-			*name, 		*text,	*item,						*vwep,						*proj;
+	int	info, 				anim,				colour,			sound, 		esound, 	fsound,		rsound;
+	bool	follows[2],			muzzle;
+	float	partsize[2],		partlen[2],		thrown[2],				halo;
+	const char *name, 		*text,	*item,						*vwep,						*proj;
 };
 #ifdef GAMESERVER
-weaptypes weaptype[WEAP_MAX] =
+weaptypes weaptype[] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			1,		1,		{ 0, 0 },	{ 300, 300, },	0,		{ 50, 25 },		{ 150, 150 },	0,				{ 100, 100 },
-			1,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 0, 0 },
-			{ IMPACT_PLAYER, IMPACT_PLAYER },
-			{ true, true },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	false,		false,	{ true, true },		false,
-			{ 0, 0 },			{ 0, 0 },			{ 1, 1 },				{ 0, 0 },		{ 0, 0 },		{ 0.75f, 0.75f },	{ 0, 0 },
-			{ 6, 6 },		{ 2, 4 },			{ 100, 500 },		{ 25, 25 },			{ 0, 0 },				1,
-			"melee",	"\fd",	"",							"",							""
+			{ false, false },	false,
+			{ 0.75f, 0.75f },	{ 0, 0 },		{ 0, 0 },				1,
+			"melee",		"\fd",	"",							"",							""
 	},
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			10,		10,		{ 1, 1 },	{ 100, 200, },	1000,	{ 35, 35 },		{ 3000, 3000 },		0,			{ 2000, 2000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 1, 1 },		{ 1, 1 },		{ 16, 16 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, true },	true,
-			{ 0, 0 },			{ 0, 0 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 10, 10 },
-			{ 1, 1 },		{ 2, 2 },			{ 150, 150 },		{ 300, 300 },		{ 0, 0 },				4,
-			"pistol",	"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
+			{ true, true },		true,
+			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,
+			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			1,		8,		{ 1, 2 },	{ 500, 750 },	1000,	{ 20, 16 },		{ 2500, 2000 },		0,			{ 300, 100 },
-			0,		{ 0, 0 },	{ 20, 40 },		{ 25, 20 },		{ 1, 2 },		{ 2, 2 },
-			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	true,
-			{ 0.5f, 0.35f },		{ 50, 50 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 25, 25 },		{ 0.75f, 0.75f },{ 50, 50 },
-			{ 1, 1 },		{ 15, 15 },			{ 20, 40 },			{ 150, 300 },			{ 0, 0 },			6,
-			"shotgun",	"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
+			{ true, true },		true,
+			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },			6,
+			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			40,		40,		{ 1, 5 },	{ 75, 300 },	1500,	{ 30, 20 },		{ 2000, 2000 },		0,			{ 500, 500 },
-			0,		{ 0, 0 },	{ 1, 5 },		{ 5, 5 },		{ 4, 2 },		{ 4, 4 },
-			{ BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ true, true },		true,
-			{ 0.75f, 0.5f },	{ 30, 30 },			{ 0.05f, 0.05f },		{ 2, 2 },		{ 0, 0 },		{ 0.5f, 0.5f },		{ 40, 40 },
-			{ 1, 1 },		{ 0.5f, 3 },		{ 100, 120 },		{ 300, 400 },		{ 0, 0 },				5,
-			"smg",		"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
+			{ true, true },		true,
+			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,
+			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			50,		50,		{ 1, 5 },	{ 100, 750 }, 	2000,	{ 8, 4 },		{ 150, 200 },		0,			{ 400, 600 },
-			0,		{ 20, 24 },	{ 1, 5 },		{ 40, 20 },		{ 0, 0 },		{ 1, 2 },
-			{ BOUNCE_GEOM|IMPACT_PLAYER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
-			{ false, false },	{ true, true },		{ true, true },		{ true, true, },	{ true, true },		true,	false,	{ true, true },		true,
-			{ 0.15f, 0 },		{ 45, 0 },			{ 0.95f, 0.5f },	{ 1, 1 },		{ -300, 50 },		{ 22, 26 },			{ 0, 0 },
-			{ 1, 1 },		{ 0.25f, 1 },		{ 20, 40 },			{ 40, 80 },			{ 0, 0 },				7,
-			"flamer",	"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
+			{ true, true },		true,
+			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				7,
+			"flamer",		"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			20,		20,		{ 1, 20 },	{ 500, 2000 },	3000,	{ 25, 25 },		{ 1500,	35 },		0,			{ 750, 5000 },
-			0,		{ 16, 40 },	{ 1, 1 },		{ 5, 5 },		{ 0, 0 },		{ 6, 2 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK },
-			{ true, true },		{ true, false },	{ true, true },		{ false, false, },	{ true, true },		true,	false,	{ true, false },	true,
-			{ 0, 0 },			{ 0, 0 },			{ 0.125f, 0.175f },			{ 1, 1 },		{ 0, 0 },	{ 16, 42 },			{ 0, 0 },
-			{ 1, 1 },		{ 3, 6 },			{ 50, 200 },		{ 200, 50 },		{ 0, 0 },				5,
-			"plasma",	"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
+			{ true, true },		true,
+			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				5,
+			"plasma",		"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 750 },	2000,	{ 50, 125 },	{ 5000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 16, 0 },	{ 1, 1 },		{ 1, 0 },		{ 0, 0 },		{ 2, 1 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	true,
-			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },			{ 600, 0 },			{ 0, 0 },				7,
-			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
+			{ false, false },	true,
+			{ 0.65f, 1.5f },	{ 1024, 4096 },	{ 0, 0 },				7,
+			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
-			1,		2,		{ 1, 1 },	{ 1500, 1500 },	6000,	{ 300, 300 },	{ 250, 250 },			3000,	{ 3000, 3000 },
-			100,	{ 60, 60 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
-			{ BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|COLLIDE_OWNER|COLLIDE_STICK },
-			{ false, false },	{ false, false },	{ false, false },	{ true, true, },	{ true, true },		false,	false,	{ false, false },	false,
-			{ 0.5f, 0 },		{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 64, 64 },		{ 2, 2 },			{ 0, 0 },
-			{ 1, 1 },		{ 5, 5 },		{ 1000, 1000 },		{ 400, 400 },			{ 0.0625f, 0.0625f },	3,
-			"grenade",	"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
+			{ true, true },		false,
+			{ 2, 2 },			{ 0, 0 },		{ 0.0625f, 0.0625f },	3,
+			"grenade",		"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			5,		5,		{ 1, 1 },	{ 750, 750 },	2000,	{ 100, 100 },	{ 10000, 50000 },		0,		{ 5000, 5000 },
-			0,		{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ false, false },	true,	true,	{ false, false },	true,
-			{ 0, 0 },			{ 0, 0 },			{ 1, 0 },				{ 2, 2 },		{ 0, 0 },		{ 0.65f, 1.5f },	{ 1024, 4096 },
-			{ 1, 1 },		{ 5, 0 },		{ 100, 200 },		{ 0, 0 },				{ 0, 0 },				7,
-			"rifle",	"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
+			{ false, false },	true,
+			{ 0.65f, 1.5f },	{ 1024, 4096 },	{ 0, 0 },				7,
+			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
-			2,		2,		{ 1, 1 },	{ 500, 500 },	500,	{ 25, 25 },		{ 250, 250 },			0,		{ 1500, 1500 },
-			100,	{ 0, 0 },	{ 1, 1 },		{ 0, 0 },		{ 0, 0 },		{ 1, 1 },
-			{ IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER, IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER },
-			{ false, false },	{ false, false },	{ false, false },	{ false, false, },	{ true, true },		true,	false,	{ false, false },	false,
-			{ 0.35f, 0.35f },	{ 0, 0 },			{ 1, 1 },				{ 2, 2 },		{ 35, 35 },		{ 2, 2 },			{ 0, 0 },
-			{ 2, 2 },		{ 5, 5 },		{ 100, 100 },		{ 200, 200 },			{ 0.125f, 0.125f },		4,
-			"gibs",		"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
+			{ true, true },		false,
+			{ 2, 2 },			{ 0, 0 },		{ 0.125f, 0.125f },		4,
+			"gibs",			"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
 	},
 };
+#define WPA(proto,weapattr,name)		((const proto []){sv_melee##name, sv_pistol##name, sv_shotgun##name, sv_smg##name, sv_flamer##name, sv_plasma##name, sv_rifle##name, sv_grenade##name, sv_insta##name, sv_gibs##name}[weapattr])
+#define WPB(proto,weapattr,name,second)	((const proto [][2]){{sv_melee##name##1,sv_melee##name##2}, {sv_pistol##name##1,sv_pistol##name##2}, {sv_shotgun##name##1,sv_shotgun##name##2}, {sv_smg##name##1,sv_smg##name##2}, {sv_flamer##name##1,sv_flamer##name##2}, {sv_plasma##name##1,sv_plasma##name##2}, {sv_rifle##name##1,sv_rifle##name##2}, {sv_grenade##name##1,sv_grenade##name##2}, {sv_insta##name##1,sv_insta##name##2}, {sv_gibs##name##1,sv_gibs##name##2}}[weapattr][second?1:0])
 #else
 extern weaptypes weaptype[];
+#define WPA(proto,weapattr,name)		((const proto []){melee##name, pistol##name, shotgun##name, smg##name, flamer##name, plasma##name, rifle##name, grenade##name, insta##name, gibs##name}[weapattr])
+#define WPB(proto,weapattr,name,second)	((const proto [][2]){{melee##name##1,melee##name##2}, {pistol##name##1,pistol##name##2}, {shotgun##name##1,shotgun##name##2}, {smg##name##1,smg##name##2}, {flamer##name##1,flamer##name##2}, {plasma##name##1,plasma##name##2}, {rifle##name##1,rifle##name##2}, {grenade##name##1,grenade##name##2}, {insta##name##1,insta##name##2}, {gibs##name##1,gibs##name##2}}[weapattr][second?1:0])
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
@@ -344,7 +395,7 @@ enum
 };
 
 #define hithurts(x) 	(x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
-#define doesburn(x,y)	(isweap(x) && weaptype[x].burns[y&HIT_ALT ? 1 : 0] && y&HIT_FULL)
+#define doesburn(x,y)	(isweap(x) && WPB(int, x, burns, y&HIT_ALT) && y&HIT_FULL)
 enum
 {
 	FRAG_NONE = 0, FRAG_HEADSHOT = 1<<1, FRAG_OBLITERATE = 1<<2,
@@ -425,9 +476,9 @@ extern gametypes gametype[], mutstype[];
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? (m_arena(a,b) ? 2 : 3) : (m_trial(a) ? 3 : 1)))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
-#define w_reload(a,b)		(a != WEAP_MELEE && (a == (isweap(b) ? b : WEAP_PISTOL) || weaptype[a].reloads))
-#define w_carry(a,b)		(a != WEAP_MELEE && a != (isweap(b) ? b : WEAP_PISTOL) && weaptype[a].reloads)
-#define w_attr(g,a,b)		(m_edit(g) || (a >= WEAP_OFFSET && a != (isweap(b) ? b : WEAP_PISTOL)) ? a : WEAP_GRENADE)
+#define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WPA(int, w1, reloads))))
+#define w_carry(w1,w2)		(w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WPA(int, w1, reloads)))
+#define w_attr(a,w1,w2)		(m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
 
 // network messages codes, c2s, c2c, s2c
 enum
@@ -607,7 +658,7 @@ struct gamestate
 				case 1: if(w_carry(weap, sweap)) return true; break; // only carriable
 				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
 				case 3: if(ammo[weap] > 0 && w_reload(weap, sweap)) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : weaptype[weap].max)) return true; break; // only reloadable or those with < max
+				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : WPA(int, weap, max))) return true; break; // only reloadable or those with < max
 				case 5: if(w_carry(weap, sweap) || (!w_reload(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
 			}
 		}
@@ -678,9 +729,9 @@ struct gamestate
 	int skipwait(int weap, int flags, int millis, int skip, bool override = false)
 	{
 		int skipstate = skip;
-		if(weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
+		if(WPB(int, weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
 		{
-			if(!override && ammo[weap]-weapload[weap] < weaptype[weap].sub[flags&HIT_ALT ? 1 : 0])
+			if(!override && ammo[weap]-weapload[weap] < WPB(int, weap, sub, flags&HIT_ALT))
 				skipstate &= ~(1<<WEAP_S_RELOAD);
 		}
 		return skipstate;
@@ -695,14 +746,14 @@ struct gamestate
 
 	bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] >= weaptype[weap].sub[flags&HIT_ALT ? 1 : 0] && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+		if(hasweap(weap, sweap) && ammo[weap] >= WPB(int, weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
 			return true;
 		return false;
 	}
 
 	bool canreload(int weap, int sweap, int millis)
 	{
-		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < weaptype[weap].max && weapwaited(weap, millis))
+		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < WPA(int, weap, max) && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
@@ -734,7 +785,7 @@ struct gamestate
 			{
 				int prev = ammo[attr];
 				weapswitch(attr, millis, hasweap(attr, sweap) ? (weapselect != attr ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
-				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+weaptype[attr].add, 1, weaptype[attr].max);
+				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WPA(int, attr, add), 1, WPA(int, attr, max));
 				weapload[attr] = ammo[attr]-prev;
 				entid[attr] = id;
 				break;
@@ -767,13 +818,13 @@ struct gamestate
 		health = heal;
 		weapreset(true);
 		if(!isweap(sweap)) sweap = WEAP_PISTOL;
-		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = weaptype[WEAP_MELEE].max;
-		ammo[sweap] = weaptype[sweap].reloads ? weaptype[sweap].add : weaptype[sweap].max;
+		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WPA(int, WEAP_MELEE, max);
+		ammo[sweap] = WPA(int, sweap, reloads) ? WPA(int, sweap, add) : WPA(int, sweap, max);
 		if(arena)
 		{
 			int aweap = arenaweap;
 			while(aweap < WEAP_OFFSET || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
-			ammo[aweap] = weaptype[aweap].reloads ? weaptype[aweap].add : weaptype[aweap].max;
+			ammo[aweap] = WPA(int, aweap, reloads) ? WPA(int, aweap, add) : WPA(int, aweap, max);
 			lastweap = weapselect = aweap;
 		}
 		else
@@ -781,7 +832,7 @@ struct gamestate
 			arenaweap = -1;
 			lastweap = weapselect = sweap;
 		}
-		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = weaptype[WEAP_GRENADE].max;
+		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WPA(int, WEAP_GRENADE, max);
 	}
 
 	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
@@ -1318,8 +1369,8 @@ namespace entities
 				case ENT_PROJ:
 				{
 					projent *p = (projent *)ob.ent;
-					if(p->projtype == PRJ_SHOT && weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0])
-						ob.above = p->o.z+(weaptype[p->weap].explode[p->flags&HIT_ALT ? 1 : 0]*p->lifesize)+1.f;
+					if(p->projtype == PRJ_SHOT && WPB(int, p->weap, explode, p->flags&HIT_ALT))
+						ob.above = p->o.z+(WPB(int, p->weap, explode, p->flags&HIT_ALT)*p->lifesize)+1.f;
 					break;
 				}
 			}

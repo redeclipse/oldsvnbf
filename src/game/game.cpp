@@ -177,7 +177,7 @@ namespace game
 
 	bool zoomallow()
 	{
-		if(allowmove(player1) && weaptype[player1->weapselect].zooms) return true;
+		if(allowmove(player1) && WPA(int, player1->weapselect, zooms)) return true;
 		zoomset(false, 0);
 		return false;
 	}
@@ -281,19 +281,18 @@ namespace game
 	{
 		if(m_arena(gamemode, mutators))
 		{
-			int weap = -1;
-			if(*s >= '0' && *s <= '9') weap = atoi(s);
+			if(*s >= '0' && *s <= '9') d->arenaweap = atoi(s);
 			else
 			{
 				loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
 				{
-					weap = i;
+					d->arenaweap = i;
 					break;
 				}
 			}
-			if(weap < WEAP_OFFSET || weap >= WEAP_SUPER || weap == WEAP_GRENADE) weap = WEAP_MELEE;
-			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, weap);
-			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[weap].text, (weap >= WEAP_OFFSET ? weaptype[weap].name : "random weapons"));
+			if(d->arenaweap < WEAP_OFFSET || d->arenaweap >= WEAP_SUPER || d->arenaweap == WEAP_GRENADE) d->arenaweap = WEAP_MELEE;
+			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
+			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[d->arenaweap].text, (d->arenaweap >= WEAP_OFFSET ? weaptype[d->arenaweap].name : "random weapons"));
 		}
 		else conoutft(CON_MESG, "\foweapon selection is only available in arena");
 	}
@@ -659,7 +658,7 @@ namespace game
 			}
 			if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
 			{
-				float force = (float(damage)/float(weaptype[weap].damage[flags&HIT_ALT ? 1 : 0]))*(100.f/d->weight)*weaptype[weap].hitpush[flags&HIT_ALT ? 1 : 0];
+				float force = (float(damage)/float(WPB(int, weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WPB(float, weap, hitpush, flags&HIT_ALT);
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 				else if(d->health <= 0) force *= deadpushscale;
 				else force *= hitpushscale;
@@ -1520,13 +1519,13 @@ namespace game
 				if(d == player1)
 				{
 					int state = d->weapstate[d->weapselect];
-					if(weaptype[d->weapselect].zooms)
+					if(WPA(int, d->weapselect, zooms))
 					{
 						if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
 							state = WEAP_S_IDLE;
 					}
-					if(zooming && (!weaptype[d->weapselect].zooms || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
-					else if(weaptype[d->weapselect].zooms && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+					if(zooming && (!WPA(int, d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
+					else if(WPA(int, d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }
@@ -1905,13 +1904,13 @@ namespace game
 					}
 					case WEAP_S_POWER:
 					{
-						if(weaptype[weap].power) animflags = weaptype[weap].anim+d->weapstate[weap];
+						if(WPA(int, weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WEAP_S_SHOOT:
 					{
-						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(int, weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
@@ -1920,7 +1919,7 @@ namespace game
 					{
 						if(weap != WEAP_MELEE)
 						{
-							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!weaptype[weap].reloads && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(int, weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 								showweap = false;
 							animflags = weaptype[weap].anim+d->weapstate[weap];
 							break;
