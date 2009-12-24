@@ -412,7 +412,7 @@ namespace hud
 					g.poplist();
 				}
 
-				if(showscore() && (showscore() >= 2 || (!m_stf(game::gamemode) && !m_ctf(game::gamemode))))
+				if(showscore() && (showscore() >= 2 || !m_flag(game::gamemode)))
 				{
 					g.pushlist();
 					if(m_trial(game::gamemode))

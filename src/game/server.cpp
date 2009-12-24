@@ -730,7 +730,7 @@ namespace server
 					}
 				}
 			}
-			if(GVAR(fraglimit) && !m_ctf(gamemode) && !m_stf(gamemode) && !m_trial(gamemode))
+			if(GVAR(fraglimit) && !m_flag(gamemode) && !m_trial(gamemode))
 			{
 				if(m_team(gamemode, mutators))
 				{
@@ -1547,16 +1547,28 @@ namespace server
 		return sc;
 	}
 
-	void savescore(clientinfo *ci)
-	{
-		savedscore &sc = findscore(ci, true);
-		if(&sc) sc.save(ci->state);
-	}
-
 	void givepoints(clientinfo *ci, int points)
 	{
 		ci->state.score += points; ci->state.points += points;
 		sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, points, ci->state.points);
+	}
+
+	void savescore(clientinfo *ci, bool distribute = true)
+	{
+		savedscore &sc = findscore(ci, true);
+		if(&sc)
+		{
+			if(distribute && m_team(gamemode, mutators) && !m_flag(gamemode))
+			{
+				int friends = 0;
+				loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team) friends++;
+				int points = int(ci->state.points/float(friends));
+				if(points != 0) loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team)
+					givepoints(clients[i], points);
+				ci->state.points = 0;
+			}
+			sc.save(ci->state);
+		}
 	}
 
 	struct droplist { int weap, ent; };
@@ -2905,7 +2917,7 @@ namespace server
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci, true));
 		    ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
-		    savescore(ci);
+		    savescore(ci, true);
 		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
