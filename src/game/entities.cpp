@@ -192,7 +192,7 @@ namespace entities
 			projent &proj = *projs::projs[i];
 			if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
 			proj.beenused = 2;
-			proj.state = CS_DEAD;
+			proj.lifetime = min(proj.lifetime, 1000);
 		}
 		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
