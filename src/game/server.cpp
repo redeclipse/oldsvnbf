@@ -2639,7 +2639,11 @@ namespace server
 			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 			ci->state.state = CS_WAITING;
 			ci->state.weapreset(false);
-			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
+			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0)
+			{
+				if(ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
+				ci->state.arenaweap = WEAP_MELEE;
+			}
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
@@ -2754,7 +2758,6 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{
-				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
 				if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
 				int delay = m_delay(gamemode, mutators);
 				if(ci->state.aitype >= AI_START)
