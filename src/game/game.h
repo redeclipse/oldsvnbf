@@ -395,38 +395,12 @@ extern weaptypes weaptype[];
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
-WP(int, add);
-WP(int, max);
-WP2(int, sub);
-WP2(int, adelay);
-WP(int, rdelay);
-WP2(int, damage);
-WP2(int, speed);
-WP(int, power);
-WP2(int, time);
-WP(int, pdelay);
-WP2(int, explode);
-WP2(int, rays);
-WP2(int, spread);
-WP2(int, zdiv);
-WP2(int, aiskew);
-WP2(int, collide);
-WP2(int, taper);
-WP2(int, extinguish);
-WP2(int, radial);
-WP2(int, burns);
-WP(int, reloads);
-WP(int, zooms);
-WP2(int, fullauto);
-WP2(float, elasticity);
-WP2(float, reflectivity);
-WP2(float, relativity);
-WP2(float, waterfric);
-WP2(float, weight);
-WP2(float, radius);
-WP2(float, kickpush);
-WP2(float, hitpush);
-WP2(float, maxdist);
+
+WP(int, add); WP(int, max); WP2(int, sub); WP2(int, adelay); WP(int, rdelay); WP2(int, damage); WP2(int, speed); WP(int, power);
+WP2(int, time); WP(int, pdelay); WP2(int, explode); WP2(int, rays); WP2(int, spread); WP2(int, zdiv); WP2(int, aiskew); WP2(int, collide);
+WP2(int, taper); WP2(int, extinguish); WP2(int, radial); WP2(int, burns); WP(int, reloads); WP(int, zooms); WP2(int, fullauto);
+WP2(float, elasticity); WP2(float, reflectivity); WP2(float, relativity); WP2(float, waterfric); WP2(float, weight); WP2(float, radius);
+WP2(float, kickpush); WP2(float, hitpush); WP2(float, maxdist);
 
 enum
 {
