@@ -324,6 +324,16 @@ body {
 	width: 180px;
 	display: block;
 }
+/* Lightbox */
+#gallery img {
+	padding: 0px 0px;
+	margin: 1px 8px;
+}
+#gallery img:hover {
+	padding: 0px 0px;
+	margin: 0px 7px;
+	border: 1px solid #870000;
+}
 #jquery-overlay {
 	position: absolute;
 	top: 0;
@@ -436,10 +446,6 @@ body {
 	padding: 0px;
 	width: 678px;
 	}
-#slider img {
-	padding: 0px 8px;
-	margin: 0px;
-}
 	#slider li{
 	/* 
 			define width and height of list item (slide)
