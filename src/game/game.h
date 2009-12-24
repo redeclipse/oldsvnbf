@@ -19,11 +19,7 @@
 #define GVAR(name)			(sv_##name)
 #else
 #define GVAR(name)			(name)
-#ifdef GAMEPHYSICS
-#define FWV(name)			(force##name >= 0 ? force##name : name)
-#else
 #define FWV(name)			(force##name >= 0 ? force##name : physics::name)
-#endif
 #endif
 enum
 {
