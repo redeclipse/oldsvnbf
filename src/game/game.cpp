@@ -1540,6 +1540,7 @@ namespace game
 				if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
             }
             otherplayers();
+            if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->arenaweap < 0 && !menuactive()) showgui("arena");
         }
         else if(!menuactive()) showgui("main");
 
