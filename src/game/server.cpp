@@ -3305,6 +3305,7 @@ namespace server
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					cp->state.arenaweap = aweap;
+					if(ci->state.state==CS_ALIVE) waiting(cp);
 					break;
 				}
 
