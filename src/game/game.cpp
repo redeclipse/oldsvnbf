@@ -177,7 +177,7 @@ namespace game
 
 	bool zoomallow()
 	{
-		if(allowmove(player1) && WPA(int, player1->weapselect, zooms)) return true;
+		if(allowmove(player1) && WPA(player1->weapselect, zooms)) return true;
 		zoomset(false, 0);
 		return false;
 	}
@@ -658,7 +658,7 @@ namespace game
 			}
 			if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
 			{
-				float force = (float(damage)/float(WPB(int, weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WPB(float, weap, hitpush, flags&HIT_ALT);
+				float force = (float(damage)/float(WPB(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WPB(weap, hitpush, flags&HIT_ALT);
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 				else if(d->health <= 0) force *= deadpushscale;
 				else force *= hitpushscale;
@@ -1519,13 +1519,13 @@ namespace game
 				if(d == player1)
 				{
 					int state = d->weapstate[d->weapselect];
-					if(WPA(int, d->weapselect, zooms))
+					if(WPA(d->weapselect, zooms))
 					{
 						if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
 							state = WEAP_S_IDLE;
 					}
-					if(zooming && (!WPA(int, d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
-					else if(WPA(int, d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+					if(zooming && (!WPA(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
+					else if(WPA(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }
@@ -1904,13 +1904,13 @@ namespace game
 					}
 					case WEAP_S_POWER:
 					{
-						if(WPA(int, weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
+						if(WPA(weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WEAP_S_SHOOT:
 					{
-						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(int, weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
@@ -1919,7 +1919,7 @@ namespace game
 					{
 						if(weap != WEAP_MELEE)
 						{
-							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(int, weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 								showweap = false;
 							animflags = weaptype[weap].anim+d->weapstate[weap];
 							break;

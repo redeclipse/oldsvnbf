@@ -1304,9 +1304,9 @@ namespace client
 					}
 					gameent *s = game::getclient(scn);
 					if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
-					s->setweapstate(weap, WEAP_S_SHOOT, WPB(int, weap, adelay, flags&HIT_ALT), lastmillis);
-					s->weapshot[weap] = WPB(int, weap, sub, flags&HIT_ALT);
-					s->totalshots += int(WPB(int, weap, damage, flags&HIT_ALT)*damagescale)*WPB(int, weap, rays, flags&HIT_ALT);
+					s->setweapstate(weap, WEAP_S_SHOOT, WPB(weap, adelay, flags&HIT_ALT), lastmillis);
+					s->weapshot[weap] = WPB(weap, sub, flags&HIT_ALT);
+					s->totalshots += int(WPB(weap, damage, flags&HIT_ALT)*damagescale)*WPB(weap, rays, flags&HIT_ALT);
 					projs::shootv(weap, flags, power, from, locs, s, false);
 					break;
 				}

@@ -377,15 +377,56 @@ weaptypes weaptype[] =
 			"gibs",			"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
 	},
 };
-#define WPA(proto,weapattr,name)		((const proto []){sv_melee##name, sv_pistol##name, sv_shotgun##name, sv_smg##name, sv_flamer##name, sv_plasma##name, sv_rifle##name, sv_grenade##name, sv_insta##name, sv_gibs##name}[weapattr])
-#define WPB(proto,weapattr,name,second)	((const proto [][2]){{sv_melee##name##1,sv_melee##name##2}, {sv_pistol##name##1,sv_pistol##name##2}, {sv_shotgun##name##1,sv_shotgun##name##2}, {sv_smg##name##1,sv_smg##name##2}, {sv_flamer##name##1,sv_flamer##name##2}, {sv_plasma##name##1,sv_plasma##name##2}, {sv_rifle##name##1,sv_rifle##name##2}, {sv_grenade##name##1,sv_grenade##name##2}, {sv_insta##name##1,sv_insta##name##2}, {sv_gibs##name##1,sv_gibs##name##2}}[weapattr][second?1:0])
+#define WP(proto,name)			proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};
+#define WP2(proto,name)			proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2}, {&sv_gibs##name##1,&sv_gibs##name##2}};
+#define WPA(weap,name)			(*sv_weap_stat_##name[weap])
+#define WPB(weap,name,second)	(*sv_weap_stat_##name[weap][second?1:0])
 #else
 extern weaptypes weaptype[];
-#define WPA(proto,weapattr,name)		((const proto []){melee##name, pistol##name, shotgun##name, smg##name, flamer##name, plasma##name, rifle##name, grenade##name, insta##name, gibs##name}[weapattr])
-#define WPB(proto,weapattr,name,second)	((const proto [][2]){{melee##name##1,melee##name##2}, {pistol##name##1,pistol##name##2}, {shotgun##name##1,shotgun##name##2}, {smg##name##1,smg##name##2}, {flamer##name##1,flamer##name##2}, {plasma##name##1,plasma##name##2}, {rifle##name##1,rifle##name##2}, {grenade##name##1,grenade##name##2}, {insta##name##1,insta##name##2}, {gibs##name##1,gibs##name##2}}[weapattr][second?1:0])
+#ifdef GAMEWORLD
+#define WP(proto,name)			proto *weap_stat_##name[] = {&melee##name, &pistol##name, &shotgun##name, &smg##name, &flamer##name, &plasma##name, &rifle##name, &grenade##name, &insta##name, &gibs##name};
+#define WP2(proto,name)			proto *weap_stat_##name[][2] = {{&melee##name##1,&melee##name##2}, {&pistol##name##1,&pistol##name##2}, {&shotgun##name##1,&shotgun##name##2}, {&smg##name##1,&smg##name##2}, {&flamer##name##1,&flamer##name##2}, {&plasma##name##1,&plasma##name##2}, {&rifle##name##1,&rifle##name##2}, {&grenade##name##1,&grenade##name##2}, {&insta##name##1,&insta##name##2}, {&gibs##name##1,&gibs##name##2}};
+#else
+#define WP(proto,name)			extern proto *weap_stat_##name[];
+#define WP2(proto,name)			extern proto *weap_stat_##name[][2];
+#endif
+#define WPA(weap,name)			(*weap_stat_##name[weap])
+#define WPB(weap,name,second)	(*weap_stat_##name[weap][second?1:0])
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
+WP(int, add);
+WP(int, max);
+WP2(int, sub);
+WP2(int, adelay);
+WP(int, rdelay);
+WP2(int, damage);
+WP2(int, speed);
+WP(int, power);
+WP2(int, time);
+WP(int, pdelay);
+WP2(int, explode);
+WP2(int, rays);
+WP2(int, spread);
+WP2(int, zdiv);
+WP2(int, aiskew);
+WP2(int, collide);
+WP2(int, taper);
+WP2(int, extinguish);
+WP2(int, radial);
+WP2(int, burns);
+WP(int, reloads);
+WP(int, zooms);
+WP2(int, fullauto);
+WP2(float, elasticity);
+WP2(float, reflectivity);
+WP2(float, relativity);
+WP2(float, waterfric);
+WP2(float, weight);
+WP2(float, radius);
+WP2(float, kickpush);
+WP2(float, hitpush);
+WP2(float, maxdist);
 
 enum
 {
@@ -395,7 +436,7 @@ enum
 };
 
 #define hithurts(x) 	(x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
-#define doesburn(x,y)	(isweap(x) && WPB(int, x, burns, y&HIT_ALT) && y&HIT_FULL)
+#define doesburn(x,y)	(isweap(x) && WPB(x, burns, y&HIT_ALT) && y&HIT_FULL)
 enum
 {
 	FRAG_NONE = 0, FRAG_HEADSHOT = 1<<1, FRAG_OBLITERATE = 1<<2,
@@ -476,8 +517,8 @@ extern gametypes gametype[], mutstype[];
 #define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? (m_arena(a,b) ? 2 : 3) : (m_trial(a) ? 3 : 1)))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
-#define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WPA(int, w1, reloads))))
-#define w_carry(w1,w2)		(w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WPA(int, w1, reloads)))
+#define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WPA(w1, reloads))))
+#define w_carry(w1,w2)		(w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WPA(w1, reloads)))
 #define w_attr(a,w1,w2)		(m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
 
 // network messages codes, c2s, c2c, s2c
@@ -644,7 +685,7 @@ struct gamestate
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen, lastfire;
 	int aitype, aientity, ownernum, skill, points, cpmillis, cptime;
 
-	gamestate() : arenaweap(-1), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
+	gamestate() : arenaweap(-1), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
 		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), cpmillis(0), cptime(0) {}
 	~gamestate() {}
 
@@ -658,7 +699,7 @@ struct gamestate
 				case 1: if(w_carry(weap, sweap)) return true; break; // only carriable
 				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
 				case 3: if(ammo[weap] > 0 && w_reload(weap, sweap)) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : WPA(int, weap, max))) return true; break; // only reloadable or those with < max
+				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : WPA(weap, max))) return true; break; // only reloadable or those with < max
 				case 5: if(w_carry(weap, sweap) || (!w_reload(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
 			}
 		}
@@ -701,7 +742,7 @@ struct gamestate
 			weapwait[i] = weaplast[i] = weapload[i] = weapshot[i] = 0;
 			if(full) ammo[i] = entid[i] = -1;
 		}
-		if(full) lastweap = weapselect = -1;
+		if(full) { lastweap = -1; weapselect = WEAP_MELEE; }
 	}
 
 	void setweapstate(int weap, int state, int delay, int millis)
@@ -729,9 +770,9 @@ struct gamestate
 	int skipwait(int weap, int flags, int millis, int skip, bool override = false)
 	{
 		int skipstate = skip;
-		if(WPB(int, weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
+		if(WPB(weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
 		{
-			if(!override && ammo[weap]-weapload[weap] < WPB(int, weap, sub, flags&HIT_ALT))
+			if(!override && ammo[weap]-weapload[weap] < WPB(weap, sub, flags&HIT_ALT))
 				skipstate &= ~(1<<WEAP_S_RELOAD);
 		}
 		return skipstate;
@@ -746,14 +787,14 @@ struct gamestate
 
 	bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] >= WPB(int, weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+		if(hasweap(weap, sweap) && ammo[weap] >= WPB(weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
 			return true;
 		return false;
 	}
 
 	bool canreload(int weap, int sweap, int millis)
 	{
-		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < WPA(int, weap, max) && weapwaited(weap, millis))
+		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < WPA(weap, max) && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
@@ -785,7 +826,7 @@ struct gamestate
 			{
 				int prev = ammo[attr];
 				weapswitch(attr, millis, hasweap(attr, sweap) ? (weapselect != attr ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
-				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WPA(int, attr, add), 1, WPA(int, attr, max));
+				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WPA(attr, add), 1, WPA(attr, max));
 				weapload[attr] = ammo[attr]-prev;
 				entid[attr] = id;
 				break;
@@ -818,13 +859,13 @@ struct gamestate
 		health = heal;
 		weapreset(true);
 		if(!isweap(sweap)) sweap = WEAP_PISTOL;
-		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WPA(int, WEAP_MELEE, max);
-		ammo[sweap] = WPA(int, sweap, reloads) ? WPA(int, sweap, add) : WPA(int, sweap, max);
+		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WPA(WEAP_MELEE, max);
+		ammo[sweap] = WPA(sweap, reloads) ? WPA(sweap, add) : WPA(sweap, max);
 		if(arena)
 		{
 			int aweap = arenaweap;
 			while(aweap < WEAP_OFFSET || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
-			ammo[aweap] = WPA(int, aweap, reloads) ? WPA(int, aweap, add) : WPA(int, aweap, max);
+			ammo[aweap] = WPA(aweap, reloads) ? WPA(aweap, add) : WPA(aweap, max);
 			lastweap = weapselect = aweap;
 		}
 		else
@@ -832,7 +873,7 @@ struct gamestate
 			arenaweap = -1;
 			lastweap = weapselect = sweap;
 		}
-		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WPA(int, WEAP_GRENADE, max);
+		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WPA(WEAP_GRENADE, max);
 	}
 
 	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
@@ -1369,8 +1410,8 @@ namespace entities
 				case ENT_PROJ:
 				{
 					projent *p = (projent *)ob.ent;
-					if(p->projtype == PRJ_SHOT && WPB(int, p->weap, explode, p->flags&HIT_ALT))
-						ob.above = p->o.z+(WPB(int, p->weap, explode, p->flags&HIT_ALT)*p->lifesize)+1.f;
+					if(p->projtype == PRJ_SHOT && WPB(p->weap, explode, p->flags&HIT_ALT))
+						ob.above = p->o.z+(WPB(p->weap, explode, p->flags&HIT_ALT)*p->lifesize)+1.f;
 					break;
 				}
 			}
