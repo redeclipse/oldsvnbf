@@ -21,8 +21,8 @@ namespace projs
 
 	int calcdamage(gameent *actor, gameent *target, int weap, int &flags, int radial, float size, float dist)
 	{
-		int damage = weaptype[weap].damage[flags&HIT_ALT ? 1 : 0], nodamage = 0; flags &= ~HIT_SFLAGS;
-		if((flags&HIT_WAVE || (isweap(weap) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0])) && flags&HIT_FULL) flags &= ~HIT_FULL;
+		int damage = WPB(int, weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
+		if((flags&HIT_WAVE || (isweap(weap) && !WPB(int, weap, explode, flags&HIT_ALT))) && flags&HIT_FULL) flags &= ~HIT_FULL;
 		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
 		if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
 		else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
@@ -37,7 +37,7 @@ namespace projs
 			}
 		}
 		if(nodamage || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-		else if((flags&HIT_FULL) && !weaptype[weap].explode[flags&HIT_ALT ? 1 : 0]) flags &= ~HIT_FULL;
+		else if((flags&HIT_FULL) && !WPB(int, weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
 		if(hithurts(flags))
 		{
 			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*damagescale);
@@ -94,7 +94,7 @@ namespace projs
 			proj.hit = d;
 			proj.hitflags = flags;
 			proj.norm = norm;
-			if(!weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0] && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
+			if(!WPB(int, proj.weap, explode, proj.flags&HIT_ALT) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
 			switch(proj.weap)
 			{
 				case WEAP_MELEE: part_create(PART_PLASMA_SOFT, 250, proj.o, 0xFFCC22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]); break;
@@ -212,7 +212,7 @@ namespace projs
                     case WEAP_FLAMER:
                     {
                         if(!proj.lastbounce && !rnd(3))
-                            adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*3.f*proj.lifesize);
+                            adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*3.f*proj.lifesize);
                         break;
                     }
                     default: break;
@@ -248,14 +248,14 @@ namespace projs
 			case PRJ_SHOT:
 			{
 				if(proj.owner && (proj.owner != game::player1 || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
-				proj.height = proj.radius = proj.xradius = proj.yradius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0];
-				proj.elasticity = weaptype[proj.weap].elasticity[proj.flags&HIT_ALT ? 1 : 0];
-				proj.reflectivity = weaptype[proj.weap].reflectivity[proj.flags&HIT_ALT ? 1 : 0];
-				proj.relativity = weaptype[proj.weap].relativity[proj.flags&HIT_ALT ? 1 : 0];
-				proj.waterfric = weaptype[proj.weap].waterfric[proj.flags&HIT_ALT ? 1 : 0];
-				proj.weight = weaptype[proj.weap].weight[proj.flags&HIT_ALT ? 1 : 0];
-				proj.projcollide = weaptype[proj.weap].collide[proj.flags&HIT_ALT ? 1 : 0];
-				proj.extinguish = weaptype[proj.weap].extinguish[proj.flags&HIT_ALT ? 1 : 0];
+				proj.height = proj.radius = proj.xradius = proj.yradius = WPB(float, proj.weap, radius, proj.flags&HIT_ALT);
+				proj.elasticity = WPB(float, proj.weap, elasticity, proj.flags&HIT_ALT);
+				proj.reflectivity = WPB(float, proj.weap, reflectivity, proj.flags&HIT_ALT);
+				proj.relativity = WPB(float, proj.weap, relativity, proj.flags&HIT_ALT);
+				proj.waterfric = WPB(float, proj.weap, waterfric, proj.flags&HIT_ALT);
+				proj.weight = WPB(float, proj.weap, weight, proj.flags&HIT_ALT);
+				proj.projcollide = WPB(int, proj.weap, collide, proj.flags&HIT_ALT);
+				proj.extinguish = WPB(int, proj.weap, extinguish, proj.flags&HIT_ALT);
 				proj.mdl = weaptype[proj.weap].proj;
 				proj.escaped = !proj.owner;
 				break;
@@ -412,9 +412,9 @@ namespace projs
 			}
 			else if(g == WEAP_GRENADE)
 			{
-				create(from, to, local, d, PRJ_SHOT, 1, weaptype[g].time[0], 1, 1, -1, g);
-				d->ammo[g] = max(d->ammo[g]-weaptype[g].sub[0], 0);
-				d->setweapstate(g, WEAP_S_SHOOT, weaptype[g].adelay[0], lastmillis);
+				create(from, to, local, d, PRJ_SHOT, 1, WPB(int, g, time, false), 1, 1, -1, g);
+				d->ammo[g] = max(d->ammo[g]-WPB(int, g, sub, false), 0);
+				d->setweapstate(g, WEAP_S_SHOOT, WPB(int, g, adelay, false), lastmillis);
 			}
 			else
 			{
@@ -427,12 +427,12 @@ namespace projs
 
 	void shootv(int weap, int flags, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
 	{
-		int delay = weaptype[weap].delay, millis = delay,
-			life = weaptype[weap].time[flags&HIT_ALT ? 1 : 0], speed = weaptype[weap].speed[flags&HIT_ALT ? 1 : 0];
+		int delay = WPA(int, weap, pdelay), millis = delay,
+			life = WPB(int, weap, time, flags&HIT_ALT), speed = WPB(int, weap, speed, flags&HIT_ALT);
 
-		if(weaptype[weap].power)
+		if(WPA(int, weap, power))
 		{
-			float amt = clamp(float(clamp(power, 0, weaptype[weap].power))/float(weaptype[weap].power), 0.f, 1.f);
+			float amt = clamp(float(clamp(power, 0, WPA(int, weap, power)))/float(WPA(int, weap, power)), 0.f, 1.f);
 			life = int(float(life)*(1.f-amt));
 			if(!life) millis = delay = 1;
 		}
@@ -445,7 +445,7 @@ namespace projs
 				if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 				else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 			}
-			else if(!weaptype[weap].time || life)
+			else if(!WPB(int, weap, time, flags&HIT_ALT) || life)
 				playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
 		}
 
@@ -518,7 +518,7 @@ namespace projs
 		}
 		loopv(locs)
 		{
-			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, weaptype[weap].time[flags&HIT_ALT ? 1 : 0], millis, speed, 0, weap, flags);
+			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WPB(int, weap, time, flags&HIT_ALT), millis, speed, 0, weap, flags);
 			millis += delay;
 		}
 	}
@@ -529,7 +529,7 @@ namespace projs
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
 		if(proj.projtype == PRJ_SHOT)
 		{
-			if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
+			if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
 			if(weaptype[proj.weap].fsound >= 0)
 			{
 				int vol = 255;
@@ -544,7 +544,7 @@ namespace projs
 			}
 			switch(proj.weap)
 			{
-				case WEAP_MELEE: proj.lifesize = 1.f-proj.lifespan; if(testmelee) part_create(PART_PLASMA_SOFT, 1, proj.o, 0xDD4400, weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize); break;
+				case WEAP_MELEE: proj.lifesize = 1.f-proj.lifespan; if(testmelee) part_create(PART_PLASMA_SOFT, 1, proj.o, 0xDD4400, WPB(float, proj.weap, radius, proj.flags&HIT_ALT)*proj.lifesize); break;
 				case WEAP_PISTOL:
 				{
 					proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f);
@@ -567,7 +567,7 @@ namespace projs
 					if(proj.movement > 0.f)
 					{
 						bool effect = false;
-						float size = weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize;
+						float size = WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.lifesize;
 						if(flamertrail && lastmillis-proj.lasteffect >= flamerdelay) { effect = true; proj.lasteffect = lastmillis; }
 						int col = ((int(254*max((1.f-proj.lifespan),proj.flags&HIT_ALT ? 0.6f : 0.4f))<<16)+1)|((int(112*max((1.f-proj.lifespan),0.25f))+1)<<8),
 							len = effect ? max(int(flamerlength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
@@ -624,9 +624,9 @@ namespace projs
 				{
 					bool taper = proj.lifespan > (proj.flags&HIT_ALT ? 0.25f : 0.0125f);
 					if(!proj.stuck || !taper) proj.lifesize = taper ? 1.125f-proj.lifespan*proj.lifespan : proj.lifespan*(proj.flags&HIT_ALT ? 4.f : 80.f);
-					if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f*proj.lifesize, PART_EXPLOSION, 1, 0x225599, 1.f, 0.75f);
-					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
-					part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.5f*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
+					if(proj.flags&HIT_ALT) part_fireball(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f*proj.lifesize, PART_EXPLOSION, 1, 0x225599, 1.f, 0.75f);
+					part_create(PART_PLASMA_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
+					part_create(PART_ELECTRIC_SOFT, 1, proj.o, proj.flags&HIT_ALT ? 0x4488EE : 0x55AAEE, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f*proj.lifesize, proj.flags&HIT_ALT ? 1.f : clamp(1.5f-proj.lifespan, 0.5f, 1.f));
 					break;
 				}
 				case WEAP_RIFLE: case WEAP_INSTA:
@@ -652,8 +652,8 @@ namespace projs
 				}
 				default: break;
 			}
-			if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0] || weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0])
-				proj.height = proj.radius = proj.xradius = proj.yradius = weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]*max(proj.lifesize, 0.1f);
+			if(WPB(int, proj.weap, radial, proj.flags&HIT_ALT) || WPB(int, proj.weap, taper, proj.flags&HIT_ALT))
+				proj.height = proj.radius = proj.xradius = proj.yradius = WPB(float, proj.weap, radius, proj.flags&HIT_ALT)*max(proj.lifesize, 0.1f);
 		}
 		else
 		{
@@ -715,7 +715,7 @@ namespace projs
 				int vol = 255;
 				switch(proj.weap)
 				{
-					case WEAP_MELEE: if(testmelee) part_create(PART_PLASMA_SOFT, 300, proj.o, 0x220000, weaptype[proj.weap].radius[proj.flags&HIT_ALT ? 1 : 0]); break;
+					case WEAP_MELEE: if(testmelee) part_create(PART_PLASMA_SOFT, 300, proj.o, 0x220000, WPB(float, proj.weap, radius, proj.flags&HIT_ALT)); break;
 					case WEAP_PISTOL:
 					{
 						vol = int(255*(1.f-proj.lifespan));
@@ -730,26 +730,26 @@ namespace projs
 						{
 							if(proj.weap == WEAP_FLAMER)
 							{
-								part_create(PART_FIREBALL_SOFT, proj.flags&HIT_ALT ? 650 : 150, proj.o, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 0.5f, -15);
-								part_create(PART_SMOKE_LERP_SOFT, proj.flags&HIT_ALT ? 750 : 250, proj.o, 0x666666, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, 0.5f, -25);
+								part_create(PART_FIREBALL_SOFT, proj.flags&HIT_ALT ? 650 : 150, proj.o, firecols[rnd(FIRECOLOURS)], WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f, 0.5f, -15);
+								part_create(PART_SMOKE_LERP_SOFT, proj.flags&HIT_ALT ? 750 : 250, proj.o, 0x666666, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.75f, 0.5f, -25);
 							}
 							else
 							{
-								int deviation = int(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f);
+								int deviation = max(int(WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.75f), 1);
 								loopi(rnd(15)+5)
 								{
 									vec to(proj.o); loopk(3) to.v[k] += rnd(deviation*2)-deviation;
-									part_create(PART_FIREBALL_SOFT, 1500, to, firecols[rnd(FIRECOLOURS)], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f, 0.75f, -15);
+									part_create(PART_FIREBALL_SOFT, 1500, to, firecols[rnd(FIRECOLOURS)], WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f, 0.75f, -15);
 								}
-								part_create(PART_PLASMA_SOFT, 1000, proj.o, 0xDD4400, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
-								game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-								part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.5f, PART_EXPLOSION, 750, 0xAA4400, 1.f);
+								part_create(PART_PLASMA_SOFT, 1000, proj.o, 0xDD4400, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
+								game::quake(proj.o, WPB(int, proj.weap, damage, proj.flags&HIT_ALT), WPB(int, proj.weap, explode, proj.flags&HIT_ALT));
+								part_fireball(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*1.5f, PART_EXPLOSION, 750, 0xAA4400, 1.f);
 								loopi(rnd(21)+20) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
-								adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.7f, bvec(196, 24, 0));
-								part_create(PART_SMOKE_LERP_SOFT, 2000, proj.o, 0x333333, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], 1, -25);
+								adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.7f, bvec(196, 24, 0));
+								part_create(PART_SMOKE_LERP_SOFT, 2000, proj.o, 0x333333, WPB(int, proj.weap, explode, proj.flags&HIT_ALT), 1, -25);
 							}
-							adddecal(proj.weap == WEAP_FLAMER ? DECAL_SCORCH_SHORT : DECAL_SCORCH, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-							adddynlight(proj.o, 1.f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], vec(1.1f, 0.22f, 0.02f), proj.weap == WEAP_FLAMER ? 250 : 1000, 10);
+							adddecal(proj.weap == WEAP_FLAMER ? DECAL_SCORCH_SHORT : DECAL_SCORCH, proj.o, proj.norm, WPB(int, proj.weap, explode, proj.flags&HIT_ALT));
+							adddynlight(proj.o, 1.f*WPB(int, proj.weap, explode, proj.flags&HIT_ALT), vec(1.1f, 0.22f, 0.02f), proj.weap == WEAP_FLAMER ? 250 : 1000, 10);
 						}
 						else vol = 0;
 						break;
@@ -765,13 +765,13 @@ namespace projs
 					{
 						if(!proj.limited)
 						{
-							part_create(PART_PLASMA_SOFT, proj.flags&HIT_ALT ? 500 : 150, proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius);
-							part_create(PART_ELECTRIC_SOFT, proj.flags&HIT_ALT ? 250 : 75, proj.o, 0x55AAEE, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.5f);
-							part_create(PART_SMOKE, proj.flags&HIT_ALT ? 500 : 250, proj.o, 0x8896A4, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.35f, 1, -30);
-							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-							if(proj.flags&HIT_ALT) part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.5f, PART_EXPLOSION, 150, 0x225599, 1.f);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius*0.75f, bvec(98, 196, 244));
-							adddynlight(proj.o, 1.1f*weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius, vec(0.1f, 0.4f, 0.6f), proj.flags&HIT_ALT ? 300 : 100, 10);
+							part_create(PART_PLASMA_SOFT, proj.flags&HIT_ALT ? 500 : 150, proj.o, 0x55AAEE, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius);
+							part_create(PART_ELECTRIC_SOFT, proj.flags&HIT_ALT ? 250 : 75, proj.o, 0x55AAEE, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f);
+							part_create(PART_SMOKE, proj.flags&HIT_ALT ? 500 : 250, proj.o, 0x8896A4, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.35f, 1, -30);
+							game::quake(proj.o, WPB(int, proj.weap, damage, proj.flags&HIT_ALT), WPB(int, proj.weap, explode, proj.flags&HIT_ALT));
+							if(proj.flags&HIT_ALT) part_fireball(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 150, 0x225599, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(98, 196, 244));
+							adddynlight(proj.o, 1.1f*WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.1f, 0.4f, 0.6f), proj.flags&HIT_ALT ? 300 : 100, 10);
 						}
 						else vol = 0;
 						break;
@@ -786,16 +786,16 @@ namespace projs
 						part_splash(PART_SPARK, proj.flags&HIT_ALT ? 25 : 50, proj.flags&HIT_ALT ? 500 : 750, proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 1, 20, 0, 24);
 						if(proj.weap == WEAP_RIFLE && !(proj.flags&HIT_ALT))
 						{
-							part_create(PART_PLASMA_SOFT, 500, proj.o, 0x4408AA, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.5f); // corona
-							game::quake(proj.o, weaptype[proj.weap].damage[proj.flags&HIT_ALT ? 1 : 0], weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]);
-							part_fireball(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*0.75f, PART_EXPLOSION, 500, 0x2211FF, 1.f);
-							adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0], vec(0.4f, 0.05f, 1.f), 500, 10);
+							part_create(PART_PLASMA_SOFT, 500, proj.o, 0x4408AA, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
+							game::quake(proj.o, WPB(int, proj.weap, damage, proj.flags&HIT_ALT), WPB(int, proj.weap, explode, proj.flags&HIT_ALT));
+							part_fireball(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*0.75f, PART_EXPLOSION, 500, 0x2211FF, 1.f);
+							adddynlight(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT), vec(0.4f, 0.05f, 1.f), 500, 10);
 							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 8.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, 4.f, bvec(98, 16, 254));
 						}
 						else
 						{
-							adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f), 250, 10);
+							adddynlight(proj.o, 16, vec(0.4f, 0.05f, 1.f), 250, 10);
 							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
 						}
@@ -1052,7 +1052,7 @@ namespace projs
 		loopv(projs)
 		{
 			projent &proj = *projs[i];
-			if(proj.projtype == PRJ_SHOT && weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0])
+			if(proj.projtype == PRJ_SHOT && WPB(int, proj.weap, radial, proj.flags&HIT_ALT))
 			{
 				proj.hit = NULL;
 				proj.hitflags = HITFLAG_NONE;
@@ -1096,11 +1096,11 @@ namespace projs
 				float radius = 0;
 				if(proj.state == CS_DEAD)
 				{
-					if(weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0])
+					if(WPB(int, proj.weap, explode, proj.flags&HIT_ALT))
 					{
 						if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
-						radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0];
-						if(weaptype[proj.weap].taper[proj.flags&HIT_ALT ? 1 : 0]) radius = max(radius*proj.radius, 1.f);
+						radius = WPB(int, proj.weap, explode, proj.flags&HIT_ALT);
+						if(WPB(int, proj.weap, taper, proj.flags&HIT_ALT)) radius = max(radius*proj.radius, 1.f);
 						if(!proj.limited && radius > 0)
 						{
 							loopj(game::numdynents())
@@ -1112,10 +1112,10 @@ namespace projs
 						}
 					}
 				}
-				else if(weaptype[proj.weap].radial[proj.flags&HIT_ALT ? 1 : 0])
+				else if(WPB(int, proj.weap, radial, proj.flags&HIT_ALT))
 				{
 					if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
-					radius = weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*proj.radius;
+					radius = WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*proj.radius;
 					if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 100))
 					{
 						loopj(game::numdynents())
@@ -1176,28 +1176,21 @@ namespace projs
 			projent &proj = *projs[i];
 			switch(proj.weap)
 			{
-				case WEAP_MELEE: default: break;
-				case WEAP_PISTOL: adddynlight(proj.o, 4, vec(0.075f, 0.075f, 0.075f)); break;
 				case WEAP_SHOTGUN: adddynlight(proj.o, 16, vec(0.5f, 0.35f, 0.1f)); break;
 				case WEAP_SMG: adddynlight(proj.o, 8, vec(0.5f, 0.25f, 0.05f)); break;
 				case WEAP_FLAMER:
 				{
 					vec col(1.1f*max(1.f-proj.lifespan,0.3f), 0.2f*max(1.f-proj.lifespan,0.15f), 0.00f);
-					adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.1f*proj.lifespan, col);
+					adddynlight(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*1.1f*proj.lifespan, col);
 					break;
 				}
 				case WEAP_PLASMA:
 				{
 					vec col(0.1f*max(1.f-proj.lifespan,0.1f), 0.4f*max(1.f-proj.lifespan,0.1f), 0.6f*max(1.f-proj.lifespan,0.1f));
-					adddynlight(proj.o, weaptype[proj.weap].explode[proj.flags&HIT_ALT ? 1 : 0]*1.1f*proj.lifesize, col);
+					adddynlight(proj.o, WPB(int, proj.weap, explode, proj.flags&HIT_ALT)*1.1f*proj.lifesize, col);
 					break;
 				}
-				case WEAP_RIFLE: case WEAP_INSTA:
-				{
-					vec pos = vec(proj.o).sub(vec(proj.vel).normalize().mul(3.f));
-					adddynlight(proj.o, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*1.5f, vec(0.4f, 0.05f, 1.f));
-					break;
-				}
+				default: break;
 			}
 		}
 	}
