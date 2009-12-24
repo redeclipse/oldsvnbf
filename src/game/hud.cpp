@@ -428,7 +428,7 @@ namespace hud
 		{
 			case WEAP_S_POWER:
 			{
-				amt = clamp(float(millis)/float(WPA(int, weap, power)), 0.f, 1.f);
+				amt = clamp(float(millis)/float(WPA(weap, power)), 0.f, 1.f);
 				colourskew(r, g, b, 1.f-amt);
 				break;
 			}
@@ -449,7 +449,7 @@ namespace hud
 			riflecliptex, ""
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
-		int ammo = game::player1->ammo[weap], maxammo = WPA(int, weap, max);
+		int ammo = game::player1->ammo[weap], maxammo = WPA(weap, max);
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
@@ -585,7 +585,7 @@ namespace hud
 		if(index != POINTER_GUI && teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::player1->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
-			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && WPA(int, game::player1->weapselect, zooms))
+			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && WPA(game::player1->weapselect, zooms))
 			{
 				int frame = lastmillis-game::lastzoom, off = int(zoomcrosshairsize*hudsize)-cs;
 				float amt = frame <= game::zoomtime ? clamp(float(frame)/float(game::zoomtime), 0.f, 1.f) : 1.f;
@@ -601,7 +601,7 @@ namespace hud
 			if(game::player1->state == CS_ALIVE && game::player1->hasweap(game::player1->weapselect, m_weapon(game::gamemode, game::mutators)))
 			{
 				if(showclips) drawclip(game::player1->weapselect, nx, ny, clipsize*hudsize);
-				if(showindicator && WPA(int, game::player1->weapselect, power) && game::player1->weapstate[game::player1->weapselect] == WEAP_S_POWER)
+				if(showindicator && WPA(game::player1->weapselect, power) && game::player1->weapstate[game::player1->weapselect] == WEAP_S_POWER)
 					drawindicator(game::player1->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
 			if(game::mousestyle() >= 1) // renders differently
@@ -616,7 +616,7 @@ namespace hud
         else if(!showcrosshair || game::player1->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::player1->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::player1->state == CS_SPECTATOR || game::player1->state == CS_WAITING) index = POINTER_SPEC;
-        else if(game::inzoom() && WPA(int, game::player1->weapselect, zooms)) index = POINTER_ZOOM;
+        else if(game::inzoom() && WPA(game::player1->weapselect, zooms)) index = POINTER_ZOOM;
         else if(lastmillis-game::player1->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(game::gamemode, game::mutators))
         {
@@ -821,7 +821,7 @@ namespace hud
 								SEARCHBINDCACHE(attackkey)("action 0", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								SEARCHBINDCACHE(altkey)("action 1", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, altkey, WPA(int, game::player1->weapselect, zooms) ? "zoom" : "alt-attack")*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, altkey, WPA(game::player1->weapselect, zooms) ? "zoom" : "alt-attack")*noticescale;
 							}
 							if(game::player1->canreload(game::player1->weapselect, m_weapon(game::gamemode, game::mutators), lastmillis))
 							{
@@ -1733,7 +1733,7 @@ namespace hud
 				drawtex(0, 0, w, h);
 			}
 		}
-		if(game::player1->state == CS_ALIVE && game::inzoom() && WPA(int, game::player1->weapselect, zooms)) drawzoom(w, h);
+		if(game::player1->state == CS_ALIVE && game::inzoom() && WPA(game::player1->weapselect, zooms)) drawzoom(w, h);
 		if(showdamage)
 		{
 			if(fireburntime && game::player1->state == CS_ALIVE) drawfire(w, h, os, fade);

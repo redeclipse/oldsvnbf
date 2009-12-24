@@ -42,9 +42,9 @@ namespace ai
 
 	bool weaprange(gameent *d, int weap, bool alt, float dist)
 	{
-		if(WPB(int, weap, extinguish, alt) && d->inliquid) return false;
-		float mindist = WPB(int, weap, explode, alt) ? WPB(int, weap, explode, alt) : (d->weapselect != WEAP_MELEE ? d->radius*2 : 0),
-			maxdist = WPB(int, weap, maxdist, alt) ? WPB(int, weap, maxdist, alt) : hdr.worldsize;
+		if(WPB(weap, extinguish, alt) && d->inliquid) return false;
+		float mindist = WPB(weap, explode, alt) ? WPB(weap, explode, alt) : (d->weapselect != WEAP_MELEE ? d->radius*2 : 0),
+			maxdist = WPB(weap, maxdist, alt) ? WPB(weap, maxdist, alt) : hdr.worldsize;
 		return dist >= mindist*mindist && dist <= maxdist*maxdist;
 	}
 
@@ -69,7 +69,7 @@ namespace ai
 
 	bool altfire(gameent *d, gameent *e)
 	{
-		if(e && !WPA(int, d->weapselect, zooms) && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+		if(e && !WPA(d->weapselect, zooms) && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
 		{
 			switch(d->weapselect)
 			{
@@ -90,7 +90,7 @@ namespace ai
 		if(weaprange(d, d->weapselect, alt, dist))
 		{
 			if(d->weapselect == WEAP_MELEE) return true;
-			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WPA(int, d->weapselect, rdelay)/2000.f)+(d->skill*WPB(int, d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
+			float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WPA(d->weapselect, rdelay)/2000.f)+(d->skill*WPB(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
 			if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
 		}
 		return false;
@@ -99,12 +99,12 @@ namespace ai
 	vec getaimpos(gameent *d, gameent *e, bool alt)
 	{
 		vec o = e->headpos();
-		#define rndaioffset (rnd(int(e->radius*WPB(int, d->weapselect, aiskew, alt)*2)+1)-e->radius*WPB(int, d->weapselect, aiskew, alt))
+		#define rndaioffset (rnd(int(e->radius*WPB(d->weapselect, aiskew, alt)*2)+1)-e->radius*WPB(d->weapselect, aiskew, alt))
 		#define skewaiskill (1.f/float(max(d->skill/10, 1)))
-		if(WPB(int, d->weapselect, radial, alt)) o.z -= e->height;
+		if(WPB(d->weapselect, radial, alt)) o.z -= e->height;
 		if(d->skill <= 100)
 		{
-			if(WPB(int, d->weapselect, radial, alt)) o.z += e->height*skewaiskill;
+			if(WPB(d->weapselect, radial, alt)) o.z += e->height*skewaiskill;
 			else o.z -= e->height*skewaiskill;
 			o.x += rndaioffset*skewaiskill; o.y += rndaioffset*skewaiskill;
 		}
@@ -777,7 +777,7 @@ namespace ai
 						bool alt = altfire(d, e);
 						if(aistyle[d->aitype].maxspeed)
 						{
-							float mindist = WPB(int, d->weapselect, explode, alt) ? WPB(int, d->weapselect, explode, alt) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
+							float mindist = WPB(d->weapselect, explode, alt) ? WPB(d->weapselect, explode, alt) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
 							return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
 						}
 						else
@@ -1313,9 +1313,9 @@ namespace ai
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
-			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WPB(int, p->weap, explode, p->flags&HIT_ALT))
+			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WPB(p->weap, explode, p->flags&HIT_ALT))
 			{
-				float limit = enttype[WAYPOINT].radius+(WPB(int, p->weap, explode, p->flags&HIT_ALT)*p->lifesize);
+				float limit = enttype[WAYPOINT].radius+(WPB(p->weap, explode, p->flags&HIT_ALT)*p->lifesize);
                 obs.avoidnear(p, p->o, limit);
 			}
 		}

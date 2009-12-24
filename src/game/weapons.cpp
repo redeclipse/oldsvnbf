@@ -36,19 +36,19 @@ namespace weapons
 			{
 				client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
 				int oldammo = d->ammo[weap];
-				ammo = min(max(d->ammo[weap], 0) + WPA(int, weap, add), WPA(int, weap, max));
+				ammo = min(max(d->ammo[weap], 0) + WPA(weap, add), WPA(weap, max));
 				load = ammo-oldammo;
 				doact = true;
 			}
 			else if(d != game::player1 && !d->ai) doact = true;
 			else if(load < 0 && d->ammo[weap] < ammo) return false; // because we've already gone ahead..
 			d->weapload[weap] = load;
-			d->ammo[weap] = min(ammo, WPA(int, weap, max));
+			d->ammo[weap] = min(ammo, WPA(weap, max));
 			if(doact)
 			{
 				if(issound(d->wschan)) removesound(d->wschan);
 				playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
-				d->setweapstate(weap, WEAP_S_RELOAD, WPA(int, weap, rdelay), lastmillis);
+				d->setweapstate(weap, WEAP_S_RELOAD, WPA(weap, rdelay), lastmillis);
 				if(local) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
 			}
 			return true;
@@ -118,7 +118,7 @@ namespace weapons
 	{
 		int sweap = m_weapon(game::gamemode, game::mutators);
 		bool reload = d->action[AC_RELOAD], canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
-		if(!reload && canreload && autoreloading >= (WPA(int, d->weapselect, add) < WPA(int, d->weapselect, max) ? 2 : (WPA(int, d->weapselect, zooms) ? 4 : 3)))
+		if(!reload && canreload && autoreloading >= (WPA(d->weapselect, add) < WPA(d->weapselect, max) ? 2 : (WPA(d->weapselect, zooms) ? 4 : 3)))
 			reload = true;
 		if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
 		else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
@@ -145,11 +145,11 @@ namespace weapons
 	void shoot(gameent *d, vec &targ, int force)
 	{
 		if(!game::allowmove(d)) return;
-		bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WPA(int, d->weapselect, zooms)));
-		if(d == game::player1 && WPA(int, d->weapselect, zooms) && game::zooming && game::inzoomswitch()) secondary = true;
-		else if(!WPA(int, d->weapselect, zooms) && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
-		else if(WPA(int, d->weapselect, power) && d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
-		int power = clamp(force, 0, WPA(int, d->weapselect, power)), flags = secondary ? HIT_ALT : 0, offset = WPB(int, d->weapselect, sub, flags&HIT_ALT), sweap = m_weapon(game::gamemode, game::mutators);
+		bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WPA(d->weapselect, zooms)));
+		if(d == game::player1 && WPA(d->weapselect, zooms) && game::zooming && game::inzoomswitch()) secondary = true;
+		else if(!WPA(d->weapselect, zooms) && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
+		else if(WPA(d->weapselect, power) && d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
+		int power = clamp(force, 0, WPA(d->weapselect, power)), flags = secondary ? HIT_ALT : 0, offset = WPB(d->weapselect, sub, flags&HIT_ALT), sweap = m_weapon(game::gamemode, game::mutators);
 		if(!d->canshoot(d->weapselect, flags, sweap, lastmillis))
 		{
 			if(!d->canshoot(d->weapselect, flags, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
@@ -159,7 +159,7 @@ namespace weapons
 			}
 			else offset = -1;
 		}
-		if(WPA(int, d->weapselect, power) && !WPA(int, d->weapselect, zooms))
+		if(WPA(d->weapselect, power) && !WPA(d->weapselect, zooms))
 		{
 			if(!power)
 			{
@@ -172,25 +172,25 @@ namespace weapons
 					}
 					else return;
 				}
-				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, WPA(int, d->weapselect, power));
-				if(pressed && power < WPA(int, d->weapselect, power)) return;
+				power = clamp(lastmillis-d->weaplast[d->weapselect], 0, WPA(d->weapselect, power));
+				if(pressed && power < WPA(d->weapselect, power)) return;
 			}
 		}
 		else if(!pressed) return;
 		if(offset < 0)
 		{
-			offset = max(d->weapload[d->weapselect], 1)+WPB(int, d->weapselect, sub, flags&HIT_ALT);
+			offset = max(d->weapload[d->weapselect], 1)+WPB(d->weapselect, sub, flags&HIT_ALT);
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
 		}
-		int adelay = WPB(int, d->weapselect, adelay, flags&HIT_ALT);
-		if(!WPB(int, d->weapselect, fullauto, flags&HIT_ALT) || (WPA(int, d->weapselect, zooms) && flags&HIT_ALT))
+		int adelay = WPB(d->weapselect, adelay, flags&HIT_ALT);
+		if(!WPB(d->weapselect, fullauto, flags&HIT_ALT) || (WPA(d->weapselect, zooms) && flags&HIT_ALT))
 		{
-			if(!secondary || !WPA(int, d->weapselect, zooms)) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
+			if(!secondary || !WPA(d->weapselect, zooms)) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
 			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
 		}
 		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
 		if(offset > 0) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
-		d->totalshots += int(WPB(int, d->weapselect, damage, flags&HIT_ALT)*damagescale)*WPB(int, d->weapselect, rays, flags&HIT_ALT);
+		d->totalshots += int(WPB(d->weapselect, damage, flags&HIT_ALT)*damagescale)*WPB(d->weapselect, rays, flags&HIT_ALT);
 		d->weapshot[d->weapselect] = offset;
 		d->action[AC_RELOAD] = false;
 		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
@@ -199,12 +199,12 @@ namespace weapons
 		else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
 		if(d->aitype < AI_START || d->maxspeed)
 		{
-			vec kick = vec(unitv).mul(-WPB(float, d->weapselect, kickpush, flags&HIT_ALT));
+			vec kick = vec(unitv).mul(-WPB(d->weapselect, kickpush, flags&HIT_ALT));
 			if(d == game::player1)
 			{
-				if(WPA(int, d->weapselect, zooms) && game::inzoom()) kick.mul(0.0125f);
+				if(WPA(d->weapselect, zooms) && game::inzoom()) kick.mul(0.0125f);
 				game::swaypush.add(vec(kick).mul(0.025f));
-				if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(WPB(float, d->weapselect, kickpush, flags&HIT_ALT)), 1), 0, 1000);
+				if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(WPB(d->weapselect, kickpush, flags&HIT_ALT)), 1), 0, 1000);
 			}
 			if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(0.5f));
 		}
@@ -235,11 +235,11 @@ namespace weapons
 		vector<vec> vshots;
 		vector<ivec> shots;
 		#define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
-		loopi(WPB(int, d->weapselect, rays, flags&HIT_ALT))
+		loopi(WPB(d->weapselect, rays, flags&HIT_ALT))
 		{
 			vec dest;
-			int spread = WPB(int, d->weapselect, spread, flags&HIT_ALT);
-			if(spread) offsetray(from, to, WPB(int, d->weapselect, spread, flags&HIT_ALT), WPB(int, d->weapselect, zdiv, flags&HIT_ALT), dest);
+			int spread = WPB(d->weapselect, spread, flags&HIT_ALT);
+			if(spread) offsetray(from, to, WPB(d->weapselect, spread, flags&HIT_ALT), WPB(d->weapselect, zdiv, flags&HIT_ALT), dest);
 			else dest = to;
 			if(weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0] > 0)
 				dest.z += from.dist(dest)*weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0];
