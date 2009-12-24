@@ -3746,10 +3746,15 @@ namespace server
 					if(!cp || cp->state.aitype >= 0) break;
 					if(cp->state.state != CS_SPECTATOR && val)
 					{
-						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-						if(cp->state.state == CS_ALIVE) dropitems(cp, 1);
+						if(cp->state.state == CS_ALIVE)
+						{
+							suicideevent ev;
+							ev.flags = 0;
+							ev.process(cp);
+						}
 						if(smode) smode->leavegame(cp);
 						mutate(smuts, mut->leavegame(cp));
+						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
 						cp->state.cpnodes.setsize(0);
 						cp->state.cpmillis = 0;
 						cp->state.state = CS_SPECTATOR;
