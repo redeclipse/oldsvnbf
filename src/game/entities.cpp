@@ -1867,14 +1867,13 @@ namespace entities
 
 	void initents(stream *g, int mtype, int mver, char *gid, int gver)
 	{
-		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && mver <= 36)) loopv(ents)
+		loopv(ents)
 		{
 			gameentity &e = *(gameentity *)ents[i];
 			int num = max(5, enttype[e.type].numattrs);
 			while(e.attrs.length() < num) e.attrs.add(0);
 			while(e.attrs.length() > num) e.attrs.pop();
 		}
-
 		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, mver, gver);
 		if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, mver, gver);
 		if(mtype == MAP_OCTA) importwaypoints(mtype, mver, gver);

@@ -473,11 +473,11 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	loopv(sunlights)
 	{
 		const extentity &light = *sunlights[i];
-		if(slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4]) continue;
+		if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
 		int yaw = light.attrs[0], pitch = light.attrs[1], offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		vec dir(yaw*RAD, pitch*RAD);
 		if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
-			hit++;		
+			hit++;
 		matrix3x3 rot;
 		rot.rotate(90*RAD, dir);
 		vec spoke(yaw*RAD, (pitch + offset)*RAD);
