@@ -73,17 +73,11 @@ struct duelservmode : servmode
 	{
 		if(!m_noitems(gamemode, mutators))
 		{
-			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !finditem(i, true, false))
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !hasitem(i))
 			{
 				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE)
 					continue;
-				loopvk(clients)
-				{
-					clientinfo *ci = clients[k];
-					ci->state.dropped.remove(i);
-					loopj(WEAP_MAX) if(ci->state.entid[j] == i)
-						ci->state.entid[j] = -1;
-				}
+				loopvk(clients) clients[k]->state.dropped.remove(i);
 				sents[i].millis = gamemillis; // hijack its spawn time
 				sents[i].spawned = true;
 				sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);

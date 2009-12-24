@@ -2704,6 +2704,7 @@ namespace server
 						override = true;
 					if(!finditem(i, true, true, override))
 					{
+						loopvk(clients) clients[k]->state.dropped.remove(i);
 						sents[i].spawned = true;
 						sents[i].millis = gamemillis+GVAR(itemspawntime);
 						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
