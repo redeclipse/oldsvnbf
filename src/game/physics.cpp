@@ -1,4 +1,3 @@
-#define GAMEPHYSICS 1
 #include "game.h"
 namespace physics
 {
@@ -1246,4 +1245,3 @@ namespace physics
 		cleardynentcache();
 	}
 }
-#undef GAMEPHYSICS
