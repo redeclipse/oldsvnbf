@@ -179,6 +179,10 @@
               <a href="/bits/images/screenshot.0020.jpg"><img src="/bits/thumbs/screenshot.0020.jpg" width="206" height="129" border="0" /></a>
               <a href="/bits/images/screenshot.0033.jpg"><img src="/bits/thumbs/screenshot.0033.jpg" width="206" height="129"  border="0"/></a>
               </li>
+			    <li><a href="/bits/images/screenshot.0034.jpg"><img src="/bits/thumbs/screenshot.0034.jpg" width="206" height="129" border="0"/></a>
+              <a href="/bits/images/screenshot.0036.jpg"><img src="/bits/thumbs/screenshot.0036.jpg" width="206" height="129" border="0" /></a>
+              <a href="/bits/images/screenshot.0038.jpg"><img src="/bits/thumbs/screenshot.0038.jpg" width="206" height="129"  border="0"/></a>
+              </li>
 			</ul>
 </div>
 				<div id="video">
