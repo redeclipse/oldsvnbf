@@ -1051,20 +1051,15 @@ struct gameent : dynent, gamestate
 
 	float calcroll(bool crouch)
 	{
-		float c = roll;
-		if(quake > 0)
+		float r = roll, wobble = float(rnd(15)-7)*(float(min(quake, 100))/100.f);
+		switch(state)
 		{
-			float wobble = float(rnd(15)-7)*(float(min(quake, 100))/100.f);
-			switch(state)
-			{
-				case CS_SPECTATOR: case CS_WAITING: c = 0; wobble *= 0.5f; break;
-				case CS_ALIVE: if(crouch) wobble *= 0.5f; break;
-				case CS_DEAD: c = 0; break;
-				default: c = wobble = 0; break;
-			}
-			c += wobble;
+			case CS_SPECTATOR: case CS_WAITING: r = wobble*0.5f; break;
+			case CS_ALIVE: if(crouch) wobble *= 0.5f;
+			case CS_DEAD: r += wobble; break;
+			default: break;
 		}
-		return c;
+		return r;
 	}
 
 	void doimpulse(int cost, int type, int millis)
