@@ -98,6 +98,25 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link rel="shortcut icon" href="<?php echo $app['siteico']; ?>" />
 		<link rel="stylesheet" type="text/css" href="<?php echo $app['sitecss']; ?>" />
+          <script type="text/javascript" src="/bits/js/jquery.js"></script>
+        <script type="text/javascript" src="/bits/js/jquery.lightbox-0.5.js"></script>
+        <script type="text/javascript">
+    $(function() {
+        $('#gallery a').lightBox();
+    });
+        </script>
+	    <script type="text/javascript" src="/bits/js/easySlider1.7.js"></script>
+	    <script type="text/javascript">
+		$(document).ready(function(){	
+			$("#slider").easySlider({
+		auto: true,
+		continuous: true,
+		nextId: "slider1next",
+		prevId: "slider1prev"
+			});
+		
+		});	
+	    </script>
 <?php if ($app['sfpiwik'] > 0) { ?>
 		<script type="text/javascript"><!--
 			var pkBaseURL = (("https:" == document.location.protocol) ? "https://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/" : "http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/");
@@ -110,6 +129,7 @@
 			piwik_log(piwik_action_name, piwik_idsite, piwik_url);
 		--></script>
 		<object><noscript><p><img src="http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
+      
 <?php } ?>
 	</head>
 	<body style="background-image: url(<?php echo $app['sitebg']; ?>)">
@@ -150,7 +170,17 @@
 					</div>
 					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
 				</div>
-				<div id="screen"><a href="/gallery"><img align="center" alt="Screenshot Gallery" src="<?php echo $app['sitescreen']; ?>" /></a></div>
+				<div id="slider">
+			<ul id="gallery">				
+				<li><a href="/bits/images/screenshot.0006.jpg"><img src="/bits/thumbs/screenshot.0006.jpg" width="206" height="129" border="0"/></a>
+                <a href="/bits/images/screenshot.0008.jpg"><img src="/bits/thumbs/screenshot.0008.jpg" width="206" height="129"  border="0" /></a>
+                <a href="/bits/images/screenshot.0010.jpg"><img src="/bits/thumbs/screenshot.0010.jpg" width="206" height="129"  border="0"/></a></li>
+			  <li><a href="/bits/images/screenshot.0013.jpg"><img src="/bits/thumbs/screenshot.0013.jpg" width="206" height="129" border="0"/></a>
+              <a href="/bits/images/screenshot.0020.jpg"><img src="/bits/thumbs/screenshot.0020.jpg" width="206" height="129" border="0" /></a>
+              <a href="/bits/images/screenshot.0033.jpg"><img src="/bits/thumbs/screenshot.0033.jpg" width="206" height="129"  border="0"/></a>
+              </li>
+			</ul>
+</div>
 				<div id="video">
 					<div id="subtext" align="center">
 						<h2><?php echo $app['sitename']; ?></h2>
