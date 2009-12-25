@@ -215,8 +215,8 @@ enum
 };
 
 #define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh) \
-	VARG(name##add, 0, w0, INT_MAX-1);			VARG(name##max, 0, w1, INT_MAX-1); \
-	VARG(name##sub1, 0, w2, INT_MAX-1);			VARG(name##sub2, 0, w3, INT_MAX-1); \
+	VARG(name##add, 0, w0, w1);					VARG(name##max, 0, w1, w1); \
+	VARG(name##sub1, 0, w2, w1);				VARG(name##sub2, 0, w3, w1); \
 	VARG(name##adelay1, 0, w4, INT_MAX-1);		VARG(name##adelay2, 0, w5, INT_MAX-1);		VARG(name##rdelay, 0, w6, INT_MAX-1); \
 	VARG(name##damage1, 0, w7, INT_MAX-1);		VARG(name##damage2, 0, w8, INT_MAX-1); \
 	VARG(name##speed1, 0, w9, INT_MAX-1);		VARG(name##speed2, 0, wa, INT_MAX-1); \
@@ -381,6 +381,7 @@ weaptypes weaptype[] =
 #define WP2(proto,name)			proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2}, {&sv_gibs##name##1,&sv_gibs##name##2}};
 #define WPA(weap,name)			(*sv_weap_stat_##name[weap])
 #define WPB(weap,name,second)	(*sv_weap_stat_##name[weap][second?1:0])
+#define WPS(a,weap,attr)		defformatstring(a)("sv_%s%s", weaptype[weap].name, #attr)
 #else
 extern weaptypes weaptype[];
 #ifdef GAMEWORLD
@@ -392,6 +393,7 @@ extern weaptypes weaptype[];
 #endif
 #define WPA(weap,name)			(*weap_stat_##name[weap])
 #define WPB(weap,name,second)	(*weap_stat_##name[weap][second?1:0])
+#define WPS(a,weap,attr)		defformatstring(a)("%s%s", weaptype[weap].name, #attr)
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif

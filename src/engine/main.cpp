@@ -686,62 +686,6 @@ VAR(bestfpsdiff, 1, 0, -1);
 VAR(worstfps, 1, 0, -1);
 VAR(worstfpsdiff, 1, 0, -1);
 
-int lastautoadjust = 0;
-
-VARFP(minfps, 0, 30, 1000,				// aim for this fps or higher
-	minfps = min(minfps, maxfps-1));
-
-VARP(autoadjust, 0, 1, 1);				// auto performance adjust
-VARP(autoadjustmin, 0, 1, 100);			// lowest level to go to
-VARP(autoadjustmax, 0, 100, 100);		// highest level to go to
-VARP(autoadjustrate, 0, 1000, 10000);	// only adjust this often
-VARFP(autoadjustlimit, 0, 25, 100,		// going below this automatically scales to minimum
-	autoadjustlimit = min(autoadjustlimit, minfps-1));
-
-void autoadjustset(int level)
-{
-	enumerate(*idents, ident, i, {
-		if(i.type == ID_VAR && (i.flags & IDF_AUTO))
-		{
-			int n = i.def.i-i.minval > 1 ? int((float(i.def.i-i.minval)/100.f)*float(level))+i.minval : (level ? i.def.i : i.minval);
-			int m = clamp(n, i.minval, i.def.i);
-			*i.storage.i = m;
-			i.changed();
-		}
-	});
-}
-
-VARFP(autoadjustlevel, 0, 100, 100, autoadjustset(autoadjustlevel));
-
-void autoadjustcheck(int frames)
-{
-	if(lastautoadjust < 0) lastautoadjust = lastmillis+autoadjustrate*5;
-	else if(frames > MAXFPSHISTORY && (!lastautoadjust || lastmillis >= lastautoadjust))
-	{
-		int delay = autoadjustrate;
-		if(worstfps < autoadjustlimit && autoadjustlevel > autoadjustmin)
-		{
-			setvar("autoadjustlevel", autoadjustmin, true);
-			delay = autoadjustrate/4;
-		}
-		else
-		{
-			float amt = float(worstfps)/float(minfps);
-			if(amt < 1.f)
-			{
-				setvar("autoadjustlevel", max(autoadjustlevel-int((1.f-amt)*10.f), autoadjustmin), true);
-				delay = autoadjustrate;
-			}
-			else if(amt > 1.f)
-			{
-				setvar("autoadjustlevel", min(autoadjustlevel+int(amt), autoadjustmax), true);
-				delay = autoadjustrate/2;
-			}
-		}
-		lastautoadjust = lastmillis+delay;
-	}
-}
-
 void resetfps()
 {
 	loopi(MAXFPSHISTORY) fpshistory[i] = 1;
@@ -761,8 +705,6 @@ void updatefps(int frames, int millis)
 	bestfpsdiff = bestdiff;
 	worstfps = fps-worstdiff;
 	worstfpsdiff = worstdiff;
-
-	if(autoadjust) autoadjustcheck(frames);
 }
 
 bool inbetweenframes = false, renderedframe = true;
@@ -852,9 +794,7 @@ void progress(float bar1, const char *text1, float bar2, const char *text2)
 	progressing = true;
 	loopi(2) { drawnoview(); swapbuffers(); }
 	progressing = false;
-
 	lastoutofloop = SDL_GetTicks();
-	lastautoadjust = -1;
 }
 
 int main(int argc, char **argv)

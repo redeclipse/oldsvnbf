@@ -653,8 +653,7 @@ extern void loadsky(char *basename);
 
 // main
 extern void setcaption(const char *text);
-extern int grabinput, colorpos, curfps, bestfps, worstfps, bestfpsdiff, worstfpsdiff, maxfps, minfps,
-	autoadjust, autoadjustlevel, autoadjustmin, autoadjustmax, autoadjustrate;
+extern int grabinput, colorpos, curfps, bestfps, worstfps, bestfpsdiff, worstfpsdiff, maxfps;
 extern char colorstack[10];
 extern void rehash(bool reload = true);
 

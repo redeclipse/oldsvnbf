@@ -98,7 +98,7 @@ namespace aiman
 		if(smode) smode->leavegame(ci, true);
 		mutate(smuts, mut->leavegame(ci, true));
 		ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-	    savescore(ci, true);
+	    distpoints(ci, true); savescore(ci);
 		sendf(-1, 1, "ri2", SV_DISCONNECT, cn);
 		clients.removeobj(ci);
 		delclient(cn);
