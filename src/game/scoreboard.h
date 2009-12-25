@@ -291,8 +291,13 @@ namespace hud
 				}
 				if(m_arena(game::gamemode, game::mutators))
 				{
-					SEARCHBINDCACHE(arenakey)("showgui arena", 0);
-					g.textf("Press \fs\fc%s\fS to change arena weapon", 0xFFFFFF, NULL, arenakey);
+					SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
+					g.textf("%sPress \fs\fc%s\fS to change your loadout", 0xFFFFFF, NULL, game::player1->loadweap < 0 ? "\fzoy" : "\fe", loadkey);
+				}
+				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
+				{
+					SEARCHBINDCACHE(teamkey)("showgui team", 0);
+					g.textf("Press \fs\fc%s\fS to change teams", 0xFFFFFF, NULL, teamkey);
 				}
 				g.popfont();
 			}

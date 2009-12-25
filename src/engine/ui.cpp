@@ -718,7 +718,7 @@ struct gui : guient
 	{
 		initscale *= 0.025f;
 		basescale = initscale;
-        if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(totalmillis-starttime)/300.0f, basescale);
+        if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(lastmillis-starttime)/300.0f, basescale);
         if(allowinput) needsinput = true;
         passthrough = !allowinput;
         fontdepth = 0;

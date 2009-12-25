@@ -2,7 +2,6 @@
 
 #include "engine.h"
 
-int cmenustart = 0, cmenutab = 1;
 guient *cgui = NULL;
 menu *cmenu = NULL;
 hashtable<const char *, menu> menus;
@@ -29,36 +28,39 @@ void removegui(menu *m)
     }
 }
 
-void pushgui(menu *m, int pos = -1)
+void pushgui(menu *m, int pos = -1, int tab = 0)
 {
     if(menustack.empty()) resetcursor();
     if(pos < 0) menustack.add(m);
     else menustack.insert(pos, m);
-    if(pos < 0 || pos==menustack.length()-1)
-    {
-        cmenutab = 1;
-        cmenustart = totalmillis;
-    }
-	if(m) m->passes = 0;
+	if(m)
+	{
+		m->passes = 0;
+		m->menustart = lastmillis;
+		if(tab > 0) m->menutab = tab;
+	}
 }
 
-void restoregui(int pos)
+void restoregui(int pos, int tab = 0)
 {
     int clear = menustack.length()-pos-1;
     loopi(clear) popgui();
-    cmenutab = 1;
-    cmenustart = totalmillis;
 	menu *m = menustack.last();
-	if(m) m->passes = 0;
+	if(m)
+	{
+		m->passes = 0;
+		m->menustart = lastmillis;
+		if(tab > 0) m->menutab = tab;
+	}
 }
 
-void showgui(const char *name)
+void showgui(const char *name, int tab)
 {
     menu *m = menus.access(name);
     if(!m) return;
     int pos = menustack.find(m);
-    if(pos<0) pushgui(m);
-    else restoregui(pos);
+    if(pos<0) pushgui(m, -1, tab);
+    else restoregui(pos, tab);
 	playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
@@ -475,7 +477,7 @@ COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
 COMMAND(guiservers, "");
 COMMANDN(cleargui, cleargui_, "i");
-COMMAND(showgui, "s");
+ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n && *n ? atoi(n) : -1));
 COMMAND(guistayopen, "s");
 COMMAND(guinoautotab, "s");
 
@@ -514,7 +516,7 @@ static struct applymenu : menu
     void gui(guient &g, bool firstpass)
     {
         if(menustack.empty()) return;
-        g.start(cmenustart, menuscale, NULL, true);
+        g.start(menustart, menuscale, &menutab, true);
         g.text("the following settings have changed:", 0xFFFFFF, "info");
         loopv(needsapply) g.text(needsapply[i].desc, 0xFFFFFF, "info");
         g.separator();

@@ -2664,7 +2664,7 @@ namespace server
 			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
 			ci->state.state = CS_WAITING;
 			ci->state.weapreset(false);
-			if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_ARENAWEAP);
+			if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_LOADWEAP);
 			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
 				setteam(ci, chooseteam(ci, ci->team), false, true);
 		}
@@ -2779,7 +2779,7 @@ namespace server
 			}
 			else if(ci->state.state == CS_WAITING)
 			{
-				if(m_arena(gamemode, mutators) && ci->state.arenaweap < 0 && ci->state.aitype < 0) continue;
+				if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) continue;
 				if(m_trial(gamemode) && ci->state.cpmillis < 0) continue;
 				int delay = m_delay(gamemode, mutators);
 				if(ci->state.aitype >= AI_START)
@@ -3309,12 +3309,12 @@ namespace server
 					break;
 				}
 
-				case SV_ARENAWEAP:
+				case SV_LOADWEAP:
 				{
 					int lcn = getint(p), aweap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					cp->state.arenaweap = aweap;
+					cp->state.loadweap = aweap;
 					break;
 				}
 

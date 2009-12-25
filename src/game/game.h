@@ -256,13 +256,13 @@ WEAPON(melee,
 	0,		0,		0,		0,		1,		1,		0,		0,		0,		0,		6,		6,		2,		4,		100,		500,		25,		25
 );
 WEAPON(pistol,
-	10,		10,		1,		1,		100,		200,		1000,		40,		40,		3000,	3000,		0,		2000,		2000,		0,		0,		0,		1,		1,		1,		1,		1,		1,		16,		16,
+	10,		10,		1,		1,		100,		200,		1000,	40,		40,		3000,		3000,		0,		2000,		2000,		0,		0,		0,		1,		1,		1,		1,		1,		1,		16,		16,
 	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,								IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		0,		0,		1,
 	0,		0,		0,		0,		0.05f,		0.05f,		2,		2,		0,		0,		1,		1,		2,		2,		150,		150,		300,		300
 );
 WEAPON(shotgun,
-	1,		8,		1,		2,		500,		750,		1000,	10,		8,		2500,		2000,		0,		300,		100,		0,		0,		0,		20,		40,		25,		20,		1,		2,		2,		2,
+	1,		8,		1,		2,		500,		750,		1000,	15,		10,		2500,		2000,		0,		300,		100,		0,		0,		0,		20,		40,		25,		20,		1,		2,		2,		2,
 	BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,					IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		0,		0,		0,
 	0.5f,		0.35f,		50,		50,		0.05f,		0.05f,		2,		2,		25,		25,		1,		1,		15,		15,		20,		40,		150,		300
@@ -506,7 +506,7 @@ enum
 {
 	SV_CONNECT = 0, SV_SERVERINIT, SV_WELCOME, SV_CLIENTINIT, SV_POS, SV_PHYS, SV_TEXT, SV_COMMAND, SV_ANNOUNCE, SV_DISCONNECT,
 	SV_SHOOT, SV_DESTROY, SV_SUICIDE, SV_DIED, SV_POINTS, SV_DAMAGE, SV_SHOTFX,
-	SV_ARENAWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
+	SV_LOADWEAP, SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN,
 	SV_DROP, SV_WEAPSELECT,
 	SV_MAPCHANGE, SV_MAPVOTE, SV_CHECKPOINT, SV_ITEMSPAWN, SV_ITEMUSE, SV_TRIGGER, SV_EXECLINK,
 	SV_PING, SV_PONG, SV_CLIENTPING,
@@ -535,7 +535,7 @@ char msgsizelookup(int msg)
 		SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
 		SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
 		SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 0,
-		SV_ARENAWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
+		SV_LOADWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
 		SV_DROP, 0, SV_WEAPSELECT, 0,
 		SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_CHECKPOINT, 0, SV_ITEMSPAWN, 2, SV_ITEMUSE, 0, SV_TRIGGER, 0, SV_EXECLINK, 3,
 		SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
@@ -661,11 +661,11 @@ enum { IM_T_NONE = 0, IM_T_BOOST, IM_T_DASH, IM_T_KICK, IM_T_SKATE, IM_T_MAX, IM
 struct gamestate
 {
 	int health, ammo[WEAP_MAX], entid[WEAP_MAX];
-	int lastweap, arenaweap, weapselect, weapload[WEAP_MAX], weapshot[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
+	int lastweap, loadweap, weapselect, weapload[WEAP_MAX], weapshot[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
 	int lastdeath, lastspawn, lastrespawn, lastpain, lastregen, lastfire;
 	int aitype, aientity, ownernum, skill, points, cpmillis, cptime;
 
-	gamestate() : arenaweap(-1), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
+	gamestate() : loadweap(-1), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
 		aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), cpmillis(0), cptime(0) {}
 	~gamestate() {}
 
@@ -843,14 +843,14 @@ struct gamestate
 		ammo[sweap] = WPA(sweap, reloads) ? WPA(sweap, add) : WPA(sweap, max);
 		if(arena)
 		{
-			int aweap = arenaweap;
+			int aweap = loadweap;
 			while(aweap < WEAP_OFFSET || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
 			ammo[aweap] = WPA(aweap, reloads) ? WPA(aweap, add) : WPA(aweap, max);
 			lastweap = weapselect = aweap;
 		}
 		else
 		{
-			arenaweap = -1;
+			loadweap = -1;
 			lastweap = weapselect = sweap;
 		}
 		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WPA(WEAP_GRENADE, max);
