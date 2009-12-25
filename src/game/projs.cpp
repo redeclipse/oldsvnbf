@@ -9,7 +9,7 @@ namespace projs
 	vector<hitmsg> hits;
 	vector<projent *> projs;
 
-	VARP(maxprojectiles, 32, 256, INT_MAX-1);
+	VARP(maxprojectiles, 32, 1024, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
 	VARP(flamerdelay, 1, 100, INT_MAX-1);
 	VARP(flamerlength, 50, 100, INT_MAX-1);
