@@ -440,6 +440,8 @@ namespace hud
 		else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
 	}
 
+	static int clipsizes[WEAP_MAX] = {0};
+
     void drawclip(int weap, int x, int y, float s)
     {
     	if(!isweap(weap) || weap == WEAP_MELEE) return;
@@ -449,8 +451,12 @@ namespace hud
 			riflecliptex, ""
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
-		WPS(clipmax, weap, max);
-		int ammo = game::player1->ammo[weap], maxammo = getvarmax(clipmax);
+		if(!clipsizes[weap])
+		{
+			WPS(clipmax, weap, max);
+			clipsizes[weap] = getvarmax(clipmax);
+		}
+		int ammo = game::player1->ammo[weap], maxammo = clipsizes[weap];
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
