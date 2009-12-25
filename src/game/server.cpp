@@ -2381,10 +2381,7 @@ namespace server
 		else if(weap == -1) gs.dropped.remove(id);
 	}
 
-	void takeammo(clientinfo *ci, int weap, int amt = 1)
-	{
-		if(weap != WEAP_MELEE) ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0);
-	}
+	void takeammo(clientinfo *ci, int weap, int amt = 1) { ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0); }
 
 	void shotevent::process(clientinfo *ci)
 	{
@@ -2558,7 +2555,7 @@ namespace server
 		int weap = -1, dropped = -1;
 		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GVAR(maxcarry))
 			weap = gs.drop(sweap, attr);
-		if(weap != WEAP_MELEE && isweap(weap))
+		if(isweap(weap))
 		{
 			dropped = gs.entid[weap];
 			gs.setweapstate(weap, WEAP_S_SWITCH, WEAPSWITCHDELAY, millis);

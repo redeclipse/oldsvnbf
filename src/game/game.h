@@ -250,7 +250,7 @@ enum
 //	tpr1	tpr2	ext1	ext2	radl1	radl2	brn1	brn2	rlds	zooms	fa1		fa2
 //	elas1	elas2	rflt1	rflt2	relt1	relt2	wfrc1	wfrc2	wght1	wght2	rads1	rads2	kpsh1	kpsh2	hpsh1		hpsh2		mdst1	mdst2
 WEAPON(melee,
-	1,		1,		0,		0,		300,		300,		0,		60,		30,		150,		150,		0,		100,		100,		1,		0,		0,		1,		1,		1,		1,		1,		1,		0,		0,
+	2,		2,		0,		0,		300,		300,		0,		60,		30,		150,		150,		0,		100,		100,		1,		0,		0,		1,		1,		1,		1,		1,		1,		0,		0,
 	IMPACT_PLAYER,															IMPACT_PLAYER,
 	1,		1,		0,		0,		0,		0,		0,		0,		0,		0,		1,		1,
 	0,		0,		0,		0,		1,		1,		0,		0,		0,		0,		6,		6,		2,		4,		100,		500,		25,		25

@@ -444,11 +444,11 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
-    	if(!isweap(weap) || weap == WEAP_MELEE) return;
+    	if(!isweap(weap) || (!WPB(weap, sub, false) && !WPB(weap, sub, true))) return;
 		const char *cliptexs[WEAP_MAX] = {
-			"", pistolcliptex, shotguncliptex, smgcliptex,
+			grenadecliptex, pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
-			riflecliptex, ""
+			riflecliptex, grenadecliptex
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
 		if(!clipsizes[weap])
@@ -461,9 +461,9 @@ namespace hud
 		else glBlendFunc(GL_ONE, GL_ONE);
 
 		const float clipskew[WEAP_MAX] = {
-			0, pistolclipskew, shotgunclipskew, smgclipskew,
+			grenadeclipskew, pistolclipskew, shotgunclipskew, smgclipskew,
 			flamerclipskew, plasmaclipskew, rifleclipskew, grenadeclipskew, // end of regular weapons
-			rifleclipskew, 0
+			rifleclipskew, grenadeclipskew
 		};
 		float fade = clipblend*hudblend, size = s*clipskew[weap];
 		int interval = lastmillis-game::player1->weaplast[weap];
@@ -1314,7 +1314,7 @@ namespace hud
 			case WEAPON:
 			{
 				const char *weaptexs[WEAP_MAX] = {
-					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
+					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, grenadetex
 				};
 				if(isweap(stype)) return weaptexs[stype];
 				break;
@@ -1352,7 +1352,7 @@ namespace hud
 			if(inventoryammo)
 			{
 				const char *hudtexs[WEAP_MAX] = {
-					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, ""
+					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, grenadetex
 				};
 				int sweap = m_weapon(game::gamemode, game::mutators);
 				loopi(WEAP_MAX) if(game::player1->hasweap(i, sweap) || lastmillis-game::player1->weaplast[i] <= game::player1->weapwait[i])
@@ -1377,7 +1377,7 @@ namespace hud
 						b = (weaptype[i].colour&0xFF)/255.f;
 					}
 					int oldy = y-sy;
-					if(inventoryammo && (instate || inventoryammo > 1) && i != WEAP_MELEE && game::player1->hasweap(i, sweap))
+					if(inventoryammo && (instate || inventoryammo > 1) && (WPB(i, sub, false) || WPB(i, sub, true)) && game::player1->hasweap(i, sweap))
 						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "super", "%d", game::player1->ammo[i]);
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
 					if(inventoryweapids && (instate || inventoryweapids > 1))
