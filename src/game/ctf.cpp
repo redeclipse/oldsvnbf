@@ -621,12 +621,12 @@ namespace ctf
 			{
 				bool guard = false;
 				if(f.owner || f.droptime || targets.empty()) guard = true;
-				else if(d->hasweap(d->arenaweap, m_weapon(game::gamemode, game::mutators)))
+				else if(d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators)))
 				{ // see if we can relieve someone who only has a piece of crap
 					gameent *t;
 					loopvk(targets) if((t = game::getclient(targets[k])))
 					{
-						if((t->ai && !t->hasweap(t->arenaweap, m_weapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect < WEAP_OFFSET))
+						if((t->ai && !t->hasweap(t->loadweap, m_weapon(game::gamemode, game::mutators))) || (!t->ai && t->weapselect < WEAP_OFFSET))
 						{
 							guard = true;
 							break;

@@ -521,22 +521,20 @@ extern void swapbuffers();
 
 // menu
 extern float menuscale;
-extern int cmenustart, cmenutab;
 extern guient *cgui;
 struct menu : guicb
 {
     char *name, *header, *contents, *initscript;
-    int passes;
+    int passes, menutab, menustart;
     bool world, useinput;
 
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), world(false), useinput(true) {}
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), menutab(0), menustart(0), world(false), useinput(true) {}
 
     void gui(guient &g, bool firstpass)
     {
         cgui = &g;
-        extern menu *cmenu;
-        cmenu = this;
-        cgui->start(cmenustart, menuscale, &cmenutab, useinput);
+        extern menu *cmenu; cmenu = this;
+        cgui->start(menustart, menuscale, &menutab, useinput);
         cgui->tab(header ? header : name);
 		if(!passes)
 		{

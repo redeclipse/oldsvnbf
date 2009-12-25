@@ -707,7 +707,7 @@ undoblock *newundocube(selinfo &s)
 void addundo(undoblock *u)
 {
     u->size = undosize(u);
-    u->timestamp = totalmillis;
+    u->timestamp = lastmillis;
     undos.add(u);
     totalundos += u->size;
     pruneundos(undomegs<<20);
@@ -747,7 +747,7 @@ void swapundo(undolist &a, undolist &b, const char *s)
             r = newundocube(l);
         }
         r->size = u->size;
-        r->timestamp = totalmillis;
+        r->timestamp = lastmillis;
         b.add(r);
         pasteundo(u);
         if(!u->numents) changed(l, false);
@@ -1458,7 +1458,7 @@ void filltexlist()
 void edittex(int i, bool save = true, bool edit = true)
 {
     lasttex = i;
-    lasttexmillis = totalmillis;
+    lasttexmillis = lastmillis;
     if(save)
     {
         loopvj(texmru) if(texmru[j]==lasttex) { curtexindex = j; break; }
@@ -1766,7 +1766,7 @@ struct texturegui : guicb
 							}
 						}
 						else if(slot.thumbnail) tex = slot.thumbnail;
-						else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
+						else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
 						if((slot.loaded || slot.thumbnail ? g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex) : g.texture(tex, thumbsize))&GUI_UP)
 						{
 							nextslot = ti;
@@ -1802,7 +1802,7 @@ struct texturegui : guicb
 					else
 					{
 						tex = loadthumbnail(slot);
-						lastthumbnail = totalmillis;
+						lastthumbnail = lastmillis;
 					}
 				}
 				if(g.texture(tex, thumbpreview, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }

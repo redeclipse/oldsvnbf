@@ -277,26 +277,26 @@ namespace game
         return true;
     }
 
-	void choosearenaweap(gameent *d, const char *s)
+	void chooseloadweap(gameent *d, const char *s)
 	{
 		if(m_arena(gamemode, mutators))
 		{
-			if(*s >= '0' && *s <= '9') d->arenaweap = atoi(s);
+			if(*s >= '0' && *s <= '9') d->loadweap = atoi(s);
 			else
 			{
 				loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
 				{
-					d->arenaweap = i;
+					d->loadweap = i;
 					break;
 				}
 			}
-			if(d->arenaweap < WEAP_OFFSET || d->arenaweap >= WEAP_SUPER || d->arenaweap == WEAP_GRENADE) d->arenaweap = WEAP_MELEE;
-			client::addmsg(SV_ARENAWEAP, "ri2", d->clientnum, d->arenaweap);
-			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[d->arenaweap].text, (d->arenaweap >= WEAP_OFFSET ? weaptype[d->arenaweap].name : "random weapons"));
+			if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_SUPER || d->loadweap == WEAP_GRENADE) d->loadweap = WEAP_MELEE;
+			client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
+			conoutft(CON_SELF, "\fwyou will spawn with: %s%s", weaptype[d->loadweap].text, (d->loadweap >= WEAP_OFFSET ? weaptype[d->loadweap].name : "random weapons"));
 		}
 		else conoutft(CON_MESG, "\foweapon selection is only available in arena");
 	}
-	ICOMMAND(arenaweap, "s", (char *s), choosearenaweap(player1, s));
+	ICOMMAND(loadweap, "s", (char *s), chooseloadweap(player1, s));
 
 	void respawn(gameent *d)
 	{
@@ -1539,7 +1539,7 @@ namespace game
 				if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
             }
             otherplayers();
-            if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->arenaweap < 0 && !menuactive()) showgui("arena");
+            if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->loadweap < 0 && !menuactive()) showgui("loadout");
         }
         else if(!menuactive()) showgui("main");
 

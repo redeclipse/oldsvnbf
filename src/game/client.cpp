@@ -16,8 +16,8 @@ namespace client
 		copystring(m->map, text);
 		m->mode = mode;
 		m->muts = muts;
-		SEARCHBINDCACHE(votekey)("showgui vote", 0);
-		SEARCHBINDCACHE(gamekey)("showgui game", 0);
+		SEARCHBINDCACHE(votekey)("showgui maps 2", 0);
+		SEARCHBINDCACHE(gamekey)("showgui maps 1", 0);
 		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
     void getvotes(int vote)
@@ -880,7 +880,7 @@ namespace client
         {
         	d->weapreset(true);
             d->lastweap = d->weapselect = getint(p);
-            if(m_arena(game::gamemode, game::mutators)) d->arenaweap = d->weapselect;
+            if(m_arena(game::gamemode, game::mutators)) d->loadweap = d->weapselect;
             loopi(WEAP_MAX) d->ammo[i] = getint(p);
         }
     }
@@ -1171,7 +1171,7 @@ namespace client
 				case SV_NEWGAME: // server requests next game
 				{
 					hud::sb.showscores(false);
-					if(!menuactive()) showgui("game");
+					if(!menuactive()) showgui("maps");
 					if(game::intermission) hud::lastnewgame = lastmillis;
 					break;
 				}
@@ -1254,10 +1254,10 @@ namespace client
 					break;
 				}
 
-				case SV_ARENAWEAP:
+				case SV_LOADWEAP:
 				{
 					hud::sb.showscores(false);
-					if(!menuactive()) showgui("arena");
+					if(!menuactive()) showgui("loadout");
 					break;
 				}
 

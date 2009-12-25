@@ -734,9 +734,16 @@ namespace hud
 						}
 						if(m_arena(game::gamemode, game::mutators))
 						{
-							SEARCHBINDCACHE(arenakey)("showgui arena", 0);
+							SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to change arena weapon", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, arenakey)*noticescale;
+							ty += draw_textx("%sPress \fs\fc%s\fS to change your loadout", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::player1->loadweap < 0 ? "\fzoy" : "\fe", loadkey)*noticescale;
+							popfont();
+						}
+						if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
+						{
+							SEARCHBINDCACHE(teamkey)("showgui team", 0);
+							pushfont("default");
+							ty += draw_textx("Press \fs\fc%s\fS to change teams", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamkey)*noticescale;
 							popfont();
 						}
 					}
