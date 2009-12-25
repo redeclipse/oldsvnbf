@@ -7,8 +7,8 @@ Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
 VARFP(maxparticles, 10, 4000, 40000, particleinit());
 VARFP(fewparticles, 10, 100, 40000, particleinit());
-VARA(maxparticledistance, 256, 1024, INT_MAX-1);
-VARA(maxparticletrail, 256, 1024, INT_MAX-1);
+VARP(maxparticledistance, 256, 1024, INT_MAX-1);
+VARP(maxparticletrail, 256, 1024, INT_MAX-1);
 
 VARP(particletext, 0, 1, 1);
 VARP(particleglare, 0, 1, 100);

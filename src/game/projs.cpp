@@ -9,10 +9,10 @@ namespace projs
 	vector<hitmsg> hits;
 	vector<projent *> projs;
 
-	VARA(maxprojectiles, 32, 256, INT_MAX-1);
+	VARP(maxprojectiles, 32, 256, INT_MAX-1);
 	VARP(flamertrail, 0, 1, 1);
 	VARP(flamerdelay, 1, 100, INT_MAX-1);
-	VARA(flamerlength, 50, 100, INT_MAX-1);
+	VARP(flamerlength, 50, 100, INT_MAX-1);
 	VARP(flamerhint, 0, 1, 1);
 
 	VARP(muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all

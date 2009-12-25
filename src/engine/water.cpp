@@ -274,7 +274,7 @@ struct Reflection
 };
 Reflection *findreflection(int height);
 
-VARA(reflectdist, 0, 2000, 10000);
+VARP(reflectdist, 0, 2000, 10000);
 VARW(waterfog, 0, 150, 10000);
 bvec watercol(0x10, 0x30, 0x60), waterfallcol(0, 0, 0);
 HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
@@ -996,7 +996,7 @@ void queryreflections()
 	}
 }
 
-VARA(maxreflect, 1, 1, 8);
+VARP(maxreflect, 1, 1, 8);
 
 int refracting = 0;
 bool reflecting = false, fading = false, fogging = false;

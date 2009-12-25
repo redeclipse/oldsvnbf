@@ -1410,11 +1410,79 @@ namespace server
 
 	extern void waiting(clientinfo *ci, int doteam = 0, int drop = 2, bool exclude = false);
 
+	savedscore &findscore(clientinfo *ci, bool insert)
+	{
+		uint ip = getclientip(ci->clientnum);
+		if(!ip) return *(savedscore *)0;
+		if(!insert)
+        {
+            loopv(clients)
+		    {
+			    clientinfo *oi = clients[i];
+			    if(oi->clientnum != ci->clientnum && getclientip(oi->clientnum) == ip && !strcmp(oi->name, ci->name))
+			    {
+				    oi->state.timeplayed += lastmillis-oi->state.lasttimeplayed;
+				    oi->state.lasttimeplayed = lastmillis;
+				    static savedscore curscore;
+				    curscore.save(oi->state);
+				    return curscore;
+			    }
+		    }
+        }
+		loopv(scores)
+		{
+			savedscore &sc = scores[i];
+			if(sc.ip == ip && !strcmp(sc.name, ci->name)) return sc;
+		}
+		if(!insert) return *(savedscore *)0;
+		savedscore &sc = scores.add();
+		sc.ip = ip;
+		copystring(sc.name, ci->name);
+		return sc;
+	}
+
+	void givepoints(clientinfo *ci, int points)
+	{
+		ci->state.score += points; ci->state.points += points;
+		sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, points, ci->state.points);
+	}
+
+	void distpoints(clientinfo *ci, bool discon = false)
+	{
+		if(m_team(gamemode, mutators) && !m_flag(gamemode))
+		{
+			int friends = 0;
+			loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team) friends++;
+			if(friends)
+			{
+				int points = int(ci->state.points/float(friends)), offset = ci->state.points-abs(points);
+				if(points || offset) loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team)
+				{
+					int total = points;
+					if(offset > 0) { total++; offset--; }
+					else if(offset < 0) { total--; offset++; }
+					else if(!points) break;
+					clients[i]->state.points += total;
+					sendf(-1, 1, "ri4", SV_POINTS, clients[i]->clientnum, total, clients[i]->state.points);
+				}
+			}
+			if(!discon) sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, -ci->state.points, 0);
+			ci->state.points = 0;
+		}
+	}
+
+	void savescore(clientinfo *ci)
+	{
+		savedscore &sc = findscore(ci, true);
+		if(&sc) sc.save(ci->state);
+	}
+
 	void setteam(clientinfo *ci, int team, bool reset = true, bool info = false)
 	{
 		if(ci->team != team)
 		{
 			bool sm = false;
+			distpoints(ci);
 			if(reset) waiting(ci, 0, 1);
 			else if(ci->state.state == CS_ALIVE)
 			{
@@ -1515,61 +1583,6 @@ namespace server
         if(m_demo(gamemode)) enddemoplayback();
         else enddemorecord();
     }
-
-	savedscore &findscore(clientinfo *ci, bool insert)
-	{
-		uint ip = getclientip(ci->clientnum);
-		if(!ip) return *(savedscore *)0;
-		if(!insert)
-        {
-            loopv(clients)
-		    {
-			    clientinfo *oi = clients[i];
-			    if(oi->clientnum != ci->clientnum && getclientip(oi->clientnum) == ip && !strcmp(oi->name, ci->name))
-			    {
-				    oi->state.timeplayed += lastmillis-oi->state.lasttimeplayed;
-				    oi->state.lasttimeplayed = lastmillis;
-				    static savedscore curscore;
-				    curscore.save(oi->state);
-				    return curscore;
-			    }
-		    }
-        }
-		loopv(scores)
-		{
-			savedscore &sc = scores[i];
-			if(sc.ip == ip && !strcmp(sc.name, ci->name)) return sc;
-		}
-		if(!insert) return *(savedscore *)0;
-		savedscore &sc = scores.add();
-		sc.ip = ip;
-		copystring(sc.name, ci->name);
-		return sc;
-	}
-
-	void givepoints(clientinfo *ci, int points)
-	{
-		ci->state.score += points; ci->state.points += points;
-		sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, points, ci->state.points);
-	}
-
-	void savescore(clientinfo *ci, bool distribute = true)
-	{
-		savedscore &sc = findscore(ci, true);
-		if(&sc)
-		{
-			if(distribute && m_team(gamemode, mutators) && !m_flag(gamemode))
-			{
-				int friends = 0;
-				loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team) friends++;
-				int points = int(ci->state.points/float(friends));
-				if(points != 0) loopv(clients) if(ci != clients[i] && clients[i]->state.aitype < AI_START && clients[i]->team == ci->team)
-					givepoints(clients[i], points);
-				ci->state.points = 0;
-			}
-			sc.save(ci->state);
-		}
-	}
 
 	struct droplist { int weap, ent; };
 	void dropitems(clientinfo *ci, int level = 2)
@@ -2914,7 +2927,7 @@ namespace server
 		    if(smode) smode->leavegame(ci, true);
 		    mutate(smuts, mut->leavegame(ci, true));
 		    ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
-		    savescore(ci, true);
+		    distpoints(ci, true); savescore(ci);
 		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
 		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
@@ -3763,6 +3776,7 @@ namespace server
 						}
 						if(smode) smode->leavegame(cp);
 						mutate(smuts, mut->leavegame(cp));
+						distpoints(cp);
 						sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
 						cp->state.cpnodes.setsize(0);
 						cp->state.cpmillis = 0;

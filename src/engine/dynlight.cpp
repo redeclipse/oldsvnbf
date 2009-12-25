@@ -2,7 +2,7 @@
 
 VARP(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
 VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
-VARA(dynlightdist, 128, 1024, 10000);
+VARP(dynlightdist, 128, 1024, 10000);
 
 struct dynlight
 {

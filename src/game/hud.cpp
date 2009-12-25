@@ -4,7 +4,7 @@ extern float progresspart;
 
 namespace hud
 {
-	const int NUMSTATS = 12;
+	const int NUMSTATS = 11;
 	int damageresidue = 0, hudwidth = 0, lastteam = 0, lastnewgame = 0,
 		laststats = 0, prevstats[NUMSTATS] = {0}, curstats[NUMSTATS] = {0};
 	vector<int> teamkills;
@@ -449,7 +449,8 @@ namespace hud
 			riflecliptex, ""
 		};
 		Texture *t = textureload(cliptexs[weap], 3);
-		int ammo = game::player1->ammo[weap], maxammo = WPA(weap, max);
+		WPS(clipmax, weap, max);
+		int ammo = game::player1->ammo[weap], maxammo = getvarmax(clipmax);
 		if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		else glBlendFunc(GL_ONE, GL_ONE);
 
@@ -1753,7 +1754,7 @@ namespace hud
 				laststats = totalmillis-(totalmillis%statrate);
 			}
 			int nextstats[NUMSTATS] = {
-				vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff, autoadjustlevel
+				vtris*100/max(wtris, 1), vverts*100/max(wverts, 1), xtraverts/1024, xtravertsva/1024, glde, gbatches, getnumqueries(), rplanes, curfps, bestfpsdiff, worstfpsdiff
 			};
 			loopi(NUMSTATS) if(prevstats[i] == curstats[i]) curstats[i] = nextstats[i];
 			if(showfps)
@@ -1763,12 +1764,10 @@ namespace hud
 				switch(showfps)
 				{
 					case 3:
-						if(autoadjust) by -= draw_textx("min:%d max:%d range:+%d-%d bal:\fs%s%d\fS%%", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[9], curstats[10], curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-						else by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps, curstats[9], curstats[10]);
+						by -= draw_textx("max:%d range:+%d-%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps, curstats[9], curstats[10]);
 						break;
 					case 2:
-						if(autoadjust) by -= draw_textx("min:%d max:%d, bal:\fs%s%d\fS%% %dfps", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, minfps, maxfps, curstats[11]<100?(curstats[11]<50?(curstats[11]<25?"\fr":"\fo"):"\fy"):"\fg", curstats[11]);
-						else by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps);
+						by -= draw_textx("max:%d", bx, by, 255, 255, 255, bf, TEXT_RIGHT_UP, -1, bs, maxfps);
 						break;
 					default: break;
 				}
