@@ -10,27 +10,42 @@ namespace client
 	void vote(gameent *d, const char *text, int mode, int muts)
 	{
 		mapvote *m = NULL;
-		loopv(mapvotes) if(mapvotes[i].player == d) { m = &mapvotes[i]; break; }
-		if(!m) m = &mapvotes.add();
-		m->player = d;
-		copystring(m->map, text);
-		m->mode = mode;
-		m->muts = muts;
+		loopv(mapvotes)
+		{
+			if(mapvotes[i].players.find(d) >= 0)
+			{
+				if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) return;
+				mapvotes[i].players.removeobj(d);
+			}
+			if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) m = &mapvotes[i];
+		}
+		if(!m)
+		{
+			m = &mapvotes.add();
+			copystring(m->map, text);
+			m->mode = mode;
+			m->muts = muts;
+		}
+		m->players.add(d);
 		SEARCHBINDCACHE(votekey)("showgui maps 2", 0);
 		SEARCHBINDCACHE(gamekey)("showgui maps 1", 0);
 		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
-    void getvotes(int vote)
+    void getvotes(int vote, int player)
     {
     	if(!vote) intret(mapvotes.length());
     	else
     	{
-			mkstring(text);
-			if(mapvotes.inrange(--vote)) formatstring(text)("%d %d %d %s", mapvotes[vote].player->clientnum, mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
+			mkstring(text); vote--; player--;
+			if(mapvotes.inrange(vote))
+			{
+				if(mapvotes[vote].players.inrange(player)) formatstring(text)("%d", mapvotes[vote].players[player]->clientnum);
+				else formatstring(text)("%d %d %d %s", mapvotes[vote].players.length(), mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
+			}
 			result(text);
     	}
     }
-    ICOMMAND(getvote, "i", (int *num), getvotes(*num));
+    ICOMMAND(getvote, "ii", (int *num, int *player), getvotes(*num, *player));
 
     int lastauth = 0;
     string authname = "", authkey = "";
@@ -199,12 +214,13 @@ namespace client
 		entities::edittoggled(edit);
 	}
 
-    const char *getclientname(int cn)
+    const char *getclientname(int cn, int colour)
     {
         gameent *d = game::getclient(cn);
+        if(colour && d) return game::colorname(d);
         return d ? d->name : "";
     }
-    ICOMMAND(getclientname, "i", (int *cn), result(getclientname(*cn)));
+    ICOMMAND(getclientname, "ii", (int *cn, int *colour), result(getclientname(*cn, *colour)));
 
     int getclientteam(int cn)
     {

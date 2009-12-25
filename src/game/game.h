@@ -1207,7 +1207,7 @@ namespace client
 {
 	struct mapvote
 	{
-		gameent *player;
+		vector<gameent *> players;
 		string map;
 		int mode, muts;
 	};
