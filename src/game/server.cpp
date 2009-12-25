@@ -3380,7 +3380,12 @@ namespace server
 						ivec &dest = ev->shots.add();
 						loopk(3) dest[k] = getint(p);
 					}
-                    if(havecn) cp->addevent(ev);
+                    if(havecn)
+                    {
+                    	while(ev->shots.length() > WPB(ev->weap, rays, ev->flags&HIT_ALT))
+							ev->shots.remove(rnd(ev->shots.length()));
+                    	cp->addevent(ev);
+                    }
                     else delete ev;
 					break;
 				}
