@@ -128,7 +128,7 @@ namespace hud
 	VARP(showinventory, 0, 1, 1);
 	VARP(inventoryammo, 0, 1, 2);
 	VARP(inventorygame, 0, 1, 2);
-	VARP(inventoryteams, 0, 4000, INT_MAX-1);
+	VARP(inventoryteams, 0, 5000, INT_MAX-1);
 	VARP(inventorystatus, 0, 2, 2);
 	VARP(inventoryscore, 0, 0, 1);
 	VARP(inventoryweapids, 0, 1, 2);
@@ -1504,7 +1504,6 @@ namespace hud
 				}
 				sy += sw;
 			}
-			else if(inventorystatus >= 2) sy += drawitem(teamtex(game::player1->team), x, y-sy, sw, true, 1.f, 1.f, 1.f, blend*inventoryblend, 1.f);
 		}
 		else
 		{
@@ -1563,30 +1562,30 @@ namespace hud
 				if(!texpaneltimer)
 				{
 					cy[i] -= showfps || showstats > (m_edit(game::gamemode) ? 0 : 1) ? cs/2 : cs/16;
+					if(lastnewgame)
+					{
+						if(!game::intermission) lastnewgame = 0;
+						else
+						{
+							int millis = votelimit-(lastmillis-lastnewgame);
+							float amt = float(millis)/float(votelimit);
+							const char *col = "\fw";
+							if(amt > 0.75f) col = "\fg";
+							else if(amt > 0.5f) col = "\fy";
+							else if(amt > 0.25f) col = "\fo";
+							else col = "\fr";
+							hud::drawprogress(cx[i], cm+cs, 0, 1, cs, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
+							cm += hud::drawprogress(cx[i], cm+cs, 0, amt, cs, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
+						}
+					}
 					if(inventoryteams && game::player1->state != CS_EDITING && game::player1->state != CS_SPECTATOR)
 					{
 						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
-						if(lastnewgame)
-						{
-							if(!game::intermission) lastnewgame = 0;
-							else
-							{
-								int millis = votelimit-(lastmillis-lastnewgame);
-								float amt = float(millis)/float(votelimit);
-								const char *col = "\fw";
-								if(amt > 0.75f) col = "\fg";
-								else if(amt > 0.5f) col = "\fy";
-								else if(amt > 0.25f) col = "\fo";
-								else col = "\fr";
-								hud::drawprogress(cx[i], cm+cs, 0, 1, cs, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
-								cm += hud::drawprogress(cx[i], cm+cs, 0, amt, cs, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
-							}
-						}
 						if(!lastnewgame && lastteam)
 						{
 							const char *pre = "";
-							float skew = inventoryskew, fade = blend*inventoryblend, rescale = 1;
-							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*inventoryskew) };
+							float skew = inventorygrow, fade = blend*inventoryblend, rescale = 1;
+							int millis = lastmillis-lastteam, pos[2] = { cx[i], cm+int(cs*inventorygrow) };
 							if(millis <= inventoryteams)
 							{
 								pre = "\fzRw";

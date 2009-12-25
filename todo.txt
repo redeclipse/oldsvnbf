@@ -33,6 +33,7 @@
 * First blood (+points?)
 
 = Maps =
-* Fix gravity in 'wet'
-* Ladderify 'dualstar'
-* Post-freeze: Update to new version of 'darkness'
+* Fix gravity in wet
+* Ladderify dualstar
+* Post-freeze: Update to new version of darkness
+* Delisting unless improved: dualstar, siege, warehouse, wet
