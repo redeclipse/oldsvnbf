@@ -1531,6 +1531,7 @@ namespace hud
 			}
 			if(inventoryhealth >= 3 && *state)
 			{
+				sy -= x/2;
 				pushfont("super");
 				sy += draw_textx("%s", x+width/2, y-sy, 255, 255, 255, int(fade*255)/2, TEXT_CENTER_UP, -1, -1, state);
 				popfont();
@@ -1877,7 +1878,7 @@ namespace hud
 		{
 			drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudsize, gap, gap, hudwidth-gap*2);
 			if(showconsole >= 2 && !noview && !progressing)
-				drawconsole(2, hudwidth, hudsize, br, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap : (bs-gap)*2);
+				drawconsole(2, hudwidth, hudsize, br+gap, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap*2 : (bs-gap*2)*2);
 		}
 
 		glDisable(GL_BLEND);
