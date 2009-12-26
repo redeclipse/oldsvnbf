@@ -6,37 +6,37 @@ enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 
 struct aistyles
 {
-	int	type,			weap,			health,	maxspeed,	frame;	float	skill,	xradius,	yradius,	height,		weight;
+	int	type,			weap,			health,	maxspeed,	frame;	float	xradius,	yradius,	height,		weight;
 	bool	canmove,	canfight,	useweap;	const char	*name,		*mdl;
 };
 #ifdef GAMESERVER
 aistyles aistyle[] = {
 	{
-		AI_BOT,			-1, 			0,		50,			1,				1.f,	0,			0, 			0,			200,
+		AI_BOT,			-1, 			0,		50,			1,				0,			0, 			0,			200,
 			true,		true,		true,					"bot",		"actors/player"
 	},
 	{
-		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				0.9f,	3,			3,			4,			0,
+		AI_TURRET,		WEAP_SMG,	 	100,	0,			2,				3,			3,			4,			0,
 			false,		true,		true,					"turret",	"weapons/smg/vwep"
 	},
 	{
-		AI_ZOMBIE,		WEAP_MELEE,		50,		45,			3,				0.8f,	3,			3,			14,			150,
+		AI_ZOMBIE,		WEAP_MELEE,		50,		45,			3,				3,			3,			14,			150,
 			true,		false,		true,					"zombie",	"actors/player/beta"
 	},
 	{
-		AI_GUARD,		WEAP_PISTOL, 	50,		40,			2,				0.85f,	3,			3,			14,			165,
+		AI_GUARD,		WEAP_PISTOL, 	50,		40,			2,				3,			3,			14,			165,
 			true,		false,		true,					"guard",	"actors/player/gamma"
 	},
 	{
-		AI_HEAVY,		WEAP_SHOTGUN, 	200,	30,			2,				0.8f,	3,			3,			14,			200,
+		AI_HEAVY,		WEAP_SHOTGUN, 	200,	30,			2,				3,			3,			14,			200,
 			true,		false,		true,					"heavy",	"actors/player/gamma"
 	},
 	{
-		AI_PYRO,		WEAP_FLAMER, 	150,	50,			2,				0.85f,	3,			3,			14,			175,
+		AI_PYRO,		WEAP_FLAMER, 	150,	50,			2,				3,			3,			14,			175,
 			true,		false,		true,					"pyro",		"actors/player/gamma"
 	},
 	{
-		AI_SNIPER,		WEAP_RIFLE, 	100,	40,			2,				0.95f,	3,			3,			14,			175,
+		AI_SNIPER,		WEAP_RIFLE, 	100,	40,			2,				3,			3,			14,			175,
 			true,		false,		true,					"sniper",	"actors/player/gamma"
 	},
 };
@@ -56,10 +56,10 @@ namespace ai
 	const float CLOSEDIST		= float(enttype[WAYPOINT].radius);	// is close
 	const float JUMPMIN			= CLOSEDIST*0.25f;					// decides to jump
 	const float JUMPMAX			= CLOSEDIST*1.5f;					// max jump
-	const float SIGHTMIN		= CLOSEDIST*2.f;					// minimum line of sight
-	const float SIGHTMAX		= CLOSEDIST*64.f;					// maximum line of sight
-	const float VIEWMIN			= 70.f;								// minimum field of view
-	const float VIEWMAX			= 150.f;							// maximum field of view
+	const float SIGHTMIN		= CLOSEDIST*4.f;					// minimum line of sight
+	const float SIGHTMAX		= CLOSEDIST*128.f;					// maximum line of sight
+	const float VIEWMIN			= 90.f;								// minimum field of view
+	const float VIEWMAX			= 180.f;							// maximum field of view
 
 	// ai state information for the owner client
 	enum
@@ -239,7 +239,7 @@ namespace ai
 	extern bool defend(gameent *d, aistate &b, const vec &pos, float guard = SIGHTMIN, float wander = SIGHTMAX, int walk = 0);
 
 	extern void spawned(gameent *d, int ent);
-	extern void damaged(gameent *d, gameent *e);
+	extern void damaged(gameent *d, gameent *e, int weap, int flags, int damage);
 	extern void killed(gameent *d, gameent *e);
 	extern void update();
 	extern void avoid();

@@ -756,9 +756,10 @@ namespace hud
 						if(game::player1->state == CS_ALIVE && !lastteam) lastteam = lastmillis;
 						if(lastmillis-lastteam <= inventoryteams)
 						{
-							if(game::player1->team == TEAM_NEUTRAL)
+							if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+							else if(!m_team(game::gamemode, game::mutators))
 							{
-								if(m_campaign(game::gamemode)) ty += draw_textx("Campaign Mission", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
+								if(m_trial(game::gamemode)) ty += draw_textx("Time Trial", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 								else ty += draw_textx("\fzReFree-for-all Deathmatch", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 							}
 							else ty += draw_textx("\fzReTeam \fs%s%s\fS \fs\fw(\fS\fs%s%s\fS\fs\fw)\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamtype[game::player1->team].chat, teamtype[game::player1->team].name, teamtype[game::player1->team].chat, teamtype[game::player1->team].colname)*noticescale;
@@ -1619,10 +1620,11 @@ namespace hud
 									rescale = tweak;
 								}
 							}
-							cm += int(drawitem(teamtex(game::player1->team), pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
-							if(game::player1->team == TEAM_NEUTRAL)
+							cm += int(drawitem(m_team(game::gamemode, game::mutators) ? teamtex(game::player1->team) : playertex, pos[0], pos[1], cs, false, 1, 1, 1, fade, skew)*rescale);
+							if(m_campaign(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "sub", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
+							else if(!m_team(game::gamemode, game::mutators))
 							{
-								if(m_campaign(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%scampaign", teamtype[game::player1->team].chat, pre)*rescale);
+								if(m_trial(game::gamemode)) cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "sub", fade, "%s%stime-trial", teamtype[game::player1->team].chat, pre)*rescale);
 								else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%sffa", teamtype[game::player1->team].chat, pre)*rescale);
 							}
 							else cm += int(drawitemsubtext(pos[0]-int(cs*skew/2), pos[1], cs, TEXT_CENTERED, skew, "default", fade, "%s%s%s", teamtype[game::player1->team].chat, pre, teamtype[game::player1->team].name)*rescale);
