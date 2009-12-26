@@ -292,7 +292,7 @@ namespace hud
 				if(m_arena(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
-					g.textf("%sPress \fs\fc%s\fS to change your loadout", 0xFFFFFF, NULL, game::player1->loadweap < 0 ? "\fzoy" : "\fe", loadkey);
+					g.textf("Press \fs\fc%s\fS to %schange your loadout", 0xFFFFFF, NULL, loadkey, game::player1->loadweap < 0 ? "\fzoy" : "");
 				}
 				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
