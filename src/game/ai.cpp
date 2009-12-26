@@ -15,27 +15,19 @@ namespace ai
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
 	ICOMMAND(delbot, "", (), client::addmsg(SV_DELBOT, "r"));
 
-	float viewdist(int x)
-	{
-		return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist);
-	}
-
-	float viewfieldx(int x)
-	{
-		return x <= 100 ? clamp((VIEWMIN+(VIEWMAX-VIEWMIN))/100.f*float(x), float(VIEWMIN), float(VIEWMAX)) : float(VIEWMAX);
-	}
-
-	float viewfieldy(int x)
-	{
-		return viewfieldx(x)*3.f/4.f;
-	}
+	float viewdist(int x) { return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist); }
+	float viewfieldx(int x) { return x <= 100 ? clamp((VIEWMIN+(VIEWMAX-VIEWMIN))/100.f*float(x), float(VIEWMIN), float(VIEWMAX)) : float(VIEWMAX); }
+	float viewfieldy(int x) { return viewfieldx(x)*3.f/4.f; }
 
 	int owner(gameent *d)
 	{
-		if(entities::ents.inrange(d->aientity))
+		if(d->aitype >= AI_START)
 		{
-			if(m_stf(game::gamemode)) return stf::aiowner(d);
-			else if(m_ctf(game::gamemode)) return ctf::aiowner(d);
+			if(entities::ents.inrange(d->aientity))
+			{
+				if(m_stf(game::gamemode)) return stf::aiowner(d);
+				else if(m_ctf(game::gamemode)) return ctf::aiowner(d);
+			}
 		}
 		return d->team;
 	}
@@ -327,8 +319,7 @@ namespace ai
 	{
 		if(e && targetable(d, e, true))
 		{
-			if(pursue && b.type != AI_S_PURSUE && b.type != AI_S_DEFEND)
-				d->ai->switchstate(b, AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
+			if(pursue && b.type != AI_S_PURSUE && b.type != AI_S_DEFEND) d->ai->addstate(AI_S_PURSUE, AI_T_PLAYER, e->clientnum);
 			if(d->ai->enemy != e->clientnum) d->ai->enemymillis = lastmillis;
 			d->ai->enemy = e->clientnum;
 			d->ai->enemyseen = lastmillis;
@@ -539,8 +530,6 @@ namespace ai
 		{
 			d->ai->reset(tryreset);
 			d->ai->lastrun = lastmillis;
-			aistate &b = d->ai->getstate();
-			b.next = lastmillis+((111-d->skill)*10)+rnd((111-d->skill)*10);
 			if(d->aitype >= AI_START && aistyle[d->aitype].weap >= 0) d->loadweap = aistyle[d->aitype].weap;
 			else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
 				d->loadweap = m_weapon(game::gamemode, game::mutators);
@@ -550,11 +539,8 @@ namespace ai
 				d->loadweap = rnd(WEAP_SUPER);
 				if(d->loadweap >= WEAP_OFFSET || !rnd(d->skill)) break;
 			}
-			if(d->aitype == AI_BOT)
-			{
-				if(m_arena(game::gamemode, game::mutators) && d->loadweap == WEAP_GRENADE)
-					d->loadweap = WEAP_PISTOL;
-			}
+			if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap == WEAP_GRENADE)
+				d->loadweap = WEAP_PISTOL;
 			d->ai->suspended = true;
 		}
 	}
@@ -881,7 +867,6 @@ namespace ai
 				{
 					if(wpspot(d, d->ai->route[n], retries >= 2))
 					{
-						b.next = lastmillis; // reached our goal, update
 						d->ai->clear(false);
 						return true;
 					}
@@ -1354,7 +1339,7 @@ namespace ai
 				client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
 				d->respawned = lastmillis;
 			}
-			else if(d->state == CS_ALIVE && run && lastmillis >= c.next)
+			else if(d->state == CS_ALIVE && run)
 			{
 				int result = 0; c.idle = 0;
 				switch(c.type)
@@ -1377,13 +1362,8 @@ namespace ai
 						}
 						continue; // shouldn't interfere
 					}
-					else c.next = lastmillis+250+rnd(250);
 				}
-				else
-				{
-					if(d->ai->suspended) d->ai->unsuspend();
-					c.next = lastmillis+125+rnd(125);
-				}
+				else if(d->ai->suspended) d->ai->unsuspend();
 			}
 			logic(d, c, run);
 			break;
@@ -1402,9 +1382,9 @@ namespace ai
 		mkstring(s);
 		if(top)
 		{
-			formatstring(s)("<default>\fg%s (%d[%d]) %s:%d (%d[%d])",
+			formatstring(s)("<default>\fg%s (%s) %s:%d (%d[%d])",
 				bnames[b.type],
-				lastmillis-b.millis, b.next-lastmillis,
+				hud::timetostr(lastmillis-b.millis),
 				btypes[b.targtype+1], b.target,
 				!d->ai->route.empty() ? d->ai->route[0] : -1,
 				d->ai->route.length()
@@ -1412,9 +1392,9 @@ namespace ai
 		}
 		else
 		{
-			formatstring(s)("<sub>\fy%s (%d[%d]) %s:%d",
+			formatstring(s)("<sub>\fy%s (%d) %s:%d",
 				bnames[b.type],
-				lastmillis-b.millis, b.next-lastmillis,
+				hud::timetostr(lastmillis-b.millis),
 				btypes[b.targtype+1], b.target
 			);
 		}
