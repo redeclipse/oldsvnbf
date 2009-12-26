@@ -17,6 +17,7 @@
 * Send points along with spawn state (like frags are)
 * Elaborate and refine Story mode/AI
 * Port NEWUI code
+* Master server tracking and unlockable system
 
 = Models =
 * New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso, tag_hat)

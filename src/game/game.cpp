@@ -666,6 +666,7 @@ namespace game
 				d->vel.add(push);
 				if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
 			}
+			ai::damaged(d, actor, weap, flags, damage);
 		}
 	}
 
@@ -676,7 +677,6 @@ namespace game
 		{
 			d->dodamage(health);
 			if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
-			ai::damaged(d, actor);
 		}
 		hiteffect(weap, flags, damage, d, actor, dir, actor == player1 || actor->ai);
 	}
@@ -1036,7 +1036,7 @@ namespace game
 		entities::spawnplayer(player1, -1, false); // prevent the player from being in the middle of nowhere
 		resetcamera();
 		if(!empty) client::sendinfo = client::sendcrc = true;
-		fogdist = max(getvar("fog")-enttype[WAYPOINT].radius, 64);
+		fogdist = max(float(getvar("fog")), ai::SIGHTMIN);
         copystring(clientmap, reqname ? reqname : (name ? name : ""));
 		resetsway();
 	}

@@ -63,7 +63,7 @@ namespace aiman
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = int(max(GVAR(botmaxskill), GVAR(botminskill))*aistyle[type].skill), n = int(min(GVAR(botminskill), m)*aistyle[type].skill);
+				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.ownernum = findaiclient();
@@ -193,7 +193,7 @@ namespace aiman
 		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
-			int o = clamp(int(m*aistyle[ci->state.aitype].skill), 1, 101), p = clamp(int(n*aistyle[ci->state.aitype].skill), 1, 101);
+			int o = clamp(m, 1, 101), p = clamp(n, 1, 101);
 			if(ci->state.skill > o || ci->state.skill < p)
 			{ // needs re-skilling
 				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);
