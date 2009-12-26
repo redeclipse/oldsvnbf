@@ -1189,7 +1189,7 @@ namespace client
 				case SV_NEWGAME: // server requests next game
 				{
 					hud::sb.showscores(false);
-					if(!menuactive()) showgui("maps");
+					if(!menuactive()) showgui("maps", 1);
 					if(game::intermission) hud::lastnewgame = lastmillis;
 					break;
 				}
