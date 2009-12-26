@@ -1323,33 +1323,33 @@ namespace server
 		return false;
 	}
 
-	bool vote(char *reqmap, int &reqmode, int &reqmuts, int sender)
+	void vote(char *reqmap, int &reqmode, int &reqmuts, int sender)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
-        if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return false;
+        if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
         switch(votelock)
         {
-        	case 1: case 2: if(reqmode == gamemode && reqmuts == mutators && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same game again")) return false; break;
-			case 3: case 4: if(!haspriv(ci, votelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return false; break;
-			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return false; break;
+        	case 1: case 2: if(reqmode == gamemode && reqmuts == mutators && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same game again")) return; break;
+			case 3: case 4: if(!haspriv(ci, votelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
+			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
         if(!hasveto)
         {
-        	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return false;
-        	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return false;
+        	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return;
+        	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return;
         }
 		if(reqmode < G_LOBBY && !ci->local)
 		{
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
-			return false;
+			return;
 		}
 		switch(modelock)
 		{
 			case 0: default: break;
-			case 1: case 2: if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return false; break;
-			case 3: case 4: if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return false; break;
-			case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return false; break;
+			case 1: case 2: if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
+			case 3: case 4: if(reqmode < modelimit && !haspriv(ci, modelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
+			case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return; break;
 		}
 		if(reqmode != G_EDITMODE && mapslock)
 		{
@@ -1369,7 +1369,7 @@ namespace server
 					else maplist = GVAR(allowmaps);
 					break;
 				}
-				case 5: if(!haspriv(ci, PRIV_MAX, "select a custom maps")) return false; break;
+				case 5: if(!haspriv(ci, PRIV_MAX, "select a custom maps")) return; break;
 			}
 			if(maplist && *maplist)
 			{
@@ -1391,21 +1391,21 @@ namespace server
 					}
 					if(found) break;
 				}
-				if(!found && !haspriv(ci, mapslock%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return false;
+				if(!found && !haspriv(ci, mapslock%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return;
 			}
 		}
-		copystring(ci->mapvote, reqmap);
-		ci->modevote = reqmode;
-		ci->mutsvote = reqmuts;
+		copystring(ci->mapvote, reqmap); ci->modevote = reqmode; ci->mutsvote = reqmuts;
 		if(hasveto)
 		{
 			endmatch();
 			srvoutf(3, "%s forced: \fs\fc%s\fS on map \fs\fc%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
-			return false;
+			return;
 		}
-		return checkvotes() ? false : true;
+		sendf(-1, 1, "ri2si2", SV_MAPVOTE, ci->clientnum, ci->mapvote, ci->modevote, ci->mutsvote);
+		relayf(3, "\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
+		checkvotes();
 	}
 
 	extern void waiting(clientinfo *ci, int doteam = 0, int drop = 2, bool exclude = false);
@@ -3614,11 +3614,7 @@ namespace server
 						copystring(text, map);
 					}
 					int reqmode = getint(p), reqmuts = getint(p);
-					if(vote(text, reqmode, reqmuts, sender))
-					{
-						sendf(-1, 1, "ri2si2", SV_MAPVOTE, sender, text, reqmode, reqmuts);
-						relayf(3, "\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(reqmode, reqmuts), text);
-					}
+					vote(text, reqmode, reqmuts, sender);
 					break;
 				}
 
