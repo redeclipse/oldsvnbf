@@ -1,4 +1,5 @@
 = Code =
+* Make checkpoints/triggers linkable for a determined order (add to kinship system)
 * Make the boundbox on mapmodels obey the scale attribute ('trees' on oasis disappear/flicker?)
 * Create "assisted secures" for stf (player1, player2, player3 secured flag N)
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
