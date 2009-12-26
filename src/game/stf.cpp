@@ -57,7 +57,7 @@ namespace stf
             	g += (g2-g)*amt;
             	b += (b2-b)*amt;
             }
-			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(r, g, b));
+			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(r, g, b), 0, 0, DL_KEEP);
         }
     }
 

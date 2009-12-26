@@ -149,7 +149,8 @@ enum
 {
     DL_SHRINK = 1<<0,
     DL_EXPAND = 1<<1,
-    DL_FLASH  = 1<<2
+    DL_FLASH  = 1<<2,
+    DL_KEEP   = 1<<3
 };
 
 extern void adddynlight(const vec &o, float radius, const vec &color, int fade = 0, int peak = 0, int flags = 0, float initradius = 0, const vec &initcolor = vec(0, 0, 0), physent *owner = NULL);

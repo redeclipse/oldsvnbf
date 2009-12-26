@@ -362,7 +362,7 @@ namespace game
 					if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
 					else pc = 0.5f+(float(millis%fireburndelay)/float(fireburndelay*2));
 					pc = deadscale(d, pc);
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.5f+(rnd(100)/100.f))*pc, vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc));
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.5f+(rnd(100)/100.f))*pc, vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc), 0, 0, DL_KEEP);
 				}
 			}
 		}
