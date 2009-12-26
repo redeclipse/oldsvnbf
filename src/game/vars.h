@@ -2,14 +2,14 @@ VARG(serverdebug, 0, 0, 3);
 
 SVARG(defaultmap, "");
 VARG(defaultmode, -1, 0, G_MAX-1);
-VARG(defaultmuts, -1, 0, G_M_ALL);
+VARG(defaultmuts, -2, -1, G_M_ALL);
 VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 SVARG(allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dualstar dutility eight enigma firehouse forge gladiator hollow longestyard mirage nova oasis overseer panic refuge rivals siege smouldering testchamber tower tranquility venus warehouse warground wet wishbone");
 SVARG(mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma gladiator longestyard mirage nova oasis panic refuge rivals smouldering tower warground venus");
 SVARG(duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight gladiator longestyard nova panic refuge rivals tower warground venus");
 SVARG(ctfmaps, "bath citadel darkness deadsimple deli enigma forge gladiator mirage nova oasis panic refuge rivals smouldering warground venus");
-SVARG(mctfmaps, "bloodgrounds deadsimple enigma oasis refuge");
+SVARG(mctfmaps, "deadsimple enigma oasis refuge");
 SVARG(stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator mirage nova oasis panic refuge rivals smouldering tower warground venus");
 SVARG(trialmaps, "testchamber");
 SVARG(storymaps, "wishbone storytest");

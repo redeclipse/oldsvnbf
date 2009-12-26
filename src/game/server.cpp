@@ -294,9 +294,7 @@ namespace server
 	}
 
 	bool hasgameinfo = false;
-	int gamemode = G_LOBBY, mutators = 0;
-	int gamemillis = 0, gamelimit = 0;
-
+	int gamemode = -1, mutators = -1, gamemillis = 0, gamelimit = 0;
 	string smapname;
 	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
@@ -1311,7 +1309,7 @@ namespace server
 			}
 			else
 			{
-				int mode = GVAR(defaultmode) >= 0 ? gamemode : -1, muts = GVAR(defaultmuts) >= 0 ? mutators : -1;
+				int mode = GVAR(defaultmode) >= 0 ? gamemode : -1, muts = GVAR(defaultmuts) >= -1 ? mutators : -2;
 				changemode(&mode, &muts);
 				const char *map = choosemap(smapname, mode, muts);
 				srvoutf(3, "server chooses: \fs\fc%s\fS on map \fs\fc%s\fS", gamename(mode, muts), map);
