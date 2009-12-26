@@ -91,7 +91,7 @@ namespace ai
 
 	struct aistate
 	{
-		int type, millis, next, targtype, target, idle;
+		int type, millis, targtype, target, idle;
 		bool override;
 
 		aistate(int m, int t, int r = -1, int v = -1) : type(t), millis(m), targtype(r), target(v)
@@ -102,7 +102,6 @@ namespace ai
 
 		void reset()
 		{
-			next = millis;
 			idle = 0;
 			override = false;
 		}
