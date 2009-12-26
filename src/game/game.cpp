@@ -982,7 +982,11 @@ namespace game
 		if(!d) return;
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
-		loopv(client::mapvotes) if(client::mapvotes[i].players.find(d) >= 0) { client::mapvotes[i].players.removeobj(d); }
+		loopvrev(client::mapvotes) if(client::mapvotes[i].players.find(d) >= 0)
+		{
+			client::mapvotes[i].players.removeobj(d);
+			if(client::mapvotes[i].players.empty()) client::mapvotes.remove(i);
+		}
 		projs::remove(d);
         removedamagetones(d);
         if(m_ctf(gamemode)) ctf::removeplayer(d);
@@ -1539,7 +1543,8 @@ namespace game
 				if(player1->state == CS_ALIVE) weapons::shoot(player1, worldpos);
             }
             otherplayers();
-            if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->loadweap < 0 && !menuactive()) showgui("loadout");
+            if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->loadweap < 0 && client::ready() && !menuactive())
+				showgui("loadout");
         }
         else if(!menuactive()) showgui("main");
 
