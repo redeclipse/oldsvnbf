@@ -10,12 +10,13 @@ namespace client
 	void vote(gameent *d, const char *text, int mode, int muts)
 	{
 		mapvote *m = NULL;
-		loopv(mapvotes)
+		loopvrev(mapvotes)
 		{
 			if(mapvotes[i].players.find(d) >= 0)
 			{
 				if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) return;
 				mapvotes[i].players.removeobj(d);
+				if(mapvotes[i].players.empty()) mapvotes.remove(i);
 			}
 			if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) m = &mapvotes[i];
 		}
@@ -31,6 +32,7 @@ namespace client
 		SEARCHBINDCACHE(gamekey)("showgui maps 1", 0);
 		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
+
     void getvotes(int vote, int player)
     {
     	if(!vote) intret(mapvotes.length());
