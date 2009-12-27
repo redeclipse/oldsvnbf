@@ -59,7 +59,7 @@ void adddynlight(const vec &o, float radius, const vec &color, int fade, int pea
     if(o.dist(camera1->o) > dynlightdist) return;
 
     int insert = 0, expire = fade + peak + lastmillis;
-    loopvrev(dynlights) if(expire>=dynlights[i].expire || ((flags&DL_KEEP) && !(dynlights[i].flags&DL_KEEP))) { insert = i+1; break; }
+    loopvrev(dynlights) if(expire>=dynlights[i].expire && (!(flags&DL_KEEP) || (dynlights[i].flags&DL_KEEP))) { insert = i+1; break; }
     dynlight d;
     d.o = o;
     d.radius = radius;
@@ -125,7 +125,7 @@ int finddynlights()
         if(collide(&e, vec(0, 0, 0), 0, false)) continue;
 
         int insert = 0;
-        loopvrev(closedynlights) if(d.dist >= closedynlights[i]->dist) { insert = i+1; break; }
+        loopvrev(closedynlights) if(d.dist >= closedynlights[i]->dist && (!(d.flags&DL_KEEP) || (closedynlights[i]->flags&DL_KEEP))) { insert = i+1; break; }
         closedynlights.insert(insert, &d);
         if(closedynlights.length() >= DYNLIGHTMASK) break;
     }
