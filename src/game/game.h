@@ -286,7 +286,7 @@ WEAPON(plasma,
 	0,		0,		0,		0,		0.125f,		0.175f,		1,		1,		0,		0,		1,		1,		3,		6,		50,		200,		200,		50
 );
 WEAPON(rifle,
-	5,		5,		1,		1,		750,		750,		2000,	100,	150,	5000,		50000,		0,		5000,		5000,		0,		16,		0,		1,		1,		1,		0,		0,		0,		2,		1,
+	5,		5,		1,		1,		750,		750,		2000,	75,		150,	5000,		50000,		0,		5000,		5000,		0,		16,		0,		1,		1,		1,		0,		0,		0,		2,		1,
 	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER|COLLIDE_TRACE,					IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_CONT,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		1,		0,		0,
 	0,		0,		0,		0,		1,		0,		2,		2,		0,		0,		1,		1,		5,		0,		100,		200,		600,		0
@@ -295,7 +295,7 @@ WEAPON(grenade,
 	1,		2,		1,		1,		1500,		1500,		6000,	300,	300,	250,		250,		3000,	3000,		3000,		100,	60,		60,		1,		1,		0,		0,		0,		0,		1,		1,
 	BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,								IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
 	0,		0,		0,		0,		0,		0,		1,		1,		0,		0,		0,		0,
-	0.5f,		0,		0,		0,		1,		1,		2,		2,		64,		64,		1,		1,		5,		5,		1000,		1000,		400,		400
+	0.5f,	0,		0,		0,		1,		1,		2,		2,		64,		64,		1,		1,		5,		5,		1000,		1000,		400,		400
 );
 WEAPON(insta,
 	5,		5,		1,		1,		750,		750,		2000,	200,	200,	10000,		50000,		0,		5000,		5000,		0,		0,		0,		1,		1,		0,		0,		0,		0,		1,		1,
@@ -359,7 +359,7 @@ weaptypes weaptype[] =
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
 			{ false, false },	true,
-			{ 0.65f, 1.5f },	{ 1024, 4096 },	{ 0, 0 },				7,
+			{ 0.65f, 1.5f },	{ 512, 4096 },	{ 0, 0 },				7,
 			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
 	},
 	{
