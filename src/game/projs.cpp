@@ -305,7 +305,7 @@ namespace projs
 							return;
 						}
 					}
-					proj.lifesize = 1.5f-(rnd(100)/100.f);
+					proj.lifesize = 2.f-(rnd(150)/100.f);
 					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.35f;
@@ -320,7 +320,7 @@ namespace projs
 			}
 			case PRJ_DEBRIS:
 			{
-				proj.lifesize = 1.5f-(rnd(100)/100.f);
+				proj.lifesize = 2.f-(rnd(150)/100.f);
 				switch(rnd(4))
 				{
 					case 3: proj.mdl = "debris/debris04"; break;
@@ -747,7 +747,7 @@ namespace projs
 								part_create(PART_PLASMA_SOFT, 1000, proj.o, 0xDD4400, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
 								game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
 								part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*1.5f, PART_EXPLOSION, 750, 0xAA4400, 1.f);
-								loopi(rnd(21)+20) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
+								loopi(rnd(50)+25) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.7f, bvec(196, 24, 0));
 								part_create(PART_SMOKE_LERP_SOFT, 2000, proj.o, 0x333333, WPB(proj.weap, explode, proj.flags&HIT_ALT), 1, -25);
 							}
