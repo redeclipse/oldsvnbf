@@ -305,14 +305,14 @@ namespace projs
 							return;
 						}
 					}
-					proj.lifesize = 2.f-(rnd(150)/100.f);
+					proj.lifesize = 1.75f-(rnd(150)/100.f);
 					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.35f;
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
-					proj.weight = 125.f;
+					proj.weight = 125.f*proj.lifesize;
 					proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					break;
@@ -320,7 +320,7 @@ namespace projs
 			}
 			case PRJ_DEBRIS:
 			{
-				proj.lifesize = 2.f-(rnd(150)/100.f);
+				proj.lifesize = 1.75f-(rnd(150)/100.f);
 				switch(rnd(4))
 				{
 					case 3: proj.mdl = "debris/debris04"; break;
@@ -333,7 +333,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 100.f;
+				proj.weight = 100.f*proj.lifesize;
 				proj.vel.add(vec(rnd(101)-50, rnd(101)-50, rnd(151)-50)).mul(2);
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				break;
