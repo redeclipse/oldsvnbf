@@ -1,5 +1,5 @@
 <?php
-	$app['theme'] = "festive";
+	$app['theme'] = "2010";
 	$app['sitename'] = "Blood Frontier";
 	$app['siteblurb'] = "It's Bloody Fun!";
 	$app['siterelver'] = "v0.85 (Beta 2)";
