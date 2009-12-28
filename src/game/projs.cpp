@@ -320,7 +320,7 @@ namespace projs
 			}
 			case PRJ_DEBRIS:
 			{
-				proj.lifesize = 1.75f-(rnd(150)/100.f);
+				proj.lifesize = 1.5f-(rnd(100)/100.f);
 				switch(rnd(4))
 				{
 					case 3: proj.mdl = "debris/debris04"; break;
