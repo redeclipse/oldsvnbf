@@ -312,8 +312,7 @@ namespace game
 		float total = amt;
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
 		{
-			int len = m_delay(gamemode, mutators);
-			if(!len && d->aitype >= AI_START) len = ai::aideadfade;
+			int len = d->aitype >= AI_START ? min(ai::aideadfade, m_campaign(gamemode) ? 60000 : 30000) : m_delay(gamemode, mutators);
 			if(len > 0 && (!timechk || len > 1000))
 			{
 				int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
@@ -921,9 +920,8 @@ namespace game
 		if(gibscale > 0)
 		{
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
-			int gibs = clamp(max(damage,5)/5, 1, 20)*2, amt = int((rnd(gibs)+gibs+1)*gibscale);
-			loopi(amt)
-				projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
+			int gibs = clamp(max(damage,5)/5, 1, 25), amt = int((rnd(gibs)+gibs+1)*gibscale);
+			loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
 		{

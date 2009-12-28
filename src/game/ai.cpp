@@ -9,7 +9,7 @@ namespace ai
     VAR(aisuspend, 0, 0, 1);
     VAR(aiforcegun, -1, -1, WEAP_SUPER-1);
     VAR(aicampaign, 0, 0, 1);
-    VARP(aideadfade, 0, 30000, INT_MAX-1);
+    VARP(aideadfade, 0, 30000, 60000);
     VARP(showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
 	ICOMMAND(addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
@@ -330,14 +330,15 @@ namespace ai
 		return false;
 	}
 
-	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false)
+	bool target(gameent *d, aistate &b, bool pursue = false, bool force = false, float mindist = 0.f)
 	{
 		gameent *t = NULL, *e = NULL;
 		vec dp = d->headpos(), tp(0, 0, 0);
 		loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && targetable(d, e, true))
 		{
 			vec ep = getaimpos(d, e, altfire(d, e));
-			if((!t || ep.squaredist(dp) < tp.squaredist(dp)) && (force || cansee(d, dp, ep)))
+			float dist = ep.squaredist(dp);
+			if((!t || dist < tp.squaredist(dp)) && ((mindist > 0 && dist <= mindist) || force || cansee(d, dp, ep)))
 			{
 				t = e;
 				tp = ep;
@@ -585,7 +586,7 @@ namespace ai
 				}
 			}
 			if(!d->ai->suspended && (check(d, b) || find(d, b))) return 1;
-			if(target(d, b, true, false)) return 1;
+			if(target(d, b, true, false, d->ai->suspended && d->aitype >= AI_START ? SIGHTMIN : 0.f)) return 1;
 		}
 		else if(d->aitype == AI_BOT && d->ai->suspended) d->ai->unsuspend();
 
@@ -956,7 +957,7 @@ namespace ai
 			if(f && targetable(d, f, true)) e = f;
 			else if(!enemyok)
 			{
-				if(target(d, b, false, false))
+				if(target(d, b, false, false, SIGHTMIN))
 				{
 					e = game::getclient(d->ai->enemy);
 					enemyok = e && targetable(d, e, true);
@@ -1244,7 +1245,7 @@ namespace ai
 			if(d->state != CS_ALIVE || !allowmove) d->stopmoving(true);
 			if(d->state == CS_ALIVE && allowmove)
 			{
-				if(!request(d, b)) target(d, b, false, b.idle > 0 ? true : false);
+				if(!request(d, b)) target(d, b, false, false, SIGHTMIN);
 				weapons::shoot(d, d->ai->target);
 			}
 		}
