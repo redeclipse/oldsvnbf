@@ -241,6 +241,34 @@ namespace projs
         }
     }
 
+	void updatebb(projent &proj)
+	{
+		if(proj.mdl && *proj.mdl)
+		{
+			float size = proj.lifesize;
+			switch(proj.projtype)
+			{
+				case PRJ_ENT: if(!entities::ents.inrange(proj.id)) return;
+				case PRJ_GIBS: case PRJ_DEBRIS: size = proj.lifesize;
+					if(proj.lifemillis)
+					{
+						int interval = min(proj.lifemillis, 1000);
+						if(proj.lifetime < interval) size *= float(proj.lifetime)/float(interval);
+						else if(proj.lifemillis > interval)
+						{
+							interval = min(proj.lifemillis-interval, 1000);
+							if(proj.lifemillis-proj.lifetime < interval) size *= float(proj.lifemillis-proj.lifetime)/float(interval);
+						}
+					}
+					break;
+				default: break;
+			}
+			setbbfrommodel(&proj, proj.mdl, size);
+			if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) proj.height += 2.5f;
+			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
+		}
+	}
+
 	void init(projent &proj, bool waited)
 	{
 		switch(proj.projtype)
@@ -256,6 +284,7 @@ namespace projs
 				proj.weight = WPB(proj.weap, weight, proj.flags&HIT_ALT);
 				proj.projcollide = WPB(proj.weap, collide, proj.flags&HIT_ALT);
 				proj.extinguish = WPB(proj.weap, extinguish, proj.flags&HIT_ALT);
+				proj.lifesize = 1;
 				proj.mdl = weaptype[proj.weap].proj;
 				proj.escaped = !proj.owner;
 				break;
@@ -271,11 +300,12 @@ namespace projs
 						else
 						{
 							proj.lifemillis = proj.lifetime = 1;
-							proj.lifespan = proj.lifesize = 1.f;
+							proj.lifespan = 1.f;
 							proj.state = CS_DEAD;
 							return;
 						}
 					}
+					proj.lifesize = 1.5f-(rnd(100)/100.f);
 					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.35f;
@@ -290,6 +320,7 @@ namespace projs
 			}
 			case PRJ_DEBRIS:
 			{
+				proj.lifesize = 1.5f-(rnd(100)/100.f);
 				switch(rnd(4))
 				{
 					case 3: proj.mdl = "debris/debris04"; break;
@@ -309,7 +340,7 @@ namespace projs
 			}
 			case PRJ_ENT:
 			{
-				proj.aboveeye = 1.f;
+				proj.lifesize = proj.aboveeye = 1.f;
 				proj.elasticity = 0.35f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
@@ -322,17 +353,7 @@ namespace projs
 			}
 			default: break;
 		}
-		if(proj.projtype != PRJ_SHOT)
-		{
-			if(proj.mdl && *proj.mdl)
-			{
-				setbbfrommodel(&proj, proj.mdl);
-				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON)
-					proj.height += 2.5f;
-				else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
-			}
-			physics::entinmap(&proj, true);
-		}
+		if(proj.projtype != PRJ_SHOT) { updatebb(proj); physics::entinmap(&proj, true); }
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
@@ -659,48 +680,30 @@ namespace projs
 		{
 			if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 			{
-				proj.lifesize = 1;
 				if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, 1000))
 				{
-					part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 1, 100, DECAL_BLOOD);
+					float size = ((rnd(20)+1)/10.f)*proj.lifesize;
+					part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, size, 1, 100, DECAL_BLOOD);
 					proj.lasteffect = lastmillis;
 				}
 			}
 			else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
 			{
-				proj.lifesize = clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
-				int steps = clamp(int(proj.vel.magnitude()*proj.lifesize*1.5f), 5, 20);
+				float size = proj.lifesize*clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+				int steps = clamp(int(proj.vel.magnitude()*size*1.5f), 5, 20);
 				if(steps && proj.movement > 0.f)
 				{
 					vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
 					loopi(steps)
 					{
-						float res = float(steps-i)/float(steps), size = clamp(proj.radius*(proj.lifesize+0.1f)*res, 0.1f, proj.radius);
-						int col = ((int(224*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
-						part_create(PART_FIREBALL_SOFT, 1, pos, col, size, clamp(1.5f-proj.lifespan, 0.5f, 1.f), -15);
-						pos.add(dir);
-						if(proj.o.dist(pos) > proj.movement) break;
+						float res = float(steps-i)/float(steps), psize = clamp(proj.radius*(size+0.1f)*res, 0.1f, proj.radius*proj.lifesize);
+						int col = ((int(244*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
+						part_create(PART_FIREBALL_SOFT, 1, pos, col, psize, clamp(1.5f-proj.lifespan, 0.5f, 1.f), -15);
+						pos.add(dir); if(proj.o.dist(pos) > proj.movement) break;
 					}
 				}
 			}
-			if(proj.mdl && *proj.mdl) switch(proj.projtype)
-			{
-				case PRJ_ENT: if(!entities::ents.inrange(proj.id)) break;
-				case PRJ_GIBS: case PRJ_DEBRIS:
-					if(proj.lifemillis)
-					{
-						int interval = min(proj.lifemillis, 1000);
-						if(proj.lifetime < interval)
-						{
-							setbbfrommodel(&proj, proj.mdl, float(proj.lifetime)/float(interval));
-							if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON)
-								proj.height += 2.5f;
-							else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
-						}
-					}
-					break;
-				default: break;
-			}
+			updatebb(proj);
 		}
 	}
 
@@ -903,7 +906,7 @@ namespace projs
 
 	void checkescaped(projent &proj, const vec &pos, const vec &dir)
 	{
-		if(lastmillis-proj.spawntime > 500 || proj.lastbounce || proj.stuck) proj.escaped = true;
+		if((proj.spawntime && lastmillis-proj.spawntime > 500) || proj.lastbounce || proj.stuck) proj.escaped = true;
 		else if(proj.projcollide&COLLIDE_TRACE)
 		{
 			vec to = vec(pos).add(dir);
@@ -1151,15 +1154,24 @@ namespace projs
 			float trans = 1, size = 1;
 			switch(proj.projtype)
 			{
-				case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_ENT:
+				case PRJ_GIBS: case PRJ_DEBRIS: size = proj.lifesize;
+				case PRJ_ENT:
 					if(proj.lifemillis)
 					{
 						int interval = min(proj.lifemillis, 1000);
-						if(proj.lifetime < interval) size = trans = float(proj.lifetime)/float(interval);
+						if(proj.lifetime < interval)
+						{
+							float amt = float(proj.lifetime)/float(interval);
+							size *= amt; trans *= amt;
+						}
 						else if(proj.lifemillis > interval)
 						{
 							interval = min(proj.lifemillis-interval, 1000);
-							if(proj.lifemillis-proj.lifetime < interval) size = trans = float(proj.lifemillis-proj.lifetime)/float(interval);
+							if(proj.lifemillis-proj.lifetime < interval)
+							{
+								float amt = float(proj.lifemillis-proj.lifetime)/float(interval);
+								size *= amt; trans *= amt;
+							}
 						}
 					}
 					break;
