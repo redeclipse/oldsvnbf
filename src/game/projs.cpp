@@ -723,7 +723,14 @@ namespace projs
 					{
 						vol = int(255*(1.f-proj.lifespan));
 						part_create(PART_SMOKE_LERP, 200, proj.o, 0x999999, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0], 1, -20);
-						adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
+						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
+						{
+							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x999999, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(196, 196, 196));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.7f, 0.7f, 0.7f), proj.flags&HIT_ALT ? 300 : 100, 10);
+						}
+						else adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
 					}
 					case WEAP_FLAMER:
@@ -760,8 +767,14 @@ namespace projs
 					case WEAP_SHOTGUN: case WEAP_SMG:
 					{
 						vol = int(255*(1.f-proj.lifespan));
-						if(proj.lifetime)
-							part_splash(PART_SPARK, proj.weap == WEAP_SHOTGUN ? 10 : 20, 500, proj.o, 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f, 1, 20, 16);
+						part_splash(PART_SPARK, proj.weap == WEAP_SHOTGUN ? 10 : 20, 500, proj.o, proj.weap == WEAP_SMG ? 0xFF8822 : 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f, 1, 20, 16);
+						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
+						{
+							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, proj.weap == WEAP_SMG ? 0xFF8822 : 0xFFAA22, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(244, proj.weap == WEAP_SMG ? 128 : 196, 64));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(1.f, proj.weap == WEAP_SMG ? 0.6f : 0.8f, 0.2f), proj.flags&HIT_ALT ? 300 : 100, 10);
+						}
 						break;
 					}
 					case WEAP_PLASMA:
@@ -787,7 +800,7 @@ namespace projs
 						part_flare(proj.to, proj.o, proj.flags&HIT_ALT ? 500 : 250, PART_FLARE, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
 						part_flare(proj.to, proj.o, proj.flags&HIT_ALT ? 500 : 250, PART_FLARE_LERP, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f);
 						part_splash(PART_SPARK, proj.flags&HIT_ALT ? 25 : 50, proj.flags&HIT_ALT ? 500 : 750, proj.o, 0x6611FF, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.125f, 1, 20, 0, 24);
-						if(proj.weap == WEAP_RIFLE && !(proj.flags&HIT_ALT))
+						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
 							part_create(PART_PLASMA_SOFT, 500, proj.o, 0x4408AA, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
 							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
@@ -817,14 +830,6 @@ namespace projs
 			}
 			case PRJ_ENT:
 			{
-#if 0
-				if(entities::ents.inrange(proj.id) && proj.beenused < 2)
-				{
-					int colour = 0xFFFFFF;
-					if(entities::ents[proj.id]->type == WEAPON) colour = weaptype[w_attr(game::gamemode, entities::ents[proj.id]->attrs[0], m_weapon(game::gamemode, game::mutators))].colour;
-					adddynlight(proj.o, enttype[entities::ents[proj.id]->type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
-				}
-#endif
 				if(!proj.beenused && proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
 				break;
 			}
