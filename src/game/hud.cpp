@@ -898,8 +898,9 @@ namespace hud
 					{
 						if(refs.length() >= numl)
 						{
-							if(refs.length() >= numo && !full)
+							if(refs.length() >= numo)
 							{
+								if(full) break;
 								bool found = false;
 								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime) < conlines[j].reftime+len)
 								{
@@ -936,8 +937,9 @@ namespace hud
 					{
 						if(refs.length() >= numl)
 						{
-							if(refs.length() >= numo && !full)
+							if(refs.length() >= numo)
 							{
+								if(full) break;
 								bool found = false;
 								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime) < conlines[j].reftime+len)
 								{
