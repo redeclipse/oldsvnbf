@@ -1008,7 +1008,6 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
 {
     lights1.setsizenodelete(0);
     lights2.setsizenodelete(0);
-    sunlights.setsizenodelete(0);
     const vector<extentity *> &ents = entities::getents();
     if(size <= 1<<lightcachesize)
     {
@@ -1022,14 +1021,16 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
             }
         }
     }
-    int numents = max(entities::lastent(ET_LIGHT), entities::lastent(ET_SUNLIGHT));
-    loopi(numents)
-    {
-        extentity &light = *ents[i];
-        switch(light.type)
-        {
-            case ET_LIGHT: if(!(size <= 1<<lightcachesize)) addlight(light, cx, cy, cz, size, v, n, n2); break;
-			case ET_SUNLIGHT: sunlights.add(&light); break;
+	else
+	{
+    	int numents = entities::lastent(ET_LIGHT);
+    	loopi(numents)
+    	{
+        	const extentity &light = *ents[i];
+        	switch(light.type)
+        	{
+            	case ET_LIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
+			}
         }
     }
     if(slot.layer && (setblendmaporigin(ivec(cx, cy, cz), size) || slot.layermask)) return true;
@@ -1636,6 +1637,7 @@ void calclight(int quality)
     optimizeblendmap();
 	resetlightmaps();
 	clear_lmids(worldroot);
+	findsunlights();
 	curlumels = 0;
 	lmprog = 0;
 	lmprogtexticks = 0;
@@ -1687,6 +1689,7 @@ void patchlight(int quality)
 	progress(0, "patching lightmaps...");
     loadlayermasks();
     cleanuplightmaps();
+	findsunlights();
 	lmprog = 0;
 	lmprogtexticks = 0;
 	int total = 0, lumels = 0;
