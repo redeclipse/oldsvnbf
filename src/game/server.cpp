@@ -2699,9 +2699,10 @@ namespace server
 	void checkents()
 	{
 		int items[MAXENTTYPES] = {0}, lowest[MAXENTTYPES] = {-1}, sweap = m_weapon(gamemode, mutators);
-		if(m_fight(gamemode)) loopv(sents)
+		if(m_fight(gamemode))
 		{
-			if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
+			loopv(clients) if(clients[i]->state.aitype < AI_START) items[WEAPON] += clients[i]->state.carry(sweap);
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
 			{
 				if(finditem(i, true, true)) items[sents[i].type]++;
 				else if(!sents.inrange(lowest[sents[i].type]) || sents[i].millis < sents[lowest[sents[i].type]].millis)
@@ -2727,13 +2728,22 @@ namespace server
 			}
 			default:
 			{
-				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && !finditem(i, true, true, i == lowest[sents[i].type] && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold))))
+				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 				{
-					loopvk(clients) clients[k]->state.dropped.remove(i);
-					sents[i].spawned = true;
-					sents[i].millis = gamemillis+GVAR(itemspawntime);
-					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-					items[sents[i].type]++;
+					bool override = false;
+					if(i == lowest[sents[i].type])
+					{
+						float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GVAR(maxcarry));
+						if(dist < GVAR(itemthreshold)) override = true;
+					}
+					if(!finditem(i, true, true, override))
+					{
+						loopvk(clients) clients[k]->state.dropped.remove(i);
+						sents[i].spawned = true;
+						sents[i].millis = gamemillis+GVAR(itemspawntime);
+						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+						items[sents[i].type]++;
+					}
 				}
 				break;
 			}

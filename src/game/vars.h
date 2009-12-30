@@ -15,7 +15,7 @@ SVARG(trialmaps, "testchamber");
 SVARG(storymaps, "wishbone storytest");
 VARG(maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
-VARG(maxcarry, 0, 2, WEAP_MAX-1);
+VARG(maxcarry, 1, 2, WEAP_MAX-1);
 VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
@@ -47,7 +47,7 @@ VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
 VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
 VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
 VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
-FVARG(itemthreshold, 0, 1, 1000); // if numspawned < numclients*this, spawn one of this type
+FVARG(itemthreshold, 0, 1, 1000); // if numitems/numclients/maxcarry is less than this, spawn one of this type
 VARG(kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade, 3 = always
 
 VARG(timelimit, 0, 15, INT_MAX-1);
