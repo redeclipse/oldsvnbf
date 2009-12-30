@@ -896,16 +896,21 @@ namespace hud
 					int len = !full && conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
 					{
-						if(refs.length() >= numo)
+						if(refs.length() >= numl)
 						{
-							bool found = false;
-							loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime) < conlines[j].reftime+len)
+							if(!full)
 							{
-								refs.remove(i);
-								found = true;
-								break;
+								bool found = false;
+								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime) < conlines[j].reftime+len)
+								{
+									refs.remove(i);
+									found = true;
+									break;
+								}
+								if(!found) continue;
 							}
-							if(!found) continue;
+							if(refs.length() >= numo) continue;
+							conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
 						}
 						refs.add(j);
 					}
@@ -930,16 +935,21 @@ namespace hud
 					int len = !full && conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
 					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime <= len+confade)
 					{
-						if(refs.length() >= numo)
+						if(refs.length() >= numl)
 						{
-							bool found = false;
-							loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime) < conlines[j].reftime+len)
+							if(!full)
 							{
-								refs.remove(i);
-								found = true;
-								break;
+								bool found = false;
+								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime) < conlines[j].reftime+len)
+								{
+									refs.remove(i);
+									found = true;
+									break;
+								}
+								if(!found) continue;
 							}
-							if(!found) continue;
+							if(refs.length() >= numo) continue;
+							conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
 						}
 						refs.add(j);
 					}
