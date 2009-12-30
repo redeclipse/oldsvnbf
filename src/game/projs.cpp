@@ -726,9 +726,9 @@ namespace projs
 						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
 							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
-							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x999999, 1.f);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(196, 196, 196));
-							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.7f, 0.7f, 0.7f), proj.flags&HIT_ALT ? 300 : 100, 10);
+							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x222222, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(32, 32, 32));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.3f, 0.3f, 0.3f), proj.flags&HIT_ALT ? 300 : 100, 10);
 						}
 						else adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
@@ -771,9 +771,9 @@ namespace projs
 						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
 							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
-							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, proj.weap == WEAP_SMG ? 0xFF8822 : 0xFFAA22, 1.f);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(244, proj.weap == WEAP_SMG ? 128 : 196, 64));
-							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(1.f, proj.weap == WEAP_SMG ? 0.6f : 0.8f, 0.2f), proj.flags&HIT_ALT ? 300 : 100, 10);
+							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, proj.weap == WEAP_SMG ? 0xFF6600 : 0xFFAA11, 1.f);
+							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(128, proj.weap == WEAP_SMG ? 32 : 96, 0));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.8f, proj.weap == WEAP_SMG ? 0.2f : 0.6f, 0.f), proj.flags&HIT_ALT ? 300 : 100, 10);
 						}
 						break;
 					}
