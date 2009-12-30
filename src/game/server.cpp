@@ -2698,10 +2698,16 @@ namespace server
 
 	void checkents()
 	{
-		int items[MAXENTTYPES] = {0}, sweap = m_weapon(gamemode, mutators);
-		loopv(sents)
-			if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && finditem(i, true, true))
-				items[sents[i].type]++;
+		int items[MAXENTTYPES] = {0}, lowest[MAXENTTYPES] = {-1}, sweap = m_weapon(gamemode, mutators);
+		if(m_fight(gamemode)) loopv(sents)
+		{
+			if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
+			{
+				if(finditem(i, true, true)) items[sents[i].type]++;
+				else if(!sents.inrange(lowest[sents[i].type]) || sents[i].millis < sents[lowest[sents[i].type]].millis)
+					lowest[sents[i].type] = i;
+			}
+		}
 		loopv(sents) switch(sents[i].type)
 		{
 			case TRIGGER:
@@ -2721,19 +2727,13 @@ namespace server
 			}
 			default:
 			{
-				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
+				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && !finditem(i, true, true, i == lowest[sents[i].type] && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold))))
 				{
-					bool override = false;
-					if(m_fight(gamemode) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold)))
-						override = true;
-					if(!finditem(i, true, true, override))
-					{
-						loopvk(clients) clients[k]->state.dropped.remove(i);
-						sents[i].spawned = true;
-						sents[i].millis = gamemillis+GVAR(itemspawntime);
-						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
-						items[sents[i].type]++;
-					}
+					loopvk(clients) clients[k]->state.dropped.remove(i);
+					sents[i].spawned = true;
+					sents[i].millis = gamemillis+GVAR(itemspawntime);
+					sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+					items[sents[i].type]++;
 				}
 				break;
 			}
