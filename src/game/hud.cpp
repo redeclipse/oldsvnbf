@@ -896,35 +896,16 @@ namespace hud
 					int len = !full && conlines[j].type > CON_CHAT ? chatcontime/2 : chatcontime;
 					if(full || lastmillis-conlines[j].reftime <= len+chatconfade)
 					{
-						if(refs.length() >= numl)
+						if(refs.length() >= numo)
 						{
-							if(!full)
+							bool found = false;
+							loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime) < conlines[j].reftime+len)
 							{
-								bool found = false;
-								loopvrev(refs) if(i > 0 && conlines[refs[i]].type > CON_CHAT)
-								{
-									if(refs.length() >= numo) refs.remove(i);
-									else
-									{
-										int dur = conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime;
-										if(lastmillis-conlines[refs[i]].reftime <= dur) conlines[refs[i]].reftime = lastmillis-dur;
-									}
-									found = true;
-									break;
-								}
-								if(found)
-								{
-									refs.add(j);
-									continue;
-								}
+								refs.remove(i);
+								found = true;
+								break;
 							}
-							if(refs.length() <= numo)
-							{
-								int fade = len+chatconfade*(1+numo-refs.length());
-								if(lastmillis-conlines[j].reftime <= fade) conlines[j].reftime = lastmillis-fade;
-								continue;
-							}
-							if(lastmillis-conlines[j].reftime <= len) conlines[j].reftime = lastmillis-len;
+							if(!found) continue;
 						}
 						refs.add(j);
 					}
@@ -949,35 +930,16 @@ namespace hud
 					int len = !full && conlines[j].type < CON_IMPORTANT ? contime/2 : contime;
 					if(conskip ? j>=conskip-1 || j>=conlines.length()-numl : full || lastmillis-conlines[j].reftime <= len+confade)
 					{
-						if(refs.length() >= numl)
+						if(refs.length() >= numo)
 						{
-							if(!full && conlines[j].type >= CON_IMPORTANT)
+							bool found = false;
+							loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime) < conlines[j].reftime+len)
 							{
-								bool found = false;
-								loopvrev(refs) if(i > 0 && conlines[refs[i]].type < CON_IMPORTANT)
-								{
-									if(refs.length() >= numo) refs.remove(i);
-									else
-									{
-										int dur = conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime;
-										if(lastmillis-conlines[refs[i]].reftime <= dur) conlines[refs[i]].reftime = lastmillis-dur;
-									}
-									found = true;
-									break;
-								}
-								if(found)
-								{
-									refs.add(j);
-									continue;
-								}
+								refs.remove(i);
+								found = true;
+								break;
 							}
-							if(refs.length() <= numo)
-							{
-								int fade = len+confade*(1+numo-refs.length());
-								if(lastmillis-conlines[j].reftime <= fade) conlines[j].reftime = lastmillis-fade;
-								continue;
-							}
-							if(lastmillis-conlines[j].reftime <= len) conlines[j].reftime = lastmillis-len;
+							if(!found) continue;
 						}
 						refs.add(j);
 					}
