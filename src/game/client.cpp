@@ -10,14 +10,16 @@ namespace client
 	{
 		vector<gameent *> players;
 		string map;
-		int mode, muts;
+		int millis, mode, muts;
 	};
 	vector<mapvote> mapvotes;
 
 	int votecmp(mapvote *a, mapvote *b)
 	{
-		if(a->players.length() > b->players.length()) return 1;
-		if(b->players.length() > a->players.length()) return -1;
+		if(a->players.length() > b->players.length()) return -1;
+		if(b->players.length() > a->players.length()) return 1;
+		if(a->millis < b->millis) return -1;
+		if(b->millis < a->millis) return 1;
 		return 0;
 	}
 
@@ -51,6 +53,7 @@ namespace client
 			copystring(m->map, text);
 			m->mode = mode;
 			m->muts = muts;
+			m->millis = lastmillis;
 		}
 		m->players.add(d);
 		mapvotes.sort(votecmp);
