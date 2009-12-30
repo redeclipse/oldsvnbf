@@ -1327,7 +1327,7 @@ namespace server
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
         switch(votelock)
         {
-        	case 1: case 2: if(reqmode == gamemode && reqmuts == mutators && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same game again")) return; break;
+        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
 			case 3: case 4: if(!haspriv(ci, votelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
