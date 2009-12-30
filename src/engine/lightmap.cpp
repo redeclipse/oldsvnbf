@@ -2004,7 +2004,7 @@ void clearlights()
 
 void lightent(extentity &e, float height)
 {
-	if(e.type==ET_LIGHT || e.type==ET_SUNLIGHT) return;
+	if(e.type==ET_LIGHT || e.type==ET_LIGHTFX || e.type==ET_SUNLIGHT) return;
 	float amb = 0.0f;
 	if(e.type==ET_MAPMODEL)
 	{
