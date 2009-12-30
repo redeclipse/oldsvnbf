@@ -1146,7 +1146,7 @@ ICOMMAND(strreplace, "sss", (char *a, char *b, char *c), commandret = strreplace
 
 struct sleepcmd
 {
-	int millis;
+	int delay, millis;
 	char *command;
 	int flags;
 };
@@ -1155,7 +1155,8 @@ vector<sleepcmd> sleepcmds;
 void addsleep(int *msec, char *cmd)
 {
 	sleepcmd &s = sleepcmds.add();
-	s.millis = *msec+lastmillis;
+	s.delay = max(*msec, 1);
+	s.millis = lastmillis;
 	s.command = newstring(cmd);
 	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0)|(persistidents ? IDF_PERSIST : 0);
 }
@@ -1167,7 +1168,7 @@ void checksleep(int millis)
 	loopv(sleepcmds)
 	{
 		sleepcmd &s = sleepcmds[i];
-		if(s.millis && millis>s.millis)
+		if(millis - s.millis >= s.delay)
 		{
 			bool oldpersistidents = persistidents,
 				 oldoverrideidents = overrideidents,
