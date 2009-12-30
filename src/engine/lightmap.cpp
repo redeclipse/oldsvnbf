@@ -878,6 +878,13 @@ static struct lightcacheentry
 
 VARF(lightcachesize, 4, 6, 12, clearlightcache());
 
+void findsunlights()
+{
+	sunlights.setsize(0);
+	int numents = entities::lastent(ET_SUNLIGHT);
+	loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
+}
+
 void clearlightcache(int e)
 {
 	if(e < 0 || !entities::getents()[e]->attrs[0])
@@ -887,6 +894,7 @@ void clearlightcache(int e)
 			lce->x = -1;
 			lce->lights.setsizenodelete(0);
 		}
+		if(e < 0) findsunlights();
 	}
 	else
 	{
