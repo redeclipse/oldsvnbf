@@ -2376,7 +2376,11 @@ namespace server
 				}
 			}
 		}
-		else if(weap == -1) gs.dropped.remove(id);
+		else if(weap == -1)
+		{
+			gs.dropped.remove(id);
+			if(sents.inrange(id)) sents[id].millis = gamemillis;
+		}
 	}
 
 	void takeammo(clientinfo *ci, int weap, int amt = 1) { ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0); }
@@ -2720,7 +2724,7 @@ namespace server
 				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 				{
 					bool override = false;
-					if(m_fight(gamemode) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && gamemillis >= sents[i].millis && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold)))
+					if(m_fight(gamemode) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)) && items[sents[i].type] < int(numclients(-1, true, AI_BOT)*GVAR(itemthreshold)))
 						override = true;
 					if(!finditem(i, true, true, override))
 					{
