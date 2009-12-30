@@ -5,7 +5,32 @@ namespace client
 		demoplayback = false, needsmap = false, gettingmap = false, sendcrc = false;
 	int lastping = 0, sessionid = 0;
     string connectpass = "";
+
+	struct mapvote
+	{
+		vector<gameent *> players;
+		string map;
+		int mode, muts;
+	};
 	vector<mapvote> mapvotes;
+
+	int votecmp(mapvote *a, mapvote *b)
+	{
+		if(a->players.length() > b->players.length()) return 1;
+		if(b->players.length() > a->players.length()) return -1;
+		return 0;
+	}
+
+	void clearvotes(gameent *d)
+	{
+		int found = 0;
+		loopvrev(mapvotes) if(mapvotes[i].players.find(d) >= 0)
+		{
+			mapvotes[i].players.removeobj(d); found++;
+			if(mapvotes[i].players.empty()) mapvotes.remove(i);
+		}
+		if(found) mapvotes.sort(votecmp);
+	}
 
 	void vote(gameent *d, const char *text, int mode, int muts)
 	{
@@ -28,6 +53,7 @@ namespace client
 			m->muts = muts;
 		}
 		m->players.add(d);
+		mapvotes.sort(votecmp);
 		SEARCHBINDCACHE(votekey)("showgui maps 2", 0);
 		SEARCHBINDCACHE(gamekey)("showgui maps 1", 0);
 		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);

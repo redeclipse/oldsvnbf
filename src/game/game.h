@@ -1205,14 +1205,8 @@ namespace server
 
 namespace client
 {
-	struct mapvote
-	{
-		vector<gameent *> players;
-		string map;
-		int mode, muts;
-	};
-	extern vector<mapvote> mapvotes;
 	extern bool demoplayback, sendinfo, sendcrc;
+	extern void clearvotes(gameent *d);
 	extern void addmsg(int type, const char *fmt = NULL, ...);
 	extern void c2sinfo();
 }
