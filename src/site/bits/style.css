@@ -45,12 +45,10 @@ body {
 	text-decoration: none;
 	display: block;
 	float: left;
-	margin-left: 20px;
 	text-align: center;
-	margin-top: 25px;
 	height: 24px;
-	padding-top: 3px;
-	width: 70px;
+	margin: 25px 0px 0px;
+	padding: 3px 22px;
 }
 #links a:visited {
 	background: none;
@@ -326,8 +324,9 @@ body {
 }
 /* Lightbox */
 #gallery img {
-	padding: 0px 0px;
+	padding: 0px;
 	margin: 1px 8px;
+	float: left;
 }
 #gallery img:hover {
 	padding: 0px 0px;
@@ -445,15 +444,19 @@ body {
 	margin: 0px;
 	padding: 0px;
 	width: 678px;
+	float: left;
 	}
 	#slider li{
 	/* 
 			define width and height of list item (slide)
 			entire slider area will adjust according to the parameters provided here
 		*/ 
-		width:678px;
+	width:678px;
 	overflow:hidden;
 	text-align: center;
+	list-style: none;
+	height: 131px;
+	float: left;
 		}	
 #prevBtn, #nextBtn,
 	#slider1next, #slider1prev{
