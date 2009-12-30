@@ -898,7 +898,7 @@ namespace hud
 					{
 						if(refs.length() >= numl)
 						{
-							if(!full)
+							if(refs.length() >= numo && !full)
 							{
 								bool found = false;
 								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type > CON_CHAT ? chatcontime/2 : chatcontime) < conlines[j].reftime+len)
@@ -909,7 +909,6 @@ namespace hud
 								}
 								if(!found) continue;
 							}
-							if(refs.length() >= numo) continue;
 							conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
 						}
 						refs.add(j);
@@ -937,7 +936,7 @@ namespace hud
 					{
 						if(refs.length() >= numl)
 						{
-							if(!full)
+							if(refs.length() >= numo && !full)
 							{
 								bool found = false;
 								loopvrev(refs) if(conlines[refs[i]].reftime+(conlines[refs[i]].type < CON_IMPORTANT ? contime/2 : contime) < conlines[j].reftime+len)
@@ -948,7 +947,6 @@ namespace hud
 								}
 								if(!found) continue;
 							}
-							if(refs.length() >= numo) continue;
 							conlines[j].reftime = min(conlines[j].reftime, lastmillis-len);
 						}
 						refs.add(j);
