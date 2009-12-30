@@ -73,7 +73,7 @@ struct duelservmode : servmode
 	{
 		if(!m_noitems(gamemode, mutators))
 		{
-			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && !hasitem(i))
+			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 			{
 				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE)
 					continue;
