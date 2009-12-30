@@ -882,6 +882,7 @@ void findsunlights()
 {
 	sunlights.setsize(0);
 	int numents = entities::lastent(ET_SUNLIGHT);
+	const vector<extentity *> &ents = entities::getents();
 	loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
 }
 
@@ -948,7 +949,7 @@ const vector<int> &checklightcache(int x, int y)
 	return lce.lights;
 }
 
-static inline void addlight(extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
+static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
 {
     int radius = light.attrs[0];
     if(radius > 0)
