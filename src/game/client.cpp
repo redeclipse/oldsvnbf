@@ -34,13 +34,13 @@ namespace client
 			mapvotes[i].players.removeobj(d); found++;
 			if(mapvotes[i].players.empty()) mapvotes.remove(i);
 		}
-		if(found) mapvotes.sort(votecmp);
+		if(found && !mapvotes.empty()) mapvotes.sort(votecmp);
 	}
 
 	void vote(gameent *d, const char *text, int mode, int muts)
 	{
 		mapvote *m = NULL;
-		loopvrev(mapvotes)
+		if(!mapvotes.empty()) loopvrev(mapvotes)
 		{
 			if(mapvotes[i].players.find(d) >= 0)
 			{
