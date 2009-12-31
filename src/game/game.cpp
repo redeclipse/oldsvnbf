@@ -357,11 +357,11 @@ namespace game
 				gameent *d = NULL;
 				loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire < fireburntime)
 				{
-					int millis = lastmillis-d->lastfire; float pc = 1;
+					int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f);
 					if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
 					else pc = 0.5f+(float(millis%fireburndelay)/float(fireburndelay*2));
 					pc = deadscale(d, pc);
-					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.5f+(rnd(100)/100.f))*pc, vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc), 0, 0, DL_KEEP);
+					adddynlight(d->headpos(-d->height*0.5f), d->height*(1.5f+intensity)*pc, vec(1.1f*max(pc,0.5f), 0.45f*max(pc,0.2f), 0.05f*pc), 0, 0, DL_KEEP);
 				}
 			}
 		}
@@ -374,12 +374,13 @@ namespace game
 			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
 			if(num > 0 && len > 0)
 			{
+				float intensity = 0.25f+(rnd(75)/100.f);
 				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, 1, 0.5f, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, 1, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, intensity, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, intensity, 0.5f, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->feetpos(), 1, 0.5f, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->feetpos(), intensity, 0.5f, -15, 0, 5);
 			}
 		}
 	}
@@ -388,10 +389,10 @@ namespace game
 	{
 		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
 		{
-			int millis = lastmillis-d->lastfire; float pc = 1;
+			int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f);
 			if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
 			else pc = 0.75f+(float(millis%fireburndelay)/float(fireburndelay*4));
-			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, (0.5f+(rnd(50)/100.f))*pc), 0.75f, -15, 0);
+			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, intensity*pc), 0.75f, -15, 0);
 		}
 	}
 
