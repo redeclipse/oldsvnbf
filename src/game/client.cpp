@@ -11,6 +11,9 @@ namespace client
 		vector<gameent *> players;
 		string map;
 		int millis, mode, muts;
+
+		mapvote() {}
+		~mapvote() { players.setsize(0); }
 	};
 	vector<mapvote> mapvotes;
 
