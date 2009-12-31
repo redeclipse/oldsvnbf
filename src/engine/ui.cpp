@@ -685,7 +685,7 @@ struct gui : guient
 			if(icon)
 			{
 				defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
-				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && hit);
+				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;
