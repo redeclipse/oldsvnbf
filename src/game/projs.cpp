@@ -333,7 +333,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 100.f*proj.lifesize;
+				proj.weight = 125.f*proj.lifesize;
 				proj.vel.add(vec(rnd(101)-50, rnd(101)-50, rnd(151)-50)).mul(2);
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				break;
@@ -689,16 +689,17 @@ namespace projs
 			}
 			else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
 			{
-				float size = proj.lifesize*clamp(1.f-proj.lifespan, 0.1f, 1.f); // gets smaller as it gets older
+				float size = proj.lifesize*clamp(1.f-proj.lifespan, 0.1f, 1.f), radius = proj.radius+1; // gets smaller as it gets older
 				int steps = clamp(int(proj.vel.magnitude()*size*1.5f), 5, 20);
 				if(steps && proj.movement > 0.f)
 				{
 					vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
 					loopi(steps)
 					{
-						float res = float(steps-i)/float(steps), psize = clamp(proj.radius*(size+0.1f)*res, 0.1f, proj.radius*proj.lifesize);
-						int col = ((int(244*max(res,0.375f))<<16)+1)|((int(96*max(res,0.125f))+1)<<8);
-						part_create(PART_FIREBALL_SOFT, 1, pos, col, psize, clamp(1.5f-proj.lifespan, 0.5f, 1.f), -15);
+						float res = float(steps-i)/float(steps), psize = clamp(radius*(size+0.1f)*res, 0.1f, radius*proj.lifesize),
+							span = clamp(1.5f-proj.lifespan, 0.5f, 1.f);
+						int col = ((int(244*max(res,0.4f))<<16)+1)|((int(64*max(res,0.1f)*span)+1)<<8);
+						part_create(PART_FIREBALL_SOFT, 1, pos, col, psize, span, -15);
 						pos.add(dir); if(proj.o.dist(pos) > proj.movement) break;
 					}
 				}
