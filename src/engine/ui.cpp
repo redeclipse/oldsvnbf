@@ -126,7 +126,7 @@ struct gui : guient
 				if(mousebuttons&GUI_UP) { b; } \
 				hit = true; \
 			} \
-			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], hit); \
+			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], !hit); \
 			y += guibound[1]*3/2; \
 		}
 		uibtn("textures/exit", cleargui(1));
