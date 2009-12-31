@@ -1720,7 +1720,7 @@ void texduplicate()
 COMMAND(texduplicate, "");
 
 VARP(thumbwidth, 0, 30, 1000);
-VARP(thumbheight, 0, 12, 1000);
+VARP(thumbheight, 0, 10, 1000);
 VARP(thumbtime, 0, 25, 1000);
 FVARP(thumbsize, 0, 1, 8);
 FVARP(thumbpreview, 0, 5, 8);
