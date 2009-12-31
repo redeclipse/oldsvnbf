@@ -325,12 +325,12 @@ body {
 /* Lightbox */
 #gallery img {
 	padding: 0px;
-	margin: 1px 8px;
+	margin: 1px 10px;
 	float: left;
 }
 #gallery img:hover {
 	padding: 0px 0px;
-	margin: 0px 7px;
+	margin: 0px 9px;
 	border: 1px solid #870000;
 }
 #jquery-overlay {
@@ -461,23 +461,24 @@ body {
 #prevBtn, #nextBtn,
 	#slider1next, #slider1prev{
 	display:block;
+	float:left;
 	width:30px;
 	height:77px;
 	position:relative;
 	left:-708px;
 	top:26px;
 	z-index:90;
-	right: 0px;
-	bottom: 0px;
 		}	
 	#nextBtn, #slider1next{
 	position: relative;
 	left: 0px;
 	top: -51px;
+	float:left;
 		}														
 	#prevBtn a, #nextBtn a,
 	#slider1next a, #slider1prev a{
 	display:block;
+	float:left;
 	position:relative;
 	width:30px;
 	height:77px;
