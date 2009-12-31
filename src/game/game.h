@@ -1318,7 +1318,6 @@ namespace game
 	extern void resetcamera();
 	extern void resetworld();
 	extern void resetstate();
-	extern void quake(const vec &o, int damage, int radius);
 	extern void hiteffect(int weap, int flags, int damage, gameent *d, gameent *actor, vec &dir, bool local = false);
 	extern void damaged(int weap, int flags, int damage, int health, gameent *d, gameent *actor, int millis, vec &dir);
 	extern void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style);

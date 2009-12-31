@@ -548,13 +548,6 @@ namespace game
 		}
 	}
 
-	void quake(const vec &o, int damage, int radius)
-	{
-		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
-			d->quake = clamp(d->quake+max(int(damage*(1.f-d->o.dist(o)/EXPLOSIONSCALE/radius)*(m_insta(gamemode, mutators) ? 0.25f : 1.f)), 1), 0, 1000);
-	}
-
 	bool fireburn(gameent *d, int weap, int flags)
 	{
 		if(fireburntime && (doesburn(weap, flags) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))

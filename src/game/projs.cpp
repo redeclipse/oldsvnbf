@@ -707,6 +707,14 @@ namespace projs
 		}
 	}
 
+	void quake(const vec &o, int weap, int flags)
+	{
+		int q = int(WPB(weap, damage, flags&HIT_ALT)/float(WPB(weap, rays, flags&HIT_ALT))), r = WPB(weap, radius, flags&HIT_ALT);
+		gameent *d;
+        loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)))
+			d->quake = clamp(d->quake+max(int(q*(1.f-d->o.dist(o)/EXPLOSIONSCALE/r)), 1), 0, 1000);
+	}
+
 	void destroy(projent &proj)
 	{
 		proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
@@ -725,10 +733,10 @@ namespace projs
 						part_create(PART_SMOKE_LERP, 200, proj.o, 0x999999, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0], 1, -20);
 						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
-							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							quake(proj.o, proj.weap, proj.flags);
 							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x222222, 1.f);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(32, 32, 32));
-							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.3f, 0.3f, 0.3f), proj.flags&HIT_ALT ? 300 : 100, 10);
+							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.2f, 0.2f, 0.2f), proj.flags&HIT_ALT ? 300 : 100, 10);
 						}
 						else adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
 						break;
@@ -752,7 +760,7 @@ namespace projs
 									part_create(PART_FIREBALL_SOFT, 1500, to, firecols[rnd(FIRECOLOURS)], WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.5f, 0.75f, -15);
 								}
 								part_create(PART_PLASMA_SOFT, 1000, proj.o, 0xDD4400, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
-								game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+								quake(proj.o, proj.weap, proj.flags);
 								part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*1.5f, PART_EXPLOSION, 750, 0xAA4400, 1.f);
 								loopi(rnd(50)+25) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
 								adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.7f, bvec(196, 24, 0));
@@ -770,10 +778,10 @@ namespace projs
 						part_splash(PART_SPARK, proj.weap == WEAP_SHOTGUN ? 10 : 20, 500, proj.o, proj.weap == WEAP_SMG ? 0xFF8822 : 0xFFAA22, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]*0.25f, 1, 20, 16);
 						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
-							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
-							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, proj.weap == WEAP_SMG ? 0xFF6600 : 0xFFAA11, 1.f);
-							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(128, proj.weap == WEAP_SMG ? 32 : 96, 0));
-							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.8f, proj.weap == WEAP_SMG ? 0.2f : 0.6f, 0.f), proj.flags&HIT_ALT ? 300 : 100, 10);
+							quake(proj.o, proj.weap, proj.flags);
+							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, proj.weap == WEAP_SMG ? 0xAA4400 : 0xAA7711, 1.f);
+							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.7f, proj.weap == WEAP_SMG ? 0.2f : 0.4f, 0.f), proj.flags&HIT_ALT ? 300 : 100, 10);
 						}
 						break;
 					}
@@ -784,7 +792,7 @@ namespace projs
 							part_create(PART_PLASMA_SOFT, proj.flags&HIT_ALT ? 500 : 150, proj.o, 0x55AAEE, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius);
 							part_create(PART_ELECTRIC_SOFT, proj.flags&HIT_ALT ? 250 : 75, proj.o, 0x55AAEE, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f);
 							part_create(PART_SMOKE, proj.flags&HIT_ALT ? 500 : 250, proj.o, 0x8896A4, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.35f, 1, -30);
-							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							quake(proj.o, proj.weap, proj.flags);
 							if(proj.flags&HIT_ALT) part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 150, 0x225599, 1.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.75f, bvec(98, 196, 244));
 							adddynlight(proj.o, 1.1f*WPB(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.1f, 0.4f, 0.6f), proj.flags&HIT_ALT ? 300 : 100, 10);
@@ -803,16 +811,16 @@ namespace projs
 						if(WPB(proj.weap, explode, proj.flags&HIT_ALT))
 						{
 							part_create(PART_PLASMA_SOFT, 500, proj.o, 0x4408AA, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
-							game::quake(proj.o, WPB(proj.weap, damage, proj.flags&HIT_ALT), WPB(proj.weap, explode, proj.flags&HIT_ALT));
+							quake(proj.o, proj.weap, proj.flags);
 							part_fireball(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT)*0.75f, PART_EXPLOSION, 500, 0x2211FF, 1.f);
 							adddynlight(proj.o, WPB(proj.weap, explode, proj.flags&HIT_ALT), vec(0.4f, 0.05f, 1.f), 500, 10);
-							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 8.f);
+							adddecal(DECAL_SCORCH, proj.o, proj.norm, 8.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, 4.f, bvec(98, 16, 254));
 						}
 						else
 						{
 							adddynlight(proj.o, 16, vec(0.4f, 0.05f, 1.f), 250, 10);
-							adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, 5.f);
+							adddecal(DECAL_SCORCH, proj.o, proj.norm, 5.f);
 							adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
 						}
 						break;
