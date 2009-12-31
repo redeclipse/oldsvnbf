@@ -2699,7 +2699,7 @@ namespace server
 	void checkents()
 	{
 		int items[MAXENTTYPES] = {0}, lowest[MAXENTTYPES] = {-1}, sweap = m_weapon(gamemode, mutators);
-		if(m_fight(gamemode))
+		if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators))
 		{
 			loopv(clients) if(clients[i]->state.aitype < AI_START) items[WEAPON] += clients[i]->state.carry(sweap);
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
@@ -2731,7 +2731,7 @@ namespace server
 				if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 				{
 					bool override = false;
-					if(i == lowest[sents[i].type])
+					if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
 					{
 						float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GVAR(maxcarry));
 						if(dist < GVAR(itemthreshold)) override = true;
