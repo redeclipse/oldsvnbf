@@ -126,7 +126,7 @@ struct gui : guient
 				if(mousebuttons&GUI_UP) { b; } \
 				hit = true; \
 			} \
-			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], !hit); \
+			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], hit); \
 			y += guibound[1]*3/2; \
 		}
 		uibtn("textures/exit", cleargui(1));
@@ -232,7 +232,7 @@ struct gui : guient
 		autotab();
 		if(scale == 0) scale = 1;
 		int size = (int)(scale*2*guibound[1])-guishadow;
-		if(visible()) icon_(t, overlaid, false, curx, cury, size, !ishit(size+guishadow, size+guishadow));
+		if(visible()) icon_(t, overlaid, false, curx, cury, size, ishit(size+guishadow, size+guishadow));
 		return layout(size+guishadow, size+guishadow);
 	}
 
@@ -241,7 +241,7 @@ struct gui : guient
         autotab();
         if(scale == 0) scale = 1;
         int size = (int)(scale*2*guibound[1])-guishadow;
-        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, !ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
+        if(t!=notexture && visible()) icon_(t, true, true, curx, cury, size, ishit(size+guishadow, size+guishadow), rotate, xoff, yoff, glowtex, glowcolor, layertex);
         return layout(size+guishadow, size+guishadow);
     }
 
@@ -580,7 +580,7 @@ struct gui : guient
             if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
         }
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
-        vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
+        vec color = hit ? (overlaid ? vec(1, 0.75f, 0.75f) : vec(0.5f, 0.5f, 0.5f)) : vec(1, 1, 1);
         glColor3fv(color.v);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
@@ -618,10 +618,9 @@ struct gui : guient
 		if(overlaid)
 		{
 			if(!overlaytex) overlaytex = textureload(guioverlaytex, 3, true, false);
-			color = hit ? vec(0.25f, 0.25f, 0.25f) : vec(1, 1, 1);
+			color = hit ? vec(1, 0.75f, 0.75f) : vec(0.5f, 0.5f, 0.5f);
 			glColor3fv(color.v);
 			glBindTexture(GL_TEXTURE_2D, overlaytex->id);
-            glColor3f(1, 1, 1);
 			glBegin(GL_QUADS);
 			rect_(xi - xpad, yi - ypad, xs + 2*xpad, ys + 2*ypad, 0);
 			glEnd();
@@ -686,7 +685,7 @@ struct gui : guient
 			if(icon)
 			{
 				defformatstring(tname)("%s%s", strncmp("textures/", icon, 9) ? "textures/" : "", icon);
-				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
+				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && hit);
 				x += guibound[1];
 			}
 			if(icon && text) x += padding;
