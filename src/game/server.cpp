@@ -2379,7 +2379,11 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id)) sents[id].millis = gamemillis;
+			if(sents.inrange(id))
+			{
+				sents[id].millis = gamemillis;
+				if(finditem(id)) sents[id].millis += GVAR(itemspawntime);
+			}
 		}
 	}
 
@@ -2483,7 +2487,7 @@ namespace server
 		int dropped = gs.entid[weap];
 		gs.ammo[weap] = gs.entid[weap] = -1;
 		int nweap = gs.bestweap(sweap, true); // switch to best weapon
-		if(w_carry(weap, sweap)) sents[dropped].millis = gamemillis+GVAR(itemspawntime);
+		if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+GVAR(itemspawntime);
 		gs.dropped.add(dropped);
 		gs.weapswitch(nweap, millis);
 		sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);

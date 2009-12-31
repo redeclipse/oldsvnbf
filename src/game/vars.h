@@ -61,7 +61,7 @@ VARG(duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round
 VARG(selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage rules
 VARG(trialdamage, 0, 0, 1); // 0 = off, 1 = allow damage in time-trial
 VARG(teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players damage team
-VARG(teambalance, 0, 2, 3); // 0 = off, 1 = by number then rank, 2 = by rank then number, 3 = humans vs. ai
+VARG(teambalance, 0, 1, 3); // 0 = off, 1 = by number then rank, 2 = by rank then number, 3 = humans vs. ai
 
 VARG(fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
