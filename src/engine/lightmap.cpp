@@ -470,7 +470,7 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 
 void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1, extentity *t = NULL)
 {
-	loopv(sunlights)
+	loopv(sunlights) if(sunlights[i])
 	{
 		const extentity &light = *sunlights[i];
 		if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
