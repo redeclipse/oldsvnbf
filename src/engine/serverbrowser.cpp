@@ -446,7 +446,7 @@ void updatefrommaster()
 }
 COMMAND(updatefrommaster, "");
 
-int showservers(guient *cgui)
+void updateservers()
 {
 	if(servers.empty() && !reqmaster)
 	{
@@ -455,5 +455,6 @@ int showservers(guient *cgui)
 	}
 	refreshservers();
 	servers.sort(sicompare);
-	return client::serverbrowser(cgui);
+	intret(servers.length());
 }
+COMMAND(updateservers, "");

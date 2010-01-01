@@ -74,7 +74,7 @@ namespace client
 			if(mapvotes.inrange(vote))
 			{
 				if(mapvotes[vote].players.inrange(player)) formatstring(text)("%d", mapvotes[vote].players[player]->clientnum);
-				else formatstring(text)("%d %d %d %s", mapvotes[vote].players.length(), mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
+				else formatstring(text)("%d %d %d \"%s\"", mapvotes[vote].players.length(), mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
 			}
 			result(text);
     	}
@@ -1956,7 +1956,7 @@ namespace client
 
 	void resetserversort()
 	{
-		defformatstring(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_PLAYERS, SINFO_PING);
+		defformatstring(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING);
 		execute(u);
 	}
 	ICOMMAND(serversortreset, "", (), resetserversort());
@@ -2018,7 +2018,7 @@ namespace client
 					retcp(strcmp(aa->sdesc, ab->sdesc));
 					break;
 				}
-				case SINFO_GAME:
+				case SINFO_MODE:
 				{
 					if(aa->attr.length() > 1) ac = aa->attr[1];
 					else ac = 0;
@@ -2027,7 +2027,9 @@ namespace client
 					else bc = 0;
 
 					retsw(ac, bc, true);
-
+				}
+				case SINFO_MUTS:
+				{
 					if(aa->attr.length() > 2) ac = aa->attr[2];
 					else ac = 0;
 
@@ -2053,10 +2055,13 @@ namespace client
 					retsw(ac, bc, false);
 					break;
 				}
-				case SINFO_PLAYERS:
+				case SINFO_NUMPLRS:
 				{
 					retsw(aa->numplayers, ab->numplayers, false);
-
+					break;
+				}
+				case SINFO_MAXPLRS:
+				{
 					if(aa->attr.length() > 4) ac = aa->attr[4];
 					else ac = 0;
 
@@ -2095,147 +2100,21 @@ namespace client
 		}
 	}
 
-    void serverstartcolumn(guient *g, int i)
+    void getservers(int server)
     {
-		g->pushlist();
-		if(g->buttonf(i ? serverinfoformats[i] : "", 0x888888, NULL, true, i ? serverinfotypes[i] : "") & GUI_UP)
+		mkstring(text); server--;
+		if(servers.inrange(server))
 		{
-			mkstring(st);
-			bool invert = false;
-			int len = execute("listlen $serversort");
-			loopk(len)
-			{
-				defformatstring(s)("at $serversort %d", k);
-
-				int n = execute(s);
-				if(abs(n) != i)
-				{
-					defformatstring(t)("%s%d", st[0] ? " " : "", n);
-					formatstring(st)("%s%s", st[0] ? st : "", t);
-				}
-				else if(!k) invert = true;
-			}
-			defformatstring(u)("serversort [%d%s%s]",
-				invert ? 0-i : i, st[0] ? " " : "", st[0] ? st : "");
-			execute(u);
+			serverinfo *si = servers[server];
+			formatstring(text)("%d \"%s\" %d %d \"%s\" %d %d \"%s\" %d %d %d %d",
+				serverstat(si), si->name, si->port, si->qport, si->sdesc,
+				si->attr.length() > 1 && si->attr[1] >= 0 ? si->attr[1] : -1,
+				si->attr.length() > 2 && si->attr[2] >= 0 ? si->attr[2] : -1, si->map,
+				si->attr.length() > 3 && si->attr[3] >= 0 ? si->attr[3] : -1, si->numplayers,
+				si->attr.length() > 4 && si->attr[4] >= 0 ? si->attr[4] : -1, si->ping);
 		}
-
-		g->mergehits(true);
+		else formatstring(text)("%d", servers.length());
+		result(text);
     }
-
-    void serverendcolumn(guient *g, int i)
-    {
-        g->mergehits(false);
-        g->poplist();
-    }
-
-    bool serverentry(guient *g, int i, serverinfo *si)
-    {
-		mkstring(text);
-		int status = serverstat(si), colour = serverstatus[status].colour;
-		if(status == SSTAT_OPEN && strcmp(si->sdesc, servermaster)) colour &= ~0x444444;
-		switch(i)
-		{
-			case SINFO_STATUS:
-			{
-				if(g->button("", colour, serverstatus[status].icon) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_DESC:
-			{
-				copystring(text, si->sdesc, 32);
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_GAME:
-			{
-				copystring(text, server::gamename(si->attr[1], si->attr[2]), 48);
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_MAP:
-			{
-				copystring(text, si->map, 24);
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_TIME:
-			{
-				if(si->attr.length() > 3 && si->attr[3] >= 0) formatstring(text)("%d %s", si->attr[3], si->attr[3] == 1 ? "min" : "mins");
-				else formatstring(text)("?? mins");
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_PLAYERS:
-			{
-				if(si->attr.length() > 4 && si->attr[4] >= 0) formatstring(text)("%-3d\fs\fd/\fS%3d ", si->numplayers, si->attr[4]);
-				else formatstring(text)("%-3d\fs\fd/\fS ?? ", si->numplayers);
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			case SINFO_PING:
-			{
-				formatstring(text)("%d ", si->ping);
-				if(g->buttonf(serverinfoformats[i], colour, NULL, true, text) & GUI_UP) return true;
-				break;
-			}
-			default: break;
-		}
-		return false;
-    }
-
-	int serverbrowser(guient *g)
-	{
-		if(servers.empty())
-		{
-			g->pushlist();
-			g->text("No servers listed, \fs\fgupdate\fS to see some.", 0xFFFFFF, "info");
-			g->poplist();
-			return -1;
-		}
-		loopv(servers) if(!strcmp(servers[i]->sdesc, servermaster))
-		{
-			if(servers[i]->attr[0] > GAMEVERSION)
-			{
-				g->pushlist();
-				g->textf("\fs\fyNEW VERSION RELEASED!\fS Please visit \fs\fc%s\fS for more information.", 0xFFFFFF, "info", ENG_URL);
-				g->poplist();
-			}
-			break;
-		}
-		int n = -1, waiting = 0;
-		for(int start = 0; start < servers.length();)
-		{
-			if(start > 0) g->tab();
-			int end = servers.length();
-			g->pushlist();
-			loopi(SINFO_MAX)
-			{
-				serverstartcolumn(g, i);
-				for(int j = start; j < end; j++)
-				{
-					if(!i && g->shouldtab()) { end = j; break; }
-					serverinfo *si = servers[j];
-					if(si->ping == serverinfo::WAITING && si->attr.empty())
-					{
-						if(!i) waiting++;
-					}
-					else if(si->ping < serverinfo::WAITING && si->attr.length() && si->attr[0] == GAMEVERSION)
-					{
-						if(serverentry(g, i, si)) n = j;
-					}
-				}
-				serverendcolumn(g, i);
-			}
-			g->poplist();
-			start = end;
-		}
-		if(waiting)
-		{
-			g->pushlist();
-			g->textf("Waiting for response from %d %s", 0xFFFFFF, "info", waiting, waiting != 1 ? "servers" : "server");
-			g->poplist();
-		}
-		return n;
-	}
+    ICOMMAND(getserver, "i", (int *server), getservers(*server));
 }

@@ -646,7 +646,7 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_MAX };
 
 enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD };
 enum { CAMERA_NONE = 0, CAMERA_PLAYER, CAMERA_FOLLOW, CAMERA_ENTITY, CAMERA_MAX };
-enum { SINFO_STATUS = 0, SINFO_DESC, SINFO_GAME, SINFO_MAP, SINFO_TIME, SINFO_PLAYERS, SINFO_PING, SINFO_MAX };
+enum { SINFO_STATUS = 0, SINFO_NAME, SINFO_PORT, SINFO_QPORT, SINFO_DESC, SINFO_MODE, SINFO_MUTS, SINFO_MAP, SINFO_TIME, SINFO_NUMPLRS, SINFO_MAXPLRS, SINFO_PING, SINFO_MAX };
 enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, SSTAT_MAX };
 
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_SPRINT, AC_CROUCH, AC_SPECIAL, AC_TOTAL, AC_DASH = AC_TOTAL, AC_MAX };
@@ -941,25 +941,6 @@ const char *animnames[] =
 };
 #else
 extern const char *animnames[];
-#endif
-struct serverstatuses
-{
-	int type,				colour;		const char *icon;
-};
-#ifdef GAMEWORLD
-serverstatuses serverstatus[] = {
-	{ SSTAT_OPEN,			0xFFFFFF,	"server" },
-	{ SSTAT_LOCKED,			0xFF8844,	"serverlock" },
-	{ SSTAT_PRIVATE,		0x8888FF,	"serverpriv" },
-	{ SSTAT_FULL,			0xFF8888,	"serverfull" },
-	{ SSTAT_UNKNOWN,		0x888888,	"serverunk" }
-};
-const char *serverinfotypes[] = 	{ "",	"description",	"game type",	"map",		"time",		"players",	"ping" };
-const char *serverinfoformats[] =	{ "",	"%-32s ",		"%-48s ",		"%-24s ",	"%-8s ",	"%-7s ",	"%-4s " };
-#else
-extern serverstatuses serverstatus[];
-extern const char *serverinfotypes[];
-extern const char *serverinfoformats[];
 #endif
 
 struct gameent : dynent, gamestate
