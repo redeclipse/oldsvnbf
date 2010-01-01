@@ -332,8 +332,9 @@ struct zipstream : stream
     z_stream zfile;
     uchar *buf;
     int reading;
+    bool ended;
 
-    zipstream() : arch(NULL), info(NULL), buf(NULL), reading(-1)
+    zipstream() : arch(NULL), info(NULL), buf(NULL), reading(-1), ended(false)
     {
         zfile.zalloc = NULL;
         zfile.zfree = NULL;
@@ -379,6 +380,7 @@ struct zipstream : stream
         arch = a;
         info = f;
         reading = f->offset;
+        ended = false;
         if(f->compressedsize) buf = new uchar[BUFSIZE];
         return true;
     }
@@ -401,7 +403,7 @@ struct zipstream : stream
     }
 
     long size() { return info->size; }
-    bool end() { return reading < 0; }
+    bool end() { return reading < 0 || ended; }
     long tell() { return reading >= 0 ? (info->compressedsize ? zfile.total_out : reading - info->offset) : -1; }
 
     bool seek(long pos, int whence)
@@ -421,6 +423,7 @@ struct zipstream : stream
             if(fseek(arch->data, pos, SEEK_SET) < 0) return false;
             arch->owner = this;
             reading = pos;
+            ended = false;
             return true;
         }
 
@@ -439,6 +442,7 @@ struct zipstream : stream
             zfile.avail_in = 0;
             zfile.total_in = info->compressedsize;
             arch->owner = NULL;
+            ended = false;
             return true;
         }
 
@@ -469,6 +473,7 @@ struct zipstream : stream
             pos -= skipped;
         }
 
+        ended = false;
         return true;
     }
 
@@ -486,6 +491,7 @@ struct zipstream : stream
 
             int n = (int)fread(buf, 1, min(len, int(info->size + info->offset - reading)), arch->data);
             reading += n;
+            if(n < len) ended = true;
             return n;
         }
 
@@ -497,7 +503,8 @@ struct zipstream : stream
             int err = inflate(&zfile, Z_NO_FLUSH);
             if(err != Z_OK)
             {
-                if(err != Z_STREAM_END)
+                if(err == Z_STREAM_END) ended = true;
+                else
                 {
 #ifndef STANDALONE
                     if(dbgzip) conoutf("inflate error: %s", err);
