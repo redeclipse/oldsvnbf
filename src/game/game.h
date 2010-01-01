@@ -1159,7 +1159,7 @@ struct projent : dynent
 	bool local, extinguish, limited, stuck, escaped;
 	int projtype, projcollide;
 	float elasticity, reflectivity, relativity, waterfric;
-	int schan, id, weap, flags, colour, hitflags;
+	int schan, id, weap, flags, hitflags;
 	entitylight light;
 	gameent *owner;
 	physent *hit;
@@ -1183,15 +1183,13 @@ struct projent : dynent
 		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = beenused = flags = 0;
 		schan = id = weap = -1;
 		movement = roll = lifespan = lifesize = 0.f;
-		colour = 0xFFFFFF;
-		extinguish = limited = stuck = false;
-		escaped = true;
+		extinguish = limited = stuck = escaped = false;
 		projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 	}
 
-	bool ready()
+	bool ready(bool used = true)
 	{
-		if(owner && !beenused && waittime <= 0 && state != CS_DEAD)
+		if(owner && (!used || !beenused) && waittime <= 0 && state != CS_DEAD)
 			return true;
 		return false;
 	}

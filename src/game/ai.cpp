@@ -55,9 +55,20 @@ namespace ai
 		return false;
 	}
 
+	bool canshoot(gameent *d, gameent *e, bool alt = true)
+	{
+		if(weaprange(d, d->weapselect, true, e->o.squaredist(d->o)))
+		{
+			int prot = m_protect(game::gamemode, game::mutators);
+			if((d->aitype >= AI_START || !d->protect(lastmillis, prot)) && targetable(d, e, true))
+				return d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD));
+		}
+		return false;
+	}
+
 	bool altfire(gameent *d, gameent *e)
 	{
-		if(e && !WPA(d->weapselect, zooms) && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)) && d->canshoot(d->weapselect, HIT_ALT, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+		if(e && !WPA(d->weapselect, zooms) && canshoot(d, e))
 		{
 			switch(d->weapselect)
 			{
@@ -989,7 +1000,7 @@ namespace ai
 				game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
 				if((insight || quick) && !d->ai->becareful)
 				{
-					if(d->canshoot(d->weapselect, alt ? HIT_ALT : 0, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)))
+					if(canshoot(d, e, alt))
 					{
 						d->action[alt ? AC_ALTERNATE : AC_ATTACK] = true;
 						d->ai->lastaction = d->actiontime[alt ? AC_ALTERNATE : AC_ATTACK] = lastmillis;
