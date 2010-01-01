@@ -821,9 +821,9 @@ void writecfg()
 		bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); break;
-			case ID_FVAR: saved = true; f->printf("\t%s %s\n", id.name, floatstr(*id.storage.f)); break;
-			case ID_SVAR: saved = true; f->printf("\t%s ", id.name); writeescapedstring(f, *id.storage.s); f->putchar('\n'); break;
+			case ID_VAR: if(*id.storage.i != id.def.i) { saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); } break;
+			case ID_FVAR: if(*id.storage.f != id.def.f) { saved = true; f->printf("\t%s %s\n", id.name, floatstr(*id.storage.f)); } break;
+			case ID_SVAR: if(strcmp(*id.storage.s, id.def.s)) { saved = true; f->printf("\t%s ", id.name); writeescapedstring(f, *id.storage.s); f->putchar('\n'); } break;
 		}
 		if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
 	}
@@ -846,7 +846,7 @@ void writecfg()
 		if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
 	}
 	writebinds(f);
-	writecompletions(f);
+	//writecompletions(f);
 	f->printf("] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
 	f->printf("\n");
 	delete f;
