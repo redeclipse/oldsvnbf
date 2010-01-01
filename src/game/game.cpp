@@ -647,6 +647,12 @@ namespace game
 					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
 					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3))) mergedamagetone(actor, damage, burning ? damagetone::BURN : 0);
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
+					if(vampire)
+					{
+						float amt = damage/float(m_health(gamemode, mutators));
+						part_splash(PART_HINT, clamp(int(amt*30), 1, 30), 100+int(100*amt), d->feetpos(), 0xFF0808, 0.3f+(0.7f*amt), clamp(0.3f+(0.7f*amt), 0.f, 1.f), -1, int(d->radius));
+						part_trail(PART_HINT, 100+int(100*amt), d->feetpos(), actor->muzzlepos(weap), 0xFF0808, 0.3f+(0.7f*amt), clamp(0.3f+(0.7f*amt), 0.f, 1.f), -1);
+					}
 				}
 			}
 			if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
@@ -1317,6 +1323,7 @@ namespace game
 					mapmodelinfo &mmi = getmminfo(e.attrs[0]);
 					vec center, radius;
 					mmi.m->collisionbox(0, center, radius);
+					if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
 					if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attrs[1]));
 					pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*3.f;
 				}

@@ -21,6 +21,7 @@ bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 			{
 				vec center, radius;
 				m->boundbox(0, center, radius);
+				if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
 				rotatebb(center, radius, e.attrs[1]);
 				o = e.o;
 				o.add(center);
@@ -324,6 +325,7 @@ void entselectionbox(const extentity &e, vec &eo, vec &es)
 	if(e.type == ET_MAPMODEL && (m = loadmodel(NULL, e.attrs[0])))
 	{
 		m->collisionbox(0, eo, es);
+		if(e.attrs[4]) { eo.mul(e.attrs[4]/100.f); es.mul(e.attrs[4]/100.f); }
 		rotatebb(eo, es, e.attrs[1]);
 		if(m->collide)
 			eo.z -= camera1->aboveeye; // wacky but true. see physics collide
@@ -524,6 +526,7 @@ bool dropentity(extentity &e, int drop = -1)
 		{
 			vec center;
 			m->boundbox(0, center, radius);
+			if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
 			rotatebb(center, radius, e.attrs[1]);
 			radius.x += fabs(center.x);
 			radius.y += fabs(center.y);
