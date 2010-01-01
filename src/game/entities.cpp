@@ -35,6 +35,74 @@ namespace entities
 		}
 		switch(type)
 		{
+			case PARTICLES:
+			{
+				switch(attr[0])
+				{
+					case 0: addentinfo("fire plume"); break;
+					case 1: addentinfo("smoke vent"); break;
+					case 2: addentinfo("water fountain"); break;
+					case 3: addentinfo("fireball"); break;
+					case 4: addentinfo("tape"); break;
+					case 7: addentinfo("lightning"); break;
+					case 8: addentinfo("fire"); break;
+					case 9: addentinfo("smoke"); break;
+					case 10: addentinfo("water"); break;
+					case 11: addentinfo("plasma"); break;
+					case 12: addentinfo("snow"); break;
+					case 13: addentinfo("sparks"); break;
+					case 14: addentinfo("flames"); break;
+					case 15: addentinfo("smoke plume"); break;
+					case 6: addentinfo("progress versus"); break;
+					case 5: addentinfo("progress"); break;
+					case 32: addentinfo("lensflare (plain)"); break;
+					case 33: addentinfo("lensflare (sparkle)"); break;
+					case 34: addentinfo("lensflare (sun)"); break;
+					case 35: addentinfo("lensflare (sparklesun)"); break;
+					default: break;
+				}
+				switch(attr[0])
+				{
+					case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
+					{
+						if(attr[1] >= 256)
+						{
+							int val = attr[1]-256;
+							switch(val%32)
+							{
+								case 0: case 1: case 2: addentinfo("circle"); break;
+								case 3: case 4: case 5: addentinfo("cylinder"); break;
+								case 6: case 7: case 8: case 9: case 10: case 11: addentinfo("cone"); break;
+								case 12: case 13: case 14: addentinfo("plane"); break;
+								case 15: case 16: case 17: case 18: case 19: case 20: addentinfo("line"); break;
+								case 21: default: addentinfo("sphere"); break;
+							}
+							switch(val%3)
+							{
+								case 0: addentinfo("x-axis"); break;
+								case 1: addentinfo("y-axis"); break;
+								case 2: addentinfo("z-axis"); break;
+							}
+							if(val%64 >= 32) addentinfo("inverted");
+							break;
+						}
+						// fall through
+					}
+					case 1: case 2:
+					{
+						switch(attr[1]%3)
+						{
+							case 0: addentinfo("x-axis"); break;
+							case 1: addentinfo("y-axis"); break;
+							case 2: addentinfo("z-axis"); break;
+						}
+						if(attr[1]%6 >= 3) addentinfo("inverted");
+						break;
+					}
+					default: break;
+				}
+				break;
+			}
 			case PLAYERSTART: case FLAG: case CHECKPOINT:
 			{
 				if(type != CHECKPOINT)
