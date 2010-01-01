@@ -142,10 +142,14 @@ namespace projs
 
 	void remove(gameent *owner)
 	{
-		loopv(projs) if(projs[i]->owner==owner)
+		loopv(projs) if(projs[i]->owner == owner)
         {
-            delete projs[i];
-            projs.removeunordered(i--);
+			if(projs[i]->projtype == PRJ_SHOT)
+			{
+				delete projs[i];
+				projs.removeunordered(i--);
+			}
+			else projs[i]->owner = NULL;
         }
 	}
 
@@ -347,7 +351,7 @@ namespace projs
 				proj.waterfric = 1.75f;
 				proj.weight = 150.f;
 				proj.projcollide = BOUNCE_GEOM;
-				proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
+				if(proj.owner) proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
 				break;
 			}
@@ -834,12 +838,12 @@ namespace projs
 					default: break;
 				}
 				if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
-				if(proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
+				if(proj.local && proj.owner) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
 				break;
 			}
 			case PRJ_ENT:
 			{
-				if(!proj.beenused && proj.local) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
+				if(!proj.beenused && proj.local && proj.owner) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
 				break;
 			}
 			default: break;
@@ -1027,7 +1031,7 @@ namespace projs
         proj.o.z += proj.height;
         loopi(physics::physsteps-1)
         {
-            if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, physics::physframetime)))
+            if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime)))
             {
             	if(proj.lifetime < 0) proj.lifetime = 0;
                 alive = false;
@@ -1035,7 +1039,7 @@ namespace projs
             }
         }
         proj.deltapos = proj.o;
-        if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, physics::physframetime))))
+        if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime))))
         {
            	if(proj.lifetime < 0) proj.lifetime = 0;
 			alive = false;
@@ -1075,7 +1079,7 @@ namespace projs
 				proj.hitflags = HITFLAG_NONE;
 			}
 			hits.setsizenodelete(0);
-			if(proj.owner && proj.state != CS_DEAD)
+			if((proj.projtype != PRJ_SHOT || proj.owner) && proj.state != CS_DEAD)
 			{
 				if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes
 					proj.mdl = entities::entmdlname(entities::ents[proj.id]->type, entities::ents[proj.id]->attrs);
@@ -1092,18 +1096,26 @@ namespace projs
 				effect(proj);
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
-                    if(!move(proj)) proj.state = CS_DEAD;
+					if(!move(proj) && !proj.beenused)
+					{
+						if(proj.projtype == PRJ_ENT)
+						{
+							proj.beenused = 1;
+							proj.lifetime = min(proj.lifetime, 1000);
+						}
+						else proj.state = CS_DEAD;
+					}
 				}
 				else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
 				{
 					int qtime = min(rtime, 30);
 					rtime -= qtime;
 
-					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || (!proj.stuck && !move(proj, qtime)))
+					if(((proj.lifetime -= qtime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, qtime)))
 					{
 						if(proj.lifetime < 0) proj.lifetime = 0;
 						proj.state = CS_DEAD;
- 						break;
+						break;
 					}
 				}
 			}
