@@ -1120,7 +1120,7 @@ namespace projs
 				}
 			}
 			else proj.state = CS_DEAD;
-			if(proj.local && proj.projtype == PRJ_SHOT)
+			if(proj.local && proj.owner && proj.projtype == PRJ_SHOT)
 			{
 				float radius = 0;
 				if(proj.state == CS_DEAD)
