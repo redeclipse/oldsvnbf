@@ -1300,18 +1300,13 @@ namespace ai
 				if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
 					obs.add(d, d->airnodes[j]);
 			if(d->state != CS_ALIVE || !physics::issolid(d)) continue;
-			vec pos = d->feetpos();
-			float limit = enttype[WAYPOINT].radius+d->radius;
-            obs.avoidnear(d, pos, limit);
+            obs.avoidnear(d, d->feetpos(), d->radius);
 		}
 		loopv(projs::projs)
 		{
 			projent *p = projs::projs[i];
 			if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WPB(p->weap, explode, p->flags&HIT_ALT))
-			{
-				float limit = enttype[WAYPOINT].radius+(WPB(p->weap, explode, p->flags&HIT_ALT)*p->lifesize);
-                obs.avoidnear(p, p->o, limit);
-			}
+                obs.avoidnear(p, p->o, WPB(p->weap, explode, p->flags&HIT_ALT)*p->lifesize);
 		}
 		loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
 		{
