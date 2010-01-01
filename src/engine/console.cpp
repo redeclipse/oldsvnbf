@@ -62,10 +62,10 @@ struct keym
     int code;
     char *name;
     char *actions[NUMACTIONS];
-    bool pressed;
+    bool pressed, persist[NUMACTIONS];
 
-    keym() : code(-1), name(NULL), pressed(false) { loopi(NUMACTIONS) actions[i] = newstring(""); }
-    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
+    keym() : code(-1), name(NULL), pressed(false) { loopi(NUMACTIONS) { actions[i] = newstring(""); persist[i] = false; } }
+    ~keym() { DELETEA(name); loopi(NUMACTIONS) { DELETEA(actions[i]); persist[i] = false; } }
 };
 
 /*
@@ -197,12 +197,14 @@ void bindkey(char *key, char *action, int state, const char *cmd)
 	keym *km = findbind(key);
     if(!km) { conoutf("\frunknown key \"%s\"", key); return; }
     char *&binding = km->actions[state];
+    bool *persist = &km->persist[state];
 	if(!keypressed || keyaction!=binding) delete[] binding;
     // trim white-space to make searchbinds more reliable
     while(isspace(*action)) action++;
     int len = strlen(action);
     while(len>0 && isspace(action[len-1])) len--;
     binding = newstring(action, len);
+    *persist = persistidents;
     changedkeys = totalmillis;
 }
 
@@ -564,7 +566,7 @@ void writebinds(stream *f)
         loopv(binds)
         {
             keym &km = *binds[i];
-            if(*km.actions[j]) f->printf("\t%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
+            if(km.persist[j] && *km.actions[j]) f->printf("\t%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
         }
     }
 }
