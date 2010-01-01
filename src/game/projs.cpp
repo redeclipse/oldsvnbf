@@ -1173,7 +1173,7 @@ namespace projs
 
 	void render()
 	{
-		loopv(projs) if(projs[i]->ready() && projs[i]->mdl && *projs[i]->mdl)
+		loopv(projs) if(projs[i]->ready(false) && projs[i]->mdl && *projs[i]->mdl)
 		{
 			projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
