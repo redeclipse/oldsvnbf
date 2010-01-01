@@ -107,8 +107,8 @@ void guibutton(char *name, char *action, char *icon, char *altact)
 	if(ret&GUI_UP)
 	{
 		char *act = name;
-		if(altact && *altact && ret&GUI_ALT) act = altact;
-		else if(action && *action) act = action;
+		if(altact[0] && ret&GUI_ALT) act = altact;
+		else if(action[0]) act = action;
 		executelater.add(newstring(act));
         if(shouldclearmenu) clearlater = true;
 	}
@@ -125,7 +125,7 @@ SVAR(guirolloverimgaction, "");
 void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
 	if(!cgui) return;
-    Texture *t = path && *path ? textureload(path, 0, true, false) : NULL;
+    Texture *t = path[0] ? textureload(path, 0, true, false) : NULL;
     if(t == notexture)
     {
         if(*altpath) t = textureload(altpath, 0, true, false);
@@ -135,9 +135,9 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 	if(ret&GUI_UP)
 	{
 		char *act = NULL;
-		if(altact && *altact && ret&GUI_ALT) act = altact;
-		else if(action && *action) act = action;
-		if(act && *act)
+		if(altact[0] && ret&GUI_ALT) act = altact;
+		else if(action[0]) act = action;
+		if(act[0])
 		{
 			executelater.add(newstring(act));
 			if(shouldclearmenu) clearlater = true;
@@ -153,19 +153,19 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 void guislice(char *path, char *action, float *scale, float *start, float *end, char *text, char *altpath, char *altact)
 {
 	if(!cgui) return;
-    Texture *t = path && *path ? textureload(path, 0, true, false) : NULL;
+    Texture *t = path[0] ? textureload(path, 0, true, false) : NULL;
     if(t == notexture)
     {
         if(*altpath) t = textureload(altpath, 0, true, false);
         if(t == notexture) return;
     }
-    int ret = cgui->slice(t, *scale, *start, *end, text && *text ? text : NULL);
+    int ret = cgui->slice(t, *scale, *start, *end, text[0] ? text : NULL);
 	if(ret&GUI_UP)
 	{
 		char *act = NULL;
-		if(altact && *altact && ret&GUI_ALT) act = altact;
-		else if(action && *action) act = action;
-		if(act && *act)
+		if(altact[0] && ret&GUI_ALT) act = altact;
+		else if(action[0]) act = action;
+		if(act[0])
 		{
 			executelater.add(newstring(act));
 			if(shouldclearmenu) clearlater = true;
@@ -212,10 +212,10 @@ void guifont(char *font, char *body)
 {
 	if(cgui)
 	{
-		if(font && *font)
+		if(font[0])
 		{
 			cgui->pushfont(font);
-			if(body && *body)
+			if(body[0])
 			{
 				execute(body);
 				cgui->popfont();
@@ -456,28 +456,12 @@ void guimodify(char *name, char *contents)
 	m->contents = contents && contents[0] ? newstring(contents) : NULL;
 }
 
-void guiservers()
-{
-	if(cgui)
-	{
-		extern int showservers(guient *cgui);
-		int n = showservers(cgui);
-		if(n >= 0 && servers.inrange(n))
-		{
-			defformatstring(c)("connect %s %d %d", servers[n]->name, servers[n]->port, servers[n]->qport);
-			executelater.add(newstring(c));
-            if(shouldclearmenu) clearlater = true;
-		}
-	}
-}
-
 COMMAND(newgui, "ssss");
 COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
-COMMAND(guiservers, "");
 COMMANDN(cleargui, cleargui_, "i");
-ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n && *n ? atoi(n) : -1));
+ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n[0] ? atoi(n) : -1));
 COMMAND(guistayopen, "s");
 COMMAND(guinoautotab, "s");
 
