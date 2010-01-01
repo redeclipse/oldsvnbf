@@ -736,6 +736,7 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         if(!m || !m->collide) continue;
         vec center, radius;
         m->collisionbox(0, center, radius);
+		if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
         float yaw = 180 + float((e.attrs[1]+7)-(e.attrs[1]+7)%15);
         switch(d->collidetype)
         {
