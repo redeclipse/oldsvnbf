@@ -21,15 +21,15 @@ static bool needsinput = false;
 #include "textedit.h"
 struct gui : guient
 {
-	struct list { int parent, w, h; };
+	struct list { int parent, w, h, hit; };
 
 	int nextlist;
 	static vector<list> lists;
 	static float hitx, hity;
-	static int curdepth, curlist, xsize, ysize, curx, cury, fontdepth;
-    static bool shouldmergehits, shouldautotab;
+	static int curdepth, curlist, xsize, ysize, curx, cury, fontdepth, mergelist, mergedepth;
+    static bool shouldautotab;
 
-	static void reset() { lists.setsize(0); }
+	static void reset() { lists.setsize(0); mergelist = mergedepth = -1; }
 
 	static int ty, tx, tpos, *tcurrent, tcolor; //tracking tab size and position since uses different layout method...
 
@@ -135,7 +135,7 @@ struct gui : guient
 	bool ishorizontal() const { return curdepth&1; }
 	bool isvertical() const { return !ishorizontal(); }
 
-	void pushlist()
+	void pushlist(bool merge)
 	{
 		if(layoutpass)
 		{
@@ -147,7 +147,7 @@ struct gui : guient
 			list &l = lists.add();
 			l.parent = curlist;
 			curlist = lists.length()-1;
-			xsize = ysize = 0;
+			l.hit = xsize = ysize = 0;
 		}
 		else
 		{
@@ -156,9 +156,15 @@ struct gui : guient
 			ysize = lists[curlist].h;
 		}
 		curdepth++;
+		if(merge)
+		{
+			if(!layoutpass && ishit(xsize, ysize)) lists[curlist].hit = 1;
+			mergelist = curlist;
+			mergedepth = curdepth;
+		}
 	}
 
-	void poplist()
+	int poplist()
 	{
 		list &l = lists[curlist];
 		if(layoutpass)
@@ -168,14 +174,16 @@ struct gui : guient
 		}
 		curlist = l.parent;
 		curdepth--;
+		if(mergelist >= 0 && curdepth < mergedepth) mergelist = mergedepth = -1;
 		if(curlist>=0)
 		{
 			xsize = lists[curlist].w;
 			ysize = lists[curlist].h;
 			if(ishorizontal()) cury -= l.h;
 			else curx -= l.w;
-			layout(l.w, l.h);
+			return layout(l.w, l.h);
 		}
+		return 0;
 	}
 
 	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false); }
@@ -217,11 +225,9 @@ struct gui : guient
 		}
 	}
 
-    void mergehits(bool on) { shouldmergehits = on; }
-
 	bool ishit(int w, int h, int x = curx, int y = cury)
 	{
-        if(shouldmergehits) return ishorizontal() ? hitx>=x && hitx<x+w : hity>=y && hity<y+h;
+		if(mergelist >= 0 && curdepth >= mergedepth && lists[mergelist].hit) return true;
 		if(ishorizontal()) h = ysize;
 		else w = xsize;
 		return hitx>=x && hity>=y && hitx<x+w && hity<y+h;
@@ -342,7 +348,7 @@ struct gui : guient
         int w = e->pixelwidth + guibound[0];
 
         bool wasvertical = isvertical();
-        if(wasvertical && e->maxy != 1) pushlist();
+        if(wasvertical && e->maxy != 1) pushlist(false);
 
 		char *result = NULL;
         if(visible())
@@ -722,14 +728,11 @@ struct gui : guient
         passthrough = !allowinput;
         fontdepth = 0;
         gui::pushfont("sub");
-		curdepth = -1;
-		curlist = -1;
-		tpos = 0;
-		tx = 0;
-		ty = 0;
+		curdepth = curlist = mergedepth = mergelist = -1;
+		tpos = tx = ty = 0;
 		tcurrent = tab;
 		tcolor = 0xFFFFFF;
-		pushlist();
+		pushlist(false);
 		if(layoutpass) nextlist = curlist;
 		else
 		{
@@ -777,8 +780,8 @@ TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
 
 vector<gui::list> gui::lists;
 float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;
-bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
-int gui::curdepth, gui::fontdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
+bool gui::passthrough, gui::shouldautotab = true;
+int gui::curdepth, gui::fontdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury, gui::mergelist, gui::mergedepth;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis;
 
