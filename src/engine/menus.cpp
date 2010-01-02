@@ -106,11 +106,14 @@ void guibutton(char *name, char *action, char *icon, char *altact)
 	int ret = cgui->button(name, 0xFFFFFF, *icon ? icon : NULL);
 	if(ret&GUI_UP)
 	{
-		char *act = name;
+		char *act = NULL;
 		if(altact[0] && ret&GUI_ALT) act = altact;
 		else if(action[0]) act = action;
-		executelater.add(newstring(act));
-        if(shouldclearmenu) clearlater = true;
+		if(act)
+		{
+			executelater.add(newstring(act));
+			if(shouldclearmenu) clearlater = true;
+		}
 	}
 	else if(ret&GUI_ROLLOVER)
 	{
@@ -137,7 +140,7 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
 		char *act = NULL;
 		if(altact[0] && ret&GUI_ALT) act = altact;
 		else if(action[0]) act = action;
-		if(act[0])
+		if(act)
 		{
 			executelater.add(newstring(act));
 			if(shouldclearmenu) clearlater = true;
@@ -419,13 +422,22 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
 
 //use text<action> to do more...
 
-
-void guilist(char *contents)
+void guilist(char *contents, char *action)
 {
 	if(!cgui) return;
-	cgui->pushlist();
+	cgui->pushlist(action[0] ? true : false);
 	execute(contents);
-	cgui->poplist();
+	int ret = cgui->poplist();
+	if(ret&GUI_UP && action[0])
+	{
+		executelater.add(newstring(action));
+		if(shouldclearmenu) clearlater = true;
+	}
+	else if(ret&GUI_ROLLOVER && action[0])
+	{
+		setsvar("guirollovername", action, true);
+		setsvar("guirolloveraction", contents, true);
+	}
 }
 
 void newgui(char *name, char *contents, char *initscript, char *header)
@@ -467,7 +479,7 @@ COMMAND(guinoautotab, "s");
 
 ICOMMAND(guicount, "", (), intret(menustack.length()));
 
-COMMAND(guilist, "s");
+COMMAND(guilist, "ss");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"ii");

@@ -464,8 +464,8 @@ struct guient
     }
     virtual void background(int color, int parentw = 0, int parenth = 0) = 0;
 
-    virtual void pushlist() {}
-    virtual void poplist() {}
+    virtual void pushlist(bool merge = false) {}
+    virtual int poplist() { return 0; }
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
@@ -487,7 +487,6 @@ struct guient
     virtual void fieldclear(const char *name, const char *init = "") = 0;
     virtual int fieldedit(const char *name) = 0;
     virtual void fieldscroll(const char *name, int n = -1) = 0;
-    virtual void mergehits(bool on) = 0;
 };
 
 struct guicb
