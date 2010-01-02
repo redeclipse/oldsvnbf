@@ -3,7 +3,7 @@
 int uimillis = -1;
 
 static bool layoutpass, actionon = false;
-static int mousebuttons = 0, guibound[2] = {0};
+static int mouseaction[2] = {0}, guibound[2] = {0};
 
 static float firstx, firsty;
 
@@ -21,7 +21,7 @@ static bool needsinput = false;
 #include "textedit.h"
 struct gui : guient
 {
-	struct list { int parent, w, h, hit; };
+	struct list { int parent, w, h, mouse[2]; };
 
 	int nextlist;
 	static vector<list> lists;
@@ -104,7 +104,7 @@ struct gui : guient
 			if(visible()) { tcolor = 0xFFFFFF; alpha = 255; }
 			else if(tcurrent && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2)
 			{
-				if(!guiclicktab || mousebuttons&GUI_UP) *tcurrent = tpos; // switch tab
+				if(!guiclicktab || mouseaction[0]&GUI_UP) *tcurrent = tpos; // switch tab
 				tcolor = 0xFF2222;
 				alpha = max(guiblend, 200);
 			}
@@ -123,7 +123,7 @@ struct gui : guient
 			bool hit = false; \
 			if(hitx>=x && hity>=y && hitx<x+guibound[1] && hity<y+guibound[1]) \
 			{ \
-				if(mousebuttons&GUI_UP) { b; } \
+				if(mouseaction[0]&GUI_UP) { b; } \
 				hit = true; \
 			} \
 			icon_(textureload(a, 3, true, false), false, false, x, y, guibound[1], !hit); \
@@ -147,7 +147,7 @@ struct gui : guient
 			list &l = lists.add();
 			l.parent = curlist;
 			curlist = lists.length()-1;
-			l.hit = xsize = ysize = 0;
+			l.mouse[0] = l.mouse[1] = xsize = ysize = 0;
 		}
 		else
 		{
@@ -156,9 +156,9 @@ struct gui : guient
 			ysize = lists[curlist].h;
 		}
 		curdepth++;
+		if(!layoutpass && visible() && ishit(xsize, ysize)) loopi(2) lists[curlist].mouse[i] = mouseaction[i]|GUI_ROLLOVER;
 		if(merge)
 		{
-			if(!layoutpass && ishit(xsize, ysize)) lists[curlist].hit = 1;
 			mergelist = curlist;
 			mergedepth = curdepth;
 		}
@@ -175,15 +175,15 @@ struct gui : guient
 		curlist = l.parent;
 		curdepth--;
 		if(mergelist >= 0 && curdepth < mergedepth) mergelist = mergedepth = -1;
-		if(curlist>=0)
+		if(curlist >= 0)
 		{
 			xsize = lists[curlist].w;
 			ysize = lists[curlist].h;
 			if(ishorizontal()) cury -= l.h;
 			else curx -= l.w;
-			return layout(l.w, l.h);
+			layout(l.w, l.h);
 		}
-		return 0;
+		return l.mouse[0];
 	}
 
 	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false); }
@@ -214,20 +214,20 @@ struct gui : guient
 				xsize = max(xsize, w);
 				ysize += h;
 			}
-			return 0;
 		}
 		else
 		{
 			bool hit = ishit(w, h);
 			if(ishorizontal()) curx += w;
 			else cury += h;
-			return (hit && visible()) ? mousebuttons|GUI_ROLLOVER : 0;
+			if(hit && visible()) return mouseaction[0]|GUI_ROLLOVER;
 		}
+		return 0;
 	}
 
 	bool ishit(int w, int h, int x = curx, int y = cury)
 	{
-		if(mergelist >= 0 && curdepth >= mergedepth && lists[mergelist].hit) return true;
+		if(mergelist >= 0 && curdepth >= mergedepth && lists[mergelist].mouse[0]) return true;
 		if(ishorizontal()) h = ysize;
 		else w = xsize;
 		return hitx>=x && hity>=y && hitx<x+w && hity<y+h;
@@ -267,7 +267,7 @@ struct gui : guient
 		slice(textureload(hud::progresstex, 3, true, false), scale, 0, percent, s);
 	}
 
-	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse)
+	void slider(int &val, int vmin, int vmax, int color, char *label, bool reverse, bool scroll)
 	{
 		autotab();
 		int x = curx;
@@ -283,7 +283,7 @@ struct gui : guient
 			}
 			int w = text_width(label);
 
-			bool hit;
+			bool hit = false;
 			int px, py;
 			if(ishorizontal())
 			{
@@ -299,14 +299,20 @@ struct gui : guient
                 else px = x + guibound[0]/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
 				py = y;
 			}
-			text_(label, px, py, hit ? 0xFF2222 : color, hit ? 255 : guiblend, hit && actionon);
-			if(hit && actionon)
+			text_(label, px, py, hit ? 0xFF2222 : color, hit ? 255 : guiblend, hit && mouseaction[0]&GUI_DOWN);
+			if(hit && mouseaction[0]&GUI_DOWN)
 			{
-                int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
-                if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-guibound[1]/2)/(ysize-guibound[1])) : int(vnew*(y+ysize-guibound[1]/2-hity)/(ysize-guibound[1]));
-                else vnew = reverse ? int(vnew*(x+xsize-guibound[0]/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-guibound[0]/2)/(xsize-w));
+				int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
+				if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-guibound[1]/2)/(ysize-guibound[1])) : int(vnew*(y+ysize-guibound[1]/2-hity)/(ysize-guibound[1]));
+				else vnew = reverse ? int(vnew*(x+xsize-guibound[0]/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-guibound[0]/2)/(xsize-w));
 				vnew += vmin;
-                vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
+				vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
+				if(vnew != val) val = vnew;
+			}
+			else if(scroll && lists[curlist].mouse[1] && lists[curlist].mouse[1]&GUI_UP)
+			{
+				int vval = val+((reverse ? !(lists[curlist].mouse[1]&GUI_ALT) : (lists[curlist].mouse[1]&GUI_ALT)) ? -1 : 1),
+					vnew = vmin < vmax ? clamp(vval, vmin, vmax) : clamp(vval, vmax, vmin);
 				if(vnew != val) val = vnew;
 			}
 		}
@@ -355,7 +361,7 @@ struct gui : guient
 		{
             bool hit = ishit(w, h);
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
-			if(mousebuttons&GUI_DOWN) //mouse request focus
+			if(mouseaction[0]&GUI_DOWN) //mouse request focus
 			{
 	            if(hit)
 	            {
@@ -370,8 +376,8 @@ struct gui : guient
 					e->mode = EDITORFOCUSED;
 				}
 			}
-            if(hit && editing && (mousebuttons&GUI_PRESSED)!=0 && fieldtype==FIELDEDIT)
-				e->hit(int(floor(hitx-(curx+guibound[0]/2))), int(floor(hity-cury)), (mousebuttons&GUI_DRAGGED)!=0); //mouse request position
+            if(hit && editing && (mouseaction[0]&GUI_PRESSED)!=0 && fieldtype==FIELDEDIT)
+				e->hit(int(floor(hitx-(curx+guibound[0]/2))), int(floor(hity-cury)), (mouseaction[0]&GUI_DRAGGED)!=0); //mouse request position
             if(editing && (fieldmode==FIELDCOMMIT || fieldmode==FIELDABORT)) // commit field if user pressed enter
             {
                 if(fieldmode==FIELDCOMMIT) result = e->currentline().text;
@@ -399,7 +405,7 @@ struct gui : guient
             if(slines > 0)
             {
                 int pos = e->scrolly;
-                slider(e->scrolly, slines, 0, color, NULL, false);
+                slider(e->scrolly, slines, 0, color, NULL, false, true);
                 if(pos != e->scrolly) e->cy = e->scrolly;
             }
             if(wasvertical) poplist();
@@ -447,7 +453,7 @@ struct gui : guient
 
 	void fieldscroll(const char *name, int n)
 	{
-		if(n < 0 && mousebuttons&GUI_PRESSED) return; // don't auto scroll during edits
+		if(n < 0 && mouseaction[0]&GUI_PRESSED) return; // don't auto scroll during edits
         if(!layoutpass) return;
         loopv(editors) if(strcmp(editors[i]->name, name) == 0)
 		{
@@ -761,7 +767,7 @@ struct gui : guient
 			{
 				hitx = (cursorx - origin.x)/scale.x;
 				hity = (cursory - origin.y)/scale.y;
-                if((mousebuttons & GUI_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mousebuttons |= GUI_DRAGGED;
+                if((mouseaction[0]&GUI_PRESSED) && (fabs(hitx-firstx) > 2 || fabs(hity - firsty) > 2)) mouseaction[0] |= GUI_DRAGGED;
 			}
 		}
 		else
@@ -823,11 +829,18 @@ namespace UI
 
 		if(code<0) switch(code)
 		{ // fall-through-o-rama
-			case -3:
-				mousebuttons |= GUI_ALT;
-			case -1:
+			case -5: mouseaction[1] |= GUI_ALT;
+			case -4:
+				mouseaction[1] |= GUI_SCROLL;
 				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
-				mousebuttons |= (actionon=isdown) ? GUI_DOWN : GUI_UP;
+				mouseaction[1] |= isdown ? GUI_DOWN : GUI_UP;
+				if(active()) return true;
+				break;
+			case -3: mouseaction[0] |= GUI_ALT;
+			case -1:
+				mouseaction[0] |= GUI_BUTTON;
+				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
+				mouseaction[0] |= (actionon=isdown) ? GUI_DOWN : GUI_UP;
 				if(active()) return true;
 				break;
 			case -2:
@@ -866,10 +879,7 @@ namespace UI
 			case SDLK_LEFT:
 			case SDLK_RIGHT:
 			case SDLK_LSHIFT:
-			case SDLK_RSHIFT:
-			case -4:
-			case -5:
-				break;
+			case SDLK_RSHIFT: break;
 			default:
 				if(!cooked || (code<32)) return false;
 		}
@@ -897,7 +907,8 @@ namespace UI
 
 	void render()
 	{
-		if(actionon) mousebuttons |= GUI_PRESSED;
+		if(actionon) mouseaction[0] |= GUI_PRESSED;
+
 		gui::reset(); guis.setsize(0);
 
 		// call all places in the engine that may want to render a gui from here, they call addcb()
@@ -952,7 +963,6 @@ namespace UI
 			SDL_EnableUNICODE(fieldmode!=FIELDSHOW);
 			keyrepeat(fieldmode!=FIELDSHOW);
 		}
-
-		mousebuttons = 0;
+		loopi(2) mouseaction[i] = 0;
 	}
 };

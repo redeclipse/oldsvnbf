@@ -439,7 +439,11 @@ extern void freechallenge(void *answer);
 extern bool checkchallenge(const char *answerstr, void *correct);
 
 // gui
-enum { GUI_DOWN = 0x0001, GUI_UP = 0x0002, GUI_PRESSED = 0x0004, GUI_ROLLOVER = 0x0008, GUI_DRAGGED = 0x0010, GUI_ALT = 0x0020 };
+enum {
+	GUI_DOWN = 1<<0, GUI_UP = 1<<1,
+	GUI_PRESSED = 1<<2, GUI_ROLLOVER = 1<<3, GUI_DRAGGED = 1<<4,
+	GUI_BUTTON = 1<<7, GUI_SCROLL = 1<<6, GUI_ALT = 1<<7
+};
 enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct Texture;
@@ -474,7 +478,7 @@ struct guient
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
     virtual int slice(Texture *t, float scale, float start = 0, float end = 1, const char *text = NULL) = 0;
-    virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false) = 0;
+    virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false, bool scroll = false) = 0;
     virtual void separator() = 0;
 	virtual void progress(float percent, float scale) = 0;
 	virtual void strut(int size) = 0;
