@@ -166,7 +166,7 @@ namespace client
 		f->printf("name \"%s\"\n\n", game::player1->name);
 	}
 
-    void connectattempt(const char *name, int port, int qport, const char *password, const ENetAddress &address)
+    void connectattempt(const char *name, int port, const char *password, const ENetAddress &address)
     {
         copystring(connectpass, password);
     }
@@ -2111,12 +2111,8 @@ namespace client
 				default: copystring(text, "0"); break;
 				case 0:
 				{
-					formatstring(text)("%d \"%s\" %d %d \"%s\" %d %d \"%s\" %d %d %d %d",
-						serverstat(si), si->name, si->port, si->qport, si->sdesc,
-						si->attr.length() > 1 && si->attr[1] >= 0 ? si->attr[1] : -1,
-						si->attr.length() > 2 && si->attr[2] >= 0 ? si->attr[2] : -1, si->map,
-						si->attr.length() > 3 && si->attr[3] >= 0 ? si->attr[3] : -1, si->numplayers,
-						si->attr.length() > 4 && si->attr[4] >= 0 ? si->attr[4] : -1, si->ping);
+					formatstring(text)("%d \"%s\" %d \"%s\" \"%s\" %d %d", serverstat(si), si->name, si->port, si->sdesc, si->map, si->numplayers, si->ping);
+					loopv(si->attr) { defformatstring(s)(" %d", si->attr[i]); concatstring(text, s); }
 					break;
 				}
 				case 1:

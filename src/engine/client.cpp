@@ -71,12 +71,10 @@ void trydisconnect()
 }
 
 char *lastaddress = NULL;
-void connectserv(const char *name, int port, int qport, const char *password)
+void connectserv(const char *name, int port, const char *password)
 {
     abortconnect();
-
 	if(!port) port = ENG_SERVER_PORT;
-	if(!qport) qport = ENG_QUERY_PORT;
 
     ENetAddress address;
     address.port = port;
@@ -86,7 +84,7 @@ void connectserv(const char *name, int port, int qport, const char *password)
 
 	if(name && *name)
 	{
-		addserver(name, port, qport);
+		addserver(name, port);
 		conoutft(CON_MESG, "\faattempting to connect to %s:[%d]", name, port);
 		if(!resolverwait(name, port, &address))
 		{
@@ -110,7 +108,7 @@ void connectserv(const char *name, int port, int qport, const char *password)
 		enet_host_flush(clienthost);
 		connmillis = totalmillis;
 		connattempts = 0;
-        client::connectattempt(name ? name : "", port, qport, password ? password : "", address);
+        client::connectattempt(name ? name : "", port, password ? password : "", address);
 		conoutft(CON_MESG, "\fgconnecting to %s:[%d]", name != NULL ? name : "local server", port);
 	}
 	else
@@ -157,7 +155,7 @@ void disconnect(int onlyclean, int async)
     if(!onlyclean) localconnect(false);
 }
 
-ICOMMAND(connect, "siis", (char *n, int *a, int *b, char *pwd), connectserv(n && *n ? n : servermaster, a ? *a : serverport, b ? *b : serverqueryport, pwd));
+ICOMMAND(connect, "sis", (char *n, int *a, char *pwd), connectserv(n && *n ? n : servermaster, a ? *a : serverport, pwd));
 COMMANDN(disconnect, trydisconnect, "");
 
 ICOMMAND(lanconnect, "", (), connectserv());

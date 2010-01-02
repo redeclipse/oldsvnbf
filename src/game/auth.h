@@ -172,7 +172,7 @@ namespace auth
 	void regserver()
 	{
 		conoutf("updating authentication server");
-		defformatstring(msg)("server %d %d\n", serverport, serverqueryport);
+		defformatstring(msg)("server %d %d\n", serverport, serverport+1);
 		addoutput(msg);
 		lastactivity = lastmillis;
 	}

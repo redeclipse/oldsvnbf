@@ -422,16 +422,22 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
 
 //use text<action> to do more...
 
-void guibody(char *contents, char *action)
+void guibody(char *contents, char *action, char *altact)
 {
 	if(!cgui) return;
 	cgui->pushlist(action[0] ? true : false);
 	execute(contents);
 	int ret = cgui->poplist();
-	if(ret&GUI_UP && action[0])
+	if(ret&GUI_UP)
 	{
-		executelater.add(newstring(action));
-		if(shouldclearmenu) clearlater = true;
+		char *act = NULL;
+		if(ret&GUI_ALT && altact[0]) act = altact;
+		else if(action[0]) act = action;
+		if(act)
+		{
+			executelater.add(newstring(act));
+			if(shouldclearmenu) clearlater = true;
+		}
 	}
 }
 
@@ -483,7 +489,7 @@ COMMAND(guinoautotab, "s");
 ICOMMAND(guicount, "", (), intret(menustack.length()));
 
 COMMAND(guilist, "s");
-COMMAND(guibody, "ss");
+COMMAND(guibody, "sss");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"fi");

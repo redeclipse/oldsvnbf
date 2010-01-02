@@ -11,7 +11,6 @@
 #define ENG_DEVEL			false
 
 #define ENG_SERVER_PORT		(ENG_DEVEL ? 28797 : 28795)
-#define ENG_QUERY_PORT		(ENG_DEVEL ? 28798 : 28796)
 #define ENG_MASTER_PORT		28800
 #define ENG_MASTER_HOST		"play.bloodfrontier.com"
 
@@ -461,12 +460,12 @@ extern void localconnect(bool force = true);
 extern void localdisconnect();
 
 // serverbrowser
-extern void addserver(const char *name, int port, int qport);
+extern void addserver(const char *name, int port);
 
 // client
 extern void localservertoclient(int chan, ENetPacket *packet);
 extern bool connected(bool attempt = true);
-extern void connectserv(const char *name = NULL, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, const char *password = NULL);
+extern void connectserv(const char *name = NULL, int port = ENG_SERVER_PORT, const char *password = NULL);
 extern void reconnect();
 extern void lanconnect();
 extern void abortconnect(bool msg = true);

@@ -78,7 +78,7 @@ void resolverinit()
 	{
 		resolverthread &rt = resolverthreads.add();
 		rt.query = NULL;
-		rt.port = serverqueryport;
+		rt.port = serverport+1;
 		rt.starttime = 0;
 		rt.thread = SDL_CreateThread(resolverloop, &rt);
 	}
@@ -277,9 +277,9 @@ vector<serverinfo *> servers;
 ENetSocket pingsock = ENET_SOCKET_NULL;
 int lastinfo = 0;
 
-static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int qport = ENG_QUERY_PORT, uint ip = ENET_HOST_ANY)
+static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, uint ip = ENET_HOST_ANY)
 {
-    serverinfo *si = new serverinfo(ip, port, qport);
+    serverinfo *si = new serverinfo(ip, port);
 
     if(name) copystring(si->name, name);
     else if(ip==ENET_HOST_ANY || enet_address_get_host_ip(&si->address, si->name, sizeof(si->name)) < 0)
@@ -293,15 +293,13 @@ static serverinfo *newserver(const char *name, int port = ENG_SERVER_PORT, int q
     return si;
 }
 
-void addserver(const char *name, int port, int qport)
+void addserver(const char *name, int port)
 {
-    loopv(servers)
-		if(!strcmp(servers[i]->name, name) && servers[i]->port == port && servers[i]->qport == qport)
-			return;
-	if(newserver(name, port, qport) && verbose >= 2)
-		conoutf("added server %s (%d,%d)", name, port, qport);
+    loopv(servers) if(!strcmp(servers[i]->name, name) && servers[i]->port == port) return;
+	if(newserver(name, port) && verbose >= 2)
+		conoutf("added server %s (%d)", name, port);
 }
-ICOMMAND(addserver, "sii", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT, b ? *b : ENG_QUERY_PORT));
+ICOMMAND(addserver, "si", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT));
 
 VAR(searchlan, 0, 0, 1);
 
@@ -330,7 +328,7 @@ void pingservers()
     {
         ENetAddress address;
         address.host = ENET_HOST_BROADCAST;
-        address.port = serverqueryport;
+        address.port = serverport+1;
         buf.data = ping;
         buf.dataLength = p.length();
         enet_socket_send(pingsock, &address, &buf, 1);
@@ -347,20 +345,20 @@ void checkresolver()
 		if(si.resolved == serverinfo::RESOLVED) continue;
 		if(si.address.host == ENET_HOST_ANY)
 		{
-			if(si.resolved == serverinfo::UNRESOLVED) { si.resolved = serverinfo::RESOLVING; resolverquery(si.name, si.qport); }
+			if(si.resolved == serverinfo::UNRESOLVED) { si.resolved = serverinfo::RESOLVING; resolverquery(si.name, si.port+1); }
 			resolving++;
 		}
 	}
 	if(!resolving) return;
 
 	const char *name = NULL;
-	ENetAddress addr = { ENET_HOST_ANY, serverqueryport };
+	ENetAddress addr = { ENET_HOST_ANY, serverport+1 };
 	while(resolvercheck(&name, &addr))
 	{
 		loopv(servers)
 		{
 			serverinfo &si = *servers[i];
-			if(name == si.name && addr.port == si.qport)
+			if(name == si.name && addr.port == si.port+1)
 			{
 				si.resolved = serverinfo::RESOLVED;
 				si.address = addr;
@@ -387,7 +385,7 @@ void checkpings()
         if(len <= 0) return;
         serverinfo *si = NULL;
         loopv(servers) if(addr.host == servers[i]->address.host && addr.port == servers[i]->address.port) { si = servers[i]; break; }
-        if(!si && searchlan) si = newserver(NULL, ENG_SERVER_PORT, ENG_QUERY_PORT, addr.host);
+        if(!si && searchlan) si = newserver(NULL, ENG_SERVER_PORT, addr.host);
         if(si) si->reset();
         else continue;
         ucharbuf p(ping, len);

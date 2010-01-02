@@ -43,11 +43,11 @@ struct masterclient
     string name;
     char input[4096];
     vector<char> output;
-    int inputpos, outputpos, port, qport, lastactivity;
+    int inputpos, outputpos, port, lastactivity;
     vector<authreq> authreqs;
     bool isserver, ishttp;
 
-    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), qport(ENG_QUERY_PORT), lastactivity(0), isserver(false), ishttp(false) {}
+    masterclient() : inputpos(0), outputpos(0), port(ENG_SERVER_PORT), lastactivity(0), isserver(false), ishttp(false) {}
 };
 
 vector<masterclient *> masterclients;
@@ -250,9 +250,7 @@ bool checkmasterclientinput(masterclient &c)
 		if(!strcmp(w[0], "server") && !c.ishttp)
 		{
 			c.port = ENG_SERVER_PORT;
-			c.qport = ENG_QUERY_PORT;
 			if(w[1]) c.port = clamp(atoi(w[1]), 1, INT_MAX-1);
-			if(w[2]) c.qport = clamp(atoi(w[2]), 1, INT_MAX-1);
 			c.lastactivity = lastmillis;
 			if(c.isserver)
 			{
@@ -272,7 +270,7 @@ bool checkmasterclientinput(masterclient &c)
 			loopvj(masterclients) if(masterclients[j]->isserver)
 			{
 				masterclient &s = *masterclients[j];
-				masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.qport);
+				masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.port+1);
 				servs++;
 			}
 			masteroutf(c, "\n");
