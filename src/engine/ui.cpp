@@ -181,9 +181,9 @@ struct gui : guient
 			ysize = lists[curlist].h;
 			if(ishorizontal()) cury -= l.h;
 			else curx -= l.w;
-			layout(l.w, l.h);
+			return layout(l.w, l.h);
 		}
-		return l.mouse[0];
+		return 0;
 	}
 
 	int text  (const char *text, int color, const char *icon) { autotab(); return button_(text, color, icon, false, false); }
@@ -370,6 +370,7 @@ struct gui : guient
 		{
             bool hit = ishit(w, h);
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
+            if(mouseaction[0]&GUI_UP && mergedepth >= 0 && hit) mouseaction[0] &= ~GUI_UP;
 			if(mouseaction[0]&GUI_DOWN) //mouse request focus
 			{
 	            if(hit)
@@ -399,7 +400,7 @@ struct gui : guient
 
 			notextureshader->set();
 			glDisable(GL_TEXTURE_2D);
-			if(editing) glColor3f(1, 0, 0);
+			if(editing) glColor3f(0.5f, 0.125f, 0.125f);
 			else glColor3ub(color>>16, (color>>8)&0xFF, color&0xFF);
 			glBegin(GL_LINE_LOOP);
             rect_(curx, cury, w, h);
@@ -673,13 +674,13 @@ struct gui : guient
 			glBegin(GL_QUADS);
 			if(percent < 0.99f)
 			{
-				glColor4f(1, 1, 1, 0.375f);
+				glColor4f(0.5f, 0.5f, 0.5f, 0.375f);
 				if(ishorizontal())
 					rect_(curx + guibound[0]/2 - size, cury, size*2, ysize, 0);
 				else
 					rect_(curx, cury + guibound[0]/2 - size, xsize, size*2, 1);
 			}
-			glColor3f(1, 1, 1);
+			glColor3f(0.5f, 0.5f, 0.5f);
 			if(ishorizontal())
 				rect_(curx + guibound[0]/2 - size, cury + ysize*(1-percent), size*2, ysize*percent, 0);
 			else
@@ -839,11 +840,11 @@ namespace UI
 		if(code<0) switch(code)
 		{ // fall-through-o-rama
 			case -5: mouseaction[1] |= GUI_ALT;
-			case -4: mouseaction[1] |= GUI_SCROLL|(isdown ? GUI_DOWN : GUI_UP);
+			case -4: mouseaction[1] |= isdown ? GUI_DOWN : GUI_UP;
 				if(active()) return true;
 				break;
 			case -3: mouseaction[0] |= GUI_ALT;
-			case -1: mouseaction[0] |= GUI_BUTTON|((actionon=isdown) ? GUI_DOWN : GUI_UP);
+			case -1: mouseaction[0] |= (actionon=isdown) ? GUI_DOWN : GUI_UP;
 				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
 				if(active()) return true;
 				break;
