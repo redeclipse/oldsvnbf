@@ -888,28 +888,29 @@ void findsunlights()
 
 void clearlightcache(int e)
 {
-	if(e < 0 || !entities::getents()[e]->attrs[0])
+	if(e >= 0)
 	{
-		for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
+		const extentity &light = *entities::getents()[e];
+		if(light.type == ET_LIGHT && light.attrs[0])
 		{
-			lce->x = -1;
-			lce->lights.setsizenodelete(0);
-		}
-		if(e < 0) findsunlights();
-	}
-	else
-	{
-		extentity &light = *entities::getents()[e];
-		int radius = light.attrs[0];
-        for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
-        for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
-		{
-			lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-			if(lce.x != x || lce.y != y) continue;
-			lce.x = -1;
-			lce.lights.setsizenodelete(0);
+			int radius = light.attrs[0];
+			for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+			for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+			{
+				lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+				if(lce.x != x || lce.y != y) continue;
+				lce.x = -1;
+				lce.lights.setsizenodelete(0);
+			}
+			return;
 		}
 	}
+	for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
+	{
+		lce->x = -1;
+		lce->lights.setsizenodelete(0);
+	}
+	if(e < 0) sunlights.setsize(0);
 }
 
 const vector<int> &checklightcache(int x, int y)
@@ -1609,6 +1610,7 @@ void resetlightmaps()
     cleanuplightmaps();
     lightmaps.setsize(0);
     compressed.clear();
+    clearlightcache();
 }
 
 static Uint32 calclight_timer(Uint32 interval, void *param)
@@ -2111,8 +2113,9 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	{
         slight[k] = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
 	}
-	if(!sunlights.empty())
+	if(sunlights.length() || entities::lastent(ET_SUNLIGHT))
 	{
+		if(sunlights.empty()) findsunlights();
 		uchar col[3] = {0, 0, 0};
 		calcsunlight(target, vec(0, 0, 0), 0.5f, col, 1, t);
 		loopk(3) slight[k] = max(slight[k], col[k]/255.0f);
