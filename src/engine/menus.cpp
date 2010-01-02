@@ -322,7 +322,7 @@ void guiprogress(float *percent, float *scale)
 	cgui->progress(*percent, *scale);
 }
 
-void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
+void guislider(char *var, int *min, int *max, char *onchange, int *reverse, int *scroll)
 {
 	if(!cgui) return;
 	int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
@@ -331,11 +331,11 @@ void guislider(char *var, int *min, int *max, char *onchange, int *reverse)
 		int vdef = getvardef(var);
 		vmax = vdef > vmin ? vdef*3 : vmin*4;
 	}
-	cgui->slider(val, vmin, vmax, 0xFFFFFF, NULL, *reverse ? true : false);
+	cgui->slider(val, vmin, vmax, 0xFFFFFF, NULL, *reverse ? true : false, *scroll ? true : false);
 	if(val != oldval) updateval(var, val, onchange);
 }
 
-void guilistslider(char *var, char *list, char *onchange, int *reverse)
+void guilistslider(char *var, char *list, char *onchange, int *reverse, int *scroll)
 {
 	if(!cgui) return;
 	vector<int> vals;
@@ -350,7 +350,7 @@ void guilistslider(char *var, char *list, char *onchange, int *reverse)
 	int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
 	loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
 	defformatstring(label)("%d", val);
-	cgui->slider(offset, 0, vals.length()-1, 0xFFFFFF, label, *reverse ? true : false);
+	cgui->slider(offset, 0, vals.length()-1, 0xFFFFFF, label, *reverse ? true : false, *scroll ? true : false);
 	if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
@@ -422,7 +422,7 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
 
 //use text<action> to do more...
 
-void guilist(char *contents, char *action)
+void guibody(char *contents, char *action)
 {
 	if(!cgui) return;
 	cgui->pushlist(action[0] ? true : false);
@@ -433,11 +433,14 @@ void guilist(char *contents, char *action)
 		executelater.add(newstring(action));
 		if(shouldclearmenu) clearlater = true;
 	}
-	else if(ret&GUI_ROLLOVER && action[0])
-	{
-		setsvar("guirollovername", action, true);
-		setsvar("guirolloveraction", contents, true);
-	}
+}
+
+void guilist(char *contents)
+{
+	if(!cgui) return;
+	cgui->pushlist();
+	execute(contents);
+	cgui->poplist();
 }
 
 void newgui(char *name, char *contents, char *initscript, char *header)
@@ -479,7 +482,8 @@ COMMAND(guinoautotab, "s");
 
 ICOMMAND(guicount, "", (), intret(menustack.length()));
 
-COMMAND(guilist, "ss");
+COMMAND(guilist, "s");
+COMMAND(guibody, "ss");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
 COMMAND(guistrut,"ii");
@@ -487,8 +491,8 @@ COMMAND(guifont,"ss");
 COMMAND(guiimage,"ssfiss");
 COMMAND(guislice,"ssfffsss");
 COMMAND(guiprogress,"ff");
-COMMAND(guislider,"siisi");
-COMMAND(guilistslider, "sssi");
+COMMAND(guislider,"siisii");
+COMMAND(guilistslider, "sssii");
 COMMAND(guiradio,"ssfs");
 COMMAND(guibitfield, "ssis");
 COMMAND(guicheckbox, "ssffs");
