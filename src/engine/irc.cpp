@@ -824,6 +824,9 @@ void guiirc(const char *s)
 	}
 }
 ICOMMAND(ircgui, "s", (char *s), guiirc(s));
-ICOMMAND(ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i].state >= IRC_ATTEMPT) num++; intret(num); });
 #endif
+ICOMMAND(ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i].state >= IRC_ATTEMPT) num++; intret(num); });
+#else
+ICOMMAND(ircgui, "s", (char *s), intret(0));
+ICOMMAND(ircconns, "", (void), intret(0));
 #endif
