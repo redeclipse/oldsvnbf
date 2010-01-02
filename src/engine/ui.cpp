@@ -193,9 +193,9 @@ struct gui : guient
 	void separator() { autotab(); line_(5); }
 
 	//use to set min size (useful when you have progress bars)
-    void strut(int size) { layout(isvertical() ? size*guibound[0] : 0, isvertical() ? 0 : size*guibound[1]); }
+    void strut(float size) { layout(isvertical() ? int(size*guibound[0]) : 0, isvertical() ? 0 : int(size*guibound[1])); }
 	//add space between list items
-    void space(int size) { layout(isvertical() ? 0 : size*guibound[0], isvertical() ? size*guibound[1] : 0); }
+    void space(float size) { layout(isvertical() ? 0 : size*guibound[0], isvertical() ? size*guibound[1] : 0); }
 
     void pushfont(const char *font) { ::pushfont(font); fontdepth++; }
     void popfont() { if(fontdepth) { ::popfont(); fontdepth--; } }
@@ -300,16 +300,25 @@ struct gui : guient
 				py = y;
 			}
 			text_(label, px, py, hit ? 0xFF2222 : color, hit ? 255 : guiblend, hit && mouseaction[0]&GUI_DOWN);
-			if(hit && mouseaction[0]&GUI_DOWN)
+			if(hit)
 			{
-				int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
-				if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-guibound[1]/2)/(ysize-guibound[1])) : int(vnew*(y+ysize-guibound[1]/2-hity)/(ysize-guibound[1]));
-				else vnew = reverse ? int(vnew*(x+xsize-guibound[0]/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-guibound[0]/2)/(xsize-w));
-				vnew += vmin;
-				vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
-				if(vnew != val) val = vnew;
+				if(mouseaction[0]&GUI_PRESSED)
+				{
+					int vnew = (vmin < vmax ? 1 : -1)+vmax-vmin;
+					if(ishorizontal()) vnew = reverse ? int(vnew*(hity-y-guibound[1]/2)/(ysize-guibound[1])) : int(vnew*(y+ysize-guibound[1]/2-hity)/(ysize-guibound[1]));
+					else vnew = reverse ? int(vnew*(x+xsize-guibound[0]/2-hitx)/(xsize-w)) : int(vnew*(hitx-x-guibound[0]/2)/(xsize-w));
+					vnew += vmin;
+					vnew = vmin < vmax ? clamp(vnew, vmin, vmax) : clamp(vnew, vmax, vmin);
+					if(vnew != val) val = vnew;
+				}
+				else if(mouseaction[1]&GUI_UP)
+				{
+					int vval = val+((reverse ? !(mouseaction[1]&GUI_ALT) : (mouseaction[1]&GUI_ALT)) ? -1 : 1),
+						vnew = vmin < vmax ? clamp(vval, vmin, vmax) : clamp(vval, vmax, vmin);
+					if(vnew != val) val = vnew;
+				}
 			}
-			else if(scroll && lists[curlist].mouse[1] && lists[curlist].mouse[1]&GUI_UP)
+			else if(scroll && lists[curlist].mouse[1]&GUI_UP)
 			{
 				int vval = val+((reverse ? !(lists[curlist].mouse[1]&GUI_ALT) : (lists[curlist].mouse[1]&GUI_ALT)) ? -1 : 1),
 					vnew = vmin < vmax ? clamp(vval, vmin, vmax) : clamp(vval, vmax, vmin);
@@ -830,17 +839,12 @@ namespace UI
 		if(code<0) switch(code)
 		{ // fall-through-o-rama
 			case -5: mouseaction[1] |= GUI_ALT;
-			case -4:
-				mouseaction[1] |= GUI_SCROLL;
-				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
-				mouseaction[1] |= isdown ? GUI_DOWN : GUI_UP;
+			case -4: mouseaction[1] |= GUI_SCROLL|(isdown ? GUI_DOWN : GUI_UP);
 				if(active()) return true;
 				break;
 			case -3: mouseaction[0] |= GUI_ALT;
-			case -1:
-				mouseaction[0] |= GUI_BUTTON;
+			case -1: mouseaction[0] |= GUI_BUTTON|((actionon=isdown) ? GUI_DOWN : GUI_UP);
 				if(isdown) { firstx = gui::hitx; firsty = gui::hity; }
-				mouseaction[0] |= (actionon=isdown) ? GUI_DOWN : GUI_UP;
 				if(active()) return true;
 				break;
 			case -2:
