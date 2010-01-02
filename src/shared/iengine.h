@@ -439,11 +439,7 @@ extern void freechallenge(void *answer);
 extern bool checkchallenge(const char *answerstr, void *correct);
 
 // gui
-enum {
-	GUI_DOWN = 1<<0, GUI_UP = 1<<1,
-	GUI_PRESSED = 1<<2, GUI_ROLLOVER = 1<<3, GUI_DRAGGED = 1<<4,
-	GUI_BUTTON = 1<<7, GUI_SCROLL = 1<<6, GUI_ALT = 1<<7
-};
+enum { GUI_DOWN = 1<<0, GUI_UP = 1<<1, GUI_ALT = 1<<2, GUI_PRESSED = 1<<3, GUI_ROLLOVER = 1<<4, GUI_DRAGGED = 1<<5 };
 enum { EDITORREADONLY = 0, EDITORFOCUSED, EDITORUSED, EDITORFOREVER };
 
 struct Texture;

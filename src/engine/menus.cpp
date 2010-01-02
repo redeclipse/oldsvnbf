@@ -183,7 +183,7 @@ void guislice(char *path, char *action, float *scale, float *start, float *end, 
 
 void guitext(char *name, char *icon)
 {
-	if(cgui) cgui->text(name, icon[0] ? 0xFFFFFF : 0xFFFFFF, icon[0] ? icon : NULL);
+	if(cgui) cgui->text(name, 0xFFFFFF, icon[0] ? icon : NULL);
 }
 
 void guititle(char *name)
@@ -389,7 +389,7 @@ void guifield(char *var, int *maxlength, char *onchange)
     const char *initval = "";
 	ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-	char *result = cgui->field(var, 0xFFFFFF, *maxlength ? *maxlength : 12, 0, initval);
+	char *result = cgui->field(var, 0x666666, *maxlength ? *maxlength : 12, 0, initval);
 	if(result)
 	{
 		alias(var, result);
@@ -401,7 +401,7 @@ void guifield(char *var, int *maxlength, char *onchange)
 void guieditor(char *name, int *maxlength, int *height, int *mode)
 {
     if(!cgui) return;
-    cgui->field(name, 0xFFFFFF, *maxlength ? *maxlength : 12, *height, NULL, *mode<=0 ? EDITORFOREVER : *mode);
+    cgui->field(name, 0x666666, *maxlength ? *maxlength : 12, *height, NULL, *mode<=0 ? EDITORFOREVER : *mode);
     //returns a non-NULL pointer (the currentline) when the user commits, could then manipulate via text* commands
 }
 
@@ -412,7 +412,7 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
     const char *initval = "";
     ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-    char *result = cgui->keyfield(var, 0xFFFFFF, *maxlength ? *maxlength : -8, 0, initval);
+    char *result = cgui->keyfield(var, 0x666666, *maxlength ? *maxlength : -8, 0, initval);
     if(result)
     {
         alias(var, result);
