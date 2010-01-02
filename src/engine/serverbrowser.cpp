@@ -388,7 +388,8 @@ void checkpings()
         serverinfo *si = NULL;
         loopv(servers) if(addr.host == servers[i]->address.host && addr.port == servers[i]->address.port) { si = servers[i]; break; }
         if(!si && searchlan) si = newserver(NULL, ENG_SERVER_PORT, ENG_QUERY_PORT, addr.host);
-        if(!si) continue;
+        if(si) si->reset();
+        else continue;
         ucharbuf p(ping, len);
         si->ping = totalmillis - getint(p);
         si->numplayers = getint(p);
@@ -400,6 +401,11 @@ void checkpings()
         getstring(text, p);
         filtertext(si->sdesc, text);
         if(!strcmp(si->sdesc, "unnamed")) copystring(si->sdesc, si->name);
+        loopi(si->numplayers)
+        {
+        	getstring(text, p);
+        	if(text[0]) si->players.add(newstring(text));
+		}
 	}
 }
 

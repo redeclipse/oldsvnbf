@@ -405,6 +405,7 @@ struct serverinfo
     string sdesc;
     int numplayers, ping, resolved, port, qport;
     vector<int> attr;
+    vector<char *> players;
     ENetAddress address;
 
     serverinfo(uint ip, int port, int qport)
@@ -413,7 +414,11 @@ struct serverinfo
         name[0] = map[0] = sdesc[0] = '\0';
         address.host = ip;
         address.port = qport;
+        reset();
     }
+    ~serverinfo() { reset(); }
+
+    void reset() { loopvrev(players) { DELETEP(players[i]); players.remove(i); } players.setsize(0); }
 };
 extern vector<serverinfo *> servers;
 extern void sendclientpacket(ENetPacket *packet, int chan);

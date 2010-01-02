@@ -2981,6 +2981,8 @@ namespace server
             sendstring(cname, p);
 			#endif
 		}
+		loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < 0)
+            sendstring(colorname(clients[i]), p);
 		sendqueryreply(p);
 	}
 

@@ -2100,21 +2100,38 @@ namespace client
 		}
 	}
 
-    void getservers(int server)
+    void getservers(int server, int prop)
     {
 		mkstring(text); server--;
 		if(servers.inrange(server))
 		{
 			serverinfo *si = servers[server];
-			formatstring(text)("%d \"%s\" %d %d \"%s\" %d %d \"%s\" %d %d %d %d",
-				serverstat(si), si->name, si->port, si->qport, si->sdesc,
-				si->attr.length() > 1 && si->attr[1] >= 0 ? si->attr[1] : -1,
-				si->attr.length() > 2 && si->attr[2] >= 0 ? si->attr[2] : -1, si->map,
-				si->attr.length() > 3 && si->attr[3] >= 0 ? si->attr[3] : -1, si->numplayers,
-				si->attr.length() > 4 && si->attr[4] >= 0 ? si->attr[4] : -1, si->ping);
+			switch(prop)
+			{
+				default: copystring(text, "0"); break;
+				case 0:
+				{
+					formatstring(text)("%d \"%s\" %d %d \"%s\" %d %d \"%s\" %d %d %d %d",
+						serverstat(si), si->name, si->port, si->qport, si->sdesc,
+						si->attr.length() > 1 && si->attr[1] >= 0 ? si->attr[1] : -1,
+						si->attr.length() > 2 && si->attr[2] >= 0 ? si->attr[2] : -1, si->map,
+						si->attr.length() > 3 && si->attr[3] >= 0 ? si->attr[3] : -1, si->numplayers,
+						si->attr.length() > 4 && si->attr[4] >= 0 ? si->attr[4] : -1, si->ping);
+					break;
+				}
+				case 1:
+				{
+					loopv(si->players)
+					{
+						defformatstring(s)("%s\"%s\"", text[0] ? " " : "", si->players[i]);
+						concatstring(text, s);
+					}
+					break;
+				}
+			}
 		}
 		else formatstring(text)("%d", servers.length());
 		result(text);
     }
-    ICOMMAND(getserver, "i", (int *server), getservers(*server));
+    ICOMMAND(getserver, "ii", (int *server, int *prop), getservers(*server, *prop));
 }
