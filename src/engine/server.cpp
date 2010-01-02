@@ -76,7 +76,6 @@ VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
 VAR(serveruprate, 0, 0, INT_MAX-1);
 VAR(serverclients, 1, 6, MAXCLIENTS);
 VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
-VAR(serverqueryport, 1, ENG_QUERY_PORT, INT_MAX-1);
 VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(servermaster, ENG_MASTER_HOST);
 SVAR(serverip, "");
@@ -758,7 +757,7 @@ void setupserver()
 	}
 	loopi(serverclients) serverhost->peers[i].data = NULL;
 
-	address.port = serverqueryport;
+	address.port = serverport+1;
     pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
     if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
     {
@@ -825,7 +824,6 @@ bool serveroption(char *opt)
 				case 'l': load = opt+3; return true;
 				case 's': setvar("servertype", atoi(opt+3)); return true;
 				case 'p': setvar("serverport", atoi(opt+3)); return true;
-				case 'q': setvar("serverqueryport", atoi(opt+3)); return true;
 				case 'a': setvar("servermasterport", atoi(opt+3)); return true;
 			}
 		}

@@ -1,7 +1,7 @@
 // the interface the game uses to access the engine
 
 extern int kidmode, verbose, curtime, lastmillis, totalmillis, timescale, paused;
-extern int servertype, serverport, serverqueryport, servermasterport, serverclients;
+extern int servertype, serverport, servermasterport, serverclients;
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
 extern void console(int type, const char *s, ...);
@@ -403,17 +403,17 @@ struct serverinfo
     string name;
     string map;
     string sdesc;
-    int numplayers, ping, resolved, port, qport;
+    int numplayers, ping, resolved, port;
     vector<int> attr;
     vector<char *> players;
     ENetAddress address;
 
-    serverinfo(uint ip, int port, int qport)
-     : numplayers(0), ping(WAITING), resolved(ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED), port(port), qport(qport)
+    serverinfo(uint ip, int port)
+     : numplayers(0), ping(WAITING), resolved(ip==ENET_HOST_ANY ? UNRESOLVED : RESOLVED), port(port)
     {
         name[0] = map[0] = sdesc[0] = '\0';
         address.host = ip;
-        address.port = qport;
+        address.port = port+1;
         reset();
     }
     ~serverinfo() { reset(); }
