@@ -201,7 +201,7 @@ namespace projs
 
     void bounceeffect(projent &proj)
     {
-		if(proj.movement > 1.f && (!proj.lastbounce || lastmillis-proj.lastbounce > 500)) switch(proj.projtype)
+		if(proj.movement > 1 && (!proj.lastbounce || lastmillis-proj.lastbounce > 500)) switch(proj.projtype)
         {
             case PRJ_SHOT:
             {
@@ -221,8 +221,11 @@ namespace projs
                     }
                     default: break;
                 }
-				int vol = int(255*(1.f-proj.lifespan));
-				if(vol && weaptype[proj.weap].rsound >= 0) playsound(weaptype[proj.weap].rsound, proj.o, NULL, 0, vol);
+                if(weaptype[proj.weap].rsound >= 0)
+                {
+					int vol = int(245*(1.f-proj.lifespan))+10;
+					playsound(weaptype[proj.weap].rsound, proj.o, NULL, 0, vol);
+                }
                 break;
             }
             case PRJ_GIBS:
@@ -230,21 +233,21 @@ namespace projs
             	if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
             	{
 					adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
-					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-					if(vol) playsound(S_SPLOSH, proj.o, NULL, 0, vol);
+					int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 10, 255);
+					playsound(S_SPLOSH, proj.o, NULL, 0, vol);
 					break;
             	} // otherwise fall through
             }
             case PRJ_DEBRIS:
             {
-       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-                if(vol) playsound(S_DEBRIS, proj.o, NULL, 0, vol);
+       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 10, 255);
+                playsound(S_DEBRIS, proj.o, NULL, 0, vol);
                 break;
             }
             case PRJ_EJECT:
             {
-       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
-                if(vol) playsound(S_TINK, proj.o, NULL, 0, vol);
+       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*3, 10, 255);
+                playsound(S_DEBRIS, proj.o, NULL, 0, vol);
                 break;
             }
             default: break;
@@ -304,7 +307,7 @@ namespace projs
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
-					proj.weight = 125.f*proj.lifesize;
+					proj.weight = 150.f*proj.lifesize;
 					proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 					proj.escaped = !proj.owner;
@@ -327,7 +330,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 125.f*proj.lifesize;
+				proj.weight = 140.f*proj.lifesize;
 				proj.vel.add(vec(rnd(101)-50, rnd(101)-50, rnd(151)-50)).mul(2);
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				proj.escaped = !proj.owner;
@@ -347,19 +350,17 @@ namespace projs
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.2f;
 				proj.reflectivity = 0.f;
-				proj.relativity = 0.75f;
+				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 100.f;
+				proj.weight = 125.f*proj.lifesize;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.escaped = true;
-				proj.fadetime = rnd(75)+75;
+				proj.fadetime = rnd(125)+125;
 				if(proj.owner)
 				{
 					vecfromyawpitch(proj.owner->yaw+60+rnd(35), proj.owner->pitch+25+rnd(30), 1, 0, proj.to);
-					(proj.vel = proj.to).mul(rnd(5)+1);
-					proj.to.mul(100).add(proj.from);
+					proj.to.mul(10).add(proj.from);
 				}
-				else proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
 				break;
 			}
 			case PRJ_ENT:
@@ -369,7 +370,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 150.f;
+				proj.weight = 175.f;
 				proj.projcollide = BOUNCE_GEOM;
 				proj.escaped = true;
 				if(proj.owner) proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
@@ -563,12 +564,9 @@ namespace projs
 			}
 			default: break;
 		}
-		loopv(locs)
-		{
-			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WPB(weap, time, flags&HIT_ALT), millis, speed, 0, weap, flags);
-			if(weaptype[weap].eject) create(from, from, local, d, PRJ_EJECT, rnd(1501)+1500, 0, millis, rnd(25)+10, 0, weap, flags);
-			millis += delay;
-		}
+		loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WPB(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags);
+		if(weaptype[weap].eject) loopi(max(WPB(weap, sub, flags&HIT_ALT), 1))
+			create(from, from, local, d, PRJ_EJECT, rnd(2501)+2500, 0, millis, rnd(20)+5, 0, weap, flags);
 	}
 
 	VAR(testmelee, 0, 0, 1);
@@ -707,23 +705,23 @@ namespace projs
 		{
 			if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 			{
-				if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
+				if(proj.movement > 1 && lastmillis-proj.lasteffect >= 1000 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
 				{
-					float size = ((rnd(20)+1)/10.f)*proj.lifesize;
+					float size = ((rnd(15)+1)/10.f)*proj.radius;
 					part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, size, 1, 100, DECAL_BLOOD);
 					proj.lasteffect = lastmillis;
 				}
 			}
 			else
 			{
-				float size = proj.lifesize*clamp(1.f-proj.lifespan, 0.1f, 1.f), radius = proj.radius+0.5f; // gets smaller as it gets older
+				float size = clamp(1.f-proj.lifespan, 0.1f, 1.f), radius = proj.radius+0.5f; // gets smaller as it gets older
 				int steps = clamp(int(proj.vel.magnitude()*size*1.5f), 5, 20);
-				if(steps && proj.movement > 0.f)
+				if(steps && proj.movement > 0.1f)
 				{
 					vec dir = vec(proj.vel).normalize().neg().mul(proj.radius*0.375f), pos = proj.o;
 					loopi(steps)
 					{
-						float res = float(steps-i)/float(steps), psize = clamp(radius*(size+0.1f)*res, 0.1f, radius*proj.lifesize),
+						float res = float(steps-i)/float(steps), psize = clamp(radius*(size+0.1f)*res, 0.1f, radius),
 							span = clamp(1.25f-proj.lifespan, 0.25f, 1.f);
 						int col = ((int(244*max(res,0.4f))<<16)+1)|((int(64*max(res,0.1f)*span)+1)<<8);
 						part_create(PART_FIREBALL_SOFT, 1, pos, col, psize, span, -15);
