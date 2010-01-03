@@ -1831,9 +1831,7 @@ namespace game
 			else return; // screw it, don't render them
 		}
 
-        modelattach a[8];
-		int ai = 0, team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL,
-			weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
+        int team = m_fight(gamemode) && m_team(gamemode, mutators) ? d->team : TEAM_NEUTRAL, weap = d->weapselect, lastaction = 0, animflags = ANIM_IDLE|ANIM_LOOP, animdelay = 0;
 		bool secondary = false, showweap = d->aitype < AI_START ? isweap(weap) : aistyle[d->aitype].useweap;
 
 		if(d->state == CS_DEAD || d->state == CS_WAITING)
@@ -1967,14 +1965,20 @@ namespace game
 				}
 			}
 		}
+
 		bool hasweapon = showweap && *weaptype[weap].vwep;
+		modelattach a[9]; int ai = 0;
 		if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
         if(rendernormally && (early || d != player1))
         {
-			const char *muzzle = hasweapon ? "tag_muzzle" : "tag_weapon";
-			//if(d->aitype == AI_TURRET && (d->ammo[d->weapselect]+(d->weapstate[d->weapselect] == WEAP_S_SHOOT ? 1 : 0))%2) muzzle = "tag_muzzle2";
+			const char *muzzle = "tag_weapon";
+			if(hasweapon)
+			{
+				muzzle = "tag_muzzle";
+				if(weaptype[weap].eject) a[ai++] = modelattach("tag_eject", &d->eject);
+			}
 			a[ai++] = modelattach(muzzle, &d->muzzle);
-        	if(third && (d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed))))
+        	if(third && d->wantshitbox())
         	{
         		a[ai++] = modelattach("tag_head", &d->head);
         		a[ai++] = modelattach("tag_torso", &d->torso);
