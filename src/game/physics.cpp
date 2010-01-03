@@ -1140,12 +1140,7 @@ namespace physics
 			loopi(x) \
 			{ \
 				if(i) { y; } \
-				if(collide(d) && !inside) \
-				{ \
-					if(avoidplayers && hitplayer && issolid(hitplayer, d)) continue; \
-                    d->resetinterp(); \
-					return true; \
-				} \
+				if(collide(d) && !inside && (!avoidplayers || !hitplayer || !issolid(hitplayer, d))) { d->resetinterp(); return true; } \
 				d->o = orig; \
 			} \
 		}
@@ -1155,8 +1150,7 @@ namespace physics
 			inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));
 		}
 		inmapchk(100, d->o.add(vec((rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f)));
-		d->o = orig;
-        d->resetinterp();
+		d->o = orig; d->resetinterp();
 		return false;
 	}
 
