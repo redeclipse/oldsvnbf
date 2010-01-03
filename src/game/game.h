@@ -341,7 +341,7 @@ weaptypes weaptype[] =
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
 			{ true, true },		true,		true,
-			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,			0.5f,
+			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,			0.35f,
 			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			"",						"weapons/cartridge"
 	},
 	{

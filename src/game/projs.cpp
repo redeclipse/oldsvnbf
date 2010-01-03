@@ -385,6 +385,8 @@ namespace projs
 				proj.fadetime = rnd(250)+250;
 				if(proj.owner)
 				{
+					if(proj.owner == game::player1 && !game::thirdpersonview())
+						proj.o = proj.from.add(vec(proj.from).sub(camera1->o).normalize().mul(5));
 					vecfromyawpitch(proj.owner->yaw+40+rnd(41), proj.owner->pitch+40+rnd(41), 1, 0, proj.to);
 					proj.to.mul(10).add(proj.from);
 					proj.yaw = proj.owner->yaw;
