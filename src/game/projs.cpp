@@ -241,6 +241,12 @@ namespace projs
                 if(vol) playsound(S_DEBRIS, proj.o, NULL, 0, vol);
                 break;
             }
+            case PRJ_EJECT:
+            {
+       	        int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 0, 255);
+                if(vol) playsound(S_TINK, proj.o, NULL, 0, vol);
+                break;
+            }
             default: break;
         }
     }
@@ -249,25 +255,7 @@ namespace projs
 	{
 		if(proj.mdl && *proj.mdl)
 		{
-			float size = proj.lifesize;
-			switch(proj.projtype)
-			{
-				case PRJ_ENT: if(!entities::ents.inrange(proj.id)) return;
-				case PRJ_GIBS: case PRJ_DEBRIS: size = proj.lifesize;
-					if(proj.lifemillis)
-					{
-						int interval = min(proj.lifemillis, 1000);
-						if(proj.lifetime < interval) size *= float(proj.lifetime)/float(interval);
-						else if(proj.lifemillis > interval)
-						{
-							interval = min(proj.lifemillis-interval, 1000);
-							if(proj.lifemillis-proj.lifetime < interval) size *= float(proj.lifemillis-proj.lifetime)/float(interval);
-						}
-					}
-					break;
-				default: break;
-			}
-			setbbfrommodel(&proj, proj.mdl, size);
+			setbbfrommodel(&proj, proj.mdl, proj.lifesize);
 			if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) proj.height += 2.5f;
 			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
 		}
@@ -309,16 +297,18 @@ namespace projs
 							return;
 						}
 					}
-					proj.lifesize = 1.75f-(rnd(150)/100.f);
+					proj.lifesize = 1.5f-(rnd(100)/100.f);
 					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
 					proj.aboveeye = 1.0f;
-					proj.elasticity = 0.35f;
+					proj.elasticity = 0.3f;
 					proj.reflectivity = 0.f;
 					proj.relativity = 1.0f;
 					proj.waterfric = 2.0f;
 					proj.weight = 125.f*proj.lifesize;
 					proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
 					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
+					proj.escaped = !proj.owner;
+					proj.fadetime = rnd(250)+250;
 					break;
 				} // otherwise fall through
 			}
@@ -333,13 +323,43 @@ namespace projs
 					case 0: default: proj.mdl = "debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.65f;
+				proj.elasticity = 0.6f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
 				proj.weight = 125.f*proj.lifesize;
 				proj.vel.add(vec(rnd(101)-50, rnd(101)-50, rnd(151)-50)).mul(2);
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
+				proj.escaped = !proj.owner;
+				proj.fadetime = rnd(250)+250;
+				break;
+			}
+			case PRJ_EJECT:
+			{
+				if(!isweap(proj.weap) && proj.owner) proj.weap = proj.owner->weapselect;
+				if(isweap(proj.weap))
+				{
+					if(proj.owner) proj.o = proj.from = proj.owner->ejectpos(proj.weap);
+					proj.mdl = weaptype[proj.weap].eject && *weaptype[proj.weap].eprj ? weaptype[proj.weap].eprj : "weapons/catridge";
+					proj.lifesize = weaptype[proj.weap].esize;
+				}
+				else { proj.mdl = "weapons/catridge"; proj.lifesize = 1; }
+				proj.aboveeye = 1.0f;
+				proj.elasticity = 0.2f;
+				proj.reflectivity = 0.f;
+				proj.relativity = 0.75f;
+				proj.waterfric = 1.75f;
+				proj.weight = 100.f;
+				proj.projcollide = BOUNCE_GEOM;
+				proj.escaped = true;
+				proj.fadetime = rnd(75)+75;
+				if(proj.owner)
+				{
+					vecfromyawpitch(proj.owner->yaw+60+rnd(35), proj.owner->pitch+25+rnd(30), 1, 0, proj.to);
+					(proj.vel = proj.to).mul(rnd(5)+1);
+					proj.to.mul(100).add(proj.from);
+				}
+				else proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
 				break;
 			}
 			case PRJ_ENT:
@@ -351,13 +371,15 @@ namespace projs
 				proj.waterfric = 1.75f;
 				proj.weight = 150.f;
 				proj.projcollide = BOUNCE_GEOM;
+				proj.escaped = true;
 				if(proj.owner) proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
 				proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
+				proj.fadetime = 500;
 				break;
 			}
 			default: break;
 		}
-		if(proj.projtype != PRJ_SHOT) { updatebb(proj); physics::entinmap(&proj, true); }
+		if(proj.projtype != PRJ_SHOT) updatebb(proj);
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
@@ -544,6 +566,7 @@ namespace projs
 		loopv(locs)
 		{
 			create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WPB(weap, time, flags&HIT_ALT), millis, speed, 0, weap, flags);
+			if(weaptype[weap].eject) create(from, from, local, d, PRJ_EJECT, rnd(1501)+1500, 0, millis, rnd(25)+10, 0, weap, flags);
 			millis += delay;
 		}
 	}
@@ -668,7 +691,7 @@ namespace projs
 				{
 					proj.lifesize = 1;
 					part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, weaptype[proj.weap].partsize[proj.flags&HIT_ALT ? 1 : 0]);
-					if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, 1000))
+					if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
 					{
 						part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 1, 100, DECAL_BLOOD);
 						proj.lasteffect = lastmillis;
@@ -680,18 +703,18 @@ namespace projs
 			if(WPB(proj.weap, radial, proj.flags&HIT_ALT) || WPB(proj.weap, taper, proj.flags&HIT_ALT))
 				proj.height = proj.radius = proj.xradius = proj.yradius = WPB(proj.weap, radius, proj.flags&HIT_ALT)*max(proj.lifesize, 0.1f);
 		}
-		else
+		else if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS)
 		{
 			if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
 			{
-				if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, 1000))
+				if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
 				{
 					float size = ((rnd(20)+1)/10.f)*proj.lifesize;
 					part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, size, 1, 100, DECAL_BLOOD);
 					proj.lasteffect = lastmillis;
 				}
 			}
-			else if(proj.projtype == PRJ_DEBRIS || (proj.projtype == PRJ_GIBS && (kidmode || game::bloodscale <= 0 || game::gibscale <= 0)))
+			else
 			{
 				float size = proj.lifesize*clamp(1.f-proj.lifespan, 0.1f, 1.f), radius = proj.radius+0.5f; // gets smaller as it gets older
 				int steps = clamp(int(proj.vel.magnitude()*size*1.5f), 5, 20);
@@ -708,7 +731,19 @@ namespace projs
 					}
 				}
 			}
-			updatebb(proj);
+		}
+		else switch(proj.projtype)
+		{
+			case PRJ_EJECT:
+			{
+				bool moving = proj.movement > 0.f;
+				if(moving && lastmillis-proj.lasteffect >= 50)
+				{
+					part_create(PART_SMOKE, 100, proj.o, 0x222222, proj.radius, 0.5f, -5);
+					proj.lasteffect = lastmillis;
+				}
+			}
+			default: break;
 		}
 	}
 
@@ -1001,20 +1036,37 @@ namespace projs
 
 		float dist = proj.o.dist(pos), diff = dist/float(4*RAD);
 		if(!blocked) proj.movement += dist;
-		if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_DEBRIS || proj.projtype == PRJ_GIBS)
+		switch(proj.projtype)
 		{
-			float dummy = 0;
-			vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, dummy);
-			proj.yaw -= 90; while(proj.yaw < 0) proj.yaw += 360;
-			proj.roll += diff; while(proj.roll >= 360) proj.roll -= 360;
+			case PRJ_SHOT: case PRJ_DEBRIS: case PRJ_GIBS: case PRJ_EJECT:
+			{
+				if(!proj.lastbounce || proj.movement >= 1)
+				{
+					dir = vec(proj.vel).normalize();
+					if(!dir.iszero())
+					{
+						float dummy = 0;
+						vectoyawpitch(dir, proj.yaw, dummy);
+						proj.yaw -= 90;
+						while(proj.yaw < 0) proj.yaw += 360;
+					}
+					proj.roll += diff;
+					while(proj.roll >= 360) proj.roll -= 360;
+				}
+				break;
+			}
+			case PRJ_ENT:
+			{
+				if(proj.pitch != 0)
+				{
+					if(proj.pitch < 0.f) { proj.pitch += secs; if(proj.pitch > 0.f) proj.pitch = 0.f; }
+					else if(proj.pitch > 0.f) { proj.pitch -= secs; if(proj.pitch < 0.f) proj.pitch = 0.f; }
+					proj.yaw = proj.roll = 0;
+				}
+				break;
+			}
+			default: break;
 		}
-		else if(proj.projtype == PRJ_ENT && proj.pitch != 0.f)
-		{
-			if(proj.pitch < 0.f) { proj.pitch += diff*0.125f; if(proj.pitch > 0.f) proj.pitch = 0.f; }
-			else if(proj.pitch > 0.f) { proj.pitch -= diff*0.125f; if(proj.pitch < 0.f) proj.pitch = 0.f; }
-			proj.yaw = proj.roll = 0;
-		}
-
 		return true;
 	}
 
@@ -1054,7 +1106,7 @@ namespace projs
 	void update()
 	{
 		vector<projent *> canremove;
-		loopvrev(projs) if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS)
+		loopvrev(projs) if(projs[i]->projtype == PRJ_DEBRIS || projs[i]->projtype == PRJ_GIBS || projs[i]->projtype == PRJ_EJECT)
 			canremove.add(projs[i]);
 		while(!canremove.empty() && canremove.length() > maxprojectiles)
 		{
@@ -1101,7 +1153,7 @@ namespace projs
 						if(proj.projtype == PRJ_ENT)
 						{
 							proj.beenused = 1;
-							proj.lifetime = min(proj.lifetime, 1000);
+							proj.lifetime = min(proj.lifetime, proj.fadetime);
 						}
 						else proj.state = CS_DEAD;
 					}
@@ -1178,13 +1230,13 @@ namespace projs
 			projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
 			float trans = 1, size = 1;
-			switch(proj.projtype)
+			if(proj.fadetime) switch(proj.projtype)
 			{
-				case PRJ_GIBS: case PRJ_DEBRIS: size = proj.lifesize;
+				case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: size = proj.lifesize;
 				case PRJ_ENT:
 					if(proj.lifemillis)
 					{
-						int interval = min(proj.lifemillis, 1000);
+						int interval = min(proj.lifemillis, proj.fadetime);
 						if(proj.lifetime < interval)
 						{
 							float amt = float(proj.lifetime)/float(interval);
@@ -1192,7 +1244,7 @@ namespace projs
 						}
 						else if(proj.lifemillis > interval)
 						{
-							interval = min(proj.lifemillis-interval, 1000);
+							interval = min(proj.lifemillis-interval, proj.fadetime);
 							if(proj.lifemillis-proj.lifetime < interval)
 							{
 								float amt = float(proj.lifemillis-proj.lifetime)/float(interval);

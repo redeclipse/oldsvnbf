@@ -313,72 +313,72 @@ WEAPON(gibs,
 struct weaptypes
 {
 	int	info, 				anim,				colour,			sound, 		esound, 	fsound,		rsound;
-	bool	follows[2],			muzzle;
-	float	partsize[2],		partlen[2],		thrown[2],				halo;
-	const char *name, 		*text,	*item,						*vwep,						*proj;
+	bool	follows[2],			muzzle,		eject;
+	float	partsize[2],		partlen[2],		thrown[2],				halo,		esize;
+	const char *name, 		*text,	*item,						*vwep,						*proj,					*eprj;
 };
 #ifdef GAMESERVER
 weaptypes weaptype[] =
 {
 	{
 		WEAP_MELEE,			ANIM_MELEE,			0xFFFFFF,		S_MELEE,	S_RICOCHET,	-1,			-1,
-			{ false, false },	false,
-			{ 0.75f, 0.75f },	{ 0, 0 },		{ 0, 0 },				1,
-			"melee",		"\fd",	"",							"",							""
+			{ false, false },	false,		false,
+			{ 0.75f, 0.75f },	{ 0, 0 },		{ 0, 0 },				1,			0,
+			"melee",		"\fd",	"",							"",							"",						""
 	},
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			{ true, true },		true,
-			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,
-			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		""
+			{ true, true },		true,		false,
+			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,			0,
+			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		"",						""
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			{ true, true },		true,
-			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },			6,
-			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		""
+			{ true, true },		true,		false,
+			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },				6,			0,
+			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		"",						""
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			{ true, true },		true,
-			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,
-			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			""
+			{ true, true },		true,		true,
+			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,			0.5f,
+			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			"",						"weapons/cartridge"
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,
-			{ true, true },		true,
-			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				7,
-			"flamer",		"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		""
+			{ true, true },		true,		false,
+			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				7,			0,
+			"flamer",		"\fr",	"weapons/flamer/item",		"weapons/flamer/vwep",		"",						""
 	},
 	{
 		WEAP_PLASMA,		ANIM_PLASMA,		0x22FFFF,		S_PLASMA,	S_ENERGY,	S_HUM,		-1,
-			{ true, true },		true,
-			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				5,
-			"plasma",		"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		""
+			{ true, true },		true,		false,
+			{ 0, 0 },			{ 0, 0 },		{ 0, 0 },				5,			0,
+			"plasma",		"\fc",	"weapons/plasma/item",		"weapons/plasma/vwep",		"",						""
 	},
 	{
 		WEAP_RIFLE,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			{ false, false },	true,
-			{ 0.65f, 1.5f },	{ 512, 4096 },	{ 0, 0 },				7,
-			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
+			{ false, false },	true,		false,
+			{ 0.65f, 1.5f },	{ 512, 4096 },	{ 0, 0 },				7,			0,
+			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		"",						""
 	},
 	{
 		WEAP_GRENADE,		ANIM_GRENADE,		0x22FF22,		S_GRENADE,	S_EXPLODE,	S_BEEP,	S_TINK,
-			{ true, true },		false,
-			{ 2, 2 },			{ 0, 0 },		{ 0.0625f, 0.0625f },	3,
-			"grenade",		"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj"
+			{ true, true },		false,		false,
+			{ 2, 2 },			{ 0, 0 },		{ 0.0625f, 0.0625f },	3,			0,
+			"grenade",		"\fg",	"weapons/grenade/item",		"weapons/grenade/vwep",		"weapons/grenade/proj",	""
 	},
 	{
 		WEAP_INSTA,			ANIM_RIFLE,			0xAA66FF,		S_RIFLE,	S_ENERGY,	S_BZZT,		-1,
-			{ false, false },	true,
-			{ 0.65f, 1.5f },	{ 1024, 4096 },	{ 0, 0 },				7,
-			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		""
+			{ false, false },	true,		false,
+			{ 0.65f, 1.5f },	{ 1024, 4096 },	{ 0, 0 },				7,			0,
+			"rifle",		"\fv",	"weapons/rifle/item",		"weapons/rifle/vwep",		"",						""
 	},
 	{
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,
-			{ true, true },		false,
-			{ 2, 2 },			{ 0, 0 },		{ 0.125f, 0.125f },		4,
-			"gibs",			"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc"
+			{ true, true },		false,		false,
+			{ 2, 2 },			{ 0, 0 },		{ 0.125f, 0.125f },		4,			0,
+			"gibs",			"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc",			""
 	},
 };
 #define WP(proto,name)			proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};
@@ -949,7 +949,7 @@ struct gameent : dynent, gamestate
 	int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
-	vec head, torso, muzzle, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
+	vec head, torso, muzzle, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
@@ -957,7 +957,7 @@ struct gameent : dynent, gamestate
 	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
 		lastattacker(-1), lastpoints(0), quake(0), lastpush(0),
-		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
+		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
 		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
 		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
@@ -1043,7 +1043,7 @@ struct gameent : dynent, gamestate
 		gamestate::mapchange();
 	}
 
-	void cleartags() { head = torso = muzzle = melee = waist = lfoot = rfoot = vec(-1, -1, -1); }
+	void cleartags() { head = torso = muzzle = eject = melee = waist = lfoot = rfoot = vec(-1, -1, -1); }
 
 	void checkmeleepos()
 	{
@@ -1054,6 +1054,7 @@ struct gameent : dynent, gamestate
 			melee = vec(o).add(dir);
 		}
 	}
+
 	void checkmuzzlepos()
 	{
 		if(muzzle == vec(-1, -1, -1))
@@ -1061,33 +1062,6 @@ struct gameent : dynent, gamestate
 			vec dir, right; vecfromyawpitch(yaw, pitch, 1, 0, dir); vecfromyawpitch(yaw, pitch, 0, -1, right);
 			dir.mul(radius); right.mul(radius); dir.z -= height*0.0625f;
 			muzzle = vec(o).add(dir).add(right);
-		}
-	}
-	void checktags()
-	{
-		checkmeleepos();
-		if(type == ENT_PLAYER || (type == ENT_AI && (!isaitype(aitype) || aistyle[aitype].maxspeed)))
-		{
-			float hsize = max(xradius*0.45f, yradius*0.45f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
-			vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.45f, yradius*0.45f, hsize);
-			if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
-			float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
-			float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
-			if(waist == vec(-1, -1, -1))
-			{
-				vecfromyawpitch(yaw, 0, -1, 0, dir); dir.mul(radius*1.15f); dir.z -= height*0.5f;
-				waist = vec(o).add(dir);
-			}
-			if(lfoot == vec(-1, -1, -1))
-			{
-				vecfromyawpitch(yaw, 0, 0, -1, dir); dir.mul(radius); dir.z -= height;
-				lfoot = vec(o).add(dir);
-			}
-			if(rfoot == vec(-1, -1, -1))
-			{
-				vecfromyawpitch(yaw, 0, 0, 1, dir); dir.mul(radius); dir.z -= height;
-				rfoot = vec(o).add(dir);
-			}
 		}
 	}
 
@@ -1100,6 +1074,59 @@ struct gameent : dynent, gamestate
 		}
 		checkmeleepos();
 		return melee;
+	}
+
+	void checkejectpos()
+	{
+		if(eject == vec(-1, -1, -1))
+		{
+			checkmuzzlepos();
+			eject = muzzle;
+		}
+	}
+
+	vec &ejectpos(int weap)
+	{
+		if(isweap(weap) && weaptype[weap].eject)
+		{
+			checkejectpos();
+			return eject;
+		}
+		return muzzlepos(weap);
+	}
+
+	void checkhitboxes()
+	{
+		float hsize = max(xradius*0.45f, yradius*0.45f); if(head == vec(-1, -1, -1)) { torso = head; head = o; head.z -= hsize; }
+		vec dir; vecfromyawpitch(yaw, pitch+90, 1, 0, dir); dir.mul(hsize); head.add(dir); hrad = vec(xradius*0.45f, yradius*0.45f, hsize);
+		if(torso == vec(-1, -1, -1)) { torso = o; torso.z -= height*0.5f; } torso.z += hsize*0.5f;
+		float tsize = (head.z-hrad.z)-torso.z; trad = vec(xradius, yradius, tsize);
+		float lsize = ((torso.z-trad.z)-(o.z-height))*0.5f; legs = torso; legs.z -= trad.z+lsize; lrad = vec(xradius*0.8f, yradius*0.8f, lsize);
+		if(waist == vec(-1, -1, -1))
+		{
+			vecfromyawpitch(yaw, 0, -1, 0, dir); dir.mul(radius*1.15f); dir.z -= height*0.5f;
+			waist = vec(o).add(dir);
+		}
+		if(lfoot == vec(-1, -1, -1))
+		{
+			vecfromyawpitch(yaw, 0, 0, -1, dir); dir.mul(radius); dir.z -= height;
+			lfoot = vec(o).add(dir);
+		}
+		if(rfoot == vec(-1, -1, -1))
+		{
+			vecfromyawpitch(yaw, 0, 0, 1, dir); dir.mul(radius); dir.z -= height;
+			rfoot = vec(o).add(dir);
+		}
+	}
+
+	bool wantshitbox() { return type == ENT_PLAYER || (type == ENT_AI && (!isaitype(aitype) || aistyle[aitype].maxspeed)); }
+
+	void checktags()
+	{
+		checkmeleepos();
+		checkmuzzlepos();
+		checkejectpos();
+		if(wantshitbox()) checkhitboxes();
 	}
 
 	float calcroll(bool crouch)
@@ -1130,12 +1157,12 @@ struct gameent : dynent, gamestate
 	}
 };
 
-enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_ENT };
+enum { PRJ_SHOT = 0, PRJ_GIBS, PRJ_DEBRIS, PRJ_EJECT, PRJ_ENT, PRJ_MAX };
 
 struct projent : dynent
 {
 	vec from, to, norm;
-	int addtime, lifetime, lifemillis, waittime, spawntime, lastradial, lasteffect, lastbounce, beenused;
+	int addtime, lifetime, lifemillis, waittime, spawntime, fadetime, lastradial, lasteffect, lastbounce, beenused;
 	float movement, roll, lifespan, lifesize;
 	bool local, extinguish, limited, stuck, escaped;
 	int projtype, projcollide;
@@ -1161,7 +1188,7 @@ struct projent : dynent
 		type = ENT_PROJ;
 		state = CS_ALIVE;
 		norm = vec(0, 0, 1);
-		addtime = lifetime = lifemillis = waittime = spawntime = lastradial = lasteffect = lastbounce = beenused = flags = 0;
+		addtime = lifetime = lifemillis = waittime = spawntime = fadetime = lastradial = lasteffect = lastbounce = beenused = flags = 0;
 		schan = id = weap = -1;
 		movement = roll = lifespan = lifesize = 0.f;
 		extinguish = limited = stuck = escaped = false;
