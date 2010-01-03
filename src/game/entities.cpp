@@ -2093,7 +2093,7 @@ namespace entities
 				}
 				case SUNLIGHT:
 				{
-					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10, yaw = e.attrs[0], pitch = e.attrs[1];
+					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10, yaw = e.attrs[0], pitch = e.attrs[1] ? e.attrs[1] : 90;
 					vec dir(yaw*RAD, pitch*RAD);
 					static const float offsets[9][2] = { { 0, 0 }, { 0, 1 }, { 90, 1 }, { 180, 1 }, { 270, 1 }, { 45, 0.5f }, { 135, 0.5f }, { 225, 0.5f }, { 315, 0.5f } };
 					loopk(9)
