@@ -254,13 +254,40 @@ namespace projs
         }
     }
 
-	void updatebb(projent &proj)
+	void updatebb(projent &proj, bool init = false)
 	{
 		if(proj.mdl && *proj.mdl)
 		{
+			float size = 1;
+			switch(proj.projtype)
+			{
+				case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: size = proj.lifesize;
+				case PRJ_ENT:
+					if(init) break;
+					else if(proj.lifemillis && proj.fadetime)
+					{
+						int interval = min(proj.lifemillis, proj.fadetime);
+						if(proj.lifetime < interval)
+						{
+							size *= float(proj.lifetime)/float(interval);
+							break;
+						}
+					} // all falls through to ..
+				default: return;
+			}
 			setbbfrommodel(&proj, proj.mdl, proj.lifesize);
 			if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) proj.height += 2.5f;
 			else proj.height += proj.projtype == PRJ_ENT ? 1.f : 0.5f;
+		}
+		if(init)
+		{
+			vec orig = proj.o;
+			loopi(100)
+			{
+				if(i) proj.o.add(vec((rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f, (rnd(21)-10)*i/10.f));
+				if(collide(&proj) && !inside && (!hitplayer || !physics::issolid(hitplayer, &proj))) break;
+				proj.o = orig;
+			}
 		}
 	}
 
@@ -305,11 +332,11 @@ namespace projs
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.3f;
 					proj.reflectivity = 0.f;
-					proj.relativity = 1.0f;
+					proj.relativity = 0.95f;
 					proj.waterfric = 2.0f;
 					proj.weight = 150.f*proj.lifesize;
-					proj.vel.add(vec(rnd(20)-11, rnd(20)-11, rnd(20)-11));
-					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
+					proj.vel.add(vec(rnd(21)-10, rnd(21)-10, rnd(21)-10));
+					proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 					proj.escaped = !proj.owner;
 					proj.fadetime = rnd(250)+250;
 					break;
@@ -330,7 +357,7 @@ namespace projs
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.0f;
 				proj.waterfric = 1.7f;
-				proj.weight = 140.f*proj.lifesize;
+				proj.weight = 150.f*proj.lifesize;
 				proj.vel.add(vec(rnd(101)-50, rnd(101)-50, rnd(151)-50)).mul(2);
 				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
 				proj.escaped = !proj.owner;
@@ -348,18 +375,20 @@ namespace projs
 				}
 				else { proj.mdl = "weapons/catridge"; proj.lifesize = 1; }
 				proj.aboveeye = 1.0f;
-				proj.elasticity = 0.2f;
+				proj.elasticity = 0.3f;
 				proj.reflectivity = 0.f;
 				proj.relativity = 0.95f;
 				proj.waterfric = 1.75f;
-				proj.weight = 125.f*proj.lifesize;
-				proj.projcollide = BOUNCE_GEOM;
+				proj.weight = 200.f*proj.lifesize; // higher so they fall better in relation to their speed
+				proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
 				proj.escaped = true;
-				proj.fadetime = rnd(125)+125;
+				proj.fadetime = rnd(250)+250;
 				if(proj.owner)
 				{
-					vecfromyawpitch(proj.owner->yaw+60+rnd(35), proj.owner->pitch+25+rnd(30), 1, 0, proj.to);
+					vecfromyawpitch(proj.owner->yaw+40+rnd(41), proj.owner->pitch+40+rnd(41), 1, 0, proj.to);
 					proj.to.mul(10).add(proj.from);
+					proj.yaw = proj.owner->yaw;
+					proj.pitch = proj.owner->pitch;
 				}
 				break;
 			}
@@ -374,25 +403,28 @@ namespace projs
 				proj.projcollide = BOUNCE_GEOM;
 				proj.escaped = true;
 				if(proj.owner) proj.o.sub(vec(0, 0, proj.owner->height*0.2f));
-				proj.vel.add(vec(rnd(50)-26, rnd(50)-26, rnd(25)));
+				proj.vel.add(vec(rnd(51)-25, rnd(51)-25, rnd(25)));
 				proj.fadetime = 500;
 				break;
 			}
 			default: break;
 		}
-		if(proj.projtype != PRJ_SHOT) updatebb(proj);
+		if(proj.projtype != PRJ_SHOT) updatebb(proj, true);
 
 		vec dir = vec(proj.to).sub(proj.o), orig = proj.o;
         float maxdist = dir.magnitude();
         if(maxdist > 1e-3f)
         {
             dir.mul(1/maxdist);
-		    vectoyawpitch(dir, proj.yaw, proj.pitch);
+		    if(proj.projtype != PRJ_EJECT) vectoyawpitch(dir, proj.yaw, proj.pitch);
         }
         else if(proj.owner)
         {
-            proj.yaw = proj.owner->yaw;
-            proj.pitch = proj.owner->pitch;
+        	if(proj.projtype != PRJ_EJECT)
+        	{
+				proj.yaw = proj.owner->yaw;
+				proj.pitch = proj.owner->pitch;
+        	}
             vecfromyawpitch(proj.yaw, proj.pitch, 1, 0, dir);
         }
 		vec rel = vec(proj.vel).add(dir);
@@ -735,9 +767,9 @@ namespace projs
 			case PRJ_EJECT:
 			{
 				bool moving = proj.movement > 0.f;
-				if(moving && lastmillis-proj.lasteffect >= 50)
+				if(moving && lastmillis-proj.lasteffect >= 100)
 				{
-					part_create(PART_SMOKE, 100, proj.o, 0x222222, proj.radius, 0.5f, -5);
+					part_create(PART_SMOKE, 150, proj.o, 0x222222, max(proj.xradius, proj.yradius)*1.25f, 0.5f, -5);
 					proj.lasteffect = lastmillis;
 				}
 			}
@@ -1040,8 +1072,7 @@ namespace projs
 			{
 				if(!proj.lastbounce || proj.movement >= 1)
 				{
-					dir = vec(proj.vel).normalize();
-					if(!dir.iszero())
+					if(proj.projtype != PRJ_EJECT && !((dir = vec(proj.vel).normalize()).iszero()))
 					{
 						float dummy = 0;
 						vectoyawpitch(dir, proj.yaw, dummy);
@@ -1143,7 +1174,7 @@ namespace projs
 					}
 					else continue;
 				}
-				effect(proj);
+				updatebb(proj); effect(proj);
 				if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
 				{
 					if(!move(proj) && !proj.beenused)
@@ -1228,11 +1259,11 @@ namespace projs
 			projent &proj = *projs[i];
             if(proj.projtype == PRJ_ENT && !entities::ents.inrange(proj.id)) continue;
 			float trans = 1, size = 1;
-			if(proj.fadetime) switch(proj.projtype)
+			switch(proj.projtype)
 			{
 				case PRJ_GIBS: case PRJ_DEBRIS: case PRJ_EJECT: size = proj.lifesize;
 				case PRJ_ENT:
-					if(proj.lifemillis)
+					if(proj.fadetime && proj.lifemillis)
 					{
 						int interval = min(proj.lifemillis, proj.fadetime);
 						if(proj.lifetime < interval)
@@ -1240,7 +1271,7 @@ namespace projs
 							float amt = float(proj.lifetime)/float(interval);
 							size *= amt; trans *= amt;
 						}
-						else if(proj.lifemillis > interval)
+						else if(proj.projtype != PRJ_EJECT && proj.lifemillis > interval)
 						{
 							interval = min(proj.lifemillis-interval, proj.fadetime);
 							if(proj.lifemillis-proj.lifetime < interval)
