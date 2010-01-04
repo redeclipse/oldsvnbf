@@ -38,7 +38,7 @@ struct ircnet
 	}
 };
 
-extern vector<ircnet> ircnets;
+extern vector<ircnet *> ircnets;
 
 extern ircnet *ircfind(const char *name);
 extern void ircestablish(ircnet *n);
