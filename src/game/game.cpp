@@ -39,8 +39,8 @@ namespace game
 	VARP(firstpersonfov, 90, 100, 150);
 	VARP(firstpersonsway, 0, 1, 1);
 	FVARP(firstpersonswaystep, 1, 18.0f, 100);
-	FVARP(firstpersonswayside, 0, 0.04f, 1);
-	FVARP(firstpersonswayup, 0, 0.05f, 1);
+	FVARP(firstpersonswayside, 0, 0.06f, 1);
+	FVARP(firstpersonswayup, 0, 0.08f, 1);
 	FVARP(firstpersonblend, 0, 1, 1);
 	FVARP(firstpersondist, -10000, -0.25f, 10000);
 	FVARP(firstpersonshift, -10000, 0.3f, 10000);
