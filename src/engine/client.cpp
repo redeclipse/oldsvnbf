@@ -86,7 +86,7 @@ void connectserv(const char *name, int port, const char *password)
 	{
 		addserver(name, port);
 		conoutft(CON_MESG, "\faattempting to connect to %s:[%d]", name, port);
-		if(!resolverwait(name, port, &address))
+		if(!resolverwait(name, &address))
 		{
 			conoutft(CON_MESG, "\frcould not resolve host %s", name);
             connectfail();

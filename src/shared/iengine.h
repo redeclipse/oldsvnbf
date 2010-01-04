@@ -387,7 +387,7 @@ extern void filtertext(char *dst, const char *src, bool whitespace = true, int l
 extern void disconnect_client(int n, int reason);
 extern void kicknonlocalclients(int reason);
 extern void sendqueryreply(ucharbuf &p);
-extern bool resolverwait(const char *name, int port, ENetAddress *address);
+extern bool resolverwait(const char *name, ENetAddress *address);
 extern int connectwithtimeout(ENetSocket sock, const char *hostname, ENetAddress &address);
 
 extern bool findoctadir(const char *name, bool fallback = false);
