@@ -1,7 +1,7 @@
 MD5Version 10
 commandline ""
 
-numJoints 2
+numJoints 3
 numMeshes 1
 
 joints {
