@@ -1,13 +1,13 @@
 #ifdef IRC
 #include "engine.h"
 
-vector<ircnet> ircnets;
+vector<ircnet *> ircnets;
 
 ircnet *ircfind(const char *name)
 {
 	if(name && *name)
 	{
-		loopv(ircnets) if(!strcmp(ircnets[i].name, name)) return &ircnets[i];
+		loopv(ircnets) if(!strcmp(ircnets[i]->name, name)) return ircnets[i];
 	}
 	return NULL;
 }
@@ -61,9 +61,9 @@ void ircsend(ircnet *n, const char *msg, ...)
 void ircoutf(int relay, const char *msg, ...)
 {
 	defvformatstring(str, msg, msg);
-	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL && ircnets[i].type == IRCT_RELAY && ircnets[i].state == IRC_ONLINE)
+	loopv(ircnets) if(ircnets[i]->sock != ENET_SOCKET_NULL && ircnets[i]->type == IRCT_RELAY && ircnets[i]->state == IRC_ONLINE)
 	{
-		ircnet *n = &ircnets[i];
+		ircnet *n = ircnets[i];
 #if 0 // workaround for freenode's crappy dropping all but the first target of multi-target messages even though they don't state MAXTARGETS=1 in 005 string..
 		mkstring(s);
 		loopvj(n->channels) if(n->channels[j].state == IRCC_JOINED && n->channels[j].relay >= relay)
@@ -115,7 +115,7 @@ void ircnewnet(int type, const char *name, const char *serv, int port, const cha
 		else ircestablish(m);
 		return;
 	}
-	ircnet &n = ircnets.add();
+	ircnet &n = *ircnets.add(new ircnet);
 	n.type = type;
 	n.state = IRC_DISC;
 	n.sock = ENET_SOCKET_NULL;
@@ -602,9 +602,9 @@ void ircdiscon(ircnet *n)
 
 void irccleanup()
 {
-	loopv(ircnets) if(ircnets[i].sock != ENET_SOCKET_NULL)
+	loopv(ircnets) if(ircnets[i]->sock != ENET_SOCKET_NULL)
 	{
-		ircnet *n = &ircnets[i];
+		ircnet *n = ircnets[i];
 		ircsend(n, "QUIT :%s, %s %s", ENG_NAME, ENG_BLURB, ENG_URL);
 		ircdiscon(n);
 	}
@@ -614,7 +614,7 @@ void ircslice()
 {
 	loopv(ircnets)
 	{
-		ircnet *n = &ircnets[i];
+		ircnet *n = ircnets[i];
 		if(n->sock != ENET_SOCKET_NULL && n->state != IRC_DISC)
 		{
 			switch(n->state)
@@ -790,9 +790,9 @@ bool ircgui(guient *g, const char *s)
 	else
 	{
 		int nets = 0;
-		loopv(ircnets) if(ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+		loopv(ircnets) if(ircnets[i]->name[0] && ircnets[i]->sock != ENET_SOCKET_NULL)
 		{
-			ircnet *n = &ircnets[i];
+			ircnet *n = ircnets[i];
 			g->pushlist();
 			g->buttonf("%s via %s:[%d]", 0xFFFFFF, NULL, true, n->name, n->serv, n->port);
 			g->space(1);
@@ -805,9 +805,9 @@ bool ircgui(guient *g, const char *s)
 		}
 		if(nets)
 		{
-			loopv(ircnets) if(ircnets[i].state != IRC_DISC && ircnets[i].name[0] && ircnets[i].sock != ENET_SOCKET_NULL)
+			loopv(ircnets) if(ircnets[i]->state != IRC_DISC && ircnets[i]->name[0] && ircnets[i]->sock != ENET_SOCKET_NULL)
 			{
-				ircnet *n = &ircnets[i];
+				ircnet *n = ircnets[i];
 				if(!ircnetgui(g, n, true)) return false;
 			}
 		}
@@ -825,7 +825,7 @@ void guiirc(const char *s)
 }
 ICOMMAND(ircgui, "s", (char *s), guiirc(s));
 #endif
-ICOMMAND(ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i].state >= IRC_ATTEMPT) num++; intret(num); });
+ICOMMAND(ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i]->state >= IRC_ATTEMPT) num++; intret(num); });
 #else
 ICOMMAND(ircgui, "s", (char *s), intret(0));
 ICOMMAND(ircconns, "", (void), intret(0));
