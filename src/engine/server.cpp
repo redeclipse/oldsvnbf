@@ -499,7 +499,7 @@ void sendpongs()		// reply all server info requests
 }
 
 #ifdef STANDALONE
-bool resolverwait(const char *name, int port, ENetAddress *address)
+bool resolverwait(const char *name, ENetAddress *address)
 {
 	return enet_address_set_host(address, name) >= 0;
 }
@@ -518,7 +518,7 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
 	if(remoteaddress.host==ENET_HOST_ANY)
 	{
 		conoutf("\falooking up %s:[%d]...", hostname, remoteaddress.port);
-		if(!resolverwait(hostname, remoteaddress.port, &remoteaddress)) return ENET_SOCKET_NULL;
+		if(!resolverwait(hostname, &remoteaddress)) return ENET_SOCKET_NULL;
 	}
     ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
     if(sock!=ENET_SOCKET_NULL && localaddress && enet_socket_bind(sock, localaddress) < 0)

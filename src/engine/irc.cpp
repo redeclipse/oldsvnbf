@@ -19,7 +19,7 @@ void ircestablish(ircnet *n)
 	if(n->address.host == ENET_HOST_ANY)
 	{
 		conoutf("looking up %s:[%d]...", n->serv, n->port);
-		if(!resolverwait(n->serv, n->port, &n->address))
+		if(!resolverwait(n->serv, &n->address))
 		{
 			conoutf("unable to resolve %s:[%d]...", n->serv, n->port);
 			n->state = IRC_DISC;

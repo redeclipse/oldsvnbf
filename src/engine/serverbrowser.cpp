@@ -3,25 +3,21 @@
 #include "engine.h"
 #include "SDL_thread.h"
 
-struct resolverq
+struct resolverthread
 {
-	const char *query;
-	int port;
+    SDL_Thread *thread;
+    const char *query;
+    int starttime;
 };
 
-struct resolverthread : resolverq
+struct resolverresult
 {
-	SDL_Thread *thread;
-	int starttime;
+    const char *query;
+    ENetAddress address;
 };
 
-struct resolverresult : resolverq
-{
-	ENetAddress address;
-};
-
-vector<resolverq> resolverqueries;
 vector<resolverthread> resolverthreads;
+vector<const char *> resolverqueries;
 vector<resolverresult> resolverresults;
 SDL_mutex *resolvermutex;
 SDL_cond *querycond, *resultcond;
@@ -41,13 +37,11 @@ int resolverloop(void * data)
 	{
 		SDL_LockMutex(resolvermutex);
 		while(resolverqueries.empty()) SDL_CondWait(querycond, resolvermutex);
-		resolverq &rq = resolverqueries.pop();
-		rt->query = rq.query;
-		rt->port = rq.port;
+		rt->query = resolverqueries.pop();
 		rt->starttime = totalmillis;
 		SDL_UnlockMutex(resolvermutex);
 
-		ENetAddress address = { ENET_HOST_ANY, rt->port };
+		ENetAddress address = { ENET_HOST_ANY, ENET_PORT_ANY };
 		enet_address_set_host(&address, rt->query);
 
 		SDL_LockMutex(resolvermutex);
@@ -55,10 +49,8 @@ int resolverloop(void * data)
 		{
 			resolverresult &rr = resolverresults.add();
 			rr.query = rt->query;
-			rr.port = rt->port;
 			rr.address = address;
 			rt->query = NULL;
-			rt->port = 0;
 			rt->starttime = 0;
 			SDL_CondSignal(resultcond);
 		}
@@ -78,7 +70,6 @@ void resolverinit()
 	{
 		resolverthread &rt = resolverthreads.add();
 		rt.query = NULL;
-		rt.port = serverport+1;
 		rt.starttime = 0;
 		rt.thread = SDL_CreateThread(resolverloop, &rt);
 	}
@@ -96,7 +87,7 @@ void resolverstop(resolverthread &rt)
 		rt.thread = SDL_CreateThread(resolverloop, &rt);
 	}
 	rt.query = NULL;
-	rt.port = rt.starttime = 0;
+	rt.starttime = 0;
 	SDL_UnlockMutex(resolvermutex);
 }
 
@@ -115,14 +106,12 @@ void resolverclear()
 	SDL_UnlockMutex(resolvermutex);
 }
 
-void resolverquery(const char *name, int port)
+void resolverquery(const char *name)
 {
 	if(resolverthreads.empty()) resolverinit();
 
 	SDL_LockMutex(resolvermutex);
-	resolverq &rq = resolverqueries.add();
-	rq.query = name;
-	rq.port = port;
+    resolverqueries.add(name);
 	SDL_CondSignal(querycond);
 	SDL_UnlockMutex(resolvermutex);
 }
@@ -136,7 +125,6 @@ bool resolvercheck(const char **name, ENetAddress *address)
 		resolverresult &rr = resolverresults.pop();
 		*name = rr.query;
 		address->host = rr.address.host;
-		address->port = rr.port;
 		resolved = true;
 	}
 	else loopv(resolverthreads)
@@ -153,7 +141,7 @@ bool resolvercheck(const char **name, ENetAddress *address)
 	return resolved;
 }
 
-bool resolverwait(const char *name, int port, ENetAddress *address)
+bool resolverwait(const char *name, ENetAddress *address)
 {
 	if(resolverthreads.empty()) resolverinit();
 
@@ -161,19 +149,16 @@ bool resolverwait(const char *name, int port, ENetAddress *address)
 	progress(0, text);
 
 	SDL_LockMutex(resolvermutex);
-	resolverq &rq = resolverqueries.add();
-	rq.query = name;
-	rq.port = port;
+    resolverqueries.add(name);
 	SDL_CondSignal(querycond);
 	int starttime = SDL_GetTicks(), timeout = 0;
 	bool resolved = false;
 	for(;;)
 	{
 		SDL_CondWaitTimeout(resultcond, resolvermutex, 250);
-		loopv(resolverresults) if(resolverresults[i].query == name && resolverresults[i].port == port)
+		loopv(resolverresults) if(resolverresults[i].query == name)
 		{
 			address->host = resolverresults[i].address.host;
-			address->port = resolverresults[i].port;
 			resolverresults.remove(i);
 			resolved = true;
 			break;
@@ -190,7 +175,7 @@ bool resolverwait(const char *name, int port, ENetAddress *address)
 		loopv(resolverthreads)
 		{
 			resolverthread &rt = resolverthreads[i];
-			if(rt.query == name && rt.port == port) { resolverstop(rt); break; }
+			if(rt.query == name) { resolverstop(rt); break; }
 		}
 	}
 	SDL_UnlockMutex(resolvermutex);
@@ -345,24 +330,24 @@ void checkresolver()
 		if(si.resolved == serverinfo::RESOLVED) continue;
 		if(si.address.host == ENET_HOST_ANY)
 		{
-			if(si.resolved == serverinfo::UNRESOLVED) { si.resolved = serverinfo::RESOLVING; resolverquery(si.name, si.port+1); }
+			if(si.resolved == serverinfo::UNRESOLVED) { si.resolved = serverinfo::RESOLVING; resolverquery(si.name); }
 			resolving++;
 		}
 	}
 	if(!resolving) return;
 
 	const char *name = NULL;
-	ENetAddress addr = { ENET_HOST_ANY, serverport+1 };
-	while(resolvercheck(&name, &addr))
-	{
+    for(;;)
+    {
+	    ENetAddress addr = { ENET_HOST_ANY, ENET_PORT_ANY };
+	    if(!resolvercheck(&name, &addr)) break;
 		loopv(servers)
 		{
 			serverinfo &si = *servers[i];
-			if(name == si.name && addr.port == si.port+1)
+			if(name == si.name)
 			{
 				si.resolved = serverinfo::RESOLVED;
-				si.address = addr;
-				addr.host = ENET_HOST_ANY;
+				si.address.host = addr.host;
 				break;
 			}
 		}
