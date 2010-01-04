@@ -26,7 +26,7 @@ vector<resolverresult> resolverresults;
 SDL_mutex *resolvermutex;
 SDL_cond *querycond, *resultcond;
 
-#define RESOLVERTHREADS 8
+#define RESOLVERTHREADS 2
 #define RESOLVERLIMIT 3500
 
 int resolverloop(void * data)
