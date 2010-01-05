@@ -328,15 +328,15 @@ weaptypes weaptype[] =
 	},
 	{
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,
-			{ true, true },		true,		false,
-			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,			0,
-			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		"",						""
+			{ true, true },		true,		true,
+			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,			0.35f,
+			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		"",						"weapons/cartridge"
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,
-			{ true, true },		true,		false,
-			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },				6,			0,
-			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		"",						""
+			{ true, true },		true,		true,
+			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },				6,			0.45f,
+			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		"",						"weapons/shell"
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,
