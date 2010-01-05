@@ -119,6 +119,7 @@ namespace hud
 	TVAR(crosshairtex, "textures/crosshair", 3);
 	TVAR(teamcrosshairtex, "", 3);
 	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
+	VARP(cursorstyle, 0, 0, 1); // 0 = top left tracking, 1 = center
 	FVARP(cursorsize, 0, 0.025f, 1000);
 	FVARP(cursorblend, 0, 1, 1);
 
@@ -581,7 +582,7 @@ namespace hud
 			else glBlendFunc(GL_ONE, GL_ONE);
 			glColor4f(r, g, b, fade);
 			glBindTexture(GL_TEXTURE_2D, t->id);
-			drawsized(index == POINTER_GUI ? x : x-s/2, index == POINTER_GUI ? y : y-s/2, s);
+			drawsized(index == POINTER_GUI && !cursorstyle ? x : x-s/2, index == POINTER_GUI && !cursorstyle ? y : y-s/2, s);
 		}
 	}
 
