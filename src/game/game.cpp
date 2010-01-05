@@ -93,9 +93,9 @@ namespace game
 	VARP(quakefade, 0, 100, INT_MAX-1);
     VARP(ragdolls, 0, 1, 1);
 	FVARP(bloodscale, 0, 1, 1000);
-	VARP(bloodfade, 1, 30000, INT_MAX-1);
+	VARP(bloodfade, 1, 20000, INT_MAX-1);
 	FVARP(gibscale, 0, 1, 1000);
-	VARP(gibfade, 1, 30000, INT_MAX-1);
+	VARP(gibfade, 1, 20000, INT_MAX-1);
 	VARP(fireburnfade, 0, 75, INT_MAX-1);
 	FVARP(impulsescale, 0, 1, 1000);
 	VARP(impulsefade, 0, 200, INT_MAX-1);
@@ -921,7 +921,7 @@ namespace game
 		{
 			vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
 			int gibs = clamp(max(damage,5)/5, 1, 25), amt = int((rnd(gibs)+gibs+1)*gibscale);
-			loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, (gibfade ? rnd(gibfade)+(gibfade/10) : 1000), 0, rnd(500)+1, 50);
+			loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, rnd(gibfade)+gibfade, 0, rnd(500)+1, rnd(50)+10);
 		}
 		if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
 		{
