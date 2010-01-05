@@ -7,6 +7,9 @@ namespace weapons
 	VARP(skippistol, 0, 8, 10); // skip pistol; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
 	VARP(skipgrenade, 0, 0, 10); // skip grenade; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
 
+	int lastweapselect = 0;
+	VARP(weapselectdelay, 0, 100, INT_MAX-1);
+
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
 	ICOMMAND(ammo, "s", (char *a),
 	{
@@ -58,7 +61,7 @@ namespace weapons
 
 	void weaponswitch(gameent *d, int a = -1, int b = -1)
 	{
-		if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX) return;
+		if(a < -1 || b < -1 || a >= WEAP_MAX || b >= WEAP_MAX || (weapselectdelay && lastweapselect && lastmillis-lastweapselect < weapselectdelay)) return;
 		if(!d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true))) return;
 		int s = d->weapselect;
 		loopi(WEAP_MAX) // only loop the amount of times we have weaps for
@@ -89,7 +92,11 @@ namespace weapons
 				skipweap(skipgrenade, WEAP_GRENADE);
 			}
 
-			if(weapselect(d, s)) return;
+			if(weapselect(d, s))
+			{
+				lastweapselect = lastmillis;
+				return;
+			}
 			else if(a >= 0) break;
 		}
 		if(d == game::player1) playsound(S_ERROR, d->o, d);
