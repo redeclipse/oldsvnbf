@@ -330,19 +330,19 @@ weaptypes weaptype[] =
 		WEAP_PISTOL,		ANIM_PISTOL,		0x888888,		S_PISTOL,	S_BZAP,		S_WHIZZ,	-1,				10,
 			{ true, true },		true,		true,
 			{ 0.5f, 0.5f },		{ 10, 10 },		{ 0, 0 },				4,			0.35f,
-			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		"",						"weapons/cartridge"
+			"pistol",		"\fa",	"weapons/pistol/item",		"weapons/pistol/vwep",		"",						"projs/cartridge"
 	},
 	{
 		WEAP_SHOTGUN,		ANIM_SHOTGUN,		0xFFFF22,		S_SHOTGUN,	S_BZAP,		S_WHIZZ,	S_RICOCHET,		10,
 			{ true, true },		true,		true,
 			{ 0.75f, 0.75f },	{ 50, 50 },		{ 0, 0 },				6,			0.45f,
-			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		"",						"weapons/shell"
+			"shotgun",		"\fy",	"weapons/shotgun/item",		"weapons/shotgun/vwep",		"",						"projs/shell"
 	},
 	{
 		WEAP_SMG,			ANIM_SMG,			0xFF8822,		S_SMG,		S_BZAP,		S_WHIZZ,	S_RICOCHET,		20,
 			{ true, true },		true,		true,
 			{ 0.5f, 0.5f },		{ 40, 40 },		{ 0, 0 },				5,			0.35f,
-			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			"",						"weapons/cartridge"
+			"smg",			"\fo",	"weapons/smg/item",			"weapons/smg/vwep",			"",						"projs/cartridge"
 	},
 	{
 		WEAP_FLAMER,		ANIM_FLAMER,		0xFF2222,		S_FLAMER,	S_BURN,		S_BURNING,	-1,				1,
@@ -378,7 +378,7 @@ weaptypes weaptype[] =
 		WEAP_GIBS,			ANIM_GRENADE,		0x660000,		S_SPLOSH,	S_SPLAT,	S_WHIRR,	S_SPLAT,		1,
 			{ true, true },		false,		false,
 			{ 2, 2 },			{ 0, 0 },		{ 0.125f, 0.125f },		4,			0,
-			"gibs",			"\fw",	"gibs/gibc",				"gibs/gibc",				"gibs/gibc",			""
+			"gibs",			"\fw",	"projs/gibs/gibc",			"projs/gibs/gibc",			"projs/gibs/gibc",			""
 	},
 };
 #define WP(proto,name)			proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};

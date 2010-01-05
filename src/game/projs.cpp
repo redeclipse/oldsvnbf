@@ -167,7 +167,7 @@ namespace projs
 	void preload()
 	{
 		loopi(WEAP_MAX) if(*weaptype[i].proj) loadmodel(weaptype[i].proj, -1, true);
-		const char *mdls[] = { "gibs/gibc", "gibs/gibh", "debris/debris01", "debris/debris02", "debris/debris03", "debris/debris04", "" };
+		const char *mdls[] = { "projs/gibs/gibc", "projs/gibs/gibh", "projs/debris/debris01", "projs/debris/debris02", "projs/debris/debris03", "projs/debris/debris04", "" };
 		for(int i = 0; *mdls[i]; i++) loadmodel(mdls[i], -1, true);
 	}
 
@@ -337,7 +337,7 @@ namespace projs
 						}
 					}
 					proj.lifesize = 1.5f-(rnd(100)/100.f);
-					proj.mdl = rnd(2) ? "gibs/gibc" : "gibs/gibh";
+					proj.mdl = rnd(2) ? "projs/gibs/gibc" : "projs/gibs/gibh";
 					proj.aboveeye = 1.0f;
 					proj.elasticity = 0.3f;
 					proj.reflectivity = 0.f;
@@ -356,10 +356,10 @@ namespace projs
 				proj.lifesize = 1.5f-(rnd(100)/100.f);
 				switch(rnd(4))
 				{
-					case 3: proj.mdl = "debris/debris04"; break;
-					case 2: proj.mdl = "debris/debris03"; break;
-					case 1: proj.mdl = "debris/debris02"; break;
-					case 0: default: proj.mdl = "debris/debris01"; break;
+					case 3: proj.mdl = "projs/debris/debris04"; break;
+					case 2: proj.mdl = "projs/debris/debris03"; break;
+					case 1: proj.mdl = "projs/debris/debris02"; break;
+					case 0: default: proj.mdl = "projs/debris/debris01"; break;
 				}
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.6f;
@@ -379,10 +379,10 @@ namespace projs
 				if(isweap(proj.weap))
 				{
 					if(proj.owner) proj.o = proj.from = proj.owner->ejectpos(proj.weap);
-					proj.mdl = weaptype[proj.weap].eject && *weaptype[proj.weap].eprj ? weaptype[proj.weap].eprj : "weapons/catridge";
+					proj.mdl = weaptype[proj.weap].eject && *weaptype[proj.weap].eprj ? weaptype[proj.weap].eprj : "projs/catridge";
 					proj.lifesize = weaptype[proj.weap].esize;
 				}
-				else { proj.mdl = "weapons/catridge"; proj.lifesize = 1; }
+				else { proj.mdl = "projs/catridge"; proj.lifesize = 1; }
 				proj.aboveeye = 1.0f;
 				proj.elasticity = 0.3f;
 				proj.reflectivity = 0.f;
