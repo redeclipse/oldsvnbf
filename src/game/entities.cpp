@@ -2327,7 +2327,7 @@ namespace entities
 			}
 		}
 		bool notitem = (edit && (showentinfo >= 4 || hasent)),
-			item = enttype[e.type].usetype == EU_ITEM && spawned && !m_noitems(game::gamemode, game::mutators);
+			item = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (spawned || (e.lastuse && lastmillis-e.lastuse < 500));
 		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
 		float fluc = interval >= 500 ? (1500-interval)/1000.f : (500+interval)/1000.f;
@@ -2356,8 +2356,17 @@ namespace entities
 			gameentity &e = *(gameentity *)ents[i];
 			if(e.type != PARTICLES && e.type != TELEPORT && !m_edit(game::gamemode) && enttype[e.type].usetype != EU_ITEM) continue;
 			if(e.o.squaredist(camera1->o) > maxdist) continue;
-			int millis = lastmillis-e.lastspawn; float skew = 1;
-			if(millis < 500) skew *= millis/500.f;
+			float skew = 1;
+			if(e.spawned)
+			{
+				int millis = lastmillis-e.lastspawn;
+				if(millis < 500) skew = float(millis)/500.f;
+			}
+			else if(e.lastuse)
+			{
+				int millis = lastmillis-e.lastuse;
+				if(millis < 500) skew = 1.f-(float(millis)/500.f);
+			}
 			drawparticle(e, e.o, i, e.spawned, skew);
 		}
 		loopv(projs::projs)
@@ -2366,10 +2375,15 @@ namespace entities
 			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id)) continue;
 			gameentity &e = *(gameentity *)ents[proj.id];
 			float skew = 1;
-			if(proj.lifemillis && proj.fadetime)
+			if(proj.fadetime && proj.lifemillis)
 			{
 				int interval = min(proj.lifemillis, proj.fadetime);
-				if(proj.lifetime < interval) skew *= float(proj.lifetime)/float(interval);
+				if(proj.lifetime < interval) skew = float(proj.lifetime)/float(interval);
+				else if(proj.lifemillis > interval)
+				{
+					interval = min(proj.lifemillis-interval, proj.fadetime);
+					if(proj.lifemillis-proj.lifetime < interval) skew = float(proj.lifemillis-proj.lifetime)/float(interval);
+				}
 			}
 			drawparticle(e, proj.o, -1, proj.ready(), skew);
 		}
