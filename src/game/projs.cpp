@@ -1106,7 +1106,7 @@ namespace projs
 					else { proj.pitch += diff; if(proj.pitch > 180) proj.pitch = fmod(proj.pitch + 180, 360) - 180; }
 					break;
 				}
-				else if(proj.projtype != PRJ_EJECT) break;
+				else if(proj.projtype == PRJ_GIBS) break;
 			}
 			case PRJ_ENT:
 			{
