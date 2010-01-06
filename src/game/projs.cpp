@@ -1101,10 +1101,9 @@ namespace projs
 			{
 				if(!proj.lastbounce || proj.movement >= 1)
 				{
-					float mag = proj.vel.magnitude(), amt = diff*mag/(proj.projtype == PRJ_EJECT ? 4.f : 8.f);
-					vec vel = vec(proj.vel).normalize(), trj; vecfromyawpitch(proj.yaw, 0, 1, 0, trj);
-					if(vel.x*vel.y >= 0 ? trj.x*trj.y >= 0 : trj.x*trj.y < 0) { proj.pitch -= amt; while(proj.pitch < -180) proj.pitch += 360; }
-					else { proj.pitch += amt; while(proj.pitch >= 180) proj.pitch -= 360; }
+					vec axis(sinf(proj.yaw*RAD), -cosf(proj.yaw*RAD), 0);
+					if(proj.vel.dot2(axis) >= 0) { proj.pitch -= diff; if(proj.pitch < -180) proj.pitch = 180 - fmod(180 - proj.pitch, 360); }
+					else { proj.pitch += diff; if(proj.pitch > 180) proj.pitch = fmod(proj.pitch + 180, 360) - 180; }
 					break;
 				}
 				else if(proj.projtype != PRJ_EJECT) break;
