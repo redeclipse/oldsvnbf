@@ -291,8 +291,11 @@ namespace entities
 			attr = w_attr(game::gamemode, f.attrs[0], sweap);
 			if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 		}
-		e.spawned = s;
-		e.lastuse = lastmillis;
+		if(e.spawned != s)
+		{
+			e.spawned = s;
+			e.lastuse = lastmillis;
+		}
 		loopv(projs::projs)
 		{
 			projent &proj = *projs::projs[i];
