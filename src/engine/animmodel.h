@@ -967,6 +967,12 @@ struct animmodel : model
             if(envmaptmu>=0) closestenvmaptex = lookupenvmap(closestenvmap(o));
         }
 
+        if(depthoffset && !enabledepthoffset)
+        {
+            enablepolygonoffset(GL_POLYGON_OFFSET_FILL);
+            enabledepthoffset = true;
+        }
+
         if(envmaptmu>=0 && renderpath==R_FIXEDFUNCTION)
         {
             if(fogging) envmaptmu = 3;
@@ -1183,7 +1189,7 @@ struct animmodel : model
         center.add(radius);
     }
 
-    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enablenormals, enabletangents, enablebones, enablerescale;
+    static bool enabletc, enablemtc, enablealphatest, enablealphablend, enableenvmap, enableglow, enableoverbright, enablelighting, enablelight0, enablecullface, enablefog, enablenormals, enabletangents, enablebones, enablerescale, enabledepthoffset;
     static vec lightcolor;
     static plane refractfogplane;
     static float transparent, lastalphatest, sizescale;
@@ -1195,7 +1201,7 @@ struct animmodel : model
 
     void startrender()
     {
-        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enableoverbright = enablelighting = enablefog = enablenormals = enabletangents = enablebones = enablerescale = false;
+        enabletc = enablemtc = enablealphatest = enablealphablend = enableenvmap = enableglow = enableoverbright = enablelighting = enablefog = enablenormals = enabletangents = enablebones = enablerescale = enabledepthoffset = false;
         enablecullface = true;
         lastalphatest = -1;
         lastvbuf = lasttcbuf = lastmtcbuf = lastxbuf = lastnbuf = lastbbuf = lastsdata = lastbdata = NULL;
@@ -1323,13 +1329,14 @@ struct animmodel : model
         if(enablerescale) glDisable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE);
         if(lastenvmaptex) disableenvmap(true);
         if(!enablecullface) glEnable(GL_CULL_FACE);
+        if(enabledepthoffset) disablepolygonoffset(GL_POLYGON_OFFSET_FILL);
         if(fogtmu>=0) disablefog(true);
     }
 };
 
 bool animmodel::enabletc = false, animmodel::enablemtc = false, animmodel::enablealphatest = false, animmodel::enablealphablend = false,
      animmodel::enableenvmap = false, animmodel::enableglow = false, animmodel::enableoverbright = false, animmodel::enablelighting = false, animmodel::enablelight0 = false, animmodel::enablecullface = true,
-     animmodel::enablefog = false, animmodel::enablenormals = false, animmodel::enabletangents = false, animmodel::enablebones = false, animmodel::enablerescale = false;
+     animmodel::enablefog = false, animmodel::enablenormals = false, animmodel::enabletangents = false, animmodel::enablebones = false, animmodel::enablerescale = false, animmodel::enabledepthoffset = false;
 vec animmodel::lightcolor;
 plane animmodel::refractfogplane;
 float animmodel::transparent = 1, animmodel::lastalphatest = -1, animmodel::sizescale = 1;
