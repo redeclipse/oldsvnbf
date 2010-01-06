@@ -1101,43 +1101,19 @@ namespace projs
 			{
 				if(!proj.lastbounce || proj.movement >= 1)
 				{
-					float mag = proj.vel.magnitude();
-					vec vel = vec(proj.vel).normalize(), trj;
-					vecfromyawpitch(proj.yaw, 0, 1, 0, trj);
-					if(proj.projtype == PRJ_EJECT)
+					float mag = proj.vel.magnitude(), amt = diff*mag/(proj.projtype == PRJ_EJECT ? 2.f : 5.f);
+					vec vel = vec(proj.vel).normalize(), trj; vecfromyawpitch(proj.yaw, 0, 1, 0, trj);
+					if(vel.x*vel.y >= 0 ? trj.x*trj.y >= 0 : trj.x*trj.y < 0)
 					{
-						if(vel.x*vel.y >= 0 ? trj.x*trj.y >= 0 : trj.x*trj.y < 0)
-						{
-							proj.pitch -= diff*mag/2.f;
-							while(proj.pitch < 0) proj.pitch += 360;
-						}
-						else
-						{
-							proj.pitch += diff*mag/2.f;
-							while(proj.pitch >= 360) proj.pitch -= 360;
-						}
-						break;
+						proj.pitch -= amt;
+						while(proj.pitch < 0) proj.pitch += 360;
 					}
 					else
 					{
-						if(!vel.iszero())
-						{
-							float dummy = 0;
-							vectoyawpitch(vel, proj.yaw, dummy);
-							proj.yaw -= 90;
-							while(proj.yaw < 0) proj.yaw += 360;
-						}
-						if(vel.x*vel.y >= 0 ? trj.x*trj.y >= 0 : trj.x*trj.y < 0)
-						{
-							proj.roll -= diff*mag/10.f;
-							while(proj.roll < 0) proj.roll += 360;
-						}
-						else
-						{
-							proj.roll += diff*mag/10.f;
-							while(proj.roll >= 360) proj.roll -= 360;
-						}
+						proj.pitch += diff*mag/2.f;
+						while(proj.pitch >= 360) proj.pitch -= 360;
 					}
+					break;
 				}
 				else if(proj.projtype != PRJ_EJECT) break;
 			}
