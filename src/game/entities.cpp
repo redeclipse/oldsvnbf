@@ -255,13 +255,6 @@ namespace entities
 	void useeffects(gameent *d, int n, bool s, int g, int r)
 	{
 		gameentity &e = *(gameentity *)ents[n];
-		loopv(projs::projs)
-		{
-			projent &proj = *projs::projs[i];
-			if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
-			proj.beenused = 2;
-			proj.lifetime = min(proj.lifetime, proj.fadetime);
-		}
 		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
 			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
 		if(showentdescs)
@@ -299,6 +292,14 @@ namespace entities
 			if(isweap(attr)) projs::drop(d, attr, r, d == game::player1 || d->ai);
 		}
 		e.spawned = s;
+		e.lastuse = lastmillis;
+		loopv(projs::projs)
+		{
+			projent &proj = *projs::projs[i];
+			if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
+			proj.beenused = 2;
+			proj.lifetime = min(proj.lifetime, proj.fadetime);
+		}
 	}
 
 	struct entcachenode
@@ -747,6 +748,15 @@ namespace entities
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 						d->action[AC_USE] = false;
+						e.spawned = false;
+						e.lastuse = lastmillis;
+						loopv(projs::projs)
+						{
+							projent &proj = *projs::projs[i];
+							if(proj.projtype != PRJ_ENT || proj.id != n || !proj.ready()) continue;
+							proj.beenused = 2;
+							proj.lifetime = min(proj.lifetime, proj.fadetime);
+						}
 					}
 					else tried = true;
 				}
@@ -2227,7 +2237,7 @@ namespace entities
 			{
 				gameentity &e = *(gameentity *)ents[i];
 				if(e.type <= NOTUSED || e.type >= MAXENTTYPES) continue;
-				bool active = enttype[e.type].usetype == EU_ITEM && e.spawned && !m_noitems(game::gamemode, game::mutators);
+				bool active = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (e.spawned || (e.lastuse && lastmillis-e.lastuse < 500));
 				if(m_edit(game::gamemode) || active)
 				{
 					const char *mdlname = entmdlname(e.type, e.attrs);
@@ -2242,10 +2252,15 @@ namespace entities
 							if(e.type == FLAG || e.type == PLAYERSTART) { yaw = e.attrs[1]+(e.type == PLAYERSTART ? 90 : 0); pitch = e.attrs[2]; }
 							else if(e.type == ACTOR) { yaw = e.attrs[1]+90; pitch = e.attrs[2]; }
 						}
-						else
+						else if(e.spawned)
 						{
 							int millis = lastmillis-e.lastspawn;
-							if(millis < 1000) size = fade = float(millis)/1000.f;
+							if(millis < 500) size = fade = float(millis)/500.f;
+						}
+						else if(e.lastuse)
+						{
+							int millis = lastmillis-e.lastuse;
+							if(millis < 500) size = fade = 1.f-(float(millis)/500.f);
 						}
 						rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0.f, flags, NULL, NULL, 0, 0, fade, size);
 					}
@@ -2342,7 +2357,7 @@ namespace entities
 			if(e.type != PARTICLES && e.type != TELEPORT && !m_edit(game::gamemode) && enttype[e.type].usetype != EU_ITEM) continue;
 			if(e.o.squaredist(camera1->o) > maxdist) continue;
 			int millis = lastmillis-e.lastspawn; float skew = 1;
-			if(millis < 1000) skew *= millis/1000.f;
+			if(millis < 500) skew *= millis/500.f;
 			drawparticle(e, e.o, i, e.spawned, skew);
 		}
 		loopv(projs::projs)
@@ -2351,9 +2366,9 @@ namespace entities
 			if(proj.projtype != PRJ_ENT || !ents.inrange(proj.id)) continue;
 			gameentity &e = *(gameentity *)ents[proj.id];
 			float skew = 1;
-			if(proj.lifemillis)
+			if(proj.lifemillis && proj.fadetime)
 			{
-				int interval = min(proj.lifemillis, 1000);
+				int interval = min(proj.lifemillis, proj.fadetime);
 				if(proj.lifetime < interval) skew *= float(proj.lifetime)/float(interval);
 			}
 			drawparticle(e, proj.o, -1, proj.ready(), skew);
