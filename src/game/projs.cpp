@@ -794,11 +794,11 @@ namespace projs
 			case PRJ_EJECT:
 			{
 				if(isweap(proj.weap) && ejecthint)
-					part_create(PART_HINT, 1, proj.o, weaptype[proj.weap].colour, max(proj.xradius, proj.yradius)*2, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.25f);
+					part_create(PART_HINT, 1, proj.o, weaptype[proj.weap].colour, max(proj.xradius, proj.yradius)*1.75f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.2f);
 				bool moving = proj.movement > 0.f;
 				if(moving && lastmillis-proj.lasteffect >= 100)
 				{
-					part_create(PART_SMOKE, 150, proj.o, 0x111111, max(proj.xradius, proj.yradius)*1.5f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.35f, -3);
+					part_create(PART_SMOKE, 150, proj.o, 0x222222, max(proj.xradius, proj.yradius)*1.75f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.5f, -3);
 					proj.lasteffect = lastmillis;
 				}
 			}
@@ -1101,7 +1101,7 @@ namespace projs
 			{
 				if(!proj.lastbounce || proj.movement >= 1)
 				{
-					float mag = proj.vel.magnitude(), amt = diff*mag/(proj.projtype == PRJ_EJECT ? 2.f : 5.f);
+					float mag = proj.vel.magnitude(), amt = diff*mag/(proj.projtype == PRJ_EJECT ? 4.f : 8.f);
 					vec vel = vec(proj.vel).normalize(), trj; vecfromyawpitch(proj.yaw, 0, 1, 0, trj);
 					if(vel.x*vel.y >= 0 ? trj.x*trj.y >= 0 : trj.x*trj.y < 0) { proj.pitch -= amt; while(proj.pitch < -180) proj.pitch += 360; }
 					else { proj.pitch += amt; while(proj.pitch >= 180) proj.pitch -= 360; }
