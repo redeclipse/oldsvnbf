@@ -602,7 +602,7 @@ struct gui : guient
             if(rotate <= 2 || rotate == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
         }
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
-        vec color = hit ? (overlaid ? vec(0.75f, 0.75f, 0.75f) : vec(0.5f, 0.5f, 0.5f)) : vec(1, 1, 1);
+        vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
         glColor3fv(color.v);
         glBegin(GL_QUADS);
         glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
