@@ -83,27 +83,27 @@ VARG(botlimit, 0, 16, MAXAI/2);
 VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
 VARFG(gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
 
-FVARG(forcegravity, -1, -1, 10000);
-FVARG(forcejumpspeed, -1, -1, 10000);
-FVARG(forcemovespeed, -1, -1, 10000);
-FVARG(forcemovecrawl, -1, -1, 10000);
-FVARG(forceimpulsespeed, -1, -1, 10000);
+FVARG(forcegravity, -1, -1, 1000);
+FVARG(forcejumpspeed, -1, -1, 1000);
+FVARG(forcemovespeed, -1, -1, 1000);
+FVARG(forcemovecrawl, -1, -1, 1000);
+FVARG(forceimpulsespeed, -1, -1, 1000);
 
 VARG(forceimpulsestyle, -1, -1, 3);
 VARG(forceimpulsemeter, -1, -1, INT_MAX-1);
 VARG(forceimpulsecost, -1, -1, INT_MAX-1);
 VARG(forceimpulsecount, -1, -1, INT_MAX-1);
 VARG(forceimpulseskate, -1, -1, INT_MAX-1);
-FVARG(forceimpulseregen, -1, -1, 10000);
+FVARG(forceimpulseregen, -1, -1, 1000);
 
 FVARG(forceliquidspeed, -1, -1, 1);
-FVARG(forceliquidcurb, -1, -1, 10000);
-FVARG(forcefloorcurb, -1, -1, 10000);
-FVARG(forceaircurb, -1, -1, 10000);
+FVARG(forceliquidcurb, -1, -1, 1000);
+FVARG(forcefloorcurb, -1, -1, 1000);
+FVARG(forceaircurb, -1, -1, 1000);
 
-FVARG(damagescale, 0, 1, 1000);
-FVARG(hitpushscale, 0, 1, 1000);
-FVARG(deadpushscale, 0, 2, 1000);
+FVARG(damagescale, -1000, 1, 1000);
+FVARG(hitpushscale, -1000, 1, 1000);
+FVARG(deadpushscale, -1000, 2, 1000);
 
 FVARG(wavepusharea, 0, 2, 1000);
 FVARG(wavepushscale, 0, 1, 1000);

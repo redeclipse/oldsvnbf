@@ -215,35 +215,35 @@ enum
 };
 
 #define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh) \
-	VARG(name##add, 1, w0, w1);					VARG(name##max, 1, w1, w1); \
-	VARG(name##sub1, 0, w2, w1);				VARG(name##sub2, 0, w3, w1); \
-	VARG(name##adelay1, 0, w4, INT_MAX-1);		VARG(name##adelay2, 0, w5, INT_MAX-1);		VARG(name##rdelay, 0, w6, INT_MAX-1); \
-	VARG(name##damage1, 0, w7, INT_MAX-1);		VARG(name##damage2, 0, w8, INT_MAX-1); \
-	VARG(name##speed1, 0, w9, INT_MAX-1);		VARG(name##speed2, 0, wa, INT_MAX-1); \
-	VARG(name##power, 0, wb, INT_MAX-1); \
-	VARG(name##time1, 0, wc, INT_MAX-1);		VARG(name##time2, 0, wd, INT_MAX-1); \
-	VARG(name##pdelay, 0, we, INT_MAX-1); \
-	VARG(name##explode1, 0, wf, INT_MAX-1);		VARG(name##explode2, 0, wg, INT_MAX-1); \
-	VARG(name##rays1, 1, wh, INT_MAX-1);		VARG(name##rays2, 1, wi, INT_MAX-1); \
-	VARG(name##spread1, 0, wj, INT_MAX-1);		VARG(name##spread2, 0, wk, INT_MAX-1); \
-	VARG(name##zdiv1, 0, wl, INT_MAX-1);		VARG(name##zdiv2, 0, wm, INT_MAX-1); \
-	VARG(name##aiskew1, 0, wn, INT_MAX-1);		VARG(name##aiskew2, 0, wo, INT_MAX-1); \
-	VARG(name##collide1, 0, wp, INT_MAX-1);		VARG(name##collide2, 0, wq, INT_MAX-1); \
-	VARG(name##taper1, 0, x0, 1);				VARG(name##taper2, 0, x1, 1); \
-	VARG(name##extinguish1, 0, x2, 1);			VARG(name##extinguish2, 0, x3, 1); \
-	VARG(name##radial1, 0, x4, 1);				VARG(name##radial2, 0, x5, 1); \
-	VARG(name##burns1, 0, x6, 1);				VARG(name##burns2, 0, x7, 1); \
-	VARG(name##reloads, 0, x8, 1);				VARG(name##zooms, 0, x9, 1); \
-	VARG(name##fullauto1, 0, xa, 1);			VARG(name##fullauto2, 0, xb, 1); \
-	FVARG(name##elasticity1, 0, y0, 1);			FVARG(name##elasticity2, 0, y1, 1); \
-	FVARG(name##reflectivity1, 0, y2, 360);		FVARG(name##reflectivity2, 0, y3, 360); \
-	FVARG(name##relativity1, 0, y4, 10000);		FVARG(name##relativity2, 0, y5, 10000); \
-	FVARG(name##waterfric1, 0, y6, 10000);		FVARG(name##waterfric2, 0, y7, 10000); \
-	FVARG(name##weight1, -10000, y8, 10000);	FVARG(name##weight2, -10000, y9, 10000); \
-	FVARG(name##radius1, -10000, ya, 10000);	FVARG(name##radius2, -10000, yb, 10000); \
-	FVARG(name##kickpush1, -10000, yc, 10000);	FVARG(name##kickpush2, -10000, yd, 10000); \
-	FVARG(name##hitpush1, -10000, ye, 10000);	FVARG(name##hitpush2, -10000, yf, 10000); \
-	FVARG(name##maxdist1, 0, yg, 10000);		FVARG(name##maxdist2, 0, yh, 10000);
+	VARG(name##add, 1, w0, w1);						VARG(name##max, 1, w1, w1); \
+	VARG(name##sub1, 0, w2, w1);					VARG(name##sub2, 0, w3, w1); \
+	VARG(name##adelay1, 0, w4, 30000);				VARG(name##adelay2, 0, w5, 30000);				VARG(name##rdelay, 0, w6, 30000); \
+	VARG(name##damage1, -1000, w7, 1000);			VARG(name##damage2, -1000, w8, 1000); \
+	VARG(name##speed1, -100000, w9, 100000);		VARG(name##speed2, -100000, wa, 100000); \
+	VARG(name##power, 0, wb, 30000); \
+	VARG(name##time1, 0, wc, 30000);				VARG(name##time2, 0, wd, 30000); \
+	VARG(name##pdelay, 0, we, 30000); \
+	VARG(name##explode1, 0, wf, 1000);				VARG(name##explode2, 0, wg, 1000); \
+	VARG(name##rays1, 1, wh, 1000);					VARG(name##rays2, 1, wi, 1000); \
+	VARG(name##spread1, 0, wj, 1000);				VARG(name##spread2, 0, wk, 1000); \
+	VARG(name##zdiv1, 0, wl, 1000);					VARG(name##zdiv2, 0, wm, 1000); \
+	VARG(name##aiskew1, 0, wn, 30000);				VARG(name##aiskew2, 0, wo, 30000); \
+	VARG(name##collide1, 0, wp, INT_MAX-1);			VARG(name##collide2, 0, wq, INT_MAX-1); \
+	VARG(name##taper1, 0, x0, 1);					VARG(name##taper2, 0, x1, 1); \
+	VARG(name##extinguish1, 0, x2, 1);				VARG(name##extinguish2, 0, x3, 1); \
+	VARG(name##radial1, 0, x4, 1);					VARG(name##radial2, 0, x5, 1); \
+	VARG(name##burns1, 0, x6, 1);					VARG(name##burns2, 0, x7, 1); \
+	VARG(name##reloads, 0, x8, 1);					VARG(name##zooms, 0, x9, 1); \
+	VARG(name##fullauto1, 0, xa, 1);				VARG(name##fullauto2, 0, xb, 1); \
+	FVARG(name##elasticity1, -1000, y0, 1000);		FVARG(name##elasticity2, 0, y1, 1); \
+	FVARG(name##reflectivity1, 0, y2, 360);			FVARG(name##reflectivity2, 0, y3, 360); \
+	FVARG(name##relativity1, -1000, y4, 1000);		FVARG(name##relativity2, 0, y5, 1000); \
+	FVARG(name##waterfric1, 0, y6, 1000);			FVARG(name##waterfric2, 0, y7, 1000); \
+	FVARG(name##weight1, -1000, y8, 1000);			FVARG(name##weight2, -1000, y9, 1000); \
+	FVARG(name##radius1, -1000, ya, 1000);			FVARG(name##radius2, -1000, yb, 1000); \
+	FVARG(name##kickpush1, -1000, yc, 1000);		FVARG(name##kickpush2, -1000, yd, 1000); \
+	FVARG(name##hitpush1, -1000, ye, 1000);			FVARG(name##hitpush2, -1000, yf, 1000); \
+	FVARG(name##maxdist1, 0, yg, 10000);			FVARG(name##maxdist2, 0, yh, 10000);
 
 //	add		max		sub1	sub2	adelay1		adelay2		rdelay	dam1	dam2	speed1		speed2		power	time1		time2		pdelay	expl1	expl2	rays1	rays2	sprd1	sprd2	zdiv1	zdiv2	aiskew1	aiskew2
 //	collide1																collide2
@@ -265,19 +265,19 @@ WEAPON(shotgun,
 	1,		8,		1,		2,		500,		750,		1000,	15,		10,		2500,		2000,		0,		300,		100,		0,		0,		0,		20,		40,		25,		20,		1,		2,		2,		2,
 	BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,					IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		0,		0,		0,
-	0.5f,		0.35f,		50,		50,		0.05f,		0.05f,		2,		2,		25,		25,		1,		1,		15,		15,		20,		40,		150,		300
+	0.5f,	0.35f,		50,		50,		0.05f,		0.05f,		2,		2,		25,		25,		1,		1,		15,		15,		20,		40,		150,		300
 );
 WEAPON(smg,
 	40,		40,		1,		5,		75,		300,		1500,		30,		25,		2000,		2000,		0,		500,		500,		0,		0,		0,		1,		5,		5,		5,		4,		2,		4,		4,
 	BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,					IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		0,		1,		1,
-	0.75f,		0.5f,		30,		30,		0.05f,		0.05f,		2,		2,		0,		0,		1,		1,		0.5f,		3,		100,		120,		300,		400
+	0.75f,	0.5f,		30,		30,		0.05f,		0.05f,		2,		2,		0,		0,		1,		1,		0.5f,		3,		100,		120,		300,		400
 );
 WEAPON(flamer,
 	50,		50,		1,		5,		100,		750,		2000,	8,		5,		150,		200,		0,		400,		600,		0,		20,		24,		1,		5,		40,		20,		0,		0,		1,		2,
 	BOUNCE_GEOM|IMPACT_PLAYER,												IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
 	0,		0,		1,		1,		1,		1,		1,		1,		1,		0,		1,		1,
-	0.15f,		0,		45,		0,		0.95f,		0.5f,		1,		1,		-300,		50,		1,		1,		0.25f,		1,		20,		40,		40,		80
+	0.15f,	0,		45,		0,		0.95f,		0.5f,		1,		1,		-300,		50,		1,		1,		0.25f,		1,		20,		40,		40,		80
 );
 WEAPON(plasma,
 	20,		20,		1,		20,		500,		2000,		3000,	25,		25,		1500,		35,			0,		750,		5000,		0,		16,		40,		1,		1,		5,		5,		0,		0,		6,		2,
@@ -307,7 +307,7 @@ WEAPON(gibs,
 	2,		2,		1,		1,		500,		500,		500,	25,		25,		250,		250,		0,		1500,		1500,		100,	0,		0,		1,		1,		0,		0,		0,		0,		1,		1,
 	IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,								IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
 	0,		0,		0,		0,		0,		0,		0,		0,		1,		0,		0,		0,
-	0.35f,		0.35f,		0,		0,		1,		1,		2,		2,		35,		35,		2,		2,		5,		5,		100,		100,		200,		200
+	0.35f,	0.35f,		0,		0,		1,		1,		2,		2,		35,		35,		2,		2,		5,		5,		100,		100,		200,		200
 );
 
 struct weaptypes
