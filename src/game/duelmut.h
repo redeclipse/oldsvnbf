@@ -126,7 +126,6 @@ struct duelservmode : servmode
 				allowed.setsize(0); playing.setsize(0);
 				if(!duelqueue.empty())
 				{
-					if(m_survivor(gamemode, mutators) || GVAR(duelclear)) clearitems();
 					loopv(clients) position(clients[i], true);
 					loopv(duelqueue)
 					{
@@ -169,6 +168,7 @@ struct duelservmode : servmode
 						defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS", duelround);
 						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
 					}
+					if(m_survivor(gamemode, mutators) || GVAR(duelclear)) clearitems();
 					dueltime = 0;
 				}
 			}
