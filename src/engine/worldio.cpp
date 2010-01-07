@@ -422,6 +422,8 @@ ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname)
 VARP(autosaveconfig, 0, 1, 1);
 VARP(autosavemapshot, 0, 1, 1);
 
+#define istempname(n) (!strncmp(n, "temp/", 5) || !strncmp(n, "temp\\", 5))
+
 void save_world(const char *mname, bool nodata, bool forcesave)
 {
 	int savingstart = SDL_GetTicks();
@@ -575,9 +577,11 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	delete f;
 
 	conoutf("\fasaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
+
+	if(istempname(mapname)) setnames(&mapname[5], MAP_BFGZ);
 }
 
-ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? (!strncmp(mname, "temp/", 5) ? &mname[5] : mname) : (!strncmp(mapname, "temp/", 5) ? &mapname[5] : mapname)));
+ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? (istempname(mname) ? &mname[5] : mname) : (istempname(mapname) ? &mapname[5] : mapname)));
 
 static uint mapcrc = 0;
 
