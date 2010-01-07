@@ -577,7 +577,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	conoutf("\fasaved map %s v.%d:%d (r%d) in %.1f secs", mapname, hdr.version, hdr.gamever, hdr.revision, (SDL_GetTicks()-savingstart)/1000.0f);
 }
 
-ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? (!strncmp(mapname, "temp/", 5) ? &mname[5] : mname) : mapname));
+ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? (!strncmp(mname, "temp/", 5) ? &mname[5] : mname) : (!strncmp(mapname, "temp/", 5) ? &mapname[5] : mapname)));
 
 static uint mapcrc = 0;
 
