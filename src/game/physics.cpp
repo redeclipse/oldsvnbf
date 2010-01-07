@@ -1,33 +1,33 @@
 #include "game.h"
 namespace physics
 {
-	FVARW(gravity,			0, 50.f, 10000);		// gravity
-	FVARW(jumpspeed,		0, 50.f, 10000);		// extra velocity to add when jumping
-	FVARW(movespeed,		0, 50.f, 10000);		// speed
-	FVARW(movecrawl,		0, 0.5f, 10000);		// crawl modifier
-	FVARW(impulsespeed,		0, 50.f, 10000);		// extra velocity to add when impulsing
+	FVARW(gravity,			0, 50.f, 1000);			// gravity
+	FVARW(jumpspeed,		0, 50.f, 1000);			// extra velocity to add when jumping
+	FVARW(movespeed,		0, 50.f, 1000);			// speed
+	FVARW(movecrawl,		0, 0.5f, 1000);			// crawl modifier
+	FVARW(impulsespeed,		0, 50.f, 1000);			// extra velocity to add when impulsing
 
 	VARW(impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 	VARW(impulsemeter,		0, 30000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
 	VARW(impulsecost,		0, 1000, INT_MAX-1);	// cost of impulse jump
 	VARW(impulsecount,		0, 5, INT_MAX-1);		// number of impulse actions per air transit
 	VARW(impulseskate,		0, 1000, INT_MAX-1);	// length of time a run along a wall can last
-	FVARW(impulseregen,		0, 5, 10000);			// impulse regen multiplier
+	FVARW(impulseregen,		0, 5, 1000);			// impulse regen multiplier
 
 	FVARW(liquidspeed,		0, 0.85f, 1);
-	FVARW(liquidcurb,		0, 10.f, 10000);
-	FVARW(floorcurb,		0, 5.f, 10000);
-	FVARW(aircurb,			0, 25.f, 10000);
+	FVARW(liquidcurb,		0, 10.f, 1000);
+	FVARW(floorcurb,		0, 5.f, 1000);
+	FVARW(aircurb,			0, 25.f, 1000);
 
-	FVARW(stairheight,		0, 4.1f, 10000);
+	FVARW(stairheight,		0, 4.1f, 1000);
 	FVARW(floorz,			0, 0.867f, 1);
 	FVARW(slopez,			0, 0.5f, 1);
 	FVARW(wallz,			0, 0.2f, 1);
-	FVARW(stepspeed,		1e-3f, 1.f, 10000);
-	FVARW(ladderspeed,		1e-3f, 1.f, 10000);
+	FVARW(stepspeed,		1e-3f, 1.f, 1000);
+	FVARW(ladderspeed,		1e-3f, 1.f, 1000);
 
-	FVARP(floatspeed,		1e-3f, 75, 10000);
-	FVARP(floatcurb,        0, 1.f, 10000);
+	FVARP(floatspeed,		1e-3f, 75, 1000);
+	FVARP(floatcurb,        0, 1.f, 1000);
 
 	FVARP(impulseroll,      0, 10, 90);
 	FVARP(impulsereflect,   0, 155, 360);
