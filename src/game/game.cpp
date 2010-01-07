@@ -11,7 +11,10 @@ namespace game
 
 	gameent *player1 = new gameent();
 	vector<gameent *> players;
-	dynent fpsmodel;
+	struct avatarent : dynent
+	{
+		avatarent() { type = ENT_CAMERA; }
+	} avatarmodel;
 
 	ICOMMANDG(resetvars, "", (), return); // server side
 
@@ -1817,7 +1820,7 @@ namespace game
 		else flags |= MDL_CULL_DIST;
         if(early) flags |= MDL_NORENDER;
 		else if(third && (anim&ANIM_INDEX)!=ANIM_DEAD) flags |= MDL_DYNSHADOW;
-		dynent *e = third ? (dynent *)d : (dynent *)&fpsmodel;
+		dynent *e = third ? (dynent *)d : (dynent *)&avatarmodel;
 		rendermodel(NULL, mdl, anim, o, yaw, pitch, roll, flags, e, attachments, basetime, basetime2, trans, size);
 	}
 
