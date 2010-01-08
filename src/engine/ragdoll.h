@@ -171,6 +171,22 @@ struct ragdolldata
     void constrain();
     void constraindist();
     void constrainrot();
+
+    static inline bool collidevert(const vec &pos, const vec &dir, float radius)
+    {
+        static struct vertent : physent
+        {
+            vertent()
+            {
+                type = ENT_RAGDOLL;
+                collidetype = COLLIDE_AABB;
+                radius = xradius = yradius = height = aboveeye = 1;
+            }
+        } v;
+        v.o = pos;
+        if(v.radius != radius) v.radius = v.xradius = v.yradius = v.height = v.aboveeye = radius;
+        return collide(&v, dir, 0, false);
+    }
 };
 
 /*
@@ -263,18 +279,13 @@ extern vec wall;
 
 void ragdolldata::updatepos()
 {
-    static physent d;
-    d.type = ENT_RAGDOLL;
-    d.collidetype = COLLIDE_AABB;
-    d.radius = d.xradius = d.yradius = d.height = d.aboveeye = 1;
     loopv(skel->verts)
     {
         vert &v = verts[i];
         if(v.weight)
         {
-            if(d.radius != skel->verts[i].radius) d.radius = d.xradius = d.yradius = d.height = d.aboveeye = skel->verts[i].radius;
-            d.o = v.newpos.div(v.weight);
-            if(collide(&d, vec(v.newpos).sub(v.pos), 0, false)) v.pos = v.newpos;
+            v.newpos.div(v.weight);
+            if(collidevert(v.pos, vec(v.newpos).sub(v.pos), skel->verts[i].radius)) v.pos = v.newpos;
             else
             {
                 vec dir = vec(v.newpos).sub(v.oldpos);
@@ -324,10 +335,6 @@ void ragdolldata::move(dynent *pl, float ts)
     physics::updateragdoll(pl, center, radius);
     float gravity = physics::gravityforce(pl)*ragdollgravity;
 
-    static physent d;
-    d.type = ENT_RAGDOLL;
-    d.collidetype = COLLIDE_AABB;
-    d.radius = d.xradius = d.yradius = d.height = d.aboveeye = 1;
     float airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     bool liquid = physics::liquidcheck(pl);
     collisions = 0;
@@ -340,10 +347,8 @@ void ragdolldata::move(dynent *pl, float ts)
         if(liquid) v.pos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts*pl->submerged;
         v.pos.add(dpos);
         if(v.pos.z < 0) { v.pos.z = 0; curpos = v.pos; collisions++; }
-        if(d.radius != skel->verts[i].radius) d.radius = d.xradius = d.yradius = d.height = d.aboveeye = skel->verts[i].radius;
-        d.o = v.pos;
         vec dir = vec(v.pos).sub(curpos);
-        v.collided = !collide(&d, dir, 0, false);
+        v.collided = !collidevert(v.pos, dir, skel->verts[i].radius);
         if(v.collided)
         {
             v.oldpos = vec(curpos).sub(dir.reflect(wall).mul(ragdollelasticity));
