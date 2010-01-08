@@ -752,6 +752,7 @@ namespace entities
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 						d->action[AC_USE] = false;
 						e.spawned = false;
+#if 0
 						e.lastuse = lastmillis;
 						loopv(projs::projs)
 						{
@@ -760,6 +761,7 @@ namespace entities
 							proj.beenused = 2;
 							proj.lifetime = min(proj.lifetime, proj.fadetime);
 						}
+#endif
 					}
 					else tried = true;
 				}
