@@ -5,7 +5,7 @@ namespace entities
 	int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
 
 	VARP(showentdescs, 0, 2, 3);
-	VARP(showentinfo, 0, 1, 5);
+	VARP(showentinfo, 0, 2, 5);
 	VARP(showentnoisy, 0, 0, 2);
 	VARP(showentdir, 0, 2, 3); // 0 = off, 1 = only selected, 2 = always when editing, 3 = always in editmode
 	VARP(showentradius, 0, 1, 3);
@@ -2294,18 +2294,36 @@ namespace entities
 				break;
 		}
 
-		bool hasent = false, edit = m_edit(game::gamemode) && cansee(e);
 		vec off(0, 0, 2.f), pos(o);
 		if(enttype[e.type].usetype == EU_ITEM) pos.add(off);
+		bool edit = m_edit(game::gamemode) && cansee(e), isedit = edit && game::player1->state == CS_EDITING,
+				item = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (spawned || (e.lastuse && lastmillis-e.lastuse < 500)),
+				hasent = isedit && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
+		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
+			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
+		float fluc = interval >= 500 ? (1500-interval)/1000.f : (500+interval)/1000.f;
+		if(item)
+		{
+			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.5f)+(fluc*0.5f))*skew, 0.125f);
+			part_create(PART_HINT_SOFT, 1, o, colour, radius, fluc*skew);
+		}
+		if(isedit ? (showentinfo >= (hasent ? 2 : 3)) : (item && showentdescs >= 3))
+		{
+			const char *itxt = entinfo(e.type, e.attrs, isedit);
+			if(itxt && *itxt)
+			{
+				defformatstring(ds)("<emphasis>%s", itxt);
+				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, 0xFFFFFF);
+			}
+		}
 		if(edit)
 		{
-			hasent = game::player1->state == CS_EDITING && idx >= 0 && (entgroup.find(idx) >= 0 || enthover == idx);
 			part_create(hasent ? PART_EDIT_ONTOP : PART_EDIT, 1, o, hasent ? 0xAA22FF : 0x441188, hasent ? 2.f : 1.f);
-			if(showentinfo >= 2 || game::player1->state == CS_EDITING)
+			if(showentinfo >= (isedit ? 2 : 4))
 			{
 				defformatstring(s)("<super>%s%s (%d)", hasent ? "\fp" : "\fv", enttype[e.type].name, idx >= 0 ? idx : 0);
 				part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
-				if(showentinfo >= 3 || hasent) loopk(enttype[e.type].numattrs)
+				if(showentinfo >= (isedit ? (hasent ? 2 : 3) : 5)) loopk(enttype[e.type].numattrs)
 				{
 					const char *attrname = enttype[e.type].attrs[k];
 					if(e.type == PARTICLES && k) switch(e.attrs[0])
@@ -2327,25 +2345,6 @@ namespace entities
 						part_textcopy(pos.add(off), s, hasent ? PART_TEXT_ONTOP : PART_TEXT);
 					}
 				}
-			}
-		}
-		bool notitem = (edit && (showentinfo >= 4 || hasent)),
-			item = enttype[e.type].usetype == EU_ITEM && !m_noitems(game::gamemode, game::mutators) && (spawned || (e.lastuse && lastmillis-e.lastuse < 500));
-		int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0],
-			colour = e.type == WEAPON ? weaptype[attr].colour : 0xFFFFFF, interval = lastmillis%1000;
-		float fluc = interval >= 500 ? (1500-interval)/1000.f : (500+interval)/1000.f;
-		if(item)
-		{
-			float radius = max(((e.type == WEAPON ? weaptype[attr].halo : enttype[e.type].radius*0.5f)+(fluc*0.5f))*skew, 0.125f);
-			part_create(PART_HINT_SOFT, 1, o, colour, radius, fluc*skew);
-		}
-		if((item && showentdescs >= 3) || notitem)
-		{
-			const char *itxt = entinfo(e.type, e.attrs, showentinfo >= 5 || hasent);
-			if(itxt && *itxt)
-			{
-				defformatstring(ds)("<emphasis>%s", itxt);
-				part_textcopy(pos.add(off), ds, hasent ? PART_TEXT_ONTOP : PART_TEXT, 1, 0xFFFFFF);
 			}
 		}
 	}
