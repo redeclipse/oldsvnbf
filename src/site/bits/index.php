@@ -32,8 +32,8 @@
 	$app['siterighturl'] = "http://www.cubeengine.com/";
 	$app['siterightlogo'] = "/bits/logo_c2.png";
 	$app['sitecopyright'] = array(
-		'bf' => 'Blood Frontier, Copyright (C) 2006-2009 Anthony Cord, Quinton Reeves, Lee Salzman',
-		'c2' => 'Cube Engine 2, Copyright (C) 2001-2009 Wouter van Oortmerssen, Lee Salzman, Mike Dysart, Robert Pointon, and Quinton Reeves'
+		'bf' => 'Blood Frontier, Copyright (C) 2006-2010 Anthony Cord, Quinton Reeves, Lee Salzman',
+		'c2' => 'Cube Engine 2, Copyright (C) 2001-2010 Wouter van Oortmerssen, Lee Salzman, Mike Dysart, Robert Pointon, and Quinton Reeves'
 	);
 
 	$app['sfproject'] = "bloodfrontier";
