@@ -1036,12 +1036,12 @@ namespace server
 	void relayf(int r, const char *s, ...)
 	{
 		defvformatstring(str, s, s);
-		string st;
-		filtertext(st, str);
 #ifdef IRC
-		ircoutf(r, "%s", st);
+		ircoutf(r, "%s", str);
 #endif
 #ifdef STANDALONE
+		string st;
+		filtertext(st, str);
 		printf("%s\n", st);
 #endif
 	}

@@ -58,9 +58,60 @@ void ircsend(ircnet *n, const char *msg, ...)
 	enet_socket_send(n->sock, NULL, &buf, 1);
 }
 
+VAR(ircfilter, 0, 1, 2);
+
+void converttext(char *dst, const char *src)
+{
+	int colorpos = 0; char colorstack[10];
+	loopi(10) colorstack[i] = 'u'; //indicate user color
+	for(int c = *src; c; c = *++src)
+	{
+		if(c == '\f')
+		{
+			c = *++src;
+			if(c == 'z')
+			{
+				c = *++src;
+				if(c) ++src;
+			}
+			else if(c == 's') { colorpos++; continue; }
+			else if(c == 'S') { c = colorstack[--colorpos]; }
+			int oldcolor = colorstack[colorpos]; colorstack[colorpos] = c;
+			switch(c)
+			{
+				case 'g': case '0': *dst++ = '\003'; *dst++ = '3'; break;	// green
+				case 'b': case '1': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// blue
+				case 'y': case '2': *dst++ = '\003'; *dst++ = '8'; break;	// yellow
+				case 'r': case '3': *dst++ = '\003'; *dst++ = '4'; break;	// red
+				case 'a': case '4': *dst++ = '\003'; *dst++ = '1'; *dst++ = '4'; break;	// grey
+				case 'm': case '5': *dst++ = '\003'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
+				case 'o': case '6': *dst++ = '\003'; *dst++ = '7'; break;	// orange
+				case 'w': case '7': *dst++ = '\003'; *dst++ = '1'; break;	// white
+				case 'k': case '8': *dst++ = '\003'; *dst++ = '0'; break;	// black
+				case 'c': case '9': *dst++ = '\003'; *dst++ = '1'; *dst++ = '1'; break;	// cyan
+				case 'v': case 'A': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// violet
+				case 'p': case 'B': *dst++ = '\003'; *dst++ = '6'; break;	// purple
+				case 'n': case 'C': *dst++ = '\003'; *dst++ = '5'; break; // brown
+				case 'd': case 'D': *dst++ = '\003'; *dst++ = '1'; *dst++ = '0'; break;	// dark grey
+				case 'u': *dst++ = '\015'; break;
+				default: colorstack[colorpos] = oldcolor; break;
+			}
+			continue;
+		}
+		if(isspace(c) || isprint(c)) *dst++ = c;
+	}
+	*dst = '\0';
+}
+
 void ircoutf(int relay, const char *msg, ...)
 {
-	defvformatstring(str, msg, msg);
+	defvformatstring(src, msg, msg); mkstring(str);
+	switch(ircfilter)
+	{
+		case 2: filtertext(str, src); break;
+		case 1: converttext(str, src); break;
+		case 0: default: copystring(str, src); break;
+	}
 	loopv(ircnets) if(ircnets[i]->sock != ENET_SOCKET_NULL && ircnets[i]->type == IRCT_RELAY && ircnets[i]->state == IRC_ONLINE)
 	{
 		ircnet *n = ircnets[i];
