@@ -45,9 +45,7 @@ void conoutft(int type, const char *s, ...)
 	defvformatstring(sf, s, s);
 	console(type, "%s", sf);
 #ifdef IRC
-	string osf;
-	filtertext(osf, sf);
-	ircoutf(5, "%s", osf);
+	ircoutf(5, "%s", sf);
 #endif
 }
 
