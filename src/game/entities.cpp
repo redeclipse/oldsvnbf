@@ -751,8 +751,8 @@ namespace entities
 						client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
 						d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
 						d->action[AC_USE] = false;
-						e.spawned = false;
 #if 0
+						e.spawned = false;
 						e.lastuse = lastmillis;
 						loopv(projs::projs)
 						{
