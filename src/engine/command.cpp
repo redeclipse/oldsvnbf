@@ -1101,8 +1101,18 @@ ICOMMANDN(&~, notb, "ii", (int *a, int *b), intret(*a & ~*b));
 ICOMMANDN(|~, noto, "ii", (int *a, int *b), intret(*a | ~*b));
 ICOMMANDN(<<, lsft, "ii", (int *a, int *b), intret(*a << *b));
 ICOMMANDN(>>, rsft, "ii", (int *a, int *b), intret(*a >> *b));
-ICOMMANDN(&&, and, "ss", (char *a, char *b), intret(execute(a)!=0 && execute(b)!=0));
-ICOMMANDN(||, or, "ss", (char *a, char *b), intret(execute(a)!=0 || execute(b)!=0));
+ICOMMANDN(&&, and, "V", (char **args, int *numargs), 
+{
+    int val = 1;
+    loopi(*numargs) { val = execute(args[i]); if(!val) break; }
+    intret(val);
+});
+ICOMMANDN(||, or, "V", (char **args, int *numargs),
+{
+    int val = 0;
+    loopi(*numargs) { val = execute(args[i]); if(val) break; }  
+    intret(val);
+});
 
 ICOMMAND(div, "ii", (int *a, int *b), intret(*b ? *a / *b : 0));
 ICOMMAND(mod, "ii", (int *a, int *b), intret(*b ? *a % *b : 0));
