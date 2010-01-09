@@ -49,11 +49,12 @@ namespace game
 
 	VARP(editfov, 1, 120, 179);
 	VARP(specfov, 1, 120, 179);
+
+	VARP(follow, -1, 0, INT_MAX-1);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
-	VARP(specfollow, -1, 0, INT_MAX-1);
 	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
 	FVARP(waittvspeed, 0, 1, 1000);
@@ -252,18 +253,21 @@ namespace game
 
 	bool tvmode()
 	{
-		if(!m_edit(gamemode)) switch(player1->state)
+		if(!m_edit(gamemode))
 		{
-			case CS_SPECTATOR: if(specmode) return true; break;
-			case CS_WAITING: if(waitmode && (!focus->lastdeath || lastmillis-focus->lastdeath >= 500)) return true; break;
-			default: break;
+			if(player1->state == CS_SPECTATOR && specmode) return true;
+			else switch(focus->state)
+			{
+				case CS_WAITING: if(waitmode && (!focus->lastdeath || lastmillis-focus->lastdeath >= 500)) return true; break;
+				default: break;
+			}
 		}
 		return false;
 	}
 
 	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false));
 	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1; hud::sb.showscores(false));
-	ICOMMAND(specfollowdelta, "i", (int *n), specfollow = clamp(specfollow + *n, -1, INT_MAX-1));
+	ICOMMAND(followdelta, "i", (int *n), follow = clamp(follow + *n, -1, INT_MAX-1));
 
     bool allowmove(physent *d)
     {
@@ -430,7 +434,7 @@ namespace game
 			camera1->state = CS_ALIVE;
 			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
 		}
-		if((player1->state != CS_WAITING && player1->state != CS_SPECTATOR) || tvmode())
+		if((focus->state != CS_WAITING && focus->state != CS_SPECTATOR) || tvmode())
 		{
 			camera1->vel = vec(0, 0, 0);
 			camera1->move = camera1->strafe = 0;
@@ -1396,13 +1400,12 @@ namespace game
 				loopvj(cameras)
 				{
 					camstate &c = cameras[j]; gameent *t = NULL;
+					vec avg(0, 0, 0); c.reset();
 					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
 					{
 						t = (gameent *)iterdynents(c.idx);
 						if(t->state == CS_SPECTATOR) continue;
 					}
-					vec avg(0, 0, 0);
-					c.reset();
 					switch(k)
 					{
 						case 0: default:
@@ -1468,9 +1471,9 @@ namespace game
 				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
 				{
 					focus = (gameent *)iterdynents(cam->idx);
-					specfollow = cam->idx;
+					follow = cam->idx;
 				}
-				else { focus = player1; specfollow = 0; }
+				else { focus = player1; follow = 0; }
 			}
 			else if(alter && !cam->cansee.length()) cam->alter = true;
 			if(focus != player1)
@@ -1532,7 +1535,7 @@ namespace game
             	if(d != player1 && d->state != CS_SPECTATOR)
             	{
 					count++;
-					if(player1->state == CS_SPECTATOR && !tvmode() && (specfollow < 0 || specfollow == count) && focus != d)
+					if((player1->state == CS_SPECTATOR || player1->state == CS_WAITING) && !tvmode() && (follow < 0 || follow == count) && focus != d)
 					{
 						focus = d;
 						resetcamera();
@@ -1552,10 +1555,10 @@ namespace game
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }
-            if(specfollow < 0) specfollow = count;
-            if(((player1->state != CS_SPECTATOR || !specfollow) && focus != player1) || specfollow > count)
+            if(follow < 0) follow = count;
+            if((((player1->state != CS_SPECTATOR && player1->state != CS_WAITING) || !follow) && focus != player1) || follow > count)
             {
-            	specfollow = 0;
+            	follow = 0;
             	focus = player1;
             	resetcamera();
             }
