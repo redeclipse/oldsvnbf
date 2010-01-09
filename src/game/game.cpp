@@ -55,7 +55,7 @@ namespace game
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
-	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
+	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
 	FVARP(waittvspeed, 0, 1, 1000);
 	FVARP(waittvpitch, 0, 1, 1000);
@@ -256,14 +256,15 @@ namespace game
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
 			case CS_SPECTATOR: if(specmode) return true; break;
-			case CS_WAITING: if(waitmode && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500)) return true; break;
+			case CS_WAITING: if(waitmode >= (m_duke(game::gamemode, game::mutators) ? 1 : 2) && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500))
+				return true; break;
 			default: break;
 		}
 		return false;
 	}
 
 	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false));
-	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1; hud::sb.showscores(false));
+	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false));
 	ICOMMAND(followdelta, "i", (int *n), follow = clamp(follow + *n, -1, INT_MAX-1));
 
     bool allowmove(physent *d)
@@ -1401,7 +1402,7 @@ namespace game
 					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
 					{
 						t = (gameent *)iterdynents(c.idx);
-						if(t->state == CS_SPECTATOR) continue;
+						if(t->state == CS_SPECTATOR || (!isspec && waitmode < (m_duke(game::gamemode, game::mutators) ? 1 : 2))) continue;
 					}
 					switch(k)
 					{
