@@ -1501,7 +1501,12 @@ namespace game
 				cam = &cameras[0];
 				lasttvcam = lastmillis;
 				if(!lasttvchg || cam->ent != entidx) lasttvchg = lastmillis;
-				focus = cam->ent < 0 && players.inrange(cam->idx) ? players[cam->idx] : player1;
+				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
+				{
+					focus = (gameent *)iterdynents(cam->idx);
+					specfollow = cam->idx;
+				}
+				else { focus = player1; specfollow = 0; }
 			}
 			else if(alter && !cam->cansee.length()) cam->alter = true;
 			if(focus != player1)
