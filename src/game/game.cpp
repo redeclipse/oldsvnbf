@@ -1534,18 +1534,16 @@ namespace game
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
-            gameent *d = NULL; int count = 0;
+            gameent *d = NULL; bool override = follow < 0, allow = player1->state == CS_SPECTATOR || player1->state == CS_WAITING, found = false;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
             {
-            	if(d != player1 && d->state != CS_SPECTATOR)
-            	{
-					count++;
-					if((player1->state == CS_SPECTATOR || player1->state == CS_WAITING) && !tvmode() && (follow < 0 || follow == count) && focus != d)
-					{
-						focus = d;
-						resetcamera();
-					}
-            	}
+            	if(d != player1 && d->state != CS_SPECTATOR && allow && (override || follow == i || (follow < i && !found)) && focus != d)
+				{
+					focus = d;
+					resetcamera();
+					follow = i;
+					found = true;
+				}
 				checkoften(d, d == player1 || d->ai);
 				if(d == player1)
 				{
@@ -1560,8 +1558,7 @@ namespace game
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }
-            if(follow < 0) follow = count;
-            if((((player1->state != CS_SPECTATOR && player1->state != CS_WAITING) || !follow) && focus != player1) || follow > count)
+            if((!found || !allow || !follow) && focus != player1)
             {
             	follow = 0;
             	focus = player1;
