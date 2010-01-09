@@ -62,7 +62,7 @@ namespace client
 		mapvotes.sort(votecmp);
 		SEARCHBINDCACHE(votekey)("showgui maps 2", 0);
 		SEARCHBINDCACHE(gamekey)("showgui maps 1", 0);
-		conoutft(CON_MESG, "\fc%s suggests: \fs\fw%s on %s, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
+		conoutft(CON_MESG, "%s suggests: \fs\fy%s\fS on map \fs\fo%s\fS, press \fs\fc%s\fS to vote or \fs\fc%s\fS to select your own", game::colorname(d), server::gamename(mode, muts), text, votekey, gamekey);
 	}
 
     void getvotes(int vote, int player)
