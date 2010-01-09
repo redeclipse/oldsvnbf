@@ -10,44 +10,8 @@ namespace game
     string clientmap = "";
 
 	gameent *player1 = new gameent(), *focus = player1;
+	avatarent avatarmodel;
 	vector<gameent *> players;
-	struct avatarent : dynent
-	{
-		avatarent() { type = ENT_CAMERA; }
-	} avatarmodel;
-
-	struct camstate
-	{
-		int ent, idx;
-		vec pos, dir;
-		vector<int> cansee;
-		float mindist, maxdist, score;
-		bool alter;
-
-		camstate() : idx(-1), mindist(16), maxdist(1024), alter(false) { reset(); }
-		~camstate() {}
-
-		void reset()
-		{
-			cansee.setsize(0);
-			dir = vec(0, 0, 0);
-			score = 0.f;
-			alter = false;
-		}
-
-		static int camsort(const camstate *a, const camstate *b)
-		{
-			int asee = a->cansee.length(), bsee = b->cansee.length(),
-				amul = a->ent < 0 ? 3 : 1, bmul = b->ent < 0 ? 3 : 1;
-			if(a->alter && asee) asee = 1;
-			if(b->alter && bsee) bsee = 1;
-			if(asee*amul > bsee*bmul) return -1;
-			if(asee*amul < bsee*bmul) return 1;
-			if(a->score*amul < b->score*bmul) return -1;
-			if(a->score*amul > b->score*bmul) return 1;
-			return 0;
-		}
-	};
 	vector<camstate> cameras;
 
 	ICOMMANDG(resetvars, "", (), return); // server side
@@ -1392,7 +1356,7 @@ namespace game
 			camstate *cam = &cameras[0];
 			int entidx = cam->ent, len = (isspec ? spectvtime : waittvtime);
 			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= len,
-				override = renew || !lasttvcam || lastmillis-lasttvcam >= max(len/10, 1500);
+				override = renew || !lasttvcam || lastmillis-lasttvcam >= max(len/3, 1000);
 			#define addcamentity(q,p) \
 			{ \
 				vec trg, pos = p; \
@@ -1484,11 +1448,11 @@ namespace game
 					else
 					{
 						c.score = 0;
-						if(override && !k && !j && !alter) renew = true; // quick scotty, get a new cam
+						if(c.ent >= 0 && override && !k && !j && !alter) renew = true; // quick scotty, get a new cam
 					}
 					if(!renew || !override) break;
 				}
-				if(override && !found && (k || !alter))
+				if(cam->ent >= 0 && override && !found && (k || !alter))
 				{
 					if(!k) renew = true;
 					else unsettvmode(lasttvcam ? false : true);

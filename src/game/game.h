@@ -1299,6 +1299,46 @@ namespace game
 	extern gameent *player1, *focus;
 	extern vector<gameent *> players;
 
+	struct avatarent : dynent
+	{
+		avatarent() { type = ENT_CAMERA; }
+	};
+	extern avatarent avatarmodel;
+
+	struct camstate
+	{
+		int ent, idx;
+		vec pos, dir;
+		vector<int> cansee;
+		float mindist, maxdist, score;
+		bool alter;
+
+		camstate() : idx(-1), mindist(16), maxdist(1024), alter(false) { reset(); }
+		~camstate() {}
+
+		void reset()
+		{
+			cansee.setsize(0);
+			dir = vec(0, 0, 0);
+			score = 0.f;
+			alter = false;
+		}
+
+		static int camsort(const camstate *a, const camstate *b)
+		{
+			int asee = a->cansee.length(), bsee = b->cansee.length(),
+				amul = a->ent < 0 ? 3 : 1, bmul = b->ent < 0 ? 3 : 1;
+			if(a->alter && asee) asee = 1;
+			if(b->alter && bsee) bsee = 1;
+			if(asee*amul > bsee*bmul) return -1;
+			if(asee*amul < bsee*bmul) return 1;
+			if(a->score*amul < b->score*bmul) return -1;
+			if(a->score*amul > b->score*bmul) return 1;
+			return 0;
+		}
+	};
+	extern vector<camstate> cameras;
+
 	extern gameent *newclient(int cn);
 	extern gameent *getclient(int cn);
 	extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
