@@ -189,16 +189,7 @@ namespace weapons
 			offset = max(d->weapload[d->weapselect], 1)+WPB(d->weapselect, sub, flags&HIT_ALT);
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
 		}
-		int adelay = WPB(d->weapselect, adelay, flags&HIT_ALT);
-		if(!WPB(d->weapselect, fullauto, flags&HIT_ALT) || (WPA(d->weapselect, zooms) && flags&HIT_ALT))
-		{
-			if(!secondary || !WPA(d->weapselect, zooms)) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
-			if(d->ai) adelay += int(adelay*(((111-d->skill)+rnd(111-d->skill))/100.f));
-		}
-		d->setweapstate(d->weapselect, WEAP_S_SHOOT, adelay, lastmillis);
-		if(offset > 0) d->ammo[d->weapselect] = max(d->ammo[d->weapselect]-offset, 0);
-		d->totalshots += int(WPB(d->weapselect, damage, flags&HIT_ALT)*damagescale)*WPB(d->weapselect, rays, flags&HIT_ALT);
-		d->weapshot[d->weapselect] = offset;
+		if(!WPB(d->weapselect, fullauto, flags&HIT_ALT)) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
 		d->action[AC_RELOAD] = false;
 		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
 		float dist = to.dist(from, unitv);
@@ -252,7 +243,7 @@ namespace weapons
 				dest.z += from.dist(dest)*weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0];
 			addshot;
 		}
-		projs::shootv(d->weapselect, flags, power, from, vshots, d, true);
+		projs::shootv(d->weapselect, flags, offset, power, from, vshots, d, true);
 		client::addmsg(SV_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, d->weapselect, flags, power, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
 	}
 

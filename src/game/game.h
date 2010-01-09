@@ -1237,7 +1237,7 @@ namespace projs
 	extern void create(vec &from, vec &to, bool local, gameent *d, int type, int lifetime, int lifemillis, int waittime, int speed, int id = 0, int weap = -1, int flags = 0);
 	extern void preload();
 	extern void remove(gameent *owner);
-	extern void shootv(int weap, int flags, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
+	extern void shootv(int weap, int flags, int offset, int power, vec &from, vector<vec> &locs, gameent *d, bool local);
 	extern void drop(gameent *d, int g, int n, bool local = true);
 	extern void adddynlights();
 	extern void render();
