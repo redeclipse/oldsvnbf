@@ -516,7 +516,7 @@ namespace projs
 		}
 	}
 
-	void shootv(int weap, int flags, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
+	void shootv(int weap, int flags, int offset, int power, vec &from, vector<vec> &locs, gameent *d, bool local)
 	{
 		int delay = WPA(weap, pdelay), millis = delay,
 			life = WPB(weap, time, flags&HIT_ALT), speed = WPB(weap, speed, flags&HIT_ALT);
@@ -610,6 +610,11 @@ namespace projs
 		loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WPB(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags);
 		if(ejectfade && weaptype[weap].eject) loopi(max(WPB(weap, sub, flags&HIT_ALT), 1))
 			create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
+
+		d->setweapstate(weap, WEAP_S_SHOOT, WPB(weap, adelay, flags&HIT_ALT), lastmillis);
+		d->ammo[weap] = max(d->ammo[weap]-offset, 0);
+		d->totalshots += int(WPB(weap, damage, flags&HIT_ALT)*damagescale)*WPB(weap, rays, flags&HIT_ALT);
+		d->weapshot[weap] = offset;
 	}
 
 	void iter(projent &proj)
