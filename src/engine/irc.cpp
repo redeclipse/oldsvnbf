@@ -86,14 +86,12 @@ void converttext(char *dst, const char *src)
 				case 'a': case '4': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '4'; break;	// grey
 				case 'm': case '5': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
 				case 'o': case '6': *dst++ = '\x03'; *dst++ = '7'; break; // orange
-				case 'w': case '7': *dst++ = '\x03'; *dst++ = '1'; break; // white
-				case 'k': case '8': *dst++ = '\x03'; *dst++ = '1'; break; // black
 				case 'c': case '9': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '0'; break;	// cyan
 				case 'v': case 'A': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '2'; break;	// violet
 				case 'p': case 'B': *dst++ = '\x03'; *dst++ = '6'; break; // purple
 				case 'n': case 'C': *dst++ = '\x03'; *dst++ = '5'; break; // brown
 				case 'd': case 'D': *dst++ = '\x03'; *dst++ = '1'; break; // dark grey
-				case 'u': *dst++ = '\x0f'; break;
+				case 'u': case 'w': case '7': case 'k': case '8': *dst++ = '\x0f'; break;
 				default: colorstack[colorpos] = oldcolor; break;
 			}
 			continue;
