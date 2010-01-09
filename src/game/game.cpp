@@ -1534,28 +1534,31 @@ namespace game
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
-            gameent *d = NULL; bool override = follow < 0, allow = player1->state == CS_SPECTATOR || player1->state == CS_WAITING, found = false;
-            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
+            gameent *d = NULL; bool override = follow < 0, allow = (player1->state == CS_SPECTATOR || player1->state == CS_WAITING) && follow, found = false;
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL)
             {
-            	if(d != player1 && d->state != CS_SPECTATOR && allow && (override || follow == i || (follow < i && !found)) && focus != d)
+            	if(d != player1 && d->state != CS_SPECTATOR && allow && (override || i == follow || (i > follow && !found)) && focus != d)
 				{
 					focus = d;
 					resetcamera();
 					follow = i;
 					found = true;
 				}
-				checkoften(d, d == player1 || d->ai);
-				if(d == player1)
+				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
-					int state = d->weapstate[d->weapselect];
-					if(WPA(d->weapselect, zooms))
+					checkoften(d, d == player1 || d->ai);
+					if(d == player1)
 					{
-						if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
-							state = WEAP_S_IDLE;
+						int state = d->weapstate[d->weapselect];
+						if(WPA(d->weapselect, zooms))
+						{
+							if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
+								state = WEAP_S_IDLE;
+						}
+						if(zooming && (!WPA(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
+						else if(WPA(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+							zoomset(d->action[AC_ALTERNATE], lastmillis);
 					}
-					if(zooming && (!WPA(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
-					else if(WPA(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
-						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
             }
             if((!found || !allow || !follow) && focus != player1)
