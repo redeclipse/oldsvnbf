@@ -567,15 +567,15 @@ namespace game
     {
         enum { BURN = 1<<0 };
 
-        gameent *actor;
+        gameent *d, *actor;
         int damage, flags;
 
         damagetone() {}
-        damagetone(gameent *actor, int damage, int flags) : actor(actor), damage(damage), flags(flags) {}
+        damagetone(gameent *d, gameent *actor, int damage, int flags) : d(d), actor(actor), damage(damage), flags(flags) {}
 
         bool merge(const damagetone &m)
         {
-            if(actor != m.actor || flags != m.flags) return false;
+            if(d != m.d || actor != m.actor || flags != m.flags) return false;
             damage += m.damage;
             return true;
         }
@@ -591,19 +591,19 @@ namespace game
             else if(damage >= 50) snd = 3;
             else if(damage >= 25) snd = 2;
             else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, actor->o, actor, actor == player1 ? SND_FORCED : 0, -1, -1, -1);
+            playsound(S_DAMAGE1+snd, d->o, d, d == player1 ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
         }
     };
     vector<damagetone> damagetones;
 
-    void removedamagetones(gameent *actor)
+    void removedamagetones(gameent *d)
     {
-        loopvrev(damagetones) if(damagetones[i].actor == actor) damagetones.removeunordered(i);
+        loopvrev(damagetones) if(damagetones[i].d == d || damagetones[i].actor == d) damagetones.removeunordered(i);
     }
 
-    void mergedamagetone(gameent *actor, int damage, int flags)
+    void mergedamagetone(gameent *d, gameent *actor, int damage, int flags)
     {
-        damagetone dt(actor, damage, flags);
+        damagetone dt(d, actor, damage, flags);
         loopv(damagetones) if(damagetones[i].merge(dt)) return;
         damagetones.add(dt);
     }
@@ -648,7 +648,7 @@ namespace game
 				{
 					bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
 					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
-					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3))) mergedamagetone(actor, damage, burning ? damagetone::BURN : 0);
+					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3))) mergedamagetone(d, actor, damage, burning ? damagetone::BURN : 0);
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
 					if(vampire)
 					{

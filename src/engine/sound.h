@@ -11,10 +11,14 @@ enum
 	SND_NODELAY	= 1<<1,	// disable delay
 	SND_NOCULL	= 1<<2,	// disable culling
 	SND_NOPAN	= 1<<3, // disable panning (distance only attenuation)
-	SND_LOOP	= 1<<4,
-	SND_MAP		= 1<<5,
+	SND_NODIST	= 1<<4, // disable distance (panning only)
+	SND_NOQUIET	= 1<<5, // disable water effects (panning only)
+	SND_LOOP	= 1<<6,
+	SND_MAP		= 1<<7,
 	SND_FORCED	= SND_NOATTEN|SND_NODELAY|SND_NOCULL,
-	SND_MASKF	= SND_LOOP|SND_MAP
+	SND_DIRECT	= SND_NODELAY|SND_NOCULL|SND_NODIST|SND_NOQUIET,
+	SND_MASKF	= SND_LOOP|SND_MAP,
+	SND_LAST	= 6
 };
 
 #ifndef STANDALONE

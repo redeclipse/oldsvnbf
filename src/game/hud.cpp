@@ -981,7 +981,7 @@ namespace hud
 
 	float radarrange()
 	{
-		float dist = radardist ? radardist : getworldsize();
+		float dist = radardist ? radardist : getworldsize()/2;
 		if(game::player1->state == CS_EDITING && editradardist) dist = editradardist;
 		return dist;
 	}
