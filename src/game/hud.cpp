@@ -702,8 +702,8 @@ namespace hud
 							if(!game::tvmode())
 							{
 								pushfont("sub");
-								SEARCHBINDCACHE(specf1key)("specfollowdelta 1", 1);
-								SEARCHBINDCACHE(specf2key)("specfollowdelta -1", 1);
+								SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
+								SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
 								ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
 								popfont();
 							}

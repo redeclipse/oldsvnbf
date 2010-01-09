@@ -270,8 +270,8 @@ namespace hud
 				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
 				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "interact" : "switch to TV");
 				g.pushfont("radar");
-				SEARCHBINDCACHE(specf1key)("specfollowdelta 1", 1);
-				SEARCHBINDCACHE(specf2key)("specfollowdelta -1", 1);
+				SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
+				SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
 				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, specf1key, specf2key);
 				g.popfont();
 				g.popfont();
