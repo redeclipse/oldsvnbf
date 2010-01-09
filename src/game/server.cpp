@@ -1303,7 +1303,7 @@ namespace server
 			endmatch();
 			if(gotvotes)
 			{
-				srvoutf(3, "vote passed: \fs\fc%s\fS on map \fs\fc%s\fS", gamename(best->mode, best->muts), best->map);
+				srvoutf(3, "vote passed: \fs\fy%s\fS on map \fs\fo%s\fS", gamename(best->mode, best->muts), best->map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, best->map, 0, best->mode, best->muts);
 				changemap(best->map, best->mode, best->muts);
 			}
@@ -1312,7 +1312,7 @@ namespace server
 				int mode = GVAR(defaultmode) >= 0 ? gamemode : -1, muts = GVAR(defaultmuts) >= -1 ? mutators : -2;
 				changemode(&mode, &muts);
 				const char *map = choosemap(smapname, mode, muts);
-				srvoutf(3, "server chooses: \fs\fc%s\fS on map \fs\fc%s\fS", gamename(mode, muts), map);
+				srvoutf(3, "server chooses: \fs\fy%s\fS on map \fs\fo%s\fS", gamename(mode, muts), map);
 				sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, map, 0, mode, muts);
 				changemap(map, mode, muts);
 			}
@@ -1396,13 +1396,13 @@ namespace server
 		if(hasveto)
 		{
 			endmatch();
-			srvoutf(3, "%s forced: \fs\fc%s\fS on map \fs\fc%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
+			srvoutf(3, "%s forced: \fs\fy%s\fS on map \fs\fo%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
 			sendf(-1, 1, "ri2si3", SV_MAPCHANGE, 1, ci->mapvote, 0, ci->modevote, ci->mutsvote);
 			changemap(ci->mapvote, ci->modevote, ci->mutsvote);
 			return;
 		}
 		sendf(-1, 1, "ri2si2", SV_MAPVOTE, ci->clientnum, ci->mapvote, ci->modevote, ci->mutsvote);
-		relayf(3, "\fc%s suggests: \fs\fw%s on map %s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
+		relayf(3, "%s suggests: \fs\fy%s\fS on map \fs\fo%s\fS", colorname(ci), gamename(ci->modevote, ci->mutsvote), ci->mapvote);
 		checkvotes();
 	}
 

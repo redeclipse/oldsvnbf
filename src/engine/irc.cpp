@@ -79,21 +79,21 @@ void converttext(char *dst, const char *src)
 			int oldcolor = colorstack[colorpos]; colorstack[colorpos] = c;
 			switch(c)
 			{
-				case 'g': case '0': *dst++ = '\003'; *dst++ = '3'; break; // green
-				case 'b': case '1': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// blue
-				case 'y': case '2': *dst++ = '\003'; *dst++ = '2'; break; // yellow
-				case 'r': case '3': *dst++ = '\003'; *dst++ = '4'; break; // red
-				case 'a': case '4': *dst++ = '\003'; *dst++ = '1'; *dst++ = '4'; break;	// grey
-				case 'm': case '5': *dst++ = '\003'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
-				case 'o': case '6': *dst++ = '\003'; *dst++ = '7'; break; // orange
-				case 'w': case '7': *dst++ = '\003'; *dst++ = '1'; break; // white
-				case 'k': case '8': *dst++ = '\003'; *dst++ = '1'; break; // black
-				case 'c': case '9': *dst++ = '\003'; *dst++ = '1'; *dst++ = '0'; break;	// cyan
-				case 'v': case 'A': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// violet
-				case 'p': case 'B': *dst++ = '\003'; *dst++ = '6'; break; // purple
-				case 'n': case 'C': *dst++ = '\003'; *dst++ = '5'; break; // brown
-				case 'd': case 'D': *dst++ = '\003'; *dst++ = '1'; break; // dark grey
-				case 'u': *dst++ = '\015'; break;
+				case 'g': case '0': *dst++ = '\x03'; *dst++ = '3'; break; // green
+				case 'b': case '1': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '2'; break;	// blue
+				case 'y': case '2': *dst++ = '\x03'; *dst++ = '2'; break; // yellow
+				case 'r': case '3': *dst++ = '\x03'; *dst++ = '4'; break; // red
+				case 'a': case '4': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '4'; break;	// grey
+				case 'm': case '5': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
+				case 'o': case '6': *dst++ = '\x03'; *dst++ = '7'; break; // orange
+				case 'w': case '7': *dst++ = '\x03'; *dst++ = '1'; break; // white
+				case 'k': case '8': *dst++ = '\x03'; *dst++ = '1'; break; // black
+				case 'c': case '9': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '0'; break;	// cyan
+				case 'v': case 'A': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '2'; break;	// violet
+				case 'p': case 'B': *dst++ = '\x03'; *dst++ = '6'; break; // purple
+				case 'n': case 'C': *dst++ = '\x03'; *dst++ = '5'; break; // brown
+				case 'd': case 'D': *dst++ = '\x03'; *dst++ = '1'; break; // dark grey
+				case 'u': *dst++ = '\x0f'; break;
 				default: colorstack[colorpos] = oldcolor; break;
 			}
 			continue;
