@@ -22,7 +22,7 @@ namespace projs
 
 	VARP(muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
 	VARP(muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
-	#define muzzlechk(a,b) (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::player1))
+	#define muzzlechk(a,b) (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::focus))
 
 	int calcdamage(gameent *actor, gameent *target, int weap, int &flags, int radial, float size, float dist)
 	{
@@ -306,7 +306,7 @@ namespace projs
 		{
 			case PRJ_SHOT:
 			{
-				if(proj.owner && (proj.owner != game::player1 || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
+				if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
 				proj.height = proj.radius = proj.xradius = proj.yradius = WPB(proj.weap, radius, proj.flags&HIT_ALT);
 				proj.elasticity = WPB(proj.weap, elasticity, proj.flags&HIT_ALT);
 				proj.reflectivity = WPB(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -394,7 +394,7 @@ namespace projs
 				proj.fadetime = rnd(250)+250;
 				if(proj.owner)
 				{
-					if(proj.owner == game::player1 && !game::thirdpersonview())
+					if(proj.owner == game::focus && !game::thirdpersonview())
 						proj.o = proj.from.add(vec(proj.from).sub(camera1->o).normalize().mul(5));
 					vecfromyawpitch(proj.owner->yaw+40+rnd(41), proj.owner->pitch+50-proj.maxspeed+rnd(41), 1, 0, proj.to);
 					proj.to.mul(10).add(proj.from);

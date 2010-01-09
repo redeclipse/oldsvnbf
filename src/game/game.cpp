@@ -9,12 +9,46 @@ namespace game
 	vec swaydir(0, 0, 0), swaypush(0, 0, 0);
     string clientmap = "";
 
-	gameent *player1 = new gameent();
+	gameent *player1 = new gameent(), *focus = player1;
 	vector<gameent *> players;
 	struct avatarent : dynent
 	{
 		avatarent() { type = ENT_CAMERA; }
 	} avatarmodel;
+
+	struct camstate
+	{
+		int ent, idx;
+		vec pos, dir;
+		vector<int> cansee;
+		float mindist, maxdist, score;
+		bool alter;
+
+		camstate() : idx(-1), mindist(16), maxdist(1024), alter(false) { reset(); }
+		~camstate() {}
+
+		void reset()
+		{
+			cansee.setsize(0);
+			dir = vec(0, 0, 0);
+			score = 0.f;
+			alter = false;
+		}
+
+		static int camsort(const camstate *a, const camstate *b)
+		{
+			int asee = a->cansee.length(), bsee = b->cansee.length(),
+				amul = a->ent < 0 ? 3 : 1, bmul = b->ent < 0 ? 3 : 1;
+			if(a->alter && asee) asee = 1;
+			if(b->alter && bsee) bsee = 1;
+			if(asee*amul > bsee*bmul) return -1;
+			if(asee*amul < bsee*bmul) return 1;
+			if(a->score*amul < b->score*bmul) return -1;
+			if(a->score*amul > b->score*bmul) return 1;
+			return 0;
+		}
+	};
+	vector<camstate> cameras;
 
 	ICOMMANDG(resetvars, "", (), return); // server side
 
@@ -55,6 +89,7 @@ namespace game
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
+	VARP(specfollow, -1, 0, INT_MAX-1);
 	VARP(waitmode, 0, 1, 1); // 0 = float, 1 = tv
 	VARP(waittvtime, 1000, 5000, INT_MAX-1);
 	FVARP(waittvspeed, 0, 1, 1000);
@@ -114,7 +149,7 @@ namespace game
 
 	bool thirdpersonview(bool viewonly)
 	{
-        if(!viewonly && (player1->state == CS_DEAD || player1->state == CS_WAITING)) return true;
+        if(!viewonly && (focus->state == CS_DEAD || focus->state == CS_WAITING)) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR) return false;
@@ -144,7 +179,7 @@ namespace game
 	int fov()
 	{
 		if(player1->state == CS_EDITING) return editfov;
-		if(player1->state == CS_SPECTATOR) return specfov;
+		if(focus == player1 && player1->state == CS_SPECTATOR) return specfov;
 		if(thirdpersonview(true)) return thirdpersonfov;
 		return firstpersonfov;
 	}
@@ -245,7 +280,7 @@ namespace game
 		if(idx >= 0)
 		{
 			if(d && issound(d->aschan)) removesound(d->aschan);
-			physent *t = !d || d == player1 ? camera1 : d;
+			physent *t = !d || d == focus ? camera1 : d;
 			playsound(idx, t->o, t, t == camera1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
 		}
 	}
@@ -256,7 +291,7 @@ namespace game
 		if(!m_edit(gamemode)) switch(player1->state)
 		{
 			case CS_SPECTATOR: if(specmode) return true; break;
-			case CS_WAITING: if(waitmode && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500)) return true; break;
+			case CS_WAITING: if(waitmode && (!focus->lastdeath || lastmillis-focus->lastdeath >= 500)) return true; break;
 			default: break;
 		}
 		return false;
@@ -264,6 +299,7 @@ namespace game
 
 	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false));
 	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : 1; hud::sb.showscores(false));
+	ICOMMAND(specfollowdelta, "i", (int *n), specfollow = clamp(specfollow + *n, -1, INT_MAX-1));
 
     bool allowmove(physent *d)
     {
@@ -328,7 +364,7 @@ namespace game
 
 	float transscale(gameent *d, bool third = true)
 	{
-		float total = d == player1 ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
+		float total = d == focus ? (third ? thirdpersonblend : firstpersonblend) : playerblend;
 		if(d->state == CS_ALIVE)
 		{
 			int prot = m_protect(gamemode, mutators), millis = d->protect(lastmillis, prot); // protect returns time left
@@ -390,7 +426,7 @@ namespace game
 
 	void fireeffect(gameent *d)
 	{
-		if(fireburntime && d->lastfire && (d != player1 || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
+		if(fireburntime && d->lastfire && (d != focus || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
 		{
 			int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f);
 			if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
@@ -405,7 +441,7 @@ namespace game
 		{
 			gameent *o = players[i];
 			if(!o) continue;
-			vec pos = player1->headpos();
+			vec pos = focus->headpos();
             float dist;
 			if(intersect(o, pos, worldpos, dist)) return o;
 		}
@@ -443,16 +479,17 @@ namespace game
 		zoomset(false, 0);
 		resetcursor();
 		checkcamera();
-		camera1->o = player1->o;
-		camera1->yaw = player1->yaw;
-		camera1->pitch = player1->pitch;
-		camera1->roll = player1->calcroll(false);
+		camera1->o = focus->o;
+		camera1->yaw = focus->yaw;
+		camera1->pitch = focus->pitch;
+		camera1->roll = focus->calcroll(false);
 		camera1->resetinterp();
-		player1->resetinterp();
+		focus->resetinterp();
 	}
 
 	void resetworld()
 	{
+		focus = player1;
 		hud::sb.showscores(false);
 		cleargui();
 	}
@@ -529,7 +566,7 @@ namespace game
 					if(issound(d->fschan)) removesound(d->fschan);
 					d->fschan = -1; d->lastfire = 0;
 				}
-				else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != player1 ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
+				else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != focus ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
 			}
 		}
 		else if(issound(d->fschan))
@@ -556,7 +593,7 @@ namespace game
 	{
 		if(fireburntime && (doesburn(weap, flags) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
 		{
-			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, d != player1 ? 128 : 224, -1, -1, &d->fschan);
+			if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, d != focus ? 128 : 224, -1, -1, &d->fschan);
 			if(flags&HIT_FULL) d->lastfire = lastmillis;
 			else return true;
 		}
@@ -591,7 +628,7 @@ namespace game
             else if(damage >= 50) snd = 3;
             else if(damage >= 25) snd = 2;
             else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, d->o, d, d == player1 ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
+            playsound(S_DAMAGE1+snd, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
         }
     };
     vector<damagetone> damagetones;
@@ -622,7 +659,7 @@ namespace game
 		{
 			if(hithurts(flags))
 			{
-				if(d == player1) hud::damage(damage, actor->o, actor, weap);
+				if(d == focus) hud::damage(damage, actor->o, actor, weap);
 				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
 					vec p = d->headpos();
@@ -633,7 +670,7 @@ namespace game
 							part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 1, 100, DECAL_BLOOD, int(d->radius*4));
 						else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 1, 50, DECAL_STAIN, int(d->radius*4));
 					}
-					if(showdamageabovehead > (d != player1 ? 0 : 1))
+					if(showdamageabovehead > (d != focus ? 0 : 1))
 					{
 						string ds;
 						if(showdamageabovehead > 2) formatstring(ds)("<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
@@ -647,8 +684,8 @@ namespace game
 				if(d != actor)
 				{
 					bool sameteam = m_team(gamemode, mutators) && d->team == actor->team;
-					if(sameteam) { if(actor == player1 && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
-					else if(playdamagetones >= (actor == player1 ? 1 : (d == player1 ? 2 : 3))) mergedamagetone(d, actor, damage, burning ? damagetone::BURN : 0);
+					if(sameteam) { if(actor == focus && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
+					else if(playdamagetones >= (actor == focus ? 1 : (d == focus ? 2 : 3))) mergedamagetone(d, actor, damage, burning ? damagetone::BURN : 0);
 					if(!burning && !sameteam) actor->lasthit = lastmillis;
 					if(vampire)
 					{
@@ -692,7 +729,7 @@ namespace game
 		d->state = CS_DEAD;
 		d->deaths++;
 		int anc = -1, dth = d->aitype >= AI_START || style&FRAG_OBLITERATE ? S_SPLOSH : S_DIE1+rnd(2);
-		if(d == player1) anc = !m_duke(gamemode, mutators) && !m_trial(gamemode) ? S_V_FRAGGED : -1;
+		if(d == focus) anc = !m_duke(gamemode, mutators) && !m_trial(gamemode) ? S_V_FRAGGED : -1;
 		else d->resetinterp();
 		formatstring(d->obit)("%s ", colorname(d));
 		if(d != actor && actor->lastattacker == d->clientnum) actor->lastattacker = -1;
@@ -796,7 +833,7 @@ namespace game
 			{
 				concatstring(d->obit, " \fs\fzawteam-mate\fS ");
 				concatstring(d->obit, colorname(actor));
-				if(actor == player1) { anc = S_ALARM; override = true; }
+				if(actor == focus) { anc = S_ALARM; override = true; }
 			}
 			else
 			{
@@ -825,21 +862,21 @@ namespace game
 				{
 					concatstring(d->obit, " \fs\fzRedouble-killing\fS");
 					part_text(az, "<super>\fzvrDOUBLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
+					if(actor == focus) { part_text(dz, "<super>\fzvrDOUBLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL2)
 				{
 					concatstring(d->obit, " \fs\fzRetriple-killing\fS");
 					part_text(az, "<super>\fzvrTRIPLE-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
+					if(actor == focus) { part_text(dz, "<super>\fzvrTRIPLE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 				else if(style&FRAG_MKILL3)
 				{
 					concatstring(d->obit, " \fs\fzRemulti-killing\fS");
 					part_text(az, "<super>\fzvrMULTI-KILL", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
-					if(actor == player1) { part_text(dz, "<super>\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
+					if(actor == focus) { part_text(dz, "<super>\fzvrMULTI", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4; }
 					if(!override) anc = S_V_MKILL1;
 				}
 			}
@@ -905,7 +942,7 @@ namespace game
 		}
 		if(showobituaries && (d->aitype < AI_START || actor->aitype < (d->aitype >= AI_START ? AI_BOT : AI_START)))
 		{
-			bool isme = (d == player1 || actor == player1), show = false;
+			bool isme = (d == focus || actor == focus), show = false;
 			if(((!m_fight(gamemode) && !isme) || actor->aitype >= AI_START) && anc >= 0) anc = -1;
 			if(flags&HIT_LOST) show = true;
 			else switch(showobituaries)
@@ -983,6 +1020,12 @@ namespace game
 		if(!d) return;
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
+		if(focus == d)
+		{
+			focus = player1;
+			resetcamera();
+		}
+		cameras.setsize(0);
 		client::clearvotes(d);
 		projs::remove(d);
         removedamagetones(d);
@@ -1222,39 +1265,6 @@ namespace game
 		if(style >= 0) vecfromcursor(cursorx, cursory, 1.f, cursordir);
 	}
 
-	struct camstate
-	{
-		int ent, idx;
-		vec pos, dir;
-		vector<int> cansee;
-		float mindist, maxdist, score;
-		bool alter;
-
-		camstate() : idx(-1), mindist(32.f), maxdist(512.f), alter(false) { reset(); }
-		~camstate() {}
-
-		void reset()
-		{
-			cansee.setsize(0);
-			dir = vec(0, 0, 0);
-			score = 0.f;
-			alter = false;
-		}
-
-		static int camsort(const camstate *a, const camstate *b)
-		{
-			int asee = a->cansee.length(), bsee = b->cansee.length();
-			if(a->alter && asee) asee = 1;
-			if(b->alter && bsee) bsee = 1;
-			if(asee > bsee) return -1;
-			if(asee < bsee) return 1;
-			if(a->score < b->score) return -1;
-			if(a->score > b->score) return 1;
-			return 0;
-		}
-	};
-	vector<camstate> cameras;
-
 	void getyawpitch(const vec &from, const vec &pos, float &yaw, float &pitch)
 	{
 		float dist = from.dist(pos);
@@ -1312,41 +1322,58 @@ namespace game
 	void cameratv()
 	{
 		bool isspec = player1->state == CS_SPECTATOR;
-		if(cameras.empty()) loopk(2)
+		if(cameras.empty())
 		{
-			physent d = *player1;
-			d.radius = d.height = 4.f;
-			d.state = CS_ALIVE;
-			loopv(entities::ents) if(entities::ents[i]->type == CAMERA || (k && !enttype[entities::ents[i]->type].noisy))
+			loopk(2)
 			{
-				gameentity &e = *(gameentity *)entities::ents[i];
-				vec pos(e.o);
-				if(e.type == MAPMODEL)
+				physent d = *player1;
+				d.radius = d.height = 4.f;
+				d.state = CS_ALIVE;
+				loopv(entities::ents) if(entities::ents[i]->type == CAMERA || (k && !enttype[entities::ents[i]->type].noisy))
 				{
-					mapmodelinfo &mmi = getmminfo(e.attrs[0]);
-					vec center, radius;
-					mmi.m->collisionbox(0, center, radius);
-					if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
-					if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attrs[1]));
-					pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*3.f;
-				}
-				else if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
-				d.o = pos;
-				if(physics::entinmap(&d, false))
-				{
-					camstate &c = cameras.add();
-					c.pos = pos;
-					c.ent = i;
-					if(!k)
+					gameentity &e = *(gameentity *)entities::ents[i];
+					vec pos(e.o);
+					if(e.type == MAPMODEL)
 					{
-						c.idx = e.attrs[0];
-						if(e.attrs[1]) c.mindist = e.attrs[1];
-						if(e.attrs[2]) c.maxdist = e.attrs[2];
+						mapmodelinfo &mmi = getmminfo(e.attrs[0]);
+						vec center, radius;
+						mmi.m->collisionbox(0, center, radius);
+						if(e.attrs[4]) { center.mul(e.attrs[4]/100.f); radius.mul(e.attrs[4]/100.f); }
+						if(!mmi.m->ellipsecollide) rotatebb(center, radius, int(e.attrs[1]));
+						pos.z += ((center.z-radius.z)+radius.z*2*mmi.m->height)*3.f;
+					}
+					else if(enttype[e.type].radius) pos.z += enttype[e.type].radius;
+					d.o = pos;
+					if(physics::entinmap(&d, false))
+					{
+						camstate &c = cameras.add();
+						c.pos = pos; c.ent = i;
+						if(!k)
+						{
+							c.idx = e.attrs[0];
+							if(e.attrs[1]) c.mindist = e.attrs[1];
+							if(e.attrs[2]) c.maxdist = e.attrs[2];
+						}
 					}
 				}
+				lasttvcam = lasttvchg = 0;
+				if(!cameras.empty()) break;
 			}
-			lasttvcam = lasttvchg = 0;
-			if(!cameras.empty()) break;
+            gameent *d = NULL;
+            loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
+			{
+				camstate &c = cameras.add();
+				c.pos = d->headpos();
+				c.ent = -1; c.idx = i;
+				c.mindist = 0; c.maxdist = 1e16f;
+				vecfromyawpitch(d->yaw, d->pitch, 1, 0, c.dir);
+			}
+		}
+		else loopv(cameras) if(cameras[i].ent < 0 && cameras[i].idx >= 0 && cameras[i].idx < numdynents())
+		{
+			gameent *d = (gameent *)iterdynents(cameras[i].idx);
+			cameras[i].pos = d->headpos();
+			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
 		#define unsettvmode(q) \
 		{ \
@@ -1378,7 +1405,7 @@ namespace game
 			}
 			#define updatecamorient \
 			{ \
-				if((k || j) && c.cansee.length()) \
+				if(!t && (k || j) && c.cansee.length()) \
 				{ \
 					vec dir = vec(avg).div(c.cansee.length()).sub(c.pos).normalize(); \
 					vectoyawpitch(dir, yaw, pitch); \
@@ -1404,7 +1431,12 @@ namespace game
 				int found = 0;
 				loopvj(cameras)
 				{
-					camstate &c = cameras[j];
+					camstate &c = cameras[j]; gameent *t = NULL;
+					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
+					{
+						t = (gameent *)iterdynents(c.idx);
+						if(t->state == CS_SPECTATOR) continue;
+					}
 					vec avg(0, 0, 0);
 					c.reset();
 					switch(k)
@@ -1412,7 +1444,7 @@ namespace game
 						case 0: default:
 						{
 							gameent *d;
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
 								addcamentity(i, d->feetpos());
 							break;
 						}
@@ -1469,19 +1501,30 @@ namespace game
 				cam = &cameras[0];
 				lasttvcam = lastmillis;
 				if(!lasttvchg || cam->ent != entidx) lasttvchg = lastmillis;
+				focus = cam->ent < 0 && players.inrange(cam->idx) ? players[cam->idx] : player1;
 			}
 			else if(alter && !cam->cansee.length()) cam->alter = true;
-			camera1->o = cam->pos;
-			if(cam->ent != entidx || !cam->alter)
+			if(focus != player1)
 			{
-				vec dir = vec(cam->dir).sub(camera1->o).normalize();
-				vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
+				camera1->o = focus->headpos();
+				camera1->yaw = camera1->aimyaw = focus->yaw;
+				camera1->pitch = camera1->aimpitch = focus->pitch;
+				camera1->roll = focus->roll;
 			}
-			if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			else
 			{
-				float speed = isspec ? spectvspeed : waittvspeed, scale = isspec ? spectvpitch : waittvpitch;
-				if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, scale);
+				camera1->o = cam->pos;
+				if(cam->ent != entidx || !cam->alter)
+				{
+					vec dir = vec(cam->dir).sub(camera1->o).normalize();
+					vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
+				}
+				if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
+				else
+				{
+					float speed = isspec ? spectvspeed : waittvspeed, scale = isspec ? spectvpitch : waittvpitch;
+					if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, scale);
+				}
 			}
 			camera1->resetinterp();
 		}
@@ -1514,9 +1557,18 @@ namespace game
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
-            gameent *d = NULL;
+            gameent *d = NULL; int count = 0;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL && (d->type == ENT_PLAYER || d->type == ENT_AI))
             {
+            	if(d != player1 && d->state != CS_SPECTATOR)
+            	{
+					count++;
+					if(player1->state == CS_SPECTATOR && !tvmode() && (specfollow < 0 || specfollow == count) && focus != d)
+					{
+						focus = d;
+						resetcamera();
+					}
+            	}
 				checkoften(d, d == player1 || d->ai);
 				if(d == player1)
 				{
@@ -1530,6 +1582,13 @@ namespace game
 					else if(WPA(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
 						zoomset(d->action[AC_ALTERNATE], lastmillis);
 				}
+            }
+            if(specfollow < 0) specfollow = count;
+            if(((player1->state != CS_SPECTATOR || !specfollow) && focus != player1) || specfollow > count)
+            {
+            	specfollow = 0;
+            	focus = player1;
+            	resetcamera();
             }
 
             physics::update();
@@ -1564,15 +1623,15 @@ namespace game
 				else if(!intermission && player1->state == CS_ALIVE)
 				{
 					physics::move(player1, 10, true);
-					addsway(player1);
 					entities::checkitems(player1);
 					weapons::reload(player1);
 				}
+				addsway(focus);
             }
 			checkcamera();
-			if(player1->state == CS_DEAD)
+			if(focus->state == CS_DEAD)
 			{
-				gameent *a = deathcamstyle ? (deathcamstyle == 2 ? player1 : getclient(player1->lastattacker)) : NULL;
+				gameent *a = deathcamstyle ? (deathcamstyle == 2 ? focus : getclient(focus->lastattacker)) : NULL;
 				if(a)
 				{
 					vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
@@ -1584,13 +1643,13 @@ namespace game
 				}
 			}
 			else if(tvmode()) cameratv();
-			else if(player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
+			else if(focus->state == CS_WAITING || focus->state == CS_SPECTATOR)
 			{
 				camera1->move = player1->move;
 				camera1->strafe = player1->strafe;
 				physics::move(camera1, 10, true);
 			}
-			if(player1->state == CS_SPECTATOR)
+			if(focus->state == CS_SPECTATOR)
 			{
 				player1->aimyaw = player1->yaw = camera1->yaw;
 				player1->aimpitch = player1->pitch = camera1->pitch;
@@ -1613,26 +1672,26 @@ namespace game
 			{
 				resetcursor();
 				cameras.setsize(0);
-				if(mousestyle() == 2 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR)
+				if(mousestyle() == 2 && focus->state != CS_WAITING && focus->state != CS_SPECTATOR)
 				{
-					camera1->yaw = player1->aimyaw = player1->yaw;
-					camera1->pitch = player1->aimpitch = player1->pitch;
+					camera1->yaw = focus->aimyaw = focus->yaw;
+					camera1->pitch = focus->aimpitch = focus->pitch;
 				}
 			}
 
-			if(player1->state == CS_DEAD || player1->state == CS_WAITING || player1->state == CS_SPECTATOR)
+			if(focus->state == CS_DEAD || focus->state == CS_WAITING || focus->state == CS_SPECTATOR)
 			{
 				camera1->aimyaw = camera1->yaw;
 				camera1->aimpitch = camera1->pitch;
 			}
 			else
 			{
-				camera1->o = player1->headpos();
+				camera1->o = focus->headpos();
 				if(mousestyle() <= 1)
-					findorientation(camera1->o, player1->yaw, player1->pitch, worldpos);
+					findorientation(camera1->o, focus->yaw, focus->pitch, worldpos);
 
-				camera1->aimyaw = mousestyle() <= 1 ? player1->yaw : player1->aimyaw;
-				camera1->aimpitch = mousestyle() <= 1 ? player1->pitch : player1->aimpitch;
+				camera1->aimyaw = mousestyle() <= 1 ? focus->yaw : focus->aimyaw;
+				camera1->aimpitch = mousestyle() <= 1 ? focus->pitch : focus->aimpitch;
 				if(thirdpersonview(true) && thirdpersondist)
 				{
 					vec dir;
@@ -1646,8 +1705,8 @@ namespace game
 					case 0:
 					case 1:
 					{
-						camera1->yaw = player1->yaw;
-						camera1->pitch = player1->pitch;
+						camera1->yaw = focus->yaw;
+						camera1->pitch = focus->pitch;
 						if(mousestyle())
 						{
 							camera1->aimyaw = camera1->yaw;
@@ -1661,7 +1720,7 @@ namespace game
 						vectoyawpitch(cursordir, yaw, pitch);
 						fixrange(yaw, pitch);
 						findorientation(camera1->o, yaw, pitch, worldpos);
-						if(allowmove(player1))
+						if(focus == player1 && allowmove(player1))
 						{
 							player1->yaw = yaw;
 							player1->pitch = pitch;
@@ -1672,7 +1731,7 @@ namespace game
 				fixfullrange(camera1->yaw, camera1->pitch, camera1->roll, false);
 				fixrange(camera1->aimyaw, camera1->aimpitch);
 			}
-			camera1->roll = player1->calcroll(physics::iscrouching(player1));
+			camera1->roll = focus->calcroll(physics::iscrouching(focus));
 			vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, camdir);
 			vecfromyawpitch(camera1->yaw, 0, 0, -1, camright);
 			vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
@@ -1739,19 +1798,19 @@ namespace game
 			if(firstpersondist != 0.f)
 			{
 				vecfromyawpitch(yaw, pitch, 1, 0, dir);
-				dir.mul(player1->radius*firstpersondist);
+				dir.mul(focus->radius*firstpersondist);
 				o.add(dir);
 			}
 			if(firstpersonshift != 0.f)
 			{
 				vecfromyawpitch(yaw, pitch, 0, -1, dir);
-				dir.mul(player1->radius*firstpersonshift);
+				dir.mul(focus->radius*firstpersonshift);
 				o.add(dir);
 			}
 			if(firstpersonadjust != 0.f)
 			{
 				vecfromyawpitch(yaw, pitch+90.f, 1, 0, dir);
-				dir.mul(player1->height*firstpersonadjust);
+				dir.mul(focus->height*firstpersonadjust);
 				o.add(dir);
 			}
 		}
@@ -1802,7 +1861,7 @@ namespace game
 			}
 		}
 
-        if(third && testanims && d == player1) yaw = 0; else yaw += 90;
+        if(third && testanims && d == focus) yaw = 0; else yaw += 90;
         if(anim == ANIM_DYING) pitch *= max(1.f-(lastmillis-basetime)/500.f, 0.f);
 
         if(d->ragdoll && (!ragdolls || anim!=ANIM_DYING)) cleanragdoll(d);
@@ -1811,7 +1870,7 @@ namespace game
 
 		int flags = MDL_LIGHT;
 #if 0 // breaks linkpos
-		if(d != player1 && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_CULL_QUERY;
+		if(d != focus && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_CULL_QUERY;
 #endif
         if(d->type == ENT_PLAYER)
         {
@@ -1827,9 +1886,9 @@ namespace game
 	void renderplayer(gameent *d, bool third, float trans, float size, bool early = false)
 	{
 		if(d->state == CS_SPECTATOR) return;
-		if(trans <= 0.f || (d == player1 && (third ? thirdpersonmodel : firstpersonmodel) < 1))
+		if(trans <= 0.f || (d == focus && (third ? thirdpersonmodel : firstpersonmodel) < 1))
 		{
-			if(d->state == CS_ALIVE && rendernormally && (early || d != player1))
+			if(d->state == CS_ALIVE && rendernormally && (early || d != focus))
 				trans = 1e-16f; // we need tag_muzzle/tag_waist
 			else return; // screw it, don't render them
 		}
@@ -1940,7 +1999,7 @@ namespace game
 		{
 			vec pos = d->abovehead(2);
 			float blend = aboveheadblend*trans;
-			if(shownamesabovehead > (d != player1 ? 0 : 1))
+			if(shownamesabovehead > (d != focus ? 0 : 1))
 			{
 				const char *name = colorname(d, NULL, d->aitype < 0 ? "<super>" : "<default>");
 				if(name && *name)
@@ -1949,14 +2008,14 @@ namespace game
 					pos.z += 2;
 				}
 			}
-			if(showstatusabovehead > (d != player1 ? 0 : 1))
+			if(showstatusabovehead > (d != focus ? 0 : 1))
 			{
 				Texture *t = NULL;
 				if(d->state == CS_DEAD || d->state == CS_WAITING) t = textureload(hud::deadtex, 3);
 				else if(d->state == CS_ALIVE)
 				{
 					if(d->conopen) t = textureload(hud::conopentex, 3);
-					else if(m_team(gamemode, mutators) && showteamabovehead > (d != player1 ? (d->team != player1->team ? 1 : 0) : 2))
+					else if(m_team(gamemode, mutators) && showteamabovehead > (d != focus ? (d->team != focus->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
 					else if(d->dominating) t = textureload(hud::dominatingtex, 3);
 					else if(d->dominated) t = textureload(hud::dominatedtex, 3);
@@ -1972,7 +2031,7 @@ namespace game
 		bool hasweapon = showweap && *weaptype[weap].vwep;
 		modelattach a[9]; int ai = 0;
 		if(hasweapon) a[ai++] = modelattach("tag_weapon", weaptype[weap].vwep, ANIM_VWEP|ANIM_LOOP, 0); // we could probably animate this too now..
-        if(rendernormally && (early || d != player1))
+        if(rendernormally && (early || d != focus))
         {
 			const char *muzzle = "tag_weapon";
 			if(hasweapon)
@@ -2004,25 +2063,25 @@ namespace game
 	{
 		startmodelbatches();
 		gameent *d;
-        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) renderplayer(d, true, transscale(d, true), deadscale(d, 1, true));
+        loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != focus) renderplayer(d, true, transscale(d, true), deadscale(d, 1, true));
 		entities::render();
 		projs::render();
 		if(m_stf(gamemode)) stf::render();
         if(m_ctf(gamemode)) ctf::render();
         ai::render();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) d->cleartags();
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != focus) d->cleartags();
 		endmodelbatches();
-        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != player1) rendercheck(d);
+        if(rendernormally) loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != focus) rendercheck(d);
 	}
 
     void renderavatar(bool early)
     {
-    	if(rendernormally && early) player1->cleartags();
+    	if(rendernormally && early) focus->cleartags();
         if((thirdpersonview() || !rendernormally))
-			renderplayer(player1, true, transscale(player1, thirdpersonview(true)), deadscale(player1, 1, true), early);
-        else if(!thirdpersonview() && player1->state == CS_ALIVE)
-            renderplayer(player1, false, transscale(player1, false), deadscale(player1, 1, true), early);
-		if(rendernormally && early) rendercheck(player1);
+			renderplayer(focus, true, transscale(focus, thirdpersonview(true)), deadscale(focus, 1, true), early);
+        else if(!thirdpersonview() && focus->state == CS_ALIVE)
+            renderplayer(focus, false, transscale(focus, false), deadscale(focus, 1, true), early);
+		if(rendernormally && early) rendercheck(focus);
     }
 
 	bool clientoption(char *arg) { return false; }

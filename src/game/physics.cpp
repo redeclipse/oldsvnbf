@@ -823,7 +823,7 @@ namespace physics
 					gameent *d = (gameent *)pl;
 					if(issound(d->fschan)) removesound(d->fschan);
 					d->fschan = -1; d->lastfire = 0;
-					playsound(S_EXTINGUISH, d->o, d, 0, d != game::player1 ? 128 : 224, -1, -1);
+					playsound(S_EXTINGUISH, d->o, d, 0, d != game::focus ? 128 : 224, -1, -1);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
 				}
 				if(pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)

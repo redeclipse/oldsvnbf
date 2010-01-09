@@ -1296,7 +1296,7 @@ namespace game
 	extern vec swaypush, swaydir;
     extern string clientmap;
 
-	extern gameent *player1;
+	extern gameent *player1, *focus;
 	extern vector<gameent *> players;
 
 	extern gameent *newclient(int cn);
