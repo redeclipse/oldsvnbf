@@ -470,7 +470,7 @@ namespace client
 		}
 
 		conoutft(CON_CHAT, "%s", s);
-		playsound(S_CHAT, camera1->o, camera1, SND_FORCED);
+		playsound(S_CHAT, d->o, d, d == game::player1 ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
 	}
 
 	void toserver(int flags, char *text)

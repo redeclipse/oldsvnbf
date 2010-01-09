@@ -201,6 +201,8 @@ namespace entities
 					if(attr[4]&SND_NODELAY) addentinfo("nodelay");
 					if(attr[4]&SND_NOCULL) addentinfo("nocull");
 					if(attr[4]&SND_NOPAN) addentinfo("nopan");
+					if(attr[4]&SND_NODIST) addentinfo("nodist");
+					if(attr[4]&SND_NOQUIET) addentinfo("noquiet");
 				}
 				break;
 			}
@@ -1134,10 +1136,7 @@ namespace entities
 						if(mapsounds.inrange(ents[i]->attrs[0]) && !issound(((gameentity *)ents[i])->schan))
 						{
 							int flags = SND_MAP;
-							if(ents[i]->attrs[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-							if(ents[i]->attrs[4]&SND_NODELAY) flags |= SND_NODELAY;
-							if(ents[i]->attrs[4]&SND_NOCULL) flags |= SND_NOCULL;
-							if(ents[i]->attrs[4]&SND_NOPAN) flags |= SND_NOPAN;
+							loopk(SND_LAST)  if(ents[i]->attrs[4]&(1<<k)) flags |= 1<<k;
 							playsound(ents[i]->attrs[0], both ? ents[i]->o : ents[index]->o, NULL, flags, ents[i]->attrs[3], ents[i]->attrs[1], ents[i]->attrs[2], &((gameentity *)ents[i])->schan);
 						}
 						break;
@@ -2217,10 +2216,7 @@ namespace entities
 			if(e.type == MAPSOUND && e.links.empty() && mapsounds.inrange(e.attrs[0]) && !issound(e.schan))
 			{
 				int flags = SND_MAP|SND_LOOP; // ambient sounds loop
-				if(e.attrs[4]&SND_NOATTEN) flags |= SND_NOATTEN;
-				if(e.attrs[4]&SND_NODELAY) flags |= SND_NODELAY;
-				if(e.attrs[4]&SND_NOCULL) flags |= SND_NOCULL;
-				if(e.attrs[4]&SND_NOPAN) flags |= SND_NOPAN;
+				loopk(SND_LAST)  if(e.attrs[4]&(1<<k)) flags |= 1<<k;
 				playsound(e.attrs[0], e.o, NULL, flags, e.attrs[3], e.attrs[1], e.attrs[2], &e.schan);
 			}
 		}

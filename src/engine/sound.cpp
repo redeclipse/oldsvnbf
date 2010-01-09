@@ -234,20 +234,22 @@ void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minra
 	int svol = clamp(int((mastervol/255.f)*(soundvol/255.f)*(vol/255.f)*(slotvol/255.f)*MIX_MAX_VOLUME), 0, MIX_MAX_VOLUME);
 	if(!(flags&SND_NOATTEN))
 	{
-		if(isliquid(lookupmaterial(pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME)) svol = int(svol*0.75f);
-		vec unitv;
-		float dist = camera1->o.dist(pos, unitv);
-		if(!soundmono && !(flags&SND_NOPAN) && (unitv.x != 0 || unitv.y != 0))
+		if(!(flags&SND_NOQUIET) && (isliquid(lookupmaterial(pos)&MATF_VOLUME) || isliquid(lookupmaterial(camera1->o)&MATF_VOLUME))) svol = int(svol*0.75f);
+		vec unitv; float dist = camera1->o.dist(pos, unitv);
+		if(!(flags&SND_NOPAN) && !soundmono && (unitv.x != 0 || unitv.y != 0))
 		{
 			float yaw = -atan2f(unitv.x, unitv.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
 			*curpan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
 		}
 		else *curpan = 127;
-
-		float mrad = maxrad > 0 ? maxrad : 256, nrad = minrad > 0 ? (minrad <= mrad ? minrad : mrad) : 0;
-		if(dist <= nrad) *curvol = svol;
-		else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/max(mrad-nrad,1e-16f))));
-		else *curvol = 0;
+		if(!(flags&SND_NODIST))
+		{
+			float mrad = maxrad > 0 ? maxrad : 256, nrad = minrad > 0 ? (minrad <= mrad ? minrad : mrad) : 0;
+			if(dist <= nrad) *curvol = svol;
+			else if(dist <= mrad) *curvol = int(svol*(1.f-((dist-nrad)/max(mrad-nrad,1e-16f))));
+			else *curvol = 0;
+		}
+		else *curvol = svol;
 	}
 	else { *curvol = svol; *curpan = 127; }
 }
