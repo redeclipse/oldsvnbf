@@ -1355,7 +1355,7 @@ namespace game
 		if(!cameras.empty())
 		{
 			camstate *cam = &cameras[0];
-			int entidx = cam->ent, len = (isspec ? spectvtime : waittvtime);
+			int entidx = cam->ent >= 0 ? cam->ent : cam->idx, len = (isspec ? spectvtime : waittvtime);
 			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= len,
 				override = renew || !lasttvcam || lastmillis-lasttvcam >= max(len/3, 1000);
 			#define addcamentity(q,p) \
@@ -1472,7 +1472,7 @@ namespace game
 				cameras.sort(camstate::camsort);
 				cam = &cameras[0];
 				lasttvcam = lastmillis;
-				if(!lasttvchg || cam->ent != entidx) lasttvchg = lastmillis;
+				if(!lasttvchg || (cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx)) lasttvchg = lastmillis;
 				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
 				{
 					focus = (gameent *)iterdynents(cam->idx);
@@ -1491,12 +1491,12 @@ namespace game
 			else
 			{
 				camera1->o = cam->pos;
-				if(cam->ent != entidx || !cam->alter)
+				if((cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx) || !cam->alter)
 				{
 					vec dir = vec(cam->dir).sub(camera1->o).normalize();
 					vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
 				}
-				if(cam->ent != entidx || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
+				if((cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx) || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 				else
 				{
 					float speed = isspec ? spectvspeed : waittvspeed, scale = isspec ? spectvpitch : waittvpitch;
