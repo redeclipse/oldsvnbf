@@ -701,13 +701,26 @@ namespace hud
 							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specmodekey, game::tvmode() ? "interact" : "switch to TV")*noticescale;
 							if(!game::tvmode())
 							{
-								pushfont("sub");
+								pushfont("radar");
 								SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
 								SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
 								ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
 								popfont();
 							}
 						}
+						popfont();
+					}
+				}
+				else if(game::focus->state == CS_WAITING)
+				{
+					if(game::focus != game::player1)
+						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
+					if(shownotices >= 3 && !game::tvmode())
+					{
+						pushfont("radar");
+						SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
+						SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
+						ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
 						popfont();
 					}
 				}

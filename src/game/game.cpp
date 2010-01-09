@@ -253,14 +253,11 @@ namespace game
 
 	bool tvmode()
 	{
-		if(!m_edit(gamemode))
+		if(!m_edit(gamemode)) switch(player1->state)
 		{
-			if(player1->state == CS_SPECTATOR && specmode) return true;
-			else switch(focus->state)
-			{
-				case CS_WAITING: if(waitmode && (!focus->lastdeath || lastmillis-focus->lastdeath >= 500)) return true; break;
-				default: break;
-			}
+			case CS_SPECTATOR: if(specmode) return true; break;
+			case CS_WAITING: if(waitmode && (!player1->lastdeath || lastmillis-player1->lastdeath >= 500)) return true; break;
+			default: break;
 		}
 		return false;
 	}
