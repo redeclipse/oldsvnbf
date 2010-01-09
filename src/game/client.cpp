@@ -1273,6 +1273,7 @@ namespace client
 						loopv(game::players)	// clear copies since new player doesn't have them
 							if(game::players[i]) freeeditinfo(game::players[i]->edit);
 						freeeditinfo(localedit);
+						game::cameras.setsize(0);
 					}
 					copystring(d->name, text, MAXNAMELEN+1);
 					int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
