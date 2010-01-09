@@ -79,20 +79,20 @@ void converttext(char *dst, const char *src)
 			int oldcolor = colorstack[colorpos]; colorstack[colorpos] = c;
 			switch(c)
 			{
-				case 'g': case '0': *dst++ = '\003'; *dst++ = '3'; break;	// green
+				case 'g': case '0': *dst++ = '\003'; *dst++ = '3'; break; // green
 				case 'b': case '1': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// blue
-				case 'y': case '2': *dst++ = '\003'; *dst++ = '8'; break;	// yellow
-				case 'r': case '3': *dst++ = '\003'; *dst++ = '4'; break;	// red
+				case 'y': case '2': *dst++ = '\003'; *dst++ = '2'; break; // yellow
+				case 'r': case '3': *dst++ = '\003'; *dst++ = '4'; break; // red
 				case 'a': case '4': *dst++ = '\003'; *dst++ = '1'; *dst++ = '4'; break;	// grey
 				case 'm': case '5': *dst++ = '\003'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
-				case 'o': case '6': *dst++ = '\003'; *dst++ = '7'; break;	// orange
-				case 'w': case '7': *dst++ = '\003'; *dst++ = '1'; break;	// white
-				case 'k': case '8': *dst++ = '\003'; *dst++ = '0'; break;	// black
-				case 'c': case '9': *dst++ = '\003'; *dst++ = '1'; *dst++ = '1'; break;	// cyan
+				case 'o': case '6': *dst++ = '\003'; *dst++ = '7'; break; // orange
+				case 'w': case '7': *dst++ = '\003'; *dst++ = '1'; break; // white
+				case 'k': case '8': *dst++ = '\003'; *dst++ = '1'; break; // black
+				case 'c': case '9': *dst++ = '\003'; *dst++ = '1'; *dst++ = '0'; break;	// cyan
 				case 'v': case 'A': *dst++ = '\003'; *dst++ = '1'; *dst++ = '2'; break;	// violet
-				case 'p': case 'B': *dst++ = '\003'; *dst++ = '6'; break;	// purple
+				case 'p': case 'B': *dst++ = '\003'; *dst++ = '6'; break; // purple
 				case 'n': case 'C': *dst++ = '\003'; *dst++ = '5'; break; // brown
-				case 'd': case 'D': *dst++ = '\003'; *dst++ = '1'; *dst++ = '0'; break;	// dark grey
+				case 'd': case 'D': *dst++ = '\003'; *dst++ = '1'; break; // dark grey
 				case 'u': *dst++ = '\015'; break;
 				default: colorstack[colorpos] = oldcolor; break;
 			}
