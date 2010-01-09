@@ -35,7 +35,7 @@ namespace ctf
     void drawblips(int w, int h, float blend)
     {
     	static vector<int> hasflags; hasflags.setsizenodelete(0);
-        loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && st.flags[i].owner == game::player1) hasflags.add(i);
+        loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && st.flags[i].owner == game::focus) hasflags.add(i);
         loopv(st.flags)
         {
             ctfstate::flag &f = st.flags[i];
@@ -49,7 +49,7 @@ namespace ctf
 				float r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
 				if(k)
 				{
-					if(!(f.base&BASE_FLAG) || f.owner == game::player1 || (!f.owner && !f.droptime) || lastmillis%600 >= 400) break;
+					if(!(f.base&BASE_FLAG) || f.owner == game::focus || (!f.owner && !f.droptime) || lastmillis%600 >= 400) break;
 					dir = f.pos();
 				}
 				else dir = f.spawnloc;
@@ -57,7 +57,7 @@ namespace ctf
 				if(!k)
 				{
 					float dist = dir.magnitude(), diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
-					if(isctfhome(f, game::player1->team) && ctfstyle <= 2 && !hasflags.empty())
+					if(isctfhome(f, game::focus->team) && ctfstyle <= 2 && !hasflags.empty())
 					{
 						fade += (1.f-fade)*diff;
 						tex = hud::arrowtex;
@@ -74,17 +74,17 @@ namespace ctf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
+		if(game::focus->state == CS_ALIVE && hud::shownotices >= 3)
 		{
 			static vector<int> hasflags, takenflags, droppedflags;
 			hasflags.setsizenodelete(0); takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
 			loopv(st.flags)
 			{
 				ctfstate::flag &f = st.flags[i];
-				if(f.owner == game::player1) hasflags.add(i);
-				else if(isctfflag(f, game::player1->team))
+				if(f.owner == game::focus) hasflags.add(i);
+				else if(isctfflag(f, game::focus->team))
 				{
-					if(f.owner && f.owner->team != game::player1->team) takenflags.add(i);
+					if(f.owner && f.owner->team != game::focus->team) takenflags.add(i);
 					else if(f.droptime) droppedflags.add(i);
 				}
 			}
@@ -103,8 +103,8 @@ namespace ctf
 		{
 			if(y-sy-s < m) break;
 			ctfstate::flag &f = st.flags[i];
-			bool headsup = hud::chkcond(hud::inventorygame, game::player1->state == CS_SPECTATOR || f.team == TEAM_NEUTRAL || f.team == game::player1->team);
-			if(headsup || f.lastowner == game::player1)
+			bool headsup = hud::chkcond(hud::inventorygame, game::player1->state == CS_SPECTATOR || f.team == TEAM_NEUTRAL || f.team == game::focus->team);
+			if(headsup || f.lastowner == game::focus)
 			{
 				const char *pre = "";
 				int millis = lastmillis-f.interptime, colour = teamtype[f.team].colour, pos[2] = { x, y-sy };
@@ -112,7 +112,7 @@ namespace ctf
 					r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f, rescale = 1.f;
 				if(f.owner || f.droptime)
 				{
-					if(f.owner == game::player1)
+					if(f.owner == game::focus)
 					{
 						pre = "\fzRw";
 						skew = 1; // override it
@@ -429,7 +429,7 @@ namespace ctf
 				break;
 			}
 		}
-		game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(denied ? S_V_DENIED : S_V_FLAGDROP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s%s dropped the the \fs%s%s\fS flag", game::colorname(d), denied ? " was denied a capture and" : "", teamtype[f.team].chat, teamtype[f.team].name);
 		st.dropflag(i, droploc, lastmillis);
 		dodrop(f, i);
     }
@@ -471,7 +471,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.spawnloc, ctfstyle ? 2 : 3, "RETURNED");
-		game::announce(S_V_FLAGRETURN, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::timetostr(lastmillis-(ctfstyle%2 ? f.taketime : f.droptime)));
+		game::announce(S_V_FLAGRETURN, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s returned the \fs%s%s\fS flag (time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, hud::timetostr(lastmillis-(ctfstyle%2 ? f.taketime : f.droptime)));
 		st.returnflag(i, lastmillis);
     }
 
@@ -495,7 +495,7 @@ namespace ctf
         }
         else flageffect(goal, d->team, f.pos(), f.spawnloc, 3, "CAPTURED");
 		(st.findscore(d->team)).total = score;
-		game::announce(S_V_FLAGSCORE, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::timetostr(lastmillis-f.taketime));
+		game::announce(S_V_FLAGSCORE, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s scored the \fs%s%s\fS flag for \fs%s%s\fS team (score: \fs\fc%d\fS, time taken: \fs\fc%s\fS)", game::colorname(d), teamtype[f.team].chat, teamtype[f.team].name, teamtype[d->team].chat, teamtype[d->team].name, score, hud::timetostr(lastmillis-f.taketime));
 		st.returnflag(relay, lastmillis);
     }
 
@@ -504,7 +504,7 @@ namespace ctf
         if(!st.flags.inrange(i)) return;
 		ctfstate::flag &f = st.flags[i];
 		flageffect(i, d->team, d->feetpos(), f.pos(), 1, f.team == d->team ? "SECURED" : "TAKEN");
-		game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::player1 ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
+		game::announce(f.team == d->team ? S_V_FLAGSECURED : S_V_FLAGPICKUP, d == game::focus ? CON_SELF : CON_INFO, d, "\fa%s %s the \fs%s%s\fS flag", game::colorname(d), f.droptime ? (f.team == d->team ? "secured" : "picked up") : "stole", teamtype[f.team].chat, teamtype[f.team].name);
 		st.takeflag(i, d, lastmillis);
     }
 

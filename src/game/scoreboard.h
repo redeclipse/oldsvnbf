@@ -260,59 +260,64 @@ namespace hud
 			g.popfont();
 			g.poplist();
 
-			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
+			if(game::focus->state == CS_SPECTATOR)
 			{
-				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
-				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
+				g.space(1);
+				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::focus != game::player1 ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating")); g.popfont();
+				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
+				g.pushfont("sub");
+				g.textf("Press \fs\fc%s\fS to play", 0xFFFFFF, NULL, speconkey);
+				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
+				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "interact" : "switch to TV");
+				g.pushfont("radar");
+				SEARCHBINDCACHE(specf1key)("specfollowdelta 1", 1);
+				SEARCHBINDCACHE(specf2key)("specfollowdelta -1", 1);
+				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, specf1key, specf2key);
+				g.popfont();
+				g.popfont();
+			}
+			if(game::focus->state == CS_DEAD || game::focus->state == CS_WAITING)
+			{
+				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::focus->lastdeath ? game::focus->respawnwait(lastmillis, sdelay) : 0;
+				const char *msg = game::focus->state != CS_WAITING && game::focus->lastdeath ? "Fragged" : "Please Wait";
 				g.space(1);
 				g.pushlist();
 				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();
 				g.space(2);
 				SEARCHBINDCACHE(attackkey)("action 0", 0);
 				g.pushfont("sub");
-				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
+				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::focus->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
 					if(m_duke(game::gamemode, game::mutators)) g.textf("Queued for new round", 0xFFFFFF, NULL);
 					else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
 					g.poplist();
-					if(game::player1->state != CS_WAITING && lastmillis-game::player1->lastdeath > 500)
+					if(game::focus == game::player1 && game::focus->state != CS_WAITING && lastmillis-game::focus->lastdeath > 500)
 						g.textf("Press \fs\fc%s\fS to look around", 0xFFFFFF, NULL, attackkey);
 				}
 				else
 				{
 					g.textf("Ready to respawn", 0xFFFFFF, NULL);
 					g.poplist();
-					if(game::player1->state != CS_WAITING) g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
+					if(game::focus->state != CS_WAITING) g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
 				}
-				if(game::player1->state == CS_WAITING)
+				if(game::focus == game::player1 && game::focus->state == CS_WAITING)
 				{
 					SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
 					g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, waitmodekey, game::tvmode() ? "look around" : "observe");
 				}
-				if(m_arena(game::gamemode, game::mutators))
+				if(game::focus == game::player1 && m_arena(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
-					g.textf("Press \fs\fc%s\fS to %s your loadout", 0xFFFFFF, NULL, loadkey, game::player1->loadweap < 0 ? "\fzoychoose" : "change");
+					g.textf("Press \fs\fc%s\fS to %s your loadout", 0xFFFFFF, NULL, loadkey, game::focus->loadweap < 0 ? "\fzoychoose" : "change");
 				}
-				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
+				if(game::focus == game::player1 && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(teamkey)("showgui team", 0);
 					g.textf("Press \fs\fc%s\fS to change teams", 0xFFFFFF, NULL, teamkey);
 				}
 				g.popfont();
 			}
-			else if(game::player1->state == CS_SPECTATOR)
-			{
-				g.space(1);
-				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating"); g.popfont();
-				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
-				g.pushfont("sub");
-				g.textf("Press \fs\fc%s\fS to play", 0xFFFFFF, NULL, speconkey);
-				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
-				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "look around" : "observe");
-				g.popfont();
-			}
-			else
+			else if(game::focus->state == CS_ALIVE)
 			{
 				g.space(1);
 				g.pushfont("super");
@@ -320,7 +325,7 @@ namespace hud
 				else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
 				else if(m_campaign(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
 				else if(m_team(game::gamemode, game::mutators))
-					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
+					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::focus->team].chat, teamtype[game::player1->team].name);
 				else g.textf("Free for All", 0xFFFFFF, NULL);
 				g.popfont();
 			}
@@ -480,7 +485,7 @@ namespace hud
 					g.text("sk", fgcolor);
 					loopscoregroup({
 						if(o->aitype >= 0) g.textf("%d", 0xFFFFFF, NULL, o->skill);
-						else g.textf("%d", 0xFFFFFF, NULL, int(game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1))));
+						else g.textf("%d", 0xFFFFFF, NULL, int(o->totaldamage*100.f/float(max(o->totalshots, 1))));
 					});
 					g.poplist();
 				}
@@ -563,7 +568,7 @@ namespace hud
 				scoregroup &sg = *groups[k];
 				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
-					if(!sg.team || ((sg.team != game::player1->team) == !i)) continue;
+					if(!sg.team || ((sg.team != game::focus->team) == !i)) continue;
 					if(!sy) sy += s/8;
 					sy += drawinventoryitem(x, y-sy, s-s/4, 1.25f-clamp(numout,1,3)*0.25f*inventoryskew, blend*inventoryblend, k, sg.team, sg.score, teamtype[sg.team].name);
 					if((numout += 1) > 3) return sy;
@@ -574,7 +579,7 @@ namespace hud
 					loopvj(sg.players)
 					{
 						gameent *d = sg.players[j];
-						if((d != game::player1) == !i) continue;
+						if((d != game::focus) == !i) continue;
 						if(!sy) sy += s/8;
 						sy += drawinventoryitem(x, y-sy, s-s/4, 1.25f-clamp(numout,1,3)*0.25f*inventoryskew, blend*inventoryblend, j, sg.team, d->points, game::colorname(d, NULL, "", false));
 						if((numout += 1) > 3) return sy;

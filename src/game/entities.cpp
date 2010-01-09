@@ -800,7 +800,7 @@ namespace entities
 									game::fixfullrange(d->yaw, d->pitch, d->roll, true);
 									f.lastuse = f.lastemit = e.lastemit;
 									execlink(d, n, true); execlink(d, teleports[r], true);
-									if(d == game::player1) game::resetcamera();
+									if(d == game::focus) game::resetcamera();
 									teleported = true;
 									break;
 								}
@@ -2020,6 +2020,7 @@ namespace entities
 	void renderentshow(gameentity &e, int idx, int level)
 	{
 		if(e.o.squaredist(camera1->o) > maxparticledistance*maxparticledistance) return;
+		#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, 1, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, 1, fade, 0x000000); }
 		if(showentradius >= level)
 		{
 			switch(e.type)
@@ -2063,6 +2064,21 @@ namespace entities
 					}
 					break;
 				}
+				case SUNLIGHT:
+				{
+					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10, yaw = e.attrs[0], pitch = e.attrs[1]+90;
+					vec dir(yaw*RAD, pitch*RAD);
+					static const float offsets[9][2] = { { 0, 0 }, { 0, 1 }, { 90, 1 }, { 180, 1 }, { 270, 1 }, { 45, 0.5f }, { 135, 0.5f }, { 225, 0.5f }, { 315, 0.5f } };
+					loopk(9)
+					{
+						vec spoke(yaw*RAD, (pitch + offset*offsets[k][1])*RAD);
+						spoke.rotate(offsets[k][0]*RAD, dir);
+						float syaw, spitch;
+						vectoyawpitch(spoke, syaw, spitch);
+						entdirpart(e.o, syaw, spitch, getworldsize()*2, 1, colour);
+					}
+					break;
+				}
 				case FLAG:
 				{
 					float radius = (float)enttype[e.type].radius;
@@ -2092,7 +2108,6 @@ namespace entities
 
 		if(showentdir >= level)
 		{
-			#define entdirpart(o,yaw,pitch,size,fade,colour) { vec pos = o; part_dir(pos, yaw, pitch, size, 1, fade, colour); pos.z -= 0.1f; part_dir(pos, yaw, pitch, size, 1, fade, 0x000000); }
 			switch(e.type)
 			{
 				case PLAYERSTART: case CHECKPOINT:
@@ -2103,21 +2118,6 @@ namespace entities
 				case MAPMODEL:
 				{
 					entdirpart(e.o, e.attrs[1], 360-e.attrs[2], 4.f, 1, 0x00FFFF);
-					break;
-				}
-				case SUNLIGHT:
-				{
-					int colour = ((e.attrs[2]/2)<<16)|((e.attrs[3]/2)<<8)|(e.attrs[4]/2), offset = e.attrs[5] ? e.attrs[5] : 10, yaw = e.attrs[0], pitch = e.attrs[1]+90;
-					vec dir(yaw*RAD, pitch*RAD);
-					static const float offsets[9][2] = { { 0, 0 }, { 0, 1 }, { 90, 1 }, { 180, 1 }, { 270, 1 }, { 45, 0.5f }, { 135, 0.5f }, { 225, 0.5f }, { 315, 0.5f } };
-					loopk(9)
-					{
-						vec spoke(yaw*RAD, (pitch + offset*offsets[k][1])*RAD);
-						spoke.rotate(offsets[k][0]*RAD, dir);
-						float syaw, spitch;
-						vectoyawpitch(spoke, syaw, spitch);
-						entdirpart(e.o, syaw, spitch, getworldsize()*2, 1, colour);
-					}
 					break;
 				}
 				case ACTOR:

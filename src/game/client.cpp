@@ -470,7 +470,7 @@ namespace client
 		}
 
 		conoutft(CON_CHAT, "%s", s);
-		playsound(S_CHAT, d->o, d, d == game::player1 ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
+		playsound(S_CHAT, d->o, d, d == game::focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
 	}
 
 	void toserver(int flags, char *text)
@@ -1276,7 +1276,7 @@ namespace client
 					}
 					copystring(d->name, text, MAXNAMELEN+1);
 					int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
-					if(d == game::player1 && d->team != team) hud::lastteam = 0;
+					if(d == game::focus && d->team != team) hud::lastteam = 0;
 					d->team = team;
 					break;
 				}
@@ -1336,7 +1336,7 @@ namespace client
 						}
 					}
 					ai::spawned(f, ent);
-					if(f == game::player1) game::resetcamera();
+					if(f == game::focus) game::resetcamera();
 					break;
 				}
 
@@ -1710,6 +1710,7 @@ namespace client
 					int sn = getint(p), val = getint(p);
 					gameent *s = game::newclient(sn);
 					if(!s) break;
+					if(s == game::player1) game::focus = game::player1;
 					if(val)
 					{
 						if(s == game::player1 && editmode) toggleedit();
@@ -1736,6 +1737,7 @@ namespace client
 					{
 						if(editmode) toggleedit();
 						hud::sb.showscores(false);
+						game::focus = game::player1;
 					}
 					else if(!s->ai) s->resetinterp();
 					if(s->state == CS_ALIVE) s->lastdeath = lastmillis; // so spawndelay shows properly
@@ -1749,7 +1751,7 @@ namespace client
 					int wn = getint(p), tn = getint(p);
 					gameent *w = game::getclient(wn);
 					if(!w) return;
-					if(w == game::player1 && w->team != tn) hud::lastteam = 0;
+					if(w == game::focus && w->team != tn) hud::lastteam = 0;
 					w->team = tn;
 					break;
 				}
@@ -1793,10 +1795,10 @@ namespace client
 					t->cplast = laptime;
 					t->cptime = besttime;
 					t->cpmillis = t->impulse[IM_METER] = 0;
-					if(showlaptimes > (t != game::player1 ? (t->aitype >= 0 ? 2 : 1) : 0))
+					if(showlaptimes > (t != game::focus ? (t->aitype >= 0 ? 2 : 1) : 0))
 					{
 						defformatstring(best)("%s", hud::timetostr(besttime));
-						conoutft(t != game::player1 ? CON_INFO : CON_SELF, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::timetostr(laptime), best);
+						conoutft(t != game::focus ? CON_INFO : CON_SELF, "%s lap time: \fs\fg%s\fS (best: \fs\fy%s\fS)", game::colorname(t), hud::timetostr(laptime), best);
 					}
 				}
 
