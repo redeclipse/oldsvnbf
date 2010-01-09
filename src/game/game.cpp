@@ -1322,7 +1322,6 @@ namespace game
 						}
 					}
 				}
-				lasttvcam = lasttvchg = 0;
 				if(!cameras.empty()) break;
 			}
             gameent *d = NULL;
@@ -1409,8 +1408,16 @@ namespace game
 						case 0: default:
 						{
 							gameent *d;
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
-								addcamentity(i, d->feetpos());
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
+							{
+								if(d == t)
+								{
+									c.cansee.add(i);
+									avg.add(d->feetpos());
+								}
+								else if(d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
+									addcamentity(i, d->feetpos());
+							}
 							break;
 						}
 						case 1:
