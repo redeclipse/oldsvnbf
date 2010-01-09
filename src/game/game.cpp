@@ -1456,11 +1456,11 @@ namespace game
 					else
 					{
 						c.score = 0;
-						if(c.ent >= 0 && override && !k && !j && !alter) renew = true; // quick scotty, get a new cam
+						if(override && !k && !j && !alter) renew = true; // quick scotty, get a new cam
 					}
 					if(!renew || !override) break;
 				}
-				if(cam->ent >= 0 && override && !found && (k || !alter))
+				if(override && !found && (k || !alter))
 				{
 					if(!k) renew = true;
 					else unsettvmode(lasttvcam ? false : true);
