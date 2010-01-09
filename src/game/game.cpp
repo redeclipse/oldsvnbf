@@ -1537,10 +1537,13 @@ namespace game
             gameent *d = NULL; bool override = follow < 0, allow = (player1->state == CS_SPECTATOR || player1->state == CS_WAITING) && follow, found = false;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL)
             {
-            	if(d != player1 && d->state != CS_SPECTATOR && allow && (override || i == follow || (i > follow && !found)) && focus != d)
+            	if(d->state != CS_SPECTATOR && allow && (override || i == follow || (i > follow && !found)))
 				{
-					focus = d;
-					resetcamera();
+					if(focus != d)
+					{
+						focus = d;
+						resetcamera();
+					}
 					follow = i;
 					found = true;
 				}
@@ -1561,11 +1564,14 @@ namespace game
 					}
 				}
             }
-            if((!found || !allow || !follow) && focus != player1)
+            if(!found || !allow)
             {
+            	if(focus != player1)
+            	{
+					focus = player1;
+					resetcamera();
+            	}
             	follow = 0;
-            	focus = player1;
-            	resetcamera();
             }
 
             physics::update();
