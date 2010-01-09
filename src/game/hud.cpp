@@ -711,7 +711,7 @@ namespace hud
 						popfont();
 					}
 				}
-				else if(game::focus->state == CS_WAITING)
+				else if(game::player1->state == CS_WAITING)
 				{
 					if(game::focus != game::player1)
 						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
