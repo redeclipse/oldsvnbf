@@ -591,7 +591,7 @@ namespace game
             else if(damage >= 50) snd = 3;
             else if(damage >= 25) snd = 2;
             else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, actor->o, actor, SND_FORCED, -1, -1, -1);
+            playsound(S_DAMAGE1+snd, actor->o, actor, actor == player1 ? SND_FORCED : 0, -1, -1, -1);
         }
     };
     vector<damagetone> damagetones;
