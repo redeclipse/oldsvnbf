@@ -628,7 +628,7 @@ namespace client
 		}
 		return;
 	}
-	ICOMMAND(getmap, "", (), if(!multiplayer()) addmsg(SV_GETMAP, "r"));
+	ICOMMAND(getmap, "", (), if(multiplayer(false)) addmsg(SV_GETMAP, "r"));
 
 	void stopdemo()
 	{
