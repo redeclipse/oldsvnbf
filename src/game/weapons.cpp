@@ -189,7 +189,8 @@ namespace weapons
 			offset = max(d->weapload[d->weapselect], 1)+WPB(d->weapselect, sub, flags&HIT_ALT);
 			d->weapload[d->weapselect] = -d->weapload[d->weapselect];
 		}
-		if(!WPB(d->weapselect, fullauto, flags&HIT_ALT)) d->action[secondary ? AC_ALTERNATE : AC_ATTACK] = false;
+		if(!WPB(d->weapselect, fullauto, flags&HIT_ALT))
+			d->action[secondary && !WPA(d->weapselect, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
 		d->action[AC_RELOAD] = false;
 		vec to = targ, from = d->muzzlepos(d->weapselect), unitv;
 		float dist = to.dist(from, unitv);
