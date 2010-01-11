@@ -1339,23 +1339,12 @@ namespace game
 			cameras[i].pos = d->headpos();
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
-		#define unsettvmode(q) \
-		{ \
-			if(q) \
-			{ \
-				camera1->o.x = camera1->o.y = camera1->o.z = getworldsize(); \
-				camera1->o.x *= 0.5f; camera1->o.y *= 0.5f; \
-			} \
-			camera1->resetinterp(); \
-			setvar(isspec ? "specmode" : "waitmode", 0, true); \
-			return; \
-		}
 
 		if(!cameras.empty())
 		{
 			camstate *cam = &cameras[0];
-			int entidx = cam->ent >= 0 ? cam->ent : cam->idx;
-			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= spectvtime;
+			int ent = cam->ent, entidx = cam->ent >= 0 ? cam->ent : cam->idx;
+			bool renew = !lasttvcam || lastmillis-lasttvcam >= spectvtime, override = !lasttvcam || lastmillis-lasttvcam >= max(spectvtime/2, 2500);
 			#define addcamentity(q,p) \
 			{ \
 				vec trg, pos = p; \
@@ -1368,7 +1357,11 @@ namespace game
 			}
 			#define updatecamorient \
 			{ \
-				if(!t && (k || j) && c.cansee.length()) \
+				if(t) \
+				{ \
+					if(t != focus) { yaw = t->yaw; pitch = t->pitch; } \
+				} \
+				else if((k || j) && c.cansee.length()) \
 				{ \
 					vec dir = vec(avg).div(c.cansee.length()).sub(c.pos).normalize(); \
 					vectoyawpitch(dir, yaw, pitch); \
@@ -1434,7 +1427,10 @@ namespace game
 						{
 							gameent *d;
 							loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
-								dircamentity(i, d->feetpos());
+							{
+								if(d == t) c.dir.add(d->feetpos());
+								else dircamentity(i, d->feetpos());
+							}
 							break;
 						}
 						case 1:
@@ -1454,14 +1450,13 @@ namespace game
 					else
 					{
 						c.score = 0;
-						if(!k && !j && !alter) renew = true; // quick scotty, get a new cam
+						if(override && !k && !j) renew = true; // quick scotty, get a new cam
 					}
 					if(!renew) break;
 				}
-				if(!found && (k || !alter))
+				if(override && !found)
 				{
-					if(!k) renew = true;
-					else unsettvmode(lasttvcam ? false : true);
+					if(k) renew = true;
 				}
 				else break;
 			}
@@ -1470,7 +1465,11 @@ namespace game
 				cameras.sort(camstate::camsort);
 				cam = &cameras[0];
 				lasttvcam = lastmillis;
-				if(!lasttvchg || (cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx)) lasttvchg = lastmillis;
+				if(!lasttvchg || (cam->ent >= 0 ? (ent >= 0 && cam->ent != entidx) : (ent < 0 && cam->idx != entidx)))
+				{
+					lasttvchg = lastmillis;
+					ent = entidx = -1;
+				}
 				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
 				{
 					focus = (gameent *)iterdynents(cam->idx);
@@ -1478,7 +1477,7 @@ namespace game
 				}
 				else { focus = player1; follow = 0; }
 			}
-			else if(alter && !cam->cansee.length()) cam->alter = true;
+			else if(cam->alter && !cam->cansee.length()) cam->alter = true;
 			if(focus != player1)
 			{
 				camera1->o = focus->headpos();
@@ -1499,7 +1498,7 @@ namespace game
 			}
 			camera1->resetinterp();
 		}
-		else unsettvmode(true);
+		else setvar(isspec ? "specmode" : "waitmode", 0, true);
 	}
 
 	void updateworld()		// main game update loop
