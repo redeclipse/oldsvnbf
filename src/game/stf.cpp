@@ -99,14 +99,14 @@ namespace stf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::focus->state == CS_ALIVE && hud::shownotices >= 3)
+		if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
 		{
-			loopv(st.flags) if(insideflag(st.flags[i], game::focus) && (st.flags[i].owner == game::focus->team || st.flags[i].enemy == game::focus->team))
+			loopv(st.flags) if(insideflag(st.flags[i], game::player1) && (st.flags[i].owner == game::player1->team || st.flags[i].enemy == game::player1->team))
 			{
 				stfstate::flag &f = st.flags[i];
 				pushfont("super");
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
-				bool overthrow = f.owner && f.enemy == game::focus->team;
+				bool overthrow = f.owner && f.enemy == game::player1->team;
 				ty += draw_textx("\fzwa%s \fs%s%d%%\fS complete", tx, ty, 255, 255, 255, int(255*blend), TEXT_CENTERED, -1, -1, overthrow ? "Overthrow" : "Secure", overthrow ? "\fo" : (occupy < 1.f ? "\fy" : "\fg"), int(occupy*100.f))*hud::noticescale;
 				popfont();
 				break;
