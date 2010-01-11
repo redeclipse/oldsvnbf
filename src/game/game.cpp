@@ -116,7 +116,7 @@ namespace game
         if(!viewonly && (focus->state == CS_DEAD || focus->state == CS_WAITING)) return true;
 		if(!thirdperson) return false;
 		if(player1->state == CS_EDITING) return false;
-		if(player1->state == CS_SPECTATOR) return false;
+		if(player1->state == CS_SPECTATOR && focus == player1) return false;
 		if(inzoom()) return false;
 		return true;
 	}
