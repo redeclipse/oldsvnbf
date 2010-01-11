@@ -52,13 +52,12 @@ namespace game
 
 	VARP(follow, -1, 0, INT_MAX-1);
 	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
+	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
+
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
-	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
-	VARP(waittvtime, 1000, 5000, INT_MAX-1);
-	FVARP(waittvspeed, 0, 1, 1000);
-	FVARP(waittvpitch, 0, 1, 1000);
+
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
 
@@ -1355,9 +1354,8 @@ namespace game
 		if(!cameras.empty())
 		{
 			camstate *cam = &cameras[0];
-			int entidx = cam->ent >= 0 ? cam->ent : cam->idx, len = (isspec ? spectvtime : waittvtime);
-			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= len,
-				override = renew || !lasttvcam || lastmillis-lasttvcam >= max(len/3, 1000);
+			int entidx = cam->ent >= 0 ? cam->ent : cam->idx;
+			bool alter = cam->alter, renew = !lasttvcam || lastmillis-lasttvcam >= spectvtime;
 			#define addcamentity(q,p) \
 			{ \
 				vec trg, pos = p; \
@@ -1456,11 +1454,11 @@ namespace game
 					else
 					{
 						c.score = 0;
-						if(override && !k && !j && !alter) renew = true; // quick scotty, get a new cam
+						if(!k && !j && !alter) renew = true; // quick scotty, get a new cam
 					}
-					if(!renew || !override) break;
+					if(!renew) break;
 				}
-				if(override && !found && (k || !alter))
+				if(!found && (k || !alter))
 				{
 					if(!k) renew = true;
 					else unsettvmode(lasttvcam ? false : true);
@@ -1497,11 +1495,7 @@ namespace game
 					vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
 				}
 				if((cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx) || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
-				else
-				{
-					float speed = isspec ? spectvspeed : waittvspeed, scale = isspec ? spectvpitch : waittvpitch;
-					if(speed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*speed, scale);
-				}
+				else if(spectvspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, spectvpitch);
 			}
 			camera1->resetinterp();
 		}

@@ -260,64 +260,48 @@ namespace hud
 			g.popfont();
 			g.poplist();
 
-			if(game::focus->state == CS_SPECTATOR)
+			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 			{
-				g.space(1);
-				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::focus != game::player1 ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating")); g.popfont();
-				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
-				g.pushfont("sub");
-				g.textf("Press \fs\fc%s\fS to play", 0xFFFFFF, NULL, speconkey);
-				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
-				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "interact" : "switch to TV");
-				g.pushfont("radar");
-				SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
-				SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
-				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, specf1key, specf2key);
-				g.popfont();
-				g.popfont();
-			}
-			if(game::focus->state == CS_DEAD || game::focus->state == CS_WAITING)
-			{
-				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::focus->lastdeath ? game::focus->respawnwait(lastmillis, sdelay) : 0;
-				const char *msg = game::focus->state != CS_WAITING && game::focus->lastdeath ? "Fragged" : "Please Wait";
+				int sdelay = m_delay(game::gamemode, game::mutators), delay = game::player1->lastdeath ? game::player1->respawnwait(lastmillis, sdelay) : 0;
+				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
 				g.space(1);
 				g.pushlist();
 				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();
 				g.space(2);
 				SEARCHBINDCACHE(attackkey)("action 0", 0);
 				g.pushfont("sub");
-				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::focus->lastdeath) || m_duke(game::gamemode, game::mutators))
+				if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !game::player1->lastdeath) || m_duke(game::gamemode, game::mutators))
 				{
 					if(m_duke(game::gamemode, game::mutators)) g.textf("Queued for new round", 0xFFFFFF, NULL);
 					else if(delay) g.textf("Down for \fs\fy%.1f\fS second(s)", 0xFFFFFF, NULL, delay/1000.f);
 					g.poplist();
-					if(game::focus == game::player1 && game::focus->state != CS_WAITING && lastmillis-game::focus->lastdeath > 500)
-						g.textf("Press \fs\fc%s\fS to look around", 0xFFFFFF, NULL, attackkey);
+					if(game::player1->state != CS_WAITING && lastmillis-game::player1->lastdeath > 500)
+						g.textf("Press \fs\fc%s\fS to enter respawn queue", 0xFFFFFF, NULL, attackkey);
 				}
 				else
 				{
 					g.textf("Ready to respawn", 0xFFFFFF, NULL);
 					g.poplist();
-					if(game::focus->state != CS_WAITING) g.textf("Press \fs\fc%s\fS to respawn", 0xFFFFFF, NULL, attackkey);
+					if(game::player1->state != CS_WAITING) g.textf("Press \fs\fc%s\fS to respawn now", 0xFFFFFF, NULL, attackkey);
 				}
-				if(game::focus == game::player1 && game::focus->state == CS_WAITING)
+				if(game::player1->state == CS_WAITING && lastmillis-game::player1->lastdeath >= 500)
 				{
 					SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
-					g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, waitmodekey, game::tvmode() ? "look around" : "observe");
+					g.textf("Press \fs\fc%s\fS to enter respawn queue", 0xFFFFFF, NULL, waitmodekey);
 				}
-				if(game::focus == game::player1 && m_arena(game::gamemode, game::mutators))
+				if(m_arena(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
-					g.textf("Press \fs\fc%s\fS to %s your loadout", 0xFFFFFF, NULL, loadkey, game::focus->loadweap < 0 ? "\fzoychoose" : "change");
+					g.textf("Press \fs\fc%s\fS to \fs%s\fS loadouts", 0xFFFFFF, NULL, loadkey, game::player1->loadweap < 0 ? "\fzoyselect" : "change");
 				}
-				if(game::focus == game::player1 && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
+				if(m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 				{
 					SEARCHBINDCACHE(teamkey)("showgui team", 0);
 					g.textf("Press \fs\fc%s\fS to change teams", 0xFFFFFF, NULL, teamkey);
 				}
 				g.popfont();
 			}
-			else if(game::focus->state == CS_ALIVE)
+			else if(game::player1->state == CS_ALIVE)
 			{
 				g.space(1);
 				g.pushfont("super");
@@ -325,10 +309,31 @@ namespace hud
 				else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
 				else if(m_campaign(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
 				else if(m_team(game::gamemode, game::mutators))
-					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::focus->team].chat, teamtype[game::player1->team].name);
+					g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 				else g.textf("Free for All", 0xFFFFFF, NULL);
 				g.popfont();
 			}
+			else if(game::player1->state == CS_SPECTATOR)
+			{
+				g.space(1);
+				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating"); g.popfont();
+				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
+				g.pushfont("sub");
+				g.textf("Press \fs\fc%s\fS to join the game", 0xFFFFFF, NULL, speconkey);
+				SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
+				g.textf("Press \fs\fc%s\fS to %s", 0xFFFFFF, NULL, specmodekey, game::tvmode() ? "interact" : "switch to TV");
+				g.popfont();
+			}
+
+			if((game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR) && !game::tvmode())
+			{
+				g.pushfont("radar");
+				SEARCHBINDCACHE(specf1key)("specfollowdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
+				SEARCHBINDCACHE(specf2key)("specfollowdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
+				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, specf1key, specf2key);
+				g.popfont();
+			}
+
 			SEARCHBINDCACHE(scoreboardkey)("showscores", 1);
 			g.pushfont("sub");
 			g.textf("%s \fs\fc%s\fS to close this window", 0xFFFFFF, NULL, scoresoff ? "Release" : "Press", scoreboardkey);
