@@ -16,6 +16,10 @@ VAR(maptype, 1, -1, -1);
 SVAR(mapfile, "");
 SVAR(mapname, "");
 
+VARP(autosavebackups, 0, 2, 4); // make backups; 0 = off, 1 = single backup, 2 = named backup, 3/4 = same as 1/2 with move to "backups/"
+VARP(autosaveconfigs, 0, 1, 1);
+VARP(autosavemapshot, 0, 1, 1);
+
 void fixmaptitle()
 {
 	const char *title = maptitle, *author = strstr(title, " by ");
@@ -313,7 +317,7 @@ static int sortidents(ident **x, ident **y) // not sure if there's a way to exte
 
 void save_config(char *mname)
 {
-	backup(mname, ".cfg", hdr.revision);
+	if(autosavebackups) backup(mname, ".cfg", hdr.revision, autosavebackups > 2, !(autosavebackups%2));
 	defformatstring(fname)("%s.cfg", mname);
 	stream *h = openfile(fname, "w");
 	if(!h) { conoutf("\frcould not write config to %s", fname); return; }
@@ -397,7 +401,7 @@ VARFP(mapshotsize, 0, 256, INT_MAX-1, mapshotsize -= mapshotsize%2);
 
 void save_mapshot(char *mname)
 {
-	backup(mname, ifmtexts[imageformat], hdr.revision);
+	if(autosavebackups) backup(mname, ifmtexts[imageformat], hdr.revision, autosavebackups > 2, !(autosavebackups%2));
 
 	GLuint tex;
 	glGenTextures(1, &tex);
@@ -419,9 +423,6 @@ void save_mapshot(char *mname)
 }
 ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));
 
-VARP(autosaveconfig, 0, 1, 1);
-VARP(autosavemapshot, 0, 1, 1);
-
 #define istempname(n) (!strncmp(n, "temp/", 5) || !strncmp(n, "temp\\", 5))
 
 void save_world(const char *mname, bool nodata, bool forcesave)
@@ -430,12 +431,12 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 
 	setnames(mname, MAP_BFGZ);
 
-	backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision);
+	if(autosavebackups) backup(mapname, mapexts[MAP_BFGZ].name, hdr.revision, autosavebackups > 2, !(autosavebackups%2));
 	stream *f = opengzfile(mapfile, "wb");
 	if(!f) { conoutf("\frerror saving %s to %s: file error", mapname, mapfile); return; }
 
 	if(autosavemapshot || forcesave) save_mapshot(mapname);
-	if(autosaveconfig || forcesave) save_config(mapname);
+	if(autosaveconfigs || forcesave) save_config(mapname);
 
 	progress(0, "saving map..");
 	strncpy(hdr.head, "BFGZ", 4);

@@ -18,24 +18,20 @@ struct packagedir
 vector<packagedir> packagedirs;
 int packagedirmask = ~0;
 
-char *makefile(const char *s, const char *e, int revision, int start, bool skip)
+char *makefile(const char *s, const char *e, int revision, int start, bool store, bool skip)
 {
     static string o;
     copystring(o, s);
 
-    string m, f;
-    copystring(m, o);
-
     int d = start;
-    char *t = strpbrk(m, ".");
+    char *t = strpbrk(s, ".");
     if(t) // try to detect extension and revision
     {
-        copystring(o, m, t-m+1);
+        copystring(o, s, t-s+1);
         char *q = t+1;
         if(isnumeric(*q)) d = min(atoi(q), 1);
     }
-    else { copystring(o, m); }
-    copystring(f, o);
+    string f, m; copystring(f, o); copystring(m, o);
 
     for(bool tryrev = false;; skip = false)
     {
@@ -46,12 +42,12 @@ char *makefile(const char *s, const char *e, int revision, int start, bool skip)
             {
                 if(!tryrev)
                 {
-                    formatstring(f)("%s.r%.4d", o, revision);
+                    formatstring(f)("%s%s.r%.4d", store ? "backups/" : "", o, revision);
                     tryrev = true;
                 }
-                else formatstring(f)("%s.r%.4d.%.4d", o, revision, d++);
+                else formatstring(f)("%s%s.r%.4d.%.4d", store ? "backups/" : "", o, revision, d++);
             }
-            else formatstring(f)("%s.%.4d", o, d++);
+            else formatstring(f)("%s%s.%.4d", store ? "backups/" : "", o, d++);
         }
         else break;
     }
@@ -60,14 +56,20 @@ char *makefile(const char *s, const char *e, int revision, int start, bool skip)
     return o;
 }
 
-void backup(const char *fname, const char *ext, int revision, int start)
+void backup(const char *fname, const char *ext, int revision, int start, bool store, bool full)
 {
     defformatstring(tname)("%s%s", fname, ext);
     defformatstring(aname)("%s", findfile(tname, "w"));
     if(fileexists(aname, "r"))
     {
-        const char *newname = findfile(makefile(fname, ext, revision, start), "w");
-		remove(newname); rename(aname, newname);
+    	const char *bname = aname;
+    	if(full) bname = findfile(makefile(fname, ext, revision, start, store), "w");
+    	else
+    	{
+    		formatstring(tname)("%s%s.bak%s", store ? "backups/" : "", fname, ext);
+			bname = findfile(tname, "w");
+    	}
+		remove(bname); rename(aname, bname);
     }
 }
 
