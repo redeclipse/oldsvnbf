@@ -786,10 +786,8 @@ namespace server
 				loopvk(clients)
 				{
 					clientinfo *ci = clients[k];
-					if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis)))
-						return true;
-					else if(override) return false;
-					else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
+					if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis))) return true;
+					else if(!override) loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
 				}
 			}
 			if(spawned && timeit && gamemillis < sents[i].millis) return true;
@@ -1609,7 +1607,7 @@ namespace server
 						droplist &d = drop.add();
 						d.weap = i;
 						d.ent = ts.entid[i];
-						if(w_carry(i, sweap)) sents[ts.entid[i]].millis += GVAR(itemspawntime);
+						sents[ts.entid[i]].millis += GVAR(itemspawntime);
 					}
 				}
 			}
@@ -2379,11 +2377,7 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id))
-			{
-				sents[id].millis = gamemillis;
-				if(finditem(id)) sents[id].millis += GVAR(itemspawntime);
-			}
+			if(sents.inrange(id)) sents[id].millis = gamemillis+GVAR(itemspawntime);
 		}
 	}
 
