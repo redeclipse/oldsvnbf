@@ -74,17 +74,17 @@ namespace ctf
 
 	void drawlast(int w, int h, int &tx, int &ty, float blend)
 	{
-		if(game::focus->state == CS_ALIVE && hud::shownotices >= 3)
+		if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
 		{
 			static vector<int> hasflags, takenflags, droppedflags;
 			hasflags.setsizenodelete(0); takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
 			loopv(st.flags)
 			{
 				ctfstate::flag &f = st.flags[i];
-				if(f.owner == game::focus) hasflags.add(i);
-				else if(isctfflag(f, game::focus->team))
+				if(f.owner == game::player1) hasflags.add(i);
+				else if(isctfflag(f, game::player1->team))
 				{
-					if(f.owner && f.owner->team != game::focus->team) takenflags.add(i);
+					if(f.owner && f.owner->team != game::player1->team) takenflags.add(i);
 					else if(f.droptime) droppedflags.add(i);
 				}
 			}

@@ -684,13 +684,12 @@ namespace hud
 					popfont();
 				}
 
-				gameent *target = game::player1->state != CS_SPECTATOR ? game::player1 : game::focus;
-
 				if(game::player1->state == CS_SPECTATOR)
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, target != game::player1 ? game::colorname(target) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
-				else if(game::player1->state == CS_WAITING && target != game::player1)
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::focus != game::player1 ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
+				else if(game::player1->state == CS_WAITING && game::focus != game::player1)
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
 
+				gameent *target = game::player1->state != CS_SPECTATOR ? game::player1 : game::focus;
 				if(target->state == CS_DEAD || target->state == CS_WAITING)
 				{
 					int sdelay = m_delay(game::gamemode, game::mutators), delay = target->lastdeath ? target->respawnwait(lastmillis, sdelay) : 0;
