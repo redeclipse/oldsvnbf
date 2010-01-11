@@ -532,7 +532,7 @@ namespace projs
 		{
 			if(weap == WEAP_FLAMER && !(flags&HIT_ALT))
 			{
-				int ends = lastmillis+(d->weapwait[weap]*2);
+				int ends = lastmillis+(WPB(weap, adelay, flags&HIT_ALT)*2);
 				if(issound(d->wschan)) sounds[d->wschan].ends = ends;
 				else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
 			}
