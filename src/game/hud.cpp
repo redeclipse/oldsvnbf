@@ -684,46 +684,11 @@ namespace hud
 					popfont();
 				}
 
-				if(m_stf(game::gamemode)) stf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
-				else if(m_ctf(game::gamemode)) ctf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
-
 				if(game::player1->state == CS_SPECTATOR)
-				{
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::focus != game::player1 ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
-					if(shownotices >= 2)
-					{
-						SEARCHBINDCACHE(speconkey)("spectator 0", 1);
-						pushfont("default");
-						ty += draw_textx("Press \fs\fc%s\fS to play", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, speconkey)*noticescale;
-						if(shownotices >= 3)
-						{
-							SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specmodekey, game::tvmode() ? "interact" : "switch to TV")*noticescale;
-							if(!game::tvmode())
-							{
-								pushfont("radar");
-								SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
-								SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
-								ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
-								popfont();
-							}
-						}
-						popfont();
-					}
-				}
-				else if(game::player1->state == CS_WAITING)
-				{
-					if(game::focus != game::player1)
-						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
-					if(shownotices >= 3 && !game::tvmode())
-					{
-						pushfont("radar");
-						SEARCHBINDCACHE(specf1key)("followdelta 1", 1);
-						SEARCHBINDCACHE(specf2key)("followdelta -1", 1);
-						ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
-						popfont();
-					}
-				}
+				else if(game::player1->state == CS_WAITING && game::focus != game::player1)
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
+
 				if(game::focus->state == CS_DEAD || game::focus->state == CS_WAITING)
 				{
 					int sdelay = m_delay(game::gamemode, game::mutators), delay = game::focus->lastdeath ? game::focus->respawnwait(lastmillis, sdelay) : 0;
@@ -747,7 +712,7 @@ namespace hud
 							if(game::focus == game::player1 && game::focus->state != CS_WAITING && shownotices >= 3 && lastmillis-game::focus->lastdeath >= 500)
 							{
 								pushfont("default");
-								ty += draw_textx("Press \fs\fc%s\fS to look around", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to enter respawn queue", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
 						}
@@ -759,7 +724,7 @@ namespace hud
 							if(game::focus == game::player1 && game::focus->state != CS_WAITING && shownotices >= 3)
 							{
 								pushfont("default");
-								ty += draw_textx("Press \fs\fc%s\fS to respawn", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to respawn now", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
 						}
@@ -767,14 +732,14 @@ namespace hud
 						{
 							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, waitmodekey, game::tvmode() ? "look around" : "observe")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, waitmodekey, game::tvmode() ? "interact" : "switch to TV")*noticescale;
 							popfont();
 						}
 						if(game::focus == game::player1 && m_arena(game::gamemode, game::mutators))
 						{
 							SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
 							pushfont("default");
-							ty += draw_textx("Press \fs\fc%s\fS to %s your loadout", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, loadkey, game::focus->loadweap < 0 ? "\fzoychoose" : "change")*noticescale;
+							ty += draw_textx("Press \fs\fc%s\fS to \fs%s\fS loadouts", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, loadkey, game::focus->loadweap < 0 ? "\fzoyselect" : "change")*noticescale;
 							popfont();
 						}
 						if(game::focus == game::player1 && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
@@ -886,6 +851,32 @@ namespace hud
 						popfont();
 					}
 				}
+
+				if(game::player1->state == CS_SPECTATOR)
+				{
+					SEARCHBINDCACHE(speconkey)("spectator 0", 1);
+					pushfont("default");
+					ty += draw_textx("Press \fs\fc%s\fS to join the game", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, speconkey)*noticescale;
+					if(shownotices >= 2)
+					{
+						SEARCHBINDCACHE(specmodekey)("specmodeswitch", 1);
+						ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specmodekey, game::tvmode() ? "interact" : "switch to TV")*noticescale;
+					}
+					popfont();
+				}
+
+				if(shownotices >= 3 && (game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR) && !game::tvmode())
+				{
+					pushfont("radar");
+					SEARCHBINDCACHE(specf1key)("followdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
+					SEARCHBINDCACHE(specf2key)("followdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
+					ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
+					popfont();
+				}
+
+				if(m_stf(game::gamemode)) stf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
+				else if(m_ctf(game::gamemode)) ctf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
+
 				if(noticescale < 1) glPopMatrix();
 				popfont();
 			}
