@@ -884,7 +884,7 @@ struct stream
 };
 
 extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
-extern char *makefile(const char *s, const char *e = "", int revision = 0, int start = 1, bool skip = false);
+extern char *makefile(const char *s, const char *e = "", int revision = 0, int start = 1, bool store = false, bool skip = false);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);
 extern const char *parentdir(const char *directory);
@@ -904,7 +904,7 @@ extern char *loadfile(const char *fn, int *size);
 extern bool listdir(const char *dir, const char *ext, vector<char *> &files);
 extern int listfiles(const char *dir, const char *ext, vector<char *> &files);
 extern int listzipfiles(const char *dir, const char *ext, vector<char *> &files);
-extern void backup(const char *fname, const char *ext, int revision = 0, int start = 1);
+extern void backup(const char *fname, const char *ext, int revision = 0, int start = 1, bool store = false, bool full = true);
 
 extern void endianswap(void *, int, int);
 extern void seedMT(uint seed);

@@ -2242,7 +2242,7 @@ const char *ifmtexts[IFMT_MAX] = { "", ".bmp", ".png", ".tga" };
 void saveimage(const char *fname, ImageData &image, int format, int compress, bool flip, bool skip)
 {
     int f = format > IFMT_NONE && format < IFMT_MAX ? format : IFMT_PNG;
-    const char *filename = makefile(fname, ifmtexts[f], 0, 1, skip);
+    const char *filename = makefile(fname, ifmtexts[f], 0, 1, false, skip);
     switch(f)
     {
         case IFMT_PNG: savepng(filename, image, compress, flip); break;
