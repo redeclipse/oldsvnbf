@@ -204,7 +204,7 @@ namespace server
 
 	struct clientinfo
 	{
-		int clientnum, connectmillis, sessionid, overflow, ping, team;
+		int clientnum, connectmillis, sessionid, ping, team;
 		string name, mapvote;
 		int modevote, mutsvote, lastvote;
 		int privilege;
@@ -234,7 +234,6 @@ namespace server
 			mapvote[0] = 0;
 			state.reset(change);
 			events.deletecontentsp();
-            overflow = 0;
             timesync = false;
             lastevent = gameoffset = lastvote = 0;
 			team = TEAM_NEUTRAL;
@@ -3022,19 +3021,11 @@ namespace server
 
 	int checktype(int type, clientinfo *ci)
 	{
-        if(ci && ci->local) return type;
 		// only allow edit messages in coop-edit mode
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
 		static int servtypes[] = { SV_SERVERINIT, SV_CLIENTINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
-		if(ci) 
-        {
-            loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
-            if(type < SV_EDITENT || type > SV_NEWMAP || !m_edit(gamemode))
-            {
-                if(++ci->overflow >= 200) return -2;
-            }
-        }
+		if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
 		return type;
 	}
 
@@ -3066,7 +3057,6 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo &ci = *clients[i];
-            ci.overflow = 0;
 			if(ci.position.empty()) ci.posoff = -1;
 			else
 			{
@@ -3252,8 +3242,7 @@ namespace server
 					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
 					if(idx == SPHY_EXTINGUISH)
 					{
-						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GVAR(fireburntime))
-							break;
+						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GVAR(fireburntime)) break;
 						cp->state.lastfire = cp->state.lastfireburn = 0;
 					}
 					QUEUE_MSG;
@@ -3264,7 +3253,7 @@ namespace server
 				{
 					int val = getint(p);
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) break;
-					//if(val && ci->state.state != CS_ALIVE) break;
+					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) break;
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
 					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
@@ -4005,15 +3994,6 @@ namespace server
 					auth::answerchallenge(ci, id, text);
 					break;
 				}
-
-                case -1:
-                    conoutf("\fy[tag error] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
-                    disconnect_client(sender, DISC_TAGT);
-                    return;
-
-                case -2:
-                    disconnect_client(sender, DISC_OVERFLOW);
-                    return;
 
 				default:
 				{
