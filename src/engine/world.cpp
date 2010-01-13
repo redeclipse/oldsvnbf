@@ -457,7 +457,7 @@ void entpush(int *dir)
 		groupedit(e.o[d] += float(s*sel.grid));
 	if(entitysurf==1)
 	{
-		physent *player = (physent *)game::iterdynents(0);
+		physent *player = (physent *)game::focusedent(true);
 		if(!player) player = camera1;
 		player->o[d] += s*sel.grid;
 	}
@@ -468,7 +468,7 @@ void entautoview(int *dir)
 {
 	if(!haveselent()) return;
 	static int s = 0;
-	physent *player = (physent *)game::iterdynents(0);
+	physent *player = (physent *)game::focusedent(true);
 	if(!player) player = camera1;
 	vec v(player->o);
 	v.sub(worldpos);

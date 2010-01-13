@@ -506,7 +506,6 @@ namespace UI
 	extern void update();
 	extern void render();
 	extern bool active(bool pass = true);
-	extern bool hascursor(bool targeting = false);
 	extern bool hit(bool on, bool act);
 	extern void addcb(guicb *cb);
 	extern void limitscale(float scale);

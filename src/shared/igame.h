@@ -49,6 +49,7 @@ namespace client
 namespace hud
 {
 	extern char *progresstex;
+	extern bool hascursor(bool pass = false);
 	extern void drawhud(bool noview = false);
 	extern void drawlast();
 	extern float motionblur(float scale);
@@ -89,6 +90,7 @@ namespace game
 	extern void startmap(const char *name, const char *reqname, bool empty = false);
 	extern bool allowmove(physent *d);
 	extern dynent *iterdynents(int i);
+	extern dynent *focusedent(bool force = false);
 	extern int numdynents();
 	extern void lighteffects(dynent *d, vec &color, vec &dir);
 	extern void adddynlights();

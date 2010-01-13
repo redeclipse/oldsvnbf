@@ -1281,7 +1281,7 @@ namespace hud
 	extern int drawweapons(int x, int y, int s, float blend = 1.f);
 	extern int drawhealth(int x, int y, int s, float blend = 1.f);
 	extern void drawinventory(int w, int h, int edge, float blend = 1.f);
-	extern void damage(int n, const vec &loc, gameent *actor, int weap);
+	extern void damage(int n, const vec &loc, gameent *actor, int weap, int flags);
 	extern const char *teamtex(int team = TEAM_NEUTRAL);
 	extern const char *itemtex(int type, int stype);
 }

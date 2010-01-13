@@ -248,7 +248,7 @@ void editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 	plane pl(d, off);
 	float dist = 0.0f;
 
-	physent *player = (physent *)game::iterdynents(0);
+	physent *player = (physent *)game::focusedent(true);
 	if(!player) player = camera1;
 	if(pl.rayintersect(player->o, ray, dist))
 	{
@@ -281,14 +281,14 @@ void cursorupdate()
 	if(!insideworld(target)) loopi(3)
         target[i] = max(min(target[i], float(hdr.worldsize)), 0.0f);
 	vec ray(target);
-	physent *player = (physent *)game::iterdynents(0);
+	physent *player = (physent *)game::focusedent(true);
 	if(!player) player = camera1;
 	ray.sub(player->o).normalize();
 	int d	= dimension(sel.orient),
 		od  = dimension(orient),
 		odc = dimcoord(orient);
 
-    bool hidecursor = UI::hascursor(), hovering = false;
+    bool hidecursor = hud::hascursor(), hovering = false;
     hmapsel = false;
 
 	if(moving)
@@ -1374,7 +1374,7 @@ void pushsel(int *dir)
 	sel.o[d] += s*sel.grid;
 	if(selectionsurf==1)
 	{
-		physent *player = (physent *)game::iterdynents(0);
+		physent *player = (physent *)game::focusedent(true);
 		if(!player) player = camera1;
 		player->o[d] += s*sel.grid;
 	}
