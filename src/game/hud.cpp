@@ -246,6 +246,8 @@ namespace hud
 		return false;
 	}
 
+	bool hascursor(bool pass) { return (!pass && commandmillis > 0) || UI::active(pass); }
+
 	char *timetostr(int millis, bool limited)
 	{
 		static string timestr; timestr[0] = 0;
@@ -289,10 +291,10 @@ namespace hud
 		return clamp(amt, motionblurmin, motionblurmax)*scale;
 	}
 
-	void damage(int n, const vec &loc, gameent *actor, int weap)
+	void damage(int n, const vec &loc, gameent *actor, int weap, int flags)
 	{
 		damageresidue = clamp(damageresidue+n, 0, 200);
-		vec colour = weap == WEAP_FLAMER || weap == WEAP_GRENADE ? vec(1.f, 0.35f, 0.0625f) : (kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0));
+		vec colour = doesburn(weap, flags) ? vec(1.f, 0.35f, 0.0625f) : (kidmode || game::bloodscale <= 0 ? vec(1, 0.25f, 1) : vec(1.f, 0, 0));
         damagelocs.add(damageloc(actor->clientnum, lastmillis, n, vec(loc).sub(camera1->o).normalize(), colour));
 	}
 
@@ -620,7 +622,7 @@ namespace hud
 	void drawpointers(int w, int h)
 	{
         int index = POINTER_NONE;
-		if(UI::hascursor()) index = !UI::hascursor(true) || commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
+		if(hascursor()) index = !hascursor(true) || commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
         else if(!showcrosshair || game::focus->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::focus->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::focus->state == CS_SPECTATOR || game::focus->state == CS_WAITING) index = POINTER_SPEC;
@@ -669,7 +671,7 @@ namespace hud
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			drawpointers(hudwidth, hudsize);
-			if(shownotices && client::ready() && !UI::hascursor(false) && !texpaneltimer)
+			if(shownotices && client::ready() && !hascursor(false) && !texpaneltimer)
 			{
 				pushfont("super");
 				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
@@ -1586,8 +1588,8 @@ namespace hud
 							else if(amt > 0.5f) col = "\fy";
 							else if(amt > 0.25f) col = "\fo";
 							else col = "\fr";
-							hud::drawprogress(cx[i], cm+cs, 0, 1, cs, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
-							cm += hud::drawprogress(cx[i], cm+cs, 0, amt, cs, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
+							drawprogress(cx[i], cm+cs, 0, 1, cs, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
+							cm += drawprogress(cx[i], cm+cs, 0, amt, cs, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
 						}
 					}
 					if(inventoryteams && game::focus->state != CS_EDITING && game::focus->state != CS_SPECTATOR)
@@ -1752,7 +1754,7 @@ namespace hud
 			if(fireburntime && game::focus->state == CS_ALIVE) drawfire(w, h, os, fade);
 			if(!kidmode && game::bloodscale > 0) drawdamage(w, h, os, fade);
 		}
-		if(!UI::hascursor() && (game::focus->state == CS_EDITING ? showeditradar > 0 : chkcond(showradar, game::tvmode()))) drawradar(w, h, fade);
+		if(!hascursor() && (game::focus->state == CS_EDITING ? showeditradar > 0 : chkcond(showradar, game::tvmode()))) drawradar(w, h, fade);
 		if(showinventory) drawinventory(w, h, os, fade);
 
 		if(!texpaneltimer)
@@ -1824,7 +1826,7 @@ namespace hud
 				if(uimillis > 0) a = 1.f-a;
 				else a += (1.f-uifadeamt);
 				loopi(3) if(a < colour[i]) colour[i] *= a;
-				//if(UI::hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
+				//if(hascursor(true)) fade *= uimillis > 0 ? 1.f-n : n;
 			}
 			if(!noview)
 			{

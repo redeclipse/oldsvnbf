@@ -894,7 +894,6 @@ namespace UI
 	}
 
 	bool active(bool pass) { return guis.length() && (!pass || needsinput); }
-	bool hascursor(bool targeting) { return (!targeting && commandmillis > 0) || active(targeting); }
 	void limitscale(float scale) {  gui::maxscale = scale; }
 
 	void addcb(guicb *cb)

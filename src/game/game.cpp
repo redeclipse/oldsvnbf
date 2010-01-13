@@ -272,7 +272,7 @@ namespace game
     {
 		if(d == player1)
 		{
-			if(UI::hascursor(true)) return false;
+			if(hud::hascursor(true)) return false;
 			if(tvmode()) return false;
 		}
         if(d->type == ENT_PLAYER || d->type == ENT_AI)
@@ -626,7 +626,7 @@ namespace game
 		{
 			if(hithurts(flags))
 			{
-				if(d == focus) hud::damage(damage, actor->o, actor, weap);
+				if(d == focus) hud::damage(damage, actor->o, actor, weap, flags);
 				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
 					vec p = d->headpos();
@@ -1074,6 +1074,11 @@ namespace game
 		i -= players.length();
 		return NULL;
 	}
+	dynent *focusedent(bool force)
+	{
+		if(force) return player1;
+		return focus;
+	}
 
 	bool duplicatename(gameent *d, char *name = NULL)
 	{
@@ -1189,7 +1194,7 @@ namespace game
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool hascursor = UI::hascursor(true);
+		bool hascursor = hud::hascursor(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
 		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR))
 		{
@@ -1223,7 +1228,7 @@ namespace game
 
 	void project(int w, int h)
 	{
-		int style = UI::hascursor() ? -1 : mousestyle();
+		int style = hud::hascursor() ? -1 : mousestyle();
 		if(style != lastmousetype)
 		{
 			resetcursor();
@@ -1274,7 +1279,7 @@ namespace game
 			player1->aimyaw = camera1->yaw;
 			player1->aimpitch = camera1->pitch;
 			fixrange(player1->aimyaw, player1->aimpitch);
-			if(lastcamera && mousestyle() >= 1 && !UI::hascursor())
+			if(lastcamera && mousestyle() >= 1 && !hud::hascursor())
 			{
 				physent *d = mousestyle() != 2 ? player1 : camera1;
 				float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
@@ -1524,7 +1529,7 @@ namespace game
        	if(!*player1->name && !menuactive()) showgui("name");
         if(connected())
         {
-        	player1->conopen = commandmillis > 0 || UI::hascursor(true);
+        	player1->conopen = commandmillis > 0 || hud::hascursor(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
