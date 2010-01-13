@@ -649,6 +649,16 @@ namespace hud
 		return numkilled;
 	}
 
+	bool showname()
+	{
+		if(game::focus != game::player1)
+		{
+			if(game::thirdpersonview(true) && game::shownamesabovehead > 1) return false;
+			return true;
+		}
+		return false;
+	}
+
 	void drawlast()
 	{
 		if(showhud)
@@ -685,8 +695,8 @@ namespace hud
 				}
 
 				if(game::player1->state == CS_SPECTATOR)
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::focus != game::player1 ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
-				else if(game::player1->state == CS_WAITING && game::focus != game::player1)
+					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, showname() ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
+				else if(game::player1->state == CS_WAITING && showname())
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
 
 				gameent *target = game::player1->state != CS_SPECTATOR ? game::player1 : game::focus;

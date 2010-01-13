@@ -28,13 +28,14 @@ namespace game
 	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
+	VARP(thirdpersonfollow, 0, 1, 1);
 	VARP(dynlighteffects, 0, 2, 2);
 	FVARP(playerblend, 0, 1, 1);
 
 	VARP(thirdpersonmodel, 0, 1, 1);
 	VARP(thirdpersonfov, 90, 120, 150);
-	FVARP(thirdpersonblend, 0, 0.5f, 1);
-	FVARP(thirdpersondist, -100, 1.f, 100);
+	FVARP(thirdpersonblend, 0, 0.45f, 1);
+	FVARP(thirdpersondist, -1000, 20, 1000);
 
 	VARP(firstpersonmodel, 0, 1, 1);
 	VARP(firstpersonfov, 90, 100, 150);
@@ -114,13 +115,14 @@ namespace game
 	bool thirdpersonview(bool viewonly)
 	{
         if(!viewonly && (focus->state == CS_DEAD || focus->state == CS_WAITING)) return true;
-		if(!thirdperson) return false;
+		if(!(focus != player1 ? thirdpersonfollow : thirdperson)) return false;
 		if(player1->state == CS_EDITING) return false;
 		if(player1->state == CS_SPECTATOR && focus == player1) return false;
 		if(inzoom()) return false;
 		return true;
 	}
 	ICOMMAND(isthirdperson, "i", (int *viewonly), intret(thirdpersonview(*viewonly ? true : false) ? 1 : 0));
+	ICOMMAND(thirdpersonswitch, "", (), int *n = (focus != player1 ? &thirdpersonfollow : &thirdperson); *n = !*n;);
 
 	int mousestyle()
 	{
