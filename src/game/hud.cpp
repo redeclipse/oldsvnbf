@@ -1517,7 +1517,7 @@ namespace hud
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
-					draw_textx("%s%d%%", x+iw/2, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
+					draw_textx("%s%d%%", x+iw/2+ow, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
 						game::focus->impulse[IM_METER] > 0 ? (FWV(impulsemeter)-game::focus->impulse[IM_METER] > FWV(impulsecost) ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
