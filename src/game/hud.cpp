@@ -1251,7 +1251,7 @@ namespace hud
 	int drawprogress(int x, int y, float start, float length, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
-		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)*3/8, cx = left ? x+cs : x-cs, cy = y-cs;
+		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)/2, cx = left ? x+cs : x-cs, cy = y-cs;
 		settexture(progresstex, 3);
 		glColor4f(cr, cg, cb, f);
 		if(length < 1) drawslice(start, length, cx, cy, cs);
