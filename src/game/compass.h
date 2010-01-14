@@ -31,11 +31,25 @@ int compassmillis = 0, compasspos = 0;
 cmenu *curcompass = NULL;
 vector<cmenu> cmenus;
 
+void clearcmenu()
+{
+	compasspos = 0;
+	if(compassmillis > 0)
+	{
+		compassmillis = -lastmillis;
+		resetcursor();
+	}
+	if(curcompass)
+	{
+		curcompass->reset();
+		curcompass = NULL;
+	}
+}
+ICOMMAND(clearcompass, "", (), clearcmenu());
+
 void resetcmenus()
 {
-	if(compassmillis > 0) compassmillis = -lastmillis;
-	compasspos = 0;
-	curcompass = NULL;
+	clearcmenu();
 	loopvrev(cmenus) cmenus.remove(i);
 	cmenus.setsize(0);
 }
@@ -66,27 +80,21 @@ void showcmenu(const char *name)
 	if(!name || !*name) return;
 	loopv(cmenus) if(!strcmp(name, cmenus[i].name))
 	{
-		if(compassmillis <= 0) compassmillis = lastmillis;
+		if(compassmillis <= 0)
+		{
+			compassmillis = lastmillis;
+			resetcursor();
+		}
 		curcompass = &cmenus[i];
 		compasspos = 0;
 		curcompass->reset();
 		execute(curcompass->contents);
-		resetcursor();
 		return;
 	}
 	conoutft(CON_DEBUG, "\frno such compass menu: %s", name);
 }
 ICOMMAND(showcompass, "s", (char *n), showcmenu(n));
 
-void clearcmenu()
-{
-	if(!curcompass) return;
-	if(compassmillis > 0) compassmillis = -lastmillis;
-	curcompass->reset();
-	curcompass = NULL;
-	resetcursor();
-}
-ICOMMAND(clearcompass, "", (), clearcmenu());
 ICOMMAND(compassactive, "", (), result(curcompass ? curcompass->name : "0"));
 
 const struct compassdirs
@@ -177,7 +185,7 @@ bool keypress(int code, bool isdown, int cooked)
 	if(curcompass)
 	{
 		switch(code)
-		{ // fall-through-o-rama
+		{
 			case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -2: case -4: if(!isdown) { if(++compasspos > NUMCOMPASS) compasspos = 0; } return true; break;
 			case SDLK_LEFT: case SDLK_DOWN: case -5: if(!isdown) { if(--compasspos < 0) compasspos = NUMCOMPASS; } return true; break;
 			case SDLK_RETURN: case -1: if(!isdown) { runcmenu(cmenuhit()); } return true; break;
