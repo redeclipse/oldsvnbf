@@ -167,8 +167,9 @@ void rendercmenu()
 
 void runcmenu(int idx)
 {
+	cmenu *oldcompass = curcompass;
 	if(idx > 0 && curcompass && curcompass->actions.inrange(idx-1)) execute(curcompass->actions[idx-1].contents);
-	clearcmenu();
+	if(oldcompass == curcompass) clearcmenu();
 }
 
 bool keypress(int code, bool isdown, int cooked)
