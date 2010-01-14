@@ -27,14 +27,14 @@ struct cmenu : caction
 	}
 };
 
-int compassmillis = 0, compasspos = -1;
+int compassmillis = 0, compasspos = 0;
 cmenu *curcompass = NULL;
 vector<cmenu> cmenus;
 
 void resetcmenus()
 {
 	if(compassmillis > 0) compassmillis = -lastmillis;
-	compasspos = -1;
+	compasspos = 0;
 	curcompass = NULL;
 	loopvrev(cmenus) cmenus.remove(i);
 	cmenus.setsize(0);
@@ -68,7 +68,7 @@ void showcmenu(const char *name)
 	{
 		if(compassmillis <= 0) compassmillis = lastmillis;
 		curcompass = &cmenus[i];
-		compasspos = -1;
+		compasspos = 0;
 		curcompass->reset();
 		execute(curcompass->contents);
 		resetcursor();
@@ -93,7 +93,7 @@ const struct compassdirs
 {
 	int x, y, align;
 } compassdir[NUMCOMPASS+1] = {
-	{ 0, 0, TEXT_CENTERED },
+	{ 0, 0, TEXT_CENTERED }, // special cancel case
 	{ 0, -1, TEXT_CENTERED }, { 1, -1, TEXT_LEFT_JUSTIFY }, { 1, 0, TEXT_LEFT_JUSTIFY }, { 1, 1, TEXT_LEFT_JUSTIFY },
 	{ 0, 1, TEXT_CENTERED }, { -1, 1, TEXT_RIGHT_JUSTIFY }, { -1, 0, TEXT_RIGHT_JUSTIFY }, { -1, -1, TEXT_RIGHT_JUSTIFY }
 };
@@ -102,16 +102,16 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 {
 	x = hudwidth/2+(size*compassdir[idx].x);
 	y = hudsize/2+(size*compassdir[idx].y);
-	if(!compassdir[idx].y) { if(!layout) y -= FONTH/2; }
+	if(!compassdir[idx].y) { if(!layout) y -= FONTH; }
 	else
 	{
-		if(!layout && compassdir[idx].y < 0) y -= FONTH;
+		if(!layout && compassdir[idx].y < 0) y -= FONTH*2;
 		switch(compassstyle)
 		{
 			case 0:
 			{
 				if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
-				else y += compassdir[idx].y*FONTH*2;
+				else y += compassdir[idx].y*FONTH*4;
 				y -= compassdir[idx].y*size/2;
 				break;
 			}
@@ -144,18 +144,12 @@ int cmenuhit()
 void renderaction(int idx, int size, const char *name, bool hit)
 {
 	int x = 0, y = 0; cmenudims(idx, x, y, size);
-	if(idx)
-	{
-		pushfont("default");
-		draw_textx("%d. %s", x, y, 255, (hit ? 0 : 255), (hit ? 0 : 255), (hit ? 255 : 128), compassdir[idx].align, -1, -1, idx, name);
-		popfont();
-	}
-	else
-	{
-		pushfont("sub");
-		draw_textx("%d. %s", x, y, 255, (hit ? 0 : 255), (hit ? 0 : 255), (hit ? 255 : 128), compassdir[idx].align, -1, -1, idx, name);
-		popfont();
-	}
+	pushfont(idx ? "default" : "sub");
+	y += draw_textx("[%d]", x, y, 255, (hit ? 0 : 255), (hit ? 0 : 255), (hit ? 255 : 128), compassdir[idx].align, -1, -1, idx);
+	popfont();
+	pushfont(idx ? "sub" : "radar");
+	draw_textx("%s", x, y, 200, (hit ? 0 : 200), (hit ? 0 : 200), (hit ? 255 : 128), compassdir[idx].align, -1, -1, name);
+	popfont();
 }
 
 void rendercmenu()
