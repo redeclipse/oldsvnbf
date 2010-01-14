@@ -177,10 +177,10 @@ bool keypress(int code, bool isdown, int cooked)
 	{
 		switch(code)
 		{ // fall-through-o-rama
-			case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -5: if(!isdown) { if(++compasspos > NUMCOMPASS) compasspos = 0; } return true; break;
-			case SDLK_LEFT: case SDLK_DOWN: case -4: if(!isdown) { if(--compasspos < 0) compasspos = NUMCOMPASS; } return true; break;
-			case SDLK_RETURN: case -1: case -2: case -3: if(!isdown) { runcmenu(cmenuhit()); } return true; break;
-			case SDLK_ESCAPE: if(!isdown) { clearcmenu(); } return true; break;
+			case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -2: case -4: if(!isdown) { if(++compasspos > NUMCOMPASS) compasspos = 0; } return true; break;
+			case SDLK_LEFT: case SDLK_DOWN: case -5: if(!isdown) { if(--compasspos < 0) compasspos = NUMCOMPASS; } return true; break;
+			case SDLK_RETURN: case -1: if(!isdown) { runcmenu(cmenuhit()); } return true; break;
+			case SDLK_ESCAPE: case -3: if(!isdown) { clearcmenu(); } return true; break;
 			case SDLK_0: case SDLK_1: case SDLK_2: case SDLK_3: case SDLK_4: case SDLK_5: case SDLK_6: case SDLK_7: case SDLK_8:
 				if(!isdown) { runcmenu(code-SDLK_0); } return true; break;
 			default: break;
