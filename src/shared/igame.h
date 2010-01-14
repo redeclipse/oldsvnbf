@@ -50,6 +50,7 @@ namespace hud
 {
 	extern char *progresstex;
 	extern bool hascursor(bool pass = false);
+	extern bool keypress(int code, bool isdown, int cooked);
 	extern void drawhud(bool noview = false);
 	extern void drawlast();
 	extern float motionblur(float scale);
