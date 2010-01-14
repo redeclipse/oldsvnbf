@@ -331,6 +331,8 @@ struct hline
 vector<hline *> history;
 int histpos = 0;
 
+VARP(maxhistory, 0, 1000, 10000);
+
 void history_(int *n)
 {
     static bool inhistory = false;
@@ -449,11 +451,12 @@ void consolekey(int code, bool isdown, int cooked)
                 break;
 
             case SDLK_UP:
-                if(histpos>0) history[--histpos]->restore();
+                if(histpos > history.length()) histpos = history.length();
+                if(histpos > 0) history[--histpos]->restore();
                 break;
 
             case SDLK_DOWN:
-                if(histpos+1<history.length()) history[++histpos]->restore();
+                if(histpos + 1 < history.length()) history[++histpos]->restore();
                 break;
 
             case SDLK_TAB:
@@ -511,7 +514,14 @@ void consolekey(int code, bool isdown, int cooked)
             if(commandbuf[0])
             {
                 if(history.empty() || history.last()->shouldsave())
-                    history.add(h = new hline)->save(); // cap this?
+                {
+                    if(maxhistory && history.length() >= maxhistory)
+                    { 
+                        loopi(history.length()-maxhistory+1) delete history[i];
+                        history.remove(0, history.length()-maxhistory+1);
+                    }
+                    history.add(h = new hline)->save();
+                }
                 else h = history.last();
             }
             histpos = history.length();
