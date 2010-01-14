@@ -672,7 +672,6 @@ namespace hud
 			glOrtho(0, hudwidth, hudsize, 0, -1, 1);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			drawpointers(hudwidth, hudsize);
 			if(client::ready())
 			{
 				if(!UI::active(false) && commandmillis <= 0 && curcompass) rendercmenu();
@@ -909,6 +908,7 @@ namespace hud
 					}
 				}
 			}
+			drawpointers(hudwidth, hudsize);
 			glDisable(GL_BLEND);
 		}
 	}
