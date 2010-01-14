@@ -323,7 +323,7 @@ FVAR(ragdollelasticity, 0, 0.5f, 1000);
 VAR(ragdollexpireoffset, 0, 1000, 30000);
 VAR(ragdollliquidexpireoffset, 0, 3000, 30000);
 VAR(ragdollexpiremillis, 1, 1000, 30000);
-FVAR(ragdollexpirefricmin, 0, 0.025f, 1);
+FVAR(ragdollexpirefricmin, 0, 0.05f, 1);
 VAR(ragdolltimestepmin, 1, 5, 50);
 VAR(ragdolltimestepmax, 1, 10, 50);
 
