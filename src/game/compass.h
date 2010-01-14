@@ -116,7 +116,11 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 	if(!compassdir[idx].y) { if(!layout) y -= FONTH; }
 	else
 	{
-		if(!layout && compassdir[idx].y < 0) y -= FONTH*2;
+		if(!layout)
+		{
+			if(compassdir[idx].y < 0) y -= FONTH*2;
+			else if(compassdir[idx].y > 0) y += FONTH/3;
+		}
 		if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
 		else y += compassdir[idx].y*FONTH*2;
 		y -= compassdir[idx].y*size/2;
