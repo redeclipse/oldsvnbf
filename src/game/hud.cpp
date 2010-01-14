@@ -151,6 +151,7 @@ namespace hud
 	FVARP(inventoryhealthglow, 0, 0.125f, 1);
 	FVARP(inventoryhealthflash, 0, 1, 1);
 	VARP(inventoryimpulse, 0, 2, 2);
+	FVARP(inventoryimpulseskew, 1e-3f, 0.8f, 1000);
 	VARP(inventorytrial, 0, 2, 2);
 
 	TVAR(meleetex, "textures/melee", 3);
@@ -1250,7 +1251,7 @@ namespace hud
 	int drawprogress(int x, int y, float start, float length, float size, bool left, float r, float g, float b, float fade, float skew, const char *font, const char *text, ...)
 	{
 		if(skew <= 0.f) return 0;
-		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)/2, cx = left ? x+cs : x-cs, cy = y-cs;
+		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)*3/8, cx = left ? x+cs : x-cs, cy = y-cs;
 		settexture(progresstex, 3);
 		glColor4f(cr, cg, cb, f);
 		if(length < 1) drawslice(start, length, cx, cy, cs);
@@ -1509,18 +1510,19 @@ namespace hud
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
 				glColor4f(r, g, b, fade*0.25f);
-				drawsized(x, y-sy-sw, sw);
+				int iw = int(sw*inventoryimpulseskew), ow = (sw-iw)/2;
+				drawsized(x+ow, y-sy-iw, iw);
 				glColor4f(r, g, b, fade);
-				drawslice(0, len, x+sw/2, y-sy-sw/2, sw/2);
+				drawslice(0, len, x+iw/2+ow, y-sy-iw/2, iw/2);
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
-					draw_textx("%s%d%%", x+sw/2, y-sy-sw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
+					draw_textx("%s%d%%", x+iw/2, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
 						game::focus->impulse[IM_METER] > 0 ? (FWV(impulsemeter)-game::focus->impulse[IM_METER] > FWV(impulsecost) ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}
-				sy += sw;
+				sy += iw;
 			}
 		}
 		else

@@ -32,10 +32,10 @@ namespace stf
 			above.z += 2.5f;
 			if(b.enemy)
 			{
-				part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
-				part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload(hud::progresstex, 3), 4, 1, 0, 0, 1, teamtype[b.owner].colour);
+			else part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour);
 			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
 		}
 	}
