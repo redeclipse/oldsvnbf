@@ -182,7 +182,7 @@ bool keypress(int code, bool isdown, int cooked)
 	{
 		switch(code)
 		{
-			case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -2: case -4: if(!isdown) { if(++compasspos > NUMCOMPASS) compasspos = 0; } return true; break;
+			case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -2: case -4: if(!isdown) { if(++compasspos > curcompass->actions.length()) compasspos = 0; } return true; break;
 			case SDLK_LEFT: case SDLK_DOWN: case -5: if(!isdown) { if(--compasspos < 0) compasspos = NUMCOMPASS; } return true; break;
 			case SDLK_RETURN: case -1: if(!isdown) { runcmenu(cmenuhit()); } return true; break;
 			case SDLK_ESCAPE: case -3: if(!isdown) { clearcmenu(); } return true; break;
