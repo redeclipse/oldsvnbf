@@ -1,10 +1,10 @@
 #define NUMCOMPASS 8
 
-VARP(compassstyle, 0, 1, 1);
 FVARP(compasssize, 0, 0.15f, 1000);
 VARP(compassfade, 0, 250, INT_MAX-1);
 FVARP(compassfadeamt, 0, 0.75f, 1);
 TVAR(compasstex, "textures/compass", 3);
+TVAR(compassringtex, "textures/progress", 3);
 
 struct caction
 {
@@ -117,25 +117,9 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 	else
 	{
 		if(!layout && compassdir[idx].y < 0) y -= FONTH*2;
-		switch(compassstyle)
-		{
-			case 0:
-			{
-				if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
-				else y += compassdir[idx].y*FONTH*2;
-				y -= compassdir[idx].y*size/2;
-				break;
-			}
-			case 1: default:
-			{
-				if(compassdir[idx].x)
-				{
-					x -= compassdir[idx].x*size/2;
-					y -= compassdir[idx].y*size/2;
-				}
-				break;
-			}
-		}
+		if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
+		else y += compassdir[idx].y*FONTH*2;
+		y -= compassdir[idx].y*size/2;
 	}
 	popfont();
 }
@@ -157,11 +141,12 @@ void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
 {
 	int x = 0, y = 0, r = 255, g = hit ? 0 : 255, b = hit ? 0 : 255, f = hit ? 255 : 128;
 	cmenudims(idx, x, y, size);
-	if(idx && t)
+	if(t)
 	{
 		glBindTexture(GL_TEXTURE_2D, t->id);
 		glColor4f(r/255.f, g/255.f, b/255.f, f/255.f);
-		drawslice(0.5f/NUMCOMPASS+(idx-2)/float(NUMCOMPASS), 1/float(NUMCOMPASS), hudwidth/2, hudsize/2, size);
+		if(idx) drawslice(0.5f/NUMCOMPASS+(idx-2)/float(NUMCOMPASS), 1/float(NUMCOMPASS), hudwidth/2, hudsize/2, size);
+		else drawsized(hudwidth/2-size/4, hudsize/2-size/4, size/2);
 	}
 	pushfont(idx ? "default" : "sub");
 	y += draw_textx("[%d]", x, y, r, g, b, f, compassdir[idx].align, -1, -1, idx);
@@ -174,10 +159,9 @@ void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
 void rendercmenu()
 {
 	if(compassmillis <= 0 || !curcompass) return;
-	int size = int(compasssize*hudsize);
+	int size = int(compasssize*hudsize), hit = cmenuhit();
+	renderaction(0, size, *compassringtex ? textureload(compassringtex, 3) : NULL, "cancel", !hit);
 	Texture *t = *compasstex ? textureload(compasstex, 3) : NULL;
-	int hit = cmenuhit();
-	renderaction(0, size, t, "cancel", !hit);
 	loopi(NUMCOMPASS)
 	{
 		if(!curcompass->actions.inrange(i)) break;

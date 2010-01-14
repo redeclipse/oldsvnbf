@@ -105,7 +105,7 @@ namespace hud
 	VARP(showindicator, 0, 1, 1);
 	FVARP(indicatorsize, 0, 0.03f, 1000);
 	FVARP(indicatorblend, 0, 0.85f, 1);
-	TVAR(indicatortex, "textures/indicator", 3);
+	TVAR(indicatortex, "textures/progress", 3);
 	TVAR(zoomtex, "textures/zoom", 3);
 
 	VARP(showcrosshair, 0, 1, 1);
