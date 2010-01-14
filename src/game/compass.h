@@ -4,6 +4,7 @@ VARP(compassstyle, 0, 1, 1);
 FVARP(compasssize, 0, 0.15f, 1000);
 VARP(compassfade, 0, 250, INT_MAX-1);
 FVARP(compassfadeamt, 0, 0.75f, 1);
+TVAR(compasstex, "textures/compass", 3);
 
 struct caction
 {
@@ -58,6 +59,7 @@ ICOMMAND(resetcompass, "", (), resetcmenus());
 void addcmenu(const char *name, const char *contents)
 {
 	if(!name || !*name || !contents || !*contents) return;
+	if(curcompass) clearcmenu();
 	loopvrev(cmenus) if(!strcmp(name, cmenus[i].name)) cmenus.remove(i);
 	cmenu &c = cmenus.add();
 	c.name = newstring(name);
@@ -110,6 +112,7 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 {
 	x = hudwidth/2+(size*compassdir[idx].x);
 	y = hudsize/2+(size*compassdir[idx].y);
+	pushfont(idx ? "default" : "sub");
 	if(!compassdir[idx].y) { if(!layout) y -= FONTH; }
 	else
 	{
@@ -119,7 +122,7 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 			case 0:
 			{
 				if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
-				else y += compassdir[idx].y*FONTH*4;
+				else y += compassdir[idx].y*FONTH*2;
 				y -= compassdir[idx].y*size/2;
 				break;
 			}
@@ -134,6 +137,7 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 			}
 		}
 	}
+	popfont();
 }
 
 int cmenuhit()
@@ -149,14 +153,21 @@ int cmenuhit()
 	return 0;
 }
 
-void renderaction(int idx, int size, const char *name, bool hit)
+void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
 {
-	int x = 0, y = 0; cmenudims(idx, x, y, size);
+	int x = 0, y = 0, r = 255, g = hit ? 0 : 255, b = hit ? 0 : 255, f = hit ? 255 : 128;
+	cmenudims(idx, x, y, size);
+	if(idx && t)
+	{
+		glBindTexture(GL_TEXTURE_2D, t->id);
+		glColor4f(r/255.f, g/255.f, b/255.f, f/255.f);
+		drawslice(0.5f/NUMCOMPASS+(idx-2)/float(NUMCOMPASS), 1/float(NUMCOMPASS), hudwidth/2, hudsize/2, size);
+	}
 	pushfont(idx ? "default" : "sub");
-	y += draw_textx("[%d]", x, y, 255, (hit ? 0 : 255), (hit ? 0 : 255), (hit ? 255 : 128), compassdir[idx].align, -1, -1, idx);
+	y += draw_textx("[%d]", x, y, r, g, b, f, compassdir[idx].align, -1, -1, idx);
 	popfont();
 	pushfont(idx ? "sub" : "radar");
-	draw_textx("%s", x, y, 200, (hit ? 0 : 200), (hit ? 0 : 200), (hit ? 255 : 128), compassdir[idx].align, -1, -1, name);
+	draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
 	popfont();
 }
 
@@ -164,12 +175,13 @@ void rendercmenu()
 {
 	if(compassmillis <= 0 || !curcompass) return;
 	int size = int(compasssize*hudsize);
+	Texture *t = *compasstex ? textureload(compasstex, 3) : NULL;
 	int hit = cmenuhit();
-	renderaction(0, size, "cancel", !hit);
+	renderaction(0, size, t, "cancel", !hit);
 	loopi(NUMCOMPASS)
 	{
 		if(!curcompass->actions.inrange(i)) break;
-		renderaction(i+1, size, curcompass->actions[i].name, hit == i+1);
+		renderaction(i+1, size, t, curcompass->actions[i].name, hit == i+1);
 	}
 }
 

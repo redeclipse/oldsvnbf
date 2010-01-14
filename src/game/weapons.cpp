@@ -11,11 +11,8 @@ namespace weapons
 	VARP(weapselectdelay, 0, 100, INT_MAX-1);
 
 	ICOMMAND(weapselect, "", (), intret(game::player1->weapselect));
-	ICOMMAND(ammo, "s", (char *a),
-	{
-		int n = a[0] ? atoi(a) : game::player1->weapselect;
-		intret(isweap(n) ? game::player1->ammo[n] : -1);
-	});
+	ICOMMAND(ammo, "i", (int *n), intret(isweap(*n) ? game::player1->ammo[*n] : -1));
+	ICOMMAND(hasweap, "ii", (int *n, int *o), intret(isweap(*n) && game::player1->hasweap(*n, *o) ? 1 : 0));
 
 	bool weapselect(gameent *d, int weap, bool local)
 	{

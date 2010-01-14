@@ -668,6 +668,11 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="game\compass.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="game\ctf.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
