@@ -401,6 +401,7 @@ game/hud.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
 game/hud.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
 game/hud.o: engine/lightmap.h engine/bih.h engine/texture.h engine/model.h
 game/hud.o: game/ai.h game/ctf.h game/stf.h game/vars.h game/scoreboard.h
+game/hud.o: game/compass.h
 game/physics.o: game/game.h engine/engine.h shared/cube.h shared/tools.h
 game/physics.o: shared/command.h shared/geom.h shared/ents.h shared/iengine.h
 game/physics.o: shared/igame.h engine/sound.h engine/world.h engine/octa.h
