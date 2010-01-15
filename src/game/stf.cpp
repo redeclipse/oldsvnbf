@@ -27,7 +27,7 @@ namespace stf
 			else formatstring(b.info)("<super>\fs%s%s\fS", teamtype[defend].chat, teamtype[defend].name);
 			float occupy = attack ? (!b.owner || b.enemy ? clamp(b.converted/float((!stfstyle && b.owner ? 2 : 1)*stfoccupy), 0.f, 1.f) : 1.f) : 0.f;
 			vec above = b.o;
-			above.z += enttype[FLAG].radius*2/3;
+			above.z += enttype[FLAG].radius/2+1.5f;
 			part_text(above, b.info);
 			above.z += 2.5f;
 			if(b.enemy)
@@ -36,7 +36,8 @@ namespace stf
 				part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
 			else part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour);
-			defformatstring(str)("%d%%", int(occupy*100.f)); part_textcopy(above, str);
+			above.z += 0.5f;
+			defformatstring(str)("<emphasis>%d%%", int(occupy*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, 0.5f);
 		}
 	}
 

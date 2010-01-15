@@ -270,11 +270,17 @@ namespace game
 	void followswitch(int n)
 	{
 		follow += n;
-		if(follow >= numdynents()) follow = 0;
-		else if(follow < 0) follow = numdynents()-1;
-		while(!iterdynents(follow)) follow += clamp(n, -1, 1);
+		#define checkfollow \
+			if(follow >= numdynents()) follow = 0; \
+			else if(follow < 0) follow = numdynents()-1;
+		checkfollow;
+		while(!iterdynents(follow))
+		{
+			follow += clamp(n, -1, 1);
+			checkfollow;
+		}
 	}
-	ICOMMAND(followdelta, "i", (int *n), followswitch(*n));
+	ICOMMAND(followdelta, "i", (int *n), followswitch(*n ? *n : 1));
 
     bool allowmove(physent *d)
     {
@@ -429,51 +435,6 @@ namespace game
 		server::modecheck(&nextmode, &nextmuts);
 	}
 	ICOMMAND(mode, "ii", (int *val, int *mut), setmode(*val, *mut));
-
-	void checkcamera()
-	{
-		camera1 = &camera;
-		if(camera1->type != ENT_CAMERA)
-		{
-			camera1->reset();
-			camera1->type = ENT_CAMERA;
-            camera1->collidetype = COLLIDE_AABB;
-			camera1->state = CS_ALIVE;
-			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
-		}
-		if((focus->state != CS_WAITING && focus->state != CS_SPECTATOR) || tvmode())
-		{
-			camera1->vel = vec(0, 0, 0);
-			camera1->move = camera1->strafe = 0;
-		}
-	}
-
-	void resetcamera()
-	{
-		lastcamera = 0;
-		zoomset(false, 0);
-		resetcursor();
-		checkcamera();
-		camera1->o = focus->o;
-		camera1->yaw = focus->yaw;
-		camera1->pitch = focus->pitch;
-		camera1->roll = focus->calcroll(false);
-		camera1->resetinterp();
-		focus->resetinterp();
-	}
-
-	void resetworld()
-	{
-		follow = 0; focus = player1;
-		hud::sb.showscores(false);
-		cleargui();
-	}
-
-	void resetstate()
-	{
-		resetworld();
-		resetcamera();
-	}
 
 	void heightoffset(gameent *d, bool local)
 	{
@@ -1286,6 +1247,18 @@ namespace game
 		fixrange(yaw, pitch);
 	}
 
+	void deathcamyawpitch(gameent *d, float &yaw, float &pitch)
+	{
+		if(deathcamstyle)
+		{
+			gameent *a = deathcamstyle > 1 ? d : getclient(d->lastattacker); if(!a && (!(a = d))) a = player1;
+			vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
+			vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
+			if(deathcamspeed > 0) scaleyawpitch(yaw, pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
+			else { yaw = camera1->aimyaw; pitch = camera1->aimpitch; }
+		}
+	}
+
 	void cameraplayer()
 	{
 		if(player1->state != CS_WAITING && player1->state != CS_SPECTATOR && player1->state != CS_DEAD && !tvmode())
@@ -1351,13 +1324,15 @@ namespace game
 				c.pos = d->headpos();
 				c.ent = -1; c.idx = i;
 				c.mindist = 0; c.maxdist = 1e16f;
+				if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
 				vecfromyawpitch(d->yaw, d->pitch, 1, 0, c.dir);
 			}
 		}
 		else loopv(cameras) if(cameras[i].ent < 0 && cameras[i].idx >= 0 && cameras[i].idx < numdynents())
 		{
 			gameent *d = (gameent *)iterdynents(cameras[i].idx);
-			cameras[i].pos = d->headpos();
+			if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
+			else cameras[i].pos = d->headpos();
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
 
@@ -1522,6 +1497,71 @@ namespace game
 		else setvar(isspec ? "specmode" : "waitmode", 0, true);
 	}
 
+	void checkcamera()
+	{
+		camera1 = &camera;
+		if(camera1->type != ENT_CAMERA)
+		{
+			camera1->reset();
+			camera1->type = ENT_CAMERA;
+            camera1->collidetype = COLLIDE_AABB;
+			camera1->state = CS_ALIVE;
+			camera1->height = camera1->zradius = camera1->radius = camera1->xradius = camera1->yradius = 2;
+		}
+		if((focus->state != CS_WAITING && focus->state != CS_SPECTATOR) || tvmode())
+		{
+			camera1->vel = vec(0, 0, 0);
+			camera1->move = camera1->strafe = 0;
+		}
+		if(tvmode()) cameratv();
+		else if(focus->state == CS_DEAD)
+		{
+			deathcamyawpitch(focus, camera1->yaw, camera1->pitch);
+			camera1->aimyaw = camera1->yaw;
+			camera1->aimpitch = camera1->pitch;
+		}
+		else if(focus->state == CS_WAITING || focus->state == CS_SPECTATOR)
+		{
+			camera1->move = player1->move;
+			camera1->strafe = player1->strafe;
+			physics::move(camera1, 10, true);
+		}
+		if(focus->state == CS_SPECTATOR)
+		{
+			player1->aimyaw = player1->yaw = camera1->yaw;
+			player1->aimpitch = player1->pitch = camera1->pitch;
+			player1->o = camera1->o;
+			player1->resetinterp();
+		}
+	}
+
+	void resetcamera()
+	{
+		lastcamera = 0;
+		zoomset(false, 0);
+		resetcursor();
+		checkcamera();
+		camera1->o = focus->o;
+		camera1->yaw = focus->yaw;
+		camera1->pitch = focus->pitch;
+		camera1->roll = focus->calcroll(false);
+		camera1->resetinterp();
+		focus->resetinterp();
+	}
+
+	void resetworld()
+	{
+		follow = 0; focus = player1;
+		hud::sb.showscores(false);
+		cleargui();
+	}
+
+	void resetstate()
+	{
+		resetworld();
+		resetcamera();
+	}
+
 	void updateworld()		// main game update loop
 	{
 		if(connected())
@@ -1626,33 +1666,6 @@ namespace game
 				addsway(focus);
             }
 			checkcamera();
-			if(focus->state == CS_DEAD)
-			{
-				gameent *a = deathcamstyle ? (deathcamstyle == 2 ? focus : getclient(focus->lastattacker)) : NULL;
-				if(a)
-				{
-					vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
-					float yaw = camera1->yaw, pitch = camera1->pitch;
-					vectoyawpitch(dir, yaw, pitch);
-					if(deathcamspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, yaw, pitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
-					camera1->aimyaw = camera1->yaw;
-					camera1->aimpitch = camera1->pitch;
-				}
-			}
-			else if(tvmode()) cameratv();
-			else if(focus->state == CS_WAITING || focus->state == CS_SPECTATOR)
-			{
-				camera1->move = player1->move;
-				camera1->strafe = player1->strafe;
-				physics::move(camera1, 10, true);
-			}
-			if(focus->state == CS_SPECTATOR)
-			{
-				player1->aimyaw = player1->yaw = camera1->yaw;
-				player1->aimpitch = player1->pitch = camera1->pitch;
-				player1->o = camera1->o;
-				player1->resetinterp();
-			}
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
 		}
 
