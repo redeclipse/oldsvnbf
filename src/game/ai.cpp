@@ -921,9 +921,8 @@ namespace ai
 		{
 			if((d->action[AC_JUMP] = jump) != false) d->actiontime[AC_JUMP] = lastmillis;
 			int seed = (111-d->skill)*(d->onladder || d->inliquid ? 2 : 8);
-			d->ai->jumpseed = lastmillis+seed+rnd(seed);
-			seed *= b.idle ? 200 : 100;
-			d->ai->jumprand = lastmillis+seed+rnd(seed);
+			d->ai->jumpseed = lastmillis+seed+rnd(seed*2); seed *= b.idle ? 1000 : 500;
+			d->ai->jumprand = lastmillis+seed+rnd(seed*2);
 		}
 	}
 
