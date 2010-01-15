@@ -718,16 +718,12 @@ static bool findarg(int argc, char **argv, const char *str)
 void rehash(bool reload)
 {
 	if(reload) writecfg();
-
-	persistidents = false;
-
 	execfile("defaults.cfg");
-
-	persistidents = true;
-
     initing = INIT_LOAD;
+	persistidents = true;
 	execfile("config.cfg", false);
 	execfile("autoexec.cfg", false);
+	persistidents = false;
     initing = NOT_INITING;
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
@@ -917,7 +913,7 @@ int main(int argc, char **argv)
 	initsound();
 
 	conoutf("loading defaults..");
-	persistidents = false;
+
 	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
 	if(!setfont("default")) fatal("no default font specified");
 	inbetweenframes = true;

@@ -574,11 +574,17 @@ void writebinds(stream *f)
     binds.sort(sortbinds);
     loopj(4)
     {
+    	bool found = false;
         loopv(binds)
         {
             keym &km = *binds[i];
-            if(km.persist[j] && *km.actions[j]) f->printf("\t%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
+            if(km.persist[j] && *km.actions[j])
+            {
+            	f->printf("%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
+            	found = true;
+            }
         }
+        if(found) f->printf("\n");
     }
 }
 

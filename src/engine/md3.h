@@ -207,16 +207,13 @@ struct md3 : vertmodel
         defformatstring(cfgname)("models/%s/md3.cfg", loadname);
 
         loadingmd3 = this;
-        persistidents = false;
         if(execfile(cfgname, false) && parts.length()) // configured md3, will call the md3* commands below
         {
-            persistidents = true;
             loadingmd3 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // md3 without configuration, try default tris and skin
         {
-            persistidents = true;
             loadingmd3 = NULL;
             if(!loaddefaultparts()) return false;
         }

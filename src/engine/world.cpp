@@ -765,39 +765,19 @@ void splitocta(cube *c, int size)
 
 void clearworldvars(bool msg)
 {
-	overrideidents = worldidents = true;
-	persistidents = false;
 	enumerate(*idents, ident, id, {
 		if(id.flags&IDF_WORLD) // reset world vars
 		{
 			switch (id.type)
 			{
-				case ID_VAR:
-				{
-					setvar(id.name, id.def.i, true);
-					break;
-				}
-				case ID_FVAR:
-				{
-					setfvar(id.name, id.def.f, true);
-					break;
-				}
-				case ID_SVAR:
-				{
-					setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true);
-					break;
-				}
-				case ID_ALIAS:
-				{
-					worldalias(id.name, "");
-					break;
-				}
+				case ID_VAR: setvar(id.name, id.def.i, true); break;
+				case ID_FVAR: setfvar(id.name, id.def.f, true); break;
+				case ID_SVAR: setsvar(id.name, id.def.s && *id.def.s ? id.def.s : "", true); break;
+				case ID_ALIAS: worldalias(id.name, ""); break;
 				default: break;
 			}
 		}
 	});
-	overrideidents = worldidents = false;
-	persistidents = true;
 	if(msg) conoutf("world variables reset");
 }
 
@@ -862,9 +842,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
     if(!nocfg)
     {
 	    overrideidents = worldidents = true;
-	    persistidents = false;
 	    execfile("map.cfg");
-	    persistidents = true;
 	    overrideidents = worldidents = false;
     }
 	game::startmap(nocfg ? "" : "maps/untitled", NULL, true);

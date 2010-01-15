@@ -640,7 +640,16 @@ namespace hud
 			else index = POINTER_HAIR;
         }
         else index = POINTER_HAIR;
-		if(index > POINTER_NONE) drawpointer(w, h, index);
+		if(index > POINTER_NONE && (showhud || index < POINTER_HIT))
+		{
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(0, hudwidth, hudsize, 0, -1, 1);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			drawpointer(w, h, index);
+			glDisable(GL_BLEND);
+		}
 	}
 
 	int numteamkills()
@@ -906,10 +915,10 @@ namespace hud
 					drawtex(0, 0, hudwidth, hudsize);
 				}
 			}
-			drawpointers(hudwidth, hudsize);
 			glDisable(GL_BLEND);
 		}
 		if(UI::ready && (progressing || (commandmillis <= 0 && !curcompass))) UI::render();
+		if(!progressing) drawpointers(hudwidth, hudsize);
 	}
 
 	void drawconsole(int type, int w, int h, int x, int y, int s)
