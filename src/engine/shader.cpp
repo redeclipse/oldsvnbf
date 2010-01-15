@@ -1100,13 +1100,11 @@ void useshader(Shader *s)
 
     char *defer = s->defer;
     s->defer = NULL;
-    bool wasstandard = standardshader, wasforcing = forceshaders, waspersisting = persistidents;
+    bool wasstandard = standardshader, wasforcing = forceshaders;
     standardshader = s->standard;
     forceshaders = false;
-    persistidents = false;
     curparams.setsize(0);
     execute(defer);
-    persistidents = waspersisting;
     forceshaders = wasforcing;
     standardshader = wasstandard;
     delete[] defer;
@@ -1831,9 +1829,7 @@ void cleanupshaders()
 
 void reloadshaders()
 {
-    persistidents = false;
     loadshaders();
-    persistidents = true;
     if(renderpath==R_FIXEDFUNCTION) return;
     linkslotshaders();
     enumerate(shaders, Shader, s,

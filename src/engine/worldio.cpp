@@ -721,7 +721,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				{
 					int numvars = hdr.version >= 25 ? f->getlil<int>() : f->getchar(), vars = 0;
 					overrideidents = worldidents = true;
-					persistidents = false;
 					progress(0, "loading variables...");
 					loopi(numvars)
 					{
@@ -793,7 +792,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 							else vars++;
 						}
 					}
-					persistidents = true;
 					overrideidents = worldidents = false;
 					if(verbose) conoutf("\faloaded %d variables", vars);
 				}
@@ -1123,7 +1121,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 			entities::initents(f, maptype, hdr.version, hdr.gameid, hdr.gamever);
 
 			overrideidents = worldidents = true;
-			persistidents = false;
 			defformatstring(cfgname)("%s.cfg", mapname);
 			if(maptype == MAP_OCTA)
 			{
@@ -1136,8 +1133,6 @@ bool load_world(const char *mname, bool temp)		// still supports all map formats
 				extern float cloudblend;
 				setfvar("cloudlayerblend", cloudblend, true);
 			}
-
-			persistidents = true;
 			overrideidents = worldidents = false;
 
 			vector<int> mapmodels;

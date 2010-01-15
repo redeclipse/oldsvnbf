@@ -5,7 +5,7 @@
 
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
 
-bool overrideidents = false, persistidents = true, worldidents = false, interactive = false;
+bool overrideidents = false, persistidents = false, worldidents = false, interactive = false;
 
 void clearstack(ident &id)
 {
@@ -86,8 +86,8 @@ ident *newident(const char *name)
 	if(!id)
 	{
 		int flags = IDF_COMPLETE;
-		if(persistidents) flags |= IDF_PERSIST;
 		if(worldidents) flags |= IDF_WORLD;
+		else if(persistidents) flags |= IDF_PERSIST;
 		ident init(ID_ALIAS, newstring(name), newstring(""), flags);
 		id = &idents->access(init.name, init);
 	}
@@ -129,8 +129,8 @@ void aliasa(const char *name, char *action)
 	if(!b)
 	{
 		int flags = IDF_COMPLETE;
-		if(persistidents) flags |= IDF_PERSIST;
 		if(worldidents) flags |= IDF_WORLD;
+		else if(persistidents) flags |= IDF_PERSIST;
 		ident d(ID_ALIAS, newstring(name), action, flags);
 		if(overrideidents && d.flags&IDF_OVERRIDE) d.override = OVERRIDDEN;
 #ifdef STANDALONE
@@ -153,7 +153,7 @@ void aliasa(const char *name, char *action)
 		else
 		{
 			if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
-			if(persistidents)
+			if(persistidents && !worldidents)
 			{
 				if(!(b->flags & IDF_PERSIST)) b->flags |= IDF_PERSIST;
 			}
@@ -175,9 +175,7 @@ COMMAND(alias, "ss");
 void worldalias(const char *name, const char *action)
 {
 	worldidents = true;
-	persistidents = false;
 	alias(name, action);
-	persistidents = true;
 	worldidents = false;
 }
 COMMAND(worldalias, "ss");
@@ -811,43 +809,50 @@ void writecfg()
 
 	if(!f) return;
 	client::writeclientinfo(f);
-	f->printf("if (= $version %d) [\n", ENG_VERSION);
 	vector<ident *> ids;
 	enumerate(*idents, ident, id, ids.add(&id));
 	ids.sort(sortidents);
+	bool found = false;
 	loopv(ids)
 	{
 		ident &id = *ids[i];
 		bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_VAR: if(*id.storage.i != id.def.i) { saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "\t%s 0x%.6X\n" : "\t%s 0x%X\n") : "\t%s %d\n"), id.name, *id.storage.i); } break;
-			case ID_FVAR: if(*id.storage.f != id.def.f) { saved = true; f->printf("\t%s %s\n", id.name, floatstr(*id.storage.f)); } break;
-			case ID_SVAR: if(strcmp(*id.storage.s, id.def.s)) { saved = true; f->printf("\t%s ", id.name); writeescapedstring(f, *id.storage.s); f->putchar('\n'); } break;
+			case ID_VAR: if(*id.storage.i != id.def.i) { found = saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "%s 0x%.6X" : "%s 0x%X") : "%s %d"), id.name, *id.storage.i); } break;
+			case ID_FVAR: if(*id.storage.f != id.def.f) { found = saved = true; f->printf("%s %s", id.name, floatstr(*id.storage.f)); } break;
+			case ID_SVAR: if(strcmp(*id.storage.s, id.def.s)) { found = saved = true; f->printf("%s ", id.name); writeescapedstring(f, *id.storage.s); } break;
 		}
-		if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
+		if(saved)
+		{
+			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
+			else f->printf("\n");
+		}
 	}
+	if(found) f->printf("\n");
+	found = false;
 	loopv(ids)
 	{
 		ident &id = *ids[i];
 		bool saved = false;
 		if(id.flags&IDF_PERSIST) switch(id.type)
 		{
-			case ID_ALIAS:
+			case ID_ALIAS: if(id.override==NO_OVERRIDE && id.action[0])
 			{
-				if(id.override==NO_OVERRIDE && id.action[0])
-				{
-					saved = true;
-					f->printf("\t\"%s\" = [%s]\n", id.name, id.action);
-				}
-				break;
+				found = saved = true;
+				f->printf("\"%s\" = [%s]", id.name, id.action);
 			}
+			break;
 		}
-		if(saved && !(id.flags&IDF_COMPLETE)) f->printf("\tsetcomplete \"%s\" 0\n", id.name);
+		if(saved)
+		{
+			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
+			else f->printf("\n");
+		}
 	}
+	if(found) f->printf("\n");
 	writebinds(f);
 	//writecompletions(f);
-	f->printf("] [ echo \"\frWARNING: config from different version ignored, if you wish to save settings between version please use autoexec.cfg\" ]\n");
 	f->printf("\n");
 	delete f;
 }
@@ -1101,7 +1106,7 @@ ICOMMANDN(&~, notb, "ii", (int *a, int *b), intret(*a & ~*b));
 ICOMMANDN(|~, noto, "ii", (int *a, int *b), intret(*a | ~*b));
 ICOMMANDN(<<, lsft, "ii", (int *a, int *b), intret(*a << *b));
 ICOMMANDN(>>, rsft, "ii", (int *a, int *b), intret(*a >> *b));
-ICOMMANDN(&&, and, "V", (char **args, int *numargs), 
+ICOMMANDN(&&, and, "V", (char **args, int *numargs),
 {
     int val = 1;
     loopi(*numargs) { val = execute(args[i]); if(!val) break; }
@@ -1110,7 +1115,7 @@ ICOMMANDN(&&, and, "V", (char **args, int *numargs),
 ICOMMANDN(||, or, "V", (char **args, int *numargs),
 {
     int val = 0;
-    loopi(*numargs) { val = execute(args[i]); if(val) break; }  
+    loopi(*numargs) { val = execute(args[i]); if(val) break; }
     intret(val);
 });
 
@@ -1168,7 +1173,7 @@ void addsleep(int *msec, char *cmd)
 	s.delay = max(*msec, 1);
 	s.millis = lastmillis;
 	s.command = newstring(cmd);
-	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0)|(persistidents ? IDF_PERSIST : 0);
+	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0)|(persistidents && !worldidents ? IDF_PERSIST : 0);
 }
 
 ICOMMAND(sleep, "is", (int *a, char *b), addsleep(a, b));

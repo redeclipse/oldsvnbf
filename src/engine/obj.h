@@ -194,16 +194,13 @@ struct obj : vertmodel
         defformatstring(cfgname)("models/%s/obj.cfg", loadname);
 
         loadingobj = this;
-        persistidents = false;
         if(execfile(cfgname) && parts.length()) // configured obj, will call the obj* commands below
         {
-            persistidents = true;
             loadingobj = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // obj without configuration, try default tris and skin
         {
-            persistidents = true;
             loadingobj = NULL;
             if(!loaddefaultparts()) return false;
         }
