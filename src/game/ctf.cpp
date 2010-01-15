@@ -175,7 +175,7 @@ namespace ctf
             }
             else if(f.base&BASE_HOME) trans = f.team ? 0.125f : 0.25f;
             if(trans > 0) rendermodel(&entities::ents[f.ent]->light, flagname, ANIM_MAPMODEL|ANIM_LOOP, above, entities::ents[f.ent]->attrs[1], entities::ents[f.ent]->attrs[2], 0, MDL_SHADOW|MDL_CULL_VFC|MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, trans);
-			above.z += enttype[FLAG].radius*2/3;
+			above.z += enttype[FLAG].radius/2+1.5f;
             if((f.base&BASE_HOME) || (!f.owner && !f.droptime))
             {
 				defformatstring(info)("<super>%s %s", teamtype[f.team].name, f.base&BASE_HOME ? "base" : "flag");
@@ -187,8 +187,9 @@ namespace ctf
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 				part_icon(above, textureload(hud::progresstex, 3), 2.5f, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
 				part_icon(above, textureload(hud::progresstex, 3), 2.5f, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
-				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f));
-				above.z += 2.5f;
+				above.z += 0.5f;
+				defformatstring(str)("<emphasis>%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f)*0.5f);
+				above.z += 2.f;
 			}
             if((f.base&BASE_FLAG) && (f.owner || f.droptime))
             {

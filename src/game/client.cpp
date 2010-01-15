@@ -200,33 +200,15 @@ namespace client
 		emptymap(0, true, NULL, true);
 		smartmusic(true, false);
 		enumerate(*idents, ident, id, {
-			if(id.flags&IDF_CLIENT) // reset vars
+			if(id.flags&IDF_CLIENT) switch(id.type)
 			{
-				switch(id.type)
-				{
-					case ID_VAR:
-					{
-						setvar(id.name, id.def.i, true);
-						break;
-					}
-					case ID_FVAR:
-					{
-						setfvar(id.name, id.def.f, true);
-						break;
-					}
-					case ID_SVAR:
-					{
-						setsvar(id.name, *id.def.s ? id.def.s : "", true);
-						break;
-					}
-					default: break;
-				}
+				case ID_VAR: setvar(id.name, id.def.i, true); break;
+				case ID_FVAR: setfvar(id.name, id.def.f, true); break;
+				case ID_SVAR: setsvar(id.name, *id.def.s ? id.def.s : "", true); break;
+				default: break;
 			}
 		});
-		if(clean)
-		{
-			game::clientmap[0] = '\0';
-		}
+		if(clean) game::clientmap[0] = '\0';
 	}
 
 	bool allowedittoggle(bool edit)
