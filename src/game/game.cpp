@@ -51,9 +51,9 @@ namespace game
 	VARP(editfov, 1, 120, 179);
 	VARP(specfov, 1, 120, 179);
 
-	VARP(follow, -1, 0, INT_MAX-1);
-	VARP(specmode, 0, 1, 1); // 0 = float, 1 = tv
-	VARP(waitmode, 0, 1, 2); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
+	VARP(follow, 0, 0, INT_MAX-1);
+	VARFP(specmode, 0, 1, 1, follow = 0); // 0 = float, 1 = tv
+	VARFP(waitmode, 0, 1, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
 
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
@@ -264,9 +264,17 @@ namespace game
 		return false;
 	}
 
-	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false));
-	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false));
-	ICOMMAND(followdelta, "i", (int *n), follow = clamp(follow + *n, -1, INT_MAX-1));
+	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false); follow = 0);
+	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false); follow = 0);
+
+	void followswitch(int n)
+	{
+		follow += n;
+		if(follow >= numdynents()) follow = 0;
+		else if(follow < 0) follow = numdynents()-1;
+		while(!iterdynents(follow)) follow += clamp(n, -1, 1);
+	}
+	ICOMMAND(followdelta, "i", (int *n), followswitch(*n));
 
     bool allowmove(physent *d)
     {
@@ -456,7 +464,7 @@ namespace game
 
 	void resetworld()
 	{
-		focus = player1;
+		follow = 0; focus = player1;
 		hud::sb.showscores(false);
 		cleargui();
 	}
@@ -987,10 +995,16 @@ namespace game
 		if(!d) return;
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
-		if(focus == d)
+		gameent *e = NULL;
+		loopi(numdynents()) if((e = (gameent *)iterdynents(i)) && d == e)
 		{
-			focus = player1;
-			resetcamera();
+			if(follow >= i)
+			{
+				followswitch(-1);
+				focus = (gameent *)iterdynents(follow);
+				resetcamera();
+			}
+			break;
 		}
 		cameras.setsize(0);
 		client::clearvotes(d);
@@ -1534,10 +1548,10 @@ namespace game
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);
 
-            gameent *d = NULL; bool override = follow < 0, allow = (player1->state == CS_SPECTATOR || player1->state == CS_WAITING) && follow, found = false;
+            gameent *d = NULL; bool allow = player1->state == CS_SPECTATOR || player1->state == CS_WAITING, found = false;
             loopi(numdynents()) if((d = (gameent *)iterdynents(i)) != NULL)
             {
-            	if(d->state != CS_SPECTATOR && allow && (override || i == follow || (i > follow && !found)))
+            	if(d->state != CS_SPECTATOR && allow && i == follow)
 				{
 					if(focus != d)
 					{
