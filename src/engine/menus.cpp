@@ -413,7 +413,12 @@ void guifield(char *var, int *maxlength, char *onchange)
 	if(result)
 	{
 		alias(var, result);
-		if(onchange[0]) execute(onchange);
+		if(onchange[0])
+		{
+			interactive = true;
+			execute(onchange);
+			interactive = false;
+		}
 	}
 }
 
@@ -436,7 +441,12 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
     if(result)
     {
         alias(var, result);
-        if(onchange[0]) execute(onchange);
+        if(onchange[0])
+        {
+      		interactive = true;
+        	execute(onchange);
+        	interactive = false;
+        }
     }
 }
 
@@ -594,8 +604,10 @@ void clearchanges(int type)
 void menuprocess()
 {
 	int level = menustack.length();
+	interactive = true;
 	loopv(executelater) execute(executelater[i]);
 	executelater.deletecontentsa();
+	interactive = false;
 	if(clearlater)
 	{
         if(level==menustack.length()) loopi(level) popgui();
