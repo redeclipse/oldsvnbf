@@ -516,7 +516,7 @@ void consolekey(int code, bool isdown, int cooked)
                 if(history.empty() || history.last()->shouldsave())
                 {
                     if(maxhistory && history.length() >= maxhistory)
-                    { 
+                    {
                         loopi(history.length()-maxhistory+1) delete history[i];
                         history.remove(0, history.length()-maxhistory+1);
                     }
@@ -547,7 +547,7 @@ void keypress(int code, bool isdown, int cooked)
     keym *haskey = keyms.access(code);
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
 	else if(commandmillis > 0) consolekey(code, isdown, alpha);
-	else if(!UI::keypress(code, isdown, alpha) && !hud::keypress(code, isdown, alpha) && haskey)
+	else if(!hud::keypress(code, isdown, alpha) && !UI::keypress(code, isdown, alpha) && haskey)
 		execbind(*haskey, isdown);
 }
 
