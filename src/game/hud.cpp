@@ -1512,15 +1512,15 @@ namespace hud
 			}
 			if(game::focus == game::player1 && FWV(impulsestyle) && FWV(impulsemeter) && inventoryimpulse)
 			{
-				float len = 1.f-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f);
+				float len = 1-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				if(teamwidgets) skewcolour(r, g, b);
 				glColor4f(r, g, b, fade*0.25f);
-				int iw = int(sw*inventoryimpulseskew), ow = (sw-iw)/2;
+				int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2;
 				drawsized(x+ow, y-sy-iw, iw);
 				glColor4f(r, g, b, fade);
-				drawslice(0, len, x+iw/2+ow, y-sy-iw/2, iw/2);
+				drawslice(1-len, len, x+iw/2+ow, y-sy-iw/2, iw/2);
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
