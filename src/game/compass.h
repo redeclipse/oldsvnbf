@@ -104,23 +104,22 @@ const struct compassdirs
 	int x, y, align;
 } compassdir[NUMCOMPASS+1] = {
 	{ 0, 0, TEXT_CENTERED }, // special cancel case
-	{ 0, -1, TEXT_CENTERED }, { 1, -1, TEXT_LEFT_JUSTIFY }, { 1, 0, TEXT_LEFT_JUSTIFY }, { 1, 1, TEXT_LEFT_JUSTIFY },
-	{ 0, 1, TEXT_CENTERED }, { -1, 1, TEXT_RIGHT_JUSTIFY }, { -1, 0, TEXT_RIGHT_JUSTIFY }, { -1, -1, TEXT_RIGHT_JUSTIFY }
+	{ 0, -1, TEXT_CENTERED },		{ 1, -1, TEXT_LEFT_JUSTIFY },
+	{ 1, 0, TEXT_LEFT_JUSTIFY },	{ 1, 1, TEXT_LEFT_JUSTIFY  },
+	{ 0, 1, TEXT_CENTERED },		{ -1, 1, TEXT_RIGHT_JUSTIFY  },
+	{ -1, 0, TEXT_RIGHT_JUSTIFY },	{ -1, -1, TEXT_RIGHT_JUSTIFY  }
 };
 
-void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
+void cmenudims(int idx, int &x, int &y, int size)
 {
 	x = hudwidth/2+(size*compassdir[idx].x);
 	y = hudsize/2+(size*compassdir[idx].y);
 	pushfont(idx ? "default" : "sub");
-	if(!compassdir[idx].y) { if(!layout) y -= FONTH; }
+	if(!compassdir[idx].y) y -= FONTH;
 	else
 	{
-		if(!layout)
-		{
-			if(compassdir[idx].y < 0) y -= FONTH*2;
-			else if(compassdir[idx].y > 0) y += FONTH/3;
-		}
+		if(compassdir[idx].y < 0) y -= FONTH*2;
+		else if(compassdir[idx].y > 0) y += FONTH/3;
 		if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
 		else y += compassdir[idx].y*FONTH*2;
 		y -= compassdir[idx].y*size/2;
@@ -130,13 +129,17 @@ void cmenudims(int idx, int &x, int &y, int size, bool layout = false)
 
 int cmenuhit()
 {
-	if(compasspos > 0) return compasspos;
-	int x = 0, y = 0, cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), size = int(compasssize*hudsize);
-	loopi(NUMCOMPASS)
+	if(curcompass)
 	{
-		cmenudims(i+1, x, y, size, true);
-		if((!compassdir[i+1].x || (compassdir[i+1].x > 0 && cx >= x) || (compassdir[i+1].x < 0 && cx <= x)) && (!compassdir[i+1].y || (compassdir[i+1].y > 0 && cy >= y) || (compassdir[i+1].y < 0 && cy <= y)))
-			return i+1;
+		if(compasspos > 0) return compasspos;
+		float cx = (cursorx-0.5f)*2.f, cy = (cursory-0.5f)*2.f;
+		if(sqrtf(cx*cx+cy*cy) <= compasssize*0.5f) return 0;
+		else
+		{
+			float yaw = -(float)atan2(cx, cy)/RAD+202.5f; if(yaw >= 360) yaw -= 360;
+			loopv(curcompass->actions) if(yaw > i*45 && yaw <= (i+1)*45)
+				return i+1;
+		}
 	}
 	return 0;
 }
