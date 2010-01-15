@@ -765,6 +765,7 @@ void splitocta(cube *c, int size)
 
 void clearworldvars(bool msg)
 {
+    overrideidents = worldidents = true;
 	enumerate(*idents, ident, id, {
 		if(id.flags&IDF_WORLD) // reset world vars
 		{
@@ -779,6 +780,7 @@ void clearworldvars(bool msg)
 		}
 	});
 	if(msg) conoutf("world variables reset");
+    overrideidents = worldidents = false;
 }
 
 ICOMMAND(resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true));
