@@ -204,7 +204,7 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     int len = strlen(action);
     while(len>0 && isspace(action[len-1])) len--;
     binding = newstring(action, len);
-    *persist = persistidents;
+    *persist = interactive;
     changedkeys = totalmillis;
 }
 

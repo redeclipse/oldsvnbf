@@ -120,7 +120,7 @@ extern void alias(const char *name, const char *action);
 extern void worldalias(const char *name, const char *action);
 extern const char *getalias(const char *name);
 
-extern bool overrideidents, persistidents, worldidents, interactive;
+extern bool overrideidents, worldidents, interactive;
 
 extern char *parseword(const char *&p, int arg, int &infix);
 extern char *parsetext(const char *&p);

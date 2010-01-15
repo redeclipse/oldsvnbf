@@ -200,7 +200,12 @@ void rendercmenu()
 void runcmenu(int idx)
 {
 	cmenu *oldcompass = curcompass;
-	if(idx > 0 && curcompass && curcompass->actions.inrange(idx-1)) execute(curcompass->actions[idx-1].contents);
+	if(idx > 0 && curcompass && curcompass->actions.inrange(idx-1))
+	{
+		interactive = true;
+		execute(curcompass->actions[idx-1].contents);
+		interactive = false;
+	}
 	if(oldcompass == curcompass) clearcmenu();
 }
 

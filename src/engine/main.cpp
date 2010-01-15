@@ -720,10 +720,10 @@ void rehash(bool reload)
 	if(reload) writecfg();
 	execfile("defaults.cfg");
     initing = INIT_LOAD;
-	persistidents = true;
+	interactive = true;
 	execfile("config.cfg", false);
 	execfile("autoexec.cfg", false);
-	persistidents = false;
+	interactive = false;
     initing = NOT_INITING;
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));

@@ -5,7 +5,7 @@
 
 identtable *idents = NULL;		// contains ALL vars/commands/aliases
 
-bool overrideidents = false, persistidents = false, worldidents = false, interactive = false;
+bool overrideidents = false, worldidents = false, interactive = false;
 
 void clearstack(ident &id)
 {
@@ -87,7 +87,6 @@ ident *newident(const char *name)
 	{
 		int flags = IDF_COMPLETE;
 		if(worldidents) flags |= IDF_WORLD;
-		else if(persistidents) flags |= IDF_PERSIST;
 		ident init(ID_ALIAS, newstring(name), newstring(""), flags);
 		id = &idents->access(init.name, init);
 	}
@@ -130,7 +129,6 @@ void aliasa(const char *name, char *action)
 	{
 		int flags = IDF_COMPLETE;
 		if(worldidents) flags |= IDF_WORLD;
-		else if(persistidents) flags |= IDF_PERSIST;
 		ident d(ID_ALIAS, newstring(name), action, flags);
 		if(overrideidents && d.flags&IDF_OVERRIDE) d.override = OVERRIDDEN;
 #ifdef STANDALONE
@@ -153,14 +151,7 @@ void aliasa(const char *name, char *action)
 		else
 		{
 			if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
-			if(persistidents && !worldidents)
-			{
-				if(!(b->flags & IDF_PERSIST)) b->flags |= IDF_PERSIST;
-			}
-			else if(b->flags & IDF_PERSIST) b->flags &= ~IDF_PERSIST;
-			if(b->type == ID_ALIAS && worldidents && !(b->flags & IDF_WORLD))
-				b->flags |= IDF_WORLD;
-
+			if(b->type == ID_ALIAS && worldidents && !(b->flags & IDF_WORLD)) b->flags |= IDF_WORLD;
 #ifndef STANDALONE
 			client::editvar(b, interactive && !overrideidents);
 #endif
@@ -852,8 +843,6 @@ void writecfg()
 	}
 	if(found) f->printf("\n");
 	writebinds(f);
-	//writecompletions(f);
-	f->printf("\n");
 	delete f;
 }
 
@@ -1173,7 +1162,7 @@ void addsleep(int *msec, char *cmd)
 	s.delay = max(*msec, 1);
 	s.millis = lastmillis;
 	s.command = newstring(cmd);
-	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0)|(persistidents && !worldidents ? IDF_PERSIST : 0);
+	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0);
 }
 
 ICOMMAND(sleep, "is", (int *a, char *b), addsleep(a, b));
@@ -1185,17 +1174,13 @@ void checksleep(int millis)
 		sleepcmd &s = sleepcmds[i];
 		if(millis - s.millis >= s.delay)
 		{
-			bool oldpersistidents = persistidents,
-				 oldoverrideidents = overrideidents,
-				 oldworldidents = worldidents;
-			persistidents = (s.flags&IDF_PERSIST)!=0;
+			bool oldoverrideidents = overrideidents, oldworldidents = worldidents;
 			overrideidents = (s.flags&IDF_OVERRIDE)!=0;
 			worldidents = (s.flags&IDF_WORLD)!=0;
 			char *cmd = s.command; // execute might create more sleep commands
 			s.command = NULL;
 			execute(cmd);
 			delete[] cmd;
-			persistidents = oldpersistidents;
 			overrideidents = oldoverrideidents;
 			worldidents = oldworldidents;
 			if(sleepcmds.inrange(i) && !sleepcmds[i].command) sleepcmds.remove(i--);
