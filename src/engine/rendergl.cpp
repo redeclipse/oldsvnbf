@@ -1686,8 +1686,7 @@ void drawnoview()
 
 	hud::update(screen->w, screen->h);
 	hud::drawhud(true);
-	if(UI::ready && (progressing || commandmillis<0)) UI::render();
-	if(!progressing) hud::drawlast();
+	hud::drawlast();
 
     glDisable(GL_TEXTURE_2D);
 }
@@ -1849,7 +1848,6 @@ void drawview(int targtype)
 	defaultshader->set();
 	hud::drawhud();
 	render_texture_panel(w, h);
-	if(commandmillis<0) UI::render();
 	hud::drawlast();
 	glDisable(GL_TEXTURE_2D);
 

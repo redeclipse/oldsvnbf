@@ -666,7 +666,7 @@ namespace hud
 
 	void drawlast()
 	{
-		if(showhud)
+		if(!progressing && showhud)
 		{
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
@@ -909,6 +909,7 @@ namespace hud
 			drawpointers(hudwidth, hudsize);
 			glDisable(GL_BLEND);
 		}
+		if(UI::ready && (progressing || (commandmillis <= 0 && !curcompass))) UI::render();
 	}
 
 	void drawconsole(int type, int w, int h, int x, int y, int s)
