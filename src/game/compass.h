@@ -110,23 +110,6 @@ const struct compassdirs
 	{ -1, 0, TEXT_RIGHT_JUSTIFY },	{ -1, -1, TEXT_RIGHT_JUSTIFY  }
 };
 
-void cmenudims(int idx, int &x, int &y, int size)
-{
-	x = hudwidth/2+(size*compassdir[idx].x);
-	y = hudsize/2+(size*compassdir[idx].y);
-	pushfont(idx ? "default" : "sub");
-	if(!compassdir[idx].y) y -= FONTH;
-	else
-	{
-		if(compassdir[idx].y < 0) y -= FONTH*2;
-		else if(compassdir[idx].y > 0) y += FONTH/3;
-		if(compassdir[idx].x) x -= compassdir[idx].x*size/2;
-		else y += compassdir[idx].y*FONTH*2;
-		y -= compassdir[idx].y*size/2;
-	}
-	popfont();
-}
-
 int cmenuhit()
 {
 	if(curcompass)
@@ -146,20 +129,58 @@ int cmenuhit()
 
 void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
 {
-	int x = 0, y = 0, r = 255, g = hit ? 0 : 255, b = hit ? 0 : 255, f = hit ? 255 : 128;
-	cmenudims(idx, x, y, size);
+	int x = hudwidth/2+(size*compassdir[idx].x), y = hudsize/2+(size*compassdir[idx].y),
+		r = 255, g = hit ? 0 : 255, b = hit ? 0 : 255, f = hit ? 255 : 128;
+	pushfont("default");
+	if(!compassdir[idx].y) y -= compassdir[idx].x ? FONTH/2 : FONTH;
+	else
+	{
+		if(compassdir[idx].y < 0) y -= FONTH*2;
+		else if(compassdir[idx].y > 0) y += FONTH/3;
+		if(compassdir[idx].x) { x -= compassdir[idx].x*size/2; y -= compassdir[idx].y*size/2; }
+		else y -= compassdir[idx].y*FONTH/2;
+	}
 	if(t)
 	{
 		glBindTexture(GL_TEXTURE_2D, t->id);
 		glColor4f(r/255.f, g/255.f, b/255.f, f/255.f);
 		if(idx) drawslice(0.5f/NUMCOMPASS+(idx-2)/float(NUMCOMPASS), 1/float(NUMCOMPASS), hudwidth/2, hudsize/2, size);
-		else drawsized(hudwidth/2-size/4, hudsize/2-size/4, size/2);
+		else drawsized(hudwidth/2-size*3/8, hudsize/2-size*3/8, size*3/4);
 	}
-	pushfont(idx ? "default" : "sub");
-	y += draw_textx("[%d]", x, y, r, g, b, f, compassdir[idx].align, -1, -1, idx);
-	popfont();
-	pushfont(idx ? "sub" : "radar");
-	draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
+	switch(compassdir[idx].y)
+	{
+		case -1:
+		{
+			pushfont("sub");
+			y += draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
+			popfont();
+			draw_textx("[%d]", x, y, r, g, b, 255, compassdir[idx].align, -1, -1, idx);
+			break;
+		}
+		case 0:
+		{
+			if(compassdir[idx].x)
+			{
+				defformatstring(s)("[%d]", idx);
+				draw_textx("%s", x, y, r, g, b, 255, compassdir[idx].align, -1, -1, s);
+				x += (text_width(s)+FONTW/4)*compassdir[idx].x;
+				y += FONTH/2;
+				pushfont("sub");
+				y -= FONTH/2;
+				draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
+				popfont();
+				break;
+			} // center uses default case
+		}
+		case 1: default:
+		{
+			y += draw_textx("[%d]", x, y, r, g, b, idx ? 255 : f, compassdir[idx].align, -1, -1, idx);
+			pushfont("sub");
+			draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
+			popfont();
+			break;
+		}
+	}
 	popfont();
 }
 
