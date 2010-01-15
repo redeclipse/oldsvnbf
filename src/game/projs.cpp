@@ -29,16 +29,19 @@ namespace projs
 		int damage = WPB(weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
 		if((flags&HIT_WAVE || (isweap(weap) && !WPB(weap, explode, flags&HIT_ALT))) && flags&HIT_FULL) flags &= ~HIT_FULL;
 		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
-		if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
-		else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
+		if(actor->aitype < AI_START)
 		{
-			if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
-			else if(weap == WEAP_MELEE) nodamage++;
-			else if(m_fight(game::gamemode)) switch(teamdamage)
+			if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
+			else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
 			{
-				case 2: default: break;
-				case 1: if(actor->aitype < 0) break;
-				case 0: nodamage++; break;
+				if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
+				else if(weap == WEAP_MELEE) nodamage++;
+				else if(m_play(game::gamemode)) switch(teamdamage)
+				{
+					case 2: default: break;
+					case 1: if((actor == target && !selfdamage) || actor->aitype < 0) break;
+					case 0: nodamage++; break;
+				}
 			}
 		}
 		if(nodamage || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
