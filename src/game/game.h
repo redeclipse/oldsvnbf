@@ -1316,11 +1316,11 @@ namespace game
 		camstate() : idx(-1), mindist(16), maxdist(1024), alter(false) { reset(); }
 		~camstate() {}
 
-		void reset()
+		void reset(bool skip = false)
 		{
 			cansee.setsize(0);
-			dir = vec(0, 0, 0);
-			score = 0.f;
+			if(skip) dir = vec(0, 0, 0);
+			score = 1e16f;
 			alter = false;
 		}
 
