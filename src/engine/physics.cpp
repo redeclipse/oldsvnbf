@@ -384,8 +384,8 @@ float raycubepos(const vec &o, const vec &ray, vec &hitpos, float radius, int mo
 {
 	hitpos = ray;
 	float dist = raycube(o, ray, radius, mode, size);
-	hitpos.mul(dist);
-	hitpos.add(o);
+    if(radius>0 && dist>=radius) dist = radius;
+	hitpos.mul(dist).add(o);
 	return dist;
 }
 
