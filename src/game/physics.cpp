@@ -1208,17 +1208,27 @@ namespace physics
 
 	bool droptofloor(vec &o, float radius, float height)
 	{
-		if(!insideworld(o)) return false;
-		vec v(0.0001f, 0.0001f, -1);
-		v.normalize();
-		if(raycube(o, v, hdr.worldsize) >= hdr.worldsize) return false;
-		physent d;
-		d.type = ENT_DUMMY;
-        d.collidetype = COLLIDE_AABB;
-		d.o = o;
-		d.radius = radius;
-		d.height = height;
-		d.aboveeye = radius;
+        static struct dropent : physent
+        {
+            dropent()
+            {
+                type = ENT_DUMMY;
+                collidetype = COLLIDE_AABB;
+                vel = vec(0, 0, -1);
+            }
+        } d;
+        d.o = o;
+        if(!insideworld(d.o))
+        {
+            d.o.z = hdr.worldsize - 1e-3f;
+            if(!insideworld(d.o)) return false;
+        }
+        vec v(0.0001f, 0.0001f, -1);
+        v.normalize();
+        if(raycube(d.o, v, hdr.worldsize) >= hdr.worldsize) return false;
+        d.radius = d.xradius = d.yradius = radius;
+        d.height = height;
+        d.aboveeye = radius;
         if(!movecamera(&d, vec(0, 0, -1), hdr.worldsize, 1))
         {
             o = d.o;
