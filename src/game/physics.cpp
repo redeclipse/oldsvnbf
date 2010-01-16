@@ -1220,6 +1220,7 @@ namespace physics
         d.o = o;
         if(!insideworld(d.o))
         {
+            if(d.o.z < hdr.worldsize) return false;
             d.o.z = hdr.worldsize - 1e-3f;
             if(!insideworld(d.o)) return false;
         }
