@@ -1251,11 +1251,14 @@ namespace game
 	{
 		if(deathcamstyle)
 		{
-			gameent *a = deathcamstyle > 1 ? d : getclient(d->lastattacker); if(!a && (!(a = d))) a = player1;
-			vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
-			vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
-			if(deathcamspeed > 0) scaleyawpitch(yaw, pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
-			else { yaw = camera1->aimyaw; pitch = camera1->aimpitch; }
+			gameent *a = deathcamstyle > 1 ? d : getclient(d->lastattacker);
+			if(a)
+			{
+				vec dir = vec(a->headpos(-a->height*0.5f)).sub(camera1->o).normalize();
+				vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
+				if(deathcamspeed > 0) scaleyawpitch(yaw, pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*deathcamspeed, 4.f);
+				else { yaw = camera1->aimyaw; pitch = camera1->aimpitch; }
+			}
 		}
 	}
 
@@ -1323,7 +1326,6 @@ namespace game
 				camstate &c = cameras.add();
 				c.pos = d->headpos();
 				c.ent = -1; c.idx = i;
-				c.mindist = 0; c.maxdist = 1e16f;
 				if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
 				vecfromyawpitch(d->yaw, d->pitch, 1, 0, c.dir);
 			}
@@ -1331,6 +1333,7 @@ namespace game
 		else loopv(cameras) if(cameras[i].ent < 0 && cameras[i].idx >= 0 && cameras[i].idx < numdynents())
 		{
 			gameent *d = (gameent *)iterdynents(cameras[i].idx);
+			if(!d) { cameras.remove(i--); continue; }
 			if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
 			else cameras[i].pos = d->headpos();
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
@@ -1368,8 +1371,8 @@ namespace game
 				vec trg, pos = p; \
 				if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
 				{ \
-					c.dir.add(pos); \
-					c.score += c.alter ? rnd(32) : c.pos.dist(pos); \
+					if(!t || (t->state != CS_DEAD && t->state != CS_WAITING)) c.dir.add(pos); \
+					c.score += c.pos.dist(pos); \
 				} \
 				else \
 				{ \
@@ -1384,12 +1387,13 @@ namespace game
 				loopvj(cameras)
 				{
 					camstate &c = cameras[j]; gameent *t = NULL;
-					vec avg(0, 0, 0); c.reset();
+					vec avg(0, 0, 0);
 					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
 					{
 						t = (gameent *)iterdynents(c.idx);
 						if(t->state == CS_SPECTATOR || (!isspec && waitmode < (m_duke(game::gamemode, game::mutators) ? 1 : 2))) continue;
 					}
+					c.reset(t != NULL);
 					switch(k)
 					{
 						case 0: default:
@@ -1445,7 +1449,7 @@ namespace game
 					}
 					else
 					{
-						c.score = 0;
+						c.score = 1e16f;
 						if(override && !k && !j) renew = true; // quick scotty, get a new cam
 					}
 					if(!renew) break;
@@ -1468,8 +1472,8 @@ namespace game
 				}
 				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
 				{
-					focus = (gameent *)iterdynents(cam->idx);
-					follow = cam->idx;
+					if((focus = (gameent *)iterdynents(cam->idx)) != NULL) follow = cam->idx;
+					else { focus = player1; follow = 0; }
 				}
 				else { focus = player1; follow = 0; }
 			}
