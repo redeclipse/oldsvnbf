@@ -288,7 +288,7 @@ void cursorupdate()
 		od  = dimension(orient),
 		odc = dimcoord(orient);
 
-    bool hidecursor = hud::hascursor(), hovering = false;
+    bool hidecursor = hud::hasinput(), hovering = false;
     hmapsel = false;
 
 	if(moving)

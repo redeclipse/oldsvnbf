@@ -286,7 +286,7 @@ namespace game
     {
 		if(d == player1)
 		{
-			if(hud::hascursor(true)) return false;
+			if(hud::hasinput(true, false)) return false;
 			if(tvmode()) return false;
 		}
         if(d->type == ENT_PLAYER || d->type == ENT_AI)
@@ -1169,9 +1169,9 @@ namespace game
 
 	bool mousemove(int dx, int dy, int x, int y, int w, int h)
 	{
-		bool hascursor = hud::hascursor(true);
+		bool hasinput = hud::hasinput(true);
 		#define mousesens(a,b,c) ((float(a)/float(b))*c)
-		if(hascursor || (mousestyle() >= 1 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR))
+		if(hasinput || (mousestyle() >= 1 && player1->state != CS_WAITING && player1->state != CS_SPECTATOR))
 		{
 			if(mouseabsolute) // absolute positions, unaccelerated
 			{
@@ -1182,7 +1182,7 @@ namespace game
 			else
 			{
 				cursorx = clamp(cursorx+mousesens(dx, w, mousesensitivity), 0.f, 1.f);
-				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity*(!hascursor && mouseinvert ? -1.f : 1.f)), 0.f, 1.f);
+				cursory = clamp(cursory+mousesens(dy, h, mousesensitivity*(!hasinput && mouseinvert ? -1.f : 1.f)), 0.f, 1.f);
 				return true;
 			}
 		}
@@ -1193,7 +1193,7 @@ namespace game
 			{
 				float scale = (inzoom() && zoomsensitivity > 0 && zoomsensitivity < 1 ? 1.f-(zoomlevel/float(zoomlevels+1)*zoomsensitivity) : 1.f)*sensitivity;
 				target->yaw += mousesens(dx, w, yawsensitivity*scale);
-				target->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hascursor && mouseinvert ? -1.f : 1.f));
+				target->pitch -= mousesens(dy, h, pitchsensitivity*scale*(!hasinput && mouseinvert ? -1.f : 1.f));
 				fixfullrange(target->yaw, target->pitch, target->roll, false);
 			}
 			return true;
@@ -1203,7 +1203,7 @@ namespace game
 
 	void project(int w, int h)
 	{
-		int style = hud::hascursor() ? -1 : mousestyle();
+		int style = hud::hasinput() ? -1 : mousestyle();
 		if(style != lastmousetype)
 		{
 			resetcursor();
@@ -1269,7 +1269,7 @@ namespace game
 			player1->aimyaw = camera1->yaw;
 			player1->aimpitch = camera1->pitch;
 			fixrange(player1->aimyaw, player1->aimpitch);
-			if(lastcamera && mousestyle() >= 1 && !hud::hascursor())
+			if(lastcamera && mousestyle() >= 1 && !hud::hasinput())
 			{
 				physent *d = mousestyle() != 2 ? player1 : camera1;
 				float amt = clamp(float(lastmillis-lastcamera)/100.f, 0.f, 1.f)*panspeed();
@@ -1587,7 +1587,7 @@ namespace game
        	if(!*player1->name && !menuactive()) showgui("name");
         if(connected())
         {
-        	player1->conopen = commandmillis > 0 || hud::hascursor(true);
+        	player1->conopen = commandmillis > 0 || hud::hasinput(true);
             // do shooting/projectile update here before network update for greater accuracy with what the player sees
 			if(allowmove(player1)) cameraplayer();
 			else player1->stopmoving(player1->state != CS_WAITING && player1->state != CS_SPECTATOR);

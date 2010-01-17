@@ -249,7 +249,17 @@ namespace hud
 		return false;
 	}
 
-	bool hascursor(bool pass) { return (!pass && commandmillis > 0) || curcompass || UI::active(pass); }
+	bool hasinput(bool pass, bool focus)
+	{
+		if(focus && (commandmillis > 0 || curcompass)) return true;
+		return UI::active(pass);
+	}
+
+	bool keypress(int code, bool isdown, int cooked)
+	{
+		if(curcompass) return keycmenu(code, isdown, cooked);
+		return UI::keypress(code, isdown, cooked); // ignore UI if compass is open
+	}
 
 	char *timetostr(int millis, bool limited)
 	{
@@ -625,7 +635,7 @@ namespace hud
 	void drawpointers(int w, int h)
 	{
         int index = POINTER_NONE;
-		if(hascursor()) index = !hascursor(true) || commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
+		if(hasinput()) index = !hasinput(true) || commandmillis > 0 ? POINTER_NONE : POINTER_GUI;
         else if(!showcrosshair || game::focus->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::focus->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::focus->state == CS_SPECTATOR || game::focus->state == CS_WAITING) index = POINTER_SPEC;
@@ -683,7 +693,7 @@ namespace hud
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			if(commandmillis <= 0 && curcompass) rendercmenu();
-			else if(client::ready() && shownotices && !hascursor(false) && !texpaneltimer)
+			else if(client::ready() && shownotices && !hasinput(false) && !texpaneltimer)
 			{
 				pushfont("super");
 				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
@@ -1768,7 +1778,7 @@ namespace hud
 			if(fireburntime && game::focus->state == CS_ALIVE) drawfire(w, h, os, fade);
 			if(!kidmode && game::bloodscale > 0) drawdamage(w, h, os, fade);
 		}
-		if(!hascursor() && (game::focus->state == CS_EDITING ? showeditradar > 0 : chkcond(showradar, game::tvmode()))) drawradar(w, h, fade);
+		if(!hasinput() && (game::focus->state == CS_EDITING ? showeditradar > 0 : chkcond(showradar, game::tvmode()))) drawradar(w, h, fade);
 		if(showinventory) drawinventory(w, h, os, fade);
 
 		if(!texpaneltimer)

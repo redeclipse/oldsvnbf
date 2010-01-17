@@ -547,8 +547,7 @@ void keypress(int code, bool isdown, int cooked)
     keym *haskey = keyms.access(code);
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
 	else if(commandmillis > 0) consolekey(code, isdown, alpha);
-	else if(!hud::keypress(code, isdown, alpha) && !UI::keypress(code, isdown, alpha) && haskey)
-		execbind(*haskey, isdown);
+	else if(!hud::keypress(code, isdown, alpha) && haskey) execbind(*haskey, isdown);
 }
 
 char *getcurcommand()
