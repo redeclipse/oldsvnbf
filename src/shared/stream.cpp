@@ -24,11 +24,11 @@ char *makefile(const char *s, const char *e, int revision, int start, bool store
     copystring(o, s);
 
     int d = start;
-    char *t = strpbrk(s, ".");
+    const char *t = strpbrk(s, ".");
     if(t) // try to detect extension and revision
     {
         copystring(o, s, t-s+1);
-        char *q = t+1;
+        const char *q = t+1;
         if(isnumeric(*q)) d = min(atoi(q), 1);
     }
     string f, m; copystring(f, o); copystring(m, o);
