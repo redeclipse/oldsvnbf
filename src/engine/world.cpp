@@ -838,15 +838,16 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 
 	if(hdr.worldsize > VVEC_INT_MASK+1) splitocta(worldroot, hdr.worldsize>>1);
 
-	clearlights();
-	allchanged();
-
     if(!nocfg)
     {
 	    overrideidents = worldidents = true;
 	    execfile("map.cfg");
 	    overrideidents = worldidents = false;
     }
+
+    clearlights();
+    allchanged(true);
+
 	game::startmap(nocfg ? "" : "maps/untitled", NULL, true);
 	return true;
 }
