@@ -3265,8 +3265,8 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) { spectator(ci, sender); break; }
-					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci, sender); break; }
+					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) { spectator(ci); break; }
+					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
 					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
