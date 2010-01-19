@@ -3948,14 +3948,6 @@ namespace server
 					break;
 				}
 
-				case SV_EDITLINK: case SV_EDITF: case SV_EDITT: case SV_EDITM: case SV_FLIP:
-				case SV_COPY: case SV_PASTE: case SV_ROTATE: case SV_REPLACE: case SV_DELCUBE: case SV_REMIP:
-				{
-					if(ci->state.state != CS_EDITING) break;
-					QUEUE_MSG;
-					break;
-				}
-
 				case SV_GETMAP:
 				{
 					ci->wantsmap = true;
@@ -4053,6 +4045,7 @@ namespace server
 						return;
 					}
 					if(size>0) loopi(size-1) getint(p);
+					if(ci->state.state != CS_EDITING && type >= SV_EDITENT && type <= SV_NEWMAP) break; // some of those don't get here though.
 					if(ci) QUEUE_MSG;
 					break;
 				}
