@@ -1119,6 +1119,9 @@ ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
+ICOMMAND(strcasecmp, "ss", (char *a, char *b), intret(strcasecmp(a,b)==0));
+ICOMMAND(strncmp, "ssi", (char *a, char *b, int *n), intret(strncmp(a,b,*n)==0));
+ICOMMAND(strncasecmp, "ssi", (char *a, char *b, int *n), intret(strncasecmp(a,b,*n)==0));
 ICOMMAND(echo, "C", (char *s), conoutft(CON_MESG, "%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
