@@ -3027,13 +3027,13 @@ namespace server
 	{
         if(ci && ci->local) return type;
 		// only allow edit messages in coop-edit mode
-		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
+		if(type >= SV_EDITENT && type <= SV_NEWMAP && (!m_edit(gamemode) || !ci || ci->state.state != CS_EDITING)) return -1;
 		// server only messages
 		static int servtypes[] = { SV_SERVERINIT, SV_CLIENTINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
 		if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
-            if(type < SV_EDITENT || type > SV_NEWMAP || !m_edit(gamemode))
+            if(type < SV_EDITENT || type > SV_NEWMAP || !m_edit(gamemode) || !ci || ci->state.state != CS_EDITING)
             {
                 if(++ci->overflow >= 200) return -2;
             }
@@ -3265,6 +3265,7 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
+					if(!ci) break;
 					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) { spectator(ci); break; }
 					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
 					ci->state.dropped.reset();
@@ -3873,13 +3874,6 @@ namespace server
 
 				case SV_EDITENT:
 				{
-					if(ci->state.state != CS_EDITING)
-					{
-						loopi(5) getint(p);
-						int numattrs = getint(p);
-						loopi(numattrs) getint(p);
-						break;
-					}
 					int n = getint(p), oldtype = NOTUSED;
 					bool tweaked = false;
 					loopk(3) getint(p);
@@ -3904,7 +3898,7 @@ namespace server
 				{
 					int t = getint(p);
 					getstring(text, p);
-					if(ci->state.state != CS_EDITING)
+					if(!ci || ci->state.state != CS_EDITING)
 					{
 						switch(t)
 						{
@@ -4045,7 +4039,6 @@ namespace server
 						return;
 					}
 					if(size>0) loopi(size-1) getint(p);
-					if(ci->state.state != CS_EDITING && type >= SV_EDITENT && type <= SV_NEWMAP) break; // some of those don't get here though.
 					if(ci) QUEUE_MSG;
 					break;
 				}
