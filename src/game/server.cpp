@@ -1623,6 +1623,14 @@ namespace server
 	#include "duelmut.h"
 	#include "aiman.h"
 
+	void spectator(clientinfo *ci, int sender = -1)
+	{
+		if(!ci) return;
+		ci->state.state = CS_SPECTATOR;
+		sendf(sender, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
+		setteam(ci, TEAM_NEUTRAL, false, true);
+	}
+
 	void changemap(const char *name, int mode, int muts)
 	{
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
@@ -1675,12 +1683,7 @@ namespace server
 		{
 			clientinfo *ci = clients[i];
             if(ci->state.state == CS_SPECTATOR) continue;
-            else if(ci->state.aitype < 0 && m_play(gamemode))
-            {
-                ci->state.state = CS_SPECTATOR;
-                sendf(-1, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
-				setteam(ci, TEAM_NEUTRAL, false, true);
-            }
+            else if(ci->state.aitype < 0 && m_play(gamemode)) spectator(ci);
             else
 			{
 				ci->state.state = CS_DEAD;
@@ -3027,7 +3030,7 @@ namespace server
 		if(type >= SV_EDITENT && type <= SV_NEWMAP && !m_edit(gamemode)) return -1;
 		// server only messages
 		static int servtypes[] = { SV_SERVERINIT, SV_CLIENTINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
-		if(ci) 
+		if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
             if(type < SV_EDITENT || type > SV_NEWMAP || !m_edit(gamemode))
@@ -3262,8 +3265,8 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) break;
-					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) break;
+					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) { spectator(ci, sender); break; }
+					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci, sender); break; }
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
 					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
@@ -3870,6 +3873,13 @@ namespace server
 
 				case SV_EDITENT:
 				{
+					if(ci->state.state != CS_EDITING)
+					{
+						loopi(5) getint(p);
+						int numattrs = getint(p);
+						loopi(numattrs) getint(p);
+						break;
+					}
 					int n = getint(p), oldtype = NOTUSED;
 					bool tweaked = false;
 					loopk(3) getint(p);
@@ -3892,10 +3902,21 @@ namespace server
 
 				case SV_EDITVAR:
 				{
-					QUEUE_INT(SV_EDITVAR);
 					int t = getint(p);
-					QUEUE_INT(t);
 					getstring(text, p);
+					if(ci->state.state != CS_EDITING)
+					{
+						switch(t)
+						{
+							case ID_VAR: getint(p); break;
+							case ID_FVAR: getfloat(p); break;
+							case ID_SVAR: case ID_ALIAS: getstring(text, p); break;
+							default: break;
+						}
+						break;
+					}
+					QUEUE_INT(SV_EDITVAR);
+					QUEUE_INT(t);
 					QUEUE_STR(text);
 					switch(t)
 					{
@@ -3924,6 +3945,14 @@ namespace server
 						}
 						default: break;
 					}
+					break;
+				}
+
+				case SV_EDITLINK: case SV_EDITF: case SV_EDITT: case SV_EDITM: case SV_FLIP:
+				case SV_COPY: case SV_PASTE: case SV_ROTATE: case SV_REPLACE: case SV_DELCUBE: case SV_REMIP:
+				{
+					if(ci->state.state != CS_EDITING) break;
+					QUEUE_MSG;
 					break;
 				}
 
@@ -3956,8 +3985,8 @@ namespace server
 				case SV_NEWMAP:
 				{
 					int size = getint(p);
-					if(ci->state.state==CS_SPECTATOR) break;
-					if(size>=0)
+					if(ci->state.state == CS_SPECTATOR) break;
+					if(size >= 0)
 					{
 						smapname[0] = '\0';
 						sents.setsize(0);
