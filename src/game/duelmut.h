@@ -73,11 +73,10 @@ struct duelservmode : servmode
 	{
 		if(!m_noitems(gamemode, mutators))
 		{
+			loopv(clients) clients[i]->state.dropped.reset();
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 			{
-				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE)
-					continue;
-				loopvk(clients) clients[k]->state.dropped.remove(i);
+				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE) continue;
 				sents[i].millis = gamemillis; // hijack its spawn time
 				sents[i].spawned = true;
 				sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
@@ -87,9 +86,8 @@ struct duelservmode : servmode
 
 	void cleanup()
 	{
-		loopvrev(duelqueue)
-			if(duelqueue[i]->state.state != CS_DEAD && duelqueue[i]->state.state != CS_WAITING)
-				duelqueue.remove(i);
+		loopvrev(duelqueue) if(duelqueue[i]->state.state != CS_DEAD && duelqueue[i]->state.state != CS_WAITING) duelqueue.remove(i);
+		loopvrev(allowed) if(allowed[i]->state.state != CS_DEAD && allowed[i]->state.state != CS_WAITING) allowed.remove(i);
 	}
 
 	void clear()
@@ -104,11 +102,7 @@ struct duelservmode : servmode
 
 		if(dueltime < 0)
 		{
-			if(duelqueue.length() >= 2)
-			{
-				clearitems();
-				dueltime = gamemillis+GVAR(duellimit);
-			}
+			if(duelqueue.length() >= 2) dueltime = gamemillis+GVAR(duellimit);
 			else
 			{
 				loopv(clients) queue(clients[i]); // safety
@@ -148,6 +142,7 @@ struct duelservmode : servmode
 							ci->state.lastregen = gamemillis;
 							ci->state.lastfire = ci->state.lastfireburn = 0;
 							sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, 0); // amt = 0 regens impulse
+							dropitems(ci, 1);
 						}
 						if(ci->state.aitype < AI_START)
 						{

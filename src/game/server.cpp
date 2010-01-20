@@ -367,7 +367,7 @@ namespace server
 	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-    VARF(serveropen, 0, 1, 3, {
+    VARF(serveropen, 0, 3, 3, {
 		switch(serveropen)
 		{
 			case 0: default: mastermask = MM_FREESERV; break;
