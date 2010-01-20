@@ -28,7 +28,7 @@ namespace game
 	VARP(mousepanspeed, 1, 30, INT_MAX-1);
 
 	VARP(thirdperson, 0, 0, 1);
-	VARP(thirdpersonfollow, 0, 1, 1);
+	VARP(thirdpersonfollow, 0, 0, 1);
 	VARP(dynlighteffects, 0, 2, 2);
 	FVARP(playerblend, 0, 1, 1);
 
@@ -1361,10 +1361,10 @@ namespace game
 					vectoyawpitch(dir, yaw, pitch); \
 				} \
 			}
-			#define dircamentity(q,p) \
+			#define dircamentity(q,p,r) \
 			{ \
 				vec trg, pos = p; \
-				if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
+				if(r || getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
 				{ \
 					c.dir.add(pos); \
 					c.score += c.pos.dist(pos); \
@@ -1396,11 +1396,7 @@ namespace game
 							gameent *d;
 							loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
 							{
-								if(d == t)
-								{
-									c.cansee.add(i);
-									avg.add(d->feetpos());
-								}
+								if(d == t) { c.cansee.add(i); avg.add(d->feetpos()); }
 								else if(d->aitype < AI_START && d->state == CS_ALIVE) addcamentity(i, d->feetpos());
 							}
 							break;
@@ -1421,16 +1417,13 @@ namespace game
 						{
 							gameent *d;
 							loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
-							{
-								if(d == t) c.dir.add(d->feetpos());
-								else dircamentity(i, d->feetpos());
-							}
+								dircamentity(i, d->feetpos(), d == t);
 							break;
 						}
 						case 1:
 						{
 							loopvrev(c.cansee) if(entities::ents.inrange(c.cansee[i]))
-								dircamentity(i, entities::ents[c.cansee[i]]->o);
+								dircamentity(i, entities::ents[c.cansee[i]]->o, false);
 							break;
 						}
 					}
