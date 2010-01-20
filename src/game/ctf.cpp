@@ -149,8 +149,8 @@ namespace ctf
 				{
 					float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
 					if(wait < 1) hud::drawprogress(pos[0], pos[1], wait, 1-wait, int(s*0.5f), false, r, g, b, fade*0.25f, skew);
-					if(f.owner) hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "radar", "\fs%s\fS (%d%%)", game::colorname(f.owner), int(wait*100.f));
-					else hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "sub", "%d%%", int(wait*100.f));
+					if(f.owner) hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "sub", "\fs%s\fS (%d%%)", game::colorname(f.owner), int(wait*100.f));
+					else hud::drawprogress(pos[0], pos[1], 0, wait, int(s*0.5f), false, r, g, b, fade, skew, "default", "%d%%", int(wait*100.f));
 				}
 				else if(f.owner) hud::drawitemsubtext(pos[0], pos[1], s, TEXT_RIGHT_UP, skew, "sub", fade, "\fs%s\fS", game::colorname(f.owner));
 			}

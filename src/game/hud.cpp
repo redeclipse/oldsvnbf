@@ -224,10 +224,10 @@ namespace hud
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 1, 2);
 
-	VARP(radardamage, 0, 2, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
+	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
-	VARP(radardamagefade, 1, 2000, INT_MAX-1);
-	FVARP(radardamagesize, 0, 6, 1000);
+	VARP(radardamagefade, 1, 4500, INT_MAX-1);
+	FVARP(radardamagesize, 0, 5, 1000);
 	FVARP(radardamageblend, 0, 1, 1);
 	FVARP(radardamagetrack, 0, 1, 1000);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
@@ -695,7 +695,7 @@ namespace hud
 			if(commandmillis <= 0 && curcompass) rendercmenu();
 			else if(client::ready() && shownotices && !hasinput(false) && !texpaneltimer)
 			{
-				pushfont("super");
+				pushfont("emphasis");
 				int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
 					tw = hudwidth-(int(hudsize*gapsize)*2+int(hudsize*inventorysize)*2);
 				if(noticescale < 1)
@@ -719,19 +719,19 @@ namespace hud
 				}
 
 				if(game::player1->state == CS_SPECTATOR)
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, showname() ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
+					ty += draw_textx("[ %s ]", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, showname() ? game::colorname(game::focus) : (game::tvmode() ? "SpecTV" : "Spectating"))*noticescale;
 				else if(game::player1->state == CS_WAITING && showname())
-					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
+					ty += draw_textx("[ %s ]", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, game::colorname(game::focus))*noticescale;
 
 				gameent *target = game::player1->state != CS_SPECTATOR ? game::player1 : game::focus;
 				if(target->state == CS_DEAD || target->state == CS_WAITING)
 				{
 					int sdelay = m_delay(game::gamemode, game::mutators), delay = target->lastdeath ? target->respawnwait(lastmillis, sdelay) : 0;
-					const char *msg = target->state != CS_WAITING && target->lastdeath ? "Fragged" : "Please Wait";
+					const char *msg = target->state == CS_WAITING && target == game::player1 ? "Please Wait" : "Fragged";
 					ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, msg)*noticescale;
 					if(obitnotices && target->lastdeath && (delay || target->state == CS_DEAD) && *target->obit)
 					{
-						pushfont("default");
+						pushfont("sub");
 						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, target->obit)*noticescale;
 						popfont();
 					}
@@ -740,25 +740,25 @@ namespace hud
 						SEARCHBINDCACHE(attackkey)("action 0", 0);
 						if(delay || m_campaign(game::gamemode) || (m_trial(game::gamemode) && !target->lastdeath) || m_duke(game::gamemode, game::mutators))
 						{
-							pushfont("emphasis");
+							pushfont("default");
 							if(m_duke(game::gamemode, game::mutators)) ty += draw_textx("Queued for new round", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 							else if(delay) ty += draw_textx("Down for \fs\fy%.1f\fS second(s)", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, delay/1000.f)*noticescale;
 							popfont();
 							if(target == game::player1 && target->state != CS_WAITING && shownotices >= 3 && lastmillis-target->lastdeath >= 500)
 							{
-								pushfont("default");
+								pushfont("sub");
 								ty += draw_textx("Press \fs\fc%s\fS to enter respawn queue", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
 						}
 						else
 						{
-							pushfont("emphasis");
+							pushfont("default");
 							ty += draw_textx("Ready to respawn", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, -1)*noticescale;
 							popfont();
 							if(target == game::player1 && target->state != CS_WAITING && shownotices >= 3)
 							{
-								pushfont("default");
+								pushfont("sub");
 								ty += draw_textx("Press \fs\fc%s\fS to respawn now", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								popfont();
 							}
@@ -766,21 +766,21 @@ namespace hud
 						if(target == game::player1 && target->state == CS_WAITING && shownotices >= 3)
 						{
 							SEARCHBINDCACHE(waitmodekey)("waitmodeswitch", 3);
-							pushfont("default");
+							pushfont("sub");
 							ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, waitmodekey, game::tvmode() ? "interact" : "switch to TV")*noticescale;
 							popfont();
 						}
 						if(target == game::player1 && m_arena(game::gamemode, game::mutators))
 						{
 							SEARCHBINDCACHE(loadkey)("showgui loadout", 0);
-							pushfont("default");
+							pushfont("sub");
 							ty += draw_textx("Press \fs\fc%s\fS to \fs%s\fS loadouts", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, loadkey, target->loadweap < 0 ? "\fzoyselect" : "change")*noticescale;
 							popfont();
 						}
 						if(target == game::player1 && m_fight(game::gamemode) && m_team(game::gamemode, game::mutators))
 						{
 							SEARCHBINDCACHE(teamkey)("showgui team", 0);
-							pushfont("default");
+							pushfont("sub");
 							ty += draw_textx("Press \fs\fc%s\fS to change teams", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, teamkey)*noticescale;
 							popfont();
 						}
@@ -806,13 +806,13 @@ namespace hud
 					}
 					if(obitnotices && lastmillis-target->lastkill <= noticetime && *target->obit)
 					{
-						pushfont("default");
+						pushfont("sub");
 						ty += draw_textx("%s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, target->obit)*noticescale;
 						popfont();
 					}
 					if(target == game::player1 && shownotices >= 3 && game::allowmove(target))
 					{
-						pushfont("default");
+						pushfont("sub");
 						static vector<actitem> actitems;
 						actitems.setsizenodelete(0);
 						if(entities::collateitems(target, actitems))
@@ -890,7 +890,7 @@ namespace hud
 				if(game::player1->state == CS_SPECTATOR)
 				{
 					SEARCHBINDCACHE(speconkey)("spectator 0", 1);
-					pushfont("default");
+					pushfont("sub");
 					ty += draw_textx("Press \fs\fc%s\fS to join the game", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, speconkey)*noticescale;
 					if(shownotices >= 2)
 					{
