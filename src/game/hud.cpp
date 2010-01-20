@@ -227,7 +227,7 @@ namespace hud
 	VARP(radardamage, 0, 2, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
 	VARP(radardamagetime, 1, 500, INT_MAX-1);
 	VARP(radardamagefade, 1, 2000, INT_MAX-1);
-	FVARP(radardamagesize, 0, 4, 1000);
+	FVARP(radardamagesize, 0, 6, 1000);
 	FVARP(radardamageblend, 0, 1, 1);
 	FVARP(radardamagetrack, 0, 1, 1000);
 	VARP(radardamagemin, 1, 25, INT_MAX-1);
@@ -1212,17 +1212,17 @@ namespace hud
 			if(millis >= radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
 			if(game::focus->state == CS_ALIVE || (game::focus->state == CS_DEAD && game::focus->lastdeath))
 			{
-				float fade = clamp(max(d.damage, radardamagemin)/float(max(radardamagemax-radardamagemin, 1)), radardamagemin/100.f, 1.f),
-					size = clamp(fade*radardamagesize, min(radardamagesize*radardamagemin/100.f, 1.f), radardamagesize);
-				if(millis >= radardamagetime) fade *= 1.f-(float(millis-radardamagetime)/float(radardamagefade));
-				else fade *= float(millis)/float(radardamagetime);
+				float amt = millis >= radardamagetime ? 1.f-(float(millis-radardamagetime)/float(radardamagefade)) : float(millis)/float(radardamagetime),
+					range = clamp(max(d.damage, radardamagemin)/float(max(radardamagemax-radardamagemin, 1)), radardamagemin/100.f, 1.f)*amt,
+					fade = clamp(range*radardamageblend*blend, min(radardamageblend*radardamagemin/100.f, 1.f), radardamageblend)*amt,
+					size = clamp(range*radardamagesize, min(radardamagesize*radardamagemin/100.f, 1.f), radardamagesize)*amt;
 				vec dir = vec(d.dir).normalize().rotate_around_z(-camera1->yaw*RAD);
 				if(radardamage >= 5)
 				{
 					gameent *a = game::getclient(d.attacker);
-					drawblip(arrowtex, 4+size, w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
+					drawblip(arrowtex, 5+size, w, h, size, fade, dir, d.colour.x, d.colour.y, d.colour.z, "radar", "%s +%d", a ? game::colorname(a) : "?", d.damage);
 				}
-				else drawblip(arrowtex, 4+size, w, h, size, blend*radardamageblend*fade, dir, d.colour.x, d.colour.y, d.colour.z);
+				else drawblip(arrowtex, 5+size, w, h, size, fade, dir, d.colour.x, d.colour.y, d.colour.z);
 			}
 		}
 		if(radardamage >= 2)

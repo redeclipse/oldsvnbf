@@ -53,7 +53,7 @@ namespace game
 
 	VARP(follow, 0, 0, INT_MAX-1);
 	VARFP(specmode, 0, 1, 1, follow = 0); // 0 = float, 1 = tv
-	VARFP(waitmode, 0, 1, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
+	VARFP(waitmode, 0, 0, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
 
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
@@ -302,13 +302,10 @@ namespace game
 		if(m_arena(gamemode, mutators))
 		{
 			if(*s >= '0' && *s <= '9') d->loadweap = atoi(s);
-			else
+			else loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
 			{
-				loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
-				{
-					d->loadweap = i;
-					break;
-				}
+				d->loadweap = i;
+				break;
 			}
 			if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_SUPER || d->loadweap == WEAP_GRENADE) d->loadweap = WEAP_MELEE;
 			client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
@@ -1326,7 +1323,6 @@ namespace game
 				camstate &c = cameras.add();
 				c.pos = d->headpos();
 				c.ent = -1; c.idx = i;
-				if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
 				vecfromyawpitch(d->yaw, d->pitch, 1, 0, c.dir);
 			}
 		}
@@ -1334,8 +1330,7 @@ namespace game
 		{
 			gameent *d = (gameent *)iterdynents(cameras[i].idx);
 			if(!d) { cameras.remove(i--); continue; }
-			if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
-			else cameras[i].pos = d->headpos();
+			cameras[i].pos = d->headpos();
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
 
@@ -1371,7 +1366,7 @@ namespace game
 				vec trg, pos = p; \
 				if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
 				{ \
-					if(!t || (t->state != CS_DEAD && t->state != CS_WAITING)) c.dir.add(pos); \
+					c.dir.add(pos); \
 					c.score += c.pos.dist(pos); \
 				} \
 				else \
@@ -1391,7 +1386,7 @@ namespace game
 					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
 					{
 						t = (gameent *)iterdynents(c.idx);
-						if(t->state == CS_SPECTATOR || (!isspec && waitmode < (m_duke(game::gamemode, game::mutators) ? 1 : 2))) continue;
+						if(t->state != CS_ALIVE || (!isspec && waitmode < (m_duke(game::gamemode, game::mutators) ? 1 : 2))) continue;
 					}
 					c.reset(t != NULL);
 					switch(k)
@@ -1406,8 +1401,7 @@ namespace game
 									c.cansee.add(i);
 									avg.add(d->feetpos());
 								}
-								else if(d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD || d->state == CS_WAITING))
-									addcamentity(i, d->feetpos());
+								else if(d->aitype < AI_START && d->state == CS_ALIVE) addcamentity(i, d->feetpos());
 							}
 							break;
 						}
