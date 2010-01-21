@@ -1210,7 +1210,7 @@ namespace hud
 			damageloc &d = damagelocs[i];
 			int millis = lastmillis-d.outtime;
 			if(millis >= radardamagetime+radardamagefade) { damagelocs.remove(i--); continue; }
-			if(game::focus->state == CS_ALIVE || (game::focus->state == CS_DEAD && game::focus->lastdeath))
+			if(game::focus->state != CS_SPECTATOR && game::focus->state != CS_EDITING)
 			{
 				float amt = millis >= radardamagetime ? 1.f-(float(millis-radardamagetime)/float(radardamagefade)) : float(millis)/float(radardamagetime),
 					range = clamp(max(d.damage, radardamagemin)/float(max(radardamagemax-radardamagemin, 1)), radardamagemin/100.f, 1.f)*amt,
