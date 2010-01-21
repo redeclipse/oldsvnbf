@@ -2,7 +2,7 @@ VARG(serverdebug, 0, 0, 3);
 
 SVARG(defaultmap, "");
 VARG(defaultmode, -1, 0, G_MAX-1);
-VARG(defaultmuts, -2, -1, 0xFFFFFF);
+VARG(defaultmuts, -2, -1, G_M_ALL);
 VARG(storyplayers, 1, 5, MAXPLAYERS);
 
 SVARG(allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dualstar dutility eight enigma firehouse forge gladiator hollow longestyard mirage nova oasis overseer panic refuge rivals siege smouldering testchamber tower tranquility venus warehouse warground wet wishbone");
