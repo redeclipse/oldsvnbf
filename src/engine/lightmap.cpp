@@ -17,7 +17,9 @@ HVARFW(skylight, 0, 0, 0xFFFFFF,
     if(skylight <= 255) skylight |= (skylight<<8) | (skylight<<16);
     skylightcolor = bvec((skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF);
 });
-VARW(lmshadows, 0, 2, 2);
+VARNW(lmshadows, lmshadows_, 0, 2, 2);
+VARNW(lmaa, lmaa_, 0, 3, 3);
+static int lmshadows = 2, lmaa = 3;
 
 static surfaceinfo brightsurfaces[6] =
 {
@@ -28,9 +30,6 @@ static surfaceinfo brightsurfaces[6] =
     {{0}, 0, 0, 0, 0, LMID_BRIGHT, LAYER_TOP},
     {{0}, 0, 0, 0, 0, LMID_BRIGHT, LAYER_TOP},
 };
-
-// quality parameters, set by the calclight arg
-int aalights = 3;
 
 static Slot *lmslot = NULL;
 static int lmtype, lmbpp, lmorient, lmrotate;
@@ -619,7 +618,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 
 	static vec samples [4*(LM_MAXW+1)*(LM_MAXH+1)];
 
-	int aasample = min(1 << aalights, 4);
+	int aasample = min(1 << lmaa, 4);
 	int stride = aasample*(lm_w+1);
 	vec *sample = &samples[stride*y1];
 	uchar *slight = &lm[lmbpp*lm_w*y1];
@@ -675,7 +674,7 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 				n.normalize();
 				loopi(aasample-1)
 					generate_lumel(EDGE_TOLERANCE(i+1) * tolerance, lightmask, lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
-				if(aalights == 3)
+				if(lmaa == 3)
 				{
 					loopi(4)
 					{
@@ -721,8 +720,8 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
 			if(blurskylight && (lm_w>1 || lm_h>1)) blurlightmap(blurskylight);
 		}
 		sample = samples;
-		float weight = 1.0f / (1.0f + 4.0f*aalights),
-			  cweight = weight * (aalights == 3 ? 5.0f : 1.0f);
+		float weight = 1.0f / (1.0f + 4.0f*lmaa),
+			  cweight = weight * (lmaa == 3 ? 5.0f : 1.0f);
 		uchar *lumel = lm;
 		vec *ray = lm_ray;
 		bvec minray(255, 255, 255), maxray(0, 0, 0);
@@ -1618,17 +1617,21 @@ static Uint32 calclight_timer(Uint32 interval, void *param)
 
 bool setlightmapquality(int quality)
 {
-	if (quality < 0 || quality > 3) return false;
-
-	aalights = quality;
-	return true;
+    switch(quality)
+    {
+        case  1: lmshadows = 2; lmaa = 3; break;
+        case  0: lmshadows = lmshadows_; lmaa = lmaa_; break;
+        case -1: lmshadows = 1; lmaa = 0; break;
+        default: return false;
+    }
+    return true;
 }
 
 void calclight(int quality)
 {
 	if(!setlightmapquality(quality))
 	{
-		conoutft(CON_MESG, "\frvalid range for calclight quality is 0..3");
+		conoutft(CON_MESG, "\frvalid range for calclight quality is -1..1");
 		return;
 	}
 	progress(0, "computing lightmaps...");
