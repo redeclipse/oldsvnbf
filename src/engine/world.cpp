@@ -146,10 +146,10 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
 	}
 }
 
-static void modifyoctaent(int flags, int id)
+static bool modifyoctaent(int flags, int id)
 {
     vector<extentity *> &ents = entities::getents();
-    if(!ents.inrange(id)) return;
+    if(!ents.inrange(id)) return false;
     ivec o, r;
     extentity &e = *ents[id];
     if((flags&MODOE_ADD ? e.inoctanode : !e.inoctanode) || !getentboundingbox(e, o, r)) return false;
@@ -163,6 +163,7 @@ static void modifyoctaent(int flags, int id)
     modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), hdr.worldsize>>1, o, r, leafsize);
     if(e.type == ET_LIGHT || e.type == ET_SUNLIGHT) clearlightcache(id);
     else if(flags&MODOE_ADD) lightent(e);
+    return true;
 }
 
 static inline void addentity(int id)    { modifyoctaent(MODOE_ADD|MODOE_UPDATEBB, id); }
