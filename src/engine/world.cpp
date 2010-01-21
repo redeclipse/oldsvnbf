@@ -152,7 +152,7 @@ static void modifyoctaent(int flags, int id)
     if(!ents.inrange(id)) return;
     ivec o, r;
     extentity &e = *ents[id];
-    if((e.inoctanode!=0)==flags || !getentboundingbox(e, o, r)) return;
+    if((flags&MODOE_ADD ? e.inoctanode : !e.inoctanode) || !getentboundingbox(e, o, r)) return false;
 
     int leafsize = octaentsize, limit = max(r.x, max(r.y, r.z));
     while(leafsize < limit) leafsize *= 2;
