@@ -17,8 +17,7 @@ HVARFW(skylight, 0, 0, 0xFFFFFF,
     if(skylight <= 255) skylight |= (skylight<<8) | (skylight<<16);
     skylightcolor = bvec((skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF);
 });
-VARW(lmshadows, 0, 1, 1);
-VARW(mmshadows, 0, 2, 2);
+VARW(lmshadows, 0, 2, 2);
 
 static surfaceinfo brightsurfaces[6] =
 {
@@ -376,7 +375,7 @@ uint generate_lumel(const float tolerance, uint lightmask, const vector<const ex
 		}
 		if(lmshadows && mag)
 		{
-			float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (mmshadows > 1 ? RAY_ALPHAPOLY : (mmshadows ? RAY_POLY : 0)));
+            float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (lmshadows > 1 ? RAY_ALPHAPOLY : 0));
 			if(dist < mag - tolerance) continue;
 		}
 		lightused |= 1<<i;
@@ -430,9 +429,7 @@ bool lumel_sample(const vec &sample, int aasample, int stride)
 	return false;
 }
 
-VARW(mmskylight, 0, 1, 1);
-
-void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1, extentity *t = NULL)
+void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *slight, int flags = RAY_ALPHAPOLY, extentity *t = NULL)
 {
 	static const vec rays[17] =
 	{
@@ -462,13 +459,13 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 	int hit = 0;
 	loopi(17) if(normal.dot(rays[i])>=0)
 	{
-		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t)>1e15f) hit++;
+		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
 	}
 
 	loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
 }
 
-void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *slight, int mmshadows = 1, extentity *t = NULL)
+void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *slight, int flags = RAY_ALPHAPOLY, extentity *t = NULL)
 {
 	loopv(sunlights) if(sunlights[i])
 	{
@@ -476,7 +473,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
 		int yaw = light.attrs[0], pitch = light.attrs[1]+90, offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
 		vec dir(yaw*RAD, pitch*RAD);
-		if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+		if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
 			hit++;
 		matrix3x3 rot;
 		rot.rotate(90*RAD, dir);
@@ -484,14 +481,14 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
 		spoke.rotate(21*RAD, dir);
 		loopk(4)
 		{
-			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
 				hit++;
 			spoke = rot.transform(spoke);
 		}
 		spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate((66-21)*RAD, dir);
 		loopk(4)
 		{
-			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | (!mmskylight || !mmshadows ? 0 : (mmshadows > 1 ? RAY_ALPHAPOLY : RAY_POLY)), t) > 1e15f)
+			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
 				hit++;
 			spoke = rot.transform(spoke);
 		}
@@ -641,11 +638,11 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
             if(hasskylight())
             {
                 if((lmtype&LM_TYPE)==LM_BUMPMAP0 || !adaptivesample || sample->x<skylightcolor[0] || sample->y<skylightcolor[1] || sample->z<skylightcolor[2])
-                    calcskylight(u, normal, tolerance, slight, mmshadows);
+                    calcskylight(u, normal, tolerance, slight, lmshadows > 1 ? RAY_ALPHAPOLY : 0);
                 else loopk(3) slight[k] = max(skylightcolor[k], ambientcolor[k]);
             }
             else loopk(3) slight[k] = ambientcolor[k];
-            if(!sunlights.empty()) calcsunlight(u, normal, tolerance, slight, mmshadows);
+            if(!sunlights.empty()) calcsunlight(u, normal, tolerance, slight, lmshadows > 1 ? RAY_ALPHAPOLY : 0);
             if(lmtype&LM_ALPHA) generate_alpha(tolerance, u, slight[3]);
             sample += aasample;
 		}
@@ -2039,6 +2036,23 @@ void initlights()
     brightengeom = false;
 }
 
+static inline void fastskylight(const vec &o, float tolerance, uchar *skylight, int flags = RAY_ALPHAPOLY, extentity *t = NULL)
+{
+    static const vec rays[5] =
+    {
+        vec(cosf(66*RAD)*cosf(65*RAD), sinf(66*RAD)*cosf(65*RAD), sinf(65*RAD)),
+        vec(cosf(156*RAD)*cosf(65*RAD), sinf(156*RAD)*cosf(65*RAD), sinf(65*RAD)),
+        vec(cosf(246*RAD)*cosf(65*RAD), sinf(246*RAD)*cosf(65*RAD), sinf(65*RAD)),
+        vec(cosf(336*RAD)*cosf(65*RAD), sinf(336*RAD)*cosf(65*RAD), sinf(65*RAD)),
+
+        vec(0, 0, 1),
+    };
+    int hit = 0;
+    loopi(5) if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
+
+    loopk(3) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/5.0f);
+}
+
 void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient)
 {
 	if(nolights || fullbright || lightmaps.empty())
@@ -2103,21 +2117,19 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
 	}
 
 	vec slight(0, 0, 0);
-	if(t && hasskylight())
-	{
-		uchar col[3];
-		calcskylight(target, vec(0, 0, 0), 0.5f, col, 1, t);
-		loopk(3) slight[k] = max(col[k]/255.0f, ambient);
-	}
-	else loopk(3)
-	{
-        slight[k] = 0.75f*max(max(skylightcolor[k], ambientcolor[k])/255.0f, ambient) + 0.25f*max(ambientcolor[k]/255.0f, ambient);
-	}
+    if(hasskylight())
+    {
+        uchar skylight[3];
+        if(t) calcskylight(target, vec(0, 0, 0), 0.5f, skylight, RAY_POLY, t);
+        else fastskylight(target, 0.5f, skylight, RAY_POLY, t);
+        loopk(3) slight[k] = max(skylight[k]/255.0f, ambient);
+    }
+    else loopk(3) slight[k] = max(ambientcolor[k]/255.0f, ambient);
 	if(sunlights.length() || entities::lastent(ET_SUNLIGHT))
 	{
 		if(sunlights.empty()) findsunlights();
 		uchar col[3] = {0, 0, 0};
-		calcsunlight(target, vec(0, 0, 0), 0.5f, col, 1, t);
+		calcsunlight(target, vec(0, 0, 0), 0.5f, col, RAY_POLY, t);
 		loopk(3) slight[k] = max(slight[k], col[k]/255.0f);
 	}
 	loopk(3) color[k] = clamp(color[k], slight[k], 1.5f);
