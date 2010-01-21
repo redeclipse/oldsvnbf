@@ -1140,7 +1140,7 @@ namespace physics
 			loopi(x) \
 			{ \
 				if(i) { y; } \
-				if(collide(d) && !inside && (!avoidplayers || !hitplayer || !issolid(hitplayer, d))) { d->resetinterp(); return true; } \
+				if(collide(d) && !inside && (!avoidplayers || !hitplayer)) { d->resetinterp(); return true; } \
 				d->o = orig; \
 			} \
 		}
