@@ -26,26 +26,20 @@
 #include <time.h>
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <io.h>
-#else
-#include <unistd.h>
-#define _dup	dup
-#define _fileno fileno
-#endif
-
-
-#ifdef WIN32
-  #define _WINDOWS
+  #define WIN32_LEAN_AND_MEAN
+  #include "windows.h"
+  #include "io.h"
+  #ifndef _WINDOWS
+    #define _WINDOWS
+  #endif
   #ifndef __GNUC__
-    #define ZLIB_DLL
-	#ifndef STANDALONE
     #include <eh.h>
     #include <dbghelp.h>
-	#endif
   #endif
+  #define ZLIB_DLL
 #endif
+
+
 #include <zlib.h>
 
 #ifndef STANDALONE
