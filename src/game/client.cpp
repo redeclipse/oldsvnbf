@@ -752,7 +752,7 @@ namespace client
 
 	void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
 	{
-        if(m_edit(game::gamemode)) switch(op)
+        if(m_edit(game::gamemode) && game::player1->state == CS_EDITING) switch(op)
 		{
 			case EDIT_FLIP:
 			case EDIT_COPY:
