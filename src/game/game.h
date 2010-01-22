@@ -217,14 +217,14 @@ enum
 #define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh) \
 	VARG(name##add, 1, w0, w1);						VARG(name##max, 1, w1, w1); \
 	VARG(name##sub1, 0, w2, w1);					VARG(name##sub2, 0, w3, w1); \
-	VARG(name##adelay1, 0, w4, 30000);				VARG(name##adelay2, 0, w5, 30000);				VARG(name##rdelay, 0, w6, 30000); \
+	VARG(name##adelay1, 50, w4, 30000);				VARG(name##adelay2, 50, w5, 30000);				VARG(name##rdelay, 50, w6, 30000); \
 	VARG(name##damage1, -1000, w7, 1000);			VARG(name##damage2, -1000, w8, 1000); \
 	VARG(name##speed1, -100000, w9, 100000);		VARG(name##speed2, -100000, wa, 100000); \
 	VARG(name##power, 0, wb, 30000); \
 	VARG(name##time1, 0, wc, 30000);				VARG(name##time2, 0, wd, 30000); \
 	VARG(name##pdelay, 0, we, 30000); \
 	VARG(name##explode1, 0, wf, 1000);				VARG(name##explode2, 0, wg, 1000); \
-	VARG(name##rays1, 1, wh, 1000);					VARG(name##rays2, 1, wi, 1000); \
+	VARG(name##rays1, 1, wh, 100);					VARG(name##rays2, 1, wi, 100); \
 	VARG(name##spread1, 0, wj, 1000);				VARG(name##spread2, 0, wk, 1000); \
 	VARG(name##zdiv1, 0, wl, 1000);					VARG(name##zdiv2, 0, wm, 1000); \
 	VARG(name##aiskew1, 0, wn, 30000);				VARG(name##aiskew2, 0, wo, 30000); \
