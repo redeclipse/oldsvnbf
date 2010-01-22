@@ -1203,7 +1203,8 @@ namespace entities
 	{
 		extentity &e = *ents[i];
 		fixentity(i, true);
-		if(m_edit(game::gamemode)) client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
+		if(m_edit(game::gamemode) && game::player1->state == CS_EDITING)
+			client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
 		if(e.type >= NOTUSED && e.type < MAXENTTYPES)
 		{
 			lastenttype[e.type] = max(lastenttype[e.type], i+1);
