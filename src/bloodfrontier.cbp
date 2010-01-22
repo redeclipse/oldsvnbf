@@ -23,7 +23,7 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O3" />
+					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-fomit-frame-pointer" />
@@ -149,7 +149,7 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O3" />
+					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-fomit-frame-pointer" />
@@ -231,7 +231,7 @@
 				<Option projectResourceIncludeDirsRelation="1" />
 				<Option projectLibDirsRelation="1" />
 				<Compiler>
-					<Add option="-O3" />
+					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-fsigned-char" />
 					<Add option="-fomit-frame-pointer" />

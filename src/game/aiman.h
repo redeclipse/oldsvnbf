@@ -283,7 +283,7 @@ namespace aiman
 
 	void checkai()
 	{
-		if(!m_demo(gamemode) && !m_lobby(gamemode) && numclients())
+		if(!m_demo(gamemode) && numclients())
 		{
 			if(hasgameinfo && !interm)
 			{
@@ -299,19 +299,11 @@ namespace aiman
 
 	void reqadd(clientinfo *ci, int skill)
 	{
-		if(haspriv(ci, PRIV_MASTER, "add bots"))
-		{
-			if(m_lobby(gamemode) || m_campaign(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(!addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
-		}
+		if(haspriv(ci, PRIV_MASTER, "add bots") && !addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
 	}
 
 	void reqdel(clientinfo *ci)
 	{
-		if(haspriv(ci, PRIV_MASTER, "remove bots"))
-		{
-			if(m_lobby(gamemode) || m_campaign(gamemode)) sendf(ci->clientnum, 1, "ri", SV_NEWGAME);
-			else if(!delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
-		}
+		if(haspriv(ci, PRIV_MASTER, "remove bots") && !delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
 	}
 }
