@@ -2652,34 +2652,31 @@ namespace server
 
 	void waiting(clientinfo *ci, int doteam, int drop, bool exclude)
 	{
-		if(ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
+		if(m_campaign(gamemode) && ci->state.cpnodes.empty())
 		{
-			if(m_campaign(gamemode) && ci->state.cpnodes.empty())
+			int maxnodes = -1;
+			loopv(clients)
 			{
-				int maxnodes = -1;
-				loopv(clients)
-				{
-					clientinfo *oi = clients[i];
-					if(oi->clientnum >= 0 && oi->name[0] && oi->state.aitype < AI_START && (!clients.inrange(maxnodes) || oi->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
-						maxnodes = i;
-				}
-				if(clients.inrange(maxnodes)) loopv(clients[maxnodes]->state.cpnodes) ci->state.cpnodes.add(clients[maxnodes]->state.cpnodes[i]);
+				clientinfo *oi = clients[i];
+				if(oi->clientnum >= 0 && oi->name[0] && oi->state.aitype < AI_START && (!clients.inrange(maxnodes) || oi->state.cpnodes.length() > clients[maxnodes]->state.cpnodes.length()))
+					maxnodes = i;
 			}
-			if(ci->state.state == CS_ALIVE)
-			{
-				dropitems(ci, drop);
-				if(smode) smode->died(ci);
-				mutate(smuts, mut->died(ci));
-				ci->state.lastdeath = gamemillis;
-			}
-			if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
-			else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
-			ci->state.state = CS_WAITING;
-			ci->state.weapreset(false);
-			if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_LOADWEAP);
-			if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
-				setteam(ci, chooseteam(ci, ci->team), false, true);
+			if(clients.inrange(maxnodes)) loopv(clients[maxnodes]->state.cpnodes) ci->state.cpnodes.add(clients[maxnodes]->state.cpnodes[i]);
 		}
+		if(ci->state.state == CS_ALIVE)
+		{
+			dropitems(ci, drop);
+			if(smode) smode->died(ci);
+			mutate(smuts, mut->died(ci));
+			ci->state.lastdeath = gamemillis;
+		}
+		if(exclude) sendf(-1, 1, "ri2x", SV_WAITING, ci->clientnum, ci->clientnum);
+		else sendf(-1, 1, "ri2", SV_WAITING, ci->clientnum);
+		ci->state.state = CS_WAITING;
+		ci->state.weapreset(false);
+		if(m_arena(gamemode, mutators) && ci->state.loadweap < 0 && ci->state.aitype < 0) sendf(ci->clientnum, 1, "ri", SV_LOADWEAP);
+		if(doteam && (doteam == 2 || !isteam(gamemode, mutators, ci->team, TEAM_FIRST)))
+			setteam(ci, chooseteam(ci, ci->team), false, true);
 	}
 
 	void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen)
