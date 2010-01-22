@@ -2048,15 +2048,19 @@ namespace server
 		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, -1))
 		{
 			ci->wantsmap = true;
-			clientinfo *best = choosebestclient();
-			if(best)
+			if(!mapsending)
 			{
-				loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
-				mapsending = false;
-				sendf(best->clientnum, 1, "ri", SV_GETMAP);
-				putint(p, 1);
+				clientinfo *best = choosebestclient();
+				if(best)
+				{
+					loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
+					sendf(best->clientnum, 1, "ri", SV_GETMAP);
+					mapsending = true;
+					putint(p, 1);
+				}
+				else putint(p, 0);
 			}
-			else putint(p, 0);
+			else putint(p, 1); // already in progress
 		}
 		else
 		{
@@ -3026,7 +3030,6 @@ namespace server
         	srvmsgf(sender, "failed to open temporary file for map");
         	return false;
 		}
-		mapsending = true;
 		mapdata[n]->write(data, len);
 		return n == 2;
 	}
@@ -3952,27 +3955,33 @@ namespace server
 
 				case SV_GETMAP:
 				{
+					clientinfo *best = choosebestclient();
 					ci->wantsmap = true;
-					if(!mapsending && mapdata[0])
+					if(ci == best) // we asked them for the map and they asked us, oops
 					{
-						loopk(3) if(mapdata[k])
-							sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
-						sendwelcome(ci);
+						mapsending = false;
+						best = choosebestclient();
 					}
-					else
+					if(!mapsending)
 					{
-						if(!mapsending)
+						if(mapdata[0])
 						{
-							clientinfo *best = choosebestclient();
-							if(best)
-							{
-								loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
-								mapsending = false;
-								sendf(best->clientnum, 1, "ri", SV_GETMAP);
-							}
+							loopk(3) if(mapdata[k]) sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
+							sendwelcome(ci);
 						}
-						srvmsgf(ci->clientnum, "map is being uploaded, please wait..");
+						else if(best)
+						{
+							loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
+							sendf(best->clientnum, 1, "ri", SV_GETMAP);
+							mapsending = true;
+						}
+						else
+						{
+							srvmsgf(ci->clientnum, "there doesn't seem to be anybody to get the map from!");
+							break;
+						}
 					}
+					srvmsgf(ci->clientnum, "map is %sbeing uploaded, please wait..", mapsending ? "already " : "");
 					break;
 				}
 
