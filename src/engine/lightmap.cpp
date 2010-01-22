@@ -1627,9 +1627,9 @@ bool setlightmapquality(int quality)
     return true;
 }
 
-void calclight(int quality)
+void calclight(int *quality)
 {
-	if(!setlightmapquality(quality))
+	if(!setlightmapquality(*quality))
 	{
 		conoutft(CON_MESG, "\frvalid range for calclight quality is -1..1");
 		return;
@@ -1677,14 +1677,14 @@ void calclight(int quality)
 	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-ICOMMAND(calclight, "s", (char *s), int n = *s ? atoi(s) : 3; calclight(n));
+COMMAND(calclight, "i");
 
 VAR(patchnormals, 0, 0, 1);
 
-void patchlight(int quality)
+void patchlight(int *quality)
 {
 	if(noedit(true)) return;
-	if(!setlightmapquality(quality))
+	if(!setlightmapquality(*quality))
 	{
 		conoutft(CON_MESG, "\frvalid range for patchlight quality is 0..3");
 		return;
@@ -1732,7 +1732,7 @@ void patchlight(int quality)
 	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-ICOMMAND(patchlight, "s", (char *s), int n = *s ? atoi(s) : 3; patchlight(n));
+COMMAND(patchlight, "i");
 
 void setfullbrightlevel(int fullbrightlevel)
 {
