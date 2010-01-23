@@ -26,6 +26,50 @@ char *gettime(char *format)
 }
 ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
 
+vector<ipinfo> bans, allows;
+void addipinfo(vector<ipinfo> &info, const char *name)
+{
+    union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ip, mask;
+    ip.i = 0;
+    mask.i = 0;
+    loopi(4)
+    {
+        char *end = NULL;
+        int n = strtol(name, &end, 10);
+        if(!end) break;
+        if(end > name) { ip.b[i] = n; mask.b[i] = 0xFF; }
+        name = end;
+        while(*name && *name++ != '.');
+    }
+    ipinfo &p = info.add();
+    p.ip = ip.i;
+    p.mask = mask.i;
+}
+ICOMMAND(addban, "s", (char *name), addipinfo(bans, name));
+ICOMMAND(addallow, "s", (char *name), addipinfo(allows, name));
+
+char *printipinfo(const ipinfo &info, char *buf)
+{
+    union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ip, mask;
+    ip.i = info.ip;
+    mask.i = info.mask;
+    int lastdigit = -1;
+    loopi(4) if(mask.b[i])
+    {
+        if(lastdigit >= 0) *buf++ = '.';
+        loopj(i - lastdigit - 1) { *buf++ = '*'; *buf++ = '.'; }
+        buf += sprintf(buf, "%d", ip.b[i]);
+        lastdigit = i;
+    }
+    return buf;
+}
+
+bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global)
+{
+    loopv(info) if((!global || info[i].time < 0) && (host & info[i].mask) == info[i].ip) return true;
+    return false;
+}
+
 void console(int type, const char *s, ...)
 {
 	defvformatstring(sf, s, s);

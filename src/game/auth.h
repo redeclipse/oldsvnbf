@@ -161,6 +161,13 @@ namespace auth
 			else if(!strcmp(w[0], "failauth")) authfailed((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])));
 			else if(!strcmp(w[0], "chalauth")) authchallenged((uint)(atoi(w[1])), w[2]);
+			else if(!strcmp(w[0], "ban") || !strcmp(w[0], "allow"))
+			{
+				ipinfo &p = (strcmp(w[0], "ban") ? allows : bans).add();
+				p.ip = (uint)(atoi(w[1]));
+				p.mask = (uint)(atoi(w[2]));
+				p.time = -2; // master info
+			}
 			else if(w[0]) conoutf("authserv sent invalid command: %s", w[0]);
 			loopj(numargs) if(w[j]) delete[] w[j];
 		}
@@ -200,6 +207,8 @@ namespace auth
 			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
 			else
 			{
+				loopv(bans) if(bans[i].time == -2) bans.remove(i--);
+				loopv(allows) if(allows[i].time == -2) allows.remove(i--);
 				regserver();
 				loopv(clients) clients[i]->authreq = clients[i]->authname[0] = 0;
 			}
