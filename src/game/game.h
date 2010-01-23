@@ -1226,6 +1226,7 @@ namespace physics
 	extern float gravity, jumpspeed, movespeed, movecrawl, impulsespeed, impulseregen, liquidspeed, liquidcurb, floorcurb, aircurb;
 	extern int impulsestyle, impulsemeter, impulsecost, impulsecount, impulseskate;
 	extern int smoothmove, smoothdist;
+	extern bool sprinting(physent *d, bool turn = true, bool move = true);
 	extern bool canimpulse(physent *d, int cost = 0);
 	extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);

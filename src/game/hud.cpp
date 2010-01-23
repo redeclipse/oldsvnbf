@@ -294,8 +294,7 @@ namespace hud
 				amt += damage*0.65f;
 				if(fireburntime && game::focus->lastfire && lastmillis-game::focus->lastfire < fireburntime)
 					amt += 0.25f+(float((lastmillis-game::focus->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
-				if(FWV(impulsestyle) && (game::focus->turnside || (game::focus->action[AC_SPRINT] && (game::focus->move || game::focus->strafe))))
-					amt += game::focus->turnside ? 0.125f : 0.25f;
+				if(physics::sprinting(game::focus)) amt += game::focus->turnside ? 0.125f : 0.25f;
 				break;
 			}
 			case 2: amt += motionbluramt; break;
@@ -1532,8 +1531,7 @@ namespace hud
 				glColor4f(r, g, b, fade*0.25f);
 				drawslice(0, 1, ix+iw/2, iy+iw/2, iw/4);
 				glColor4f(r, g, b, fade);
-				if(game::focus->action[AC_SPRINT] && (game::focus->move || game::focus->strafe))
-					drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix+iw/2, iy+iw/2, iw/2);
+				if(physics::sprinting(game::focus, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix+iw/2, iy+iw/2, iw/2);
 				else drawslice(1-len, len, ix+iw/2, iy+iw/2, iw/2);
 				drawslice(1-len, len, ix+iw/2, iy+iw/2, iw/4);
 				if(inventoryimpulse >= 2)
