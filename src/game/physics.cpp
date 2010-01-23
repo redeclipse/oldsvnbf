@@ -39,7 +39,7 @@ namespace physics
 	VARP(impulsedash,		0, 1, 3);				// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
 	VARP(crouchstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
-	VARP(sprintstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
+	VARP(sprintstyle,		0, 4, 5);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
 
 	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0, lastcrouch = 0, lastsprint = 0;
 
@@ -78,7 +78,7 @@ namespace physics
 				switch(type)
 				{
 					case AC_CROUCH: style = crouchstyle; last = &lastcrouch; break;
-					case AC_SPRINT: style = sprintstyle; last = &lastsprint; break;
+					case AC_SPRINT: style = sprintstyle%3; last = &lastsprint; break;
 					default: break;
 				}
 				switch(style)
@@ -165,6 +165,22 @@ namespace physics
 		}
 		return false;
 	}
+
+	bool sprinting(physent *d, bool turn, bool move)
+	{
+		if(FWV(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI) && !iscrouching(d))
+		{
+			if(turn && ((gameent *)d)->turnside) return true;
+			if((d != game::player1 && !((gameent *)d)->ai) || !FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter))
+			{
+				bool value = ((gameent *)d)->action[AC_SPRINT];
+				if(d == game::player1 && sprintstyle >= 3) value = !value;
+				if(value && (!move || d->move || d->strafe)) return true;
+			}
+		}
+		return false;
+	}
+
 	bool liquidcheck(physent *d) { return d->inliquid && d->submerged > 0.8f; }
 
 	float liquidmerge(physent *d, float from, float to)
@@ -238,8 +254,7 @@ namespace physics
 			{
 				float speed = FWV(movespeed);
 				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= FWV(movecrawl);
-				if(FWV(impulsestyle) && ((gameent *)d)->action[AC_SPRINT] && (d->move || d->strafe) && (!FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter)))
-					speed += FWV(impulsespeed)*(d->move < 0 ? 0.5f : 1);
+				if(physics::sprinting(d, false)) speed += FWV(impulsespeed)*(d->move < 0 ? 0.5f : 1);
 				return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
 			}
 		}
@@ -589,11 +604,7 @@ namespace physics
 			bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d);
 			if(millis && FWV(impulsestyle))
 			{
-				if(d->action[AC_SPRINT] && (d->move || d->strafe))
-				{
-					if(canimpulse(d, millis)) d->impulse[IM_METER] += millis;
-					else d->action[AC_SPRINT] = false;
-				}
+				if(sprinting(d) && canimpulse(d, millis)) d->impulse[IM_METER] += millis;
 				else if(d->impulse[IM_METER] > 0 && FWV(impulseregen) > 0)
 				{
 					int timeslice = max(int(millis*FWV(impulseregen)), 1);
@@ -749,8 +760,7 @@ namespace physics
 		else
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
-			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((gameent *)pl)->action[AC_SPRINT] && (!FWV(impulsemeter) || ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter)))
-				floor = false;
+			if(floor && sprinting(pl)) floor = false;
 			float curb = floor ? FWV(floorcurb) : FWV(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, FWV(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
 		}
