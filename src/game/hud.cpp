@@ -1269,11 +1269,11 @@ namespace hud
 		if(skew <= 0.f) return 0;
 		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)/2, cx = left ? x+cs : x-cs, cy = y-cs;
 		settexture(progresstex, 3);
-		glColor4f(cr, cg, cb, max(f, 0.5f)*0.25f);
-		drawslice(0, 1, cx, cy, cs/2);
+		glColor4f(cr, cg, cb, f*0.25f);
+		drawslice(0, 1, cx, cy, cs*2/3);
 		glColor4f(cr, cg, cb, f);
 		drawslice((totalmillis%1000)/1000.f, 0.1f, cx, cy, cs);
-		drawslice(start, length, cx, cy, cs/2);
+		drawslice(start, length, cx, cy, cs*2/3);
 		if(text && *text)
 		{
 			glPushMatrix();
@@ -1526,14 +1526,15 @@ namespace hud
 				float len = 1-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f);
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
-				int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2, ix = x+ow, iy = y-sy-iw;
+				int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2, is = iw/2, ix = x+ow+is, iy = y-sy-is;
 				if(teamwidgets) skewcolour(r, g, b);
 				glColor4f(r, g, b, fade*0.25f);
-				drawslice(0, 1, ix+iw/2, iy+iw/2, iw/4);
+				drawslice(0, 1, ix, iy, is);
+				drawslice(0, 1, ix, iy, is*2/3);
 				glColor4f(r, g, b, fade);
-				if(physics::sprinting(game::focus, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix+iw/2, iy+iw/2, iw/2);
-				else drawslice(1-len, len, ix+iw/2, iy+iw/2, iw/2);
-				drawslice(1-len, len, ix+iw/2, iy+iw/2, iw/4);
+				if(physics::sprinting(game::focus, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix, iy, is);
+				else drawslice(1-len, len, ix, iy, is);
+				drawslice(1-len, len, ix, iy, is*2/3);
 				if(inventoryimpulse >= 2)
 				{
 					pushfont("sub");
