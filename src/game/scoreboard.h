@@ -235,6 +235,7 @@ namespace hud
 			g.image(NULL, 6, true);
 			g.space(2);
 			g.pushlist();
+			g.space(1);
 			g.pushfont("super");
 			if(*maptitle) g.textf("%s", 0xFFFFFF, NULL, maptitle);
 			else g.textf("(%s)", 0xFFFFFF, NULL, mapname);
@@ -266,7 +267,7 @@ namespace hud
 				const char *msg = game::player1->state != CS_WAITING && game::player1->lastdeath ? "Fragged" : "Please Wait";
 				g.space(1);
 				g.pushlist();
-				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();
+				g.pushfont("default"); g.textf("%s", 0xFFFFFF, NULL, msg); g.popfont();
 				g.space(2);
 				SEARCHBINDCACHE(attackkey)("action 0", 0);
 				g.pushfont("sub");
@@ -304,7 +305,7 @@ namespace hud
 			else if(game::player1->state == CS_ALIVE)
 			{
 				g.space(1);
-				g.pushfont("super");
+				g.pushfont("default");
 				if(m_lobby(game::gamemode)) g.textf("Free Roam", 0xFFFFFF, NULL);
 				else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
 				else if(m_campaign(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
@@ -316,7 +317,7 @@ namespace hud
 			else if(game::player1->state == CS_SPECTATOR)
 			{
 				g.space(1);
-				g.pushfont("super"); g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating"); g.popfont();
+				g.pushfont("default"); g.textf("%s", 0xFFFFFF, NULL, game::tvmode() ? "SpecTV" : "Spectating"); g.popfont();
 				SEARCHBINDCACHE(speconkey)("spectator 0", 1);
 				g.pushfont("sub");
 				g.textf("Press \fs\fc%s\fS to join the game", 0xFFFFFF, NULL, speconkey);
@@ -328,9 +329,9 @@ namespace hud
 			if((game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR) && !game::tvmode())
 			{
 				g.pushfont("radar");
-				SEARCHBINDCACHE(specf1key)("specfollowdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
-				SEARCHBINDCACHE(specf2key)("specfollowdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
-				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, specf1key, specf2key);
+				SEARCHBINDCACHE(followf1key)("followdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
+				SEARCHBINDCACHE(followf2key)("followdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
+				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, followf1key, followf2key);
 				g.popfont();
 			}
 
