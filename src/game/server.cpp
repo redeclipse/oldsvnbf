@@ -273,12 +273,6 @@ namespace server
 		vector<uchar> positions, messages;
 	};
 
-	struct ban
-	{
-		int time;
-		uint ip;
-	};
-
 	namespace aiman {
 		bool autooverride = false, dorefresh = false;
 		extern int findaiclient(int exclude = -1);
@@ -304,8 +298,6 @@ namespace server
 	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	stream *mapdata[3] = { NULL, NULL, NULL };
 
-    vector<uint> allowedips;
-	vector<ban> bannedips;
 	vector<clientinfo *> clients, connects;
 	vector<worldstate *> worldstates;
 	bool reliablemessages = false;
@@ -445,7 +437,7 @@ namespace server
 		setpause(false);
 		if(GVAR(resetmmonend)) mastermode = MM_OPEN;
 		if(GVAR(resetvarsonend)) resetgamevars(true);
-		if(GVAR(resetbansonend)) bannedips.setsize(0);
+		if(GVAR(resetbansonend)) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
 		changemap();
 	}
 
@@ -1255,7 +1247,7 @@ namespace server
 		if(demorecord) enddemorecord();
 		if(GVAR(resetmmonend) >= 2) mastermode = MM_OPEN;
 		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
-		if(GVAR(resetbansonend) >= 2) bannedips.setsize(0);
+		if(GVAR(resetbansonend) >= 2) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
 	}
 
 	bool checkvotes(bool force = false)
@@ -2829,12 +2821,6 @@ namespace server
 		}
 	}
 
-	void cleanbans()
-	{
-		while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000)
-			bannedips.remove(0);
-	}
-
 	void serverupdate()
 	{
 		if(numclients())
@@ -2850,7 +2836,7 @@ namespace server
 				if(smode) smode->update();
 				mutate(smuts, mut->update());
 			}
-			cleanbans();
+			loopv(bans) if(bans[i].time >= 0 && totalmillis-bans[i].time > 4*60*60000) bans.remove(i--);
 			loopv(connects) if(totalmillis-connects[i]->connectmillis > 15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
 			if(masterupdate)
@@ -2876,7 +2862,10 @@ namespace server
 			}
             if(shouldcheckvotes) checkvotes();
 		}
-		else if(!GVAR(resetbansonend)) cleanbans();
+		else if(!GVAR(resetbansonend))
+		{
+			loopv(bans) if(bans[i].time >= 0 && totalmillis-bans[i].time > 4*60*60000) bans.remove(i--);
+		}
 		aiman::checkai();
 		auth::update();
 	}
@@ -2908,8 +2897,8 @@ namespace server
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
         if(numclients() >= serverclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
-        loopv(bannedips) if(bannedips[i].ip == ip) return DISC_IPBAN;
-        if(mastermode >= MM_PRIVATE && allowedips.find(ip) < 0) return DISC_PRIVATE;
+        if(checkipinfo(bans, ip) && !checkipinfo(allows, ip, true)) return DISC_IPBAN;
+        if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
         return DISC_NONE;
     }
 
@@ -3758,10 +3747,15 @@ namespace server
 						if(haspriv(ci, PRIV_ADMIN) || (mastermask&(1<<mm)))
 						{
 							mastermode = mm;
-                            allowedips.setsize(0);
+                            loopv(allows) if(allows[i].time >= 0) allows.remove(i--);
                             if(mm >= MM_PRIVATE)
                             {
-                                loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
+                                loopv(clients)
+                                {
+                                	ipinfo &allow = allows.add();
+									allow.time = totalmillis;
+									allow.ip = getclientip(clients[i]->clientnum);
+                                }
                             }
 							srvoutf(3, "\fymastermode is now \fs\fc%d\fS (\fs\fc%s\fS)", mastermode, mastermodename(mm));
 						}
@@ -3774,8 +3768,8 @@ namespace server
 				{
 					if(haspriv(ci, PRIV_MASTER, "clear bans"))
 					{
-						bannedips.setsize(0);
-						srvoutf(3, "cleared all bans");
+						loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
+						srvoutf(3, "cleared bans");
 					}
 					break;
 				}
@@ -3785,10 +3779,10 @@ namespace server
 					int victim = getint(p);
 					if(haspriv(ci, PRIV_MASTER, "kick people") && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
 					{
-						ban &b = bannedips.add();
-						b.time = totalmillis;
-						b.ip = getclientip(victim);
-                        allowedips.removeobj(b.ip);
+						ipinfo &ban = bans.add();
+						ban.time = totalmillis;
+						ban.ip = getclientip(victim);
+						loopv(allows) if(allows[i].time >= 0 && allows[i].ip == ban.ip) allows.remove(i--);
 						disconnect_client(victim, DISC_KICK);
 					}
 					break;

@@ -261,6 +261,8 @@ bool checkmasterclientinput(masterclient &c)
 			{
 				masteroutf(c, "echo \"server initiated\"\n");
 				conoutf("master peer %s registered as a server",  c.name);
+				loopv(bans) if(bans[i].time < 0) masteroutf(c, "ban %u %u\n", bans[i].ip, bans[i].mask);
+				loopv(allows) if(allows[i].time < 0) masteroutf(c, "allow %u %u\n", allows[i].ip, allows[i].mask);
 				c.isserver = true;
 			}
 		}
@@ -328,7 +330,8 @@ void checkmaster()
 		{
 			ENetAddress address;
 			ENetSocket masterclientsocket = enet_socket_accept(mastersocket, &address);
-			if(masterclients.length() >= MASTER_LIMIT) enet_socket_destroy(masterclientsocket);
+			if(masterclients.length() >= MASTER_LIMIT || (checkipinfo(bans, address.host) && !checkipinfo(allows, address.host, true)))
+				enet_socket_destroy(masterclientsocket);
 			else if(masterclientsocket!=ENET_SOCKET_NULL)
 			{
 				int dups = 0, oldest = -1;

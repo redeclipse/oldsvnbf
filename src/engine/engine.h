@@ -31,10 +31,20 @@ extern char *masterip;
 
 enum { CON_DEBUG = 0, CON_MESG, CON_INFO, CON_SELF, CON_GAMESPECIFIC };
 
-enum
+enum { PACKAGEDIR_OCTA = 1<<0 };
+
+struct ipinfo
 {
-    PACKAGEDIR_OCTA = 1<<0
+    enet_uint32 ip, mask;
+    int time;
+
+    ipinfo() : ip(0), mask(0), time(-1) {}
+    ~ipinfo() {}
 };
+extern vector<ipinfo> bans, allows;
+extern void addipinfo(vector<ipinfo> &info, const char *name);
+extern char *printipinfo(const ipinfo &info, char *buf);
+extern bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global = false);
 
 #ifndef STANDALONE
 #include "world.h"
