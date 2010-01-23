@@ -902,9 +902,9 @@ namespace hud
 				if(shownotices >= 3 && (game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR) && !game::tvmode())
 				{
 					pushfont("radar");
-					SEARCHBINDCACHE(specf1key)("followdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
-					SEARCHBINDCACHE(specf2key)("followdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
-					ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, specf1key, specf2key)*noticescale;
+					SEARCHBINDCACHE(uvf1key)("universaldelta 1", game::player1->state == CS_WAITING ? 3 : 1);
+					SEARCHBINDCACHE(uvf2key)("universaldelta -1", game::player1->state == CS_WAITING ? 3 : 1);
+					ty += draw_textx("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, uvf1key, uvf2key)*noticescale;
 					popfont();
 				}
 
@@ -1759,8 +1759,8 @@ namespace hud
 			else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
 		}
 		y = h-FONTH/2;
+		y -= draw_textx("v%.2f (%s) [%s]", w-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE, ENG_PLATFORM);
 		y -= draw_textx("%s", w-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
-		y -= draw_textx("v%.2f (%s)", w-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE);
 		popfont();
 	}
 

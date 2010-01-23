@@ -728,6 +728,7 @@ namespace client
 	ICOMMAND(ready, "", (), intret(ready()));
 
 	int state() { return game::player1->state; }
+	ICOMMAND(getstate, "", (), intret(state()));
 	int otherclients()
 	{
 		int n = 0; // ai don't count
