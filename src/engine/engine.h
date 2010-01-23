@@ -8,6 +8,13 @@
 #define ENG_RELEASE			"Beta 2"
 #define ENG_URL				"www.bloodfrontier.com"
 #define ENG_BLURB			"It's bloody fun!"
+#ifdef WIN32
+#define ENG_PLATFORM		"Win"
+#elif defined(__APPLE__)
+#define ENG_PLATFORM		"Mac"
+#else
+#define ENG_PLATFORM		"Nix"
+#endif
 #define ENG_DEVEL			false
 
 #define ENG_SERVER_PORT		(ENG_DEVEL ? 28797 : 28795)

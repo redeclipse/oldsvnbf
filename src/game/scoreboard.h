@@ -329,9 +329,9 @@ namespace hud
 			if((game::player1->state == CS_WAITING || game::player1->state == CS_SPECTATOR) && !game::tvmode())
 			{
 				g.pushfont("radar");
-				SEARCHBINDCACHE(followf1key)("followdelta 1", game::player1->state == CS_WAITING ? 3 : 1);
-				SEARCHBINDCACHE(followf2key)("followdelta -1", game::player1->state == CS_WAITING ? 3 : 1);
-				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, followf1key, followf2key);
+				SEARCHBINDCACHE(uvf1key)("universaldelta 1", game::player1->state == CS_WAITING ? 3 : 1);
+				SEARCHBINDCACHE(uvf2key)("universaldelta -1", game::player1->state == CS_WAITING ? 3 : 1);
+				g.textf("Press \fs\fc%s\fS and \fs\fc%s\fS to change views", 0xFFFFFF, NULL, uvf1key, uvf2key);
 				g.popfont();
 			}
 
