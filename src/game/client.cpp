@@ -453,6 +453,13 @@ namespace client
 
 		conoutft(CON_CHAT, "%s", s);
 		playsound(S_CHAT, d->o, d, d == game::focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
+		ident *wid = idents->access(flags&SAY_ACTION ? "on_action" : "on_text");
+		if(wid && wid->action)
+		{
+			defformatstring(act)("%s %d %d \"%s\" \"%s\" \"%s\"", flags&SAY_ACTION ? "on_action" : "on_text",
+				d->clientnum, flags&SAY_TEAM ? 1 : 0, game::colorname(d), text, s);
+			execute(act);
+		}
 	}
 
 	void toserver(int flags, char *text)
