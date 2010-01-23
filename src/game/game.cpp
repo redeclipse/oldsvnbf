@@ -58,6 +58,7 @@ namespace game
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
 	FVARP(spectvspeed, 0, 1, 1000);
 	FVARP(spectvpitch, 0, 1, 1000);
+	FVARP(spectvbias, 0, 2, 1000);
 
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
@@ -1306,7 +1307,7 @@ namespace game
 					if(physics::entinmap(&d, false))
 					{
 						camstate &c = cameras.add();
-						c.pos = pos; c.ent = i;
+						c.pos = d.o; c.ent = i;
 						if(!k)
 						{
 							c.idx = e.attrs[0];
@@ -1330,7 +1331,7 @@ namespace game
 		{
 			gameent *d = (gameent *)iterdynents(cameras[i].idx);
 			if(!d) { cameras.remove(i--); continue; }
-			cameras[i].pos = d->headpos();
+			if(d->state != CS_DEAD && d->state != CS_WAITING) cameras[i].pos = d->headpos();
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
 
@@ -1345,35 +1346,20 @@ namespace game
 				float dist = c.pos.dist(pos); \
 				if(dist >= c.mindist && dist <= min(c.maxdist, float(fogdist)) && raycubelos(c.pos, pos, trg)) \
 				{ \
-					c.cansee.add(q); \
-					avg.add(pos); \
-				} \
-			}
-			#define updatecamorient \
-			{ \
-				if(t) \
-				{ \
-					if(t != focus) { yaw = t->yaw; pitch = t->pitch; } \
-				} \
-				else if((k || j) && c.cansee.length()) \
-				{ \
-					vec dir = vec(avg).div(c.cansee.length()).sub(c.pos).normalize(); \
-					vectoyawpitch(dir, yaw, pitch); \
-				} \
-			}
-			#define dircamentity(q,p,r) \
-			{ \
-				vec trg, pos = p; \
-				if(r || getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
-				{ \
-					c.dir.add(pos); \
-					c.score += c.pos.dist(pos); \
-				} \
-				else \
-				{ \
-					avg.sub(pos); \
-					c.cansee.remove(q); \
-					updatecamorient; \
+					float yaw = camera1->yaw, pitch = camera1->pitch; avg.add(pos); \
+					if(t) { yaw = t->yaw; pitch = t->pitch; } \
+					else \
+					{ \
+						vec dir = vec(avg).div(c.cansee.length()+1).sub(c.pos).normalize(); \
+						vectoyawpitch(dir, yaw, pitch); \
+					} \
+					if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
+					{ \
+						c.cansee.add(q); \
+						c.dir.add(pos); \
+						c.score += c.pos.dist(pos); \
+					} \
+					else avg.sub(pos); \
 				} \
 			}
 			loopk(2)
@@ -1382,69 +1368,49 @@ namespace game
 				loopvj(cameras)
 				{
 					camstate &c = cameras[j]; gameent *t = NULL;
-					vec avg(0, 0, 0);
-					if(c.ent < 0 && c.idx >= 0 && c.idx < numdynents())
+					vec avg(0, 0, 0); c.reset();
+					if(c.ent < 0 && c.idx >= 0)
 					{
 						t = (gameent *)iterdynents(c.idx);
-						if(t->state != CS_ALIVE || (!isspec && waitmode < (m_duke(game::gamemode, game::mutators) ? 1 : 2))) continue;
+						if(!t || t->state != CS_ALIVE) { c.score = 1e16f; continue; }
 					}
-					c.reset(t != NULL);
 					switch(k)
 					{
 						case 0: default:
 						{
 							gameent *d;
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)))
-							{
-								if(d == t) { c.cansee.add(i); avg.add(d->feetpos()); }
-								else if(d->aitype < AI_START && d->state == CS_ALIVE) addcamentity(i, d->feetpos());
-							}
+							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD))
+								addcamentity(i, d->feetpos());
 							break;
 						}
 						case 1:
 						{
-							c.alter = true;
 							loopv(entities::ents) if(entities::ents[i]->type == WEAPON || entities::ents[i]->type == FLAG)
 								addcamentity(i, entities::ents[i]->o);
 							break;
 						}
 					}
-					float yaw = camera1->yaw, pitch = camera1->pitch;
-					updatecamorient;
-					switch(k)
+					if(!c.cansee.empty() || t)
 					{
-						case 0: default:
+						if(!c.cansee.empty())
 						{
-							gameent *d;
-							loopvrev(c.cansee) if((d = (gameent *)iterdynents(c.cansee[i])))
-								dircamentity(i, d->feetpos(), d == t);
-							break;
+							float amt = float(c.cansee.length());
+							c.dir.div(amt);
+							c.score /= amt;
+							if(t && spectvbias > 0) c.score /= spectvbias;
 						}
-						case 1:
-						{
-							loopvrev(c.cansee) if(entities::ents.inrange(c.cansee[i]))
-								dircamentity(i, entities::ents[c.cansee[i]]->o, false);
-							break;
-						}
-					}
-					if(!c.cansee.empty())
-					{
-						float amt = float(c.cansee.length());
-						c.dir.div(amt);
-						c.score /= amt;
+						else if(t) c.score = 1e8f;
 						found++;
 					}
 					else
 					{
+						c.dir = c.pos;
 						c.score = 1e16f;
-						if(override && !k && !j) renew = true; // quick scotty, get a new cam
+						if(override) renew = true; // quick scotty, get a new cam
 					}
 					if(!renew) break;
 				}
-				if(override && !found)
-				{
-					if(k) renew = true;
-				}
+				if(!found && override) renew = true;
 				else break;
 			}
 			if(renew)
@@ -1457,15 +1423,14 @@ namespace game
 					lasttvchg = lastmillis;
 					ent = entidx = -1;
 				}
-				if(cam->ent < 0 && cam->idx >= 0 && cam->idx < numdynents())
+				if(cam->ent < 0 && cam->idx >= 0)
 				{
 					if((focus = (gameent *)iterdynents(cam->idx)) != NULL) follow = cam->idx;
 					else { focus = player1; follow = 0; }
 				}
 				else { focus = player1; follow = 0; }
 			}
-			else if(cam->alter && !cam->cansee.length()) cam->alter = true;
-			if(focus != player1)
+			if(cam->ent < 0 && focus != player1)
 			{
 				camera1->o = focus->headpos();
 				camera1->yaw = camera1->aimyaw = focus->yaw;
@@ -1475,13 +1440,9 @@ namespace game
 			else
 			{
 				camera1->o = cam->pos;
-				if((cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx) || !cam->alter)
-				{
-					vec dir = vec(cam->dir).sub(camera1->o).normalize();
-					vectoyawpitch(dir, camera1->aimyaw, camera1->aimpitch);
-				}
-				if((cam->ent >= 0 ? cam->ent != entidx : cam->idx != entidx) || cam->alter) { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
-				else if(spectvspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, spectvpitch);
+				vectoyawpitch(vec(cam->dir).sub(camera1->o).normalize(), camera1->aimyaw, camera1->aimpitch);
+				if(spectvspeed > 0) scaleyawpitch(camera1->yaw, camera1->pitch, camera1->aimyaw, camera1->aimpitch, (float(curtime)/1000.f)*spectvspeed, spectvpitch);
+				else { camera1->yaw = camera1->aimyaw; camera1->pitch = camera1->aimpitch; }
 			}
 			camera1->resetinterp();
 		}
