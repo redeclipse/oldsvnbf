@@ -463,7 +463,7 @@ namespace projs
 			{
 				eyedir.div(eyedist);
 				float blocked = pltracecollide(&proj, proj.owner->o, eyedir, eyedist);
-				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked).add(proj.owner->o);
+				if(blocked >= 0) proj.o = vec(eyedir).mul(blocked+proj.radius).add(proj.owner->o);
 			}
 		}
         proj.resetinterp();
