@@ -20,7 +20,7 @@ VARG(spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 VARG(spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 VARG(instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 VARG(trialweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
-VARG(spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
+VARG(spawngrenades, 0, 1, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
 VARG(instadelay, 0, 2500, INT_MAX-1); // .. in instagib/arena matches
 VARG(trialdelay, 0, 1000, INT_MAX-1); // .. in time trial matches
@@ -42,9 +42,9 @@ VARG(regenhealth, 0, 5, INT_MAX-1);
 VARG(regenextra, 0, 10, INT_MAX-1);
 VARG(regenflag, 0, 1, 2); // 0 = off, 1 = only guarding, 2 = also while carrying
 
-VARG(itemsallowed, 0, 2, 3); // 0 = never, 1 = all but instagib/time-trial, 2 = override insta if arena, 3 = always
+VARG(itemsallowed, 0, 2, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 VARG(itemdropping, 0, 1, 1); // 0 = never, 1 = yes
-VARG(itemspawntime, 1, 30000, INT_MAX-1); // when items respawn
+VARG(itemspawntime, 1, 15000, INT_MAX-1); // when items respawn
 VARG(itemspawndelay, 0, 1000, INT_MAX-1); // after map start items first spawn
 VARG(itemspawnstyle, 0, 1, 2); // 0 = all at once, 1 = staggered, 2 = random
 FVARG(itemthreshold, 0, 1, 1000); // if numitems/numclients/maxcarry is less than this, spawn one of this type

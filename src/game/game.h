@@ -292,7 +292,7 @@ WEAPON(rifle,
 	0,		0,		0,		0,		1,		0,		2,		2,		0,		0,		1,		1,		5,		0,		100,		200,		600,		0
 );
 WEAPON(grenade,
-	1,		2,		1,		1,		1500,		1500,		6000,	300,	300,	250,		250,		3000,	3000,		3000,		100,	60,		60,		1,		1,		0,		0,		0,		0,		1,		1,
+	1,		2,		1,		1,		1500,		1500,		6000,	200,	200,	250,		250,		3000,	3000,		3000,		100,	38,		38,		1,		1,		0,		0,		0,		0,		1,		1,
 	BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,								IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
 	0,		0,		0,		0,		0,		0,		1,		1,		0,		0,		0,		0,
 	0.5f,	0,		0,		0,		1,		1,		2,		2,		64,		64,		1,		1,		5,		5,		1000,		1000,		400,		400
@@ -494,7 +494,7 @@ extern gametypes gametype[], mutstype[];
 #define m_weapon(a,b)		(m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
 #define m_delay(a,b)		(m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
 #define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
-#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) ? (m_arena(a,b) ? 2 : 3) : (m_trial(a) ? 3 : 1)))
+#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
 
 #define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WPA(w1, reloads))))
@@ -853,7 +853,11 @@ struct gamestate
 			loadweap = -1;
 			lastweap = weapselect = sweap;
 		}
-		if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WPA(WEAP_GRENADE, max);
+		if(grenades && sweap != WEAP_GRENADE)
+		{
+			ammo[WEAP_GRENADE] = WPA(WEAP_GRENADE, max);
+			if(loadweap < 0) lastweap = weapselect = WEAP_GRENADE;
+		}
 	}
 
 	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)

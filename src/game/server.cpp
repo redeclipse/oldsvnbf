@@ -762,7 +762,7 @@ namespace server
 		{
 			case WEAPON:
 				if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
-				if(m_arena(gamemode, mutators) && sents[i].attrs[0] != WEAP_GRENADE) return false;
+				if((m_arena(gamemode, mutators) || m_insta(gamemode, mutators)) && sents[i].attrs[0] != WEAP_GRENADE) return false;
 				break;
 			default: break;
 		}
