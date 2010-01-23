@@ -13,6 +13,22 @@ namespace stf
         loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
     }
 
+	void skewrgb(float &r, float &g, float &b, int owner, int enemy)
+	{
+		r = (teamtype[owner].colour>>16)/255.f;
+		g = ((teamtype[owner].colour>>8)&0xFF)/255.f;
+		b = (teamtype[owner].colour&0xFF)/255.f;
+		if(enemy)
+		{
+			float r2 = (teamtype[enemy].colour>>16)/255.f, g2 = ((teamtype[enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[enemy].colour&0xFF)/255.f,
+				amt = float(lastmillis%1000)/500.f;
+			if(amt > 1.f) amt = 2.f-amt;
+			r += (r2-r)*amt;
+			g += (g2-g)*amt;
+			b += (b2-b)*amt;
+		}
+	}
+
 	void render()
 	{
 		loopv(st.flags)
@@ -32,10 +48,16 @@ namespace stf
 			above.z += 2.5f;
 			if(b.enemy)
 			{
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
+				float rr = 1, gg = 1, bb = 1; skewrgb(rr, gg, bb, b.owner, b.enemy);
+				part_icon(above, textureload(hud::progresstex, 3), 3, 1, 0, 0, 1, (int(rr*255)<<16)|(int(gg*255)<<8)|int(bb*255), (totalmillis%1000)/1000.f, 0.1f);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
-			else part_icon(above, textureload(hud::progresstex, 3), 2.5f, 1, 0, 0, 1, teamtype[b.owner].colour);
+			else
+			{
+				part_icon(above, textureload(hud::progresstex, 3), 3, 0.25f, 0, 0, 1, teamtype[b.owner].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.owner].colour);
+			}
 			above.z += 0.5f;
 			defformatstring(str)("<emphasis>%d%%", int(occupy*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, 0.5f);
 		}
@@ -48,16 +70,7 @@ namespace stf
         {
             stfstate::flag &f = st.flags[i];
             if(!entities::ents.inrange(f.ent)) continue;
-			float r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f;
-            if(f.enemy)
-            {
-				float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
-					amt = float(lastmillis%1000)/500.f;
-				if(amt > 1.f) amt = 2.f-amt;
-            	r += (r2-r)*amt;
-            	g += (g2-g)*amt;
-            	b += (b2-b)*amt;
-            }
+			float r = 1, g = 1, b = 1; skewrgb(r, g, b, f.owner, f.enemy);
 			adddynlight(vec(f.o).add(vec(0, 0, enttype[FLAG].radius)), enttype[FLAG].radius*2, vec(r, g, b), 0, 0, DL_KEEP);
         }
     }
@@ -68,16 +81,7 @@ namespace stf
 		{
 			stfstate::flag &f = st.flags[i];
 			vec dir(f.o); dir.sub(camera1->o);
-			float r = (teamtype[f.owner].colour>>16)/255.f, g = ((teamtype[f.owner].colour>>8)&0xFF)/255.f, b = (teamtype[f.owner].colour&0xFF)/255.f, fade = blend*hud::radarflagblend;
-            if(f.enemy)
-            {
-				float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f,
-					amt = float(lastmillis%1000)/500.f;
-				if(amt > 1.f) amt = 2.f-amt;
-            	r += (r2-r)*amt;
-            	g += (g2-g)*amt;
-            	b += (b2-b)*amt;
-            }
+			float r = 1, g = 1, b = 1, fade = blend*hud::radarflagblend; skewrgb(r, g, b, f.owner, f.enemy);
 			if(f.owner != game::focus->team && f.enemy != game::focus->team)
 			{
 				float dist = dir.magnitude(),

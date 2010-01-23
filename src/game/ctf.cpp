@@ -185,11 +185,12 @@ namespace ctf
 			if((f.base&BASE_FLAG) && ((ctfstyle >= 1 && f.droptime) || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				part_icon(above, textureload(hud::progresstex, 3), 3, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, (totalmillis%1000)/1000.f, 0.1f);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, max(trans, 0.5f)*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, max(trans, 0.5f), 0, 0, 1, teamtype[f.team].colour, 0, wait);
 				above.z += 0.5f;
 				defformatstring(str)("<emphasis>%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, max(trans, 0.5f)*0.5f);
-				above.z += 2.f;
+				above.z += 2.5f;
 			}
             if((f.base&BASE_FLAG) && (f.owner || f.droptime))
             {
@@ -236,9 +237,12 @@ namespace ctf
 			if((f.base&BASE_FLAG) && (f.droptime || (ctfstyle >= 3 && f.taketime && f.owner && f.owner->team != f.team)))
 			{
 				float wait = f.droptime ? clamp((lastmillis-f.droptime)/float(ctfresetdelay), 0.f, 1.f) : clamp((lastmillis-f.taketime)/float(ctfresetdelay), 0.f, 1.f);
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
-				part_icon(above, textureload(hud::progresstex, 3), 2.5f, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				part_icon(above, textureload(hud::progresstex, 3), 3, trans, 0, 0, 1, teamtype[f.team].colour, (totalmillis%1000)/1000.f, 0.1f);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, trans*0.25f, 0, 0, 1, teamtype[f.team].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 1.5f, trans, 0, 0, 1, teamtype[f.team].colour, 0, wait);
+				above.z += 0.5f;
 				defformatstring(str)("%d%%", int(wait*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, trans);
+				above.z += 2.5f;
 			}
         }
     }
