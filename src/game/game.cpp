@@ -1340,77 +1340,55 @@ namespace game
 			camstate *cam = &cameras[0];
 			int ent = cam->ent, entidx = cam->ent >= 0 ? cam->ent : cam->idx;
 			bool renew = !lasttvcam || lastmillis-lasttvcam >= spectvtime, override = !lasttvcam || lastmillis-lasttvcam >= max(spectvtime/2, 2500);
-			#define addcamentity(q,p) \
-			{ \
-				vec trg, pos = p; \
-				float dist = c.pos.dist(pos); \
-				if(dist >= c.mindist && dist <= min(c.maxdist, float(fogdist)) && raycubelos(c.pos, pos, trg)) \
-				{ \
-					float yaw = camera1->yaw, pitch = camera1->pitch; avg.add(pos); \
-					if(t) { yaw = t->yaw; pitch = t->pitch; } \
-					else \
-					{ \
-						vec dir = vec(avg).div(c.cansee.length()+1).sub(c.pos).normalize(); \
-						vectoyawpitch(dir, yaw, pitch); \
-					} \
-					if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy)) \
-					{ \
-						c.cansee.add(q); \
-						c.dir.add(pos); \
-						c.score += c.pos.dist(pos); \
-					} \
-					else avg.sub(pos); \
-				} \
-			}
-			loopk(2)
+			loopk(3)
 			{
 				int found = 0;
 				loopvj(cameras)
 				{
-					camstate &c = cameras[j]; gameent *t = NULL;
-					vec avg(0, 0, 0); c.reset();
-					if(c.ent < 0 && c.idx >= 0)
+					camstate &c = cameras[j]; c.reset();
+					gameent *d, *t = NULL;
+					if(c.ent < 0 && c.idx >= 0) t = (gameent *)iterdynents(c.idx);
+					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD))
 					{
-						t = (gameent *)iterdynents(c.idx);
-						if(!t || t->state != CS_ALIVE) { c.score = 1e16f; continue; }
+						vec trg, pos = d->feetpos();
+						float dist = c.pos.dist(d->feetpos());
+						if(dist >= c.mindist && dist <= min(c.maxdist, float(fogdist)) && (raycubelos(c.pos, pos, trg) || raycubelos(c.pos, pos = d->headpos(), trg)))
+						{
+							float yaw = t ? t->yaw : camera1->yaw, pitch = t ? t->pitch : camera1->pitch;
+							if(!t && k)
+							{
+								vec dir = pos;
+								if(c.cansee.length()) dir.add(vec(c.dir).div(c.cansee.length()));
+								dir.sub(c.pos).normalize();
+								vectoyawpitch(dir, yaw, pitch);
+							}
+							if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy) || getsight(c.pos, yaw, pitch, pos = d->headpos(), trg, min(c.maxdist, float(fogdist)), curfov, fovy))
+							{
+								c.cansee.add(i);
+								c.dir.add(pos);
+								c.score += dist;
+							}
+						}
 					}
-					switch(k)
+					if(!c.cansee.empty())
 					{
-						case 0: default:
-						{
-							gameent *d;
-							loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD))
-								addcamentity(i, d->feetpos());
-							break;
-						}
-						case 1:
-						{
-							loopv(entities::ents) if(entities::ents[i]->type == WEAPON || entities::ents[i]->type == FLAG)
-								addcamentity(i, entities::ents[i]->o);
-							break;
-						}
-					}
-					if(!c.cansee.empty() || t)
-					{
-						if(!c.cansee.empty())
-						{
-							float amt = float(c.cansee.length());
-							c.dir.div(amt);
-							c.score /= amt;
-							if(t && spectvbias > 0) c.score /= spectvbias;
-						}
-						else if(t) c.score = 1e8f;
+						float amt = float(c.cansee.length());
+						c.dir.div(amt);
+						c.score /= amt;
 						found++;
 					}
-					else
-					{
-						c.dir = c.pos;
-						c.score = 1e16f;
-						if(override) renew = true; // quick scotty, get a new cam
-					}
-					if(!renew) break;
+					else { c.dir = c.pos; c.score = 1e16f; }
+					if(t && t->state == CS_ALIVE && spectvbias > 0) c.score /= spectvbias;
+					if(k <= 1 && (found || (t && t->state == CS_ALIVE))) break;
 				}
-				if(!found && override) renew = true;
+				if(!found)
+				{
+					if(k == 1)
+					{
+						if(override) renew = true;
+						else break;
+					}
+				}
 				else break;
 			}
 			if(renew)
