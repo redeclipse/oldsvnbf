@@ -76,7 +76,7 @@ struct duelservmode : servmode
 			loopv(clients) clients[i]->state.dropped.reset();
 			loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 			{
-				if(m_arena(gamemode, mutators) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE) continue;
+				if((m_arena(gamemode, mutators) || m_insta(gamemode, mutators)) && sents[i].type == WEAPON && sents[i].attrs[0] != WEAP_GRENADE) continue;
 				sents[i].millis = gamemillis; // hijack its spawn time
 				sents[i].spawned = true;
 				sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
