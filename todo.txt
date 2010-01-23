@@ -1,21 +1,21 @@
+* Keep an eye out for the elusive grenade bugs
+
 = Code =
 * Remember ammo counts for dropped weapons
 * Give remaining interactive entities a mode field
 * Make checkpoints/triggers linkable for a determined order (add to kinship system)
 * Create "assisted secures" for stf (player1, player2, player3 secured flag N)
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
-* Instead of wall 'kick', retool into a wall/ceiling 'grab', then use jump to 'kick'
+* Instead of wall 'kick', retool into a wall/ceiling 'grab', then use jump to 'kick' (??)
 * Rename 'storyplayers' and 'storymaps' to campaign
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
 * Don't destroy (certain?) projectiles entering death material
-* Keep an eye out for the elusive grenade bugs
 * Make submerging extinguish at a lower level
 * Re-balance shotgun (more spread/less bullets?)
 * Make glass more visible/look better (combined texture?)
 * Send points along with spawn state (like frags are)
 * Elaborate and refine Story mode/AI
-* Port NEWUI code
 * Master server tracking and unlockable system
 
 = Models =
@@ -24,7 +24,6 @@
 
 = Art =
 * Dead, Arrow, Melee, Dominated/Dominating icons
-* NEWUI widgets
 * Current "widgets" need glow removed so they are not clipped by image dimensions
 
 = Sounds =
@@ -33,6 +32,7 @@
 * Spree 5/6 (7/8/9/10?)
 * Team-alert and damage tones
 * First blood (+points?)
+* (compass) voices
 
 = Maps =
 * Fix gravity in wet
