@@ -749,7 +749,7 @@ namespace physics
 		else
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
-			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((FWV(impulsemeter) && ((gameent *)pl)->action[AC_SPRINT] && ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter))))
+			if(floor && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && ((gameent *)pl)->action[AC_SPRINT] && (!FWV(impulsemeter) || ((gameent *)pl)->impulse[IM_METER] < FWV(impulsemeter)))
 				floor = false;
 			float curb = floor ? FWV(floorcurb) : FWV(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, FWV(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
