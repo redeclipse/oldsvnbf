@@ -1311,29 +1311,21 @@ namespace game
 		vec pos, dir;
 		vector<int> cansee;
 		float mindist, maxdist, score;
-		bool alter;
 
-		camstate() : idx(-1), mindist(16), maxdist(1024), alter(false) { reset(); }
+		camstate() : idx(-1), mindist(4), maxdist(4096), score(0) { reset(); }
 		~camstate() {}
 
-		void reset(bool skip = false)
+		void reset()
 		{
 			cansee.setsize(0);
-			if(skip) dir = vec(0, 0, 0);
-			score = 1e16f;
-			alter = false;
+			dir = vec(0, 0, 0);
+			score = 0;
 		}
 
 		static int camsort(const camstate *a, const camstate *b)
 		{
-			int asee = a->cansee.length(), bsee = b->cansee.length(),
-				amul = a->ent < 0 ? 3 : 1, bmul = b->ent < 0 ? 3 : 1;
-			if(a->alter && asee) asee = 1;
-			if(b->alter && bsee) bsee = 1;
-			if(asee*amul > bsee*bmul) return -1;
-			if(asee*amul < bsee*bmul) return 1;
-			if(a->score*amul < b->score*bmul) return -1;
-			if(a->score*amul > b->score*bmul) return 1;
+			if(a->score < b->score) return -1;
+			if(a->score > b->score) return 1;
 			return 0;
 		}
 	};
