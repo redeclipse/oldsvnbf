@@ -12,7 +12,6 @@
 * Keep an eye out for the elusive grenade bugs
 * Make submerging extinguish at a lower level
 * Re-balance shotgun (more spread/less bullets?)
-* Port Cube 2 ban list functionality, add global master ban list
 * Make glass more visible/look better (combined texture?)
 * Send points along with spawn state (like frags are)
 * Elaborate and refine Story mode/AI
