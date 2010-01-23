@@ -1271,10 +1271,10 @@ namespace hud
 		float q = clamp(skew, 0.f, 1.f), f = fade*q, cr = r*q, cg = g*q, cb = b*q, s = size*skew, cs = int(s)/2, cx = left ? x+cs : x-cs, cy = y-cs;
 		settexture(progresstex, 3);
 		glColor4f(cr, cg, cb, max(f, 0.5f)*0.25f);
-		drawslice(0, 1, cx+cs/8, cy+cs/8, cs/2);
+		drawslice(0, 1, cx, cy, cs/2);
 		glColor4f(cr, cg, cb, f);
 		drawslice((totalmillis%1000)/1000.f, 0.1f, cx, cy, cs);
-		drawslice(start, length, cx+cs/8, cy+cs/8, cs/2);
+		drawslice(start, length, cx, cy, cs/2);
 		if(text && *text)
 		{
 			glPushMatrix();
