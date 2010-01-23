@@ -210,7 +210,7 @@ namespace physics
 		if(!d->onladder && !liquidcheck(d) && (d->type == ENT_PLAYER || d->type == ENT_AI) && FWV(gravity) > 0)
 		{
 			gameent *e = (gameent *)d;
-			if(e->turnside || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS) || (e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS))
+			if(e->turnside || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS/2) || (e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS/2))
 				return false;
 			return true;
 		}
@@ -828,7 +828,7 @@ namespace physics
 			pl->submerged = found ? found/10.f : 1.f;
 			if(local)
 			{
-				if(curmat == MAT_WATER && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->submerged >= 0.5f && ((gameent *)pl)->lastfire)
+				if(curmat == MAT_WATER && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->submerged >= (iscrouching(pl) ? 0.2f : 0.4f) && ((gameent *)pl)->lastfire)
 				{
 					gameent *d = (gameent *)pl;
 					if(issound(d->fschan)) removesound(d->fschan);
