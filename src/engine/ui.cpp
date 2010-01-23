@@ -265,8 +265,8 @@ struct gui : guient
 		autotab();
 		Texture *t = textureload(hud::progresstex, 3, true, false);
         if(scale == 0) scale = 1;
-        int size = (int)(scale*2*guibound[1]);
-		slice_(t, curx+size/8, cury+size/8, size/2, 0, percent);
+        int size = (int)(scale*2*guibound[1]), part = size*2/3;
+		slice_(t, curx+part/8, cury+part/8, part, 0, percent);
 		string s; if(percent > 0) formatstring(s)("\fg%d%%", int(percent*100)); else formatstring(s)("\fgload");
 		slice_(t, curx, cury, size, (SDL_GetTicks()%1000)/1000.f, 0.1f, s);
 		layout(size, size);

@@ -50,13 +50,13 @@ namespace stf
 			{
 				float rr = 1, gg = 1, bb = 1; skewrgb(rr, gg, bb, b.owner, b.enemy);
 				part_icon(above, textureload(hud::progresstex, 3), 3, 1, 0, 0, 1, (int(rr*255)<<16)|(int(gg*255)<<8)|int(bb*255), (totalmillis%1000)/1000.f, 0.1f);
-				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
-				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 2, 1, 0, 0, 1, teamtype[b.enemy].colour, 0, occupy);
+				part_icon(above, textureload(hud::progresstex, 3), 2, 1, 0, 0, 1, teamtype[b.owner].colour, occupy, 1-occupy);
 			}
 			else
 			{
 				part_icon(above, textureload(hud::progresstex, 3), 3, 0.25f, 0, 0, 1, teamtype[b.owner].colour);
-				part_icon(above, textureload(hud::progresstex, 3), 1.5f, 1, 0, 0, 1, teamtype[b.owner].colour);
+				part_icon(above, textureload(hud::progresstex, 3), 2, 1, 0, 0, 1, teamtype[b.owner].colour);
 			}
 			above.z += 0.5f;
 			defformatstring(str)("<emphasis>%d%%", int(occupy*100.f)); part_textcopy(above, str, PART_TEXT, 1, 0xFFFFFF, 2, 0.5f);
@@ -165,8 +165,8 @@ namespace stf
 				if(f.enemy)
 				{
 					float r2 = (teamtype[f.enemy].colour>>16)/255.f, g2 = ((teamtype[f.enemy].colour>>8)&0xFF)/255.f, b2 = (teamtype[f.enemy].colour&0xFF)/255.f;
-					hud::drawprogress(x, y-prevsy, 0, occupy, int(s*0.5f), false, r2, g2, b2, fade, skew);
-					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, int(s*0.5f), false, r1, g1, b1, fade, skew, !skewed && headsup ? "default" : "sub", "%s%d%%", hasflag ? (f.owner && f.enemy == game::focus->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
+					hud::drawprogress(x, y-prevsy, 0, occupy, s, false, r2, g2, b2, fade, skew);
+					hud::drawprogress(x, y-prevsy, occupy, 1-occupy, s, false, r1, g1, b1, fade, skew, !skewed && headsup ? "default" : "sub", "%s%d%%", hasflag ? (f.owner && f.enemy == game::focus->team ? "\fo" : (occupy < 1.f ? "\fy" : "\fg")) : "\fw", int(occupy*100.f));
 				}
 				else if(f.owner) hud::drawitem(hud::teamtex(f.owner), x, y-prevsy, int(s*0.5f), false, 1.f, 1.f, 1.f, fade, skew);
 			}
