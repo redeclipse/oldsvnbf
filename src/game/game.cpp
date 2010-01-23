@@ -1615,7 +1615,7 @@ namespace game
 					entities::checkitems(player1);
 					weapons::reload(player1);
 				}
-				addsway(focus);
+				if(!intermission) addsway(focus);
             }
 			checkcamera();
             if(hud::sb.canshowscores()) hud::sb.showscores(true);
@@ -1749,7 +1749,7 @@ namespace game
 		if(!third)
 		{
 			vec dir;
-			if(firstpersonsway)
+			if(firstpersonsway && !intermission)
 			{
 				vecfromyawpitch(d->yaw, 0, 0, 1, dir);
 				float steps = swaydist/firstpersonswaystep*M_PI;
