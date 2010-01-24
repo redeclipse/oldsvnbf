@@ -1324,6 +1324,7 @@ namespace game
 				camstate &c = cameras.add();
 				c.pos = d->headpos();
 				c.ent = -1; c.idx = i;
+				if(d->state == CS_DEAD || d->state == CS_WAITING) deathcamyawpitch(d, d->yaw, d->pitch);
 				vecfromyawpitch(d->yaw, d->pitch, 1, 0, c.dir);
 			}
 		}
@@ -1332,6 +1333,7 @@ namespace game
 			gameent *d = (gameent *)iterdynents(cameras[i].idx);
 			if(!d) { cameras.remove(i--); continue; }
 			if(d->state != CS_DEAD && d->state != CS_WAITING) cameras[i].pos = d->headpos();
+			else deathcamyawpitch(d, d->yaw, d->pitch);
 			vecfromyawpitch(d->yaw, d->pitch, 1, 0, cameras[i].dir);
 		}
 
