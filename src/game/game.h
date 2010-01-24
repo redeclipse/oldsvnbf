@@ -954,20 +954,23 @@ struct gameent : dynent, gamestate
 		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
-	bool action[AC_MAX], conopen, dominating, dominated, k_up, k_down, k_left, k_right;
+	bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right;
 	string name, info, obit;
 	vector<int> airnodes;
+	vector<gameent *> dominating, dominated;
 
 	gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
 		frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
 		lastattacker(-1), lastpoints(0), quake(0), lastpush(0),
 		head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
 		lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
-		conopen(false), dominating(false), dominated(false), k_up(false), k_down(false), k_left(false), k_right(false)
+		conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
 	{
 		name[0] = info[0] = obit[0] = 0;
 		weight = 200; // so we can control the 'gravity' feel
 		maxspeed = 50; // ditto for movement
+		dominating.setsize(0);
+		dominated.setsize(0);
 		checktags();
 		respawn(-1, 100);
 	}
@@ -1042,7 +1045,8 @@ struct gameent : dynent, gamestate
 	void mapchange(int millis, int heal)
 	{
 		checkpoint = -1;
-		dominating = dominated = false;
+		dominating.setsize(0);
+		dominated.setsize(0);
 		resetstate(millis, heal);
 		gamestate::mapchange();
 	}
