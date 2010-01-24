@@ -1269,7 +1269,7 @@ namespace hud
 					case 1: if(m_team(game::gamemode, game::mutators) && d->team == game::focus->team) continue; break;
 					case 2: if(m_team(game::gamemode, game::mutators) && d->team != game::focus->team) continue; break;
 				}
-				drawplayerblip(game::players[i], w, h, blend*radarblend);
+				drawplayerblip(d, w, h, blend*radarblend);
 			}
 		}
 		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
