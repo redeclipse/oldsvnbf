@@ -10,6 +10,8 @@ VAR(version, 1, ENG_VERSION, -1); // for scripts
 int kidmode = 0;
 ICOMMAND(getkidmode, "", (void), intret(kidmode));
 
+const char *disc_reasons[] = { "normal", "end of packet", "client num", "user was banned", "tag type error", "address is banned", "server is in private mode", "server is full", "connection timed out", "packet overflow" };
+
 SVARP(consoletimefmt, "%c");
 char *gettime(char *format)
 {
@@ -50,18 +52,34 @@ ICOMMAND(addallow, "s", (char *name), addipinfo(allows, name));
 
 char *printipinfo(const ipinfo &info, char *buf)
 {
+	static string ipinfobuf = ""; char *str = buf ? buf : (char *)&ipinfobuf;
     union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ip, mask;
     ip.i = info.ip;
     mask.i = info.mask;
     int lastdigit = -1;
     loopi(4) if(mask.b[i])
     {
-        if(lastdigit >= 0) *buf++ = '.';
-        loopj(i - lastdigit - 1) { *buf++ = '*'; *buf++ = '.'; }
-        buf += sprintf(buf, "%d", ip.b[i]);
+        if(lastdigit >= 0) *str++ = '.';
+        loopj(i - lastdigit - 1) { *str++ = '*'; *str++ = '.'; }
+        str += sprintf(str, "%d", ip.b[i]);
         lastdigit = i;
     }
-    return buf;
+    return str;
+}
+
+char *formatip(uint host, char *buf)
+{
+	static string ipbuf = ""; char *str = buf ? buf : (char *)&ipbuf;
+    union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ip;
+    ip.i = host;
+    int lastdigit = -1;
+    loopi(4)
+    {
+        if(lastdigit >= 0) *str++ = '.';
+        str += sprintf(str, "%d", ip.b[i]);
+        lastdigit = i;
+    }
+    return str;
 }
 
 bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global)
@@ -399,20 +417,15 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
 #endif
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server is full", "connection timed out", "overflow" };
-
 void disconnect_client(int n, int reason)
 {
 	if(clients[n]->type!=ST_TCPIP) return;
 	enet_peer_disconnect(clients[n]->peer, reason);
-	server::clientdisconnect(n);
+	server::clientdisconnect(n, false, reason);
 	clients[n]->type = ST_EMPTY;
 	clients[n]->peer->data = NULL;
 	server::deleteinfo(clients[n]->info);
 	clients[n]->info = NULL;
-	defformatstring(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-	conoutf("\fr%s", s);
-	server::srvmsgf(-1, "%s", s);
 }
 
 void kicknonlocalclients(int reason)
@@ -490,7 +503,6 @@ void localdisconnect()
     loopv(clients) if(clients[i] && clients[i]->type==ST_LOCAL)
     {
         clientdata &c = *clients[i];
-        conoutf("\frlocal client %d disconnected", c.num);
         server::clientdisconnect(c.num, true);
         c.type = ST_EMPTY;
         server::deleteinfo(c.info);
@@ -674,7 +686,6 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 			{
 				clientdata *c = (clientdata *)event.peer->data;
 				if(!c) break;
-				conoutf("\frdisconnected client (%s)", c->hostname);
 				server::clientdisconnect(c->num);
 				c->type = ST_EMPTY;
 				event.peer->data = NULL;

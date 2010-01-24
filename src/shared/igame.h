@@ -122,7 +122,7 @@ namespace server
 	extern void deleteinfo(void *ci);
 	extern int numclients(int exclude = -1, bool nospec = false, int aitype = -1);
 	extern int reserveclients();
-	extern void clientdisconnect(int n, bool local = false);
+	extern void clientdisconnect(int n, bool local = false, int reason = DISC_NONE);
 	extern int clientconnect(int n, uint ip, bool local = false);
 	extern bool allowbroadcast(int n);
 	extern int peerowner(int n);

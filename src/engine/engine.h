@@ -39,7 +39,7 @@ extern char *masterip;
 enum { CON_DEBUG = 0, CON_MESG, CON_INFO, CON_SELF, CON_GAMESPECIFIC };
 
 enum { PACKAGEDIR_OCTA = 1<<0 };
-
+extern const char *disc_reasons[];
 struct ipinfo
 {
     enet_uint32 ip, mask;
@@ -50,7 +50,8 @@ struct ipinfo
 };
 extern vector<ipinfo> bans, allows;
 extern void addipinfo(vector<ipinfo> &info, const char *name);
-extern char *printipinfo(const ipinfo &info, char *buf);
+extern char *printipinfo(const ipinfo &info, char *buf = NULL);
+extern char *formatip(uint host, char *buf = NULL);
 extern bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global = false);
 
 #ifndef STANDALONE
