@@ -237,7 +237,7 @@ void filtertext(char *dst, const char *src, bool newline, bool colour, bool whit
 		if(newline && (c=='\n' || c=='\r')) c = ' ';
         if(c=='\f')
         {
-        	if(colour) *dst++ = c;
+        	if(!colour) *dst++ = c;
         	else
         	{
 				c = *++src;
