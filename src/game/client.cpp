@@ -74,7 +74,7 @@ namespace client
 			if(mapvotes.inrange(vote))
 			{
 				if(mapvotes[vote].players.inrange(player)) formatstring(text)("%d", mapvotes[vote].players[player]->clientnum);
-				else formatstring(text)("%d %d %d \"%s\"", mapvotes[vote].players.length(), mapvotes[vote].mode, mapvotes[vote].muts, mapvotes[vote].map);
+				else formatstring(text)("%d %d %d \"%s\"", mapvotes[vote].players.length(), mapvotes[vote].mode, mapvotes[vote].muts, escapetext(mapvotes[vote].map));
 			}
 			result(text);
     	}
@@ -100,7 +100,7 @@ namespace client
 	SVARP(serversort, "");
 
 	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
-	ICOMMAND(getname, "", (), result(game::player1->name));
+	ICOMMAND(getname, "", (), result(escapetext(game::player1->name)));
 	ICOMMAND(getteam, "", (), result(teamtype[game::player1->team].name));
     ICOMMAND(getteamicon, "", (), result(hud::teamtex(game::player1->team)));
 
@@ -236,7 +236,7 @@ namespace client
         if(colour && d) return game::colorname(d);
         return d ? d->name : "";
     }
-    ICOMMAND(getclientname, "ii", (int *cn, int *colour), result(getclientname(*cn, *colour)));
+    ICOMMAND(getclientname, "ii", (int *cn, int *colour), result(escapetext(getclientname(*cn, *colour))));
 
     int getclientteam(int cn)
     {
@@ -453,8 +453,10 @@ namespace client
 		ident *wid = idents->access(flags&SAY_ACTION ? "on_action" : "on_text");
 		if(wid && wid->action)
 		{
-			defformatstring(act)("%s %d %d \"%s\" \"%s\" \"%s\"", flags&SAY_ACTION ? "on_action" : "on_text",
-				d->clientnum, flags&SAY_TEAM ? 1 : 0, game::colorname(d), text, s);
+			defformatstring(fn)("%s", escapetext(game::colorname(d)));
+			defformatstring(ft)("%s", escapetext(text));
+			defformatstring(fs)("%s", escapetext(s));
+			defformatstring(act)("%s %d %d \"%s\" \"%s\" \"%s\"", flags&SAY_ACTION ? "on_action" : "on_text", d->clientnum, flags&SAY_TEAM ? 1 : 0, fn, ft, fs);
 			int ret = execute(act);
 			if((ret >= S_PAIN1 && ret <= S_DIE2) || ret >= S_MAX) snd = ret;
 		}
@@ -2101,7 +2103,10 @@ namespace client
 				default: copystring(text, "0"); break;
 				case 0:
 				{
-					formatstring(text)("%d \"%s\" %d \"%s\" \"%s\" %d %d", serverstat(si), si->name, si->port, si->sdesc, si->map, si->numplayers, si->ping);
+					defformatstring(sn)("%s", escapetext(si->name));
+					defformatstring(sd)("%s", escapetext(si->sdesc));
+					defformatstring(sm)("%s", escapetext(si->map));
+					formatstring(text)("%d \"%s\" %d \"%s\" \"%s\" %d %d", serverstat(si), sn, si->port, sd, sm, si->numplayers, si->ping);
 					loopv(si->attr) { defformatstring(s)(" %d", si->attr[i]); concatstring(text, s); }
 					break;
 				}
@@ -2109,7 +2114,7 @@ namespace client
 				{
 					loopv(si->players)
 					{
-						defformatstring(s)("%s\"%s\"", text[0] ? " " : "", si->players[i]);
+						defformatstring(s)("%s\"%s\"", text[0] ? " " : "", escapetext(si->players[i]));
 						concatstring(text, s);
 					}
 					break;

@@ -258,6 +258,25 @@ void filtertext(char *dst, const char *src, bool newline, bool colour, bool whit
 	*dst = '\0';
 }
 
+const char *escapetext(const char *src, bool quoteonly)
+{
+	static string escbuf = ""; char *dst = (char *)&escbuf;
+	for(int c = *src; c; c = *++src)
+	{
+		if(!quoteonly)
+		{
+			if(c=='\f') { *dst++ = '^'; *dst++ = 'f'; continue; }
+			if(c=='\n') { *dst++ = '^'; *dst++ = 'n'; continue; }
+			if(c=='\t') { *dst++ = '^'; *dst++ = 't'; continue; }
+		}
+		if(c=='\n') { *dst++ = ' '; continue; }
+        if(c=='\"') { *dst++ = '^'; *dst++ = '\"'; continue; }
+		if(isspace(c) || isprint(c)) *dst++ = c;
+	}
+	*dst = '\0';
+	return escbuf;
+}
+
 vector<clientdata *> clients;
 
 ENetHost *serverhost = NULL;
