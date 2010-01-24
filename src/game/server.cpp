@@ -479,7 +479,7 @@ namespace server
 	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
 	{
 		if(ci->local || ci->privilege >= flag) return true;
-		else if(mastermask()&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum, false, -1)) return true;
+		else if(mastermask()&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum)) return true;
 		else if(msg)
 			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
 		return false;
@@ -1337,7 +1337,7 @@ namespace server
 			case 3: case 4: if(!haspriv(ci, GVAR(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
-        bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
+        bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum));
         if(!hasveto)
         {
         	if(ci->lastvote && lastmillis-ci->lastvote <= GVAR(votewait)) return;
@@ -2041,7 +2041,7 @@ namespace server
 			sendstring(smapname, p);
 		}
         if(!ci) putint(p, 0);
-		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum, false, -1))
+		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum))
 		{
 			ci->wantsmap = true;
 			if(!mapsending)
@@ -2887,7 +2887,7 @@ namespace server
         return -1;
     }
 
-    int reserveclients() { return 3; }
+    int reserveclients() { return GVAR(serverclients)+4; }
 
     int allowconnect(clientinfo *ci, const char *pwd)
     {
@@ -2899,7 +2899,7 @@ namespace server
             return DISC_NONE;
         }
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(numclients() >= serverclients) return DISC_MAXCLIENTS;
+        if(numclients(-1, true) >= GVAR(serverclients)) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         if(checkipinfo(bans, ip) && !checkipinfo(allows, ip, true)) return DISC_IPBAN;
         if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
@@ -2930,7 +2930,7 @@ namespace server
 	void clientdisconnect(int n, bool local, int reason)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
-		bool complete = !numclients(n, false, -1);
+		bool complete = !numclients(n);
         if(ci->connected)
         {
         	loopv(clients) if(clients[i] != ci)
@@ -2964,13 +2964,13 @@ namespace server
             extqueryreply(req, p);
             return;
         }
-		putint(p, numclients());
+		putint(p, numclients(-1, true));
 		putint(p, 6);					// number of attrs following
 		putint(p, GAMEVERSION);			// 1
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
-		putint(p, serverclients);		// 5
+		putint(p, GVAR(serverclients));		// 5
 		putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
 		sendstring(smapname, p);
 		if(*GVAR(serverdesc)) sendstring(GVAR(serverdesc), p);
@@ -2984,7 +2984,7 @@ namespace server
             sendstring(cname, p);
 			#endif
 		}
-		loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < 0)
+		loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < 0 && clients[i]->state.state != CS_SPECTATOR)
             sendstring(colorname(clients[i]), p);
 		sendqueryreply(p);
 	}
@@ -4067,11 +4067,8 @@ namespace server
 	{
 		if(arg[0]=='-' && arg[1]=='s') switch(arg[2])
 		{
-			case 'd': setsvar("serverdesc", &arg[3]); return true;
 			case 'P': setsvar("adminpass", &arg[3]); return true;
             case 'k': setsvar("serverpass", &arg[3]); return true;
-			case 'o': setvar("serveropen", atoi(&arg[2])); return true;
-			case 'M': setsvar("servermotd", &arg[3]); return true;
 			default: break;
 		}
 		return false;

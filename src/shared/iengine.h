@@ -1,7 +1,7 @@
 // the interface the game uses to access the engine
 
 extern int kidmode, verbose, curtime, lastmillis, totalmillis, timescale, paused;
-extern int servertype, serverport, servermasterport, serverclients;
+extern int servertype, serverport, servermasterport;
 extern char *servermaster, *serverip;
 extern void fatal(const char *s, ...);
 extern void console(int type, const char *s, ...);
