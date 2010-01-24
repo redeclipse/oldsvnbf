@@ -776,8 +776,8 @@ namespace game
 					concatstring(d->obit, " \fs\fzoyvengeful\fS");
 					part_text(az, "<super>\fzoyAVENGED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 					part_text(dz, "<super>\fzoyREVENGE", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4;
-					if(actor == player1) d->dominated = false;
-					else if(d == player1) actor->dominating = false;
+					d->dominated.removeobj(actor);
+					actor->dominating.removeobj(d);
 					anc = S_V_REVENGE; override = true;
 				}
 				else if(style&FRAG_DOMINATE)
@@ -785,8 +785,8 @@ namespace game
 					concatstring(d->obit, " \fs\fzoydominating\fS");
 					part_text(az, "<super>\fzoyDOMINATING", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
 					part_text(dz, "<super>\fzoyDOMINATED", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d); dz.z += 4;
-					if(actor == player1) d->dominating = true;
-					else if(d == player1) actor->dominated = true;
+					if(d->dominating.find(actor) < 0) d->dominating.add(actor);
+					if(actor->dominated.find(d) < 0) actor->dominated.add(d);
 					anc = S_V_DOMINATE; override = true;
 				}
 				concatstring(d->obit, " ");
@@ -955,15 +955,16 @@ namespace game
 		if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
 			conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
 		gameent *e = NULL;
-		loopi(numdynents()) if((e = (gameent *)iterdynents(i)) && d == e)
+		loopi(numdynents()) if((e = (gameent *)iterdynents(i)))
 		{
-			if(follow >= i)
+			e->dominating.removeobj(d);
+			e->dominated.removeobj(d);
+			if(d == e && follow >= i)
 			{
 				followswitch(-1);
 				focus = (gameent *)iterdynents(follow);
 				resetcamera();
 			}
-			break;
 		}
 		cameras.setsize(0);
 		client::clearvotes(d);
@@ -1961,8 +1962,8 @@ namespace game
 					if(d->conopen) t = textureload(hud::conopentex, 3);
 					else if(m_team(gamemode, mutators) && showteamabovehead > (d != focus ? (d->team != focus->team ? 1 : 0) : 2))
 						t = textureload(hud::teamtex(d->team), 3);
-					else if(d->dominating) t = textureload(hud::dominatingtex, 3);
-					else if(d->dominated) t = textureload(hud::dominatedtex, 3);
+					else if(d->dominating.find(game::focus) >= 0) t = textureload(hud::dominatingtex, 3);
+					else if(d->dominated.find(game::focus) >= 0) t = textureload(hud::dominatedtex, 3);
 				}
 				if(t)
 				{

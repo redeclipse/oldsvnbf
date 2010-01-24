@@ -392,8 +392,8 @@ namespace hud
 					if(o->state == CS_DEAD || o->state == CS_WAITING) status = hud::deadtex;
 					else if(o->state == CS_ALIVE)
 					{
-						if(o->dominating) status = hud::dominatingtex;
-						else if(o->dominated) status = hud::dominatedtex;
+						if(o->dominating.find(game::focus) >= 0) status = hud::dominatingtex;
+						else if(o->dominated.find(game::focus) >= 0) status = hud::dominatedtex;
 					}
 					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
 					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
