@@ -2942,7 +2942,7 @@ namespace server
 		    distpoints(ci, true); savescore(ci);
 		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
-		    if(ci->name[0]) relayf(2, "\fo%s (%s) has left the game (%s, %d player(s))", colorname(ci), formatip(getclientip(n)), reason >= 0 ? disc_reasons[reason] : "normal", numclients(ci->clientnum));
+		    if(ci->name[0]) relayf(2, "\fo%s (%s) has left the game (%s, %d player(s))", colorname(ci), gethostname(n), reason >= 0 ? disc_reasons[reason] : "normal", numclients(ci->clientnum));
 		    aiman::removeai(ci, complete);
 		    if(!complete) aiman::dorefresh = true;
 		    clients.removeobj(ci);
@@ -3180,7 +3180,7 @@ namespace server
                 sendwelcome(ci);
                 if(restorescore(ci)) sendresume(ci);
 				sendinitclient(ci);
-                relayf(2, "\fg%s (%s) has joined the game (%d player(s))", colorname(ci), formatip(getclientip(ci->clientnum)), numclients());
+                relayf(2, "\fg%s (%s) has joined the game (%d player(s))", colorname(ci), gethostname(ci->clientnum), numclients());
             }
         }
 		else if(chan==2)
