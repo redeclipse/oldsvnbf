@@ -106,14 +106,6 @@ VARP(verbose, 0, 0, 6);
 
 #ifdef STANDALONE
 void localservertoclient(int chan, ENetPacket *packet) {}
-void fatal(const char *s, ...)
-{
-    void cleanupserver();
-    cleanupserver();
-    defvformatstring(msg,s,s);
-    printf("ERROR: %s\n", msg);
-    exit(EXIT_FAILURE);
-}
 VAR(servertype, 1, 3, 3); // 1: private, 2: public, 3: dedicated
 #else
 VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
@@ -288,12 +280,15 @@ void cleanupserver()
 {
 	if(serverhost) enet_host_destroy(serverhost);
     serverhost = NULL;
-#ifdef MASTERSERVER
-	cleanupmaster();
-#endif
 #ifdef IRC
 	irccleanup();
 #endif
+}
+
+void reloadserver()
+{
+	loopv(bans) if(bans[i].time < 0) bans.remove(i--);
+	loopv(allows) if(allows[i].time < 0) allows.remove(i--);
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -616,7 +611,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 {
 	buf[0] = '\0';
 	ENetAddress address = { ENET_HOST_ANY, servermasterport };
-	ENetSocket sock = mastersend(address, servermaster, "list");
+	ENetSocket sock = mastersend(address, servermaster, "update");
 	if(sock==ENET_SOCKET_NULL) return buf;
 	/* only cache this if connection succeeds */
 	defformatstring(text)("retrieving servers from %s:[%d]", servermaster, address.port);
@@ -847,7 +842,9 @@ void initgame()
 		if(server::serveroption(gameargs[i])) continue;
 		conoutf("\frunknown command-line option: %s", gameargs[i]);
 	}
-	execfile("servinit.cfg", false);
+#ifdef STANDALONE
+	rehash(false);
+#endif
     setupserver();
 }
 
@@ -1010,7 +1007,118 @@ void setlocations(bool wanthome)
 	}
 }
 
+void writecfg()
+{
+#ifndef STANDALONE
+	stream *f = openfile("config.cfg", "w");
+	if(!f) return;
+	client::writeclientinfo(f);
+	vector<ident *> ids;
+	enumerate(*idents, ident, id, ids.add(&id));
+	ids.sort(sortidents);
+	bool found = false;
+	loopv(ids)
+	{
+		ident &id = *ids[i];
+		bool saved = false;
+		if(id.flags&IDF_PERSIST) switch(id.type)
+		{
+			case ID_VAR: if(*id.storage.i != id.def.i) { found = saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "%s 0x%.6X" : "%s 0x%X") : "%s %d"), id.name, *id.storage.i); } break;
+			case ID_FVAR: if(*id.storage.f != id.def.f) { found = saved = true; f->printf("%s %s", id.name, floatstr(*id.storage.f)); } break;
+			case ID_SVAR: if(strcmp(*id.storage.s, id.def.s)) { found = saved = true; f->printf("%s ", id.name); writeescapedstring(f, *id.storage.s); } break;
+		}
+		if(saved)
+		{
+			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
+			else f->printf("\n");
+		}
+	}
+	if(found) f->printf("\n");
+	found = false;
+	loopv(ids)
+	{
+		ident &id = *ids[i];
+		bool saved = false;
+		if(id.flags&IDF_PERSIST) switch(id.type)
+		{
+			case ID_ALIAS: if(id.override==NO_OVERRIDE && id.action[0])
+			{
+				found = saved = true;
+				f->printf("\"%s\" = [%s]", id.name, id.action);
+			}
+			break;
+		}
+		if(saved)
+		{
+			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
+			else f->printf("\n");
+		}
+	}
+	if(found) f->printf("\n");
+	writebinds(f);
+	delete f;
+#endif
+}
+
+COMMAND(writecfg, "");
+
+void rehash(bool reload)
+{
+	if(reload) writecfg();
+	reloadserver();
+#ifdef MASTERSERVER
+	reloadmaster();
+#endif
+	execfile("servinit.cfg", false);
+#ifndef STANDALONE
+	execfile("defaults.cfg");
+    initing = INIT_LOAD;
+	interactive = true;
+	execfile("config.cfg", false);
+	execfile("autoexec.cfg", false);
+	interactive = false;
+    initing = NOT_INITING;
+#endif
+	conoutf("\fcconfiguration reloaded");
+}
+ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
+
 #ifdef STANDALONE
+#include <signal.h>
+volatile int errors = 0;
+void fatal(const char *s, ...)    // failure exit
+{
+    if(++errors <= 2) // print up to one extra recursive error
+    {
+        defvformatstring(msg, s, s);
+        fprintf(stderr, "Exiting: %s\n", msg);
+        if(errors <= 1) // avoid recursion
+        {
+			cleanupserver();
+#ifdef MASTERSERVER
+			cleanupmaster();
+#endif
+			enet_deinitialize();
+        }
+    }
+    exit(EXIT_FAILURE);
+}
+
+volatile bool fatalsig = false;
+void fatalsignal(int signum)
+{
+    if(!fatalsig)
+    {
+    	fatalsig = true;
+    	fatal("Received fatal signal %d", signum);
+    }
+}
+
+void reloadsignal(int signum)
+{
+	rehash(true);
+}
+
 int main(int argc, char* argv[])
 {
     setlocations(false);
@@ -1025,8 +1133,21 @@ int main(int argc, char* argv[])
 		else gameargs.add(argv[i]);
 	}
 	if(enet_initialize()<0) fatal("Unable to initialise network module");
-	atexit(enet_deinitialize);
-	atexit(cleanupserver);
+    signal(SIGINT, fatalsignal);
+    signal(SIGILL, fatalsignal);
+    signal(SIGABRT, fatalsignal);
+    signal(SIGFPE, fatalsignal);
+    signal(SIGSEGV, fatalsignal);
+    signal(SIGTERM, fatalsignal);
+#if !defined(WIN32) && !defined(__APPLE__)
+    signal(SIGINT, fatalsignal);
+    signal(SIGHUP, reloadsignal);
+    signal(SIGQUIT, fatalsignal);
+    signal(SIGKILL, fatalsignal);
+    signal(SIGPIPE, fatalsignal);
+    signal(SIGALRM, fatalsignal);
+    signal(SIGSTOP, fatalsignal);
+#endif
 	enet_time_set(0);
 	initgame();
 	trytofindocta();

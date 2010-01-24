@@ -15,6 +15,7 @@ namespace game
 	vector<camstate> cameras;
 
 	ICOMMANDG(resetvars, "", (), return); // server side
+	ICOMMANDG(resetconfig, "", (), return); // server side
 
 	VARW(numplayers, 0, 0, MAXCLIENTS);
 	SVARW(obitwater, "");

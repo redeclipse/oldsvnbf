@@ -27,7 +27,7 @@ namespace auth
 				}
 				privilege = ci->privilege = PRIV_ADMIN;
 			}
-            else if(!(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
+            else if(!(mastermask()&MM_AUTOAPPROVE) && !ci->privilege)
             {
             	srvmsgf(ci->clientnum, "\fraccess denied, you need auth/admin access to gain master");
                 return;
@@ -54,9 +54,9 @@ namespace auth
         if(paused)
         {
             int vars = 0;
-			if(varslock < 2)
+			if(GVAR(varslock) < 2)
 			{
-				loopv(clients) if(clients[i]->privilege >= (varslock ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
+				loopv(clients) if(clients[i]->privilege >= (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
 			}
             if(!vars) setpause(false);
         }
@@ -178,6 +178,8 @@ namespace auth
 
 	void regserver()
 	{
+		loopv(bans) if(bans[i].time == -2) bans.remove(i--);
+		loopv(allows) if(allows[i].time == -2) allows.remove(i--);
 		conoutf("updating authentication server");
 		defformatstring(msg)("server %d %d\n", serverport, serverport+1);
 		addoutput(msg);
@@ -207,8 +209,6 @@ namespace auth
 			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
 			else
 			{
-				loopv(bans) if(bans[i].time == -2) bans.remove(i--);
-				loopv(allows) if(allows[i].time == -2) allows.remove(i--);
 				regserver();
 				loopv(clients) clients[i]->authreq = clients[i]->authname[0] = 0;
 			}

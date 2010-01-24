@@ -774,8 +774,7 @@ bool execfile(const char *cfgfile, bool msg)
 	return true;
 }
 
-#ifndef STANDALONE
-static int sortidents(ident **x, ident **y)
+int sortidents(ident **x, ident **y)
 {
     return strcmp((*x)->name, (*y)->name);
 }
@@ -793,61 +792,6 @@ void writeescapedstring(stream *f, const char *s)
     }
     f->putchar('"');
 }
-
-void writecfg()
-{
-	stream *f = openfile("config.cfg", "w");
-
-	if(!f) return;
-	client::writeclientinfo(f);
-	vector<ident *> ids;
-	enumerate(*idents, ident, id, ids.add(&id));
-	ids.sort(sortidents);
-	bool found = false;
-	loopv(ids)
-	{
-		ident &id = *ids[i];
-		bool saved = false;
-		if(id.flags&IDF_PERSIST) switch(id.type)
-		{
-			case ID_VAR: if(*id.storage.i != id.def.i) { found = saved = true; f->printf((id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "%s 0x%.6X" : "%s 0x%X") : "%s %d"), id.name, *id.storage.i); } break;
-			case ID_FVAR: if(*id.storage.f != id.def.f) { found = saved = true; f->printf("%s %s", id.name, floatstr(*id.storage.f)); } break;
-			case ID_SVAR: if(strcmp(*id.storage.s, id.def.s)) { found = saved = true; f->printf("%s ", id.name); writeescapedstring(f, *id.storage.s); } break;
-		}
-		if(saved)
-		{
-			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
-			else f->printf("\n");
-		}
-	}
-	if(found) f->printf("\n");
-	found = false;
-	loopv(ids)
-	{
-		ident &id = *ids[i];
-		bool saved = false;
-		if(id.flags&IDF_PERSIST) switch(id.type)
-		{
-			case ID_ALIAS: if(id.override==NO_OVERRIDE && id.action[0])
-			{
-				found = saved = true;
-				f->printf("\"%s\" = [%s]", id.name, id.action);
-			}
-			break;
-		}
-		if(saved)
-		{
-			if(!(id.flags&IDF_COMPLETE)) f->printf("; setcomplete \"%s\" 0\n", id.name);
-			else f->printf("\n");
-		}
-	}
-	if(found) f->printf("\n");
-	writebinds(f);
-	delete f;
-}
-
-COMMAND(writecfg, "");
-#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.

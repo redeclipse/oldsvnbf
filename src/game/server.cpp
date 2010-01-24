@@ -294,10 +294,9 @@ namespace server
 	int interm = 0, minremain = -1, oldtimelimit = -1;
 	bool maprequest = false;
 	enet_uint32 lastsend = 0;
-	int mastermode = MM_OPEN, mastermask = MM_OPENSERV;
+	int mastermode = MM_OPEN;
 	bool masterupdate = false, mapsending = false, shouldcheckvotes = false;
 	stream *mapdata[3] = { NULL, NULL, NULL };
-
 	vector<clientinfo *> clients, connects;
 	vector<worldstate *> worldstates;
 	bool reliablemessages = false;
@@ -355,30 +354,23 @@ namespace server
 	vector<servmode *> smuts;
 	#define mutate(a,b) loopvk(a) { servmode *mut = a[k]; { b; } }
 
-	SVAR(serverdesc, "");
-	SVAR(servermotd, "");
 	SVAR(serverpass, "");
     SVAR(adminpass, "");
-    VARF(serveropen, 0, 3, 3, {
-		switch(serveropen)
+
+	int version[2] = {0};
+	ICOMMAND(setversion, "ii", (int *a, int *b), version[0] = *a; version[1] = *b);
+
+	int mastermask()
+	{
+		switch(GVAR(serveropen))
 		{
-			case 0: default: mastermask = MM_FREESERV; break;
-			case 1: mastermask = MM_OPENSERV; break;
-			case 2: mastermask = MM_COOPSERV; break;
-			case 3: mastermask = MM_VETOSERV; break;
+			case 0: default: return MM_FREESERV; break;
+			case 1: return MM_OPENSERV; break;
+			case 2: return MM_COOPSERV; break;
+			case 3: return MM_VETOSERV; break;
 		}
-	});
-
-	VAR(modelimit, 0, G_LOBBY, G_MAX-1);
-	VAR(mutslimit, 0, G_M_ALL, G_M_ALL);
-	VAR(modelock, 0, 4, 5); // 0 = off, 1 = master only (+1 admin only), 3 = master can only set limited mode and higher (+1 admin), 5 = no mode selection
-	VAR(mapslock, 0, 2, 5); // 0 = off, 1 = master can select non-allow maps (+1 admin), 3 = master can select non-rotation maps (+1 admin), 5 = no map selection
-	VAR(varslock, 0, 1, 2); // 0 = master, 1 = admin only, 2 = nobody
-	VAR(votelock, 0, 2, 5); // 0 = off, 1 = master can select same game (+1 admin), 3 = master only can vote (+1 admin), 5 = no voting
-	VAR(votewait, 0, 3000, INT_MAX-1);
-
-	ICOMMAND(gameid, "", (), result(gameid()));
-	ICOMMAND(gamever, "", (), intret(gamever()));
+		return 0;
+	}
 
 	void resetgamevars(bool flush)
 	{
@@ -415,6 +407,7 @@ namespace server
 		execfile("servexec.cfg", false);
 	}
 	ICOMMANDG(resetvars, "", (), resetgamevars(true));
+	ICOMMANDG(resetconfig, "", (), rehash(true));
 
 	const char *pickmap(const char *suggest, int mode, int muts)
 	{
@@ -486,7 +479,7 @@ namespace server
 	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
 	{
 		if(ci->local || ci->privilege >= flag) return true;
-		else if(mastermask&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum, false, -1)) return true;
+		else if(mastermask()&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum, false, -1)) return true;
 		else if(msg)
 			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
 		return false;
@@ -514,7 +507,18 @@ namespace server
 	}
 
     const char *gameid() { return GAMEID; }
-    int gamever() { return GAMEVERSION; }
+	ICOMMAND(gameid, "", (), result(gameid()));
+    int getver(int n)
+    {
+    	switch(n)
+    	{
+    		case 0: return ENG_VERSION;
+    		case 1: return GAMEVERSION;
+    		case 2: case 3: return version[n%2];
+    	}
+    	return 0;
+	}
+	ICOMMAND(getversion, "i", (int *a), intret(getver(*a)));
     const char *gamename(int mode, int muts)
     {
     	if(!m_game(mode))
@@ -1327,16 +1331,16 @@ namespace server
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
-        switch(votelock)
+        switch(GVAR(votelock))
         {
-        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, votelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
-			case 3: case 4: if(!haspriv(ci, votelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
+        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GVAR(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
+			case 3: case 4: if(!haspriv(ci, GVAR(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum, false, -1));
         if(!hasveto)
         {
-        	if(ci->lastvote && lastmillis-ci->lastvote <= votewait) return;
+        	if(ci->lastvote && lastmillis-ci->lastvote <= GVAR(votewait)) return;
         	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return;
         }
 		if(reqmode < G_LOBBY && !ci->local)
@@ -1344,17 +1348,17 @@ namespace server
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
 			return;
 		}
-		switch(modelock)
+		switch(GVAR(modelock))
 		{
 			case 0: default: break;
-			case 1: case 2: if(!haspriv(ci, modelock == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
-			case 3: case 4: if((reqmode < modelimit || !mutscmp(reqmuts, mutslimit)) && !haspriv(ci, modelock == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
+			case 1: case 2: if(!haspriv(ci, GVAR(modelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
+			case 3: case 4: if((reqmode < GVAR(modelimit) || !mutscmp(reqmuts, GVAR(mutslimit))) && !haspriv(ci, GVAR(modelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return; break;
 		}
-		if(reqmode != G_EDITMODE && mapslock)
+		if(reqmode != G_EDITMODE && GVAR(mapslock))
 		{
 			const char *maplist = NULL;
-			switch(mapslock)
+			switch(GVAR(mapslock))
 			{
 				default: break;
 				case 1: case 2: maplist = GVAR(allowmaps); break;
@@ -1391,7 +1395,7 @@ namespace server
 					}
 					if(found) break;
 				}
-				if(!found && !haspriv(ci, mapslock%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return;
+				if(!found && !haspriv(ci, GVAR(mapslock)%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return;
 			}
 		}
 		copystring(ci->mapvote, reqmap); ci->modevote = reqmode; ci->mutsvote = reqmuts;
@@ -1863,7 +1867,7 @@ namespace server
 				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
-					if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					string s;
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
@@ -1880,7 +1884,7 @@ namespace server
 						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fg%s = 0x%.6X" : "\fg%s = 0x%X") : "\fg%s = %d", cmd, *id->storage.i);
 						return;
 					}
-					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					if(id->maxval < id->minval)
 					{
 						srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
@@ -1907,7 +1911,7 @@ namespace server
 						srvmsgf(ci->clientnum, "\fg%s = %s", cmd, floatstr(*id->storage.f));
 						return;
 					}
-					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					float ret = atof(arg);
 					if(ret < id->minvalf || ret > id->maxvalf)
 					{
@@ -1926,7 +1930,7 @@ namespace server
 						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fg%s = [%s]" : "\fg%s = \"%s\"", cmd, *id->storage.s);
 						return;
 					}
-					else if(!haspriv(ci, varslock >= 2 ? PRIV_MAX : (varslock ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
@@ -2154,12 +2158,12 @@ namespace server
 			}
 		}
 
-		if(*servermotd)
+		if(*GVAR(servermotd))
 		{
 			putint(p, SV_ANNOUNCE);
 			putint(p, S_GUIACT);
 			putint(p, CON_CHAT);
-			sendstring(servermotd, p);
+			sendstring(GVAR(servermotd), p);
 		}
 
 		if(smode) smode->initclient(ci, p, true);
@@ -2969,7 +2973,7 @@ namespace server
 		putint(p, serverclients);		// 5
 		putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
 		sendstring(smapname, p);
-		if(*serverdesc) sendstring(serverdesc, p);
+		if(*GVAR(serverdesc)) sendstring(GVAR(serverdesc), p);
 		else
 		{
 			#ifdef STANDALONE
@@ -3745,7 +3749,7 @@ namespace server
 					int mm = getint(p);
 					if(haspriv(ci, PRIV_MASTER, "change mastermode") && mm >= MM_OPEN && mm <= MM_PRIVATE)
 					{
-						if(haspriv(ci, PRIV_ADMIN) || (mastermask&(1<<mm)))
+						if(haspriv(ci, PRIV_ADMIN) || (mastermask()&(1<<mm)))
 						{
 							mastermode = mm;
                             loopv(allows) if(allows[i].time >= 0) allows.remove(i--);

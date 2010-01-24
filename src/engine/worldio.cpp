@@ -310,11 +310,6 @@ void saveslotconfig(stream *h, Slot &s, int index)
 	h->printf("\n");
 }
 
-static int sortidents(ident **x, ident **y) // not sure if there's a way to extern this when it needs to be static? --quin
-{
-	return strcmp((*x)->name, (*y)->name);
-}
-
 void save_config(char *mname)
 {
 	if(autosavebackups) backup(mname, ".cfg", hdr.revision, autosavebackups > 2, !(autosavebackups%2));
@@ -442,7 +437,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	strncpy(hdr.head, "BFGZ", 4);
 	hdr.version = MAPVERSION;
 	hdr.headersize = sizeof(bfgz);
-	hdr.gamever = server::gamever();
+	hdr.gamever = server::getver(1);
 	hdr.numents = 0;
 	hdr.revision++;
 	strncpy(hdr.gameid, server::gameid(), 4);

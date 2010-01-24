@@ -246,7 +246,7 @@ bool checkmasterclientinput(masterclient &c)
 			numargs--;
 			c.ishttp = true;
 		}
-
+		bool found = false;
 		if(!strcmp(w[0], "server") && !c.ishttp)
 		{
 			c.port = ENG_SERVER_PORT;
@@ -261,12 +261,19 @@ bool checkmasterclientinput(masterclient &c)
 			{
 				masteroutf(c, "echo \"server initiated\"\n");
 				conoutf("master peer %s registered as a server",  c.name);
-				loopv(bans) if(bans[i].time < 0) masteroutf(c, "ban %u %u\n", bans[i].ip, bans[i].mask);
-				loopv(allows) if(allows[i].time < 0) masteroutf(c, "allow %u %u\n", allows[i].ip, allows[i].mask);
 				c.isserver = true;
 			}
+			loopv(bans) if(bans[i].time < 0) masteroutf(c, "ban %u %u\n", bans[i].ip, bans[i].mask);
+			loopv(allows) if(allows[i].time < 0) masteroutf(c, "allow %u %u\n", allows[i].ip, allows[i].mask);
+			found = true;
 		}
-		else if(!strcmp(w[0], "list"))
+		if(!strcmp(w[0], "version") || !strcmp(w[0], "update"))
+		{
+			masteroutf(c, "setversion %d %d\n", server::getver(0), server::getver(1));
+			conoutf("master peer %s was sent the version",  c.name);
+			found = true;
+		}
+		if(!strcmp(w[0], "list") || !strcmp(w[0], "update"))
 		{
 			int servs = 0;
 			loopvj(masterclients) if(masterclients[j]->isserver)
@@ -275,26 +282,18 @@ bool checkmasterclientinput(masterclient &c)
 				masteroutf(c, "addserver %s %d %d\n", s.name, s.port, s.port+1);
 				servs++;
 			}
-			masteroutf(c, "\n");
 			conoutf("master peer %s was sent %d server(s)",  c.name, servs);
+			found = true;
 		}
-		else
+		if(c.isserver)
 		{
-			if(c.isserver)
-			{
-				if(!strcmp(w[0], "reqauth")) reqauth(c, uint(atoi(w[1])), w[2]);
-				else if(!strcmp(w[0], "confauth")) confauth(c, uint(atoi(w[1])), w[2]);
-				else if(w[0])
-				{
-					masteroutf(c, "error \"unknown command %s\"\n", w[0]);
-					conoutf("master peer %s (server) sent unknown command: %s",  c.name, w[0]);
-				}
-			}
-			else if(w[0])
-			{
-				masteroutf(c, "error \"unknown command %s\"\n", w[0]);
-				conoutf("master peer %s (client) sent unknown command: %s",  c.name, w[0]);
-			}
+			if(!strcmp(w[0], "reqauth")) { reqauth(c, uint(atoi(w[1])), w[2]); found = true; }
+			if(!strcmp(w[0], "confauth")) { confauth(c, uint(atoi(w[1])), w[2]); found = true; }
+		}
+		if(w[0] && !found)
+		{
+			masteroutf(c, "error \"unknown command %s\"\n", w[0]);
+			conoutf("master peer %s (client) sent unknown command: %s",  c.name, w[0]);
 		}
 		loopj(numargs) if(w[j]) delete[] w[j];
 	}
@@ -403,4 +402,9 @@ void checkmaster()
 void cleanupmaster()
 {
 	if(mastersocket != ENET_SOCKET_NULL) enet_socket_destroy(mastersocket);
+}
+
+void reloadmaster()
+{
+	clearauth();
 }
