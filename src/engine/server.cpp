@@ -67,21 +67,6 @@ char *printipinfo(const ipinfo &info, char *buf)
     return str;
 }
 
-char *formatip(uint host, char *buf)
-{
-	static string ipbuf = ""; char *str = buf ? buf : (char *)&ipbuf;
-    union { uchar b[sizeof(enet_uint32)]; enet_uint32 i; } ip;
-    ip.i = host;
-    int lastdigit = -1;
-    loopi(4)
-    {
-        if(lastdigit >= 0) *str++ = '.';
-        str += sprintf(str, "%d", ip.b[i]);
-        lastdigit = i;
-    }
-    return str;
-}
-
 bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global)
 {
     loopv(info) if((!global || info[i].time < 0) && (host & info[i].mask) == info[i].ip) return true;
@@ -290,9 +275,10 @@ void cleanupserver()
 void process(ENetPacket *packet, int sender, int chan);
 //void disconnect_client(int n, int reason);
 
-void *getinfo(int i)	{ return !clients.inrange(i) || clients[i]->type==ST_EMPTY ? NULL : clients[i]->info; }
-int getnumclients()	 { return clients.length(); }
-uint getclientip(int n) { return clients.inrange(n) && clients[n]->type==ST_TCPIP ? clients[n]->peer->address.host : 0; }
+void *getinfo(int i)			{ return !clients.inrange(i) || clients[i]->type==ST_EMPTY ? NULL : clients[i]->info; }
+const char *gethostname(int i)	{ int o = server::peerowner(i); return !clients.inrange(o) || clients[o]->type==ST_EMPTY ? "unknown" : clients[o]->hostname; }
+int getnumclients()	 			{ return clients.length(); }
+uint getclientip(int n)			{ int o = server::peerowner(n); return clients.inrange(o) && clients[o]->type==ST_TCPIP ? clients[o]->peer->address.host : 0; }
 
 void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
 {
@@ -490,7 +476,7 @@ void localconnect(bool force)
 		int cn = addclient(ST_LOCAL);
 		clientdata &c = *clients[cn];
 		c.peer = NULL;
-		copystring(c.hostname, "<local>");
+		copystring(c.hostname, "localhost");
 		conoutf("\fglocal client %d connected", c.num);
 		client::gameconnect(false);
 		server::clientconnect(c.num, 0, true);
@@ -667,8 +653,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				clientdata &c = *clients[cn];
 				c.peer = event.peer;
 				c.peer->data = &c;
-				char hn[1024];
-				copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
+				static string hostn = "";
+				copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hostn, sizeof(hostn))==0) ? hostn : "unknown");
 				int reason = server::clientconnect(c.num, c.peer->address.host);
 				if(reason) disconnect_client(c.num, reason);
 				break;
