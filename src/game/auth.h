@@ -114,7 +114,7 @@ namespace auth
 		}
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
-        filtertext(ci->authname, user, false, 100);
+        filtertext(ci->authname, user, true, true, false, 100);
         defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
 		sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "please wait, requesting credential match");

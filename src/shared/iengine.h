@@ -384,7 +384,7 @@ extern void sendstring(const char *t, ucharbuf &p);
 extern void sendstring(const char *t, packetbuf &p);
 extern void sendstring(const char *t, vector<uchar> &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
-extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
+extern void filtertext(char *dst, const char *src, bool newline = true, bool colour = true, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
 extern void kicknonlocalclients(int reason);
 extern void sendqueryreply(ucharbuf &p);

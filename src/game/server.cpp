@@ -3157,9 +3157,8 @@ namespace server
             else
             {
                 getstring(text, p);
-                //filtertext(text, text, true, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
-				filtertext(text, text, true, MAXNAMELEN);
+				filtertext(text, text, true, true, true, MAXNAMELEN);
                 copystring(ci->name, text, MAXNAMELEN+1);
 
                 getstring(text, p);
@@ -3611,7 +3610,7 @@ namespace server
 					defformatstring(oldname)("%s", colorname(ci));
 					getstring(text, p);
 					if(!text[0]) copystring(text, "unnamed");
-					filtertext(text, text, true, MAXNAMELEN);
+					filtertext(text, text, true, true, true, MAXNAMELEN);
 					copystring(ci->name, text, MAXNAMELEN+1);
 					relayf(2, "\fm* %s is now known as %s", oldname, colorname(ci));
 					QUEUE_STR(ci->name);

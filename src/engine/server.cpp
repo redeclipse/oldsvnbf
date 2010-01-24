@@ -230,17 +230,22 @@ void getstring(char *text, ucharbuf &p, int len)
 	while(*t++);
 }
 
-void filtertext(char *dst, const char *src, bool whitespace, int len)
+void filtertext(char *dst, const char *src, bool newline, bool colour, bool whitespace, int len)
 {
 	for(int c = *src; c; c = *++src)
 	{
+		if(newline && (c=='\n' || c=='\r')) c = ' ';
         if(c=='\f')
         {
-        	c = *++src;
-        	if(c=='z')
+        	if(colour) *dst++ = c;
+        	else
         	{
-        		c = *++src;
-        		if(c) c = *++src;
+				c = *++src;
+				if(c=='z')
+				{
+					c = *++src;
+					if(c) c = *++src;
+				}
         	}
         	continue;
         }
