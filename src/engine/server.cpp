@@ -111,7 +111,6 @@ VAR(servertype, 1, 3, 3); // 1: private, 2: public, 3: dedicated
 VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
 #endif
 VAR(serveruprate, 0, 0, INT_MAX-1);
-VAR(serverclients, 1, 6, MAXCLIENTS);
 VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
 VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(servermaster, ENG_MASTER_HOST);
@@ -791,7 +790,7 @@ void setupserver()
 	{
 		if(enet_address_set_host(&address, serverip) < 0) conoutf("\frWARNING: server address not resolved");
 	}
-	serverhost = enet_host_create(&address, serverclients + server::reserveclients(), 0, serveruprate);
+	serverhost = enet_host_create(&address, server::reserveclients(), 0, serveruprate);
 	if(!serverhost)
 	{
 		conoutf("\frcould not create server socket");
@@ -800,7 +799,7 @@ void setupserver()
 #endif
 		return;
 	}
-	loopi(serverclients) serverhost->peers[i].data = NULL;
+	loopi(server::reserveclients()) serverhost->peers[i].data = NULL;
 
 	address.port = serverport+1;
     pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
@@ -865,7 +864,6 @@ bool serveroption(char *opt)
 			switch(opt[2])
 			{
 				case 'u': setvar("serveruprate", atoi(opt+3)); return true;
-				case 'c': setvar("serverclients", atoi(opt+3)); return true;
 				case 'i': setsvar("serverip", opt+3); return true;
 				case 'm': setsvar("servermaster", opt+3); return true;
 				case 'l': load = opt+3; return true;
@@ -1062,9 +1060,14 @@ void writecfg()
 
 COMMAND(writecfg, "");
 
+VAR(rehashing, 1, 0, -1);
 void rehash(bool reload)
 {
-	if(reload) writecfg();
+	if(reload)
+	{
+		rehashing = 1;
+		writecfg();
+	}
 	reloadserver();
 #ifdef MASTERSERVER
 	reloadmaster();
@@ -1080,6 +1083,7 @@ void rehash(bool reload)
     initing = NOT_INITING;
 #endif
 	conoutf("\fcconfiguration reloaded");
+	rehashing = 0;
 }
 ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
