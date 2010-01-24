@@ -1,6 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
+* Add reason to client disconnects
 * Remember ammo counts for dropped weapons
 * Give remaining interactive entities a mode field
 * Make checkpoints/triggers linkable for a determined order (add to kinship system)
