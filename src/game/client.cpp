@@ -434,8 +434,7 @@ namespace client
 
 	void saytext(gameent *d, int flags, char *text)
 	{
-		if(!colourchat) filtertext(text, text);
-		mkstring(s);
+		filtertext(text, text, true, colourchat ? false : true); mkstring(s);
 		defformatstring(m)("%s", game::colorname(d));
 		if(flags&SAY_TEAM)
 		{
@@ -1220,7 +1219,7 @@ namespace client
 				case SV_SWITCHNAME:
 					getstring(text, p);
 					if(!d) break;
-					filtertext(text, text, true, MAXNAMELEN);
+					filtertext(text, text, true, true, true, MAXNAMELEN);
 					if(!text[0]) copystring(text, "unnamed");
 					if(strcmp(d->name, text))
 					{
@@ -1244,7 +1243,7 @@ namespace client
 						break;
 					}
 					getstring(text, p);
-					filtertext(text, text, true, MAXNAMELEN);
+					filtertext(text, text, true, true, true, MAXNAMELEN);
 					if(!text[0]) copystring(text, "unnamed");
 					if(d->name[0])		  // already connected
 					{
