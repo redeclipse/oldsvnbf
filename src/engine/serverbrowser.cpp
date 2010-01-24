@@ -285,14 +285,19 @@ void addserver(const char *name, int port)
 		conoutf("added server %s (%d)", name, port);
 }
 ICOMMAND(addserver, "si", (char *n, int *a), addserver(n, a ? *a : ENG_SERVER_PORT));
-VAR(searchlan, 0, 0, 1);
+VARP(searchlan, 0, 0, 1);
+VARP(maxservpings, 0, 10, 1000);
 
 void pingservers()
 {
     if(pingsock == ENET_SOCKET_NULL)
     {
         pingsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-        if(pingsock == ENET_SOCKET_NULL) return;
+        if(pingsock == ENET_SOCKET_NULL)
+        {
+            lastinfo = totalmillis;
+            return;
+        }
         enet_socket_set_option(pingsock, ENET_SOCKOPT_NONBLOCK, 1);
         enet_socket_set_option(pingsock, ENET_SOCKOPT_BROADCAST, 1);
     }
@@ -300,9 +305,13 @@ void pingservers()
     uchar ping[MAXTRANS];
     ucharbuf p(ping, sizeof(ping));
     putint(p, totalmillis);
-    loopv(servers)
+
+    static int lastping = 0;
+    if(lastping >= servers.length()) lastping = 0;
+    loopi(maxservpings ? min(servers.length(), maxservpings) : servers.length())
     {
-        serverinfo &si = *servers[i];
+        serverinfo &si = *servers[lastping];
+        if(++lastping >= servers.length()) lastping = 0;
         if(si.address.host == ENET_HOST_ANY) continue;
         buf.data = ping;
         buf.dataLength = p.length();
@@ -399,12 +408,12 @@ void refreshservers()
 {
 	static int lastrefresh = 0;
 	if(lastrefresh == totalmillis) return;
+    if(totalmillis - lastrefresh > 1000) loopv(servers) servers[i]->reset();
 	lastrefresh = totalmillis;
 
 	checkresolver();
 	checkpings();
-	if(serverupdateinterval && (!lastinfo || totalmillis-lastinfo >= serverupdateinterval*1000))
-		pingservers();
+    if(totalmillis - lastinfo >= (serverupdateinterval*1000)/(maxservpings ? max(1, (servers.length() + maxservpings - 1) / maxservpings) : 1)) pingservers();
 }
 
 bool reqmaster = false;
