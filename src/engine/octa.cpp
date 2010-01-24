@@ -172,31 +172,29 @@ ivec lu;
 int lusize;
 cube &lookupcube(int tx, int ty, int tz, int tsize)
 {
-	int size = hdr.worldsize;
-	int x = 0, y = 0, z = 0;
-	cube *c = worldroot;
-	for(;;)
-	{
-		size >>= 1;
-		ASSERT(size);
-		if(tz>=z+size) { z += size; c += 4; }
-		if(ty>=y+size) { y += size; c += 2; }
-		if(tx>=x+size) { x += size; c += 1; }
-		//if(tsize==size) break;
-		if(abs(tsize)>=size) break;
-		if(c->children==NULL)
-		{
-			//if(!tsize) break;
-			if(tsize<=0) break;
-			subdividecube(*c);
-		}
-		c = c->children;
-	}
-	lu.x = x;
-	lu.y = y;
-	lu.z = z;
-	lusize = size;
-	return *c;
+    tx = clamp(tx, 0, worldsize-1);
+    ty = clamp(ty, 0, worldsize-1);
+    tz = clamp(tz, 0, worldsize-1);
+    int scale = worldscale-1, csize = abs(tsize);
+    cube *c = &worldroot[octastep(tx, ty, tz, scale)];
+    if(!(csize>>scale)) do
+    {
+        if(!c->children) 
+        {
+            if(tsize > 0) do
+            {
+                subdividecube(*c);
+                scale--;
+                c = &c->children[octastep(tx, ty, tz, scale)];
+            } while(!(csize>>scale));
+            break;
+        }
+        scale--;
+        c = &c->children[octastep(tx, ty, tz, scale)];
+    } while(!(csize>>scale));
+    lu = ivec(tx, ty, tz).mask(~0<<scale);
+    lusize = 1<<scale;
+    return *c;
 }
 
 cube &neighbourcube(int x, int y, int z, int size, int rsize, int orient)
