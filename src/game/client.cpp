@@ -1180,7 +1180,7 @@ namespace client
 					mapchanged = true;
 					if(needsmap) switch(getit)
 					{
-						case 0:
+						case 0: case 2:
 						{
 							conoutft(CON_MESG, "\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
 							addmsg(SV_GETMAP, "r");
@@ -1189,12 +1189,6 @@ namespace client
 						case 1:
 						{
 							conoutft(CON_MESG, "\fcserver is requesting the map from another client for us");
-							break;
-						}
-						case 2:
-						{
-							conoutft(CON_MESG, "\fcseem to have failed to get map to %s, try /getmap", hasmap ? text : "<temp>");
-							needsmap = false; // we failed sir
 							break;
 						}
 						default: needsmap = false; break;
