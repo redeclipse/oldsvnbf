@@ -56,9 +56,9 @@ namespace game
 	VARFP(waitmode, 0, 0, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
 
 	VARP(spectvtime, 1000, 10000, INT_MAX-1);
-	FVARP(spectvspeed, 0, 1, 1000);
-	FVARP(spectvpitch, 0, 1, 1000);
-	FVARP(spectvbias, 0, 2, 1000);
+	FVARP(spectvspeed, 0, 0.5f, 1000);
+	FVARP(spectvpitch, 0, 0.5f, 1000);
+	FVARP(spectvbias, 0, 2.5f, 1000);
 
 	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
 	FVARP(deathcamspeed, 0, 2.f, 1000);
@@ -1346,8 +1346,7 @@ namespace game
 				loopvj(cameras)
 				{
 					camstate &c = cameras[j]; c.reset();
-					gameent *d, *t = NULL;
-					if(c.ent < 0 && c.idx >= 0) t = (gameent *)iterdynents(c.idx);
+					gameent *d, *t = c.ent < 0 && c.idx >= 0 ? (gameent *)iterdynents(c.idx) : NULL;
 					loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d != t && d->aitype < AI_START && (d->state == CS_ALIVE || d->state == CS_DEAD))
 					{
 						vec trg, pos = d->feetpos();
@@ -1355,14 +1354,14 @@ namespace game
 						if(dist >= c.mindist && dist <= min(c.maxdist, float(fogdist)) && (raycubelos(c.pos, pos, trg) || raycubelos(c.pos, pos = d->headpos(), trg)))
 						{
 							float yaw = t ? t->yaw : camera1->yaw, pitch = t ? t->pitch : camera1->pitch;
-							if(!t && k)
+							if(!t && (k || renew))
 							{
 								vec dir = pos;
 								if(c.cansee.length()) dir.add(vec(c.dir).div(c.cansee.length()));
 								dir.sub(c.pos).normalize();
 								vectoyawpitch(dir, yaw, pitch);
 							}
-							if(getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy) || getsight(c.pos, yaw, pitch, pos = d->headpos(), trg, min(c.maxdist, float(fogdist)), curfov, fovy))
+							if(k || renew || getsight(c.pos, yaw, pitch, pos, trg, min(c.maxdist, float(fogdist)), curfov, fovy) || getsight(c.pos, yaw, pitch, pos = d->headpos(), trg, min(c.maxdist, float(fogdist)), curfov, fovy))
 							{
 								c.cansee.add(i);
 								c.dir.add(pos);
@@ -1370,16 +1369,19 @@ namespace game
 							}
 						}
 					}
-					if(!c.cansee.empty())
+					if(c.cansee.length() > (override && !t ? 1 : 0))
 					{
-						float amt = float(c.cansee.length());
-						c.dir.div(amt);
-						c.score /= amt;
+						if(c.cansee.length() > 1)
+						{
+							float amt = float(c.cansee.length());
+							c.dir.div(amt);
+							c.score /= amt;
+						}
 						found++;
 					}
-					else { c.dir = c.pos; c.score = 1e16f; }
+					else { c.dir = c.pos; c.score = t ? 1e14f : 1e16f; }
 					if(t && t->state == CS_ALIVE && spectvbias > 0) c.score /= spectvbias;
-					if(k <= 1 && (found || (t && t->state == CS_ALIVE))) break;
+					if(k <= 1) break;
 				}
 				if(!found)
 				{
