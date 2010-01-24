@@ -291,7 +291,7 @@ extern void renderellipse(vec &o, float xradius, float yradius, float yaw);
 extern cube *newcubes(uint face = F_EMPTY);
 extern cubeext *newcubeext(cube &c);
 extern void getcubevector(cube &c, int d, int x, int y, int z, ivec &p);
-extern void setcubevector(cube &c, int d, int x, int y, int z, ivec &p);
+extern void setcubevector(cube &c, int d, int x, int y, int z, const ivec &p);
 extern int familysize(cube &c);
 extern void freeocta(cube *c);
 extern void discardchildren(cube &c);
