@@ -669,7 +669,6 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 				c.peer->data = &c;
 				char hn[1024];
 				copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-				conoutf("\fgclient connected (%s)", c.hostname);
 				int reason = server::clientconnect(c.num, c.peer->address.host);
 				if(reason) disconnect_client(c.num, reason);
 				break;
