@@ -219,7 +219,8 @@ namespace hud
 	VARP(radaritemspawn, 0, 1, 1);
 	VARP(radaritemtime, 0, 5000, INT_MAX-1);
 	VARP(radaritemnames, 0, 0, 2);
-	VARP(radarplayers, 0, 1, 2);
+	VARP(radarplayers, 0, 2, 2);
+	VARP(radarplayerfilter, 0, 0, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
 	VARP(radarplayernames, 0, 0, 2);
 	VARP(radarflags, 0, 2, 2);
 	VARP(radarflagnames, 0, 1, 2);
@@ -1255,10 +1256,19 @@ namespace hud
 			if(m_stf(game::gamemode)) stf::drawblips(w, h, blend);
 			else if(m_ctf(game::gamemode)) ctf::drawblips(w, h, blend*radarblend);
 		}
-		if(chkcond(radarplayers, m_campaign(game::gamemode) || m_duke(game::gamemode, game::mutators) || m_edit(game::gamemode) || game::tvmode())) // 4
+		if(chkcond(radarplayers, radarplayerfilter != 3 || m_duke(game::gamemode, game::mutators) || m_edit(game::gamemode) || game::tvmode())) // 4
 		{
-			loopv(game::players) if(game::players[i] && game::players[i]->state != CS_SPECTATOR && game::players[i]->aitype < AI_START && (!m_campaign(game::gamemode) || game::players[i]->team == game::focus->team))
+			gameent *d = NULL;
+			loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)) && d != game::focus && d->state != CS_SPECTATOR && d->aitype < AI_START)
+			{
+				switch(radarplayerfilter)
+				{
+					case 0: case 3: default: break;
+					case 1: if(m_team(game::gamemode, game::mutators) && d->team == game::focus->team) continue; break;
+					case 2: if(m_team(game::gamemode, game::mutators) && d->team != game::focus->team) continue; break;
+				}
 				drawplayerblip(game::players[i], w, h, blend*radarblend);
+			}
 		}
 		if(chkcond(radarcard, game::tvmode()) || (editradarcard && m_edit(game::gamemode))) drawcardinalblips(w, h, blend*radarblend, m_edit(game::gamemode)); // 4
 		if(radardamage) drawdamageblips(w, h, blend*radarblend); // 5+
