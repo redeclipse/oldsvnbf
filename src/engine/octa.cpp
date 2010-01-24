@@ -172,9 +172,9 @@ ivec lu;
 int lusize;
 cube &lookupcube(int tx, int ty, int tz, int tsize)
 {
-    tx = clamp(tx, 0, worldsize-1);
-    ty = clamp(ty, 0, worldsize-1);
-    tz = clamp(tz, 0, worldsize-1);
+    tx = clamp(tx, 0, hdr.worldsize-1);
+    ty = clamp(ty, 0, hdr.worldsize-1);
+    tz = clamp(tz, 0, hdr.worldsize-1);
     int scale = worldscale-1, csize = abs(tsize);
     cube *c = &worldroot[octastep(tx, ty, tz, scale)];
     if(!(csize>>scale)) do
