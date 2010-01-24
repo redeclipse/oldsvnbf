@@ -823,7 +823,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	hdr.version = MAPVERSION;
 	hdr.gamever = server::getver(1);
 	hdr.headersize = sizeof(bfgz);
-    worldscale = scale<10 ? 10 : (scale>20 ? 20 : scale);
+    worldscale = scale<10 ? 10 : (scale>16 ? 16 : scale);
     hdr.worldsize = 1<<worldscale;
 	hdr.revision = 0;
     hdr.numpvs = 0;
@@ -860,7 +860,7 @@ bool enlargemap(bool force)
 		conoutft(CON_MESG, "\frmapenlarge only allowed in edit mode");
 		return false;
 	}
-	if(hdr.worldsize >= 1<<20) return false;
+	if(hdr.worldsize >= 1<<16) return false;
 
     worldscale++;
 	hdr.worldsize *= 2;
