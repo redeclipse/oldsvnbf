@@ -1533,9 +1533,9 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(game::focus == game::player1 && FWV(impulsestyle) && FWV(impulsemeter) && inventoryimpulse)
+			if(FWV(impulsestyle) && FWV(impulsemeter) && inventoryimpulse)
 			{
-				float len = 1-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f);
+				float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f) : 1;
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2, is = iw/2, ix = x+ow+is, iy = y-sy-is;
@@ -1547,7 +1547,7 @@ namespace hud
 				if(physics::sprinting(game::focus, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix, iy, is);
 				else drawslice(1-len, len, ix, iy, is);
 				drawslice(1-len, len, ix, iy, is*2/3);
-				if(inventoryimpulse >= 2)
+				if(game::focus == game::player1 && inventoryimpulse >= 2)
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+iw/2+ow, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
