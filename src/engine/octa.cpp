@@ -221,7 +221,7 @@ cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size)
     uint diff = n[dim];
     if(dimcoord(orient)) n[dim] += size; else n[dim] -= size;
     diff ^= n[dim];
-    if(diff >= uint(worldsize)) { lu = n; lusize = size; return c; }
+    if(diff >= uint(hdr.worldsize)) { lu = n; lusize = size; return c; }
     int scale = worldscale;
     cube *nc = worldroot;
     if(neighbourdepth >= 0)
