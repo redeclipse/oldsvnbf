@@ -134,7 +134,7 @@ namespace server
 	extern const char *gameid();
 	extern const char *gamename(int mode, int muts);
 	extern void modecheck(int *mode, int *muts, int trying = 0);
-	extern int gamever();
+	extern int getver(int n = 0);
 	extern const char *pickmap(const char *suggest = NULL);
 	extern const char *choosemap(const char *suggest = NULL, int mode = -1, int muts = -1, int force = 0);
 	extern void changemap(const char *name = NULL, int mode = -1, int muts = -1);

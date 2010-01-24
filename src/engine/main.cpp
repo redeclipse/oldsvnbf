@@ -70,6 +70,9 @@ void cleanup()
 {
     recorder::stop();
 	cleanupserver();
+#ifdef MASTERSERVER
+	cleanupmaster();
+#endif
 	setscreensaver(true);
 	showcursor(true);
 	if(scursor) SDL_FreeCursor(scursor);
@@ -128,6 +131,11 @@ void fatalsignal(int signum)
     	fatalsig = true;
     	fatal("Received fatal signal %d", signum);
     }
+}
+
+void reloadsignal(int signum)
+{
+	rehash(true);
 }
 
 int initing = NOT_INITING;
@@ -715,19 +723,6 @@ static bool findarg(int argc, char **argv, const char *str)
 	return false;
 }
 
-void rehash(bool reload)
-{
-	if(reload) writecfg();
-	execfile("defaults.cfg");
-    initing = INIT_LOAD;
-	interactive = true;
-	execfile("config.cfg", false);
-	execfile("autoexec.cfg", false);
-	interactive = false;
-    initing = NOT_INITING;
-}
-ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
-
 const char *loadbackinfo = "";
 void eastereggs()
 {
@@ -887,13 +882,18 @@ int main(int argc, char **argv)
 	keyrepeat(false);
 	setcaption("please wait..");
 
-    signal(SIGINT, fatalsignal);
     signal(SIGILL, fatalsignal);
     signal(SIGABRT, fatalsignal);
     signal(SIGFPE, fatalsignal);
     signal(SIGSEGV, fatalsignal);
     signal(SIGTERM, fatalsignal);
-#if !defined(WIN32) && !defined(__APPLE__)
+#if defined(WIN32)
+    signal(SIGINT, reloadsignal);
+#elif defined(__APPLE__)
+    signal(SIGINT, fatalsignal);
+#else
+    signal(SIGINT, fatalsignal);
+    signal(SIGHUP, reloadsignal);
     signal(SIGQUIT, fatalsignal);
     signal(SIGKILL, fatalsignal);
     signal(SIGPIPE, fatalsignal);

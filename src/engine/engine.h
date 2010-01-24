@@ -29,7 +29,7 @@
 extern void setupmaster();
 extern void checkmaster();
 extern void cleanupmaster();
-
+extern void reloadmaster();
 extern int masterserver, masterport;
 extern char *masterip;
 #endif
@@ -52,6 +52,8 @@ extern vector<ipinfo> bans, allows;
 extern void addipinfo(vector<ipinfo> &info, const char *name);
 extern char *printipinfo(const ipinfo &info, char *buf = NULL);
 extern bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global = false);
+extern void writecfg();
+extern void rehash(bool reload = true);
 
 #ifndef STANDALONE
 #include "world.h"
@@ -669,7 +671,6 @@ extern void loadsky(char *basename);
 extern void setcaption(const char *text);
 extern int grabinput, colorpos, curfps, bestfps, worstfps, bestfpsdiff, worstfpsdiff, maxfps;
 extern char colorstack[10];
-extern void rehash(bool reload = true);
 
 // editing
 extern int getmatvec(vec v);

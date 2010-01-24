@@ -284,8 +284,7 @@ void addserver(const char *name, int port)
 	if(newserver(name, port) && verbose >= 2)
 		conoutf("added server %s (%d)", name, port);
 }
-ICOMMAND(addserver, "si", (char *n, int *a, int *b), addserver(n, a ? *a : ENG_SERVER_PORT));
-
+ICOMMAND(addserver, "si", (char *n, int *a), addserver(n, a ? *a : ENG_SERVER_PORT));
 VAR(searchlan, 0, 0, 1);
 
 void pingservers()

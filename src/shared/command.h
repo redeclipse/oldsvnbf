@@ -129,11 +129,10 @@ extern void explodelist(const char *s, vector<char *> &elems);
 extern int listlen(const char *s);
 extern char *indexlist(const char *s, int pos);
 
-extern void clearoverrides();
-#ifndef STANDALONE
-extern void writecfg();
-#endif
+extern int sortidents(ident **x, ident **y);
+extern void writeescapedstring(stream *f, const char *s);
 
+extern void clearoverrides();
 extern void checksleep(int millis);
 extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 

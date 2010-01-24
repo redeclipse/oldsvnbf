@@ -821,7 +821,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)	// main empty worl
 	strncpy(hdr.head, "BFGZ", 4);
 
 	hdr.version = MAPVERSION;
-	hdr.gamever = server::gamever();
+	hdr.gamever = server::getver(1);
 	hdr.headersize = sizeof(bfgz);
     worldscale = scale<10 ? 10 : (scale>20 ? 20 : scale);
     hdr.worldsize = 1<<worldscale;
