@@ -236,7 +236,6 @@ void gets2c()			// get updates from the server
 			break;
 
 		case ENET_EVENT_TYPE_DISCONNECT:
-            extern const char *disc_reasons[];
 			if(event.data>=DISC_NUM) event.data = DISC_NONE;
             if(event.peer==connpeer)
             {

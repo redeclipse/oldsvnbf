@@ -1629,7 +1629,7 @@ namespace hud
 							else if(amt > 0.25f) col = "\fo";
 							else col = "\fr";
 							drawprogress(cx[i], cm+cg, amt, 1, cg, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
-							cm += drawprogress(cx[i], cm+cg, 1-amt, amt, cg, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%.1f", col, millis/1000.f);
+							cm += drawprogress(cx[i], cm+cg, 1-amt, amt, cg, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%d", col, int(millis/1000.f));
 						}
 					}
 					if(inventoryteams && game::focus->state != CS_EDITING && game::focus->state != CS_SPECTATOR)

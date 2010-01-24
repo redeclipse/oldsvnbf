@@ -2923,7 +2923,7 @@ namespace server
 		return DISC_NONE;
 	}
 
-	void clientdisconnect(int n, bool local)
+	void clientdisconnect(int n, bool local, int reason)
 	{
 		clientinfo *ci = (clientinfo *)getinfo(n);
 		bool complete = !numclients(n, false, -1);
@@ -2942,7 +2942,7 @@ namespace server
 		    distpoints(ci, true); savescore(ci);
 		    sendf(-1, 1, "ri2", SV_DISCONNECT, n);
 		    ci->connected = false;
-		    if(ci->name[0]) relayf(2, "\fo%s has left the game", colorname(ci));
+		    if(ci->name[0]) relayf(2, "\fo%s (%s) has left the game (%s, %d player(s))", colorname(ci), formatip(getclientip(n)), reason >= 0 ? disc_reasons[reason] : "normal", numclients(ci->clientnum));
 		    aiman::removeai(ci, complete);
 		    if(!complete) aiman::dorefresh = true;
 		    clients.removeobj(ci);
@@ -3180,7 +3180,7 @@ namespace server
                 sendwelcome(ci);
                 if(restorescore(ci)) sendresume(ci);
 				sendinitclient(ci);
-                relayf(2, "\fg%s has joined the game", colorname(ci));
+                relayf(2, "\fg%s (%s) has joined the game (%d player(s))", colorname(ci), formatip(getclientip(ci->clientnum)), numclients());
             }
         }
 		else if(chan==2)
@@ -3608,10 +3608,12 @@ namespace server
 				case SV_SWITCHNAME:
 				{
 					QUEUE_MSG;
+					defformatstring(oldname)("%s", colorname(ci));
 					getstring(text, p);
 					if(!text[0]) copystring(text, "unnamed");
 					filtertext(text, text, true, MAXNAMELEN);
 					copystring(ci->name, text, MAXNAMELEN+1);
+					relayf(2, "\fm* %s is now known as %s", oldname, colorname(ci));
 					QUEUE_STR(ci->name);
 					break;
 				}
