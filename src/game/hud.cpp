@@ -1095,11 +1095,13 @@ namespace hud
 				}
 				else return;
 			}
-			else
+			else if(d->state == CS_ALIVE)
 			{
 				int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
 				if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
+				fade *= clamp(d->vel.magnitude()/FWV(movespeed), 0.f, 1.f);
 			}
+			else if(d->state != CS_EDITING) return;
 			if(chkcond(radarplayernames, game::tvmode()))
 				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
 			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
