@@ -703,7 +703,7 @@ struct gui : guient
 		if(font && *font) gui::pushfont(font);
 		int w = 0, h = max((int)FONTH, guibound[1]);
 		if(icon) w += guibound[1];
-		if(icon && text) w += guibound[1];
+		if(icon && text) w += 8;
 		if(text) w += text_width(text);
 
 		if(visible())
@@ -717,7 +717,7 @@ struct gui : guient
 				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
 				x += guibound[1];
 			}
-			if(icon && text) x += guibound[1];
+			if(icon && text) x += 8;
 			if(text) text_(text, x, cury, color, hit || !faded || !clickable ? 255 : guiblend, hit && clickable);
 		}
 		if(font && *font) gui::popfont();
