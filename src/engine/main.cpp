@@ -861,7 +861,7 @@ int main(int argc, char **argv)
 	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	//#endif
 
-	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
+	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE;
 	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
 	ignoremouse += 3;
 
@@ -882,17 +882,14 @@ int main(int argc, char **argv)
 	keyrepeat(false);
 	setcaption("please wait..");
 
+    signal(SIGINT, fatalsignal);
     signal(SIGILL, fatalsignal);
     signal(SIGABRT, fatalsignal);
     signal(SIGFPE, fatalsignal);
     signal(SIGSEGV, fatalsignal);
     signal(SIGTERM, fatalsignal);
-#if defined(WIN32)
-    signal(SIGINT, reloadsignal);
-#elif defined(__APPLE__)
     signal(SIGINT, fatalsignal);
-#else
-    signal(SIGINT, fatalsignal);
+#if !defined(WIN32) && !defined(__APPLE__)
     signal(SIGHUP, reloadsignal);
     signal(SIGQUIT, fatalsignal);
     signal(SIGKILL, fatalsignal);
