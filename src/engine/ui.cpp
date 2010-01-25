@@ -15,6 +15,7 @@ VARP(guishadow, 0, 2, 8);
 VARP(guiautotab, 6, 16, 40);
 VARP(guiclicktab, 0, 1, 1);
 VARP(guiblend, 1, 156, 255);
+VARP(guilinesize, 1, 36, 128);
 
 static bool needsinput = false;
 
@@ -277,9 +278,10 @@ struct gui : guient
 		autotab();
 		int x = curx;
 		int y = cury;
-		line_(10);
+		line_(guilinesize);
 		if(visible())
 		{
+			pushfont("emphasis");
 			if(!label)
 			{
 				static string s;
@@ -292,14 +294,14 @@ struct gui : guient
 			int px, py;
 			if(ishorizontal())
 			{
-				hit = ishit(guibound[0], ysize, x, y);
-				px = x + (guibound[0]-w)/2;
+				hit = ishit(guilinesize, ysize, x, y);
+				px = x + (guilinesize-w)/2;
                 if(reverse) py = y + ((ysize-guibound[1])*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at top
                 else py = y + (ysize-guibound[1]) - ((ysize-guibound[1])*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at bottom
 			}
 			else
 			{
-				hit = ishit(xsize, guibound[1], x, y);
+				hit = ishit(xsize, guilinesize, x, y);
                 if(reverse) px = x + (xsize-guibound[0]/2-w/2) - ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at right
                 else px = x + guibound[0]/2 - w/2 + ((xsize-w)*(val-vmin))/((vmax==vmin) ? 1 : (vmax-vmin)); //vmin at left
 				py = y;
@@ -329,6 +331,7 @@ struct gui : guient
 					vnew = vmin < vmax ? clamp(vval, vmin, vmax) : clamp(vval, vmax, vmin);
 				if(vnew != val) val = vnew;
 			}
+			popfont();
 		}
 	}
 
@@ -697,11 +700,10 @@ struct gui : guient
 
 	int button_(const char *text, int color, const char *icon, bool clickable, bool faded, const char *font = "")
 	{
-		const int padding = 10;
 		if(font && *font) gui::pushfont(font);
 		int w = 0, h = max((int)FONTH, guibound[1]);
 		if(icon) w += guibound[1];
-		if(icon && text) w += padding;
+		if(icon && text) w += guibound[1];
 		if(text) w += text_width(text);
 
 		if(visible())
@@ -715,7 +717,7 @@ struct gui : guient
 				icon_(textureload(tname, 3, true, false), false, false, x, cury, guibound[1], faded && clickable && !hit);
 				x += guibound[1];
 			}
-			if(icon && text) x += padding;
+			if(icon && text) x += guibound[1];
 			if(text) text_(text, x, cury, color, hit || !faded || !clickable ? 255 : guiblend, hit && clickable);
 		}
 		if(font && *font) gui::popfont();
