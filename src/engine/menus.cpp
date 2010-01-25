@@ -9,6 +9,7 @@ vector<menu *> menustack;
 vector<char *> executelater;
 bool shouldclearmenu = true, clearlater = false;
 FVARP(menuscale, 0, 0.02f, 1);
+VAR(guipasses, 1, -1, -1);
 
 void popgui()
 {
@@ -38,6 +39,7 @@ void pushgui(menu *m, int pos = -1, int tab = 0)
 		m->passes = 0;
 		m->menustart = lastmillis;
 		if(tab > 0) m->menutab = tab;
+		m->usetitle = tab >= 0 ? true : false;
 	}
 }
 
@@ -78,6 +80,12 @@ int cleargui(int n)
 void cleargui_(int *n)
 {
 	intret(cleargui(*n));
+}
+
+void guishowtitle(int *n)
+{
+	if(!cmenu) return;
+	cmenu->usetitle = *n ? true : false;
 }
 
 void guistayopen(char *contents)
@@ -479,7 +487,7 @@ void guilist(char *contents)
 	cgui->poplist();
 }
 
-void newgui(char *name, char *contents, char *initscript, char *header)
+void newgui(char *name, char *contents, char *initscript)
 {
     menu *m = menus.access(name);
     if(!m)
@@ -496,7 +504,13 @@ void newgui(char *name, char *contents, char *initscript, char *header)
     }
     m->contents = contents && contents[0] ? newstring(contents) : NULL;
     m->initscript = initscript && initscript[0] ? newstring(initscript) : NULL;
-    m->header = header && header[0] ? newstring(header) : NULL;
+}
+
+void guiheader(char *name)
+{
+	if(!cmenu) return;
+    DELETEA(cmenu->header);
+    cmenu->header = name && name[0] ? newstring(name) : NULL;
 }
 
 void guimodify(char *name, char *contents)
@@ -507,12 +521,14 @@ void guimodify(char *name, char *contents)
 	m->contents = contents && contents[0] ? newstring(contents) : NULL;
 }
 
-COMMAND(newgui, "ssss");
+COMMAND(newgui, "sss");
+COMMAND(guiheader, "s");
 COMMAND(guimodify, "ss");
 COMMAND(guibutton, "ssss");
 COMMAND(guitext, "ss");
 COMMANDN(cleargui, cleargui_, "i");
-ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n[0] ? atoi(n) : -1));
+ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n[0] ? atoi(n) : 0));
+COMMAND(guishowtitle, "i");
 COMMAND(guistayopen, "s");
 COMMAND(guinoautotab, "s");
 
@@ -620,7 +636,7 @@ void progressmenu()
     menu *m = menus.access("loading");
     if(m)
     {
-    	m->useinput = false;
+    	m->usetitle = m->useinput = false;
     	UI::addcb(m);
     }
     else conoutf("cannot find menu 'loading'");

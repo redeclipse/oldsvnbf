@@ -540,33 +540,37 @@ extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 extern void swapbuffers();
 
 // menu
+extern int guipasses;
 extern float menuscale;
 extern guient *cgui;
 struct menu : guicb
 {
     char *name, *header, *contents, *initscript;
     int passes, menutab, menustart;
-    bool world, useinput;
+    bool world, useinput, usetitle;
 
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), menutab(0), menustart(0), world(false), useinput(true) {}
+    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), menutab(0), menustart(0), world(false), useinput(true), usetitle(true) {}
 
     void gui(guient &g, bool firstpass)
     {
         cgui = &g;
         extern menu *cmenu; cmenu = this;
-        cgui->start(menustart, menuscale, &menutab, useinput);
+        guipasses = passes;
+		if(!passes) world = worldidents;
+        if(initscript && *initscript)
+        {
+        	if(world && passes) { RUNWORLD(initscript); }
+        	else execute(initscript);
+        }
+        cgui->start(menustart, menuscale, &menutab, useinput, usetitle);
         cgui->tab(header ? header : name);
-		if(!passes)
-		{
-			world = worldidents;
-			if(initscript && *initscript) execute(initscript);
-		}
         if(contents && *contents)
         {
         	if(world && passes) { RUNWORLD(contents); }
         	else execute(contents);
         }
         cgui->end();
+        guipasses = -1;
         cmenu = NULL;
         cgui = NULL;
 		passes++;

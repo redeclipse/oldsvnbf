@@ -1475,7 +1475,7 @@ namespace game
 	{
 		lastcamera = 0;
 		zoomset(false, 0);
-		resetcursor();
+		if(focus == game::player1) resetcursor();
 		checkcamera();
 		camera1->o = focus->o;
 		camera1->yaw = focus->yaw;
@@ -1516,7 +1516,7 @@ namespace game
 		}
         if(!curtime) { gets2c(); if(player1->clientnum >= 0) client::c2sinfo(); return; }
 
-       	if(!*player1->name && !menuactive()) showgui("name");
+       	if(!*player1->name && !menuactive()) showgui("name", -1);
         if(connected())
         {
         	player1->conopen = commandmillis > 0 || hud::hasinput(true);
@@ -1574,9 +1574,9 @@ namespace game
             }
             otherplayers();
             if(m_arena(gamemode, mutators) && player1->state != CS_SPECTATOR && player1->loadweap < 0 && client::ready() && !menuactive())
-				showgui("loadout");
+				showgui("loadout", -1);
         }
-        else if(!menuactive()) showgui("main");
+        else if(!menuactive()) showgui("main", -1);
 
 		gets2c();
 		adjustscaled(int, hud::damageresidue, hud::damageresiduefade);

@@ -99,7 +99,7 @@ struct bindlist
 #define SEARCHBINDCACHE(def) static bindlist __##def; const char *def = __##def.search
 
 // menus
-extern void newgui(char *name, char *contents, char *initaction = NULL, char *header = NULL);
+extern void newgui(char *name, char *contents, char *initscript = NULL);
 extern void showgui(const char *name, int tab = 0);
 
 // world
@@ -449,7 +449,7 @@ struct guient
 {
     virtual ~guient() {}
 
-    virtual void start(int starttime, float basescale, int *tab = NULL, bool allowinput = true) = 0;
+    virtual void start(int starttime, float basescale, int *tab = NULL, bool allowinput = true, bool wantstitle = true) = 0;
     virtual void end() = 0;
 
     virtual int text(const char *text, int color, const char *icon = NULL) = 0;
