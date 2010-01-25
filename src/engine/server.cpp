@@ -1143,8 +1143,8 @@ int main(int argc, char* argv[])
     signal(SIGFPE, fatalsignal);
     signal(SIGSEGV, fatalsignal);
     signal(SIGTERM, fatalsignal);
-#if !defined(WIN32) && !defined(__APPLE__)
     signal(SIGINT, fatalsignal);
+#if !defined(WIN32) && !defined(__APPLE__)
     signal(SIGHUP, reloadsignal);
     signal(SIGQUIT, fatalsignal);
     signal(SIGKILL, fatalsignal);
