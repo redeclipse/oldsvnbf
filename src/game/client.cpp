@@ -1847,9 +1847,9 @@ namespace client
 					if(!needsmap && !gettingmap) sendmap();
 					else
 					{
-						if(!gettingmap) conoutft(CON_MESG, "\frwe don't have the map though, so asking for it instead");
-						else conoutft(CON_MESG, "\frbut we're in the process of getting it");
-							addmsg(SV_GETMAP, "r");
+						if(!gettingmap) conoutft(CON_MESG, "\fowe don't have the map though, so asking for it instead");
+						else conoutft(CON_MESG, "\fobut we're in the process of getting it");
+						addmsg(SV_GETMAP, "r");
 					}
 					break;
 				}
@@ -1859,7 +1859,7 @@ namespace client
 					conoutft(CON_MESG, "\fcmap data has been uploaded");
 					if(needsmap && !gettingmap)
 					{
-						conoutft(CON_MESG, "\frwe want the map too, so asking for it");
+						conoutft(CON_MESG, "\fowe want the map too, so asking for it");
 						addmsg(SV_GETMAP, "r");
 					}
 					break;

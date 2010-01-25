@@ -235,7 +235,7 @@ namespace server
 			state.reset(change);
 			events.deletecontentsp();
             overflow = 0;
-            timesync = false;
+            timesync = wantsmap = false;
             lastevent = gameoffset = lastvote = 0;
 			team = TEAM_NEUTRAL;
 			clientmap[0] = '\0';
@@ -1638,6 +1638,41 @@ namespace server
 		setteam(ci, TEAM_NEUTRAL, false, true);
 	}
 
+	bool allowstate(clientinfo *ci, int n, bool msg = true)
+	{
+		if(!ci) return false;
+		if(ci->state.aitype < 0) switch(n)
+		{
+			case 0: if(ci->state.state == CS_SPECTATOR || gamemode >= G_EDITMODE) return false; // first spawn, falls through
+			case 1: // try spawn
+			{
+				if(mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR && !haspriv(ci, PRIV_MASTER)) return false;
+				if(ci->state.state != CS_DEAD || ci->state.lastrespawn >= 0 || gamemillis-ci->state.lastdeath <= DEATHMILLIS) return false;
+				if(ci->wantsmap)
+				{
+					if(msg) srvmsgf(ci->clientnum, "\foyou must get the map before you are allowed to spawn, try /getmap");
+					if(ci->state.state != CS_SPECTATOR) spectator(ci);
+					return false;
+				}
+				break;
+			}
+			case 2: // spawn
+			{
+				if((ci->state.state != CS_ALIVE && ci->state.state != CS_DEAD && ci->state.state != CS_WAITING) || ci->state.lastrespawn < 0) return false;
+				break;
+			}
+			case 3: return true; // spec
+			case 5: if(ci->state.state != CS_EDITING) return false;
+			case 4: // edit on/off
+			{
+				if(!m_edit(gamemode) || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR && !haspriv(ci, PRIV_MASTER))) return false;
+				break;
+			}
+			default: break;
+		}
+		return true;
+	}
+
 	void changemap(const char *name, int mode, int muts)
 	{
 		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
@@ -1672,6 +1707,8 @@ namespace server
 				break;
 			}
 		}
+#else
+		loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
 #endif
 		copystring(smapname, reqmap);
 
@@ -1689,13 +1726,12 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-            if(ci->state.state == CS_SPECTATOR) continue;
-            else if(ci->state.aitype < 0 && m_play(gamemode)) spectator(ci);
-            else
+            if(allowstate(ci, 0, false))
 			{
 				ci->state.state = CS_DEAD;
 				waiting(ci, 2, 1);
 			}
+			else spectator(ci);
 		}
 
 		if(m_fight(gamemode) && numclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
@@ -2880,6 +2916,12 @@ namespace server
         return ci && ci->connected && ci->state.aitype < 0;
     }
 
+    bool hasclient(clientinfo *ci, clientinfo *cp = NULL)
+    {
+		if(!ci || (ci != cp && ci->clientnum != cp->clientnum && ci->state.ownernum != cp->clientnum)) return false;
+		return true;
+    }
+
     int peerowner(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
@@ -3191,7 +3233,7 @@ namespace server
 			if(receivefile(sender, p.buf, p.maxlen))
 			{
 				mapsending = false;
-				sendf(-1, 1, "ri", SV_SENDMAP);
+				if(mapdata[0] && mapdata[1] && mapdata[2]) sendf(-1, 1, "ri", SV_SENDMAP);
 			}
 			return;
 		}
@@ -3255,7 +3297,7 @@ namespace server
 				{
 					int lcn = getint(p), idx = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
 					if(idx == SPHY_EXTINGUISH)
 					{
 						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GVAR(fireburntime)) break;
@@ -3268,9 +3310,8 @@ namespace server
 				case SV_EDITMODE:
 				{
 					int val = getint(p);
-					if(!ci) break;
-					if((!val && ci->state.state != CS_EDITING) || !m_edit(gamemode) || ci->state.aitype >= 0) { spectator(ci); break; }
-					if((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
+					if(!ci || ci->state.aitype >= 0) break;
+					if(!allowstate(ci, val ? 4 : 5) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
 					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
@@ -3320,8 +3361,8 @@ namespace server
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if(cp->state.state != CS_DEAD || cp->state.lastrespawn >= 0 || gamemillis-cp->state.lastdeath <= DEATHMILLIS) break;
+					if(!hasclient(cp, ci)) break;
+					if(!allowstate(cp, 1)) { spectator(cp); break; }
 					if(!ci->clientmap[0] && !ci->mapcrc)
 					{
 						ci->mapcrc = -1;
@@ -3338,7 +3379,7 @@ namespace server
 				{
 					int lcn = getint(p), aweap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
 					cp->state.loadweap = aweap;
 					break;
 				}
@@ -3347,7 +3388,7 @@ namespace server
 				{
 					int lcn = getint(p), id = getint(p), weap = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
                     switchevent *ev = new switchevent;
 					ev->id = id;
 					ev->weap = weap;
@@ -3360,9 +3401,8 @@ namespace server
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
-					if((cp->state.state!=CS_ALIVE && cp->state.state!=CS_DEAD && cp->state.state!=CS_WAITING) || cp->state.lastrespawn < 0)
-						break;
+					if(!hasclient(cp, ci)) break;
+					if(!allowstate(cp, 2)) { spectator(cp); break; }
 					cp->state.lastrespawn = -1;
 					cp->state.state = CS_ALIVE;
 					if(smode) smode->spawned(cp);
@@ -3379,7 +3419,7 @@ namespace server
 				{
 					int lcn = getint(p), flags = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
                     suicideevent *ev = new suicideevent;
 					ev->flags = flags;
                     cp->addevent(ev);
@@ -3480,7 +3520,7 @@ namespace server
 				{
 					int lcn = getint(p), id = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
                     useevent *ev = new useevent;
 					ev->id = id;
 					ev->ent = ent;
@@ -3493,7 +3533,7 @@ namespace server
 				{
 					int lcn = getint(p), ent = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci) || cp->state.state != CS_ALIVE) break;
 					if(sents.inrange(ent))
 					{
 						if(sents[ent].type == CHECKPOINT)
@@ -3578,7 +3618,7 @@ namespace server
 					int lcn = getint(p), flags = getint(p);
 					getstring(text, p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
 					loopv(clients)
 					{
 						clientinfo *t = clients[i];
@@ -3603,7 +3643,7 @@ namespace server
 					string cmd;
 					getstring(cmd, p);
 					getstring(text, p);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum)) break;
+					if(!hasclient(cp, ci)) break;
 					parsecommand(cp, nargs, cmd, text);
 					break;
 				}
@@ -3698,7 +3738,7 @@ namespace server
 				{
 					int lcn = getint(p), flag = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum) || cp->state.state==CS_SPECTATOR) break;
+					if(!hasclient(cp, ci) || cp->state.state == CS_SPECTATOR) break;
 					if(smode==&ctfmode) ctfmode.takeflag(cp, flag);
 					break;
 				}
@@ -3717,7 +3757,7 @@ namespace server
 					vec droploc;
 					loopk(3) droploc[k] = getint(p)/DMF;
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!cp || (cp->clientnum!=ci->clientnum && cp->state.ownernum!=ci->clientnum) || cp->state.state==CS_SPECTATOR) break;
+					if(!hasclient(cp, ci) || cp->state.state == CS_SPECTATOR) break;
 					if(smode==&ctfmode) ctfmode.dropflag(cp, droploc);
 					break;
 				}
@@ -3796,9 +3836,9 @@ namespace server
 				case SV_SPECTATOR:
 				{
 					int spectator = getint(p), val = getint(p);
-					if(((mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR) || spectator != sender) && !haspriv(ci, PRIV_MASTER, spectator != sender ? "spectate others" : "unspectate")) break;
 					clientinfo *cp = (clientinfo *)getinfo(spectator);
 					if(!cp || cp->state.aitype >= 0) break;
+					if((spectator != sender || !allowstate(cp, val ? 3 : 1, false)) && !haspriv(ci, PRIV_MASTER, spectator != sender ? "spectate others" : "unspectate")) break;
 					if(cp->state.state != CS_SPECTATOR && val)
 					{
 						if(cp->state.state == CS_ALIVE)
@@ -3963,7 +4003,7 @@ namespace server
 					}
 					if(!mapsending)
 					{
-						if(mapdata[0])
+						if(mapdata[0] && mapdata[1] && mapdata[2])
 						{
 							loopk(3) if(mapdata[k]) sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
 							sendwelcome(ci);
@@ -3980,7 +4020,7 @@ namespace server
 							break;
 						}
 					}
-					srvmsgf(ci->clientnum, "map is %sbeing uploaded, please wait..", mapsending ? "already " : "");
+					srvmsgf(ci->clientnum, "map is %s being uploaded, please wait..", mapsending ? "already" : "now");
 					break;
 				}
 
