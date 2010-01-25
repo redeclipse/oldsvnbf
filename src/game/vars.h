@@ -12,6 +12,13 @@ VARG(varslock, 0, 1, 2); // 0 = master, 1 = admin only, 2 = nobody
 VARG(votelock, 0, 2, 5); // 0 = off, 1 = master can select same game (+1 admin), 3 = master only can vote (+1 admin), 5 = no voting
 VARG(votewait, 0, 3000, INT_MAX-1);
 
+VARG(resetmmonend, 0, 1, 2); // reset mastermode on end (1: just when empty, 2: when matches end)
+VARG(resetbansonend, 0, 1, 2); // reset bans on end (1: just when empty, 2: when matches end)
+VARG(resetvarsonend, 0, 1, 2); // reset variables on end (1: just when empty, 2: when matches end)
+
+VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
+VARFG(gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
+
 SVARG(defaultmap, "");
 VARG(defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 VARG(defaultmuts, -2, G_M_TEAM, G_M_ALL);
@@ -92,9 +99,6 @@ VARG(botminskill, 1, 70, 101);
 VARG(botmaxskill, 1, 80, 101);
 VARG(botlimit, 0, 16, MAXAI/2);
 
-VARFG(gamespeed, 1, 100, 1000, timescale = sv_gamespeed, timescale = gamespeed);
-VARFG(gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepaused);
-
 FVARG(forcegravity, -1, -1, 1000);
 FVARG(forcejumpspeed, -1, -1, 1000);
 FVARG(forcemovespeed, -1, -1, 1000);
@@ -120,10 +124,6 @@ FVARG(deadpushscale, -1000, 2, 1000);
 FVARG(wavepusharea, 0, 2, 1000);
 FVARG(wavepushscale, 0, 1, 1000);
 
-VARG(multikilldelay, 0, 3000, INT_MAX-1);
+VARG(multikilldelay, 0, 5000, INT_MAX-1);
 VARG(spreecount, 0, 5, INT_MAX-1);
 VARG(dominatecount, 0, 5, INT_MAX-1);
-
-VARG(resetmmonend, 0, 2, 2); // reset mastermode on end (1: just when empty, 2: when matches end)
-VARG(resetbansonend, 0, 1, 2); // reset bans on end (1: just when empty, 2: when matches end)
-VARG(resetvarsonend, 0, 2, 2); // reset variables on end (1: just when empty, 2: when matches end)
