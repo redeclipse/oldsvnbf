@@ -1,6 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
+* Move to mutators: spawngrenades?, vampire, itemsallowed?, itemdropping?, kamikaze?, duelreset?, duelclear?, selfdamage?, trialdamage?, teamdamage?, ctfstyle, stfstyle, (low/high gravity?), extrahealth?
 * Add reason to client disconnects
 * Remember ammo counts for dropped weapons
 * Give remaining interactive entities a mode field
