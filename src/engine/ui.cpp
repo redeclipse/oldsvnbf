@@ -17,7 +17,7 @@ VARP(guiclicktab, 0, 1, 1);
 VARP(guiblend, 1, 156, 255);
 VARP(guilinesize, 1, 36, 128);
 
-static bool needsinput = false;
+static bool needsinput = false, hastitle = true;
 
 #include "textedit.h"
 struct gui : guient
@@ -81,7 +81,7 @@ struct gui : guient
 	//tab is always at top of page
 	void tab(const char *name, int color)
 	{
-		if(curdepth != 0) return;
+		if(curdepth != 0 || !hastitle) return;
         if(color) tcolor = color;
 		tpos++;
 		if(!name)
@@ -118,7 +118,7 @@ struct gui : guient
 	void uibuttons()
 	{
 		cury = -ysize;
-		int x = curx + max(tx, xsize) - guibound[0]*2, y = cury - guibound[1]*2;
+		int x = curx + max(tx, xsize) - guibound[0]/2, y = cury - guibound[1]*2;
 		#define uibtn(a,b) \
 		{ \
 			bool hit = false; \
@@ -742,12 +742,13 @@ struct gui : guient
 		scale = vec(aspect*scale.x*fit, scale.y*fit, 1);
 	}
 
-	void start(int starttime, float initscale, int *tab, bool allowinput)
+	void start(int starttime, float initscale, int *tab, bool allowinput, bool wantstitle)
 	{
 		initscale *= 0.025f;
 		basescale = initscale;
         if(layoutpass) scale.x = scale.y = scale.z = basescale; //min(basescale*(lastmillis-starttime)/300.0f, basescale);
-        if(allowinput) needsinput = true;
+        needsinput = allowinput;
+        hastitle = wantstitle;
         passthrough = !allowinput;
         fontdepth = 0;
         gui::pushfont("sub");
@@ -789,7 +790,7 @@ struct gui : guient
 		}
 		else
 		{
-			if(needsinput) uibuttons();
+			if(needsinput && hastitle) uibuttons();
 			glPopMatrix();
 		}
 		poplist();
@@ -936,6 +937,7 @@ namespace UI
 		fieldsactive = false;
 
 		needsinput = false;
+		hastitle = true;
 
 		if(!guis.empty())
 		{

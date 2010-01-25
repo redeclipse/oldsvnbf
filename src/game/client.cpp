@@ -1294,7 +1294,7 @@ namespace client
 				case SV_LOADWEAP:
 				{
 					hud::sb.showscores(false);
-					if(!menuactive()) showgui("loadout");
+					if(!menuactive()) showgui("loadout", -1);
 					break;
 				}
 
