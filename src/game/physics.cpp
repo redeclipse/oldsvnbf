@@ -2,28 +2,28 @@
 namespace physics
 {
 	FVAR(IDF_WORLD, gravity,			0, 50.f, 1000);			// gravity
-	FVAR(IDF_WORLD, jumpspeed,		0, 50.f, 1000);			// extra velocity to add when jumping
-	FVAR(IDF_WORLD, movespeed,		0, 50.f, 1000);			// speed
-	FVAR(IDF_WORLD, movecrawl,		0, 0.5f, 1000);			// crawl modifier
+	FVAR(IDF_WORLD, jumpspeed,			0, 50.f, 1000);			// extra velocity to add when jumping
+	FVAR(IDF_WORLD, movespeed,			0, 50.f, 1000);			// speed
+	FVAR(IDF_WORLD, movecrawl,			0, 0.5f, 1000);			// crawl modifier
 	FVAR(IDF_WORLD, impulsespeed,		0, 50.f, 1000);			// extra velocity to add when impulsing
 
 	VAR(IDF_WORLD, impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
-	VAR(IDF_WORLD, impulsemeter,		0, 30000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
-	VAR(IDF_WORLD, impulsecost,		0, 1000, INT_MAX-1);	// cost of impulse jump
-	VAR(IDF_WORLD, impulsecount,		0, 5, INT_MAX-1);		// number of impulse actions per air transit
-	VAR(IDF_WORLD, impulseskate,		0, 1000, INT_MAX-1);	// length of time a run along a wall can last
+	VAR(IDF_WORLD, impulsemeter,		0, 60000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
+	VAR(IDF_WORLD, impulsecost,			0, 500, INT_MAX-1);		// cost of impulse jump
+	VAR(IDF_WORLD, impulsecount,		0, 6, INT_MAX-1);		// number of impulse actions per air transit
+	VAR(IDF_WORLD, impulseskate,		0, 500, INT_MAX-1);		// length of time a run along a wall can last
 	FVAR(IDF_WORLD, impulseregen,		0, 5, 1000);			// impulse regen multiplier
 
 	FVAR(IDF_WORLD, liquidspeed,		0, 0.85f, 1);
-	FVAR(IDF_WORLD, liquidcurb,		0, 10.f, 1000);
-	FVAR(IDF_WORLD, floorcurb,		0, 5.f, 1000);
+	FVAR(IDF_WORLD, liquidcurb,			0, 10.f, 1000);
+	FVAR(IDF_WORLD, floorcurb,			0, 5.f, 1000);
 	FVAR(IDF_WORLD, aircurb,			0, 25.f, 1000);
 
 	FVAR(IDF_WORLD, stairheight,		0, 4.1f, 1000);
-	FVAR(IDF_WORLD, floorz,			0, 0.867f, 1);
-	FVAR(IDF_WORLD, slopez,			0, 0.5f, 1);
-	FVAR(IDF_WORLD, wallz,			0, 0.2f, 1);
-	FVAR(IDF_WORLD, stepspeed,		1e-3f, 1.f, 1000);
+	FVAR(IDF_WORLD, floorz,				0, 0.867f, 1);
+	FVAR(IDF_WORLD, slopez,				0, 0.5f, 1);
+	FVAR(IDF_WORLD, wallz,				0, 0.2f, 1);
+	FVAR(IDF_WORLD, stepspeed,			1e-3f, 1.f, 1000);
 	FVAR(IDF_WORLD, ladderspeed,		1e-3f, 1.f, 1000);
 
 	FVAR(IDF_PERSIST, floatspeed,		1e-3f, 75, 1000);
