@@ -1171,8 +1171,14 @@ ICOMMAND(0, getmillis, "", (), intret(lastmillis));
 void getvariable(int num)
 {
 	mkstring(text); num--;
-	static vector<ident *> ids; ids.setsizenodelete(0);
-	enumerate(*idents, ident, id, ids.add(&id));
+	static vector<ident *> ids;
+	static int lastupdate = 0;
+	if(ids.empty() || !lastupdate || lastmillis-lastupdate >= 60000)
+	{
+		ids.setsizenodelete(0);
+		enumerate(*idents, ident, id, ids.add(&id));
+		lastupdate = lastmillis;
+	}
 	if(ids.inrange(num))
 	{
 		ids.sort(sortidents);
