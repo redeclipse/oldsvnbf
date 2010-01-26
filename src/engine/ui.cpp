@@ -81,9 +81,19 @@ struct gui : guient
 	//tab is always at top of page
 	void tab(const char *name, int color)
 	{
-		if(curdepth != 0 || !hastitle) return;
-        if(color) tcolor = color;
+		if(curdepth != 0) return;
 		tpos++;
+		if(!hastitle)
+		{
+			if(layoutpass)
+			{
+				ty = max(ty, ysize);
+				ysize = 0;
+			}
+			else cury = -ysize;
+			return;
+		}
+        if(color) tcolor = color;
 		if(!name)
 		{
 			static string title;
