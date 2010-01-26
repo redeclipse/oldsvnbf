@@ -11,7 +11,7 @@ namespace physics
 	VAR(IDF_WORLD, impulsemeter,		0, 60000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
 	VAR(IDF_WORLD, impulsecost,			0, 500, INT_MAX-1);		// cost of impulse jump
 	VAR(IDF_WORLD, impulsecount,		0, 6, INT_MAX-1);		// number of impulse actions per air transit
-	VAR(IDF_WORLD, impulseskate,		0, 500, INT_MAX-1);		// length of time a run along a wall can last
+	VAR(IDF_WORLD, impulseskate,		0, 750, INT_MAX-1);		// length of time a run along a wall can last
 	FVAR(IDF_WORLD, impulseregen,		0, 5, 1000);			// impulse regen multiplier
 
 	FVAR(IDF_WORLD, liquidspeed,		0, 0.85f, 1);

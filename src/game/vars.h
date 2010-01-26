@@ -109,7 +109,7 @@ GVAR(0, forceimpulsestyle, -1, -1, 3);
 GVAR(0, forceimpulsemeter, -1, 60000, INT_MAX-1);
 GVAR(0, forceimpulsecost, -1, 500, INT_MAX-1);
 GVAR(0, forceimpulsecount, -1, 6, INT_MAX-1);
-GVAR(0, forceimpulseskate, -1, 500, INT_MAX-1);
+GVAR(0, forceimpulseskate, -1, 750, INT_MAX-1);
 GFVAR(0, forceimpulseregen, -1, 5, 1000);
 
 GFVAR(0, forceliquidspeed, -1, -1, 1);
