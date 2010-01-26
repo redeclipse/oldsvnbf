@@ -388,7 +388,7 @@ namespace game
 
 	void impulseeffect(gameent *d, bool effect)
 	{
-		if(effect || (d->state == CS_ALIVE && physics::sprinting(d)))
+		if(effect || (d->state == CS_ALIVE && physics::sprinting(d, true)))
 		{
 			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
 			if(num > 0 && len > 0)

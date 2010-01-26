@@ -945,7 +945,7 @@ struct gameent : dynent, gamestate
 {
 	editinfo *edit; ai::aiinfo *ai;
 	int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
-		actiontime[AC_MAX], impulse[IM_MAX], smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
+		actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
 	float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
 	vec head, torso, muzzle, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
 	bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right;
@@ -988,7 +988,7 @@ struct gameent : dynent, gamestate
 
 	void stopmoving(bool full)
 	{
-		if(full) move = strafe = 0;
+		if(full) move = strafe = lastsprint = 0;
 		loopi(AC_MAX)
 		{
 			action[i] = false;
@@ -1224,7 +1224,7 @@ namespace physics
 	extern float gravity, jumpspeed, movespeed, movecrawl, impulsespeed, impulseregen, liquidspeed, liquidcurb, floorcurb, aircurb;
 	extern int impulsestyle, impulsemeter, impulsecost, impulsecount, impulseskate;
 	extern int smoothmove, smoothdist;
-	extern bool sprinting(physent *d, bool turn = true, bool move = true);
+	extern bool sprinting(physent *d, bool last = false, bool turn = true, bool move = true);
 	extern bool canimpulse(physent *d, int cost = 0);
 	extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 	extern void smoothplayer(gameent *d, int res, bool local);
