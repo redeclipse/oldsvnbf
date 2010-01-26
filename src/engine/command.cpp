@@ -1171,7 +1171,7 @@ ICOMMAND(0, getmillis, "", (), intret(lastmillis));
 void getvariable(int num)
 {
 	mkstring(text); num--;
-	vector<ident *> ids;
+	static vector<ident *> ids; ids.setsizenodelete(0);
 	enumerate(*idents, ident, id, ids.add(&id));
 	if(ids.inrange(num))
 	{
@@ -1181,4 +1181,4 @@ void getvariable(int num)
 	else formatstring(text)("%d", ids.length());
 	result(text);
 }
-ICOMMAND(0, getvariable, "s", (int *n), getvariable(*n));
+ICOMMAND(0, getvariable, "i", (int *n), getvariable(*n));
