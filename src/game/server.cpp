@@ -1333,7 +1333,7 @@ namespace server
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
         switch(GAME(votelock))
         {
-        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GAME(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
+        	case 1: case 2: if(!m_edit(reqmode) && smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GAME(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
 			case 3: case 4: if(!haspriv(ci, GAME(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
@@ -1638,7 +1638,7 @@ namespace server
 		setteam(ci, TEAM_NEUTRAL, false, true);
 	}
 
-	bool allowstate(clientinfo *ci, int n, bool msg = true)
+	bool allowstate(clientinfo *ci, int n)
 	{
 		if(!ci) return false;
 		if(ci->state.aitype < 0) switch(n)
@@ -1646,26 +1646,20 @@ namespace server
 			case 0: if(ci->state.state == CS_SPECTATOR || gamemode >= G_EDITMODE) return false; // first spawn, falls through
 			case 1: // try spawn
 			{
-				if(mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR && !haspriv(ci, PRIV_MASTER)) return false;
-				if(ci->state.state != CS_DEAD || ci->state.lastrespawn >= 0 || gamemillis-ci->state.lastdeath <= DEATHMILLIS) return false;
-				if(ci->wantsmap)
-				{
-					if(msg) srvmsgf(ci->clientnum, "\foyou must get the map before you are allowed to spawn, try /getmap");
-					if(ci->state.state != CS_SPECTATOR) spectator(ci);
-					return false;
-				}
+				if(ci->wantsmap || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR)) return false;
+				if(ci->state.state == CS_ALIVE || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
 				break;
 			}
 			case 2: // spawn
 			{
-				if((ci->state.state != CS_ALIVE && ci->state.state != CS_DEAD && ci->state.state != CS_WAITING) || ci->state.lastrespawn < 0) return false;
+				if(ci->state.state == CS_SPECTATOR || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
 				break;
 			}
 			case 3: return true; // spec
 			case 5: if(ci->state.state != CS_EDITING) return false;
 			case 4: // edit on/off
 			{
-				if(!m_edit(gamemode) || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR && !haspriv(ci, PRIV_MASTER))) return false;
+				if(!m_edit(gamemode) || (mastermode >= MM_LOCKED && ci->state.state == CS_SPECTATOR)) return false;
 				break;
 			}
 			default: break;
@@ -1726,7 +1720,7 @@ namespace server
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-            if(allowstate(ci, 0, false))
+            if(allowstate(ci, 0))
 			{
 				ci->state.state = CS_DEAD;
 				waiting(ci, 2, 1);
@@ -3839,7 +3833,7 @@ namespace server
 					int spectator = getint(p), val = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(spectator);
 					if(!cp || cp->state.aitype >= 0) break;
-					if((spectator != sender || !allowstate(cp, val ? 3 : 1, false)) && !haspriv(ci, PRIV_MASTER, spectator != sender ? "spectate others" : "unspectate")) break;
+					if((spectator != sender || !allowstate(cp, val ? 3 : 1)) && !haspriv(ci, PRIV_MASTER, spectator != sender ? "spectate others" : "unspectate")) break;
 					if(cp->state.state != CS_SPECTATOR && val)
 					{
 						if(cp->state.state == CS_ALIVE)
