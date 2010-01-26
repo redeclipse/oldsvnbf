@@ -17,34 +17,34 @@ namespace hud
         damageloc(int a, int t, int d, const vec &p, const vec &c) : attacker(a), outtime(t), damage(d), dir(p), colour(c) {}
     };
     vector<damageloc> damagelocs;
-	VARP(damageresiduefade, 0, 500, INT_MAX-1);
+	VAR(IDF_PERSIST, damageresiduefade, 0, 500, INT_MAX-1);
 
-	VARP(showhud, 0, 1, 1);
-	VARP(huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
-	VARP(hudsize, 0, 2048, INT_MAX-1);
-	FVARP(hudblend, 0, 1, 1);
-	FVARP(gapsize, 0, 0.01f, 1000);
+	VAR(IDF_PERSIST, showhud, 0, 1, 1);
+	VAR(IDF_PERSIST, huduioverride, 0, 1, 2); // 0=off, 1=except intermission, 2=interactive ui only
+	VAR(IDF_PERSIST, hudsize, 0, 2048, INT_MAX-1);
+	FVAR(IDF_PERSIST, hudblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, gapsize, 0, 0.01f, 1000);
 
-	VARP(showconsole, 0, 2, 2);
-	VARP(shownotices, 0, 3, 4);
+	VAR(IDF_PERSIST, showconsole, 0, 2, 2);
+	VAR(IDF_PERSIST, shownotices, 0, 3, 4);
 
-	VARP(showfps, 0, 1, 3);
-	VARP(showstats, 0, 1, 2);
-	VARP(statrate, 0, 200, 1000);
-	FVARP(statblend, 0, 0.65f, 1);
+	VAR(IDF_PERSIST, showfps, 0, 1, 3);
+	VAR(IDF_PERSIST, showstats, 0, 1, 2);
+	VAR(IDF_PERSIST, statrate, 0, 200, 1000);
+	FVAR(IDF_PERSIST, statblend, 0, 0.65f, 1);
 
 	bool fullconsole = false;
 	void toggleconsole() { fullconsole = !fullconsole; }
-	COMMAND(toggleconsole, "");
+	COMMAND(0, toggleconsole, "");
 
-	VARP(titlefade, 0, 3000, 10000);
-	VARP(tvmodefade, 0, 1000, INT_MAX-1);
-	VARP(spawnfade, 0, 1500, INT_MAX-1);
+	VAR(IDF_PERSIST, titlefade, 0, 3000, 10000);
+	VAR(IDF_PERSIST, tvmodefade, 0, 1000, INT_MAX-1);
+	VAR(IDF_PERSIST, spawnfade, 0, 1500, INT_MAX-1);
 
-	VARP(commandfade, 0, 250, INT_MAX-1);
-	FVARP(commandfadeamt, 0, 0.75f, 1);
-	VARP(uifade, 0, 250, INT_MAX-1);
-	FVARP(uifadeamt, 0, 0.5f, 1);
+	VAR(IDF_PERSIST, commandfade, 0, 250, INT_MAX-1);
+	FVAR(IDF_PERSIST, commandfadeamt, 0, 0.75f, 1);
+	VAR(IDF_PERSIST, uifade, 0, 250, INT_MAX-1);
+	FVAR(IDF_PERSIST, uifadeamt, 0, 0.5f, 1);
 
 	int conskip = 0;
 	void setconskip(int *n)
@@ -52,197 +52,197 @@ namespace hud
 		conskip += *n;
 		if(conskip<0) conskip = 0;
 	}
-	COMMANDN(conskip, setconskip, "i");
+	COMMANDN(0, conskip, setconskip, "i");
 
-	VARP(consize, 0, 6, 100);
-	VARP(contime, 0, 30000, INT_MAX-1);
-	VARP(confade, 0, 1000, INT_MAX-1);
-	VARP(conoverflow, 0, 6, INT_MAX-1);
-	VARP(concenter, 0, 0, 1);
-	VARP(confilter, 0, 1, 1);
-	FVARP(conblend, 0, 0.6f, 1);
-	VARP(chatconsize, 0, 6, 100);
-	VARP(chatcontime, 0, 30000, INT_MAX-1);
-	VARP(chatconfade, 0, 2000, INT_MAX-1);
-	VARP(chatconoverflow, 0, 4, INT_MAX-1);
-	FVARP(chatconblend, 0, 0.75f, 1);
-	FVARP(fullconblend, 0, 0.9f, 1);
+	VAR(IDF_PERSIST, consize, 0, 6, 100);
+	VAR(IDF_PERSIST, contime, 0, 30000, INT_MAX-1);
+	VAR(IDF_PERSIST, confade, 0, 1000, INT_MAX-1);
+	VAR(IDF_PERSIST, conoverflow, 0, 6, INT_MAX-1);
+	VAR(IDF_PERSIST, concenter, 0, 0, 1);
+	VAR(IDF_PERSIST, confilter, 0, 1, 1);
+	FVAR(IDF_PERSIST, conblend, 0, 0.6f, 1);
+	VAR(IDF_PERSIST, chatconsize, 0, 6, 100);
+	VAR(IDF_PERSIST, chatcontime, 0, 30000, INT_MAX-1);
+	VAR(IDF_PERSIST, chatconfade, 0, 2000, INT_MAX-1);
+	VAR(IDF_PERSIST, chatconoverflow, 0, 4, INT_MAX-1);
+	FVAR(IDF_PERSIST, chatconblend, 0, 0.75f, 1);
+	FVAR(IDF_PERSIST, fullconblend, 0, 0.9f, 1);
 
-	FVARP(noticeoffset, -1, 0.4f, 1);
-	FVARP(noticeblend, 0, 0.6f, 1);
-	FVARP(noticescale, 1e-3f, 1, 1);
-	VARP(noticetime, 0, 5000, INT_MAX-1);
-	VARP(obitnotices, 0, 2, 2);
+	FVAR(IDF_PERSIST, noticeoffset, -1, 0.4f, 1);
+	FVAR(IDF_PERSIST, noticeblend, 0, 0.6f, 1);
+	FVAR(IDF_PERSIST, noticescale, 1e-3f, 1, 1);
+	VAR(IDF_PERSIST, noticetime, 0, 5000, INT_MAX-1);
+	VAR(IDF_PERSIST, obitnotices, 0, 2, 2);
 
-	TVAR(conopentex, "textures/conopen", 3);
-	TVAR(playertex, "textures/player", 3);
-	TVAR(deadtex, "textures/dead", 3);
-	TVAR(dominatingtex, "textures/dominating", 3);
-	TVAR(dominatedtex, "textures/dominated", 3);
-	TVAR(inputtex, "textures/menu", 3);
+	TVAR(IDF_PERSIST, conopentex, "textures/conopen", 3);
+	TVAR(IDF_PERSIST, playertex, "textures/player", 3);
+	TVAR(IDF_PERSIST, deadtex, "textures/dead", 3);
+	TVAR(IDF_PERSIST, dominatingtex, "textures/dominating", 3);
+	TVAR(IDF_PERSIST, dominatedtex, "textures/dominated", 3);
+	TVAR(IDF_PERSIST, inputtex, "textures/menu", 3);
 
-	VARP(teamwidgets, 0, 1, 3); // colour based on team
-	VARP(teamclips, 0, 1, 2);
-	VARP(teamcrosshair, 0, 1, 2);
-	VARP(teamnotices, 0, 0, 1);
-	VARP(teamkillnum, 0, 3, INT_MAX-1);
-	VARP(teamkilltime, 0, 60000, INT_MAX-1);
+	VAR(IDF_PERSIST, teamwidgets, 0, 1, 3); // colour based on team
+	VAR(IDF_PERSIST, teamclips, 0, 1, 2);
+	VAR(IDF_PERSIST, teamcrosshair, 0, 1, 2);
+	VAR(IDF_PERSIST, teamnotices, 0, 0, 1);
+	VAR(IDF_PERSIST, teamkillnum, 0, 3, INT_MAX-1);
+	VAR(IDF_PERSIST, teamkilltime, 0, 60000, INT_MAX-1);
 
-	TVAR(underlaytex, "", 3);
-	VARP(underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
-	FVARP(underlayblend, 0, 0.5f, 1);
-	TVAR(overlaytex, "", 3);
-	VARP(overlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
-	FVARP(overlayblend, 0, 0.5f, 1);
+	TVAR(IDF_PERSIST, underlaytex, "", 3);
+	VAR(IDF_PERSIST, underlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
+	FVAR(IDF_PERSIST, underlayblend, 0, 0.5f, 1);
+	TVAR(IDF_PERSIST, overlaytex, "", 3);
+	VAR(IDF_PERSIST, overlaydisplay, 0, 0, 2); // 0 = only firstperson and alive, 1 = only when alive, 2 = always
+	FVAR(IDF_PERSIST, overlayblend, 0, 0.5f, 1);
 
-	VARP(showdamage, 0, 1, 2); // 1 shows just damage texture, 2 blends as well
-	VARP(damagefade, 0, 0, 1);
-	TVAR(damagetex, "textures/damage", 3);
-	FVARP(damageblend, 0, 0.75f, 1);
-	TVAR(burntex, "textures/burn", 3);
-	FVARP(burnblend, 0, 0.65f, 1);
+	VAR(IDF_PERSIST, showdamage, 0, 1, 2); // 1 shows just damage texture, 2 blends as well
+	VAR(IDF_PERSIST, damagefade, 0, 0, 1);
+	TVAR(IDF_PERSIST, damagetex, "textures/damage", 3);
+	FVAR(IDF_PERSIST, damageblend, 0, 0.75f, 1);
+	TVAR(IDF_PERSIST, burntex, "textures/burn", 3);
+	FVAR(IDF_PERSIST, burnblend, 0, 0.65f, 1);
 
-	VARP(showindicator, 0, 1, 1);
-	FVARP(indicatorsize, 0, 0.03f, 1000);
-	FVARP(indicatorblend, 0, 0.85f, 1);
-	TVAR(indicatortex, "textures/progress", 3);
-	TVAR(zoomtex, "textures/zoom", 3);
+	VAR(IDF_PERSIST, showindicator, 0, 1, 1);
+	FVAR(IDF_PERSIST, indicatorsize, 0, 0.03f, 1000);
+	FVAR(IDF_PERSIST, indicatorblend, 0, 0.85f, 1);
+	TVAR(IDF_PERSIST, indicatortex, "textures/progress", 3);
+	TVAR(IDF_PERSIST, zoomtex, "textures/zoom", 3);
 
-	VARP(showcrosshair, 0, 1, 1);
-	FVARP(crosshairsize, 0, 0.04f, 1000);
-	VARP(crosshairhitspeed, 0, 500, INT_MAX-1);
-	FVARP(crosshairblend, 0, 0.95f, 1);
-	VARP(crosshairhealth, 0, 2, 2);
-	FVARP(crosshairskew, 1e-3f, 0.3f, 1000);
-	TVAR(relativecursortex, "textures/crosshair", 3);
-	TVAR(guicursortex, "textures/cursor", 3);
-	TVAR(editcursortex, "textures/crosshair", 3);
-	TVAR(speccursortex, "textures/crosshair", 3);
-	TVAR(crosshairtex, "textures/crosshair", 3);
-	TVAR(teamcrosshairtex, "", 3);
-	TVAR(hitcrosshairtex, "textures/hitcrosshair", 3);
-	VARP(cursorstyle, 0, 0, 1); // 0 = top left tracking, 1 = center
-	FVARP(cursorsize, 0, 0.025f, 1000);
-	FVARP(cursorblend, 0, 1, 1);
+	VAR(IDF_PERSIST, showcrosshair, 0, 1, 1);
+	FVAR(IDF_PERSIST, crosshairsize, 0, 0.04f, 1000);
+	VAR(IDF_PERSIST, crosshairhitspeed, 0, 500, INT_MAX-1);
+	FVAR(IDF_PERSIST, crosshairblend, 0, 0.95f, 1);
+	VAR(IDF_PERSIST, crosshairhealth, 0, 2, 2);
+	FVAR(IDF_PERSIST, crosshairskew, 1e-3f, 0.3f, 1000);
+	TVAR(IDF_PERSIST, relativecursortex, "textures/crosshair", 3);
+	TVAR(IDF_PERSIST, guicursortex, "textures/cursor", 3);
+	TVAR(IDF_PERSIST, editcursortex, "textures/crosshair", 3);
+	TVAR(IDF_PERSIST, speccursortex, "textures/crosshair", 3);
+	TVAR(IDF_PERSIST, crosshairtex, "textures/crosshair", 3);
+	TVAR(IDF_PERSIST, teamcrosshairtex, "", 3);
+	TVAR(IDF_PERSIST, hitcrosshairtex, "textures/hitcrosshair", 3);
+	VAR(IDF_PERSIST, cursorstyle, 0, 0, 1); // 0 = top left tracking, 1 = center
+	FVAR(IDF_PERSIST, cursorsize, 0, 0.025f, 1000);
+	FVAR(IDF_PERSIST, cursorblend, 0, 1, 1);
 
-	TVAR(zoomcrosshairtex, "", 3);
-	FVARP(zoomcrosshairsize, 0, 0.575f, 1000);
+	TVAR(IDF_PERSIST, zoomcrosshairtex, "", 3);
+	FVAR(IDF_PERSIST, zoomcrosshairsize, 0, 0.575f, 1000);
 
-	VARP(showinventory, 0, 1, 1);
-	VARP(inventoryammo, 0, 1, 2);
-	VARP(inventorygame, 0, 1, 2);
-	VARP(inventoryteams, 0, 5000, INT_MAX-1);
-	VARP(inventorystatus, 0, 2, 2);
-	VARP(inventoryscore, 0, 0, 1);
-	VARP(inventoryweapids, 0, 1, 2);
-	VARP(inventorycolour, 0, 2, 2);
-	FVARP(inventorysize, 0, 0.07f, 1000);
-	FVARP(inventoryskew, 1e-3f, 0.6f, 1000);
-	FVARP(inventorygrow, 1e-3f, 0.75f, 1);
-	FVARP(inventoryblend, 0, 0.6f, 1);
+	VAR(IDF_PERSIST, showinventory, 0, 1, 1);
+	VAR(IDF_PERSIST, inventoryammo, 0, 1, 2);
+	VAR(IDF_PERSIST, inventorygame, 0, 1, 2);
+	VAR(IDF_PERSIST, inventoryteams, 0, 5000, INT_MAX-1);
+	VAR(IDF_PERSIST, inventorystatus, 0, 2, 2);
+	VAR(IDF_PERSIST, inventoryscore, 0, 0, 1);
+	VAR(IDF_PERSIST, inventoryweapids, 0, 1, 2);
+	VAR(IDF_PERSIST, inventorycolour, 0, 2, 2);
+	FVAR(IDF_PERSIST, inventorysize, 0, 0.07f, 1000);
+	FVAR(IDF_PERSIST, inventoryskew, 1e-3f, 0.6f, 1000);
+	FVAR(IDF_PERSIST, inventorygrow, 1e-3f, 0.75f, 1);
+	FVAR(IDF_PERSIST, inventoryblend, 0, 0.6f, 1);
 
-	VARP(inventoryedit, 0, 1, 1);
-	FVARP(inventoryeditblend, 0, 1, 1);
-	FVARP(inventoryeditskew, 1e-3f, 0.65f, 1000);
+	VAR(IDF_PERSIST, inventoryedit, 0, 1, 1);
+	FVAR(IDF_PERSIST, inventoryeditblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, inventoryeditskew, 1e-3f, 0.65f, 1000);
 
-	VARP(inventoryhealth, 0, 3, 3);
-	FVARP(inventoryhealththrob, 0, 1, 1);
-	FVARP(inventoryhealthblend, 0, 0.95f, 1);
-	FVARP(inventoryhealthglow, 0, 0.125f, 1);
-	FVARP(inventoryhealthflash, 0, 1, 1);
-	VARP(inventoryimpulse, 0, 2, 2);
-	FVARP(inventoryimpulseskew, 1e-3f, 0.8f, 1000);
-	VARP(inventorytrial, 0, 2, 2);
+	VAR(IDF_PERSIST, inventoryhealth, 0, 3, 3);
+	FVAR(IDF_PERSIST, inventoryhealththrob, 0, 1, 1);
+	FVAR(IDF_PERSIST, inventoryhealthblend, 0, 0.95f, 1);
+	FVAR(IDF_PERSIST, inventoryhealthglow, 0, 0.125f, 1);
+	FVAR(IDF_PERSIST, inventoryhealthflash, 0, 1, 1);
+	VAR(IDF_PERSIST, inventoryimpulse, 0, 2, 2);
+	FVAR(IDF_PERSIST, inventoryimpulseskew, 1e-3f, 0.8f, 1000);
+	VAR(IDF_PERSIST, inventorytrial, 0, 2, 2);
 
-	TVAR(meleetex, "textures/melee", 3);
-	TVAR(pistoltex, "textures/pistol", 3);
-	TVAR(shotguntex, "textures/shotgun", 3);
-	TVAR(smgtex, "textures/smg", 3);
-	TVAR(grenadetex, "textures/grenade", 3);
-	TVAR(flamertex, "textures/flamer", 3);
-	TVAR(plasmatex, "textures/plasma", 3);
-	TVAR(rifletex, "textures/rifle", 3);
-	TVAR(healthtex, "textures/health", 3);
-	TVAR(progresstex, "textures/progress", 3);
-	TVAR(inventoryenttex, "textures/progress", 3);
-	TVAR(inventoryedittex, "textures/arrow", 3);
-	TVAR(inventorywaittex, "textures/wait", 3);
-	TVAR(inventorydeadtex, "textures/dead", 3);
-	TVAR(inventorychattex, "textures/conopen", 3);
+	TVAR(IDF_PERSIST, meleetex, "textures/melee", 3);
+	TVAR(IDF_PERSIST, pistoltex, "textures/pistol", 3);
+	TVAR(IDF_PERSIST, shotguntex, "textures/shotgun", 3);
+	TVAR(IDF_PERSIST, smgtex, "textures/smg", 3);
+	TVAR(IDF_PERSIST, grenadetex, "textures/grenade", 3);
+	TVAR(IDF_PERSIST, flamertex, "textures/flamer", 3);
+	TVAR(IDF_PERSIST, plasmatex, "textures/plasma", 3);
+	TVAR(IDF_PERSIST, rifletex, "textures/rifle", 3);
+	TVAR(IDF_PERSIST, healthtex, "textures/health", 3);
+	TVAR(IDF_PERSIST, progresstex, "textures/progress", 3);
+	TVAR(IDF_PERSIST, inventoryenttex, "textures/progress", 3);
+	TVAR(IDF_PERSIST, inventoryedittex, "textures/arrow", 3);
+	TVAR(IDF_PERSIST, inventorywaittex, "textures/wait", 3);
+	TVAR(IDF_PERSIST, inventorydeadtex, "textures/dead", 3);
+	TVAR(IDF_PERSIST, inventorychattex, "textures/conopen", 3);
 
-	TVAR(neutraltex, "textures/team", 3);
-	TVAR(alphatex, "textures/teamalpha", 3);
-	TVAR(betatex, "textures/teambeta", 3);
-	TVAR(gammatex, "textures/teamgamma", 3);
-	TVAR(deltatex, "textures/teamdelta", 3);
+	TVAR(IDF_PERSIST, neutraltex, "textures/team", 3);
+	TVAR(IDF_PERSIST, alphatex, "textures/teamalpha", 3);
+	TVAR(IDF_PERSIST, betatex, "textures/teambeta", 3);
+	TVAR(IDF_PERSIST, gammatex, "textures/teamgamma", 3);
+	TVAR(IDF_PERSIST, deltatex, "textures/teamdelta", 3);
 
-	VARP(showclips, 0, 2, 2);
-	FVARP(clipsize, 0, 0.045f, 1000);
-	FVARP(clipblend, 0, 0.45f, 1000);
-	FVARP(clipcolour, 0, 1, 1);
-	TVAR(pistolcliptex, "textures/pistolclip", 3);
-	TVAR(shotguncliptex, "textures/shotgunclip", 3);
-	TVAR(smgcliptex, "textures/smgclip", 3);
-	TVAR(grenadecliptex, "textures/grenadeclip", 3);
-	TVAR(flamercliptex, "textures/flamerclip", 3);
-	TVAR(plasmacliptex, "textures/plasmaclip", 3);
-	TVAR(riflecliptex, "textures/rifleclip", 3);
-	FVARP(pistolclipskew, 0, 0.85f, 1000);
-	FVARP(shotgunclipskew, 0, 1, 1000);
-	FVARP(smgclipskew, 0, 0.85f, 1000);
-	FVARP(grenadeclipskew, 0, 1.25f, 1000);
-	FVARP(flamerclipskew, 0, 0.85f, 1000);
-	FVARP(plasmaclipskew, 0, 0.85f, 1000);
-	FVARP(rifleclipskew, 0, 1, 1000);
+	VAR(IDF_PERSIST, showclips, 0, 2, 2);
+	FVAR(IDF_PERSIST, clipsize, 0, 0.045f, 1000);
+	FVAR(IDF_PERSIST, clipblend, 0, 0.45f, 1000);
+	FVAR(IDF_PERSIST, clipcolour, 0, 1, 1);
+	TVAR(IDF_PERSIST, pistolcliptex, "textures/pistolclip", 3);
+	TVAR(IDF_PERSIST, shotguncliptex, "textures/shotgunclip", 3);
+	TVAR(IDF_PERSIST, smgcliptex, "textures/smgclip", 3);
+	TVAR(IDF_PERSIST, grenadecliptex, "textures/grenadeclip", 3);
+	TVAR(IDF_PERSIST, flamercliptex, "textures/flamerclip", 3);
+	TVAR(IDF_PERSIST, plasmacliptex, "textures/plasmaclip", 3);
+	TVAR(IDF_PERSIST, riflecliptex, "textures/rifleclip", 3);
+	FVAR(IDF_PERSIST, pistolclipskew, 0, 0.85f, 1000);
+	FVAR(IDF_PERSIST, shotgunclipskew, 0, 1, 1000);
+	FVAR(IDF_PERSIST, smgclipskew, 0, 0.85f, 1000);
+	FVAR(IDF_PERSIST, grenadeclipskew, 0, 1.25f, 1000);
+	FVAR(IDF_PERSIST, flamerclipskew, 0, 0.85f, 1000);
+	FVAR(IDF_PERSIST, plasmaclipskew, 0, 0.85f, 1000);
+	FVAR(IDF_PERSIST, rifleclipskew, 0, 1, 1000);
 
-	VARP(showradar, 0, 2, 2);
-	TVAR(bliptex, "textures/blip", 3);
-	TVAR(cardtex, "textures/card", 3);
-	TVAR(flagtex, "textures/flag", 3);
-	TVAR(arrowtex, "textures/arrow", 3);
-	FVARP(radarblend, 0, 1, 1);
-	FVARP(radarcardsize, 0, 0.5f, 1000);
-	FVARP(radarcardblend, 0, 0.75f, 1);
-	FVARP(radarplayerblend, 0, 0.5f, 1);
-	FVARP(radarplayersize, 0, 0.5f, 1000);
-	FVARP(radarblipblend, 0, 0.5f, 1);
-	FVARP(radarblipsize, 0, 0.5f, 1000);
-	FVARP(radarflagblend, 0, 1, 1);
-	FVARP(radarflagsize, 0, 1, 1000);
-	FVARP(radaritemblend, 0, 0.75f, 1);
-	FVARP(radaritemsize, 0, 0.9f, 1000);
-	FVARP(radarsize, 0, 0.035f, 1000);
-	FVARP(radaroffset, 0, 0.035f, 1000);
-	VARP(radardist, 0, 0, INT_MAX-1); // 0 = use world size
-	VARP(radarcard, 0, 0, 2);
-	VARP(radaritems, 0, 2, 2);
-	VARP(radaritemspawn, 0, 1, 1);
-	VARP(radaritemtime, 0, 5000, INT_MAX-1);
-	VARP(radaritemnames, 0, 0, 2);
-	VARP(radarplayers, 0, 2, 2);
-	VARP(radarplayerfilter, 0, 0, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
-	VARP(radarplayernames, 0, 0, 2);
-	VARP(radarflags, 0, 2, 2);
-	VARP(radarflagnames, 0, 1, 2);
+	VAR(IDF_PERSIST, showradar, 0, 2, 2);
+	TVAR(IDF_PERSIST, bliptex, "textures/blip", 3);
+	TVAR(IDF_PERSIST, cardtex, "textures/card", 3);
+	TVAR(IDF_PERSIST, flagtex, "textures/flag", 3);
+	TVAR(IDF_PERSIST, arrowtex, "textures/arrow", 3);
+	FVAR(IDF_PERSIST, radarblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, radarcardsize, 0, 0.5f, 1000);
+	FVAR(IDF_PERSIST, radarcardblend, 0, 0.75f, 1);
+	FVAR(IDF_PERSIST, radarplayerblend, 0, 0.5f, 1);
+	FVAR(IDF_PERSIST, radarplayersize, 0, 0.5f, 1000);
+	FVAR(IDF_PERSIST, radarblipblend, 0, 0.5f, 1);
+	FVAR(IDF_PERSIST, radarblipsize, 0, 0.5f, 1000);
+	FVAR(IDF_PERSIST, radarflagblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, radarflagsize, 0, 1, 1000);
+	FVAR(IDF_PERSIST, radaritemblend, 0, 0.75f, 1);
+	FVAR(IDF_PERSIST, radaritemsize, 0, 0.9f, 1000);
+	FVAR(IDF_PERSIST, radarsize, 0, 0.035f, 1000);
+	FVAR(IDF_PERSIST, radaroffset, 0, 0.035f, 1000);
+	VAR(IDF_PERSIST, radardist, 0, 0, INT_MAX-1); // 0 = use world size
+	VAR(IDF_PERSIST, radarcard, 0, 0, 2);
+	VAR(IDF_PERSIST, radaritems, 0, 2, 2);
+	VAR(IDF_PERSIST, radaritemspawn, 0, 1, 1);
+	VAR(IDF_PERSIST, radaritemtime, 0, 5000, INT_MAX-1);
+	VAR(IDF_PERSIST, radaritemnames, 0, 0, 2);
+	VAR(IDF_PERSIST, radarplayers, 0, 2, 2);
+	VAR(IDF_PERSIST, radarplayerfilter, 0, 0, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
+	VAR(IDF_PERSIST, radarplayernames, 0, 0, 2);
+	VAR(IDF_PERSIST, radarflags, 0, 2, 2);
+	VAR(IDF_PERSIST, radarflagnames, 0, 1, 2);
 
-	VARP(radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
-	VARP(radardamagetime, 1, 500, INT_MAX-1);
-	VARP(radardamagefade, 1, 4500, INT_MAX-1);
-	FVARP(radardamagesize, 0, 5, 1000);
-	FVARP(radardamageblend, 0, 1, 1);
-	FVARP(radardamagetrack, 0, 1, 1000);
-	VARP(radardamagemin, 1, 25, INT_MAX-1);
-	VARP(radardamagemax, 1, 100, INT_MAX-1);
+	VAR(IDF_PERSIST, radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
+	VAR(IDF_PERSIST, radardamagetime, 1, 500, INT_MAX-1);
+	VAR(IDF_PERSIST, radardamagefade, 1, 4500, INT_MAX-1);
+	FVAR(IDF_PERSIST, radardamagesize, 0, 5, 1000);
+	FVAR(IDF_PERSIST, radardamageblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, radardamagetrack, 0, 1, 1000);
+	VAR(IDF_PERSIST, radardamagemin, 1, 25, INT_MAX-1);
+	VAR(IDF_PERSIST, radardamagemax, 1, 100, INT_MAX-1);
 
-	VARP(showeditradar, 0, 0, 1);
-	VARP(editradarcard, 0, 0, 1);
-	VARP(editradardist, 0, 64, INT_MAX-1); // 0 = use radardist
-	VARP(editradarnoisy, 0, 1, 2);
+	VAR(IDF_PERSIST, showeditradar, 0, 0, 1);
+	VAR(IDF_PERSIST, editradarcard, 0, 0, 1);
+	VAR(IDF_PERSIST, editradardist, 0, 64, INT_MAX-1); // 0 = use radardist
+	VAR(IDF_PERSIST, editradarnoisy, 0, 1, 2);
 
-	VARP(motionblurfx, 0, 1, 2); // 0 = off, 1 = on, 2 = override
-	FVARP(motionblurmin, 0, 0.0f, 1); // minimum
-	FVARP(motionblurmax, 0, 0.75f, 1); // maximum
-	FVARP(motionbluramt, 0, 0.5f, 1); // used for override
+	VAR(IDF_PERSIST, motionblurfx, 0, 1, 2); // 0 = off, 1 = on, 2 = override
+	FVAR(IDF_PERSIST, motionblurmin, 0, 0.0f, 1); // minimum
+	FVAR(IDF_PERSIST, motionblurmax, 0, 0.75f, 1); // maximum
+	FVAR(IDF_PERSIST, motionbluramt, 0, 0.5f, 1); // used for override
 
 	bool chkcond(int val, bool cond)
 	{
@@ -444,7 +444,7 @@ namespace hud
 		{
 			case WEAP_S_POWER:
 			{
-				amt = clamp(float(millis)/float(WPA(weap, power)), 0.f, 1.f);
+				amt = clamp(float(millis)/float(WEAP(weap, power)), 0.f, 1.f);
 				colourskew(r, g, b, 1.f-amt);
 				break;
 			}
@@ -460,7 +460,7 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
-    	if(!isweap(weap) || (!WPB(weap, sub, false) && !WPB(weap, sub, true))) return;
+    	if(!isweap(weap) || (!WEAP2(weap, sub, false) && !WEAP2(weap, sub, true))) return;
 		const char *cliptexs[WEAP_MAX] = {
 			grenadecliptex, pistolcliptex, shotguncliptex, smgcliptex,
 			flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
@@ -469,7 +469,7 @@ namespace hud
 		Texture *t = textureload(cliptexs[weap], 3);
 		if(!clipsizes[weap])
 		{
-			WPS(clipmax, weap, max);
+			WEAPSTR(clipmax, weap, max);
 			clipsizes[weap] = getvarmax(clipmax);
 		}
 		int ammo = game::focus->ammo[weap], maxammo = clipsizes[weap];
@@ -608,7 +608,7 @@ namespace hud
 		if(index != POINTER_GUI && teamcrosshair >= (crosshairhealth ? 2 : 1)) skewcolour(r, g, b);
 		if(game::focus->state == CS_ALIVE && index >= POINTER_HAIR)
 		{
-			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && WPA(game::focus->weapselect, zooms))
+			if(index == POINTER_ZOOM && *zoomcrosshairtex && game::inzoom() && WEAP(game::focus->weapselect, zooms))
 			{
 				int frame = lastmillis-game::lastzoom, off = int(zoomcrosshairsize*hudsize)-cs;
 				float amt = frame <= game::zoomtime ? clamp(float(frame)/float(game::zoomtime), 0.f, 1.f) : 1.f;
@@ -624,7 +624,7 @@ namespace hud
 			if(game::focus->state == CS_ALIVE && game::focus->hasweap(game::focus->weapselect, m_weapon(game::gamemode, game::mutators)))
 			{
 				if(showclips) drawclip(game::focus->weapselect, nx, ny, clipsize*hudsize);
-				if(showindicator && WPA(game::focus->weapselect, power) && game::focus->weapstate[game::focus->weapselect] == WEAP_S_POWER)
+				if(showindicator && WEAP(game::focus->weapselect, power) && game::focus->weapstate[game::focus->weapselect] == WEAP_S_POWER)
 					drawindicator(game::focus->weapselect, nx, ny, int(indicatorsize*hudsize));
 			}
 			if(game::mousestyle() >= 1) // renders differently
@@ -639,7 +639,7 @@ namespace hud
         else if(!showcrosshair || game::focus->state == CS_DEAD || !client::ready()) index = POINTER_NONE;
         else if(game::focus->state == CS_EDITING) index = POINTER_EDIT;
         else if(game::focus->state == CS_SPECTATOR || game::focus->state == CS_WAITING) index = POINTER_SPEC;
-        else if(game::inzoom() && WPA(game::focus->weapselect, zooms)) index = POINTER_ZOOM;
+        else if(game::inzoom() && WEAP(game::focus->weapselect, zooms)) index = POINTER_ZOOM;
         else if(lastmillis-game::focus->lasthit <= crosshairhitspeed) index = POINTER_HIT;
         else if(m_team(game::gamemode, game::mutators))
         {
@@ -875,7 +875,7 @@ namespace hud
 								SEARCHBINDCACHE(attackkey)("action 0", 0);
 								ty += draw_textx("Press \fs\fc%s\fS to attack", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, attackkey)*noticescale;
 								SEARCHBINDCACHE(altkey)("action 1", 0);
-								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, altkey, WPA(target->weapselect, zooms) ? "zoom" : "alt-attack")*noticescale;
+								ty += draw_textx("Press \fs\fc%s\fS to %s", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, altkey, WEAP(target->weapselect, zooms) ? "zoom" : "alt-attack")*noticescale;
 							}
 							if(target->canreload(target->weapselect, m_weapon(game::gamemode, game::mutators), lastmillis))
 							{
@@ -1099,7 +1099,7 @@ namespace hud
 			{
 				int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
 				if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
-				fade *= clamp(d->vel.magnitude()/FWV(movespeed), 0.f, 1.f);
+				fade *= clamp(d->vel.magnitude()/PHYS(movespeed), 0.f, 1.f);
 			}
 			else if(d->state != CS_EDITING) return;
 			if(chkcond(radarplayernames, game::tvmode()))
@@ -1413,7 +1413,7 @@ namespace hud
 						b = (weaptype[i].colour&0xFF)/255.f;
 					}
 					int oldy = y-sy;
-					if(inventoryammo && (instate || inventoryammo > 1) && (WPB(i, sub, false) || WPB(i, sub, true)) && game::focus->hasweap(i, sweap))
+					if(inventoryammo && (instate || inventoryammo > 1) && (WEAP2(i, sub, false) || WEAP2(i, sub, true)) && game::focus->hasweap(i, sweap))
 						sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "super", "%d", game::focus->ammo[i]);
 					else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
 					if(inventoryweapids && (instate || inventoryweapids > 1))
@@ -1533,9 +1533,9 @@ namespace hud
 				if(!sy) sy += dt;
 				popfont();
 			}
-			if(FWV(impulsestyle) && FWV(impulsemeter) && inventoryimpulse)
+			if(PHYS(impulsestyle) && PHYS(impulsemeter) && inventoryimpulse)
 			{
-				float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(FWV(impulsemeter)), 0.f, 1.f) : 1;
+				float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(PHYS(impulsemeter)), 0.f, 1.f) : 1;
 				settexture(progresstex, 3);
 				float r = 1.f, g = 1.f, b = 1.f;
 				int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2, is = iw/2, ix = x+ow+is, iy = y-sy-is;
@@ -1551,7 +1551,7 @@ namespace hud
 				{
 					pushfont("sub");
 					draw_textx("%s%d%%", x+iw/2+ow, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-						game::focus->impulse[IM_METER] > 0 ? (FWV(impulsemeter)-game::focus->impulse[IM_METER] > FWV(impulsecost) ? "\fy" : "\fw") : "\fg",
+						game::focus->impulse[IM_METER] > 0 ? (PHYS(impulsemeter)-game::focus->impulse[IM_METER] > PHYS(impulsecost) ? "\fy" : "\fw") : "\fg",
 							int(len*100));
 					popfont();
 				}
@@ -1788,7 +1788,7 @@ namespace hud
 				drawtex(0, 0, w, h);
 			}
 		}
-		if(game::focus->state == CS_ALIVE && game::inzoom() && WPA(game::focus->weapselect, zooms)) drawzoom(w, h);
+		if(game::focus->state == CS_ALIVE && game::inzoom() && WEAP(game::focus->weapselect, zooms)) drawzoom(w, h);
 		if(showdamage)
 		{
 			if(fireburntime && game::focus->state == CS_ALIVE) drawfire(w, h, os, fade);

@@ -1,13 +1,13 @@
 #include "engine.h"
 
-VARNP(blobs, showblobs, 0, 1, 1);
-VARFP(blobintensity, 0, 60, 100, resetblobs());
-VARFP(blobheight, 1, 32, 128, resetblobs());
-VARFP(blobfadelow, 1, 8, 32, resetblobs());
-VARFP(blobfadehigh, 1, 8, 32, resetblobs());
-VARFP(blobmargin, 0, 1, 16, resetblobs());
+VARN(IDF_PERSIST, blobs, showblobs, 0, 1, 1);
+VARF(IDF_PERSIST, blobintensity, 0, 60, 100, resetblobs());
+VARF(IDF_PERSIST, blobheight, 1, 32, 128, resetblobs());
+VARF(IDF_PERSIST, blobfadelow, 1, 8, 32, resetblobs());
+VARF(IDF_PERSIST, blobfadehigh, 1, 8, 32, resetblobs());
+VARF(IDF_PERSIST, blobmargin, 0, 1, 16, resetblobs());
 
-VAR(dbgblob, 0, 0, 1);
+VAR(0, dbgblob, 0, 0, 1);
 
 struct blobinfo
 {
@@ -38,7 +38,7 @@ struct blobrenderer
     int maxverts, startvert, endvert, availverts;
     ushort *indexes;
     int maxindexes, startindex, endindex, availindexes;
-    
+
     blobinfo *lastblob, *flushblob;
 
     vec blobmin, blobmax;
@@ -119,7 +119,7 @@ struct blobrenderer
         blobinfo &b = blobs[endblob];
         int next = endblob + 1;
         if(next>=maxblobs) next = 0;
-        if(next==startblob) 
+        if(next==startblob)
         {
             lastblob = &b;
             freeblob();
@@ -142,8 +142,8 @@ struct blobrenderer
         startindex = endindex = 0;
         availindexes = maxindexes - 3;
     }
-    
-   
+
+
     template<int C>
     static int split(const vec *in, int numin, float val, vec *out)
     {
@@ -175,7 +175,7 @@ struct blobrenderer
             const vec &p = *n++;
             float pc = c;
             c = (*n)[C];
-            if(pc >= val) 
+            if(pc >= val)
             {
                 out[numout++] = p;
                 if(pc > val && c < val) (out[numout++] = *n).sub(p).mul((pc - val) / (pc - c)).add(p);
@@ -184,7 +184,7 @@ struct blobrenderer
         }
         float ic = (*in)[C];
         if(c >= val)
-        {   
+        {
             out[numout++] = *n;
             if(c > val && ic < val) (out[numout++] = *in).sub(*n).mul((c - val) / (c - ic)).add(*n);
         }
@@ -203,7 +203,7 @@ struct blobrenderer
             const vec &p = *n++;
             float pc = c;
             c = (*n)[C];
-            if(pc <= val)   
+            if(pc <= val)
             {
                 out[numout++] = p;
                 if(pc < val && c > val) (out[numout++] = *n).sub(p).mul((pc - val) / (pc - c)).add(p);
@@ -212,7 +212,7 @@ struct blobrenderer
         }
         float ic = (*in)[C];
         if(c <= val)
-        { 
+        {
             out[numout++] = *n;
             if(c < val && ic > val) (out[numout++] = *in).sub(*n).mul((c - val) / (c - ic)).add(*n);
         }
@@ -222,11 +222,11 @@ struct blobrenderer
 
     void dupblob()
     {
-        if(lastblob->startvert >= lastblob->endvert) 
+        if(lastblob->startvert >= lastblob->endvert)
         {
             lastblob->startindex = lastblob->endindex = endindex;
             lastblob->startvert = lastblob->endvert = endvert;
-            return; 
+            return;
         }
         blobinfo &b = newblob(lastblob->o, lastblob->radius);
         b.millis = -1;
@@ -270,7 +270,7 @@ struct blobrenderer
                 indexes[endindex++] = i1;
                 indexes[endindex++] = i2;
                 i2 = addvert(*cur++);
-                indexes[endindex++] = i2; 
+                indexes[endindex++] = i2;
             }
 
             availverts -= endvert - lastblob->endvert;
@@ -332,7 +332,7 @@ struct blobrenderer
             if((p1.x - p0.x)*(p2.y - p0.y) - (p1.y - p0.y)*(p2.x - p0.x) < 0) goto nexttri;
             v1[0] = p0; v1[1] = p1; v1[2] = p2;
             int numv = 3;
-            if(!convexity && p0 != p3 && p2 != p3) { v1[3] = p3; numv = 4; } 
+            if(!convexity && p0 != p3 && p2 != p3) { v1[3] = p3; numv = 4; }
             v = v1;
             CLIPSIDE(1<<0, clipabove<0>, blobmin.x, { if(numv < 3) goto nexttri; });
             CLIPSIDE(1<<1, clipbelow<0>, blobmax.x, { if(numv < 3) goto nexttri; });
@@ -364,7 +364,7 @@ struct blobrenderer
 
             addtris(v, numv);
         }
-    } 
+    }
 
     int checkoverlap(const ivec &o, int size)
     {
@@ -423,7 +423,7 @@ struct blobrenderer
                 uchar vertused = fvmasks[vismask];
                 vec v[8];
                 loopj(8) if(vertused&(1<<j)) calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, solid);
-                loopj(6) if(vismask&(1<<j)) 
+                loopj(6) if(vismask&(1<<j))
                 {
                     if(solid || (flataxisface(cu[i], j) && faceedges(cu[i], j)==F_SOLID)) genflattris(cu[i], j, v, overlap);
                     else genslopedtris(cu[i], j, v, overlap);
@@ -451,7 +451,7 @@ struct blobrenderer
         blobalpha = uchar(scale);
         gentris(worldroot, ivec(0, 0, 0), hdr.worldsize>>1);
         return b.millis >= 0 ? &b : NULL;
-    } 
+    }
 
     static void setuprenderstate()
     {
@@ -495,7 +495,7 @@ struct blobrenderer
     {
         float minz = b->o.z - (blobheight + blobfadelow), maxz = b->o.z + blobfadehigh,
               scale = fade*blobintensity*255/100.0f, scalelow = scale / blobfadelow, scalehigh = scale / blobfadehigh;
-        uchar alpha = uchar(scale); 
+        uchar alpha = uchar(scale);
         b->millis = totalmillis;
         do
         {
@@ -517,7 +517,7 @@ struct blobrenderer
     {
         if(lastrender != this)
         {
-            if(!lastrender) 
+            if(!lastrender)
             {
                 if(!blobs) initblobs();
 
@@ -529,7 +529,7 @@ struct blobrenderer
             if(!lastrender || lastrender->tex != tex) glBindTexture(GL_TEXTURE_2D, tex->id);
             lastrender = this;
         }
-    
+
         union { int i; float f; } ox, oy;
         ox.f = o.x; oy.f = o.y;
         uint hash = uint(ox.i^~oy.i^(INT_MAX-oy.i)^uint(radius));
@@ -541,7 +541,7 @@ struct blobrenderer
             cache[hash] = b;
             if(!b) return;
         }
-        else if(fade < 1 && b->millis < totalmillis) fadeblob(b, fade); 
+        else if(fade < 1 && b->millis < totalmillis) fadeblob(b, fade);
         do
         {
             if(b->endvert - b->startvert >= 3)
@@ -551,9 +551,9 @@ struct blobrenderer
                 xtravertsva += b->endvert - b->startvert;
             }
             int offset = b - &blobs[0] + 1;
-            if(offset >= maxblobs) offset = 0; 
+            if(offset >= maxblobs) offset = 0;
             if(offset < endblob ? offset > startblob || startblob > endblob : offset > startblob) b = &blobs[offset];
-            else break; 
+            else break;
         } while(b->millis < 0);
     }
 };
@@ -561,10 +561,10 @@ struct blobrenderer
 int blobrenderer::lastreset = 0;
 blobrenderer *blobrenderer::lastrender = NULL;
 
-VARFP(blobstattris, 128, 4096, 1<<16, initblobs(BLOB_STATIC));
-VARFP(blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
+VARF(IDF_PERSIST, blobstattris, 128, 4096, 1<<16, initblobs(BLOB_STATIC));
+VARF(IDF_PERSIST, blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
 
-static blobrenderer blobs[] = 
+static blobrenderer blobs[] =
 {
     blobrenderer("data/particles/blob.png"),
     blobrenderer("data/particles/blob.png")

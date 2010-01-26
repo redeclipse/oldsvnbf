@@ -54,10 +54,7 @@ namespace auth
         if(paused)
         {
             int vars = 0;
-			if(GVAR(varslock) < 2)
-			{
-				loopv(clients) if(clients[i]->privilege >= (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
-			}
+			loopv(clients) if(clients[i]->privilege >= (GAME(varslock) ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
             if(!vars) setpause(false);
         }
 	}

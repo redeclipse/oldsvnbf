@@ -4,14 +4,14 @@ namespace entities
 	vector<extentity *> ents;
 	int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
 
-	VARP(showentdescs, 0, 2, 3);
-	VARP(showentinfo, 0, 2, 5);
-	VARP(showentnoisy, 0, 0, 2);
-	VARP(showentdir, 0, 2, 3); // 0 = off, 1 = only selected, 2 = always when editing, 3 = always in editmode
-	VARP(showentradius, 0, 1, 3);
-	VARP(showentlinks, 0, 1, 3);
-	VARP(showlighting, 0, 0, 1);
-	VAR(dropwaypoints, 0, 0, 1); // drop waypoints during play
+	VAR(IDF_PERSIST, showentdescs, 0, 2, 3);
+	VAR(IDF_PERSIST, showentinfo, 0, 2, 5);
+	VAR(IDF_PERSIST, showentnoisy, 0, 0, 2);
+	VAR(IDF_PERSIST, showentdir, 0, 2, 3); // 0 = off, 1 = only selected, 2 = always when editing, 3 = always in editmode
+	VAR(IDF_PERSIST, showentradius, 0, 1, 3);
+	VAR(IDF_PERSIST, showentlinks, 0, 1, 3);
+	VAR(IDF_PERSIST, showlighting, 0, 0, 1);
+	VAR(0, dropwaypoints, 0, 0, 1); // drop waypoints during play
 
 	vector<extentity *> &getents() { return ents; }
 	 int lastent(int type) { return lastenttype[type]; }
@@ -417,7 +417,7 @@ namespace entities
 		entcachemin = vec(1e16f, 1e16f, 1e16f);
 		entcachemax = vec(-1e16f, -1e16f, -1e16f);
 	}
-	ICOMMAND(clearentcache, "", (void), clearentcache());
+	ICOMMAND(0, clearentcache, "", (void), clearentcache());
 
 	void buildentcache()
 	{
@@ -701,7 +701,7 @@ namespace entities
 	}
 
 	gameent *trigger = NULL;
-	ICOMMAND(triggerclientnum, "", (), intret(trigger ? trigger->clientnum : -1));
+	ICOMMAND(0, triggerclientnum, "", (), intret(trigger ? trigger->clientnum : -1));
 
 	void runtrigger(int n, gameent *d, bool act = true)
 	{
@@ -736,7 +736,7 @@ namespace entities
 	{
 		loopi(lastenttype[TRIGGER]) if(ents[i]->type == TRIGGER && ents[i]->attrs[0] == n && ents[i]->attrs[2] == TA_MANUAL) runtrigger(i, d, false);
 	}
-	ICOMMAND(exectrigger, "i", (int *n), if(worldidents) runtriggers(*n, trigger ? trigger : game::player1));
+	ICOMMAND(0, exectrigger, "i", (int *n), if(worldidents) runtriggers(*n, trigger ? trigger : game::player1));
 
 	void execitem(int n, gameent *d, bool &tried)
 	{

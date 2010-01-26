@@ -8,8 +8,8 @@ hashtable<const char *, menu> menus;
 vector<menu *> menustack;
 vector<char *> executelater;
 bool shouldclearmenu = true, clearlater = false;
-FVARP(menuscale, 0, 0.02f, 1);
-VAR(guipasses, 1, -1, -1);
+FVAR(IDF_PERSIST, menuscale, 0, 0.02f, 1);
+VAR(0, guipasses, 1, -1, -1);
 
 void popgui()
 {
@@ -105,8 +105,8 @@ void guinoautotab(char *contents)
 }
 
 //@DOC name and icon are optional
-SVAR(guirollovername, "");
-SVAR(guirolloveraction, "");
+SVAR(0, guirollovername, "");
+SVAR(0, guirolloveraction, "");
 
 void guibutton(char *name, char *action, char *icon, char *altact)
 {
@@ -130,8 +130,8 @@ void guibutton(char *name, char *action, char *icon, char *altact)
 	}
 }
 
-SVAR(guirolloverimgpath, "");
-SVAR(guirolloverimgaction, "");
+SVAR(0, guirolloverimgpath, "");
+SVAR(0, guirolloverimgaction, "");
 
 void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
@@ -521,38 +521,38 @@ void guimodify(char *name, char *contents)
 	m->contents = contents && contents[0] ? newstring(contents) : NULL;
 }
 
-COMMAND(newgui, "sss");
-COMMAND(guiheader, "s");
-COMMAND(guimodify, "ss");
-COMMAND(guibutton, "ssss");
-COMMAND(guitext, "ss");
-COMMANDN(cleargui, cleargui_, "i");
-ICOMMAND(showgui, "ss", (const char *s, const char *n), showgui(s, n[0] ? atoi(n) : 0));
-COMMAND(guishowtitle, "i");
-COMMAND(guistayopen, "s");
-COMMAND(guinoautotab, "s");
+COMMAND(0, newgui, "sss");
+COMMAND(0, guiheader, "s");
+COMMAND(0, guimodify, "ss");
+COMMAND(0, guibutton, "ssss");
+COMMAND(0, guitext, "ss");
+COMMANDN(0, cleargui, cleargui_, "i");
+ICOMMAND(0, showgui, "ss", (const char *s, const char *n), showgui(s, n[0] ? atoi(n) : 0));
+COMMAND(0, guishowtitle, "i");
+COMMAND(0, guistayopen, "s");
+COMMAND(0, guinoautotab, "s");
 
-ICOMMAND(guicount, "", (), intret(menustack.length()));
+ICOMMAND(0, guicount, "", (), intret(menustack.length()));
 
-COMMAND(guilist, "s");
-COMMAND(guibody, "sss");
-COMMAND(guititle, "s");
-COMMAND(guibar,"");
-COMMAND(guistrut,"fi");
-COMMAND(guifont,"ss");
-COMMAND(guiimage,"ssfiss");
-COMMAND(guislice,"ssfffsss");
-COMMAND(guiprogress,"ff");
-COMMAND(guislider,"siisii");
-COMMAND(guilistslider, "sssii");
-COMMAND(guinameslider, "ssssii");
-COMMAND(guiradio,"ssfs");
-COMMAND(guibitfield, "ssis");
-COMMAND(guicheckbox, "ssffs");
-COMMAND(guitab, "s");
-COMMAND(guifield, "sis");
-COMMAND(guikeyfield, "sis");
-COMMAND(guieditor, "siii");
+COMMAND(0, guilist, "s");
+COMMAND(0, guibody, "sss");
+COMMAND(0, guititle, "s");
+COMMAND(0, guibar,"");
+COMMAND(0, guistrut,"fi");
+COMMAND(0, guifont,"ss");
+COMMAND(0, guiimage,"ssfiss");
+COMMAND(0, guislice,"ssfffsss");
+COMMAND(0, guiprogress,"ff");
+COMMAND(0, guislider,"siisii");
+COMMAND(0, guilistslider, "sssii");
+COMMAND(0, guinameslider, "ssssii");
+COMMAND(0, guiradio,"ssfs");
+COMMAND(0, guibitfield, "ssis");
+COMMAND(0, guicheckbox, "ssffs");
+COMMAND(0, guitab, "s");
+COMMAND(0, guifield, "sis");
+COMMAND(0, guikeyfield, "sis");
+COMMAND(0, guieditor, "siii");
 
 struct change
 {
@@ -593,7 +593,7 @@ static struct applymenu : menu
     }
 } applymenu;
 
-VARP(applydialog, 0, 1, 1);
+VAR(IDF_PERSIST, applydialog, 0, 1, 1);
 
 void addchange(const char *desc, int type)
 {
@@ -652,4 +652,4 @@ bool menuactive()
 	return !menustack.empty();
 }
 
-ICOMMAND(menustacklen, "", (void), intret(menustack.length()));
+ICOMMAND(0, menustacklen, "", (void), intret(menustack.length()));

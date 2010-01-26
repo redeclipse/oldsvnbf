@@ -298,7 +298,7 @@ void ragdolldata::updatepos()
     }
 }
 
-VAR(ragdollconstrain, 1, 5, 100);
+VAR(0, ragdollconstrain, 1, 5, 100);
 
 void ragdolldata::constrain()
 {
@@ -313,19 +313,19 @@ void ragdolldata::constrain()
     }
 }
 
-FVAR(ragdollbodyfric, 0, 0.95f, 1);
-FVAR(ragdollbodyfricscale, 0, 2, 10);
-FVAR(ragdollliquidfric, 0, 0.85f, 1);
-FVAR(ragdollgroundfric, 0, 0.8f, 1);
-FVAR(ragdollairfric, 0, 0.996f, 1);
-FVAR(ragdollgravity, 0, 1.f, 1000);
-FVAR(ragdollelasticity, 0, 0.5f, 1000);
-VAR(ragdollexpireoffset, 0, 1000, 30000);
-VAR(ragdollliquidexpireoffset, 0, 3000, 30000);
-VAR(ragdollexpiremillis, 1, 1000, 30000);
-FVAR(ragdollexpirefricmin, 0, 0.05f, 1);
-VAR(ragdolltimestepmin, 1, 5, 50);
-VAR(ragdolltimestepmax, 1, 10, 50);
+FVAR(0, ragdollbodyfric, 0, 0.95f, 1);
+FVAR(0, ragdollbodyfricscale, 0, 2, 10);
+FVAR(0, ragdollliquidfric, 0, 0.85f, 1);
+FVAR(0, ragdollgroundfric, 0, 0.8f, 1);
+FVAR(0, ragdollairfric, 0, 0.996f, 1);
+FVAR(0, ragdollgravity, 0, 1.f, 1000);
+FVAR(0, ragdollelasticity, 0, 0.5f, 1000);
+VAR(0, ragdollexpireoffset, 0, 1000, 30000);
+VAR(0, ragdollliquidexpireoffset, 0, 3000, 30000);
+VAR(0, ragdollexpiremillis, 1, 1000, 30000);
+FVAR(0, ragdollexpirefricmin, 0, 0.05f, 1);
+VAR(0, ragdolltimestepmin, 1, 5, 50);
+VAR(0, ragdolltimestepmax, 1, 10, 50);
 
 void ragdolldata::move(dynent *pl, float ts)
 {
@@ -372,8 +372,8 @@ void ragdolldata::move(dynent *pl, float ts)
     calcboundsphere();
 }
 
-FVAR(ragdolleyesmooth, 0, 0.5f, 1);
-VAR(ragdolleyesmoothmillis, 1, 50, 10000);
+FVAR(0, ragdolleyesmooth, 0, 0.5f, 1);
+VAR(0, ragdolleyesmoothmillis, 1, 50, 10000);
 
 bool validragdoll(dynent *d, int millis)
 {

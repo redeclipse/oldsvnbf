@@ -79,7 +79,7 @@ namespace client
 			result(text);
     	}
     }
-    ICOMMAND(getvote, "ii", (int *num, int *player), getvotes(*num, *player));
+    ICOMMAND(0, getvote, "ii", (int *num, int *player), getvotes(*num, *player));
 
     int lastauth = 0;
     string authname = "", authkey = "";
@@ -89,20 +89,20 @@ namespace client
         copystring(authname, name);
         copystring(authkey, key);
     }
-    ICOMMAND(authkey, "ss", (char *name, char *key), setauthkey(name, key));
+    ICOMMAND(0, authkey, "ss", (char *name, char *key), setauthkey(name, key));
 
 	// collect c2s messages conveniently
 	vector<uchar> messages;
     bool messagereliable = false;
 
-	VARP(colourchat, 0, 1, 1);
-	VARP(showlaptimes, 0, 2, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
-	SVARP(serversort, "");
+	VAR(IDF_PERSIST, colourchat, 0, 1, 1);
+	VAR(IDF_PERSIST, showlaptimes, 0, 2, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
+	SVAR(IDF_PERSIST, serversort, "");
 
-	ICOMMAND(mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
-	ICOMMAND(getname, "", (), result(escapetext(game::player1->name)));
-	ICOMMAND(getteam, "", (), result(teamtype[game::player1->team].name));
-    ICOMMAND(getteamicon, "", (), result(hud::teamtex(game::player1->team)));
+	ICOMMAND(0, mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
+	ICOMMAND(0, getname, "", (), result(escapetext(game::player1->name)));
+	ICOMMAND(0, getteam, "", (), result(teamtype[game::player1->team].name));
+    ICOMMAND(0, getteamicon, "", (), result(hud::teamtex(game::player1->team)));
 
     const char *getname() { return game::player1->name; }
 
@@ -116,7 +116,7 @@ namespace client
 		}
 		else conoutft(CON_MESG, "\fgyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
 	}
-	ICOMMAND(name, "s", (char *s), switchname(s));
+	ICOMMAND(0, name, "s", (char *s), switchname(s));
 
 	int teamname(const char *team)
 	{
@@ -157,7 +157,7 @@ namespace client
 		}
 		else conoutft(CON_MESG, "\fs\fgyour team is:\fS \fs%s%s\fS", teamtype[game::player1->team].chat, teamtype[game::player1->team].name);
 	}
-	ICOMMAND(team, "s", (char *s), switchteam(s));
+	ICOMMAND(0, team, "s", (char *s), switchteam(s));
 
 	int numchannels() { return 3; }
 
@@ -236,35 +236,35 @@ namespace client
         if(colour && d) return game::colorname(d);
         return d ? d->name : "";
     }
-    ICOMMAND(getclientname, "ii", (int *cn, int *colour), result(escapetext(getclientname(*cn, *colour))));
+    ICOMMAND(0, getclientname, "ii", (int *cn, int *colour), result(escapetext(getclientname(*cn, *colour))));
 
     int getclientteam(int cn)
     {
         gameent *d = game::getclient(cn);
         return d ? d->team : -1;
     }
-    ICOMMAND(getclientteam, "i", (int *cn), intret(getclientteam(*cn)));
+    ICOMMAND(0, getclientteam, "i", (int *cn), intret(getclientteam(*cn)));
 
     bool ismaster(int cn)
     {
         gameent *d = game::getclient(cn);
         return d && d->privilege >= PRIV_MASTER;
     }
-    ICOMMAND(ismaster, "i", (int *cn), intret(ismaster(*cn) ? 1 : 0));
+    ICOMMAND(0, ismaster, "i", (int *cn), intret(ismaster(*cn) ? 1 : 0));
 
     bool isadmin(int cn)
     {
         gameent *d = game::getclient(cn);
         return d && d->privilege >= PRIV_ADMIN;
     }
-    ICOMMAND(isadmin, "i", (int *cn), intret(isadmin(*cn) ? 1 : 0));
+    ICOMMAND(0, isadmin, "i", (int *cn), intret(isadmin(*cn) ? 1 : 0));
 
     bool isspectator(int cn)
     {
         gameent *d = game::getclient(cn);
         return d && d->state == CS_SPECTATOR;
     }
-    ICOMMAND(isspectator, "i", (int *cn), intret(isspectator(*cn) ? 1 : 0));
+    ICOMMAND(0, isspectator, "i", (int *cn), intret(isspectator(*cn) ? 1 : 0));
 
     bool isai(int cn, int type)
     {
@@ -272,7 +272,7 @@ namespace client
         int aitype = type > 0 && type < AI_MAX ? type : AI_BOT;
         return d && d->aitype == aitype;
     }
-    ICOMMAND(isai, "ii", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
+    ICOMMAND(0, isai, "ii", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
 
     int parseplayer(const char *arg)
     {
@@ -297,7 +297,7 @@ namespace client
         }
         return -1;
     }
-    ICOMMAND(getclientnum, "s", (char *name), intret(name[0] ? parseplayer(name) : game::player1->clientnum));
+    ICOMMAND(0, getclientnum, "s", (char *name), intret(name[0] ? parseplayer(name) : game::player1->clientnum));
 
     void listclients(bool local)
     {
@@ -319,20 +319,20 @@ namespace client
         buf.add('\0');
         result(buf.getbuf());
     }
-    ICOMMAND(listclients, "i", (int *local), listclients(*local!=0));
+    ICOMMAND(0, listclients, "i", (int *local), listclients(*local!=0));
 
 	void clearbans()
 	{
 		addmsg(SV_CLEARBANS, "r");
 	}
-	ICOMMAND(clearbans, "", (char *s), clearbans());
+	ICOMMAND(0, clearbans, "", (char *s), clearbans());
 
 	void kick(const char *arg)
 	{
 		int i = parseplayer(arg);
 		if(i>=0 && i!=game::player1->clientnum) addmsg(SV_KICK, "ri", i);
 	}
-	ICOMMAND(kick, "s", (char *s), kick(s));
+	ICOMMAND(0, kick, "s", (char *s), kick(s));
 
 	void setteam(const char *arg1, const char *arg2)
 	{
@@ -347,7 +347,7 @@ namespace client
 		}
 		else conoutft(CON_MESG, "\frcan only change teams in team games");
 	}
-	ICOMMAND(setteam, "ss", (char *who, char *team), setteam(who, team));
+	ICOMMAND(0, setteam, "ss", (char *who, char *team), setteam(who, team));
 
     void hashpwd(const char *pwd)
     {
@@ -356,7 +356,7 @@ namespace client
         server::hashpassword(game::player1->clientnum, sessionid, pwd, hash);
         result(hash);
     }
-    COMMAND(hashpwd, "s");
+    COMMAND(0, hashpwd, "s");
 
     void setmaster(const char *arg)
     {
@@ -367,7 +367,7 @@ namespace client
         else server::hashpassword(game::player1->clientnum, sessionid, arg, hash);
         addmsg(SV_SETMASTER, "ris", val, hash);
     }
-	COMMAND(setmaster, "s");
+	COMMAND(0, setmaster, "s");
 
     void tryauth()
     {
@@ -375,16 +375,16 @@ namespace client
         lastauth = lastmillis;
         addmsg(SV_AUTHTRY, "rs", authname);
     }
-	ICOMMAND(auth, "", (), tryauth());
+	ICOMMAND(0, auth, "", (), tryauth());
 
     void togglespectator(int val, const char *who)
 	{
         int i = who[0] ? parseplayer(who) : game::player1->clientnum;
 		if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
 	}
-	ICOMMAND(spectator, "is", (int *val, char *who), togglespectator(*val, who));
+	ICOMMAND(0, spectator, "is", (int *val, char *who), togglespectator(*val, who));
 
-    ICOMMAND(checkmaps, "", (), addmsg(SV_CHECKMAPS, "r"));
+    ICOMMAND(0, checkmaps, "", (), addmsg(SV_CHECKMAPS, "r"));
 
 	void addmsg(int type, const char *fmt, ...)
 	{
@@ -472,10 +472,10 @@ namespace client
 			addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
 		}
 	}
-	ICOMMAND(say, "C", (char *s), toserver(SAY_NONE, s));
-	ICOMMAND(me, "C", (char *s), toserver(SAY_ACTION, s));
-	ICOMMAND(sayteam, "C", (char *s), toserver(SAY_TEAM, s));
-	ICOMMAND(meteam, "C", (char *s), toserver(SAY_ACTION|SAY_TEAM, s));
+	ICOMMAND(0, say, "C", (char *s), toserver(SAY_NONE, s));
+	ICOMMAND(0, me, "C", (char *s), toserver(SAY_ACTION, s));
+	ICOMMAND(0, sayteam, "C", (char *s), toserver(SAY_TEAM, s));
+	ICOMMAND(0, meteam, "C", (char *s), toserver(SAY_ACTION|SAY_TEAM, s));
 
 	void parsecommand(gameent *d, const char *cmd, const char *arg)
 	{
@@ -619,26 +619,26 @@ namespace client
 		}
 		return;
 	}
-	ICOMMAND(getmap, "", (), if(multiplayer(false)) addmsg(SV_GETMAP, "r"));
+	ICOMMAND(0, getmap, "", (), if(multiplayer(false)) addmsg(SV_GETMAP, "r"));
 
 	void stopdemo()
 	{
 		if(remote) addmsg(SV_STOPDEMO, "r");
 		else server::stopdemo();
 	}
-	ICOMMAND(stopdemo, "", (), stopdemo());
+	ICOMMAND(0, stopdemo, "", (), stopdemo());
 
     void recorddemo(int val)
 	{
         addmsg(SV_RECORDDEMO, "ri", val);
 	}
-	ICOMMAND(recorddemo, "i", (int *val), recorddemo(*val));
+	ICOMMAND(0, recorddemo, "i", (int *val), recorddemo(*val));
 
 	void cleardemos(int val)
 	{
         addmsg(SV_CLEARDEMOS, "ri", val);
 	}
-	ICOMMAND(cleardemos, "i", (int *val), cleardemos(*val));
+	ICOMMAND(0, cleardemos, "i", (int *val), cleardemos(*val));
 
     void getdemo(int i)
 	{
@@ -646,14 +646,14 @@ namespace client
 		else conoutft(CON_MESG, "getting demo %d...", i);
 		addmsg(SV_GETDEMO, "ri", i);
 	}
-	ICOMMAND(getdemo, "i", (int *val), getdemo(*val));
+	ICOMMAND(0, getdemo, "i", (int *val), getdemo(*val));
 
 	void listdemos()
 	{
 		conoutft(CON_MESG, "listing demos...");
 		addmsg(SV_LISTDEMOS, "r");
 	}
-	ICOMMAND(listdemos, "", (), listdemos());
+	ICOMMAND(0, listdemos, "", (), listdemos());
 
 	void changemap(const char *name) // request map change, server may ignore
 	{
@@ -671,7 +671,7 @@ namespace client
 			addmsg(SV_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
         }
 	}
-	ICOMMAND(map, "s", (char *s), changemap(s));
+	ICOMMAND(0, map, "s", (char *s), changemap(s));
 
 	void sendmap()
 	{
@@ -706,7 +706,7 @@ namespace client
 			else conoutft(CON_MESG, "\frfailed to open map file: %s", reqfext);
 		}
 	}
-	ICOMMAND(sendmap, "", (), sendmap());
+	ICOMMAND(0, sendmap, "", (), sendmap());
 
 	void gotoplayer(const char *arg)
 	{
@@ -723,13 +723,13 @@ namespace client
             game::player1->resetinterp();
 		}
 	}
-	ICOMMAND(goto, "s", (char *s), gotoplayer(s));
+	ICOMMAND(0, goto, "s", (char *s), gotoplayer(s));
 
 	bool ready() { return connected(false) && isready && game::maptime > 0; }
-	ICOMMAND(ready, "", (), intret(ready()));
+	ICOMMAND(0, ready, "", (), intret(ready()));
 
 	int state() { return game::player1->state; }
-	ICOMMAND(getstate, "", (), intret(state()));
+	ICOMMAND(0, getstate, "", (), intret(state()));
 	int otherclients()
 	{
 		int n = 0; // ai don't count
@@ -1341,7 +1341,7 @@ namespace client
 					}
 					gameent *s = game::getclient(scn);
 					if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
-					projs::shootv(weap, flags, WPB(weap, sub, flags&HIT_ALT), power, from, locs, s, false);
+					projs::shootv(weap, flags, WEAP2(weap, sub, flags&HIT_ALT), power, from, locs, s, false);
 					break;
 				}
 
@@ -1945,7 +1945,7 @@ namespace client
 		defformatstring(u)("serversort [%d %d %d]", SINFO_STATUS, SINFO_NUMPLRS, SINFO_PING);
 		execute(u);
 	}
-	ICOMMAND(serversortreset, "", (), resetserversort());
+	ICOMMAND(0, serversortreset, "", (), resetserversort());
 
 	int servercompare(serverinfo *a, serverinfo *b)
 	{
@@ -2118,5 +2118,5 @@ namespace client
 		else formatstring(text)("%d", servers.length());
 		result(text);
     }
-    ICOMMAND(getserver, "ii", (int *server, int *prop), getservers(*server, *prop));
+    ICOMMAND(0, getserver, "ii", (int *server, int *prop), getservers(*server, *prop));
 }

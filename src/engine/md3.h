@@ -384,22 +384,22 @@ void md3noclip(char *meshname, int *noclip)
     loopmd3meshes(meshname, m, m.noclip = *noclip!=0);
 }
 
-COMMAND(md3load, "s");
-COMMAND(md3pitch, "ffff");
-COMMAND(md3skin, "sssff");
-COMMAND(md3spec, "si");
-COMMAND(md3ambient, "si");
-COMMAND(md3glow, "si");
-COMMAND(md3glare, "sff");
-COMMAND(md3alphatest, "sf");
-COMMAND(md3alphablend, "si");
-COMMAND(md3cullface, "si");
-COMMAND(md3envmap, "ss");
-COMMAND(md3bumpmap, "sss");
-COMMAND(md3fullbright, "sf");
-COMMAND(md3shader, "ss");
-COMMAND(md3scroll, "sff");
-COMMAND(md3anim, "siifi");
-COMMAND(md3link, "iisfff");
-COMMAND(md3noclip, "si");
+COMMAND(0, md3load, "s");
+COMMAND(0, md3pitch, "ffff");
+COMMAND(0, md3skin, "sssff");
+COMMAND(0, md3spec, "si");
+COMMAND(0, md3ambient, "si");
+COMMAND(0, md3glow, "si");
+COMMAND(0, md3glare, "sff");
+COMMAND(0, md3alphatest, "sf");
+COMMAND(0, md3alphablend, "si");
+COMMAND(0, md3cullface, "si");
+COMMAND(0, md3envmap, "ss");
+COMMAND(0, md3bumpmap, "sss");
+COMMAND(0, md3fullbright, "sf");
+COMMAND(0, md3shader, "ss");
+COMMAND(0, md3scroll, "sff");
+COMMAND(0, md3anim, "siifi");
+COMMAND(0, md3link, "iisfff");
+COMMAND(0, md3noclip, "si");
 

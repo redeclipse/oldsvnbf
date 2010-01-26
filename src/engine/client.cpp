@@ -21,13 +21,13 @@ void setrate(int rate)
 	enet_host_bandwidth_limit(clienthost, rate, rate);
 }
 
-VARF(rate, 0, 0, 25000, setrate(rate));
+VARF(0, rate, 0, 0, 25000, setrate(rate));
 
 void throttle();
 
-VARF(throttle_interval, 0, 5, 30, throttle());
-VARF(throttle_accel,	0, 2, 32, throttle());
-VARF(throttle_decel,	0, 2, 32, throttle());
+VARF(0, throttle_interval, 0, 5, 30, throttle());
+VARF(0, throttle_accel,	0, 2, 32, throttle());
+VARF(0, throttle_decel,	0, 2, 32, throttle());
 
 void throttle()
 {
@@ -155,18 +155,18 @@ void disconnect(int onlyclean, int async)
     if(!onlyclean) localconnect(false);
 }
 
-ICOMMAND(connect, "sis", (char *n, int *a, char *pwd), connectserv(n && *n ? n : servermaster, a ? *a : serverport, pwd));
-COMMANDN(disconnect, trydisconnect, "");
+ICOMMAND(0, connect, "sis", (char *n, int *a, char *pwd), connectserv(n && *n ? n : servermaster, a ? *a : serverport, pwd));
+COMMANDN(0, disconnect, trydisconnect, "");
 
-ICOMMAND(lanconnect, "", (), connectserv());
-ICOMMAND(localconnect, "i", (int *n), localconnect(*n ? false : true));
+ICOMMAND(0, lanconnect, "", (), connectserv());
+ICOMMAND(0, localconnect, "i", (int *n), localconnect(*n ? false : true));
 
 void reconnect()
 {
 	disconnect(1);
 	connectserv(lastaddress && *lastaddress ? lastaddress : NULL);
 }
-COMMAND(reconnect, "");
+COMMAND(0, reconnect, "");
 
 int lastupdate = -1000;
 

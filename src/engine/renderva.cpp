@@ -299,8 +299,8 @@ void clearqueries()
     }
 }
 
-VAR(oqfrags, 0, 8, 64);
-VAR(oqreflect, 0, 4, 64);
+VAR(0, oqfrags, 0, 8, 64);
+VAR(0, oqreflect, 0, 4, 64);
 
 bool checkquery(occludequery *query, bool nowait)
 {
@@ -400,7 +400,7 @@ void findvisiblemms(const vector<extentity *> &ents)
 	}
 }
 
-VAR(oqmm, 0, 4, 8);
+VAR(0, oqmm, 0, 4, 8);
 
 extern bool getentboundingbox(extentity &e, ivec &o, ivec &r);
 
@@ -599,8 +599,8 @@ static void disabletexgen(int dims = 2)
     }
 }
 
-HVARP(outline, 0, 1, 0xFFFFFF);
-VAR(dtoutline, 0, 1, 1);
+VAR(IDF_HEX|IDF_PERSIST, outline, 0, 1, 0xFFFFFF);
+VAR(0, dtoutline, 0, 1, 1);
 
 void renderoutline()
 {
@@ -660,7 +660,7 @@ void renderoutline()
 	defaultshader->set();
 }
 
-HVAR(blendbrushcolor, 0, 0x0000C0, 0xFFFFFF);
+VAR(IDF_HEX, blendbrushcolor, 0, 0x0000C0, 0xFFFFFF);
 
 void renderblendbrush(GLuint tex, float x, float y, float w, float h)
 {
@@ -1254,7 +1254,7 @@ static void changeglow(renderstate &cur, int pass, Slot &slot)
     cur.glowcolor = color;
 }
 
-VAR(blankgeom, 0, 0, 1);
+VAR(0, blankgeom, 0, 0, 1);
 
 static void changeslottmus(renderstate &cur, int pass, Slot &slot)
 {
@@ -1673,7 +1673,7 @@ void rendershadowmappass(renderstate &cur, vtxarray *va)
     }
 }
 
-VAR(batchgeom, 0, 1, 1);
+VAR(0, batchgeom, 0, 1, 1);
 
 void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bool fogpass = false, bool doquery = false)
 {
@@ -1752,9 +1752,9 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
     }
 }
 
-VAR(oqdist, 0, 256, 1024);
-VAR(zpass, 0, 1, 1);
-VAR(glowpass, 0, 1, 1);
+VAR(0, oqdist, 0, 256, 1024);
+VAR(0, zpass, 0, 1, 1);
+VAR(0, glowpass, 0, 1, 1);
 
 GLuint fogtex = 0;
 
@@ -1811,7 +1811,7 @@ void loadcaustic(const char *name)
 	}
 	else caustic = notexture;
 }
-SVARFW(caustictex, "<anim:75>textures/caustics", loadcaustic(caustictex));
+SVARF(IDF_WORLD, caustictex, "<anim:75>textures/caustics", loadcaustic(caustictex));
 
 void loadcaustics(bool force)
 {
@@ -1822,8 +1822,8 @@ void loadcaustics(bool force)
     loadcaustic(caustictex);
 }
 
-VARW(causticscale, 0, 100, 10000);
-VARFP(caustics, 0, 1, 1, loadcaustics());
+VAR(IDF_WORLD, causticscale, 0, 100, 10000);
+VARF(IDF_PERSIST, caustics, 0, 1, 1, loadcaustics());
 
 void cleanupva()
 {
@@ -2054,12 +2054,12 @@ static void rendergeommultipass(renderstate &cur, int pass, bool fogpass)
     if(geombatches.length()) renderbatches(cur, pass);
 }
 
-VAR(oqgeom, 0, 1, 1);
-VAR(oqbatch, 0, 1, 1);
+VAR(0, oqgeom, 0, 1, 1);
+VAR(0, oqbatch, 0, 1, 1);
 
-VAR(dbgffsm, 0, 0, 1);
-VAR(dbgffdl, 0, 0, 1);
-VAR(ffdlscissor, 0, 1, 1);
+VAR(0, dbgffsm, 0, 0, 1);
+VAR(0, dbgffdl, 0, 0, 1);
+VAR(0, ffdlscissor, 0, 1, 1);
 
 void rendergeom(float causticspass, bool fogpass)
 {

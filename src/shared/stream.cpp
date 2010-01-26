@@ -412,7 +412,7 @@ struct filestream : stream
 };
 
 #ifndef STANDALONE
-VAR(dbggz, 0, 0, 1);
+VAR(0, dbggz, 0, 0, 1);
 #endif
 
 struct gzstream : stream

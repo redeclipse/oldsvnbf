@@ -15,9 +15,9 @@ namespace ctf
 		}
 		else if(d == game::player1) playsound(S_ERROR, d->o, d);
 	}
-   	ICOMMAND(dropflag, "", (), dropflag(game::player1));
+   	ICOMMAND(0, dropflag, "", (), dropflag(game::player1));
 
-   	ICOMMAND(ctfdebug, "", (), {
+   	ICOMMAND(0, ctfdebug, "", (), {
 		loopv(st.flags)
 		{
 			ctfstate::flag &f = st.flags[i];

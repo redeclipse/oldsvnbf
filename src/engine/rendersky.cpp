@@ -26,37 +26,37 @@ Texture *loadskyoverlay(const char *basename)
 	return t;
 }
 
-HVARW(skybgcolour, 0, 0x000000, 0xFFFFFF);
-VARW(skybgglare, 0, 0, 1);
+VAR(IDF_HEX|IDF_WORLD, skybgcolour, 0, 0x000000, 0xFFFFFF);
+VAR(IDF_WORLD, skybgglare, 0, 0, 1);
 
-SVARFW(skybox, "", { if(skybox[0]) loadsky(skybox, sky); });
-FVARW(skyblend, 0, 1.0f, 1);
-VARW(skyglare, 0, 1, 1);
-HVARW(skycolour, 0, 0xFFFFFF, 0xFFFFFF);
-FVARW(spinsky, -720, 0, 720);
-VARW(yawsky, 0, 0, 360);
+SVARF(IDF_WORLD, skybox, "", { if(skybox[0]) loadsky(skybox, sky); });
+FVAR(IDF_WORLD, skyblend, 0, 1.0f, 1);
+VAR(IDF_WORLD, skyglare, 0, 1, 1);
+VAR(IDF_HEX|IDF_WORLD, skycolour, 0, 0xFFFFFF, 0xFFFFFF);
+FVAR(IDF_WORLD, spinsky, -720, 0, 720);
+VAR(IDF_WORLD, yawsky, 0, 0, 360);
 
-SVARFW(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
-FVARW(cloudblend, 0, 1.0f, 1);
-VARW(cloudglare, 0, 0, 1);
-HVARW(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
-FVARW(spinclouds, -720, 0, 720);
-VARW(yawclouds, 0, 0, 360);
+SVARF(IDF_WORLD, cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
+FVAR(IDF_WORLD, cloudblend, 0, 1.0f, 1);
+VAR(IDF_WORLD, cloudglare, 0, 0, 1);
+VAR(IDF_HEX|IDF_WORLD, cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
+FVAR(IDF_WORLD, spinclouds, -720, 0, 720);
+VAR(IDF_WORLD, yawclouds, 0, 0, 360);
 
-SVARFW(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
-FVARW(cloudlayerblend, 0, 1.0f, 1);
-VARW(cloudlayerglare, 0, 0, 1);
-HVARW(cloudlayercolour, 0, 0xFFFFFF, 0xFFFFFF);
-FVARW(cloudscrollx, -16, 0, 16);
-FVARW(cloudscrolly, -16, 0, 16);
-FVARW(cloudscale, 0, 1, 64);
-FVARW(spincloudlayer, -720, 0, 720);
-VARW(yawcloudlayer, 0, 0, 360);
-FVARW(cloudheight, -1, 0.2f, 1);
-FVARW(cloudfade, 0, 0.2f, 1);
-VARW(cloudsubdiv, 4, 16, 64);
+SVARF(IDF_WORLD, cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
+FVAR(IDF_WORLD, cloudlayerblend, 0, 1.0f, 1);
+VAR(IDF_WORLD, cloudlayerglare, 0, 0, 1);
+VAR(IDF_HEX|IDF_WORLD, cloudlayercolour, 0, 0xFFFFFF, 0xFFFFFF);
+FVAR(IDF_WORLD, cloudscrollx, -16, 0, 16);
+FVAR(IDF_WORLD, cloudscrolly, -16, 0, 16);
+FVAR(IDF_WORLD, cloudscale, 0, 1, 64);
+FVAR(IDF_WORLD, spincloudlayer, -720, 0, 720);
+VAR(IDF_WORLD, yawcloudlayer, 0, 0, 360);
+FVAR(IDF_WORLD, cloudheight, -1, 0.2f, 1);
+FVAR(IDF_WORLD, cloudfade, 0, 0.2f, 1);
+VAR(IDF_WORLD, cloudsubdiv, 4, 16, 64);
 
-FVARW(cloudclip, 0, 0.5f, 1);
+FVAR(IDF_WORLD, cloudclip, 0, 0.5f, 1);
 
 void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
 					  float s1, float t1, int x1, int y1, int z1,
@@ -307,13 +307,13 @@ static void deletedome()
     DELETEA(domeindices);
 }
 
-FVARW(fogdomeheight, -1, -0.5f, 1);
-FVARW(fogdomemin, 0, 0, 1);
-FVARW(fogdomemax, 0, 0, 1);
-VARW(fogdomecap, 0, 0, 1);
-FVARW(fogdomeclip, 0, 1, 1);
+FVAR(IDF_WORLD, fogdomeheight, -1, -0.5f, 1);
+FVAR(IDF_WORLD, fogdomemin, 0, 0, 1);
+FVAR(IDF_WORLD, fogdomemax, 0, 0, 1);
+VAR(IDF_WORLD, fogdomecap, 0, 0, 1);
+FVAR(IDF_WORLD, fogdomeclip, 0, 1, 1);
 bvec fogdomecolor(0, 0, 0);
-HVARFW(fogdomecolour, 0, 0, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, fogdomecolour, 0, 0, 0xFFFFFF,
 {
     fogdomecolor = bvec((fogdomecolour>>16)&0xFF, (fogdomecolour>>8)&0xFF, fogdomecolour&0xFF);
 });
@@ -322,7 +322,7 @@ static void drawdome()
 {
     float capsize = fogdomecap && fogdomeheight < 1 ? (1 + fogdomeheight) / (1 - fogdomeheight) : -1;
     bvec color = fogdomecolour ? fogdomecolor : fogcolor;
-    if(!domenumverts || domecolor != color || domeminalpha != fogdomemin || domemaxalpha != fogdomemax || domecapsize != capsize || domeclipz != fogdomeclip)   
+    if(!domenumverts || domecolor != color || domeminalpha != fogdomemin || domemaxalpha != fogdomemax || domecapsize != capsize || domeclipz != fogdomeclip)
     {
         initdome(color, min(fogdomemin, fogdomemax), fogdomemax, capsize, fogdomeclip);
         domecolor = color;
@@ -363,9 +363,9 @@ void cleanupsky()
     deletedome();
 }
 
-VARP(sparklyfix, 0, 0, 1);
-VAR(showsky, 0, 1, 1);
-VAR(clipsky, 0, 1, 1);
+VAR(IDF_PERSIST, sparklyfix, 0, 0, 1);
+VAR(0, showsky, 0, 1, 1);
+VAR(0, clipsky, 0, 1, 1);
 
 bool drawskylimits(bool explicitonly)
 {
@@ -405,7 +405,7 @@ void drawskyoutline()
 	if(!glaring) defaultshader->set();
 }
 
-VAR(clampsky, 0, 1, 1);
+VAR(0, clampsky, 0, 1, 1);
 
 static int yawskyfaces(int faces, int yaw = 0, float spin = 0)
 {
@@ -610,7 +610,7 @@ void drawskybox(int farplane, bool limited)
 	if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
 }
 
-VARNW(skytexture, useskytexture, 0, 1, 1);
+VARN(IDF_WORLD, skytexture, useskytexture, 0, 1, 1);
 
 int explicitsky = 0;
 double skyarea = 0;

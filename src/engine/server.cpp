@@ -6,13 +6,13 @@
 #include <shlobj.h>
 #endif
 
-VAR(version, 1, ENG_VERSION, -1); // for scripts
+VAR(0, version, 1, ENG_VERSION, -1); // for scripts
 int kidmode = 0;
-ICOMMAND(getkidmode, "", (void), intret(kidmode));
+ICOMMAND(0, getkidmode, "", (void), intret(kidmode));
 
 const char *disc_reasons[] = { "normal", "end of packet", "client num", "user was banned", "tag type error", "address is banned", "server is in private mode", "server is full", "connection timed out", "packet overflow" };
 
-SVARP(consoletimefmt, "%c");
+SVAR(IDF_PERSIST, consoletimefmt, "%c");
 char *gettime(char *format)
 {
 	time_t ltime;
@@ -26,7 +26,7 @@ char *gettime(char *format)
 
 	return buf;
 }
-ICOMMAND(gettime, "s", (char *a), result(gettime(a)));
+ICOMMAND(0, gettime, "s", (char *a), result(gettime(a)));
 
 vector<ipinfo> bans, allows;
 void addipinfo(vector<ipinfo> &info, const char *name)
@@ -47,8 +47,8 @@ void addipinfo(vector<ipinfo> &info, const char *name)
     p.ip = ip.i;
     p.mask = mask.i;
 }
-ICOMMAND(addban, "s", (char *name), addipinfo(bans, name));
-ICOMMAND(addallow, "s", (char *name), addipinfo(allows, name));
+ICOMMAND(0, addban, "s", (char *name), addipinfo(bans, name));
+ICOMMAND(0, addallow, "s", (char *name), addipinfo(allows, name));
 
 char *printipinfo(const ipinfo &info, char *buf)
 {
@@ -102,19 +102,19 @@ void conoutf(const char *s, ...)
 	conoutft(0, "%s", sf);
 }
 
-VARP(verbose, 0, 0, 6);
+VAR(IDF_PERSIST, verbose, 0, 0, 6);
 
 #ifdef STANDALONE
 void localservertoclient(int chan, ENetPacket *packet) {}
-VAR(servertype, 1, 3, 3); // 1: private, 2: public, 3: dedicated
+VAR(0, servertype, 1, 3, 3); // 1: private, 2: public, 3: dedicated
 #else
-VAR(servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
+VAR(0, servertype, 0, 1, 3); // 0: local only, 1: private, 2: public, 3: dedicated
 #endif
-VAR(serveruprate, 0, 0, INT_MAX-1);
-VAR(serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
-VAR(servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
-SVAR(servermaster, ENG_MASTER_HOST);
-SVAR(serverip, "");
+VAR(0, serveruprate, 0, 0, INT_MAX-1);
+VAR(0, serverport, 1, ENG_SERVER_PORT, INT_MAX-1);
+VAR(0, servermasterport, 1, ENG_MASTER_PORT, INT_MAX-1);
+SVAR(0, servermaster, ENG_MASTER_HOST);
+SVAR(0, serverip, "");
 
 int curtime = 0, totalmillis = 1, lastmillis = 1, timescale = 100, paused = 0, timeerr = 0;
 const char *load = NULL;
@@ -482,7 +482,7 @@ int addclient(int type)
 }
 
 #ifndef STANDALONE
-VARP(autoconnect, 0, 0, 1);
+VAR(IDF_PERSIST, autoconnect, 0, 0, 1);
 extern bool connectedlocally;
 extern char *lastaddress;
 void localconnect(bool force)
@@ -706,8 +706,8 @@ void serverslice()	// main server update, called from main loop in sp, or from b
 #ifndef STANDALONE
 int clockrealbase = 0, clockvirtbase = 0;
 void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
-VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
-VARFP(clockfix, 0, 0, 1, clockreset());
+VARF(IDF_PERSIST, clockerror, 990000, 1000000, 1010000, clockreset());
+VARF(IDF_PERSIST, clockfix, 0, 0, 1, clockreset());
 #endif
 
 void updatetimer()
@@ -847,8 +847,8 @@ void initgame()
     setupserver();
 }
 
-VAR(hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
-SVARP(octadir, "");//, if(!hasoctapaks) trytofindocta(false););
+VAR(0, hasoctapaks, 1, 0, 0); // mega hack; try to find Cube 2, done after our own data so as to not clobber stuff
+SVAR(IDF_PERSIST, octadir, "");//, if(!hasoctapaks) trytofindocta(false););
 
 bool serveroption(char *opt)
 {
@@ -1058,9 +1058,9 @@ void writecfg()
 #endif
 }
 
-COMMAND(writecfg, "");
+COMMAND(0, writecfg, "");
 
-VAR(rehashing, 1, 0, -1);
+VAR(0, rehashing, 1, 0, -1);
 void rehash(bool reload)
 {
 	if(reload)
@@ -1085,7 +1085,7 @@ void rehash(bool reload)
 	conoutf("\fcconfiguration reloaded");
 	rehashing = 0;
 }
-ICOMMAND(rehash, "i", (int *nosave), rehash(*nosave ? false : true));
+ICOMMAND(0, rehash, "i", (int *nosave), rehash(*nosave ? false : true));
 
 #ifdef STANDALONE
 #include <signal.h>

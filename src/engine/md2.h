@@ -275,6 +275,6 @@ void md2anim(char *anim, int *frame, int *range, float *speed, int *priority)
     }
 }
 
-COMMAND(md2pitch, "ffff");
-COMMAND(md2anim, "siifi");
+COMMAND(0, md2pitch, "ffff");
+COMMAND(0, md2anim, "siifi");
 

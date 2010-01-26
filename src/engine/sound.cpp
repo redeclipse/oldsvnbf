@@ -11,17 +11,17 @@ stream *musicstream = NULL;
 char *musicfile = NULL, *musicdonecmd = NULL;
 int soundsatonce = 0, lastsoundmillis = 0, musictime = -1;
 
-VARFP(mastervol, 0, 255, 255, changedvol = true);
-VARP(soundvol, 0, 255, 255);
-VARF(soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundchans, 0, 32, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundbufferlen, 128, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(IDF_PERSIST, mastervol, 0, 255, 255, changedvol = true);
+VAR(IDF_PERSIST, soundvol, 0, 255, 255);
+VARF(0, soundmono, 0, 0, 1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(0, soundchans, 0, 32, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(0, soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(0, soundbufferlen, 128, 1024, INT_MAX-1, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
-VARFP(musicvol, 0, 64, 255, changedvol = true);
-VARP(musicfadein, 0, 250, INT_MAX-1);
-VARP(musicfadeout, 0, 5000, INT_MAX-1);
-SVAR(titlemusic, "sounds/theme");
+VARF(IDF_PERSIST, musicvol, 0, 64, 255, changedvol = true);
+VAR(IDF_PERSIST, musicfadein, 0, 250, INT_MAX-1);
+VAR(IDF_PERSIST, musicfadeout, 0, 5000, INT_MAX-1);
+SVAR(0, titlemusic, "sounds/theme");
 
 void initsound()
 {
@@ -143,7 +143,7 @@ void playmusic(const char *name, const char *cmd)
 	}
 }
 
-COMMANDN(music, playmusic, "ss");
+COMMANDN(0, music, playmusic, "ss");
 
 void smartmusic(bool cond, bool autooff)
 {
@@ -151,7 +151,7 @@ void smartmusic(bool cond, bool autooff)
 	if(!music || !Mix_PlayingMusic() || (cond && strcmp(musicfile, titlemusic))) playmusic(titlemusic, "");
 	else if(music && Mix_PlayingMusic()) Mix_VolumeMusic(int((mastervol/255.f)*(musicvol/255.f)*MIX_MAX_VOLUME));
 }
-ICOMMAND(smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
+ICOMMAND(0, smartmusic, "ii", (int *a, int *b), smartmusic(*a, *b));
 
 int findsound(const char *name, int vol, vector<soundslot> &sounds)
 {
@@ -226,8 +226,8 @@ int addsound(const char *name, int vol, int material, int maxrad, int minrad, bo
 	return sounds.length()-1;
 }
 
-ICOMMAND(registersound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, gamesounds)));
-ICOMMAND(mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, mapsounds)));
+ICOMMAND(0, registersound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, gamesounds)));
+ICOMMAND(0, mapsound, "sisssi", (char *n, int *v, char *m, char *w, char *x, int *u), intret(addsound(n, *v, *m ? findmaterial(m, true) : MAT_AIR, *w ? atoi(w) : -1, *x ? atoi(x) : -1, *u > 0, mapsounds)));
 
 void calcvol(int flags, int vol, int slotvol, int slotmat, int maxrad, int minrad, const vec &pos, int *curvol, int *curpan)
 {
@@ -388,7 +388,7 @@ void sound(int *n, int *vol)
 {
 	intret(playsound(*n, camera1->o, camera1, SND_FORCED, *vol ? *vol : -1));
 }
-COMMAND(sound, "ii");
+COMMAND(0, sound, "ii");
 
 void removetrackedsounds(physent *d)
 {
@@ -443,7 +443,7 @@ void resetsound()
     }
 }
 
-COMMAND(resetsound, "");
+COMMAND(0, resetsound, "");
 
 #ifdef WIN32
 
@@ -483,9 +483,9 @@ static MumbleInfo *mumbleinfo = (MumbleInfo *)-1;
 #endif
 
 #ifdef VALID_MUMBLELINK
-VARFP(mumble, 0, 1, 1, { if(mumble) initmumble(); else closemumble(); });
+VARF(IDF_PERSIST, mumble, 0, 1, 1, { if(mumble) initmumble(); else closemumble(); });
 #else
-VARFP(mumble, 0, 0, 1, { if(mumble) initmumble(); else closemumble(); });
+VARF(IDF_PERSIST, mumble, 0, 0, 1, { if(mumble) initmumble(); else closemumble(); });
 #endif
 
 void initmumble()

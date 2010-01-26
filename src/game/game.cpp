@@ -14,100 +14,100 @@ namespace game
 	vector<gameent *> players;
 	vector<camstate> cameras;
 
-	ICOMMANDG(resetvars, "", (), return); // server side
-	ICOMMANDG(resetconfig, "", (), return); // server side
+	GICOMMAND(0, resetvars, "", (), return); // server side
+	GICOMMAND(0, resetconfig, "", (), return); // server side
 
-	VARW(numplayers, 0, 0, MAXCLIENTS);
-	SVARW(obitwater, "");
-	SVARW(obitdeath, "");
-	SVARW(mapmusic, "");
+	VAR(IDF_WORLD, numplayers, 0, 0, MAXCLIENTS);
+	SVAR(IDF_WORLD, obitwater, "");
+	SVAR(IDF_WORLD, obitdeath, "");
+	SVAR(IDF_WORLD, mapmusic, "");
 
-	VARP(mouseinvert, 0, 0, 1);
-	VARP(mouseabsolute, 0, 0, 1);
-	VARP(mousetype, 0, 0, 2);
-	VARP(mousedeadzone, 0, 10, 100);
-	VARP(mousepanspeed, 1, 30, INT_MAX-1);
+	VAR(IDF_PERSIST, mouseinvert, 0, 0, 1);
+	VAR(IDF_PERSIST, mouseabsolute, 0, 0, 1);
+	VAR(IDF_PERSIST, mousetype, 0, 0, 2);
+	VAR(IDF_PERSIST, mousedeadzone, 0, 10, 100);
+	VAR(IDF_PERSIST, mousepanspeed, 1, 30, INT_MAX-1);
 
-	VARP(thirdperson, 0, 0, 1);
-	VARP(thirdpersonfollow, 0, 0, 1);
-	VARP(dynlighteffects, 0, 2, 2);
-	FVARP(playerblend, 0, 1, 1);
+	VAR(IDF_PERSIST, thirdperson, 0, 0, 1);
+	VAR(IDF_PERSIST, thirdpersonfollow, 0, 0, 1);
+	VAR(IDF_PERSIST, dynlighteffects, 0, 2, 2);
+	FVAR(IDF_PERSIST, playerblend, 0, 1, 1);
 
-	VARP(thirdpersonmodel, 0, 1, 1);
-	VARP(thirdpersonfov, 90, 120, 150);
-	FVARP(thirdpersonblend, 0, 0.45f, 1);
-	FVARP(thirdpersondist, -1000, 20, 1000);
+	VAR(IDF_PERSIST, thirdpersonmodel, 0, 1, 1);
+	VAR(IDF_PERSIST, thirdpersonfov, 90, 120, 150);
+	FVAR(IDF_PERSIST, thirdpersonblend, 0, 0.45f, 1);
+	FVAR(IDF_PERSIST, thirdpersondist, -1000, 20, 1000);
 
-	VARP(firstpersonmodel, 0, 1, 1);
-	VARP(firstpersonfov, 90, 100, 150);
-	VARP(firstpersonsway, 0, 1, 1);
-	FVARP(firstpersonswaystep, 1, 18.0f, 100);
-	FVARP(firstpersonswayside, 0, 0.06f, 1);
-	FVARP(firstpersonswayup, 0, 0.08f, 1);
-	FVARP(firstpersonblend, 0, 1, 1);
-	FVARP(firstpersondist, -10000, -0.25f, 10000);
-	FVARP(firstpersonshift, -10000, 0.3f, 10000);
-	FVARP(firstpersonadjust, -10000, -0.07f, 10000);
+	VAR(IDF_PERSIST, firstpersonmodel, 0, 1, 1);
+	VAR(IDF_PERSIST, firstpersonfov, 90, 100, 150);
+	VAR(IDF_PERSIST, firstpersonsway, 0, 1, 1);
+	FVAR(IDF_PERSIST, firstpersonswaystep, 1, 18.0f, 100);
+	FVAR(IDF_PERSIST, firstpersonswayside, 0, 0.06f, 1);
+	FVAR(IDF_PERSIST, firstpersonswayup, 0, 0.08f, 1);
+	FVAR(IDF_PERSIST, firstpersonblend, 0, 1, 1);
+	FVAR(IDF_PERSIST, firstpersondist, -10000, -0.25f, 10000);
+	FVAR(IDF_PERSIST, firstpersonshift, -10000, 0.3f, 10000);
+	FVAR(IDF_PERSIST, firstpersonadjust, -10000, -0.07f, 10000);
 
-	VARP(editfov, 1, 120, 179);
-	VARP(specfov, 1, 120, 179);
+	VAR(IDF_PERSIST, editfov, 1, 120, 179);
+	VAR(IDF_PERSIST, specfov, 1, 120, 179);
 
-	VARP(follow, 0, 0, INT_MAX-1);
-	VARFP(specmode, 0, 1, 1, follow = 0); // 0 = float, 1 = tv
-	VARFP(waitmode, 0, 0, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
+	VAR(IDF_PERSIST, follow, 0, 0, INT_MAX-1);
+	VARF(IDF_PERSIST, specmode, 0, 1, 1, follow = 0); // 0 = float, 1 = tv
+	VARF(IDF_PERSIST, waitmode, 0, 0, 2, follow = 0); // 0 = float, 1 = tv in duel/survivor, 2 = tv always
 
-	VARP(spectvtime, 1000, 10000, INT_MAX-1);
-	FVARP(spectvspeed, 0, 0.5f, 1000);
-	FVARP(spectvpitch, 0, 0.5f, 1000);
-	FVARP(spectvbias, 0, 2.5f, 1000);
+	VAR(IDF_PERSIST, spectvtime, 1000, 10000, INT_MAX-1);
+	FVAR(IDF_PERSIST, spectvspeed, 0, 0.5f, 1000);
+	FVAR(IDF_PERSIST, spectvpitch, 0, 0.5f, 1000);
+	FVAR(IDF_PERSIST, spectvbias, 0, 2.5f, 1000);
 
-	VARP(deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
-	FVARP(deathcamspeed, 0, 2.f, 1000);
+	VAR(IDF_PERSIST, deathcamstyle, 0, 1, 2); // 0 = no follow, 1 = follow attacker, 2 = follow self
+	FVAR(IDF_PERSIST, deathcamspeed, 0, 2.f, 1000);
 
-	FVARP(sensitivity, 1e-3f, 10.0f, 1000);
-	FVARP(yawsensitivity, 1e-3f, 10.0f, 1000);
-	FVARP(pitchsensitivity, 1e-3f, 7.5f, 1000);
-	FVARP(mousesensitivity, 1e-3f, 1.0f, 1000);
-	FVARP(zoomsensitivity, 0, 0.75f, 1);
+	FVAR(IDF_PERSIST, sensitivity, 1e-3f, 10.0f, 1000);
+	FVAR(IDF_PERSIST, yawsensitivity, 1e-3f, 10.0f, 1000);
+	FVAR(IDF_PERSIST, pitchsensitivity, 1e-3f, 7.5f, 1000);
+	FVAR(IDF_PERSIST, mousesensitivity, 1e-3f, 1.0f, 1000);
+	FVAR(IDF_PERSIST, zoomsensitivity, 0, 0.75f, 1);
 
-	VARP(zoommousetype, 0, 0, 2);
-	VARP(zoommousedeadzone, 0, 25, 100);
-	VARP(zoommousepanspeed, 1, 10, INT_MAX-1);
-	VARP(zoomfov, 1, 10, 150);
-	VARP(zoomtime, 1, 100, 10000);
+	VAR(IDF_PERSIST, zoommousetype, 0, 0, 2);
+	VAR(IDF_PERSIST, zoommousedeadzone, 0, 25, 100);
+	VAR(IDF_PERSIST, zoommousepanspeed, 1, 10, INT_MAX-1);
+	VAR(IDF_PERSIST, zoomfov, 1, 10, 150);
+	VAR(IDF_PERSIST, zoomtime, 1, 100, 10000);
 
-	VARFP(zoomlevel, 1, 4, 10, checkzoom());
-	VARP(zoomlevels, 1, 5, 10);
-	VARP(zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
-	VARP(zoomscroll, 0, 0, 1); // 0 = stop at min/max, 1 = go to opposite end
+	VARF(IDF_PERSIST, zoomlevel, 1, 4, 10, checkzoom());
+	VAR(IDF_PERSIST, zoomlevels, 1, 5, 10);
+	VAR(IDF_PERSIST, zoomdefault, 0, 0, 10); // 0 = last used, else defines default level
+	VAR(IDF_PERSIST, zoomscroll, 0, 0, 1); // 0 = stop at min/max, 1 = go to opposite end
 
-	VARP(shownamesabovehead, 0, 2, 2);
-	VARP(showstatusabovehead, 0, 2, 2);
-	VARP(showteamabovehead, 0, 1, 3);
-	VARP(showdamageabovehead, 0, 0, 3);
-	FVARP(aboveheadblend, 0.f, 0.75f, 1.f);
-	FVAR(aboveheadsmooth, 0, 0.5f, 1);
-	VAR(aboveheadsmoothmillis, 1, 200, 10000);
-	VARP(aboveheadfade, 500, 5000, INT_MAX-1);
+	VAR(IDF_PERSIST, shownamesabovehead, 0, 2, 2);
+	VAR(IDF_PERSIST, showstatusabovehead, 0, 2, 2);
+	VAR(IDF_PERSIST, showteamabovehead, 0, 1, 3);
+	VAR(IDF_PERSIST, showdamageabovehead, 0, 0, 3);
+	FVAR(IDF_PERSIST, aboveheadblend, 0.f, 0.75f, 1.f);
+	FVAR(0, aboveheadsmooth, 0, 0.5f, 1);
+	VAR(0, aboveheadsmoothmillis, 1, 200, 10000);
+	VAR(IDF_PERSIST, aboveheadfade, 500, 5000, INT_MAX-1);
 
-	VARP(showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
-	VARP(showobitdists, 0, 0, 1);
-	VARP(showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
-	VARP(playdamagetones, 0, 1, 3);
+	VAR(IDF_PERSIST, showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
+	VAR(IDF_PERSIST, showobitdists, 0, 0, 1);
+	VAR(IDF_PERSIST, showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
+	VAR(IDF_PERSIST, playdamagetones, 0, 1, 3);
 
-	VARP(quakefade, 0, 100, INT_MAX-1);
-    VARP(ragdolls, 0, 1, 1);
-	FVARP(bloodscale, 0, 1, 1000);
-	VARP(bloodfade, 1, 20000, INT_MAX-1);
-	FVARP(gibscale, 0, 1, 1000);
-	VARP(gibfade, 1, 20000, INT_MAX-1);
-	VARP(fireburnfade, 0, 75, INT_MAX-1);
-	FVARP(impulsescale, 0, 1, 1000);
-	VARP(impulsefade, 0, 200, INT_MAX-1);
+	VAR(IDF_PERSIST, quakefade, 0, 100, INT_MAX-1);
+    VAR(IDF_PERSIST, ragdolls, 0, 1, 1);
+	FVAR(IDF_PERSIST, bloodscale, 0, 1, 1000);
+	VAR(IDF_PERSIST, bloodfade, 1, 20000, INT_MAX-1);
+	FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
+	VAR(IDF_PERSIST, gibfade, 1, 20000, INT_MAX-1);
+	VAR(IDF_PERSIST, fireburnfade, 0, 75, INT_MAX-1);
+	FVAR(IDF_PERSIST, impulsescale, 0, 1, 1000);
+	VAR(IDF_PERSIST, impulsefade, 0, 200, INT_MAX-1);
 
-	ICOMMAND(gamemode, "", (), intret(gamemode));
-	ICOMMAND(mutators, "", (), intret(mutators));
-	ICOMMAND(getintermission, "", (), intret(intermission ? 1 : 0));
+	ICOMMAND(0, gamemode, "", (), intret(gamemode));
+	ICOMMAND(0, mutators, "", (), intret(mutators));
+	ICOMMAND(0, getintermission, "", (), intret(intermission ? 1 : 0));
 
 	void start() { }
 
@@ -123,8 +123,8 @@ namespace game
 		if(inzoom()) return false;
 		return true;
 	}
-	ICOMMAND(isthirdperson, "i", (int *viewonly), intret(thirdpersonview(*viewonly ? true : false) ? 1 : 0));
-	ICOMMAND(thirdpersonswitch, "", (), int *n = (focus != player1 ? &thirdpersonfollow : &thirdperson); *n = !*n;);
+	ICOMMAND(0, isthirdperson, "i", (int *viewonly), intret(thirdpersonview(*viewonly ? true : false) ? 1 : 0));
+	ICOMMAND(0, thirdpersonswitch, "", (), int *n = (focus != player1 ? &thirdpersonfollow : &thirdperson); *n = !*n;);
 
 	int mousestyle()
 	{
@@ -166,7 +166,7 @@ namespace game
 		if(zoomlevel > zoomlevels) zoomlevel = zoomscroll ? 1 : zoomlevels;
 		else if(zoomlevel < 1) zoomlevel = zoomscroll ? zoomlevels : 1;
 	}
-	ICOMMAND(setzoom, "i", (int *level), setzoomlevel(*level));
+	ICOMMAND(0, setzoom, "i", (int *level), setzoomlevel(*level));
 
 	void zoomset(bool on, int millis)
 	{
@@ -183,7 +183,7 @@ namespace game
 
 	bool zoomallow()
 	{
-		if(allowmove(player1) && WPA(player1->weapselect, zooms)) return true;
+		if(allowmove(player1) && WEAP(player1->weapselect, zooms)) return true;
 		zoomset(false, 0);
 		return false;
 	}
@@ -194,7 +194,7 @@ namespace game
 			return true;
 		return false;
 	}
-	ICOMMAND(iszooming, "", (), intret(inzoom() ? 1 : 0));
+	ICOMMAND(0, iszooming, "", (), intret(inzoom() ? 1 : 0));
 
 	bool inzoomswitch()
 	{
@@ -252,7 +252,7 @@ namespace game
 			playsound(idx, t->o, t, t == camera1 ? SND_FORCED : 0, 255, getworldsize()/2, 0, d ? &d->aschan : NULL);
 		}
 	}
-	ICOMMAND(announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
+	ICOMMAND(0, announce, "iis", (int *idx, int *targ, char *s), announce(*idx, *targ, NULL, "\fw%s", s));
 
 	bool tvmode()
 	{
@@ -266,8 +266,8 @@ namespace game
 		return false;
 	}
 
-	ICOMMAND(specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false); follow = 0);
-	ICOMMAND(waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false); follow = 0);
+	ICOMMAND(0, specmodeswitch, "", (), specmode = specmode ? 0 : 1; hud::sb.showscores(false); follow = 0);
+	ICOMMAND(0, waitmodeswitch, "", (), waitmode = waitmode ? 0 : (m_duke(game::gamemode, game::mutators) ? 1 : 2); hud::sb.showscores(false); follow = 0);
 
 	void followswitch(int n)
 	{
@@ -282,7 +282,7 @@ namespace game
 			checkfollow;
 		}
 	}
-	ICOMMAND(followdelta, "i", (int *n), followswitch(*n ? *n : 1));
+	ICOMMAND(0, followdelta, "i", (int *n), followswitch(*n ? *n : 1));
 
     bool allowmove(physent *d)
     {
@@ -315,7 +315,7 @@ namespace game
 		}
 		else conoutft(CON_MESG, "\foweapon selection is only available in arena");
 	}
-	ICOMMAND(loadweap, "s", (char *s), chooseloadweap(player1, s));
+	ICOMMAND(0, loadweap, "s", (char *s), chooseloadweap(player1, s));
 
 	void respawn(gameent *d)
 	{
@@ -433,7 +433,7 @@ namespace game
 		nextmode = nmode; nextmuts = nmuts;
 		server::modecheck(&nextmode, &nextmuts);
 	}
-	ICOMMAND(mode, "ii", (int *val, int *mut), setmode(*val, *mut));
+	ICOMMAND(0, mode, "ii", (int *val, int *mut), setmode(*val, *mut));
 
 	void heightoffset(gameent *d, bool local)
 	{
@@ -632,7 +632,7 @@ namespace game
 			}
 			if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
 			{
-				float force = (float(damage)/float(WPB(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WPB(weap, hitpush, flags&HIT_ALT);
+				float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
 				if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
 				else if(d->health <= 0) force *= deadpushscale;
 				else force *= hitpushscale;
@@ -1086,7 +1086,7 @@ namespace game
 			d->suicided = lastmillis;
 		}
 	}
-	ICOMMAND(kill, "",  (), { suicide(player1, 0); });
+	ICOMMAND(0, kill, "",  (), { suicide(player1, 0); });
 
 	void lighteffects(dynent *e, vec &color, vec &dir) { }
 
@@ -1543,13 +1543,13 @@ namespace game
 					if(d == player1)
 					{
 						int state = d->weapstate[d->weapselect];
-						if(WPA(d->weapselect, zooms))
+						if(WEAP(d->weapselect, zooms))
 						{
 							if(state == WEAP_S_SHOOT || (state == WEAP_S_RELOAD && lastmillis-d->weaplast[d->weapselect] >= max(d->weapwait[d->weapselect]-zoomtime, 1)))
 								state = WEAP_S_IDLE;
 						}
-						if(zooming && (!WPA(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
-						else if(WPA(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
+						if(zooming && (!WEAP(d->weapselect, zooms) || state != WEAP_S_IDLE)) zoomset(false, lastmillis);
+						else if(WEAP(d->weapselect, zooms) && state == WEAP_S_IDLE && zooming != d->action[AC_ALTERNATE])
 							zoomset(d->action[AC_ALTERNATE], lastmillis);
 					}
 				}
@@ -1705,8 +1705,8 @@ namespace game
 		}
 	}
 
-	VAR(animoverride, -1, 0, ANIM_MAX-1);
-	VAR(testanims, 0, 0, 1);
+	VAR(0, animoverride, -1, 0, ANIM_MAX-1);
+	VAR(0, testanims, 0, 0, 1);
 
 	int numanims() { return ANIM_MAX; }
 
@@ -1773,7 +1773,7 @@ namespace game
 			{
 				if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
 					anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;
-				else if(d->physstate == PHYS_FALL && !d->onladder && FWV(impulsestyle) && d->impulse[IM_TYPE] != IM_T_NONE && lastmillis-d->impulse[IM_TIME] <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulse[IM_TIME]; }
+				else if(d->physstate == PHYS_FALL && !d->onladder && PHYS(impulsestyle) && d->impulse[IM_TYPE] != IM_T_NONE && lastmillis-d->impulse[IM_TIME] <= 1000) { anim |= ANIM_IMPULSE_DASH<<ANIM_SECONDARY; basetime2 = d->impulse[IM_TIME]; }
 				else if(d->physstate == PHYS_FALL && !d->onladder && d->actiontime[AC_JUMP] && lastmillis-d->actiontime[AC_JUMP] <= 1000) { anim |= ANIM_JUMP<<ANIM_SECONDARY; basetime2 = d->actiontime[AC_JUMP]; }
 				else if(d->physstate == PHYS_FALL && !d->onladder && d->timeinair >= 1000) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
 				else if(physics::sprinting(d))
@@ -1910,13 +1910,13 @@ namespace game
 					}
 					case WEAP_S_POWER:
 					{
-						if(WPA(weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
+						if(WEAP(weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
 						else animflags = weaptype[weap].anim|ANIM_LOOP;
 						break;
 					}
 					case WEAP_S_SHOOT:
 					{
-						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+						if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WEAP(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 							showweap = false;
 						animflags = weaptype[weap].anim+d->weapstate[weap];
 						break;
@@ -1925,7 +1925,7 @@ namespace game
 					{
 						if(weap != WEAP_MELEE)
 						{
-							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WPA(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+							if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WEAP(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
 								showweap = false;
 							animflags = weaptype[weap].anim+d->weapstate[weap];
 							break;

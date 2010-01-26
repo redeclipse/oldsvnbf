@@ -5,8 +5,8 @@
 bfgz hdr;
 int worldscale;
 
-VAR(octaentsize, 0, 128, 1024);
-VAR(entselradius, 0, 2, 10);
+VAR(0, octaentsize, 0, 128, 1024);
+VAR(0, entselradius, 0, 2, 10);
 
 bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 {
@@ -195,7 +195,7 @@ int entlooplevel = 0;
 int efocus = -1, enthover = -1, entorient = -1, oldhover = -1;
 bool undonext = true;
 
-VAR(entediting, 0, 0, 1);
+VAR(0, entediting, 0, 0, 1);
 
 bool noentedit()
 {
@@ -343,8 +343,8 @@ void entselectionbox(const extentity &e, vec &eo, vec &es)
 	es.mul(2);
 }
 
-VAR(entselsnap, 0, 1, 1);
-VAR(entmovingshadow, 0, 1, 1);
+VAR(0, entselsnap, 0, 1, 1);
+VAR(0, entmovingshadow, 0, 1, 1);
 
 extern void boxs(int orient, vec o, const vec &s);
 extern void boxs3D(const vec &o, vec s, int g);
@@ -433,8 +433,8 @@ bool hoveringonent(int ent, int orient)
 	return false;
 }
 
-VAR(entitysurf, 0, 0, 1);
-VARF(entmoving, 0, 0, 2,
+VAR(0, entitysurf, 0, 0, 1);
+VARF(0, entmoving, 0, 0, 2,
 	if(enthover < 0 || noentedit())
 		entmoving = 0;
 	else if(entmoving == 1)
@@ -464,7 +464,7 @@ void entpush(int *dir)
 	}
 }
 
-VAR(entautoviewdist, 0, 25, 100);
+VAR(0, entautoviewdist, 0, 25, 100);
 void entautoview(int *dir)
 {
 	if(!haveselent()) return;
@@ -485,10 +485,10 @@ void entautoview(int *dir)
 	);
 }
 
-COMMAND(entautoview, "i");
-COMMAND(entflip, "");
-COMMAND(entrotate, "i");
-COMMAND(entpush, "i");
+COMMAND(0, entautoview, "i");
+COMMAND(0, entflip, "");
+COMMAND(0, entrotate, "i");
+COMMAND(0, entpush, "i");
 
 void delent()
 {
@@ -497,7 +497,7 @@ void delent()
 	entcancel();
 }
 
-VAR(entdrop, 0, 2, 3);
+VAR(0, entdrop, 0, 2, 3);
 
 void dropenttofloor(extentity *e)
 {
@@ -655,11 +655,11 @@ void entpaste()
 	groupeditundo(e.type = entcopybuf[j++].type;);
 }
 
-COMMAND(newent, "ss");
-COMMAND(delent, "");
-COMMAND(dropent, "");
-COMMAND(entcopy, "");
-COMMAND(entpaste, "");
+COMMAND(0, newent, "ss");
+COMMAND(0, delent, "");
+COMMAND(0, dropent, "");
+COMMAND(0, entcopy, "");
+COMMAND(0, entpaste, "");
 
 void entlink()
 {
@@ -686,7 +686,7 @@ void entlink()
 	}
 	else conoutft(CON_MESG, "\frmore than one entity must be selected to link");
 }
-COMMAND(entlink, "");
+COMMAND(0, entlink, "");
 
 
 void entset(char *what, char *attr)
@@ -702,12 +702,12 @@ void entset(char *what, char *attr)
 	});
 }
 
-ICOMMAND(enthavesel,"", (), addimplicit(intret(entgroup.length())));
-ICOMMAND(entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
-ICOMMAND(entloop, "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
-ICOMMAND(enttype, "s", (char *s), entfocus(efocus, intret((!*s || !strcmp(s, entities::findname(e.type))))));
-ICOMMAND(insel, "", (), entfocus(efocus, intret(pointinsel(sel, e.o))));
-ICOMMAND(entget, "", (), entfocus(efocus, {
+ICOMMAND(0, enthavesel,"", (), addimplicit(intret(entgroup.length())));
+ICOMMAND(0, entselect, "s", (char *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && execute(body)>0));
+ICOMMAND(0, entloop, "s", (char *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
+ICOMMAND(0, enttype, "s", (char *s), entfocus(efocus, intret((!*s || !strcmp(s, entities::findname(e.type))))));
+ICOMMAND(0, insel, "", (), entfocus(efocus, intret(pointinsel(sel, e.o))));
+ICOMMAND(0, entget, "", (), entfocus(efocus, {
 	defformatstring(s)("%s", entities::findname(e.type));
 	loopv(e.attrs)
 	{
@@ -716,8 +716,8 @@ ICOMMAND(entget, "", (), entfocus(efocus, {
 	}
 	result(s);
 }));
-ICOMMAND(entindex, "", (), intret(efocus));
-COMMAND(entset, "ss");
+ICOMMAND(0, entindex, "", (), intret(efocus));
+COMMAND(0, entset, "ss");
 
 
 int findentity(int type, int index, vector<int> &attr)
@@ -784,7 +784,7 @@ void clearworldvars(bool msg)
     overrideidents = worldidents = false;
 }
 
-ICOMMAND(resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true));
+ICOMMAND(0, resetworldvars, "", (), if(editmode || worldidents) clearworldvars(true));
 
 void resetmap(bool empty)
 {
@@ -878,9 +878,9 @@ bool enlargemap(bool force)
 	return true;
 }
 
-ICOMMAND(newmap, "is", (int *i), if(emptymap(*i, false)) game::newmap(::max(*i, 0)));
-ICOMMAND(mapenlarge, "", (), if(enlargemap(false)) game::newmap(-1));
-ICOMMAND(mapsize, "", (void),
+ICOMMAND(0, newmap, "is", (int *i), if(emptymap(*i, false)) game::newmap(::max(*i, 0)));
+ICOMMAND(0, mapenlarge, "", (), if(enlargemap(false)) game::newmap(-1));
+ICOMMAND(0, mapsize, "", (void),
 {
     int size = 0;
     while(1<<size < hdr.worldsize) size++;

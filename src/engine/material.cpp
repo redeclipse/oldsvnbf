@@ -282,7 +282,7 @@ static int optmatcmp(const materialsurface *x, const materialsurface *y)
 	return 0;
 }
 
-VARF(optmats, 0, 1, 1, allchanged());
+VARF(0, optmats, 0, 1, 1, allchanged());
 
 int optimizematsurfs(materialsurface *matbuf, int matsurfs)
 {
@@ -431,7 +431,7 @@ void setupmaterials(int start, int len)
     if(hasmat&(1<<MAT_GLASS)) useshaderbyname("glass");
 }
 
-VARP(showmat, 0, 0, 1);
+VAR(IDF_PERSIST, showmat, 0, 0, 1);
 
 static int sortdim[3];
 static ivec sortorigin;
@@ -530,7 +530,7 @@ void rendermatgrid(vector<materialsurface *> &vismats)
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 }
 
-VARP(glassenv, 0, 1, 1);
+VAR(IDF_PERSIST, glassenv, 0, 1, 1);
 
 void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offset)
 {
@@ -553,7 +553,7 @@ void drawglass(int orient, int x, int y, int z, int csize, int rsize, float offs
 	xtraverts += 4;
 }
 
-VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
+VARF(IDF_PERSIST, waterfallenv, 0, 1, 1, preloadwatershaders());
 
 void rendermaterials()
 {

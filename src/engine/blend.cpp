@@ -277,7 +277,7 @@ void optimizeblendmap()
     optimizeblendmap(blendmap.type, blendmap);
 }
 
-VAR(blendpaintmode, 0, 0, 5);
+VAR(0, blendpaintmode, 0, 0, 5);
 
 static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int bmsize, uchar *src, int sx, int sy, int sw, int sh)
 {
@@ -518,13 +518,13 @@ void curblendbrush()
     intret(curbrush);
 }
 
-COMMAND(clearblendbrushes, "");
-COMMAND(delblendbrush, "s");
-COMMAND(addblendbrush, "ss");
-COMMAND(nextblendbrush, "i");
-COMMAND(setblendbrush, "s");
-COMMAND(getblendbrushname, "i");
-COMMAND(curblendbrush, "");
+COMMAND(0, clearblendbrushes, "");
+COMMAND(0, delblendbrush, "s");
+COMMAND(0, addblendbrush, "ss");
+COMMAND(0, nextblendbrush, "i");
+COMMAND(0, setblendbrush, "s");
+COMMAND(0, getblendbrushname, "i");
+COMMAND(0, curblendbrush, "");
 
 bool canpaintblendmap(bool brush = true, bool sel = false)
 {
@@ -551,7 +551,7 @@ void rotateblendbrush(int *val)
     brush->reorient(numrots>=2 && numrots<=4, numrots<=2 || numrots==5, (numrots&5)==1);
 }
 
-COMMAND(rotateblendbrush, "i");
+COMMAND(0, rotateblendbrush, "i");
 
 void paintblendmap()
 {
@@ -565,7 +565,7 @@ void paintblendmap()
                   ivec((brush->w+2)<<BM_SCALE, (brush->h+2)<<BM_SCALE, hdr.worldsize));
 }
 
-COMMAND(paintblendmap, "");
+COMMAND(0, paintblendmap, "");
 
 void clearblendmapsel()
 {
@@ -579,7 +579,7 @@ void clearblendmapsel()
                   ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, hdr.worldsize));
 }
 
-COMMAND(clearblendmapsel, "");
+COMMAND(0, clearblendmapsel, "");
 
 void showblendmap()
 {
@@ -587,9 +587,9 @@ void showblendmap()
     previewblends(ivec(0, 0, 0), ivec(hdr.worldsize, hdr.worldsize, hdr.worldsize));
 }
 
-COMMAND(showblendmap, "");
-COMMAND(optimizeblendmap, "");
-ICOMMAND(clearblendmap, "", (),
+COMMAND(0, showblendmap, "");
+COMMAND(0, optimizeblendmap, "");
+ICOMMAND(0, clearblendmap, "", (),
 {
     if(noedit(true)) return;
     resetblendmap();

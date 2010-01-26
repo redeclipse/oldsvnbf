@@ -79,7 +79,7 @@ struct stfservmode : stfstate, servmode
 			{
                 if(!b.owners || !b.enemies)
                 {
-                	int pts = b.occupy(b.enemy, GVAR(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GVAR(stfoccupy), GVAR(stfstyle) != 0);
+                	int pts = b.occupy(b.enemy, GAME(stfpoints)*(b.enemies ? b.enemies : -(1+b.owners))*t, GAME(stfoccupy), GAME(stfstyle) != 0);
                 	if(pts > 0) loopvk(clients) if(clients[k]->state.aitype < AI_START && b.owner == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], 3);
                 }
 				sendflag(i);
@@ -138,7 +138,7 @@ struct stfservmode : stfstate, servmode
 
 	void endcheck()
 	{
-		int maxscore = GVAR(stflimit) ? GVAR(stflimit) : INT_MAX-1;
+		int maxscore = GAME(stflimit) ? GAME(stflimit) : INT_MAX-1;
 		loopi(numteams(gamemode, mutators))
 		{
 			int steam = i+TEAM_FIRST;
@@ -150,7 +150,7 @@ struct stfservmode : stfstate, servmode
 				return;
 			}
 		}
-		if(GVAR(stffinish))
+		if(GAME(stffinish))
 		{
 			int steam = TEAM_NEUTRAL;
 			loopv(flags)
@@ -213,14 +213,14 @@ struct stfservmode : stfstate, servmode
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(hasflaginfo && GVAR(regenflag)) loopv(flags)
+		if(hasflaginfo && GAME(regenflag)) loopv(flags)
 		{
 			flag &b = flags[i];
 			if(b.owner == ci->team && !b.enemy && insideflag(b, ci->state.o, 2.f))
 			{
-				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
-				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
-				if(GVAR(regenextra)) amt = GVAR(regenextra);
+				if(GAME(extrahealth)) total = max(GAME(extrahealth), total);
+				if(ci->state.lastregen && GAME(regenguard)) delay = GAME(regenguard);
+				if(GAME(regenextra)) amt = GAME(regenextra);
 				return;
 			}
 		}

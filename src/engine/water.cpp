@@ -1,13 +1,13 @@
 #include "engine.h"
 
-VARFP(waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-VARFP(waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-VARFP(waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-VARFP(waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
+VARF(IDF_PERSIST, waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARF(IDF_PERSIST, waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARF(IDF_PERSIST, waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARF(IDF_PERSIST, waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
 
-VARW(refractfog, 0, 1, 1);
-VARW(watersubdiv, 0, 3, 3);
-VARW(waterlod, 0, 1, 3);
+VAR(IDF_WORLD, refractfog, 0, 1, 1);
+VAR(IDF_WORLD, watersubdiv, 0, 3, 3);
+VAR(IDF_WORLD, waterlod, 0, 1, 3);
 
 static int wx1, wy1, wx2, wy2, wsize;
 float wcol[4];
@@ -242,7 +242,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
 	}
 }
 
-VARFW(vertwater, 0, 1, 1, if(!worldidents) allchanged());
+VARF(IDF_WORLD, vertwater, 0, 1, 1, if(!worldidents) allchanged());
 
 void renderlava(materialsurface &m, Texture *tex, float scale)
 {
@@ -274,20 +274,20 @@ struct Reflection
 };
 Reflection *findreflection(int height);
 
-VARP(reflectdist, 0, 2000, 10000);
-VARW(waterfog, 0, 150, 10000);
+VAR(IDF_PERSIST, reflectdist, 0, 2000, 10000);
+VAR(IDF_WORLD, waterfog, 0, 150, 10000);
 bvec watercol(0x10, 0x30, 0x60), waterfallcol(0, 0, 0);
-HVARFW(watercolour, 0, 0x103060, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, watercolour, 0, 0x103060, 0xFFFFFF,
 {
     watercol = bvec((watercolour>>16)&0xFF, (watercolour>>8)&0xFF, watercolour&0xFF);
 });
-HVARFW(waterfallcolour, 0, 0, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, waterfallcolour, 0, 0, 0xFFFFFF,
 {
     waterfallcol = bvec((waterfallcolour>>16)&0xFF, (waterfallcolour>>8)&0xFF, waterfallcolour&0xFF);
 });
-VARW(lavafog, 0, 50, 10000);
+VAR(IDF_WORLD, lavafog, 0, 50, 10000);
 bvec lavacol(0xFF, 0x44, 0x00);
-HVARFW(lavacolour, 0, 0xFF4400, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, lavacolour, 0, 0xFF4400, 0xFFFFFF,
 {
     lavacol = bvec((lavacolour>>16)&0xFF, (lavacolour>>8)&0xFF, lavacolour&0xFF);
 });
@@ -353,7 +353,7 @@ void cleanupwaterTMUs(bool refract)
     }
 }
 
-VARW(waterspec, 0, 150, 1000);
+VAR(IDF_WORLD, waterspec, 0, 150, 1000);
 
 Reflection reflections[MAXREFLECTIONS];
 Reflection waterfallrefraction;
@@ -361,7 +361,7 @@ GLuint reflectionfb = 0, reflectiondb = 0;
 
 GLuint getwaterfalltex() { return waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id; }
 
-VAR(oqwater, 0, 1, 1);
+VAR(0, oqwater, 0, 1, 1);
 
 extern int oqfrags;
 
@@ -486,7 +486,7 @@ void renderwaterff()
 	glEnable(GL_CULL_FACE);
 }
 
-VARFP(waterfade, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
+VARF(IDF_PERSIST, waterfade, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 
 void preloadwatershaders(bool force)
 {
@@ -763,7 +763,7 @@ void cleanreflections()
     }
 }
 
-VARFP(reflectsize, 6, 8, 10, cleanreflections());
+VARF(IDF_PERSIST, reflectsize, 6, 8, 10, cleanreflections());
 
 void genwatertex(GLuint &tex, GLuint &fb, GLuint &db, bool refract = false)
 {
@@ -996,13 +996,13 @@ void queryreflections()
 	}
 }
 
-VARP(maxreflect, 1, 1, 8);
+VAR(IDF_PERSIST, maxreflect, 1, 1, 8);
 
 int refracting = 0;
 bool reflecting = false, fading = false, fogging = false;
 float reflectz = 1e16f;
 
-VAR(maskreflect, 0, 2, 16);
+VAR(0, maskreflect, 0, 2, 16);
 
 void maskreflection(Reflection &ref, float offset, bool reflect)
 {
@@ -1046,8 +1046,8 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
 	glDepthRange(0, 1);
 }
 
-VAR(reflectscissor, 0, 1, 1);
-VAR(reflectvfc, 0, 1, 1);
+VAR(0, reflectscissor, 0, 1, 1);
+VAR(0, reflectvfc, 0, 1, 1);
 
 static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxyaw, float &minpitch, float &maxpitch, int &sx, int &sy, int &sw, int &sh)
 {

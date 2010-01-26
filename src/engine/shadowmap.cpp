@@ -1,31 +1,31 @@
 #include "engine.h"
 #include "rendertarget.h"
 
-VARP(shadowmap, 0, 0, 1);
+VAR(IDF_PERSIST, shadowmap, 0, 0, 1);
 
 extern void cleanshadowmap();
-VARFP(shadowmapsize, 7, 9, 11, cleanshadowmap());
-VARP(shadowmapradius, 64, 96, 256);
-VAR(shadowmapheight, 0, 32, 128);
-VARP(ffshadowmapdist, 128, 1024, 4096);
-VARP(shadowmapdist, 128, 256, 512);
-VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
-VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
+VARF(IDF_PERSIST, shadowmapsize, 7, 9, 11, cleanshadowmap());
+VAR(IDF_PERSIST, shadowmapradius, 64, 96, 256);
+VAR(0, shadowmapheight, 0, 32, 128);
+VAR(IDF_PERSIST, ffshadowmapdist, 128, 1024, 4096);
+VAR(IDF_PERSIST, shadowmapdist, 128, 256, 512);
+VARF(IDF_PERSIST, fpshadowmap, 0, 0, 1, cleanshadowmap());
+VARF(IDF_PERSIST, shadowmapprecision, 0, 0, 1, cleanshadowmap());
 bvec shadowmapambientcolor(0, 0, 0);
-HVARFW(shadowmapambient, 0, 0, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, shadowmapambient, 0, 0, 0xFFFFFF,
 {
     if(shadowmapambient <= 255) shadowmapambient |= (shadowmapambient<<8) | (shadowmapambient<<16);
     shadowmapambientcolor = bvec((shadowmapambient>>16)&0xFF, (shadowmapambient>>8)&0xFF, shadowmapambient&0xFF);
 });
-VARP(shadowmapintensity, 0, 40, 100);
+VAR(IDF_PERSIST, shadowmapintensity, 0, 40, 100);
 
-VARP(blurshadowmap, 0, 1, 3);
-VARP(blursmsigma, 1, 100, 200);
+VAR(IDF_PERSIST, blurshadowmap, 0, 1, 3);
+VAR(IDF_PERSIST, blursmsigma, 1, 100, 200);
 
 #define SHADOWSKEW 0.7071068f
 
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, SHADOWSKEW, 1);
-VAR(shadowmapcasters, 1, 0, 0);
+VAR(0, shadowmapcasters, 1, 0, 0);
 float shadowmapmaxz = 0;
 
 void setshadowdir(int angle)
@@ -34,7 +34,7 @@ void setshadowdir(int angle)
     shadowdir.rotate_around_z(angle*RAD);
 }
 
-VARFW(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
+VARF(IDF_WORLD, shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
 
 void guessshadowdir()
 {
@@ -95,10 +95,10 @@ bool shadowmapping = false;
 
 static glmatrixf shadowmapmatrix;
 
-VARP(shadowmapbias, 0, 5, 1024);
-VARP(shadowmappeelbias, 0, 20, 1024);
-VAR(smdepthpeel, 0, 1, 1);
-VAR(smoothshadowmappeel, 1, 0, 0);
+VAR(IDF_PERSIST, shadowmapbias, 0, 5, 1024);
+VAR(IDF_PERSIST, shadowmappeelbias, 0, 20, 1024);
+VAR(0, smdepthpeel, 0, 1, 1);
+VAR(0, smoothshadowmappeel, 1, 0, 0);
 
 static struct shadowmaptexture : rendertarget
 {
@@ -273,7 +273,7 @@ void cleanshadowmap()
     shadowmaptex.cleanup(true);
 }
 
-VAR(ffsmscissor, 0, 1, 1);
+VAR(0, ffsmscissor, 0, 1, 1);
 
 static void calcscissorbox()
 {
@@ -543,7 +543,7 @@ void rendershadowmap()
     if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
 }
 
-VAR(debugsm, 0, 0, 1);
+VAR(0, debugsm, 0, 0, 1);
 
 void viewshadowmap()
 {

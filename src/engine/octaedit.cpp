@@ -3,9 +3,9 @@
 extern int outline, blankgeom;
 editinfo *localedit = NULL;
 
-VAR(showpastegrid, 0, 0, 1);
-VAR(showcursorgrid, 0, 0, 1);
-VAR(showselgrid, 0, 0, 1);
+VAR(0, showpastegrid, 0, 0, 1);
+VAR(0, showcursorgrid, 0, 0, 1);
+VAR(0, showselgrid, 0, 0, 1);
 
 void boxs(int orient, vec o, const vec &s)
 {
@@ -79,7 +79,7 @@ int horient = 0;
 
 extern int entmoving;
 
-VARF(dragging, 0, 0, 1,
+VARF(0, dragging, 0, 0, 1,
 	if(!dragging || cor[0]<0) return;
 	lastcur = cur;
 	lastcor = cor;
@@ -87,14 +87,14 @@ VARF(dragging, 0, 0, 1,
 	sel.orient = orient;
 );
 
-VARF(moving, 0, 0, 1,
+VARF(0, moving, 0, 0, 1,
 	if(!moving) return;
 	vec v(cur.v); v.add(1);
 	moving = pointinsel(sel, v);
 	if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
+VARF(0, gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 {
     if(dragging) return;
     gridsize = 1<<gridpower;
@@ -102,10 +102,10 @@ VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
 	cancelsel();
 });
 
-VAR(passthroughsel, 0, 0, 1);
-VAR(editing, 1, 0, 0);
-VAR(selectcorners, 0, 0, 1);
-VARF(hmapedit, 0, 0, 1, horient = sel.orient);
+VAR(0, passthroughsel, 0, 0, 1);
+VAR(0, editing, 1, 0, 0);
+VAR(0, selectcorners, 0, 0, 1);
+VARF(0, hmapedit, 0, 0, 1, horient = sel.orient);
 
 void forcenextundo() { lastsel.orient = -1; }
 
@@ -177,12 +177,12 @@ void selextend()
 	}
 }
 
-COMMANDN(edittoggle, toggleedit, "");
-COMMAND(entcancel, "");
-COMMAND(cubecancel, "");
-COMMAND(cancelsel, "");
-COMMAND(reorient, "");
-COMMAND(selextend, "");
+COMMANDN(0, edittoggle, toggleedit, "");
+COMMAND(0, entcancel, "");
+COMMAND(0, cubecancel, "");
+COMMAND(0, cancelsel, "");
+COMMAND(0, reorient, "");
+COMMAND(0, selextend, "");
 
 ///////// selection support /////////////
 
@@ -204,7 +204,7 @@ cube &blockcube(int x, int y, int z, const block3 &b, int rgrid) // looks up a w
 
 int selchildcount=0;
 
-ICOMMAND(havesel, "", (), intret(havesel ? selchildcount : 0));
+ICOMMAND(0, havesel, "", (), intret(havesel ? selchildcount : 0));
 
 void countselchild(cube *c, const ivec &cor, int size)
 {
@@ -272,8 +272,8 @@ extern bool hoveringonent(int ent, int orient);
 extern void renderentselection(const vec &o, const vec &ray, bool entmoving);
 extern float rayent(const vec &o, const vec &ray, vec &hitpos, float radius, int mode, int size, int &orient, int &ent);
 
-VAR(gridlookup, 0, 0, 1);
-VAR(passthroughcube, 0, 1, 1);
+VAR(0, gridlookup, 0, 0, 1);
+VAR(0, passthroughcube, 0, 1, 1);
 
 void cursorupdate()
 {
@@ -668,7 +668,7 @@ struct undolist
 };
 
 undolist undos, redos;
-VARP(undomegs, 0, 8, 100);                              // bounded by n megs
+VAR(IDF_PERSIST, undomegs, 0, 8, 100);                              // bounded by n megs
 int totalundos = 0;
 
 void pruneundos(int maxremain)                          // bound memory
@@ -690,7 +690,7 @@ void pruneundos(int maxremain)                          // bound memory
 
 void clearundos() { pruneundos(0); }
 
-COMMAND(clearundos, "");
+COMMAND(0, clearundos, "");
 
 undoblock *newundocube(selinfo &s)
 {
@@ -830,12 +830,12 @@ void paste()
 	mppaste(localedit, sel, true);
 }
 
-COMMAND(copy, "");
-COMMAND(pasteclear, "");
-COMMAND(pastehilight, "");
-COMMAND(paste, "");
-COMMANDN(undo, editundo, "");
-COMMANDN(redo, editredo, "");
+COMMAND(0, copy, "");
+COMMAND(0, pasteclear, "");
+COMMAND(0, pastehilight, "");
+COMMAND(0, paste, "");
+COMMANDN(0, undo, editundo, "");
+COMMANDN(0, redo, editredo, "");
 
 ///////////// height maps ////////////////
 
@@ -843,8 +843,8 @@ COMMANDN(redo, editredo, "");
 #define MAXBRUSHC   63
 #define MAXBRUSH2   32
 int brush[MAXBRUSH][MAXBRUSH];
-VAR(brushx, 0, MAXBRUSH2, MAXBRUSH);
-VAR(brushy, 0, MAXBRUSH2, MAXBRUSH);
+VAR(0, brushx, 0, MAXBRUSH2, MAXBRUSH);
+VAR(0, brushy, 0, MAXBRUSH2, MAXBRUSH);
 bool paintbrush = 0;
 int brushmaxx = 0, brushminx = MAXBRUSH;
 int brushmaxy = 0, brushminy = MAXBRUSH;
@@ -907,14 +907,14 @@ void brushimport(char *name)
 	else conoutf("\frcould not load: %s", name);
 }
 
-COMMAND(brushimport, "s");
+COMMAND(0, brushimport, "s");
 
 vector<int> htextures;
 
-COMMAND(clearbrush, "");
-COMMAND(brushvert, "iii");
-ICOMMAND(hmapcancel, "", (), htextures.setsizenodelete(0); );
-ICOMMAND(hmapselect, "", (),
+COMMAND(0, clearbrush, "");
+COMMAND(0, brushvert, "iii");
+ICOMMAND(0, hmapcancel, "", (), htextures.setsizenodelete(0); );
+ICOMMAND(0, hmapselect, "", (),
     int t = lookupcube(cur.x, cur.y, cur.z).texture[orient];
     int i = htextures.find(t);
     if(i<0)
@@ -931,7 +931,7 @@ inline bool ishtexture(int t)
 	return true;
 }
 
-VAR(bypassheightmapcheck, 0, 0, 1);    // temp
+VAR(0, bypassheightmapcheck, 0, 0, 1);    // temp
 
 inline bool isheightmap(int o, int d, bool empty, cube *c)
 {
@@ -1276,7 +1276,7 @@ static uchar getmaterial(cube &c)
 	return c.ext ? c.ext->material : MAT_AIR;
 }
 
-VAR(invalidcubeguard, 0, 1, 1);
+VAR(0, invalidcubeguard, 0, 1, 1);
 
 void mpeditface(int dir, int mode, selinfo &sel, bool local)
 {
@@ -1366,7 +1366,7 @@ void editface(int *dir, int *mode)
 		edithmap(*dir, *mode);
 }
 
-VAR(selectionsurf, 0, 0, 1);
+VAR(0, selectionsurf, 0, 0, 1);
 
 void pushsel(int *dir)
 {
@@ -1394,9 +1394,9 @@ void delcube()
 	mpdelcube(sel, true);
 }
 
-COMMAND(pushsel, "i");
-COMMAND(editface, "ii");
-COMMAND(delcube, "");
+COMMAND(0, pushsel, "i");
+COMMAND(0, editface, "ii");
+COMMAND(0, delcube, "");
 
 /////////// texture editing //////////////////
 
@@ -1434,7 +1434,7 @@ void edittexcube(cube &c, int tex, int orient, bool &findrep)
 }
 
 extern int curtexnum;
-VAR(allfaces, 0, 0, 1);
+VAR(0, allfaces, 0, 0, 1);
 
 void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 {
@@ -1516,11 +1516,11 @@ void gettexname(int *tex, int *subslot)
     result(slot.sts[*subslot].name);
 }
 
-COMMANDN(edittex, edittex_, "i");
-COMMAND(gettex, "");
-COMMAND(getcurtex, "");
-COMMAND(getseltex, "");
-COMMAND(gettexname, "ii");
+COMMANDN(0, edittex, edittex_, "i");
+COMMAND(0, gettex, "");
+COMMAND(0, getcurtex, "");
+COMMAND(0, getseltex, "");
+COMMAND(0, gettexname, "ii");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {
@@ -1541,11 +1541,11 @@ void replacetex(int texnum = -1)
 	mpreplacetex(texnum, lasttex, sel, true);
 }
 
-ICOMMAND(replace, "", (void), {
+ICOMMAND(0, replace, "", (void), {
 	if(reptex < 0) { conoutf("\frcan only replace after a texture edit"); return; }
 	replacetex(reptex);
 });
-ICOMMAND(replaceall, "", (void), replacetex(););
+ICOMMAND(0, replaceall, "", (void), replacetex(););
 
 ////////// flip and rotate ///////////////
 uint dflip(uint face) { return face==F_EMPTY ? face : 0x88888888 - (((face&0xF0F0F0F0)>>4) | ((face&0x0F0F0F0F)<<4)); }
@@ -1649,8 +1649,8 @@ void rotate(int *cw)
 	mprotate(*cw, sel, true);
 }
 
-COMMAND(flip, "");
-COMMAND(rotate, "i");
+COMMAND(0, flip, "");
+COMMAND(0, rotate, "i");
 
 void setmat(cube &c, uchar mat, uchar matmask)
 {
@@ -1683,7 +1683,7 @@ void editmat(char *name)
 	mpeditmat(id, sel, true);
 }
 
-COMMAND(editmat, "s");
+COMMAND(0, editmat, "s");
 
 int duplicateslot(Slot &s)
 {
@@ -1719,13 +1719,13 @@ void texduplicate()
 	edittex(duplicateslot(lookuptexture(tex, false)), true, false);
 }
 
-COMMAND(texduplicate, "");
+COMMAND(0, texduplicate, "");
 
-VARP(thumbwidth, 0, 30, 1000);
-VARP(thumbheight, 0, 10, 1000);
-VARP(thumbtime, 0, 25, 1000);
-FVARP(thumbsize, 0, 1, 8);
-FVARP(thumbpreview, 0, 5, 8);
+VAR(IDF_PERSIST, thumbwidth, 0, 30, 1000);
+VAR(IDF_PERSIST, thumbheight, 0, 10, 1000);
+VAR(IDF_PERSIST, thumbtime, 0, 25, 1000);
+FVAR(IDF_PERSIST, thumbsize, 0, 1, 8);
+FVAR(IDF_PERSIST, thumbpreview, 0, 5, 8);
 
 static int lastthumbnail = 0;
 
@@ -2007,7 +2007,7 @@ void showtexgui(int *n)
     gui.showtextures(*n==0 ? !gui.menuon : *n==1);
 }
 
-COMMAND(showtexgui, "i"); // 0/noargs = toggle, 1 = on, other = off - will autoclose when exiting editmode
+COMMAND(0, showtexgui, "i"); // 0/noargs = toggle, 1 = on, other = off - will autoclose when exiting editmode
 
 void render_texture_panel(int w, int h)
 {

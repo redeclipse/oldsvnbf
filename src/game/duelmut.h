@@ -15,7 +15,7 @@ struct duelservmode : servmode
 			{
 				if(clean)
 				{
-					n -= GVAR(duelreset) ? 2 : 1;
+					n -= GAME(duelreset) ? 2 : 1;
 					if(n < 0) return;
 				}
 				if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fayou are \fs\fgqueued\fS for the next round");
@@ -92,7 +92,7 @@ struct duelservmode : servmode
 
 	void clear()
 	{
-		dueltime = gamemillis+GVAR(duellimit);
+		dueltime = gamemillis+GAME(duellimit);
 		playing.setsize(0);
 	}
 
@@ -102,7 +102,7 @@ struct duelservmode : servmode
 
 		if(dueltime < 0)
 		{
-			if(duelqueue.length() >= 2) dueltime = gamemillis+GVAR(duellimit);
+			if(duelqueue.length() >= 2) dueltime = gamemillis+GAME(duellimit);
 			else
 			{
 				loopv(clients) queue(clients[i]); // safety
@@ -116,7 +116,7 @@ struct duelservmode : servmode
 			if(gamemillis >= dueltime)
 			{
 				vector<clientinfo *> alive;
-				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GVAR(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
+				loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GAME(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
 				allowed.setsize(0); playing.setsize(0);
 				if(!duelqueue.empty())
 				{
@@ -163,7 +163,7 @@ struct duelservmode : servmode
 						defformatstring(fight)("\falast one left alive wins, round \fs\fr#%d\fS", duelround);
 						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_FIGHT, CON_MESG, fight);
 					}
-					if(m_survivor(gamemode, mutators) || GVAR(duelclear)) clearitems();
+					if(m_survivor(gamemode, mutators) || GAME(duelclear)) clearitems();
 					dueltime = 0;
 				}
 			}

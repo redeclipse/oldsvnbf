@@ -284,9 +284,9 @@ void addserver(const char *name, int port)
 	if(newserver(name, port) && verbose >= 2)
 		conoutf("added server %s (%d)", name, port);
 }
-ICOMMAND(addserver, "si", (char *n, int *a), addserver(n, a ? *a : ENG_SERVER_PORT));
-VARP(searchlan, 0, 0, 1);
-VARP(maxservpings, 0, 10, 1000);
+ICOMMAND(0, addserver, "si", (char *n, int *a), addserver(n, a ? *a : ENG_SERVER_PORT));
+VAR(IDF_PERSIST, searchlan, 0, 0, 1);
+VAR(IDF_PERSIST, maxservpings, 0, 10, 1000);
 
 void pingservers()
 {
@@ -402,7 +402,7 @@ void checkpings()
 
 int sicompare(serverinfo **a, serverinfo **b) { return client::servercompare(*a, *b); }
 
-VARP(serverupdateinterval, 0, 5, INT_MAX-1);
+VAR(IDF_PERSIST, serverupdateinterval, 0, 5, INT_MAX-1);
 
 void refreshservers()
 {
@@ -425,7 +425,7 @@ void clearservers()
 	lastinfo = 0;
 }
 
-COMMAND(clearservers, "");
+COMMAND(0, clearservers, "");
 
 void updatefrommaster()
 {
@@ -441,7 +441,7 @@ void updatefrommaster()
 	else conoutf("master server not replying");
 	refreshservers();
 }
-COMMAND(updatefrommaster, "");
+COMMAND(0, updatefrommaster, "");
 
 void updateservers()
 {
@@ -454,4 +454,4 @@ void updateservers()
 	servers.sort(sicompare);
 	intret(servers.length());
 }
-COMMAND(updateservers, "");
+COMMAND(0, updateservers, "");

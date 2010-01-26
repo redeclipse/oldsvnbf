@@ -5,7 +5,7 @@
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false;
 int hasstencil = 0;
 
-VAR(renderpath, 1, 0, 0);
+VAR(0, renderpath, 1, 0, 0);
 
 // GL_ARB_vertex_buffer_object, GL_ARB_pixel_buffer_object
 PFNGLGENBUFFERSARBPROC       glGenBuffers_       = NULL;
@@ -107,28 +107,28 @@ void *getprocaddress(const char *name)
 	return SDL_GL_GetProcAddress(name);
 }
 
-VARP(ati_skybox_bug, 0, 0, 1);
-VAR(ati_texgen_bug, 0, 0, 1);
-VAR(ati_oq_bug, 0, 0, 1);
-VAR(ati_minmax_bug, 0, 0, 1);
-VAR(ati_dph_bug, 0, 0, 1);
-VAR(nvidia_texgen_bug, 0, 0, 1);
-VAR(nvidia_scissor_bug, 0, 0, 1);
-VAR(apple_glsldepth_bug, 0, 0, 1);
-VAR(apple_ff_bug, 0, 0, 1);
-VAR(apple_vp_bug, 0, 0, 1);
-VAR(sdl_backingstore_bug, -1, 0, 1);
-VAR(intel_quadric_bug, 0, 0, 1);
-VAR(mesa_program_bug, 0, 0, 1);
-VAR(avoidshaders, 1, 0, 0);
-VAR(minimizetcusage, 1, 0, 0);
-VAR(emulatefog, 1, 0, 0);
-VAR(usevp2, 1, 0, 0);
-VAR(usevp3, 1, 0, 0);
-VAR(usetexrect, 1, 0, 0);
-VAR(rtscissor, 0, 1, 1);
-VAR(blurtile, 0, 1, 1);
-VAR(rtsharefb, 0, 1, 1);
+VAR(IDF_PERSIST, ati_skybox_bug, 0, 0, 1);
+VAR(0, ati_texgen_bug, 0, 0, 1);
+VAR(0, ati_oq_bug, 0, 0, 1);
+VAR(0, ati_minmax_bug, 0, 0, 1);
+VAR(0, ati_dph_bug, 0, 0, 1);
+VAR(0, nvidia_texgen_bug, 0, 0, 1);
+VAR(0, nvidia_scissor_bug, 0, 0, 1);
+VAR(0, apple_glsldepth_bug, 0, 0, 1);
+VAR(0, apple_ff_bug, 0, 0, 1);
+VAR(0, apple_vp_bug, 0, 0, 1);
+VAR(0, sdl_backingstore_bug, -1, 0, 1);
+VAR(0, intel_quadric_bug, 0, 0, 1);
+VAR(0, mesa_program_bug, 0, 0, 1);
+VAR(0, avoidshaders, 1, 0, 0);
+VAR(0, minimizetcusage, 1, 0, 0);
+VAR(0, emulatefog, 1, 0, 0);
+VAR(0, usevp2, 1, 0, 0);
+VAR(0, usevp3, 1, 0, 0);
+VAR(0, usetexrect, 1, 0, 0);
+VAR(0, rtscissor, 0, 1, 1);
+VAR(0, blurtile, 0, 1, 1);
+VAR(0, rtsharefb, 0, 1, 1);
 
 static bool checkseries(const char *s, int low, int high)
 {
@@ -139,7 +139,7 @@ static bool checkseries(const char *s, int low, int high)
     return n >= low && n < high;
 }
 
-VAR(dbgexts, 0, 0, 1);
+VAR(0, dbgexts, 0, 0, 1);
 
 void gl_checkextensions()
 {
@@ -559,7 +559,7 @@ void glext(char *ext)
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
     intret(strstr(exts, ext) ? 1 : 0);
 }
-COMMAND(glext, "s");
+COMMAND(0, glext, "s");
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -631,7 +631,7 @@ void cleanupgl()
     cleanupmotionblur();
 }
 
-VAR(wireframe, 0, 0, 1);
+VAR(0, wireframe, 0, 0, 1);
 
 physent camera, *camera1 = &camera;
 vec worldpos, camerapos, camdir, camright, camup;
@@ -662,9 +662,9 @@ void transplayer()
 float curfov = 100, fovy, aspect;
 int farplane, xtraverts, xtravertsva;
 
-VARW(fog, 16, 4000, INT_MAX-1);
+VAR(IDF_WORLD, fog, 16, 4000, INT_MAX-1);
 bvec fogcolor(0x80, 0x99, 0xB3);
-HVARFW(fogcolour, 0, 0x8099B3, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, fogcolour, 0, 0x8099B3, 0xFFFFFF,
 {
     fogcolor = bvec((fogcolour>>16)&0xFF, (fogcolour>>8)&0xFF, fogcolour&0xFF);
 });
@@ -689,7 +689,7 @@ void vectocursor(vec &v, float &x, float &y, float &z)
 	z = screenpos.z/screenpos.w*0.5f + 0.5f;
 }
 
-FVAR(nearplane, 1e-3f, 0.54f, 1e3f);
+FVAR(0, nearplane, 1e-3f, 0.54f, 1e3f);
 
 void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, bool swapxy, float zscale)
 {
@@ -702,7 +702,7 @@ void project(float fovy, float aspect, int farplane, bool flipx, bool flipy, boo
     glMatrixMode(GL_MODELVIEW);
 }
 
-VAR(reflectclip, 0, 6, 64);
+VAR(0, reflectclip, 0, 6, 64);
 
 glmatrixf clipmatrix;
 
@@ -738,9 +738,9 @@ void undoclipmatrix()
 	glMatrixMode(GL_MODELVIEW);
 }
 
-FVAR(polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
-FVAR(polygonoffsetunits, -1e4f, -3.0f, 1e4f);
-FVAR(depthoffset, -1e4f, 0.01f, 1e4f);
+FVAR(0, polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
+FVAR(0, polygonoffsetunits, -1e4f, -3.0f, 1e4f);
+FVAR(0, depthoffset, -1e4f, 0.01f, 1e4f);
 
 void enablepolygonoffset(GLenum type)
 {
@@ -969,9 +969,9 @@ void cleanupmotionblur()
     lastmotion = 0;
 }
 
-VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
-VARP(motionblurmillis, 1, 5, 1000);
-FVARP(motionblurscale, 0, 1, 1);
+VARF(IDF_PERSIST, motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
+VAR(IDF_PERSIST, motionblurmillis, 1, 5, 1000);
+FVAR(IDF_PERSIST, motionblurscale, 0, 1, 1);
 
 void addmotionblur()
 {
@@ -1120,8 +1120,8 @@ void renderavatar(bool early)
 
 extern void viewproject(float zscale = 1);
 
-VARP(skyboxglare, 0, 1, 1);
-FVAR(firstpersondepth, 0, 0.5f, 1);
+VAR(IDF_PERSIST, skyboxglare, 0, 1, 1);
+FVAR(0, firstpersondepth, 0, 0.5f, 1);
 
 void drawglare()
 {
@@ -1167,7 +1167,7 @@ void drawglare()
     glaring = false;
 }
 
-VARP(reflectmms, 0, 1, 1);
+VAR(IDF_PERSIST, reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
@@ -1403,10 +1403,10 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     envmapping = false;
 }
 
-VARP(scr_virtw, 0, 1024, INT_MAX-1);
-VARP(scr_virth, 0, 768, INT_MAX-1);
-VARP(scr_minw, 0, 640, INT_MAX-1);
-VARP(scr_minh, 0, 480, INT_MAX-1);
+VAR(IDF_PERSIST, scr_virtw, 0, 1024, INT_MAX-1);
+VAR(IDF_PERSIST, scr_virth, 0, 768, INT_MAX-1);
+VAR(IDF_PERSIST, scr_minw, 0, 640, INT_MAX-1);
+VAR(IDF_PERSIST, scr_minh, 0, 480, INT_MAX-1);
 
 void getscreenres(int &w, int &h)
 {
@@ -1594,11 +1594,11 @@ enum { VP_LEFT, VP_RIGHT, VP_MAX, VP_CAMERA = VP_MAX };
 
 framebuffercopy views[VP_MAX];
 
-VARFP(viewtype, VW_NORMAL, VW_NORMAL, VW_MAX, loopi(VP_MAX) views[i].cleanup());
-FVARP(stereoblend, 0, 0.5f, 1);
-FVARP(stereodist, 0, 0.5f, 10000);
-FVARP(stereoplane, 1e-3f, 40.f, 1000);
-FVARP(stereonear, 0, 2.f, 10000);
+VARF(IDF_PERSIST, viewtype, VW_NORMAL, VW_NORMAL, VW_MAX, loopi(VP_MAX) views[i].cleanup());
+FVAR(IDF_PERSIST, stereoblend, 0, 0.5f, 1);
+FVAR(IDF_PERSIST, stereodist, 0, 0.5f, 10000);
+FVAR(IDF_PERSIST, stereoplane, 1e-3f, 40.f, 1000);
+FVAR(IDF_PERSIST, stereonear, 0, 2.f, 10000);
 
 int fogmat = MAT_AIR, abovemat = MAT_AIR;
 float fogblend = 1.0f, causticspass = 0.0f;

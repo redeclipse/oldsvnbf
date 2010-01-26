@@ -54,8 +54,8 @@ void inputgrab(bool on)
     showcursor(!on);
 }
 
-VARF(grabinput, 0, 0, 1, inputgrab(grabinput!=0));
-VARP(autograbinput, 0, 1, 1);
+VARF(0, grabinput, 0, 0, 1, inputgrab(grabinput!=0));
+VAR(IDF_PERSIST, autograbinput, 0, 1, 1);
 
 void setscreensaver(bool active)
 {
@@ -157,14 +157,14 @@ bool initwarning(const char *desc, int level, int type)
 #define SCR_MAXH 10000
 #define SCR_DEFAULTW 1024
 #define SCR_DEFAULTH 768
-VARF(scr_w, SCR_MINW, -1, SCR_MAXW, initwarning("screen resolution"));
-VARF(scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
-VARF(colorbits, 0, 0, 32, initwarning("color depth"));
-VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
-VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
-VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
+VARF(0, scr_w, SCR_MINW, -1, SCR_MAXW, initwarning("screen resolution"));
+VARF(0, scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
+VARF(0, colorbits, 0, 0, 32, initwarning("color depth"));
+VARF(0, depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
+VARF(0, stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
+VARF(0, fsaa, -1, -1, 16, initwarning("anti-aliasing"));
 int actualvsync = -1, lastoutofloop = 0;
-VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
+VARF(0, vsync, -1, -1, 1, initwarning("vertical sync"));
 
 void writeinitcfg()
 {
@@ -191,8 +191,8 @@ void writeinitcfg()
     delete f;
 }
 
-VARP(compresslevel, 0, 9, 9);
-VARP(imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
+VAR(IDF_PERSIST, compresslevel, 0, 9, 9);
+VAR(IDF_PERSIST, imageformat, IFMT_NONE+1, IFMT_PNG, IFMT_MAX-1);
 
 void screenshot(char *sname)
 {
@@ -203,8 +203,8 @@ void screenshot(char *sname)
 	saveimage(fname, image, imageformat, compresslevel, true, true);
 }
 
-COMMAND(screenshot, "s");
-COMMAND(quit, "");
+COMMAND(0, screenshot, "s");
+COMMAND(0, quit, "");
 
 void setfullscreen(bool enable)
 {
@@ -220,7 +220,7 @@ void setfullscreen(bool enable)
 #endif
 }
 
-VARF(fullscreen, 0, 1, 1, setfullscreen(fullscreen!=0));
+VARF(0, fullscreen, 0, 1, 1, setfullscreen(fullscreen!=0));
 
 void screenres(int *w, int *h)
 {
@@ -244,9 +244,9 @@ void screenres(int *w, int *h)
 #endif
 }
 
-COMMAND(screenres, "ii");
+COMMAND(0, screenres, "ii");
 
-VARFP(gamma, 30, 100, 300,
+VARF(IDF_PERSIST, gamma, 30, 100, 300,
 {
 	float f = gamma/100.0f;
 	if(SDL_SetGamma(f,f,f)==-1)
@@ -454,7 +454,7 @@ void resetgl()
     allchanged(true);
 }
 
-COMMAND(resetgl, "");
+COMMAND(0, resetgl, "");
 
 bool activewindow = true, warpmouse = false;
 int ignoremouse = 0;
@@ -607,7 +607,7 @@ void swapbuffers()
     SDL_GL_SwapBuffers();
 }
 
-VARP(maxfps, 0, 200, 1000);
+VAR(IDF_PERSIST, maxfps, 0, 200, 1000);
 
 void limitfps(int &millis, int curmillis)
 {
@@ -686,13 +686,13 @@ void getfps_(int *raw)
     intret(fps);
 }
 
-COMMANDN(getfps, getfps_, "i");
+COMMANDN(0, getfps, getfps_, "i");
 
-VAR(curfps, 1, 0, -1);
-VAR(bestfps, 1, 0, -1);
-VAR(bestfpsdiff, 1, 0, -1);
-VAR(worstfps, 1, 0, -1);
-VAR(worstfpsdiff, 1, 0, -1);
+VAR(0, curfps, 1, 0, -1);
+VAR(0, bestfps, 1, 0, -1);
+VAR(0, bestfpsdiff, 1, 0, -1);
+VAR(0, worstfps, 1, 0, -1);
+VAR(0, worstfpsdiff, 1, 0, -1);
 
 void resetfps()
 {
@@ -755,11 +755,11 @@ void eastereggs()
 
 bool progressing = false;
 
-FVAR(loadprogress, 0, 0, 1);
-SVAR(progresstitle, "");
-SVAR(progresstext, "");
-FVAR(progressamt, 0, 0, 1);
-FVAR(progresspart, 0, 0, 1);
+FVAR(0, loadprogress, 0, 0, 1);
+SVAR(0, progresstitle, "");
+SVAR(0, progresstext, "");
+FVAR(0, progressamt, 0, 0, 1);
+FVAR(0, progresspart, 0, 0, 1);
 
 void progress(float bar1, const char *text1, float bar2, const char *text2)
 {

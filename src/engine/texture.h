@@ -297,7 +297,7 @@ struct Texture
 
         STUB       = 1<<8,
         TRANSIENT  = 1<<9,
-        COMPRESSED = 1<<10, 
+        COMPRESSED = 1<<10,
         FLAGS      = 0xF0
     };
 
@@ -495,13 +495,11 @@ extern void setuptmu(int n, const char *rgbfunc = NULL, const char *alphafunc = 
 extern void setupblurkernel(int radius, float sigma, float *weights, float *offsets);
 extern void setblurshader(int pass, int size, int radius, float *weights, float *offsets, GLenum target = GL_TEXTURE_2D);
 
-#define _TVAR(n, c, m, p) _SVARF(n, n, c, { if(n[0]) textureload(n, m, true); }, p)
-#define TVAR(n, c, m)  _TVAR(n, c, m, IDF_PERSIST|IDF_COMPLETE|IDF_TEXTURE)
-#define TVARW(n, c, m) _TVAR(n, c, m, IDF_WORLD|IDF_COMPLETE|IDF_TEXTURE)
-#define _TVARN(n, c, t, m, p) _SVARF(n, n, c, { t = n[0] ? textureload(n, m, true) : notexture; }, p)
-#define TVARN(n, c, t, m) _TVARN(n, c, t, m, IDF_PERSIST|IDF_COMPLETE|IDF_TEXTURE)
-#define TVARC(n, c, t, m) Texture *##t; _TVARN(n, c, t, m, IDF_PERSIST|IDF_COMPLETE|IDF_TEXTURE)
+#define _TVAR(f, n, c, m) _SVARF(n, n, c, { if(n[0]) textureload(n, m, true); }, f|IDF_TEXTURE)
+#define TVAR(f, n, c, m)  _TVAR(f, n, c, m)
+#define _TVARN(f, n, c, t, m) _SVARF(n, n, c, { t = n[0] ? textureload(n, m, true) : notexture; }, f|IDF_TEXTURE)
+#define TVARN(f, n, c, t, m) _TVARN(f, n, c, t, m)
+#define TVARC(f, n, c, t, m) Texture *##t; _TVARN(f, n, c, t, m)
 
-#define _ITVAR(n, c, m, p) _ISVAR(n, c, void changed() { if(*val.s) textureload(val.s, m, true); }, p)
-#define ITVAR(n, c, m)  _ITVAR(n, c, m, IDF_PERSIST|IDF_COMPLETE|IDF_TEXTURE)
-#define ITVARW(n, c, m) _ITVAR(n, c, m, IDF_WORLD|IDF_COMPLETE|IDF_TEXTURE)
+#define _ITVAR(f, n, c, m) _ISVAR(n, c, void changed() { if(*val.s) textureload(val.s, m, true); }, f|IDF_TEXTURE)
+#define ITVAR(f, n, c, m)  _ITVAR(f, n, c, m)
