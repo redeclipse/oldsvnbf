@@ -171,7 +171,7 @@ namespace physics
 		if(PHYS(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI))
 		{
 			gameent *e = (gameent *)d;
-			if(last && e->lastsprint && lastmillis-e->lastsprint <= PHYSMILLIS*2) return true;
+			if(last && e->lastsprint && lastmillis-e->lastsprint <= PHYSMILLIS) return true;
 			if(!iscrouching(d))
 			{
 				if(turn && e->turnside) return true;
