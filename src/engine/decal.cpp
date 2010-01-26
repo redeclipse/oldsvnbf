@@ -25,9 +25,9 @@ enum
     DF_SATURATE   = 1<<5
 };
 
-VARFP(maxdecaltris, 1, 512, INT_MAX-1, initdecals());
-VARP(decalfade, 1000, 5000, INT_MAX-1);
-VAR(dbgdec, 0, 0, 1);
+VARF(IDF_PERSIST, maxdecaltris, 1, 512, INT_MAX-1, initdecals());
+VAR(IDF_PERSIST, decalfade, 1000, 5000, INT_MAX-1);
+VAR(0, dbgdec, 0, 0, 1);
 
 struct decalrenderer
 {
@@ -512,7 +512,7 @@ void cleardecals()
     loopi(sizeof(decals)/sizeof(decals[0])) decals[i].cleardecals();
 }
 
-VARNP(decals, showdecals, 0, 1, 1);
+VARN(IDF_PERSIST, decals, showdecals, 0, 1, 1);
 
 void renderdecals(bool mainpass)
 {
@@ -538,7 +538,7 @@ void renderdecals(bool mainpass)
     decalrenderer::cleanuprenderstate();
 }
 
-VARP(maxdecaldistance, 128, 1024, INT_MAX-1);
+VAR(IDF_PERSIST, maxdecaldistance, 128, 1024, INT_MAX-1);
 
 void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color, int info)
 {

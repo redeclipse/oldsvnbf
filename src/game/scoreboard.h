@@ -19,24 +19,24 @@ namespace hud
 		vector<scoregroup *> groups;
 		vector<gameent *> spectators;
 
-		IVARP(autoshowscores, 0, 2, 3); // 1 = when dead, 2 = also in spectv, 3 = and in waittv too
-		IVARP(showscoresdelay, 0, 0, INT_MAX-1); // otherwise use a static timespan
-		IVARP(showscoresinfo, 0, 1, 1);
-		IVARP(highlightscore, 0, 1, 1);
+		IVAR(IDF_PERSIST, autoshowscores, 0, 2, 3); // 1 = when dead, 2 = also in spectv, 3 = and in waittv too
+		IVAR(IDF_PERSIST, showscoresdelay, 0, 0, INT_MAX-1); // otherwise use a static timespan
+		IVAR(IDF_PERSIST, showscoresinfo, 0, 1, 1);
+		IVAR(IDF_PERSIST, highlightscore, 0, 1, 1);
 
-		IVARP(showpj, 0, 0, 1);
-		IVARP(showping, 0, 1, 1);
-		IVARP(showpoints, 0, 1, 1);
-		IVARP(showscore, 0, 2, 2);
-		IVARP(showclientnum, 0, 1, 1);
-		IVARP(showskills, 0, 1, 1);
-		IVARP(showownernum, 0, 0, 1);
-		IVARP(showspectators, 0, 1, 1);
-		IVARP(showconnecting, 0, 0, 1);
+		IVAR(IDF_PERSIST, showpj, 0, 0, 1);
+		IVAR(IDF_PERSIST, showping, 0, 1, 1);
+		IVAR(IDF_PERSIST, showpoints, 0, 1, 1);
+		IVAR(IDF_PERSIST, showscore, 0, 2, 2);
+		IVAR(IDF_PERSIST, showclientnum, 0, 1, 1);
+		IVAR(IDF_PERSIST, showskills, 0, 1, 1);
+		IVAR(IDF_PERSIST, showownernum, 0, 0, 1);
+		IVAR(IDF_PERSIST, showspectators, 0, 1, 1);
+		IVAR(IDF_PERSIST, showconnecting, 0, 0, 1);
 
 		scoreboard() : scoreson(false), scoresoff(false), shownscores(false), menulastpress(0)
 		{
-			CCOMMAND(showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0, false, false, true));
+			CCOMMAND(0, showscores, "D", (scoreboard *self, int *down), self->showscores(*down!=0, false, false, true));
 		}
 
 		bool canshowscores()

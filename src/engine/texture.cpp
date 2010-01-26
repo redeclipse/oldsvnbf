@@ -320,16 +320,16 @@ void texmix(ImageData &s, int c1, int c2, int c3, int c4)
     s.replace(d);
 }
 
-VAR(hwtexsize, 1, 0, 0);
-VAR(hwcubetexsize, 1, 0, 0);
-VAR(hwmaxaniso, 1, 0, 0);
-VARFP(maxtexsize, 0, 0, 1<<12, initwarning("texture quality", INIT_LOAD));
-VARFP(texreduce, 0, 0, 12, initwarning("texture quality", INIT_LOAD));
-VARFP(texcompress, 0, 1<<10, 1<<12, initwarning("texture quality", INIT_LOAD));
-VARFP(texcompressquality, -1, -1, 1, setuptexcompress());
-VARFP(trilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(bilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(aniso, 0, 0, 16, initwarning("texture filtering", INIT_LOAD));
+VAR(0, hwtexsize, 1, 0, 0);
+VAR(0, hwcubetexsize, 1, 0, 0);
+VAR(0, hwmaxaniso, 1, 0, 0);
+VARF(IDF_PERSIST, maxtexsize, 0, 0, 1<<12, initwarning("texture quality", INIT_LOAD));
+VARF(IDF_PERSIST, texreduce, 0, 0, 12, initwarning("texture quality", INIT_LOAD));
+VARF(IDF_PERSIST, texcompress, 0, 1<<10, 1<<12, initwarning("texture quality", INIT_LOAD));
+VARF(IDF_PERSIST, texcompressquality, -1, -1, 1, setuptexcompress());
+VARF(IDF_PERSIST, trilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
+VARF(IDF_PERSIST, bilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
+VARF(IDF_PERSIST, aniso, 0, 0, 16, initwarning("texture filtering", INIT_LOAD));
 
 void setuptexcompress()
 {
@@ -374,8 +374,8 @@ int formatsize(GLenum format)
 	}
 }
 
-VARFP(hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(usenp2, 0, 0, 1, initwarning("texture quality", INIT_LOAD));
+VARF(IDF_PERSIST, hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
+VARF(IDF_PERSIST, usenp2, 0, 0, 1, initwarning("texture quality", INIT_LOAD));
 
 void resizetexture(int w, int h, bool mipmap, bool canreduce, GLenum target, int compress, int &tw, int &th)
 {
@@ -858,7 +858,7 @@ static vec parsevec(const char *arg)
 	return v;
 }
 
-VAR(usedds, 0, 1, 1);
+VAR(0, usedds, 0, 1, 1);
 
 static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, bool msg = true, int *compress = NULL, TextureAnim *anim = NULL)
 {
@@ -1041,14 +1041,14 @@ void resettextures()
 	slots.setsize(0);
 }
 
-ICOMMAND(texturereset, "", (void), if(editmode || worldidents) resettextures(););
+ICOMMAND(0, texturereset, "", (void), if(editmode || worldidents) resettextures(););
 
 void resetmaterials()
 {
     loopi(MATF_VOLUME+1) materialslots[i].reset();
 }
 
-ICOMMAND(materialreset, "", (void), if(editmode || worldidents) resetmaterials(););
+ICOMMAND(0, materialreset, "", (void), if(editmode || worldidents) resetmaterials(););
 generic textypes[] =
 {
 	{"c", TEX_DIFFUSE},
@@ -1105,7 +1105,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
     }
 }
 
-COMMAND(texture, "ssiiif");
+COMMAND(0, texture, "ssiiif");
 
 void texturedel(int i, bool local)
 {
@@ -1129,7 +1129,7 @@ void texturedel(int i, bool local)
 	curtexnum--;
 }
 
-ICOMMAND(texturedel, "i", (int *i), {
+ICOMMAND(0, texturedel, "i", (int *i), {
 	if (curtexnum > 8)
 	{
 		if (*i >= 0 && *i <= curtexnum)
@@ -1167,7 +1167,7 @@ void texturecull(bool local)
 	}
 }
 
-ICOMMAND(texturecull, "", (void), {
+ICOMMAND(0, texturecull, "", (void), {
 	if (curtexnum > 8)
 	{
 		texturecull(true);
@@ -1183,7 +1183,7 @@ void autograss(char *name)
 	DELETEA(s.autograss);
 	s.autograss = name[0] ? newstring(name) : NULL;
 }
-COMMAND(autograss, "s");
+COMMAND(0, autograss, "s");
 
 void texscroll(float *scrollS, float *scrollT)
 {
@@ -1192,7 +1192,7 @@ void texscroll(float *scrollS, float *scrollT)
     s.scrollS = *scrollS/1000.0f;
     s.scrollT = *scrollT/1000.0f;
 }
-COMMAND(texscroll, "ff");
+COMMAND(0, texscroll, "ff");
 
 void texoffset_(int *xoffset, int *yoffset)
 {
@@ -1201,7 +1201,7 @@ void texoffset_(int *xoffset, int *yoffset)
     s.xoffset = max(*xoffset, 0);
     s.yoffset = max(*yoffset, 0);
 }
-COMMANDN(texoffset, texoffset_, "ii");
+COMMANDN(0, texoffset, texoffset_, "ii");
 
 void texrotate_(int *rot)
 {
@@ -1209,7 +1209,7 @@ void texrotate_(int *rot)
     Slot &s = slots.last();
     s.rotation = clamp(*rot, 0, 5);
 }
-COMMANDN(texrotate, texrotate_, "i");
+COMMANDN(0, texrotate, texrotate_, "i");
 
 void texlayer(int *layer, char *name, int *mode, float *scale)
 {
@@ -1220,7 +1220,7 @@ void texlayer(int *layer, char *name, int *mode, float *scale)
     s.layermaskmode = *mode;
     s.layermaskscale = *scale <= 0 ? 1 : *scale;
 }
-COMMAND(texlayer, "isif");
+COMMAND(0, texlayer, "isif");
 
 void texscale(float *scale)
 {
@@ -1228,7 +1228,7 @@ void texscale(float *scale)
     Slot &s = slots.last();
     s.scale = *scale <= 0 ? 1 : *scale;
 }
-COMMAND(texscale, "f");
+COMMAND(0, texscale, "f");
 
 static int findtextype(Slot &s, int type, int last = -1)
 {
@@ -1506,7 +1506,7 @@ cubemapside cubemapsides[6] =
     { GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB, "up", false, false, true  },
 };
 
-VARFP(envmapsize, 4, 7, 10, setupmaterials());
+VARF(IDF_PERSIST, envmapsize, 4, 7, 10, setupmaterials());
 
 Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg, bool transient = false)
 {
@@ -1615,7 +1615,7 @@ Texture *cubemapload(const char *name, bool mipit, bool msg, bool transient)
 	return t;
 }
 
-VARW(envmapradius, 0, 128, 10000);
+VAR(IDF_WORLD, envmapradius, 0, 128, 10000);
 
 struct envmap
 {
@@ -1638,7 +1638,7 @@ void clearenvmaps()
 	envmaps.setsize(0);
 }
 
-VAR(aaenvmap, 0, 2, 4);
+VAR(0, aaenvmap, 0, 2, 4);
 
 GLuint genenvmap(const vec &o, int envmapsize)
 {
@@ -1836,7 +1836,7 @@ void reloadtex(char *name)
         conoutf("\frfailed to reload texture %s", name);
     }
 }
-COMMAND(reloadtex, "s");
+COMMAND(0, reloadtex, "s");
 
 void reloadtextures()
 {
@@ -1909,7 +1909,7 @@ struct DDSURFACEDESC2
     uint dwTextureStage;
 };
 
-VAR(dbgdds, 0, 0, 1);
+VAR(0, dbgdds, 0, 0, 1);
 
 bool loaddds(const char *filename, ImageData &image)
 {
@@ -2042,7 +2042,7 @@ void gendds(char *infile, char *outfile)
 
     setuptexcompress();
 }
-COMMAND(gendds, "ss");
+COMMAND(0, gendds, "ss");
 
 void writepngchunk(stream *f, const char *type, uchar *data = NULL, uint len = 0)
 {
@@ -2322,6 +2322,6 @@ void mergenormalmaps(char *heightfile, char *normalfile) // jpg/png/tga + tga ->
     savetga(normalfile, d);
 }
 
-COMMAND(flipnormalmapy, "ss");
-COMMAND(mergenormalmaps, "sss");
+COMMAND(0, flipnormalmapy, "ss");
+COMMAND(0, mergenormalmaps, "sss");
 

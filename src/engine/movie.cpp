@@ -14,7 +14,7 @@
 #include "engine.h"
 #include "SDL_mixer.h"
 
-VAR(dbgmovie, 0, 0, 1);
+VAR(0, dbgmovie, 0, 0, 1);
 
 struct aviindexentry
 {
@@ -612,10 +612,10 @@ struct aviwriter
 
 };
 
-VAR(movieaccelblit, 0, 0, 1);
-VAR(movieaccelyuv, 0, 1, 1);
-VARP(movieaccel, 0, 1, 1);
-VARP(moviesync, 0, 0, 1);
+VAR(0, movieaccelblit, 0, 0, 1);
+VAR(0, movieaccelyuv, 0, 1, 1);
+VAR(IDF_PERSIST, movieaccel, 0, 1, 1);
+VAR(IDF_PERSIST, moviesync, 0, 0, 1);
 
 namespace recorder
 {
@@ -1077,10 +1077,10 @@ namespace recorder
     }
 }
 
-VARP(moview, 0, 320, 10000);
-VARP(movieh, 0, 240, 10000);
-VARP(moviefps, 1, 24, 1000);
-VARP(moviesound, 0, 1, 1);
+VAR(IDF_PERSIST, moview, 0, 320, 10000);
+VAR(IDF_PERSIST, movieh, 0, 240, 10000);
+VAR(IDF_PERSIST, moviefps, 1, 24, 1000);
+VAR(IDF_PERSIST, moviesound, 0, 1, 1);
 
 void movie(char *name)
 {
@@ -1088,5 +1088,5 @@ void movie(char *name)
     else if (!recorder::isrecording()) recorder::start(name, moviefps, moview ? moview : screen->w, movieh ? movieh : screen->h, moviesound!=0);
 }
 
-COMMAND(movie, "s");
+COMMAND(0, movie, "s");
 

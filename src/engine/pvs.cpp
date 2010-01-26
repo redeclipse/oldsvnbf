@@ -286,8 +286,8 @@ static vector<viewcellrequest> viewcellrequests;
 static bool genpvs_canceled = false;
 static int numviewcells = 0;
 
-VAR(maxpvsblocker, 1, 512, 1<<16);
-VAR(pvsleafsize, 1, 64, 1024);
+VAR(0, maxpvsblocker, 1, 512, 1<<16);
+VAR(0, pvsleafsize, 1, 64, 1024);
 
 #define MAXWATERPVS 32
 
@@ -804,7 +804,7 @@ struct viewcellnode
     }
 };
 
-VARP(pvsthreads, 1, 1, 16);
+VAR(IDF_PERSIST, pvsthreads, 1, 1, 16);
 static vector<pvsworker *> pvsworkers;
 
 static volatile bool check_genpvs_progress = false;
@@ -955,10 +955,10 @@ static void lockpvs_(bool lock)
     conoutf("\fglocked view cell at %.1f, %.1f, %.1f", camera1->o.x, camera1->o.y, camera1->o.z);
 }
 
-VARF(lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
+VARF(0, lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
 
-VARN(pvs, usepvs, 0, 1, 1);
-VARN(waterpvs, usewaterpvs, 0, 1, 1);
+VARN(0, pvs, usepvs, 0, 1, 1);
+VARN(0, waterpvs, usewaterpvs, 0, 1, 1);
 
 void setviewcell(const vec &p)
 {
@@ -992,7 +992,7 @@ void clearpvs()
     lockpvs_(false);
 }
 
-COMMAND(clearpvs, "");
+COMMAND(0, clearpvs, "");
 
 static void findwaterplanes()
 {
@@ -1069,7 +1069,7 @@ void testpvs(int *vcsize)
     loopi(numwaterplanes) waterplanes[i].height = oldwaterplanes[i];
 }
 
-COMMAND(testpvs, "i");
+COMMAND(0, testpvs, "i");
 
 void genpvs(int *viewcellsize)
 {
@@ -1150,7 +1150,7 @@ void genpvs(int *viewcellsize)
             pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1), (end - start) / 1000.0f);
 }
 
-COMMAND(genpvs, "i");
+COMMAND(0, genpvs, "i");
 
 void pvsstats()
 {
@@ -1158,7 +1158,7 @@ void pvsstats()
         pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1));
 }
 
-COMMAND(pvsstats, "");
+COMMAND(0, pvsstats, "");
 
 static inline bool pvsoccluded(uchar *buf, const ivec &co, int size, const ivec &bborigin, const ivec &bbsize)
 {

@@ -15,12 +15,6 @@
 #define DNF 100.0f			// for normalized vectors
 #define DVELF 1.0f			// for playerspeed based velocity vectors
 
-#ifdef GAMESERVER
-#define GVAR(name)			(sv_##name)
-#else
-#define GVAR(name)			(name)
-#define FWV(name)			(force##name >= 0 ? force##name : physics::name)
-#endif
 enum
 {
 	S_JUMP = S_GAMESPECIFIC, S_IMPULSE, S_LAND, S_PAIN1, S_PAIN2, S_PAIN3, S_PAIN4, S_PAIN5, S_PAIN6, S_DIE1, S_DIE2, S_SPLASH1, S_SPLASH2, S_UNDERWATER,
@@ -215,35 +209,35 @@ enum
 };
 
 #define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh) \
-	VARG(name##add, 1, w0, w1);						VARG(name##max, 1, w1, w1); \
-	VARG(name##sub1, 0, w2, w1);					VARG(name##sub2, 0, w3, w1); \
-	VARG(name##adelay1, 50, w4, 30000);				VARG(name##adelay2, 50, w5, 30000);				VARG(name##rdelay, 50, w6, 30000); \
-	VARG(name##damage1, -1000, w7, 1000);			VARG(name##damage2, -1000, w8, 1000); \
-	VARG(name##speed1, -100000, w9, 100000);		VARG(name##speed2, -100000, wa, 100000); \
-	VARG(name##power, 0, wb, 30000); \
-	VARG(name##time1, 0, wc, 30000);				VARG(name##time2, 0, wd, 30000); \
-	VARG(name##pdelay, 0, we, 30000); \
-	VARG(name##explode1, 0, wf, 1000);				VARG(name##explode2, 0, wg, 1000); \
-	VARG(name##rays1, 1, wh, 100);					VARG(name##rays2, 1, wi, 100); \
-	VARG(name##spread1, 0, wj, 1000);				VARG(name##spread2, 0, wk, 1000); \
-	VARG(name##zdiv1, 0, wl, 1000);					VARG(name##zdiv2, 0, wm, 1000); \
-	VARG(name##aiskew1, 0, wn, 30000);				VARG(name##aiskew2, 0, wo, 30000); \
-	VARG(name##collide1, 0, wp, INT_MAX-1);			VARG(name##collide2, 0, wq, INT_MAX-1); \
-	VARG(name##taper1, 0, x0, 1);					VARG(name##taper2, 0, x1, 1); \
-	VARG(name##extinguish1, 0, x2, 1);				VARG(name##extinguish2, 0, x3, 1); \
-	VARG(name##radial1, 0, x4, 1);					VARG(name##radial2, 0, x5, 1); \
-	VARG(name##burns1, 0, x6, 1);					VARG(name##burns2, 0, x7, 1); \
-	VARG(name##reloads, 0, x8, 1);					VARG(name##zooms, 0, x9, 1); \
-	VARG(name##fullauto1, 0, xa, 1);				VARG(name##fullauto2, 0, xb, 1); \
-	FVARG(name##elasticity1, -1000, y0, 1000);		FVARG(name##elasticity2, 0, y1, 1); \
-	FVARG(name##reflectivity1, 0, y2, 360);			FVARG(name##reflectivity2, 0, y3, 360); \
-	FVARG(name##relativity1, -1000, y4, 1000);		FVARG(name##relativity2, 0, y5, 1000); \
-	FVARG(name##waterfric1, 0, y6, 1000);			FVARG(name##waterfric2, 0, y7, 1000); \
-	FVARG(name##weight1, -1000, y8, 1000);			FVARG(name##weight2, -1000, y9, 1000); \
-	FVARG(name##radius1, -1000, ya, 1000);			FVARG(name##radius2, -1000, yb, 1000); \
-	FVARG(name##kickpush1, -1000, yc, 1000);		FVARG(name##kickpush2, -1000, yd, 1000); \
-	FVARG(name##hitpush1, -1000, ye, 1000);			FVARG(name##hitpush2, -1000, yf, 1000); \
-	FVARG(name##maxdist1, 0, yg, 10000);			FVARG(name##maxdist2, 0, yh, 10000);
+	GVAR(0, name##add, 1, w0, w1);					GVAR(0, name##max, 1, w1, w1); \
+	GVAR(0, name##sub1, 0, w2, w1);					GVAR(0, name##sub2, 0, w3, w1); \
+	GVAR(0, name##adelay1, 50, w4, 30000);			GVAR(0, name##adelay2, 50, w5, 30000);				GVAR(0, name##rdelay, 50, w6, 30000); \
+	GVAR(0, name##damage1, -1000, w7, 1000);		GVAR(0, name##damage2, -1000, w8, 1000); \
+	GVAR(0, name##speed1, -100000, w9, 100000);		GVAR(0, name##speed2, -100000, wa, 100000); \
+	GVAR(0, name##power, 0, wb, 30000); \
+	GVAR(0, name##time1, 0, wc, 30000);				GVAR(0, name##time2, 0, wd, 30000); \
+	GVAR(0, name##pdelay, 0, we, 30000); \
+	GVAR(0, name##explode1, 0, wf, 1000);			GVAR(0, name##explode2, 0, wg, 1000); \
+	GVAR(0, name##rays1, 1, wh, 100);				GVAR(0, name##rays2, 1, wi, 100); \
+	GVAR(0, name##spread1, 0, wj, 1000);			GVAR(0, name##spread2, 0, wk, 1000); \
+	GVAR(0, name##zdiv1, 0, wl, 1000);				GVAR(0, name##zdiv2, 0, wm, 1000); \
+	GVAR(0, name##aiskew1, 0, wn, 30000);			GVAR(0, name##aiskew2, 0, wo, 30000); \
+	GVAR(0, name##collide1, 0, wp, INT_MAX-1);		GVAR(0, name##collide2, 0, wq, INT_MAX-1); \
+	GVAR(0, name##taper1, 0, x0, 1);				GVAR(0, name##taper2, 0, x1, 1); \
+	GVAR(0, name##extinguish1, 0, x2, 1);			GVAR(0, name##extinguish2, 0, x3, 1); \
+	GVAR(0, name##radial1, 0, x4, 1);				GVAR(0, name##radial2, 0, x5, 1); \
+	GVAR(0, name##burns1, 0, x6, 1);				GVAR(0, name##burns2, 0, x7, 1); \
+	GVAR(0, name##reloads, 0, x8, 1);				GVAR(0, name##zooms, 0, x9, 1); \
+	GVAR(0, name##fullauto1, 0, xa, 1);				GVAR(0, name##fullauto2, 0, xb, 1); \
+	GFVAR(0, name##elasticity1, -1000, y0, 1000);	GFVAR(0, name##elasticity2, 0, y1, 1); \
+	GFVAR(0, name##reflectivity1, 0, y2, 360);		GFVAR(0, name##reflectivity2, 0, y3, 360); \
+	GFVAR(0, name##relativity1, -1000, y4, 1000);	GFVAR(0, name##relativity2, 0, y5, 1000); \
+	GFVAR(0, name##waterfric1, 0, y6, 1000);		GFVAR(0, name##waterfric2, 0, y7, 1000); \
+	GFVAR(0, name##weight1, -1000, y8, 1000);		GFVAR(0, name##weight2, -1000, y9, 1000); \
+	GFVAR(0, name##radius1, -1000, ya, 1000);		GFVAR(0, name##radius2, -1000, yb, 1000); \
+	GFVAR(0, name##kickpush1, -1000, yc, 1000);		GFVAR(0, name##kickpush2, -1000, yd, 1000); \
+	GFVAR(0, name##hitpush1, -1000, ye, 1000);		GFVAR(0, name##hitpush2, -1000, yf, 1000); \
+	GFVAR(0, name##maxdist1, 0, yg, 10000);			GFVAR(0, name##maxdist2, 0, yh, 10000);
 
 //	add		max		sub1	sub2	adelay1		adelay2		rdelay	dam1	dam2	speed1		speed2		power	time1		time2		pdelay	expl1	expl2	rays1	rays2	sprd1	sprd2	zdiv1	zdiv2	aiskew1	aiskew2
 //	collide1																collide2
@@ -381,32 +375,32 @@ weaptypes weaptype[] =
 			"gibs",			"\fw",	"projs/gibs/gibc",			"projs/gibs/gibc",			"projs/gibs/gibc",			""
 	},
 };
-#define WP(proto,name)			proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};
-#define WP2(proto,name)			proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2}, {&sv_gibs##name##1,&sv_gibs##name##2}};
-#define WPA(weap,name)			(*sv_weap_stat_##name[weap])
-#define WPB(weap,name,second)	(*sv_weap_stat_##name[weap][second?1:0])
-#define WPS(a,weap,attr)		defformatstring(a)("sv_%s%s", weaptype[weap].name, #attr)
+#define WEAPDEF(proto,name)		proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};
+#define WEAPDEF2(proto,name)	proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2}, {&sv_gibs##name##1,&sv_gibs##name##2}};
+#define WEAP(weap,name)			(*sv_weap_stat_##name[weap])
+#define WEAP2(weap,name,second)	(*sv_weap_stat_##name[weap][second?1:0])
+#define WEAPSTR(a,weap,attr)	defformatstring(a)("sv_%s%s", weaptype[weap].name, #attr)
 #else
 extern weaptypes weaptype[];
 #ifdef GAMEWORLD
-#define WP(proto,name)			proto *weap_stat_##name[] = {&melee##name, &pistol##name, &shotgun##name, &smg##name, &flamer##name, &plasma##name, &rifle##name, &grenade##name, &insta##name, &gibs##name};
-#define WP2(proto,name)			proto *weap_stat_##name[][2] = {{&melee##name##1,&melee##name##2}, {&pistol##name##1,&pistol##name##2}, {&shotgun##name##1,&shotgun##name##2}, {&smg##name##1,&smg##name##2}, {&flamer##name##1,&flamer##name##2}, {&plasma##name##1,&plasma##name##2}, {&rifle##name##1,&rifle##name##2}, {&grenade##name##1,&grenade##name##2}, {&insta##name##1,&insta##name##2}, {&gibs##name##1,&gibs##name##2}};
+#define WEAPDEF(proto,name)		proto *weap_stat_##name[] = {&melee##name, &pistol##name, &shotgun##name, &smg##name, &flamer##name, &plasma##name, &rifle##name, &grenade##name, &insta##name, &gibs##name};
+#define WEAPDEF2(proto,name)	proto *weap_stat_##name[][2] = {{&melee##name##1,&melee##name##2}, {&pistol##name##1,&pistol##name##2}, {&shotgun##name##1,&shotgun##name##2}, {&smg##name##1,&smg##name##2}, {&flamer##name##1,&flamer##name##2}, {&plasma##name##1,&plasma##name##2}, {&rifle##name##1,&rifle##name##2}, {&grenade##name##1,&grenade##name##2}, {&insta##name##1,&insta##name##2}, {&gibs##name##1,&gibs##name##2}};
 #else
-#define WP(proto,name)			extern proto *weap_stat_##name[];
-#define WP2(proto,name)			extern proto *weap_stat_##name[][2];
+#define WEAPDEF(proto,name)		extern proto *weap_stat_##name[];
+#define WEAPDEF2(proto,name)	extern proto *weap_stat_##name[][2];
 #endif
-#define WPA(weap,name)			(*weap_stat_##name[weap])
-#define WPB(weap,name,second)	(*weap_stat_##name[weap][second?1:0])
-#define WPS(a,weap,attr)		defformatstring(a)("%s%s", weaptype[weap].name, #attr)
+#define WEAP(weap,name)			(*weap_stat_##name[weap])
+#define WEAP2(weap,name,second)	(*weap_stat_##name[weap][second?1:0])
+#define WEAPSTR(a,weap,attr)	defformatstring(a)("%s%s", weaptype[weap].name, #attr)
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
 
-WP(int, add); WP(int, max); WP2(int, sub); WP2(int, adelay); WP(int, rdelay); WP2(int, damage); WP2(int, speed); WP(int, power);
-WP2(int, time); WP(int, pdelay); WP2(int, explode); WP2(int, rays); WP2(int, spread); WP2(int, zdiv); WP2(int, aiskew); WP2(int, collide);
-WP2(int, taper); WP2(int, extinguish); WP2(int, radial); WP2(int, burns); WP(int, reloads); WP(int, zooms); WP2(int, fullauto);
-WP2(float, elasticity); WP2(float, reflectivity); WP2(float, relativity); WP2(float, waterfric); WP2(float, weight); WP2(float, radius);
-WP2(float, kickpush); WP2(float, hitpush); WP2(float, maxdist);
+WEAPDEF(int, add); WEAPDEF(int, max); WEAPDEF2(int, sub); WEAPDEF2(int, adelay); WEAPDEF(int, rdelay); WEAPDEF2(int, damage); WEAPDEF2(int, speed); WEAPDEF(int, power);
+WEAPDEF2(int, time); WEAPDEF(int, pdelay); WEAPDEF2(int, explode); WEAPDEF2(int, rays); WEAPDEF2(int, spread); WEAPDEF2(int, zdiv); WEAPDEF2(int, aiskew); WEAPDEF2(int, collide);
+WEAPDEF2(int, taper); WEAPDEF2(int, extinguish); WEAPDEF2(int, radial); WEAPDEF2(int, burns); WEAPDEF(int, reloads); WEAPDEF(int, zooms); WEAPDEF2(int, fullauto);
+WEAPDEF2(float, elasticity); WEAPDEF2(float, reflectivity); WEAPDEF2(float, relativity); WEAPDEF2(float, waterfric); WEAPDEF2(float, weight); WEAPDEF2(float, radius);
+WEAPDEF2(float, kickpush); WEAPDEF2(float, hitpush); WEAPDEF2(float, maxdist);
 
 enum
 {
@@ -416,7 +410,7 @@ enum
 };
 
 #define hithurts(x) 	(x&HIT_BURN || x&HIT_EXPLODE || x&HIT_PROJ || x&HIT_MELT || x&HIT_DEATH || x&HIT_WATER)
-#define doesburn(x,y)	(isweap(x) && WPB(x, burns, y&HIT_ALT) && y&HIT_FULL)
+#define doesburn(x,y)	(isweap(x) && WEAP2(x, burns, y&HIT_ALT) && y&HIT_FULL)
 enum
 {
 	FRAG_NONE = 0, FRAG_HEADSHOT = 1<<1, FRAG_OBLITERATE = 1<<2,
@@ -491,14 +485,14 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)			(m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)		(!m_duke(a,b) && !m_insta(a,b))
 
-#define m_weapon(a,b)		(m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GVAR(trialweapon) : (m_insta(a,b) ? GVAR(instaweapon) : GVAR(spawnweapon))))
-#define m_delay(a,b)		(m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GVAR(trialdelay) : ((m_insta(a, b) ? GVAR(instadelay) : GVAR(spawndelay)))) : 0)
-#define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GVAR(instaprotect) : GVAR(spawnprotect))
-#define m_noitems(a,b)		(GVAR(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
-#define m_health(a,b)		(m_insta(a,b) ? 1 : GVAR(maxhealth))
+#define m_weapon(a,b)		(m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GAME(trialweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
+#define m_delay(a,b)		(m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GAME(trialdelay) : ((m_insta(a, b) ? GAME(instadelay) : GAME(spawndelay)))) : 0)
+#define m_protect(a,b)		(m_insta(a, b) || m_arena(a, b) ? GAME(instaprotect) : GAME(spawnprotect))
+#define m_noitems(a,b)		(GAME(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
+#define m_health(a,b)		(m_insta(a,b) ? 1 : GAME(maxhealth))
 
-#define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WPA(w1, reloads))))
-#define w_carry(w1,w2)		(w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WPA(w1, reloads)))
+#define w_reload(w1,w2)		(w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads))))
+#define w_carry(w1,w2)		(w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads)))
 #define w_attr(a,w1,w2)		(m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
 
 // network messages codes, c2s, c2c, s2c
@@ -679,7 +673,7 @@ struct gamestate
 				case 1: if(w_carry(weap, sweap)) return true; break; // only carriable
 				case 2: if(ammo[weap] > 0) return true; break; // only with actual ammo
 				case 3: if(ammo[weap] > 0 && w_reload(weap, sweap)) return true; break; // only reloadable with actual ammo
-				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : WPA(weap, max))) return true; break; // only reloadable or those with < max
+				case 4: if(ammo[weap] >= (w_reload(weap, sweap) ? 0 : WEAP(weap, max))) return true; break; // only reloadable or those with < max
 				case 5: if(w_carry(weap, sweap) || (!w_reload(weap, sweap) && weap >= WEAP_OFFSET)) return true; break; // special case for usable weapons
 			}
 		}
@@ -750,9 +744,9 @@ struct gamestate
 	int skipwait(int weap, int flags, int millis, int skip, bool override = false)
 	{
 		int skipstate = skip;
-		if(WPB(weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
+		if(WEAP2(weap, sub, flags&HIT_ALT) && (skip&(1<<WEAP_S_RELOAD)) && weapstate[weap] == WEAP_S_RELOAD && millis-weaplast[weap] < weapwait[weap])
 		{
-			if(!override && ammo[weap]-weapload[weap] < WPB(weap, sub, flags&HIT_ALT))
+			if(!override && ammo[weap]-weapload[weap] < WEAP2(weap, sub, flags&HIT_ALT))
 				skipstate &= ~(1<<WEAP_S_RELOAD);
 		}
 		return skipstate;
@@ -767,14 +761,14 @@ struct gamestate
 
 	bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
 	{
-		if(hasweap(weap, sweap) && ammo[weap] >= WPB(weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+		if(hasweap(weap, sweap) && ammo[weap] >= WEAP2(weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
 			return true;
 		return false;
 	}
 
 	bool canreload(int weap, int sweap, int millis)
 	{
-		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < WPA(weap, max) && weapwaited(weap, millis))
+		if(weap == weapselect && w_reload(weap, sweap) && hasweap(weap, sweap) && ammo[weap] < WEAP(weap, max) && weapwaited(weap, millis))
 			return true;
 		return false;
 	}
@@ -806,7 +800,7 @@ struct gamestate
 			{
 				int prev = ammo[attr];
 				weapswitch(attr, millis, hasweap(attr, sweap) ? (weapselect != attr ? WEAP_S_SWITCH : WEAP_S_RELOAD) : WEAP_S_PICKUP);
-				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WPA(attr, add), 1, WPA(attr, max));
+				ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WEAP(attr, add), 1, WEAP(attr, max));
 				weapload[attr] = ammo[attr]-prev;
 				entid[attr] = id;
 				break;
@@ -839,13 +833,13 @@ struct gamestate
 		health = heal;
 		weapreset(true);
 		if(!isweap(sweap)) sweap = WEAP_PISTOL;
-		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WPA(WEAP_MELEE, max);
-		ammo[sweap] = WPA(sweap, reloads) ? WPA(sweap, add) : WPA(sweap, max);
+		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+		ammo[sweap] = WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max);
 		if(arena)
 		{
 			int aweap = loadweap;
 			while(aweap < WEAP_OFFSET || aweap >= WEAP_SUPER || aweap == WEAP_GRENADE) aweap = rnd(WEAP_SUPER-WEAP_OFFSET)+WEAP_OFFSET; // pistol = random
-			ammo[aweap] = WPA(aweap, reloads) ? WPA(aweap, add) : WPA(aweap, max);
+			ammo[aweap] = WEAP(aweap, reloads) ? WEAP(aweap, add) : WEAP(aweap, max);
 			lastweap = weapselect = aweap;
 		}
 		else
@@ -855,7 +849,7 @@ struct gamestate
 		}
 		if(grenades && sweap != WEAP_GRENADE)
 		{
-			ammo[WEAP_GRENADE] = WPA(WEAP_GRENADE, max);
+			ammo[WEAP_GRENADE] = WEAP(WEAP_GRENADE, max);
 			if(loadweap < 0) lastweap = weapselect = WEAP_GRENADE;
 		}
 	}
@@ -1430,8 +1424,8 @@ namespace entities
 				case ENT_PROJ:
 				{
 					projent *p = (projent *)ob.ent;
-					if(p->projtype == PRJ_SHOT && WPB(p->weap, explode, p->flags&HIT_ALT))
-						ob.above = p->o.z+(WPB(p->weap, explode, p->flags&HIT_ALT)*p->lifesize)+1.f;
+					if(p->projtype == PRJ_SHOT && WEAP2(p->weap, explode, p->flags&HIT_ALT))
+						ob.above = p->o.z+(WEAP2(p->weap, explode, p->flags&HIT_ALT)*p->lifesize)+1.f;
 					break;
 				}
 			}

@@ -12,11 +12,11 @@ static vector<ShaderParam> curparams;
 static ShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS], pixelparamstate[RESERVEDSHADERPARAMS + MAXSHADERPARAMS];
 static bool dirtyenvparams = false, standardshader = false, initshaders = false, forceshaders = true;
 
-VAR(reservevpparams, 1, 16, 0);
-VAR(maxvpenvparams, 1, 0, 0);
-VAR(maxvplocalparams, 1, 0, 0);
-VAR(maxfpenvparams, 1, 0, 0);
-VAR(maxfplocalparams, 1, 0, 0);
+VAR(0, reservevpparams, 1, 16, 0);
+VAR(0, maxvpenvparams, 1, 0, 0);
+VAR(0, maxvplocalparams, 1, 0, 0);
+VAR(0, maxfpenvparams, 1, 0, 0);
+VAR(0, maxfplocalparams, 1, 0, 0);
 
 void loadshaders()
 {
@@ -515,10 +515,10 @@ void Shader::bindprograms()
     lastshader = this;
 }
 
-VARFN(shaders, useshaders, -1, -1, 1, initwarning("shaders"));
-VARF(shaderprecision, 0, 0, 2, initwarning("shader quality"));
+VARFN(0, shaders, useshaders, -1, -1, 1, initwarning("shaders"));
+VARF(0, shaderprecision, 0, 0, 2, initwarning("shader quality"));
 
-VAR(dbgshader, 0, 0, 1);
+VAR(0, dbgshader, 0, 0, 1);
 
 bool Shader::compile()
 {
@@ -724,9 +724,9 @@ static bool findunusedtexcoordcomponent(const char *str, int &texcoord, int &com
         psbuf.put(calcfog, strlen(calcfog)+1); \
     }
 
-VAR(reserveshadowmaptc, 1, 0, 0);
-VAR(reservedynlighttc, 1, 0, 0);
-VAR(minimizedynlighttcusage, 1, 0, 0);
+VAR(0, reserveshadowmaptc, 1, 0, 0);
+VAR(0, reservedynlighttc, 1, 0, 0);
+VAR(0, minimizedynlighttcusage, 1, 0, 0);
 
 static void gengenericvariant(Shader &s, const char *sname, const char *vs, const char *ps, int row)
 {
@@ -1078,7 +1078,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(s, name, vssm.getbuf(), pssm.getbuf(), row);
 }
 
-VAR(defershaders, 0, 1, 1);
+VAR(0, defershaders, 0, 1, 1);
 
 void defershader(int *type, const char *name, const char *contents)
 {
@@ -1124,8 +1124,8 @@ void fixshaderdetail()
     linkslotshaders();
 }
 
-VARF(nativeshaders, 0, 1, 1, fixshaderdetail());
-VARFP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL, fixshaderdetail());
+VARF(0, nativeshaders, 0, 1, 1, fixshaderdetail());
+VARF(IDF_PERSIST, shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL, fixshaderdetail());
 
 void Shader::fixdetailshader(bool force, bool recurse)
 {
@@ -1364,13 +1364,13 @@ void fastshader(char *nice, char *fast, int *detail)
     ns->fixdetailshader(false);
 }
 
-COMMAND(shader, "isss");
-COMMAND(variantshader, "isiss");
-COMMAND(setshader, "s");
-COMMAND(altshader, "ss");
-COMMAND(fastshader, "ssi");
-COMMAND(defershader, "iss");
-ICOMMAND(forceshader, "s", (const char *name), useshaderbyname(name));
+COMMAND(0, shader, "isss");
+COMMAND(0, variantshader, "isiss");
+COMMAND(0, setshader, "s");
+COMMAND(0, altshader, "ss");
+COMMAND(0, fastshader, "ssi");
+COMMAND(0, defershader, "iss");
+ICOMMAND(0, forceshader, "s", (const char *name), useshaderbyname(name));
 
 void isshaderdefined(char *name)
 {
@@ -1384,8 +1384,8 @@ void isshadernative(char *name)
     intret(s && s->native ? 1 : 0);
 }
 
-COMMAND(isshaderdefined, "s");
-COMMAND(isshadernative, "s");
+COMMAND(0, isshaderdefined, "s");
+COMMAND(0, isshadernative, "s");
 
 static hashtable<const char *, const char *> shaderparamnames(256);
 
@@ -1422,13 +1422,13 @@ void addshaderparam(const char *name, int type, int n, float x, float y, float z
     curparams.add(param);
 }
 
-ICOMMAND(setvertexparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
-ICOMMAND(setpixelparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
-ICOMMAND(setuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
-ICOMMAND(setshaderparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_LOOKUP, -1, *x, *y, *z, *w));
-ICOMMAND(defvertexparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
-ICOMMAND(defpixelparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
-ICOMMAND(defuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
+ICOMMAND(0, setvertexparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
+ICOMMAND(0, setpixelparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
+ICOMMAND(0, setuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
+ICOMMAND(0, setshaderparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_LOOKUP, -1, *x, *y, *z, *w));
+ICOMMAND(0, defvertexparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
+ICOMMAND(0, defpixelparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
+ICOMMAND(0, defuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
 
 #define NUMPOSTFXBINDS 10
 
@@ -1598,9 +1598,9 @@ void clearpostfx()
     cleanuppostfx(false);
 }
 
-COMMAND(clearpostfx, "");
+COMMAND(0, clearpostfx, "");
 
-ICOMMAND(addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs, float *x, float *y, float *z, float *w),
+ICOMMAND(0, addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs, float *x, float *y, float *z, float *w),
 {
     int inputmask = inputs[0] ? 0 : 1;
     int freemask = inputs[0] ? 0 : 1;
@@ -1617,7 +1617,7 @@ ICOMMAND(addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs
     addpostfx(name, clamp(*bind, 0, NUMPOSTFXBINDS-1), max(*scale, 0), inputmask, freemask, vec4(*x, *y, *z, *w));
 });
 
-ICOMMAND(setpostfx, "sffff", (char *name, float *x, float *y, float *z, float *w),
+ICOMMAND(0, setpostfx, "sffff", (char *name, float *x, float *y, float *z, float *w),
 {
     clearpostfx();
     addpostfx(name, 0, 0, 1, 1, vec4(*x, *y, *z, *w));
@@ -1666,7 +1666,7 @@ tmu tmus[MAXTMUS] =
 	INVALIDTMU
 };
 
-VAR(maxtmus, 1, 0, 0);
+VAR(0, maxtmus, 1, 0, 0);
 
 void parsetmufunc(tmu &t, tmufunc &f, const char *s)
 {
@@ -1770,9 +1770,9 @@ void setuptmu(int n, const char *rgbfunc, const char *alphafunc)
 	committmu(n, f);
 }
 
-VAR(nolights, 1, 0, 0);
-VAR(nowater, 1, 0, 0);
-VAR(nomasks, 1, 0, 0);
+VAR(0, nolights, 1, 0, 0);
+VAR(0, nowater, 1, 0, 0);
+VAR(0, nomasks, 1, 0, 0);
 
 void inittmus()
 {

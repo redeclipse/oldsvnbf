@@ -678,25 +678,25 @@ void md5noclip(char *meshname, int *noclip)
     loopmd5meshes(meshname, m, m.noclip = *noclip!=0);
 }
 
-COMMANDN(md5dir, setmd5dir, "s");
-COMMAND(md5load, "ssf");
-COMMAND(md5tag, "ss");
-COMMAND(md5pitch, "sffff");
-COMMAND(md5skin, "sssff");
-COMMAND(md5spec, "si");
-COMMAND(md5ambient, "si");
-COMMAND(md5glow, "si");
-COMMAND(md5glare, "sff");
-COMMAND(md5alphatest, "sf");
-COMMAND(md5alphablend, "si");
-COMMAND(md5cullface, "si");
-COMMAND(md5envmap, "ss");
-COMMAND(md5bumpmap, "sss");
-COMMAND(md5fullbright, "sf");
-COMMAND(md5shader, "ss");
-COMMAND(md5scroll, "sff");
-COMMAND(md5animpart, "s");
-COMMAND(md5anim, "ssfi");
-COMMAND(md5link, "iisfff");
-COMMAND(md5noclip, "si");
+COMMANDN(0, md5dir, setmd5dir, "s");
+COMMAND(0, md5load, "ssf");
+COMMAND(0, md5tag, "ss");
+COMMAND(0, md5pitch, "sffff");
+COMMAND(0, md5skin, "sssff");
+COMMAND(0, md5spec, "si");
+COMMAND(0, md5ambient, "si");
+COMMAND(0, md5glow, "si");
+COMMAND(0, md5glare, "sff");
+COMMAND(0, md5alphatest, "sf");
+COMMAND(0, md5alphablend, "si");
+COMMAND(0, md5cullface, "si");
+COMMAND(0, md5envmap, "ss");
+COMMAND(0, md5bumpmap, "sss");
+COMMAND(0, md5fullbright, "sf");
+COMMAND(0, md5shader, "ss");
+COMMAND(0, md5scroll, "sff");
+COMMAND(0, md5animpart, "s");
+COMMAND(0, md5anim, "ssfi");
+COMMAND(0, md5link, "iisfff");
+COMMAND(0, md5noclip, "si");
 

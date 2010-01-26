@@ -1,45 +1,45 @@
 #include "game.h"
 namespace physics
 {
-	FVARW(gravity,			0, 50.f, 1000);			// gravity
-	FVARW(jumpspeed,		0, 50.f, 1000);			// extra velocity to add when jumping
-	FVARW(movespeed,		0, 50.f, 1000);			// speed
-	FVARW(movecrawl,		0, 0.5f, 1000);			// crawl modifier
-	FVARW(impulsespeed,		0, 50.f, 1000);			// extra velocity to add when impulsing
+	FVAR(IDF_WORLD, gravity,			0, 50.f, 1000);			// gravity
+	FVAR(IDF_WORLD, jumpspeed,		0, 50.f, 1000);			// extra velocity to add when jumping
+	FVAR(IDF_WORLD, movespeed,		0, 50.f, 1000);			// speed
+	FVAR(IDF_WORLD, movecrawl,		0, 0.5f, 1000);			// crawl modifier
+	FVAR(IDF_WORLD, impulsespeed,		0, 50.f, 1000);			// extra velocity to add when impulsing
 
-	VARW(impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
-	VARW(impulsemeter,		0, 30000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
-	VARW(impulsecost,		0, 1000, INT_MAX-1);	// cost of impulse jump
-	VARW(impulsecount,		0, 5, INT_MAX-1);		// number of impulse actions per air transit
-	VARW(impulseskate,		0, 1000, INT_MAX-1);	// length of time a run along a wall can last
-	FVARW(impulseregen,		0, 5, 1000);			// impulse regen multiplier
+	VAR(IDF_WORLD, impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
+	VAR(IDF_WORLD, impulsemeter,		0, 30000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
+	VAR(IDF_WORLD, impulsecost,		0, 1000, INT_MAX-1);	// cost of impulse jump
+	VAR(IDF_WORLD, impulsecount,		0, 5, INT_MAX-1);		// number of impulse actions per air transit
+	VAR(IDF_WORLD, impulseskate,		0, 1000, INT_MAX-1);	// length of time a run along a wall can last
+	FVAR(IDF_WORLD, impulseregen,		0, 5, 1000);			// impulse regen multiplier
 
-	FVARW(liquidspeed,		0, 0.85f, 1);
-	FVARW(liquidcurb,		0, 10.f, 1000);
-	FVARW(floorcurb,		0, 5.f, 1000);
-	FVARW(aircurb,			0, 25.f, 1000);
+	FVAR(IDF_WORLD, liquidspeed,		0, 0.85f, 1);
+	FVAR(IDF_WORLD, liquidcurb,		0, 10.f, 1000);
+	FVAR(IDF_WORLD, floorcurb,		0, 5.f, 1000);
+	FVAR(IDF_WORLD, aircurb,			0, 25.f, 1000);
 
-	FVARW(stairheight,		0, 4.1f, 1000);
-	FVARW(floorz,			0, 0.867f, 1);
-	FVARW(slopez,			0, 0.5f, 1);
-	FVARW(wallz,			0, 0.2f, 1);
-	FVARW(stepspeed,		1e-3f, 1.f, 1000);
-	FVARW(ladderspeed,		1e-3f, 1.f, 1000);
+	FVAR(IDF_WORLD, stairheight,		0, 4.1f, 1000);
+	FVAR(IDF_WORLD, floorz,			0, 0.867f, 1);
+	FVAR(IDF_WORLD, slopez,			0, 0.5f, 1);
+	FVAR(IDF_WORLD, wallz,			0, 0.2f, 1);
+	FVAR(IDF_WORLD, stepspeed,		1e-3f, 1.f, 1000);
+	FVAR(IDF_WORLD, ladderspeed,		1e-3f, 1.f, 1000);
 
-	FVARP(floatspeed,		1e-3f, 75, 1000);
-	FVARP(floatcurb,        0, 1.f, 1000);
+	FVAR(IDF_PERSIST, floatspeed,		1e-3f, 75, 1000);
+	FVAR(IDF_PERSIST, floatcurb,        0, 1.f, 1000);
 
-	FVARP(impulseroll,      0, 10, 90);
-	FVARP(impulsereflect,   0, 155, 360);
+	FVAR(IDF_PERSIST, impulseroll,      0, 10, 90);
+	FVAR(IDF_PERSIST, impulsereflect,   0, 155, 360);
 
-	VARP(physframetime,		5, 5, 20);
-	VARP(physinterp,		0, 1, 1);
+	VAR(IDF_PERSIST, physframetime,		5, 5, 20);
+	VAR(IDF_PERSIST, physinterp,		0, 1, 1);
 
-	VARP(impulseaction,		0, 1, 2);				// determines if impulse remains active when pushed, 0 = off, 1 = only if no gravity or impulsestyle requires no ground contact, 2 = always
-	VARP(impulsedash,		0, 1, 3);				// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
+	VAR(IDF_PERSIST, impulseaction,		0, 1, 2);				// determines if impulse remains active when pushed, 0 = off, 1 = only if no gravity or impulsestyle requires no ground contact, 2 = always
+	VAR(IDF_PERSIST, impulsedash,		0, 1, 3);				// determines how impulsedash works, 0 = off, 1 = double jump, 2 = double tap, 3 = double jump only
 
-	VARP(crouchstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
-	VARP(sprintstyle,		0, 4, 5);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
+	VAR(IDF_PERSIST, crouchstyle,		0, 1, 2);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle
+	VAR(IDF_PERSIST, sprintstyle,		0, 4, 5);				// 0 = press and hold, 1 = double-tap toggle, 2 = toggle, 3-5 = inverted
 
 	int physsteps = 0, lastphysframe = 0, lastmove = 0, lastdirmove = 0, laststrafe = 0, lastdirstrafe = 0, lastcrouch = 0, lastsprint = 0;
 
@@ -51,7 +51,7 @@ namespace physics
 			game::player1->v = dir; \
 			if(down) \
 			{ \
-				if(FWV(impulsestyle) && impulsedash == 2 && last##v && lastdir##v && dir == lastdir##v && lastmillis-last##v < PHYSMILLIS) \
+				if(PHYS(impulsestyle) && impulsedash == 2 && last##v && lastdir##v && dir == lastdir##v && lastmillis-last##v < PHYSMILLIS) \
 				{ \
 					game::player1->action[AC_DASH] = true; \
 					game::player1->actiontime[AC_DASH] = lastmillis; \
@@ -60,7 +60,7 @@ namespace physics
 				last##u = lastdir##u = 0; \
 			} \
 		} \
-		ICOMMAND(name, "D", (int *down), { do##name(*down!=0); });
+		ICOMMAND(0, name, "D", (int *down), { do##name(*down!=0); });
 
 	imov(backward, move,   strafe,	-1, k_down,  k_up);
 	imov(forward,  move,   strafe,	 1, k_up,    k_down);
@@ -125,7 +125,7 @@ namespace physics
 			}
 		}
 	}
-	ICOMMAND(action, "Di", (int *n, int *i), { doaction(*i, *n!=0); });
+	ICOMMAND(0, action, "Di", (int *n, int *i), { doaction(*i, *n!=0); });
 
 	bool issolid(physent *d, physent *e, bool esc)
 	{
@@ -168,10 +168,10 @@ namespace physics
 
 	bool sprinting(physent *d, bool turn, bool move)
 	{
-		if(FWV(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI) && !iscrouching(d))
+		if(PHYS(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI) && !iscrouching(d))
 		{
 			if(turn && ((gameent *)d)->turnside) return true;
-			if((d != game::player1 && !((gameent *)d)->ai) || !FWV(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < FWV(impulsemeter))
+			if((d != game::player1 && !((gameent *)d)->ai) || !PHYS(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < PHYS(impulsemeter))
 			{
 				bool value = ((gameent *)d)->action[AC_SPRINT];
 				if(d == game::player1 && sprintstyle >= 3) value = !value;
@@ -194,9 +194,9 @@ namespace physics
 		return from;
 	}
 
-	float jumpforce(physent *d, bool liquid) { return FWV(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, FWV(liquidspeed)) : 1.f); }
-	float impulseforce(physent *d) { return FWV(impulsespeed)*(d->weight/100.f); }
-	float gravityforce(physent *d) { return FWV(gravity)*(d->weight/100.f); }
+	float jumpforce(physent *d, bool liquid) { return PHYS(jumpspeed)*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, PHYS(liquidspeed)) : 1.f); }
+	float impulseforce(physent *d) { return PHYS(impulsespeed)*(d->weight/100.f); }
+	float gravityforce(physent *d) { return PHYS(gravity)*(d->weight/100.f); }
 
 	float stepforce(physent *d, bool up)
 	{
@@ -207,7 +207,7 @@ namespace physics
 
 	bool sticktofloor(physent *d)
 	{
-		if(!d->onladder && !liquidcheck(d) && (d->type == ENT_PLAYER || d->type == ENT_AI) && FWV(gravity) > 0)
+		if(!d->onladder && !liquidcheck(d) && (d->type == ENT_PLAYER || d->type == ENT_AI) && PHYS(gravity) > 0)
 		{
 			gameent *e = (gameent *)d;
 			if(e->turnside || (e->lastpush && lastmillis-e->lastpush <= PHYSMILLIS/2) || (e->actiontime[AC_JUMP] && lastmillis-e->actiontime[AC_JUMP] <= PHYSMILLIS/2))
@@ -226,17 +226,17 @@ namespace physics
 
 	bool canimpulse(physent *d, int cost)
 	{
-		if((d->type == ENT_PLAYER || d->type == ENT_AI) && FWV(impulsestyle))
+		if((d->type == ENT_PLAYER || d->type == ENT_AI) && PHYS(impulsestyle))
 		{
 			gameent *e = (gameent *)d;
-			if(FWV(impulsemeter) && e->impulse[IM_METER]+(cost > 0 ? cost : FWV(impulsecost)) > FWV(impulsemeter)) return false;
+			if(PHYS(impulsemeter) && e->impulse[IM_METER]+(cost > 0 ? cost : PHYS(impulsecost)) > PHYS(impulsemeter)) return false;
 			if(cost <= 0)
 			{
 				if(e->impulse[IM_TIME] && lastmillis-e->impulse[IM_TIME] <= PHYSMILLIS) return false;
-				if(FWV(gravity) > 0)
+				if(PHYS(gravity) > 0)
 				{
-					if(FWV(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= FWV(impulsecount)) return false;
-					if(cost == 0 && FWV(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
+					if(PHYS(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= PHYS(impulsecount)) return false;
+					if(cost == 0 && PHYS(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
 				}
 			}
 			return true;
@@ -252,9 +252,9 @@ namespace physics
 			if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
 			else
 			{
-				float speed = FWV(movespeed);
-				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= FWV(movecrawl);
-				if(physics::sprinting(d, false)) speed += FWV(impulsespeed)*(d->move < 0 ? 0.5f : 1);
+				float speed = PHYS(movespeed);
+				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= PHYS(movecrawl);
+				if(physics::sprinting(d, false)) speed += PHYS(impulsespeed)*(d->move < 0 ? 0.5f : 1);
 				return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
 			}
 		}
@@ -264,7 +264,7 @@ namespace physics
 	bool movepitch(physent *d)
 	{
 		if(d->type == ENT_CAMERA || d->state == CS_EDITING || d->state == CS_SPECTATOR) return true;
-		if(d->state == CS_ALIVE && FWV(gravity) <= 0 && d->physstate == PHYS_FALL) return true;
+		if(d->state == CS_ALIVE && PHYS(gravity) <= 0 && d->physstate == PHYS_FALL) return true;
 		return false;
 	}
 
@@ -602,12 +602,12 @@ namespace physics
 		else if(game::allowmove(d))
 		{
 			bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d);
-			if(millis && FWV(impulsestyle))
+			if(millis && PHYS(impulsestyle))
 			{
 				if(sprinting(d) && canimpulse(d, millis)) d->impulse[IM_METER] += millis;
-				else if(d->impulse[IM_METER] > 0 && FWV(impulseregen) > 0)
+				else if(d->impulse[IM_METER] > 0 && PHYS(impulseregen) > 0)
 				{
-					int timeslice = max(int(millis*FWV(impulseregen)), 1);
+					int timeslice = max(int(millis*PHYS(impulseregen)), 1);
 					if(iscrouching(d)) timeslice += timeslice;
 					if(d->move || d->strafe) timeslice -= timeslice/2;
 					if(d->physstate == PHYS_FALL && !d->onladder) timeslice -= timeslice/2;
@@ -615,18 +615,18 @@ namespace physics
 				}
 			}
 
-			if(d->turnside && (!FWV(impulsestyle) || d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > FWV(impulseskate)))
+			if(d->turnside && (!PHYS(impulsestyle) || d->impulse[IM_TYPE] != IM_T_SKATE || lastmillis-d->impulse[IM_TIME] > PHYS(impulseskate)))
 			{
 				d->turnside = 0;
 				d->resetphys();
 			}
 
-			if(FWV(impulsestyle) && (d->ai || (impulsedash > 0 && impulsedash < 3)) && canimpulse(d) && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] : d->action[AC_JUMP] && !onfloor))
+			if(PHYS(impulsestyle) && (d->ai || (impulsedash > 0 && impulsedash < 3)) && canimpulse(d) && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] : d->action[AC_JUMP] && !onfloor))
 			{
 				float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
 				vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
 				d->vel.normalize().mul(mag); d->vel.z += mag/4;
-				d->doimpulse(FWV(impulsecost), IM_T_DASH, lastmillis);
+				d->doimpulse(PHYS(impulsecost), IM_T_DASH, lastmillis);
 				playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
 				client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 			}
@@ -637,7 +637,7 @@ namespace physics
 					d->vel.z += jumpforce(d, true);
 					if(d->inliquid)
 					{
-						float scale = liquidmerge(d, 1.f, FWV(liquidspeed));
+						float scale = liquidmerge(d, 1.f, PHYS(liquidspeed));
 						d->vel.x *= scale;
 						d->vel.y *= scale;
 					}
@@ -650,15 +650,15 @@ namespace physics
 			}
 			else
 			{
-				if(FWV(impulsestyle) && !d->turnside && !onfloor && canimpulse(d) && d->action[AC_JUMP])
+				if(PHYS(impulsestyle) && !d->turnside && !onfloor && canimpulse(d) && d->action[AC_JUMP])
 				{
 					d->vel.z += impulseforce(d)*1.5f;
-					d->doimpulse(FWV(impulsecost), IM_T_BOOST, lastmillis);
+					d->doimpulse(PHYS(impulsecost), IM_T_BOOST, lastmillis);
 					playsound(S_IMPULSE, d->o, d);
 					game::impulseeffect(d, true);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
 				}
-				if(FWV(impulsestyle) && (d->turnside || (canimpulse(d, -1) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
+				if(PHYS(impulsestyle) && (d->turnside || (canimpulse(d, -1) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
 				{
 					loopi(d->turnside ? 3 : 1)
 					{
@@ -690,7 +690,7 @@ namespace physics
 							off = yaw-d->aimyaw;
 							if(off > 180) off -= 360;
 							else if(off < -180) off += 360;
-							d->doimpulse(FWV(impulsecost), IM_T_KICK, lastmillis);
+							d->doimpulse(PHYS(impulsecost), IM_T_KICK, lastmillis);
 							d->action[key] = false;
 							d->turnmillis = PHYSMILLIS;
 							d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
@@ -714,7 +714,7 @@ namespace physics
 								off = yaw-d->aimyaw;
 								if(off > 180) off -= 360;
 								else if(off < -180) off += 360;
-								d->doimpulse(FWV(impulsecost), IM_T_SKATE, lastmillis);
+								d->doimpulse(PHYS(impulsecost), IM_T_SKATE, lastmillis);
 								d->action[AC_SPECIAL] = false;
 								d->turnmillis = PHYSMILLIS;
 								d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
@@ -730,7 +730,7 @@ namespace physics
 				else if(d->turnside) { d->turnside = 0; d->resetphys(); }
 			}
 		}
-		if(d->action[AC_JUMP] && impulseaction < (FWV(gravity) > 0 && FWV(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
+		if(d->action[AC_JUMP] && impulseaction < (PHYS(gravity) > 0 && PHYS(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
 		d->action[AC_DASH] = false;
 		if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
 		else d->dojumpreset();
@@ -761,7 +761,7 @@ namespace physics
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
 			if(floor && sprinting(pl)) floor = false;
-			float curb = floor ? FWV(floorcurb) : FWV(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, FWV(liquidcurb)) : curb;
+			float curb = floor ? PHYS(floorcurb) : PHYS(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, PHYS(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
 		}
 	}
@@ -770,7 +770,7 @@ namespace physics
     {
         float secs = curtime/1000.0f;
         vec g(0, 0, 0);
-        if(FWV(gravity) > 0)
+        if(PHYS(gravity) > 0)
         {
 			if(pl->physstate == PHYS_FALL) g.z -= gravityforce(pl)*secs;
 			else if(pl->floor.z > 0 && pl->floor.z < floorz)
@@ -785,7 +785,7 @@ namespace physics
         else pl->falling = g;
         if(liquidcheck(pl) || pl->physstate >= PHYS_SLOPE)
         {
-            float fric = liquidcheck(pl) ? liquidmerge(pl, FWV(aircurb), FWV(liquidcurb)) : FWV(floorcurb),
+            float fric = liquidcheck(pl) ? liquidmerge(pl, PHYS(aircurb), PHYS(liquidcurb)) : PHYS(floorcurb),
                   c = liquidcheck(pl) ? 1.0f : clamp((pl->floor.z - slopez)/(floorz-slopez), 0.0f, 1.0f);
             pl->falling.mul(pow(max(1.0f - c/fric, 0.0f), curtime/20.0f));
         }
@@ -875,7 +875,7 @@ namespace physics
 		modifyvelocity(pl, local, floating, millis); // apply any player generated changes in velocity
 
 		vec d(pl->vel);
-        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, FWV(liquidspeed)));
+        if((pl->type==ENT_PLAYER || pl->type==ENT_AI) && !floating && pl->inliquid) d.mul(liquidmerge(pl, 1.f, PHYS(liquidspeed)));
         d.add(pl->falling);
 		d.mul(secs);
 
@@ -1164,8 +1164,8 @@ namespace physics
 		return false;
 	}
 
-    VARP(smoothmove, 0, 90, 1000);
-    VARP(smoothdist, 0, 64, 1024);
+    VAR(IDF_PERSIST, smoothmove, 0, 90, 1000);
+    VAR(IDF_PERSIST, smoothdist, 0, 64, 1024);
 
     void predictplayer(gameent *d, bool domove, int res = 0, bool local = false)
     {

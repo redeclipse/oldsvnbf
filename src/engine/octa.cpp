@@ -128,7 +128,7 @@ void printcube()
 	conoutf("\fa z  %.8x", c.faces[2]);
 }
 
-COMMAND(printcube, "");
+COMMAND(0, printcube, "");
 
 bool isvalidcube(cube &c)
 {
@@ -179,7 +179,7 @@ cube &lookupcube(int tx, int ty, int tz, int tsize)
     cube *c = &worldroot[octastep(tx, ty, tz, scale)];
     if(!(csize>>scale)) do
     {
-        if(!c->children) 
+        if(!c->children)
         {
             if(tsize > 0) do
             {
@@ -413,7 +413,7 @@ int visibleorient(cube &c, int orient)
 	return orient;
 }
 
-VAR(mipvis, 0, 0, 1);
+VAR(0, mipvis, 0, 0, 1);
 
 static int remipprogress = 0, remiptotal = 0;
 
@@ -529,7 +529,7 @@ void remip_()
 	allchanged();
 }
 
-COMMANDN(remip, remip_, "");
+COMMANDN(0, remip, remip_, "");
 
 static inline int edgeval(cube &c, const ivec &p, int dim, int coord)
 {
@@ -1296,7 +1296,7 @@ bool mincubeface(cube &cu, int orient, const ivec &co, int size, mergeinfo &orig
 	return smaller;
 }
 
-VAR(minface, 0, 1, 1);
+VAR(0, minface, 0, 1, 1);
 
 bool gencubeface(cube &cu, int orient, const ivec &co, int size, ivec &n, int &offset, cubeface &cf)
 {
@@ -1401,7 +1401,7 @@ void freemergeinfo(cube &c)
 	DELETEA(c.ext->merges);
 }
 
-VAR(maxmerge, 0, 6, VVEC_INT-1);
+VAR(0, maxmerge, 0, 6, VVEC_INT-1);
 
 static int genmergeprogress = 0;
 

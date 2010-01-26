@@ -16,12 +16,12 @@ void cleanupglare()
     glaretex.cleanup(true);
 }
 
-VARFP(glaresize, 6, 8, 10, cleanupglare());
-VARP(glare, 0, 0, 1);
-VARP(blurglare, 0, 4, 7);
-VARP(blurglaresigma, 1, 50, 200);
+VARF(IDF_PERSIST, glaresize, 6, 8, 10, cleanupglare());
+VAR(IDF_PERSIST, glare, 0, 0, 1);
+VAR(IDF_PERSIST, blurglare, 0, 4, 7);
+VAR(IDF_PERSIST, blurglaresigma, 1, 50, 200);
 
-VAR(debugglare, 0, 0, 1);
+VAR(0, debugglare, 0, 0, 1);
 
 void viewglaretex()
 {
@@ -38,7 +38,7 @@ void drawglaretex()
     glaretex.render(1<<glaresize, 1<<glaresize, blurglare, blurglaresigma/100.0f);
 }
 
-FVARP(glarescale, 0, 0.25f, 8);
+FVAR(IDF_PERSIST, glarescale, 0, 0.25f, 8);
 
 void addglare()
 {

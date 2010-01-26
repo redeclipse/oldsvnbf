@@ -676,13 +676,13 @@ static editor *useeditor(const char *name, int mode, bool focus, const char *ini
 }
 
 
-#define TEXTCOMMAND(f, s, d, body) ICOMMAND(f, s, d,\
+#define TEXTCOMMAND(f, s, d, body) ICOMMAND(0, f, s, d,\
     editor *top = currentfocus();\
     if(!top) return;\
     body\
 )
 
-ICOMMAND(textlist, "", (), // @DEBUG return list of all the editors
+ICOMMAND(0, textlist, "", (), // @DEBUG return list of all the editors
     mkstring(s);
     loopv(editors)
     {
@@ -697,7 +697,7 @@ TEXTCOMMAND(textshow, "", (), // @DEBUG return the start of the buffer
     result(line.text);
     line.clear();
 );
-ICOMMAND(textfocus, "si", (char *name, int *mode), // focus on a (or create a persistent) specific editor, else returns current name
+ICOMMAND(0, textfocus, "si", (char *name, int *mode), // focus on a (or create a persistent) specific editor, else returns current name
     if(*name) useeditor(name, *mode<=0 ? EDITORFOREVER : *mode, true);
     else if(editors.length() > 0) result(editors.last()->name);
 );

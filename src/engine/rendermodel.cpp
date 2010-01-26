@@ -1,7 +1,7 @@
 #include "engine.h"
 
-VARP(oqdynent, 0, 1, 1);
-VARP(animationinterpolationtime, 0, 150, 1000);
+VAR(IDF_PERSIST, oqdynent, 0, 1, 1);
+VAR(IDF_PERSIST, animationinterpolationtime, 0, 150, 1000);
 
 model *loadingmodel = NULL;
 
@@ -43,7 +43,7 @@ void mdlcullface(int *cullface)
     loadingmodel->setcullface(*cullface!=0);
 }
 
-COMMAND(mdlcullface, "i");
+COMMAND(0, mdlcullface, "i");
 
 void mdlcollide(int *collide)
 {
@@ -51,7 +51,7 @@ void mdlcollide(int *collide)
 	loadingmodel->collide = *collide!=0;
 }
 
-COMMAND(mdlcollide, "i");
+COMMAND(0, mdlcollide, "i");
 
 void mdlellipsecollide(int *collide)
 {
@@ -59,7 +59,7 @@ void mdlellipsecollide(int *collide)
     loadingmodel->ellipsecollide = *collide!=0;
 }
 
-COMMAND(mdlellipsecollide, "i");
+COMMAND(0, mdlellipsecollide, "i");
 
 void mdlspec(int *percent)
 {
@@ -70,7 +70,7 @@ void mdlspec(int *percent)
 	loadingmodel->setspec(spec);
 }
 
-COMMAND(mdlspec, "i");
+COMMAND(0, mdlspec, "i");
 
 void mdlambient(int *percent)
 {
@@ -81,7 +81,7 @@ void mdlambient(int *percent)
 	loadingmodel->setambient(ambient);
 }
 
-COMMAND(mdlambient, "i");
+COMMAND(0, mdlambient, "i");
 
 void mdlalphatest(float *cutoff)
 {
@@ -89,7 +89,7 @@ void mdlalphatest(float *cutoff)
     loadingmodel->setalphatest(max(0.0f, min(1.0f, *cutoff)));
 }
 
-COMMAND(mdlalphatest, "f");
+COMMAND(0, mdlalphatest, "f");
 
 void mdlalphablend(int *blend)
 {
@@ -97,7 +97,7 @@ void mdlalphablend(int *blend)
 	loadingmodel->setalphablend(*blend!=0);
 }
 
-COMMAND(mdlalphablend, "i");
+COMMAND(0, mdlalphablend, "i");
 
 void mdlalphadepth(int *depth)
 {
@@ -105,7 +105,7 @@ void mdlalphadepth(int *depth)
     loadingmodel->alphadepth = *depth!=0;
 }
 
-COMMAND(mdlalphadepth, "i");
+COMMAND(0, mdlalphadepth, "i");
 
 void mdldepthoffset(int *offset)
 {
@@ -113,7 +113,7 @@ void mdldepthoffset(int *offset)
     loadingmodel->depthoffset = *offset!=0;
 }
 
-COMMAND(mdldepthoffset, "i");
+COMMAND(0, mdldepthoffset, "i");
 
 void mdlglow(int *percent)
 {
@@ -124,7 +124,7 @@ void mdlglow(int *percent)
 	loadingmodel->setglow(glow);
 }
 
-COMMAND(mdlglow, "i");
+COMMAND(0, mdlglow, "i");
 
 void mdlglare(float *specglare, float *glowglare)
 {
@@ -132,7 +132,7 @@ void mdlglare(float *specglare, float *glowglare)
     loadingmodel->setglare(*specglare, *glowglare);
 }
 
-COMMAND(mdlglare, "ff");
+COMMAND(0, mdlglare, "ff");
 
 void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap)
 {
@@ -140,7 +140,7 @@ void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap)
 	loadingmodel->setenvmap(*envmapmin, *envmapmax, envmap[0] ? cubemapload(envmap) : NULL);
 }
 
-COMMAND(mdlenvmap, "ffs");
+COMMAND(0, mdlenvmap, "ffs");
 
 void mdlfullbright(float *fullbright)
 {
@@ -148,7 +148,7 @@ void mdlfullbright(float *fullbright)
     loadingmodel->setfullbright(*fullbright);
 }
 
-COMMAND(mdlfullbright, "f");
+COMMAND(0, mdlfullbright, "f");
 
 void mdlshader(char *shader)
 {
@@ -156,7 +156,7 @@ void mdlshader(char *shader)
 	loadingmodel->setshader(lookupshaderbyname(shader));
 }
 
-COMMAND(mdlshader, "s");
+COMMAND(0, mdlshader, "s");
 
 void mdlspin(float *rate)
 {
@@ -164,7 +164,7 @@ void mdlspin(float *rate)
 	loadingmodel->spin = *rate;
 }
 
-COMMAND(mdlspin, "f");
+COMMAND(0, mdlspin, "f");
 
 void mdlscale(int *percent)
 {
@@ -175,7 +175,7 @@ void mdlscale(int *percent)
 	loadingmodel->scale = scale;
 }
 
-COMMAND(mdlscale, "i");
+COMMAND(0, mdlscale, "i");
 
 void mdltrans(float *x, float *y, float *z)
 {
@@ -183,7 +183,7 @@ void mdltrans(float *x, float *y, float *z)
 	loadingmodel->translate = vec(*x, *y, *z);
 }
 
-COMMAND(mdltrans, "fff");
+COMMAND(0, mdltrans, "fff");
 
 void mdlyaw(float *angle)
 {
@@ -191,7 +191,7 @@ void mdlyaw(float *angle)
     loadingmodel->offsetyaw = *angle;
 }
 
-COMMAND(mdlyaw, "f");
+COMMAND(0, mdlyaw, "f");
 
 void mdlpitch(float *angle)
 {
@@ -199,7 +199,7 @@ void mdlpitch(float *angle)
     loadingmodel->offsetpitch = *angle;
 }
 
-COMMAND(mdlpitch, "f");
+COMMAND(0, mdlpitch, "f");
 
 void mdlroll(float *angle)
 {
@@ -207,7 +207,7 @@ void mdlroll(float *angle)
     loadingmodel->offsetroll = *angle;
 }
 
-COMMAND(mdlroll, "f");
+COMMAND(0, mdlroll, "f");
 
 void mdlshadow(int *shadow)
 {
@@ -215,7 +215,7 @@ void mdlshadow(int *shadow)
 	loadingmodel->shadow = *shadow!=0;
 }
 
-COMMAND(mdlshadow, "i");
+COMMAND(0, mdlshadow, "i");
 
 void mdlbb(float *rad, float *h, float *height)
 {
@@ -225,7 +225,7 @@ void mdlbb(float *rad, float *h, float *height)
 	loadingmodel->height = *height;
 }
 
-COMMAND(mdlbb, "fff");
+COMMAND(0, mdlbb, "fff");
 
 void mdlextendbb(float *x, float *y, float *z)
 {
@@ -233,7 +233,7 @@ void mdlextendbb(float *x, float *y, float *z)
     loadingmodel->bbextend = vec(*x, *y, *z);
 }
 
-COMMAND(mdlextendbb, "fff");
+COMMAND(0, mdlextendbb, "fff");
 
 void mdlname()
 {
@@ -241,7 +241,7 @@ void mdlname()
 	result(loadingmodel->name());
 }
 
-COMMAND(mdlname, "");
+COMMAND(0, mdlname, "");
 
 #define checkragdoll \
     skelmodel *m = dynamic_cast<skelmodel *>(loadingmodel); \
@@ -261,14 +261,14 @@ void rdvert(float *x, float *y, float *z, float *radius)
     v.pos = vec(*x, *y, *z);
     v.radius = *radius > 0 ? *radius : 1;
 }
-COMMAND(rdvert, "ffff");
+COMMAND(0, rdvert, "ffff");
 
 void rdeye(int *v)
 {
     checkragdoll;
     ragdoll->eye = *v;
 }
-COMMAND(rdeye, "i");
+COMMAND(0, rdeye, "i");
 
 void rdtri(int *v1, int *v2, int *v3)
 {
@@ -278,7 +278,7 @@ void rdtri(int *v1, int *v2, int *v3)
     t.vert[1] = *v2;
     t.vert[2] = *v3;
 }
-COMMAND(rdtri, "iii");
+COMMAND(0, rdtri, "iii");
 
 void rdjoint(int *n, int *t, char *v1, char *v2, char *v3)
 {
@@ -290,7 +290,7 @@ void rdjoint(int *n, int *t, char *v1, char *v2, char *v3)
     j.vert[1] = v2[0] ? atoi(v2) : -1;
     j.vert[2] = v3[0] ? atoi(v3) : -1;
 }
-COMMAND(rdjoint, "iisss");
+COMMAND(0, rdjoint, "iisss");
 
 void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist)
 {
@@ -301,7 +301,7 @@ void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist)
     d.mindist = *mindist;
     d.maxdist = max(*maxdist, *mindist);
 }
-COMMAND(rdlimitdist, "iiff");
+COMMAND(0, rdlimitdist, "iiff");
 
 void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *qz, float *qw)
 {
@@ -312,7 +312,7 @@ void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *
     r.maxangle = *maxangle * RAD;
     r.middle = matrix3x3(quat(*qx, *qy, *qz, *qw));
 }
-COMMAND(rdlimitrot, "iifffff");
+COMMAND(0, rdlimitrot, "iifffff");
 
 // mapmodels
 
@@ -334,10 +334,10 @@ void resetmapmodels() { mapmodels.setsize(0); }
 
 mapmodelinfo &getmminfo(int i) { return mapmodels.inrange(i) ? mapmodels[i] : *(mapmodelinfo *)0; }
 
-COMMAND(mmodel, "s");
-COMMANDN(mapmodel, mapmodelcompat, "iiiss");
-ICOMMAND(mapmodelreset, "", (void), if(editmode || worldidents) resetmapmodels(););
-ICOMMAND(mapmodelindex, "s", (char *a), {
+COMMAND(0, mmodel, "s");
+COMMANDN(0, mapmodel, mapmodelcompat, "iiiss");
+ICOMMAND(0, mapmodelreset, "", (void), if(editmode || worldidents) resetmapmodels(););
+ICOMMAND(0, mapmodelindex, "s", (char *a), {
 	if (!*a) intret(mapmodels.length());
 	else
 	{
@@ -412,7 +412,7 @@ void clearmodel(char *name)
     conoutf("\fgcleared model %s", name);
 }
 
-COMMAND(clearmodel, "s");
+COMMAND(0, clearmodel, "s");
 
 bool modeloccluded(const vec &center, float radius)
 {
@@ -421,7 +421,7 @@ bool modeloccluded(const vec &center, float radius)
            bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
 }
 
-VAR(showboundingbox, 0, 0, 2);
+VAR(0, showboundingbox, 0, 0, 2);
 
 void render2dbox(vec &o, float x, float y, float z)
 {
@@ -656,7 +656,7 @@ void endmodelquery()
 	modelattached.setsizenodelete(minattached);
 }
 
-VARP(maxmodelradiusdistance, 10, 200, 1000);
+VAR(IDF_PERSIST, maxmodelradiusdistance, 10, 200, 1000);
 
 void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 {

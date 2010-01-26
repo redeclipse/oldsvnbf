@@ -2,8 +2,8 @@
 
 #include "engine.h"
 
-VARP(showconsole, 0, 1, 1);
-VARP(consoletime, 200, 20000, INT_MAX-1);
+VAR(IDF_PERSIST, showconsole, 0, 1, 1);
+VAR(IDF_PERSIST, consoletime, 200, 20000, INT_MAX-1);
 
 vector<cline> conlines;
 
@@ -89,7 +89,7 @@ void keymap(int *code, char *key)
     km.name = newstring(key);
 }
 
-COMMAND(keymap, "is");
+COMMAND(0, keymap, "is");
 
 keym *keypressed = NULL;
 char *keyaction = NULL;
@@ -208,18 +208,18 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     changedkeys = totalmillis;
 }
 
-ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
-ICOMMAND(specbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_SPECTATOR, "specbind"));
-ICOMMAND(editbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_EDITING, "editbind"));
-ICOMMAND(waitbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_WAITING, "waitbind"));
-ICOMMAND(getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
-ICOMMAND(getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
-ICOMMAND(geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
-ICOMMAND(getwaitbind, "s", (char *key), getbind(key, keym::ACTION_WAITING));
-ICOMMAND(searchbinds,     "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(0, bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
+ICOMMAND(0, specbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_SPECTATOR, "specbind"));
+ICOMMAND(0, editbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_EDITING, "editbind"));
+ICOMMAND(0, waitbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_WAITING, "waitbind"));
+ICOMMAND(0, getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
+ICOMMAND(0, getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
+ICOMMAND(0, geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
+ICOMMAND(0, getwaitbind, "s", (char *key), getbind(key, keym::ACTION_WAITING));
+ICOMMAND(0, searchbinds,     "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(0, searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(0, searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(0, searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
 
 void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns input to the command line on or off
 {
@@ -234,8 +234,8 @@ void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns i
     if(icon && icon[0]) commandicon = newstring(icon);
 }
 
-ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
-COMMAND(inputcommand, "sss");
+ICOMMAND(0, saycommand, "C", (char *init), inputcommand(init));
+COMMAND(0, inputcommand, "sss");
 
 #if !defined(WIN32) && !defined(__APPLE__)
 #include <X11/Xlib.h>
@@ -279,7 +279,7 @@ void pasteconsole()
 	#endif
 }
 
-SVAR(commandbuffer, "");
+SVAR(0, commandbuffer, "");
 
 struct hline
 {
@@ -331,7 +331,7 @@ struct hline
 vector<hline *> history;
 int histpos = 0;
 
-VARP(maxhistory, 0, 1000, 10000);
+VAR(IDF_PERSIST, maxhistory, 0, 1000, 10000);
 
 void history_(int *n)
 {
@@ -344,7 +344,7 @@ void history_(int *n)
     }
 }
 
-COMMANDN(history, history_, "i");
+COMMANDN(0, history, history_, "i");
 
 struct releaseaction
 {
@@ -367,7 +367,7 @@ void onrelease(char *s)
 	addreleaseaction(s);
 }
 
-COMMAND(onrelease, "s");
+COMMAND(0, onrelease, "s");
 
 void execbind(keym &k, bool isdown)
 {
@@ -689,8 +689,8 @@ void addlistcomplete(char *command, char *list)
     addcomplete(command, FILES_LIST, list, NULL);
 }
 
-COMMANDN(complete, addfilecomplete, "sss");
-COMMANDN(listcomplete, addlistcomplete, "ss");
+COMMANDN(0, complete, addfilecomplete, "sss");
+COMMANDN(0, listcomplete, addlistcomplete, "ss");
 
 void complete(char *s)
 {
@@ -760,7 +760,7 @@ void setcompletion(const char *s, bool on)
 	}
 }
 
-ICOMMAND(setcomplete, "ss", (char *s, char *t), {
+ICOMMAND(0, setcomplete, "ss", (char *s, char *t), {
 	bool on = false;
 	if (isnumeric(*t)) on = atoi(t) ? true : false;
 	else if (!strcasecmp("false", t)) on = false;

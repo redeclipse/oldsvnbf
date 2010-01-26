@@ -352,20 +352,20 @@ void objnoclip(char *meshname, int *noclip)
     loopobjmeshes(meshname, m, m.noclip = *noclip!=0);
 }
 
-COMMAND(objload, "s");
-COMMAND(objpitch, "ffff");
-COMMAND(objskin, "sssff");
-COMMAND(objspec, "si");
-COMMAND(objambient, "si");
-COMMAND(objglow, "si");
-COMMAND(objglare, "sff");
-COMMAND(objalphatest, "sf");
-COMMAND(objalphablend, "si");
-COMMAND(objcullface, "si");
-COMMAND(objenvmap, "ss");
-COMMAND(objbumpmap, "sss");
-COMMAND(objfullbright, "sf");
-COMMAND(objshader, "ss");
-COMMAND(objscroll, "sff");
-COMMAND(objnoclip, "si");
+COMMAND(0, objload, "s");
+COMMAND(0, objpitch, "ffff");
+COMMAND(0, objskin, "sssff");
+COMMAND(0, objspec, "si");
+COMMAND(0, objambient, "si");
+COMMAND(0, objglow, "si");
+COMMAND(0, objglare, "sff");
+COMMAND(0, objalphatest, "sf");
+COMMAND(0, objalphablend, "si");
+COMMAND(0, objcullface, "si");
+COMMAND(0, objenvmap, "ss");
+COMMAND(0, objbumpmap, "sss");
+COMMAND(0, objfullbright, "sf");
+COMMAND(0, objshader, "ss");
+COMMAND(0, objscroll, "sff");
+COMMAND(0, objnoclip, "si");
 

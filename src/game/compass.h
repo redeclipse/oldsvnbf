@@ -1,10 +1,10 @@
 #define NUMCOMPASS 8
 
-FVARP(compasssize, 0, 0.15f, 1000);
-VARP(compassfade, 0, 250, INT_MAX-1);
-FVARP(compassfadeamt, 0, 0.75f, 1);
-TVAR(compasstex, "textures/compass", 3);
-TVAR(compassringtex, "textures/progress", 3);
+FVAR(IDF_PERSIST, compasssize, 0, 0.15f, 1000);
+VAR(IDF_PERSIST, compassfade, 0, 250, INT_MAX-1);
+FVAR(IDF_PERSIST, compassfadeamt, 0, 0.75f, 1);
+TVAR(IDF_PERSIST, compasstex, "textures/compass", 3);
+TVAR(IDF_PERSIST, compassringtex, "textures/progress", 3);
 
 struct caction
 {
@@ -42,7 +42,7 @@ void clearcmenu()
 		curcompass = NULL;
 	}
 }
-ICOMMAND(clearcompass, "", (), clearcmenu());
+ICOMMAND(0, clearcompass, "", (), clearcmenu());
 
 void resetcmenus()
 {
@@ -50,7 +50,7 @@ void resetcmenus()
 	loopvrev(cmenus) cmenus.remove(i);
 	cmenus.setsize(0);
 }
-ICOMMAND(resetcompass, "", (), resetcmenus());
+ICOMMAND(0, resetcompass, "", (), resetcmenus());
 
 void addcmenu(const char *name, const char *contents)
 {
@@ -61,7 +61,7 @@ void addcmenu(const char *name, const char *contents)
 	c.name = newstring(name);
 	c.contents = newstring(contents);
 }
-ICOMMAND(newcompass, "ss", (char *n, char *c), addcmenu(n, c));
+ICOMMAND(0, newcompass, "ss", (char *n, char *c), addcmenu(n, c));
 
 void addaction(const char *name, const char *contents)
 {
@@ -71,7 +71,7 @@ void addaction(const char *name, const char *contents)
 	a.name = newstring(name);
 	a.contents = newstring(contents && *contents ? contents : "");
 }
-ICOMMAND(compass, "ss", (char *n, char *c), addaction(n, c));
+ICOMMAND(0, compass, "ss", (char *n, char *c), addaction(n, c));
 
 void showcmenu(const char *name)
 {
@@ -87,9 +87,9 @@ void showcmenu(const char *name)
 	}
 	conoutft(CON_DEBUG, "\frno such compass menu: %s", name);
 }
-ICOMMAND(showcompass, "s", (char *n), showcmenu(n));
+ICOMMAND(0, showcompass, "s", (char *n), showcmenu(n));
 
-ICOMMAND(compassactive, "", (), result(curcompass ? curcompass->name : "0"));
+ICOMMAND(0, compassactive, "", (), result(curcompass ? curcompass->name : "0"));
 
 const struct compassdirs
 {

@@ -3,8 +3,8 @@
 int lnjitterx[MAXLIGHTNINGSTEPS], lnjittery[MAXLIGHTNINGSTEPS];
 int lastlnjitter = 0;
 
-VAR(lnjittermillis, 0, 100, 1000);
-VAR(lnjitterradius, 0, 2, 100);
+VAR(0, lnjittermillis, 0, 100, 1000);
+VAR(0, lnjitterradius, 0, 2, 100);
 
 static void setuplightning()
 {

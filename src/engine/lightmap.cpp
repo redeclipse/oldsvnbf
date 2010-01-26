@@ -2,23 +2,23 @@
 
 vector<LightMap> lightmaps;
 
-VARW(lightprecision, 1, 32, 256);
-VARW(lighterror, 1, 8, 16);
-VARW(bumperror, 1, 3, 16);
-VARW(lightlod, 0, 0, 10);
+VAR(IDF_WORLD, lightprecision, 1, 32, 256);
+VAR(IDF_WORLD, lighterror, 1, 8, 16);
+VAR(IDF_WORLD, bumperror, 1, 3, 16);
+VAR(IDF_WORLD, lightlod, 0, 0, 10);
 bvec ambientcolor(25, 25, 25), skylightcolor(0, 0, 0);
-HVARFW(ambient, 0, 0x191919, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, ambient, 0, 0x191919, 0xFFFFFF,
 {
     if(ambient <= 255) ambient |= (ambient<<8) | (ambient<<16);
     ambientcolor = bvec((ambient>>16)&0xFF, (ambient>>8)&0xFF, ambient&0xFF);
 });
-HVARFW(skylight, 0, 0, 0xFFFFFF,
+VARF(IDF_HEX|IDF_WORLD, skylight, 0, 0, 0xFFFFFF,
 {
     if(skylight <= 255) skylight |= (skylight<<8) | (skylight<<16);
     skylightcolor = bvec((skylight>>16)&0xFF, (skylight>>8)&0xFF, skylight&0xFF);
 });
-VARNW(lmshadows, lmshadows_, 0, 2, 2);
-VARNW(lmaa, lmaa_, 0, 3, 3);
+VARN(IDF_WORLD, lmshadows, lmshadows_, 0, 2, 2);
+VARN(IDF_WORLD, lmaa, lmaa_, 0, 3, 3);
 static int lmshadows = 2, lmaa = 3;
 
 static surfaceinfo brightsurfaces[6] =
@@ -255,7 +255,7 @@ static inline uint hthash(const compresskey &k)
 
 static hashtable<compresskey, compressval> compressed;
 
-VARW(lightcompress, 0, 3, 6);
+VAR(IDF_WORLD, lightcompress, 0, 3, 6);
 
 bool pack_lightmap(surfaceinfo &surface)
 {
@@ -500,8 +500,8 @@ static inline bool hasskylight()
     return skylightcolor[0]>ambientcolor[0] || skylightcolor[1]>ambientcolor[1] || skylightcolor[2]>ambientcolor[2];
 }
 
-VARW(blurlms, 0, 0, 2);
-VARW(blurskylight, 0, 0, 2);
+VAR(IDF_WORLD, blurlms, 0, 0, 2);
+VAR(IDF_WORLD, blurskylight, 0, 0, 2);
 
 void blurlightmap(int n)
 {
@@ -571,8 +571,8 @@ static inline void generate_alpha(float tolerance, const vec &pos, uchar &alpha)
     }
 }
 
-VARW(edgetolerance, 1, 4, 8);
-VARW(adaptivesample, 0, 2, 2);
+VAR(IDF_WORLD, edgetolerance, 1, 4, 8);
+VAR(IDF_WORLD, adaptivesample, 0, 2, 2);
 
 enum
 {
@@ -872,7 +872,7 @@ static struct lightcacheentry
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
 
-VARF(lightcachesize, 4, 6, 12, clearlightcache());
+VARF(0, lightcachesize, 4, 6, 12, clearlightcache());
 
 void findsunlights()
 {
@@ -1677,9 +1677,9 @@ void calclight(int *quality)
 	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-COMMAND(calclight, "i");
+COMMAND(0, calclight, "i");
 
-VAR(patchnormals, 0, 0, 1);
+VAR(0, patchnormals, 0, 0, 1);
 
 void patchlight(int *quality)
 {
@@ -1732,7 +1732,7 @@ void patchlight(int *quality)
 	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
-COMMAND(patchlight, "i");
+COMMAND(0, patchlight, "i");
 
 void setfullbrightlevel(int fullbrightlevel)
 {
@@ -1744,8 +1744,8 @@ void setfullbrightlevel(int fullbrightlevel)
     initlights();
 }
 
-VARF(fullbright, 0, 0, 1, initlights());
-VARFP(fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
+VARF(0, fullbright, 0, 0, 1, initlights());
+VARF(IDF_PERSIST, fullbrightlevel, 0, 128, 255, setfullbrightlevel(fullbrightlevel));
 
 vector<LightMapTexture> lightmaptexs;
 
@@ -1833,7 +1833,7 @@ static void copylightmap(LightMap &lm, uchar *dst, size_t stride)
     }
 }
 
-VARF(convertlms, 0, 1, 1, { cleanuplightmaps(); initlights(); allchanged(); });
+VARF(0, convertlms, 0, 1, 1, { cleanuplightmaps(); initlights(); allchanged(); });
 
 void genreservedlightmaptexs()
 {
@@ -1888,8 +1888,8 @@ static void findunlit(int i)
     }
 }
 
-VARF(roundlightmaptex, 0, 4, 16, { cleanuplightmaps(); initlights(); allchanged(); });
-VARF(batchlightmaps, 0, 4, 256, { cleanuplightmaps(); initlights(); allchanged(); });
+VARF(0, roundlightmaptex, 0, 4, 16, { cleanuplightmaps(); initlights(); allchanged(); });
+VARF(0, batchlightmaps, 0, 4, 256, { cleanuplightmaps(); initlights(); allchanged(); });
 
 void genlightmaptexs(int flagmask, int flagval)
 {
@@ -2237,6 +2237,6 @@ void dumplms()
     }
 }
 
-COMMAND(dumplms, "");
+COMMAND(0, dumplms, "");
 
 

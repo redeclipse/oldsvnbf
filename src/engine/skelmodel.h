@@ -1,5 +1,5 @@
-VARP(gpuskel, 0, 1, 1);
-VARP(matskel, 0, 1, 1);
+VAR(IDF_PERSIST, gpuskel, 0, 1, 1);
+VAR(IDF_PERSIST, matskel, 0, 1, 1);
 
 #define BONEMASK_NOT  0x8000
 #define BONEMASK_END  0xFFFF

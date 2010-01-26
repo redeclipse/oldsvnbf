@@ -19,9 +19,9 @@
 #define AUTH_LIMIT 100
 #define DUP_LIMIT 16
 
-VAR(masterserver, 0, 0, 1);
-VAR(masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
-SVAR(masterip, "");
+VAR(0, masterserver, 0, 0, 1);
+VAR(0, masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
+SVAR(0, masterip, "");
 
 struct authreq
 {
@@ -98,14 +98,14 @@ void addauth(char *name, char *pubkey)
 	u.name = name;
     u.pubkey = parsepubkey(pubkey);
 }
-COMMAND(addauth, "ss");
+COMMAND(0, addauth, "ss");
 
 void clearauth()
 {
 	enumerate(authusers, authuser, u, { delete[] u.name; freepubkey(u.pubkey); });
 	authusers.clear();
 }
-COMMAND(clearauth, "");
+COMMAND(0, clearauth, "");
 
 void purgeauths(masterclient &c)
 {

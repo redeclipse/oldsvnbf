@@ -28,9 +28,9 @@ struct flare
     bool sparkle;
 };
 
-VARW(flarelights, 0, 0, 1);
-VARP(flarecutoff, 0, 1000, 10000);
-VARP(flaresize, 20, 100, 500);
+VAR(IDF_WORLD, flarelights, 0, 0, 1);
+VAR(IDF_PERSIST, flarecutoff, 0, 1000, 10000);
+VAR(IDF_PERSIST, flaresize, 20, 100, 500);
 
 struct flarerenderer : partrenderer
 {

@@ -12,13 +12,13 @@ generic mapdirs[] = {
 	{ "base", MAP_OCTA },
 };
 
-VAR(maptype, 1, -1, -1);
-SVAR(mapfile, "");
-SVAR(mapname, "");
+VAR(0, maptype, 1, -1, -1);
+SVAR(0, mapfile, "");
+SVAR(0, mapname, "");
 
-VARP(autosavebackups, 0, 2, 4); // make backups; 0 = off, 1 = single backup, 2 = named backup, 3/4 = same as 1/2 with move to "backups/"
-VARP(autosaveconfigs, 0, 1, 1);
-VARP(autosavemapshot, 0, 1, 1);
+VAR(IDF_PERSIST, autosavebackups, 0, 2, 4); // make backups; 0 = off, 1 = single backup, 2 = named backup, 3/4 = same as 1/2 with move to "backups/"
+VAR(IDF_PERSIST, autosaveconfigs, 0, 1, 1);
+VAR(IDF_PERSIST, autosavemapshot, 0, 1, 1);
 
 void fixmaptitle()
 {
@@ -39,8 +39,8 @@ void fixmaptitle()
 	}
 }
 
-SVARFW(maptitle, "", fixmaptitle());
-SVARW(mapauthor, "");
+SVARF(IDF_WORLD, maptitle, "", fixmaptitle());
+SVAR(IDF_WORLD, mapauthor, "");
 
 void setnames(const char *fname, int type)
 {
@@ -390,9 +390,9 @@ void save_config(char *mname)
 	delete h;
 	if(verbose) conoutf("\fasaved config %s", fname);
 }
-ICOMMAND(savemapconfig, "s", (char *mname), save_config(*mname ? mname : mapname));
+ICOMMAND(0, savemapconfig, "s", (char *mname), save_config(*mname ? mname : mapname));
 
-VARFP(mapshotsize, 0, 256, INT_MAX-1, mapshotsize -= mapshotsize%2);
+VARF(IDF_PERSIST, mapshotsize, 0, 256, INT_MAX-1, mapshotsize -= mapshotsize%2);
 
 void save_mapshot(char *mname)
 {
@@ -416,7 +416,7 @@ void save_mapshot(char *mname)
 
 	reloadtexture(mname);
 }
-ICOMMAND(savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));
+ICOMMAND(0, savemapshot, "s", (char *mname), save_mapshot(*mname ? mname : mapname));
 
 #define istempname(n) (!strncmp(n, "temp/", 5) || !strncmp(n, "temp\\", 5))
 
@@ -577,7 +577,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
 	if(istempname(mapname)) setnames(&mapname[5], MAP_BFGZ);
 }
 
-ICOMMAND(savemap, "s", (char *mname), save_world(*mname ? (istempname(mname) ? &mname[5] : mname) : (istempname(mapname) ? &mapname[5] : mapname)));
+ICOMMAND(0, savemap, "s", (char *mname), save_world(*mname ? (istempname(mname) ? &mname[5] : mname) : (istempname(mapname) ? &mapname[5] : mapname)));
 
 static uint mapcrc = 0;
 
@@ -1232,11 +1232,11 @@ void writeobj(char *name)
 	delete f;
 }
 
-COMMAND(writeobj, "s");
+COMMAND(0, writeobj, "s");
 
 int getworldsize() { return hdr.worldsize; }
 int getmapversion() { return hdr.version; }
-ICOMMAND(mapversion, "", (void), intret(getmapversion()));
+ICOMMAND(0, mapversion, "", (void), intret(getmapversion()));
 int getmaprevision() { return hdr.revision; }
-ICOMMAND(maprevision, "", (void), intret(getmaprevision()));
+ICOMMAND(0, maprevision, "", (void), intret(getmaprevision()));
 

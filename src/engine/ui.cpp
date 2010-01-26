@@ -11,11 +11,11 @@ enum {FIELDCOMMIT, FIELDABORT, FIELDEDIT, FIELDSHOW, FIELDKEY};
 static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
-VARP(guishadow, 0, 2, 8);
-VARP(guiautotab, 6, 16, 40);
-VARP(guiclicktab, 0, 1, 1);
-VARP(guiblend, 1, 156, 255);
-VARP(guilinesize, 1, 36, 128);
+VAR(IDF_PERSIST, guishadow, 0, 2, 8);
+VAR(IDF_PERSIST, guiautotab, 6, 16, 40);
+VAR(IDF_PERSIST, guiclicktab, 0, 1, 1);
+VAR(IDF_PERSIST, guiblend, 1, 156, 255);
+VAR(IDF_PERSIST, guilinesize, 1, 36, 128);
 
 static bool needsinput = false, hastitle = true;
 
@@ -799,8 +799,8 @@ struct gui : guient
 };
 
 Texture *gui::overlaytex = NULL, *gui::slidertex = NULL;
-TVARN(guioverlaytex, "textures/guioverlay", gui::overlaytex, 0);
-TVARN(guislidertex, "textures/guislider", gui::slidertex, 0);
+TVARN(IDF_PERSIST, guioverlaytex, "textures/guioverlay", gui::overlaytex, 0);
+TVARN(IDF_PERSIST, guislidertex, "textures/guislider", gui::slidertex, 0);
 
 vector<gui::list> gui::lists;
 float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;

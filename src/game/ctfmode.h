@@ -54,7 +54,7 @@ struct ctfservmode : ctfstate, servmode
             loopvk(flags)
             {
 				flag &f = flags[k];
-				if(isctfhome(f, ci->team) && (f.owner < 0 || (GVAR(ctfstyle) <= 2 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
+				if(isctfhome(f, ci->team) && (f.owner < 0 || (GAME(ctfstyle) <= 2 && f.owner == ci->clientnum && i == k)) && !f.droptime && newpos.dist(f.spawnloc) <= enttype[FLAG].radius*2/3)
 				{
 					ctfstate::returnflag(i, gamemillis);
 					givepoints(ci, 5);
@@ -63,7 +63,7 @@ struct ctfservmode : ctfstate, servmode
 						ci->state.flags++;
 						int score = addscore(ci->team);
 						sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
-						if(GVAR(ctflimit) && score >= GVAR(ctflimit))
+						if(GAME(ctflimit) && score >= GAME(ctflimit))
 						{
 							sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
 							startintermission();
@@ -79,8 +79,8 @@ struct ctfservmode : ctfstate, servmode
     {
         if(!hasflaginfo || !flags.inrange(i) || ci->state.state!=CS_ALIVE || !ci->team || ci->state.aitype >= AI_START) return;
 		flag &f = flags[i];
-		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && GVAR(ctfstyle) <= 2 && (GVAR(ctfstyle) == 2 || !f.droptime))) return;
-		if(!GVAR(ctfstyle) && f.team == ci->team)
+		if(!(f.base&BASE_FLAG) || f.owner >= 0 || (f.team == ci->team && GAME(ctfstyle) <= 2 && (GAME(ctfstyle) == 2 || !f.droptime))) return;
+		if(!GAME(ctfstyle) && f.team == ci->team)
 		{
 			ctfstate::returnflag(i, gamemillis);
 			givepoints(ci, 5);
@@ -113,10 +113,10 @@ struct ctfservmode : ctfstate, servmode
         loopv(flags)
         {
             flag &f = flags[i];
-            switch(GVAR(ctfstyle))
+            switch(GAME(ctfstyle))
             {
             	case 3:
-					if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GVAR(ctfresetdelay))
+					if(f.owner > 0 && f.taketime && gamemillis-f.taketime >= GAME(ctfresetdelay))
 					{
 						clientinfo *ci = (clientinfo *)getinfo(f.owner);
 						if(f.team != ci->team)
@@ -126,7 +126,7 @@ struct ctfservmode : ctfstate, servmode
 							ci->state.flags++;
 							int score = addscore(ci->team);
 							sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, -1, score);
-							if(GVAR(ctflimit) && score >= GVAR(ctflimit))
+							if(GAME(ctflimit) && score >= GAME(ctflimit))
 							{
 								sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
 								startintermission();
@@ -135,7 +135,7 @@ struct ctfservmode : ctfstate, servmode
 						break;
 					}
             	default:
-					if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= GVAR(ctfresetdelay))
+					if(f.owner < 0 && f.droptime && gamemillis-f.droptime >= GAME(ctfresetdelay))
 					{
 						ctfstate::returnflag(i, gamemillis);
 						loopvk(clients) if(isctfflag(f, clients[k]->team)) givepoints(clients[k], -5);
@@ -181,15 +181,15 @@ struct ctfservmode : ctfstate, servmode
 
 	void regen(clientinfo *ci, int &total, int &amt, int &delay)
 	{
-		if(hasflaginfo && GVAR(regenflag)) loopv(flags)
+		if(hasflaginfo && GAME(regenflag)) loopv(flags)
         {
             flag &f = flags[i];
             bool insidehome = (isctfhome(f, ci->team) && f.owner < 0 && !f.droptime && ci->state.o.dist(f.spawnloc) <= enttype[FLAG].radius*2.f);
-            if(insidehome || (GVAR(regenflag) == 2 && f.owner == ci->clientnum))
+            if(insidehome || (GAME(regenflag) == 2 && f.owner == ci->clientnum))
             {
-				if(GVAR(extrahealth)) total = max(GVAR(extrahealth), total);
-				if(ci->state.lastregen && GVAR(regenguard)) delay = GVAR(regenguard);
-				if(GVAR(regenextra)) amt = GVAR(regenextra);
+				if(GAME(extrahealth)) total = max(GAME(extrahealth), total);
+				if(ci->state.lastregen && GAME(regenguard)) delay = GAME(regenguard);
+				if(GAME(regenextra)) amt = GAME(regenextra);
 				return;
             }
 		}

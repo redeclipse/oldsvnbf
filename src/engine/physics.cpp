@@ -556,7 +556,7 @@ void cleardynentcache()
 	if(!dynentframe) dynentframe = 1;
 }
 
-VARF(dynentsize, 4, 7, 12, cleardynentcache());
+VARF(0, dynentsize, 4, 7, 12, cleardynentcache());
 
 #define DYNENTHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (DYNENTCACHESIZE - 1))
 
@@ -1138,7 +1138,7 @@ void phystest()
 //    printf ("PHYS(cam): %s, air %d, floor: (%f, %f, %f), vel: (%f, %f, %f), g: (%f, %f, %f)\n", states[camera1->physstate], camera1->timeinair, camera1->floor.x, camera1->floor.y, camera1->floor.z, camera1->vel.x, camera1->vel.y, camera1->vel.z, camera1->falling.x, camera1->falling.y, camera1->falling.z);
 }
 
-COMMAND(phystest, "");
+COMMAND(0, phystest, "");
 
 void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m)
 {

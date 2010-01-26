@@ -107,7 +107,7 @@ static bool findzipdirectory(FILE *f, zipdirectoryheader &hdr)
 }
 
 #ifndef STANDALONE
-VAR(dbgzip, 0, 0, 1);
+VAR(0, dbgzip, 0, 0, 1);
 #endif
 
 static bool readzipdirectory(const char *archname, FILE *f, int entries, int offset, int size, vector<zipfile> &files)
@@ -560,7 +560,7 @@ int listzipfiles(const char *dir, const char *ext, vector<char *> &files)
 }
 
 #ifndef STANDALONE
-ICOMMAND(addzip, "sss", (const char *name, const char *mount, const char *strip), addzip(name, mount[0] ? mount : NULL, strip[0] ? strip : NULL));
-ICOMMAND(removezip, "s", (const char *name), removezip(name));
+ICOMMAND(0, addzip, "sss", (const char *name, const char *mount, const char *strip), addzip(name, mount[0] ? mount : NULL, strip[0] ? strip : NULL));
+ICOMMAND(0, removezip, "s", (const char *name), removezip(name));
 #endif
 

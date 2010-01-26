@@ -2,7 +2,7 @@
 
 #include "engine.h"
 
-VARF(floatvtx, 0, 0, 1, allchanged());
+VARF(0, floatvtx, 0, 0, 1, allchanged());
 
 #define GENVERTS(type, ptr, offset, body) \
     { \
@@ -53,8 +53,8 @@ static inline bool htcmp(GLuint x, GLuint y)
 
 hashtable<GLuint, vboinfo> vbos;
 
-VAR(printvbo, 0, 0, 1);
-VARFN(vbosize, maxvbosize, 0, 1<<15, 1<<16, allchanged());
+VAR(0, printvbo, 0, 0, 1);
+VARFN(0, vbosize, maxvbosize, 0, 1<<15, 1<<16, allchanged());
 
 enum
 {
@@ -576,7 +576,7 @@ int calcshadowmask(vvec *vv)
     return mask;
 }
 
-VARFP(filltjoints, 0, 1, 1, allchanged());
+VARF(IDF_PERSIST, filltjoints, 0, 1, 1, allchanged());
 
 void reduceslope(ivec &n)
 {
@@ -1484,9 +1484,9 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
     vc.clear();
 }
 
-VARF(vacubemax, 64, 512, 256*256, allchanged());
-VARF(vacubesize, 32, 128, VVEC_INT_MASK+1, allchanged());
-VARF(vacubemin, 0, 128, 256*256, allchanged());
+VARF(0, vacubemax, 64, 512, 256*256, allchanged());
+VARF(0, vacubesize, 32, 128, VVEC_INT_MASK+1, allchanged());
+VARF(0, vacubemin, 0, 128, 256*256, allchanged());
 
 int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 {
@@ -1708,5 +1708,5 @@ void recalc()
 	allchanged(true);
 }
 
-COMMAND(recalc, "");
+COMMAND(0, recalc, "");
 

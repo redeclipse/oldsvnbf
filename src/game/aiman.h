@@ -40,7 +40,7 @@ namespace aiman
 		int numbots = 0;
 		loopv(clients)
 		{
-			if(type == AI_BOT && numbots >= GVAR(botlimit)) return false;
+			if(type == AI_BOT && numbots >= GAME(botlimit)) return false;
 			if(clients[i]->state.aitype == type)
 			{
 				clientinfo *ci = clients[i];
@@ -56,14 +56,14 @@ namespace aiman
 				if(type == AI_BOT) numbots++;
 			}
 		}
-		if(type == AI_BOT && numbots >= GVAR(botlimit)) return false;
+		if(type == AI_BOT && numbots >= GAME(botlimit)) return false;
 		int cn = addclient(ST_REMOTE);
 		if(cn >= 0)
 		{
 			clientinfo *ci = (clientinfo *)getinfo(cn);
 			if(ci)
 			{
-				int s = skill, m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m);
+				int s = skill, m = max(GAME(botmaxskill), GAME(botminskill)), n = min(GAME(botminskill), m);
 				if(skill > m || skill < n) s = (m != n ? rnd(m-n) + n + 1 : m);
 				ci->clientnum = cn;
 				ci->state.ownernum = findaiclient();
@@ -189,7 +189,7 @@ namespace aiman
 
 	void checksetup()
 	{
-		int m = max(GVAR(botmaxskill), GVAR(botminskill)), n = min(GVAR(botminskill), m), numbots = 0;
+		int m = max(GAME(botmaxskill), GAME(botminskill)), n = min(GAME(botminskill), m), numbots = 0;
 		loopv(clients) if(clients[i]->state.aitype >= 0 && clients[i]->state.ownernum >= 0)
 		{
 			clientinfo *ci = clients[i];
@@ -199,7 +199,7 @@ namespace aiman
 				ci->state.skill = (o != p ? rnd(o-p) + p + 1 : o);
 				if(!ci->state.aireinit) ci->state.aireinit = 1;
 			}
-			if(ci->state.aitype == AI_BOT && ++numbots >= GVAR(botlimit)) shiftai(ci, -1);
+			if(ci->state.aitype == AI_BOT && ++numbots >= GAME(botlimit)) shiftai(ci, -1);
 		}
 		loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
 		{
@@ -209,20 +209,20 @@ namespace aiman
 		}
 		int balance = 0;
 		if(m_campaign(gamemode)) balance = nplayers; // campaigns strictly obeys nplayers
-		else if(m_fight(gamemode) && !m_trial(gamemode) && GVAR(botlimit) > 0)
+		else if(m_fight(gamemode) && !m_trial(gamemode) && GAME(botlimit) > 0)
 		{
 			int numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);
-			switch(GVAR(botbalance))
+			switch(GAME(botbalance))
 			{
 				case -1: balance = max(people, m_duel(gamemode, mutators) ? 2 : nplayers); break; // use distributed numplayers
 				case  0: balance = 0; break; // no bots
-				default: balance = max(people, m_duel(gamemode, mutators) ? 2 : GVAR(botbalance)); break; // balance to at least this
+				default: balance = max(people, m_duel(gamemode, mutators) ? 2 : GAME(botbalance)); break; // balance to at least this
 			}
-			if(m_team(gamemode, mutators) && (balance > 0 || GVAR(teambalance) == 3))
+			if(m_team(gamemode, mutators) && (balance > 0 || GAME(teambalance) == 3))
 			{ // skew this if teams are unbalanced
 				if(!autooverride)
 				{
-					if(GVAR(teambalance) != 3)
+					if(GAME(teambalance) != 3)
 					{
 						int teamscores[TEAM_NUM] = {0}, highest = -1;
 						loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
@@ -258,9 +258,9 @@ namespace aiman
 				}
 			}
 			int bots = balance-people;
-			if(bots > GVAR(botlimit))
+			if(bots > GAME(botlimit))
 			{
-				balance -= bots-GVAR(botlimit);
+				balance -= bots-GAME(botlimit);
 				if(m_team(gamemode, mutators)) balance -= balance%numt;
 			}
 		}
@@ -287,7 +287,7 @@ namespace aiman
 		{
 			if(hasgameinfo && !interm)
 			{
-				#define checkold(n) if(old##n != GVAR(n)) { dorefresh = true; old##n = GVAR(n); }
+				#define checkold(n) if(old##n != GAME(n)) { dorefresh = true; old##n = GAME(n); }
 				checkold(teambalance); checkold(botbalance); checkold(botminskill); checkold(botmaxskill); checkold(botlimit);
 				if(dorefresh) { checksetup(); dorefresh = false; }
 				loopvrev(clients) if(clients[i]->state.aitype >= 0) reinitai(clients[i]);

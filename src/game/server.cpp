@@ -354,15 +354,15 @@ namespace server
 	vector<servmode *> smuts;
 	#define mutate(a,b) loopvk(a) { servmode *mut = a[k]; { b; } }
 
-	SVAR(serverpass, "");
-    SVAR(adminpass, "");
+	SVAR(0, serverpass, "");
+    SVAR(0, adminpass, "");
 
 	int version[2] = {0};
-	ICOMMAND(setversion, "ii", (int *a, int *b), version[0] = *a; version[1] = *b);
+	ICOMMAND(0, setversion, "ii", (int *a, int *b), version[0] = *a; version[1] = *b);
 
 	int mastermask()
 	{
-		switch(GVAR(serveropen))
+		switch(GAME(serveropen))
 		{
 			case 0: default: return MM_FREESERV; break;
 			case 1: return MM_OPENSERV; break;
@@ -406,13 +406,13 @@ namespace server
 		});
 		execfile("servexec.cfg", false);
 	}
-	ICOMMANDG(resetvars, "", (), resetgamevars(true));
-	ICOMMANDG(resetconfig, "", (), rehash(true));
+	GICOMMAND(0, resetvars, "", (), resetgamevars(true));
+	GICOMMAND(0, resetconfig, "", (), rehash(true));
 
 	const char *pickmap(const char *suggest, int mode, int muts)
 	{
-		const char *map = GVAR(defaultmap);
-		if(!map || !*map) map = choosemap(suggest, mode, muts, m_campaign(gamemode) ? 1 : GVAR(maprotate));
+		const char *map = GAME(defaultmap);
+		if(!map || !*map) map = choosemap(suggest, mode, muts, m_campaign(gamemode) ? 1 : GAME(maprotate));
 		return map;
 	}
 
@@ -428,9 +428,9 @@ namespace server
 	void cleanup()
 	{
 		setpause(false);
-		if(GVAR(resetmmonend)) mastermode = MM_OPEN;
-		if(GVAR(resetvarsonend)) resetgamevars(true);
-		if(GVAR(resetbansonend)) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
+		if(GAME(resetmmonend)) mastermode = MM_OPEN;
+		if(GAME(resetvarsonend)) resetgamevars(true);
+		if(GAME(resetbansonend)) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
 		changemap();
 	}
 
@@ -507,7 +507,7 @@ namespace server
 	}
 
     const char *gameid() { return GAMEID; }
-	ICOMMAND(gameid, "", (), result(gameid()));
+	ICOMMAND(0, gameid, "", (), result(gameid()));
     int getver(int n)
     {
     	switch(n)
@@ -518,7 +518,7 @@ namespace server
     	}
     	return 0;
 	}
-	ICOMMAND(getversion, "i", (int *a), intret(getver(*a)));
+	ICOMMAND(0, getversion, "i", (int *a), intret(getver(*a)));
     const char *gamename(int mode, int muts)
     {
     	if(!m_game(mode))
@@ -540,7 +540,7 @@ namespace server
 		copystring(gname, mname);
 		return gname;
     }
-	ICOMMAND(gamename, "iii", (int *g, int *m), result(gamename(*g, *m)));
+	ICOMMAND(0, gamename, "iii", (int *g, int *m), result(gamename(*g, *m)));
 
     void modecheck(int *mode, int *muts, int trying)
     {
@@ -587,18 +587,18 @@ namespace server
 		modecheck(&gm, &mt, trying);
 		return mt;
 	}
-	ICOMMAND(mutscheck, "iii", (int *g, int *m, int *t), intret(mutscheck(*g, *m, *t)));
+	ICOMMAND(0, mutscheck, "iii", (int *g, int *m, int *t), intret(mutscheck(*g, *m, *t)));
 
 	void changemode(int *mode, int *muts)
 	{
 		if(*mode < 0)
 		{
-			if(GVAR(defaultmode) >= G_START) *mode = GVAR(defaultmode);
+			if(GAME(defaultmode) >= G_START) *mode = GAME(defaultmode);
 			else *mode = rnd(G_RAND)+G_FIGHT;
 		}
 		if(*muts < 0)
 		{
-			if(GVAR(defaultmuts) >= G_M_NONE) *muts = GVAR(defaultmuts);
+			if(GAME(defaultmuts) >= G_M_NONE) *muts = GAME(defaultmuts);
 			else
 			{
 				*muts = G_M_NONE;
@@ -618,15 +618,15 @@ namespace server
 		static string mapchosen;
 		if(suggest && *suggest) copystring(mapchosen, suggest);
 		else *mapchosen = 0;
-		int rotate = force ? force : GVAR(maprotate);
+		int rotate = force ? force : GAME(maprotate);
 		if(rotate)
 		{
-			const char *maplist = GVAR(mainmaps);
-			if(m_campaign(mode)) maplist = GVAR(storymaps);
-			else if(m_duel(mode, muts)) maplist = GVAR(duelmaps);
-			else if(m_stf(mode)) maplist = GVAR(stfmaps);
-			else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-			else if(m_trial(mode)) maplist = GVAR(trialmaps);
+			const char *maplist = GAME(mainmaps);
+			if(m_campaign(mode)) maplist = GAME(storymaps);
+			else if(m_duel(mode, muts)) maplist = GAME(duelmaps);
+			else if(m_stf(mode)) maplist = GAME(stfmaps);
+			else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GAME(mctfmaps) : GAME(ctfmaps);
+			else if(m_trial(mode)) maplist = GAME(trialmaps);
 			if(maplist && *maplist)
 			{
 				int n = listlen(maplist), p = -1, c = -1;
@@ -681,7 +681,7 @@ namespace server
 		if(smode) smode->intermission();
 		mutate(smuts, mut->intermission());
 		maprequest = false;
-		interm = gamemillis+GVAR(intermlimit);
+		interm = gamemillis+GAME(intermlimit);
 		sendf(-1, 1, "ri2", SV_TIMEUP, 0);
 	}
 
@@ -691,23 +691,23 @@ namespace server
 		{
 			if(m_trial(gamemode))
 			{
-				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GVAR(triallimit))
+				loopv(clients) if(clients[i]->state.cpmillis < 0 && gamemillis+clients[i]->state.cpmillis >= GAME(triallimit))
 				{
 					sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fctime trial wait period has timed out");
 					startintermission();
 					return;
 				}
 			}
-			if(GVAR(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000))
+			if(GAME(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000))
 			{
-				if(GVAR(timelimit) != oldtimelimit)
+				if(GAME(timelimit) != oldtimelimit)
 				{
-					if(GVAR(timelimit)) gamelimit += (GVAR(timelimit)-oldtimelimit)*60000;
-					oldtimelimit = GVAR(timelimit);
+					if(GAME(timelimit)) gamelimit += (GAME(timelimit)-oldtimelimit)*60000;
+					oldtimelimit = GAME(timelimit);
 				}
 				if(minremain)
 				{
-					if(GVAR(timelimit))
+					if(GAME(timelimit))
 					{
 						if(gamemillis >= gamelimit) minremain = 0;
 						else minremain = (gamelimit-gamemillis+60000-1)/60000;
@@ -726,7 +726,7 @@ namespace server
 					}
 				}
 			}
-			if(GVAR(fraglimit) && !m_flag(gamemode) && !m_trial(gamemode))
+			if(GAME(fraglimit) && !m_flag(gamemode) && !m_trial(gamemode))
 			{
 				if(m_team(gamemode, mutators))
 				{
@@ -736,7 +736,7 @@ namespace server
 					int best = -1;
 					loopi(TEAM_NUM) if(best < 0 || teamscores[i] > teamscores[best])
 						best = i;
-					if(best >= 0 && teamscores[best] >= GVAR(fraglimit))
+					if(best >= 0 && teamscores[best] >= GAME(fraglimit))
 					{
 						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcfrag limit has been reached");
 						startintermission();
@@ -748,7 +748,7 @@ namespace server
 					int best = -1;
 					loopv(clients) if(clients[i]->state.aitype < AI_START && (best < 0 || clients[i]->state.frags > clients[best]->state.frags))
 						best = i;
-					if(best >= 0 && clients[best]->state.frags >= GVAR(fraglimit))
+					if(best >= 0 && clients[best]->state.frags >= GAME(fraglimit))
 					{
 						sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcfrag limit has been reached");
 						startintermission();
@@ -799,18 +799,18 @@ namespace server
 		static vector<int> items; items.setsizenodelete(0);
 		loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
 		{
-			sents[i].millis += GVAR(itemspawndelay);
-			switch(GVAR(itemspawnstyle))
+			sents[i].millis += GAME(itemspawndelay);
+			switch(GAME(itemspawnstyle))
 			{
 				case 1: items.add(i); break;
-				case 2: sents[i].millis += rnd(GVAR(itemspawntime)); break;
+				case 2: sents[i].millis += rnd(GAME(itemspawntime)); break;
 				default: break;
 			}
 		}
 		if(!items.empty())
 		{
 			items.sort(sortitems);
-			loopv(items) sents[items[i]].millis += GVAR(itemspawndelay)*i;
+			loopv(items) sents[items[i]].millis += GAME(itemspawndelay)*i;
 		}
 	}
 
@@ -948,12 +948,12 @@ namespace server
 				int checkpoint = ci->state.cpnodes.last();
 				if(sents.inrange(checkpoint)) return checkpoint;
 			}
-			if(totalspawns && GVAR(spawnrotate))
+			if(totalspawns && GAME(spawnrotate))
 			{
 				int cycle = -1, team = m_fight(gamemode) && m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
 				if(!spawns[team].ents.empty())
 				{
-					switch(GVAR(spawnrotate))
+					switch(GAME(spawnrotate))
 					{
 						case 2:
 						{
@@ -996,7 +996,7 @@ namespace server
 		loopvk(clients) clients[k]->state.dropped.reset();
 		setuptriggers(true);
 		if(m_fight(gamemode)) setupitems(true);
-		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GVAR(storyplayers) : np));
+		setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GAME(storyplayers) : np));
 		hasgameinfo = aiman::dorefresh = true;
 	}
 
@@ -1004,7 +1004,7 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
-		bool grenades = GVAR(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
+		bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
 		if(ci->state.aitype >= AI_START)
 		{
 			weap = aistyle[ci->state.aitype].weap;
@@ -1249,9 +1249,9 @@ namespace server
 	{
 		setpause(false);
 		if(demorecord) enddemorecord();
-		if(GVAR(resetmmonend) >= 2) mastermode = MM_OPEN;
-		if(GVAR(resetvarsonend) >= 2) resetgamevars(true);
-		if(GVAR(resetbansonend) >= 2) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
+		if(GAME(resetmmonend) >= 2) mastermode = MM_OPEN;
+		if(GAME(resetvarsonend) >= 2) resetgamevars(true);
+		if(GAME(resetbansonend) >= 2) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
 	}
 
 	bool checkvotes(bool force = false)
@@ -1305,7 +1305,7 @@ namespace server
 			}
 			else
 			{
-				int mode = GVAR(defaultmode) >= 0 ? gamemode : -1, muts = GVAR(defaultmuts) >= -1 ? mutators : -2;
+				int mode = GAME(defaultmode) >= 0 ? gamemode : -1, muts = GAME(defaultmuts) >= -1 ? mutators : -2;
 				changemode(&mode, &muts);
 				const char *map = choosemap(smapname, mode, muts);
 				srvoutf(3, "server chooses: \fs\fy%s\fS on map \fs\fo%s\fS", gamename(mode, muts), map);
@@ -1331,16 +1331,16 @@ namespace server
 	{
 		clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
-        switch(GVAR(votelock))
+        switch(GAME(votelock))
         {
-        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GVAR(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
-			case 3: case 4: if(!haspriv(ci, GVAR(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
+        	case 1: case 2: if(smapname[0] && !strcmp(reqmap, smapname) && !haspriv(ci, GAME(votelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "vote for the same map again")) return; break;
+			case 3: case 4: if(!haspriv(ci, GAME(votelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "vote for a new game")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "vote for a new game")) return; break;
         }
         bool hasveto = haspriv(ci, PRIV_MASTER) && (mastermode >= MM_VETO || !numclients(ci->clientnum));
         if(!hasveto)
         {
-        	if(ci->lastvote && lastmillis-ci->lastvote <= GVAR(votewait)) return;
+        	if(ci->lastvote && lastmillis-ci->lastvote <= GAME(votewait)) return;
         	if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return;
         }
 		if(reqmode < G_LOBBY && !ci->local)
@@ -1348,29 +1348,29 @@ namespace server
 			srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
 			return;
 		}
-		switch(GVAR(modelock))
+		switch(GAME(modelock))
 		{
 			case 0: default: break;
-			case 1: case 2: if(!haspriv(ci, GVAR(modelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
-			case 3: case 4: if((reqmode < GVAR(modelimit) || !mutscmp(reqmuts, GVAR(mutslimit))) && !haspriv(ci, GVAR(modelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
+			case 1: case 2: if(!haspriv(ci, GAME(modelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
+			case 3: case 4: if((reqmode < GAME(modelimit) || !mutscmp(reqmuts, GAME(mutslimit))) && !haspriv(ci, GAME(modelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
 			case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return; break;
 		}
-		if(reqmode != G_EDITMODE && GVAR(mapslock))
+		if(reqmode != G_EDITMODE && GAME(mapslock))
 		{
 			const char *maplist = NULL;
-			switch(GVAR(mapslock))
+			switch(GAME(mapslock))
 			{
 				default: break;
-				case 1: case 2: maplist = GVAR(allowmaps); break;
+				case 1: case 2: maplist = GAME(allowmaps); break;
 				case 3: case 4:
 				{
-					if(m_campaign(reqmode)) maplist = GVAR(storymaps);
-					else if(m_duel(reqmode, reqmuts)) maplist = GVAR(duelmaps);
-					else if(m_stf(reqmode)) maplist = GVAR(stfmaps);
-					else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GVAR(mctfmaps) : GVAR(ctfmaps);
-					else if(m_trial(reqmode)) maplist = GVAR(trialmaps);
-					else if(m_fight(reqmode)) maplist = GVAR(mainmaps);
-					else maplist = GVAR(allowmaps);
+					if(m_campaign(reqmode)) maplist = GAME(storymaps);
+					else if(m_duel(reqmode, reqmuts)) maplist = GAME(duelmaps);
+					else if(m_stf(reqmode)) maplist = GAME(stfmaps);
+					else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GAME(mctfmaps) : GAME(ctfmaps);
+					else if(m_trial(reqmode)) maplist = GAME(trialmaps);
+					else if(m_fight(reqmode)) maplist = GAME(mainmaps);
+					else maplist = GAME(allowmaps);
 					break;
 				}
 				case 5: if(!haspriv(ci, PRIV_MAX, "select a custom maps")) return; break;
@@ -1395,7 +1395,7 @@ namespace server
 					}
 					if(found) break;
 				}
-				if(!found && !haspriv(ci, GVAR(mapslock)%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return;
+				if(!found && !haspriv(ci, GAME(mapslock)%2 ? PRIV_MASTER : PRIV_ADMIN, "select a custom maps")) return;
 			}
 		}
 		copystring(ci->mapvote, reqmap); ci->modevote = reqmode; ci->mutsvote = reqmuts;
@@ -1523,7 +1523,7 @@ namespace server
 		if(ci->state.aitype >= AI_START) return TEAM_ENEMY;
 		else if(m_fight(gamemode) && m_team(gamemode, mutators) && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
 		{
-			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GVAR(teambalance);
+			int team = isteam(gamemode, mutators, suggest, TEAM_FIRST) ? suggest : -1, balance = GAME(teambalance);
 			if(balance < 3 && ci->state.aitype >= 0) balance = 1;
 			if(balance || team < 0)
 			{
@@ -1597,7 +1597,7 @@ namespace server
 			servstate &ts = ci->state;
 			vector<droplist> drop;
 			int sweap = m_weapon(gamemode, mutators);
-			if(level >= 2 && GVAR(kamikaze) && (GVAR(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GVAR(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
+			if(level >= 2 && GAME(kamikaze) && (GAME(kamikaze) > 2 || (ts.hasweap(WEAP_GRENADE, sweap) && (GAME(kamikaze) > 1 || ts.weapselect == WEAP_GRENADE))))
 			{
 				ts.weapshots[WEAP_GRENADE][0].add(-1);
 				droplist &d = drop.add();
@@ -1609,13 +1609,13 @@ namespace server
 				loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
 				{
 					sents[ts.entid[i]].millis = gamemillis;
-					if(level && GVAR(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
+					if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
 					{
 						ts.dropped.add(ts.entid[i]);
 						droplist &d = drop.add();
 						d.weap = i;
 						d.ent = ts.entid[i];
-						sents[ts.entid[i]].millis += GVAR(itemspawntime);
+						sents[ts.entid[i]].millis += GAME(itemspawntime);
 					}
 				}
 			}
@@ -1681,9 +1681,9 @@ namespace server
         stopdemo();
 		gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
 		nplayers = gamemillis = interm = 0;
-		oldtimelimit = GVAR(timelimit);
-		minremain = GVAR(timelimit) ? GVAR(timelimit) : -1;
-		gamelimit = GVAR(timelimit) ? minremain*60000 : 0;
+		oldtimelimit = GAME(timelimit);
+		minremain = GAME(timelimit) ? GAME(timelimit) : -1;
+		gamelimit = GAME(timelimit) ? minremain*60000 : 0;
 		sents.setsize(0); scores.setsize(0);
 		setuptriggers(false); setupspawns(false);
 
@@ -1898,12 +1898,13 @@ namespace server
 		if(id && id->flags&IDF_SERVER)
 		{
 			mkstring(val);
+			int locked = max(id->flags&IDF_ADMIN ? 1 : 0, GAME(varslock));
 			switch(id->type)
 			{
 				case ID_CCOMMAND:
 				case ID_COMMAND:
 				{
-					if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					if(!haspriv(ci, locked >= 2 ? PRIV_MAX : (locked ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					string s;
 					if(nargs <= 1 || !arg) formatstring(s)("sv_%s", cmd);
 					else formatstring(s)("sv_%s %s", cmd, arg);
@@ -1920,7 +1921,7 @@ namespace server
 						srvmsgf(ci->clientnum, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fg%s = 0x%.6X" : "\fg%s = 0x%X") : "\fg%s = %d", cmd, *id->storage.i);
 						return;
 					}
-					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, locked >= 2 ? PRIV_MAX : (locked ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					if(id->maxval < id->minval)
 					{
 						srvmsgf(ci->clientnum, "\frcannot override variable: %s", cmd);
@@ -1947,7 +1948,7 @@ namespace server
 						srvmsgf(ci->clientnum, "\fg%s = %s", cmd, floatstr(*id->storage.f));
 						return;
 					}
-					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, locked >= 2 ? PRIV_MAX : (locked ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					float ret = atof(arg);
 					if(ret < id->minvalf || ret > id->maxvalf)
 					{
@@ -1966,7 +1967,7 @@ namespace server
 						srvmsgf(ci->clientnum, strchr(*id->storage.s, '"') ? "\fg%s = [%s]" : "\fg%s = \"%s\"", cmd, *id->storage.s);
 						return;
 					}
-					else if(!haspriv(ci, GVAR(varslock) >= 2 ? PRIV_MAX : (GVAR(varslock) ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
+					else if(!haspriv(ci, locked >= 2 ? PRIV_MAX : (locked ? PRIV_ADMIN : PRIV_MASTER), "change variables")) return;
 					delete[] *id->storage.s;
 					*id->storage.s = newstring(arg);
 					id->changed();
@@ -2194,12 +2195,12 @@ namespace server
 			}
 		}
 
-		if(*GVAR(servermotd))
+		if(*GAME(servermotd))
 		{
 			putint(p, SV_ANNOUNCE);
 			putint(p, S_GUIACT);
 			putint(p, CON_CHAT);
-			sendstring(GVAR(servermotd), p);
+			sendstring(GAME(servermotd), p);
 		}
 
 		if(smode) smode->initclient(ci, p, true);
@@ -2214,20 +2215,20 @@ namespace server
 	void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
 	{
 		int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-		if((realflags&HIT_WAVE || (isweap(weap) && !WPB(weap, explode, realflags&HIT_ALT))) && (realflags&HIT_FULL))
+		if((realflags&HIT_WAVE || (isweap(weap) && !WEAP2(weap, explode, realflags&HIT_ALT))) && (realflags&HIT_FULL))
 			realflags &= ~HIT_FULL;
 		if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
 		mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
 		if(actor->state.aitype < AI_START)
 		{
-			if((actor == target && !GVAR(selfdamage)) || (m_trial(gamemode) && !GVAR(trialdamage))) nodamage++;
+			if((actor == target && !GAME(selfdamage)) || (m_trial(gamemode) && !GAME(trialdamage))) nodamage++;
 			else if(m_team(gamemode, mutators) && actor->team == target->team)
 			{
 				if(weap == WEAP_MELEE) nodamage++;
-				else if(m_play(gamemode)) switch(GVAR(teamdamage))
+				else if(m_play(gamemode)) switch(GAME(teamdamage))
 				{
 					case 2: default: break;
-					case 1: if((actor == target && !GVAR(selfdamage)) || actor->state.aitype < 0) break;
+					case 1: if((actor == target && !GAME(selfdamage)) || actor->state.aitype < 0) break;
 					case 0: nodamage++; break;
 				}
 			}
@@ -2239,14 +2240,14 @@ namespace server
 			target->state.lastpain = gamemillis;
 			actor->state.damage += realdamage;
 			if(target->state.health <= 0) realflags |= HIT_KILL;
-			if(GVAR(fireburntime) && doesburn(weap, flags))
+			if(GAME(fireburntime) && doesburn(weap, flags))
 			{
 				target->state.lastfire = target->state.lastfireburn = gamemillis;
 				target->state.lastfireowner = actor->clientnum;
 			}
 		}
 		sendf(-1, 1, "ri7i3", SV_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, target->state.health, hitpush.x, hitpush.y, hitpush.z);
-		if(GVAR(vampire) && actor->state.state == CS_ALIVE)
+		if(GAME(vampire) && actor->state.state == CS_ALIVE)
 		{
 			int total = m_health(gamemode, mutators), amt = 0, delay = 0;
 			if(smode) smode->regen(actor, total, amt, delay);
@@ -2289,12 +2290,12 @@ namespace server
 						style |= FRAG_HEADSHOT;
 						pointvalue *= 2;
 					}
-					if(m_fight(gamemode) && GVAR(multikilldelay))
+					if(m_fight(gamemode) && GAME(multikilldelay))
 					{
 						logs = 0;
 						loopv(actor->state.fragmillis)
 						{
-							if(lastmillis-actor->state.fragmillis[i] > GVAR(multikilldelay)) actor->state.fragmillis.remove(i--);
+							if(lastmillis-actor->state.fragmillis[i] > GAME(multikilldelay)) actor->state.fragmillis.remove(i--);
 							else logs++;
 						}
 						if(!logs) actor->state.rewards &= ~FRAG_MULTI;
@@ -2311,9 +2312,9 @@ namespace server
 							}
 						}
 					}
-					if(actor->state.spree <= GVAR(spreecount)*FRAG_SPREES && !(actor->state.spree%GVAR(spreecount)))
+					if(actor->state.spree <= GAME(spreecount)*FRAG_SPREES && !(actor->state.spree%GAME(spreecount)))
 					{
-						int offset = clamp((actor->state.spree/GVAR(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
+						int offset = clamp((actor->state.spree/GAME(spreecount)), 1, int(FRAG_SPREES))-1, type = 1<<(FRAG_SPREE+offset);
 						if(!(actor->state.rewards&type))
 						{
 							style |= type;
@@ -2325,17 +2326,17 @@ namespace server
 					{
 						logs = 0;
 						loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-						if(logs >= GVAR(dominatecount))
+						if(logs >= GAME(dominatecount))
 						{
 							style |= FRAG_REVENGE;
-							pointvalue *= GVAR(dominatecount);
+							pointvalue *= GAME(dominatecount);
 						}
 						logs = 0;
 						loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-						if(logs == GVAR(dominatecount))
+						if(logs == GAME(dominatecount))
 						{
 							style |= FRAG_DOMINATE;
-							pointvalue *= GVAR(dominatecount);
+							pointvalue *= GAME(dominatecount);
 						}
 					}
 				}
@@ -2373,7 +2374,7 @@ namespace server
         ci->state.deaths++;
 		dropitems(ci); givepoints(ci, pointvalue);
 		if(!(flags&HIT_FULL)) flags |= HIT_FULL;
-		if(GVAR(fireburntime) && (flags&HIT_MELT || flags&HIT_BURN))
+		if(GAME(fireburntime) && (flags&HIT_MELT || flags&HIT_BURN))
 		{
 			ci->state.lastfire = ci->state.lastfireburn = gamemillis;
 			ci->state.lastfireowner = ci->clientnum;
@@ -2388,18 +2389,18 @@ namespace server
 
 	int calcdamage(int weap, int &flags, int radial, float size, float dist)
 	{
-		int damage = WPB(weap, damage, flags&HIT_ALT);
+		int damage = WEAP2(weap, damage, flags&HIT_ALT);
 		if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
 		if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-		else if((flags&HIT_FULL) && !WPB(weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
+		else if((flags&HIT_FULL) && !WEAP2(weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
 		if(hithurts(flags))
 		{
-			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GVAR(damagescale));
-			else if(flags&HIT_TORSO) damage = int(damage*0.5f*GVAR(damagescale));
-			else if(flags&HIT_LEGS) damage = int(damage*0.25f*GVAR(damagescale));
+			if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GAME(damagescale));
+			else if(flags&HIT_TORSO) damage = int(damage*0.5f*GAME(damagescale));
+			else if(flags&HIT_LEGS) damage = int(damage*0.25f*GAME(damagescale));
 			else damage = 0;
 		}
-		else damage = int(damage*GVAR(damagescale));
+		else damage = int(damage*GAME(damagescale));
 		return damage;
 	}
 
@@ -2416,7 +2417,7 @@ namespace server
 				{
 					hitset &h = hits[i];
 					int hflags = flags|h.flags;
-					float size = radial ? (hflags&HIT_WAVE ? radial*GVAR(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
+					float size = radial ? (hflags&HIT_WAVE ? radial*GAME(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
 					clientinfo *target = (clientinfo *)getinfo(h.target);
 					if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
 						continue;
@@ -2428,7 +2429,7 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id)) sents[id].millis = gamemillis+GVAR(itemspawntime);
+			if(sents.inrange(id)) sents[id].millis = gamemillis+GAME(itemspawntime);
 		}
 	}
 
@@ -2439,31 +2440,31 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
-			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", weap);
+			if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", weap);
 			return;
 		}
 		if(!gs.canshoot(weap, flags, m_weapon(gamemode, mutators), millis))
 		{
 			if(!gs.canshoot(weap, flags, m_weapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
-				if(WPB(weap, sub, flags&HIT_ALT) && WPA(weap, max))
-					ci->state.ammo[weap] = max(ci->state.ammo[weap]-WPB(weap, sub, flags&HIT_ALT), 0);
-				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
+				if(WEAP2(weap, sub, flags&HIT_ALT) && WEAP(weap, max))
+					ci->state.ammo[weap] = max(ci->state.ammo[weap]-WEAP2(weap, sub, flags&HIT_ALT), 0);
+				if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
 				return;
 			}
 			else if(gs.weapload[weap] > 0)
 			{
-				takeammo(ci, weap, gs.weapload[weap]+WPB(weap, sub, flags&HIT_ALT));
+				takeammo(ci, weap, gs.weapload[weap]+WEAP2(weap, sub, flags&HIT_ALT));
 				gs.weapload[weap] = -gs.weapload[weap];
 				sendf(-1, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			}
 			else return;
 		}
-		else takeammo(ci, weap, WPB(weap, sub, flags&HIT_ALT));
-		gs.setweapstate(weap, WEAP_S_SHOOT, WPB(weap, adelay, flags&HIT_ALT), millis);
+		else takeammo(ci, weap, WEAP2(weap, sub, flags&HIT_ALT));
+		gs.setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), millis);
 		sendf(-1, 1, "ri8ivx", SV_SHOTFX, ci->clientnum, weap, flags, power, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
-		gs.weapshot[weap] = WPB(weap, sub, flags&HIT_ALT);
-		gs.shotdamage += WPB(weap, damage, flags&HIT_ALT)*shots.length();
+		gs.weapshot[weap] = WEAP2(weap, sub, flags&HIT_ALT);
+		gs.shotdamage += WEAP2(weap, damage, flags&HIT_ALT)*shots.length();
 		loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
 	}
 
@@ -2472,7 +2473,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
-			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", weap);
+			if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - unexpected message", weap);
 			sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 			return;
 		}
@@ -2480,7 +2481,7 @@ namespace server
 		{
 			if(!gs.canswitch(weap, m_weapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
 			{
-				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
+				if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: switch [%d] failed - current state disallows it", weap);
 				sendf(ci->clientnum, 1, "ri3", SV_WEAPSELECT, ci->clientnum, gs.weapselect);
 				return;
 			}
@@ -2501,13 +2502,13 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
-			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - unexpected message", weap);
+			if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - unexpected message", weap);
 			return;
 		}
 		int sweap = m_weapon(gamemode, mutators);
 		if(!gs.hasweap(weap, sweap, weap == WEAP_GRENADE ? 2 : 0) || (weap != WEAP_GRENADE && m_noitems(gamemode, mutators)))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
+			if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
 			return;
 		}
 		if(weap == WEAP_GRENADE)
@@ -2520,19 +2521,19 @@ namespace server
 				nweap = gs.bestweap(sweap, true);
 				gs.weapswitch(nweap, millis);
 			}
-			else gs.setweapstate(weap, WEAP_S_SHOOT, WPB(weap, adelay, false), millis);
+			else gs.setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, false), millis);
 			sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
 			return;
 		}
 		else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attrs[1]&WEAP_F_FORCED))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
+			if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
 			return;
 		}
 		int dropped = gs.entid[weap];
 		gs.ammo[weap] = gs.entid[weap] = -1;
 		int nweap = gs.bestweap(sweap, true); // switch to best weapon
-		if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+GVAR(itemspawntime);
+		if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+GAME(itemspawntime);
 		gs.dropped.add(dropped);
 		gs.weapswitch(nweap, millis);
 		sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);
@@ -2543,19 +2544,19 @@ namespace server
 		servstate &gs = ci->state;
 		if(!gs.isalive(gamemillis) || !isweap(weap))
 		{
-			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", weap);
+			if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - unexpected message", weap);
 			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
 		if(!gs.canreload(weap, m_weapon(gamemode, mutators), millis))
 		{
-			if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", weap);
+			if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: reload [%d] failed - current state disallows it", weap);
 			sendf(ci->clientnum, 1, "ri5", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
 			return;
 		}
-		gs.setweapstate(weap, WEAP_S_RELOAD, WPA(weap, rdelay), millis);
+		gs.setweapstate(weap, WEAP_S_RELOAD, WEAP(weap, rdelay), millis);
 		int oldammo = gs.ammo[weap];
-		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + WPA(weap, add), WPA(weap, max));
+		gs.ammo[weap] = min(max(gs.ammo[weap], 0) + WEAP(weap, add), WEAP(weap, max));
 		gs.weapload[weap] = gs.ammo[weap]-oldammo;
 		sendf(-1, 1, "ri5x", SV_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap], ci->clientnum);
 	}
@@ -2565,7 +2566,7 @@ namespace server
 		servstate &gs = ci->state;
 		if(gs.state != CS_ALIVE || !sents.inrange(ent) || enttype[sents[ent].type].usetype != EU_ITEM || m_noitems(gamemode, mutators))
 		{
-			if(GVAR(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
+			if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: use [%d] failed - unexpected message", ent);
 			return;
 		}
 		int sweap = m_weapon(gamemode, mutators), attr = sents[ent].type == WEAPON ? w_attr(gamemode, sents[ent].attrs[0], sweap) : sents[ent].attrs[0];
@@ -2573,7 +2574,7 @@ namespace server
 		{
 			if(!gs.canuse(sents[ent].type, attr, sents[ent].attrs, sweap, millis, (1<<WEAP_S_RELOAD)))
 			{
-				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
+				if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - current state disallows it", ent);
 				return;
 			}
 			else if(gs.weapload[gs.weapselect] > 0)
@@ -2598,13 +2599,13 @@ namespace server
 			}
 			if(!found)
 			{
-				if(GVAR(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", ent);
+				if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: use [%d] failed - doesn't seem to be spawned anywhere", ent);
 				return;
 			}
 		}
 
 		int weap = -1, dropped = -1;
-		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GVAR(maxcarry))
+		if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry))
 			weap = gs.drop(sweap, attr);
 		if(isweap(weap))
 		{
@@ -2619,13 +2620,13 @@ namespace server
 			if(!(sents[dropped].attrs[1]&WEAP_F_FORCED))
 			{
 				sents[dropped].spawned = false;
-				sents[dropped].millis = gamemillis+GVAR(itemspawntime);
+				sents[dropped].millis = gamemillis+GAME(itemspawntime);
 			}
 		}
 		if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
 		{
 			sents[ent].spawned = false;
-			sents[ent].millis = gamemillis+GVAR(itemspawntime);
+			sents[ent].millis = gamemillis+GAME(itemspawntime);
 		}
 		sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
 	}
@@ -2779,14 +2780,14 @@ namespace server
 					bool override = false;
 					if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
 					{
-						float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GVAR(maxcarry));
-						if(dist < GVAR(itemthreshold)) override = true;
+						float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
+						if(dist < GAME(itemthreshold)) override = true;
 					}
 					if(!finditem(i, true, true, override))
 					{
 						loopvk(clients) clients[k]->state.dropped.remove(i);
 						sents[i].spawned = true;
-						sents[i].millis = gamemillis+GVAR(itemspawntime);
+						sents[i].millis = gamemillis+GAME(itemspawntime);
 						sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
 						items[sents[i].type]++;
 					}
@@ -2803,27 +2804,27 @@ namespace server
 			clientinfo *ci = clients[i];
 			if(ci->state.state == CS_ALIVE)
 			{
-				if(GVAR(fireburntime) && ci->state.lastfire)
+				if(GAME(fireburntime) && ci->state.lastfire)
 				{
-					if(gamemillis-ci->state.lastfire <= GVAR(fireburntime))
+					if(gamemillis-ci->state.lastfire <= GAME(fireburntime))
 					{
-						if(gamemillis-ci->state.lastfireburn >= GVAR(fireburndelay))
+						if(gamemillis-ci->state.lastfireburn >= GAME(fireburndelay))
 						{
 							clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-							dodamage(ci, co ? co : ci, GVAR(fireburndamage), -1, HIT_BURN);
-							ci->state.lastfireburn += GVAR(fireburndelay);
+							dodamage(ci, co ? co : ci, GAME(fireburndamage), -1, HIT_BURN);
+							ci->state.lastfireburn += GAME(fireburndelay);
 						}
 						continue;
 					}
 					else ci->state.lastfire = ci->state.lastfireburn = 0;
 				}
 				if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
-				int total = m_health(gamemode, mutators), amt = GVAR(regenhealth), delay = ci->state.lastregen ? GVAR(regentime) : GVAR(regendelay);
+				int total = m_health(gamemode, mutators), amt = GAME(regenhealth), delay = ci->state.lastregen ? GAME(regentime) : GAME(regendelay);
 				if(smode) smode->regen(ci, total, amt, delay);
 				if(delay && (ci->state.health < total || ci->state.health > total) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
 				{
 					int low = 0;
-					if(ci->state.health > total) { amt = -GVAR(regenhealth); total = ci->state.health; low = m_health(gamemode, mutators); }
+					if(ci->state.health > total) { amt = -GAME(regenhealth); total = ci->state.health; low = m_health(gamemode, mutators); }
 					int rgn = ci->state.health, heal = clamp(ci->state.health+amt, low, total), eff = heal-rgn;
 					if(eff)
 					{
@@ -2887,12 +2888,12 @@ namespace server
 
 			if(interm && gamemillis >= interm) // wait then call for next map
 			{
-				if(GVAR(votelimit) && !maprequest)
+				if(GAME(votelimit) && !maprequest)
 				{
 					if(demorecord) enddemorecord();
 					sendf(-1, 1, "ri", SV_NEWGAME);
 					maprequest = true;
-					interm = gamemillis+GVAR(votelimit);
+					interm = gamemillis+GAME(votelimit);
 				}
 				else
 				{
@@ -2902,7 +2903,7 @@ namespace server
 			}
             if(shouldcheckvotes) checkvotes();
 		}
-		else if(!GVAR(resetbansonend))
+		else if(!GAME(resetbansonend))
 		{
 			loopv(bans) if(bans[i].time >= 0 && totalmillis-bans[i].time > 4*60*60000) bans.remove(i--);
 		}
@@ -2929,7 +2930,7 @@ namespace server
         return -1;
     }
 
-    int reserveclients() { return GVAR(serverclients)+4; }
+    int reserveclients() { return GAME(serverclients)+4; }
 
     int allowconnect(clientinfo *ci, const char *pwd)
     {
@@ -2941,7 +2942,7 @@ namespace server
             return DISC_NONE;
         }
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(numclients(-1, true) >= GVAR(serverclients)) return DISC_MAXCLIENTS;
+        if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         if(checkipinfo(bans, ip) && !checkipinfo(allows, ip, true)) return DISC_IPBAN;
         if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
@@ -3012,10 +3013,10 @@ namespace server
 		putint(p, gamemode);			// 2
 		putint(p, mutators);			// 3
 		putint(p, minremain);			// 4
-		putint(p, GVAR(serverclients));		// 5
+		putint(p, GAME(serverclients));		// 5
 		putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
 		sendstring(smapname, p);
-		if(*GVAR(serverdesc)) sendstring(GVAR(serverdesc), p);
+		if(*GAME(serverdesc)) sendstring(GAME(serverdesc), p);
 		else
 		{
 			#ifdef STANDALONE
@@ -3300,7 +3301,7 @@ namespace server
 					if(!hasclient(cp, ci)) break;
 					if(idx == SPHY_EXTINGUISH)
 					{
-						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GVAR(fireburntime)) break;
+						if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GAME(fireburntime)) break;
 						cp->state.lastfire = cp->state.lastfireburn = 0;
 					}
 					QUEUE_MSG;
@@ -3314,7 +3315,7 @@ namespace server
 					if(!allowstate(ci, val ? 4 : 5) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
-					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GVAR(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
+					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
 					if(val)
 					{
 						if(smode) smode->leavegame(ci);
@@ -3447,7 +3448,7 @@ namespace server
 					}
                     if(havecn)
                     {
-                    	while(ev->shots.length() > WPB(ev->weap, rays, ev->flags&HIT_ALT))
+                    	while(ev->shots.length() > WEAP2(ev->weap, rays, ev->flags&HIT_ALT))
 							ev->shots.remove(rnd(ev->shots.length()));
                     	cp->addevent(ev);
                     }
@@ -3609,7 +3610,7 @@ namespace server
 							}
 						}
 					}
-					else if(GVAR(serverdebug)) srvmsgf(cp->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
+					else if(GAME(serverdebug)) srvmsgf(cp->clientnum, "sync error: cannot trigger %d - not a trigger", ent);
 					break;
 				}
 
@@ -3938,7 +3939,7 @@ namespace server
 					if(tweaked)
 					{
 						sents[n].spawned = false;
-						sents[n].millis = gamemillis+GVAR(itemspawndelay);
+						sents[n].millis = gamemillis+GAME(itemspawndelay);
 						if(sents[n].type == TRIGGER) setuptriggers(true);
 					}
 					break;

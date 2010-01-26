@@ -1,12 +1,12 @@
 #include "engine.h"
 
-VARP(grass, 0, 0, 1);
-FVARP(grassstep, 0.5, 1, 8);
-FVARP(grasstaper, 0, 0.1, 1);
+VAR(IDF_PERSIST, grass, 0, 0, 1);
+FVAR(IDF_PERSIST, grassstep, 0.5, 1, 8);
+FVAR(IDF_PERSIST, grasstaper, 0, 0.1, 1);
 
-VAR(dbggrass, 0, 0, 1);
-VARP(grassdist, 0, 256, 10000);
-VARW(grassheight, 1, 4, 64);
+VAR(0, dbggrass, 0, 0, 1);
+VAR(IDF_PERSIST, grassdist, 0, 256, 10000);
+VAR(IDF_WORLD, grassheight, 1, 4, 64);
 
 struct grasswedge
 {
@@ -29,7 +29,7 @@ void resetgrasswedges(int n)
 	grassws = new grasswedge[n];
 	loopi(n) grassws[i].init(i, n);
 }
-VARFP(grasswedges, 8, 8, 1024, resetgrasswedges(grasswedges));
+VARF(IDF_PERSIST, grasswedges, 8, 8, 1024, resetgrasswedges(grasswedges));
 
 struct grassvert
 {
@@ -58,7 +58,7 @@ void resetgrassoffsets(int n)
 	grassanimoffsets = new float[n];
 	loopi(n) grassoffsets[i] = rnd(0x1000000)/float(0x1000000);
 }
-VARFP(grassoffset, 8, 32, 1024, resetgrassoffsets(grassoffset));
+VARF(IDF_PERSIST, grassoffset, 8, 32, 1024, resetgrassoffsets(grassoffset));
 
 void checkgrass()
 {
@@ -68,8 +68,8 @@ void checkgrass()
 
 static int lastgrassanim = -1;
 
-VARW(grassanimmillis, 0, 3000, 60000);
-FVARW(grassanimscale, 0, 0.03f, 1);
+VAR(IDF_WORLD, grassanimmillis, 0, 3000, 60000);
+FVAR(IDF_WORLD, grassanimscale, 0, 0.03f, 1);
 
 static void animategrass()
 {
@@ -93,8 +93,8 @@ static inline bool clipgrassquad(const grasstri &g, vec &p1, vec &p2)
     return true;
 }
 
-VARW(grassscale, 1, 2, 64);
-FVARW(grassblend, 0, 1, 1);
+VAR(IDF_WORLD, grassscale, 1, 2, 64);
+FVAR(IDF_WORLD, grassblend, 0, 1, 1);
 
 static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstri &g, Texture *tex)
 {

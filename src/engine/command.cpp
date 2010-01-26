@@ -118,9 +118,9 @@ void resetvar(char *name)
     clearoverride(*id);
 }
 
-COMMAND(push, "ss");
-COMMAND(pop, "s");
-COMMAND(resetvar, "s");
+COMMAND(0, push, "ss");
+COMMAND(0, pop, "s");
+COMMAND(0, resetvar, "s");
 
 void aliasa(const char *name, char *action)
 {
@@ -161,7 +161,7 @@ void aliasa(const char *name, char *action)
 
 void alias(const char *name, const char *action) { aliasa(name, newstring(action)); }
 
-COMMAND(alias, "ss");
+COMMAND(0, alias, "ss");
 
 void worldalias(const char *name, const char *action)
 {
@@ -169,7 +169,7 @@ void worldalias(const char *name, const char *action)
 	alias(name, action);
 	worldidents = false;
 }
-COMMAND(worldalias, "ss");
+COMMAND(0, worldalias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
@@ -259,10 +259,10 @@ const char *getalias(const char *name)
 	return i && i->type==ID_ALIAS ? i->action : "";
 }
 
-bool addcommand(const char *name, void (*fun)(), const char *narg)
+bool addcommand(const char *name, void (*fun)(), const char *narg, int flags)
 {
 	if(!idents) idents = new identtable;
-	ident c(ID_COMMAND, name, narg, (void *)fun, (void *)NULL);
+	ident c(ID_COMMAND, name, narg, (void *)fun, (void *)NULL, flags);
 	idents->access(name, c);
 	return false;
 }
@@ -506,7 +506,7 @@ char *conc(char **w, int n, bool space)
 	return r;
 }
 
-VARN(numargs, _numargs, 25, 0, 0);
+VARN(0, numargs, _numargs, 25, 0, 0);
 
 static inline bool isinteger(char *c)
 {
@@ -812,9 +812,9 @@ void floatret(float v)
 	commandret = newstring(floatstr(v));
 }
 
-ICOMMAND(if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
-ICOMMANDN(?, iif, "sss", (char *cond, char *t, char *f), result(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
-ICOMMAND(loop, "sis", (char *var, int *n, char *body),
+ICOMMAND(0, if, "sss", (char *cond, char *t, char *f), commandret = executeret(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
+ICOMMANDN(0, ?, iif, "sss", (char *cond, char *t, char *f), result(cond[0] && (!isinteger(cond) || parseint(cond)) ? t : f));
+ICOMMAND(0, loop, "sis", (char *var, int *n, char *body),
 {
 	if(*n<=0) return;
 	ident *id = newident(var);
@@ -827,7 +827,7 @@ ICOMMAND(loop, "sis", (char *var, int *n, char *body),
 	}
 	popident(*id);
 });
-ICOMMAND(loopwhile, "siss", (char *var, int *n, char *cond, char *body),
+ICOMMAND(0, loopwhile, "siss", (char *var, int *n, char *cond, char *body),
 {
     if(*n<=0) return;
     ident *id = newident(var);
@@ -841,7 +841,7 @@ ICOMMAND(loopwhile, "siss", (char *var, int *n, char *cond, char *body),
     }
     popident(*id);
 });
-ICOMMAND(while, "ss", (char *cond, char *body), while(execute(cond)) execute(body));	// can't get any simpler than this :)
+ICOMMAND(0, while, "ss", (char *cond, char *body), while(execute(cond)) execute(body));	// can't get any simpler than this :)
 
 void concat(const char *s) { commandret = newstring(s); }
 void result(const char *s) { commandret = newstring(s); }
@@ -933,15 +933,15 @@ void getalias_(char *s)
 	result(getalias(s));
 }
 
-ICOMMAND(exec, "s", (char *file), execfile(file));
-COMMAND(concat, "C");
-COMMAND(result, "s");
-COMMAND(concatword, "V");
-COMMAND(format, "V");
-COMMAND(at, "si");
-COMMAND(substr, "sii");
-ICOMMAND(listlen, "s", (char *s), intret(listlen(s)));
-COMMANDN(getalias, getalias_, "s");
+ICOMMAND(0, exec, "s", (char *file), execfile(file));
+COMMAND(0, concat, "C");
+COMMAND(0, result, "s");
+COMMAND(0, concatword, "V");
+COMMAND(0, format, "V");
+COMMAND(0, at, "si");
+COMMAND(0, substr, "sii");
+ICOMMAND(0, listlen, "s", (char *s), intret(listlen(s)));
+COMMANDN(0, getalias, getalias_, "s");
 
 void looplist(const char *var, const char *list, const char *body, bool search)
 {
@@ -988,11 +988,11 @@ void prettylist(const char *s, const char *conj)
 	p.add('\0');
 	result(p.getbuf());
 }
-COMMAND(prettylist, "ss");
+COMMAND(0, prettylist, "ss");
 
-ICOMMAND(listfind, "sss", (char *var, char *list, char *body), looplist(var, list, body, true));
-ICOMMAND(looplist, "sss", (char *var, char *list, char *body), looplist(var, list, body, false));
-ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
+ICOMMAND(0, listfind, "sss", (char *var, char *list, char *body), looplist(var, list, body, true));
+ICOMMAND(0, looplist, "sss", (char *var, char *list, char *body), looplist(var, list, body, false));
+ICOMMAND(0, loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
 {
     ident *id = newident(var);
     if(id->type!=ID_ALIAS) return;
@@ -1011,64 +1011,64 @@ ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
     if(files.length()) popident(*id);
 });
 
-ICOMMANDN(+, add, "ii", (int *a, int *b), intret(*a + *b));
-ICOMMANDN(*, mul, "ii", (int *a, int *b), intret(*a * *b));
-ICOMMANDN(-, sub, "ii", (int *a, int *b), intret(*a - *b));
-ICOMMANDN(+f, addf, "ff", (float *a, float *b), floatret(*a + *b));
-ICOMMANDN(*f, mulf, "ff", (float *a, float *b), floatret(*a * *b));
-ICOMMANDN(-f, subf, "ff", (float *a, float *b), floatret(*a - *b));
-ICOMMANDN(=, eq, "ii", (int *a, int *b), intret((int)(*a == *b)));
-ICOMMANDN(!=, neq, "ii", (int *a, int *b), intret((int)(*a != *b)));
-ICOMMANDN(<, lt, "ii", (int *a, int *b), intret((int)(*a < *b)));
-ICOMMANDN(>, gt, "ii", (int *a, int *b), intret((int)(*a > *b)));
-ICOMMANDN(<=, lteq, "ii", (int *a, int *b), intret((int)(*a <= *b)));
-ICOMMANDN(>=, gteq, "ii", (int *a, int *b), intret((int)(*a >= *b)));
-ICOMMANDN(=f, eqf, "ff", (float *a, float *b), intret((int)(*a == *b)));
-ICOMMANDN(!=f, neqf, "ff", (float *a, float *b), intret((int)(*a != *b)));
-ICOMMANDN(<f, ltf, "ff", (float *a, float *b), intret((int)(*a < *b)));
-ICOMMANDN(>f, gtf, "ff", (float *a, float *b), intret((int)(*a > *b)));
-ICOMMANDN(<=f, lteqf, "ff", (float *a, float *b), intret((int)(*a <= *b)));
-ICOMMANDN(>=f, gteqf, "ff", (float *a, float *b), intret((int)(*a >= *b)));
-ICOMMANDN(^, xora, "ii", (int *a, int *b), intret(*a ^ *b));
-ICOMMANDN(!, anda, "i", (int *a), intret(*a == 0));
-ICOMMANDN(&, bita, "ii", (int *a, int *b), intret(*a & *b));
-ICOMMANDN(|, orba, "ii", (int *a, int *b), intret(*a | *b));
-ICOMMANDN(~, nota, "i", (int *a), intret(~*a));
-ICOMMANDN(^~, notx, "ii", (int *a, int *b), intret(*a ^ ~*b));
-ICOMMANDN(&~, notb, "ii", (int *a, int *b), intret(*a & ~*b));
-ICOMMANDN(|~, noto, "ii", (int *a, int *b), intret(*a | ~*b));
-ICOMMANDN(<<, lsft, "ii", (int *a, int *b), intret(*a << *b));
-ICOMMANDN(>>, rsft, "ii", (int *a, int *b), intret(*a >> *b));
-ICOMMANDN(&&, and, "V", (char **args, int *numargs),
+ICOMMANDN(0, +, add, "ii", (int *a, int *b), intret(*a + *b));
+ICOMMANDN(0, *, mul, "ii", (int *a, int *b), intret(*a * *b));
+ICOMMANDN(0, -, sub, "ii", (int *a, int *b), intret(*a - *b));
+ICOMMANDN(0, +f, addf, "ff", (float *a, float *b), floatret(*a + *b));
+ICOMMANDN(0, *f, mulf, "ff", (float *a, float *b), floatret(*a * *b));
+ICOMMANDN(0, -f, subf, "ff", (float *a, float *b), floatret(*a - *b));
+ICOMMANDN(0, =, eq, "ii", (int *a, int *b), intret((int)(*a == *b)));
+ICOMMANDN(0, !=, neq, "ii", (int *a, int *b), intret((int)(*a != *b)));
+ICOMMANDN(0, <, lt, "ii", (int *a, int *b), intret((int)(*a < *b)));
+ICOMMANDN(0, >, gt, "ii", (int *a, int *b), intret((int)(*a > *b)));
+ICOMMANDN(0, <=, lteq, "ii", (int *a, int *b), intret((int)(*a <= *b)));
+ICOMMANDN(0, >=, gteq, "ii", (int *a, int *b), intret((int)(*a >= *b)));
+ICOMMANDN(0, =f, eqf, "ff", (float *a, float *b), intret((int)(*a == *b)));
+ICOMMANDN(0, !=f, neqf, "ff", (float *a, float *b), intret((int)(*a != *b)));
+ICOMMANDN(0, <f, ltf, "ff", (float *a, float *b), intret((int)(*a < *b)));
+ICOMMANDN(0, >f, gtf, "ff", (float *a, float *b), intret((int)(*a > *b)));
+ICOMMANDN(0, <=f, lteqf, "ff", (float *a, float *b), intret((int)(*a <= *b)));
+ICOMMANDN(0, >=f, gteqf, "ff", (float *a, float *b), intret((int)(*a >= *b)));
+ICOMMANDN(0, ^, xora, "ii", (int *a, int *b), intret(*a ^ *b));
+ICOMMANDN(0, !, anda, "i", (int *a), intret(*a == 0));
+ICOMMANDN(0, &, bita, "ii", (int *a, int *b), intret(*a & *b));
+ICOMMANDN(0, |, orba, "ii", (int *a, int *b), intret(*a | *b));
+ICOMMANDN(0, ~, nota, "i", (int *a), intret(~*a));
+ICOMMANDN(0, ^~, notx, "ii", (int *a, int *b), intret(*a ^ ~*b));
+ICOMMANDN(0, &~, notb, "ii", (int *a, int *b), intret(*a & ~*b));
+ICOMMANDN(0, |~, noto, "ii", (int *a, int *b), intret(*a | ~*b));
+ICOMMANDN(0, <<, lsft, "ii", (int *a, int *b), intret(*a << *b));
+ICOMMANDN(0, >>, rsft, "ii", (int *a, int *b), intret(*a >> *b));
+ICOMMANDN(0, &&, and, "V", (char **args, int *numargs),
 {
     int val = 1;
     loopi(*numargs) { val = execute(args[i]); if(!val) break; }
     intret(val);
 });
-ICOMMANDN(||, or, "V", (char **args, int *numargs),
+ICOMMANDN(0, ||, or, "V", (char **args, int *numargs),
 {
     int val = 0;
     loopi(*numargs) { val = execute(args[i]); if(val) break; }
     intret(val);
 });
 
-ICOMMAND(div, "ii", (int *a, int *b), intret(*b ? *a / *b : 0));
-ICOMMAND(mod, "ii", (int *a, int *b), intret(*b ? *a % *b : 0));
-ICOMMAND(divf, "ff", (float *a, float *b), floatret(*b ? *a / *b : 0));
-ICOMMAND(modf, "ff", (float *a, float *b), floatret(*b ? fmod(*a, *b) : 0));
-ICOMMAND(min, "ii", (int *a, int *b), intret(min(*a, *b)));
-ICOMMAND(max, "ii", (int *a, int *b), intret(max(*a, *b)));
-ICOMMAND(minf, "ff", (float *a, float *b), floatret(min(*a, *b)));
-ICOMMAND(maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
+ICOMMAND(0, div, "ii", (int *a, int *b), intret(*b ? *a / *b : 0));
+ICOMMAND(0, mod, "ii", (int *a, int *b), intret(*b ? *a % *b : 0));
+ICOMMAND(0, divf, "ff", (float *a, float *b), floatret(*b ? *a / *b : 0));
+ICOMMAND(0, modf, "ff", (float *a, float *b), floatret(*b ? fmod(*a, *b) : 0));
+ICOMMAND(0, min, "ii", (int *a, int *b), intret(min(*a, *b)));
+ICOMMAND(0, max, "ii", (int *a, int *b), intret(max(*a, *b)));
+ICOMMAND(0, minf, "ff", (float *a, float *b), floatret(min(*a, *b)));
+ICOMMAND(0, maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
 
-ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
-ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
-ICOMMAND(strcasecmp, "ss", (char *a, char *b), intret(strcasecmp(a,b)==0));
-ICOMMAND(strncmp, "ssi", (char *a, char *b, int *n), intret(strncmp(a,b,*n)==0));
-ICOMMAND(strncasecmp, "ssi", (char *a, char *b, int *n), intret(strncasecmp(a,b,*n)==0));
-ICOMMAND(echo, "C", (char *s), conoutft(CON_MESG, "%s", s));
-ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
-ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
+ICOMMAND(0, rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
+ICOMMAND(0, strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
+ICOMMAND(0, strcasecmp, "ss", (char *a, char *b), intret(strcasecmp(a,b)==0));
+ICOMMAND(0, strncmp, "ssi", (char *a, char *b, int *n), intret(strncmp(a,b,*n)==0));
+ICOMMAND(0, strncasecmp, "ssi", (char *a, char *b, int *n), intret(strncasecmp(a,b,*n)==0));
+ICOMMAND(0, echo, "C", (char *s), conoutft(CON_MESG, "%s", s));
+ICOMMAND(0, strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
+ICOMMAND(0, strlen, "s", (char *s), intret(strlen(s)));
 
 char *strreplace(const char *s, const char *oldval, const char *newval)
 {
@@ -1093,7 +1093,7 @@ char *strreplace(const char *s, const char *oldval, const char *newval)
 	}
 }
 
-ICOMMAND(strreplace, "sss", (char *a, char *b, char *c), commandret = strreplace(a, b, c));
+ICOMMAND(0, strreplace, "sss", (char *a, char *b, char *c), commandret = strreplace(a, b, c));
 
 struct sleepcmd
 {
@@ -1112,7 +1112,7 @@ void addsleep(int *msec, char *cmd)
 	s.flags = (overrideidents ? IDF_OVERRIDE : 0)|(worldidents ? IDF_WORLD : 0);
 }
 
-ICOMMAND(sleep, "is", (int *a, char *b), addsleep(a, b));
+ICOMMAND(0, sleep, "is", (int *a, char *b), addsleep(a, b));
 
 void checksleep(int millis)
 {
@@ -1148,7 +1148,7 @@ void clearsleep(bool clearoverrides, bool clearworlds)
 	sleepcmds.setsize(len);
 }
 
-ICOMMAND(clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideidents, *b!=0 || worldidents));
-ICOMMAND(exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
-ICOMMAND(getmillis, "", (), intret(lastmillis));
+ICOMMAND(0, clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideidents, *b!=0 || worldidents));
+ICOMMAND(0, exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
+ICOMMAND(0, getmillis, "", (), intret(lastmillis));
 

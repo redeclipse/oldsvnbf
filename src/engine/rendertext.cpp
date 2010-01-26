@@ -1,6 +1,6 @@
 #include "engine.h"
 
-VARP(blinkingtext, 0, 1, 1);
+VAR(IDF_PERSIST, blinkingtext, 0, 1, 1);
 
 static hashtable<const char *, font> fonts;
 static font *fontdef = NULL;
@@ -40,8 +40,8 @@ void fontchar(int *x, int *y, int *w, int *h)
 	c.h = *h ? *h : fontdef->defaulth;
 }
 
-COMMANDN(font, newfont, "ssiiiiii");
-COMMAND(fontchar, "iiii");
+COMMANDN(0, font, newfont, "ssiiiiii");
+COMMAND(0, fontchar, "iiii");
 
 bool setfont(const char *name)
 {
@@ -76,7 +76,7 @@ void tabify(const char *str, int *numtabs)
     result(tabbed.getbuf());
 }
 
-COMMAND(tabify, "si");
+COMMAND(0, tabify, "si");
 
 int draw_textf(const char *fstr, int left, int top, ...)
 {
