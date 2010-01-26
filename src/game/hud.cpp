@@ -1544,7 +1544,7 @@ namespace hud
 				drawslice(0, 1, ix, iy, is);
 				drawslice(0, 1, ix, iy, is*2/3);
 				glColor4f(r, g, b, fade);
-				if(physics::sprinting(game::focus, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix, iy, is);
+				if(physics::sprinting(game::focus, false, false)) drawslice(((lastmillis-game::focus->actiontime[AC_SPRINT])%1000)/1000.f, 0.1f, ix, iy, is);
 				else drawslice(1-len, len, ix, iy, is);
 				drawslice(1-len, len, ix, iy, is*2/3);
 				if(game::focus == game::player1 && inventoryimpulse >= 2)

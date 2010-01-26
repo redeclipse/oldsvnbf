@@ -166,16 +166,21 @@ namespace physics
 		return false;
 	}
 
-	bool sprinting(physent *d, bool turn, bool move)
+	bool sprinting(physent *d, bool last, bool turn, bool move)
 	{
-		if(PHYS(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI) && !iscrouching(d))
+		if(PHYS(impulsestyle) && (d->type == ENT_PLAYER || d->type == ENT_AI))
 		{
-			if(turn && ((gameent *)d)->turnside) return true;
-			if((d != game::player1 && !((gameent *)d)->ai) || !PHYS(impulsemeter) || ((gameent *)d)->impulse[IM_METER] < PHYS(impulsemeter))
+			gameent *e = (gameent *)d;
+			if(last && e->lastsprint && lastmillis-e->lastsprint <= PHYSMILLIS*2) return true;
+			if(!iscrouching(d))
 			{
-				bool value = ((gameent *)d)->action[AC_SPRINT];
-				if(d == game::player1 && sprintstyle >= 3) value = !value;
-				if(value && (!move || d->move || d->strafe)) return true;
+				if(turn && e->turnside) return true;
+				if((d != game::player1 && !e->ai) || !PHYS(impulsemeter) || e->impulse[IM_METER] < PHYS(impulsemeter))
+				{
+					bool value = e->action[AC_SPRINT];
+					if(d == game::player1 && sprintstyle >= 3) value = !value;
+					if(value && (!move || d->move || d->strafe)) return true;
+				}
 			}
 		}
 		return false;
@@ -254,7 +259,7 @@ namespace physics
 			{
 				float speed = PHYS(movespeed);
 				if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= PHYS(movecrawl);
-				if(physics::sprinting(d, false)) speed += PHYS(impulsespeed)*(d->move < 0 ? 0.5f : 1);
+				if(physics::sprinting(d, false, false)) speed += PHYS(impulsespeed)*(d->move < 0 ? 0.5f : 1);
 				return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
 			}
 		}
@@ -604,7 +609,11 @@ namespace physics
 			bool onfloor = d->physstate >= PHYS_SLOPE || d->onladder || liquidcheck(d);
 			if(millis && PHYS(impulsestyle))
 			{
-				if(sprinting(d) && canimpulse(d, millis)) d->impulse[IM_METER] += millis;
+				if(sprinting(d) && canimpulse(d, millis))
+				{
+					d->impulse[IM_METER] += millis;
+					d->lastsprint = lastmillis;
+				}
 				else if(d->impulse[IM_METER] > 0 && PHYS(impulseregen) > 0)
 				{
 					int timeslice = max(int(millis*PHYS(impulseregen)), 1);
@@ -760,7 +769,7 @@ namespace physics
 		else
 		{
 			bool floor = pl->physstate >= PHYS_SLOPE;
-			if(floor && sprinting(pl)) floor = false;
+			if(floor && sprinting(pl, true)) floor = false;
 			float curb = floor ? PHYS(floorcurb) : PHYS(aircurb), fric = pl->inliquid ? liquidmerge(pl, curb, PHYS(liquidcurb)) : curb;
 			pl->vel.lerp(d, pl->vel, pow(max(1.0f - 1.0f/fric, 0.0f), millis/20.0f));
 		}
