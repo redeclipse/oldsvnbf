@@ -1098,7 +1098,7 @@ namespace game
         {
         	case PT_TEXT: case PT_ICON:
         	{
-        		vec q = p->owner->abovehead(); q.z = p->o.z;
+        		vec q = p->owner->abovehead(p->m.z+4);
 				float k = pow(aboveheadsmooth, float(curtime)/float(aboveheadsmoothmillis));
 				p->o.mul(k).add(q.mul(1-k));
         		break;

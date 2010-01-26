@@ -219,7 +219,7 @@ enum
 
 struct particle
 {
-    vec o, d;
+    vec o, d, m;
     int collide, fade, grav, millis;
     bvec color;
     uchar flags;

@@ -70,8 +70,8 @@ struct partrenderer
 	//blend = 0 => remove it
 	void calc(particle *p, int &blend, int &ts, bool lastpass = true)
 	{
-		vec o = p->o;
 		game::particletrack(p, type, ts, lastpass);
+		vec o = p->o;
 		if(p->fade <= 5)
 		{
 			ts = 1;
@@ -103,6 +103,7 @@ struct partrenderer
 					blend = 0;
 				}
 			}
+			else p->m.add(vec(p->o).sub(o));
 		}
 	}
 };
@@ -180,6 +181,7 @@ struct listrenderer : partrenderer
 		p->next = list;
 		list = p;
 		p->o = o;
+		p->m = vec(0, 0, 0);
 		p->d = d;
 		p->fade = fade;
 		p->millis = lastmillis;
@@ -583,6 +585,7 @@ struct varenderer : partrenderer
 		particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
 		p->o = o;
 		p->d = d;
+		p->m = vec(0, 0, 0);
 		p->fade = fade;
 		p->millis = lastmillis;
 		p->color = bvec(color>>16, (color>>8)&0xFF, color&0xFF);
