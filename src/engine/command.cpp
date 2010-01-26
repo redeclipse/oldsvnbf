@@ -227,6 +227,16 @@ int getvar(const char *name)
 	GETVAR(id, name, 0);
 	return *id->storage.i;
 }
+int getvartype(const char *name)
+{
+	GETVAR(id, name, 0);
+	return id->type;
+}
+int getvarflags(const char *name)
+{
+	GETVAR(id, name, 0);
+	return id->flags;
+}
 int getvarmin(const char *name)
 {
 	GETVAR(id, name, 0);
@@ -237,6 +247,12 @@ int getvarmax(const char *name)
 	GETVAR(id, name, 0);
 	return id->maxval;
 }
+ICOMMAND(0, getvar, "s", (char *n), intret(getvar(n)));
+ICOMMAND(0, getvartype, "s", (char *n), intret(getvartype(n)));
+ICOMMAND(0, getvarflags, "s", (char *n), intret(getvarflags(n)));
+ICOMMAND(0, getvarmin, "s", (char *n), intret(getvarmin(n)));
+ICOMMAND(0, getvarmax, "s", (char *n), intret(getvarmax(n)));
+
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
 
@@ -1152,3 +1168,17 @@ ICOMMAND(0, clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideiden
 ICOMMAND(0, exists, "ss", (char *a, char *b), intret(fileexists(a, *b ? b : "r")));
 ICOMMAND(0, getmillis, "", (), intret(lastmillis));
 
+void getvariable(int num)
+{
+	mkstring(text); num--;
+	vector<ident *> ids;
+	enumerate(*idents, ident, id, ids.add(&id));
+	if(ids.inrange(num))
+	{
+		ids.sort(sortidents);
+		formatstring(text)("%s", ids[num]->name);
+	}
+	else formatstring(text)("%d", ids.length());
+	result(text);
+}
+ICOMMAND(0, getvariable, "s", (int *n), getvariable(*n));
