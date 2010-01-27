@@ -107,7 +107,7 @@ GFVAR(0, forcegravity, -1, -1, 1000);
 GFVAR(0, forcejumpspeed, -1, -1, 1000);
 GFVAR(0, forcemovespeed, -1, -1, 1000);
 GFVAR(0, forcemovecrawl, -1, -1, 1000);
-GFVAR(0, forceimpulsespeed, -1, -1, 1000);
+GFVAR(0, forceimpulsespeed, -1, 40, 1000);
 
 GVAR(0, forceimpulsestyle, -1, -1, 3);
 GVAR(0, forceimpulsemeter, -1, 60000, INT_MAX-1);
