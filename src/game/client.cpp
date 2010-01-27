@@ -488,18 +488,16 @@ namespace client
 			{
 				case ID_COMMAND: case ID_CCOMMAND:
 				{
+#if 0 // these shouldn't get here
 					string s;
 					formatstring(s)("%s %s", cmd, arg);
-					if(d) conoutft(CON_MESG, "\fg%s executed %s", game::colorname(d), cmd);
-					else
+					char *ret = executeret(s);
+					if(ret)
 					{
-						char *ret = executeret(s);
-						if(ret)
-						{
-							conoutft(CON_MESG, "\fg%s: %s", cmd, ret);
-							delete[] ret;
-						}
+						conoutft(CON_MESG, "\fg%s: %s", cmd, ret);
+						delete[] ret;
 					}
+#endif
 					return;
 				}
 				case ID_VAR:

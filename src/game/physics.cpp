@@ -5,7 +5,7 @@ namespace physics
 	FVAR(IDF_WORLD, jumpspeed,			0, 50.f, 1000);			// extra velocity to add when jumping
 	FVAR(IDF_WORLD, movespeed,			0, 50.f, 1000);			// speed
 	FVAR(IDF_WORLD, movecrawl,			0, 0.5f, 1000);			// crawl modifier
-	FVAR(IDF_WORLD, impulsespeed,		0, 50.f, 1000);			// extra velocity to add when impulsing
+	FVAR(IDF_WORLD, impulsespeed,		0, 40.f, 1000);			// extra velocity to add when impulsing
 
 	VAR(IDF_WORLD, impulsestyle,		0, 1, 3);				// impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 	VAR(IDF_WORLD, impulsemeter,		0, 60000, INT_MAX-1);	// impulse dash length; 0 = unlimited, anything else = timer
