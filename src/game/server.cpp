@@ -2938,7 +2938,7 @@ namespace server
         if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
         if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
-        if(checkipinfo(bans, ip) && !checkipinfo(allows, ip, true)) return DISC_IPBAN;
+        if(checkipinfo(bans, ip) && !checkipinfo(allows, ip)) return DISC_IPBAN;
         if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
         return DISC_NONE;
     }
@@ -3809,7 +3809,7 @@ namespace server
 					if(haspriv(ci, PRIV_MASTER, "clear bans"))
 					{
 						loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
-						srvoutf(3, "cleared bans");
+						srvoutf(3, "\fccleared existing bans");
 					}
 					break;
 				}
