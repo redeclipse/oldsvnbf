@@ -486,21 +486,22 @@ namespace client
 			val[0] = 0;
 			switch(id->type)
 			{
-#if 0 // these shouldn't get here
-				case ID_COMMAND:
-				case ID_COMMAND:
+				case ID_COMMAND: case ID_CCOMMAND:
 				{
 					string s;
 					formatstring(s)("%s %s", cmd, arg);
-					char *ret = executeret(s);
-					if(ret)
+					if(d) conoutft(CON_MESG, "\fg%s executed %s", game::colorname(d), cmd);
+					else
 					{
-						conoutft(CON_MESG, "\fg%s: %s", cmd, ret);
-						delete[] ret;
+						char *ret = executeret(s);
+						if(ret)
+						{
+							conoutft(CON_MESG, "\fg%s: %s", cmd, ret);
+							delete[] ret;
+						}
 					}
 					return;
 				}
-#endif
 				case ID_VAR:
 				{
 					int ret = atoi(arg);

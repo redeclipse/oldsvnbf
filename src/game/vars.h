@@ -32,6 +32,10 @@ GSVAR(IDF_ADMIN, mctfmaps, "deadsimple enigma oasis refuge");
 GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator mirage nova oasis panic refuge rivals smouldering tower warground venus");
 GSVAR(IDF_ADMIN, trialmaps, "testchamber");
 GSVAR(IDF_ADMIN, storymaps, "wishbone storytest");
+
+GICOMMAND(0, resetvars, "", (), server::resetgamevars(true), return);
+GICOMMAND(IDF_ADMIN, resetconfig, "", (), rehash(true), );
+
 GVAR(0, maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 
 GVAR(0, maxcarry, 1, 2, WEAP_MAX-1);

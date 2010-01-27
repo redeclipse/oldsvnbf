@@ -140,7 +140,7 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define COMMANDN(flags, name, fun, nargs) static bool __dummy_##fun = addcommand(#name, (void (*)())fun, nargs, flags|IDF_COMPLETE)
 #define COMMAND(flags, name, nargs) COMMANDN(flags, name, name, nargs)
 
-#define _VAR(name, global, min, cur, max, flags)  int global = variable(#name, min, cur, max, &global, NULL, flags|IDF_COMPLETE)
+#define _VAR(name, global, min, cur, max, flags) int global = variable(#name, min, cur, max, &global, NULL, flags|IDF_COMPLETE)
 #define VARN(flags, name, global, min, cur, max) _VAR(name, global, min, cur, max, flags)
 #define VAR(flags, name, min, cur, max) _VAR(name, name, min, cur, max, flags)
 #define _VARF(name, global, min, cur, max, body, flags)  void var_##name(); int global = variable(#name, min, cur, max, &global, var_##name, flags|IDF_COMPLETE); void var_##name() { body; }
@@ -222,10 +222,10 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define IDF_GAME IDF_CLIENT
 #define GAME(name) (name)
 #define PHYS(name) (force##name >= 0 ? force##name : physics::name)
-#define GICOMMAND(flags, n, g, proto, b) _COMMAND(ID_COMMAND, , n, n, g, proto, b, flags|IDF_GAME)
-#define GICOMMANDN(flags, n, name, g, proto, b) _COMMAND(ID_COMMAND, , n, name, g, proto, b, flags|IDF_GAME)
-#define GCCOMMAND(flags, n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, b, flags|IDF_GAME)
-#define GCCOMMANDN(flags, n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b, flags|IDF_GAME)
+#define GICOMMAND(flags, n, g, proto, svbody, ccbody) _COMMAND(ID_COMMAND, , n, n, g, proto, ccbody, flags|IDF_GAME)
+#define GICOMMANDN(flags, n, name, g, proto, svbody, ccbody) _COMMAND(ID_COMMAND, , n, name, g, proto, ccbody, flags|IDF_GAME)
+#define GCCOMMAND(flags, n, g, proto, svbody, ccbody) _COMMAND(ID_CCOMMAND, (this), n, n, g, proto, ccbody, flags|IDF_GAME)
+#define GCCOMMANDN(flags, n, name, g, proto, svbody, ccbody) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, ccbody, flags|IDF_GAME)
 #define GVARN(flags, name, global, min, cur, max) _VAR(name, global, min, cur, max, flags|IDF_GAME)
 #define GVAR(flags, name, min, cur, max) _VAR(name, name, min, cur, max, flags|IDF_GAME)
 #define GVARF(flags, name, min, cur, max, svbody, ccbody) _VARF(name, name, min, cur, max, ccbody, flags|IDF_GAME)
@@ -238,10 +238,10 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #elif defined(GAMESERVER)
 #define GAME(name) (sv_##name)
 #define IDF_GAME IDF_SERVER
-#define GICOMMAND(flags, n, g, proto, b) _COMMAND(ID_COMMAND, , sv_##n, sv_##n, g, proto, b, flags|IDF_GAME)
-#define GICOMMANDN(flags, n, name, g, proto, b) _COMMAND(ID_COMMAND, , sv_##n, name, g, proto, b, flags|IDF_GAME)
-#define GCCOMMAND(flags, n, g, proto, b) _COMMAND(ID_CCOMMAND, (this), sv_##n, sv_##n, g, proto, b, flags|IDF_GAME)
-#define GCCOMMANDN(flags, n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), sv_##n, name, g, proto, b, flags|IDF_GAME)
+#define GICOMMAND(flags, n, g, proto, svbody, ccbody) _COMMAND(ID_COMMAND, , sv_##n, sv_##n, g, proto, svbody, flags|IDF_GAME)
+#define GICOMMANDN(flags, n, name, g, proto, svbody, ccbody) _COMMAND(ID_COMMAND, , sv_##n, name, g, proto, svbody, flags|IDF_GAME)
+#define GCCOMMAND(flags, n, g, proto, svbody, ccbody) _COMMAND(ID_CCOMMAND, (this), sv_##n, sv_##n, g, proto, svbody, flags|IDF_GAME)
+#define GCCOMMANDN(flags, n, name, g, proto, svbody, ccbody) _COMMAND(ID_CCOMMAND, (this), sv_##n, name, g, proto, svbody, flags|IDF_GAME)
 #define GVARN(flags, name, global, min, cur, max) _VAR(sv_##name, global, min, cur, max, flags|IDF_GAME)
 #define GVAR(flags, name, min, cur, max) _VAR(sv_##name, sv_##name, min, cur, max, flags|IDF_GAME)
 #define GVARF(flags, name, min, cur, max, svbody, ccbody) _VARF(sv_##name, sv_##name, min, cur, max, svbody, flags|IDF_GAME)
@@ -254,6 +254,10 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #else
 #define GAME(name) (name)
 #define PHYS(name) (force##name >= 0 ? force##name : physics::name)
+#define GICOMMAND(flags, n, g, proto, svbody, ccbody)
+#define GICOMMANDN(flags, n, name, g, proto, svbody, ccbody)
+#define GCCOMMAND(flags, n, g, proto, svbody, ccbody)
+#define GCCOMMANDN(flags, n, name, g, proto, svbody, ccbody)
 #define GVARN(flags, name, global, min, cur, max) extern int name
 #define GVAR(flags, name, min, cur, max) extern int name
 #define GVARF(flags, name, min, cur, max, svbody, ccbody) extern int name

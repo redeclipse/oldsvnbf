@@ -406,8 +406,6 @@ namespace server
 		});
 		execfile("servexec.cfg", false);
 	}
-	GICOMMAND(0, resetvars, "", (), resetgamevars(true));
-	GICOMMAND(0, resetconfig, "", (), rehash(true));
 
 	const char *pickmap(const char *suggest, int mode, int muts)
 	{

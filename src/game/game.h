@@ -880,6 +880,13 @@ struct gamestate
 	}
 };
 
+namespace server
+{
+	extern void resetgamevars(bool flush);
+	extern void stopdemo();
+	extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
+}
+
 #if !defined(GAMESERVER) && !defined(STANDALONE)
 struct gameentity : extentity
 {
@@ -1204,12 +1211,6 @@ struct projent : dynent
 		return false;
 	}
 };
-
-namespace server
-{
-	extern void stopdemo();
-	extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
-}
 
 namespace client
 {
