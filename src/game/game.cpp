@@ -14,9 +14,6 @@ namespace game
 	vector<gameent *> players;
 	vector<camstate> cameras;
 
-	GICOMMAND(0, resetvars, "", (), return); // server side
-	GICOMMAND(0, resetconfig, "", (), return); // server side
-
 	VAR(IDF_WORLD, numplayers, 0, 0, MAXCLIENTS);
 	SVAR(IDF_WORLD, obitwater, "");
 	SVAR(IDF_WORLD, obitdeath, "");
