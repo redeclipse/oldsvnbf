@@ -69,7 +69,7 @@ char *printipinfo(const ipinfo &info, char *buf)
 
 bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global)
 {
-    loopv(info) if((!global || info[i].time < 0) && (host & info[i].mask) == info[i].ip) return true;
+    loopv(info) if((!global || info[i].time < 0) && ((host & info[i].mask) == info[i].ip)) return true;
     return false;
 }
 
@@ -286,8 +286,8 @@ void cleanupserver()
 
 void reloadserver()
 {
-	loopv(bans) if(bans[i].time < 0) bans.remove(i--);
-	loopv(allows) if(allows[i].time < 0) allows.remove(i--);
+	loopv(bans) if(bans[i].time == -1) bans.remove(i--);
+	loopv(allows) if(allows[i].time == -1) allows.remove(i--);
 }
 
 void process(ENetPacket *packet, int sender, int chan);
