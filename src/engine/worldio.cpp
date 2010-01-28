@@ -1313,7 +1313,7 @@ void writeobj(char *name)
     {
         Slot &slot = lookuptexture(usedslots[i], false);
         f->printf("newmtl slot%d\n", usedslots[i]);
-        f->printf("map_Kd %s\n", slot.sts.empty() ? notexture->name : findfile(slot.sts[0].name, "r"));
+        f->printf("map_Kd %s\n", findfile(slot.sts.empty() ? notexture->name : slot.sts[0].name, "r"));
         f->printf("\n");
     }
     delete f;
