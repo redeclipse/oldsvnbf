@@ -1205,6 +1205,7 @@ void writeobj(char *name)
     extern vector<vtxarray *> valist;
     vector<vec2> texcoords;
     vector<int> usedslots;
+    int totalverts = 0;
     loopv(valist)
     {
         vtxarray &va = *valist[i];
@@ -1216,8 +1217,8 @@ void writeobj(char *name)
         loopj(va.verts)
         {
             vec v;
-            if(floatvtx) (v = *(vec *)vert).div(1<<VVEC_FRAC);
-            else v = ((vvec *)vert)->tovec(va.o).add(0x8000>>VVEC_FRAC);
+            if(floatvtx) (v = *(const vec *)vert).div(1<<VVEC_FRAC);
+            else v = ((const vvec *)vert)->bias(0x8000).tovec(va.o);
             if(v.y != floor(v.y)) f->printf("v %.3f ", -v.y); else f->printf("v %d ", int(-v.y));
             if(v.z != floor(v.z)) f->printf("%.3f ", v.z); else f->printf("%d ", int(v.z));
             if(v.x != floor(v.x)) f->printf("%.3f\n", v.x); else f->printf("%d\n", int(v.x));
@@ -1226,7 +1227,7 @@ void writeobj(char *name)
         texcoords.setsizenodelete(0);
         loopj(va.verts) texcoords.add(vec2(0, 0));
         ushort *idx = edata;
-        ivec origin = floatvtx ? ivec(0, 0, 0) : ivec(va.o).mask(~VVEC_INT_MASK).add(0x8000>>VVEC_FRAC);
+        ivec origin = floatvtx ? ivec(0, 0, 0) : ivec(va.o).mask(~VVEC_INT_MASK);
         loopj(va.texs)
         {
             elementset &es = va.eslist[j];
@@ -1262,7 +1263,6 @@ void writeobj(char *name)
                 loopk(len)
                 {
                     int n = *idx++ - va.voffset;
-                    if(!texcoords.inrange(n)) *(int *)0 = 0;
                     if(floatvtx)
                     {
                         const vec &v = *(const vec *)&vdata[n*vtxsize];
@@ -1270,7 +1270,7 @@ void writeobj(char *name)
                     }
                     else
                     {
-                        const vvec &v = *(const vvec *)&vdata[n*vtxsize];
+                        vvec v = ((const vvec *)&vdata[n*vtxsize])->bias(0x8000);
                         texcoords[n] = vec2(v.dot(sgen), v.dot(tgen));
                     }
                 }
@@ -1295,11 +1295,12 @@ void writeobj(char *name)
             loopl(es.length[5]/3)
             {
                 f->printf("f");
-                loopk(3) f->printf(" %d/%d", tri[2-k]-va.verts-va.voffset, tri[2-k]-va.verts-va.voffset);
+                loopk(3) f->printf(" %d/%d", totalverts+1+tri[2-k]-va.voffset, totalverts+1+tri[2-k]-va.voffset);
                 tri += 3;
                 f->printf("\n");
             }
         }
+        totalverts += va.verts;
         f->printf("\n");
         delete[] edata;
         delete[] vdata;
