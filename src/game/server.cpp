@@ -1630,7 +1630,7 @@ namespace server
 
 	void spectator(clientinfo *ci, int sender = -1)
 	{
-		if(!ci) return;
+		if(!ci || ci->state.aitype >= 0) return;
 		ci->state.state = CS_SPECTATOR;
 		sendf(sender, 1, "ri3", SV_SPECTATOR, ci->clientnum, 1);
 		setteam(ci, TEAM_NEUTRAL, false, true);
@@ -3354,8 +3354,7 @@ namespace server
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!hasclient(cp, ci)) break;
-					if(!allowstate(cp, 1)) { spectator(cp); break; }
+					if(!hasclient(cp, ci) || !allowstate(cp, 1)) break;
 					if(!ci->clientmap[0] && !ci->mapcrc)
 					{
 						ci->mapcrc = -1;
@@ -3394,8 +3393,7 @@ namespace server
 				{
 					int lcn = getint(p);
 					clientinfo *cp = (clientinfo *)getinfo(lcn);
-					if(!hasclient(cp, ci)) break;
-					if(!allowstate(cp, 2)) { spectator(cp); break; }
+					if(!hasclient(cp, ci) || !allowstate(cp, 2)) break;
 					cp->state.lastrespawn = -1;
 					cp->state.state = CS_ALIVE;
 					if(smode) smode->spawned(cp);

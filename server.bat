@@ -1,7 +1,7 @@
 @ECHO OFF
 
 set BF_DIR=.
-set BF_OPTIONS=-sc8
+set BF_OPTIONS=
 
 IF EXIST bin\bfserver.exe (
 	bin\bfserver.exe %BF_OPTIONS% %* 
