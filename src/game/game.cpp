@@ -83,8 +83,8 @@ namespace game
 	VAR(IDF_PERSIST, showteamabovehead, 0, 1, 3);
 	VAR(IDF_PERSIST, showdamageabovehead, 0, 0, 3);
 	FVAR(IDF_PERSIST, aboveheadblend, 0.f, 0.75f, 1.f);
-	FVAR(0, aboveheadsmooth, 0, 0.5f, 1);
-	VAR(0, aboveheadsmoothmillis, 1, 200, 10000);
+	FVAR(IDF_PERSIST, aboveheadsmooth, 0, 0.5f, 1);
+	VAR(IDF_PERSIST, aboveheadsmoothmillis, 1, 200, 10000);
 	VAR(IDF_PERSIST, aboveheadfade, 500, 5000, INT_MAX-1);
 
 	VAR(IDF_PERSIST, showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
