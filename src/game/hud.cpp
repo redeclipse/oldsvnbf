@@ -1391,7 +1391,7 @@ namespace hud
 					meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, grenadetex
 				};
 				int sweap = m_weapon(game::gamemode, game::mutators);
-				loopi(WEAP_MAX) if(game::focus->hasweap(i, sweap) || lastmillis-game::focus->weaplast[i] <= game::focus->weapwait[i])
+				loopi(WEAP_MAX) if(game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i])
 				{
 					if(y-sy-s < m) break;
 					float fade = blend*inventoryblend, size = s, skew = 0.f;
@@ -1401,7 +1401,7 @@ namespace hud
 						if(i != game::focus->weapselect) skew = game::focus->hasweap(i, sweap) ? 1.f-(amt*(1.f-inventoryskew)) : 1.f-amt;
 						else skew = game::focus->weapstate[i] == WEAP_S_PICKUP ? amt : inventoryskew+(amt*(1.f-inventoryskew));
 					}
-					else if(game::focus->hasweap(i, sweap)) skew = i != game::focus->weapselect ? inventoryskew : 1.f;
+					else if(game::focus->hasweap(i, sweap) || i == game::focus->weapselect) skew = i != game::focus->weapselect ? inventoryskew : 1.f;
 					else continue;
 					bool instate = (i == game::focus->weapselect || game::focus->weapstate[i] != WEAP_S_PICKUP);
 					float r = 1.f, g = 1.f, b = 1.f;
