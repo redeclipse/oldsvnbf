@@ -1650,7 +1650,7 @@ namespace server
 			}
 			case 2: // spawn
 			{
-				if(ci->state.state == CS_SPECTATOR || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
+				if((ci->state.state != CS_DEAD && ci->state.state != CS_WAITING) || (ci->state.lastdeath && gamemillis-ci->state.lastdeath <= DEATHMILLIS)) return false;
 				break;
 			}
 			case 3: return true; // spec
@@ -2072,20 +2072,19 @@ namespace server
         if(!ci) putint(p, 0);
 		else if(!ci->online && m_edit(gamemode) && numclients(ci->clientnum))
 		{
+			loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
 			ci->wantsmap = true;
 			if(!mapsending)
 			{
 				clientinfo *best = choosebestclient();
 				if(best)
 				{
-					loopi(3) if(mapdata[i]) DELETEP(mapdata[i]);
+					srvmsgf(ci->clientnum, "map is being requested, please wait..");
 					sendf(best->clientnum, 1, "ri", SV_GETMAP);
 					mapsending = true;
-					putint(p, 1);
 				}
-				else putint(p, 0);
 			}
-			else putint(p, 1); // already in progress
+			putint(p, 1); // already in progress
 		}
 		else
 		{
@@ -3996,22 +3995,20 @@ namespace server
 					{
 						if(mapdata[0] && mapdata[1] && mapdata[2])
 						{
+							srvmsgf(ci->clientnum, "sending map, please wait..");
 							loopk(3) if(mapdata[k]) sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
 							sendwelcome(ci);
 						}
 						else if(best)
 						{
 							loopk(3) if(mapdata[k]) DELETEP(mapdata[k]);
+							srvmsgf(ci->clientnum, "map is being requested, please wait..");
 							sendf(best->clientnum, 1, "ri", SV_GETMAP);
 							mapsending = true;
 						}
-						else
-						{
-							srvmsgf(ci->clientnum, "there doesn't seem to be anybody to get the map from!");
-							break;
-						}
+						else srvmsgf(ci->clientnum, "there doesn't seem to be anybody to get the map from!");
 					}
-					srvmsgf(ci->clientnum, "map is %s being uploaded, please wait..", mapsending ? "already" : "now");
+					else srvmsgf(ci->clientnum, "map is being uploaded, please be patient..");
 					break;
 				}
 
