@@ -38,6 +38,11 @@ void ircestablish(ircnet *n)
 	if(n->sock == ENET_SOCKET_NULL || connectwithtimeout(n->sock, n->serv, n->address) < 0)
 	{
 		conoutf(n->sock == ENET_SOCKET_NULL ? "could not open socket to %s:[%d]" : "could not connect to %s:[%d]", n->serv, n->port);
+		if(n->sock != ENET_SOCKET_NULL)
+		{
+			enet_socket_destroy(n->sock);
+			n->sock = ENET_SOCKET_NULL;
+		}
 		n->state = IRC_DISC;
 		return;
 	}
