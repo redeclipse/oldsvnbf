@@ -127,8 +127,7 @@ struct gui : guient
 
 	void uibuttons()
 	{
-		cury = -ysize;
-		int x = curx + max(tx, xsize) - guibound[0]/2, y = cury - guibound[1]*2;
+		int x = curx+xsize-guibound[0]/2, y = -ysize-guibound[1]*2;
 		#define uibtn(a,b) \
 		{ \
 			bool hit = false; \
@@ -800,7 +799,7 @@ struct gui : guient
 		}
 		else
 		{
-			if(needsinput && hastitle) uibuttons();
+			//if(needsinput && hastitle) uibuttons();
 			glPopMatrix();
 		}
 		poplist();
@@ -925,6 +924,10 @@ namespace UI
 	{
 		bool p = active(false);
 		if(isopen != p) uimillis = (isopen = p) ? lastmillis : -lastmillis;
+		setsvar("guirollovername", "", true);
+		setsvar("guirolloveraction", "", true);
+		setsvar("guirolloverimgpath", "", true);
+		setsvar("guirolloverimgaction", "", true);
 	}
 
 	void render()
