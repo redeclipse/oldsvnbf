@@ -89,9 +89,9 @@ namespace stf
 				fade *= diff*0.5f;
 			}
 			dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
-			const char *tex = f.hasflag ? hud::arrowtex : hud::flagtex;
+			const char *tex = f.hasflag ? hud::arrowtex : (f.owner == game::focus->team && f.enemy ? hud::alerttex : hud::flagtex);
 			float size = hud::radarflagsize*(f.hasflag ? 2 : 1);
-			if(hud::radarflagnames > (f.hasflag ? 0 : 1))
+			if(hud::radarflagnames >= (f.hasflag ? 1 : 2))
 			{
 				float occupy = !f.owner || f.enemy ? clamp(f.converted/float((!stfstyle && f.owner ? 2 : 1) * stfoccupy), 0.f, 1.f) : 1.f;
 				bool overthrow = f.owner && f.enemy == game::focus->team;
