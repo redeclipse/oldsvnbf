@@ -88,11 +88,12 @@ struct partrenderer
 				float amt = clamp(ts/float(p->fade), 0.f, 1.f);
 				if(type&PT_SHRINK)
 				{
-					if(type&PT_GROW) { if((amt *= 2) > 1) amt = 2-amt; }
-					else amt = 1-amt;
+					if(type&PT_GROW) { if((amt *= 2) > 1) amt = 2-amt; amt *= amt; }
+					else amt = 1-(amt*amt);
 				}
+				else amt *= amt;
 				size = p->size*amt;
-				if(weight) weight += weight*amt*2;
+				if(weight) weight += weight*(p->size-size);
 			}
 			else size = p->size;
 			if(weight)
