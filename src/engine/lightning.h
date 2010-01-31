@@ -81,7 +81,7 @@ struct lightningrenderer : sharedlistrenderer
         setuplightning();
     }
 
-    void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
+    void renderpart(sharedlistparticle *p, int blend, int ts, float size, uchar *color)
     {
         blend = min(blend<<2, 255);
         if(type&PT_MOD) //multiply alpha into color
@@ -96,7 +96,7 @@ struct lightningrenderer : sharedlistrenderer
             ty = 0.5f*((i>>1)&1);
             tsz = 0.5f;
         }
-        renderlightning(p, p->size, tx, ty, tsz);
+        renderlightning(p, size, tx, ty, tsz);
     }
 };
 static lightningrenderer lightnings;
