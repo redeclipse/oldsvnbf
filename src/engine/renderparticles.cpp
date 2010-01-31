@@ -68,7 +68,7 @@ struct partrenderer
 	}
 
 	//blend = 0 => remove it
-	void calc(particle *p, int &blend, int &ts, bool lastpass = true)
+	void calc(particle *p, int &blend, int &ts, float &size, bool lastpass = true)
 	{
 		game::particletrack(p, type, ts, lastpass);
 		vec o = p->o;
@@ -76,18 +76,32 @@ struct partrenderer
 		{
 			ts = 1;
 			blend = 255;
+			size = p->size;
 		}
 		else
 		{
 			ts = lastmillis-p->millis;
-			blend = max(255 - (ts<<8)/p->fade, 0);
-			if(p->grav)
+			blend = max(255-((ts<<8)/p->fade), 0);
+			int weight = p->grav;
+			if(type&PT_SHRINK || type&PT_GROW)
+			{
+				float amt = clamp(ts/float(p->fade), 0.f, 1.f);
+				if(type&PT_SHRINK)
+				{
+					if(type&PT_GROW) { if((amt *= 2) > 1) amt = 2-amt; }
+					else amt = 1-amt;
+				}
+				size = p->size*amt;
+				if(weight) weight += weight*amt*2;
+			}
+			else size = p->size;
+			if(weight)
 			{
 				if(ts > p->fade) ts = p->fade;
 				float secs = curtime/1000.f;
 				vec v = vec(p->d).mul(secs);
 				static physent dummy;
-				dummy.weight = p->grav;
+				dummy.weight = weight;
 				v.z -= physics::gravityforce(&dummy)*secs;
 				p->o.add(v);
 			}
@@ -99,7 +113,7 @@ struct partrenderer
 				if(p->o.z >= collidez+COLLIDEERROR) p->val = collidez+COLLIDEERROR;
 				else
 				{
-					adddecal(p->collide, vec(p->o.x, p->o.y, collidez), vec(o).sub(p->o).normalize(), 2*p->size, p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
+					adddecal(p->collide, vec(p->o.x, p->o.y, collidez), vec(o).sub(p->o).normalize(), 2*size, p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
 					blend = 0;
 				}
 			}
@@ -210,7 +224,7 @@ struct listrenderer : partrenderer
 
 	virtual void startrender() = 0;
 	virtual void endrender() = 0;
-	virtual void renderpart(T *p, int blend, int ts, uchar *color) = 0;
+	virtual void renderpart(T *p, int blend, int ts, float size, uchar *color) = 0;
 
 	void render()
 	{
@@ -220,11 +234,12 @@ struct listrenderer : partrenderer
 		bool lastpass = !reflecting && !refracting;
 		for(T **prev = &list, *p = list; p; p = *prev)
 		{
-			int blend, ts;
-			calc(p, blend, ts, lastpass);
+			int blend = 255, ts = 1;
+			float size = 1;
+			calc(p, blend, ts, size, lastpass);
 			if(blend > 0)
 			{
-				renderpart(p, blend, ts, p->color.v);
+				renderpart(p, blend, ts, size, p->color.v);
 
 				if(p->fade > 5 || !lastpass)
 				{
@@ -270,7 +285,7 @@ struct textrenderer : sharedlistrenderer
 		if(p->text && p->flags&1) delete[] p->text;
 	}
 
-	void renderpart(sharedlistparticle *p, int blend, int ts, uchar *color)
+	void renderpart(sharedlistparticle *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
@@ -281,7 +296,7 @@ struct textrenderer : sharedlistrenderer
 		}
 		glRotatef(camera1->yaw-180, 0, 0, 1);
 		glRotatef(camera1->pitch-90, 1, 0, 0);
-		float scale = p->size/80.0f;
+		float scale = size/80.0f;
 		glScalef(-scale, scale, -scale);
 		const char *text = p->text;
 		static string font; font[0] = 0;
@@ -324,14 +339,14 @@ struct portalrenderer : listrenderer<portal>
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
 	}
 
-	void renderpart(portal *p, int blend, int ts, uchar *color)
+	void renderpart(portal *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glRotatef(p->yaw-180, 0, 0, 1);
 		glRotatef(p->pitch, 1, 0, 0);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 		glBegin(GL_QUADS);
@@ -380,7 +395,7 @@ struct iconrenderer : listrenderer<icon>
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
 	}
 
-	void renderpart(icon *p, int blend, int ts, uchar *color)
+	void renderpart(icon *p, int blend, int ts, float size, uchar *color)
 	{
 		if(p->tex != lasttex)
 		{
@@ -393,7 +408,7 @@ struct iconrenderer : listrenderer<icon>
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
 		glRotatef(camera1->yaw-180, 0, 0, 1);
 		glRotatef(camera1->pitch, 1, 0, 0);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 		if(p->start > 0 || p->length < 1)
@@ -601,8 +616,9 @@ struct varenderer : partrenderer
 
 	void genverts(particle *p, partvert *vs, bool regen)
 	{
-		int blend, ts;
-		calc(p, blend, ts);
+		int blend = 255, ts = 1;
+		float size = 1;
+		calc(p, blend, ts, size);
 		if(blend <= 1 || p->fade <= 5) p->fade = -1; //mark to remove on next pass (i.e. after render)
 
 		modifyblend<T>(p->o, blend);
@@ -641,8 +657,8 @@ struct varenderer : partrenderer
 		else if(type&PT_MOD) SETMODCOLOR;
 		else loopi(4) vs[i].alpha = uchar(p->blend*blend);
 
-		if(type&PT_ROT) genrotpos<T>(p->o, p->d, p->size, ts, p->grav, vs, (p->flags>>2)&0x1F);
-		else genpos<T>(p->o, p->d, p->size, ts, p->grav, vs);
+		if(type&PT_ROT) genrotpos<T>(p->o, p->d, size, ts, p->grav, vs, (p->flags>>2)&0x1F);
+		else genpos<T>(p->o, p->d, size, ts, p->grav, vs);
 	}
 
 	void update()
@@ -698,9 +714,10 @@ struct softquadrenderer : quadrenderer
 		loopi(numparts)
 		{
 			particle &p = parts[i];
-			float radius = p.size*SQRT2;
-			int blend, ts;
-			calc(&p, blend, ts, false);
+			int blend = 255, ts = 1;
+			float size = 1;
+			calc(&p, blend, ts, size, false);
+			float radius = size*SQRT2;
 			if(!isfoggedsphere(radius, p.o) && (depthfxscissor!=2 || depthfxtex.addscissorbox(p.o, radius)))
 			{
 				numsoft++;
@@ -741,12 +758,12 @@ struct lineprimitiverenderer : listrenderer<lineprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(lineprimitive *p, int blend, int ts, uchar *color)
+	void renderpart(lineprimitive *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
 		glBegin(GL_LINES);
@@ -796,12 +813,12 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(trisprimitive *p, int blend, int ts, uchar *color)
+	void renderpart(trisprimitive *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
 		glBegin(GL_TRIANGLES);
@@ -861,12 +878,12 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(loopprimitive *p, int blend, int ts, uchar *color)
+	void renderpart(loopprimitive *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
 		glBegin(GL_LINE_LOOP);
@@ -935,12 +952,12 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
 		particleshader->set();
 	}
 
-	void renderpart(coneprimitive *p, int blend, int ts, uchar *color)
+	void renderpart(coneprimitive *p, int blend, int ts, float size, uchar *color)
 	{
 		glPushMatrix();
 		glTranslatef(p->o.x, p->o.y, p->o.z);
 		if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-		glScalef(p->size, p->size, p->size);
+		glScalef(size, size, size);
 		glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
 		glBegin(GL_LINES);
@@ -987,29 +1004,29 @@ static partrenderer *parts[] =
 {
 	new portalrenderer("textures/teleport"), &icons,
 	&lineprimitives, &trisprimitives, &loopprimitives, &coneprimitives,
-	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_LERP),
-	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_LERP),
+	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_LERP|PT_SHRINK),
+	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_LERP|PT_SHRINK),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE|PT_LERP),
 	new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_LERP),
-	new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT|PT_SHRINK),
+	new quadrenderer("particles/smoke", PT_PART|PT_LERP|PT_FLIP|PT_ROT|PT_SHRINK),
 	new softquadrenderer("particles/hint", PT_PART|PT_GLARE|PT_LERP),
 	new quadrenderer("particles/hint", PT_PART|PT_GLARE|PT_LERP),
-	new softquadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT|PT_SHRINK),
+	new quadrenderer("particles/smoke", PT_PART|PT_FLIP|PT_ROT|PT_SHRINK),
 	new softquadrenderer("particles/hint", PT_PART|PT_GLARE),
 	new quadrenderer("particles/hint", PT_PART|PT_GLARE),
-	new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT),
+	new quadrenderer("particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT|PT_GROW),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE),
 	new quadrenderer("particles/entity", PT_PART|PT_GLARE|PT_ONTOP),
-	new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
-	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
+	new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK|PT_GROW),
+	new softquadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_SHRINK),
+	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_SHRINK),
+	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK),
+	new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK),
 	new softquadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
 	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT),
+	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT|PT_SHRINK),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
 	new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_GLARE),
 	new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),

@@ -190,6 +190,8 @@ enum
     PT_SOFT		= 1<<15,	// use soft quad rendering when available
     PT_ONTOP	= 1<<16,	// render on top of everything else, remove depth testing
     PT_FEW      = 1<<17,    // allocate smaller number of particles
+    PT_SHRINK	= 1<<18,	// shrink particle as it fades
+    PT_GROW		= 1<<19,	// grow particle as it fades
 	PT_FLIP		= PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
