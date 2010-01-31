@@ -50,12 +50,14 @@ namespace ctf
 				if(k)
 				{
 					if(!(f.base&BASE_FLAG) || f.owner == game::focus || (!f.owner && !f.droptime)) break;
-					dir = f.pos();
+					(dir = f.pos()).sub(camera1->o);
+					int interval = lastmillis%500;
+					if(interval >= 300 || interval <= 200) fade *= clamp(interval >= 300 ? 1.f-((interval-300)/200.f) : interval/200.f, 0.f, 1.f);
+					if(f.owner) fade *= clamp(f.owner->vel.magnitude()/PHYS(movespeed), 0.f, 1.f);
 				}
-				else dir = f.spawnloc;
-				dir.sub(camera1->o);
-				if(!k)
+				else
 				{
+					(dir = f.spawnloc).sub(camera1->o);
 					float dist = dir.magnitude(), diff = dist <= hud::radarrange() ? clamp(1.f-(dist/hud::radarrange()), 0.f, 1.f) : 0.f;
 					if(isctfhome(f, game::focus->team) && ctfstyle <= 2 && !hasflags.empty())
 					{
@@ -63,13 +65,11 @@ namespace ctf
 						tex = hud::arrowtex;
 						arrow = true;
 					}
-					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime) fade *= diff*0.5f;
-				}
-				else
-				{
-					int interval = lastmillis%500;
-					if(interval >= 300 || interval <= 200) fade *= clamp(interval >= 300 ? 1.f-((interval-300)/200.f) : interval/200.f, 0.f, 1.f);
-					if(f.owner) fade *= clamp(f.owner->vel.magnitude()/PHYS(movespeed), 0.f, 1.f);
+					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime)
+					{
+						tex = hud::alerttex;
+						fade *= diff*0.5f;
+					}
 				}
 				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
 				if(hud::radarflagnames > (arrow ? 0 : 1)) hud::drawblip(tex, 3, w, h, hud::radarflagsize, fade, dir, r, g, b, "radar", "%s%s", teamtype[f.team].chat, k ? "flag" : "base");

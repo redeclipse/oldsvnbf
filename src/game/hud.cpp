@@ -200,6 +200,7 @@ namespace hud
 	TVAR(IDF_PERSIST, cardtex, "textures/card", 3);
 	TVAR(IDF_PERSIST, flagtex, "textures/flag", 3);
 	TVAR(IDF_PERSIST, arrowtex, "textures/arrow", 3);
+	TVAR(IDF_PERSIST, alerttex, "textures/alert", 3);
 	FVAR(IDF_PERSIST, radarblend, 0, 1, 1);
 	FVAR(IDF_PERSIST, radarcardsize, 0, 0.5f, 1000);
 	FVAR(IDF_PERSIST, radarcardblend, 0, 0.75f, 1);
