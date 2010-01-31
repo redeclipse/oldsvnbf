@@ -79,9 +79,7 @@ void connectserv(const char *name, int port, const char *password)
     ENetAddress address;
     address.port = port;
 
-	if(lastaddress) delete[] lastaddress;
-	lastaddress = NULL;
-
+	if(lastaddress) DELETEP(lastaddress);
 	if(name && *name)
 	{
 		addserver(name, port);

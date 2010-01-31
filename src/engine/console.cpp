@@ -114,7 +114,7 @@ void searchbindlist(const char *action, int type, int limit, const char *sep, co
             else
             {
                 #define ADDSEP(comma, conj) do { \
-                    if(pretty) \
+                    if(pretty && *pretty) \
                     { \
                         names.put("\fs", 2); \
                         names.put(pretty, strlen(pretty)); \
@@ -216,10 +216,10 @@ ICOMMAND(0, getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
 ICOMMAND(0, getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
 ICOMMAND(0, geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
 ICOMMAND(0, getwaitbind, "s", (char *key), getbind(key, keym::ACTION_WAITING));
-ICOMMAND(0, searchbinds,     "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(0, searchspecbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(0, searcheditbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
-ICOMMAND(0, searchwaitbinds, "sis", (char *action, int *limit, char *sep), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, NULL, list); result(list.getbuf()); });
+ICOMMAND(0, searchbinds,     "siss", (char *action, int *limit, char *sep, char *pretty), { vector<char> list; searchbindlist(action, keym::ACTION_DEFAULT, max(*limit, 0), sep, pretty, list); result(list.getbuf()); });
+ICOMMAND(0, searchspecbinds, "siss", (char *action, int *limit, char *sep, char *pretty), { vector<char> list; searchbindlist(action, keym::ACTION_SPECTATOR, max(*limit, 0), sep, pretty, list); result(list.getbuf()); });
+ICOMMAND(0, searcheditbinds, "siss", (char *action, int *limit, char *sep, char *pretty), { vector<char> list; searchbindlist(action, keym::ACTION_EDITING, max(*limit, 0), sep, pretty, list); result(list.getbuf()); });
+ICOMMAND(0, searchwaitbinds, "siss", (char *action, int *limit, char *sep, char *pretty), { vector<char> list; searchbindlist(action, keym::ACTION_WAITING, max(*limit, 0), sep, pretty, list); result(list.getbuf()); });
 
 void inputcommand(char *init, char *action = NULL, char *icon = NULL) // turns input to the command line on or off
 {
