@@ -70,7 +70,6 @@ struct partrenderer
 	//blend = 0 => remove it
 	void calc(particle *p, int &blend, int &ts, float &size, bool lastpass = true)
 	{
-		game::particletrack(p, type, ts, lastpass);
 		vec o = p->o;
 		if(p->fade <= 5)
 		{
@@ -120,6 +119,7 @@ struct partrenderer
 			}
 			else p->m.add(vec(p->o).sub(o));
 		}
+		game::particletrack(p, type, ts, lastpass);
 	}
 };
 

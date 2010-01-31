@@ -22,6 +22,7 @@ namespace projs
 
 	VAR(IDF_PERSIST, muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
 	VAR(IDF_PERSIST, muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
+	FVAR(IDF_PERSIST, muzzleblend, 0, 1, 1);
 	#define muzzlechk(a,b) (a == 3 || (a == 2 && game::thirdpersonview(true)) || (a == 1 && b != game::focus))
 
 	int calcdamage(gameent *actor, gameent *target, int weap, int &flags, int radial, float size, float dist)
@@ -542,18 +543,18 @@ namespace projs
 			else if(!WEAP2(weap, time, flags&HIT_ALT) || life)
 				playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
 		}
-
+		float muz = muzzleblend; if(d == game::focus) muz *= 0.5f;
 		switch(weap)
 		{
 			case WEAP_MELEE: break;
 			case WEAP_PISTOL:
 			{
 				part_create(PART_SMOKE_LERP, 200, from, 0xAAAAAA, 1, 0.25f, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFCC22, 1.5f, 1, 0, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFCC22, 1.5f, muz, 0, 0, d);
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(3.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFCC22, 1.5f, 1, 0, 0, d);
+					part_flare(from, to.mul(3.f).add(from), 150, PART_MUZZLE_FLARE, 0xFFCC22, 1.5f, muz, 0, 0, d);
 				}
                 adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
 				break;
@@ -561,11 +562,11 @@ namespace projs
 			case WEAP_SHOTGUN:
 			{
 				part_create(PART_SMOKE_LERP, 500, from, 0x666666, 4, 0.25f, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFAA00, 3, 1, 0, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFAA00, 3, muz, 0, 0, d);
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(16.f).add(from), 100, PART_MUZZLE_FLARE, 0xFFAA00, 4, 1, 0, 0, d);
+					part_flare(from, to.mul(16.f).add(from), 150, PART_MUZZLE_FLARE, 0xFFAA00, 4, muz, 0, 0, d);
 				}
 				adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
 				break;
@@ -573,11 +574,11 @@ namespace projs
 			case WEAP_SMG:
 			{
 				part_create(PART_SMOKE_LERP, 100, from, 0x999999, 1.5f, 0.25f, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 25, from, 0xFF8800, 2.25f, 1, 0, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 25, from, 0xFF8800, 2.25f, muz, 0, 0, d);
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(12.f).add(from), 25, PART_MUZZLE_FLARE, 0xFF8800, 3, 1, 0, 0, d);
+					part_flare(from, to.mul(12.f).add(from), 50, PART_MUZZLE_FLARE, 0xFF8800, 3, muz, 0, 0, d);
 				}
                 adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
 				break;
@@ -585,25 +586,25 @@ namespace projs
 			case WEAP_FLAMER:
 			{
 				part_create(PART_SMOKE_LERP, 100, from, 0x333333, 2, 0.25f, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 50, from, firecols[rnd(FIRECOLOURS)], 1.5f, 0.75f, -15, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 50, from, firecols[rnd(FIRECOLOURS)], 1.5f, muz, -10, 0, d);
 				adddynlight(from, 48, vec(1.1f, 0.3f, 0.01f), 100, 0, DL_FLASH);
 				break;
 			}
 			case WEAP_PLASMA:
 			{
 				part_create(PART_SMOKE_LERP, 150, from, 0x88AABB, 0.6f, 0.25f, -20);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x226688, 1.25f, 1, 0, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x226688, 1.25f, muz, 0, 0, d);
 				adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
 				break;
 			}
 			case WEAP_RIFLE: case WEAP_INSTA:
 			{
 				part_create(PART_SMOKE_LERP, 100, from, 0x444444, 0.8f, 0.25f, -40);
-				if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x6611FF, 1.25f, 1, 0, 0, d);
+				if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x6611FF, 1.25f, muz, 0, 0, d);
 				if(muzzlechk(muzzleflare, d))
 				{
 					vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-					part_flare(from, to.mul(8.f).add(from), 75, PART_MUZZLE_FLARE, 0x6611FF, 2, 1, 0, 0, d);
+					part_flare(from, to.mul(8.f).add(from), 150, PART_MUZZLE_FLARE, 0x6611FF, 2, muz, 0, 0, d);
 				}
                 adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
 				break;
