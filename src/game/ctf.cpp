@@ -67,8 +67,8 @@ namespace ctf
 					}
 					else if(!(f.base&BASE_FLAG) || f.owner || f.droptime)
 					{
+						fade += (1.f-fade)*diff;
 						tex = hud::alerttex;
-						fade *= diff*0.5f;
 					}
 				}
 				dir.rotate_around_z(-camera1->yaw*RAD); dir.normalize();
