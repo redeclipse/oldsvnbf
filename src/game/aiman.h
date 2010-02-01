@@ -296,14 +296,4 @@ namespace aiman
 		}
 		else clearai();
 	}
-
-	void reqadd(clientinfo *ci, int skill)
-	{
-		if(haspriv(ci, PRIV_MASTER, "add bots") && !addai(AI_BOT, -1, skill, true)) srvmsgf(ci->clientnum, "failed to create or assign bot");
-	}
-
-	void reqdel(clientinfo *ci)
-	{
-		if(haspriv(ci, PRIV_MASTER, "remove bots") && !delai(AI_BOT, true)) srvmsgf(ci->clientnum, "failed to remove any bots");
-	}
 }
