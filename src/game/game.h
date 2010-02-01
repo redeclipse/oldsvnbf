@@ -828,12 +828,12 @@ struct gamestate
 		weapreset(true);
 	}
 
-	void spawnstate(int sweap, int heal, bool arena = false, bool grenades = false)
+	void spawnstate(int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
 	{
 		health = heal;
 		weapreset(true);
 		if(!isweap(sweap)) sweap = WEAP_PISTOL;
-		if(sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
+		if(melee && sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
 		ammo[sweap] = WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max);
 		if(arena)
 		{
@@ -854,10 +854,10 @@ struct gamestate
 		}
 	}
 
-	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
+	void editspawn(int millis, int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
 	{
 		clearstate();
-		spawnstate(sweap, heal, arena, grenades);
+		spawnstate(sweap, heal, melee, arena, grenades);
 	}
 
 	int respawnwait(int millis, int delay)
@@ -1022,7 +1022,7 @@ struct gameent : dynent, gamestate
 		airnodes.setsizenodelete(0);
 	}
 
-	void editspawn(int millis, int sweap, int heal, bool arena = false, bool grenades = false)
+	void editspawn(int millis, int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
 	{
 		stopmoving(true);
 		clearstate();
@@ -1033,7 +1033,7 @@ struct gameent : dynent, gamestate
 		vel = falling = vec(0, 0, 0);
 		floor = vec(0, 0, 1);
 		resetinterp();
-		gamestate::editspawn(millis, sweap, heal, arena, grenades);
+		gamestate::editspawn(millis, sweap, heal, melee, arena, grenades);
 		airnodes.setsizenodelete(0);
 	}
 

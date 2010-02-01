@@ -43,6 +43,7 @@ GVAR(0, spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = rando
 GVAR(0, spawnweapon, 0, WEAP_PISTOL, WEAP_TOTAL-1);
 GVAR(0, instaweapon, 0, WEAP_INSTA, WEAP_TOTAL-1);
 GVAR(0, trialweapon, 0, WEAP_MELEE, WEAP_TOTAL-1);
+GVAR(0, spawnmelee, 0, 1, 2); // 0 = never, 1 = all but non-trial instagib, 2 = always
 GVAR(0, spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 GVAR(0, spawndelay, 0, 5000, INT_MAX-1); // delay before spawning in most modes
 GVAR(0, instadelay, 0, 2500, INT_MAX-1); // .. in instagib/arena matches
