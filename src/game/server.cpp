@@ -274,11 +274,11 @@ namespace server
 	};
 
 	namespace aiman {
-		bool autooverride = false, dorefresh = false;
+		bool dorefresh = false;
 		extern int findaiclient(int exclude = -1);
-		extern bool addai(int type, int ent, int skill, bool req = false);
+		extern bool addai(int type, int ent, int skill);
 		extern void deleteai(clientinfo *ci);
-		extern bool delai(int type, bool req = false);
+		extern bool delai(int type);
 		extern void removeai(clientinfo *ci, bool complete = false);
 		extern bool reassignai(int exclude = -1);
 		extern void checkskills();
@@ -1667,7 +1667,7 @@ namespace server
 
 	void changemap(const char *name, int mode, int muts)
 	{
-		hasgameinfo = maprequest = mapsending = shouldcheckvotes = aiman::autooverride = false;
+		hasgameinfo = maprequest = mapsending = shouldcheckvotes = false;
 		aiman::clearai(m_play(mode) ? false : true);
 		aiman::dorefresh = true;
         stopdemo();
