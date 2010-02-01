@@ -35,7 +35,7 @@ namespace aiman
 		return -1;
 	}
 
-	bool addai(int type, int ent, int skill, bool req)
+	bool addai(int type, int ent, int skill)
 	{
 		int numbots = 0;
 		loopv(clients)
@@ -50,7 +50,6 @@ namespace aiman
 					ci->state.aireinit = 1;
 					ci->state.aitype = type;
 					ci->state.aientity = ent;
-					if(req) autooverride = true;
 					return true;
 				}
 				if(type == AI_BOT) numbots++;
@@ -77,7 +76,6 @@ namespace aiman
 				ci->state.state = CS_DEAD;
 				ci->team = type == AI_BOT ? TEAM_NEUTRAL : TEAM_ENEMY;
 				ci->online = ci->connected = true;
-				if(req) autooverride = true;
 				return true;
 			}
 			delclient(cn);
@@ -105,18 +103,11 @@ namespace aiman
 		dorefresh = true;
 	}
 
-	bool delai(int type, bool req)
+	bool delai(int type)
 	{
 		loopvrev(clients) if(clients[i]->state.aitype == type && clients[i]->state.ownernum >= 0)
 		{
 			deleteai(clients[i]);
-			if(req) autooverride = true;
-			return true;
-		}
-		if(req)
-		{
-			if(autooverride) dorefresh = true;
-			autooverride = false;
 			return true;
 		}
 		return false;
@@ -205,7 +196,7 @@ namespace aiman
 		{
 			bool needent = true;
 			loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-			if(needent) addai(sents[i].attrs[0], i, -1, false);
+			if(needent) addai(sents[i].attrs[0], i, -1);
 		}
 		int balance = 0;
 		if(m_campaign(gamemode)) balance = nplayers; // campaigns strictly obeys nplayers
@@ -220,35 +211,32 @@ namespace aiman
 			}
 			if(m_team(gamemode, mutators) && (balance > 0 || GAME(teambalance) == 3))
 			{ // skew this if teams are unbalanced
-				if(!autooverride)
+				if(GAME(teambalance) != 3)
 				{
-					if(GAME(teambalance) != 3)
+					int teamscores[TEAM_NUM] = {0}, highest = -1;
+					loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
 					{
-						int teamscores[TEAM_NUM] = {0}, highest = -1;
-						loopv(clients) if(clients[i]->state.aitype < 0 && clients[i]->team >= TEAM_FIRST && isteam(gamemode, mutators, clients[i]->team, TEAM_FIRST))
+						int team = clients[i]->team-TEAM_FIRST;
+						teamscores[team]++;
+						if(highest < 0 || teamscores[team] > teamscores[highest]) highest = team;
+					}
+					if(highest >= 0)
+					{
+						int bots = balance-people;
+						loopi(numt) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
 						{
-							int team = clients[i]->team-TEAM_FIRST;
-							teamscores[team]++;
-							if(highest < 0 || teamscores[team] > teamscores[highest]) highest = team;
-						}
-						if(highest >= 0)
-						{
-							int bots = balance-people;
-							loopi(numt) if(i != highest && teamscores[i] < teamscores[highest]) loopj(teamscores[highest]-teamscores[i])
-							{
-								if(bots > 0) bots--;
-								else balance++;
-							}
+							if(bots > 0) bots--;
+							else balance++;
 						}
 					}
-					else balance = max(people*numt, numt); // humans vs. bots, just directly balance
 				}
+				else balance = max(people*numt, numt); // humans vs. bots, just directly balance
 				loopvrev(clients)
 				{
 					clientinfo *ci = clients[i];
 					if(ci->state.aitype == AI_BOT && ci->state.ownernum >= 0)
 					{
-						if(!autooverride && numclients(-1, true, AI_BOT) > balance) shiftai(ci, -1);
+						if(numclients(-1, true, AI_BOT) > balance) shiftai(ci, -1);
 						else
 						{
 							int teamb = chooseteam(ci, ci->team);
@@ -264,21 +252,18 @@ namespace aiman
 				if(m_team(gamemode, mutators)) balance -= balance%numt;
 			}
 		}
-		if(!autooverride)
+		if(balance > 0)
 		{
-			if(balance > 0)
-			{
-				while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
-				while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
-			}
-			else clearai();
+			while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
+			while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
 		}
+		else clearai();
 	}
 
 	void clearai(bool all)
 	{ // clear and remove all ai immediately
 		loopvrev(clients) if(clients[i]->state.aitype >= (all ? AI_BOT : AI_START)) deleteai(clients[i]);
-		dorefresh = autooverride = false;
+		dorefresh = false;
 	}
 
 	void checkai()
