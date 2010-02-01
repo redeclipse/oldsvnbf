@@ -245,6 +245,11 @@ namespace hud
 	FVAR(IDF_PERSIST, motionblurmax, 0, 0.75f, 1); // maximum
 	FVAR(IDF_PERSIST, motionbluramt, 0, 0.5f, 1); // used for override
 
+	TVAR(IDF_PERSIST, logotex, "textures/logo", 3);
+	TVAR(IDF_PERSIST, badgetex, "textures/cube2badge", 3);
+	TVAR(IDF_PERSIST, bglefttex, "textures/bgleft", 3);
+	TVAR(IDF_PERSIST, bgrighttex, "textures/bgright", 3);
+
 	bool chkcond(int val, bool cond)
 	{
 		if(val == 2 || (val && cond)) return true;
@@ -1747,7 +1752,26 @@ namespace hud
 
 	void drawbackground(int w, int h)
 	{
-		settexture("textures/logo", 3);
+		Texture *t = textureload(bglefttex, 3);
+		glBindTexture(GL_TEXTURE_2D, t->id);
+		glBegin(GL_QUADS); // goes off the edge on purpose
+		glTexCoord2f(0, 0); glVertex2f(512, h/2-256);
+		glTexCoord2f(1, 0); glVertex2f(0, h/2-256);
+		glTexCoord2f(1, 1); glVertex2f(0, h/2+256);
+		glTexCoord2f(0, 1); glVertex2f(512, h/2+256);
+		glEnd();
+
+		t = textureload(bgrighttex, 3);
+		glBindTexture(GL_TEXTURE_2D, t->id);
+		glBegin(GL_QUADS); // goes off the edge on purpose
+		glTexCoord2f(0, 0); glVertex2f(w, h/2-256);
+		glTexCoord2f(1, 0); glVertex2f(w-512, h/2-256);
+		glTexCoord2f(1, 1); glVertex2f(w-512, h/2+256);
+		glTexCoord2f(0, 1); glVertex2f(w, h/2+256);
+		glEnd();
+
+		t = textureload(logotex, 3);
+		glBindTexture(GL_TEXTURE_2D, t->id);
 		glBegin(GL_QUADS);
 		glTexCoord2f(0, 0); glVertex2f(w-512, 0);
 		glTexCoord2f(1, 0); glVertex2f(w, 0);
@@ -1755,7 +1779,8 @@ namespace hud
 		glTexCoord2f(0, 1); glVertex2f(w-512, 128);
 		glEnd();
 
-		settexture("textures/cube2badge", 3);
+		t = textureload(badgetex, 3);
+		glBindTexture(GL_TEXTURE_2D, t->id);
 		glBegin(GL_QUADS); // goes off the edge on purpose
 		glTexCoord2f(0, 0); glVertex2f(w-208, 96);
 		glTexCoord2f(1, 0); glVertex2f(w-16, 96);
