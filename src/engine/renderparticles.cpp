@@ -82,7 +82,7 @@ struct partrenderer
 			ts = lastmillis-p->millis;
 			blend = max(255-((ts<<8)/p->fade), 0);
 			int weight = p->grav;
-			if(type&PT_SHRINK || type&PT_GROW)
+			if((type&PT_SHRINK || type&PT_GROW) && p->fade >= emitmillis*2)
 			{
 				float amt = clamp(ts/float(p->fade), 0.f, 1.f);
 				if(type&PT_SHRINK)
@@ -1025,8 +1025,8 @@ static partrenderer *parts[] =
 	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_SHRINK),
 	new softquadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK),
 	new quadrenderer("particles/plasma", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK),
-	new softquadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
-	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
+	new softquadrenderer("particles/electric", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_SHRINK),
+	new quadrenderer("particles/electric", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT|PT_SHRINK),
 	new quadrenderer("particles/fire", PT_PART|PT_GLARE|PT_FLIP|PT_RND4|PT_GLARE|PT_ROT|PT_SHRINK),
 	new taperenderer("particles/sflare", PT_TAPE|PT_GLARE),
 	new taperenderer("particles/mflare", PT_TAPE|PT_GLARE|PT_RND4|PT_VFLIP|PT_GLARE),

@@ -653,7 +653,7 @@ namespace physics
 					d->action[AC_JUMP] = false;
 					d->resetphys();
 					playsound(S_JUMP, d->o, d);
-					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 100, d->feetpos(), 1, 1, -10, 0, 10.f);
+					regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
 					client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
 				}
 			}

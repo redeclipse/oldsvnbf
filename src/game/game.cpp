@@ -98,7 +98,7 @@ namespace game
 	VAR(IDF_PERSIST, bloodfade, 1, 20000, INT_MAX-1);
 	FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
 	VAR(IDF_PERSIST, gibfade, 1, 20000, INT_MAX-1);
-	VAR(IDF_PERSIST, fireburnfade, 0, 75, INT_MAX-1);
+	VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
 	FVAR(IDF_PERSIST, impulsescale, 0, 1, 1000);
 	VAR(IDF_PERSIST, impulsefade, 0, 200, INT_MAX-1);
 
@@ -390,13 +390,13 @@ namespace game
 			int num = int((effect ? 25 : 5)*impulsescale), len = effect ? impulsefade : impulsefade/5;
 			if(num > 0 && len > 0)
 			{
-				float intensity = 0.25f+(rnd(75)/100.f);
+				float intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f);
 				if(d->type == ENT_PLAYER || d->type == ENT_AI)
 				{
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, intensity, 0.5f, -15, 0, 5);
-					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, intensity, 0.5f, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->lfoot, intensity, blend, -15, 0, 5);
+					regularshape(PART_FIREBALL, int(d->radius), firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->rfoot, intensity, blend, -15, 0, 5);
 				}
-				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->feetpos(), intensity, 0.5f, -15, 0, 5);
+				else regularshape(PART_FIREBALL, int(d->radius)*2, firecols[effect ? 0 : rnd(FIRECOLOURS)], 21, num, len, d->feetpos(), intensity, blend, -15, 0, 5);
 			}
 		}
 	}
@@ -405,10 +405,10 @@ namespace game
 	{
 		if(fireburntime && d->lastfire && (d != focus || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
 		{
-			int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f);
+			int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f);
 			if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
 			else pc = 0.75f+(float(millis%fireburndelay)/float(fireburndelay*4));
-			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 1), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, intensity*pc), 0.75f, -15, 0);
+			regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 100), d->headpos(-d->height*0.35f), firecols[rnd(FIRECOLOURS)], d->height*deadscale(d, intensity*pc), blend*pc, -15, 0);
 		}
 	}
 
