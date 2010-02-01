@@ -70,7 +70,9 @@ void trydisconnect()
     else conoutft(CON_MESG, "\frnot connected");
 }
 
-char *lastaddress = NULL;
+SVAR(0, serveraddress, "");
+VAR(0, serverconport, 0, 0, INT_MAX-1);
+
 void connectserv(const char *name, int port, const char *password)
 {
     abortconnect();
@@ -79,7 +81,8 @@ void connectserv(const char *name, int port, const char *password)
     ENetAddress address;
     address.port = port;
 
-	if(lastaddress) DELETEP(lastaddress);
+	setsvar("serveraddress", "");
+	setvar("serverconport", 0);
 	if(name && *name)
 	{
 		addserver(name, port);
@@ -90,7 +93,8 @@ void connectserv(const char *name, int port, const char *password)
             connectfail();
 			return;
 		}
-		lastaddress = newstring(name);
+		setsvar("serveraddress", name);
+		setvar("serverconport", port);
 	}
 	else
 	{
@@ -161,8 +165,17 @@ ICOMMAND(0, localconnect, "i", (int *n), localconnect(*n ? false : true));
 
 void reconnect()
 {
+	int port = 0;
+	mkstring(addr);
+	if(*serveraddress) copystring(addr, serveraddress);
+	if(serverconport) port = serverconport;
 	disconnect(1);
-	connectserv(lastaddress && *lastaddress ? lastaddress : NULL);
+	if(*addr)
+	{
+		if(port) connectserv(addr, port);
+		else connectserv(addr);
+	}
+	else connectserv();
 }
 COMMAND(0, reconnect, "");
 

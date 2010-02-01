@@ -484,13 +484,12 @@ int addclient(int type)
 #ifndef STANDALONE
 VAR(IDF_PERSIST, autoconnect, 0, 0, 1);
 extern bool connectedlocally;
-extern char *lastaddress;
 void localconnect(bool force)
 {
 	if((!connected() || !connectedlocally) && (force || autoconnect))
 	{
-		if(lastaddress) delete[] lastaddress;
-		lastaddress = NULL;
+		setsvar("serveraddress", "");
+		setvar("serverconport", 0);
 		int cn = addclient(ST_LOCAL);
 		clientdata &c = *clients[cn];
 		c.peer = NULL;
