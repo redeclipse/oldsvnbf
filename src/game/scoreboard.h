@@ -232,7 +232,7 @@ namespace hud
 			g.start(menustart, menuscale, NULL, false);
 			int numgroups = groupplayers();
 			g.pushlist();
-			g.image(NULL, 6, true);
+			g.image(NULL, 7, true);
 			g.space(2);
 			g.pushlist();
 			g.space(1);
@@ -244,22 +244,40 @@ namespace hud
 			{
 				g.pushlist();
 				g.space(3);
-				g.pushfont("default");
+				g.pushfont("emphasis");
 				g.textf("by %s", 0xFFFFFF, NULL, mapauthor);
 				g.popfont();
 				g.poplist();
 			}
 			g.pushlist();
-			g.pushfont("sub");
+			g.pushfont("default");
 			g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
 			if((m_play(game::gamemode) || client::demoplayback) && game::minremain >= 0)
 			{
-				if(!game::minremain) g.textf(", intermission", 0xFFFFFF, NULL);
-				else if(paused) g.textf(", paused", 0xFFFFFF, NULL);
-				else g.textf(", %d %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "minute" : "minutes");
+				if(!game::minremain) g.textf(", \fs\fyintermission\fS", 0xFFFFFF, NULL);
+				else if(paused) g.textf(", \fs\fopaused\fS", 0xFFFFFF, NULL);
+				else g.textf(", \fs\fg%d\fS %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "min" : "mins");
 			}
 			g.popfont();
 			g.poplist();
+			if(*serveraddress)
+			{
+				g.pushlist();
+				g.space(2);
+				g.pushfont("radar");
+				g.textf("\fdon ", 0xFFFFFF, NULL);
+				g.popfont();
+				if(*serverdesc)
+				{
+					g.pushfont("sub");
+					g.textf("%s ", 0xFFFFFF, NULL, serverdesc);
+					g.popfont();
+				}
+				g.pushfont("radar");
+				g.textf("\fd(\fa%s:[%d]\fd)", 0xFFFFFF, NULL, serveraddress, serverconport);
+				g.popfont();
+				g.poplist();
+			}
 
 			if(game::player1->state == CS_DEAD || game::player1->state == CS_WAITING)
 			{
@@ -338,25 +356,15 @@ namespace hud
 			SEARCHBINDCACHE(scoreboardkey)("showscores", 1);
 			g.pushfont("sub");
 			g.textf("%s \fs\fc%s\fS to close this window", 0xFFFFFF, NULL, scoresoff ? "Release" : "Press", scoreboardkey);
+			g.popfont();
 			g.pushlist();
-			g.space(3);
+			g.space(2);
+			g.pushfont("radar");
 			g.textf("Double-tap to keep the window open", 0xFFFFFF, NULL);
-			g.poplist();
 			g.popfont();
 			g.poplist();
 			g.poplist();
-			if(m_play(game::gamemode) && game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
-			{
-				float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
-					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
-				g.space(1);
-				g.pushfont("sub");
-				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio, \fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL,
-					game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
-					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio,
-					game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
-				g.popfont();
-			}
+			g.poplist();
 			g.space(1);
 			loopk(numgroups)
 			{
@@ -530,13 +538,25 @@ namespace hud
 					int bgcol = o==game::player1 && highlightscore() ? 0x888888 : 0;
 					if(o->privilege) bgcol |= o->privilege >= PRIV_ADMIN ? 0x226622 : 0x666622;
 					if((i%3)==0) g.pushlist();
-					if(bgcol) g.background(bgcol);
+					if(bgcol) g.background(bgcol, -1);
 					if(showclientnum() || game::player1->privilege>=PRIV_MASTER)
 						g.textf("%s (%d)", 0xFFFFFF, hud::conopentex, game::colorname(o, NULL, "", false), o->clientnum);
 					else g.textf("%s", 0xFFFFFF, hud::conopentex, game::colorname(o, NULL, "", false));
 					if(i+1<spectators.length() && (i+1)%3) g.space(1);
 					else g.poplist();
 				}
+			}
+			if(m_play(game::gamemode) && game::player1->state != CS_SPECTATOR && (game::intermission || showscoresinfo()))
+			{
+				float ratio = game::player1->frags >= game::player1->deaths ? (game::player1->frags/float(max(game::player1->deaths, 1))) : -(game::player1->deaths/float(max(game::player1->frags, 1))),
+					accuracy = game::player1->totaldamage*100.f/float(max(game::player1->totalshots, 1));
+				g.space(1);
+				g.pushfont("sub");
+				g.textf("\fs\fg%d\fS %s, \fs\fg%d\fS %s, \fs\fy%.1f\fS:\fs\fy%.1f\fS ratio, \fs\fg%d\fS damage, \fs\fg%d\fS wasted, \fs\fg%.1f%%\fS accuracy", 0xFFFFFF, NULL,
+					game::player1->frags, game::player1->frags != 1 ? "frags" : "frag",
+					game::player1->deaths, game::player1->deaths != 1 ? "deaths" : "death", ratio >= 0 ? ratio : 1.f, ratio >= 0 ? 1.f : -ratio,
+					game::player1->totaldamage, game::player1->totalshots-game::player1->totaldamage, accuracy);
+				g.popfont();
 			}
 			g.end();
 		}

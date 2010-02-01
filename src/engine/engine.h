@@ -9,11 +9,11 @@
 #define ENG_URL				"www.bloodfrontier.com"
 #define ENG_BLURB			"It's bloody fun!"
 #ifdef WIN32
-#define ENG_PLATFORM		"Win"
+#define ENG_PLATFORM		"win"
 #elif defined(__APPLE__)
-#define ENG_PLATFORM		"Mac"
+#define ENG_PLATFORM		"mac"
 #else
-#define ENG_PLATFORM		"Nix"
+#define ENG_PLATFORM		"nix"
 #endif
 #define ENG_DEVEL			false
 
@@ -484,6 +484,8 @@ extern void localdisconnect();
 extern void addserver(const char *name, int port);
 
 // client
+extern char *serveraddress;
+extern int serverconport;
 extern void localservertoclient(int chan, ENetPacket *packet);
 extern bool connected(bool attempt = true);
 extern void connectserv(const char *name = NULL, int port = ENG_SERVER_PORT, const char *password = NULL);

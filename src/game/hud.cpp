@@ -1797,7 +1797,7 @@ namespace hud
 			else y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, *progresstitle ? progresstitle : "please wait...");
 		}
 		y = h-FONTH/2;
-		y -= draw_textx("v%.2f (%s) [%s]", w-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_RELEASE, ENG_PLATFORM);
+		y -= draw_textx("v%.2f-%s (%s)", w-FONTH, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, float(ENG_VERSION)/100.f, ENG_PLATFORM, ENG_RELEASE);
 		y -= draw_textx("%s", w-FONTH/2, y, 255, 255, 255, 255, TEXT_RIGHT_UP, -1, w, ENG_URL);
 		popfont();
 	}
