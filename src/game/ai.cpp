@@ -499,7 +499,7 @@ namespace ai
 		{
 			if(d->ai && (d->aitype >= AI_START || hithurts(flags))) // see if this ai is interested in a grudge
 			{
-				d->ai->unsuspend();
+				if(d->lastnode >= 0) d->ai->unsuspend();
 				aistate &b = d->ai->getstate();
 				violence(d, b, e, d->aitype == AI_BOT ? false : true);
 			}
@@ -513,7 +513,7 @@ namespace ai
 					vec tp = t->headpos();
 					if(cansee(t, tp, dp) || tp.squaredist(dp) <= maxdist)
 					{
-						d->ai->unsuspend();
+						if(d->lastnode >= 0) d->ai->unsuspend();
 						aistate &c = t->ai->getstate();
 						if(violence(t, c, e, true)) return;
 					}
@@ -582,7 +582,7 @@ namespace ai
 	{
 		if(!m_edit(game::gamemode))
 		{
-			if(d->aitype == AI_BOT && d->ai->suspended)
+			if(d->aitype == AI_BOT && d->ai->suspended && d->lastnode >= 0)
 			{ // bots idle until a human is around
 				if(!m_campaign(game::gamemode) || aicampaign || !entities::ents.inrange(d->aientity) || entities::ents[d->aientity]->type != PLAYERSTART)
 					d->ai->unsuspend();
@@ -600,7 +600,7 @@ namespace ai
 			if(!d->ai->suspended && (check(d, b) || find(d, b))) return 1;
 			if(target(d, b, true, false, d->ai->suspended && d->aitype >= AI_START ? SIGHTMIN : 0.f)) return 1;
 		}
-		else if(d->aitype == AI_BOT && d->ai->suspended) d->ai->unsuspend();
+		else if(d->aitype == AI_BOT && d->ai->suspended && d->lastnode >= 0) d->ai->unsuspend();
 
 		if(!d->ai->suspended)
 		{
@@ -1371,7 +1371,7 @@ namespace ai
 						continue; // shouldn't interfere
 					}
 				}
-				else if(d->ai->suspended) d->ai->unsuspend();
+				else if(d->ai->suspended && d->lastnode >= 0) d->ai->unsuspend();
 			}
 			logic(d, c, run);
 			break;

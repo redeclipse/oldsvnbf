@@ -335,7 +335,7 @@ namespace entities
 	static void buildentcache(int *indices, int numindices, int depth = 1)
 	{
 		vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-		loopi(numindices)
+		loopi(numindices) if(ents.inrange(indices[i]))
 		{
 			extentity &e = *ents[indices[i]];
 			float radius = calcentcacheradius(e);
@@ -356,7 +356,7 @@ namespace entities
 
 		float split = 0.5f*(vmax[axis] + vmin[axis]), splitleft = -1e16f, splitright = 1e16f;
 		int left, right;
-		for(left = 0, right = numindices; left < right;)
+		for(left = 0, right = numindices; left < right;) if(ents.inrange(indices[left]))
 		{
 			extentity &e = *ents[indices[left]];
 			float radius = calcentcacheradius(e);
@@ -378,7 +378,7 @@ namespace entities
 			left = right = numindices/2;
 			splitleft = -1e16f;
 			splitright = 1e16f;
-			loopi(numindices)
+			loopi(numindices) if(ents.inrange(indices[i]))
 			{
 				extentity &e = *ents[indices[i]];
 				float radius = calcentcacheradius(e);
@@ -460,11 +460,13 @@ namespace entities
 
 		#define CHECKCLOSEST(branch) do { \
 			int n = curnode->childindex(branch); \
-			extentity &e = *ents[n]; \
-			if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force!=0)) \
-			{ \
-				float dist = e.o.squaredist(pos); \
-				if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
+			if(ents.inrange(n)) { \
+				extentity &e = *ents[n]; \
+				if(e.type == type && (!links || !e.links.empty()) && allowuse(d, n, force!=0)) \
+				{ \
+					float dist = e.o.squaredist(pos); \
+					if(dist < mindist*mindist) { closest = n; mindist = sqrtf(dist); } \
+				} \
 			} \
 		} while(0)
         int closest = -1;
@@ -516,11 +518,13 @@ namespace entities
 		entcachenode *curnode = &entcache[0];
 		#define CHECKWITHIN(branch) do { \
 			int n = curnode->childindex(branch); \
-			extentity &e = *ents[n]; \
-			if(e.type == type && allowuse(NULL, n)) \
-			{ \
-				float dist = e.o.squaredist(pos); \
-				if(dist > mindist2 && dist < maxdist2) results.add(n); \
+			if(ents.inrange(n)) { \
+				extentity &e = *ents[n]; \
+				if(e.type == type && allowuse(NULL, n)) \
+				{ \
+					float dist = e.o.squaredist(pos); \
+					if(dist > mindist2 && dist < maxdist2) results.add(n); \
+				} \
 			} \
 		} while(0)
 		for(;;)
@@ -570,8 +574,10 @@ namespace entities
 		entcachenode *curnode = &entcache[0];
 		#define CHECKNEAR(branch) do { \
 			int n = curnode->childindex(branch); \
-			extentity &e = *ents[n]; \
-			if(e.type == WAYPOINT && e.o.squaredist(pos) < limit2) add(d, n); \
+			if(ents.inrange(n)) { \
+				extentity &e = *ents[n]; \
+				if(e.type == WAYPOINT && e.o.squaredist(pos) < limit2) add(d, n); \
+			} \
 		} while(0)
 		for(;;)
 		{
@@ -618,16 +624,18 @@ namespace entities
 		entcachenode *curnode = &entcache[0];
 		#define CHECKITEM(branch) do { \
 			int n = curnode->childindex(branch); \
-			extentity &e = *ents[n]; \
-			if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || (!m_noitems(game::gamemode, game::mutators) && e.spawned))) \
-			{ \
-				float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3] ? e.attrs[e.type == CHECKPOINT ? 0 : 3] : enttype[e.type].radius; \
-				if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
+			if(ents.inrange(n)) { \
+				extentity &e = *ents[n]; \
+				if(enttype[e.type].usetype != EU_NONE && (enttype[e.type].usetype!=EU_ITEM || (!m_noitems(game::gamemode, game::mutators) && e.spawned))) \
 				{ \
-					actitem &t = actitems.add(); \
-					t.type = ITEM_ENT; \
-					t.target = n; \
-					t.score = pos.squaredist(e.o); \
+					float radius = (e.type == TRIGGER || e.type == TELEPORT || e.type == PUSHER || e.type == CHECKPOINT) && e.attrs[e.type == CHECKPOINT ? 0 : 3] ? e.attrs[e.type == CHECKPOINT ? 0 : 3] : enttype[e.type].radius; \
+					if(overlapsbox(pos, zrad, xyrad, e.o, radius, radius)) \
+					{ \
+						actitem &t = actitems.add(); \
+						t.type = ITEM_ENT; \
+						t.target = n; \
+						t.score = pos.squaredist(e.o); \
+					} \
 				} \
 			} \
 		} while(0)
@@ -1362,6 +1370,7 @@ namespace entities
 			float prevscore = m->curscore;
 			m->curscore = -1.f;
 			int current = int(m-&nodes[0]);
+			if(!ents.inrange(current)) continue;
 			extentity &ent = *ents[current];
 			vector<int> &links = ent.links;
 			loopv(links)

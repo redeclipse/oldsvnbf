@@ -1451,7 +1451,7 @@ namespace entities
 					int next = cur + ob.numentities; \
 					if(!ob.ent || ob.ent != (d)) \
 					{ \
-						for(; cur < next; cur++) \
+						for(; cur < next; cur++) if((v).entities.inrange(cur)) \
 						{ \
 							int ent = (v).entities[cur]; \
 							body; \
