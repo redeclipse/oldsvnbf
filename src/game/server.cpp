@@ -284,8 +284,6 @@ namespace server
 		extern void checkskills();
 		extern void clearai(bool all = true);
 		extern void checkai();
-		extern void reqadd(clientinfo *ci, int skill);
-		extern void reqdel(clientinfo *ci);
 	}
 
 	bool hasgameinfo = false;
@@ -4039,17 +4037,8 @@ namespace server
 					break;
 				}
 
-				case SV_ADDBOT:
-				{
-					aiman::reqadd(ci, getint(p));
-					break;
-				}
-
-				case SV_DELBOT:
-				{
-					aiman::reqdel(ci);
-					break;
-				}
+				case SV_ADDBOT: getint(p); break;
+				case SV_DELBOT: break;
 
 				case SV_AUTHTRY:
 				{

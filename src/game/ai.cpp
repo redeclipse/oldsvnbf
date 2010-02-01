@@ -12,9 +12,6 @@ namespace ai
     VAR(IDF_PERSIST, aideadfade, 0, 30000, 60000);
     VAR(IDF_PERSIST, showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
-	ICOMMAND(0, addbot, "s", (char *s), client::addmsg(SV_ADDBOT, "ri", *s ? clamp(atoi(s), 1, 101) : -1));
-	ICOMMAND(0, delbot, "", (), client::addmsg(SV_DELBOT, "r"));
-
 	float viewdist(int x) { return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist); }
 	float viewfieldx(int x) { return x <= 100 ? clamp((VIEWMIN+(VIEWMAX-VIEWMIN))/100.f*float(x), float(VIEWMIN), float(VIEWMAX)) : float(VIEWMAX); }
 	float viewfieldy(int x) { return viewfieldx(x)*3.f/4.f; }
