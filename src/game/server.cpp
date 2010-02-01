@@ -1002,15 +1002,17 @@ namespace server
 	{
 		servstate &gs = ci->state;
 		int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
-		bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
+		bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators),
+			melee = GAME(spawnmelee) >= (!m_insta(gamemode, mutators) || m_trial(gamemode) ? 1 : 2);
 		if(ci->state.aitype >= AI_START)
 		{
 			weap = aistyle[ci->state.aitype].weap;
 			if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
 			maxhealth = aistyle[ci->state.aitype].health;
 			arena = grenades = false;
+			melee = true;
 		}
-		gs.spawnstate(weap, maxhealth, arena, grenades);
+		gs.spawnstate(weap, maxhealth, melee, arena, grenades);
 		int spawn = pickspawn(ci);
 		sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
 		gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -3306,7 +3308,7 @@ namespace server
 					if(!allowstate(ci, val ? 4 : 5) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
 					ci->state.dropped.reset();
 					loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
-					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
+					ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), !m_insta(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
 					if(val)
 					{
 						if(smode) smode->leavegame(ci);
