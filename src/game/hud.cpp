@@ -221,7 +221,7 @@ namespace hud
 	VAR(IDF_PERSIST, radaritemtime, 0, 5000, INT_MAX-1);
 	VAR(IDF_PERSIST, radaritemnames, 0, 0, 2);
 	VAR(IDF_PERSIST, radarplayers, 0, 2, 2);
-	VAR(IDF_PERSIST, radarplayerfilter, 0, 0, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
+	VAR(IDF_PERSIST, radarplayerfilter, 0, 1, 3); // 0 = off, 1 = non-team, 2 = team, 3 = only in duel/survivor/edit/tv
 	VAR(IDF_PERSIST, radarplayernames, 0, 0, 2);
 	VAR(IDF_PERSIST, radarflags, 0, 2, 2);
 	VAR(IDF_PERSIST, radarflagnames, 0, 1, 2);
