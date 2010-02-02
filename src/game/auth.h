@@ -61,9 +61,19 @@ namespace auth
         return NULL;
     }
 
+    void reqauth(clientinfo *ci)
+    {
+        if(!nextauthreq) nextauthreq = 1;
+        ci->authreq = nextauthreq++;
+        defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
+        addoutput(buf);
+		sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "please wait, requesting credential match");
+    }
+
     bool tryauth(clientinfo *ci, const char *user)
     {
-		if(!isconnected())
+    	if(!ci) return false;
+		else if(!isconnected())
 		{
 			sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "not connected to authentication server");
 			return false;
@@ -73,12 +83,8 @@ namespace auth
 			sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "waiting for previous attempt..");
 			return true;
 		}
-        if(!nextauthreq) nextauthreq = 1;
-        ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, true, true, false, 100);
-        defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
-        addoutput(buf);
-		sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "please wait, requesting credential match");
+        reqauth(ci);
 		return true;
     }
 
@@ -304,8 +310,10 @@ namespace auth
 			if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
 			else
 			{
+				output.setsizenodelete(0);
+				outputpos = inputpos = 0;
 				regserver();
-				loopv(clients) clients[i]->authreq = clients[i]->authname[0] = 0;
+				loopv(clients) if(clients[i]->authreq) reqauth(clients[i]);
 			}
 		}
     }
