@@ -1788,7 +1788,7 @@ namespace hud
 		glTexCoord2f(0, 1); glVertex2f(w-208, 192);
 		glEnd();
 
-		pushfont("sub");
+		pushfont("radar");
 		int y = h-FONTH/2;
 		if(loadbackinfo && *loadbackinfo) y -= draw_textx("%s", FONTH/2, y, 255, 255, 255, 255, TEXT_LEFT_UP, -1, w*2, loadbackinfo);
 		if(progressing)
