@@ -10,22 +10,23 @@ namespace auth
 	extern void connect();
 	extern void disconnect();
 
-    void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
+    void setmaster(clientinfo *ci, bool val, const char *text = "", int flags = 0)
 	{
-        if(authname && !val) return;
-        int privilege = ci->privilege;
+        if(!flags && !val) return;
+        int privilege = ci->privilege, flag = flags;
+		bool haspass = val && !flags && adminpass[0] && checkpassword(ci, adminpass, text);
+        if((haspass || ci->local) && flag < PRIV_ADMIN) flag = PRIV_ADMIN;
 		if(val)
 		{
-            bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
-			if(ci->privilege >= (haspass || authname || ci->local ? PRIV_ADMIN : PRIV_MASTER)) return;
-			if(haspass || authname || ci->local)
+			if(ci->privilege >= flag)
 			{
-				loopv(clients) if(ci != clients[i] && clients[i]->privilege == PRIV_MASTER)
-				{
-					clients[i]->privilege = PRIV_NONE;
-					mastermode = MM_OPEN;
-				}
-				privilege = ci->privilege = PRIV_ADMIN;
+            	srvmsgf(ci->clientnum, "\foyou are already \fs\fc%s\fS", privname(ci->privilege));
+				return;
+			}
+			if(flag)
+			{
+				loopv(clients) if(ci != clients[i] && clients[i]->privilege < flag) clients[i]->privilege = PRIV_NONE;
+				privilege = ci->privilege = flag;
 			}
             else if(!(mastermask()&MM_AUTOAPPROVE) && !ci->privilege)
             {
@@ -46,16 +47,18 @@ namespace auth
 		{
 			if(!ci->privilege) return;
 			ci->privilege = PRIV_NONE;
-			mastermode = MM_OPEN;
+            int others = 0;
+			loopv(clients) if(clients[i]->privilege >= PRIV_MASTER || clients[i]->local) others++;
+            if(!others) mastermode = MM_OPEN;
 		}
-        if(val && authname) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), authname);
+        if(val && flags) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), text);
         else srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
 		masterupdate = true;
         if(paused)
         {
-            int vars = 0;
-			loopv(clients) if(clients[i]->privilege >= (GAME(varslock) ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) vars++;
-            if(!vars) setpause(false);
+            int others = 0;
+			loopv(clients) if(clients[i]->privilege >= (GAME(varslock) ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) others++;
+            if(!others) setpause(false);
         }
 	}
 
@@ -82,12 +85,19 @@ namespace auth
 		sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
     }
 
-    void authsucceeded(uint id)
+    void authsucceeded(uint id, const char *name, const char *flags)
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
         ci->authreq = 0;
-		setmaster(ci, true, "", ci->authname);
+        int n = 0;
+        for(const char *c = flags; *c; *c++) switch(*c)
+        {
+        	case 'a': n = PRIV_ADMIN; break;
+        	case 'm': n = PRIV_MASTER; break;
+        	case 'u': n = PRIV_NONE; break;
+        }
+		if(n) setmaster(ci, true, name, n);
     }
 
     void authchallenged(uint id, const char *val)
@@ -156,7 +166,7 @@ namespace auth
 			if(!strcmp(w[0], "error")) conoutf("authserv error: %s", w[1]);
 			else if(!strcmp(w[0], "echo")) conoutf("authserv reply: %s", w[1]);
 			else if(!strcmp(w[0], "failauth")) authfailed((uint)(atoi(w[1])));
-			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])));
+			else if(!strcmp(w[0], "succauth")) authsucceeded((uint)(atoi(w[1])), w[2], w[3]);
 			else if(!strcmp(w[0], "chalauth")) authchallenged((uint)(atoi(w[1])), w[2]);
 			else if(!strcmp(w[0], "ban") || !strcmp(w[0], "allow"))
 			{
@@ -165,7 +175,7 @@ namespace auth
 				p.mask = (uint)(atoi(w[2]));
 				p.time = -2; // master info
 			}
-			else if(w[0]) conoutf("authserv sent invalid command: %s", w[0]);
+			//else if(w[0]) conoutf("authserv sent invalid command: %s", w[0]);
 			loopj(numargs) if(w[j]) delete[] w[j];
 		}
 		inputpos = &input[inputpos] - p;

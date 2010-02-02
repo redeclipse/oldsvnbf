@@ -16,24 +16,24 @@
 #define CLIENT_TIME (60*1000)
 #define SERVER_TIME (11*60*1000)
 #define AUTH_TIME (60*1000)
-#define AUTH_LIMIT 100
 #define DUP_LIMIT 16
 
 VAR(0, masterserver, 0, 0, 1);
 VAR(0, masterport, 1, ENG_MASTER_PORT, INT_MAX-1);
 SVAR(0, masterip, "");
 
+struct authuser
+{
+    char *name, *flags;
+    void *pubkey;
+};
+
 struct authreq
 {
     enet_uint32 reqtime;
     uint id;
     void *answer;
-};
-
-struct authuser
-{
-    char *name;
-    void *pubkey;
+    authuser *user;
 };
 
 struct masterclient
@@ -91,18 +91,19 @@ void masteroutf(masterclient &c, const char *fmt, ...)
 
 hashtable<char *, authuser> authusers;
 
-void addauth(char *name, char *pubkey)
+void addauth(char *name, char *flags, char *pubkey)
 {
 	name = newstring(name);
 	authuser &u = authusers[name];
 	u.name = name;
+	u.flags = newstring(flags);
     u.pubkey = parsepubkey(pubkey);
 }
-COMMAND(0, addauth, "ss");
+COMMAND(0, addauth, "sss");
 
 void clearauth()
 {
-	enumerate(authusers, authuser, u, { delete[] u.name; freepubkey(u.pubkey); });
+	enumerate(authusers, authuser, u, { delete[] u.name; delete[] u.flags; freepubkey(u.pubkey); });
 	authusers.clear();
 }
 COMMAND(0, clearauth, "");
@@ -145,22 +146,14 @@ void reqauth(masterclient &c, uint id, char *name)
 		return;
 	}
 
-	if(c.authreqs.length() >= AUTH_LIMIT)
-	{
-		masteroutf(c, "failauth %u\n", c.authreqs[0].id);
-        freechallenge(c.authreqs[0].answer);
-		c.authreqs.remove(0);
-	}
-
 	authreq &a = c.authreqs.add();
+	a.user = u;
 	a.reqtime = lastmillis;
 	a.id = id;
 	uint seed[3] = { starttime, lastmillis, randomMT() };
     static vector<char> buf;
     buf.setsizenodelete(0);
     a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
-
-	//printf("%s\n", buf.getbuf());
 
 	masteroutf(c, "chalauth %u %s\n", id, buf.getbuf());
 }
@@ -175,13 +168,13 @@ void confauth(masterclient &c, uint id, const char *val)
 		if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) copystring(ip, "-");
 		if(checkchallenge(val, c.authreqs[i].answer))
 		{
-			masteroutf(c, "succauth %u\n", id);
-			conoutf("succeeded %u from %s\n", id, ip);
+			masteroutf(c, "succauth %u \"%s\" \"%s\"\n", id, c.authreqs[i].user->name, c.authreqs[i].user->flags);
+			conoutf("succeeded %u (%s [%s]) from %s\n", id, c.authreqs[i].user->name, c.authreqs[i].user->flags, ip);
 		}
 		else
 		{
 			masteroutf(c, "failauth %u\n", id);
-			conoutf("failed %u from %s\n", id, ip);
+			conoutf("failed %u (%s) from %s\n", id, c.authreqs[i].user->name, ip);
 		}
         freechallenge(c.authreqs[i].answer);
 		c.authreqs.remove(i--);
