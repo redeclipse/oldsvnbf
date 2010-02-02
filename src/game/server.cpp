@@ -208,7 +208,7 @@ namespace server
 		string name, mapvote;
 		int modevote, mutsvote, lastvote;
 		int privilege;
-        bool connected, local, timesync, online, wantsmap;
+        bool connected, local, timesync, online, wantsmap, connectauth;
         int gameoffset, lastevent;
 		servstate state;
 		vector<gameevent *> events;
@@ -248,7 +248,7 @@ namespace server
 			ping = 0;
 			name[0] = 0;
 			privilege = PRIV_NONE;
-            connected = local = online = wantsmap = false;
+            connected = local = online = wantsmap = connectauth = false;
             authreq = 0;
 			position.setsizenodelete(0);
 			messages.setsizenodelete(0);
@@ -1628,6 +1628,8 @@ namespace server
 	#include "duelmut.h"
 	#include "aiman.h"
 
+	#include "auth.h"
+
 	void spectator(clientinfo *ci, int sender = -1)
 	{
 		if(!ci || ci->state.aitype >= 0) return;
@@ -2707,23 +2709,6 @@ namespace server
 			setteam(ci, chooseteam(ci, ci->team), false, true);
 	}
 
-	void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen)
-	{
-		char buf[2*sizeof(string)];
-		formatstring(buf)("%d %d ", cn, sessionid);
-		copystring(&buf[strlen(buf)], pwd);
-        if(!hashstring(buf, result, maxlen)) *result = '\0';
-	}
-
-	bool checkpassword(clientinfo *ci, const char *wanted, const char *given)
-	{
-		string hash;
-		hashpassword(ci->clientnum, ci->sessionid, wanted, hash, sizeof(string));
-		return !strcmp(hash, given);
-    }
-
-	#include "auth.h"
-
 	int triggertime(int i)
 	{
 		if(sents.inrange(i)) switch(sents[i].type)
@@ -2901,44 +2886,6 @@ namespace server
 		aiman::checkai();
 		auth::update();
 	}
-
-    bool allowbroadcast(int n)
-    {
-        clientinfo *ci = (clientinfo *)getinfo(n);
-        return ci && ci->connected && ci->state.aitype < 0;
-    }
-
-    bool hasclient(clientinfo *ci, clientinfo *cp = NULL)
-    {
-		if(!ci || (ci != cp && ci->clientnum != cp->clientnum && ci->state.ownernum != cp->clientnum)) return false;
-		return true;
-    }
-
-    int peerowner(int n)
-    {
-        clientinfo *ci = (clientinfo *)getinfo(n);
-        if(ci) return ci->state.aitype >= 0 ? ci->state.ownernum : ci->clientnum;
-        return -1;
-    }
-
-    int reserveclients() { return GAME(serverclients)+4; }
-
-    int allowconnect(clientinfo *ci, const char *pwd)
-    {
-        if(ci->local) return DISC_NONE;
-        if(m_demo(gamemode)) return DISC_PRIVATE;
-        if(serverpass[0])
-        {
-            if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
-            return DISC_NONE;
-        }
-        if(adminpass[0] && checkpassword(ci, adminpass, pwd)) return DISC_NONE;
-        if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
-        uint ip = getclientip(ci->clientnum);
-        if(checkipinfo(bans, ip) && !checkipinfo(allows, ip)) return DISC_IPBAN;
-        if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
-        return DISC_NONE;
-    }
 
 	int clientconnect(int n, uint ip, bool local)
 	{
@@ -3200,7 +3147,7 @@ namespace server
                 copystring(ci->name, text, MAXNAMELEN+1);
 
                 getstring(text, p);
-                int disc = allowconnect(ci, text);
+                int disc = auth::allowconnect(ci, text);
                 if(disc)
                 {
                     disconnect_client(sender, disc);

@@ -168,12 +168,14 @@ namespace client
 
     void connectattempt(const char *name, int port, const char *password, const ENetAddress &address)
     {
-        copystring(connectpass, password);
+        if(*password) { copystring(connectpass, password); }
+        else if(*authname) { defformatstring(connectpass)("@%s", authname); }
+        else connectpass[0] = 0;
     }
 
     void connectfail()
     {
-        memset(connectpass, 0, sizeof(connectpass));
+        connectpass[0] = 0;
     }
 
 	void gameconnect(bool _remote)
