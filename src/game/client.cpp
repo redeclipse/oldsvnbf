@@ -169,12 +169,12 @@ namespace client
     {
         if(*password) { copystring(connectpass, password); }
         else if(*authname) { formatstring(connectpass)("@%s", authname); }
-        else connectpass[0] = 0;
+        else memset(connectpass, 0, sizeof(connectpass));
     }
 
     void connectfail()
     {
-        connectpass[0] = 0;
+        memset(connectpass, 0, sizeof(connectpass));
     }
 
 	void gameconnect(bool _remote)
@@ -808,7 +808,8 @@ namespace client
         mkstring(hash);
         if(connectpass[0])
         {
-            server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
+        	if(connectpass[0] == '@') copystring(hash, connectpass);
+        	else server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
             memset(connectpass, 0, sizeof(connectpass));
         }
         sendstring(hash, p);
