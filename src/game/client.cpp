@@ -169,7 +169,7 @@ namespace client
     void connectattempt(const char *name, int port, const char *password, const ENetAddress &address)
     {
         if(*password) { copystring(connectpass, password); }
-        else if(*authname) { defformatstring(connectpass)("@%s", authname); }
+        else if(*authname) { formatstring(connectpass)("@%s", authname); }
         else connectpass[0] = 0;
     }
 
