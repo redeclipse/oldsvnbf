@@ -141,13 +141,10 @@ namespace auth
 		if(ci->privilege >= PRIV_ADMIN) return DISC_NONE;
 		if(*pwd)
 		{
-			if(!strncmp(pwd, "@", 1))
+			if(pwd[0] == '@' && !ci->connectauth)
 			{
-				if(!ci->connectauth)
-				{
-					ci->connectauth = true;
-					if(tryauth(ci, &pwd[1])) return DISC_NONE;
-				}
+				ci->connectauth = true;
+				if(tryauth(ci, &pwd[1])) return DISC_NONE;
 			}
 			else
 			{
