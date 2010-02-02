@@ -1,6 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
+* Update hacky '@authname' system with properly identified auth-on-connect requests
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
 * Undo forced impulse vars
