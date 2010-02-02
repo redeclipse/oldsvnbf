@@ -13,8 +13,8 @@ bool hasclient(clientinfo *ci, clientinfo *cp = NULL)
 int peerowner(int n)
 {
 	clientinfo *ci = (clientinfo *)getinfo(n);
-	if(ci) return ci->state.aitype >= 0 ? ci->state.ownernum : ci->clientnum;
-	return -1;
+	if(ci && ci->state.aitype >= 0) return ci->state.ownernum;
+	return n;
 }
 
 int reserveclients() { return GAME(serverclients)+4; }
@@ -90,9 +90,9 @@ namespace auth
         if((haspass || ci->local) && flag < PRIV_ADMIN) flag = PRIV_ADMIN;
 		if(val)
 		{
-			if(ci->privilege >= flag)
+			if(ci->privilege >= (flag ? flag : PRIV_MASTER))
 			{
-            	srvmsgf(ci->clientnum, "\foyou are already \fs\fc%s\fS", privname(ci->privilege));
+            	srvmsgf(ci->clientnum, "\foyou already have \fs\fc%s\fS access", privname(flag ? flag : PRIV_MASTER));
 				return;
 			}
 			if(flag)

@@ -81,7 +81,6 @@ namespace client
     }
     ICOMMAND(0, getvote, "ii", (int *num, int *player), getvotes(*num, *player));
 
-    int lastauth = 0;
     string authname = "", authkey = "";
 
     void setauthkey(const char *name, const char *key)
@@ -374,7 +373,6 @@ namespace client
     void tryauth()
     {
         if(!authname[0]) return;
-        lastauth = lastmillis;
         addmsg(SV_AUTHTRY, "rs", authname);
     }
 	ICOMMAND(0, auth, "", (), tryauth());
@@ -1897,9 +1895,9 @@ namespace client
 				{
 					uint id = (uint)getint(p);
 					getstring(text, p);
-					conoutft(CON_MESG, "server is challenging authentication details..");
-					if(lastauth && lastmillis-lastauth < 60*1000 && authname[0])
+					if(authname[0])
 					{
+						conoutft(CON_MESG, "server is challenging authentication details..");
 						vector<char> buf;
                         answerchallenge(authkey, text, buf);
 						addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
