@@ -91,21 +91,17 @@ namespace auth
     void setmaster(clientinfo *ci, bool val, const char *text = "", int flags = 0)
 	{
         if(!flags && !val) return;
-        int privilege = ci->privilege, flag = flags;
+        int privilege = ci->privilege, wants = flags;
 		bool haspass = val && !flags && adminpass[0] && checkpassword(ci, adminpass, text);
-        if((haspass || ci->local) && flag < PRIV_ADMIN) flag = PRIV_ADMIN;
+        if((haspass || ci->local) && wants < PRIV_ADMIN) wants = PRIV_ADMIN;
 		if(val)
 		{
-			if(ci->privilege >= (flag ? flag : PRIV_MASTER))
+			if(ci->privilege >= (wants ? wants : PRIV_MASTER))
 			{
-            	srvmsgf(ci->clientnum, "\foyou already have \fs\fc%s\fS access", privname(flag ? flag : PRIV_MASTER));
+            	srvmsgf(ci->clientnum, "\foyou already have \fs\fc%s\fS access", privname(wants ? wants : PRIV_MASTER));
 				return;
 			}
-			if(flag)
-			{
-				loopv(clients) if(ci != clients[i] && clients[i]->privilege < flag) clients[i]->privilege = PRIV_NONE;
-				privilege = ci->privilege = flag;
-			}
+			if(wants) privilege = ci->privilege = wants;
             else if(!(mastermask()&MM_AUTOAPPROVE) && !ci->privilege)
             {
             	srvmsgf(ci->clientnum, "\fraccess denied, you need auth/admin access to gain master");
@@ -206,7 +202,7 @@ namespace auth
         	case 'u': n = PRIV_NONE; break;
         }
 		if(n >= PRIV_NONE) setmaster(ci, true, n ? name : "", n);
-		if(ci->connectauth)
+		else if(ci->connectauth) // else so 'user' can connect
 		{
 			int disc = allowconnect(ci, "");
 			if(disc) { disconnect_client(id, disc); return; }
@@ -245,8 +241,6 @@ namespace auth
 			if(!end) end = (char *)memchr(p, '\0', &input[inputpos] - p);
 			if(!end) break;
 			*end++ = '\0';
-
-			//conoutf("{authserv} %s", p);
 			loopi(MAXWORDS)
 			{
 				w[i] = (char *)"";
@@ -255,7 +249,6 @@ namespace auth
 				if(s) w[i] = s;
 				else numargs = i;
 			}
-
 			p += strcspn(p, ";\n\0"); p++;
 			if(!strcmp(w[0], "error")) conoutf("authserv error: %s", w[1]);
 			else if(!strcmp(w[0], "echo")) conoutf("authserv reply: %s", w[1]);
