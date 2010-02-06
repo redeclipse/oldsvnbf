@@ -493,13 +493,13 @@ struct decalrenderer
 
 decalrenderer decals[] =
 {
-    decalrenderer("particles/smoke", DF_ROTATE, 500, 1000, 10000),
-    decalrenderer("particles/scorch", DF_ROTATE, 500, 1000, 10000),
-    decalrenderer("particles/scorch", DF_ROTATE, 500, 1000, 2000),
-    decalrenderer("particles/blood", DF_RND4|DF_ROTATE|DF_INVMOD, 0, 1000, 10000),
-    decalrenderer("<decal>particles/bullet", DF_OVERBRIGHT, 0, 1000, 10000),
-    decalrenderer("particles/energy", DF_ROTATE|DF_ADD|DF_SATURATE, 150, 500, 3000),
-    decalrenderer("particles/stain", DF_SATURATE, 100, 900, 1000)
+    decalrenderer("<grey>particles/smoke", DF_ROTATE, 500, 1000, 10000),
+    decalrenderer("<grey>particles/scorch", DF_ROTATE, 500, 1000, 10000),
+    decalrenderer("<grey>particles/scorch", DF_ROTATE, 500, 1000, 2000),
+    decalrenderer("<grey>particles/blood", DF_RND4|DF_ROTATE|DF_INVMOD, 0, 1000, 10000),
+    decalrenderer("<grey><decal>particles/bullet", DF_OVERBRIGHT, 0, 1000, 10000),
+    decalrenderer("<grey>particles/energy", DF_ROTATE|DF_ADD|DF_SATURATE, 150, 500, 3000),
+    decalrenderer("<grey>particles/stain", DF_SATURATE, 100, 900, 1000)
 };
 
 void initdecals()

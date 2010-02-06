@@ -566,8 +566,8 @@ VARF(IDF_PERSIST, blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
 
 static blobrenderer blobs[] =
 {
-    blobrenderer("data/particles/blob.png"),
-    blobrenderer("data/particles/blob.png")
+    blobrenderer("<grey>data/particles/blob.png"),
+    blobrenderer("<grey>data/particles/blob.png")
 };
 
 void initblobs(int type)
