@@ -229,7 +229,7 @@ namespace hud
 	VAR(IDF_PERSIST, radardamage, 0, 3, 5); // 0 = off, 1 = basic damage, 2 = with killer announce (+1 killer track, +2 and bots), 5 = verbose
 	VAR(IDF_PERSIST, radardamagetime, 1, 500, INT_MAX-1);
 	VAR(IDF_PERSIST, radardamagefade, 1, 4500, INT_MAX-1);
-	FVAR(IDF_PERSIST, radardamagesize, 0, 5, 1000);
+	FVAR(IDF_PERSIST, radardamagesize, 0, 6, 1000);
 	FVAR(IDF_PERSIST, radardamageblend, 0, 1, 1);
 	FVAR(IDF_PERSIST, radardamagetrack, 0, 1, 1000);
 	VAR(IDF_PERSIST, radardamagemin, 1, 25, INT_MAX-1);
@@ -1088,7 +1088,9 @@ namespace hud
 			dir.rotate_around_z(-camera1->yaw*RAD);
 			dir.normalize();
 			int colour = teamtype[d->team].colour;
-			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f), r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
+			const char *tex = bliptex;
+			float fade = clamp(1.f-(dist/radarrange()), 0.f, 1.f), pos = 4, size = radarplayersize,
+				r = (colour>>16)/255.f, g = ((colour>>8)&0xFF)/255.f, b = (colour&0xFF)/255.f;
 			if(d->state == CS_DEAD || d->state == CS_WAITING)
 			{
 				int millis = d->lastdeath ? lastmillis-d->lastdeath : 0;
@@ -1100,6 +1102,10 @@ namespace hud
 					else return;
 				}
 				else return;
+				tex = deadtex;
+				pos -= size;
+				size *= 2;
+
 			}
 			else if(d->state == CS_ALIVE)
 			{
@@ -1109,8 +1115,8 @@ namespace hud
 			}
 			else if(d->state != CS_EDITING) return;
 			if(chkcond(radarplayernames, game::tvmode()))
-				drawblip(bliptex, 4, w, h, radarplayersize*fade, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
-			else drawblip(bliptex, 4, w, h, radarplayersize, fade, dir, r, g, b);
+				drawblip(tex, pos, w, h, size, fade*blend*radarplayerblend, dir, r, g, b, "radar", "%s", game::colorname(d, NULL, "", false));
+			else drawblip(tex, pos, w, h, size, fade, dir, r, g, b);
 		}
 	}
 
