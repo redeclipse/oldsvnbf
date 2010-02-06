@@ -472,15 +472,6 @@ namespace server
 		return n;
 	}
 
-	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
-	{
-		if(ci->local || ci->privilege >= flag) return true;
-		else if(mastermask()&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum)) return true;
-		else if(msg)
-			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
-		return false;
-	}
-
 	bool duplicatename(clientinfo *ci, char *name)
 	{
 		if(!name) name = ci->name;
@@ -500,6 +491,22 @@ namespace server
 		}
 		concatstring(cname, "\fS");
 		return cname;
+	}
+
+	bool haspriv(clientinfo *ci, int flag, const char *msg = NULL)
+	{
+		if(ci->local || ci->privilege >= flag) return true;
+		else if(mastermask()&MM_AUTOAPPROVE && flag <= PRIV_MASTER && !numclients(ci->clientnum)) return true;
+		else if(msg && *msg)
+			srvmsgf(ci->clientnum, "\fraccess denied, you need to be %s to %s", privname(flag), msg);
+		return false;
+	}
+
+	bool cmppriv(clientinfo *ci, clientinfo *cp, const char *msg = NULL)
+	{
+		mkstring(str); if(msg && *msg) formatstring(str)("%s %s", msg, colorname(cp));
+		if(haspriv(ci, cp->local ? PRIV_MAX : cp->privilege, str)) return true;
+		return false;
 	}
 
     const char *gameid() { return GAMEID; }
@@ -3759,8 +3766,10 @@ namespace server
 				case SV_KICK:
 				{
 					int victim = getint(p);
-					if(haspriv(ci, PRIV_MASTER, "kick people") && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
+					if(haspriv(ci, PRIV_MASTER, "kick people") && victim >= 0 && ci->clientnum != victim)
 					{
+						clientinfo *cp = (clientinfo *)getinfo(victim);
+						if(!cp || !cmppriv(ci, cp, "kick")) break;
 						ipinfo &ban = bans.add();
 						ban.time = totalmillis;
 						ban.ip = getclientip(victim);
