@@ -105,7 +105,7 @@ SERVER_OBJS= \
 default: all
 
 enet/Makefile:
-    cd enet; chmod +x ./configure; ./configure
+    @cd enet; chmod +x ./configure; ./configure
 
 libenet: enet/Makefile
     $(MAKE) -C enet/ all
