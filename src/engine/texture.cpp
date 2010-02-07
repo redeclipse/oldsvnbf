@@ -381,15 +381,15 @@ GLenum compressedformat(GLenum format, int w, int h, int force = 0)
 
 int formatsize(GLenum format)
 {
-	switch(format)
-	{
-		case GL_LUMINANCE:
-		case GL_ALPHA: return 1;
-		case GL_LUMINANCE_ALPHA: return 2;
-		case GL_RGB: return 3;
-		case GL_RGBA: return 4;
-		default: return 4;
-	}
+    switch(format)
+    {
+        case GL_LUMINANCE:
+        case GL_ALPHA: return 1;
+        case GL_LUMINANCE_ALPHA: return 2;
+        case GL_RGB: return 3;
+        case GL_RGBA: return 4;
+        default: return 4;
+    }
 }
 
 VARF(IDF_PERSIST, hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
@@ -607,26 +607,26 @@ Texture *notexture = NULL, *blanktexture = NULL; // used as default, ensured to 
 
 void updatetexture(Texture *t)
 {
-	if(t->frames.length())
-	{
-		if(t->delay)
-		{
-			while(lastmillis-t->last >= t->delay)
-			{
-				t->frame++;
-				if(t->frame >= t->frames.length()) t->frame = 0;
-				t->last += t->delay;
-			}
+    if(t->frames.length())
+    {
+        if(t->delay)
+        {
+            while(lastmillis-t->last >= t->delay)
+            {
+                t->frame++;
+                if(t->frame >= t->frames.length()) t->frame = 0;
+                t->last += t->delay;
+            }
 
-			if(t->frames.inrange(t->frame)) t->id = t->frames[t->frame];
-			else t->id = t->frames[0];
+            if(t->frames.inrange(t->frame)) t->id = t->frames[t->frame];
+            else t->id = t->frames[0];
 
-			if(t->id <= 0)
-				t->id = t != notexture ? notexture->id : 0;
-		}
-		else t->id = t->frames[0];
-	}
-	else t->id = 0;
+            if(t->id <= 0)
+                t->id = t != notexture ? notexture->id : 0;
+        }
+        else t->id = t->frames[0];
+    }
+    else t->id = 0;
 }
 
 void updatetextures()
@@ -637,21 +637,21 @@ void updatetextures()
 void preloadtextures()
 {
     enumerate(*idents, ident, id, {
-    	if(id.type == ID_SVAR && (id.flags & IDF_TEXTURE))
-			id.changed();
-	});
+        if(id.type == ID_SVAR && (id.flags & IDF_TEXTURE))
+            id.changed();
+    });
 }
 
 static GLenum texformat(int bpp)
 {
-	switch(bpp)
-	{
-		case 1: return GL_LUMINANCE;
-		case 2: return GL_LUMINANCE_ALPHA;
-		case 3: return GL_RGB;
-		case 4: return GL_RGBA;
-		default: return 0;
-	}
+    switch(bpp)
+    {
+        case 1: return GL_LUMINANCE;
+        case 2: return GL_LUMINANCE_ALPHA;
+        case 3: return GL_RGB;
+        case 4: return GL_RGBA;
+        default: return 0;
+    }
 }
 
 int texalign(void *data, int w, int bpp)
@@ -670,8 +670,8 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
         char *key = newstring(rname);
         t = &textures[key];
         t->name = key;
-		t->frames.setsize(0);
-		t->frame = 0;
+        t->frames.setsize(0);
+        t->frame = 0;
     }
 
     t->clamp = clamp;
@@ -686,12 +686,12 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
     }
     if(s.compressed) t->type |= Texture::COMPRESSED;
 
-	bool hasanim = anim && anim->count;
+    bool hasanim = anim && anim->count;
     t->bpp = s.compressed ? formatsize(uncompressedformat(s.compressed)) : s.bpp;
-	t->delay = hasanim ? anim->delay : 0;
+    t->delay = hasanim ? anim->delay : 0;
 
-	t->w = t->xs = hasanim ? anim->w : s.w;
-	t->h = t->ys = hasanim ? anim->h : s.h;
+    t->w = t->xs = hasanim ? anim->w : s.w;
+    t->h = t->ys = hasanim ? anim->h : s.h;
 
     if(s.compressed)
     {
@@ -717,15 +717,15 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
         }
         createcompressedtexture(t->frames[0], t->w, t->h, data, s.align, s.bpp, levels, clamp, mipit ? 2 : 1, s.compressed, GL_TEXTURE_2D);
     }
-	else
+    else
     {
         resizetexture(t->w, t->h, mipit, canreduce, GL_TEXTURE_2D, compress, t->w, t->h);
         GLenum format = compressedformat(texformat(t->bpp), t->w, t->h, compress);
 
         loopi(hasanim ? anim->count : 1)
-	    {
-		    while(!t->frames.inrange(i)) t->frames.add(0);
-		    glGenTextures(1, &t->frames[i]);
+        {
+            while(!t->frames.inrange(i)) t->frames.add(0);
+            glGenTextures(1, &t->frames[i]);
 
             ImageData cropped;
             uchar *data = s.data;
@@ -740,11 +740,11 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
 
             createtexture(t->frames[i], t->w, t->h, data, clamp, mipit ? 2 : 1, format, GL_TEXTURE_2D, t->xs, t->ys, pitch, false);
 
-		    if(verbose >= 3)
-			    conoutf("\faadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, t->xs, t->ys);
+            if(verbose >= 3)
+                conoutf("\faadding frame: %s (%d) [%d,%d:%d,%d]", t->name, i+1, t->w, t->h, t->xs, t->ys);
         }
-	}
-	updatetexture(t);
+    }
+    updatetexture(t);
     return t;
 }
 
@@ -865,15 +865,15 @@ void scaleimage(ImageData &s, int w, int h)
 
 static vec parsevec(const char *arg)
 {
-	vec v(0, 0, 0);
-	int i = 0;
+    vec v(0, 0, 0);
+    int i = 0;
     for(; arg[0] && (!i || arg[0]=='/') && i<3; arg += strcspn(arg, "/,><"), i++)
     {
         if(i) arg++;
         v[i] = atof(arg);
     }
-	if(i==1) v.y = v.z = v.x;
-	return v;
+    if(i==1) v.y = v.z = v.x;
+    return v;
 }
 
 VAR(0, usedds, 0, 1, 1);
@@ -890,7 +890,7 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         else file++;
     }
 
-	if(!file) { if(msg) conoutf("\frcould not load texture %s", tname); return NULL; }
+    if(!file) { if(msg) conoutf("\frcould not load texture %s", tname); return NULL; }
 
     bool raw = !usedds || !compress, dds = false;
     for(const char *pcmds = cmds; pcmds;)
@@ -982,17 +982,17 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         }
         else if(!strncmp(cmd, "anim", len))
         {
-        	if(anim)
-        	{
-				anim->delay = arg[0] ? atoi(arg[0]) : 0;
-				anim->w = arg[1] ? atoi(arg[1]) : 0;
-				anim->h = arg[2] ? atoi(arg[2]) : 0;
-				if(!anim->w) anim->w = d.h < d.w ? d.h : d.w;
-				if(!anim->h) anim->h = d.h < d.w ? d.h : d.w;
-				anim->x = d.w/anim->w;
-				anim->y = d.h/anim->h;
-				anim->count = anim->x*anim->y;
-        	}
+            if(anim)
+            {
+                anim->delay = arg[0] ? atoi(arg[0]) : 0;
+                anim->w = arg[1] ? atoi(arg[1]) : 0;
+                anim->h = arg[2] ? atoi(arg[2]) : 0;
+                if(!anim->w) anim->w = d.h < d.w ? d.h : d.w;
+                if(!anim->h) anim->h = d.h < d.w ? d.h : d.w;
+                anim->x = d.w/anim->w;
+                anim->y = d.h/anim->h;
+                anim->count = anim->x*anim->y;
+            }
         }
     }
     if((anim && anim->count ? max(anim->w, anim->h) : max(d.w, d.h)) > (1<<12))
@@ -1027,19 +1027,19 @@ void loadalphamask(Texture *t)
 
 Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
-	string tname;
-	copystring(tname, name);
+    string tname;
+    copystring(tname, name);
     path(tname);
-	Texture *t = textures.access(tname);
-	if(!t)
-	{
-		ImageData s;
-		TextureAnim anim;
-		int compress = 0;
-		if(texturedata(s, tname, NULL, msg, &compress, &anim))
-			t = newtexture(NULL, tname, s, clamp, mipit, false, false, compress, &anim);
-		else t = notexture;
-	}
+    Texture *t = textures.access(tname);
+    if(!t)
+    {
+        ImageData s;
+        TextureAnim anim;
+        int compress = 0;
+        if(texturedata(s, tname, NULL, msg, &compress, &anim))
+            t = newtexture(NULL, tname, s, clamp, mipit, false, false, compress, &anim);
+        else t = notexture;
+    }
     return t;
 }
 
@@ -1056,8 +1056,8 @@ int curtexnum = 0, curmatslot = -1;
 void resettextures()
 {
     resetslotshader();
-	curtexnum = 0;
-	slots.setsize(0);
+    curtexnum = 0;
+    slots.setsize(0);
 }
 
 ICOMMAND(0, texturereset, "", (void), if(editmode || worldidents) resettextures(););
@@ -1070,50 +1070,50 @@ void resetmaterials()
 ICOMMAND(0, materialreset, "", (void), if(editmode || worldidents) resetmaterials(););
 generic textypes[] =
 {
-	{"c", TEX_DIFFUSE},
-	{"u", TEX_UNKNOWN},
-	{"d", TEX_DECAL},
-	{"n", TEX_NORMAL},
-	{"g", TEX_GLOW},
-	{"s", TEX_SPEC},
-	{"z", TEX_DEPTH},
-	{"e", TEX_ENVMAP}
+    {"c", TEX_DIFFUSE},
+    {"u", TEX_UNKNOWN},
+    {"d", TEX_DECAL},
+    {"n", TEX_NORMAL},
+    {"g", TEX_GLOW},
+    {"s", TEX_SPEC},
+    {"z", TEX_DEPTH},
+    {"e", TEX_ENVMAP}
 };
 
 int findtexturetype(char *name, bool tryint)
 {
-	loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { return textypes[i].id; }
-	return tryint && isnumeric(*name) ? atoi(name) : -1;
+    loopi(sizeof(textypes)/sizeof(textypes[0])) if(!strcmp(textypes[i].name, name)) { return textypes[i].id; }
+    return tryint && isnumeric(*name) ? atoi(name) : -1;
 }
 
 const char *findtexturename(int type)
 {
-	loopi(sizeof(textypes)/sizeof(textypes[0])) if(textypes[i].id == type) { return textypes[i].name; }
-	return NULL;
+    loopi(sizeof(textypes)/sizeof(textypes[0])) if(textypes[i].id == type) { return textypes[i].name; }
+    return NULL;
 }
 
 void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale)
 {
-	if(curtexnum<0 || curtexnum>=0x10000) return;
-	int tnum = findtexturetype(type, true), matslot = findmaterial(type, false);
-	if (tnum < 0) tnum = 0;
-	if (tnum == TEX_DIFFUSE)
-	{
-		if(matslot>=0) curmatslot = matslot;
-		else { curmatslot = -1; curtexnum++; }
-	}
-	else if(curmatslot>=0) matslot = curmatslot;
-	else if(!curtexnum) return;
-	Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
-	s.loaded = false;
+    if(curtexnum<0 || curtexnum>=0x10000) return;
+    int tnum = findtexturetype(type, true), matslot = findmaterial(type, false);
+    if (tnum < 0) tnum = 0;
+    if (tnum == TEX_DIFFUSE)
+    {
+        if(matslot>=0) curmatslot = matslot;
+        else { curmatslot = -1; curtexnum++; }
+    }
+    else if(curmatslot>=0) matslot = curmatslot;
+    else if(!curtexnum) return;
+    Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
+    s.loaded = false;
     s.texmask |= 1<<tnum;
-	if (s.sts.length() >= TEX_MAX) conoutf("\frwarning: too many textures, [%d] %s (%d,%d)", curtexnum, name, matslot, curmatslot);
-	Slot::Tex &st = s.sts.add();
-	st.type = tnum;
-	st.combined = -1;
-	st.t = NULL;
-	copystring(st.lname, name);
-	copystring(st.name, name);
+    if (s.sts.length() >= TEX_MAX) conoutf("\frwarning: too many textures, [%d] %s (%d,%d)", curtexnum, name, matslot, curmatslot);
+    Slot::Tex &st = s.sts.add();
+    st.type = tnum;
+    st.combined = -1;
+    st.t = NULL;
+    copystring(st.lname, name);
+    copystring(st.name, name);
     if(tnum==TEX_DIFFUSE)
     {
         setslotshader(s);
@@ -1128,79 +1128,79 @@ COMMAND(0, texture, "ssiiif");
 
 void texturedel(int i, bool local)
 {
-	loopj(curtexnum-i)
-	{
-		int oldtex = i+j, newtex = max(i+j-1, 0);
-		if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
-		loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
-	}
+    loopj(curtexnum-i)
+    {
+        int oldtex = i+j, newtex = max(i+j-1, 0);
+        if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+        loopk(8) replacetexcube(worldroot[k], oldtex, newtex);
+    }
 
-	loopvj(slots)
-	{
-		if(slots[j].layer > i)
-			slots[j].layer--;
-		else if(slots[j].layer == i) //since it's layer no longer exists
-			slots[j].layer = 0;
-	}
+    loopvj(slots)
+    {
+        if(slots[j].layer > i)
+            slots[j].layer--;
+        else if(slots[j].layer == i) //since it's layer no longer exists
+            slots[j].layer = 0;
+    }
 
-	slots[i].reset();
-	slots.remove(i);
-	curtexnum--;
+    slots[i].reset();
+    slots.remove(i);
+    curtexnum--;
 }
 
 ICOMMAND(0, texturedel, "i", (int *i), {
-	if (curtexnum > 8)
-	{
-		if (*i >= 0 && *i <= curtexnum)
-		{
-			texturedel(*i, true);
-			allchanged();
-		}
-		else conoutf("\frtexture to delete must be in range 0..%d", curtexnum);
-	}
-	else conoutf("\frnot enough texture slots, please add another one first");
+    if (curtexnum > 8)
+    {
+        if (*i >= 0 && *i <= curtexnum)
+        {
+            texturedel(*i, true);
+            allchanged();
+        }
+        else conoutf("\frtexture to delete must be in range 0..%d", curtexnum);
+    }
+    else conoutf("\frnot enough texture slots, please add another one first");
 });
 
 bool findcubetex(cube *c, int i)
 {
-	loopj(8)
-	{
-		if(c[j].children)
-		{
-			if(findcubetex(c[j].children, i)) return true;
-		}
-		else if(!isempty(c[j]))
-		{
-			loopk(6) if(c[j].texture[k] == i || (curtexnum-1 >= c[j].texture[k] && c[j].texture[k] >= 0 && slots[c[j].texture[k]].layer == i)) return true;
-		}
-	}
-	return false;
+    loopj(8)
+    {
+        if(c[j].children)
+        {
+            if(findcubetex(c[j].children, i)) return true;
+        }
+        else if(!isempty(c[j]))
+        {
+            loopk(6) if(c[j].texture[k] == i || (curtexnum-1 >= c[j].texture[k] && c[j].texture[k] >= 0 && slots[c[j].texture[k]].layer == i)) return true;
+        }
+    }
+    return false;
 }
 
 void texturecull(bool local)
 {
-	loopirev(curtexnum)
-	{
-		if(curtexnum <= 8) break;
-		if(!findcubetex(worldroot, i)) texturedel(i, local);
-	}
+    loopirev(curtexnum)
+    {
+        if(curtexnum <= 8) break;
+        if(!findcubetex(worldroot, i)) texturedel(i, local);
+    }
 }
 
 ICOMMAND(0, texturecull, "", (void), {
-	if (curtexnum > 8)
-	{
-		texturecull(true);
-		allchanged();
-	}
-	else conoutf("\frnot enough texture slots");
+    if (curtexnum > 8)
+    {
+        texturecull(true);
+        allchanged();
+    }
+    else conoutf("\frnot enough texture slots");
 });
 
 void autograss(char *name)
 {
     if(slots.empty()) return;
-	Slot &s = slots.last();
-	DELETEA(s.autograss);
-	s.autograss = name[0] ? newstring(name) : NULL;
+    Slot &s = slots.last();
+    DELETEA(s.autograss);
+    s.autograss = name[0] ? newstring(name) : NULL;
 }
 COMMAND(0, autograss, "s");
 
@@ -1251,8 +1251,8 @@ COMMAND(0, texscale, "f");
 
 static int findtextype(Slot &s, int type, int last = -1)
 {
-	for(int i = last+1; i<s.sts.length(); i++) if((type&(1<<s.sts[i].type)) && s.sts[i].combined<0) return i;
-	return -1;
+    for(int i = last+1; i<s.sts.length(); i++) if((type&(1<<s.sts[i].type)) && s.sts[i].combined<0) return i;
+    return -1;
 }
 
 static void addbump(ImageData &c, ImageData &n)
@@ -1316,43 +1316,43 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t, bool combined =
     if(combined) key.add('&');
     if(prefix) { while(*prefix) key.add(*prefix++); }
     defformatstring(tname)("%s", t.name);
-	for(const char *s = tname; *s; key.add(*s++));
+    for(const char *s = tname; *s; key.add(*s++));
 }
 
 static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 {
     if(renderpath==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && t.type!=TEX_GLOW && !forceload) { t.t = notexture; return; }
-	vector<char> key;
-	addname(key, s, t);
-	switch(t.type)
-	{
-		case TEX_DIFFUSE:
-			if(renderpath==R_FIXEDFUNCTION)
-			{
+    vector<char> key;
+    addname(key, s, t);
+    switch(t.type)
+    {
+        case TEX_DIFFUSE:
+            if(renderpath==R_FIXEDFUNCTION)
+            {
                 for(int i = -1; (i = findtextype(s, (1<<TEX_DECAL)|(1<<TEX_NORMAL), i))>=0;)
-				{
-					s.sts[i].combined = index;
-					addname(key, s, s.sts[i], true);
-				}
-				break;
-			} // fall through to shader case
+                {
+                    s.sts[i].combined = index;
+                    addname(key, s, s.sts[i], true);
+                }
+                break;
+            } // fall through to shader case
 
-		case TEX_NORMAL:
-		{
-			if(renderpath==R_FIXEDFUNCTION) break;
-			int i = findtextype(s, t.type==TEX_DIFFUSE ? (1<<TEX_SPEC) : (1<<TEX_DEPTH));
-			if(i<0) break;
-			s.sts[i].combined = index;
-			addname(key, s, s.sts[i], true);
-			break;
-		}
-	}
-	key.add('\0');
-	t.t = textures.access(key.getbuf());
-	if(t.t) return;
+        case TEX_NORMAL:
+        {
+            if(renderpath==R_FIXEDFUNCTION) break;
+            int i = findtextype(s, t.type==TEX_DIFFUSE ? (1<<TEX_SPEC) : (1<<TEX_DEPTH));
+            if(i<0) break;
+            s.sts[i].combined = index;
+            addname(key, s, s.sts[i], true);
+            break;
+        }
+    }
+    key.add('\0');
+    t.t = textures.access(key.getbuf());
+    if(t.t) return;
 
     ImageData ts;
-	TextureAnim anim;
+    TextureAnim anim;
     int compress = 0;
     if(!texturedata(ts, NULL, &t, true, &compress, &anim)) { t.t = notexture; return; }
     switch(t.type)
@@ -1394,7 +1394,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
             }
             break;
     }
-	t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress, &anim);
+    t.t = newtexture(NULL, key.getbuf(), ts, 0, true, true, true, compress, &anim);
 }
 
 Slot dummyslot;
@@ -1542,20 +1542,20 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
             return t;
         }
     }
-	char *wildcard = strchr(tname, '*');
+    char *wildcard = strchr(tname, '*');
     ImageData surface[6];
-	string sname;
-	if(!wildcard) copystring(sname, tname);
+    string sname;
+    if(!wildcard) copystring(sname, tname);
     GLenum format = GL_FALSE;
     int tsize = 0, compress = 0;
-	loopi(6)
-	{
-		if(wildcard)
-		{
-			copystring(sname, tname, wildcard-tname+1);
-			concatstring(sname, cubemapsides[i].name);
-			concatstring(sname, wildcard+1);
-		}
+    loopi(6)
+    {
+        if(wildcard)
+        {
+            copystring(sname, tname, wildcard-tname+1);
+            concatstring(sname, cubemapsides[i].name);
+            concatstring(sname, wildcard+1);
+        }
         ImageData &s = surface[i];
         texturedata(s, sname, NULL, msg, &compress);
         if(!s.data) return NULL;
@@ -1571,7 +1571,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
             return NULL;
         }
         tsize = max(tsize, max(s.w, s.h));
-	}
+    }
     if(name)
     {
         char *key = newstring(tname);
@@ -1617,30 +1617,30 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
         }
     }
     updatetexture(t);
-	return t;
+    return t;
 }
 
 Texture *cubemapload(const char *name, bool mipit, bool msg, bool transient)
 {
-	if(!hasCM) return NULL;
-	Texture *t = NULL;
-	if(!strchr(name, '*'))
-	{
-		defformatstring(pname)("%s_*", name);
-		t = cubemaploadwildcard(NULL, pname, mipit, false, transient);
-		if(!t && msg) conoutf("\frcould not load envmap %s", name);
-	}
-	else t = cubemaploadwildcard(NULL, name, mipit, msg, transient);
-	return t;
+    if(!hasCM) return NULL;
+    Texture *t = NULL;
+    if(!strchr(name, '*'))
+    {
+        defformatstring(pname)("%s_*", name);
+        t = cubemaploadwildcard(NULL, pname, mipit, false, transient);
+        if(!t && msg) conoutf("\frcould not load envmap %s", name);
+    }
+    else t = cubemaploadwildcard(NULL, name, mipit, msg, transient);
+    return t;
 }
 
 VAR(IDF_WORLD, envmapradius, 0, 128, 10000);
 
 struct envmap
 {
-	int radius, size;
-	vec o;
-	GLuint tex;
+    int radius, size;
+    vec o;
+    GLuint tex;
 };
 
 static vector<envmap> envmaps;
@@ -1653,8 +1653,8 @@ void clearenvmaps()
         if(skyenvmap->type&Texture::TRANSIENT) cleanuptexture(skyenvmap);
         skyenvmap = NULL;
     }
-	loopv(envmaps) glDeleteTextures(1, &envmaps[i].tex);
-	envmaps.setsize(0);
+    loopv(envmaps) glDeleteTextures(1, &envmaps[i].tex);
+    envmaps.setsize(0);
 }
 
 VAR(0, aaenvmap, 0, 2, 4);
@@ -1662,21 +1662,21 @@ VAR(0, aaenvmap, 0, 2, 4);
 GLuint genenvmap(const vec &o, int envmapsize)
 {
     int rendersize = 1<<(envmapsize+aaenvmap), sizelimit = min(hwcubetexsize, min(screen->w, screen->h));
-	if(maxtexsize) sizelimit = min(sizelimit, maxtexsize);
+    if(maxtexsize) sizelimit = min(sizelimit, maxtexsize);
     while(rendersize > sizelimit) rendersize /= 2;
-	int texsize = min(rendersize, 1<<envmapsize);
-	if(!aaenvmap) rendersize = texsize;
+    int texsize = min(rendersize, 1<<envmapsize);
+    if(!aaenvmap) rendersize = texsize;
     GLuint tex;
-	glGenTextures(1, &tex);
-	glViewport(0, 0, rendersize, rendersize);
-	float yaw = 0, pitch = 0;
+    glGenTextures(1, &tex);
+    glViewport(0, 0, rendersize, rendersize);
+    float yaw = 0, pitch = 0;
     uchar *pixels = new uchar[3*rendersize*rendersize];
     glPixelStorei(GL_PACK_ALIGNMENT, texalign(pixels, rendersize, 3));
-	loopi(6)
-	{
-		const cubemapside &side = cubemapsides[i];
-		switch(side.target)
-		{
+    loopi(6)
+    {
+        const cubemapside &side = cubemapsides[i];
+        switch(side.target)
+        {
             case GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB: // lf
                 yaw = 270; pitch = 0; break;
             case GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB: // rt
@@ -1692,43 +1692,43 @@ GLuint genenvmap(const vec &o, int envmapsize)
         }
         glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CCW : GL_CW);
         drawcubemap(rendersize, 0, o, yaw, pitch, !side.flipx, !side.flipy, side.swapxy);
-		glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         createtexture(tex, texsize, texsize, pixels, 3, 2, GL_RGB5, side.target, rendersize, rendersize);
-	}
+    }
     glFrontFace(GL_CCW);
     delete[] pixels;
-	glViewport(0, 0, screen->w, screen->h);
-	return tex;
+    glViewport(0, 0, screen->w, screen->h);
+    return tex;
 }
 
 void initenvmaps()
 {
-	if(!hasCM) return;
-	clearenvmaps();
+    if(!hasCM) return;
+    clearenvmaps();
     extern char *skybox;
     skyenvmap = skybox[0] ? cubemapload(skybox, true, false, true) : NULL;
-	const vector<extentity *> &ents = entities::getents();
-	loopv(ents)
-	{
-		const extentity &ent = *ents[i];
-		if(ent.type != ET_ENVMAP) continue;
-		envmap &em = envmaps.add();
+    const vector<extentity *> &ents = entities::getents();
+    loopv(ents)
+    {
+        const extentity &ent = *ents[i];
+        if(ent.type != ET_ENVMAP) continue;
+        envmap &em = envmaps.add();
         em.radius = ent.attrs[0] ? max(0, min(10000, int(ent.attrs[0]))) : envmapradius;
         em.size = ent.attrs[1] ? max(4, min(9, int(ent.attrs[1]))) : 0;
-		em.o = ent.o;
-		em.tex = 0;
-	}
+        em.o = ent.o;
+        em.tex = 0;
+    }
 }
 
 void genenvmaps()
 {
-	if(envmaps.empty()) return;
-	progress(0, "generating environment maps...");
+    if(envmaps.empty()) return;
+    progress(0, "generating environment maps...");
     int lastprogress = SDL_GetTicks();
-	loopv(envmaps)
-	{
-		envmap &em = envmaps[i];
-		em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
+    loopv(envmaps)
+    {
+        envmap &em = envmaps[i];
+        em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
         if(renderedframe) continue;
         int millis = SDL_GetTicks();
         if(millis - lastprogress >= 250)
@@ -1736,34 +1736,34 @@ void genenvmaps()
             progress(float(i+1)/envmaps.length(), "generating environment maps...");
             lastprogress = millis;
         }
-	}
+    }
 }
 
 ushort closestenvmap(const vec &o)
 {
-	ushort minemid = EMID_SKY;
-	float mindist = 1e16f;
-	loopv(envmaps)
-	{
-		envmap &em = envmaps[i];
-		float dist = em.o.dist(o);
-		if(dist < em.radius && dist < mindist)
-		{
-			minemid = EMID_RESERVED + i;
-			mindist = dist;
-		}
-	}
-	return minemid;
+    ushort minemid = EMID_SKY;
+    float mindist = 1e16f;
+    loopv(envmaps)
+    {
+        envmap &em = envmaps[i];
+        float dist = em.o.dist(o);
+        if(dist < em.radius && dist < mindist)
+        {
+            minemid = EMID_RESERVED + i;
+            mindist = dist;
+        }
+    }
+    return minemid;
 }
 
 ushort closestenvmap(int orient, int x, int y, int z, int size)
 {
-	vec loc(x, y, z);
-	int dim = dimension(orient);
-	if(dimcoord(orient)) loc[dim] += size;
-	loc[R[dim]] += size/2;
-	loc[C[dim]] += size/2;
-	return closestenvmap(loc);
+    vec loc(x, y, z);
+    int dim = dimension(orient);
+    if(dimcoord(orient)) loc[dim] += size;
+    loc[R[dim]] += size/2;
+    loc[C[dim]] += size/2;
+    return closestenvmap(loc);
 }
 
 GLuint lookupenvmap(Slot &slot)
@@ -1774,9 +1774,9 @@ GLuint lookupenvmap(Slot &slot)
 
 GLuint lookupenvmap(ushort emid)
 {
-	if(emid==EMID_SKY || emid==EMID_CUSTOM) return skyenvmap ? skyenvmap->id : 0;
-	if(emid==EMID_NONE || !envmaps.inrange(emid-EMID_RESERVED)) return 0;
-	GLuint tex = envmaps[emid-EMID_RESERVED].tex;
+    if(emid==EMID_SKY || emid==EMID_CUSTOM) return skyenvmap ? skyenvmap->id : 0;
+    if(emid==EMID_NONE || !envmaps.inrange(emid-EMID_RESERVED)) return 0;
+    GLuint tex = envmaps[emid-EMID_RESERVED].tex;
     return tex ? tex : (skyenvmap ? skyenvmap->id : 0);
 }
 

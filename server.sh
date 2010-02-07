@@ -20,51 +20,51 @@ MACHINE_NAME=`uname -m`
 
 case ${SYSTEM_NAME} in
 Linux)
-	SYSTEM_SUFFIX=_linux
-	;;
+    SYSTEM_SUFFIX=_linux
+    ;;
 *)
-	SYSTEM_SUFFIX=_unknown
-	;;
+    SYSTEM_SUFFIX=_unknown
+    ;;
 esac
 
 case ${MACHINE_NAME} in
 i486|i586|i686)
-	MACHINE_SUFFIX=
-	;;
+    MACHINE_SUFFIX=
+    ;;
 x86_64)
-	MACHINE_SUFFIX=_64
-	;;
+    MACHINE_SUFFIX=_64
+    ;;
 *)
-	SYSTEM_SUFFIX=
-	MACHINE_SUFFIX=
-	;;
+    SYSTEM_SUFFIX=
+    MACHINE_SUFFIX=
+    ;;
 esac
 
 if [ -x ${BF_BIN}/bfserver ]
 then
-	SYSTEM_SUFFIX=
-	MACHINE_SUFFIX=
+    SYSTEM_SUFFIX=
+    MACHINE_SUFFIX=
 fi
 
 
 if [ -x ${BF_BIN}/bfserver${SYSTEM_SUFFIX}${MACHINE_SUFFIX} ]; 
 then
-	cd ${BF_DATA}
-	exec ${BF_BIN}/bfserver${SYSTEM_SUFFIX}${MACHINE_SUFFIX} ${BF_OPTIONS} "$@"
+    cd ${BF_DATA}
+    exec ${BF_BIN}/bfserver${SYSTEM_SUFFIX}${MACHINE_SUFFIX} ${BF_OPTIONS} "$@"
 else
-	echo "Your platform does not have a pre-compiled Blood Frontier server."
-	echo -n "Would you like to build one now? [Yn] "
-	read CC
-	if [ "${CC}" != "n" ]; then
-		cd ${BF_DATA}/src
-		make clean install-server
-		echo "Build complete, please try running the script again."
-	else
-		echo "Please follow the following steps to build:"
-		echo "1) Ensure you have the zlib *DEVELOPMENT* libraries installed."
-		echo "2) Change directory to src/ and type \"make clean install-server\"."
-		echo "3) If the build succeeds, return to this directory and run this script again."
-		exit 1
-	fi
+    echo "Your platform does not have a pre-compiled Blood Frontier server."
+    echo -n "Would you like to build one now? [Yn] "
+    read CC
+    if [ "${CC}" != "n" ]; then
+        cd ${BF_DATA}/src
+        make clean install-server
+        echo "Build complete, please try running the script again."
+    else
+        echo "Please follow the following steps to build:"
+        echo "1) Ensure you have the zlib *DEVELOPMENT* libraries installed."
+        echo "2) Change directory to src/ and type \"make clean install-server\"."
+        echo "3) If the build succeeds, return to this directory and run this script again."
+        exit 1
+    fi
 fi
 

@@ -15,19 +15,19 @@ struct grasswedge
 
     void init(int i, int n)
     {
-		dir = vec(2*M_PI*(i+0.5f)/float(n), 0);
-		edge1 = vec(2*M_PI*i/float(n), 0).div(cos(M_PI/n));
-		edge2 = vec(2*M_PI*(i+1)/float(n), 0).div(cos(M_PI/n));
-		bound1 = plane(vec(2*M_PI*(i/float(n) - 0.5f), 0), 0);
-		bound2 = plane(vec(2*M_PI*((i+1)/float(n) + 0.5f), 0), 0);
+        dir = vec(2*M_PI*(i+0.5f)/float(n), 0);
+        edge1 = vec(2*M_PI*i/float(n), 0).div(cos(M_PI/n));
+        edge2 = vec(2*M_PI*(i+1)/float(n), 0).div(cos(M_PI/n));
+        bound1 = plane(vec(2*M_PI*(i/float(n) - 0.5f), 0), 0);
+        bound2 = plane(vec(2*M_PI*((i+1)/float(n) + 0.5f), 0), 0);
     }
 };
 grasswedge *grassws = NULL;
 void resetgrasswedges(int n)
 {
-	DELETEA(grassws);
-	grassws = new grasswedge[n];
-	loopi(n) grassws[i].init(i, n);
+    DELETEA(grassws);
+    grassws = new grasswedge[n];
+    loopi(n) grassws[i].init(i, n);
 }
 VARF(IDF_PERSIST, grasswedges, 8, 8, 1024, resetgrasswedges(grasswedges));
 
@@ -52,18 +52,18 @@ static vector<grassgroup> grassgroups;
 float *grassoffsets = NULL, *grassanimoffsets = NULL;
 void resetgrassoffsets(int n)
 {
-	DELETEA(grassoffsets);
-	DELETEA(grassanimoffsets);
-	grassoffsets = new float[n];
-	grassanimoffsets = new float[n];
-	loopi(n) grassoffsets[i] = rnd(0x1000000)/float(0x1000000);
+    DELETEA(grassoffsets);
+    DELETEA(grassanimoffsets);
+    grassoffsets = new float[n];
+    grassanimoffsets = new float[n];
+    loopi(n) grassoffsets[i] = rnd(0x1000000)/float(0x1000000);
 }
 VARF(IDF_PERSIST, grassoffset, 8, 32, 1024, resetgrassoffsets(grassoffset));
 
 void checkgrass()
 {
-	if(!grassws) resetgrasswedges(grasswedges);
-	if(!grassoffsets) resetgrassoffsets(grassoffset);
+    if(!grassws) resetgrasswedges(grasswedges);
+    if(!grassoffsets) resetgrassoffsets(grassoffset);
 }
 
 static int lastgrassanim = -1;
@@ -215,7 +215,7 @@ void generategrass()
 {
     if(!grass || !grassdist) return;
 
-	checkgrass();
+    checkgrass();
 
     grassgroups.setsizenodelete(0);
     grassverts.setsizenodelete(0);
@@ -243,7 +243,7 @@ void rendergrass()
 {
     if(!grass || !grassdist || grassgroups.empty() || dbggrass) return;
 
-	checkgrass();
+    checkgrass();
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);

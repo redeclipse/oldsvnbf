@@ -23,7 +23,7 @@ void removegui(menu *m)
     loopv(menustack) if(menustack[i]==m)
     {
         menustack.remove(i);
-		m->passes = 0;
+        m->passes = 0;
         m->clear();
         return;
     }
@@ -34,26 +34,26 @@ void pushgui(menu *m, int pos = -1, int tab = 0)
     if(menustack.empty()) resetcursor();
     if(pos < 0) menustack.add(m);
     else menustack.insert(pos, m);
-	if(m)
-	{
-		m->passes = 0;
-		m->menustart = lastmillis;
-		if(tab > 0) m->menutab = tab;
-		m->usetitle = tab >= 0 ? true : false;
-	}
+    if(m)
+    {
+        m->passes = 0;
+        m->menustart = lastmillis;
+        if(tab > 0) m->menutab = tab;
+        m->usetitle = tab >= 0 ? true : false;
+    }
 }
 
 void restoregui(int pos, int tab = 0)
 {
     int clear = menustack.length()-pos-1;
     loopi(clear) popgui();
-	menu *m = menustack.last();
-	if(m)
-	{
-		m->passes = 0;
-		m->menustart = lastmillis;
-		if(tab > 0) m->menutab = tab;
-	}
+    menu *m = menustack.last();
+    if(m)
+    {
+        m->passes = 0;
+        m->menustart = lastmillis;
+        if(tab > 0) m->menutab = tab;
+    }
 }
 
 void showgui(const char *name, int tab)
@@ -63,13 +63,13 @@ void showgui(const char *name, int tab)
     int pos = menustack.find(m);
     if(pos<0) pushgui(m, -1, tab);
     else restoregui(pos, tab);
-	playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
+    playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
 extern bool closetexgui();
 int cleargui(int n)
 {
-	if(closetexgui()) n--;
+    if(closetexgui()) n--;
     int clear = menustack.length();
     if(n>0) clear = min(clear, n);
     loopi(clear) popgui();
@@ -79,13 +79,13 @@ int cleargui(int n)
 
 void cleargui_(int *n)
 {
-	intret(cleargui(*n));
+    intret(cleargui(*n));
 }
 
 void guishowtitle(int *n)
 {
-	if(!cmenu) return;
-	cmenu->usetitle = *n ? true : false;
+    if(!cmenu) return;
+    cmenu->usetitle = *n ? true : false;
 }
 
 void guistayopen(char *contents)
@@ -110,24 +110,24 @@ SVAR(0, guirolloveraction, "");
 
 void guibutton(char *name, char *action, char *icon, char *altact)
 {
-	if(!cgui) return;
-	int ret = cgui->button(name, 0xFFFFFF, *icon ? icon : NULL);
-	if(ret&GUI_UP)
-	{
-		char *act = NULL;
-		if(altact[0] && ret&GUI_ALT) act = altact;
-		else if(action[0]) act = action;
-		if(act)
-		{
-			executelater.add(newstring(act));
-			if(shouldclearmenu) clearlater = true;
-		}
-	}
-	else if(ret&GUI_ROLLOVER)
-	{
-		setsvar("guirollovername", name, true);
-		setsvar("guirolloveraction", action, true);
-	}
+    if(!cgui) return;
+    int ret = cgui->button(name, 0xFFFFFF, *icon ? icon : NULL);
+    if(ret&GUI_UP)
+    {
+        char *act = NULL;
+        if(altact[0] && ret&GUI_ALT) act = altact;
+        else if(action[0]) act = action;
+        if(act)
+        {
+            executelater.add(newstring(act));
+            if(shouldclearmenu) clearlater = true;
+        }
+    }
+    else if(ret&GUI_ROLLOVER)
+    {
+        setsvar("guirollovername", name, true);
+        setsvar("guirolloveraction", action, true);
+    }
 }
 
 SVAR(0, guirolloverimgpath, "");
@@ -135,7 +135,7 @@ SVAR(0, guirolloverimgaction, "");
 
 void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpath, char *altact)
 {
-	if(!cgui) return;
+    if(!cgui) return;
     Texture *t = path[0] ? textureload(path, 0, true, false) : NULL;
     if(t == notexture)
     {
@@ -143,27 +143,27 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *altpa
         if(t == notexture) return;
     }
     int ret = cgui->image(t, *scale, *overlaid!=0);
-	if(ret&GUI_UP)
-	{
-		char *act = NULL;
-		if(altact[0] && ret&GUI_ALT) act = altact;
-		else if(action[0]) act = action;
-		if(act)
-		{
-			executelater.add(newstring(act));
-			if(shouldclearmenu) clearlater = true;
-		}
-	}
-	else if(ret&GUI_ROLLOVER)
-	{
-		setsvar("guirolloverimgpath", path, true);
-		setsvar("guirolloverimgaction", action, true);
-	}
+    if(ret&GUI_UP)
+    {
+        char *act = NULL;
+        if(altact[0] && ret&GUI_ALT) act = altact;
+        else if(action[0]) act = action;
+        if(act)
+        {
+            executelater.add(newstring(act));
+            if(shouldclearmenu) clearlater = true;
+        }
+    }
+    else if(ret&GUI_ROLLOVER)
+    {
+        setsvar("guirolloverimgpath", path, true);
+        setsvar("guirolloverimgaction", action, true);
+    }
 }
 
 void guislice(char *path, char *action, float *scale, float *start, float *end, char *text, char *altpath, char *altact)
 {
-	if(!cgui) return;
+    if(!cgui) return;
     Texture *t = path[0] ? textureload(path, 0, true, false) : NULL;
     if(t == notexture)
     {
@@ -171,76 +171,76 @@ void guislice(char *path, char *action, float *scale, float *start, float *end, 
         if(t == notexture) return;
     }
     int ret = cgui->slice(t, *scale, *start, *end, text[0] ? text : NULL);
-	if(ret&GUI_UP)
-	{
-		char *act = NULL;
-		if(altact[0] && ret&GUI_ALT) act = altact;
-		else if(action[0]) act = action;
-		if(act[0])
-		{
-			executelater.add(newstring(act));
-			if(shouldclearmenu) clearlater = true;
-		}
-	}
-	else if(ret&GUI_ROLLOVER)
-	{
-		setsvar("guirolloverimgpath", path, true);
-		setsvar("guirolloverimgaction", action, true);
-	}
+    if(ret&GUI_UP)
+    {
+        char *act = NULL;
+        if(altact[0] && ret&GUI_ALT) act = altact;
+        else if(action[0]) act = action;
+        if(act[0])
+        {
+            executelater.add(newstring(act));
+            if(shouldclearmenu) clearlater = true;
+        }
+    }
+    else if(ret&GUI_ROLLOVER)
+    {
+        setsvar("guirolloverimgpath", path, true);
+        setsvar("guirolloverimgaction", action, true);
+    }
 }
 
 void guitext(char *name, char *icon)
 {
-	if(cgui) cgui->text(name, 0xFFFFFF, icon[0] ? icon : NULL);
+    if(cgui) cgui->text(name, 0xFFFFFF, icon[0] ? icon : NULL);
 }
 
 void guititle(char *name)
 {
-	if(cgui) cgui->title(name);
+    if(cgui) cgui->title(name);
 }
 
 void guitab(char *name)
 {
-	if(cgui) cgui->tab(name);
+    if(cgui) cgui->tab(name);
 }
 
 void guibar()
 {
-	if(cgui) cgui->separator();
+    if(cgui) cgui->separator();
 }
 
 void guistrut(float *strut, int *alt)
 {
-	if(cgui)
-	{
-		if(!*alt) cgui->pushlist();
-		cgui->strut(*strut);
-		if(!*alt) cgui->poplist();
-	}
+    if(cgui)
+    {
+        if(!*alt) cgui->pushlist();
+        cgui->strut(*strut);
+        if(!*alt) cgui->poplist();
+    }
 }
 
 void guifont(char *font, char *body)
 {
-	if(cgui)
-	{
-		if(font[0])
-		{
-			cgui->pushfont(font);
-			if(body[0])
-			{
-				execute(body);
-				cgui->popfont();
-			}
-		}
-		else cgui->popfont();
-	}
+    if(cgui)
+    {
+        if(font[0])
+        {
+            cgui->pushfont(font);
+            if(body[0])
+            {
+                execute(body);
+                cgui->popfont();
+            }
+        }
+        else cgui->popfont();
+    }
 }
 
 static void updateval(char *var, int val, char *onchange)
 {
-	ident *id = getident(var);
-	string assign;
-	if(!id) return;
+    ident *id = getident(var);
+    string assign;
+    if(!id) return;
     switch(id->type)
     {
         case ID_VAR:
@@ -254,8 +254,8 @@ static void updateval(char *var, int val, char *onchange)
         default:
             return;
     }
-	executelater.add(newstring(assign));
-	if(onchange[0]) executelater.add(newstring(onchange));
+    executelater.add(newstring(assign));
+    if(onchange[0]) executelater.add(newstring(onchange));
 }
 
 static void updatefval(char *var, float val, char *onchange)
@@ -284,8 +284,8 @@ static void updatefval(char *var, float val, char *onchange)
 
 static int getval(char *var)
 {
-	ident *id = getident(var);
-	if(!id) return 0;
+    ident *id = getident(var);
+    if(!id) return 0;
     switch(id->type)
     {
         case ID_VAR: return *id->storage.i;
@@ -312,8 +312,8 @@ static float getfval(char *var)
 
 static int getvardef(char *var)
 {
-	ident *id = getident(var);
-	if(!id) return 0;
+    ident *id = getident(var);
+    if(!id) return 0;
     switch(id->type)
     {
         case ID_VAR: return id->def.i;
@@ -326,40 +326,40 @@ static int getvardef(char *var)
 
 void guiprogress(float *percent, float *scale)
 {
-	if(!cgui) return;
-	cgui->progress(*percent, *scale);
+    if(!cgui) return;
+    cgui->progress(*percent, *scale);
 }
 
 void guislider(char *var, int *min, int *max, char *onchange, int *reverse, int *scroll)
 {
-	if(!cgui) return;
-	int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
-	if(vmax >= INT_MAX-1)
-	{ // not a sane value for a slider..
-		int vdef = getvardef(var);
-		vmax = vdef > vmin ? vdef*3 : vmin*4;
-	}
-	cgui->slider(val, vmin, vmax, 0xFFFFFF, NULL, *reverse ? true : false, *scroll ? true : false);
-	if(val != oldval) updateval(var, val, onchange);
+    if(!cgui) return;
+    int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
+    if(vmax >= INT_MAX-1)
+    { // not a sane value for a slider..
+        int vdef = getvardef(var);
+        vmax = vdef > vmin ? vdef*3 : vmin*4;
+    }
+    cgui->slider(val, vmin, vmax, 0xFFFFFF, NULL, *reverse ? true : false, *scroll ? true : false);
+    if(val != oldval) updateval(var, val, onchange);
 }
 
 void guilistslider(char *var, char *list, char *onchange, int *reverse, int *scroll)
 {
-	if(!cgui) return;
-	vector<int> vals;
-	list += strspn(list, "\n\t ");
-	while(*list)
-	{
-		vals.add(atoi(list));
-		list += strcspn(list, "\n\t \0");
-		list += strspn(list, "\n\t ");
-	}
-	if(vals.empty()) return;
-	int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
-	loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
-	defformatstring(label)("%d", val);
-	cgui->slider(offset, 0, vals.length()-1, 0xFFFFFF, label, *reverse ? true : false, *scroll ? true : false);
-	if(offset != oldoffset) updateval(var, vals[offset], onchange);
+    if(!cgui) return;
+    vector<int> vals;
+    list += strspn(list, "\n\t ");
+    while(*list)
+    {
+        vals.add(atoi(list));
+        list += strcspn(list, "\n\t \0");
+        list += strspn(list, "\n\t ");
+    }
+    if(vals.empty()) return;
+    int val = getval(var), oldoffset = vals.length()-1, offset = oldoffset;
+    loopv(vals) if(val <= vals[i]) { oldoffset = offset = i; break; }
+    defformatstring(label)("%d", val);
+    cgui->slider(offset, 0, vals.length()-1, 0xFFFFFF, label, *reverse ? true : false, *scroll ? true : false);
+    if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
 void guinameslider(char *var, char *names, char *list, char *onchange, int *reverse, int *scroll)
@@ -384,20 +384,20 @@ void guinameslider(char *var, char *names, char *list, char *onchange, int *reve
 
 void guicheckbox(char *name, char *var, float *on, int *off, char *onchange)
 {
-	bool enabled = getfval(var)!=*off;
-	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox", enabled ? false : true)&GUI_UP)
-	{
-		updatefval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
-	}
+    bool enabled = getfval(var)!=*off;
+    if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "checkboxon" : "checkbox", enabled ? false : true)&GUI_UP)
+    {
+        updatefval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
+    }
 }
 
 void guiradio(char *name, char *var, float *n, char *onchange)
 {
-	bool enabled = getfval(var)==*n;
-	if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "radioboxon" : "radiobox", enabled ? false : true)&GUI_UP)
-	{
-		if(!enabled) updatefval(var, *n, onchange);
-	}
+    bool enabled = getfval(var)==*n;
+    if(cgui && cgui->button(name, 0xFFFFFF, enabled ? "radioboxon" : "radiobox", enabled ? false : true)&GUI_UP)
+    {
+        if(!enabled) updatefval(var, *n, onchange);
+    }
 }
 
 void guibitfield(char *name, char *var, int *mask, char *onchange)
@@ -413,21 +413,21 @@ void guibitfield(char *name, char *var, int *mask, char *onchange)
 //-ve length indicates a wrapped text field of any (approx 260 chars) length, |length| is the field width
 void guifield(char *var, int *maxlength, char *onchange)
 {
-	if(!cgui) return;
+    if(!cgui) return;
     const char *initval = "";
-	ident *id = getident(var);
+    ident *id = getident(var);
     if(id && id->type==ID_ALIAS) initval = id->action;
-	char *result = cgui->field(var, 0x666666, *maxlength ? *maxlength : 12, 0, initval);
-	if(result)
-	{
-		alias(var, result);
-		if(onchange[0])
-		{
-			interactive = true;
-			execute(onchange);
-			interactive = false;
-		}
-	}
+    char *result = cgui->field(var, 0x666666, *maxlength ? *maxlength : 12, 0, initval);
+    if(result)
+    {
+        alias(var, result);
+        if(onchange[0])
+        {
+            interactive = true;
+            execute(onchange);
+            interactive = false;
+        }
+    }
 }
 
 //-ve maxlength indicates a wrapped text field of any (approx 260 chars) length, |maxlength| is the field width
@@ -451,9 +451,9 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
         alias(var, result);
         if(onchange[0])
         {
-      		interactive = true;
-        	execute(onchange);
-        	interactive = false;
+            interactive = true;
+            execute(onchange);
+            interactive = false;
         }
     }
 }
@@ -462,29 +462,29 @@ void guikeyfield(char *var, int *maxlength, char *onchange)
 
 void guibody(char *contents, char *action, char *altact)
 {
-	if(!cgui) return;
-	cgui->pushlist(action[0] ? true : false);
-	execute(contents);
-	int ret = cgui->poplist();
-	if(ret&GUI_UP)
-	{
-		char *act = NULL;
-		if(ret&GUI_ALT && altact[0]) act = altact;
-		else if(action[0]) act = action;
-		if(act)
-		{
-			executelater.add(newstring(act));
-			if(shouldclearmenu) clearlater = true;
-		}
-	}
+    if(!cgui) return;
+    cgui->pushlist(action[0] ? true : false);
+    execute(contents);
+    int ret = cgui->poplist();
+    if(ret&GUI_UP)
+    {
+        char *act = NULL;
+        if(ret&GUI_ALT && altact[0]) act = altact;
+        else if(action[0]) act = action;
+        if(act)
+        {
+            executelater.add(newstring(act));
+            if(shouldclearmenu) clearlater = true;
+        }
+    }
 }
 
 void guilist(char *contents)
 {
-	if(!cgui) return;
-	cgui->pushlist();
-	execute(contents);
-	cgui->poplist();
+    if(!cgui) return;
+    cgui->pushlist();
+    execute(contents);
+    cgui->poplist();
 }
 
 void newgui(char *name, char *contents, char *initscript)
@@ -508,7 +508,7 @@ void newgui(char *name, char *contents, char *initscript)
 
 void guiheader(char *name)
 {
-	if(!cmenu) return;
+    if(!cmenu) return;
     DELETEA(cmenu->header);
     cmenu->header = name && name[0] ? newstring(name) : NULL;
 }
@@ -518,7 +518,7 @@ void guimodify(char *name, char *contents)
     menu *m = menus.access(name);
     if(!m) return;
     if(m->contents) delete[] m->contents;
-	m->contents = contents && contents[0] ? newstring(contents) : NULL;
+    m->contents = contents && contents[0] ? newstring(contents) : NULL;
 }
 
 COMMAND(0, newgui, "sss");
@@ -619,16 +619,16 @@ void clearchanges(int type)
 
 void menuprocess()
 {
-	int level = menustack.length();
-	interactive = true;
-	loopv(executelater) execute(executelater[i]);
-	executelater.deletecontentsa();
-	interactive = false;
-	if(clearlater)
-	{
+    int level = menustack.length();
+    interactive = true;
+    loopv(executelater) execute(executelater[i]);
+    executelater.deletecontentsa();
+    interactive = false;
+    if(clearlater)
+    {
         if(level==menustack.length()) loopi(level) popgui();
-		clearlater = false;
-	}
+        clearlater = false;
+    }
 }
 
 void progressmenu()
@@ -636,20 +636,20 @@ void progressmenu()
     menu *m = menus.access("loading");
     if(m)
     {
-    	m->usetitle = m->useinput = false;
-    	UI::addcb(m);
+        m->usetitle = m->useinput = false;
+        UI::addcb(m);
     }
     else conoutf("cannot find menu 'loading'");
 }
 
 void mainmenu()
 {
-	if(!menustack.empty()) UI::addcb(menustack.last());
+    if(!menustack.empty()) UI::addcb(menustack.last());
 }
 
 bool menuactive()
 {
-	return !menustack.empty();
+    return !menustack.empty();
 }
 
 ICOMMAND(0, menustacklen, "", (void), intret(menustack.length()));

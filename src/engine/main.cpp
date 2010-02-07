@@ -9,39 +9,39 @@ SDL_Cursor *scursor = NULL, *ncursor = NULL;
 
 void showcursor(bool show)
 {
-	if(show)
-	{
-		if(scursor) SDL_FreeCursor(scursor);
-		scursor = NULL;
-		SDL_SetCursor(ncursor);
-	}
-	else
-	{
-		if(!scursor)
-		{
-			Uint8 sd[1] = { 0 };
-			if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
-				fatal("could not create blank cursor");
-		}
+    if(show)
+    {
+        if(scursor) SDL_FreeCursor(scursor);
+        scursor = NULL;
+        SDL_SetCursor(ncursor);
+    }
+    else
+    {
+        if(!scursor)
+        {
+            Uint8 sd[1] = { 0 };
+            if(!(scursor = SDL_CreateCursor(sd, sd, 1, 1, 0, 0)))
+                fatal("could not create blank cursor");
+        }
 
-		SDL_SetCursor(scursor);
-	}
+        SDL_SetCursor(scursor);
+    }
 }
 
 void setcaption(const char *text)
 {
     static string caption = "";
-	defformatstring(newcaption)("%s v%.2f-%s (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_PLATFORM, ENG_RELEASE, text ? ": " : "", text ? text : "");
+    defformatstring(newcaption)("%s v%.2f-%s (%s)%s%s", ENG_NAME, float(ENG_VERSION)/100.f, ENG_PLATFORM, ENG_RELEASE, text ? ": " : "", text ? text : "");
     if(strcmp(caption, newcaption))
     {
         copystring(caption, newcaption);
-	    SDL_WM_SetCaption(caption, NULL);
+        SDL_WM_SetCaption(caption, NULL);
     }
 }
 
 void keyrepeat(bool on)
 {
-	SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0, SDL_DEFAULT_REPEAT_INTERVAL);
+    SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0, SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
 void inputgrab(bool on)
@@ -60,42 +60,42 @@ VAR(IDF_PERSIST, autograbinput, 0, 1, 1);
 void setscreensaver(bool active)
 {
 #ifdef WIN32
-	SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, active ? 1 : 0, NULL, 0);
-	SystemParametersInfo(SPI_SETLOWPOWERACTIVE, active ? 1 : 0, NULL, 0);
-	SystemParametersInfo(SPI_SETPOWEROFFACTIVE, active ? 1 : 0, NULL, 0);
+    SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, active ? 1 : 0, NULL, 0);
+    SystemParametersInfo(SPI_SETLOWPOWERACTIVE, active ? 1 : 0, NULL, 0);
+    SystemParametersInfo(SPI_SETPOWEROFFACTIVE, active ? 1 : 0, NULL, 0);
 #endif
 }
 
 void cleanup()
 {
     recorder::stop();
-	cleanupserver();
+    cleanupserver();
 #ifdef MASTERSERVER
-	cleanupmaster();
+    cleanupmaster();
 #endif
-	setscreensaver(true);
-	showcursor(true);
-	if(scursor) SDL_FreeCursor(scursor);
+    setscreensaver(true);
+    showcursor(true);
+    if(scursor) SDL_FreeCursor(scursor);
     SDL_WM_GrabInput(SDL_GRAB_OFF);
     SDL_SetGamma(1, 1, 1);
-	freeocta(worldroot);
-	extern void clear_command();	clear_command();
-	extern void clear_console();	clear_console();
-	extern void clear_mdls();		clear_mdls();
-	stopsound();
-	SDL_Quit();
+    freeocta(worldroot);
+    extern void clear_command();    clear_command();
+    extern void clear_console();    clear_console();
+    extern void clear_mdls();       clear_mdls();
+    stopsound();
+    SDL_Quit();
 }
 
-void quit()					 // normal exit
+void quit()                  // normal exit
 {
-	extern void writeinitcfg();
-	inbetweenframes = false;
-	writeinitcfg();
-	abortconnect();
-	disconnect(1);
-	writecfg();
-	cleanup();
-	exit(EXIT_SUCCESS);
+    extern void writeinitcfg();
+    inbetweenframes = false;
+    writeinitcfg();
+    abortconnect();
+    disconnect(1);
+    writecfg();
+    cleanup();
+    exit(EXIT_SUCCESS);
 }
 
 volatile int errors = 0;
@@ -107,7 +107,7 @@ void fatal(const char *s, ...)    // failure exit
         fprintf(stderr, "%s\n", msg);
         if(errors <= 1) // avoid recursion
         {
-			setscreensaver(true);
+            setscreensaver(true);
             if(SDL_WasInit(SDL_INIT_VIDEO))
             {
                 showcursor(true);
@@ -115,7 +115,7 @@ void fatal(const char *s, ...)    // failure exit
                 SDL_SetGamma(1, 1, 1);
             }
             #ifdef WIN32
-			MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
+            MessageBox(NULL, msg, "Blood Frontier: Error", MB_OK|MB_SYSTEMMODAL);
             #endif
             SDL_Quit();
         }
@@ -128,14 +128,14 @@ void fatalsignal(int signum)
 {
     if(!fatalsig)
     {
-    	fatalsig = true;
-    	fatal("Received fatal signal %d", signum);
+        fatalsig = true;
+        fatal("Received fatal signal %d", signum);
     }
 }
 
 void reloadsignal(int signum)
 {
-	rehash(true);
+    rehash(true);
 }
 
 int initing = NOT_INITING;
@@ -169,25 +169,25 @@ VARF(0, vsync, -1, -1, 1, initwarning("vertical sync"));
 void writeinitcfg()
 {
     if(!restoredinits) return;
-	stream *f = openfile("init.cfg", "w");
-	if(!f) return;
-	f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
+    stream *f = openfile("init.cfg", "w");
+    if(!f) return;
+    f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
     f->printf("fullscreen %d\n", fullscreen);
-	f->printf("scr_w %d\n", scr_w);
-	f->printf("scr_h %d\n", scr_h);
-	f->printf("colorbits %d\n", colorbits);
-	f->printf("depthbits %d\n", depthbits);
-	f->printf("stencilbits %d\n", stencilbits);
-	f->printf("fsaa %d\n", fsaa);
-	f->printf("vsync %d\n", vsync);
-	f->printf("shaders %d\n", useshaders);
-	f->printf("shaderprecision %d\n", shaderprecision);
-	f->printf("soundmono %d\n", soundmono);
-	f->printf("soundchans %d\n", soundchans);
-	f->printf("soundbufferlen %d\n", soundbufferlen);
-	f->printf("soundfreq %d\n", soundfreq);
-	f->printf("verbose %d\n", verbose);
+    f->printf("scr_w %d\n", scr_w);
+    f->printf("scr_h %d\n", scr_h);
+    f->printf("colorbits %d\n", colorbits);
+    f->printf("depthbits %d\n", depthbits);
+    f->printf("stencilbits %d\n", stencilbits);
+    f->printf("fsaa %d\n", fsaa);
+    f->printf("vsync %d\n", vsync);
+    f->printf("shaders %d\n", useshaders);
+    f->printf("shaderprecision %d\n", shaderprecision);
+    f->printf("soundmono %d\n", soundmono);
+    f->printf("soundchans %d\n", soundchans);
+    f->printf("soundbufferlen %d\n", soundbufferlen);
+    f->printf("soundfreq %d\n", soundfreq);
+    f->printf("verbose %d\n", verbose);
     delete f;
 }
 
@@ -198,9 +198,9 @@ void screenshot(char *sname)
 {
     ImageData image(screen->w, screen->h, 3);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image.data);
-	defformatstring(fname)("%s", sname && *sname ? sname : "screenshot");
-	saveimage(fname, image, imageformat, compresslevel, true, true);
+    glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, image.data);
+    defformatstring(fname)("%s", sname && *sname ? sname : "screenshot");
+    saveimage(fname, image, imageformat, compresslevel, true, true);
 }
 
 COMMAND(0, screenshot, "s");
@@ -226,21 +226,21 @@ void screenres(int *w, int *h)
 {
 #if !defined(WIN32) && !defined(__APPLE__)
     if(initing >= INIT_RESET)
-	{
+    {
 #endif
-		scr_w = clamp(*w, SCR_MINW, SCR_MAXW);
-		scr_h = clamp(*h, SCR_MINH, SCR_MAXH);
+        scr_w = clamp(*w, SCR_MINW, SCR_MAXW);
+        scr_h = clamp(*h, SCR_MINH, SCR_MAXH);
 #if defined(WIN32) || defined(__APPLE__)
-		initwarning("screen resolution");
+        initwarning("screen resolution");
 #else
-		return;
-	}
+        return;
+    }
     SDL_Surface *surf = SDL_SetVideoMode(clamp(*w, SCR_MINW, SCR_MAXW), clamp(*h, SCR_MINH, SCR_MAXH), 0, SDL_OPENGL|(screen->flags&SDL_FULLSCREEN ? SDL_FULLSCREEN : SDL_RESIZABLE));
-	if(!surf) return;
-	screen = surf;
-	scr_w = screen->w;
-	scr_h = screen->h;
-	glViewport(0, 0, scr_w, scr_h);
+    if(!surf) return;
+    screen = surf;
+    scr_w = screen->w;
+    scr_h = screen->h;
+    glViewport(0, 0, scr_w, scr_h);
 #endif
 }
 
@@ -248,12 +248,12 @@ COMMAND(0, screenres, "ii");
 
 VARF(IDF_PERSIST, gamma, 30, 100, 300,
 {
-	float f = gamma/100.0f;
-	if(SDL_SetGamma(f,f,f)==-1)
-	{
-		conoutf("\frcould not set gamma (card/driver doesn't support it?)");
-		conoutf("\frsdl: %s", SDL_GetError());
-	}
+    float f = gamma/100.0f;
+    if(SDL_SetGamma(f,f,f)==-1)
+    {
+        conoutf("\frcould not set gamma (card/driver doesn't support it?)");
+        conoutf("\frsdl: %s", SDL_GetError());
+    }
 });
 
 void resetgamma()
@@ -373,8 +373,8 @@ void setupscreen(int &usedcolorbits, int &useddepthbits, int &usedfsaa)
         if(stencilbits && (config&2)==0) conoutf("\frStencil buffer not supported - disabling");
         if(fsaa>0 && (config&4)==0) conoutf("\fr%dx anti-aliasing not supported - disabling", fsaa);
 #if SDL_VERSION_ATLEAST(1, 2, 11)
-		if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync) >= 0 && actualvsync >= 0) // could be forced on
-			conoutf("vsync is %s", actualvsync ? "enabled" : "disabled");
+        if(SDL_GL_GetAttribute(SDL_GL_SWAP_CONTROL, &actualvsync) >= 0 && actualvsync >= 0) // could be forced on
+            conoutf("vsync is %s", actualvsync ? "enabled" : "disabled");
 #endif
     }
 
@@ -432,7 +432,7 @@ void resetgl()
 
     inbetweenframes = false;
     if(!reloadtexture("textures/notexture") || !reloadtexture("textures/blank") || !reloadtexture("textures/logo") || !reloadtexture("textures/cube2badge"))
-		fatal("failed to reload core textures");
+        fatal("failed to reload core textures");
     reloadfonts();
     inbetweenframes = true;
     progress(0, "initializing...");
@@ -476,12 +476,12 @@ bool interceptkey(int sym)
 
 void resetcursor(bool warp, bool reset)
 {
-	if(warp && grabinput)
-	{
-		SDL_WarpMouse(screen->w/2, screen->h/2);
-		warpmouse = true;
-	}
-	if(reset) cursorx = cursory = 0.5f;
+    if(warp && grabinput)
+    {
+        SDL_WarpMouse(screen->w/2, screen->h/2);
+        warpmouse = true;
+    }
+    if(reset) cursorx = cursory = 0.5f;
 }
 
 static inline bool skipmousemotion(SDL_Event &event, bool init = false)
@@ -531,63 +531,63 @@ static void checkmousemotion(int &dx, int &dy)
 
 void checkinput()
 {
-	SDL_Event event;
-	int lasttype = 0, lastbut = 0;
+    SDL_Event event;
+    int lasttype = 0, lastbut = 0;
     while(events.length() || SDL_PollEvent(&event))
     {
         if(events.length()) event = events.remove(0);
 
-		switch (event.type)
-		{
-			case SDL_QUIT:
-				quit();
-				break;
+        switch (event.type)
+        {
+            case SDL_QUIT:
+                quit();
+                break;
 
 #if !defined(WIN32) && !defined(__APPLE__)
-			case SDL_VIDEORESIZE:
-				screenres(&event.resize.w, &event.resize.h);
-				break;
+            case SDL_VIDEORESIZE:
+                screenres(&event.resize.w, &event.resize.h);
+                break;
 #endif
 
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
-				break;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
+                break;
 
-			case SDL_ACTIVEEVENT:
-			{
-				if(event.active.state & SDL_APPINPUTFOCUS)
-				{
-					activewindow = event.active.gain ? true : false;
+            case SDL_ACTIVEEVENT:
+            {
+                if(event.active.state & SDL_APPINPUTFOCUS)
+                {
+                    activewindow = event.active.gain ? true : false;
 
-					if(autograbinput)
-						setvar("grabinput", event.active.gain ? 1 : 0, true);
-				}
-				break;
-			}
-			case SDL_MOUSEMOTION:
-			{
-				if((grabinput || activewindow) && !skipmousemotion(event, true))
-				{
-					//conoutf("mouse: %d %d, %d %d [%s, %d]", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, warpmouse ? "true" : "false", ignoremouse);
+                    if(autograbinput)
+                        setvar("grabinput", event.active.gain ? 1 : 0, true);
+                }
+                break;
+            }
+            case SDL_MOUSEMOTION:
+            {
+                if((grabinput || activewindow) && !skipmousemotion(event, true))
+                {
+                    //conoutf("mouse: %d %d, %d %d [%s, %d]", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y, warpmouse ? "true" : "false", ignoremouse);
                     int dx = event.motion.xrel, dy = event.motion.yrel;
                     checkmousemotion(dx, dy);
-					if(game::mousemove(dx, dy, event.motion.x, event.motion.y, screen->w, screen->h))
-						resetcursor(true, false); // game controls engine cursor
-				}
-				break;
-			}
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-			{
-				if(lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
-				keypress(-event.button.button, event.button.state!=0, 0);
-				lasttype = event.type;
-				lastbut = event.button.button;
-				break;
-			}
-		}
-	}
+                    if(game::mousemove(dx, dy, event.motion.x, event.motion.y, screen->w, screen->h))
+                        resetcursor(true, false); // game controls engine cursor
+                }
+                break;
+            }
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+            {
+                if(lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
+                keypress(-event.button.button, event.button.state!=0, 0);
+                lasttype = event.type;
+                lastbut = event.button.button;
+                break;
+            }
+        }
+    }
 }
 
 void swapbuffers()
@@ -601,49 +601,49 @@ VAR(IDF_PERSIST, maxfps, 0, 200, 1000);
 void limitfps(int &millis, int curmillis)
 {
     if(!maxfps) return;
-	static int fpserror = 0;
-	int delay = 1000/maxfps - (millis-curmillis);
-	if(delay < 0) fpserror = 0;
-	else
-	{
-		fpserror += 1000%maxfps;
-		if(fpserror >= maxfps)
-		{
-			++delay;
-			fpserror -= maxfps;
-		}
-		if(delay > 0)
-		{
-			SDL_Delay(delay);
-			millis += delay;
-		}
-	}
+    static int fpserror = 0;
+    int delay = 1000/maxfps - (millis-curmillis);
+    if(delay < 0) fpserror = 0;
+    else
+    {
+        fpserror += 1000%maxfps;
+        if(fpserror >= maxfps)
+        {
+            ++delay;
+            fpserror -= maxfps;
+        }
+        if(delay > 0)
+        {
+            SDL_Delay(delay);
+            millis += delay;
+        }
+    }
 }
 
 #if defined(WIN32) && !defined(_DEBUG) && !defined(__GNUC__)
 void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 {
-	if(!ep) fatal("unknown type");
-	EXCEPTION_RECORD *er = ep->ExceptionRecord;
-	CONTEXT *context = ep->ContextRecord;
-	string out, t;
-	formatstring(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
-	STACKFRAME sf = {{context->Eip, 0, AddrModeFlat}, {}, {context->Ebp, 0, AddrModeFlat}, {context->Esp, 0, AddrModeFlat}, 0};
-	SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    if(!ep) fatal("unknown type");
+    EXCEPTION_RECORD *er = ep->ExceptionRecord;
+    CONTEXT *context = ep->ContextRecord;
+    string out, t;
+    formatstring(out)("Blood Frontier Win32 Exception: 0x%x [0x%x]\n\n", er->ExceptionCode, er->ExceptionCode==EXCEPTION_ACCESS_VIOLATION ? er->ExceptionInformation[1] : -1);
+    STACKFRAME sf = {{context->Eip, 0, AddrModeFlat}, {}, {context->Ebp, 0, AddrModeFlat}, {context->Esp, 0, AddrModeFlat}, 0};
+    SymInitialize(GetCurrentProcess(), NULL, TRUE);
 
-	while(::StackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(), &sf, context, NULL, ::SymFunctionTableAccess, ::SymGetModuleBase, NULL))
-	{
-		struct { IMAGEHLP_SYMBOL sym; string n; } si = { { sizeof( IMAGEHLP_SYMBOL ), 0, 0, 0, sizeof(string) } };
-		IMAGEHLP_LINE li = { sizeof( IMAGEHLP_LINE ) };
-		DWORD off;
-		if(SymGetSymFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &si.sym) && SymGetLineFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &li))
-		{
-			char *del = strrchr(li.FileName, '\\');
-			formatstring(t)("%s - %s [%d]\n", si.sym.Name, del ? del + 1 : li.FileName, li.LineNumber);
-			concatstring(out, t);
-		}
-	}
-	fatal(out);
+    while(::StackWalk(IMAGE_FILE_MACHINE_I386, GetCurrentProcess(), GetCurrentThread(), &sf, context, NULL, ::SymFunctionTableAccess, ::SymGetModuleBase, NULL))
+    {
+        struct { IMAGEHLP_SYMBOL sym; string n; } si = { { sizeof( IMAGEHLP_SYMBOL ), 0, 0, 0, sizeof(string) } };
+        IMAGEHLP_LINE li = { sizeof( IMAGEHLP_LINE ) };
+        DWORD off;
+        if(SymGetSymFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &si.sym) && SymGetLineFromAddr(GetCurrentProcess(), (DWORD)sf.AddrPC.Offset, &off, &li))
+        {
+            char *del = strrchr(li.FileName, '\\');
+            formatstring(t)("%s - %s [%d]\n", si.sym.Name, del ? del + 1 : li.FileName, li.LineNumber);
+            concatstring(out, t);
+        }
+    }
+    fatal(out);
 }
 #endif
 
@@ -653,18 +653,18 @@ int fpspos = 0, fpshistory[MAXFPSHISTORY];
 
 void getfps(int &fps, int &bestdiff, int &worstdiff)
 {
-	int total = fpshistory[MAXFPSHISTORY-1], best = total, worst = total;
-	loopi(MAXFPSHISTORY-1)
-	{
-		int millis = fpshistory[i];
-		total += millis;
-		if(millis < best) best = millis;
-		if(millis > worst) worst = millis;
-	}
+    int total = fpshistory[MAXFPSHISTORY-1], best = total, worst = total;
+    loopi(MAXFPSHISTORY-1)
+    {
+        int millis = fpshistory[i];
+        total += millis;
+        if(millis < best) best = millis;
+        if(millis > worst) worst = millis;
+    }
 
-	fps = (1000*MAXFPSHISTORY)/total;
-	bestdiff = 1000/best-fps;
-	worstdiff = fps-1000/worst;
+    fps = (1000*MAXFPSHISTORY)/total;
+    bestdiff = 1000/best-fps;
+    worstdiff = fps-1000/worst;
 }
 
 void getfps_(int *raw)
@@ -685,61 +685,61 @@ VAR(0, worstfpsdiff, 1, 0, -1);
 
 void resetfps()
 {
-	loopi(MAXFPSHISTORY) fpshistory[i] = 1;
-	fpspos = 0;
+    loopi(MAXFPSHISTORY) fpshistory[i] = 1;
+    fpspos = 0;
 }
 
 void updatefps(int frames, int millis)
 {
-	fpshistory[fpspos++] = max(1, min(1000, millis));
-	if(fpspos >= MAXFPSHISTORY) fpspos = 0;
+    fpshistory[fpspos++] = max(1, min(1000, millis));
+    if(fpspos >= MAXFPSHISTORY) fpspos = 0;
 
-	int fps, bestdiff, worstdiff;
-	getfps(fps, bestdiff, worstdiff);
+    int fps, bestdiff, worstdiff;
+    getfps(fps, bestdiff, worstdiff);
 
-	curfps = fps;
-	bestfps = fps+bestdiff;
-	bestfpsdiff = bestdiff;
-	worstfps = fps-worstdiff;
-	worstfpsdiff = worstdiff;
+    curfps = fps;
+    bestfps = fps+bestdiff;
+    bestfpsdiff = bestdiff;
+    worstfps = fps-worstdiff;
+    worstfpsdiff = worstdiff;
 }
 
 bool inbetweenframes = false, renderedframe = true;
 
 static bool findarg(int argc, char **argv, const char *str)
 {
-	for(int i = 1; i<argc; i++) if(strstr(argv[i], str)==argv[i]) return true;
-	return false;
+    for(int i = 1; i<argc; i++) if(strstr(argv[i], str)==argv[i]) return true;
+    return false;
 }
 
 const char *loadbackinfo = "";
 void eastereggs()
 {
-	time_t ct = time(NULL); // current time
-	struct tm *lt = localtime(&ct);
+    time_t ct = time(NULL); // current time
+    struct tm *lt = localtime(&ct);
 
-	/*
-	tm_sec		seconds after the minute (0-61)
-	tm_min		minutes after the hour (0-59)
-	tm_hour		hours since midnight (0-23)
-	tm_mday		day of the month (1-31)
-	tm_mon		months since January (0-11)
-	tm_year		elapsed years since 1900
-	tm_wday		days since Sunday (0-6)
-	tm_yday		days since January 1st (0-365)
-	tm_isdst	1 if daylight savings is on, zero if not,
-	*/
-	int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
-	if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
-	else if(month == 10 && mday == 31) loadbackinfo = "Happy Halloween";
-	if(month == 2 && mday == 6)		loadbackinfo = "Happy Birthday Ahven!";
-	if(month == 2 && mday == 9)		loadbackinfo = "Happy Birthday Quin!";
-	if(month == 4 && mday == 18)	loadbackinfo = "Happy Birthday Geartrooper!";
-	if(month == 6 && mday == 9)		loadbackinfo = "Happy Birthday W!CK3D!";
-	if(month == 7 && mday == 26)	loadbackinfo = "Happy Birthday Acord!";
-	if(month == 7 && mday == 2)		loadbackinfo = "Happy Birthday c0rdawg and LedIris!";
-	if(month == 9 && mday == 26)	loadbackinfo = "Happy Birthday Dazza!";
-	if(month == 12 && mday == 8)	loadbackinfo = "Happy Birthday Hirato!";
+    /*
+    tm_sec      seconds after the minute (0-61)
+    tm_min      minutes after the hour (0-59)
+    tm_hour     hours since midnight (0-23)
+    tm_mday     day of the month (1-31)
+    tm_mon      months since January (0-11)
+    tm_year     elapsed years since 1900
+    tm_wday     days since Sunday (0-6)
+    tm_yday     days since January 1st (0-365)
+    tm_isdst    1 if daylight savings is on, zero if not,
+    */
+    int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
+    if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
+    else if(month == 10 && mday == 31) loadbackinfo = "Happy Halloween";
+    if(month == 2 && mday == 6)     loadbackinfo = "Happy Birthday Ahven!";
+    if(month == 2 && mday == 9)     loadbackinfo = "Happy Birthday Quin!";
+    if(month == 4 && mday == 18)    loadbackinfo = "Happy Birthday Geartrooper!";
+    if(month == 6 && mday == 9)     loadbackinfo = "Happy Birthday W!CK3D!";
+    if(month == 7 && mday == 26)    loadbackinfo = "Happy Birthday Acord!";
+    if(month == 7 && mday == 2)     loadbackinfo = "Happy Birthday c0rdawg and LedIris!";
+    if(month == 9 && mday == 26)    loadbackinfo = "Happy Birthday Dazza!";
+    if(month == 12 && mday == 8)    loadbackinfo = "Happy Birthday Hirato!";
 }
 
 bool progressing = false;
@@ -752,109 +752,109 @@ FVAR(0, progresspart, 0, 0, 1);
 
 void progress(float bar1, const char *text1, float bar2, const char *text2)
 {
-	if(progressing || !inbetweenframes)// || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
-		return;
-	clientkeepalive();
+    if(progressing || !inbetweenframes)// || ((actualvsync > 0 || verbose) && lastoutofloop && SDL_GetTicks()-lastoutofloop < 20))
+        return;
+    clientkeepalive();
 
     #ifdef __APPLE__
     interceptkey(SDLK_UNKNOWN); // keep the event queue awake to avoid 'beachball' cursor
     #endif
 
-	setsvar("progresstitle", text1 ? text1 : "please wait...");
-	setfvar("progressamt", bar1);
-	setsvar("progresstext", text2 ? text2 : "");
-	setfvar("progresspart", bar2);
-	if(verbose >= 4)
-	{
-		if(text2) conoutf("%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-		else if(text1) conoutf("%s [%.2f%%]", text1, bar1*100.f);
-		else conoutf("progressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
-	}
+    setsvar("progresstitle", text1 ? text1 : "please wait...");
+    setfvar("progressamt", bar1);
+    setsvar("progresstext", text2 ? text2 : "");
+    setfvar("progresspart", bar2);
+    if(verbose >= 4)
+    {
+        if(text2) conoutf("%s [%.2f%%], %s [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+        else if(text1) conoutf("%s [%.2f%%]", text1, bar1*100.f);
+        else conoutf("progressing [%.2f%%]", text1, bar1*100.f, text2, bar2*100.f);
+    }
 
-	progressing = true;
-	loopi(2) { drawnoview(); swapbuffers(); }
-	progressing = false;
-	lastoutofloop = SDL_GetTicks();
+    progressing = true;
+    loopi(2) { drawnoview(); swapbuffers(); }
+    progressing = false;
+    lastoutofloop = SDL_GetTicks();
 }
 
 int main(int argc, char **argv)
 {
-	#ifdef WIN32
-	//atexit((void (__cdecl *)(void))_CrtDumpMemoryLeaks);
-	#ifndef _DEBUG
-	#ifndef __GNUC__
-	__try {
-	#endif
-	#endif
-	#endif
+    #ifdef WIN32
+    //atexit((void (__cdecl *)(void))_CrtDumpMemoryLeaks);
+    #ifndef _DEBUG
+    #ifndef __GNUC__
+    __try {
+    #endif
+    #endif
+    #endif
 
     setlocations(true);
 
-	char *initscript = NULL;
-	initing = INIT_RESET;
-	for(int i = 1; i<argc; i++)
-	{
-		if(argv[i][0]=='-') switch(argv[i][1])
-		{
-			case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg", false); restoredinits = true; break;
-			case 'd':
-			{
-				switch(argv[i][2])
-				{
+    char *initscript = NULL;
+    initing = INIT_RESET;
+    for(int i = 1; i<argc; i++)
+    {
+        if(argv[i][0]=='-') switch(argv[i][1])
+        {
+            case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg", false); restoredinits = true; break;
+            case 'd':
+            {
+                switch(argv[i][2])
+                {
                     case 'w': scr_w = clamp(atoi(&argv[i][3]), SCR_MINW, SCR_MAXW); if(!findarg(argc, argv, "-dh")) scr_h = -1; break;
                     case 'h': scr_h = clamp(atoi(&argv[i][3]), SCR_MINH, SCR_MAXH); if(!findarg(argc, argv, "-dw")) scr_w = -1; break;
-					case 'd': depthbits = atoi(&argv[i][3]); break;
-					case 'c': colorbits = atoi(&argv[i][3]); break;
-					case 'a': fsaa = atoi(&argv[i][3]); break;
-					case 'v': vsync = atoi(&argv[i][3]); break;
-					case 'f': fullscreen = atoi(&argv[i][3]); break;
-					case 's': stencilbits = atoi(&argv[i][3]); break;
-					case 'u':
-					{
-						extern int useshaders, shaderprecision;
-						int n = atoi(&argv[i][3]);
-						useshaders = n ? 1 : 0;
-						shaderprecision = min(max(n - 1, 0), 3);
-						break;
-					}
-					default: conoutf("\frunknown display option %c", argv[i][2]); break;
-				}
-				break;
-			}
-			case 'x': initscript = &argv[i][2]; break;
-			default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
-		}
-		else gameargs.add(argv[i]);
-	}
+                    case 'd': depthbits = atoi(&argv[i][3]); break;
+                    case 'c': colorbits = atoi(&argv[i][3]); break;
+                    case 'a': fsaa = atoi(&argv[i][3]); break;
+                    case 'v': vsync = atoi(&argv[i][3]); break;
+                    case 'f': fullscreen = atoi(&argv[i][3]); break;
+                    case 's': stencilbits = atoi(&argv[i][3]); break;
+                    case 'u':
+                    {
+                        extern int useshaders, shaderprecision;
+                        int n = atoi(&argv[i][3]);
+                        useshaders = n ? 1 : 0;
+                        shaderprecision = min(max(n - 1, 0), 3);
+                        break;
+                    }
+                    default: conoutf("\frunknown display option %c", argv[i][2]); break;
+                }
+                break;
+            }
+            case 'x': initscript = &argv[i][2]; break;
+            default: if(!serveroption(argv[i])) gameargs.add(argv[i]); break;
+        }
+        else gameargs.add(argv[i]);
+    }
 
-	initing = NOT_INITING;
+    initing = NOT_INITING;
 
-	conoutf("loading enet..");
-	if(enet_initialize()<0) fatal("Unable to initialise network module");
+    conoutf("loading enet..");
+    if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
 
-	conoutf("loading game..");
-	initgame();
+    conoutf("loading game..");
+    initgame();
 
-	conoutf("loading sdl..");
+    conoutf("loading sdl..");
     int par = 0;
-	#ifdef _DEBUG
-	par = SDL_INIT_NOPARACHUTE;
-	#ifdef WIN32
-	SetEnvironmentVariable("SDL_DEBUG", "1");
-	#endif
-	#endif
+    #ifdef _DEBUG
+    par = SDL_INIT_NOPARACHUTE;
+    #ifdef WIN32
+    SetEnvironmentVariable("SDL_DEBUG", "1");
+    #endif
+    #endif
 
-	//#ifdef WIN32
-	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-	//#endif
+    //#ifdef WIN32
+    //SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    //#endif
 
-	par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE;
-	if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
-	ignoremouse += 3;
+    par |= SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE;
+    if(SDL_Init(par) < 0) fatal("Unable to initialize SDL: %s", SDL_GetError());
+    ignoremouse += 3;
 
-	conoutf("loading video mode..");
+    conoutf("loading video mode..");
     const SDL_VideoInfo *video = SDL_GetVideoInfo();
     if(video)
     {
@@ -864,12 +864,12 @@ int main(int argc, char **argv)
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-	conoutf("loading video misc..");
-	ncursor = SDL_GetCursor();
-	showcursor(false);
-	setscreensaver(false);
-	keyrepeat(false);
-	setcaption("please wait..");
+    conoutf("loading video misc..");
+    ncursor = SDL_GetCursor();
+    showcursor(false);
+    setscreensaver(false);
+    keyrepeat(false);
+    setcaption("please wait..");
 
     signal(SIGINT, fatalsignal);
     signal(SIGILL, fatalsignal);
@@ -886,59 +886,59 @@ int main(int argc, char **argv)
     signal(SIGALRM, fatalsignal);
     signal(SIGSTOP, fatalsignal);
 #endif
-	eastereggs();
+    eastereggs();
 
-	conoutf("loading gl..");
+    conoutf("loading gl..");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     if(!(notexture = textureload("textures/notexture")) ||
-		!(blanktexture = textureload("textures/blank")))
-		fatal("could not find core textures");
+        !(blanktexture = textureload("textures/blank")))
+        fatal("could not find core textures");
 
-	conoutf("loading sound..");
-	initsound();
+    conoutf("loading sound..");
+    initsound();
 
-	conoutf("loading defaults..");
+    conoutf("loading defaults..");
 
-	if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
-	if(!setfont("default")) fatal("no default font specified");
-	inbetweenframes = true;
+    if(!execfile("stdlib.cfg", false)) fatal("cannot find data files");
+    if(!setfont("default")) fatal("no default font specified");
+    inbetweenframes = true;
     progress(0, "please wait..");
 
     conoutf("loading gl effects..");
     progress(0, "loading gl effects..");
     loadshaders();
 
-	conoutf("loading world..");
+    conoutf("loading world..");
     progress(0, "loading world..");
-	emptymap(0, true, NULL, true);
+    emptymap(0, true, NULL, true);
 
-	conoutf("loading config..");
+    conoutf("loading config..");
     progress(0, "loading config..");
-	rehash(false);
-	smartmusic(true, false);
+    rehash(false);
+    smartmusic(true, false);
 
-	conoutf("loading required data..");
+    conoutf("loading required data..");
     progress(0, "loading required data..");
     preloadtextures();
-	particleinit();
+    particleinit();
     initdecals();
 
-	trytofindocta();
-	conoutf("loading main..");
+    trytofindocta();
+    conoutf("loading main..");
     progress(0, "loading main..");
-	if(initscript) execute(initscript);
-	if(autograbinput) setvar("grabinput", 1, true);
+    if(initscript) execute(initscript);
+    if(autograbinput) setvar("grabinput", 1, true);
     localconnect(false);
-	resetfps();
-	UI::setup();
+    resetfps();
+    UI::setup();
 
-	for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
-	{
-		updatetimer();
-		updatefps(frameloops, curtime);
-		checkinput();
-		menuprocess();
+    for(int frameloops = 0; ; frameloops = frameloops >= INT_MAX-1 ? MAXFPSHISTORY+1 : frameloops+1)
+    {
+        updatetimer();
+        updatefps(frameloops, curtime);
+        checkinput();
+        menuprocess();
 
         if(frameloops)
         {
@@ -946,34 +946,34 @@ int main(int argc, char **argv)
             game::updateworld();
         }
 
-		checksleep(lastmillis);
-		serverslice();
+        checksleep(lastmillis);
+        serverslice();
 #ifdef IRC
-		ircslice();
+        ircslice();
 #endif
-		if(frameloops)
-		{
-			game::recomputecamera(screen->w, screen->h);
-			hud::update(screen->w, screen->h);
-			setviewcell(camera1->o);
-			updatetextures();
-			updateparticles();
-			updatesounds();
-			UI::update();
-			inbetweenframes = renderedframe = false;
-			gl_drawframe(screen->w, screen->h);
-			renderedframe = true;
-			swapbuffers();
-			inbetweenframes = true;
-			defformatstring(cap)("%s - %s", game::gametitle(), game::gametext());
-			setcaption(cap);
-		}
-	}
+        if(frameloops)
+        {
+            game::recomputecamera(screen->w, screen->h);
+            hud::update(screen->w, screen->h);
+            setviewcell(camera1->o);
+            updatetextures();
+            updateparticles();
+            updatesounds();
+            UI::update();
+            inbetweenframes = renderedframe = false;
+            gl_drawframe(screen->w, screen->h);
+            renderedframe = true;
+            swapbuffers();
+            inbetweenframes = true;
+            defformatstring(cap)("%s - %s", game::gametitle(), game::gametext());
+            setcaption(cap);
+        }
+    }
 
-	ASSERT(0);
-	return EXIT_FAILURE;
+    ASSERT(0);
+    return EXIT_FAILURE;
 
 #if defined(WIN32) && !defined(_DEBUG) && !defined(__GNUC__)
-	} __except(stackdumper(0, GetExceptionInformation()), EXCEPTION_CONTINUE_SEARCH) { return 0; }
+    } __except(stackdumper(0, GetExceptionInformation()), EXCEPTION_CONTINUE_SEARCH) { return 0; }
 #endif
 }

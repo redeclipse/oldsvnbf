@@ -1,8 +1,8 @@
 // GL_ARB_vertex_program, GL_ARB_fragment_program
-extern PFNGLGENPROGRAMSARBPROC			glGenPrograms_;
-extern PFNGLDELETEPROGRAMSARBPROC		 glDeletePrograms_;
-extern PFNGLBINDPROGRAMARBPROC			glBindProgram_;
-extern PFNGLPROGRAMSTRINGARBPROC		  glProgramString_;
+extern PFNGLGENPROGRAMSARBPROC          glGenPrograms_;
+extern PFNGLDELETEPROGRAMSARBPROC        glDeletePrograms_;
+extern PFNGLBINDPROGRAMARBPROC          glBindProgram_;
+extern PFNGLPROGRAMSTRINGARBPROC          glProgramString_;
 extern PFNGLGETPROGRAMIVARBPROC           glGetProgramiv_;
 extern PFNGLPROGRAMENVPARAMETER4FARBPROC  glProgramEnvParameter4f_;
 extern PFNGLPROGRAMENVPARAMETER4FVARBPROC glProgramEnvParameter4fv_;
@@ -22,18 +22,18 @@ extern PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC glProgramLocalParameters4fv_;
 
 // GL_ARB_shading_language_100, GL_ARB_shader_objects, GL_ARB_fragment_shader, GL_ARB_vertex_shader
 extern PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObject_;
-extern PFNGLDELETEOBJECTARBPROC		 glDeleteObject_;
-extern PFNGLUSEPROGRAMOBJECTARBPROC	 glUseProgramObject_;
-extern PFNGLCREATESHADEROBJECTARBPROC	glCreateShaderObject_;
-extern PFNGLSHADERSOURCEARBPROC		 glShaderSource_;
-extern PFNGLCOMPILESHADERARBPROC		glCompileShader_;
+extern PFNGLDELETEOBJECTARBPROC      glDeleteObject_;
+extern PFNGLUSEPROGRAMOBJECTARBPROC  glUseProgramObject_;
+extern PFNGLCREATESHADEROBJECTARBPROC   glCreateShaderObject_;
+extern PFNGLSHADERSOURCEARBPROC      glShaderSource_;
+extern PFNGLCOMPILESHADERARBPROC        glCompileShader_;
 extern PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameteriv_;
-extern PFNGLATTACHOBJECTARBPROC		 glAttachObject_;
-extern PFNGLGETINFOLOGARBPROC			glGetInfoLog_;
-extern PFNGLLINKPROGRAMARBPROC		  glLinkProgram_;
-extern PFNGLGETUNIFORMLOCATIONARBPROC	glGetUniformLocation_;
-extern PFNGLUNIFORM4FVARBPROC			glUniform4fv_;
-extern PFNGLUNIFORM1IARBPROC			glUniform1i_;
+extern PFNGLATTACHOBJECTARBPROC      glAttachObject_;
+extern PFNGLGETINFOLOGARBPROC           glGetInfoLog_;
+extern PFNGLLINKPROGRAMARBPROC        glLinkProgram_;
+extern PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocation_;
+extern PFNGLUNIFORM4FVARBPROC           glUniform4fv_;
+extern PFNGLUNIFORM1IARBPROC            glUniform1i_;
 
 extern int renderpath;
 
@@ -47,22 +47,22 @@ enum { SHPARAM_LOOKUP = 0, SHPARAM_VERTEX, SHPARAM_PIXEL, SHPARAM_UNIFORM };
 struct ShaderParam
 {
     const char *name;
-	int type, index, loc;
-	float val[4];
+    int type, index, loc;
+    float val[4];
 };
 
 struct LocalShaderParamState : ShaderParam
 {
-	float curval[4];
+    float curval[4];
 
-	LocalShaderParamState()
-	{
-		memset(curval, -1, sizeof(curval));
-	}
-	LocalShaderParamState(const ShaderParam &p) : ShaderParam(p)
-	{
-		memset(curval, -1, sizeof(curval));
-	}
+    LocalShaderParamState()
+    {
+        memset(curval, -1, sizeof(curval));
+    }
+    LocalShaderParamState(const ShaderParam &p) : ShaderParam(p)
+    {
+        memset(curval, -1, sizeof(curval));
+    }
 };
 
 struct ShaderParamState
@@ -88,9 +88,9 @@ struct ShaderParamState
 
 enum
 {
-	SHADER_DEFAULT    = 0,
-	SHADER_NORMALSLMS = 1<<0,
-	SHADER_ENVMAP     = 1<<1,
+    SHADER_DEFAULT    = 0,
+    SHADER_NORMALSLMS = 1<<0,
+    SHADER_ENVMAP     = 1<<1,
     SHADER_GLSLANG    = 1<<2,
     SHADER_OPTION     = 1<<3,
     SHADER_INVALID    = 1<<4,
@@ -106,7 +106,7 @@ struct Slot;
 
 struct Shader
 {
-	static Shader *lastshader;
+    static Shader *lastshader;
 
     char *name, *vsstr, *psstr, *defer;
     int type;
@@ -281,9 +281,9 @@ struct ImageData
 
 struct TextureAnim
 {
-	int count, delay, x, y, w, h;
+    int count, delay, x, y, w, h;
 
-	TextureAnim() : count(0), delay(0) {}
+    TextureAnim() : count(0), delay(0) {}
 };
 
 
@@ -311,57 +311,57 @@ struct Texture
 
     Texture() : frame(0), delay(0), last(0), alphamask(NULL)
     {
-    	frames.setsize(0);
-	}
+        frames.setsize(0);
+    }
 
-	GLuint idframe(int id)
-	{
-		if(!frames.empty())
-			return frames[clamp(id, 0, frames.length()-1)];
-		return id;
-	}
+    GLuint idframe(int id)
+    {
+        if(!frames.empty())
+            return frames[clamp(id, 0, frames.length()-1)];
+        return id;
+    }
 
-	GLuint getframe(float amt)
-	{
-		if(!frames.empty())
-			return frames[clamp(int((frames.length()-1)*amt), 0, frames.length()-1)];
-		return id;
-	}
+    GLuint getframe(float amt)
+    {
+        if(!frames.empty())
+            return frames[clamp(int((frames.length()-1)*amt), 0, frames.length()-1)];
+        return id;
+    }
 
-	GLuint retframe(int cur, int total)
-	{
-		if(!frames.empty())
-			return frames[clamp((frames.length()-1)*cur/total, 0, frames.length()-1)];
-		return id;
-	}
+    GLuint retframe(int cur, int total)
+    {
+        if(!frames.empty())
+            return frames[clamp((frames.length()-1)*cur/total, 0, frames.length()-1)];
+        return id;
+    }
 };
 
 enum
 {
-	TEX_DIFFUSE = 0,
-	TEX_UNKNOWN,
-	TEX_DECAL,
-	TEX_NORMAL,
-	TEX_GLOW,
-	TEX_SPEC,
-	TEX_DEPTH,
-	TEX_ENVMAP,
-	TEX_MAX
+    TEX_DIFFUSE = 0,
+    TEX_UNKNOWN,
+    TEX_DECAL,
+    TEX_NORMAL,
+    TEX_GLOW,
+    TEX_SPEC,
+    TEX_DEPTH,
+    TEX_ENVMAP,
+    TEX_MAX
 };
 
 struct Slot
 {
-	struct Tex
-	{
-		int type;
-		Texture *t;
-		string lname, name;
-		int combined;
-	};
+    struct Tex
+    {
+        int type;
+        Texture *t;
+        string lname, name;
+        int combined;
+    };
 
-	vector<Tex> sts;
-	Shader *shader;
-	vector<ShaderParam> params;
+    vector<Tex> sts;
+    Shader *shader;
+    vector<ShaderParam> params;
     float scale;
     int rotation, xoffset, yoffset;
     float scrollS, scrollT;
@@ -379,11 +379,11 @@ struct Slot
 
     Slot() : autograss(NULL), layermaskname(NULL), layermask(NULL) { reset(); }
 
-	void reset()
-	{
-		sts.setsize(0);
-		shader = NULL;
-		params.setsize(0);
+    void reset()
+    {
+        sts.setsize(0);
+        shader = NULL;
+        params.setsize(0);
         scale = 1;
         rotation = xoffset = yoffset = 0;
         scrollS = scrollT = 0;
@@ -391,23 +391,23 @@ struct Slot
         glowcolor = vec(1, 1, 1);
         pulseglowcolor = vec(0, 0, 0);
         pulseglowspeed = 0;
-		loaded = false;
+        loaded = false;
         texmask = 0;
         DELETEA(autograss);
         grasstex = NULL;
-		thumbnail = NULL;
+        thumbnail = NULL;
         DELETEA(layermaskname);
         layermaskmode = 0;
         layermaskscale = 1;
         if(layermask) DELETEP(layermask);
-	}
+    }
 
     void cleanup()
     {
         loaded = false;
         grasstex = NULL;
         thumbnail = NULL;
-		if(layermask) DELETEP(layermask);
+        if(layermask) DELETEP(layermask);
         loopv(sts)
         {
             Tex &t = sts[i];
@@ -452,8 +452,8 @@ extern void preloadtextures();
 
 struct cubemapside
 {
-	GLenum target;
-	const char *name;
+    GLenum target;
+    const char *name;
     bool flipx, flipy, swapxy;
 };
 

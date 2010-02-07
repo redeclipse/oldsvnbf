@@ -18,7 +18,7 @@
 @end
 
 /* Use this flag to determine whether we use SDLMain.nib or not */
-#define		SDL_USE_NIB_FILE	0
+#define     SDL_USE_NIB_FILE    0
 
 static int    gArgc;
 static char  **gArgv;
@@ -64,11 +64,11 @@ static NSString *getApplicationName(void)
 // ADDED SO IT DOESN'T BEEP BECAUSE WE ENABLE SDL_ENABLEAPPEVENTS
 - (void)sendEvent:(NSEvent *)anEvent
 {
-	if( NSKeyDown == [anEvent type] || NSKeyUp == [anEvent type] ) {
-		if( [anEvent modifierFlags] & NSCommandKeyMask ) 
-			[super sendEvent: anEvent];
-	} else 
-		[super sendEvent: anEvent];
+    if( NSKeyDown == [anEvent type] || NSKeyUp == [anEvent type] ) {
+        if( [anEvent modifierFlags] & NSCommandKeyMask ) 
+            [super sendEvent: anEvent];
+    } else 
+        [super sendEvent: anEvent];
 }
 @end
 
@@ -81,14 +81,14 @@ static NSString *getApplicationName(void)
     if (shouldChdir)
     {
         char parentdir[MAXPATHLEN];
-		CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-		CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
-		if (CFURLGetFileSystemRepresentation(url2, true, (UInt8 *)parentdir, MAXPATHLEN)) {
-	        assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
-		}
-		CFRelease(url);
-		CFRelease(url2);
-	}
+        CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+        CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
+        if (CFURLGetFileSystemRepresentation(url2, true, (UInt8 *)parentdir, MAXPATHLEN)) {
+            assert ( chdir (parentdir) == 0 );   /* chdir to the binary app's parent */
+        }
+        CFRelease(url);
+        CFRelease(url2);
+    }
 
 }
 
@@ -193,8 +193,8 @@ static void setupWindowMenu(void)
 /* Replacement for NSApplicationMain */
 static void CustomApplicationMain (int argc, char **argv)
 {
-    NSAutoreleasePool	*pool = [[NSAutoreleasePool alloc] init];
-    SDLMain				*sdlMain;
+    NSAutoreleasePool   *pool = [[NSAutoreleasePool alloc] init];
+    SDLMain             *sdlMain;
 
     /* Ensure the application object is initialised */
     [SDLApplication sharedApplication];

@@ -49,26 +49,26 @@ void guessshadowdir()
         {
             case ET_LIGHT:
             {
-				if(!e.attrs[0])
-				{
-					lightpos.add(e.o);
-					numlights++;
-				}
-				break;
+                if(!e.attrs[0])
+                {
+                    lightpos.add(e.o);
+                    numlights++;
+                }
+                break;
             }
             case ET_SUNLIGHT:
             {
-				vec dir; vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir); dir.normalize().mul(hdr.worldsize);
-				lightpos.add(vec(1, 1, 1).mul(hdr.worldsize/2).add(dir));
-				numlights++;
+                vec dir; vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir); dir.normalize().mul(hdr.worldsize);
+                lightpos.add(vec(1, 1, 1).mul(hdr.worldsize/2).add(dir));
+                numlights++;
                 break;
             }
-			case ET_MAPMODEL:
-			{
+            case ET_MAPMODEL:
+            {
                 casterpos.add(e.o);
                 numcasters++;
                 break;
-			}
+            }
             default:
             {
                 if(e.type<ET_GAMESPECIFIC) break;

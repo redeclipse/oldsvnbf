@@ -28,10 +28,10 @@ struct editline
         char *newtext = new char[maxlen];
         if(fmt)
         {
-        	va_list args;
-        	va_start(args, fmt);
-        	_vsnprintf(newtext, maxlen, fmt, args);
-        	va_end(args);
+            va_list args;
+            va_start(args, fmt);
+            _vsnprintf(newtext, maxlen, fmt, args);
+            va_end(args);
         }
         DELETEA(text);
         text = newtext;
@@ -504,9 +504,9 @@ struct editor
             case SDLK_F4:
                 if(SDL_GetModState()&MOD_KEYS)
                 {
-                	quit();
-                	break;
-				}
+                    quit();
+                    break;
+                }
                 // fall through
             default:
                 insert(cooked);

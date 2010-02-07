@@ -6,9 +6,9 @@
 
 @interface ConsoleView : NSView {
 @private
-	NSMutableArray *array;
-	NSDictionary *attr;
-	BOOL endScroll;
+    NSMutableArray *array;
+    NSDictionary *attr;
+    BOOL endScroll;
 }
 - (void)scrollToEnd:(BOOL)enable;
 

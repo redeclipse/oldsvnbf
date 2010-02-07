@@ -7,25 +7,25 @@
 
 struct PackNode
 {
-	PackNode *child1, *child2;
-	ushort x, y, w, h;
-	int available;
+    PackNode *child1, *child2;
+    ushort x, y, w, h;
+    int available;
 
-	PackNode() : child1(0), child2(0), x(0), y(0), w(LM_PACKW), h(LM_PACKH), available(min(LM_PACKW, LM_PACKH)) {}
-	PackNode(ushort x, ushort y, ushort w, ushort h) : child1(0), child2(0), x(x), y(y), w(w), h(h), available(min(w, h)) {}
+    PackNode() : child1(0), child2(0), x(0), y(0), w(LM_PACKW), h(LM_PACKH), available(min(LM_PACKW, LM_PACKH)) {}
+    PackNode(ushort x, ushort y, ushort w, ushort h) : child1(0), child2(0), x(x), y(y), w(w), h(h), available(min(w, h)) {}
 
-	void clear()
-	{
-		DELETEP(child1);
-		DELETEP(child2);
-	}
+    void clear()
+    {
+        DELETEP(child1);
+        DELETEP(child2);
+    }
 
-	~PackNode()
-	{
-		clear();
-	}
+    ~PackNode()
+    {
+        clear();
+    }
 
-	bool insert(ushort &tx, ushort &ty, ushort tw, ushort th);
+    bool insert(ushort &tx, ushort &ty, ushort tw, ushort th);
 };
 
 enum
@@ -97,19 +97,19 @@ extern void previewblends(const ivec &bo, const ivec &bs);
 
 struct lerpvert
 {
-	vec normal;
-	float u, v;
+    vec normal;
+    float u, v;
 
-	bool operator==(const lerpvert &l) const { return u == l.u && v == l.v; }
-	bool operator!=(const lerpvert &l) const { return u != l.u || v != l.v; }
+    bool operator==(const lerpvert &l) const { return u == l.u && v == l.v; }
+    bool operator!=(const lerpvert &l) const { return u != l.u || v != l.v; }
 };
 
 struct lerpbounds
 {
-	const lerpvert *min;
-	const lerpvert *max;
-	float u, ustep;
-	vec normal, nstep;
+    const lerpvert *min;
+    const lerpvert *max;
+    float u, ustep;
+    vec normal, nstep;
 };
 
 extern void calcnormals();
@@ -123,15 +123,15 @@ extern void newnormals(cube &c);
 extern void freenormals(cube &c);
 
 #define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog) \
-	if(check_calclight_lmprog) \
-	{ \
-		if(!calclight_canceled) \
-		{ \
-			show_calclight_lmprog(); \
-			check_calclight_canceled(); \
-		} \
-		if(calclight_canceled) exit; \
-	}
+    if(check_calclight_lmprog) \
+    { \
+        if(!calclight_canceled) \
+        { \
+            show_calclight_lmprog(); \
+            check_calclight_canceled(); \
+        } \
+        if(calclight_canceled) exit; \
+    }
 
 extern bool calclight_canceled;
 extern volatile bool check_calclight_lmprog;

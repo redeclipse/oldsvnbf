@@ -23,23 +23,23 @@ struct entitylight
 
 enum
 {
-	MMT_NONE = 0,
-	MMT_HIDE = 1<<0, // hide when triggered (trigger)
-	MMT_NOCLIP = 1<<1, // always not collide
-	MMT_NOSHADOW = 1<<2, // doesn't cast a lightmap shadow
-	MMT_NODYNSHADOW = 1<<3, // doesn't cast a shadow map (trigger)
+    MMT_NONE = 0,
+    MMT_HIDE = 1<<0, // hide when triggered (trigger)
+    MMT_NOCLIP = 1<<1, // always not collide
+    MMT_NOSHADOW = 1<<2, // doesn't cast a lightmap shadow
+    MMT_NODYNSHADOW = 1<<3, // doesn't cast a shadow map (trigger)
 };
 
 struct entity : entbase
 {
-	vector<int> attrs, links;
+    vector<int> attrs, links;
 
     entity() { reset(); }
 
     void reset()
     {
-		attrs.setsize(0);
-		links.setsize(0);
+        attrs.setsize(0);
+        links.setsize(0);
     }
 };
 
@@ -47,15 +47,15 @@ struct extentity : entity                       // part of the entity that doesn
 {
     uchar spawned, inoctanode, visible;        // the only dynamic state of a map entity
     entitylight light;
-	int lastemit, emit[3];
+    int lastemit, emit[3];
 
     extentity() { reset(); }
 
     void reset()
     {
-    	entity::reset();
-		spawned = inoctanode = visible = false;
-		lastemit = emit[0] = emit[1] = emit[2] = 0;
+        entity::reset();
+        spawned = inoctanode = visible = false;
+        lastemit = emit[0] = emit[1] = emit[2] = 0;
     }
 };
 
@@ -69,7 +69,7 @@ enum { COLLIDE_AABB = 0, COLLIDE_OBB, COLLIDE_ELLIPSE };
 
 struct physent                                  // base entity type, can be affected by physics
 {
-	vec o, vel, falling;						// origin and velocity
+    vec o, vel, falling;                        // origin and velocity
     vec deltapos, newpos;
     float yaw, pitch, roll;
     float aimyaw, aimpitch;
@@ -79,7 +79,7 @@ struct physent                                  // base entity type, can be affe
     float xradius, yradius, zradius, zmargin;
     vec floor;                                  // the normal of floor the dynent is on
 
-	int inmaterial;
+    int inmaterial;
     bool blocked, inliquid, onladder;
     float submerged;
     char move, strafe;
@@ -91,11 +91,11 @@ struct physent                                  // base entity type, can be affe
 
     physent() : maxspeed(100), weight(100.f), radius(3.f), height(14.f), aboveeye(1.f),
         xradius(3.f), yradius(3.f), zradius(14.f), zmargin(0),
-		state(CS_ALIVE), type(ENT_PLAYER),
-		collidetype(COLLIDE_ELLIPSE)
-	{
-		reset();
-	}
+        state(CS_ALIVE), type(ENT_PLAYER),
+        collidetype(COLLIDE_ELLIPSE)
+    {
+        reset();
+    }
 
     void resetinterp()
     {
@@ -106,23 +106,23 @@ struct physent                                  // base entity type, can be affe
 
     void reset()
     {
-    	inmaterial = timeinair = 0;
-    	blocked = inliquid = onladder = false;
+        inmaterial = timeinair = 0;
+        blocked = inliquid = onladder = false;
         strafe = move = 0;
         physstate = PHYS_FALL;
         o = vel = falling = vec(0, 0, 0);
-    	yaw = pitch = roll = aimyaw = aimpitch = 0.f;
+        yaw = pitch = roll = aimyaw = aimpitch = 0.f;
         floor = vec(0, 0, 1);
         resetinterp();
     }
 
-	void resetphys()
-	{
-		falling = vec(0, 0, 0);
-		timeinair = 0;
-		physstate = PHYS_FALL;
+    void resetphys()
+    {
+        falling = vec(0, 0, 0);
+        timeinair = 0;
+        physstate = PHYS_FALL;
         floor = vec(0, 0, 1);
-	}
+    }
 
     vec abovehead(float offset = 1.f) const { return vec(o).add(vec(0, 0, aboveeye+offset)); }
     vec feetpos(float offset = 0) const { return vec(o).add(vec(0, 0, offset-height)); }

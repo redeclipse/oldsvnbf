@@ -9,35 +9,35 @@ font *curfont = NULL;
 
 void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth)
 {
-	font *f = fonts.access(name);
-	if(!f)
-	{
-		name = newstring(name);
-		f = &fonts[name];
-		f->name = name;
-	}
+    font *f = fonts.access(name);
+    if(!f)
+    {
+        name = newstring(name);
+        f = &fonts[name];
+        f->name = name;
+    }
 
-	f->tex = textureload(tex, 3);
-	f->chars.setsize(0);
-	f->defaultw = *defaultw;
-	f->defaulth = *defaulth;
-	f->offsetx = *offsetx;
-	f->offsety = *offsety;
-	f->offsetw = *offsetw;
-	f->offseth = *offseth;
+    f->tex = textureload(tex, 3);
+    f->chars.setsize(0);
+    f->defaultw = *defaultw;
+    f->defaulth = *defaulth;
+    f->offsetx = *offsetx;
+    f->offsety = *offsety;
+    f->offsetw = *offsetw;
+    f->offseth = *offseth;
 
-	fontdef = f;
+    fontdef = f;
 }
 
 void fontchar(int *x, int *y, int *w, int *h)
 {
-	if(!fontdef) return;
+    if(!fontdef) return;
 
-	font::charinfo &c = fontdef->chars.add();
-	c.x = *x;
-	c.y = *y;
-	c.w = *w ? *w : fontdef->defaultw;
-	c.h = *h ? *h : fontdef->defaulth;
+    font::charinfo &c = fontdef->chars.add();
+    c.x = *x;
+    c.y = *y;
+    c.w = *w ? *w : fontdef->defaultw;
+    c.h = *h ? *h : fontdef->defaulth;
 }
 
 COMMANDN(0, font, newfont, "ssiiiiii");
@@ -45,15 +45,15 @@ COMMAND(0, fontchar, "iiii");
 
 bool setfont(const char *name)
 {
-	font *f = fonts.access(name);
-	if(!f)
-	{
-		defformatstring(n)("fonts/%s.cfg", name);
-		if(!execfile(n, false) || !(f = fonts.access(name)))
-			return false;
-	}
-	curfont = f;
-	return true;
+    font *f = fonts.access(name);
+    if(!f)
+    {
+        defformatstring(n)("fonts/%s.cfg", name);
+        if(!execfile(n, false) || !(f = fonts.access(name)))
+            return false;
+    }
+    curfont = f;
+    return true;
 }
 
 int text_width(const char *str, int flags) { //@TODO deprecate in favour of text_bounds(..)
@@ -80,8 +80,8 @@ COMMAND(0, tabify, "si");
 
 int draw_textf(const char *fstr, int left, int top, ...)
 {
-	defvformatstring(str, top, fstr);
-	return draw_text(str, left, top);
+    defvformatstring(str, top, fstr);
+    return draw_text(str, left, top);
 }
 
 static int draw_char(int c, int x, int y)
@@ -103,7 +103,7 @@ static int draw_char(int c, int x, int y)
 
 static void text_color(char c, char *stack, int size, int &sp, bvec &color, int r, int g, int b, int a)
 {
-	char d = c;
+    char d = c;
     if(d=='s') // save color
     {
         d = stack[sp];
@@ -111,29 +111,29 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
     }
     else
     {
-    	int f = a;
-		if(d=='S') d = stack[(sp > 0) ? --sp : sp]; // restore color
-		else stack[sp] = d;
-		switch(d)
-		{
-			case 'g': case '0': color = bvec( 64, 255,  64); break;	// green
-			case 'b': case '1': color = bvec( 64,  64, 255); break;	// blue
-			case 'y': case '2': color = bvec(255, 255,   0); break;	// yellow
-			case 'r': case '3': color = bvec(255,  64,  64); break;	// red
-			case 'a': case '4': color = bvec(192, 192, 192); break;	// grey
-			case 'm': case '5': color = bvec(255, 164, 255); break;	// magenta
-			case 'o': case '6': color = bvec(255,  96,   0); break;	// orange
-			case 'w': case '7': color = bvec(255, 255, 255); break;	// white
-			case 'k': case '8': color = bvec(0,     0,   0); break;	// black
-			case 'c': case '9': color = bvec(64,  255, 255); break;	// cyan
-			case 'v': case 'A': color = bvec(192,  96, 255); break;	// violet
-			case 'p': case 'B': color = bvec(224,  64, 224); break;	// purple
-			case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
-			case 'd': case 'D': color = bvec(102, 102, 102); break;	// dark grey
-			case 'e': case 'E': f -= d!='E' ? f/2 : f/4; break;
-			case 'u': color = bvec(r, g, b); break;	// user colour
-			case 'R': default: break; // everything else
-		}
+        int f = a;
+        if(d=='S') d = stack[(sp > 0) ? --sp : sp]; // restore color
+        else stack[sp] = d;
+        switch(d)
+        {
+            case 'g': case '0': color = bvec( 64, 255,  64); break; // green
+            case 'b': case '1': color = bvec( 64,  64, 255); break; // blue
+            case 'y': case '2': color = bvec(255, 255,   0); break; // yellow
+            case 'r': case '3': color = bvec(255,  64,  64); break; // red
+            case 'a': case '4': color = bvec(192, 192, 192); break; // grey
+            case 'm': case '5': color = bvec(255, 164, 255); break; // magenta
+            case 'o': case '6': color = bvec(255,  96,   0); break; // orange
+            case 'w': case '7': color = bvec(255, 255, 255); break; // white
+            case 'k': case '8': color = bvec(0,     0,   0); break; // black
+            case 'c': case '9': color = bvec(64,  255, 255); break; // cyan
+            case 'v': case 'A': color = bvec(192,  96, 255); break; // violet
+            case 'p': case 'B': color = bvec(224,  64, 224); break; // purple
+            case 'n': case 'C': color = bvec(120,  72,   0); break; // brown
+            case 'd': case 'D': color = bvec(102, 102, 102); break; // dark grey
+            case 'e': case 'E': f -= d!='E' ? f/2 : f/4; break;
+            case 'u': color = bvec(r, g, b); break; // user colour
+            case 'R': default: break; // everything else
+        }
         glColor4ub(color.x, color.y, color.z, f);
     }
 }
@@ -141,9 +141,9 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
 #define TEXTTAB(x) clamp(x + (PIXELTAB - (x % PIXELTAB)), x + FONTW, x + PIXELTAB)
 #define TEXTBLINK(x,y,z) { if(x[y] == 'z') { int q = blinkingtext && lastmillis%500 > 250 ? 2 : 1; if(x[y+q]) { y += q; z; } y += 2-q; } else { z } }
 #define TEXTALIGN \
-	x = (!(flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT) ? TEXTTAB(0) : 0); \
-	if(!y && (flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT)) maxwidth -= PIXELTAB; \
-	y += FONTH;
+    x = (!(flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT) ? TEXTTAB(0) : 0); \
+    if(!y && (flags&TEXT_RIGHT_JUSTIFY) && !(flags&TEXT_NO_INDENT)) maxwidth -= PIXELTAB; \
+    y += FONTH;
 #define TEXTSKELETON \
     int y = 0, x = 0;\
     int i;\
@@ -264,18 +264,18 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
     glBegin(GL_QUADS);
-	glColor4ub(color.x, color.y, color.z, a);
-	left = rleft;
-	top = rtop;
-	TEXTSKELETON
-	if(cursor >= 0)
-	{
-		float fade = 1.f-(float(lastmillis%1000)/1000.f);
-		glColor4ub(color.x, color.y, color.z, int(a*fade));
-		if(cx == INT_MIN) { cx = x; cy = y; }
-		if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
-		draw_char('|', left+cx-FONTW/2, top+cy-FONTH/32);
-	}
+    glColor4ub(color.x, color.y, color.z, a);
+    left = rleft;
+    top = rtop;
+    TEXTSKELETON
+    if(cursor >= 0)
+    {
+        float fade = 1.f-(float(lastmillis%1000)/1000.f);
+        glColor4ub(color.x, color.y, color.z, int(a*fade));
+        if(cx == INT_MIN) { cx = x; cy = y; }
+        if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
+        draw_char('|', left+cx-FONTW/2, top+cy-FONTH/32);
+    }
     glEnd();
     #undef TEXTINDEX
     #undef TEXTWHITE
@@ -296,42 +296,42 @@ void reloadfonts()
 
 int draw_textx(const char *fstr, int left, int top, int r, int g, int b, int a, int flags, int cursor, int maxwidth, ...)
 {
-	defvformatstring(str, maxwidth, fstr);
+    defvformatstring(str, maxwidth, fstr);
 
-	int width = 0, height = 0;
-	text_bounds(str, width, height, maxwidth, flags);
+    int width = 0, height = 0;
+    text_bounds(str, width, height, maxwidth, flags);
     if(flags&TEXT_ALIGN) switch(flags&TEXT_ALIGN)
-	{
-		case TEXT_CENTERED: left -= width/2; break;
-		case TEXT_RIGHT_JUSTIFY: left -= width; break;
-		default: break;
-	}
+    {
+        case TEXT_CENTERED: left -= width/2; break;
+        case TEXT_RIGHT_JUSTIFY: left -= width; break;
+        default: break;
+    }
     if(flags&TEXT_UPWARD) top -= height;
     if(flags&TEXT_SHADOW) draw_text(str, left-2, top-2, 0, 0, 0, a, flags, cursor, maxwidth);
-	return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
+    return draw_text(str, left, top, r, g, b, a, flags, cursor, maxwidth);
 }
 
 vector<const char *> fontstack;
 
 bool pushfont(const char *name)
 {
-	if(!fontstack.length() && curfont)
-		fontstack.add(curfont->name);
+    if(!fontstack.length() && curfont)
+        fontstack.add(curfont->name);
 
-	if(setfont(name))
-	{
-		fontstack.add(name);
-		return true;
-	}
-	return false;
+    if(setfont(name))
+    {
+        fontstack.add(name);
+        return true;
+    }
+    return false;
 }
 
 bool popfont(int num)
 {
-	loopi(num)
-	{
-		if (!fontstack.length()) break;
-		fontstack.pop();
-	}
-	return setfont(fontstack.length() ? fontstack.last() : "default");
+    loopi(num)
+    {
+        if (!fontstack.length()) break;
+        fontstack.pop();
+    }
+    return setfont(fontstack.length() ? fontstack.last() : "default");
 }

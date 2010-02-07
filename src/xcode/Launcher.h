@@ -4,7 +4,7 @@
 
 @interface Launcher : NSObject {
     IBOutlet NSWindow *window;
-	
+    
     //able to leave these disconnected
     IBOutlet NSView *view1; //Main
     IBOutlet NSView *view2; //Maps
@@ -12,14 +12,14 @@
     IBOutlet NSView *view4; //Server
     IBOutlet NSView *view5; //EisenStern
     
-	
+    
     IBOutlet NSProgressIndicator *prog; //while scanning maps - it's there if you want to wire it up
     IBOutlet NSArrayController *maps;
     IBOutlet NSArrayController *keys;
     IBOutlet NSPopUpButton *resolutions;
     IBOutlet NSButton *multiplayer;
     IBOutlet ConsoleView *console;
-@private	
+@private    
     NSMutableDictionary *toolBarItems;
     pid_t server;
     NSMutableDictionary *fileRoles;

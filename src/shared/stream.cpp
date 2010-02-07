@@ -62,14 +62,14 @@ void backup(const char *fname, const char *ext, int revision, int start, bool st
     defformatstring(aname)("%s", findfile(tname, "w"));
     if(fileexists(aname, "r"))
     {
-    	const char *bname = aname;
-    	if(full) bname = findfile(makefile(fname, ext, revision, start, store), "w");
-    	else
-    	{
-    		formatstring(tname)("%s%s.bak%s", store ? "backups/" : "", fname, ext);
-			bname = findfile(tname, "w");
-    	}
-		remove(bname); rename(aname, bname);
+        const char *bname = aname;
+        if(full) bname = findfile(makefile(fname, ext, revision, start, store), "w");
+        else
+        {
+            formatstring(tname)("%s%s.bak%s", store ? "backups/" : "", fname, ext);
+            bname = findfile(tname, "w");
+        }
+        remove(bname); rename(aname, bname);
     }
 }
 

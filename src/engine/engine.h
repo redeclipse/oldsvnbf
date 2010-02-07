@@ -3,23 +3,23 @@
 
 #include "cube.h"
 
-#define ENG_VERSION			85
-#define ENG_NAME			"Blood Frontier"
-#define ENG_RELEASE			"Beta 2"
-#define ENG_URL				"www.bloodfrontier.com"
-#define ENG_BLURB			"It's bloody fun!"
+#define ENG_VERSION         85
+#define ENG_NAME            "Blood Frontier"
+#define ENG_RELEASE         "Beta 2"
+#define ENG_URL             "www.bloodfrontier.com"
+#define ENG_BLURB           "It's bloody fun!"
 #ifdef WIN32
-#define ENG_PLATFORM		"win"
+#define ENG_PLATFORM        "win"
 #elif defined(__APPLE__)
-#define ENG_PLATFORM		"mac"
+#define ENG_PLATFORM        "mac"
 #else
-#define ENG_PLATFORM		"nix"
+#define ENG_PLATFORM        "nix"
 #endif
-#define ENG_DEVEL			false
+#define ENG_DEVEL           false
 
-#define ENG_SERVER_PORT		(ENG_DEVEL ? 28797 : 28795)
-#define ENG_MASTER_PORT		28800
-#define ENG_MASTER_HOST		"play.bloodfrontier.com"
+#define ENG_SERVER_PORT     (ENG_DEVEL ? 28797 : 28795)
+#define ENG_MASTER_PORT     28800
+#define ENG_MASTER_HOST     "play.bloodfrontier.com"
 
 #ifdef IRC
 #include "irc.h"
@@ -64,10 +64,10 @@ extern void rehash(bool reload = true);
 #include "model.h"
 
 // GL_ARB_multitexture
-extern PFNGLACTIVETEXTUREARBPROC		glActiveTexture_;
+extern PFNGLACTIVETEXTUREARBPROC        glActiveTexture_;
 extern PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTexture_;
-extern PFNGLMULTITEXCOORD2FARBPROC	 glMultiTexCoord2f_;
-extern PFNGLMULTITEXCOORD3FARBPROC	 glMultiTexCoord3f_;
+extern PFNGLMULTITEXCOORD2FARBPROC   glMultiTexCoord2f_;
+extern PFNGLMULTITEXCOORD3FARBPROC   glMultiTexCoord3f_;
 extern PFNGLMULTITEXCOORD4FARBPROC   glMultiTexCoord4f_;
 
 // GL_ARB_vertex_buffer_object
@@ -81,26 +81,26 @@ extern PFNGLDELETEBUFFERSARBPROC    glDeleteBuffers_;
 extern PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubData_;
 
 // GL_ARB_occlusion_query
-extern PFNGLGENQUERIESARBPROC		glGenQueries_;
-extern PFNGLDELETEQUERIESARBPROC	 glDeleteQueries_;
-extern PFNGLBEGINQUERYARBPROC		glBeginQuery_;
-extern PFNGLENDQUERYARBPROC		  glEndQuery_;
-extern PFNGLGETQUERYIVARBPROC		glGetQueryiv_;
+extern PFNGLGENQUERIESARBPROC       glGenQueries_;
+extern PFNGLDELETEQUERIESARBPROC     glDeleteQueries_;
+extern PFNGLBEGINQUERYARBPROC       glBeginQuery_;
+extern PFNGLENDQUERYARBPROC       glEndQuery_;
+extern PFNGLGETQUERYIVARBPROC       glGetQueryiv_;
 extern PFNGLGETQUERYOBJECTIVARBPROC  glGetQueryObjectiv_;
 extern PFNGLGETQUERYOBJECTUIVARBPROC glGetQueryObjectuiv_;
 
 // GL_EXT_framebuffer_object
-extern PFNGLBINDRENDERBUFFEREXTPROC		glBindRenderbuffer_;
-extern PFNGLDELETERENDERBUFFERSEXTPROC	 glDeleteRenderbuffers_;
-extern PFNGLGENFRAMEBUFFERSEXTPROC		 glGenRenderbuffers_;
-extern PFNGLRENDERBUFFERSTORAGEEXTPROC	 glRenderbufferStorage_;
+extern PFNGLBINDRENDERBUFFEREXTPROC     glBindRenderbuffer_;
+extern PFNGLDELETERENDERBUFFERSEXTPROC   glDeleteRenderbuffers_;
+extern PFNGLGENFRAMEBUFFERSEXTPROC       glGenRenderbuffers_;
+extern PFNGLRENDERBUFFERSTORAGEEXTPROC   glRenderbufferStorage_;
 extern PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  glCheckFramebufferStatus_;
-extern PFNGLBINDFRAMEBUFFEREXTPROC		 glBindFramebuffer_;
-extern PFNGLDELETEFRAMEBUFFERSEXTPROC	  glDeleteFramebuffers_;
-extern PFNGLGENFRAMEBUFFERSEXTPROC		 glGenFramebuffers_;
-extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC	glFramebufferTexture2D_;
+extern PFNGLBINDFRAMEBUFFEREXTPROC       glBindFramebuffer_;
+extern PFNGLDELETEFRAMEBUFFERSEXTPROC     glDeleteFramebuffers_;
+extern PFNGLGENFRAMEBUFFERSEXTPROC       glGenFramebuffers_;
+extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2D_;
 extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_;
-extern PFNGLGENERATEMIPMAPEXTPROC		  glGenerateMipmap_;
+extern PFNGLGENERATEMIPMAPEXTPROC         glGenerateMipmap_;
 
 // GL_EXT_framebuffer_blit
 #ifndef GL_EXT_framebuffer_blit
@@ -160,16 +160,16 @@ extern int zpass, glowpass;
 // rendertext
 struct font
 {
-	struct charinfo
-	{
-		short x, y, w, h;
-	};
+    struct charinfo
+    {
+        short x, y, w, h;
+    };
 
-	char *name;
-	Texture *tex;
-	vector<charinfo> chars;
-	short defaultw, defaulth;
-	short offsetx, offsety, offsetw, offseth;
+    char *name;
+    Texture *tex;
+    vector<charinfo> chars;
+    short defaultw, defaulth;
+    short offsetx, offsety, offsetw, offseth;
 };
 
 #define FONTH (curfont->defaulth)
@@ -332,7 +332,7 @@ extern void calcmerges();
 
 struct cubeface : mergeinfo
 {
-	cube *c;
+    cube *c;
 };
 
 extern int mergefaces(int orient, cubeface *m, int sz);
@@ -411,11 +411,11 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 
 #define startquery(query) { glBeginQuery_(GL_SAMPLES_PASSED_ARB, ((occludequery *)(query))->id); }
 #define endquery(query) \
-	{ \
-		glEndQuery_(GL_SAMPLES_PASSED_ARB); \
-		extern int ati_oq_bug; \
-		if(ati_oq_bug) glFlush(); \
-	}
+    { \
+        glEndQuery_(GL_SAMPLES_PASSED_ARB); \
+        extern int ati_oq_bug; \
+        if(ati_oq_bug) glFlush(); \
+    }
 
 // dynlight
 
@@ -498,9 +498,9 @@ extern ENetPeer *curpeer, *connpeer;
 
 // console
 #ifdef __APPLE__
-	#define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
+    #define MOD_KEYS (KMOD_LMETA|KMOD_RMETA)
 #else
-	#define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
+    #define MOD_KEYS (KMOD_LCTRL|KMOD_RCTRL)
 #endif
 
 extern void writebinds(stream *f);
@@ -558,24 +558,24 @@ struct menu : guicb
         cgui = &g;
         extern menu *cmenu; cmenu = this;
         guipasses = passes;
-		if(!passes) world = worldidents;
+        if(!passes) world = worldidents;
         if(initscript && *initscript)
         {
-        	if(world && passes) { RUNWORLD(initscript); }
-        	else execute(initscript);
+            if(world && passes) { RUNWORLD(initscript); }
+            else execute(initscript);
         }
         cgui->start(menustart, menuscale, &menutab, useinput, usetitle);
         cgui->tab(header ? header : name);
         if(contents && *contents)
         {
-        	if(world && passes) { RUNWORLD(contents); }
-        	else execute(contents);
+            if(world && passes) { RUNWORLD(contents); }
+            else execute(contents);
         }
         cgui->end();
         guipasses = -1;
         cmenu = NULL;
         cgui = NULL;
-		passes++;
+        passes++;
     }
 
     virtual void clear() {}

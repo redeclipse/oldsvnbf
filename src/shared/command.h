@@ -177,12 +177,12 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define CCOMMANDN(f, n, name, g, proto, b) _COMMAND(ID_CCOMMAND, (this), n, name, g, proto, b, f)
 
 #define _IVAR(n, m, c, x, b, f) \
-	struct var_##n : ident \
-	{ \
+    struct var_##n : ident \
+    { \
         var_##n() : ident(ID_VAR, #n, m, c, x, &val.i, (void *)NULL, f|IDF_COMPLETE) \
-		{ \
+        { \
             addident(name, this); \
-		} \
+        } \
         int operator()() { return val.i; } \
         b \
     } n
@@ -190,12 +190,12 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define IVARF(f, n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, f)
 
 #define _IFVAR(n, m, c, x, b, f) \
-	struct var_##n : ident \
-	{ \
+    struct var_##n : ident \
+    { \
         var_##n() : ident(ID_FVAR, #n, m, c, x, &val.f, (void *)NULL, f|IDF_COMPLETE) \
-		{ \
+        { \
             addident(name, this); \
-		} \
+        } \
         float operator()() { return val.f; } \
         b \
     } n
@@ -203,12 +203,12 @@ extern void clearsleep(bool clearoverrides = true, bool clearworlds = false);
 #define IFVARF(f, n, m, c, x, b) _IFVAR(n, m, c, x, void changed() { b; }, f)
 
 #define _ISVAR(n, c, b, f) \
-	struct var_##n : ident \
-	{ \
+    struct var_##n : ident \
+    { \
         var_##n() : ident(ID_SVAR, #n, newstring(c), newstring(c), &val.s, (void *)NULL, f|IDF_COMPLETE) \
-		{ \
+        { \
             addident(name, this); \
-		} \
+        } \
         char *operator()() { return val.s; } \
         b \
     } n
