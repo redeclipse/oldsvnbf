@@ -141,9 +141,9 @@
 						<div id="main">
                         <h1><?php echo $app['sitename']; ?></h1>
 						<h2><?php echo $app['siteblurb']; ?></h2>
-                        <h3>Free and open source Game for Windows, Linux/BSD and Mac OSX.</h3>
+                        <h3>Free and open source Game for Windows, Linux/BSD and Mac OSX</h3>
                         <h3>Fast and aerial gameplay : wall run, wall jump, double&nbsp;jump...</h3>
-                        <h3>Create your own level in cooperation with your friends online using the Ingame map editor.</h3>
+                        <h3>Create your own level in cooperation with your friends online using the Ingame map editor</h3>
                         <a href="/download" id="button">Download for free now !<em> <?php echo $app['siterelver']; ?></em></a> 
                         <p id="svn">or <a href="/wiki/SVN">Get the SVN version</a> and receive regular dev’s updates</p>
                         </div>
@@ -191,14 +191,14 @@
             </div>
             <div class="vbar">&nbsp;</div>
 			<div class="leftcol">
-                       <h4>Current Version:</h4>
+                       <h4>Current Version</h4>
                        <p><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i>
                        </p>
   						<h4>Synopsis</h4>
 						<p><?php echo $app['siteinfo']; ?></p>
 			</div>
 			<div class="rightblock">
-            <h4>feed the devs !</h4>
+            <h4>Feed the devs !</h4>
 				<p id="donatemsg"><?php echo $app['sitedonate']; ?></p>
 					<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
 					<input type="hidden" name="cmd" value="_s-xclick" />
