@@ -2429,7 +2429,7 @@ namespace server
 		else if(weap == -1)
 		{
 			gs.dropped.remove(id);
-			if(sents.inrange(id)) sents[id].millis = gamemillis+GAME(itemspawntime);
+			if(sents.inrange(id)) sents[id].millis = gamemillis;
 		}
 	}
 
