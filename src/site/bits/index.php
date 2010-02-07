@@ -6,15 +6,15 @@
 	$app['sitereldate'] = "6th December 2009";
 	$app['sitevideo'] = "http://www.youtube.com/v/uKnLsAiCVLk&amp;color1=0x000000&amp;color2=0x000000&amp;border=0&amp;fs=1&amp;egm=0&amp;showsearch=0&amp;showinfo=0&amp;ap=%2526fmt%3D18";
 	$app['sitevidlo'] = array (
-		'watch' => 'Watch this video on <a href="http://www.youtube.com/watch?v=uKnLsAiCVLk">YouTube</a>, <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a>, or download the MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a>, <a href="/bits/bfb2_hifi.mp4">Hi-fi</a>.',
-		'creds' => 'Created with <a href="http://animoto.com/">Animoto</a>, the end of slideshows! Proud affiliate of Blood Frontier.'
+		'watch' => 'Watch on <a href="http://animoto.com/play/9cEfKRX71W9dKr3SfMJs1g">Animoto</a> | download MP4: <a href="/bits/bfb2_lofi.mp4">Lo-fi</a> - <a href="/bits/bfb2_hifi.mp4">Hi-fi</a> ',
+		'creds' => ' | Created with <a href="http://animoto.com/">Animoto</a>'
 	);
 	$app['sitenotice'] = array(
 		'intro' => 'Blood Frontier is a <a href="/wiki/Collaborate">Free and Open Source</a> game (see our <a href="/wiki/License">License</a>), using <a href="http://libsdl.org/">SDL</a> and <a href="http://opengl.org/">OpenGL</a> which allows it to be ported to many platforms; you can <a href="/download">download a package</a> for Windows, Linux/BSD, Mac OSX, or grab a development copy from our <a href="/wiki/SVN">Subversion</a> repository and live on the bleeding edge. If you\'re an Ubuntu user, you might like to use the <a href="/playdeb">easy-to-install package available on PlayDeb.net</a>.',
 		'about' => 'The game is a single-player and multi-player first-person ego-shooter, built as a total conversion of <a href="http://www.cubeengine.com/">Cube Engine 2</a>, which lends itself toward a balanced gameplay, completely at the control of map makers, while maintaining a general theme of agility in a low gravity environment. For more information, please see our <a href="/wiki">Wiki</a>.',
 		'outro' => 'In a true open source <i>by the people for the people</i> nature, it tries to work closely with the gaming and open source communities to provide a better overall experience, taking all sorts of feedback from your average player, to your seasoned developer, aiming to create a story-driven game environment that is flexible, fun, easy to use, and pleasing to the eye.'
 	);
-	$app['siteinfo'] = "In the distant future, humanity has spread throughout the universe, to ends of the galaxy and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals. You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
+	$app['siteinfo'] = "In the distant future, humanity has spread throughout the universe, to ends of the galaxy and beyond. A vast communications network bridges from colony to colony, human to machine, and machine to human. This seemingly benign keystone of modern inter-planetary society, however, appears to be the carrier of a mysterious techno-biological plague. Any persons so-connected seem to fall ill and die, only to return as ravenous, sub-human cannibals.You, a machine intelligence, an android, remain unafflicted by this strange phenomenon and have been tasked with destroying the growing hordes of the infected, while, hopefully, locating and stopping the source of the epidemic.";
 	$app['sitepaypal'] = "212900";
 	$app['sitedonate'] = "Blood Frontier is developed by volunteers, and you get it free of charge; your donations go toward ongoing costs which keep this project alive.";
 	$app['sitemainlogo'] = "/bits/logo_bf.png";
@@ -22,7 +22,7 @@
 	$app['sitecss'] = "/bits/style.css";
 	$app['siteico'] = "/bits/favicon.ico";
 	if ($app['theme'] != "default") {
-		$app['sitebg'] = "/bits/bg_". $app['theme'] .".jpg";
+		$app['sitebg'] = "/bits/background_". $app['theme'] .".jpg";
 		$app['sitemiddle'] = "/bits/middle_". $app['theme'] .".png";
 	} else {
 		$app['sitemiddle'] = "/bits/bg_01.jpg";
@@ -59,11 +59,11 @@
 	$app['targets']['project'] = array('name' => 'Project', 'url' => 'http://sourceforge.net/projects/'.$app['sfproject'].'/', 'alturl' => '', 'nav' => 1, 'redir' => 1);
 	$app['targets']['svn'] = array('name' => 'SVN', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/'.$app['sfproject'].'/', 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/?view=rev&amp;rev=', 'nav' => 1, 'redir' => 1);
 	$app['targets']['repo'] = array('name' => 'Repository', 'url' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'], 'alturl' => 'http://'.$app['sfproject'].'.svn.sourceforge.net/viewvc/'.$app['sfproject'].'/', 'nav' => -1, 'redir' => 1);
-	$app['targets']['youtube'] = array('name' => 'on YouTube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
-	$app['targets']['google'] = array('name' => 'on Google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
-	$app['targets']['facebook'] = array('name' => 'on Facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
-	$app['targets']['blackboxbeta'] = array('name' => 'on BlackBoxBETA', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
-	$app['targets']['playdeb'] = array('name' => 'on PlayDeb', 'url' => 'http://www.playdeb.net/updates/Blood%20Frontier', 'nav' => 0, 'redir' => 1);
+	$app['targets']['youtube'] = array('name' => 'youtube', 'url' => 'http://www.youtube.com/results?search_query='.$app['defsearch'], 'alturl' => 'http://www.youtube.com/results?search_query='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['google'] = array('name' => 'google', 'url' => 'http://www.google.com/search?q='.$app['defsearch'], 'alturl' => 'http://www.google.com/search?q='.$app['defsearch'].'+', 'nav' => 0, 'redir' => 1);
+	$app['targets']['facebook'] = array('name' => 'facebook', 'url' => 'http://www.facebook.com/group.php?gid=86675052192&amp;ref=mf', 'nav' => 0, 'redir' => 1);
+	$app['targets']['blackboxbeta'] = array('name' => 'blackboxbeta', 'url' => 'http://www.blackboxbeta.net/blood-frontier-oss', 'nav' => 0, 'redir' => 1);
+	$app['targets']['playdeb'] = array('name' => 'playdeb', 'url' => 'http://www.playdeb.net/updates/Blood%20Frontier', 'nav' => 0, 'redir' => 1);
 
 	function checkarg($arg = "", $def = "") {
 		return isset($_GET[$arg]) && $_GET[$arg] != "" ? $_GET[$arg] : $def;
@@ -128,83 +128,96 @@
 			piwik_url = pkBaseURL + "piwik.php";
 			piwik_log(piwik_action_name, piwik_idsite, piwik_url);
 		--></script>
-		<object><noscript><p><img src="http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
+<object><noscript><p><img src="http://sourceforge.net/apps/piwik/<?php echo $app['sfproject']; ?>/piwik.php?idsite=<?php echo $app['sfpiwik']; ?>" alt="piwik"/></p></noscript></object>
       
 <?php } ?>
 	</head>
 	<body style="background-image: url(<?php echo $app['sitebg']; ?>)">
 		<div id="container">
+			<div id="links"><?php echo $app['navbar']; ?></div>
 			<div id="header">
-				<a href="/home"><img src="<?php echo $app['sitemainlogo']; ?>" alt="<?php echo $app['sitename']; ?>" title="<?php echo $app['sitename']; ?>" width="304" height="143" border="0" /></a>
-				<img src="<?php echo $app['sitemiddle']; ?>" alt="<?php echo $app['siteblurb']; ?>" title="<?php echo $app['siteblurb']; ?>" width="323" height="143" border="0" />
-				<a href="<?php echo $app['siterighturl']; ?>"><img src="<?php echo $app['siterightlogo']; ?>" alt="<?php echo $app['siterightname']; ?>" title="<?php echo $app['siterightname']; ?>" width="193" height="143" border="0" /></a>
+				<a href="/home"><img src="/bits/lightbox-blank.gif" alt="<?php echo $app['sitename']; ?>" width="450" height="143" border="0" align="left" title="<?php echo $app['sitename']; ?>" /></a><a href="<?php echo $app['siterighturl']; ?>"><img src="/bits/lightbox-blank.gif" alt="<?php echo $app['siterightname']; ?>" width="150" height="143" border="0" align="right" title="<?php echo $app['siterightname']; ?>" /></a>			</div>
+<div id="video">
+						<div id="main">
+                        <h1><?php echo $app['sitename']; ?></h1>
+						<h2><?php echo $app['siteblurb']; ?></h2>
+                        <h3>Free and open source Game for Windows, Linux/BSD and Mac OSX.</h3>
+                        <h3>Fast and aerial gameplay : wall run, wall jump, double&nbsp;jump...</h3>
+                        <h3>Create your own level in cooperation with your friends online using the Ingame map editor.</h3>
+                        <a href="/download" id="button">Download for free now !<em> <?php echo $app['siterelver']; ?></em></a> 
+                        <p id="svn">or <a href="/wiki/SVN">Get the SVN version</a> and receive regular dev’s updates</p>
+                        </div>
+<div id="player">
+					<object width="500" height="308" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
+						<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
+						<param name="allowscriptaccess" value="always" />
+						<param name="allowFullScreen" value="true" />
+					</object>
+				</div>
+				<div id="vidlow" align="center">
+						<?php foreach ($app['sitevidlo'] as $key => $targ) {
+						echo "<p>" . $targ . "</p>";
+						} ?>
+				</div>
 			</div>
-			<div id="page">
-				<div id="links"><?php echo $app['navbar']; ?></div>
-				<div id="noticebg">
-					<div id="list">
-						<ul>
-<?php						foreach ($app['targets'] as $key => $targ) {
-								if ($key != "" && $targ['name'] != "" && $targ['nav'] == 0) {
-									echo "<li><a href=\"/". $key ."\">" . $targ['name'] ."</a></li>";
-								}
-							} ?>
-						</ul>
-						<div id="listdonate">
-							<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-								<input type="hidden" name="cmd" value="_s-xclick" />
-								<input type="hidden" name="hosted_button_id" value="<?php echo $app['sitepaypal']; ?>" />
-								<input type="image" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="<?php echo $app['sitedonate']; ?>" />
-								<img alt="<?php echo $app['sitedonate']; ?>" border="0" src="https://www.paypal.com/en_AU/i/scr/pixel.gif" width="1" height="1" />
-							</form>
-							<p id="donatemsg"><i><?php echo $app['sitedonate']; ?></i></p>
-						</div>
-					</div>
-					<img src="/bits/block_up.png" alt="" width="549" height="20" border="0" id="blockborder" />
-					<div id="redblock" align="center">
-						<p id="version">Current Version: <b><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i></p>
-						<hr />
+            
+			<div class="endblock">&nbsp;</div>
+            
+                        <div class="sliderblock">
+<div id="slider">
+				<ul id="gallery">				
+					<li><a href="/bits/images/screenshot.0006.jpg"><img src="/bits/thumbs/screenshot.0006.jpg" width="220" height="140" border="0"/></a>
+						<a href="/bits/images/screenshot.0008.jpg"><img src="/bits/thumbs/screenshot.0008.jpg" width="220" height="140"  border="0" /></a>
+						<a href="/bits/images/screenshot.0010.jpg"><img src="/bits/thumbs/screenshot.0010.jpg" width="220" height="140"  border="0"/></a>
+						<a href="/bits/images/screenshot.0020.jpg"><img src="/bits/thumbs/screenshot.0020.jpg" width="220" height="140" border="0" /></a></li>
+			  <li><a href="/bits/images/screenshot.0013.jpg"><img src="/bits/thumbs/screenshot.0013.jpg" width="220" height="140" border="0"/></a>
+						<a href="/bits/images/screenshot.0033.jpg"><img src="/bits/thumbs/screenshot.0033.jpg" width="220" height="140"  border="0"/></a>
+						<a href="/bits/images/screenshot.0036.jpg"><img src="/bits/thumbs/screenshot.0036.jpg" width="220" height="140" border="0" /></a>
+						<a href="/bits/images/screenshot.0038.jpg"><img src="/bits/thumbs/screenshot.0038.jpg" width="220" height="140"  border="0"/></a></li>
+			  <li><a href="/bits/images/screenshot.0034.jpg"><img src="/bits/thumbs/screenshot.0034.jpg" width="220" height="140" border="0"/></a>
+						<a href="/bits/images/screenshot.0008.jpg"><img src="/bits/thumbs/screenshot.0008.jpg" width="220" height="140"  border="0" /></a>
+						<a href="/bits/images/screenshot.0010.jpg"><img src="/bits/thumbs/screenshot.0010.jpg" width="220" height="140"  border="0"/></a>
+						<a href="/bits/images/screenshot.0020.jpg"><img src="/bits/thumbs/screenshot.0020.jpg" width="220" height="140" border="0" /></a></li>
+		</ul>
+			</div>
+          </div>
+            <div class="endblock">&nbsp;</div>
+            
+            <div class="leftcol">
+            <h4>About Blood Frontier</h4>
 <?php					foreach ($app['sitenotice'] as $key => $targ) {
 							echo "<p id=\"notice\">" . $targ . "</p>";
 						} ?>
-					</div>
-					<img src="/bits/block_down.png" alt="" width="549" height="20" border="0" id="blockborder" />
-				</div>
-				<div id="slider">
-			<ul id="gallery">				
-				<li><a href="/bits/images/screenshot.0006.jpg"><img src="/bits/thumbs/screenshot.0006.jpg" width="206" height="129" border="0"/></a>
-                <a href="/bits/images/screenshot.0008.jpg"><img src="/bits/thumbs/screenshot.0008.jpg" width="206" height="129"  border="0" /></a>
-                <a href="/bits/images/screenshot.0010.jpg"><img src="/bits/thumbs/screenshot.0010.jpg" width="206" height="129"  border="0"/></a></li>
-			  <li><a href="/bits/images/screenshot.0013.jpg"><img src="/bits/thumbs/screenshot.0013.jpg" width="206" height="129" border="0"/></a>
-              <a href="/bits/images/screenshot.0020.jpg"><img src="/bits/thumbs/screenshot.0020.jpg" width="206" height="129" border="0" /></a>
-              <a href="/bits/images/screenshot.0033.jpg"><img src="/bits/thumbs/screenshot.0033.jpg" width="206" height="129"  border="0"/></a>
-              </li>
-			    <li><a href="/bits/images/screenshot.0034.jpg"><img src="/bits/thumbs/screenshot.0034.jpg" width="206" height="129" border="0"/></a>
-              <a href="/bits/images/screenshot.0036.jpg"><img src="/bits/thumbs/screenshot.0036.jpg" width="206" height="129" border="0" /></a>
-              <a href="/bits/images/screenshot.0038.jpg"><img src="/bits/thumbs/screenshot.0038.jpg" width="206" height="129"  border="0"/></a>
-              </li>
-			</ul>
-</div>
-				<div id="video">
-					<div id="subtext" align="center">
-						<h2><?php echo $app['sitename']; ?></h2>
-						<h3><i><?php echo $app['siteblurb']; ?></i></h3>
+            </div>
+            <div class="vbar">&nbsp;</div>
+			<div class="leftcol">
+                       <h4>Current Version:</h4>
+                       <p><a href="/download"><?php echo $app['siterelver']; ?></a></b> released <i><?php echo $app['sitereldate']; ?></i>
+                       </p>
+  						<h4>Synopsis</h4>
 						<p><?php echo $app['siteinfo']; ?></p>
-					</div>
-					<div id="player">
-						<object width="500" height="308" type="application/x-shockwave-flash" data="<?php echo $app['sitevideo']; ?>">
-							<param name="movie" value="<?php echo $app['sitevideo']; ?>" />
-							<param name="allowscriptaccess" value="always" />
-							<param name="allowFullScreen" value="true" />
-						</object>
-					</div>
-					<div id="vidlow" align="center">
-<?php					foreach ($app['sitevidlo'] as $key => $targ) {
-							echo "<p>" . $targ . "</p>";
-						} ?>
-					</div>
-				</div>
 			</div>
+			<div class="rightblock">
+            <h4>feed the devs !</h4>
+				<p id="donatemsg"><?php echo $app['sitedonate']; ?></p>
+					<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+					<input type="hidden" name="cmd" value="_s-xclick" />
+					<input type="hidden" name="hosted_button_id" value="<?php echo $app['sitepaypal']; ?>" />
+					<input type="image" src="https://www.paypal.com/en_AU/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="<?php echo $app['sitedonate']; ?>" />
+					<img alt="<?php echo $app['sitedonate']; ?>" border="0" src="https://www.paypal.com/en_AU/i/scr/pixel.gif" width="1" height="1" />
+					</form>
+			</div>
+            <div class="endrightblock">&nbsp;</div>
+		  <div class="rightblock">
+                <ul>
+<?php						foreach ($app['targets'] as $key => $targ) {
+								if ($key != "" && $targ['name'] != "" && $targ['nav'] == 0) {
+									echo "<li><a href=\"/". $key ."\" class='info'><div class=". $targ['name'] .">&nbsp;</div><span>on ". $targ['name'] ."</span></a></li>";
+								}
+							} ?>
+				</ul>
+			</div>
+            <div class="endrightblock">&nbsp;</div>
 			<div id="footer">
 <?php			if ($app['sflogo'] > 0) { ?>
 					<div id="sflogo">
