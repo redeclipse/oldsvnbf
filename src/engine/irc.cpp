@@ -92,7 +92,7 @@ void converttext(char *dst, const char *src)
 				case 'm': case '5': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '3'; break;	// magenta
 				case 'o': case '6': *dst++ = '\x03'; *dst++ = '0'; *dst++ = '7'; break; // orange
 				case 'c': case '9': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '0'; break;	// cyan
-				case 'v': case 'A': *dst++ = '\x03'; *dst++ = '1'; *dst++ = '2'; break;	// violet
+				case 'v': case 'A': *dst++ = '\x03'; *dst++ = '0'; *dst++ = '6'; break;	// violet
 				case 'p': case 'B': *dst++ = '\x03'; *dst++ = '0'; *dst++ = '6'; break; // purple
 				case 'n': case 'C': *dst++ = '\x03'; *dst++ = '0'; *dst++ = '5'; break; // brown
 				case 'd': case 'D': *dst++ = '\x03'; *dst++ = '0'; *dst++ = '1'; break; // dark grey
