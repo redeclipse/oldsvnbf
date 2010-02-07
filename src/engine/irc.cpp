@@ -182,7 +182,7 @@ void ircnewnet(int type, const char *name, const char *serv, int port, const cha
     copystring(n.passkey, passkey);
     n.address.host = ENET_HOST_ANY;
     n.address.port = n.port;
-    n.input[0] = 0;
+    n.input[0] = n.authname[0] = n.authpass[0] = 0;
     conoutf("added irc %s %s (%s:%d) [%s]", type == IRCT_RELAY ? "relay" : "client", name, serv, port, nick);
 }
 
@@ -221,6 +221,13 @@ ICOMMAND(0, ircpass, "ss", (const char *name, const char *s), {
     if(!n) { conoutf("no such ircnet: %s", name); return; }
     if(!s || !*s) { conoutf("%s current password is: %s", n->name, n->passkey && *n->passkey ? "<set>" : "<not set>"); return; }
     copystring(n->passkey, s);
+});
+ICOMMAND(0, ircauth, "sss", (const char *name, const char *s, const char *t), {
+    ircnet *n = ircfind(name);
+    if(!n) { conoutf("no such ircnet: %s", name); return; }
+    if(!s || !*s || !t || !*t) { conoutf("%s current authority is: %s (%s)", n->name, n->authname, n->authpass && *n->authpass ? "<set>" : "<not set>"); return; }
+    copystring(n->authname, s);
+    copystring(n->authpass, t);
 });
 ICOMMAND(0, ircconnect, "s", (const char *name), {
     ircnet *n = ircfind(name);
@@ -689,6 +696,7 @@ void ircslice()
                 }
                 case IRC_ONLINE:
                 {
+                    if(*n->authname && *n->authpass) ircsend(n, "PRIVMSG %s :%s", n->authname, n->authpass);
                     loopvj(n->channels)
                     {
                         ircchan *c = &n->channels[j];
