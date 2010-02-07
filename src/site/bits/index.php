@@ -41,7 +41,7 @@
 	$app['sflogo'] = 11;
 	$app['sfpiwik'] = 1; // use SF's piwik with idsite=N
 
-	$app['ircnetwork'] = "irc.freenode.net";
+	$app['ircnetwork'] = "irc.bloodfrontier.com";
 	$app['ircchannel'] = "bloodfrontier";
 	$app['ircsetup'] = "bloodfrontier";
 
