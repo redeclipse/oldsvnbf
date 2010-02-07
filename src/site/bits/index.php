@@ -41,7 +41,7 @@
 	$app['sflogo'] = 11;
 	$app['sfpiwik'] = 1; // use SF's piwik with idsite=N
 
-	$app['ircnetwork'] = "irc.bloodfrontier.com";
+	$app['ircnetwork'] = "irc.freenode.net";
 	$app['ircchannel'] = "bloodfrontier";
 	$app['ircsetup'] = "bloodfrontier";
 
@@ -132,7 +132,7 @@
       
 <?php } ?>
 	</head>
-	<body style="background-image: url(<?php echo $app['sitebg']; ?>)">
+	<body style="background: #111111 url(<?php echo $app['sitebg']; ?>) no-repeat center top">
 		<div id="container">
 			<div id="links"><?php echo $app['navbar']; ?></div>
 			<div id="header">
