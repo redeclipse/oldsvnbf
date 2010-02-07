@@ -1,84 +1,151 @@
 @charset "utf-8";
 body {
-	font-family: sans-serif;
-	font-size: 11px;
-	background: #0e0e0e no-repeat scroll center top;
+	background: #111111 url(/bits/background.jpg) no-repeat scroll center top;
 	margin: 0px;
 	padding: 0px;
+	font: 14px sans-serif;
 }
+h1 {
+	color: #a34b14;
+	float: left;
+	margin: 0px 0px 15px;
+	padding: 0px;
+	font: bold 28px "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+	
+h2 {
+	color: #999999;
+	float: left;
+	margin: 0px 0px 15px 10px;
+	padding: 0px;
+	font: bold normal 28px "Trebuchet MS", Arial, Helvetica, sans-serif;
+}
+h3 {
+	font: 16px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #FFFFFF;
+	background: url(/bits/sprite.png) no-repeat -860px -777px;
+	float: left;
+	margin: 0px 0px 15px;
+	padding: 0px 0px 0px 20px;
+	width: 390px;
+}
+/*.rightblock h4 {
+	font: bold 18px Trebuchet MS, Arial, Helvetica, sans-serif;
+	color: #a34b14;
+	margin: 0px;
+	padding: 0px;
+	text-align: center;
+}*/
+h4{
+	font: bold 18px Trebuchet MS, Arial, Helvetica, sans-serif;
+	color: #a34b14;
+	margin: 0px 0px 10px;
+	padding: 0px;
+}
+
+
+
+
 #container {
 	margin: 0px auto;
-	width: 820px;
+	width: 980px;
 	padding: 0px;
 }
-#header {
-	margin: 19px 0px 0px;
-	padding: 0px;
+#main {
+	margin: 10px 0px 0px 30px;
+	width: 410px;
 	float: left;
-	width: 820px;
+}
+#button {
+	font: bold normal 20px "Trebuchet MS", Arial, Helvetica, sans-serif;
+	color: #FFFFFF;
+	background: url(/bits/sprite.png) no-repeat -282px -777px;
+	margin: 10px 0px 0px 34px;
+	padding: 3px 0px 0px 34px;
+	float: left;
+	height: 30px;
+	width: 302px;
+	text-decoration: none;
+	text-shadow: -1px -1px 1px #773a00;
+}
+#svn {
+	font: 12px Arial, Helvetica, sans-serif;
+	color: #c0bfb7;
+	margin: 0px;
+	padding: 10px 0px 0px;
+	float: left;
+	width: 402px;
+	text-align: center;
+}
+#svn a {
+	color: #FFFFFF;
+	border-bottom: 1px dotted #FFFFFF;
+	text-decoration: none;
+}
+#svn a:hover {
+	color: #FFFFFF;
+	text-decoration: none;
+	border-bottom: 1px solid #FFFFFF;
+}
+
+#button:hover {
+	background: url(/bits/sprite.png) -282px -820px;
+}
+
+#button  em {
+	font: normal 9px Arial, Helvetica, sans-serif;
+	text-decoration: none;
+}
+
+
+
+
+#header {
+	margin: 10px 0px 0px;
+	padding: 10px 0px;
+	float: left;
+	width: 980px;
+	background: url(/bits/sprite.png) no-repeat center top;
 }
 #header img {
 	margin: 0px;
 	padding: 0px;
-	float: left;
 	border-style: none;
 }
+
 #links {
 	font-size: 16px;
 	font-weight: bold;
 	color: #FFFFFF;
-	background: #000000 url(/bits/bg_links.jpg) repeat-x center center;
 	margin: 0px;
 	padding: 0px;
-	float: left;
-	height: 75px;
-	width: 740px;
-}
-#page {
-	padding: 0px 40px;
-	width: 740px;
-	background: url(/bits/bg_page.png) repeat-y center top;
-	float: left;
+	float: right;
+	height: 50px;
+	width: 980px;
+	
 }
 #links a {
 	color: #FFFFFF;
 	text-decoration: none;
 	display: block;
-	float: left;
+	float: right;
 	text-align: center;
 	height: 24px;
-	margin: 25px 0px 0px;
-	padding: 3px 22px;
+	margin: 0px;
+	padding: 15px;
+	text-shadow: -1px -1px 1px #000;
 }
 #links a:visited {
 	background: none;
 	color: #FFFFFF;
+	text-shadow: -1px -1px 1px #000;
 }
 #links a:hover {
-	background: url(/bits/bg_link.png) no-repeat center top;
-	color: #CCCCCC;
+	color: #ffffff;
+	background: #A34B14 url(/bits/sprite.png) no-repeat center -1246px;
+	text-shadow: -1px -1px 1px #773a00;
 }
-#noticebg {
-	background: #000000 url(/bits/bg_blood.gif) no-repeat center top;
-	margin: 0px;
-	padding: 5px 0px 0px;
-	float: left;
-	width: 738px;
-}
-#blockborder {
-	margin: 0px;
-	padding: 0px;
-	float: left;
-	height: 20px;
-}
-#redblock {
-	background: url(/bits/bg_block.png) repeat-y;
-	float: left;
-	width: 510px;
-	margin: 0px;
-	padding: 0px 20px 0px 19px;
-	color: #FFFFFF;
-}
+
 #version {
 	font-size: 16px;
 	color: #FFFFFF;
@@ -87,187 +154,278 @@ body {
 	padding: 0px;
 	width: 500px;
 }
-#redblock a {
-	color: #F0F0F0;
-	text-decoration: none;
-	border-bottom: 1px dotted #C0C0C0;
-}
-#redblock a:visited {
-	color: #F0F0F0;
-	text-decoration: none;
-	border-bottom: 1px dotted #C0C0C0;
-}
-#redblock a:hover {
-	color: #FFFFFF;
-	text-decoration: none;
-	border-bottom: 1px solid #CCCCCC;
-}
-#redblock hr {
-	background: url(/bits/bg_hr.png) no-repeat center center;
-	margin: 0px 0px 5px;
-	padding: 0px;
-	float: left;
-	height: 2px;
-	width: 520px;
-	border-style: none;
-	border-width: 0px;
-}
-#notice {
-	color: #FFFFFF;
-	display: block;
-	margin: 0px;
-	padding: 5px 0px 0px 0px;
-	float: left;
-	width: 500px;
-}
-#insert {
-	float: left;
-	width: 92px;
-	display: block;
-}
-#right a {
-	color: #FFFFFF;
-	text-decoration: none;
-}
+
 #footer {
-	font-size: 16px;
-	color: #FFFFFF;
-	background: url(/bits/bg_footer.png) no-repeat center top;
+	color: #a5a5a5;
+	background: url(/bits/sprite.png) no-repeat left -1310px;
 	margin: 0px;
-	padding: 10px 0px 20px 60px;
+	padding: 20px 0px 20px 20px;
 	float: left;
-	height: 16px;
-	width: 760px;
+	height: 21px;
+	width: 960px;
+	font: 18px "Trebuchet MS", Arial, Helvetica, sans-serif;
 }
 #footer a {
-	color: #CC0000;
+	color: #FFFFFF;
 	text-decoration: none;
+
 }
 #footer a:visited {
-	color: #CC0000;
+	color: #FFFFFF;
 	text-decoration: none;
+
 }
 #footer a:hover {
-	color: #FF0000;
+	color: #FFFFFF;
 	text-decoration: underline;
 }
 #copyright {
 	font-size: 10px;
 	color: #999999;
 	margin: 0px;
-	padding: 2px 2px 8px 2px;
+	padding: 2px 0px 8px 20px;
 	float: left;
 	height: 32px;
-	width: 760px;
+	width: 960px;
+	text-align: left;
 }
 #copyright p {
 	margin: 0px;
 	padding: 4px 0px 0px 0px;
 }
 #sflogo {
-	margin: 0px 32px;
+	margin: -2px 10px 0px 0px;
 	float: right;
 	padding: 0px;
 }
 #list {
-	font-size: 10px;
+	font-size: 14px;
 	color: #FFFFFF;
 	margin: 0px;
 	padding: 18px 20px 0px 0px;
 	float: right;
 	width: 140px;
 }
-#list ul {
-	margin: 0px;
-	padding: 0px 0px 0px 12px;
-	float: left;
-	list-style: none;
-	width: 140px;
-	display: block;
-}
-#list li {
-	margin: 0px;
-	padding: 0px 0px 4px 20px;
-	float: left;
-	background: url(/bits/bg_li.png) no-repeat left center;
-	display: block;
-	width: 120px;
-}
-#list a {
-	color: #FFFFFF;
-	text-decoration: none;
-}
-#list a:visited {
-	color: #FFFFFF;
-	text-decoration: none;
-}
-#list a:hover {
-	color: #CCCCCC;
-	text-decoration: none;
-}
-#listdonate {
-	margin: 0px;
-	float: left;
-	padding: 14px 0px 0px 12px;
-}
-#listdonate form {
-	margin: 0px;
-	padding: 0px 0px 0px 4px;
-}
 #donatemsg {
-	margin: 0px 0px 0px -46px;
-	padding: 10px 0px 0px 4px;
-	font-size: 10px;
-	font-weight: bold;
-	text-align: center;
-	width: 182px;
+
 }
 #video {
-	background: url(/bits/bg_vid.jpg) no-repeat center center;
+	background: url(/bits/sprite.png) no-repeat center -300px;
 	margin: 0px;
 	padding: 0px;
 	float: left;
-	height: 380px;
-	width: 738px;
+	width: 980px;
 }
 #video object {
 	margin: 0px;
 	padding: 0px;
 }
 #player {
-	margin: 0px;
-	padding: 12px 0px 0px 10px;
-	float: left;
+	margin: 0px 20px 0px 0px;
+	padding: 0px;
+	float: right;
 	height: 308px;
 	width: 500px;
 }
 #vidlow {
 	font-size: 11px;
-	color: #FFFFFF;
+	color: #a5a5a5;
 	margin: 0px;
-	padding: 5px 0px 0px 10px;
-	float: left;
-	height: 16px;
-	width: 500px;
+	padding: 5px 42px 0px 0px;
+	float: right;
+	width: 400px;
+	clear: right;
 }
 #vidlow p{
-	color: #ffffff;
+	color: #a5a5a5;
 	text-decoration: none;
 	margin: 0px;
-	padding: 5px 0px 0px 0px;
+	padding: 0px 0px 0px 3px;
+	float: left;
+	text-align: center;
 }
 #vidlow a {
-	color: #CC0000;
-	text-decoration: none;
-}
-#vidlow a:visited {
-	color: #CC0000;
-	text-decoration: none;
-}
-#vidlow a:hover {
-	color: #FF0000;
+	color: #FFFFFF;
 	text-decoration: underline;
 }
+#vidlow a:visited {
+	color: #FFFFFF;
+	text-decoration: underline;
+}
+#vidlow a:hover {
+	color: #A34B14;
+	text-decoration: none;
+}
+
+.sliderblock{
+	background: url(/bits/sprite.png) no-repeat scroll left -204px;
+	float: left;
+	width: 935px;
+	margin: 0px;
+	padding: 20px 0px 0px 45px;
+}
+
+.vbar {
+	background: url(/bits/sprite.png) no-repeat -260px -774px;
+	margin: 0px 5px;
+	padding: 0px;
+	float: left;
+	height: 459px;
+	width: 2px;
+}
+.endblock {
+	background: url(/bits/sprite.png) no-repeat center -741px;
+	float: left;
+	height: 20px;
+	width: 980px;
+	margin: 0px 0px 5px;
+}
+.rightblock {
+	background: url(/bits/sprite.png) 0px -767px;
+	margin: 0px;
+	padding: 20px 20px 0px;
+	float: right;
+	width: 210px;
+	font-size: 14px;
+	color: #a5a5a5;
+	clear: right;
+	font-weight: normal;
+	text-align: center;
+}
+.rightblock ul {
+	margin: 0px 0px 10px;
+	padding: 0px;
+	float: left;
+	list-style: none;
+	display: block;
+}
+.rightblock li {
+	float: left;
+	display: block;
+	width: 41px;
+	margin: 10px 0px 0px 10px;
+	padding: 0px;
+	height: 41px;
+}
+.rightblock a {
+	color: #FFFFFF;
+	text-decoration: none;
+	float: left;
+}
+.rightblock a:visited {
+	color: #FFFFFF;
+	text-decoration: none;
+}
+.rightblock a:hover {
+	color: #CCCCCC;
+	text-decoration: none;
+}
+.endrightblock {
+	background: url(/bits/sprite.png) 0px -1290px;
+	margin: 0px;
+	padding: 0px;
+	float: right;
+	width: 250px;
+	height: 20px;
+	clear: right;
+}
+.rightblock form{
+	margin: 10px 0px 0px;
+}
+.leftcol{
+	margin: 10px 10px 0px 12px;
+	padding: 0px;
+	float: left;
+	width: 330px;
+	font: 14px/18px Arial, Helvetica, sans-serif;
+	color: #a5a5a5;
+	}
+.leftcol p {
+	margin: 0px 0px 10px;
+	padding: 0px;
+}
+.leftcol a:link {
+	color: #d3d3d3;
+	text-decoration: none;
+	border-bottom: 1px dotted #d3d3d3;
+}
+.leftcol a:visited {
+	color: #d3d3d3;
+	text-decoration: none;
+	border-bottom: 1px dotted #d3d3d3;
+}
+.leftcol a:hover {
+	color: #FFFFFF;
+	text-decoration: none;
+	border-bottom: 1px solid #FFFFFF;
+}
+.facebook {
+	background: url(/bits/sprite.png) no-repeat -282px -876px;
+	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;
+}
+.google {
+	background: url(/bits/sprite.png) no-repeat -282px -927px;
+	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;
+}
+.blackboxbeta {
+	background: url(/bits/sprite.png) no-repeat -282px -1076px;
+	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;
+}
+.playdeb {
+	background: url(/bits/sprite.png) no-repeat -282px -1126px;
+	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;
+}
+.youtube {
+	background: url(/bits/sprite.png) no-repeat -282px -1027px;
+	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;
+}
+a.info{
+    position:relative; 
+    z-index:24; 	display: block;
+	float: left;
+	height: 41px;
+	padding: 0px;
+	width: 41px;}
+
+a.info:hover{
+	z-index:25;
+}
+
+a.info span{display: none}
+
+a.info:hover span{
+	/*content only displayed on hover*/
+ display:block;
+	position:absolute;
+	top:2em;
+	left:-10em;
+	width:158px;
+	color:#FFFFFF;
+	text-align: center;
+	padding:10px 0px 0px;
+	background: url(/bits/sprite.png) no-repeat -671px -777px;
+	height: 30px;
+    }
 #screen {
 	font-size: 11px;
 	color: #FFFFFF;
@@ -282,55 +440,16 @@ body {
 #screen img {
 	border: none;
 }
-#subtext {
-	font-size: 11px;
-	color: #FFFFFF;
-	margin: 0px;
-	padding: 4px 30px 0px 0px;
-	float: right;
-	width: 180px;
-}
-#subtext p {
-	width: 180px;
-	margin: 0px;
-	padding: 0px;
-	float: right;
-	display: block;
-}
-#subtext a {
-	color: #999999;
-	margin: 0px;
-	padding: 0px;
-}
-#subtext h2 {
-	font-size: 22px;
-	font-weight: bold;
-	margin: 0px;
-	padding: 0px 0px 4px 0px;
-	color: #CC0000;
-	float: right;
-	width: 180px;
-	display: block;
-}
-#subtext h3 {
-	font-size: 16px;
-	font-weight: bold;
-	margin: 0px;
-	padding: 0px 0px 8px 0px;
-	color: #999999;
-	float: right;
-	width: 180px;
-	display: block;
-}
+
 /* Lightbox */
 #gallery img {
 	padding: 0px;
-	margin: 1px 10px;
+	margin: 1px;
 	float: left;
 }
 #gallery img:hover {
-	padding: 0px 0px;
-	margin: 0px 9px;
+	padding: 0px;
+	margin: 0px;
 	border: 1px solid #870000;
 }
 #jquery-overlay {
@@ -431,19 +550,19 @@ body {
 
 /* Easy Slider */
 	#slider{
-	background-color:#000000;
 	color:#FFFFFF;
 	font-size:10px;
 	padding:0;
 	text-align:center;
-	width:678px;
+	width:890px;
 	float: left;
-	margin: 0px 0px 0px 30px;
+	margin: 0px;
+	display: block;
 	}
 	#slider ul, #slider li{
 	margin: 0px;
 	padding: 0px;
-	width: 678px;
+	width: 890px;
 	float: left;
 	}
 	#slider li{
@@ -451,28 +570,30 @@ body {
 			define width and height of list item (slide)
 			entire slider area will adjust according to the parameters provided here
 		*/ 
-	width:678px;
+	width:890px;
 	overflow:hidden;
 	text-align: center;
 	list-style: none;
-	height: 131px;
+	height: 142px;
 	float: left;
+	padding: 0px;
+	margin: 0px;
 		}	
 #prevBtn, #nextBtn,
 	#slider1next, #slider1prev{
 	display:block;
 	float:left;
-	width:30px;
-	height:77px;
+	width:20px;
+	height:30px;
 	position:relative;
-	left:-708px;
-	top:26px;
+	left:-916px;
+	top:57px;
 	z-index:90;
 		}	
 	#nextBtn, #slider1next{
 	position: relative;
-	left: 0px;
-	top: -51px;
+	left: -13px;
+	top: 57px;
 	float:left;
 		}														
 	#prevBtn a, #nextBtn a,
@@ -480,12 +601,12 @@ body {
 	display:block;
 	float:left;
 	position:relative;
-	width:30px;
-	height:77px;
-	background:url(/bits/btn_prev.png) no-repeat center center;
+	width:20px;
+	height:30px;
+	background:url(/bits/sprite.png) no-repeat -310px -1273px;
 		}	
 	#nextBtn a, #slider1next a{
-	background:url(/bits/btn_next.png) no-repeat center center;
+	background:url(/bits/sprite.png) no-repeat -339px -1273px;
 		}														
 
 	/* numeric controls */	
@@ -518,5 +639,3 @@ body {
 		color:#fff;
 		}
 	ol#controls li a:focus, #prevBtn a:focus, #nextBtn a:focus{outline:none;}
-	
-/* // Easy Slider */
