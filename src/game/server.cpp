@@ -1355,17 +1355,16 @@ namespace server
         }
         switch(GAME(modelock))
         {
-            case 0: default: break;
             case 1: case 2: if(!haspriv(ci, GAME(modelock) == 1 ? PRIV_MASTER : PRIV_ADMIN, "change game modes")) return; break;
             case 3: case 4: if((reqmode < GAME(modelimit) || !mutscmp(reqmuts, GAME(mutslimit))) && !haspriv(ci, GAME(modelock) == 3 ? PRIV_MASTER : PRIV_ADMIN, "change to a locked game mode")) return; break;
             case 5: if(!haspriv(ci, PRIV_MAX, "change game modes")) return; break;
+            case 0: default: break;
         }
         if(reqmode != G_EDITMODE && GAME(mapslock))
         {
             const char *maplist = NULL;
             switch(GAME(mapslock))
             {
-                default: break;
                 case 1: case 2: maplist = GAME(allowmaps); break;
                 case 3: case 4:
                 {
@@ -1379,6 +1378,7 @@ namespace server
                     break;
                 }
                 case 5: if(!haspriv(ci, PRIV_MAX, "select a custom maps")) return; break;
+                case 0: default: break;
             }
             if(maplist && *maplist)
             {
