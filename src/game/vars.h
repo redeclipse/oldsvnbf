@@ -24,12 +24,12 @@ GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
 GVAR(IDF_ADMIN, storyplayers, 1, 5, MAXPLAYERS);
 
-GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dualstar dutility eight enigma firehouse forge gladiator hollow longestyard mirage nova oasis overseer panic refuge rivals siege smouldering testchamber tower tranquility venus warehouse warground wet wishbone");
-GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma gladiator longestyard mirage nova oasis panic refuge rivals smouldering tower warground venus");
+GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dutility eight enigma firehouse forge gladiator hollow longestyard nova oasis overseer panic refuge rivals siege smouldering testchamber tower venus warground");
+GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
 GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight gladiator longestyard nova panic refuge rivals tower warground venus");
-GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli enigma forge gladiator mirage nova oasis panic refuge rivals smouldering warground venus");
-GSVAR(IDF_ADMIN, mctfmaps, "deadsimple enigma oasis refuge");
-GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator mirage nova oasis panic refuge rivals smouldering tower warground venus");
+GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli enigma forge gladiator nova panic refuge rivals smouldering warground venus");
+GSVAR(IDF_ADMIN, mctfmaps, "deadsimple enigma refuge");
+GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator nova panic refuge rivals smouldering tower warground venus");
 GSVAR(IDF_ADMIN, trialmaps, "testchamber");
 GSVAR(IDF_ADMIN, storymaps, "wishbone storytest");
 
