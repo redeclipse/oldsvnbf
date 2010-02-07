@@ -90,7 +90,6 @@ namespace auth
 
     void setmaster(clientinfo *ci, bool val, const char *text = "", int flags = 0)
 	{
-        if(!flags && !val) return;
         int privilege = ci->privilege, wants = flags;
 		bool haspass = val && !flags && adminpass[0] && checkpassword(ci, adminpass, text);
         if((haspass || ci->local) && wants < PRIV_ADMIN) wants = PRIV_ADMIN;
