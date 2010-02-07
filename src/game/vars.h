@@ -56,7 +56,7 @@ GVAR(0, extrahealth, 0, 100, INT_MAX-1);
 
 GVAR(0, fireburntime, 0, 5500, INT_MAX-1);
 GVAR(0, fireburndelay, 0, 1000, INT_MAX-1);
-GVAR(0, fireburndamage, 0, 7, INT_MAX-1);
+GVAR(0, fireburndamage, 0, 5, INT_MAX-1);
 
 GVAR(0, vampire, 0, 0, 1);
 GVAR(0, regendelay, 0, 3000, INT_MAX-1);
