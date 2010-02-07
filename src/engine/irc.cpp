@@ -543,6 +543,7 @@ void ircprocess(ircnet *n, char *user[3], int g, int numargs, char *w[])
                 {
                     n->state = IRC_ONLINE;
                     ircprintf(n, 4, NULL, "\fbnow connected to %s as %s", user[0], n->nick);
+                    if(*n->authname && *n->authpass) ircsend(n, "PRIVMSG %s :%s", n->authname, n->authpass);
                 }
                 break;
             }
@@ -696,7 +697,6 @@ void ircslice()
                 }
                 case IRC_ONLINE:
                 {
-                    if(*n->authname && *n->authpass) ircsend(n, "PRIVMSG %s :%s", n->authname, n->authpass);
                     loopvj(n->channels)
                     {
                         ircchan *c = &n->channels[j];
