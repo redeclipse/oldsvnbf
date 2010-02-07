@@ -119,18 +119,18 @@ extern char *savecolour, *restorecolour, *green, *blue, *yellow, *red, *gray, *m
 
 enum
 {
-    TEXT_SHADOW			= 1<<0,
-    TEXT_NO_INDENT		= 1<<1,
-    TEXT_UPWARD			= 1<<2,
+    TEXT_SHADOW         = 1<<0,
+    TEXT_NO_INDENT      = 1<<1,
+    TEXT_UPWARD         = 1<<2,
 
-    TEXT_ALIGN			= 3<<8,
-    TEXT_LEFT_JUSTIFY	= 0<<8,
-    TEXT_CENTERED		= 1<<8,
-    TEXT_RIGHT_JUSTIFY	= 2<<8,
+    TEXT_ALIGN          = 3<<8,
+    TEXT_LEFT_JUSTIFY   = 0<<8,
+    TEXT_CENTERED       = 1<<8,
+    TEXT_RIGHT_JUSTIFY  = 2<<8,
 
-    TEXT_LEFT_UP		= TEXT_UPWARD|TEXT_LEFT_JUSTIFY,
-    TEXT_CENTER_UP		= TEXT_UPWARD|TEXT_CENTERED,
-    TEXT_RIGHT_UP		= TEXT_UPWARD|TEXT_RIGHT_JUSTIFY
+    TEXT_LEFT_UP        = TEXT_UPWARD|TEXT_LEFT_JUSTIFY,
+    TEXT_CENTER_UP      = TEXT_UPWARD|TEXT_CENTERED,
+    TEXT_RIGHT_UP       = TEXT_UPWARD|TEXT_RIGHT_JUSTIFY
 };
 
 extern bool setfont(const char *name);
@@ -180,26 +180,26 @@ enum
     PT_ELLIPSE,
     PT_CONE,
 
-    PT_MOD		= 1<<8,
-    PT_RND4		= 1<<9,		// uses random image quarters
-    PT_HFLIP	= 1<<10,	// uses random horizontal flipping
-	PT_VFLIP	= 1<<11,	// uses random vertical flipping
-	PT_ROT		= 1<<12,	// uses random rotation
-    PT_LERP		= 1<<13,	// use very sparingly - order of blending issues
-    PT_GLARE	= 1<<14,	// use glare when available
-    PT_SOFT		= 1<<15,	// use soft quad rendering when available
-    PT_ONTOP	= 1<<16,	// render on top of everything else, remove depth testing
+    PT_MOD      = 1<<8,
+    PT_RND4     = 1<<9,     // uses random image quarters
+    PT_HFLIP    = 1<<10,    // uses random horizontal flipping
+    PT_VFLIP    = 1<<11,    // uses random vertical flipping
+    PT_ROT      = 1<<12,    // uses random rotation
+    PT_LERP     = 1<<13,    // use very sparingly - order of blending issues
+    PT_GLARE    = 1<<14,    // use glare when available
+    PT_SOFT     = 1<<15,    // use soft quad rendering when available
+    PT_ONTOP    = 1<<16,    // render on top of everything else, remove depth testing
     PT_FEW      = 1<<17,    // allocate smaller number of particles
-    PT_SHRINK	= 1<<18,	// shrink particle as it fades
-    PT_GROW		= 1<<19,	// grow particle as it fades
-	PT_FLIP		= PT_HFLIP | PT_VFLIP | PT_ROT
+    PT_SHRINK   = 1<<18,    // shrink particle as it fades
+    PT_GROW     = 1<<19,    // grow particle as it fades
+    PT_FLIP     = PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
 enum
 {
     PART_TELEPORT = 0, PART_ICON,
     PART_LINE, PART_TRIANGLE, PART_ELLIPSE, PART_CONE,
-	PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_FLARE_LERP, PART_MUZZLE_FLARE_LERP,
+    PART_FIREBALL_LERP, PART_PLASMA_LERP, PART_FLARE_LERP, PART_MUZZLE_FLARE_LERP,
     PART_SMOKE_LERP_SOFT, PART_SMOKE_LERP, PART_HINT_LERP_SOFT, PART_HINT_LERP,
     PART_SMOKE_SOFT, PART_SMOKE, PART_HINT_SOFT, PART_HINT,
     PART_BLOOD,
@@ -236,7 +236,7 @@ struct particle
             uchar progress;
         };
     };
-	physent *owner;
+    physent *owner;
 };
 
 extern void regular_part_create(int type, int fade, const vec &p, int color = 0xFFFFFF, float size = 4, float blend = 1, int grav = 0, int collide = 0, physent *pl = NULL, int delay = 0);
@@ -277,15 +277,15 @@ enum { PARTTYPE_CREATE = 0, PARTTYPE_SPLASH, PARTTYPE_SHAPE, PARTTYPE_FIRE, PART
 
 struct mapparticle
 {
-	const char *name;
-	int part, type, colour, grav, fade, attr;
-	float radius, height, size, blend, vel;
+    const char *name;
+    int part, type, colour, grav, fade, attr;
+    float radius, height, size, blend, vel;
 
-	mapparticle() : name(NULL) {}
-	~mapparticle()
-	{
-		if(name) delete name;
-	}
+    mapparticle() : name(NULL) {}
+    ~mapparticle()
+    {
+        if(name) delete name;
+    }
 };
 extern vector<mapparticle> mapparts;
 #endif
@@ -473,17 +473,17 @@ struct guient
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
-	virtual void tab(const char *name = NULL, int color = 0xFFFFFF) = 0;
+    virtual void tab(const char *name = NULL, int color = 0xFFFFFF) = 0;
     virtual int title(const char *text, int color = 0xFFFFFF, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
     virtual int slice(Texture *t, float scale, float start = 0, float end = 1, const char *text = NULL) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL, bool reverse = false, bool scroll = false) = 0;
     virtual void separator() = 0;
-	virtual void progress(float percent, float scale) = 0;
-	virtual void strut(float size = 1) = 0;
-	virtual void pushfont(const char *font) = 0;
-	virtual void popfont() = 0;
+    virtual void progress(float percent, float scale) = 0;
+    virtual void strut(float size = 1) = 0;
+    virtual void pushfont(const char *font) = 0;
+    virtual void popfont() = 0;
     virtual void space(float size = 1) = 0;
     virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = 0) = 0;
     virtual char *keyfield(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = 0) = 0;
@@ -504,15 +504,15 @@ extern char *guioverlaytex, *guislidertex;
 
 namespace UI
 {
-	extern bool isopen, ready;
-	extern bool keypress(int code, bool isdown, int cooked);
-	extern void setup();
-	extern void update();
-	extern void render();
-	extern bool active(bool pass = true);
-	extern bool hit(bool on, bool act);
-	extern void addcb(guicb *cb);
-	extern void limitscale(float scale);
+    extern bool isopen, ready;
+    extern bool keypress(int code, bool isdown, int cooked);
+    extern void setup();
+    extern void update();
+    extern void render();
+    extern bool active(bool pass = true);
+    extern bool hit(bool on, bool act);
+    extern void addcb(guicb *cb);
+    extern void limitscale(float scale);
 }
 
 // client
@@ -520,11 +520,11 @@ enum { ST_EMPTY, ST_LOCAL, ST_TCPIP, ST_REMOTE };
 
 struct clientdata
 {
-	int type;
-	int num;
-	ENetPeer *peer;
-	string hostname;
-	void *info;
+    int type;
+    int num;
+    ENetPeer *peer;
+    string hostname;
+    void *info;
 };
 
 extern void process(ENetPacket *packet, int sender, int chan);
@@ -545,9 +545,9 @@ enum { HITFLAG_NONE = 0, HITFLAG_LEGS = 1<<0, HITFLAG_TORSO = 1<<1, HITFLAG_HEAD
 
 enum
 {
-	MAP_BFGZ = 0,
-	MAP_OCTA,
-	MAP_MAX
+    MAP_BFGZ = 0,
+    MAP_OCTA,
+    MAP_MAX
 };
 
 enum

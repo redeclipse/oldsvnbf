@@ -388,7 +388,7 @@ template <class T> struct vector
         advance(p.length());
     }
 
-	void put(const T &v) { add(v); }
+    void put(const T &v) { add(v); }
 
     void put(const T *v, int n)
     {
@@ -794,13 +794,13 @@ inline void itoa(char *s, int i) { formatstring(s)("%d", i); }
 inline char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 inline char *expandstr(char *o, const char *n, char *delimit = " ")
 {
-	int len = strlen(o)+strlen(n)+strlen(delimit)+1;
-	char *q = new char[len];
-	copystring(q, o, len);
-	if(*delimit) concatstring(q, delimit);
-	concatstring(q, n);
-	delete[] o;
-	return q;
+    int len = strlen(o)+strlen(n)+strlen(delimit)+1;
+    char *q = new char[len];
+    copystring(q, o, len);
+    if(*delimit) concatstring(q, delimit);
+    concatstring(q, n);
+    delete[] o;
+    return q;
 }
 
 #if defined(WIN32) && !defined(__GNUC__)

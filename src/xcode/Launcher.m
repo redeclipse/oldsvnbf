@@ -281,7 +281,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         CFDictionaryRef mode = CFArrayGetValueAtIndex(modeList, i);
         NSString *title = [NSString stringWithFormat:@"%i x %i", numberForKey(mode, kCGDisplayWidth), numberForKey(mode, kCGDisplayHeight)];
         if (![resolutions itemWithTitle:title]) [resolutions addItemWithTitle:title];
-    }	
+    }   
 }
 
 - (void)initResolutions 
@@ -295,12 +295,12 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         CGDisplayCount i;
         for (i = 0; i < numDisplays; i++) [self addResolutionsForDisplay:display[i]];
     }
-    [resolutions selectItemAtIndex: [[NSUserDefaults standardUserDefaults] integerForKey:dkRESOLUTION]];	
+    [resolutions selectItemAtIndex: [[NSUserDefaults standardUserDefaults] integerForKey:dkRESOLUTION]];    
 }
 
 /* build key array from config data */
 -(NSArray *)getKeys:(NSDictionary *)dict 
-{	
+{   
     NSMutableArray *arr = [NSMutableArray array];
     NSEnumerator *e = [dict keyEnumerator];
     NSString *key;
@@ -341,7 +341,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
             file = [dataPath stringByAppendingPathComponent:@"data/defaults.cfg"];
             lines = [[NSString stringWithContentsOfFile:file] componentsSeparatedByString:@"\n"];
         }
-		
+        
         NSString *line; 
         NSEnumerator *e = [lines objectEnumerator];
         while (line = [e nextObject]) 
@@ -398,12 +398,12 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
 {
     NSFileHandle *taskOutput = [note object];
     NSData *data = [[note userInfo] objectForKey:NSFileHandleNotificationDataItem];
-	
+    
     if (data && [data length])
     {
         NSString *text = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
         [console appendText:text];
-        [text release];					
+        [text release];                 
         [taskOutput readInBackgroundAndNotify]; //wait for more data
     }
     else
@@ -490,16 +490,16 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
  * otherwise specifying a map to play
  */
 - (BOOL)playFile:(id)filename 
-{	
+{   
     NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
     
-    NSArray *res = [[resolutions titleOfSelectedItem] componentsSeparatedByString:@" x "];	
+    NSArray *res = [[resolutions titleOfSelectedItem] componentsSeparatedByString:@" x "];  
     NSMutableArray *args = [NSMutableArray array];
-	
+    
     [args addObject:[NSString stringWithFormat:@"-dw%@", [res objectAtIndex:0]]];
     [args addObject:[NSString stringWithFormat:@"-dh%@", [res objectAtIndex:1]]];
     [args addObject:@"-dz32"]; // otherwise seems to have a fondness to use -z16 which looks crap
-	
+    
     if ([defs integerForKey:dkFULLSCREEN] == 0) [args addObject:@"-df"];
     [args addObject:[NSString stringWithFormat:@"-da%d", [defs integerForKey:dkFSAA]]];
     [args addObject:[NSString stringWithFormat:@"-du%d", [defs integerForKey:dkSHADER]]];
@@ -598,7 +598,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         NSString *ext;
         while((ext = [exts nextObject])) [fileRoles setObject:role forKey:ext];
     }
-	
+    
     NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
     NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
     NSString *version = [defs stringForKey:dkVERSION];
@@ -619,7 +619,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
     //encourage people not to remain unnamed
     NSString *name = [dict objectForKey:@"name"];
     forcename = (!name || [name isEqualToString:@""] || [name isEqualToString:@"unnamed"]);
-    	
+        
     [self initMaps];
     [self initResolutions];
     server = -1;
@@ -714,7 +714,7 @@ static int numberForKey(CFDictionaryRef desc, CFStringRef key)
         
         NSString *pass = [defs nonNullStringForKey:dkPASSWORD];
         if (![pass isEqualToString:@""]) [args addObject:[NSString stringWithFormat:@"-sP%@", pass]];
-		
+        
         int clients = [defs integerForKey:dkMAXCLIENTS];
         if (clients > 0) [args addObject:[NSString stringWithFormat:@"-sc%d", clients]];
         

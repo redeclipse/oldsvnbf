@@ -47,77 +47,77 @@ volatile bool check_calclight_lmprog = false;
 void check_calclight_canceled()
 {
     if(interceptkey(SDLK_ESCAPE)) calclight_canceled = true;
-	if(!calclight_canceled) check_calclight_lmprog = false;
+    if(!calclight_canceled) check_calclight_lmprog = false;
 }
 
 static int curlumels = 0;
 
 void show_calclight_lmprog()
 {
-	int lumels = curlumels;
-	loopv(lightmaps) lumels += lightmaps[i].lumels;
-	float bar1 = float(lmprog) / float(allocnodes),
-		  bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
+    int lumels = curlumels;
+    loopv(lightmaps) lumels += lightmaps[i].lumels;
+    float bar1 = float(lmprog) / float(allocnodes),
+          bar2 = lightmaps.length() ? float(lumels) / float(lightmaps.length() * LM_PACKW * LM_PACKH) : 0;
 
-	defformatstring(text)("%d textures used", lightmaps.length());
+    defformatstring(text)("%d textures used", lightmaps.length());
 
-	if(LM_PACKW <= hwtexsize && !lmprogtex)
-	{
-		glGenTextures(1, &lmprogtex);
-		createtexture(lmprogtex, LM_PACKW, LM_PACKH, NULL, 3, 1, GL_RGB);
-	}
-	// only update once a sec (4 * 250 ms ticks) to not kill performance
-	if(lmprogtex && !calclight_canceled)
+    if(LM_PACKW <= hwtexsize && !lmprogtex)
+    {
+        glGenTextures(1, &lmprogtex);
+        createtexture(lmprogtex, LM_PACKW, LM_PACKH, NULL, 3, 1, GL_RGB);
+    }
+    // only update once a sec (4 * 250 ms ticks) to not kill performance
+    if(lmprogtex && !calclight_canceled)
     {
         loopvrev(lightmaps) if((lightmaps[i].type&LM_TYPE)!=LM_BUMPMAP1)
-	    {
-		    if(lmprogtexticks++ % 4) break;
-		    glBindTexture(GL_TEXTURE_2D, lmprogtex);
+        {
+            if(lmprogtexticks++ % 4) break;
+            glBindTexture(GL_TEXTURE_2D, lmprogtex);
             glPixelStorei(GL_UNPACK_ALIGNMENT, texalign(lightmaps[i].data, LM_PACKW, lightmaps[i].bpp));
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, LM_PACKW, LM_PACKH,
                             lightmaps[i].type&LM_ALPHA ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, lightmaps[i].data);
-		    break;
-	    }
+            break;
+        }
     }
-	progress(bar1, "computing lightmaps..", bar2, text);//, lmprogtexticks ? lmprogtex : 0);
+    progress(bar1, "computing lightmaps..", bar2, text);//, lmprogtexticks ? lmprogtex : 0);
 }
 
 #define CHECK_PROGRESS(exit) CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_lmprog)
 
 bool PackNode::insert(ushort &tx, ushort &ty, ushort tw, ushort th)
 {
-	if((available < tw && available < th) || w < tw || h < th)
-		return false;
-	if(child1)
-	{
-		bool inserted = child1->insert(tx, ty, tw, th) ||
-						child2->insert(tx, ty, tw, th);
-		available = max(child1->available, child2->available);
-		if(!available) clear();
-		return inserted;
-	}
-	if(w == tw && h == th)
-	{
-		available = 0;
-		tx = x;
-		ty = y;
-		return true;
-	}
+    if((available < tw && available < th) || w < tw || h < th)
+        return false;
+    if(child1)
+    {
+        bool inserted = child1->insert(tx, ty, tw, th) ||
+                        child2->insert(tx, ty, tw, th);
+        available = max(child1->available, child2->available);
+        if(!available) clear();
+        return inserted;
+    }
+    if(w == tw && h == th)
+    {
+        available = 0;
+        tx = x;
+        ty = y;
+        return true;
+    }
 
-	if(w - tw > h - th)
-	{
-		child1 = new PackNode(x, y, tw, h);
-		child2 = new PackNode(x + tw, y, w - tw, h);
-	}
-	else
-	{
-		child1 = new PackNode(x, y, w, th);
-		child2 = new PackNode(x, y + th, w, h - th);
-	}
+    if(w - tw > h - th)
+    {
+        child1 = new PackNode(x, y, tw, h);
+        child2 = new PackNode(x + tw, y, w - tw, h);
+    }
+    else
+    {
+        child1 = new PackNode(x, y, w, th);
+        child2 = new PackNode(x, y + th, w, h - th);
+    }
 
-	bool inserted = child1->insert(tx, ty, tw, th);
-	available = max(child1->available, child2->available);
-	return inserted;
+    bool inserted = child1->insert(tx, ty, tw, th);
+    available = max(child1->available, child2->available);
+    return inserted;
 }
 
 bool LightMap::insert(ushort &tx, ushort &ty, uchar *src, ushort tw, ushort th)
@@ -203,19 +203,19 @@ void copy_lightmap(surfaceinfo &surface)
 
 struct compresskey
 {
-	ushort x, y, lmid;
-	uchar w, h;
+    ushort x, y, lmid;
+    uchar w, h;
 
-	compresskey() {}
-	compresskey(const surfaceinfo &s) : x(s.x), y(s.y), lmid(s.lmid), w(s.w), h(s.h) {}
+    compresskey() {}
+    compresskey(const surfaceinfo &s) : x(s.x), y(s.y), lmid(s.lmid), w(s.w), h(s.h) {}
 };
 
 struct compressval
 {
-	ushort x, y, lmid;
+    ushort x, y, lmid;
 
-	compressval() {}
-	compressval(const surfaceinfo &s) : x(s.x), y(s.y), lmid(s.lmid) {}
+    compressval() {}
+    compressval(const surfaceinfo &s) : x(s.x), y(s.y), lmid(s.lmid) {}
 };
 
 static inline bool htcmp(const compresskey &x, const compresskey &y)
@@ -329,15 +329,15 @@ void update_lightmap(const surfaceinfo &surface)
 
 uint generate_lumel(const float tolerance, uint lightmask, const vector<const extentity *> &lights, const vec &target, const vec &normal, vec &sample, int x, int y)
 {
-	vec avgray(0, 0, 0);
-	float r = 0, g = 0, b = 0;
-	uint lightused = 0;
-	loopv(lights)
-	{
-		if(lightmask&(1<<i)) continue;
-		const extentity &light = *lights[i];
-		vec ray = target;
-		ray.sub(light.o);
+    vec avgray(0, 0, 0);
+    float r = 0, g = 0, b = 0;
+    uint lightused = 0;
+    loopv(lights)
+    {
+        if(lightmask&(1<<i)) continue;
+        const extentity &light = *lights[i];
+        vec ray = target;
+        ray.sub(light.o);
         float mag = ray.magnitude();
         if(!mag) continue;
         float attenuation = 1;
@@ -349,55 +349,55 @@ uint generate_lumel(const float tolerance, uint lightmask, const vector<const ex
         ray.mul(1.0f / mag);
         float angle = -ray.dot(normal);
         if(angle <= 0) continue;
-		if(!light.links.empty())
-		{
-			int slight = -1;
-			const vector<extentity *> &ents = entities::getents();
-			loopvk(light.links)
-			{
-				if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_LIGHTFX && ents[light.links[k]]->attrs[0] == LFX_SPOTLIGHT)
-				{
-					slight = light.links[k];
-					break;
-				}
-			}
-			if(ents.inrange(slight))
-			{
-				extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(light.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
-				float spotatten = 1-(1-ray.dot(spot))/maxatten;
-				if(spotatten <= 0) continue;
-				attenuation *= spotatten;
-			}
-			else continue;
-		}
-		if(lmshadows && mag)
-		{
+        if(!light.links.empty())
+        {
+            int slight = -1;
+            const vector<extentity *> &ents = entities::getents();
+            loopvk(light.links)
+            {
+                if(ents.inrange(light.links[k]) && ents[light.links[k]]->type == ET_LIGHTFX && ents[light.links[k]]->attrs[0] == LFX_SPOTLIGHT)
+                {
+                    slight = light.links[k];
+                    break;
+                }
+            }
+            if(ents.inrange(slight))
+            {
+                extentity &spotlight = *ents[slight];
+                vec spot(vec(spotlight.o).sub(light.o).normalize());
+                float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
+                float spotatten = 1-(1-ray.dot(spot))/maxatten;
+                if(spotatten <= 0) continue;
+                attenuation *= spotatten;
+            }
+            else continue;
+        }
+        if(lmshadows && mag)
+        {
             float dist = shadowray(light.o, ray, mag - tolerance, RAY_SHADOW | (lmshadows > 1 ? RAY_ALPHAPOLY : 0));
-			if(dist < mag - tolerance) continue;
-		}
-		lightused |= 1<<i;
-		float intensity;
+            if(dist < mag - tolerance) continue;
+        }
+        lightused |= 1<<i;
+        float intensity;
         switch(lmtype&LM_TYPE)
-		{
-			case LM_BUMPMAP0:
-				intensity = attenuation;
-				avgray.add(ray.mul(-attenuation));
-				break;
-			default:
+        {
+            case LM_BUMPMAP0:
+                intensity = attenuation;
+                avgray.add(ray.mul(-attenuation));
+                break;
+            default:
                 intensity = angle * attenuation;
-				break;
-		}
-		r += intensity * float(light.attrs[1]);
-		g += intensity * float(light.attrs[2]);
-		b += intensity * float(light.attrs[3]);
-	}
+                break;
+        }
+        r += intensity * float(light.attrs[1]);
+        g += intensity * float(light.attrs[2]);
+        b += intensity * float(light.attrs[3]);
+    }
     switch(lmtype&LM_TYPE)
-	{
-		case LM_BUMPMAP0:
-			if(avgray.iszero()) break;
-			// transform to tangent space
+    {
+        case LM_BUMPMAP0:
+            if(avgray.iszero()) break;
+            // transform to tangent space
             extern float orientation_tangent[6][3][4];
             extern float orientation_binormal[6][3][4];
             vec S(orientation_tangent[lmrotate][dimension(lmorient)]),
@@ -405,94 +405,94 @@ uint generate_lumel(const float tolerance, uint lightmask, const vector<const ex
             normal.orthonormalize(S, T);
             avgray.normalize();
             lm_ray[y*lm_w+x].add(vec(S.dot(avgray), T.dot(avgray), normal.dot(avgray)));
-			break;
-	}
+            break;
+    }
     sample.x = min(255.0f, max(r, float(ambientcolor[0])));
     sample.y = min(255.0f, max(g, float(ambientcolor[1])));
     sample.z = min(255.0f, max(b, float(ambientcolor[2])));
-	return lightused;
+    return lightused;
 }
 
 bool lumel_sample(const vec &sample, int aasample, int stride)
 {
-	if(sample.x >= ambientcolor[0]+1 || sample.y >= ambientcolor[1]+1 || sample.z >= ambientcolor[2]+1) return true;
+    if(sample.x >= ambientcolor[0]+1 || sample.y >= ambientcolor[1]+1 || sample.z >= ambientcolor[2]+1) return true;
 #define NCHECK(n) \
-	if((n).x >= ambientcolor[0]+1 || (n).y >= ambientcolor[1]+1 || (n).z >= ambientcolor[2]+1) \
-		return true;
-	const vec *n = &sample - stride - aasample;
-	NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
-	n += stride;
-	NCHECK(n[0]); NCHECK(n[2*aasample]);
-	n += stride;
-	NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
-	return false;
+    if((n).x >= ambientcolor[0]+1 || (n).y >= ambientcolor[1]+1 || (n).z >= ambientcolor[2]+1) \
+        return true;
+    const vec *n = &sample - stride - aasample;
+    NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
+    n += stride;
+    NCHECK(n[0]); NCHECK(n[2*aasample]);
+    n += stride;
+    NCHECK(n[0]); NCHECK(n[aasample]); NCHECK(n[2*aasample]);
+    return false;
 }
 
 void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *slight, int flags = RAY_ALPHAPOLY, extentity *t = NULL)
 {
-	static const vec rays[17] =
-	{
-		vec(cosf(21*RAD)*cosf(50*RAD), sinf(21*RAD)*cosf(50*RAD), sinf(50*RAD)),
-		vec(cosf(111*RAD)*cosf(50*RAD), sinf(111*RAD)*cosf(50*RAD), sinf(50*RAD)),
-		vec(cosf(201*RAD)*cosf(50*RAD), sinf(201*RAD)*cosf(50*RAD), sinf(50*RAD)),
-		vec(cosf(291*RAD)*cosf(50*RAD), sinf(291*RAD)*cosf(50*RAD), sinf(50*RAD)),
+    static const vec rays[17] =
+    {
+        vec(cosf(21*RAD)*cosf(50*RAD), sinf(21*RAD)*cosf(50*RAD), sinf(50*RAD)),
+        vec(cosf(111*RAD)*cosf(50*RAD), sinf(111*RAD)*cosf(50*RAD), sinf(50*RAD)),
+        vec(cosf(201*RAD)*cosf(50*RAD), sinf(201*RAD)*cosf(50*RAD), sinf(50*RAD)),
+        vec(cosf(291*RAD)*cosf(50*RAD), sinf(291*RAD)*cosf(50*RAD), sinf(50*RAD)),
 
-		vec(cosf(66*RAD)*cosf(70*RAD), sinf(66*RAD)*cosf(70*RAD), sinf(70*RAD)),
-		vec(cosf(156*RAD)*cosf(70*RAD), sinf(156*RAD)*cosf(70*RAD), sinf(70*RAD)),
-		vec(cosf(246*RAD)*cosf(70*RAD), sinf(246*RAD)*cosf(70*RAD), sinf(70*RAD)),
-		vec(cosf(336*RAD)*cosf(70*RAD), sinf(336*RAD)*cosf(70*RAD), sinf(70*RAD)),
+        vec(cosf(66*RAD)*cosf(70*RAD), sinf(66*RAD)*cosf(70*RAD), sinf(70*RAD)),
+        vec(cosf(156*RAD)*cosf(70*RAD), sinf(156*RAD)*cosf(70*RAD), sinf(70*RAD)),
+        vec(cosf(246*RAD)*cosf(70*RAD), sinf(246*RAD)*cosf(70*RAD), sinf(70*RAD)),
+        vec(cosf(336*RAD)*cosf(70*RAD), sinf(336*RAD)*cosf(70*RAD), sinf(70*RAD)),
 
-		vec(0, 0, 1),
+        vec(0, 0, 1),
 
-		vec(cosf(43*RAD)*cosf(60*RAD), sinf(43*RAD)*cosf(60*RAD), sinf(60*RAD)),
-		vec(cosf(133*RAD)*cosf(60*RAD), sinf(133*RAD)*cosf(60*RAD), sinf(60*RAD)),
-		vec(cosf(223*RAD)*cosf(60*RAD), sinf(223*RAD)*cosf(60*RAD), sinf(60*RAD)),
-		vec(cosf(313*RAD)*cosf(60*RAD), sinf(313*RAD)*cosf(60*RAD), sinf(60*RAD)),
+        vec(cosf(43*RAD)*cosf(60*RAD), sinf(43*RAD)*cosf(60*RAD), sinf(60*RAD)),
+        vec(cosf(133*RAD)*cosf(60*RAD), sinf(133*RAD)*cosf(60*RAD), sinf(60*RAD)),
+        vec(cosf(223*RAD)*cosf(60*RAD), sinf(223*RAD)*cosf(60*RAD), sinf(60*RAD)),
+        vec(cosf(313*RAD)*cosf(60*RAD), sinf(313*RAD)*cosf(60*RAD), sinf(60*RAD)),
 
-		vec(cosf(88*RAD)*cosf(80*RAD), sinf(88*RAD)*cosf(80*RAD), sinf(80*RAD)),
-		vec(cosf(178*RAD)*cosf(80*RAD), sinf(178*RAD)*cosf(80*RAD), sinf(80*RAD)),
-		vec(cosf(268*RAD)*cosf(80*RAD), sinf(268*RAD)*cosf(80*RAD), sinf(80*RAD)),
-		vec(cosf(358*RAD)*cosf(80*RAD), sinf(358*RAD)*cosf(80*RAD), sinf(80*RAD)),
+        vec(cosf(88*RAD)*cosf(80*RAD), sinf(88*RAD)*cosf(80*RAD), sinf(80*RAD)),
+        vec(cosf(178*RAD)*cosf(80*RAD), sinf(178*RAD)*cosf(80*RAD), sinf(80*RAD)),
+        vec(cosf(268*RAD)*cosf(80*RAD), sinf(268*RAD)*cosf(80*RAD), sinf(80*RAD)),
+        vec(cosf(358*RAD)*cosf(80*RAD), sinf(358*RAD)*cosf(80*RAD), sinf(80*RAD)),
 
-	};
-	int hit = 0;
-	loopi(17) if(normal.dot(rays[i])>=0)
-	{
-		if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
-	}
+    };
+    int hit = 0;
+    loopi(17) if(normal.dot(rays[i])>=0)
+    {
+        if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
+    }
 
-	loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
+    loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
 }
 
 void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *slight, int flags = RAY_ALPHAPOLY, extentity *t = NULL)
 {
-	loopv(sunlights) if(sunlights[i])
-	{
-		const extentity &light = *sunlights[i];
-		if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
-		int yaw = light.attrs[0], pitch = light.attrs[1]+90, offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
-		vec dir(yaw*RAD, pitch*RAD);
-		if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
-			hit++;
-		matrix3x3 rot;
-		rot.rotate(90*RAD, dir);
-		vec spoke(yaw*RAD, (pitch + offset)*RAD);
-		spoke.rotate(21*RAD, dir);
-		loopk(4)
-		{
-			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
-				hit++;
-			spoke = rot.transform(spoke);
-		}
-		spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate((66-21)*RAD, dir);
-		loopk(4)
-		{
-			if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
-				hit++;
-			spoke = rot.transform(spoke);
-		}
-		loopk(3) slight[k] = max(uchar(light.attrs[2+k]*hit/9.f), slight[k]);
-	}
+    loopv(sunlights) if(sunlights[i])
+    {
+        const extentity &light = *sunlights[i];
+        if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
+        int yaw = light.attrs[0], pitch = light.attrs[1]+90, offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
+        vec dir(yaw*RAD, pitch*RAD);
+        if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+            hit++;
+        matrix3x3 rot;
+        rot.rotate(90*RAD, dir);
+        vec spoke(yaw*RAD, (pitch + offset)*RAD);
+        spoke.rotate(21*RAD, dir);
+        loopk(4)
+        {
+            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+                hit++;
+            spoke = rot.transform(spoke);
+        }
+        spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate((66-21)*RAD, dir);
+        loopk(4)
+        {
+            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+                hit++;
+            spoke = rot.transform(spoke);
+        }
+        loopk(3) slight[k] = max(uchar(light.attrs[2+k]*hit/9.f), slight[k]);
+    }
 }
 
 static inline bool hasskylight()
@@ -590,48 +590,48 @@ enum
 int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpvert *lv, int numv, const vec &ustep, const vec &vstep)
 {
     static uchar mincolor[4], maxcolor[4];
-	static float aacoords[8][2] =
-	{
-		{0.0f, 0.0f},
-		{-0.5f, -0.5f},
-		{0.0f, -0.5f},
-		{-0.5f, 0.0f},
+    static float aacoords[8][2] =
+    {
+        {0.0f, 0.0f},
+        {-0.5f, -0.5f},
+        {0.0f, -0.5f},
+        {-0.5f, 0.0f},
 
-		{0.3f, -0.6f},
-		{0.6f, 0.3f},
-		{-0.3f, 0.6f},
-		{-0.6f, -0.3f},
-	};
-	float tolerance = 0.5 / lpu;
-	vector<const extentity *> &lights = (y1 == 0 ? lights1 : lights2);
-	uint lightmask = 0, lightused = 0;
-	vec v = origin;
-	vec offsets[8];
-	loopi(8) loopj(3) offsets[i][j] = aacoords[i][0]*ustep[j] + aacoords[i][1]*vstep[j];
+        {0.3f, -0.6f},
+        {0.6f, 0.3f},
+        {-0.3f, 0.6f},
+        {-0.6f, -0.3f},
+    };
+    float tolerance = 0.5 / lpu;
+    vector<const extentity *> &lights = (y1 == 0 ? lights1 : lights2);
+    uint lightmask = 0, lightused = 0;
+    vec v = origin;
+    vec offsets[8];
+    loopi(8) loopj(3) offsets[i][j] = aacoords[i][0]*ustep[j] + aacoords[i][1]*vstep[j];
 
-	if(y1 == 0)
-	{
-		memset(mincolor, 255, sizeof(mincolor));
-		memset(maxcolor, 0, sizeof(maxcolor));
+    if(y1 == 0)
+    {
+        memset(mincolor, 255, sizeof(mincolor));
+        memset(maxcolor, 0, sizeof(maxcolor));
         if((lmtype&LM_TYPE) == LM_BUMPMAP0) memset(lm_ray, 0, sizeof(lm_ray));
-	}
+    }
 
-	static vec samples [4*(LM_MAXW+1)*(LM_MAXH+1)];
+    static vec samples [4*(LM_MAXW+1)*(LM_MAXH+1)];
 
-	int aasample = min(1 << lmaa, 4);
-	int stride = aasample*(lm_w+1);
-	vec *sample = &samples[stride*y1];
-	uchar *slight = &lm[lmbpp*lm_w*y1];
-	lerpbounds start, end;
-	initlerpbounds(lv, numv, start, end);
-	for(int y = y1; y < y2; ++y, v.add(vstep))
-	{
-		vec normal, nstep;
-		lerpnormal(y, lv, numv, start, end, normal, nstep);
+    int aasample = min(1 << lmaa, 4);
+    int stride = aasample*(lm_w+1);
+    vec *sample = &samples[stride*y1];
+    uchar *slight = &lm[lmbpp*lm_w*y1];
+    lerpbounds start, end;
+    initlerpbounds(lv, numv, start, end);
+    for(int y = y1; y < y2; ++y, v.add(vstep))
+    {
+        vec normal, nstep;
+        lerpnormal(y, lv, numv, start, end, normal, nstep);
 
-		vec u(v);
-		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), slight += lmbpp)
-		{
+        vec u(v);
+        for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep), slight += lmbpp)
+        {
             CHECK_PROGRESS(return NO_SURFACE);
             lightused |= generate_lumel(tolerance, 0, lights, u, vec(normal).normalize(), *sample, x, y);
             if(hasskylight())
@@ -644,119 +644,119 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
             if(!sunlights.empty()) calcsunlight(u, normal, tolerance, slight, lmshadows > 1 ? RAY_ALPHAPOLY : 0);
             if(lmtype&LM_ALPHA) generate_alpha(tolerance, u, slight[3]);
             sample += aasample;
-		}
-		sample += aasample;
-	}
-	if(adaptivesample > 1 && min(lm_w, lm_h) >= 2) lightmask = ~lightused;
-	v = origin;
-	sample = &samples[stride*y1];
-	initlerpbounds(lv, numv, start, end);
-	for(int y = y1; y < y2; ++y, v.add(vstep))
-	{
-		vec normal, nstep;
-		lerpnormal(y, lv, numv, start, end, normal, nstep);
+        }
+        sample += aasample;
+    }
+    if(adaptivesample > 1 && min(lm_w, lm_h) >= 2) lightmask = ~lightused;
+    v = origin;
+    sample = &samples[stride*y1];
+    initlerpbounds(lv, numv, start, end);
+    for(int y = y1; y < y2; ++y, v.add(vstep))
+    {
+        vec normal, nstep;
+        lerpnormal(y, lv, numv, start, end, normal, nstep);
 
-		vec u(v);
-		for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep))
-		{
-			vec &center = *sample++;
-			if(adaptivesample && x > 0 && x+1 < lm_w && y > y1 && y+1 < y2 && !lumel_sample(center, aasample, stride))
-				loopi(aasample-1) *sample++ = center;
-			else
-			{
+        vec u(v);
+        for(int x = 0; x < lm_w; ++x, u.add(ustep), normal.add(nstep))
+        {
+            vec &center = *sample++;
+            if(adaptivesample && x > 0 && x+1 < lm_w && y > y1 && y+1 < y2 && !lumel_sample(center, aasample, stride))
+                loopi(aasample-1) *sample++ = center;
+            else
+            {
 #define EDGE_TOLERANCE(i) \
-	((!x && aacoords[i][0] < 0) \
-	 || (x+1==lm_w && aacoords[i][0] > 0) \
-	 || (!y && aacoords[i][1] < 0) \
-	 || (y+1==lm_h && aacoords[i][1] > 0) \
-	 ? edgetolerance : 1)
-				vec n(normal);
-				n.normalize();
-				loopi(aasample-1)
-					generate_lumel(EDGE_TOLERANCE(i+1) * tolerance, lightmask, lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
-				if(lmaa == 3)
-				{
-					loopi(4)
-					{
-						vec s;
-						generate_lumel(EDGE_TOLERANCE(i+4) * tolerance, lightmask, lights, vec(u).add(offsets[i+4]), n, s, x, y);
-						center.add(s);
-					}
-					center.div(5);
-				}
-			}
-		}
-		if(aasample > 1)
-		{
-			normal.normalize();
-			generate_lumel(tolerance, lightmask, lights, vec(u).add(offsets[1]), normal, sample[1], lm_w-1, y);
-			if(aasample > 2)
-				generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(u).add(offsets[3]), normal, sample[3], lm_w-1, y);
-		}
-		sample += aasample;
-	}
+    ((!x && aacoords[i][0] < 0) \
+     || (x+1==lm_w && aacoords[i][0] > 0) \
+     || (!y && aacoords[i][1] < 0) \
+     || (y+1==lm_h && aacoords[i][1] > 0) \
+     ? edgetolerance : 1)
+                vec n(normal);
+                n.normalize();
+                loopi(aasample-1)
+                    generate_lumel(EDGE_TOLERANCE(i+1) * tolerance, lightmask, lights, vec(u).add(offsets[i+1]), n, *sample++, x, y);
+                if(lmaa == 3)
+                {
+                    loopi(4)
+                    {
+                        vec s;
+                        generate_lumel(EDGE_TOLERANCE(i+4) * tolerance, lightmask, lights, vec(u).add(offsets[i+4]), n, s, x, y);
+                        center.add(s);
+                    }
+                    center.div(5);
+                }
+            }
+        }
+        if(aasample > 1)
+        {
+            normal.normalize();
+            generate_lumel(tolerance, lightmask, lights, vec(u).add(offsets[1]), normal, sample[1], lm_w-1, y);
+            if(aasample > 2)
+                generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(u).add(offsets[3]), normal, sample[3], lm_w-1, y);
+        }
+        sample += aasample;
+    }
 
-	if(y2 == lm_h)
-	{
-		if(aasample > 1)
-		{
-			vec normal, nstep;
-			lerpnormal(lm_h, lv, numv, start, end, normal, nstep);
+    if(y2 == lm_h)
+    {
+        if(aasample > 1)
+        {
+            vec normal, nstep;
+            lerpnormal(lm_h, lv, numv, start, end, normal, nstep);
 
-			for(int x = 0; x <= lm_w; ++x, v.add(ustep), normal.add(nstep))
-			{
+            for(int x = 0; x <= lm_w; ++x, v.add(ustep), normal.add(nstep))
+            {
                 CHECK_PROGRESS(return NO_SURFACE);
-				vec n(normal);
-				n.normalize();
-				generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[1]), n, sample[1], min(x, lm_w-1), lm_h-1);
-				if(aasample > 2)
-					generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[2]), n, sample[2], min(x, lm_w-1), lm_h-1);
-				sample += aasample;
-			}
-		}
+                vec n(normal);
+                n.normalize();
+                generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[1]), n, sample[1], min(x, lm_w-1), lm_h-1);
+                if(aasample > 2)
+                    generate_lumel(edgetolerance * tolerance, lightmask, lights, vec(v).add(offsets[2]), n, sample[2], min(x, lm_w-1), lm_h-1);
+                sample += aasample;
+            }
+        }
 
-		if(hasskylight() || !sunlights.empty())
-		{
-			if(blurskylight && (lm_w>1 || lm_h>1)) blurlightmap(blurskylight);
-		}
-		sample = samples;
-		float weight = 1.0f / (1.0f + 4.0f*lmaa),
-			  cweight = weight * (lmaa == 3 ? 5.0f : 1.0f);
-		uchar *lumel = lm;
-		vec *ray = lm_ray;
-		bvec minray(255, 255, 255), maxray(0, 0, 0);
-		loop(y, lm_h)
-		{
-			loop(x, lm_w)
-			{
-				vec l(0, 0, 0);
-				const vec &center = *sample++;
-				loopi(aasample-1) l.add(*sample++);
-				if(aasample > 1)
-				{
-					l.add(sample[1]);
-					if(aasample > 2) l.add(sample[3]);
-				}
-				vec *next = sample + stride - aasample;
-				if(aasample > 1)
-				{
-					l.add(next[1]);
-					if(aasample > 2) l.add(next[2]);
-					l.add(next[aasample+1]);
-				}
+        if(hasskylight() || !sunlights.empty())
+        {
+            if(blurskylight && (lm_w>1 || lm_h>1)) blurlightmap(blurskylight);
+        }
+        sample = samples;
+        float weight = 1.0f / (1.0f + 4.0f*lmaa),
+              cweight = weight * (lmaa == 3 ? 5.0f : 1.0f);
+        uchar *lumel = lm;
+        vec *ray = lm_ray;
+        bvec minray(255, 255, 255), maxray(0, 0, 0);
+        loop(y, lm_h)
+        {
+            loop(x, lm_w)
+            {
+                vec l(0, 0, 0);
+                const vec &center = *sample++;
+                loopi(aasample-1) l.add(*sample++);
+                if(aasample > 1)
+                {
+                    l.add(sample[1]);
+                    if(aasample > 2) l.add(sample[3]);
+                }
+                vec *next = sample + stride - aasample;
+                if(aasample > 1)
+                {
+                    l.add(next[1]);
+                    if(aasample > 2) l.add(next[2]);
+                    l.add(next[aasample+1]);
+                }
 
-				int r = int(center.x*cweight + l.x*weight),
-					g = int(center.y*cweight + l.y*weight),
-					b = int(center.z*cweight + l.z*weight),
-					ar = lumel[0], ag = lumel[1], ab = lumel[2];
-				lumel[0] = max(ar, r);
-				lumel[1] = max(ag, g);
-				lumel[2] = max(ab, b);
-				loopk(3)
-				{
-					mincolor[k] = min(mincolor[k], lumel[k]);
-					maxcolor[k] = max(maxcolor[k], lumel[k]);
-				}
+                int r = int(center.x*cweight + l.x*weight),
+                    g = int(center.y*cweight + l.y*weight),
+                    b = int(center.z*cweight + l.z*weight),
+                    ar = lumel[0], ag = lumel[1], ab = lumel[2];
+                lumel[0] = max(ar, r);
+                lumel[1] = max(ag, g);
+                lumel[2] = max(ab, b);
+                loopk(3)
+                {
+                    mincolor[k] = min(mincolor[k], lumel[k]);
+                    maxcolor[k] = max(maxcolor[k], lumel[k]);
+                }
                 if(lmtype&LM_ALPHA)
                 {
                     mincolor[3] = min(mincolor[3], lumel[3]);
@@ -784,9 +784,9 @@ int generate_lightmap(float lpu, int y1, int y2, const vec &origin, const lerpve
                     ray++;
                 }
                 lumel += lmbpp;
-			}
-			sample += aasample;
-		}
+            }
+            sample += aasample;
+        }
         if(int(maxcolor[0]) - int(mincolor[0]) <= lighterror &&
            int(maxcolor[1]) - int(mincolor[1]) <= lighterror &&
            int(maxcolor[2]) - int(mincolor[2]) <= lighterror &&
@@ -851,23 +851,23 @@ int preview_lightmap_alpha(float lpu, int y1, int y2, const vec &origin, const v
 
 void clear_lmids(cube *c)
 {
-	loopi(8)
-	{
-		if(c[i].ext)
-		{
-			if(c[i].ext->surfaces) freesurfaces(c[i]);
-			if(c[i].ext->normals) freenormals(c[i]);
-		}
-		if(c[i].children) clear_lmids(c[i].children);
-	}
+    loopi(8)
+    {
+        if(c[i].ext)
+        {
+            if(c[i].ext->surfaces) freesurfaces(c[i]);
+            if(c[i].ext->normals) freenormals(c[i]);
+        }
+        if(c[i].children) clear_lmids(c[i].children);
+    }
 }
 
 #define LIGHTCACHESIZE 1024
 
 static struct lightcacheentry
 {
-	int x, y;
-	vector<int> lights;
+    int x, y;
+    vector<int> lights;
 } lightcache[1024];
 
 #define LIGHTCACHEHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (LIGHTCACHESIZE - 1))
@@ -876,53 +876,53 @@ VARF(0, lightcachesize, 4, 6, 12, clearlightcache());
 
 void findsunlights()
 {
-	sunlights.setsize(0);
-	int numents = entities::lastent(ET_SUNLIGHT);
-	const vector<extentity *> &ents = entities::getents();
-	loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
+    sunlights.setsize(0);
+    int numents = entities::lastent(ET_SUNLIGHT);
+    const vector<extentity *> &ents = entities::getents();
+    loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
 }
 
 void clearlightcache(int e)
 {
-	if(e >= 0)
-	{
-		const extentity &light = *entities::getents()[e];
-		if(light.type == ET_LIGHT && light.attrs[0])
-		{
-			int radius = light.attrs[0];
-			for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
-			for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
-			{
-				lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-				if(lce.x != x || lce.y != y) continue;
-				lce.x = -1;
-				lce.lights.setsizenodelete(0);
-			}
-			return;
-		}
-	}
-	for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
-	{
-		lce->x = -1;
-		lce->lights.setsizenodelete(0);
-	}
-	if(e < 0) sunlights.setsize(0);
+    if(e >= 0)
+    {
+        const extentity &light = *entities::getents()[e];
+        if(light.type == ET_LIGHT && light.attrs[0])
+        {
+            int radius = light.attrs[0];
+            for(int x = int(max(light.o.x-radius, 0.0f))>>lightcachesize, ex = int(min(light.o.x+radius, hdr.worldsize-1.0f))>>lightcachesize; x <= ex; x++)
+            for(int y = int(max(light.o.y-radius, 0.0f))>>lightcachesize, ey = int(min(light.o.y+radius, hdr.worldsize-1.0f))>>lightcachesize; y <= ey; y++)
+            {
+                lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+                if(lce.x != x || lce.y != y) continue;
+                lce.x = -1;
+                lce.lights.setsizenodelete(0);
+            }
+            return;
+        }
+    }
+    for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
+    {
+        lce->x = -1;
+        lce->lights.setsizenodelete(0);
+    }
+    if(e < 0) sunlights.setsize(0);
 }
 
 const vector<int> &checklightcache(int x, int y)
 {
-	x >>= lightcachesize;
-	y >>= lightcachesize;
-	lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
-	if(lce.x == x && lce.y == y) return lce.lights;
+    x >>= lightcachesize;
+    y >>= lightcachesize;
+    lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
+    if(lce.x == x && lce.y == y) return lce.lights;
 
-	lce.lights.setsizenodelete(0);
-	int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
-	const vector<extentity *> &ents = entities::getents();
+    lce.lights.setsizenodelete(0);
+    int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
+    const vector<extentity *> &ents = entities::getents();
     int numents = entities::lastent(ET_LIGHT);
-	loopi(numents)
-	{
-		extentity &light = *ents[i];
+    loopi(numents)
+    {
+        extentity &light = *ents[i];
         switch(light.type)
         {
             case ET_LIGHT:
@@ -938,12 +938,12 @@ const vector<int> &checklightcache(int x, int y)
             }
             default: continue;
         }
-		lce.lights.add(i);
-	}
+        lce.lights.add(i);
+    }
 
-	lce.x = x;
-	lce.y = y;
-	return lce.lights;
+    lce.x = x;
+    lce.y = y;
+    return lce.lights;
 }
 
 static inline void addlight(const extentity &light, int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2)
@@ -1019,99 +1019,99 @@ bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, c
             }
         }
     }
-	else
-	{
-    	int numents = entities::lastent(ET_LIGHT);
-    	loopi(numents)
-    	{
-        	const extentity &light = *ents[i];
-        	switch(light.type)
-        	{
-            	case ET_LIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
-			}
+    else
+    {
+        int numents = entities::lastent(ET_LIGHT);
+        loopi(numents)
+        {
+            const extentity &light = *ents[i];
+            switch(light.type)
+            {
+                case ET_LIGHT: addlight(light, cx, cy, cz, size, v, n, n2); break;
+            }
         }
     }
     if(slot.layer && (setblendmaporigin(ivec(cx, cy, cz), size) || slot.layermask)) return true;
-	return lights1.length() || lights2.length() || hasskylight() || sunlights.length();
+    return lights1.length() || lights2.length() || hasskylight() || sunlights.length();
 }
 
 int setup_surface(plane planes[2], const vec *p, const vec *n, const vec *n2, uchar texcoords[8], bool preview = false)
 {
-	vec u, v, s, t;
-	float umin(0.0f), umax(0.0f),
-		  vmin(0.0f), vmax(0.0f),
-		  tmin(0.0f), tmax(0.0f);
+    vec u, v, s, t;
+    float umin(0.0f), umax(0.0f),
+          vmin(0.0f), vmax(0.0f),
+          tmin(0.0f), tmax(0.0f);
 
-	#define COORDMINMAX(u, v, orig, vert) \
-	{ \
-		vec tovert = p[vert]; \
-		tovert.sub(p[orig]); \
-		float u ## coord = u.dot(tovert), \
-			  v ## coord = v.dot(tovert); \
-		u ## min = min(u ## coord, u ## min); \
-		u ## max = max(u ## coord, u ## max); \
-		v ## min = min(v ## coord, v ## min); \
-		v ## max = max(v ## coord, v ## max);  \
-	}
+    #define COORDMINMAX(u, v, orig, vert) \
+    { \
+        vec tovert = p[vert]; \
+        tovert.sub(p[orig]); \
+        float u ## coord = u.dot(tovert), \
+              v ## coord = v.dot(tovert); \
+        u ## min = min(u ## coord, u ## min); \
+        u ## max = max(u ## coord, u ## max); \
+        v ## min = min(v ## coord, v ## min); \
+        v ## max = max(v ## coord, v ## max);  \
+    }
 
-	if(!n2)
-	{
-		u = (p[0] == p[1] ? p[2] : p[1]);
-		u.sub(p[0]);
-		u.normalize();
-		v.cross(planes[0], u);
+    if(!n2)
+    {
+        u = (p[0] == p[1] ? p[2] : p[1]);
+        u.sub(p[0]);
+        u.normalize();
+        v.cross(planes[0], u);
 
-		COORDMINMAX(u, v, 0, 1);
-		COORDMINMAX(u, v, 0, 2);
-		COORDMINMAX(u, v, 0, 3);
-	}
-	else
-	{
-		u = p[2];
-		u.sub(p[0]);
-		u.normalize();
-		v.cross(u, planes[0]);
-		t.cross(planes[1], u);
+        COORDMINMAX(u, v, 0, 1);
+        COORDMINMAX(u, v, 0, 2);
+        COORDMINMAX(u, v, 0, 3);
+    }
+    else
+    {
+        u = p[2];
+        u.sub(p[0]);
+        u.normalize();
+        v.cross(u, planes[0]);
+        t.cross(planes[1], u);
 
-		COORDMINMAX(u, v, 0, 1);
-		COORDMINMAX(u, v, 0, 2);
-		COORDMINMAX(u, t, 0, 2);
-		COORDMINMAX(u, t, 0, 3);
-	}
+        COORDMINMAX(u, v, 0, 1);
+        COORDMINMAX(u, v, 0, 2);
+        COORDMINMAX(u, t, 0, 2);
+        COORDMINMAX(u, t, 0, 3);
+    }
 
-	int scale = int(min(umax - umin, vmax - vmin));
-	if(n2) scale = min(scale, int(tmax));
-	float lpu = 16.0f / float(scale < (1 << lightlod) ? lightprecision / 2 : lightprecision);
+    int scale = int(min(umax - umin, vmax - vmin));
+    if(n2) scale = min(scale, int(tmax));
+    float lpu = 16.0f / float(scale < (1 << lightlod) ? lightprecision / 2 : lightprecision);
     int ul((int)ceil((umax - umin + 1) * lpu)),
         vl((int)ceil((vmax - vmin + 1) * lpu)),
-		 tl(0);
-	vl = max(LM_MINW, vl);
-	if(n2)
-	{
-		tl = (uint)ceil((tmax + 1) * lpu);
-		tl = max(LM_MINW, tl);
-	}
-	lm_w = max(LM_MINW, min(LM_MAXW, ul));
-	lm_h = min(LM_MAXH, vl + tl);
+         tl(0);
+    vl = max(LM_MINW, vl);
+    if(n2)
+    {
+        tl = (uint)ceil((tmax + 1) * lpu);
+        tl = max(LM_MINW, tl);
+    }
+    lm_w = max(LM_MINW, min(LM_MAXW, ul));
+    lm_h = min(LM_MAXH, vl + tl);
 
-	vec origin1(p[0]), origin2, uo(u), vo(v);
-	uo.mul(umin);
-	if(!n2)
-	{
-		vo.mul(vmin);
-	}
-	else
-	{
-		vo.mul(vmax);
-		v.mul(-1);
-	}
-	origin1.add(uo);
-	origin1.add(vo);
+    vec origin1(p[0]), origin2, uo(u), vo(v);
+    uo.mul(umin);
+    if(!n2)
+    {
+        vo.mul(vmin);
+    }
+    else
+    {
+        vo.mul(vmax);
+        v.mul(-1);
+    }
+    origin1.add(uo);
+    origin1.add(vo);
 
-	vec ustep(u), vstep(v);
-	ustep.mul((umax - umin) / (lm_w - 1));
-	uint split = vl * lm_h / (vl + tl);
-	vstep.mul((vmax - vmin) / (split - 1));
+    vec ustep(u), vstep(v);
+    ustep.mul((umax - umin) / (lm_w - 1));
+    uint split = vl * lm_h / (vl + tl);
+    vstep.mul((vmax - vmin) / (split - 1));
     int surftype = NO_SURFACE;
     if(preview)
     {
@@ -1156,31 +1156,31 @@ int setup_surface(plane planes[2], const vec *p, const vec *n, const vec *n2, uc
     }
     if(surftype<SURFACE_LIGHTMAP) return surftype;
 
-	#define CALCVERT(origin, u, v, offset, vert) \
-	{ \
-		vec tovert = p[vert]; \
-		tovert.sub(origin); \
-		float u ## coord = u.dot(tovert), \
-			  v ## coord = v.dot(tovert); \
-		texcoords[vert*2] = uchar(u ## coord * u ## scale); \
-		texcoords[vert*2+1] = offset + uchar(v ## coord * v ## scale); \
-	}
+    #define CALCVERT(origin, u, v, offset, vert) \
+    { \
+        vec tovert = p[vert]; \
+        tovert.sub(origin); \
+        float u ## coord = u.dot(tovert), \
+              v ## coord = v.dot(tovert); \
+        texcoords[vert*2] = uchar(u ## coord * u ## scale); \
+        texcoords[vert*2+1] = offset + uchar(v ## coord * v ## scale); \
+    }
 
-	float uscale = 255.0f / float(umax - umin),
-		  vscale = 255.0f / float(vmax - vmin) * float(split) / float(lm_h);
-	CALCVERT(origin1, u, v, 0, 0)
-	CALCVERT(origin1, u, v, 0, 1)
-	CALCVERT(origin1, u, v, 0, 2)
-	if(!n2)
-	{
-		CALCVERT(origin1, u, v, 0, 3)
-	}
-	else
-	{
-		uchar toffset = uchar(255.0 * float(split) / float(lm_h));
-		float tscale = 255.0f / float(tmax - tmin) * float(lm_h - split) / float(lm_h);
-		CALCVERT(origin2, u, t, toffset, 3)
-	}
+    float uscale = 255.0f / float(umax - umin),
+          vscale = 255.0f / float(vmax - vmin) * float(split) / float(lm_h);
+    CALCVERT(origin1, u, v, 0, 0)
+    CALCVERT(origin1, u, v, 0, 1)
+    CALCVERT(origin1, u, v, 0, 2)
+    if(!n2)
+    {
+        CALCVERT(origin1, u, v, 0, 3)
+    }
+    else
+    {
+        uchar toffset = uchar(255.0 * float(split) / float(lm_h));
+        float tscale = 255.0f / float(tmax - tmin) * float(lm_h - split) / float(lm_h);
+        CALCVERT(origin2, u, t, toffset, 3)
+    }
     return surftype;
 }
 
@@ -1201,15 +1201,15 @@ void removelmalpha()
 
 void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 {
-	if(c.ext && c.ext->surfaces)
-	{
-		loopi(6) if(c.ext->surfaces[i].lmid >= LMID_RESERVED)
-		{
-			return;
-		}
-		freesurfaces(c);
-		freenormals(c);
-	}
+    if(c.ext && c.ext->surfaces)
+    {
+        loopi(6) if(c.ext->surfaces[i].lmid >= LMID_RESERVED)
+        {
+            return;
+        }
+        freesurfaces(c);
+        freenormals(c);
+    }
     vvec vvecs[8];
     vec verts[8];
     int vertused = 0, usefaces[6];
@@ -1220,50 +1220,50 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
         verts[i] = vvecs[i].tovec(cx, cy, cz);
     }
 
-	int mergeindex = 0;
+    int mergeindex = 0;
     surfaceinfo surfaces[12];
     int numsurfs = 0;
-	loopi(6) if(usefaces[i])
-	{
-		CHECK_PROGRESS(return);
-		if(c.texture[i] == DEFAULT_SKY) continue;
+    loopi(6) if(usefaces[i])
+    {
+        CHECK_PROGRESS(return);
+        if(c.texture[i] == DEFAULT_SKY) continue;
 
-		plane planes[2];
-		vec v[4], n[4], n2[3];
-		int numplanes;
+        plane planes[2];
+        vec v[4], n[4], n2[3];
+        int numplanes;
 
         Slot &slot = lookuptexture(c.texture[i], false),
              *layer = slot.layer ? &lookuptexture(slot.layer, false) : NULL;
         Shader *shader = slot.shader ? slot.shader : defaultshader;
         int shadertype = shader->type;
         if(layer) shadertype |= layer->shader->type;
-		if(c.ext && c.ext->merged&(1<<i))
-		{
-			if(!(c.ext->mergeorigin&(1<<i))) continue;
-			const mergeinfo &m = c.ext->merges[mergeindex++];
-			vvec mv[4];
-			ivec mo(cx, cy, cz);
-			genmergedverts(c, i, mo, size, m, mv, planes);
+        if(c.ext && c.ext->merged&(1<<i))
+        {
+            if(!(c.ext->mergeorigin&(1<<i))) continue;
+            const mergeinfo &m = c.ext->merges[mergeindex++];
+            vvec mv[4];
+            ivec mo(cx, cy, cz);
+            genmergedverts(c, i, mo, size, m, mv, planes);
 
-			numplanes = 1;
-			int msz = calcmergedsize(i, mo, size, m, mv);
-			mo.mask(~((1<<msz)-1));
+            numplanes = 1;
+            int msz = calcmergedsize(i, mo, size, m, mv);
+            mo.mask(~((1<<msz)-1));
 
-			loopj(4)
-			{
-				v[j] = mv[j].tovec(mo);
+            loopj(4)
+            {
+                v[j] = mv[j].tovec(mo);
                 findnormal(mo, mv[j], planes[0], n[j]);
-			}
+            }
 
             if(!find_lights(mo.x, mo.y, mo.z, 1<<msz, v, n, NULL, slot))
             {
                 if(!(shadertype&(SHADER_NORMALSLMS | SHADER_ENVMAP))) continue;
             }
-		}
-		else
-		{
-			numplanes = genclipplane(c, i, verts, planes);
-			if(!numplanes) continue;
+        }
+        else
+        {
+            numplanes = genclipplane(c, i, verts, planes);
+            if(!numplanes) continue;
 
             vec avg;
             if(numplanes >= 2)
@@ -1399,18 +1399,18 @@ void setup_surfaces(cube &c, int cx, int cy, int cz, int size)
 
 void generate_lightmaps(cube *c, int cx, int cy, int cz, int size)
 {
-	CHECK_PROGRESS(return);
+    CHECK_PROGRESS(return);
 
-	lmprog++;
+    lmprog++;
 
-	loopi(8)
-	{
-		ivec o(i, cx, cy, cz, size);
-		if(c[i].children)
-			generate_lightmaps(c[i].children, o.x, o.y, o.z, size >> 1);
-		if(!c[i].children && !isempty(c[i]))
-			setup_surfaces(c[i], o.x, o.y, o.z, size);
-	}
+    loopi(8)
+    {
+        ivec o(i, cx, cy, cz, size);
+        if(c[i].children)
+            generate_lightmaps(c[i].children, o.x, o.y, o.z, size >> 1);
+        if(!c[i].children && !isempty(c[i]))
+            setup_surfaces(c[i], o.x, o.y, o.z, size);
+    }
 }
 
 bool previewblends(cube &c, const ivec &co, int size)
@@ -1611,8 +1611,8 @@ void resetlightmaps()
 
 static Uint32 calclight_timer(Uint32 interval, void *param)
 {
-	check_calclight_lmprog = true;
-	return interval;
+    check_calclight_lmprog = true;
+    return interval;
 }
 
 bool setlightmapquality(int quality)
@@ -1629,52 +1629,52 @@ bool setlightmapquality(int quality)
 
 void calclight(int *quality)
 {
-	if(!setlightmapquality(*quality))
-	{
-		conoutft(CON_MESG, "\frvalid range for calclight quality is -1..1");
-		return;
-	}
-	progress(0, "computing lightmaps...");
+    if(!setlightmapquality(*quality))
+    {
+        conoutft(CON_MESG, "\frvalid range for calclight quality is -1..1");
+        return;
+    }
+    progress(0, "computing lightmaps...");
     mpremip(true);
     loadlayermasks();
     optimizeblendmap();
-	resetlightmaps();
-	clear_lmids(worldroot);
-	findsunlights();
-	curlumels = 0;
-	lmprog = 0;
-	lmprogtexticks = 0;
-	calclight_canceled = false;
-	check_calclight_lmprog = false;
-	SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
-	Uint32 start = SDL_GetTicks();
-	calcnormals();
-	show_calclight_lmprog();
-	generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
-	clearnormals();
-	Uint32 end = SDL_GetTicks();
-	if(timer) SDL_RemoveTimer(timer);
-	uint total = 0, lumels = 0;
-	loopv(lightmaps)
-	{
-		insert_unlit(i);
-		if(!editmode) lightmaps[i].finalize();
-		total += lightmaps[i].lightmaps;
-		lumels += lightmaps[i].lumels;
-	}
-	if(!editmode) compressed.clear();
-	initlights();
-	progress(0, "lighting done...");
-	allchanged();
-	if(calclight_canceled)
-		conoutf("\frcalclight aborted");
-	else
-		conoutf("\fggenerated %d lightmaps using %d%% of %d textures (%.1f seconds)",
-			total,
-			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
-			lightmaps.length(),
-			(end - start) / 1000.0f);
-	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
+    resetlightmaps();
+    clear_lmids(worldroot);
+    findsunlights();
+    curlumels = 0;
+    lmprog = 0;
+    lmprogtexticks = 0;
+    calclight_canceled = false;
+    check_calclight_lmprog = false;
+    SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
+    Uint32 start = SDL_GetTicks();
+    calcnormals();
+    show_calclight_lmprog();
+    generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
+    clearnormals();
+    Uint32 end = SDL_GetTicks();
+    if(timer) SDL_RemoveTimer(timer);
+    uint total = 0, lumels = 0;
+    loopv(lightmaps)
+    {
+        insert_unlit(i);
+        if(!editmode) lightmaps[i].finalize();
+        total += lightmaps[i].lightmaps;
+        lumels += lightmaps[i].lumels;
+    }
+    if(!editmode) compressed.clear();
+    initlights();
+    progress(0, "lighting done...");
+    allchanged();
+    if(calclight_canceled)
+        conoutf("\frcalclight aborted");
+    else
+        conoutf("\fggenerated %d lightmaps using %d%% of %d textures (%.1f seconds)",
+            total,
+            lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
+            lightmaps.length(),
+            (end - start) / 1000.0f);
+    if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 COMMAND(0, calclight, "i");
@@ -1683,53 +1683,53 @@ VAR(0, patchnormals, 0, 0, 1);
 
 void patchlight(int *quality)
 {
-	if(noedit(true)) return;
-	if(!setlightmapquality(*quality))
-	{
-		conoutft(CON_MESG, "\frvalid range for patchlight quality is 0..3");
-		return;
-	}
-	progress(0, "patching lightmaps...");
+    if(noedit(true)) return;
+    if(!setlightmapquality(*quality))
+    {
+        conoutft(CON_MESG, "\frvalid range for patchlight quality is 0..3");
+        return;
+    }
+    progress(0, "patching lightmaps...");
     loadlayermasks();
     cleanuplightmaps();
-	findsunlights();
-	lmprog = 0;
-	lmprogtexticks = 0;
-	int total = 0, lumels = 0;
-	loopv(lightmaps)
-	{
-		total -= lightmaps[i].lightmaps;
-		lumels -= lightmaps[i].lumels;
-	}
-	curlumels = lumels;
-	calclight_canceled = false;
-	check_calclight_lmprog = false;
-	SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
-	if(patchnormals) progress(0, "computing normals...");
-	Uint32 start = SDL_GetTicks();
-	if(patchnormals) calcnormals();
-	show_calclight_lmprog();
-	generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
-	if(patchnormals) clearnormals();
-	Uint32 end = SDL_GetTicks();
-	if(timer) SDL_RemoveTimer(timer);
-	loopv(lightmaps)
-	{
-		total += lightmaps[i].lightmaps;
-		lumels += lightmaps[i].lumels;
-	}
-	initlights();
-	progress(0, "lighting done...");
-	allchanged();
-	if(calclight_canceled)
-		conoutf("\frpatchlight aborted");
-	else
-		conoutf("\fgpatched %d lightmaps using %d%% of %d textures (%.1f seconds)",
-			total,
-			lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
-			lightmaps.length(),
-			(end - start) / 1000.0f);
-	if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
+    findsunlights();
+    lmprog = 0;
+    lmprogtexticks = 0;
+    int total = 0, lumels = 0;
+    loopv(lightmaps)
+    {
+        total -= lightmaps[i].lightmaps;
+        lumels -= lightmaps[i].lumels;
+    }
+    curlumels = lumels;
+    calclight_canceled = false;
+    check_calclight_lmprog = false;
+    SDL_TimerID timer = SDL_AddTimer(250, calclight_timer, NULL);
+    if(patchnormals) progress(0, "computing normals...");
+    Uint32 start = SDL_GetTicks();
+    if(patchnormals) calcnormals();
+    show_calclight_lmprog();
+    generate_lightmaps(worldroot, 0, 0, 0, hdr.worldsize >> 1);
+    if(patchnormals) clearnormals();
+    Uint32 end = SDL_GetTicks();
+    if(timer) SDL_RemoveTimer(timer);
+    loopv(lightmaps)
+    {
+        total += lightmaps[i].lightmaps;
+        lumels += lightmaps[i].lumels;
+    }
+    initlights();
+    progress(0, "lighting done...");
+    allchanged();
+    if(calclight_canceled)
+        conoutf("\frpatchlight aborted");
+    else
+        conoutf("\fgpatched %d lightmaps using %d%% of %d textures (%.1f seconds)",
+            total,
+            lightmaps.length() ? lumels * 100 / (lightmaps.length() * LM_PACKW * LM_PACKH) : 0,
+            lightmaps.length(),
+            (end - start) / 1000.0f);
+    if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 COMMAND(0, patchlight, "i");
@@ -1989,15 +1989,15 @@ bool brightengeom = false;
 
 void clearlights()
 {
-	clearlightcache();
-	const vector<extentity *> &ents = entities::getents();
-	loopv(ents)
-	{
-		extentity &e = *ents[i];
+    clearlightcache();
+    const vector<extentity *> &ents = entities::getents();
+    loopv(ents)
+    {
+        extentity &e = *ents[i];
         e.light.color = vec(1, 1, 1);
         e.light.dir = vec(0, 0, 1);
-	}
-	if(nolights) return;
+    }
+    if(nolights) return;
 
     genlightmaptexs(LM_ALPHA, 0);
     genlightmaptexs(LM_ALPHA, LM_ALPHA);
@@ -2006,34 +2006,34 @@ void clearlights()
 
 void lightent(extentity &e, float height)
 {
-	if(e.type==ET_LIGHT || e.type==ET_LIGHTFX || e.type==ET_SUNLIGHT) return;
-	float amb = 0.0f;
-	if(e.type==ET_MAPMODEL)
-	{
-		model *m = loadmodel(NULL, e.attrs[0]);
-		if(m) height = m->above()*0.75f;
-	}
-	else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
-	vec target(e.o.x, e.o.y, e.o.z + height);
-	lightreaching(target, e.light.color, e.light.dir, &e, amb);
+    if(e.type==ET_LIGHT || e.type==ET_LIGHTFX || e.type==ET_SUNLIGHT) return;
+    float amb = 0.0f;
+    if(e.type==ET_MAPMODEL)
+    {
+        model *m = loadmodel(NULL, e.attrs[0]);
+        if(m) height = m->above()*0.75f;
+    }
+    else if(e.type>=ET_GAMESPECIFIC) amb = 0.4f;
+    vec target(e.o.x, e.o.y, e.o.z + height);
+    lightreaching(target, e.light.color, e.light.dir, &e, amb);
 }
 
 void updateentlighting()
 {
-	const vector<extentity *> &ents = entities::getents();
-	loopv(ents) lightent(*ents[i]);
+    const vector<extentity *> &ents = entities::getents();
+    loopv(ents) lightent(*ents[i]);
 }
 
 void initlights()
 {
-	if(nolights || fullbright || lightmaps.empty())
-	{
-		clearlights();
-		return;
-	}
+    if(nolights || fullbright || lightmaps.empty())
+    {
+        clearlights();
+        return;
+    }
 
-	clearlightcache();
-	updateentlighting();
+    clearlightcache();
+    updateentlighting();
     genlightmaptexs(LM_ALPHA, 0);
     genlightmaptexs(LM_ALPHA, LM_ALPHA);
     brightengeom = false;
@@ -2058,68 +2058,68 @@ static inline void fastskylight(const vec &o, float tolerance, uchar *skylight, 
 
 void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient)
 {
-	if(nolights || fullbright || lightmaps.empty())
-	{
-		color = vec(1, 1, 1);
-		dir = vec(0, 0, 1);
-		return;
-	}
+    if(nolights || fullbright || lightmaps.empty())
+    {
+        color = vec(1, 1, 1);
+        dir = vec(0, 0, 1);
+        return;
+    }
 
-	color = dir = vec(0, 0, 0);
-	const vector<extentity *> &ents = entities::getents();
-	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
-	loopv(lights)
-	{
-		extentity &e = *ents[lights[i]];
-		if(e.type != ET_LIGHT)
-			continue;
+    color = dir = vec(0, 0, 0);
+    const vector<extentity *> &ents = entities::getents();
+    const vector<int> &lights = checklightcache(int(target.x), int(target.y));
+    loopv(lights)
+    {
+        extentity &e = *ents[lights[i]];
+        if(e.type != ET_LIGHT)
+            continue;
 
-		vec ray(target);
-		ray.sub(e.o);
-		float mag = ray.magnitude();
-		if(e.attrs[0] && mag >= float(e.attrs[0]))
-			continue;
+        vec ray(target);
+        ray.sub(e.o);
+        float mag = ray.magnitude();
+        if(e.attrs[0] && mag >= float(e.attrs[0]))
+            continue;
 
-		ray.div(mag);
-		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
-			continue;
-		float intensity = 1;
-		if(e.attrs[0])
-			intensity -= mag / float(e.attrs[0]);
+        ray.div(mag);
+        if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY, t) < mag)
+            continue;
+        float intensity = 1;
+        if(e.attrs[0])
+            intensity -= mag / float(e.attrs[0]);
 
-		if(!e.links.empty())
-		{
-			int slight = -1;
-			const vector<extentity *> &ents = entities::getents();
-			loopvk(e.links)
-			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
-				{
-					slight = e.links[k];
-					break;
-				}
-			}
-			if(ents.inrange(slight))
-			{
-				extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
-				float spotatten = 1-(1-ray.dot(spot))/maxatten;
-				if(spotatten <= 0) continue;
-				intensity *= spotatten;
-			}
-			else continue;
-		}
+        if(!e.links.empty())
+        {
+            int slight = -1;
+            const vector<extentity *> &ents = entities::getents();
+            loopvk(e.links)
+            {
+                if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
+                {
+                    slight = e.links[k];
+                    break;
+                }
+            }
+            if(ents.inrange(slight))
+            {
+                extentity &spotlight = *ents[slight];
+                vec spot(vec(spotlight.o).sub(e.o).normalize());
+                float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
+                float spotatten = 1-(1-ray.dot(spot))/maxatten;
+                if(spotatten <= 0) continue;
+                intensity *= spotatten;
+            }
+            else continue;
+        }
 
-		color.add(vec(e.attrs[1], e.attrs[2], e.attrs[3]).div(255).mul(intensity));
+        color.add(vec(e.attrs[1], e.attrs[2], e.attrs[3]).div(255).mul(intensity));
 
-		intensity *= e.attrs[1]*e.attrs[2]*e.attrs[3];
+        intensity *= e.attrs[1]*e.attrs[2]*e.attrs[3];
 
-		if(fabs(mag)<1e-3) dir.add(vec(0, 0, 1));
-		else dir.add(vec(e.o).sub(target).mul(intensity/mag));
-	}
+        if(fabs(mag)<1e-3) dir.add(vec(0, 0, 1));
+        else dir.add(vec(e.o).sub(target).mul(intensity/mag));
+    }
 
-	vec slight(0, 0, 0);
+    vec slight(0, 0, 0);
     if(hasskylight())
     {
         uchar skylight[3];
@@ -2128,84 +2128,84 @@ void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float 
         loopk(3) slight[k] = max(skylight[k]/255.0f, ambient);
     }
     else loopk(3) slight[k] = max(ambientcolor[k]/255.0f, ambient);
-	if(sunlights.length() || entities::lastent(ET_SUNLIGHT))
-	{
-		if(sunlights.empty()) findsunlights();
-		uchar col[3] = {0, 0, 0};
-		calcsunlight(target, vec(0, 0, 0), 0.5f, col, RAY_POLY, t);
-		loopk(3) slight[k] = max(slight[k], col[k]/255.0f);
-	}
-	loopk(3) color[k] = clamp(color[k], slight[k], 1.5f);
-	if(dir.iszero()) dir = vec(0, 0, 1);
-	else dir.normalize();
+    if(sunlights.length() || entities::lastent(ET_SUNLIGHT))
+    {
+        if(sunlights.empty()) findsunlights();
+        uchar col[3] = {0, 0, 0};
+        calcsunlight(target, vec(0, 0, 0), 0.5f, col, RAY_POLY, t);
+        loopk(3) slight[k] = max(slight[k], col[k]/255.0f);
+    }
+    loopk(3) color[k] = clamp(color[k], slight[k], 1.5f);
+    if(dir.iszero()) dir = vec(0, 0, 1);
+    else dir.normalize();
 }
 
 const extentity *brightestlight(const vec &target, const vec &dir)
 {
-	const vector<extentity *> &ents = entities::getents();
-	const vector<int> &lights = checklightcache(int(target.x), int(target.y));
-	const extentity *brightest = NULL;
-	float bintensity = 0;
-	loopv(lights)
-	{
-		const extentity &e = *ents[lights[i]];
-		if(e.type != ET_LIGHT || vec(e.o).sub(target).dot(dir)<0)
-			continue;
+    const vector<extentity *> &ents = entities::getents();
+    const vector<int> &lights = checklightcache(int(target.x), int(target.y));
+    const extentity *brightest = NULL;
+    float bintensity = 0;
+    loopv(lights)
+    {
+        const extentity &e = *ents[lights[i]];
+        if(e.type != ET_LIGHT || vec(e.o).sub(target).dot(dir)<0)
+            continue;
 
-		vec ray(target);
-		ray.sub(e.o);
-		float mag = ray.magnitude();
-		if(e.attrs[0] && mag >= float(e.attrs[0]))
-			 continue;
+        vec ray(target);
+        ray.sub(e.o);
+        float mag = ray.magnitude();
+        if(e.attrs[0] && mag >= float(e.attrs[0]))
+             continue;
 
-		ray.div(mag);
-		if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
-			continue;
-		float intensity = 1;
-		if(e.attrs[0])
-			intensity -= mag / float(e.attrs[0]);
+        ray.div(mag);
+        if(shadowray(e.o, ray, mag, RAY_SHADOW | RAY_POLY) < mag)
+            continue;
+        float intensity = 1;
+        if(e.attrs[0])
+            intensity -= mag / float(e.attrs[0]);
 
-		if(!e.links.empty())
-		{
-			int slight = -1;
-			const vector<extentity *> &ents = entities::getents();
-			loopvk(e.links)
-			{
-				if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
-				{
-					slight = e.links[k];
-					break;
-				}
-			}
-			if(ents.inrange(slight))
-			{
-				const extentity &spotlight = *ents[slight];
-				vec spot(vec(spotlight.o).sub(e.o).normalize());
-				float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
-				float spotatten = 1-(1-ray.dot(spot))/maxatten;
-				if(spotatten <= 0) continue;
-				intensity *= spotatten;
-			}
-			else continue;
-		}
+        if(!e.links.empty())
+        {
+            int slight = -1;
+            const vector<extentity *> &ents = entities::getents();
+            loopvk(e.links)
+            {
+                if(ents.inrange(e.links[k]) && ents[e.links[k]]->type == ET_LIGHTFX && ents[e.links[k]]->attrs[0] == LFX_SPOTLIGHT)
+                {
+                    slight = e.links[k];
+                    break;
+                }
+            }
+            if(ents.inrange(slight))
+            {
+                const extentity &spotlight = *ents[slight];
+                vec spot(vec(spotlight.o).sub(e.o).normalize());
+                float maxatten = 1-cosf(max(1, min(90, int(spotlight.attrs[1])))*RAD);
+                float spotatten = 1-(1-ray.dot(spot))/maxatten;
+                if(spotatten <= 0) continue;
+                intensity *= spotatten;
+            }
+            else continue;
+        }
 
-		if(!brightest || intensity > bintensity)
-		{
-			brightest = &e;
-			bintensity = intensity;
-		}
-	}
-	return brightest;
+        if(!brightest || intensity > bintensity)
+        {
+            brightest = &e;
+            bintensity = intensity;
+        }
+    }
+    return brightest;
 }
 
 void brightencube(cube &c)
 {
-	if(c.ext && c.ext->surfaces)
-	{
-		if(c.ext->surfaces==brightsurfaces) return;
-		freesurfaces(c);
-	}
-	ext(c).surfaces = brightsurfaces;
+    if(c.ext && c.ext->surfaces)
+    {
+        if(c.ext->surfaces==brightsurfaces) return;
+        freesurfaces(c);
+    }
+    ext(c).surfaces = brightsurfaces;
 }
 
 void newsurfaces(cube &c, const surfaceinfo *surfs, int numsurfs)
@@ -2220,11 +2220,11 @@ void newsurfaces(cube &c, const surfaceinfo *surfs, int numsurfs)
 
 void freesurfaces(cube &c)
 {
-	if(c.ext)
-	{
-		if(c.ext->surfaces==brightsurfaces) c.ext->surfaces = NULL;
-		else DELETEA(c.ext->surfaces);
-	}
+    if(c.ext)
+    {
+        if(c.ext->surfaces==brightsurfaces) c.ext->surfaces = NULL;
+        else DELETEA(c.ext->surfaces);
+    }
 }
 
 void dumplms()

@@ -2,40 +2,40 @@ enum { IRCC_NONE = 0, IRCC_JOINING, IRCC_JOINED, IRCC_KICKED, IRCC_BANNED };
 enum { IRCCT_NONE = 0, IRCCT_AUTO };
 struct ircchan
 {
-	int state, type, relay, lastjoin;
-	string name, friendly, passkey;
+    int state, type, relay, lastjoin;
+    string name, friendly, passkey;
 #ifndef STANDALONE
-	vector<char *> lines;
+    vector<char *> lines;
 #endif
 
-	ircchan() {}
-	~ircchan()
-	{
+    ircchan() {}
+    ~ircchan()
+    {
 #ifndef STANDALONE
-		loopv(lines) DELETEA(lines[i]);
-		lines.setsize(0);
+        loopv(lines) DELETEA(lines[i]);
+        lines.setsize(0);
 #endif
-	}
+    }
 };
 enum { IRCT_NONE = 0, IRCT_CLIENT, IRCT_RELAY, IRCT_MAX };
 enum { IRC_DISC = 0, IRC_ATTEMPT, IRC_CONN, IRC_ONLINE, IRC_MAX };
 struct ircnet
 {
-	int type, state, port, lastattempt;
-	string name, serv, nick, ip, passkey;
-	ENetAddress address;
-	ENetSocket sock;
-	vector<ircchan> channels;
-	vector<char *> lines;
-	uchar input[4096];
+    int type, state, port, lastattempt;
+    string name, serv, nick, ip, passkey;
+    ENetAddress address;
+    ENetSocket sock;
+    vector<ircchan> channels;
+    vector<char *> lines;
+    uchar input[4096];
 
-	ircnet() {}
-	~ircnet()
-	{
-		channels.setsize(0);
-		loopv(lines) DELETEA(lines[i]);
-		lines.setsize(0);
-	}
+    ircnet() {}
+    ~ircnet()
+    {
+        channels.setsize(0);
+        loopv(lines) DELETEA(lines[i]);
+        lines.setsize(0);
+    }
 };
 
 extern vector<ircnet *> ircnets;

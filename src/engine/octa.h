@@ -19,28 +19,28 @@ struct elementset
 
 enum
 {
-	EMID_NONE = 0,
-	EMID_CUSTOM,
-	EMID_SKY,
-	EMID_RESERVED
+    EMID_NONE = 0,
+    EMID_CUSTOM,
+    EMID_SKY,
+    EMID_RESERVED
 };
 
 struct materialsurface
 {
-	ivec o;
-	ushort csize, rsize;
-	union
-	{
-		short index;
-		short depth;
-	};
-	uchar material, orient;
-	union
-	{
-		const extentity *light;
-		ushort envmap;
-		uchar ends;
-	};
+    ivec o;
+    ushort csize, rsize;
+    union
+    {
+        short index;
+        short depth;
+    };
+    uchar material, orient;
+    union
+    {
+        const extentity *light;
+        ushort envmap;
+        uchar ends;
+    };
 };
 
 struct surfaceinfo
@@ -53,7 +53,7 @@ struct surfaceinfo
 
 struct surfacenormals
 {
-	bvec normals[4];
+    bvec normals[4];
 };
 
 struct grasstri
@@ -69,50 +69,50 @@ struct grasstri
 
 struct occludequery
 {
-	void *owner;
-	GLuint id;
-	int fragments;
+    void *owner;
+    GLuint id;
+    int fragments;
 };
 
 struct vtxarray;
 
 struct octaentities
 {
-	vector<int> mapmodels;
-	vector<int> other;
-	occludequery *query;
-	octaentities *next, *rnext;
-	int distance;
-	ivec o;
-	int size;
-	ivec bbmin, bbmax;
+    vector<int> mapmodels;
+    vector<int> other;
+    occludequery *query;
+    octaentities *next, *rnext;
+    int distance;
+    ivec o;
+    int size;
+    ivec bbmin, bbmax;
 
-	octaentities(const ivec &o, int size) : query(0), o(o), size(size), bbmin(o), bbmax(o)
-	{
-		bbmin.add(size);
-	}
+    octaentities(const ivec &o, int size) : query(0), o(o), size(size), bbmin(o), bbmax(o)
+    {
+        bbmin.add(size);
+    }
 };
 
 enum
 {
-	OCCLUDE_NOTHING = 0,
-	OCCLUDE_GEOM,
-	OCCLUDE_BB,
-	OCCLUDE_PARENT
+    OCCLUDE_NOTHING = 0,
+    OCCLUDE_GEOM,
+    OCCLUDE_BB,
+    OCCLUDE_PARENT
 };
 
 enum
 {
-	MERGE_ORIGIN = 1<<0,
-	MERGE_PART	= 1<<1,
-	MERGE_USE	= 1<<2
+    MERGE_ORIGIN = 1<<0,
+    MERGE_PART  = 1<<1,
+    MERGE_USE   = 1<<2
 };
 
 struct vtxarray
 {
-	vtxarray *parent;
-	vector<vtxarray *> children;
-	vtxarray *next, *rnext; // linked list of visible VOBs
+    vtxarray *parent;
+    vector<vtxarray *> children;
+    vtxarray *next, *rnext; // linked list of visible VOBs
     vertex *vdata;           // vertex data
     ushort voffset;          // offset into vertex data
     ushort *edata, *skydata; // vertex indices
@@ -128,11 +128,11 @@ struct vtxarray
     ivec shadowmapmin, shadowmapmax; // BB of shadowmapped surfaces
     ivec matmin, matmax;     // BB of any materials
     ivec bbmin, bbmax;       // BB of everything including children
-	uchar curvfc, occluded;
-	occludequery *query, *rquery;
-	vector<octaentities *> *mapmodels;
+    uchar curvfc, occluded;
+    occludequery *query, *rquery;
+    vector<octaentities *> *mapmodels;
     vector<grasstri> *grasstris;
-	int hasmerges;
+    int hasmerges;
     uint dynlightmask;
     bool shadowed;
 };
@@ -141,15 +141,15 @@ struct cube;
 
 struct clipplanes
 {
-	vec o, r, v[8];
-	int size, visible;
-	plane p[12];
+    vec o, r, v[8];
+    int size, visible;
+    plane p[12];
     cube *owner;
 };
 
 struct mergeinfo
 {
-	ushort u1, u2, v1, v2;
+    ushort u1, u2, v1, v2;
 };
 
 struct tjoint
@@ -161,64 +161,64 @@ struct tjoint
 
 struct cubeext
 {
-	uchar material;		  // empty-space material
-	uchar visible;			// visible faces of the cube
-	uchar merged;			// merged faces of the cube
-	uchar mergeorigin;		// whether this face describes a larger merged face
-	vtxarray *va;			// vertex array for children, or NULL
-	clipplanes *clip;		// collision planes
-	surfaceinfo *surfaces;	// lighting info for each surface
-	surfacenormals *normals; // per-vertex normals for each surface
-	octaentities *ents;	  // list of map entites totally inside cube
-	mergeinfo *merges;		// bounds of merged surfaces
+    uchar material;       // empty-space material
+    uchar visible;          // visible faces of the cube
+    uchar merged;           // merged faces of the cube
+    uchar mergeorigin;      // whether this face describes a larger merged face
+    vtxarray *va;           // vertex array for children, or NULL
+    clipplanes *clip;       // collision planes
+    surfaceinfo *surfaces;  // lighting info for each surface
+    surfacenormals *normals; // per-vertex normals for each surface
+    octaentities *ents;   // list of map entites totally inside cube
+    mergeinfo *merges;      // bounds of merged surfaces
     int tjoints;             // linked list of t-joints
 };
 
 struct cube
 {
-	cube *children;		  // points to 8 cube structures which are its children, or NULL. -Z first, then -Y, -X
-	union
-	{
-		uchar edges[12];	 // edges of the cube, each uchar is 2 4bit values denoting the range.
-							 // see documentation jpgs for more info.
-		uint faces[3];		// 4 edges of each dimension together representing 2 perpendicular faces
-	};
+    cube *children;       // points to 8 cube structures which are its children, or NULL. -Z first, then -Y, -X
     union
     {
-		ushort texture[6];		// one for each face. same order as orient.
+        uchar edges[12];     // edges of the cube, each uchar is 2 4bit values denoting the range.
+                             // see documentation jpgs for more info.
+        uint faces[3];      // 4 edges of each dimension together representing 2 perpendicular faces
+    };
+    union
+    {
+        ushort texture[6];      // one for each face. same order as orient.
         struct
         {
             uchar clipmask, vismask;
             uchar vismasks[8];
         };
     };
-	cubeext *ext;			// extended info for the cube
+    cubeext *ext;           // extended info for the cube
 };
 
 static inline cubeext &ext(cube &c)
 {
-	extern cubeext *newcubeext(cube &c);
-	return *(c.ext ? c.ext : newcubeext(c));
+    extern cubeext *newcubeext(cube &c);
+    return *(c.ext ? c.ext : newcubeext(c));
 }
 
 struct block3
 {
-	ivec o, s;
-	int grid, orient;
-	block3() {}
-	block3(const selinfo &sel) : o(sel.o), s(sel.s), grid(sel.grid), orient(sel.orient) {}
-	cube *c()			{ return (cube *)(this+1); }
-	int size()	const { return s.x*s.y*s.z; }
+    ivec o, s;
+    int grid, orient;
+    block3() {}
+    block3(const selinfo &sel) : o(sel.o), s(sel.s), grid(sel.grid), orient(sel.orient) {}
+    cube *c()           { return (cube *)(this+1); }
+    int size()  const { return s.x*s.y*s.z; }
 };
 
 struct editinfo
 {
-	block3 *copy;
-	editinfo() : copy(NULL) {}
+    block3 *copy;
+    editinfo() : copy(NULL) {}
 };
 
 #define UNDOATTRS 6
-struct undoent	{ int i; uchar type; vec o; int attrs[UNDOATTRS]; };
+struct undoent  { int i; uchar type; vec o; int attrs[UNDOATTRS]; };
 struct undoblock // undo header, all data sits in payload
 {
     undoblock *prev, *next;
@@ -233,14 +233,14 @@ struct undoblock // undo header, all data sits in payload
     undoent *ents() { return (undoent *)(this + 1); }
 };
 
-extern cube *worldroot;			 // the world data. only a ptr to 8 cubes (ie: like cube.children above)
+extern cube *worldroot;          // the world data. only a ptr to 8 cubes (ie: like cube.children above)
 extern ivec lu;
 extern int lusize;
 extern int wtris, wverts, vtris, vverts, glde, gbatches, rplanes;
 extern int allocnodes, allocva, selchildcount;
 
-const uint F_EMPTY = 0;			 // all edges in the range (0,0)
-const uint F_SOLID = 0x80808080;	// all edges in the range (0,8)
+const uint F_EMPTY = 0;          // all edges in the range (0,0)
+const uint F_SOLID = 0x80808080;    // all edges in the range (0,8)
 
 #define isempty(c) ((c).faces[0]==F_EMPTY)
 #define isentirelysolid(c) ((c).faces[0]==F_SOLID && (c).faces[1]==F_SOLID && (c).faces[2]==F_SOLID)
@@ -254,8 +254,8 @@ const uint F_SOLID = 0x80808080;	// all edges in the range (0,8)
 
 #define cubeedge(c, d, x, y) ((c).edges[(((d)<<2)+((y)<<1)+(x))])
 
-#define octadim(d)		  (1<<(d))					// creates mask for bit of given dimension
-#define octacoord(d, i)	 (((i)&octadim(d))>>(d))
+#define octadim(d)        (1<<(d))                  // creates mask for bit of given dimension
+#define octacoord(d, i)  (((i)&octadim(d))>>(d))
 #define oppositeocta(d, i)  ((i)^octadim(D[d]))
 #define octaindex(d,x,y,z)  (((z)<<D[d])+((y)<<C[d])+((x)<<R[d]))
 #define octastep(x, y, z, scale) (((((z)>>(scale))&1)<<2) | ((((y)>>(scale))&1)<<1) | (((x)>>(scale))&1))
@@ -264,12 +264,12 @@ const uint F_SOLID = 0x80808080;	// all edges in the range (0,8)
 
 enum
 {
-	O_LEFT = 0,
-	O_RIGHT,
-	O_BACK,
-	O_FRONT,
-	O_BOTTOM,
-	O_TOP
+    O_LEFT = 0,
+    O_RIGHT,
+    O_BACK,
+    O_FRONT,
+    O_BOTTOM,
+    O_TOP
 };
 
 #define dimension(orient) ((orient)>>1)
@@ -278,10 +278,10 @@ enum
 
 enum
 {
-	VFC_FULL_VISIBLE = 0,
-	VFC_PART_VISIBLE,
-	VFC_FOGGED,
-	VFC_NOT_VISIBLE,
+    VFC_FULL_VISIBLE = 0,
+    VFC_PART_VISIBLE,
+    VFC_FOGGED,
+    VFC_NOT_VISIBLE,
     PVS_FULL_VISIBLE,
     PVS_PART_VISIBLE,
     PVS_FOGGED

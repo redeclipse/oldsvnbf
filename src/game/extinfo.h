@@ -34,7 +34,7 @@
         ucharbuf q = p;
         putint(q, EXT_PLAYERSTATS_RESP_STATS); // send player stats following
         putint(q, ci->clientnum); //add player id
-		putint(q, ci->ping);
+        putint(q, ci->ping);
         sendstring(ci->name, q);
         sendstring(teamtype[ci->team].name, q); //backward compatibility mode
         putint(q, ci->state.frags);

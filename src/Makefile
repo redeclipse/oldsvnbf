@@ -28,61 +28,61 @@ ifeq ($(PLATFORM),Linux)
 CLIENT_LIBS+= -lrt
 endif
 CLIENT_OBJS= \
-	shared/crypto.o \
-	shared/geom.o \
-	shared/stream.o \
-	shared/tools.o \
-	shared/zip.o \
-	engine/bih.o \
-	engine/blend.o \
-	engine/blob.o \
-	engine/client.o	\
-	engine/command.o \
-	engine/console.o \
-	engine/decal.o \
-	engine/dynlight.o \
-	engine/glare.o \
-	engine/grass.o \
-	engine/irc.o	\
-	engine/lightmap.o \
-	engine/main.o \
-	engine/material.o \
-	engine/menus.o \
-	engine/movie.o \
-	engine/normal.o	\
-	engine/octa.o \
-	engine/octaedit.o \
-	engine/octarender.o \
-	engine/physics.o \
-	engine/pvs.o \
-	engine/rendergl.o \
-	engine/rendermodel.o \
-	engine/renderparticles.o \
-	engine/rendersky.o \
-	engine/rendertext.o \
-	engine/renderva.o \
-	engine/server.o	\
-	engine/serverbrowser.o \
-	engine/shader.o \
-	engine/shadowmap.o \
-	engine/sound.o \
-	engine/texture.o \
-	engine/ui.o \
-	engine/water.o \
-	engine/world.o \
-	engine/worldio.o \
-	game/ai.o \
-	game/client.o \
-	game/ctf.o \
-	game/entities.o \
-	game/game.o \
-	game/hud.o \
-	game/physics.o \
-	game/projs.o \
-	game/server.o \
-	game/stf.o \
-	game/weapons.o
-	
+    shared/crypto.o \
+    shared/geom.o \
+    shared/stream.o \
+    shared/tools.o \
+    shared/zip.o \
+    engine/bih.o \
+    engine/blend.o \
+    engine/blob.o \
+    engine/client.o \
+    engine/command.o \
+    engine/console.o \
+    engine/decal.o \
+    engine/dynlight.o \
+    engine/glare.o \
+    engine/grass.o \
+    engine/irc.o    \
+    engine/lightmap.o \
+    engine/main.o \
+    engine/material.o \
+    engine/menus.o \
+    engine/movie.o \
+    engine/normal.o \
+    engine/octa.o \
+    engine/octaedit.o \
+    engine/octarender.o \
+    engine/physics.o \
+    engine/pvs.o \
+    engine/rendergl.o \
+    engine/rendermodel.o \
+    engine/renderparticles.o \
+    engine/rendersky.o \
+    engine/rendertext.o \
+    engine/renderva.o \
+    engine/server.o \
+    engine/serverbrowser.o \
+    engine/shader.o \
+    engine/shadowmap.o \
+    engine/sound.o \
+    engine/texture.o \
+    engine/ui.o \
+    engine/water.o \
+    engine/world.o \
+    engine/worldio.o \
+    game/ai.o \
+    game/client.o \
+    game/ctf.o \
+    game/entities.o \
+    game/game.o \
+    game/hud.o \
+    game/physics.o \
+    game/projs.o \
+    game/server.o \
+    game/stf.o \
+    game/weapons.o
+    
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
@@ -96,37 +96,37 @@ SERVER_OBJS= \
     shared/crypto-standalone.o \
     shared/stream-standalone.o \
     shared/tools-standalone.o \
-	engine/command-standalone.o \
-	engine/irc-standalone.o	\
-	engine/master-standalone.o \
-	engine/server-standalone.o \
-	game/server-standalone.o
+    engine/command-standalone.o \
+    engine/irc-standalone.o \
+    engine/master-standalone.o \
+    engine/server-standalone.o \
+    game/server-standalone.o
 
 default: all
 
 enet/Makefile:
-	cd enet; chmod +x ./configure; ./configure
+    cd enet; chmod +x ./configure; ./configure
 
 libenet: enet/Makefile
-	$(MAKE)	-C enet/ all
+    $(MAKE) -C enet/ all
 
 clean-enet: enet/Makefile
-	$(MAKE) -C enet/ clean
+    $(MAKE) -C enet/ clean
 
 clean: clean-client clean-server
 
 clean-client:
-	@rm -fv $(CLIENT_PCH) $(CLIENT_OBJS) bfclient
+    @rm -fv $(CLIENT_PCH) $(CLIENT_OBJS) bfclient
 
 clean-server:
-	@rm -fv $(SERVER_OBJS) bfserver
+    @rm -fv $(SERVER_OBJS) bfserver
 
 %.h.gch: %.h
-	$(CXX) $(CXXFLAGS) -o $@.tmp $(subst .h.gch,.h,$@)
-	$(MV) $@.tmp $@
+    $(CXX) $(CXXFLAGS) -o $@.tmp $(subst .h.gch,.h,$@)
+    $(MV) $@.tmp $@
 
 %-standalone.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
+    $(CXX) $(CXXFLAGS) -c -o $@ $(subst -standalone.o,.cpp,$@)
 
 $(CLIENT_OBJS): CXXFLAGS += $(CLIENT_INCLUDES)
 $(filter shared/%,$(CLIENT_OBJS)): $(filter shared/%,$(CLIENT_PCH))
@@ -137,47 +137,47 @@ $(SERVER_OBJS): CXXFLAGS += $(SERVER_INCLUDES)
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 client: $(CLIENT_OBJS)
-	$(WINDRES) -i bloodfrontier.rc -J rc -o bloodfrontier.res -O coff 
-	$(CXX) $(CXXFLAGS) -o ../bin/bfclient.exe bloodfrontier.res $(CLIENT_OBJS) $(CLIENT_LIBS)
+    $(WINDRES) -i bloodfrontier.rc -J rc -o bloodfrontier.res -O coff 
+    $(CXX) $(CXXFLAGS) -o ../bin/bfclient.exe bloodfrontier.res $(CLIENT_OBJS) $(CLIENT_LIBS)
 
 server: $(SERVER_OBJS)
-	$(CXX) $(CXXFLAGS) -o ../bin/bfserver.exe $(SERVER_OBJS) $(SERVER_LIBS)
+    $(CXX) $(CXXFLAGS) -o ../bin/bfserver.exe $(SERVER_OBJS) $(SERVER_LIBS)
 
 install-client: client
 ifneq (,$(STRIP))
-	$(STRIP) ../bin/bfclient.exe
+    $(STRIP) ../bin/bfclient.exe
 endif
 
 install-server: server
 ifneq (,$(STRIP))
-	$(STRIP) ../bin/bfserver.exe
+    $(STRIP) ../bin/bfserver.exe
 endif
 else
-client:	libenet $(CLIENT_OBJS)
-	$(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
+client: libenet $(CLIENT_OBJS)
+    $(CXX) $(CXXFLAGS) -o bfclient $(CLIENT_OBJS) $(CLIENT_LIBS)
 ifneq (,$(STRIP))
-	$(STRIP) bfclient
+    $(STRIP) bfclient
 endif
 
-server:	libenet $(SERVER_OBJS)
-	$(CXX) $(CXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
+server: libenet $(SERVER_OBJS)
+    $(CXX) $(CXXFLAGS) -o bfserver $(SERVER_OBJS) $(SERVER_LIBS)
 ifneq (,$(STRIP))
-	$(STRIP) bfserver
+    $(STRIP) bfserver
 endif
 
 install-client: client
-	cp bfclient ../bin/bfclient$(PLATFORM_SUFFIX)
+    cp bfclient ../bin/bfclient$(PLATFORM_SUFFIX)
 
 install-server: server
-	cp bfserver ../bin/bfserver$(PLATFORM_SUFFIX)
+    cp bfserver ../bin/bfserver$(PLATFORM_SUFFIX)
 endif
 
 install: install-client install-server
 
 depend:
-	makedepend -Y -Ishared -Iengine -Igame $(subst .o,.cpp,$(CLIENT_OBJS))
-	makedepend -a -o-standalone.o -Y -Ishared -Iengine -Igame $(subst -standalone.o,.cpp,$(SERVER_OBJS))
-	makedepend -a -o.h.gch -Y -Ishared -Iengine -Igame $(subst .h.gch,.h,$(CLIENT_PCH))
+    makedepend -Y -Ishared -Iengine -Igame $(subst .o,.cpp,$(CLIENT_OBJS))
+    makedepend -a -o-standalone.o -Y -Ishared -Iengine -Igame $(subst -standalone.o,.cpp,$(SERVER_OBJS))
+    makedepend -a -o.h.gch -Y -Ishared -Iengine -Igame $(subst .h.gch,.h,$(CLIENT_PCH))
 
 all: client server
 # DO NOT DELETE

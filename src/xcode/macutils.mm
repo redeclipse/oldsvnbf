@@ -8,13 +8,13 @@ inline char *concatstring(char *d, const char *s) { size_t len = strlen(d); retu
 // --
 
 void mac_pasteconsole(char *commandbuf)
-{	
+{   
     NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
     NSString *type = [pasteboard availableTypeFromArray:[NSArray arrayWithObject:NSStringPboardType]];
     if (type != nil) {
         NSString *contents = [pasteboard stringForType:type];
         if (contents != nil)
-			concatstring(commandbuf, [contents lossyCString]);
+            concatstring(commandbuf, [contents lossyCString]);
     }
 }
 

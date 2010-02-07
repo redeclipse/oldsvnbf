@@ -1,24 +1,24 @@
 enum
 {
-	S_GUIPRESS = 0, S_GUIBACK, S_GUIACT,
-	S_GAMESPECIFIC
+    S_GUIPRESS = 0, S_GUIBACK, S_GUIACT,
+    S_GAMESPECIFIC
 };
 
 enum
 {
-	SND_NONE	= 0,
-	SND_NOATTEN	= 1<<0,	// disable attenuation
-	SND_NODELAY	= 1<<1,	// disable delay
-	SND_NOCULL	= 1<<2,	// disable culling
-	SND_NOPAN	= 1<<3, // disable panning (distance only attenuation)
-	SND_NODIST	= 1<<4, // disable distance (panning only)
-	SND_NOQUIET	= 1<<5, // disable water effects (panning only)
-	SND_LOOP	= 1<<6,
-	SND_MAP		= 1<<7,
-	SND_FORCED	= SND_NOATTEN|SND_NODELAY|SND_NOCULL,
-	SND_DIRECT	= SND_NODELAY|SND_NOCULL|SND_NODIST|SND_NOQUIET,
-	SND_MASKF	= SND_LOOP|SND_MAP,
-	SND_LAST	= 6
+    SND_NONE    = 0,
+    SND_NOATTEN = 1<<0, // disable attenuation
+    SND_NODELAY = 1<<1, // disable delay
+    SND_NOCULL  = 1<<2, // disable culling
+    SND_NOPAN   = 1<<3, // disable panning (distance only attenuation)
+    SND_NODIST  = 1<<4, // disable distance (panning only)
+    SND_NOQUIET = 1<<5, // disable water effects (panning only)
+    SND_LOOP    = 1<<6,
+    SND_MAP     = 1<<7,
+    SND_FORCED  = SND_NOATTEN|SND_NODELAY|SND_NOCULL,
+    SND_DIRECT  = SND_NODELAY|SND_NOCULL|SND_NODIST|SND_NOQUIET,
+    SND_MASKF   = SND_LOOP|SND_MAP,
+    SND_LAST    = 6
 };
 
 #ifndef STANDALONE
@@ -29,51 +29,51 @@ extern Mix_Music *music;
 extern char *musicfile, *musicdonecmd;
 extern int soundsatonce, lastsoundmillis;
 
-#define SOUNDMINDIST		16.0f
-#define SOUNDMAXDIST		10000.f
+#define SOUNDMINDIST        16.0f
+#define SOUNDMAXDIST        10000.f
 
 struct soundsample
 {
-	Mix_Chunk *sound;
-	char *name;
+    Mix_Chunk *sound;
+    char *name;
 
-	soundsample() : name(NULL) {}
-	~soundsample() { DELETEA(name); }
+    soundsample() : name(NULL) {}
+    ~soundsample() { DELETEA(name); }
 };
 
 struct soundslot
 {
-	soundsample *sample;
-	int vol, material, maxrad, minrad;
+    soundsample *sample;
+    int vol, material, maxrad, minrad;
 
-	soundslot() : sample(NULL), vol(255), material(MAT_AIR), maxrad(-1), minrad(-1) {}
-	~soundslot() {}
+    soundslot() : sample(NULL), vol(255), material(MAT_AIR), maxrad(-1), minrad(-1) {}
+    ~soundslot() {}
 };
 
 
 struct sound
 {
-	soundslot *slot;
-	vec pos;
-	physent *owner;
-	int vol, curvol, curpan;
-	int flags, maxrad, minrad;
-	int millis, ends, slotnum, chan, *hook;
+    soundslot *slot;
+    vec pos;
+    physent *owner;
+    int vol, curvol, curpan;
+    int flags, maxrad, minrad;
+    int millis, ends, slotnum, chan, *hook;
 
-	sound() : hook(NULL) { reset(); }
-	~sound() {}
+    sound() : hook(NULL) { reset(); }
+    ~sound() {}
 
-	void reset()
-	{
-		slot = NULL;
-		owner = NULL;
-		vol = curvol = 255;
-		curpan = 127;
-		flags = maxrad = minrad = millis = ends = slotnum = 0;
-		chan = -1;
-		if(hook) *hook = -1;
-		hook = NULL;
-	}
+    void reset()
+    {
+        slot = NULL;
+        owner = NULL;
+        vol = curvol = 255;
+        curpan = 127;
+        flags = maxrad = minrad = millis = ends = slotnum = 0;
+        chan = -1;
+        if(hook) *hook = -1;
+        hook = NULL;
+    }
 };
 
 extern hashtable<const char *, soundsample> soundsamples;

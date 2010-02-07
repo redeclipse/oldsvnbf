@@ -1,13 +1,13 @@
-wind						Original recording by "Bahutan"
-fire_light					Original recording by "Slanesh"
-hum							Original recording by "Therac 25"
-night_crickets,creek		Original recording by "RHumphries"
-forest,cycadas				Original recording by "dobroide"
-river, cavedrip				Original recording by "acclivity"
-frogs, forestflies			Original recording by "oyes"
-water						Original recording by "ignotus"
-waterfall					Original recording by "Corsica_S
-distant_cars				Original recording by "fresco" and "WIM"
+wind                        Original recording by "Bahutan"
+fire_light                  Original recording by "Slanesh"
+hum                         Original recording by "Therac 25"
+night_crickets,creek        Original recording by "RHumphries"
+forest,cycadas              Original recording by "dobroide"
+river, cavedrip             Original recording by "acclivity"
+frogs, forestflies          Original recording by "oyes"
+water                       Original recording by "ignotus"
+waterfall                   Original recording by "Corsica_S
+distant_cars                Original recording by "fresco" and "WIM"
 
 These works are licensed: http://creativecommons.org/licenses/sampling+/1.0/
 Downloaded from: http://freesound.iua.upf.edu/
@@ -16,20 +16,20 @@ All other sounds in this directory are original works by Anthony "Acord" Cord, Q
 
 Files in this directory are released under the Creative Commons license:
 
-	Attribution-ShareAlike 3.0
+    Attribution-ShareAlike 3.0
 
 You are free:
 
-	* to Share — to copy, distribute and transmit the work
-	* to Remix — to adapt the work
+    * to Share — to copy, distribute and transmit the work
+    * to Remix — to adapt the work
 
 Under the following conditions:
 
-	* Attribution. You must attribute the work in the manner specified by the author or licensor (but not in any way that suggests that they endorse you or your use of the work).
-	* Share Alike. If you alter, transform, or build upon this work, you may distribute the resulting work only under the same, similar or a compatible license.
-	* For any reuse or distribution, you must make clear to others the license terms of this work.
-	* Any of the above conditions can be waived if you get permission from the copyright holder.
-	* Nothing in this license impairs or restricts the author's moral rights.
+    * Attribution. You must attribute the work in the manner specified by the author or licensor (but not in any way that suggests that they endorse you or your use of the work).
+    * Share Alike. If you alter, transform, or build upon this work, you may distribute the resulting work only under the same, similar or a compatible license.
+    * For any reuse or distribution, you must make clear to others the license terms of this work.
+    * Any of the above conditions can be waived if you get permission from the copyright holder.
+    * Nothing in this license impairs or restricts the author's moral rights.
 
 Full license (legal code) can be found at:
 http://creativecommons.org/licenses/by-nc/3.0/legalcode

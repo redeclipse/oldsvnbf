@@ -42,7 +42,7 @@ FVAR(IDF_PERSIST, glarescale, 0, 0.25f, 8);
 
 void addglare()
 {
-	extern int viewtype;
+    extern int viewtype;
     if(!glare || viewtype || renderpath==R_FIXEDFUNCTION) return;
 
     glEnable(GL_BLEND);

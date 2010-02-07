@@ -18,17 +18,17 @@ PFNGLDELETEBUFFERSARBPROC    glDeleteBuffers_    = NULL;
 PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubData_ = NULL;
 
 // GL_ARB_multitexture
-PFNGLACTIVETEXTUREARBPROC		glActiveTexture_		= NULL;
+PFNGLACTIVETEXTUREARBPROC       glActiveTexture_        = NULL;
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTexture_ = NULL;
-PFNGLMULTITEXCOORD2FARBPROC	 glMultiTexCoord2f_	 = NULL;
-PFNGLMULTITEXCOORD3FARBPROC	 glMultiTexCoord3f_	 = NULL;
+PFNGLMULTITEXCOORD2FARBPROC  glMultiTexCoord2f_  = NULL;
+PFNGLMULTITEXCOORD3FARBPROC  glMultiTexCoord3f_  = NULL;
 PFNGLMULTITEXCOORD4FARBPROC  glMultiTexCoord4f_     = NULL;
 
 // GL_ARB_vertex_program, GL_ARB_fragment_program
-PFNGLGENPROGRAMSARBPROC			glGenPrograms_			= NULL;
-PFNGLDELETEPROGRAMSARBPROC		 glDeletePrograms_		 = NULL;
-PFNGLBINDPROGRAMARBPROC			glBindProgram_			= NULL;
-PFNGLPROGRAMSTRINGARBPROC		  glProgramString_		  = NULL;
+PFNGLGENPROGRAMSARBPROC         glGenPrograms_          = NULL;
+PFNGLDELETEPROGRAMSARBPROC       glDeletePrograms_       = NULL;
+PFNGLBINDPROGRAMARBPROC         glBindProgram_          = NULL;
+PFNGLPROGRAMSTRINGARBPROC         glProgramString_        = NULL;
 PFNGLGETPROGRAMIVARBPROC           glGetProgramiv_           = NULL;
 PFNGLPROGRAMENVPARAMETER4FARBPROC  glProgramEnvParameter4f_  = NULL;
 PFNGLPROGRAMENVPARAMETER4FVARBPROC glProgramEnvParameter4fv_ = NULL;
@@ -41,44 +41,44 @@ PFNGLPROGRAMENVPARAMETERS4FVEXTPROC   glProgramEnvParameters4fv_   = NULL;
 PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC glProgramLocalParameters4fv_ = NULL;
 
 // GL_ARB_occlusion_query
-PFNGLGENQUERIESARBPROC		glGenQueries_		= NULL;
-PFNGLDELETEQUERIESARBPROC	 glDeleteQueries_	 = NULL;
-PFNGLBEGINQUERYARBPROC		glBeginQuery_		= NULL;
-PFNGLENDQUERYARBPROC		  glEndQuery_		  = NULL;
-PFNGLGETQUERYIVARBPROC		glGetQueryiv_		= NULL;
+PFNGLGENQUERIESARBPROC      glGenQueries_       = NULL;
+PFNGLDELETEQUERIESARBPROC    glDeleteQueries_    = NULL;
+PFNGLBEGINQUERYARBPROC      glBeginQuery_       = NULL;
+PFNGLENDQUERYARBPROC          glEndQuery_         = NULL;
+PFNGLGETQUERYIVARBPROC      glGetQueryiv_       = NULL;
 PFNGLGETQUERYOBJECTIVARBPROC  glGetQueryObjectiv_  = NULL;
 PFNGLGETQUERYOBJECTUIVARBPROC glGetQueryObjectuiv_ = NULL;
 
 // GL_EXT_framebuffer_object
-PFNGLBINDRENDERBUFFEREXTPROC		glBindRenderbuffer_		= NULL;
-PFNGLDELETERENDERBUFFERSEXTPROC	 glDeleteRenderbuffers_	 = NULL;
-PFNGLGENFRAMEBUFFERSEXTPROC		 glGenRenderbuffers_		= NULL;
-PFNGLRENDERBUFFERSTORAGEEXTPROC	 glRenderbufferStorage_	 = NULL;
+PFNGLBINDRENDERBUFFEREXTPROC        glBindRenderbuffer_     = NULL;
+PFNGLDELETERENDERBUFFERSEXTPROC  glDeleteRenderbuffers_  = NULL;
+PFNGLGENFRAMEBUFFERSEXTPROC      glGenRenderbuffers_        = NULL;
+PFNGLRENDERBUFFERSTORAGEEXTPROC  glRenderbufferStorage_  = NULL;
 PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  glCheckFramebufferStatus_  = NULL;
-PFNGLBINDFRAMEBUFFEREXTPROC		 glBindFramebuffer_		 = NULL;
-PFNGLDELETEFRAMEBUFFERSEXTPROC	  glDeleteFramebuffers_	  = NULL;
-PFNGLGENFRAMEBUFFERSEXTPROC		 glGenFramebuffers_		 = NULL;
-PFNGLFRAMEBUFFERTEXTURE2DEXTPROC	glFramebufferTexture2D_	= NULL;
+PFNGLBINDFRAMEBUFFEREXTPROC      glBindFramebuffer_      = NULL;
+PFNGLDELETEFRAMEBUFFERSEXTPROC    glDeleteFramebuffers_   = NULL;
+PFNGLGENFRAMEBUFFERSEXTPROC      glGenFramebuffers_      = NULL;
+PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    glFramebufferTexture2D_ = NULL;
 PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbuffer_ = NULL;
-PFNGLGENERATEMIPMAPEXTPROC		  glGenerateMipmap_		  = NULL;
+PFNGLGENERATEMIPMAPEXTPROC        glGenerateMipmap_       = NULL;
 
 // GL_EXT_framebuffer_blit
 PFNGLBLITFRAMEBUFFEREXTPROC         glBlitFramebuffer_         = NULL;
 
 // GL_ARB_shading_language_100, GL_ARB_shader_objects, GL_ARB_fragment_shader, GL_ARB_vertex_shader
-PFNGLCREATEPROGRAMOBJECTARBPROC		glCreateProgramObject_	  = NULL;
-PFNGLDELETEOBJECTARBPROC			  glDeleteObject_			 = NULL;
-PFNGLUSEPROGRAMOBJECTARBPROC		  glUseProgramObject_		 = NULL;
-PFNGLCREATESHADEROBJECTARBPROC		glCreateShaderObject_		= NULL;
-PFNGLSHADERSOURCEARBPROC			  glShaderSource_			 = NULL;
-PFNGLCOMPILESHADERARBPROC			 glCompileShader_			= NULL;
-PFNGLGETOBJECTPARAMETERIVARBPROC	  glGetObjectParameteriv_	 = NULL;
-PFNGLATTACHOBJECTARBPROC			  glAttachObject_			 = NULL;
-PFNGLGETINFOLOGARBPROC				glGetInfoLog_				= NULL;
-PFNGLLINKPROGRAMARBPROC				glLinkProgram_			  = NULL;
-PFNGLGETUNIFORMLOCATIONARBPROC		glGetUniformLocation_		= NULL;
-PFNGLUNIFORM4FVARBPROC				glUniform4fv_				= NULL;
-PFNGLUNIFORM1IARBPROC				 glUniform1i_				= NULL;
+PFNGLCREATEPROGRAMOBJECTARBPROC     glCreateProgramObject_    = NULL;
+PFNGLDELETEOBJECTARBPROC              glDeleteObject_            = NULL;
+PFNGLUSEPROGRAMOBJECTARBPROC          glUseProgramObject_        = NULL;
+PFNGLCREATESHADEROBJECTARBPROC      glCreateShaderObject_       = NULL;
+PFNGLSHADERSOURCEARBPROC              glShaderSource_            = NULL;
+PFNGLCOMPILESHADERARBPROC            glCompileShader_           = NULL;
+PFNGLGETOBJECTPARAMETERIVARBPROC      glGetObjectParameteriv_    = NULL;
+PFNGLATTACHOBJECTARBPROC              glAttachObject_            = NULL;
+PFNGLGETINFOLOGARBPROC              glGetInfoLog_               = NULL;
+PFNGLLINKPROGRAMARBPROC             glLinkProgram_            = NULL;
+PFNGLGETUNIFORMLOCATIONARBPROC      glGetUniformLocation_       = NULL;
+PFNGLUNIFORM4FVARBPROC              glUniform4fv_               = NULL;
+PFNGLUNIFORM1IARBPROC                glUniform1i_               = NULL;
 
 // GL_EXT_draw_range_elements
 PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_ = NULL;
@@ -104,7 +104,7 @@ PFNGLGETCOMPRESSEDTEXIMAGEARBPROC   glGetCompressedTexImage_   = NULL;
 
 void *getprocaddress(const char *name)
 {
-	return SDL_GL_GetProcAddress(name);
+    return SDL_GL_GetProcAddress(name);
 }
 
 VAR(IDF_PERSIST, ati_skybox_bug, 0, 0, 1);
@@ -563,26 +563,26 @@ COMMAND(0, glext, "s");
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
-	glViewport(0, 0, w, h);
-	glClearColor(0, 0, 0, 0);
-	glClearDepth(1);
-	glDepthFunc(GL_LESS);
-	glDisable(GL_DEPTH_TEST);
-	glShadeModel(GL_SMOOTH);
+    glViewport(0, 0, w, h);
+    glClearColor(0, 0, 0, 0);
+    glClearDepth(1);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_DEPTH_TEST);
+    glShadeModel(GL_SMOOTH);
 
 
-	glDisable(GL_FOG);
-	glFogi(GL_FOG_MODE, GL_LINEAR);
-	glHint(GL_FOG_HINT, GL_NICEST);
-	GLfloat fogcolor[4] = { 0, 0, 0, 0 };
-	glFogfv(GL_FOG_COLOR, fogcolor);
+    glDisable(GL_FOG);
+    glFogi(GL_FOG_MODE, GL_LINEAR);
+    glHint(GL_FOG_HINT, GL_NICEST);
+    GLfloat fogcolor[4] = { 0, 0, 0, 0 };
+    glFogfv(GL_FOG_COLOR, fogcolor);
 
 
-	glEnable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_LINE_SMOOTH);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-	glCullFace(GL_FRONT);
-	glDisable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
 
 #ifdef __APPLE__
     if(sdl_backingstore_bug)
@@ -638,25 +638,25 @@ vec worldpos, camerapos, camdir, camright, camup;
 
 void findorientation(vec &o, float yaw, float pitch, vec &pos)
 {
-	vec dir;
-	vecfromyawpitch(yaw, pitch, 1, 0, dir);
-	if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-		pos = dir.mul(2*hdr.worldsize).add(o); //otherwise gui won't work when outside of map
+    vec dir;
+    vecfromyawpitch(yaw, pitch, 1, 0, dir);
+    if(raycubepos(o, dir, pos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
+        pos = dir.mul(2*hdr.worldsize).add(o); //otherwise gui won't work when outside of map
 }
 
 void transplayer()
 {
-	glLoadIdentity();
+    glLoadIdentity();
 
-	glRotatef(camera1->roll, 0, 0, 1);
-	glRotatef(camera1->pitch, -1, 0, 0);
-	glRotatef(camera1->yaw, 0, 1, 0);
+    glRotatef(camera1->roll, 0, 0, 1);
+    glRotatef(camera1->pitch, -1, 0, 0);
+    glRotatef(camera1->yaw, 0, 1, 0);
 
-	// move from RH to Z-up LH quake style worldspace
-	glRotatef(-90, 1, 0, 0);
-	glScalef(1, -1, 1);
+    // move from RH to Z-up LH quake style worldspace
+    glRotatef(-90, 1, 0, 0);
+    glScalef(1, -1, 1);
 
-	glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
+    glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
 }
 
 float curfov = 100, fovy, aspect;
@@ -684,9 +684,9 @@ void vectocursor(vec &v, float &x, float &y, float &z)
     vec4 screenpos;
     mvpmatrix.transform(v, screenpos);
 
-	x = screenpos.x/screenpos.w*0.5f + 0.5f;
-	y = 0.5f - screenpos.y/screenpos.w*0.5f;
-	z = screenpos.z/screenpos.w*0.5f + 0.5f;
+    x = screenpos.x/screenpos.w*0.5f + 0.5f;
+    y = 0.5f - screenpos.y/screenpos.w*0.5f;
+    z = screenpos.z/screenpos.w*0.5f + 0.5f;
 }
 
 FVAR(0, nearplane, 1e-3f, 0.54f, 1e3f);
@@ -733,9 +733,9 @@ void setclipmatrix()
 
 void undoclipmatrix()
 {
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 FVAR(0, polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
@@ -868,7 +868,7 @@ void popscissor()
 
 void setfogplane(const plane &p, bool flush)
 {
-	static float fogselect[4] = {0, 0, 0, 0};
+    static float fogselect[4] = {0, 0, 0, 0};
     if(flush)
     {
         flushenvparamfv("fogselect", SHPARAM_VERTEX, 8, fogselect);
@@ -975,7 +975,7 @@ FVAR(IDF_PERSIST, motionblurscale, 0, 1, 1);
 
 void addmotionblur()
 {
-	extern int viewtype;
+    extern int viewtype;
     if(!motionblur || viewtype || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
 
     if(!motiontex || motionw != screen->w || motionh != screen->h)
@@ -1171,14 +1171,14 @@ VAR(IDF_PERSIST, reflectmms, 0, 1, 1);
 
 void drawreflection(float z, bool refract, bool clear)
 {
-	float fogc[4] = { watercol[0]/255.0f, watercol[1]/255.0f, watercol[2]/255.0f, 1.0f };
+    float fogc[4] = { watercol[0]/255.0f, watercol[1]/255.0f, watercol[2]/255.0f, 1.0f };
 
-	if(refract && !waterfog)
-	{
-		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		return;
-	}
+    if(refract && !waterfog)
+    {
+        glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        return;
+    }
 
     reflectz = z < 0 ? 1e16f : z;
     reflecting = !refract;
@@ -1209,11 +1209,11 @@ void drawreflection(float z, bool refract, bool clear)
         }
     }
 
-	if(clear)
-	{
-		glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
+    if(clear)
+    {
+        glClearColor(fogc[0], fogc[1], fogc[2], 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     if(reflecting)
     {
@@ -1283,11 +1283,11 @@ void drawreflection(float z, bool refract, bool clear)
 
     if(renderpath==R_FIXEDFUNCTION && fogging) glEnable(GL_FOG);
     else
-	{
-		glFogf(GL_FOG_START, oldfogstart);
-		glFogf(GL_FOG_END, oldfogend);
-		glFogfv(GL_FOG_COLOR, oldfogcolor);
-	}
+    {
+        glFogf(GL_FOG_START, oldfogstart);
+        glFogf(GL_FOG_END, oldfogend);
+        glFogfv(GL_FOG_COLOR, oldfogcolor);
+    }
 
     reflectz = 1e16f;
     refracting = 0;
@@ -1298,21 +1298,21 @@ bool envmapping = false;
 
 void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool flipx, bool flipy, bool swapxy)
 {
-	float fovx = 90.f, fovy = 90.f, aspect = 1.f;
+    float fovx = 90.f, fovy = 90.f, aspect = 1.f;
     envmapping = true;
 
-	physent *oldcamera = camera1;
-	static physent cmcamera;
-	cmcamera = *camera1;
-	cmcamera.reset();
-	cmcamera.type = ENT_CAMERA;
-	cmcamera.o = o;
-	cmcamera.yaw = yaw;
-	cmcamera.pitch = pitch;
-	cmcamera.roll = 0;
-	camera1 = &cmcamera;
+    physent *oldcamera = camera1;
+    static physent cmcamera;
+    cmcamera = *camera1;
+    cmcamera.reset();
+    cmcamera.type = ENT_CAMERA;
+    cmcamera.o = o;
+    cmcamera.yaw = yaw;
+    cmcamera.pitch = pitch;
+    cmcamera.roll = 0;
+    camera1 = &cmcamera;
 
-	defaultshader->set();
+    defaultshader->set();
 
     updatedynlights();
 
@@ -1328,7 +1328,7 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
     }
     else
     {
-    	fogmat = MAT_AIR;
+        fogmat = MAT_AIR;
     }
     setfog(fogmat, fogblend, abovemat);
     if(level > 1 && fogmat != MAT_AIR)
@@ -1338,17 +1338,17 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
         aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
     }
 
-	int farplane = hdr.worldsize*2;
+    int farplane = hdr.worldsize*2;
 
     project(fovy, aspect, farplane, flipx, flipy, swapxy);
-	transplayer();
+    transplayer();
 
     glEnable(GL_FOG);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_TEXTURE_2D);
 
-	xtravertsva = xtraverts = glde = gbatches = 0;
+    xtravertsva = xtraverts = glde = gbatches = 0;
 
     if(level > 1 && !hasFBO)
     {
@@ -1361,45 +1361,45 @@ void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool
         else dopostfx = true;
     }
 
-	visiblecubes(fovx, fovy);
+    visiblecubes(fovx, fovy);
 
-	if(level > 1 && shadowmap && !hasFBO) rendershadowmap();
+    if(level > 1 && shadowmap && !hasFBO) rendershadowmap();
 
-	glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
-	if(limitsky()) drawskybox(farplane, true);
-	rendergeom(level > 1 ? causticspass : 0);
-	if(level > 1) queryreflections();
+    if(limitsky()) drawskybox(farplane, true);
+    rendergeom(level > 1 ? causticspass : 0);
+    if(level > 1) queryreflections();
     if(level) generategrass();
     if(!limitsky()) drawskybox(farplane, false);
     if(level > 1) renderdecals();
 
-	rendermapmodels();
+    rendermapmodels();
 
-	if(level) rendergame();
-	if(level > 1)
-	{
-		if(hasFBO)
-		{
-			drawglaretex();
-			drawdepthfxtex();
-			drawreflections();
-		}
-		renderwater(); // water screws up for some reason
-	}
-	rendergrass();
-	rendermaterials();
-	renderparticles();
+    if(level) rendergame();
+    if(level > 1)
+    {
+        if(hasFBO)
+        {
+            drawglaretex();
+            drawdepthfxtex();
+            drawreflections();
+        }
+        renderwater(); // water screws up for some reason
+    }
+    rendergrass();
+    rendermaterials();
+    renderparticles();
 
-	glDisable(GL_FOG);
-	glDisable(GL_CULL_FACE);
+    glDisable(GL_FOG);
+    glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-	if(level > 1) addglare();
+    if(level > 1) addglare();
 
-	glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
 
-	camera1 = oldcamera;
+    camera1 = oldcamera;
     envmapping = false;
 }
 
@@ -1420,19 +1420,19 @@ void getscreenres(int &w, int &h)
 
 void gettextres(int &w, int &h)
 {
-	if(w < scr_minw || h < scr_minh)
-	{
-		if(scr_minw > w*scr_minh/h)
-		{
-			h = h*scr_minw/w;
-			w = scr_minw;
-		}
-		else
-		{
-			w = w*scr_minh/h;
-			h = scr_minh;
-		}
-	}
+    if(w < scr_minw || h < scr_minh)
+    {
+        if(scr_minw > w*scr_minh/h)
+        {
+            h = h*scr_minw/w;
+            w = scr_minw;
+        }
+        else
+        {
+            w = w*scr_minh/h;
+            h = scr_minh;
+        }
+    }
 }
 
 void drawslice(float start, float length, float x, float y, float size)
@@ -1524,7 +1524,7 @@ struct framebuffercopy
     {
         if(!tex) return;
         glDeleteTextures(1, &tex);
-		tex = 0;
+        tex = 0;
     }
 
     void setup()
@@ -1559,19 +1559,19 @@ struct framebuffercopy
         glCopyTexSubImage2D(target, 0, 0, 0, 0, 0, screen->w, screen->h);
     }
 
-	void draw(float sx, float sy, float sw, float sh)
-	{
-		float tx = 0, ty = 0, tw = float(screen->w)/w, th = float(screen->h)/h;
-		if(target == GL_TEXTURE_RECTANGLE_ARB)
-		{
-			glDisable(GL_TEXTURE_2D);
-			glEnable(GL_TEXTURE_RECTANGLE_ARB);
-			rectshader->set();
-			tx *= w;
-			ty *= h;
-			tw *= w;
-			th *= h;
-		}
+    void draw(float sx, float sy, float sw, float sh)
+    {
+        float tx = 0, ty = 0, tw = float(screen->w)/w, th = float(screen->h)/h;
+        if(target == GL_TEXTURE_RECTANGLE_ARB)
+        {
+            glDisable(GL_TEXTURE_2D);
+            glEnable(GL_TEXTURE_RECTANGLE_ARB);
+            rectshader->set();
+            tx *= w;
+            ty *= h;
+            tw *= w;
+            th *= h;
+        }
         glBindTexture(target, tex);
         glBegin(GL_QUADS);
         glTexCoord2f(tx,    ty);    glVertex2f(sx,    sy);
@@ -1579,13 +1579,13 @@ struct framebuffercopy
         glTexCoord2f(tx+tw, ty+th); glVertex2f(sx+sw, sy+sh);
         glTexCoord2f(tx,    ty+th); glVertex2f(sx,    sy+sh);
         glEnd();
-		if(target == GL_TEXTURE_RECTANGLE_ARB)
-		{
-			glEnable(GL_TEXTURE_2D);
+        if(target == GL_TEXTURE_RECTANGLE_ARB)
+        {
+            glEnable(GL_TEXTURE_2D);
             glDisable(GL_TEXTURE_RECTANGLE_ARB);
-			defaultshader->set();
-		}
-	}
+            defaultshader->set();
+        }
+    }
 };
 
 #define DTR 0.0174532925
@@ -1607,9 +1607,9 @@ GLenum colormask[3] = { GL_TRUE, GL_TRUE, GL_TRUE };
 
 void setcolormask(bool r, bool g, bool b)
 {
-	colormask[0] = r ? GL_TRUE : GL_FALSE;
-	colormask[1] = g ? GL_TRUE : GL_FALSE;
-	colormask[2] = b ? GL_TRUE : GL_FALSE;
+    colormask[0] = r ? GL_TRUE : GL_FALSE;
+    colormask[1] = g ? GL_TRUE : GL_FALSE;
+    colormask[2] = b ? GL_TRUE : GL_FALSE;
 }
 
 bool needsview(int v, int targtype)
@@ -1678,15 +1678,15 @@ void drawnoview()
     glLoadIdentity();
     glOrtho(0, w, h, 0, -1, 1);
 
-	glClearColor(0.f, 0.f, 0.f, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.f, 0.f, 0.f, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
+    glEnable(GL_TEXTURE_2D);
+    defaultshader->set();
 
-	hud::update(screen->w, screen->h);
-	hud::drawhud(true);
-	hud::drawlast();
+    hud::update(screen->w, screen->h);
+    hud::drawhud(true);
+    hud::drawlast();
 
     glDisable(GL_TEXTURE_2D);
 }
@@ -1695,15 +1695,15 @@ void drawview(int targtype)
 {
     curview = targtype;
 
-	defaultshader->set();
-	updatedynlights();
+    defaultshader->set();
+    updatedynlights();
 
-	setfog(fogmat, fogblend, abovemat);
-  	viewproject();
-	transplayer();
-	if(targtype == VP_LEFT || targtype == VP_RIGHT)
-	{
-		if(viewtype >= VW_STEREO)
+    setfog(fogmat, fogblend, abovemat);
+    viewproject();
+    transplayer();
+    if(targtype == VP_LEFT || targtype == VP_RIGHT)
+    {
+        if(viewtype >= VW_STEREO)
         {
             switch(viewtype)
             {
@@ -1714,144 +1714,144 @@ void drawview(int targtype)
             }
             glColorMask(COLORMASK, GL_TRUE);
         }
-	}
+    }
 
-	readmatrices();
+    readmatrices();
 
     glEnable(GL_FOG);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
 
-	xtravertsva = xtraverts = glde = gbatches = 0;
+    xtravertsva = xtraverts = glde = gbatches = 0;
 
-	if(!hasFBO)
-	{
-		if(dopostfx)
-		{
-			drawglaretex();
-			drawdepthfxtex();
-			drawreflections();
-		}
-		else dopostfx = true;
-	}
+    if(!hasFBO)
+    {
+        if(dopostfx)
+        {
+            drawglaretex();
+            drawdepthfxtex();
+            drawreflections();
+        }
+        else dopostfx = true;
+    }
 
-	visiblecubes(curfov, fovy);
-	if(shadowmap && !hasFBO) rendershadowmap();
+    visiblecubes(curfov, fovy);
+    if(shadowmap && !hasFBO) rendershadowmap();
 
-	glClearColor(0, 0, 0, 0);
-	glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode && clearview(viewtype, targtype) ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode && clearview(viewtype, targtype) ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
 
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	if(limitsky()) drawskybox(farplane, true);
+    if(limitsky()) drawskybox(farplane, true);
 
-	rendergeom(causticspass);
-	extern int outline, blankgeom;
-	if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
+    rendergeom(causticspass);
+    extern int outline, blankgeom;
+    if(!wireframe && editmode && (outline || (fullbright && blankgeom))) renderoutline();
 
-	queryreflections();
+    queryreflections();
     generategrass();
 
-	if(!limitsky()) drawskybox(farplane, false);
+    if(!limitsky()) drawskybox(farplane, false);
 
     renderdecals(true);
-	renderavatar(true);
+    renderavatar(true);
 
-	rendermapmodels();
-	rendergame();
+    rendermapmodels();
+    rendergame();
 
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	if(hasFBO)
-	{
-		drawglaretex();
-		drawdepthfxtex();
-		drawreflections();
-	}
+    if(hasFBO)
+    {
+        drawglaretex();
+        drawdepthfxtex();
+        drawreflections();
+    }
 
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	renderwater();
+    renderwater();
     rendergrass();
 
-	rendermaterials();
-	renderparticles(true);
+    rendermaterials();
+    renderparticles(true);
 
     if(game::thirdpersonview()) renderavatar(false);
     else
     {
         viewproject(0.5f);
-	    renderavatar(false);
+        renderavatar(false);
         viewproject();
     }
 
     if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-	glDisable(GL_FOG);
-	glDisable(GL_CULL_FACE);
+    glDisable(GL_FOG);
+    glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
     addmotionblur();
-	addglare();
+    addglare();
     if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
-	renderpostfx();
+    renderpostfx();
 
-	glDisable(GL_TEXTURE_2D);
-	notextureshader->set();
-	if(editmode)
-	{
+    glDisable(GL_TEXTURE_2D);
+    notextureshader->set();
+    if(editmode)
+    {
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
 
         renderblendbrush();
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		cursorupdate();
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        cursorupdate();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glDepthMask(GL_TRUE);
         glDisable(GL_DEPTH_TEST);
-	}
+    }
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	int w = screen->w, h = screen->h;
-	gettextres(w, h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, w, h, 0, -1, 1);
-	glColor3f(1, 1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    int w = screen->w, h = screen->h;
+    gettextres(w, h);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, w, h, 0, -1, 1);
+    glColor3f(1, 1, 1);
 
-	extern int debugsm;
-	if(debugsm)
-	{
-		extern void viewshadowmap();
-		viewshadowmap();
-	}
+    extern int debugsm;
+    if(debugsm)
+    {
+        extern void viewshadowmap();
+        viewshadowmap();
+    }
 
-	extern int debugglare;
-	if(debugglare)
-	{
-		extern void viewglaretex();
-		viewglaretex();
-	}
+    extern int debugglare;
+    if(debugglare)
+    {
+        extern void viewglaretex();
+        viewglaretex();
+    }
 
-	extern int debugdepthfx;
-	if(debugdepthfx)
-	{
-		extern void viewdepthfxtex();
-		viewdepthfxtex();
-	}
+    extern int debugdepthfx;
+    if(debugdepthfx)
+    {
+        extern void viewdepthfxtex();
+        viewdepthfxtex();
+    }
 
-	glEnable(GL_TEXTURE_2D);
-	defaultshader->set();
-	hud::drawhud();
-	render_texture_panel(w, h);
-	hud::drawlast();
-	glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
+    defaultshader->set();
+    hud::drawhud();
+    render_texture_panel(w, h);
+    hud::drawlast();
+    glDisable(GL_TEXTURE_2D);
 
-	renderedgame = false;
+    renderedgame = false;
 
     if(targtype == VP_LEFT || targtype == VP_RIGHT)
     {
@@ -1867,101 +1867,101 @@ void gl_drawframe(int w, int h)
 {
     if(client::ready())
     {
-		fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
-		causticspass = 0.f;
-		if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
-		{
-			float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
-			if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
-			else fogmat = abovemat;
-			if(caustics && fogmat == MAT_WATER && camera1->o.z < z)
-				causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+        fogmat = lookupmaterial(camera1->o)&MATF_VOLUME;
+        causticspass = 0.f;
+        if(fogmat == MAT_WATER || fogmat == MAT_LAVA)
+        {
+            float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
+            if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
+            else fogmat = abovemat;
+            if(caustics && fogmat == MAT_WATER && camera1->o.z < z)
+                causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
 
-			float blend = abovemat == MAT_AIR ? fogblend : 1.0f;
-			fovy += blend*sinf(lastmillis/1000.0)*2.0f;
-			aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
-		}
-		else fogmat = MAT_AIR;
+            float blend = abovemat == MAT_AIR ? fogblend : 1.0f;
+            fovy += blend*sinf(lastmillis/1000.0)*2.0f;
+            aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
+        }
+        else fogmat = MAT_AIR;
 
-		farplane = hdr.worldsize*2;
-		project(fovy, aspect, farplane);
-		transplayer();
-		readmatrices();
-		game::project(w, h);
+        farplane = hdr.worldsize*2;
+        project(fovy, aspect, farplane);
+        transplayer();
+        readmatrices();
+        game::project(w, h);
 
-		int copies = 0, oldcurtime = curtime;
-		loopi(VP_MAX) if(needsview(viewtype, i))
-		{
-			drawview(i);
-			if(copyview(viewtype, i))
-			{
-				views[i].copy();
-				copies++;
-			}
-			curtime = 0;
-		}
-		if(needsview(viewtype, VP_CAMERA)) drawview(VP_CAMERA);
-		curtime = oldcurtime;
+        int copies = 0, oldcurtime = curtime;
+        loopi(VP_MAX) if(needsview(viewtype, i))
+        {
+            drawview(i);
+            if(copyview(viewtype, i))
+            {
+                views[i].copy();
+                copies++;
+            }
+            curtime = 0;
+        }
+        if(needsview(viewtype, VP_CAMERA)) drawview(VP_CAMERA);
+        curtime = oldcurtime;
 
-		if(!copies) return;
+        if(!copies) return;
 
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, 1, 0, 1, -1, 1);
-		glDisable(GL_BLEND);
-		glEnable(GL_TEXTURE_2D);
-		defaultshader->set();
-		glColor3f(1.f, 1.f, 1.f);
-		switch(viewtype)
-		{
-			case VW_MAGIC:
-			{
-				views[VP_LEFT].draw(0, 0, 0.5f, 1);
-				views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1);
-				break;
-			}
-			case VW_STEREO_BLEND:
-			case VW_STEREO_BLEND_REDCYAN:
-			{
-				glEnable(GL_BLEND);
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
-				glColor4f(1.f, 1.f, 1.f, stereoblend); views[VP_RIGHT].draw(0, 0, 1, 1);
-				if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-				glDisable(GL_BLEND);
-				break;
-			}
-			case VW_STEREO_AVG:
-			{
-				glEnable(GL_BLEND);
-				if(hasBC)
-				{
-					glBlendFunc(GL_ONE, GL_CONSTANT_COLOR_EXT);
-					glBlendColor_(0.f, 0.5f, 1.f, 1.f);
-				}
-				else
-				{
-					glDisable(GL_TEXTURE_2D);
-					glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-					glColor3f(0.f, 0.5f, 1.f);
-					glBegin(GL_QUADS);
-					glVertex2f(0, 0);
-					glVertex2f(1, 0);
-					glVertex2f(1, 1);
-					glVertex2f(0, 1);
-					glEnd();
-					glEnable(GL_TEXTURE_2D);
-					glBlendFunc(GL_ONE, GL_ONE);
-				}
-				glColor3f(1.f, 0.5f, 0.f);
-				views[VP_LEFT].draw(0, 0, 1, 1);
-				glDisable(GL_BLEND);
-				break;
-			}
-		}
-		glDisable(GL_TEXTURE_2D);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, -1, 1);
+        glDisable(GL_BLEND);
+        glEnable(GL_TEXTURE_2D);
+        defaultshader->set();
+        glColor3f(1.f, 1.f, 1.f);
+        switch(viewtype)
+        {
+            case VW_MAGIC:
+            {
+                views[VP_LEFT].draw(0, 0, 0.5f, 1);
+                views[VP_RIGHT].draw(0.5f, 0, 0.5f, 1);
+                break;
+            }
+            case VW_STEREO_BLEND:
+            case VW_STEREO_BLEND_REDCYAN:
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_FALSE, GL_TRUE, GL_TRUE);
+                glColor4f(1.f, 1.f, 1.f, stereoblend); views[VP_RIGHT].draw(0, 0, 1, 1);
+                if(viewtype == VW_STEREO_BLEND) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                glDisable(GL_BLEND);
+                break;
+            }
+            case VW_STEREO_AVG:
+            {
+                glEnable(GL_BLEND);
+                if(hasBC)
+                {
+                    glBlendFunc(GL_ONE, GL_CONSTANT_COLOR_EXT);
+                    glBlendColor_(0.f, 0.5f, 1.f, 1.f);
+                }
+                else
+                {
+                    glDisable(GL_TEXTURE_2D);
+                    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+                    glColor3f(0.f, 0.5f, 1.f);
+                    glBegin(GL_QUADS);
+                    glVertex2f(0, 0);
+                    glVertex2f(1, 0);
+                    glVertex2f(1, 1);
+                    glVertex2f(0, 1);
+                    glEnd();
+                    glEnable(GL_TEXTURE_2D);
+                    glBlendFunc(GL_ONE, GL_ONE);
+                }
+                glColor3f(1.f, 0.5f, 0.f);
+                views[VP_LEFT].draw(0, 0, 1, 1);
+                glDisable(GL_BLEND);
+                break;
+            }
+        }
+        glDisable(GL_TEXTURE_2D);
     }
     else drawnoview();
 }

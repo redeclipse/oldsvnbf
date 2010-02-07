@@ -9,59 +9,59 @@ VAR(0, showselgrid, 0, 0, 1);
 
 void boxs(int orient, vec o, const vec &s)
 {
-	int	d = dimension(orient),
-		  dc= dimcoord(orient);
+    int d = dimension(orient),
+          dc= dimcoord(orient);
 
-	float f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
-	o[D[d]] += float(dc) * s[D[d]] + f,
+    float f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
+    o[D[d]] += float(dc) * s[D[d]] + f,
 
-	glBegin(GL_POLYGON);
+    glBegin(GL_POLYGON);
 
-	glVertex3fv(o.v); o[R[d]] += s[R[d]];
-	glVertex3fv(o.v); o[C[d]] += s[C[d]];
-	glVertex3fv(o.v); o[R[d]] -= s[R[d]];
-	glVertex3fv(o.v);
+    glVertex3fv(o.v); o[R[d]] += s[R[d]];
+    glVertex3fv(o.v); o[C[d]] += s[C[d]];
+    glVertex3fv(o.v); o[R[d]] -= s[R[d]];
+    glVertex3fv(o.v);
 
-	glEnd();
-	xtraverts += 4;
+    glEnd();
+    xtraverts += 4;
 }
 
 void boxs3D(const vec &o, vec s, int g)
 {
-	s.mul(g);
-	loopi(6)
-		boxs(i, o, s);
+    s.mul(g);
+    loopi(6)
+        boxs(i, o, s);
 }
 
 void boxsgrid(int orient, vec o, vec s, int g)
 {
-	int	d = dimension(orient),
-		  dc= dimcoord(orient);
-	float ox = o[R[d]],
-		  oy = o[C[d]],
-		  xs = s[R[d]],
-		  ys = s[C[d]],
-		  f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
+    int d = dimension(orient),
+          dc= dimcoord(orient);
+    float ox = o[R[d]],
+          oy = o[C[d]],
+          xs = s[R[d]],
+          ys = s[C[d]],
+          f = !outline && !(fullbright && blankgeom) ? 0 : (dc>0 ? 0.2f : -0.2f);
 
-	o[D[d]] += dc * s[D[d]]*g + f;
+    o[D[d]] += dc * s[D[d]]*g + f;
 
-	glBegin(GL_LINES);
-	loop(x, xs) {
-		o[R[d]] += g;
-		glVertex3fv(o.v);
-		o[C[d]] += ys*g;
-		glVertex3fv(o.v);
-		o[C[d]] = oy;
-	}
-	loop(y, ys) {
-		o[C[d]] += g;
-		o[R[d]] = ox;
-		glVertex3fv(o.v);
-		o[R[d]] += xs*g;
-		glVertex3fv(o.v);
-	}
-	glEnd();
-	xtraverts += 2*int(xs+ys);
+    glBegin(GL_LINES);
+    loop(x, xs) {
+        o[R[d]] += g;
+        glVertex3fv(o.v);
+        o[C[d]] += ys*g;
+        glVertex3fv(o.v);
+        o[C[d]] = oy;
+    }
+    loop(y, ys) {
+        o[C[d]] += g;
+        o[R[d]] = ox;
+        glVertex3fv(o.v);
+        o[R[d]] += xs*g;
+        glVertex3fv(o.v);
+    }
+    glEnd();
+    xtraverts += 2*int(xs+ys);
 }
 
 selinfo sel, lastsel;
@@ -80,18 +80,18 @@ int horient = 0;
 extern int entmoving;
 
 VARF(0, dragging, 0, 0, 1,
-	if(!dragging || cor[0]<0) return;
-	lastcur = cur;
-	lastcor = cor;
-	sel.grid = gridsize;
-	sel.orient = orient;
+    if(!dragging || cor[0]<0) return;
+    lastcur = cur;
+    lastcor = cor;
+    sel.grid = gridsize;
+    sel.orient = orient;
 );
 
 VARF(0, moving, 0, 0, 1,
-	if(!moving) return;
-	vec v(cur.v); v.add(1);
-	moving = pointinsel(sel, v);
-	if(moving) havesel = false; // tell cursorupdate to create handle
+    if(!moving) return;
+    vec v(cur.v); v.add(1);
+    moving = pointinsel(sel, v);
+    if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
 VARF(0, gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
@@ -99,7 +99,7 @@ VARF(0, gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
     if(dragging) return;
     gridsize = 1<<gridpower;
     if(gridsize>=hdr.worldsize) gridsize = hdr.worldsize/2;
-	cancelsel();
+    cancelsel();
 });
 
 VAR(0, passthroughsel, 0, 0, 1);
@@ -126,55 +126,55 @@ void cancelsel()
 
 void toggleedit()
 {
-	if(!client::allowedittoggle(editmode)) return;
-	editmode = !editmode;
-	editing = entediting = (editmode ? 1 : 0);
-	client::edittoggled(editmode);
-	cancelsel();
-	efocus = enthover = -1;
-	//keyrepeat(editmode);
+    if(!client::allowedittoggle(editmode)) return;
+    editmode = !editmode;
+    editing = entediting = (editmode ? 1 : 0);
+    client::edittoggled(editmode);
+    cancelsel();
+    efocus = enthover = -1;
+    //keyrepeat(editmode);
 }
 
 bool noedit(bool view)
 {
-	if(!editmode) { conoutf("\froperation only allowed in edit mode"); return true; }
-	if(view || haveselent()) return false;
-	float r = 1.0f;
-	vec o = sel.o.tovec(), s = sel.s.tovec();
-	s.mul(float(sel.grid) / 2.0f);
-	o.add(s);
-	r = float(max(s.x, max(s.y, s.z)));
-	bool viewable = (isvisiblesphere(r, o) != VFC_NOT_VISIBLE);
-	if(!viewable) conoutf("\frselection not in view");
-	return !viewable;
+    if(!editmode) { conoutf("\froperation only allowed in edit mode"); return true; }
+    if(view || haveselent()) return false;
+    float r = 1.0f;
+    vec o = sel.o.tovec(), s = sel.s.tovec();
+    s.mul(float(sel.grid) / 2.0f);
+    o.add(s);
+    r = float(max(s.x, max(s.y, s.z)));
+    bool viewable = (isvisiblesphere(r, o) != VFC_NOT_VISIBLE);
+    if(!viewable) conoutf("\frselection not in view");
+    return !viewable;
 }
 
 extern void createheightmap();
 
 void reorient()
 {
-	sel.cx = 0;
-	sel.cy = 0;
-	sel.cxs = sel.s[R[dimension(orient)]]*2;
-	sel.cys = sel.s[C[dimension(orient)]]*2;
-	sel.orient = orient;
+    sel.cx = 0;
+    sel.cy = 0;
+    sel.cxs = sel.s[R[dimension(orient)]]*2;
+    sel.cys = sel.s[C[dimension(orient)]]*2;
+    sel.orient = orient;
 }
 
 void selextend()
 {
-	if(noedit(true)) return;
-	loopi(3)
-	{
-		if(cur[i]<sel.o[i])
-		{
-			sel.s[i] += (sel.o[i]-cur[i])/sel.grid;
-			sel.o[i] = cur[i];
-		}
-		else if(cur[i]>=sel.o[i]+sel.s[i]*sel.grid)
-		{
-			sel.s[i] = (cur[i]-sel.o[i])/sel.grid+1;
-		}
-	}
+    if(noedit(true)) return;
+    loopi(3)
+    {
+        if(cur[i]<sel.o[i])
+        {
+            sel.s[i] += (sel.o[i]-cur[i])/sel.grid;
+            sel.o[i] = cur[i];
+        }
+        else if(cur[i]>=sel.o[i]+sel.s[i]*sel.grid)
+        {
+            sel.s[i] = (cur[i]-sel.o[i])/sel.grid+1;
+        }
+    }
 }
 
 COMMANDN(0, edittoggle, toggleedit, "");
@@ -195,9 +195,9 @@ cube &blockcube(int x, int y, int z, const block3 &b, int rgrid) // looks up a w
     return lookupcube(s.x, s.y, s.z, rgrid);
 }
 
-#define loopxy(b)		loop(y,(b).s[C[dimension((b).orient)]]) loop(x,(b).s[R[dimension((b).orient)]])
+#define loopxy(b)       loop(y,(b).s[C[dimension((b).orient)]]) loop(x,(b).s[R[dimension((b).orient)]])
 #define loopxyz(b, r, f) { loop(z,(b).s[D[dimension((b).orient)]]) loopxy((b)) { cube &c = blockcube(x,y,z,b,r); f; } }
-#define loopselxyz(f)	{ makeundo(); loopxyz(sel, sel.grid, f); changed(sel); }
+#define loopselxyz(f)   { makeundo(); loopxyz(sel, sel.grid, f); changed(sel); }
 #define selcube(x, y, z) blockcube(x, y, z, sel, sel.grid)
 
 ////////////// cursor ///////////////
@@ -208,62 +208,62 @@ ICOMMAND(0, havesel, "", (), intret(havesel ? selchildcount : 0));
 
 void countselchild(cube *c, const ivec &cor, int size)
 {
-	ivec ss(sel.s);
-	ss.mul(sel.grid);
-	loopoctabox(cor, size, sel.o, ss)
-	{
-		ivec o(i, cor.x, cor.y, cor.z, size);
-		if(c[i].children) countselchild(c[i].children, o, size/2);
-		else selchildcount++;
-	}
+    ivec ss(sel.s);
+    ss.mul(sel.grid);
+    loopoctabox(cor, size, sel.o, ss)
+    {
+        ivec o(i, cor.x, cor.y, cor.z, size);
+        if(c[i].children) countselchild(c[i].children, o, size/2);
+        else selchildcount++;
+    }
 }
 
 void normalizelookupcube(int x, int y, int z)
 {
-	if(lusize>gridsize)
-	{
-		lu.x += (x-lu.x)/gridsize*gridsize;
-		lu.y += (y-lu.y)/gridsize*gridsize;
-		lu.z += (z-lu.z)/gridsize*gridsize;
-	}
-	else if(gridsize>lusize)
-	{
-		lu.x &= ~(gridsize-1);
-		lu.y &= ~(gridsize-1);
-		lu.z &= ~(gridsize-1);
-	}
-	lusize = gridsize;
+    if(lusize>gridsize)
+    {
+        lu.x += (x-lu.x)/gridsize*gridsize;
+        lu.y += (y-lu.y)/gridsize*gridsize;
+        lu.z += (z-lu.z)/gridsize*gridsize;
+    }
+    else if(gridsize>lusize)
+    {
+        lu.x &= ~(gridsize-1);
+        lu.y &= ~(gridsize-1);
+        lu.z &= ~(gridsize-1);
+    }
+    lusize = gridsize;
 }
 
 void updateselection()
 {
-	sel.o.x = min(lastcur.x, cur.x);
-	sel.o.y = min(lastcur.y, cur.y);
-	sel.o.z = min(lastcur.z, cur.z);
-	sel.s.x = abs(lastcur.x-cur.x)/sel.grid+1;
-	sel.s.y = abs(lastcur.y-cur.y)/sel.grid+1;
-	sel.s.z = abs(lastcur.z-cur.z)/sel.grid+1;
+    sel.o.x = min(lastcur.x, cur.x);
+    sel.o.y = min(lastcur.y, cur.y);
+    sel.o.z = min(lastcur.z, cur.z);
+    sel.s.x = abs(lastcur.x-cur.x)/sel.grid+1;
+    sel.s.y = abs(lastcur.y-cur.y)/sel.grid+1;
+    sel.s.z = abs(lastcur.z-cur.z)/sel.grid+1;
 }
 
 void editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, vec &dest, bool first)
 {
-	plane pl(d, off);
-	float dist = 0.0f;
+    plane pl(d, off);
+    float dist = 0.0f;
 
-	physent *player = (physent *)game::focusedent(true);
-	if(!player) player = camera1;
-	if(pl.rayintersect(player->o, ray, dist))
-	{
-		dest = ray;
-		dest.mul(dist);
-		dest.add(player->o);
-		if(first)
-		{
-			handle = dest;
-			handle.sub(o);
-		}
-		dest.sub(handle);
-	}
+    physent *player = (physent *)game::focusedent(true);
+    if(!player) player = camera1;
+    if(pl.rayintersect(player->o, ray, dist))
+    {
+        dest = ray;
+        dest.mul(dist);
+        dest.add(player->o);
+        if(first)
+        {
+            handle = dest;
+            handle.sub(o);
+        }
+        dest.sub(handle);
+    }
 }
 
 inline bool isheightmap(int orient, int d, bool empty, cube *c);
@@ -277,87 +277,87 @@ VAR(0, passthroughcube, 0, 1, 1);
 
 void cursorupdate()
 {
-	if(sel.grid == 0) sel.grid = gridsize;
+    if(sel.grid == 0) sel.grid = gridsize;
 
-	vec target(worldpos);
-	if(!insideworld(target)) loopi(3)
+    vec target(worldpos);
+    if(!insideworld(target)) loopi(3)
         target[i] = max(min(target[i], float(hdr.worldsize)), 0.0f);
-	vec ray(target);
-	physent *player = (physent *)game::focusedent(true);
-	if(!player) player = camera1;
-	ray.sub(player->o).normalize();
-	int d	= dimension(sel.orient),
-		od  = dimension(orient),
-		odc = dimcoord(orient);
+    vec ray(target);
+    physent *player = (physent *)game::focusedent(true);
+    if(!player) player = camera1;
+    ray.sub(player->o).normalize();
+    int d   = dimension(sel.orient),
+        od  = dimension(orient),
+        odc = dimcoord(orient);
 
     bool hidecursor = hud::hasinput(), hovering = false;
     hmapsel = false;
 
-	if(moving)
-	{
-		ivec e;
-		static vec v, handle;
-		editmoveplane(sel.o.tovec(), ray, od, sel.o[D[od]]+odc*sel.grid*sel.s[D[od]], handle, v, !havesel);
-		if(!havesel)
-		{
-			v.add(handle);
-			(e = handle).mask(~(sel.grid-1));
-			v.sub(handle = e.tovec());
-			havesel = true;
-		}
-		(e = v).mask(~(sel.grid-1));
-		sel.o[R[od]] = e[R[od]];
-		sel.o[C[od]] = e[C[od]];
-	}
-	else if(entmoving)
-	{
-		entdrag(ray);
-	}
-	else
-	{
-		vec v;
-		ivec w;
-		float sdist = 0, wdist = 0, t;
-		int entorient = 0, ent = -1;
+    if(moving)
+    {
+        ivec e;
+        static vec v, handle;
+        editmoveplane(sel.o.tovec(), ray, od, sel.o[D[od]]+odc*sel.grid*sel.s[D[od]], handle, v, !havesel);
+        if(!havesel)
+        {
+            v.add(handle);
+            (e = handle).mask(~(sel.grid-1));
+            v.sub(handle = e.tovec());
+            havesel = true;
+        }
+        (e = v).mask(~(sel.grid-1));
+        sel.o[R[od]] = e[R[od]];
+        sel.o[C[od]] = e[C[od]];
+    }
+    else if(entmoving)
+    {
+        entdrag(ray);
+    }
+    else
+    {
+        vec v;
+        ivec w;
+        float sdist = 0, wdist = 0, t;
+        int entorient = 0, ent = -1;
 
-		wdist = rayent(player->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)	// select cubes first
-											| (!dragging && entediting ? RAY_ENTS : 0)
-											| RAY_SKIPFIRST
-											| (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
+        wdist = rayent(player->o, ray, v, 0, (editmode && showmat ? RAY_EDITMAT : 0)    // select cubes first
+                                            | (!dragging && entediting ? RAY_ENTS : 0)
+                                            | RAY_SKIPFIRST
+                                            | (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
 
         if((havesel || dragging) && !passthroughsel && !hmapedit)     // now try selecting the selection
-			if(rayrectintersect(sel.o.tovec(), vec(sel.s.tovec()).mul(sel.grid), player->o, ray, sdist, orient))
-			{	// and choose the nearest of the two
-				if(sdist < wdist)
-				{
-					wdist = sdist;
-					ent	= -1;
-				}
-			}
+            if(rayrectintersect(sel.o.tovec(), vec(sel.s.tovec()).mul(sel.grid), player->o, ray, sdist, orient))
+            {   // and choose the nearest of the two
+                if(sdist < wdist)
+                {
+                    wdist = sdist;
+                    ent = -1;
+                }
+            }
 
         if((hovering = hoveringonent(hidecursor ? -1 : ent, entorient)))
         {
-			if(!havesel)
-			{
-				selchildcount = 0;
-				sel.s = ivec(0, 0, 0);
-			}
-		}
-		else
-		{
-			v = ray;
-			v.mul(wdist+0.1f);
-			v.add(player->o);
-			w = v;
+            if(!havesel)
+            {
+                selchildcount = 0;
+                sel.s = ivec(0, 0, 0);
+            }
+        }
+        else
+        {
+            v = ray;
+            v.mul(wdist+0.1f);
+            v.add(player->o);
+            w = v;
             cube *c = &lookupcube(w.x, w.y, w.z);
             if(gridlookup && !dragging && !moving && !havesel && hmapedit!=1) gridsize = lusize;
-			int mag = gridsize && lusize ? lusize / gridsize : 0;
-			normalizelookupcube(w.x, w.y, w.z);
-			if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient
-			cur = lu;
+            int mag = gridsize && lusize ? lusize / gridsize : 0;
+            normalizelookupcube(w.x, w.y, w.z);
+            if(sdist == 0 || sdist > wdist) rayrectintersect(lu.tovec(), vec(gridsize), player->o, ray, t=0, orient); // just getting orient
+            cur = lu;
             cor = vec(v).mul(2).div(gridsize);
-			od = dimension(orient);
-			d = dimension(sel.orient);
+            od = dimension(orient);
+            d = dimension(sel.orient);
 
             if(hmapedit==1 && dimcoord(horient) == (ray[dimension(horient)]<0))
             {
@@ -366,118 +366,118 @@ void cursorupdate()
                     od = dimension(orient = horient);
             }
 
-			if(dragging)
-			{
-				updateselection();
-				sel.cx	= min(cor[R[d]], lastcor[R[d]]);
-				sel.cy	= min(cor[C[d]], lastcor[C[d]]);
-				sel.cxs  = max(cor[R[d]], lastcor[R[d]]);
-				sel.cys  = max(cor[C[d]], lastcor[C[d]]);
+            if(dragging)
+            {
+                updateselection();
+                sel.cx  = min(cor[R[d]], lastcor[R[d]]);
+                sel.cy  = min(cor[C[d]], lastcor[C[d]]);
+                sel.cxs  = max(cor[R[d]], lastcor[R[d]]);
+                sel.cys  = max(cor[C[d]], lastcor[C[d]]);
 
-				if(!selectcorners)
-				{
-					sel.cx &= ~1;
-					sel.cy &= ~1;
-					sel.cxs &= ~1;
-					sel.cys &= ~1;
-					sel.cxs -= sel.cx-2;
-					sel.cys -= sel.cy-2;
-				}
-				else
-				{
-					sel.cxs -= sel.cx-1;
-					sel.cys -= sel.cy-1;
-				}
+                if(!selectcorners)
+                {
+                    sel.cx &= ~1;
+                    sel.cy &= ~1;
+                    sel.cxs &= ~1;
+                    sel.cys &= ~1;
+                    sel.cxs -= sel.cx-2;
+                    sel.cys -= sel.cy-2;
+                }
+                else
+                {
+                    sel.cxs -= sel.cx-1;
+                    sel.cys -= sel.cy-1;
+                }
 
-				sel.cx  &= 1;
-				sel.cy  &= 1;
-				havesel = true;
-			}
+                sel.cx  &= 1;
+                sel.cy  &= 1;
+                havesel = true;
+            }
             else if(!havesel)
-			{
-				sel.o = lu;
-				sel.s.x = sel.s.y = sel.s.z = 1;
-				sel.cx = sel.cy = 0;
-				sel.cxs = sel.cys = 2;
-				sel.grid = gridsize;
-				sel.orient = orient;
-				d = od;
-			}
+            {
+                sel.o = lu;
+                sel.s.x = sel.s.y = sel.s.z = 1;
+                sel.cx = sel.cy = 0;
+                sel.cxs = sel.cys = 2;
+                sel.grid = gridsize;
+                sel.orient = orient;
+                d = od;
+            }
 
-			sel.corner = (cor[R[d]]-(lu[R[d]]*2)/gridsize)+(cor[C[d]]-(lu[C[d]]*2)/gridsize)*2;
-			selchildcount = 0;
-			countselchild(worldroot, ivec(0, 0, 0), hdr.worldsize/2);
-			if(mag>1 && selchildcount==1) selchildcount = -mag;
-		}
-	}
+            sel.corner = (cor[R[d]]-(lu[R[d]]*2)/gridsize)+(cor[C[d]]-(lu[C[d]]*2)/gridsize)*2;
+            selchildcount = 0;
+            countselchild(worldroot, ivec(0, 0, 0), hdr.worldsize/2);
+            if(mag>1 && selchildcount==1) selchildcount = -mag;
+        }
+    }
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
 
-	// cursors
+    // cursors
 
-	renderentselection(player->o, ray, entmoving!=0);
+    renderentselection(player->o, ray, entmoving!=0);
 
     enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
-	#define planargrid(q,r,s) \
-	{ \
-		for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
-		{ \
-			vec a; \
-			a = q; a.x = v; boxs3D(a, r, s); \
-			a = q; a.y = v; boxs3D(a, r, s); \
-			a = q; a.z = v; boxs3D(a, r, s); \
-		} \
-	}
+    #define planargrid(q,r,s) \
+    { \
+        for (float v = 0.f; v < (hdr.worldsize-s); v += s) \
+        { \
+            vec a; \
+            a = q; a.x = v; boxs3D(a, r, s); \
+            a = q; a.y = v; boxs3D(a, r, s); \
+            a = q; a.z = v; boxs3D(a, r, s); \
+        } \
+    }
 
     if(!moving && !hovering && !hidecursor)
-	{
-		bool ishmap = hmapedit==1 && hmapsel;
-		if(showcursorgrid)
-		{
-			glColor3ub(ishmap ? 0 : 30, 30, ishmap ? 0 : 30);
-			planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
-		}
+    {
+        bool ishmap = hmapedit==1 && hmapsel;
+        if(showcursorgrid)
+        {
+            glColor3ub(ishmap ? 0 : 30, 30, ishmap ? 0 : 30);
+            planargrid(lu.tovec(), vec(1, 1, 1), gridsize);
+        }
         glColor3ub(ishmap ? 0 : 255, 255, ishmap ? 0 : 255);
-		boxs(orient, lu.tovec(), vec(lusize));
-	}
+        boxs(orient, lu.tovec(), vec(lusize));
+    }
 
-	// selections
+    // selections
     if(havesel)
-	{
-		d = dimension(sel.orient);
-		glColor3ub(120, 120, 120);	// grid
-		boxsgrid(sel.orient, sel.o.tovec(), sel.s.tovec(), sel.grid);
-		glColor3ub(255, 0, 0);	// 0 reference
+    {
+        d = dimension(sel.orient);
+        glColor3ub(120, 120, 120);  // grid
+        boxsgrid(sel.orient, sel.o.tovec(), sel.s.tovec(), sel.grid);
+        glColor3ub(255, 0, 0);  // 0 reference
         boxs3D(sel.o.tovec().sub(0.5f*min(gridsize*0.25f, 2.0f)), vec(min(gridsize*0.25f, 2.0f)), 1);
-		glColor3ub(120, 120, 120);// 2D selection box
-		vec co(sel.o.v), cs(sel.s.v);
-		co[R[d]] += 0.5f*(sel.cx*gridsize);
-		co[C[d]] += 0.5f*(sel.cy*gridsize);
-		cs[R[d]]  = 0.5f*(sel.cxs*gridsize);
-		cs[C[d]]  = 0.5f*(sel.cys*gridsize);
-		cs[D[d]] *= gridsize;
-		boxs(sel.orient, co, cs);
+        glColor3ub(120, 120, 120);// 2D selection box
+        vec co(sel.o.v), cs(sel.s.v);
+        co[R[d]] += 0.5f*(sel.cx*gridsize);
+        co[C[d]] += 0.5f*(sel.cy*gridsize);
+        cs[R[d]]  = 0.5f*(sel.cxs*gridsize);
+        cs[C[d]]  = 0.5f*(sel.cys*gridsize);
+        cs[D[d]] *= gridsize;
+        boxs(sel.orient, co, cs);
         if(hmapedit==1) glColor3ub(0, 120, 0); // 3D selection box
         else glColor3ub(0, 0, 120);
-		boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
-		if(showselgrid)
-		{
-			glColor3ub(30, 30, 30);
-			planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
-		}
-	}
+        boxs3D(sel.o.tovec(), sel.s.tovec(), sel.grid);
+        if(showselgrid)
+        {
+            glColor3ub(30, 30, 30);
+            planargrid(sel.o.tovec(), sel.s.tovec(), sel.grid);
+        }
+    }
 
-	if(showpastegrid && localedit && localedit->copy)
-	{
-		glColor3ub(30, 0, 30);
-		boxs3D(havesel ? sel.o.tovec() : lu.tovec(), localedit->copy->s.tovec(), havesel ? sel.grid : gridsize);
-	}
+    if(showpastegrid && localedit && localedit->copy)
+    {
+        glColor3ub(30, 0, 30);
+        boxs3D(havesel ? sel.o.tovec() : lu.tovec(), localedit->copy->s.tovec(), havesel ? sel.grid : gridsize);
+    }
 
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
-	glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 }
 
 //////////// ready changes to vertex arrays ////////////
@@ -486,33 +486,33 @@ static bool haschanged = false;
 
 void readychanges(block3 &b, cube *c, const ivec &cor, int size)
 {
-	loopoctabox(cor, size, b.o, b.s)
-	{
-		ivec o(i, cor.x, cor.y, cor.z, size);
-		if(c[i].ext)
-		{
-			if(c[i].ext->va)			 // removes va s so that octarender will recreate
-			{
-				int hasmerges = c[i].ext->va->hasmerges;
-				destroyva(c[i].ext->va);
-				c[i].ext->va = NULL;
+    loopoctabox(cor, size, b.o, b.s)
+    {
+        ivec o(i, cor.x, cor.y, cor.z, size);
+        if(c[i].ext)
+        {
+            if(c[i].ext->va)             // removes va s so that octarender will recreate
+            {
+                int hasmerges = c[i].ext->va->hasmerges;
+                destroyva(c[i].ext->va);
+                c[i].ext->va = NULL;
                 if(hasmerges) invalidatemerges(c[i], true);
-			}
-			freeoctaentities(c[i]);
+            }
+            freeoctaentities(c[i]);
             c[i].ext->tjoints = -1;
-		}
-		if(c[i].children)
-		{
-			if(size<=(8>>VVEC_FRAC))
-			{
-				solidfaces(c[i]);
-				discardchildren(c[i]);
-				brightencube(c[i]);
-			}
-			else readychanges(b, c[i].children, o, size/2);
-		}
-		else brightencube(c[i]);
-	}
+        }
+        if(c[i].children)
+        {
+            if(size<=(8>>VVEC_FRAC))
+            {
+                solidfaces(c[i]);
+                discardchildren(c[i]);
+                brightencube(c[i]);
+            }
+            else readychanges(b, c[i].children, o, size/2);
+        }
+        else brightencube(c[i]);
+    }
 }
 
 void commitchanges(bool force)
@@ -534,18 +534,18 @@ void commitchanges(bool force)
 
 void changed(const block3 &sel, bool commit = true)
 {
-	if(sel.s.iszero()) return;
-	block3 b = sel;
-	loopi(3) b.s[i] *= b.grid;
-	b.grid = 1;
-	loopi(3)					// the changed blocks are the selected cubes
-	{
-		b.o[i] -= 1;
-		b.s[i] += 2;
-		readychanges(b, worldroot, ivec(0, 0, 0), hdr.worldsize/2);
-		b.o[i] += 1;
-		b.s[i] -= 2;
-	}
+    if(sel.s.iszero()) return;
+    block3 b = sel;
+    loopi(3) b.s[i] *= b.grid;
+    b.grid = 1;
+    loopi(3)                    // the changed blocks are the selected cubes
+    {
+        b.o[i] -= 1;
+        b.s[i] += 2;
+        readychanges(b, worldroot, ivec(0, 0, 0), hdr.worldsize/2);
+        b.o[i] += 1;
+        b.s[i] -= 2;
+    }
     haschanged = true;
 
     if(commit) commitchanges();
@@ -554,21 +554,21 @@ void changed(const block3 &sel, bool commit = true)
 //////////// copy and undo /////////////
 cube copycube(cube &src)
 {
-	cube c = src;
-	c.ext = NULL; // src cube is responsible for va destruction
-	if(src.children)
-	{
-		c.children = newcubes(F_EMPTY);
-		loopi(8) c.children[i] = copycube(src.children[i]);
-	}
-	else if(src.ext && src.ext->material!=MAT_AIR) ext(c).material = src.ext->material;
-	return c;
+    cube c = src;
+    c.ext = NULL; // src cube is responsible for va destruction
+    if(src.children)
+    {
+        c.children = newcubes(F_EMPTY);
+        loopi(8) c.children[i] = copycube(src.children[i]);
+    }
+    else if(src.ext && src.ext->material!=MAT_AIR) ext(c).material = src.ext->material;
+    return c;
 }
 
 void pastecube(cube &src, cube &dest)
 {
-	discardchildren(dest);
-	dest = copycube(src);
+    discardchildren(dest);
+    dest = copycube(src);
 }
 
 void blockcopy(const block3 &s, int rgrid, block3 *b)
@@ -769,10 +769,10 @@ void editredo() { swapundo(redos, undos, "redo"); }
 
 void freeeditinfo(editinfo *&e)
 {
-	if(!e) return;
-	if(e->copy) freeblock(e->copy);
-	delete e;
-	e = NULL;
+    if(!e) return;
+    if(e->copy) freeblock(e->copy);
+    delete e;
+    e = NULL;
 }
 
 // guard against subdivision
@@ -780,54 +780,54 @@ void freeeditinfo(editinfo *&e)
 
 void mpcopy(editinfo *&e, selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_COPY);
-	if(e==NULL) e = new editinfo;
-	if(e->copy) freeblock(e->copy);
-	e->copy = NULL;
-	protectsel(e->copy = blockcopy(block3(sel), sel.grid));
-	changed(sel);
+    if(local) client::edittrigger(sel, EDIT_COPY);
+    if(e==NULL) e = new editinfo;
+    if(e->copy) freeblock(e->copy);
+    e->copy = NULL;
+    protectsel(e->copy = blockcopy(block3(sel), sel.grid));
+    changed(sel);
 }
 
 void mppaste(editinfo *&e, selinfo &sel, bool local)
 {
-	if(e==NULL) return;
-	if(local) client::edittrigger(sel, EDIT_PASTE);
-	if(e->copy)
-	{
-		sel.s = e->copy->s;
-		int o = sel.orient;
-		sel.orient = e->copy->orient;
-		cube *s = e->copy->c();
-		loopselxyz(if (!isempty(*s) || s->children) pastecube(*s, c); s++); // 'transparent'. old opaque by 'delcube; paste'
-		sel.orient = o;
-	}
+    if(e==NULL) return;
+    if(local) client::edittrigger(sel, EDIT_PASTE);
+    if(e->copy)
+    {
+        sel.s = e->copy->s;
+        int o = sel.orient;
+        sel.orient = e->copy->orient;
+        cube *s = e->copy->c();
+        loopselxyz(if (!isempty(*s) || s->children) pastecube(*s, c); s++); // 'transparent'. old opaque by 'delcube; paste'
+        sel.orient = o;
+    }
 }
 
 void copy()
 {
-	if(noedit(true)) return;
-	mpcopy(localedit, sel, true);
+    if(noedit(true)) return;
+    mpcopy(localedit, sel, true);
 }
 
 void pasteclear()
 {
-	if(!localedit) return;
-	if(localedit->copy) freeblock(localedit->copy);
-	localedit->copy = NULL;
+    if(!localedit) return;
+    if(localedit->copy) freeblock(localedit->copy);
+    localedit->copy = NULL;
 }
 
 void pastehilight()
 {
-	if(!localedit) return;
-	sel.s = localedit->copy->s;
+    if(!localedit) return;
+    sel.s = localedit->copy->s;
     reorient();
-	havesel = true;
+    havesel = true;
 }
 
 void paste()
 {
-	if(noedit()) return;
-	mppaste(localedit, sel, true);
+    if(noedit()) return;
+    mppaste(localedit, sel, true);
 }
 
 COMMAND(0, copy, "");
@@ -861,7 +861,7 @@ void brushvert(int *x, int *y, int *v)
 {
     *x += MAXBRUSH2 - brushx + 1; // +1 for automatic padding
     *y += MAXBRUSH2 - brushy + 1;
-	if(*x<0 || *y<0 || *x>=MAXBRUSH || *y>=MAXBRUSH) return;
+    if(*x<0 || *y<0 || *x>=MAXBRUSH || *y>=MAXBRUSH) return;
     brush[*x][*y] = clamp(*v, 0, 8);
     paintbrush = paintbrush || (brush[*x][*y] > 0);
     brushmaxx = min(MAXBRUSH-1, max(brushmaxx, *x+1));
@@ -873,38 +873,38 @@ void brushvert(int *x, int *y, int *v)
 void brushimport(char *name)
 {
     ImageData s;
-	if(loadimage(name, s))
-	{
-		if(s.w > MAXBRUSH || s.h > MAXBRUSH) // only use max size
+    if(loadimage(name, s))
+    {
+        if(s.w > MAXBRUSH || s.h > MAXBRUSH) // only use max size
             scaleimage(s, MAXBRUSH, MAXBRUSH);
 
-		uchar *pixel = s.data;
-		int value, x, y;
+        uchar *pixel = s.data;
+        int value, x, y;
 
-		clearbrush();
-		brushx = brushy = MAXBRUSH2; // set real coords to 0,0
+        clearbrush();
+        brushx = brushy = MAXBRUSH2; // set real coords to 0,0
 
-		loopi(s.w)
-		{
-			x = i;
-			loopj(s.h)
-			{
-				y = j;
-				value = 0;
+        loopi(s.w)
+        {
+            x = i;
+            loopj(s.h)
+            {
+                y = j;
+                value = 0;
 
-				loopk(s.bpp) // add the entire pixel together
-				{
-					value += pixel[0];
-					pixel++;
-				}
+                loopk(s.bpp) // add the entire pixel together
+                {
+                    value += pixel[0];
+                    pixel++;
+                }
 
-				value /= s.bpp; // average the entire pixel
-				value /= 32; // scale to cube shapes (256 / 8)
-				brushvert(&x, &y, &value);
-			}
-		}
-	}
-	else conoutf("\frcould not load: %s", name);
+                value /= s.bpp; // average the entire pixel
+                value /= 32; // scale to cube shapes (256 / 8)
+                brushvert(&x, &y, &value);
+            }
+        }
+    }
+    else conoutf("\frcould not load: %s", name);
 }
 
 COMMAND(0, brushimport, "s");
@@ -928,7 +928,7 @@ inline bool ishtexture(int t)
     loopv(htextures)
         if(t == htextures[i])
             return false;
-	return true;
+    return true;
 }
 
 VAR(0, bypassheightmapcheck, 0, 0, 1);    // temp
@@ -950,7 +950,7 @@ namespace hmap
     int    mapz[MAXBRUSHC][MAXBRUSHC];
     int    map [MAXBRUSH][MAXBRUSH];
 
-	selinfo changes;
+    selinfo changes;
     bool selecting;
     int d, dc, dr, dcr, biasup, br, hws, fg;
     int gx, gy, gz, mx, my, mz, nx, ny, nz, bmx, bmy, bnx, bny;
@@ -971,8 +971,8 @@ namespace hmap
         else if(t.y > changes.s.y) changes.s.y = t.y;
         if     (t.z < changes.o.z) changes.o.z = t.z;
         else if(t.z > changes.s.z) changes.s.z = t.z;
-		return c;
-	}
+        return c;
+    }
 
     uint getface(cube *c, int d)
     {
@@ -980,13 +980,13 @@ namespace hmap
     }
 
     void pushside(cube &c, int d, int x, int y, int z)
-	{
-    	if(d < 0 || d > 2) return;
+    {
+        if(d < 0 || d > 2) return;
         ivec a;
         getcubevector(c, d, x, y, z, a);
         a[R[d]] = 8 - a[R[d]];
         setcubevector(c, d, x, y, z, a);
-	}
+    }
 
     void addpoint(int x, int y, int z, int v)
     {
@@ -1106,20 +1106,20 @@ namespace hmap
                 c[k]->texture[sel.orient] = c[1]->texture[sel.orient];
                 solidfaces(*c[k]);
                 loopi(2) loopj(2)
-        		{
+                {
                     int f = e[i][j];
                     if(f<0 || (f==0 && e[1-i][j]==0 && e[i][1-j]==0))
-        			{
+                    {
                         f=0;
                         pushside(*c[k], d, i, j, 0);
                         pushside(*c[k], d, i, j, 1);
-       				}
+                    }
                     edgeset(cubeedge(*c[k], d, i, j), dc, dc ? f : 8-f);
-        		}
+                }
             }
-	        else if(c[k])
+            else if(c[k])
                 emptyfaces(*c[k]);
-		}
+        }
 
         if(!changed) return;
         if(x>mx) ripple(x-1, y, mapz[x][y], true);
@@ -1138,12 +1138,12 @@ namespace hmap
         DIAGONAL_RIPPLE(-1, +1, (x>mx && y<ny)); //    won't unless changed
         DIAGONAL_RIPPLE(+1, +1, (x<nx && y<ny));
         DIAGONAL_RIPPLE(+1, -1, (x<nx && y>my));
-		}
+        }
 
 #define loopbrush(i) for(int x=bmx; x<=bnx+i; x++) for(int y=bmy; y<=bny+i; y++)
 
     void paint()
-	{
+    {
         loopbrush(1)
             map[x][y] -= dr * brush[x][y];
     }
@@ -1162,7 +1162,7 @@ namespace hmap
             if(div)
                 map[x+1][y+1] = sum / div;
         }
-	}
+    }
 
     void rippleandset()
     {
@@ -1204,9 +1204,9 @@ namespace hmap
         else
         {   // brush range
             bmx = max(mx, brushminx);
-        	bmy = max(my, brushminy);
-        	bnx = min(nx, brushmaxx-1);
-        	bny = min(ny, brushmaxy-1);
+            bmy = max(my, brushminy);
+            bnx = min(nx, brushmaxx-1);
+            bny = min(ny, brushmaxy-1);
         }
         nz = hdr.worldsize-gridsize;
         mz = 0;
@@ -1246,152 +1246,152 @@ int bounded(int n) { return n<0 ? 0 : (n>8 ? 8 : n); }
 
 void pushedge(uchar &edge, int dir, int dc)
 {
-	int ne = bounded(edgeget(edge, dc)+dir);
-	edge = edgeset(edge, dc, ne);
-	int oe = edgeget(edge, 1-dc);
-	if((dir<0 && dc && oe>ne) || (dir>0 && dc==0 && oe<ne)) edge = edgeset(edge, 1-dc, ne);
+    int ne = bounded(edgeget(edge, dc)+dir);
+    edge = edgeset(edge, dc, ne);
+    int oe = edgeget(edge, 1-dc);
+    if((dir<0 && dc && oe>ne) || (dir>0 && dc==0 && oe<ne)) edge = edgeset(edge, 1-dc, ne);
 }
 
 void linkedpush(cube &c, int d, int x, int y, int dc, int dir)
 {
-	ivec v, p;
-	getcubevector(c, d, x, y, dc, v);
+    ivec v, p;
+    getcubevector(c, d, x, y, dc, v);
 
-	loopi(2) loopj(2)
-	{
-		getcubevector(c, d, i, j, dc, p);
-		if(v==p)
-			pushedge(cubeedge(c, d, i, j), dir, dc);
-	}
+    loopi(2) loopj(2)
+    {
+        getcubevector(c, d, i, j, dc, p);
+        if(v==p)
+            pushedge(cubeedge(c, d, i, j), dir, dc);
+    }
 }
 
 static uchar getmaterial(cube &c)
 {
-	if(c.children)
-	{
-		uchar mat = getmaterial(c.children[7]);
-		loopi(7) if(mat != getmaterial(c.children[i])) return MAT_AIR;
-		return mat;
-	}
-	return c.ext ? c.ext->material : MAT_AIR;
+    if(c.children)
+    {
+        uchar mat = getmaterial(c.children[7]);
+        loopi(7) if(mat != getmaterial(c.children[i])) return MAT_AIR;
+        return mat;
+    }
+    return c.ext ? c.ext->material : MAT_AIR;
 }
 
 VAR(0, invalidcubeguard, 0, 1, 1);
 
 void mpeditface(int dir, int mode, selinfo &sel, bool local)
 {
-	if(mode==1 && (sel.cx || sel.cy || sel.cxs&1 || sel.cys&1)) mode = 0;
-	int d = dimension(sel.orient);
-	int dc = dimcoord(sel.orient);
-	int seldir = dc ? -dir : dir;
+    if(mode==1 && (sel.cx || sel.cy || sel.cxs&1 || sel.cys&1)) mode = 0;
+    int d = dimension(sel.orient);
+    int dc = dimcoord(sel.orient);
+    int seldir = dc ? -dir : dir;
 
-	if(local)
-		client::edittrigger(sel, EDIT_FACE, dir, mode);
+    if(local)
+        client::edittrigger(sel, EDIT_FACE, dir, mode);
 
-	if(mode==1)
-	{
-		int h = sel.o[d]+dc*sel.grid;
-		if(((dir>0) == dc && h<=0) || ((dir<0) == dc && h>=hdr.worldsize)) return;
-		if(dir<0) sel.o[d] += sel.grid * seldir;
-	}
+    if(mode==1)
+    {
+        int h = sel.o[d]+dc*sel.grid;
+        if(((dir>0) == dc && h<=0) || ((dir<0) == dc && h>=hdr.worldsize)) return;
+        if(dir<0) sel.o[d] += sel.grid * seldir;
+    }
 
-	if(dc) sel.o[d] += sel.us(d)-sel.grid;
-	sel.s[d] = 1;
+    if(dc) sel.o[d] += sel.us(d)-sel.grid;
+    sel.s[d] = 1;
 
-	loopselxyz(
-		if(c.children) solidfaces(c);
-		uchar mat = getmaterial(c);
-		discardchildren(c);
-		if(mat!=MAT_AIR) ext(c).material = mat;
-		if(mode==1) // fill command
-		{
-			if(dir<0)
-			{
-				solidfaces(c);
-				cube &o = blockcube(x, y, 1, sel, -sel.grid);
-				loopi(6)
-					c.texture[i] = o.children ? 2+i : o.texture[i];
-			}
-			else
-				emptyfaces(c);
-		}
-		else
-		{
-			uint bak = c.faces[d];
-			uchar *p = (uchar *)&c.faces[d];
+    loopselxyz(
+        if(c.children) solidfaces(c);
+        uchar mat = getmaterial(c);
+        discardchildren(c);
+        if(mat!=MAT_AIR) ext(c).material = mat;
+        if(mode==1) // fill command
+        {
+            if(dir<0)
+            {
+                solidfaces(c);
+                cube &o = blockcube(x, y, 1, sel, -sel.grid);
+                loopi(6)
+                    c.texture[i] = o.children ? 2+i : o.texture[i];
+            }
+            else
+                emptyfaces(c);
+        }
+        else
+        {
+            uint bak = c.faces[d];
+            uchar *p = (uchar *)&c.faces[d];
 
-			if(mode==2)
-				linkedpush(c, d, sel.corner&1, sel.corner>>1, dc, seldir); // corner command
-			else
-			{
-				loop(mx,2) loop(my,2)										// pull/push edges command
-				{
-					if(x==0 && mx==0 && sel.cx) continue;
-					if(y==0 && my==0 && sel.cy) continue;
-					if(x==sel.s[R[d]]-1 && mx==1 && (sel.cx+sel.cxs)&1) continue;
-					if(y==sel.s[C[d]]-1 && my==1 && (sel.cy+sel.cys)&1) continue;
-					if(p[mx+my*2] != ((uchar *)&bak)[mx+my*2]) continue;
+            if(mode==2)
+                linkedpush(c, d, sel.corner&1, sel.corner>>1, dc, seldir); // corner command
+            else
+            {
+                loop(mx,2) loop(my,2)                                       // pull/push edges command
+                {
+                    if(x==0 && mx==0 && sel.cx) continue;
+                    if(y==0 && my==0 && sel.cy) continue;
+                    if(x==sel.s[R[d]]-1 && mx==1 && (sel.cx+sel.cxs)&1) continue;
+                    if(y==sel.s[C[d]]-1 && my==1 && (sel.cy+sel.cys)&1) continue;
+                    if(p[mx+my*2] != ((uchar *)&bak)[mx+my*2]) continue;
 
-					linkedpush(c, d, mx, my, dc, seldir);
-				}
-			}
+                    linkedpush(c, d, mx, my, dc, seldir);
+                }
+            }
 
-			optiface(p, c);
-			if(invalidcubeguard==1 && !isvalidcube(c))
-			{
-				uint newbak = c.faces[d];
-				uchar *m = (uchar *)&bak;
-				uchar *n = (uchar *)&newbak;
-				loopk(4) if(n[k] != m[k]) // tries to find partial edit that is valid
-				{
-					c.faces[d] = bak;
-					c.edges[d*4+k] = n[k];
-					if(isvalidcube(c))
-						m[k] = n[k];
-				}
-				c.faces[d] = bak;
-			}
-		}
-	);
-	if (mode==1 && dir>0)
-		sel.o[d] += sel.grid * seldir;
+            optiface(p, c);
+            if(invalidcubeguard==1 && !isvalidcube(c))
+            {
+                uint newbak = c.faces[d];
+                uchar *m = (uchar *)&bak;
+                uchar *n = (uchar *)&newbak;
+                loopk(4) if(n[k] != m[k]) // tries to find partial edit that is valid
+                {
+                    c.faces[d] = bak;
+                    c.edges[d*4+k] = n[k];
+                    if(isvalidcube(c))
+                        m[k] = n[k];
+                }
+                c.faces[d] = bak;
+            }
+        }
+    );
+    if (mode==1 && dir>0)
+        sel.o[d] += sel.grid * seldir;
 }
 
 void editface(int *dir, int *mode)
 {
-	if(noedit(moving!=0)) return;
+    if(noedit(moving!=0)) return;
     if(hmapedit!=1)
         mpeditface(*dir, *mode, sel, true);
     else
-		edithmap(*dir, *mode);
+        edithmap(*dir, *mode);
 }
 
 VAR(0, selectionsurf, 0, 0, 1);
 
 void pushsel(int *dir)
 {
-	if(noedit(moving!=0)) return;
-	int d = dimension(orient);
-	int s = dimcoord(orient) ? -*dir : *dir;
-	sel.o[d] += s*sel.grid;
-	if(selectionsurf==1)
-	{
-		physent *player = (physent *)game::focusedent(true);
-		if(!player) player = camera1;
-		player->o[d] += s*sel.grid;
-	}
+    if(noedit(moving!=0)) return;
+    int d = dimension(orient);
+    int s = dimcoord(orient) ? -*dir : *dir;
+    sel.o[d] += s*sel.grid;
+    if(selectionsurf==1)
+    {
+        physent *player = (physent *)game::focusedent(true);
+        if(!player) player = camera1;
+        player->o[d] += s*sel.grid;
+    }
 }
 
 void mpdelcube(selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_DELCUBE);
-	loopselxyz(discardchildren(c); emptyfaces(c));
+    if(local) client::edittrigger(sel, EDIT_DELCUBE);
+    loopselxyz(discardchildren(c); emptyfaces(c));
 }
 
 void delcube()
 {
-	if(noedit()) return;
-	mpdelcube(sel, true);
+    if(noedit()) return;
+    mpdelcube(sel, true);
 }
 
 COMMAND(0, pushsel, "i");
@@ -1404,14 +1404,14 @@ int curtexindex = -1, lasttex = 0, lasttexmillis = -1;
 int texpaneltimer = 0;
 vector<ushort> texmru;
 
-void tofronttex()										// maintain most recently used of the texture lists when applying texture
+void tofronttex()                                       // maintain most recently used of the texture lists when applying texture
 {
-	int c = curtexindex;
-	if(c>=0)
-	{
-		texmru.insert(0, texmru.remove(c));
-		curtexindex = -1;
-	}
+    int c = curtexindex;
+    if(c>=0)
+    {
+        texmru.insert(0, texmru.remove(c));
+        curtexindex = -1;
+    }
 }
 
 selinfo repsel;
@@ -1419,18 +1419,18 @@ int reptex = -1;
 
 void edittexcube(cube &c, int tex, int orient, bool &findrep)
 {
-	if(orient<0) loopi(6) c.texture[i] = tex;
-	else
-	{
-		int i = visibleorient(c, orient);
-		if(findrep)
-		{
-			if(reptex < 0) reptex = c.texture[i];
-			else if(reptex != c.texture[i]) findrep = false;
-		}
-		c.texture[i] = tex;
-	}
-	if(c.children) loopi(8) edittexcube(c.children[i], tex, orient, findrep);
+    if(orient<0) loopi(6) c.texture[i] = tex;
+    else
+    {
+        int i = visibleorient(c, orient);
+        if(findrep)
+        {
+            if(reptex < 0) reptex = c.texture[i];
+            else if(reptex != c.texture[i]) findrep = false;
+        }
+        c.texture[i] = tex;
+    }
+    if(c.children) loopi(8) edittexcube(c.children[i], tex, orient, findrep);
 }
 
 extern int curtexnum;
@@ -1438,23 +1438,23 @@ VAR(0, allfaces, 0, 0, 1);
 
 void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 {
-	if(local)
-	{
-		client::edittrigger(sel, EDIT_TEX, tex, allfaces);
-		if(allfaces || !(repsel == sel)) reptex = -1;
-		repsel = sel;
-	}
-	bool findrep = local && !allfaces && reptex < 0;
-	loopselxyz(edittexcube(c, tex, allfaces ? -1 : sel.orient, findrep));
+    if(local)
+    {
+        client::edittrigger(sel, EDIT_TEX, tex, allfaces);
+        if(allfaces || !(repsel == sel)) reptex = -1;
+        repsel = sel;
+    }
+    bool findrep = local && !allfaces && reptex < 0;
+    loopselxyz(edittexcube(c, tex, allfaces ? -1 : sel.orient, findrep));
 }
 
 void filltexlist()
 {
-	if(texmru.length()!=curtexnum)
-	{
-		loopv(texmru) if(texmru[i]>=curtexnum) texmru.remove(i--);
-		loopi(curtexnum) if(texmru.find(i)<0) texmru.add(i);
-	}
+    if(texmru.length()!=curtexnum)
+    {
+        loopv(texmru) if(texmru[i]>=curtexnum) texmru.remove(i--);
+        loopi(curtexnum) if(texmru.find(i)<0) texmru.add(i);
+    }
 }
 
 void edittex(int i, bool save = true, bool edit = true)
@@ -1470,25 +1470,25 @@ void edittex(int i, bool save = true, bool edit = true)
 
 void edittex_(int *dir)
 {
-	if(noedit()) return;
-	filltexlist();
-	texpaneltimer = 5000;
-	if(!(lastsel==sel)) tofronttex();
+    if(noedit()) return;
+    filltexlist();
+    texpaneltimer = 5000;
+    if(!(lastsel==sel)) tofronttex();
     curtexindex = clamp(curtexindex<0 ? 0 : curtexindex+*dir, 0, curtexnum-1);
     edittex(texmru[curtexindex], false);
 }
 
 void gettex()
 {
-	if(noedit()) return;
-	filltexlist();
-	loopxyz(sel, sel.grid, curtexindex = c.texture[sel.orient]);
-	loopi(curtexnum) if(texmru[i]==curtexindex)
-	{
-		curtexindex = i;
-		tofronttex();
-		return;
-	}
+    if(noedit()) return;
+    filltexlist();
+    loopxyz(sel, sel.grid, curtexindex = c.texture[sel.orient]);
+    loopi(curtexnum) if(texmru[i]==curtexindex)
+    {
+        curtexindex = i;
+        tofronttex();
+        return;
+    }
 }
 
 void getcurtex()
@@ -1524,26 +1524,26 @@ COMMAND(0, gettexname, "ii");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {
-	loopi(6) if(oldtex < 0 || c.texture[i] == oldtex) c.texture[i] = newtex;
-	if(c.children) loopi(8) replacetexcube(c.children[i], oldtex, newtex);
+    loopi(6) if(oldtex < 0 || c.texture[i] == oldtex) c.texture[i] = newtex;
+    if(c.children) loopi(8) replacetexcube(c.children[i], oldtex, newtex);
 }
 
 void mpreplacetex(int oldtex, int newtex, selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
-	loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
-	allchanged();
+    if(local) client::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
+    loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
+    allchanged();
 }
 
 void replacetex(int texnum = -1)
 {
-	if(noedit()) return;
-	mpreplacetex(texnum, lasttex, sel, true);
+    if(noedit()) return;
+    mpreplacetex(texnum, lasttex, sel, true);
 }
 
 ICOMMAND(0, replace, "", (void), {
-	if(reptex < 0) { conoutf("\frcan only replace after a texture edit"); return; }
-	replacetex(reptex);
+    if(reptex < 0) { conoutf("\frcan only replace after a texture edit"); return; }
+    replacetex(reptex);
 });
 ICOMMAND(0, replaceall, "", (void), replacetex(););
 
@@ -1556,97 +1556,97 @@ uint mflip(uint face) { return (face&0xFF0000FF) | ((face&0x00FF0000)>>8) | ((fa
 void flipcube(cube &c, int d)
 {
     swap(c.texture[d*2], c.texture[d*2+1]);
-	c.faces[D[d]] = dflip(c.faces[D[d]]);
-	c.faces[C[d]] = cflip(c.faces[C[d]]);
-	c.faces[R[d]] = rflip(c.faces[R[d]]);
-	if (c.children)
-	{
+    c.faces[D[d]] = dflip(c.faces[D[d]]);
+    c.faces[C[d]] = cflip(c.faces[C[d]]);
+    c.faces[R[d]] = rflip(c.faces[R[d]]);
+    if (c.children)
+    {
         loopi(8) if(i&octadim(d)) swap(c.children[i], c.children[i-octadim(d)]);
-		loopi(8) flipcube(c.children[i], d);
-	}
+        loopi(8) flipcube(c.children[i], d);
+    }
 }
 
 void rotatequad(cube &a, cube &b, cube &c, cube &d)
 {
-	cube t = a; a = b; b = c; c = d; d = t;
+    cube t = a; a = b; b = c; c = d; d = t;
 }
 
-void rotatecube(cube &c, int d)	// rotates cube clockwise. see pics in cvs for help.
+void rotatecube(cube &c, int d) // rotates cube clockwise. see pics in cvs for help.
 {
-	c.faces[D[d]] = cflip (mflip(c.faces[D[d]]));
-	c.faces[C[d]] = dflip (mflip(c.faces[C[d]]));
-	c.faces[R[d]] = rflip (mflip(c.faces[R[d]]));
+    c.faces[D[d]] = cflip (mflip(c.faces[D[d]]));
+    c.faces[C[d]] = dflip (mflip(c.faces[C[d]]));
+    c.faces[R[d]] = rflip (mflip(c.faces[R[d]]));
     swap(c.faces[R[d]], c.faces[C[d]]);
 
     swap(c.texture[2*R[d]], c.texture[2*C[d]+1]);
     swap(c.texture[2*C[d]], c.texture[2*R[d]+1]);
     swap(c.texture[2*C[d]], c.texture[2*C[d]+1]);
 
-	if(c.children)
-	{
-		int row = octadim(R[d]);
-		int col = octadim(C[d]);
-		for(int i=0; i<=octadim(d); i+=octadim(d)) rotatequad
-		(
-			c.children[i+row],
-			c.children[i],
-			c.children[i+col],
-			c.children[i+col+row]
-		);
-		loopi(8) rotatecube(c.children[i], d);
-	}
+    if(c.children)
+    {
+        int row = octadim(R[d]);
+        int col = octadim(C[d]);
+        for(int i=0; i<=octadim(d); i+=octadim(d)) rotatequad
+        (
+            c.children[i+row],
+            c.children[i],
+            c.children[i+col],
+            c.children[i+col+row]
+        );
+        loopi(8) rotatecube(c.children[i], d);
+    }
 }
 
 void mpflip(selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_FLIP);
-	int zs = sel.s[dimension(sel.orient)];
-	makeundo();
-	loopxy(sel)
-	{
-		loop(z,zs) flipcube(selcube(x, y, z), dimension(sel.orient));
-		loop(z,zs/2)
-		{
-			cube &a = selcube(x, y, z);
-			cube &b = selcube(x, y, zs-z-1);
+    if(local) client::edittrigger(sel, EDIT_FLIP);
+    int zs = sel.s[dimension(sel.orient)];
+    makeundo();
+    loopxy(sel)
+    {
+        loop(z,zs) flipcube(selcube(x, y, z), dimension(sel.orient));
+        loop(z,zs/2)
+        {
+            cube &a = selcube(x, y, z);
+            cube &b = selcube(x, y, zs-z-1);
             swap(a, b);
-		}
-	}
-	changed(sel);
+        }
+    }
+    changed(sel);
 }
 
 void flip()
 {
     if(noedit()) return;
-	mpflip(sel, true);
+    mpflip(sel, true);
 }
 
 void mprotate(int cw, selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_ROTATE, cw);
-	int d = dimension(sel.orient);
-	if(!dimcoord(sel.orient)) cw = -cw;
+    if(local) client::edittrigger(sel, EDIT_ROTATE, cw);
+    int d = dimension(sel.orient);
+    if(!dimcoord(sel.orient)) cw = -cw;
     int m = sel.s[C[d]] < sel.s[R[d]] ? C[d] : R[d];
     int ss = sel.s[m] = max(sel.s[R[d]], sel.s[C[d]]);
-	makeundo();
-	loop(z,sel.s[D[d]]) loopi(cw>0 ? 1 : 3)
-	{
-		loopxy(sel) rotatecube(selcube(x,y,z), d);
-		loop(y,ss/2) loop(x,ss-1-y*2) rotatequad
-		(
-			selcube(ss-1-y, x+y, z),
-			selcube(x+y, y, z),
-			selcube(y, ss-1-x-y, z),
-			selcube(ss-1-x-y, ss-1-y, z)
-		);
-	}
-	changed(sel);
+    makeundo();
+    loop(z,sel.s[D[d]]) loopi(cw>0 ? 1 : 3)
+    {
+        loopxy(sel) rotatecube(selcube(x,y,z), d);
+        loop(y,ss/2) loop(x,ss-1-y*2) rotatequad
+        (
+            selcube(ss-1-y, x+y, z),
+            selcube(x+y, y, z),
+            selcube(y, ss-1-x-y, z),
+            selcube(ss-1-x-y, ss-1-y, z)
+        );
+    }
+    changed(sel);
 }
 
 void rotate(int *cw)
 {
     if(noedit()) return;
-	mprotate(*cw, sel, true);
+    mprotate(*cw, sel, true);
 }
 
 COMMAND(0, flip, "");
@@ -1654,7 +1654,7 @@ COMMAND(0, rotate, "i");
 
 void setmat(cube &c, uchar mat, uchar matmask)
 {
-	if(c.children)
+    if(c.children)
         loopi(8) setmat(c.children[i], mat, matmask);
     else if(mat!=MAT_AIR)
     {
@@ -1662,12 +1662,12 @@ void setmat(cube &c, uchar mat, uchar matmask)
         e.material &= matmask;
         e.material |= mat;
     }
-	else if(c.ext) c.ext->material = MAT_AIR;
+    else if(c.ext) c.ext->material = MAT_AIR;
 }
 
 void mpeditmat(int matid, selinfo &sel, bool local)
 {
-	if(local) client::edittrigger(sel, EDIT_MAT, matid);
+    if(local) client::edittrigger(sel, EDIT_MAT, matid);
 
     uchar matmask = matid&MATF_VOLUME ? 0 : (matid&MATF_CLIP ? ~MATF_CLIP : 0xFF);
     if(isclipped(matid&MATF_VOLUME)) matid |= MAT_CLIP;
@@ -1677,46 +1677,46 @@ void mpeditmat(int matid, selinfo &sel, bool local)
 
 void editmat(char *name)
 {
-	if(noedit()) return;
-	int id = findmaterial(name, true);
-	if(id<0) { conoutf("\frunknown material \"%s\"", name); return; }
-	mpeditmat(id, sel, true);
+    if(noedit()) return;
+    int id = findmaterial(name, true);
+    if(id<0) { conoutf("\frunknown material \"%s\"", name); return; }
+    mpeditmat(id, sel, true);
 }
 
 COMMAND(0, editmat, "s");
 
 int duplicateslot(Slot &s)
 {
-	if(s.shader) { defformatstring(t)("setshader %s", s.shader->name); execute(t); }
-	loopvj(s.params)
-	{
-		defformatstring(t)("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
-		if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) { defformatstring(u)(" \"%s\"", s.params[j].name); concatstring(t, u); }
-		else { defformatstring(u)(" %d", s.params[j].index); concatstring(t, u); }
-		loopk(4) { defformatstring(u)(" %f", s.params[j].val[k]); concatstring(t, u); }
-		execute(t);
-	}
+    if(s.shader) { defformatstring(t)("setshader %s", s.shader->name); execute(t); }
+    loopvj(s.params)
+    {
+        defformatstring(t)("set%sparam", s.params[j].type == SHPARAM_LOOKUP ? "shader" : (s.params[j].type == SHPARAM_UNIFORM ? "uniform" : (s.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+        if(s.params[j].type == SHPARAM_LOOKUP || s.params[j].type == SHPARAM_UNIFORM) { defformatstring(u)(" \"%s\"", s.params[j].name); concatstring(t, u); }
+        else { defformatstring(u)(" %d", s.params[j].index); concatstring(t, u); }
+        loopk(4) { defformatstring(u)(" %f", s.params[j].val[k]); concatstring(t, u); }
+        execute(t);
+    }
     loopvj(s.sts)
     {
         defformatstring(t)("texture %s \"%s\"", findtexturename(s.sts[j].type), s.sts[j].lname);
         if(!j) { defformatstring(u)(" %d %d %d %f", s.rotation, s.xoffset, s.yoffset, s.scale); concatstring(t, u); }
         execute(t);
     }
-	if(s.scrollS != 0.f || s.scrollT != 0.f) { defformatstring(t)("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f); execute(t); }
-	if(s.layer != 0)
-	{
-		if(s.layermaskname) { defformatstring(t)("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale); execute(t); }
-		else { defformatstring(t)("texlayer %d\n", s.layer); execute(t); }
-	}
-	if(s.autograss) { defformatstring(t)("autograss \"%s\"\n", s.autograss); execute(t); }
-	return slots.length()-1;
+    if(s.scrollS != 0.f || s.scrollT != 0.f) { defformatstring(t)("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f); execute(t); }
+    if(s.layer != 0)
+    {
+        if(s.layermaskname) { defformatstring(t)("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale); execute(t); }
+        else { defformatstring(t)("texlayer %d\n", s.layer); execute(t); }
+    }
+    if(s.autograss) { defformatstring(t)("autograss \"%s\"\n", s.autograss); execute(t); }
+    return slots.length()-1;
 }
 
 void texduplicate()
 {
-	cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
-	int tex = !c.children && !isempty(c) ? c.texture[sel.orient] : lasttex;
-	edittex(duplicateslot(lookuptexture(tex, false)), true, false);
+    cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
+    int tex = !c.children && !isempty(c) ? c.texture[sel.orient] : lasttex;
+    edittex(duplicateslot(lookuptexture(tex, false)), true, false);
 }
 
 COMMAND(0, texduplicate, "");
@@ -1731,271 +1731,271 @@ static int lastthumbnail = 0;
 
 struct texturegui : guicb
 {
-	bool menuon;
+    bool menuon;
     int menustart, menutab, menutex;
 
     texturegui() : menustart(-1), menutex(-1) {}
 
-	void gui(guient &g, bool firstpass)
-	{
-		int origtab = menutab, nextslot = menutex;
-		g.start(menustart, menuscale, &menutab, true);
-		loopi(1+curtexnum/(thumbwidth*thumbheight))
-		{
-			g.tab(!i ? "textures" : NULL);
-			if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-			g.pushlist();
-			g.pushlist();
-			loop(h, thumbheight)
-			{
-				g.pushlist();
-				loop(w, thumbwidth)
-				{
-					int ti = (i*thumbheight+h)*thumbwidth+w;
-					if(ti<curtexnum)
-					{
-						Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
-						Slot &slot = lookuptexture(ti, false);
-						if(slot.sts.empty()) continue;
-						else if(slot.loaded)
-						{
-							tex = slot.sts[0].t;
-							if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-							if(slot.layer)
-							{
-								Slot &layer = lookuptexture(slot.layer);
-								if(!layer.sts.empty()) layertex = layer.sts[0].t;
-							}
-						}
-						else if(slot.thumbnail) tex = slot.thumbnail;
-						else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
-						if((slot.loaded || slot.thumbnail ? g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex) : g.texture(tex, thumbsize))&GUI_UP)
-						{
-							nextslot = ti;
-						}
-					}
-					else
-					{
-						Texture *tex = textureload("textures/blank", 3);
-						g.image(tex, thumbsize, false); // empty space
-					}
-				}
-				g.poplist();
-			}
-			g.space(1);
-			if(menutex >= 0 && menutex < curtexnum)
-			{
-				Slot &slot = lookuptexture(menutex, false);
-				g.pushlist();
-				Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
-				if(!slot.sts.empty())
-				{
-					if(slot.loaded)
-					{
-						tex = slot.sts[0].t;
-						if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
-						if(slot.layer)
-						{
-							Slot &layer = lookuptexture(slot.layer);
-							if(!layer.sts.empty()) layertex = layer.sts[0].t;
-						}
-					}
-					else if(slot.thumbnail) tex = slot.thumbnail;
-					else
-					{
-						tex = loadthumbnail(slot);
-						lastthumbnail = lastmillis;
-					}
-				}
-				if(g.texture(tex, thumbpreview, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
-				g.space(2);
-				g.pushlist();
+    void gui(guient &g, bool firstpass)
+    {
+        int origtab = menutab, nextslot = menutex;
+        g.start(menustart, menuscale, &menutab, true);
+        loopi(1+curtexnum/(thumbwidth*thumbheight))
+        {
+            g.tab(!i ? "textures" : NULL);
+            if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
+            g.pushlist();
+            g.pushlist();
+            loop(h, thumbheight)
+            {
+                g.pushlist();
+                loop(w, thumbwidth)
+                {
+                    int ti = (i*thumbheight+h)*thumbwidth+w;
+                    if(ti<curtexnum)
+                    {
+                        Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
+                        Slot &slot = lookuptexture(ti, false);
+                        if(slot.sts.empty()) continue;
+                        else if(slot.loaded)
+                        {
+                            tex = slot.sts[0].t;
+                            if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+                            if(slot.layer)
+                            {
+                                Slot &layer = lookuptexture(slot.layer);
+                                if(!layer.sts.empty()) layertex = layer.sts[0].t;
+                            }
+                        }
+                        else if(slot.thumbnail) tex = slot.thumbnail;
+                        else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
+                        if((slot.loaded || slot.thumbnail ? g.texture(tex, thumbsize, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex) : g.texture(tex, thumbsize))&GUI_UP)
+                        {
+                            nextslot = ti;
+                        }
+                    }
+                    else
+                    {
+                        Texture *tex = textureload("textures/blank", 3);
+                        g.image(tex, thumbsize, false); // empty space
+                    }
+                }
+                g.poplist();
+            }
+            g.space(1);
+            if(menutex >= 0 && menutex < curtexnum)
+            {
+                Slot &slot = lookuptexture(menutex, false);
+                g.pushlist();
+                Texture *tex = textureload("textures/nothumb", 3), *glowtex = NULL, *layertex = NULL;
+                if(!slot.sts.empty())
+                {
+                    if(slot.loaded)
+                    {
+                        tex = slot.sts[0].t;
+                        if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+                        if(slot.layer)
+                        {
+                            Slot &layer = lookuptexture(slot.layer);
+                            if(!layer.sts.empty()) layertex = layer.sts[0].t;
+                        }
+                    }
+                    else if(slot.thumbnail) tex = slot.thumbnail;
+                    else
+                    {
+                        tex = loadthumbnail(slot);
+                        lastthumbnail = lastmillis;
+                    }
+                }
+                if(g.texture(tex, thumbpreview, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&GUI_UP) { edittex(menutex); menuon = false; }
+                g.space(2);
+                g.pushlist();
 
-				g.pushlist();
-				g.pushfont("emphasis"); g.textf("#%-3d", 0xFFFFFF, NULL, menutex); g.popfont();
-				g.space(1); if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
-				g.space(1); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
-				g.space(1); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
-				g.space(1); if(g.button("dupe", 0x888888)&GUI_UP) { nextslot = duplicateslot(slot); }
-				g.space(1); if(g.button("cull unused", 0x444444)&GUI_UP) { extern void texturecull(bool local); texturecull(true); }
-				g.space(2); g.textf("(\fs\fa%s\fS)", 0xAAFFAA, NULL, slot.shader->name);
-				g.poplist();
-				if(!slot.sts.empty())
-				{
-					loopvj(slot.params)
-					{
-						g.pushlist();
-						g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
-						if(slot.params[j].type == SHPARAM_LOOKUP || slot.params[j].type == SHPARAM_UNIFORM)
-						{
-							defformatstring(index)("%s", slot.params[j].name);
-							defformatstring(input)("param_%d_%d_input", menutex, j);
-							char *w = g.field(input, 0x666666, -32, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
-						}
-						else
-						{
-							defformatstring(index)("%d", slot.params[j].index);
-							defformatstring(input)("param_%d_%d_input", menutex, j);
-							char *w = g.field(input, 0x666666, -2, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
-						}
-						loopk(4)
-						{
-							g.space(1);
-							defformatstring(index)("%f", slot.params[j].val[k]);
-							defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
-							char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
-						}
-						g.poplist();
-						g.space(1);
-					}
-					loopvj(slot.sts)
-					{
-						g.pushlist();
-						g.text("texture", 0xAAFFAA);
-						{
-							g.space(1);
-							defformatstring(index)("%s", findtexturename(slot.sts[j].type));
-							defformatstring(input)("texture_%d_%d_name_input", menutex, j);
-							char *w = g.field(input, 0x666666, -3, 0, index, EDITORFOREVER);
-							if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
-						}
-						{
-							defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
-							char *w = g.field(input, 0x666666, j ? -78 : -48, 0, slot.sts[j].lname, EDITORFOREVER);
-							if(w && *w)
-							{
-								copystring(slot.sts[j].lname, w);
-								copystring(slot.sts[j].name, w);
-								slot.cleanup();
-								g.fieldedit(input);
-							}
-						}
-						if(!j)
-						{
-							{
-								g.pushfont("console");
-								defformatstring(index)("%d", slot.rotation);
-								g.space(1);
-								if(g.button(index, 0x666666)&GUI_UP) slot.rotation = (slot.rotation+1)%4;
-								g.space(1);
-								g.popfont();
-							}
-							{
-								defformatstring(index)("%d", slot.xoffset);
-								defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
-								char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-								if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
-							}
-							{
-								defformatstring(index)("%d", slot.yoffset);
-								defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
-								char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-								if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
-							}
-							{
-								defformatstring(index)("%f", slot.scale);
-								defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
-								char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-								if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
-							}
-						}
-						g.poplist();
-					}
-					g.space(1);
-					g.pushlist();
-					g.text("texscroll", 0xAAFFAA);
-					{
-						g.space(1);
-						defformatstring(index)("%f", slot.scrollS * 1000.0f);
-						defformatstring(input)("texscroll_%d_x_scale_input", menutex);
-						char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
-					}
-					{
-						defformatstring(index)("%f", slot.scrollT * 1000.0f);
-						defformatstring(input)("texscroll_%d_y_scale_input", menutex);
-						char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-						if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
-					}
-					g.space(1);
-					g.text("autograss", 0xAAFFAA);
-					{
-						g.space(1);
-						defformatstring(input)("autograss_%d_input", menutex);
-						char *w = g.field(input, 0x666666, -45, 0, slot.autograss, EDITORFOREVER);
-						if(w) { DELETEA(slot.autograss); slot.autograss = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
-					}
-					g.poplist();
-					g.pushlist();
-					g.text("texlayer", 0xAAFFAA);
-					{
-						g.space(1);
-						defformatstring(index)("%d", slot.layer);
-						defformatstring(input)("texlayer_%d_layer_input", menutex);
-						char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-						if(w && *w) { int layer = atoi(w); slot.layer = layer < 0 ? max(slots.length()-1+layer, 0) : layer; slot.cleanup(); g.fieldedit(input); }
-					}
-					{
-						defformatstring(input)("texlayer_%d_maskname_input", menutex);
-						char *w = g.field(input, 0x666666, -54, 0, slot.layermaskname, EDITORFOREVER);
-						if(w) { if(slot.layermaskname) delete[] slot.layermaskname; slot.layermaskname = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
-					}
-					{
-						defformatstring(index)("%d", slot.layermaskmode);
-						defformatstring(input)("texlayer_%d_maskmode_input", menutex);
-						char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-						if(w && *w) { int mode = atoi(w); slot.layermaskmode = mode; g.fieldedit(input); }
-					}
-					{
-						defformatstring(index)("%f", slot.layermaskscale);
-						defformatstring(input)("texlayer_%d_maskscale_input", menutex);
-						char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-						if(w && *w) { float scale = atof(w); slot.layermaskscale = scale <= 0 ? 1 : scale; g.fieldedit(input); }
-					}
-					g.poplist();
-				}
-				g.poplist();
-				g.poplist();
-			}
-			else
-			{
-				g.pushlist();
-				g.texture(textureload("textures/nothumb", 3), 7);
-				g.space(2);
-				g.pushlist();
-				g.title("no texture selected", 0x666666);
-				g.poplist();
-				g.poplist();
-				menutex = nextslot = -1;
-			}
-			g.poplist();
-			g.poplist();
-		}
-		menutex = nextslot;
-		g.end();
-	}
+                g.pushlist();
+                g.pushfont("emphasis"); g.textf("#%-3d", 0xFFFFFF, NULL, menutex); g.popfont();
+                g.space(1); if(g.button("<prev", 0x44FFAA)&GUI_UP) nextslot = menutex > 0 ? menutex-1 : curtexnum-1;
+                g.space(1); if(g.button("next>", 0xAAFF44)&GUI_UP) nextslot = menutex < curtexnum-1 ? menutex+1 : 0;
+                g.space(1); if(g.button("select", 0x66FF66)&GUI_UP) { edittex(menutex); menuon = false; }
+                g.space(1); if(g.button("dupe", 0x888888)&GUI_UP) { nextslot = duplicateslot(slot); }
+                g.space(1); if(g.button("cull unused", 0x444444)&GUI_UP) { extern void texturecull(bool local); texturecull(true); }
+                g.space(2); g.textf("(\fs\fa%s\fS)", 0xAAFFAA, NULL, slot.shader->name);
+                g.poplist();
+                if(!slot.sts.empty())
+                {
+                    loopvj(slot.params)
+                    {
+                        g.pushlist();
+                        g.textf("set%sparam", 0xAAFFAA, NULL, slot.params[j].type == SHPARAM_LOOKUP ? "shader" : (slot.params[j].type == SHPARAM_UNIFORM ? "uniform" : (slot.params[j].type == SHPARAM_PIXEL ? "pixel" : "vertex")));
+                        if(slot.params[j].type == SHPARAM_LOOKUP || slot.params[j].type == SHPARAM_UNIFORM)
+                        {
+                            defformatstring(index)("%s", slot.params[j].name);
+                            defformatstring(input)("param_%d_%d_input", menutex, j);
+                            char *w = g.field(input, 0x666666, -32, 0, index, EDITORFOREVER);
+                            if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+                        }
+                        else
+                        {
+                            defformatstring(index)("%d", slot.params[j].index);
+                            defformatstring(input)("param_%d_%d_input", menutex, j);
+                            char *w = g.field(input, 0x666666, -2, 0, index, EDITORFOREVER);
+                            if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+                        }
+                        loopk(4)
+                        {
+                            g.space(1);
+                            defformatstring(index)("%f", slot.params[j].val[k]);
+                            defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
+                            char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
+                            if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
+                        }
+                        g.poplist();
+                        g.space(1);
+                    }
+                    loopvj(slot.sts)
+                    {
+                        g.pushlist();
+                        g.text("texture", 0xAAFFAA);
+                        {
+                            g.space(1);
+                            defformatstring(index)("%s", findtexturename(slot.sts[j].type));
+                            defformatstring(input)("texture_%d_%d_name_input", menutex, j);
+                            char *w = g.field(input, 0x666666, -3, 0, index, EDITORFOREVER);
+                            if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
+                        }
+                        {
+                            defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
+                            char *w = g.field(input, 0x666666, j ? -78 : -48, 0, slot.sts[j].lname, EDITORFOREVER);
+                            if(w && *w)
+                            {
+                                copystring(slot.sts[j].lname, w);
+                                copystring(slot.sts[j].name, w);
+                                slot.cleanup();
+                                g.fieldedit(input);
+                            }
+                        }
+                        if(!j)
+                        {
+                            {
+                                g.pushfont("console");
+                                defformatstring(index)("%d", slot.rotation);
+                                g.space(1);
+                                if(g.button(index, 0x666666)&GUI_UP) slot.rotation = (slot.rotation+1)%4;
+                                g.space(1);
+                                g.popfont();
+                            }
+                            {
+                                defformatstring(index)("%d", slot.xoffset);
+                                defformatstring(input)("texture_%d_%d_xoffset_input", menutex, j);
+                                char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
+                                if(w && *w) { slot.xoffset = atoi(w); g.fieldedit(input); }
+                            }
+                            {
+                                defformatstring(index)("%d", slot.yoffset);
+                                defformatstring(input)("texture_%d_%d_yoffset_input", menutex, j);
+                                char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
+                                if(w && *w) { slot.yoffset = atoi(w); g.fieldedit(input); }
+                            }
+                            {
+                                defformatstring(index)("%f", slot.scale);
+                                defformatstring(input)("texture_%d_%d_scale_input", menutex, j);
+                                char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
+                                if(w && *w) { slot.scale = atof(w); g.fieldedit(input); }
+                            }
+                        }
+                        g.poplist();
+                    }
+                    g.space(1);
+                    g.pushlist();
+                    g.text("texscroll", 0xAAFFAA);
+                    {
+                        g.space(1);
+                        defformatstring(index)("%f", slot.scrollS * 1000.0f);
+                        defformatstring(input)("texscroll_%d_x_scale_input", menutex);
+                        char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
+                        if(w && *w) { slot.scrollS = atof(w)/1000.f; g.fieldedit(input); }
+                    }
+                    {
+                        defformatstring(index)("%f", slot.scrollT * 1000.0f);
+                        defformatstring(input)("texscroll_%d_y_scale_input", menutex);
+                        char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
+                        if(w && *w) { slot.scrollT = atof(w)/1000.f; g.fieldedit(input); }
+                    }
+                    g.space(1);
+                    g.text("autograss", 0xAAFFAA);
+                    {
+                        g.space(1);
+                        defformatstring(input)("autograss_%d_input", menutex);
+                        char *w = g.field(input, 0x666666, -45, 0, slot.autograss, EDITORFOREVER);
+                        if(w) { DELETEA(slot.autograss); slot.autograss = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
+                    }
+                    g.poplist();
+                    g.pushlist();
+                    g.text("texlayer", 0xAAFFAA);
+                    {
+                        g.space(1);
+                        defformatstring(index)("%d", slot.layer);
+                        defformatstring(input)("texlayer_%d_layer_input", menutex);
+                        char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
+                        if(w && *w) { int layer = atoi(w); slot.layer = layer < 0 ? max(slots.length()-1+layer, 0) : layer; slot.cleanup(); g.fieldedit(input); }
+                    }
+                    {
+                        defformatstring(input)("texlayer_%d_maskname_input", menutex);
+                        char *w = g.field(input, 0x666666, -54, 0, slot.layermaskname, EDITORFOREVER);
+                        if(w) { if(slot.layermaskname) delete[] slot.layermaskname; slot.layermaskname = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
+                    }
+                    {
+                        defformatstring(index)("%d", slot.layermaskmode);
+                        defformatstring(input)("texlayer_%d_maskmode_input", menutex);
+                        char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
+                        if(w && *w) { int mode = atoi(w); slot.layermaskmode = mode; g.fieldedit(input); }
+                    }
+                    {
+                        defformatstring(index)("%f", slot.layermaskscale);
+                        defformatstring(input)("texlayer_%d_maskscale_input", menutex);
+                        char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
+                        if(w && *w) { float scale = atof(w); slot.layermaskscale = scale <= 0 ? 1 : scale; g.fieldedit(input); }
+                    }
+                    g.poplist();
+                }
+                g.poplist();
+                g.poplist();
+            }
+            else
+            {
+                g.pushlist();
+                g.texture(textureload("textures/nothumb", 3), 7);
+                g.space(2);
+                g.pushlist();
+                g.title("no texture selected", 0x666666);
+                g.poplist();
+                g.poplist();
+                menutex = nextslot = -1;
+            }
+            g.poplist();
+            g.poplist();
+        }
+        menutex = nextslot;
+        g.end();
+    }
 
-	void showtextures(bool on)
-	{
+    void showtextures(bool on)
+    {
         if(on != menuon && (menuon = on))
         {
             if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(thumbwidth*thumbheight);
             menustart = starttime();
-			cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
-			menutex = !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
+            cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
+            menutex = !c.children && !isempty(c) ? c.texture[sel.orient] : -1;
         }
-	}
+    }
 
-	void show()
-	{
-		if(!menuon) return;
-		filltexlist();
-		if(!editmode) menuon = false;
-		else UI::addcb(this);
-	}
+    void show()
+    {
+        if(!menuon) return;
+        filltexlist();
+        if(!editmode) menuon = false;
+        else UI::addcb(this);
+    }
 } gui;
 
 void texturemenu() { gui.show(); }
@@ -2011,23 +2011,23 @@ COMMAND(0, showtexgui, "i"); // 0/noargs = toggle, 1 = on, other = off - will au
 
 void render_texture_panel(int w, int h)
 {
-	if((texpaneltimer -= curtime)>0 && editmode)
-	{
-		glLoadIdentity();
-		int width = w*1800/h;
-		glOrtho(0, width, 1800, 0, -1, 1);
-		int y = 50, gap = 10;
+    if((texpaneltimer -= curtime)>0 && editmode)
+    {
+        glLoadIdentity();
+        int width = w*1800/h;
+        glOrtho(0, width, 1800, 0, -1, 1);
+        int y = 50, gap = 10;
 
-		static Shader *rgbonlyshader = NULL;
-		if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
+        static Shader *rgbonlyshader = NULL;
+        if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
 
-		rgbonlyshader->set();
+        rgbonlyshader->set();
 
-		loopi(7)
-		{
-			int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
-			if(ti>=0 && ti<curtexnum)
-			{
+        loopi(7)
+        {
+            int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
+            if(ti>=0 && ti<curtexnum)
+            {
                 Slot &slot = lookuptexture(texmru[ti]);
                 Texture *tex = slot.sts[0].t, *glowtex = NULL, *layertex = NULL;
                 if(slot.texmask&(1<<TEX_GLOW))
@@ -2086,11 +2086,11 @@ void render_texture_panel(int w, int h)
                     }
                     else if(j == 2) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 }
-			}
-			y += s+gap;
-		}
+            }
+            y += s+gap;
+        }
 
         defaultshader->set();
-	}
-	else texpaneltimer = 0;
+    }
+    else texpaneltimer = 0;
 }
