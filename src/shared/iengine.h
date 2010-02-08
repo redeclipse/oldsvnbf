@@ -52,7 +52,7 @@ struct editinfo;
 extern bool editmode;
 
 extern void freeeditinfo(editinfo *&e);
-extern void cursorupdate();
+extern void rendereditcursor();
 extern void pruneundos(int maxremain = 0);
 extern bool noedit(bool view = false);
 extern void toggleedit();
