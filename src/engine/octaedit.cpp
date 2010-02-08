@@ -275,7 +275,7 @@ extern float rayent(const vec &o, const vec &ray, vec &hitpos, float radius, int
 VAR(0, gridlookup, 0, 0, 1);
 VAR(0, passthroughcube, 0, 1, 1);
 
-void cursorupdate()
+void rendereditcursor()
 {
     if(sel.grid == 0) sel.grid = gridsize;
 

@@ -822,8 +822,7 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
-        glBegin(GL_TRIANGLES);
-        glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
+        glBegin(p->fill ? GL_TRIANGLES : GL_LINE_LOOP);
         glVertex3f(0, 0, 0);
         glVertex3fv(p->value[0].v);
         glVertex3fv(p->value[1].v);
@@ -887,9 +886,8 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
-        glBegin(GL_LINE_LOOP);
-        glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
-        loopi(16)
+        glBegin(p->fill ? GL_TRIANGLE_FAN : GL_LINE_LOOP);
+        loopi(16 + (p->fill ? 1 : 0))
         {
             vec v;
             switch(p->axis)
@@ -962,7 +960,6 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
         glBegin(GL_LINES);
-        //glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
         loopi(16)
         {
             vec v = vec(p->spoke).rotate(2*M_PI*i/16.f, p->dir).add(p->spot);
@@ -972,7 +969,6 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
         glEnd();
 
         glBegin(GL_LINE_LOOP);
-        //glPolygonMode(GL_FRONT_AND_BACK, p->fill ? GL_FILL : GL_LINE);
         loopi(16)
         {
             vec v = vec(p->spoke).rotate(2*M_PI*i/16.f, p->dir).add(p->spot);
