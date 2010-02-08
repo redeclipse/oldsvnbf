@@ -24,6 +24,7 @@ enum
     S_RESPAWN, S_CHAT, S_ERROR, S_ALARM, S_V_FLAGSECURED, S_V_FLAGOVERTHROWN, S_V_FLAGPICKUP, S_V_FLAGDROP, S_V_FLAGRETURN, S_V_FLAGSCORE, S_V_FLAGRESET,
     S_V_FIGHT, S_V_CHECKPOINT, S_V_ONEMINUTE, S_V_HEADSHOT, S_V_SPREE1, S_V_SPREE2, S_V_SPREE3, S_V_SPREE4, S_V_SPREE5, S_V_SPREE6, S_V_MKILL1, S_V_MKILL2, S_V_MKILL3,
     S_V_REVENGE, S_V_DOMINATE, S_V_YOUWIN, S_V_YOULOSE, S_V_MCOMPLETE, S_V_FRAGGED, S_V_OWNED, S_V_DENIED,
+    S_NOTIFY, // move after release
     S_MAX
 };
 
@@ -55,109 +56,109 @@ struct enttypes
 #ifdef GAMESERVER
 enttypes enttype[] = {
     {
-        NOTUSED,        -1,  0,     0,      EU_NONE,    0,
+        NOTUSED,        -1,         0,      0,      EU_NONE,    0,
             0,
             0,
             true,               "none",         { "",       "",         "",         "",         "",         "" }
     },
     {
-        LIGHT,          1,  59,     0,      EU_NONE,    4,
+        LIGHT,          1,          59,     0,      EU_NONE,    4,
             (1<<LIGHTFX),
             (1<<LIGHTFX),
             false,              "light",        { "radius", "red",      "green",    "blue",     "",         "" }
     },
     {
-        MAPMODEL,       1,  58,     0,      EU_NONE,    6,
+        MAPMODEL,       1,          58,     0,      EU_NONE,    6,
             (1<<TRIGGER),
             (1<<TRIGGER),
             false,              "mapmodel",     { "type",   "yaw",      "rot",      "blend",    "scale",    "flags" }
     },
     {
-        PLAYERSTART,    1,  59,     0,      EU_NONE,    5,
+        PLAYERSTART,    1,          59,     0,      EU_NONE,    5,
             0,
             0,
             false,              "playerstart",  { "team",   "yaw",      "pitch",    "mode",     "id",       "" }
     },
     {
-        ENVMAP,         1,  0,      0,      EU_NONE,    1,
+        ENVMAP,         1,          0,      0,      EU_NONE,    1,
             0,
             0,
             false,              "envmap",       { "radius", "",         "",         "",         "",         "" }
     },
     {
-        PARTICLES,      1,  59,     0,      EU_NONE,    5,
+        PARTICLES,      1,          59,     0,      EU_NONE,    5,
             (1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<TRIGGER)|(1<<PUSHER),
             false,              "particles",    { "type",   "a",        "b",        "c",        "d",        "" }
     },
     {
-        MAPSOUND,       1,  58,     0,      EU_NONE,    5,
+        MAPSOUND,       1,          58,     0,      EU_NONE,    5,
             (1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<TRIGGER)|(1<<PUSHER),
             false,              "sound",        { "type",   "maxrad",   "minrad",   "volume",   "flags",    "" }
     },
     {
-        LIGHTFX,        1,  1,      0,      EU_NONE,    5,
+        LIGHTFX,        1,          1,      0,      EU_NONE,    5,
             (1<<LIGHT)|(1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<LIGHT)|(1<<TRIGGER)|(1<<PUSHER),
             false,              "lightfx",      { "type",   "mod",      "min",      "max",      "flags",    "" }
     },
     {
-        SUNLIGHT,       1,  160,    0,      EU_NONE,    6,
+        SUNLIGHT,       1,          160,    0,      EU_NONE,    6,
             0,
             0,
             false,              "sunlight",     { "yaw",    "pitch",    "red",      "green",    "blue",     "offset" }
     },
     {
-        WEAPON,         2,  59,     16,     EU_ITEM,    4,
+        WEAPON,         2,          59,     16,     EU_ITEM,    4,
             0,
             0,
             false,              "weapon",       { "type",   "flags",    "mode",     "id",       "",         "" }
     },
     {
-        TELEPORT,       1,  50,     12,     EU_AUTO,    5,
+        TELEPORT,       1,          50,     12,     EU_AUTO,    5,
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX)|(1<<TELEPORT),
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             false,              "teleport",     { "yaw",    "pitch",    "push",     "radius",   "colour",   "" }
     },
     {
-        ACTOR,          1,  59,     0,      EU_NONE,    5,
+        ACTOR,          1,          59,     0,      EU_NONE,    5,
             (1<<FLAG)|(1<<WAYPOINT),
             0,
             false,              "actor",        { "type",   "yaw",      "pitch",    "mode",     "id",       "" }
     },
     {
-        TRIGGER,        1,  58,     16,     EU_AUTO,    5,
+        TRIGGER,        1,          58,     16,     EU_AUTO,    5,
             (1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             (1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             false,              "trigger",      { "id",     "type",     "action",   "radius",   "state",    "" }
     },
     {
-        PUSHER,         1,  58,     12,     EU_AUTO,    5,
+        PUSHER,         1,          58,     12,     EU_AUTO,    5,
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             false,              "pusher",       { "zpush",  "ypush",    "xpush",    "radius",   "min",      "" }
     },
     {
-        FLAG,           1,  48,     36,     EU_NONE,    5,
+        FLAG,           1,          48,     36,     EU_NONE,    5,
             (1<<FLAG),
             0,
             false,              "flag",         { "team",   "yaw",      "pitch",    "mode",     "id",       "" }
     },
     {
-        CHECKPOINT,     1,  48,     16,     EU_AUTO,    6,
+        CHECKPOINT,     1,          48,     16,     EU_AUTO,    6,
             0,
             0,
             false,              "checkpoint",   { "radius", "yaw",      "pitch",    "mode",     "id",       "type" }
     },
     {
-        CAMERA,         1,  48,     0,      EU_NONE,    3,
+        CAMERA,         1,          48,     0,      EU_NONE,    3,
             (1<<CAMERA),
             0,
             false,              "camera",       { "type",   "mindist",  "maxdist",  "",         "",         "" }
     },
     {
-        WAYPOINT,       0,  1,      16,     EU_NONE,    5,
+        WAYPOINT,       0,          1,      16,     EU_NONE,    5,
             (1<<WAYPOINT),
             0,
             true,               "waypoint",     { "type",   "state",    "id",       "radius",   "flags",    "" }

@@ -1806,7 +1806,7 @@ void drawview(int targtype)
         glDepthMask(GL_FALSE);
 
         renderblendbrush();
-
+        extern void rendereditcursor();
         rendereditcursor();
 
         glDepthMask(GL_TRUE);

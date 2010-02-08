@@ -195,6 +195,10 @@ namespace hud
     FVAR(IDF_PERSIST, plasmaclipskew, 0, 0.85f, 1000);
     FVAR(IDF_PERSIST, rifleclipskew, 0, 1, 1000);
 
+    VAR(IDF_PERSIST, showreload, 0, 2, 2);
+    FVAR(IDF_PERSIST, reloadsize, 0, 0.0265f, 1000);
+    FVAR(IDF_PERSIST, reloadblend, 0, 0.75f, 1000);
+
     VAR(IDF_PERSIST, showradar, 0, 2, 2);
     TVAR(IDF_PERSIST, bliptex, "textures/blip", 3);
     TVAR(IDF_PERSIST, cardtex, "textures/card", 3);
@@ -590,6 +594,14 @@ namespace hud
             default:
                 drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, size);
                 break;
+        }
+        if(showreload >= (WEAP(weap, add) < WEAP(weap, max) ? 2 : 1) && interval <= game::focus->weapwait[weap] && game::focus->weapstate[weap] == WEAP_S_RELOAD)
+        {
+            Texture *t = textureload(progresstex, 3);
+            float amt = clamp(float(interval)/float(game::focus->weapwait[weap]), 0.f, 1.f);
+            glColor4f(1-amt, amt, 0, reloadblend*hudblend);
+            glBindTexture(GL_TEXTURE_2D, t->id);
+            drawslice(0, amt, x, y, reloadsize*hudsize);
         }
     }
 

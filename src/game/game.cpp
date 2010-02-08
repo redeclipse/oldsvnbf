@@ -91,6 +91,7 @@ namespace game
     VAR(IDF_PERSIST, showobitdists, 0, 0, 1);
     VAR(IDF_PERSIST, showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
     VAR(IDF_PERSIST, playdamagetones, 0, 1, 3);
+    VAR(IDF_PERSIST, playreloadnotify, 0, 1, 4);
 
     VAR(IDF_PERSIST, quakefade, 0, 100, INT_MAX-1);
     VAR(IDF_PERSIST, ragdolls, 0, 1, 1);
@@ -494,7 +495,11 @@ namespace game
         loopi(WEAP_MAX) if(d->weapstate[i] != WEAP_S_IDLE)
         {
             if(d->state != CS_ALIVE || (d->weapstate[i] != WEAP_S_POWER && lastmillis-d->weaplast[i] >= d->weapwait[i]))
+            {
+                if(playreloadnotify >= ((d == focus ? 1 : 2)*(WEAP(i, add) < WEAP(i, max) ? 2 : 1)) && i == d->weapselect && d->weapstate[i] == WEAP_S_RELOAD)
+                    playsound(S_NOTIFY, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
                 d->setweapstate(i, WEAP_S_IDLE, 0, lastmillis);
+            }
         }
         if(d->respawned > 0 && lastmillis-d->respawned >= PHYSMILLIS*4) d->respawned = -1;
         if(d->suicided > 0 && lastmillis-d->suicided >= PHYSMILLIS*4) d->suicided = -1;
