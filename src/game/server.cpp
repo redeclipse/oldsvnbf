@@ -2268,6 +2268,7 @@ namespace server
                 style = FRAG_OBLITERATE;
             actor->state.frags += fragvalue;
 
+            target->state.spree = 0;
             if(m_team(gamemode, mutators) && actor->team == target->team)
             {
                 actor->state.spree = 0;
@@ -2280,7 +2281,6 @@ namespace server
             else if(actor != target)
             {
                 int logs = 0;
-                target->state.spree = 0;
                 if(actor->state.aitype >= AI_START) pointvalue *= -3;
                 else
                 {
@@ -2342,7 +2342,6 @@ namespace server
                     }
                 }
             }
-            else actor->state.spree = 0;
             target->state.deaths++;
             dropitems(target);
             if(actor != target && actor->state.aitype >= AI_START) givepoints(target, pointvalue); else givepoints(actor, pointvalue);
