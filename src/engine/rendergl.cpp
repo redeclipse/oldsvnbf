@@ -112,6 +112,7 @@ VAR(0, ati_texgen_bug, 0, 0, 1);
 VAR(0, ati_oq_bug, 0, 0, 1);
 VAR(0, ati_minmax_bug, 0, 0, 1);
 VAR(0, ati_dph_bug, 0, 0, 1);
+VAR(0, ati_line_bug, 0, 0, 1);
 VAR(0, nvidia_texgen_bug, 0, 0, 1);
 VAR(0, nvidia_scissor_bug, 0, 0, 1);
 VAR(0, apple_glsldepth_bug, 0, 0, 1);
@@ -395,7 +396,7 @@ void gl_checkextensions()
             }
         }
 
-        if(strstr(vendor, "ATI")) ati_dph_bug = 1;
+        if(strstr(vendor, "ATI")) ati_dph_bug = ati_line_bug = 1;
         else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
 
 #ifdef __APPLE__
