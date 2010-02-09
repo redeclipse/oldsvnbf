@@ -2243,7 +2243,7 @@ namespace server
             {
                 actor->state.crits++;
                 int offset = GAME(damagecritchance)-actor->state.crits;
-                if(GAME(damagecritdist) > 0)
+                if(target != actor && GAME(damagecritdist) > 0)
                 {
                     float dist = actor->state.o.dist(target->state.o);
                     if(dist <= GAME(damagecritdist))

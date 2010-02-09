@@ -101,6 +101,7 @@ namespace game
     VAR(IDF_PERSIST, bloodfade, 1, 20000, INT_MAX-1);
     FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
     VAR(IDF_PERSIST, gibfade, 1, 20000, INT_MAX-1);
+    VAR(IDF_PERSIST, fireburning, 0, 2, 2);
     VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
     FVAR(IDF_PERSIST, impulsescale, 0, 1, 1000);
     VAR(IDF_PERSIST, impulsefade, 0, 200, INT_MAX-1);
@@ -379,7 +380,7 @@ namespace game
                 if(m_ctf(gamemode)) ctf::adddynlights();
                 if(m_stf(gamemode)) stf::adddynlights();
             }
-            if(fireburntime)
+            if(fireburning && fireburntime)
             {
                 gameent *d = NULL;
                 loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire < fireburntime)
@@ -414,7 +415,7 @@ namespace game
 
     void fireeffect(gameent *d)
     {
-        if(fireburntime && d->lastfire && (d != focus || thirdpersonview()) && lastmillis-d->lastfire < fireburntime)
+        if(fireburning >= (d != focus || thirdpersonview() ? 1 : 2) && fireburntime && d->lastfire && lastmillis-d->lastfire < fireburntime)
         {
             int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f);
             if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
