@@ -103,8 +103,8 @@ namespace hud
     FVAR(IDF_PERSIST, burnblend, 0, 0.65f, 1);
 
     VAR(IDF_PERSIST, showindicator, 0, 3, 4);
-    FVAR(IDF_PERSIST, indicatorsize, 0, 0.03f, 1000);
-    FVAR(IDF_PERSIST, indicatorblend, 0, 0.85f, 1);
+    FVAR(IDF_PERSIST, indicatorsize, 0, 0.025f, 1000);
+    FVAR(IDF_PERSIST, indicatorblend, 0, 0.75f, 1);
     TVAR(IDF_PERSIST, indicatortex, "textures/progress", 3);
     TVAR(IDF_PERSIST, zoomtex, "textures/zoom", 3);
 

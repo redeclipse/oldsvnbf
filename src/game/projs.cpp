@@ -1017,6 +1017,7 @@ namespace projs
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
         if(proj.spawntime && lastmillis-proj.spawntime > 500) proj.escaped = true;
+#if 0
         else if(proj.projcollide&COLLIDE_TRACE)
         {
             vec to = vec(pos).add(dir);
@@ -1026,6 +1027,7 @@ namespace projs
             if(physics::xtracecollide(&proj, pos, to, x1, x2, y1, y2, maxdist, dist, proj.owner) || dist > maxdist) proj.escaped = true;
         }
         else if(physics::xcollide(&proj, dir, proj.owner)) proj.escaped = true;
+#endif
     }
 
     bool move(projent &proj, int qtime)
