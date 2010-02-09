@@ -1,6 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
+* Make client aware of an ability to do a critical hit (protocol reliant)
 * Update hacky '@authname' system with properly identified auth-on-connect requests
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
