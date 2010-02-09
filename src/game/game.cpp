@@ -567,16 +567,16 @@ namespace game
 
         void play()
         {
-            int snd = 0;
+            int snd = S_DAMAGE1;
             if(flags&CRIT) snd = S_CRITDAMAGE;
             else if(flags&BURN) snd = S_BURNDAMAGE;
-            else if(damage >= 200) snd = S_DAMAGE1+7;
-            else if(damage >= 150) snd = S_DAMAGE1+6;
-            else if(damage >= 100) snd = S_DAMAGE1+5;
-            else if(damage >= 75) snd = S_DAMAGE1+4;
-            else if(damage >= 50) snd = S_DAMAGE1+3;
-            else if(damage >= 25) snd = S_DAMAGE1+2;
-            else if(damage >= 10) snd = S_DAMAGE1+1;
+            else if(damage >= 200) snd += 7;
+            else if(damage >= 150) snd += 6;
+            else if(damage >= 100) snd += 5;
+            else if(damage >= 75) snd += 4;
+            else if(damage >= 50) snd += 3;
+            else if(damage >= 25) snd += 2;
+            else if(damage >= 10) snd += 1;
             playsound(snd, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
         }
     };
