@@ -102,7 +102,7 @@ namespace hud
     TVAR(IDF_PERSIST, burntex, "textures/burn", 3);
     FVAR(IDF_PERSIST, burnblend, 0, 0.65f, 1);
 
-    VAR(IDF_PERSIST, showindicator, 0, 1, 1);
+    VAR(IDF_PERSIST, showindicator, 0, 3, 4);
     FVAR(IDF_PERSIST, indicatorsize, 0, 0.03f, 1000);
     FVAR(IDF_PERSIST, indicatorblend, 0, 0.85f, 1);
     TVAR(IDF_PERSIST, indicatortex, "textures/progress", 3);
@@ -194,10 +194,6 @@ namespace hud
     FVAR(IDF_PERSIST, flamerclipskew, 0, 0.85f, 1000);
     FVAR(IDF_PERSIST, plasmaclipskew, 0, 0.85f, 1000);
     FVAR(IDF_PERSIST, rifleclipskew, 0, 1, 1000);
-
-    VAR(IDF_PERSIST, showreload, 0, 2, 2);
-    FVAR(IDF_PERSIST, reloadsize, 0, 0.0265f, 1000);
-    FVAR(IDF_PERSIST, reloadblend, 0, 0.75f, 1000);
 
     VAR(IDF_PERSIST, showradar, 0, 2, 2);
     TVAR(IDF_PERSIST, bliptex, "textures/blip", 3);
@@ -443,27 +439,37 @@ namespace hud
         return NULL;
     }
 
+
     void drawindicator(int weap, int x, int y, int s)
     {
-        Texture *t = textureload(indicatortex, 3);
-        if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        else glBlendFunc(GL_ONE, GL_ONE);
         int millis = lastmillis-game::focus->weaplast[weap];
         float r = 1, g = 1, b = 1, amt = 0;
         switch(game::focus->weapstate[weap])
         {
-            case WEAP_S_POWER:
+            case WEAP_S_POWER: if(WEAP(game::focus->weapselect, power))
             {
                 amt = clamp(float(millis)/float(WEAP(weap, power)), 0.f, 1.f);
                 colourskew(r, g, b, 1.f-amt);
                 break;
             }
+            case WEAP_S_RELOAD: if(showindicator >= (WEAP(weap, add) < WEAP(weap, max) ? 3 : 2) && millis <= game::focus->weapwait[weap])
+            {
+                amt = 1.f-clamp(float(millis)/float(game::focus->weapwait[weap]), 0.f, 1.f);
+                colourskew(r, g, b, 1.f-amt);
+                break;
+            }
             default: amt = 0; break;
         }
-        glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
-        glColor4f(r, g, b, indicatorblend*hudblend);
-        if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
-        else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
+        if(amt > 0)
+        {
+            Texture *t = textureload(indicatortex, 3);
+            if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            else glBlendFunc(GL_ONE, GL_ONE);
+            glBindTexture(GL_TEXTURE_2D, t->getframe(amt));
+            glColor4f(r, g, b, indicatorblend*hudblend);
+            if(t->frames.length() > 1) drawsized(x-s/2, y-s/2, s);
+            else drawslice(0, clamp(amt, 0.f, 1.f), x, y, s);
+        }
     }
 
     static int clipsizes[WEAP_MAX] = {0};
@@ -595,14 +601,6 @@ namespace hud
                 drawslice(0.5f/maxammo, ammo/float(maxammo), x, y, size);
                 break;
         }
-        if(showreload >= (WEAP(weap, add) < WEAP(weap, max) ? 2 : 1) && interval <= game::focus->weapwait[weap] && game::focus->weapstate[weap] == WEAP_S_RELOAD)
-        {
-            Texture *t = textureload(progresstex, 3);
-            float amt = clamp(float(interval)/float(game::focus->weapwait[weap]), 0.f, 1.f);
-            glColor4f(1-amt, amt, 0, reloadblend*hudblend);
-            glBindTexture(GL_TEXTURE_2D, t->id);
-            drawslice(0, amt, x, y, reloadsize*hudsize);
-        }
     }
 
     void drawpointerindex(int index, int x, int y, int s, float r, float g, float b, float fade)
@@ -642,8 +640,7 @@ namespace hud
             if(game::focus->state == CS_ALIVE && game::focus->hasweap(game::focus->weapselect, m_weapon(game::gamemode, game::mutators)))
             {
                 if(showclips) drawclip(game::focus->weapselect, nx, ny, clipsize*hudsize);
-                if(showindicator && WEAP(game::focus->weapselect, power) && game::focus->weapstate[game::focus->weapselect] == WEAP_S_POWER)
-                    drawindicator(game::focus->weapselect, nx, ny, int(indicatorsize*hudsize));
+                if(showindicator) drawindicator(game::focus->weapselect, nx, ny, int(indicatorsize*hudsize));
             }
             if(game::mousestyle() >= 1) // renders differently
                 drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1, 1, 1, crosshairblend*hudblend);
@@ -1652,7 +1649,7 @@ namespace hud
                             else if(amt > 0.5f) col = "\fy";
                             else if(amt > 0.25f) col = "\fo";
                             else col = "\fr";
-                            drawprogress(cx[i], cm+cg, amt, 1, cg, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
+                            drawprogress(cx[i], cm+cg, 0, 1, cg, false, 1, 1, 1, blend*inventoryblend*0.25f, 1);
                             cm += drawprogress(cx[i], cm+cg, 1-amt, amt, cg, false, 1, 1, 1, blend*inventoryblend, 1, "default", "%s%d", col, int(millis/1000.f));
                         }
                     }
