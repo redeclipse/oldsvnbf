@@ -122,9 +122,13 @@ GFVAR(0, forceliquidcurb, -1, -1, 1000);
 GFVAR(0, forcefloorcurb, -1, -1, 1000);
 GFVAR(0, forceaircurb, -1, -1, 1000);
 
-GFVAR(0, damagescale, -1000, 1, 1000);
-GFVAR(0, hitpushscale, -1000, 1, 1000);
-GFVAR(0, deadpushscale, -1000, 2, 1000);
+GFVAR(0, damagescale, 0, 1, 1000);
+GVAR(0, damagecritchance, 0, 100, INT_MAX-1);
+GFVAR(0, damagecritscale, 0, 4, 1000);
+GFVAR(0, damagecritdist, 0, 8, 1000);
+
+GFVAR(0, hitpushscale, 0, 1, 1000);
+GFVAR(0, deadpushscale, 0, 2, 1000);
 
 GFVAR(0, wavepusharea, 0, 2, 1000);
 GFVAR(0, wavepushscale, 0, 1, 1000);

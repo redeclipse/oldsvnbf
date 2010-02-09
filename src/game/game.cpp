@@ -81,7 +81,8 @@ namespace game
     VAR(IDF_PERSIST, shownamesabovehead, 0, 2, 2);
     VAR(IDF_PERSIST, showstatusabovehead, 0, 2, 2);
     VAR(IDF_PERSIST, showteamabovehead, 0, 1, 3);
-    VAR(IDF_PERSIST, showdamageabovehead, 0, 0, 3);
+    VAR(IDF_PERSIST, showdamageabovehead, 0, 0, 2);
+    VAR(IDF_PERSIST, showcritabovehead, 0, 1, 2);
     FVAR(IDF_PERSIST, aboveheadblend, 0.f, 0.75f, 1.f);
     FVAR(IDF_PERSIST, aboveheadsmooth, 0, 0.5f, 1);
     VAR(IDF_PERSIST, aboveheadsmoothmillis, 1, 200, 10000);
@@ -91,6 +92,7 @@ namespace game
     VAR(IDF_PERSIST, showobitdists, 0, 0, 1);
     VAR(IDF_PERSIST, showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
     VAR(IDF_PERSIST, playdamagetones, 0, 1, 3);
+    VAR(IDF_PERSIST, playcrittones, 0, 3, 3);
     VAR(IDF_PERSIST, playreloadnotify, 0, 1, 4);
 
     VAR(IDF_PERSIST, quakefade, 0, 100, INT_MAX-1);
@@ -548,7 +550,7 @@ namespace game
 
     struct damagetone
     {
-        enum { BURN = 1<<0 };
+        enum { BURN = 1<<0, CRIT = 1<<1 };
 
         gameent *d, *actor;
         int damage, flags;
@@ -566,15 +568,16 @@ namespace game
         void play()
         {
             int snd = 0;
-            if(flags & BURN) snd = 8;
-            else if(damage >= 200) snd = 7;
-            else if(damage >= 150) snd = 6;
-            else if(damage >= 100) snd = 5;
-            else if(damage >= 75) snd = 4;
-            else if(damage >= 50) snd = 3;
-            else if(damage >= 25) snd = 2;
-            else if(damage >= 10) snd = 1;
-            playsound(S_DAMAGE1+snd, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
+            if(flags&CRIT) snd = S_CRITDAMAGE;
+            else if(flags&BURN) snd = S_BURNDAMAGE;
+            else if(damage >= 200) snd = S_DAMAGE1+7;
+            else if(damage >= 150) snd = S_DAMAGE1+6;
+            else if(damage >= 100) snd = S_DAMAGE1+5;
+            else if(damage >= 75) snd = S_DAMAGE1+4;
+            else if(damage >= 50) snd = S_DAMAGE1+3;
+            else if(damage >= 25) snd = S_DAMAGE1+2;
+            else if(damage >= 10) snd = S_DAMAGE1+1;
+            playsound(snd, d->o, d, d == focus ? SND_FORCED : SND_DIRECT, 255-int(camera1->o.dist(d->o)/(getworldsize()/2)*200));
         }
     };
     vector<damagetone> damagetones;
@@ -615,13 +618,6 @@ namespace game
                         if(!kidmode && bloodscale > 0)
                             part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 1, 100, DECAL_BLOOD, int(d->radius*4));
                         else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 1, 50, DECAL_STAIN, int(d->radius*4));
-                    }
-                    if(showdamageabovehead > (d != focus ? 0 : 1))
-                    {
-                        string ds;
-                        if(showdamageabovehead > 2) formatstring(ds)("<sub>-%d (%d%%)", damage, flags&HIT_HEAD ? 100 : (flags&HIT_TORSO ? 50 : 25));
-                        else formatstring(ds)("<sub>-%d", damage);
-                        part_textcopy(d->abovehead(), ds, PART_TEXT, aboveheadfade, 0x888888, 3, 1, -10, 0, d);
                     }
                     if(d->aitype < AI_START && !issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
                     if(!burning) d->quake = clamp(d->quake+max(damage/2, 1), 0, 1000);
@@ -664,6 +660,17 @@ namespace game
             if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
         }
         hiteffect(weap, flags, damage, d, actor, dir, actor == player1 || actor->ai);
+        if(showdamageabovehead >= (d != focus ? 1 : 2))
+        {
+            defformatstring(ds)("<sub>\fr+%d", damage);
+            part_textcopy(d->abovehead(), ds, d != focus ? PART_TEXT : PART_TEXT_ONTOP, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d);
+        }
+        if(flags&HIT_CRIT)
+        {
+            if(showcritabovehead >= (d != focus ? 1 : 2))
+                part_text(d->abovehead(), "<super>\fzgrCRITICAL", d != focus ? PART_TEXT : PART_TEXT_ONTOP, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d);
+            if(playcrittones >= (actor == focus ? 1 : (d == focus ? 2 : 3))) mergedamagetone(d, actor, damage, damagetone::CRIT);
+        }
     }
 
     void killed(int weap, int flags, int damage, gameent *d, gameent *actor, int style)
@@ -711,6 +718,7 @@ namespace game
         else
         {
             concatstring(d->obit, "was ");
+            if(flags&HIT_CRIT) concatstring(d->obit, "\fs\fzgrcritically\fS ");
             if(d->aitype == AI_TURRET) concatstring(d->obit, "destroyed by");
             else
             {

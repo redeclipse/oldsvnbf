@@ -205,7 +205,11 @@ struct listrenderer : partrenderer
         p->blend = blend;
         p->grav = grav;
         p->collide = collide;
-        p->owner = pl;
+        if((p->owner = pl) != NULL && (p->owner->type == ENT_PLAYER || p->owner->type == ENT_AI)) switch(type&0xFF)
+        {
+            case PT_TEXT: case PT_ICON: p->m.add(vec(p->o).sub(p->owner->abovehead())); break;
+            default: break;
+        }
         p->flags = 0;
         return p;
     }

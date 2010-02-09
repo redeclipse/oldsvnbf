@@ -126,7 +126,7 @@ namespace server
         vec o;
         int state;
         projectilestate dropped, weapshots[WEAP_MAX][2];
-        int score, frags, spree, rewards, flags, deaths, teamkills, shotdamage, damage;
+        int score, frags, spree, crits, rewards, flags, deaths, teamkills, shotdamage, damage;
         int lasttimeplayed, timeplayed, aireinit, lastfireburn, lastfireowner;
         vector<int> fraglog, fragmillis, cpnodes;
 
@@ -144,7 +144,7 @@ namespace server
             loopi(WEAP_MAX) loopj(2) weapshots[i][j].reset();
             if(!change) score = timeplayed = 0;
             else gamestate::mapchange();
-            frags = spree = rewards = flags = deaths = teamkills = shotdamage = damage = 0;
+            frags = spree = crits = rewards = flags = deaths = teamkills = shotdamage = damage = 0;
             fraglog.setsize(0); fragmillis.setsize(0); cpnodes.setsize(0);
             respawn(0, m_health(server::gamemode, server::mutators));
         }
@@ -161,7 +161,7 @@ namespace server
     {
         uint ip;
         string name;
-        int points, score, frags, spree, rewards, flags, timeplayed, deaths, teamkills, shotdamage, damage;
+        int points, score, frags, spree, crits, rewards, flags, timeplayed, deaths, teamkills, shotdamage, damage;
 
         void save(servstate &gs)
         {
@@ -169,6 +169,7 @@ namespace server
             score = gs.score;
             frags = gs.frags;
             spree = gs.spree;
+            crits = gs.crits;
             rewards = gs.rewards;
             flags = gs.flags;
             deaths = gs.deaths;
@@ -184,6 +185,7 @@ namespace server
             gs.score = score;
             gs.frags = frags;
             gs.spree = spree;
+            gs.crits = crits;
             gs.rewards = rewards;
             gs.flags = flags;
             gs.deaths = deaths;
@@ -2237,6 +2239,23 @@ namespace server
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else
         {
+            if(GAME(damagecritchance))
+            {
+                actor->state.crits++;
+                int offset = GAME(damagecritchance)-actor->state.crits;
+                if(GAME(damagecritdist) > 0)
+                {
+                    float dist = actor->state.o.dist(target->state.o);
+                    if(dist <= GAME(damagecritdist))
+                        offset = int(offset*dist/GAME(damagecritdist));
+                }
+                if(offset <= 0 || !rnd(offset))
+                {
+                    realflags |= HIT_CRIT;
+                    realdamage = int(realdamage*GAME(damagecritscale));
+                    actor->state.crits = 0;
+                }
+            }
             target->state.dodamage(target->state.health -= realdamage);
             target->state.lastpain = gamemillis;
             actor->state.damage += realdamage;
