@@ -257,7 +257,7 @@ namespace projs
             case PRJ_EJECT:
             {
                 int mag = int(proj.vel.magnitude()), vol = clamp(mag*3, 10, 255);
-                playsound(S_DEBRIS, proj.o, NULL, 0, vol);
+                playsound(S_SHELL1+rnd(6), proj.o, NULL, 0, vol);
                 break;
             }
             default: break;
