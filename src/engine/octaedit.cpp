@@ -277,8 +277,6 @@ VAR(0, passthroughcube, 0, 1, 1);
 
 void rendereditcursor()
 {
-    if(sel.grid == 0) sel.grid = gridsize;
-
     vec target(worldpos);
     if(!insideworld(target)) loopi(3)
         target[i] = max(min(target[i], float(hdr.worldsize)), 0.0f);
