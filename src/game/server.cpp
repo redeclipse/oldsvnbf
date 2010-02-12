@@ -2953,7 +2953,11 @@ namespace server
             distpoints(ci, true); savescore(ci);
             sendf(-1, 1, "ri2", SV_DISCONNECT, n);
             ci->connected = false;
-            if(ci->name[0]) relayf(2, "\fo%s (%s) has left the game (%s, %d player(s))", colorname(ci), gethostname(n), reason >= 0 ? disc_reasons[reason] : "normal", numclients(ci->clientnum));
+            if(ci->name[0])
+            {
+                int amt = numclients(ci->clientnum);
+                relayf(2, "\fo%s (%s) has left the game (%s, %d %s)", colorname(ci), gethostname(n), reason >= 0 ? disc_reasons[reason] : "normal", amt, amt != 1 ? "players" : "players");
+            }
             aiman::removeai(ci, complete);
             if(!complete) aiman::dorefresh = true;
             clients.removeobj(ci);
@@ -3190,7 +3194,8 @@ namespace server
                 sendwelcome(ci);
                 if(restorescore(ci)) sendresume(ci);
                 sendinitclient(ci);
-                relayf(2, "\fg%s (%s) has joined the game (%d player(s))", colorname(ci), gethostname(ci->clientnum), numclients());
+                int amt = numclients();
+                relayf(2, "\fg%s (%s) has joined the game (%d %s)", colorname(ci), gethostname(ci->clientnum), amt, amt != 1 ? "players" : "players");
             }
         }
         else if(chan==2)
@@ -3198,7 +3203,7 @@ namespace server
             if(receivefile(sender, p.buf, p.maxlen))
             {
                 mapsending = false;
-                if(mapdata[0] && mapdata[1] && mapdata[2]) sendf(-1, 1, "ri", SV_SENDMAP);
+                sendf(-1, 1, "ri", SV_SENDMAP);
             }
             return;
         }
