@@ -895,7 +895,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     }
 
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
-    else if(showboundingbox && !shadowmapping)
+    else if(showboundingbox && !shadowmapping && editmode)
     {
         glPushMatrix();
         notextureshader->set();
