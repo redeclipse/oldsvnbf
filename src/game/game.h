@@ -954,7 +954,8 @@ struct gameent : dynent, gamestate
 {
     editinfo *edit; ai::aiinfo *ai;
     int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
-        actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake, lastpush;
+        actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake,
+        lastpush, lastjump;
     float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
     vec head, torso, muzzle, eject, melee, waist, lfoot, rfoot, legs, hrad, trad, lrad;
     bool action[AC_MAX], conopen, k_up, k_down, k_left, k_right;
@@ -964,7 +965,7 @@ struct gameent : dynent, gamestate
 
     gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
         frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
-        lastattacker(-1), lastpoints(0), quake(0), lastpush(0),
+        lastattacker(-1), lastpoints(0), quake(0), lastpush(0), lastjump(0),
         head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
         lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
         conopen(false), k_up(false), k_down(false), k_left(false), k_right(false)
@@ -1156,14 +1157,24 @@ struct gameent : dynent, gamestate
     void doimpulse(int cost, int type, int millis)
     {
         impulse[IM_METER] += cost;
-        impulse[IM_TYPE] = type;
         impulse[IM_TIME] = millis;
-        impulse[IM_COUNT]++;
+        if(!lastjump && type > IM_T_NONE && type < IM_T_WALL)
+        {
+            impulse[IM_TYPE] = IM_T_NONE;
+            lastjump = millis;
+        }
+        else
+        {
+            impulse[IM_TYPE] = type;
+            impulse[IM_COUNT]++;
+        }
         resetphys();
     }
 
-    void dojumpreset()
+    void dojumpreset(bool full = false)
     {
+        if(full) lastjump = 0;
+        else resetphys();
         timeinair = turnside = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
     }
 };

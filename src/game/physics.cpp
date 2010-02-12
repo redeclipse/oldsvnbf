@@ -241,7 +241,8 @@ namespace physics
                 if(PHYS(gravity) > 0)
                 {
                     if(PHYS(impulsestyle) <= 2 && e->impulse[IM_COUNT] >= PHYS(impulsecount)) return false;
-                    if(cost == 0 && PHYS(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL) return false;
+                    if(cost == 0 && PHYS(impulsestyle) == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL)
+                        return false;
                 }
             }
             return true;
@@ -652,6 +653,7 @@ namespace physics
                     }
                     d->action[AC_JUMP] = false;
                     d->resetphys();
+                    d->lastjump = lastmillis;
                     playsound(S_JUMP, d->o, d);
                     regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
                     client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
@@ -739,10 +741,14 @@ namespace physics
                 else if(d->turnside) { d->turnside = 0; d->resetphys(); }
             }
         }
-        if(d->action[AC_JUMP] && impulseaction < (PHYS(gravity) > 0 && PHYS(impulsestyle) < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
+
+        if(d->action[AC_JUMP] && impulseaction < (PHYS(gravity) > 0 && PHYS(impulsestyle) < 2 ? 2 : 1))
+            d->action[AC_JUMP] = false;
         d->action[AC_DASH] = false;
-        if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside) d->timeinair += millis;
-        else d->dojumpreset();
+
+        if((d->physstate == PHYS_FALL && !d->onladder) || d->turnside)
+            d->timeinair += millis;
+        else d->dojumpreset(true);
     }
 
     void modifyvelocity(physent *pl, bool local, bool floating, int millis)

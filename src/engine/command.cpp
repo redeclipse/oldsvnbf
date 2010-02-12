@@ -151,7 +151,6 @@ void aliasa(const char *name, char *action)
         else
         {
             if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
-            if(b->type == ID_ALIAS && worldidents && !(b->flags & IDF_WORLD)) b->flags |= IDF_WORLD;
 #ifndef STANDALONE
             client::editvar(b, interactive && !overrideidents);
 #endif
