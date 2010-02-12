@@ -96,8 +96,8 @@
                     <h3>Free and open source game for Windows, Linux/BSD and Mac OSX</h3>
                     <h3>Agile gameplay in low gravity environments: sprint, wall run/kick, and impulse dash</h3>
                     <h3>Create your own maps cooperatively with friends online using the builtin map editor</h3>
-                    <a href="/download" id="button">Free Download <em><?php echo $app['releasever']; ?></em></a> 
-                    <p id="rel">released <i><?php echo $app['releasedate']; ?></i></p>
+                    <a href="/download" id="button">Free Download<br /><em><?php echo $app['releasever']; ?><br />
+                    released <i><?php echo $app['releasedate']; ?></i></em></a>
                     <p id="svn">or <a href="/wiki/SVN">get the SVN version</a> and live on the bleeding edge</p>
                 </div>
                 <div id="player">
