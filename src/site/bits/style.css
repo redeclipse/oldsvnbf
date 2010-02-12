@@ -5,12 +5,12 @@ h3 { font: 16px "Trebuchet MS", Arial, Helvetica, sans-serif; color: #FFFFFF; ba
 h4 { font: bold 21px Trebuchet MS, Arial, Helvetica, sans-serif; color: #a34b14; margin: 0px 0px 10px; padding: 0px; }
 #container { margin: 0px auto; width: 980px; padding: 0px; }
 #main { margin: 5px 0px 0px 30px; width: 410px; float: left; }
-#button { font: bold normal 20px "Trebuchet MS", Arial, Helvetica, sans-serif; color: #FFFFFF; background: url(/bits/sprite.png) no-repeat -282px -777px; margin: 10px 0px 0px 34px; padding: 3px 0px 0px 54px; float: left; height: 30px; width: 302px; text-decoration: none; text-shadow: -1px -1px 1px #773a00; }
+#button { font: bold normal 20px "Trebuchet MS", Arial, Helvetica, sans-serif; color: #FFFFFF; background: url(/bits/sprite.png) no-repeat -690px -1126px; margin: 0px 0px 0px 65px; padding: 15px 0px 0px 98px; float: left; height: 64px; width: 176px; text-decoration: none; text-shadow: -1px -1px 1px #773a00; }
 #rel, #svn { font: 12px Arial, Helvetica, sans-serif; color: #c0bfb7; margin: 0px; padding: 5px 0px 0px; float: left; width: 402px; text-align: center; }
 #rel a, #svn a { color: #FFFFFF; border-bottom: 1px dotted #FFFFFF; text-decoration: none; }
 #rel a:hover, #svn a:hover { color: #FFFFFF; text-decoration: none; border-bottom: 1px solid #FFFFFF; }
-#button:hover { background: url(/bits/sprite.png) -282px -820px; }
-#button em { font: normal 11px Arial, Helvetica, sans-serif; text-decoration: none; padding-left: 10px; }
+#button:hover { font: bold normal 20px "Trebuchet MS", Arial, Helvetica, sans-serif; color: #FFFFFF; background: url(/bits/sprite.png) no-repeat -690px -1217px; margin: 0px 0px 0px 65px; padding: 15px 0px 0px 98px; float: left; height: 64px; width: 176px; text-decoration: none; text-shadow: -1px -1px 1px #773a00; }
+#button em { font: normal 11px Arial, Helvetica, sans-serif; text-decoration: none; }
 #header { margin: 10px 0px 0px; padding: 10px 0px; float: left; width: 980px; background: url(/bits/sprite.png) no-repeat center top; }
 #header img { margin: 0px; padding: 0px; border-style: none; }
 #links { font-size: 16px; font-weight: bold; color: #FFFFFF; margin: 0px; padding: 0px; float: right; height: 50px; width: 980px; }
@@ -24,12 +24,12 @@ h4 { font: bold 21px Trebuchet MS, Arial, Helvetica, sans-serif; color: #a34b14;
 #copyright { font-size: 10px; color: #999999; margin: 0px; padding: 2px 0px 8px 20px; float: left; height: 32px; width: 960px; text-align: left; }
 #copyright p { margin: 0px; padding: 4px 0px 0px 0px; }
 #sflogo { margin: -2px 10px 0px 0px; float: right; padding: 0px; }
-#video { background: url(/bits/sprite.png) no-repeat center -300px; margin: 0px; padding: 0px; float: left; width: 980px; }
+#video { background: url(/bits/sprite.png) no-repeat center -300px; margin: 0px; padding: 0 0 10px 0; float: left; width: 980px; }
 #video object { margin: 0px; padding: 0px; }
 #player { margin: 0px 20px 0px 0px; padding: 0px; float: right; height: 308px; width: 500px; }
-.sliderblock{ background: url(/bits/sprite.png) no-repeat scroll left -204px; float: left; width: 935px; margin: 0px; padding: 20px 0px 0px 45px; }
+.sliderblock{ background: url(/bits/sprite.png) no-repeat scroll left -204px; float: left; width: 935px; margin: 0px; padding: 20px 0px 5px 45px; }
 .vbar { background: url(/bits/sprite.png) no-repeat -260px -774px; margin: 0px 5px; padding: 0px; float: left; height: 459px; width: 2px; }
-.endblock { background: url(/bits/sprite.png) no-repeat center -741px; float: left; height: 10px; width: 980px; margin: 0px 0px 10px; }
+.endblock { background: url(/bits/sprite.png) no-repeat center -752px; float: left; height: 10px; width: 980px; margin: 0px 0px 0px; }
 .rightblock { background: url(/bits/sprite.png) 0px -767px; margin: 0px; padding: 14px 20px 0px; float: right; width: 210px; font-size: 14px; color: #a5a5a5; clear: right; font-weight: normal; text-align: center; }
 .rightblock ul { margin: 0px 0px 10px; padding: 0px; float: left; list-style: none; display: block; }
 .rightblock li { float: left; display: block; width: 41px; margin: 10px 0px 0px 10px; padding: 0px; height: 41px; }
