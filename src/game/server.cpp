@@ -2956,7 +2956,7 @@ namespace server
             if(ci->name[0])
             {
                 int amt = numclients(ci->clientnum);
-                relayf(2, "\fo%s (%s) has left the game (%s, %d %s)", colorname(ci), gethostname(n), reason >= 0 ? disc_reasons[reason] : "normal", amt, amt != 1 ? "players" : "players");
+                relayf(2, "\fo%s (%s) has left the game (%s, %d %s)", colorname(ci), gethostname(n), reason >= 0 ? disc_reasons[reason] : "normal", amt, amt != 1 ? "players" : "player");
             }
             aiman::removeai(ci, complete);
             if(!complete) aiman::dorefresh = true;
@@ -3195,7 +3195,7 @@ namespace server
                 if(restorescore(ci)) sendresume(ci);
                 sendinitclient(ci);
                 int amt = numclients();
-                relayf(2, "\fg%s (%s) has joined the game (%d %s)", colorname(ci), gethostname(ci->clientnum), amt, amt != 1 ? "players" : "players");
+                relayf(2, "\fg%s (%s) has joined the game (%d %s)", colorname(ci), gethostname(ci->clientnum), amt, amt != 1 ? "players" : "player");
             }
         }
         else if(chan==2)
