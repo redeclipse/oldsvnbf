@@ -46,6 +46,7 @@
 * (compass) voices
 
 = Maps =
+* Clip area behind beta flag in refuge
 * Fix gravity in wet
 * Ladderify dualstar
 * Post-freeze: Update to new version of darkness
