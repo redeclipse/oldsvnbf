@@ -98,9 +98,9 @@ namespace game
     VAR(IDF_PERSIST, quakefade, 0, 100, INT_MAX-1);
     VAR(IDF_PERSIST, ragdolls, 0, 1, 1);
     FVAR(IDF_PERSIST, bloodscale, 0, 1, 1000);
-    VAR(IDF_PERSIST, bloodfade, 1, 20000, INT_MAX-1);
+    VAR(IDF_PERSIST, bloodfade, 1, 5000, INT_MAX-1);
     FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
-    VAR(IDF_PERSIST, gibfade, 1, 20000, INT_MAX-1);
+    VAR(IDF_PERSIST, gibfade, 1, 10000, INT_MAX-1);
     VAR(IDF_PERSIST, fireburning, 0, 2, 2);
     VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
     FVAR(IDF_PERSIST, impulsescale, 0, 1, 1000);
