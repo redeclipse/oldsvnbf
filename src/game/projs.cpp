@@ -10,7 +10,7 @@ namespace projs
     vector<hitmsg> hits;
     vector<projent *> projs;
 
-    VAR(IDF_PERSIST, maxprojectiles, 32, 1024, INT_MAX-1);
+    VAR(IDF_PERSIST, maxprojectiles, 32, 512, INT_MAX-1);
 
     VAR(IDF_PERSIST, ejectfade, 0, 3500, INT_MAX-1);
     VAR(IDF_PERSIST, ejectspin, 0, 1, 1);
@@ -757,7 +757,8 @@ namespace projs
                 case WEAP_GIBS:
                 {
                     part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
-                    if(lastmillis-proj.lasteffect >= game::bloodfade/10 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
+                    bool moving = proj.movement > 0.f;
+                    if(lastmillis-proj.lasteffect >= (moving ? 250 : 1000) && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
                     {
                         part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 1, 100, DECAL_BLOOD);
                         proj.lasteffect = lastmillis;

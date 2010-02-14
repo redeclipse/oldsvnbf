@@ -82,7 +82,7 @@ struct partrenderer
             ts = lastmillis-p->millis;
             blend = max(255-((ts<<8)/p->fade), 0);
             int weight = p->grav;
-            if((type&PT_SHRINK || type&PT_GROW) && p->fade >= emitmillis*2)
+            if((type&PT_SHRINK || type&PT_GROW) && p->fade >= 50)
             {
                 float amt = clamp(ts/float(p->fade), 0.f, 1.f);
                 if(type&PT_SHRINK)
@@ -1017,7 +1017,7 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>particles/smoke", PT_PART|PT_FLIP|PT_ROT|PT_SHRINK),
     new softquadrenderer("particles/hint", PT_PART|PT_GLARE),
     new quadrenderer("particles/hint", PT_PART|PT_GLARE),
-    new quadrenderer("<grey>particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT|PT_GROW),
+    new quadrenderer("<grey>particles/blood", PT_PART|PT_MOD|PT_RND4|PT_FLIP|PT_ROT),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE),
     new quadrenderer("particles/entity", PT_PART|PT_GLARE|PT_ONTOP),
     new quadrenderer("particles/spark", PT_PART|PT_GLARE|PT_FLIP|PT_ROT|PT_SHRINK|PT_GROW),
