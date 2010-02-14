@@ -574,6 +574,11 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="engine\smd.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="engine\sound.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
