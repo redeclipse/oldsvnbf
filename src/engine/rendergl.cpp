@@ -632,6 +632,9 @@ void cleanupgl()
     cleanupmotionblur();
 }
 
+#define VARRAY_INTERNAL
+#include "varray.h"
+
 VAR(0, wireframe, 0, 0, 1);
 
 physent camera, *camera1 = &camera;
