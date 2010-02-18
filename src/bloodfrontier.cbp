@@ -613,6 +613,12 @@
 			<Option target="data" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="engine\varray.h">
+			<Option target="data" />
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="engine\vertmodel.h">
 			<Option target="data" />
 			<Option target="client" />

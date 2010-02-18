@@ -142,6 +142,8 @@ extern PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC glCompressedTexSubImage2D_;
 extern PFNGLCOMPRESSEDTEXSUBIMAGE1DARBPROC glCompressedTexSubImage1D_;
 extern PFNGLGETCOMPRESSEDTEXIMAGEARBPROC   glGetCompressedTexImage_;
 
+#include "varray.h"
+
 extern physent *camera1, camera;
 extern bfgz hdr;
 extern int worldscale;
