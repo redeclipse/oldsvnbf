@@ -84,6 +84,8 @@ int draw_textf(const char *fstr, int left, int top, ...)
     return draw_text(str, left, top);
 }
 
+static varray textverts;
+
 static int draw_char(int c, int x, int y)
 {
     font::charinfo &info = curfont->chars[c-33];
@@ -92,12 +94,11 @@ static int draw_char(int c, int x, int y)
     float tc_right   = (info.x + info.w + curfont->offsetw) / float(curfont->tex->xs);
     float tc_bottom  = (info.y + info.h + curfont->offseth) / float(curfont->tex->ys);
 
-    glTexCoord2f(tc_left,  tc_top   ); glVertex2f(x,          y);
-    glTexCoord2f(tc_right, tc_top   ); glVertex2f(x + info.w, y);
-    glTexCoord2f(tc_right, tc_bottom); glVertex2f(x + info.w, y + info.h);
-    glTexCoord2f(tc_left,  tc_bottom); glVertex2f(x,          y + info.h);
+    textverts.attrib<float>(x,          y         ); textverts.attrib<float>(tc_left,  tc_top   );
+    textverts.attrib<float>(x + info.w, y         ); textverts.attrib<float>(tc_right, tc_top   );
+    textverts.attrib<float>(x + info.w, y + info.h); textverts.attrib<float>(tc_right, tc_bottom);
+    textverts.attrib<float>(x,          y + info.h); textverts.attrib<float>(tc_left,  tc_bottom);
 
-    xtraverts += 4;
     return info.w;
 }
 
@@ -111,6 +112,7 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
     }
     else
     {
+        xtraverts += textverts.end();
         int f = a;
         if(d=='S') d = stack[(sp > 0) ? --sp : sp]; // restore color
         else stack[sp] = d;
@@ -263,11 +265,15 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, curfont->tex->id);
-    glBegin(GL_QUADS);
     glColor4ub(color.x, color.y, color.z, a);
+    textverts.enable();
+    textverts.defattrib(varray::ATTRIB_VERTEX, 2, GL_FLOAT);
+    textverts.defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
+    textverts.begin(GL_QUADS);
     left = rleft;
     top = rtop;
     TEXTSKELETON
+    xtraverts += textverts.end();
     if(cursor >= 0)
     {
         float fade = 1.f-(float(lastmillis%1000)/1000.f);
@@ -275,8 +281,9 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
         if(cx == INT_MIN) { cx = x; cy = y; }
         if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
         draw_char('|', left+cx-FONTW/2, top+cy-FONTH/32);
+        xtraverts += textverts.end();
     }
-    glEnd();
+    textverts.disable();
     #undef TEXTINDEX
     #undef TEXTWHITE
     #undef TEXTLINE
