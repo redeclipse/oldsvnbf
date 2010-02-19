@@ -1515,6 +1515,42 @@ void loadlayermasks()
 
 // environment mapped reflections
 
+void forcecubemapload(GLuint tex)
+{
+    extern int ati_cubemap_bug;
+    if(!ati_cubemap_bug || !tex) return;
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    cubemapshader->set();
+    GLenum tex2d = glIsEnabled(GL_TEXTURE_2D), depthtest = glIsEnabled(GL_DEPTH_TEST), blend = glIsEnabled(GL_BLEND);
+    if(tex2d) glDisable(GL_TEXTURE_2D);
+    if(depthtest) glDisable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_CUBE_MAP_ARB);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, tex);
+    if(!blend) glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBegin(GL_POINTS);
+    glColor4f(1, 1, 1, 0);
+    glTexCoord3f(0, 0, 0);
+    glVertex2f(0, 0);
+    glEnd();
+    if(!blend) glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+    if(depthtest) glEnable(GL_DEPTH_TEST);
+    if(tex2d) glEnable(GL_TEXTURE_2D);
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 cubemapside cubemapsides[6] =
 {
     { GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB, "lf", true,  true,  true  },
@@ -1617,6 +1653,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
         }
     }
     updatetexture(t);
+    forcecubemapload(t->frames[0]);
     return t;
 }
 
@@ -1698,6 +1735,7 @@ GLuint genenvmap(const vec &o, int envmapsize)
     glFrontFace(GL_CCW);
     delete[] pixels;
     glViewport(0, 0, screen->w, screen->h);
+    forcecubemapload(tex);
     return tex;
 }
 
