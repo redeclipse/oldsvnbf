@@ -113,6 +113,7 @@ VAR(0, ati_oq_bug, 0, 0, 1);
 VAR(0, ati_minmax_bug, 0, 0, 1);
 VAR(0, ati_dph_bug, 0, 0, 1);
 VAR(0, ati_line_bug, 0, 0, 1);
+VAR(0, ati_cubemap_bug, 0, 0, 1);
 VAR(0, nvidia_texgen_bug, 0, 0, 1);
 VAR(0, nvidia_scissor_bug, 0, 0, 1);
 VAR(0, apple_glsldepth_bug, 0, 0, 1);
@@ -457,6 +458,8 @@ void gl_checkextensions()
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &val);
         hwcubetexsize = val;
         hasCM = true;
+        // On Catalyst 10.2, issuing an occlusion query on the first draw using a given cubemap texture causes a nasty crash
+        if(strstr(vendor, "ATI")) ati_cubemap_bug = 1;
         if(dbgexts) conoutf("\frUsing GL_ARB_texture_cube_map extension.");
     }
     else conoutf("\frWARNING: No cube map texture support. (no reflective glass)");
