@@ -175,7 +175,7 @@ namespace ai
         d->team = tm;
 
         if(resetthisguy) projs::remove(d);
-        if(game::player1->clientnum == d->ownernum) create(d);
+        if(d->ownernum >= 0 && game::player1->clientnum == d->ownernum) create(d);
         else if(d->ai) destroy(d);
     }
 
