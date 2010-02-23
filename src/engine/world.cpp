@@ -790,7 +790,6 @@ void resetmap(bool empty)
 {
     progress(0, "resetting map...");
     resetmaterials();
-    resettextures();
     resetmapmodels();
     clearoverrides();
     clearsound();
@@ -798,6 +797,7 @@ void resetmap(bool empty)
     resetblendmap();
     resetlightmaps();
     clearpvs();
+    clearslots();
     clearparticles();
     cleardecals();
     clearsleep();
