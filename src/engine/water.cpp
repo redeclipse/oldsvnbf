@@ -565,7 +565,7 @@ void renderwater()
     uchar wcol[3] = { watercolour>>16, (watercolour>>8)&0xFF, watercolour&0xFF };
     glColor3ubv(wcol);
 
-    Slot &s = lookupmaterialslot(MAT_WATER);
+    MSlot &s = lookupmaterialslot(MAT_WATER);
 
     glActiveTexture_(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_2D);

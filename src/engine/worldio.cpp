@@ -264,6 +264,125 @@ cube *loadchildren(stream *f)
     return c;
 }
 
+void savevslot(stream *f, VSlot &vs, int prev)
+{
+    f->putlil<int>(vs.changed);
+    f->putlil<int>(prev);
+    if(vs.changed & (1<<VSLOT_SHPARAM))
+    {
+        f->putlil<ushort>(vs.params.length());
+        loopv(vs.params)
+        {
+            ShaderParam &p = vs.params[i];
+            f->putlil<ushort>(strlen(p.name));
+            f->write(p.name, strlen(p.name));
+            loopk(4) f->putlil<float>(p.val[k]);
+        }
+    }
+    if(vs.changed & (1<<VSLOT_SCALE)) f->putlil<float>(vs.scale);
+    if(vs.changed & (1<<VSLOT_ROTATION)) f->putlil<int>(vs.rotation);
+    if(vs.changed & (1<<VSLOT_OFFSET))
+    {
+        f->putlil<int>(vs.xoffset);
+        f->putlil<int>(vs.yoffset);
+    }
+    if(vs.changed & (1<<VSLOT_SCROLL))
+    {
+        f->putlil<float>(vs.scrollS);
+        f->putlil<float>(vs.scrollT);
+    }
+    if(vs.changed & (1<<VSLOT_LAYER)) f->putlil<int>(vs.layer);
+}
+
+void savevslots(stream *f, int numvslots)
+{
+    if(vslots.empty()) return;
+    int *prev = new int[numvslots];
+    memset(prev, -1, numvslots*sizeof(int));
+    loopi(numvslots)
+    {
+        VSlot *vs = vslots[i];
+        if(vs->changed) continue;
+        for(;;)
+        {
+            VSlot *cur = vs;
+            do vs = vs->next; while(vs && vs->index >= numvslots);
+            if(!vs) break;
+            prev[vs->index] = cur->index;
+        }
+    }
+    int lastroot = 0;
+    loopi(numvslots)
+    {
+        VSlot &vs = *vslots[i];
+        if(!vs.changed) continue;
+        if(lastroot < i) f->putlil<int>(-(i - lastroot));
+        savevslot(f, vs, prev[i]);
+        lastroot = i+1;
+    }
+    if(lastroot < numvslots) f->putlil<int>(-(numvslots - lastroot));
+    delete[] prev;
+}
+
+void loadvslot(stream *f, VSlot &vs, int changed)
+{
+    vs.changed = changed;
+    if(vs.changed & (1<<VSLOT_SHPARAM))
+    {
+        int numparams = f->getlil<ushort>();
+        string name;
+        loopi(numparams)
+        {
+            ShaderParam &p = vs.params.add();
+            int nlen = f->getlil<ushort>();
+            f->read(name, min(nlen, MAXSTRLEN-1));
+            name[min(nlen, MAXSTRLEN-1)] = '\0';
+            if(nlen >= MAXSTRLEN) f->seek(nlen - (MAXSTRLEN-1), SEEK_CUR);
+            p.name = getshaderparamname(name);
+            p.type = SHPARAM_LOOKUP;
+            p.index = -1;
+            p.loc = -1;
+            loopk(4) p.val[k] = f->getlil<float>();
+        }
+    }
+    if(vs.changed & (1<<VSLOT_SCALE)) vs.scale = f->getlil<float>();
+    if(vs.changed & (1<<VSLOT_ROTATION)) vs.rotation = f->getlil<int>();
+    if(vs.changed & (1<<VSLOT_OFFSET))
+    {
+        vs.xoffset = f->getlil<int>();
+        vs.yoffset = f->getlil<int>();
+    }
+    if(vs.changed & (1<<VSLOT_SCROLL))
+    {
+        vs.scrollS = f->getlil<float>();
+        vs.scrollT = f->getlil<float>();
+    }
+    if(vs.changed & (1<<VSLOT_LAYER)) vs.layer = f->getlil<int>();
+}
+
+void loadvslots(stream *f, int numvslots)
+{
+    int *prev = new int[numvslots];
+    memset(prev, -1, numvslots*sizeof(int));
+    while(numvslots > 0)
+    {
+        int changed = f->getlil<int>();
+        if(changed < 0)
+        {
+            loopi(-changed) vslots.add(new VSlot(NULL, vslots.length()));
+            numvslots += changed;
+        }
+        else
+        {
+            prev[vslots.length()] = f->getlil<int>();
+            loadvslot(f, *vslots.add(new VSlot(NULL, vslots.length())), changed);
+            numvslots--;
+        }
+    }
+    loopv(vslots) if(vslots.inrange(prev[i])) vslots[prev[i]]->next = vslots[i];
+    delete[] prev;
+}
+
 void saveslotconfig(stream *h, Slot &s, int index)
 {
     if(index >= 0)
@@ -291,19 +410,19 @@ void saveslotconfig(stream *h, Slot &s, int index)
         if(!j)
         {
             h->printf(" %d %d %d %f",
-                s.rotation, s.xoffset, s.yoffset, s.scale);
+                s.variants->rotation, s.variants->xoffset, s.variants->yoffset, s.variants->scale);
             if(index >= 0) h->printf(" // %d", index);
         }
         h->printf("\n");
     }
     if(index >= 0)
     {
-        if(s.scrollS != 0.f || s.scrollT != 0.f)
-            h->printf("texscroll %f %f\n", s.scrollS * 1000.0f, s.scrollT * 1000.0f);
-        if(s.layer != 0)
+        if(s.variants->scrollS != 0.f || s.variants->scrollT != 0.f)
+            h->printf("texscroll %f %f\n", s.variants->scrollS * 1000.0f, s.variants->scrollT * 1000.0f);
+        if(s.variants->layer != 0)
         {
-            if(s.layermaskname) h->printf("texlayer %d \"%s\" %d %f\n", s.layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
-            else h->printf("texlayer %d\n", s.layer);
+            if(s.layermaskname) h->printf("texlayer %d \"%s\" %d %f\n", s.variants->layer, s.layermaskname, s.layermaskmode, s.layermaskscale);
+            else h->printf("texlayer %d\n", s.variants->layer);
         }
         if(s.autograss) h->printf("autograss \"%s\"\n", s.autograss);
     }
@@ -367,7 +486,7 @@ void save_config(char *mname)
     loopv(slots)
     {
         if(verbose) progress(float(i)/float(slots.length()), "saving texture slots...");
-        saveslotconfig(h, slots[i], i);
+        saveslotconfig(h, *slots[i], i);
     }
     if(verbose) conoutf("\fasaved %d texture slots", slots.length());
 
@@ -433,12 +552,20 @@ void save_world(const char *mname, bool nodata, bool forcesave)
     if(autosavemapshot || forcesave) save_mapshot(mapname);
     if(autosaveconfigs || forcesave) save_config(mapname);
 
+    int numvslots = vslots.length();
+    if(!nodata && !multiplayer(false))
+    {
+        numvslots = compactvslots();
+        allchanged();
+    }
+
     progress(0, "saving map..");
     strncpy(hdr.head, "BFGZ", 4);
     hdr.version = MAPVERSION;
     hdr.headersize = sizeof(bfgz);
     hdr.gamever = server::getver(1);
     hdr.numents = 0;
+    hdr.numvslots = numvslots;
     hdr.revision++;
     strncpy(hdr.gameid, server::gameid(), 4);
 
@@ -456,7 +583,7 @@ void save_world(const char *mname, bool nodata, bool forcesave)
     hdr.lightmaps = nodata ? 0 : lightmaps.length();
 
     bfgz tmp = hdr;
-    lilswap(&tmp.version, 7);
+    lilswap(&tmp.version, 10);
     f->write(&tmp, sizeof(bfgz));
 
     // world variables
@@ -537,6 +664,9 @@ void save_world(const char *mname, bool nodata, bool forcesave)
         }
     }
     if(verbose) conoutf("\fasaved %d entities", count);
+
+    savevslots(f, numvslots);
+    if(verbose) conoutf("\fasaved %d vslots", numvslots);
 
     savec(worldroot, f, nodata);
     if(!nodata)
@@ -664,6 +794,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                     newhdr.numpvs = 0;
                     newhdr.lightmaps = chdr.lightmaps;
                     newhdr.blendmap = 0;
+                    newhdr.numvslots = 0;
                     memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
                     setsvar("maptitle", chdr.maptitle, true);
@@ -674,6 +805,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                     lilswap(&chdr.worldsize, 6);
                     memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*4);
                     newhdr.blendmap = 0;
+                    newhdr.numvslots = 0;
                     memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
                     setsvar("maptitle", chdr.maptitle, true);
@@ -682,9 +814,19 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                 {
                     BFGZCOMPAT(33);
                     lilswap(&chdr.worldsize, 7);
-                    memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*7);
+                    memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*5);
+                    newhdr.numvslots = 0;
+                    memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                     memcpy(&newhdr.gameid, &chdr.gameid, 4);
                     setsvar("maptitle", chdr.maptitle, true);
+                }
+                else if(newhdr.version <= 38)
+                {
+                    BFGZCOMPAT(38);
+                    lilswap(&chdr.worldsize, 7);
+                    memcpy(&newhdr.worldsize, &chdr.worldsize, sizeof(int)*5);
+                    newhdr.numvslots = 0;
+                    memcpy(&newhdr.gamever, &chdr.gamever, sizeof(int)*2);
                 }
                 else
                 {
@@ -694,7 +836,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                         delete f;
                         return false;
                     }
-                    lilswap(&newhdr.worldsize, 7);
+                    lilswap(&newhdr.worldsize, 8);
                 }
 
                 if(newhdr.version > MAPVERSION)
@@ -841,6 +983,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                     memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*2);
                     ohdr.numpvs = 0;
                     memcpy(&ohdr.lightmaps, &chdr.lightmaps, sizeof(int)*3);
+                    ohdr.numvslots = 0;
                     OCTAVARS;
                 }
                 else if(ohdr.version <= 28)
@@ -850,6 +993,14 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                     memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*6);
                     OCTAVARS;
                     ohdr.blendmap = chdr.blendmap;
+                    ohdr.numvslots = 0;
+                }
+                else if(ohdr.version <= 29)
+                {
+                    OCTACOMPAT(29);
+                    lilswap(&chdr.worldsize, 6);
+                    memcpy(&ohdr.worldsize, &chdr.worldsize, sizeof(int)*6);
+                    ohdr.numvslots = 0;
                 }
                 else
                 {
@@ -859,7 +1010,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                         delete f;
                         return false;
                     }
-                    lilswap(&ohdr.worldsize, 6);
+                    lilswap(&ohdr.worldsize, 7);
                 }
 
                 if(ohdr.version > OCTAVERSION)
@@ -882,6 +1033,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                 hdr.numpvs = ohdr.numpvs;
                 hdr.lightmaps = ohdr.lightmaps;
                 hdr.blendmap = ohdr.blendmap;
+                hdr.numvslots = ohdr.numvslots;
                 hdr.revision = 1;
 
                 if(ohdr.version >= 29) loopi(ohdr.numvars)
@@ -1067,6 +1219,9 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
             }
             if(verbose) conoutf("\faloaded %d entities", hdr.numents);
 
+            progress(0, "loading slots...");
+            loadvslots(f, hdr.numvslots);
+
             progress(0, "loading octree...");
             worldroot = loadchildren(f);
 
@@ -1230,14 +1385,14 @@ void writeobj(char *name)
             elementset &es = va.eslist[j];
             if(usedmtl.find(es.texture) < 0) usedmtl.add(es.texture);
             vector<ivec> &keys = mtls[es.texture];
-            Slot &slot = lookuptexture(es.texture);
-            Texture *tex = slot.sts.empty() ? notexture : slot.sts[0].t;
-            float k = TEX_SCALE/slot.scale,
-                  xs = slot.rotation>=2 && slot.rotation<=4 ? -tex->xs : tex->xs,
-                  ys = (slot.rotation>=1 && slot.rotation<=2) || slot.rotation==5 ? -tex->ys : tex->ys,
+            VSlot &vslot = lookupvslot(es.texture);
+            Texture *tex = vslot.slot->sts.empty() ? notexture : vslot.slot->sts[0].t;
+            float k = TEX_SCALE/vslot.scale,
+                  xs = vslot.rotation>=2 && vslot.rotation<=4 ? -tex->xs : tex->xs,
+                  ys = (vslot.rotation>=1 && vslot.rotation<=2) || vslot.rotation==5 ? -tex->ys : tex->ys,
                   sk = k/xs, tk = k/ys,
-                  soff = -((slot.rotation&5)==1 ? slot.yoffset : slot.xoffset)/xs,
-                  toff = -((slot.rotation&5)==1 ? slot.xoffset : slot.yoffset)/ys;
+                  soff = -((vslot.rotation&5)==1 ? vslot.yoffset : vslot.xoffset)/xs,
+                  toff = -((vslot.rotation&5)==1 ? vslot.xoffset : vslot.yoffset)/ys;
             loop(dim, 3)
             {
                 int len = dim ? es.length[dim*2+1] - es.length[dim*2-1] : es.length[1];
@@ -1245,7 +1400,7 @@ void writeobj(char *name)
                 static const int si[] = { 1, 0, 0 }, ti[] = { 2, 2, 1 };
                 int sdim = si[dim], tdim = ti[dim];
                 vec4 sgen(0, 0, 0, soff), tgen(0, 0, 0, toff);
-                if((slot.rotation&5)==1)
+                if((vslot.rotation&5)==1)
                 {
                     sgen[tdim] = (dim <= 1 ? -sk : sk);
                     tgen[sdim] = tk;
@@ -1319,9 +1474,9 @@ void writeobj(char *name)
     f->printf("# mtl file of Cube 2 level\n\n");
     loopv(usedmtl)
     {
-        Slot &slot = lookuptexture(usedmtl[i], false);
+        VSlot &vslot = lookupvslot(usedmtl[i], false);
         f->printf("newmtl slot%d\n", usedmtl[i]);
-        f->printf("map_Kd %s\n", findfile(slot.sts.empty() ? notexture->name : slot.sts[0].name, "r"));
+        f->printf("map_Kd %s\n", findfile(vslot.slot->sts.empty() ? notexture->name : vslot.slot->sts[0].name, "r"));
         f->printf("\n");
     }
     delete f;

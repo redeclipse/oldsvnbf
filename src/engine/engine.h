@@ -149,7 +149,6 @@ extern bfgz hdr;
 extern int worldscale;
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
-extern int curtexnum;
 extern const ivec cubecoords[8];
 extern const ushort fv[6][4];
 extern const uchar fvmasks[64];
@@ -191,8 +190,6 @@ extern void loadlayermasks();
 extern GLuint cubemapfromsky(int size);
 extern Texture *cubemapload(const char *name, bool mipit = true, bool msg = true, bool transient = false);
 extern void drawcubemap(int size, int level, const vec &o, float yaw, float pitch, bool flipx, bool flipy, bool swapxy);
-extern Slot &lookupmaterialslot(int slot, bool load = true);
-extern Slot &lookuptexture(int slot, bool load = true);
 extern void loadshaders();
 extern void createtexture(int tnum, int w, int h, void *pixels, int clamp, int filter, GLenum component = GL_RGB, GLenum target = GL_TEXTURE_2D, int pw = 0, int ph = 0, int pitch = 0, bool resize = true);
 extern void renderpostfx();
@@ -205,6 +202,11 @@ extern GLuint lookupenvmap(Slot &slot);
 extern bool reloadtexture(Texture *t);
 extern bool reloadtexture(const char *name);
 extern void setuptexcompress();
+extern void clearslots();
+extern void compacteditvslots();
+extern void compactmruvslots();
+extern void compactvslots(cube *c, int n = 8);
+extern int compactvslots(bool cull = false);
 
 // shader
 
