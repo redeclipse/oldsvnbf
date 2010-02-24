@@ -38,7 +38,7 @@ void drawglaretex()
     glaretex.render(1<<glaresize, 1<<glaresize, blurglare, blurglaresigma/100.0f);
 }
 
-FVAR(IDF_PERSIST, glarescale, 0, 0.25f, 8);
+FVAR(IDF_PERSIST, glarescale, 0, 1.0f, 8);
 
 void addglare()
 {
