@@ -1,5 +1,5 @@
 #CXXFLAGS= -ggdb3
-CXXFLAGS= -O2 -fomit-frame-pointer
+CXXFLAGS= -O3 -fomit-frame-pointer
 override CXXFLAGS+= -Wall -fsigned-char
 
 PLATFORM= $(shell uname -s)
