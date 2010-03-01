@@ -24,7 +24,7 @@ struct BIH
 
     vec bbmin, bbmax;
 
-    BIH(vector<tri> *tris);
+    BIH(vector<tri> *t);
 
     ~BIH()
     {
