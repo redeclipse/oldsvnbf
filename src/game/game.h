@@ -930,7 +930,7 @@ struct actitem
     ~actitem() {}
 };
 #ifdef GAMEWORLD
-const char *animnames[] =
+const char * const animnames[] =
 {
     "idle", "forward", "backward", "left", "right", "dead", "dying", "swim",
     "mapmodel", "trigger on", "trigger off", "pain", "jump",
@@ -949,7 +949,7 @@ const char *animnames[] =
     ""
 };
 #else
-extern const char *animnames[];
+extern const char * const animnames[];
 #endif
 
 struct gameent : dynent, gamestate
