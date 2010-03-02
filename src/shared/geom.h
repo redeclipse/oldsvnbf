@@ -166,10 +166,10 @@ struct vec4
     float magnitude3() const { return sqrtf(dot3(*this)); }
     vec4 &normalize() { mul(1/magnitude()); return *this; }
 
-    void lerp(const vec4 &a, const vec4 &b, float t)
-    {
-        x = a.x+(b.x-a.x)*t;
-        y = a.y+(b.y-a.y)*t;
+    void lerp(const vec4 &a, const vec4 &b, float t) 
+    { 
+        x = a.x+(b.x-a.x)*t; 
+        y = a.y+(b.y-a.y)*t; 
         z = a.z+(b.z-a.z)*t;
         w = a.w+(b.w-b.w)*t;
     }
@@ -394,7 +394,7 @@ struct dualquat
         dual.mul(p.real, o.dual).add(quat().mul(p.dual, o.real));
     }       
     void mul(const dualquat &o) { mul(dualquat(*this), o); }    
- 
+  
     void mulorient(const quat &q)
     {
         real.mul(q, quat(real));
@@ -452,9 +452,19 @@ struct dualquat
         return vec().cross(real, vec().cross(real, v).add(vec(v).mul(real.w)).add(vec(dual))).add(vec(dual).mul(real.w)).sub(vec(real).mul(dual.w)).mul(2).add(v);
     }
 
+    vec transposedtransform(const vec &v) const
+    {
+        return dualquat(*this).invert().transform(v);
+    }
+
     vec transformnormal(const vec &v) const
     {
         return real.rotate(v);
+    }
+
+    vec transposedtransformnormal(const vec &v) const
+    {
+        return real.invertedrotate(v);
     }
 
     vec gettranslation() const
@@ -526,7 +536,7 @@ struct matrix3x3
     {
         angle = acosf(clamp(0.5f*(a.x + b.y + c.z - 1), -1.0f, 1.0f));
 
-        if(angle <= 0) axis = vec(0, 0, 1);
+		if(angle <= 0) axis = vec(0, 0, 1);
         else if(angle < M_PI) axis = vec(c.y - b.z, a.z - c.x, b.x - a.y).normalize();
         else if(a.x >= b.y && a.x >= c.z)
         {
@@ -599,13 +609,20 @@ struct matrix3x4
             -(d.dual.w*r.z + d.dual.x*r.y - d.dual.y*r.x - d.dual.z*r.w));
     }
 
-    void scale(float k)
+    void mul(float k)
     {
         a.mul(k);
         b.mul(k);
         c.mul(k);
     }
 
+    void scale(float k)
+    {
+        a.mul(k);
+        b.mul(k);
+        c.mul(k);
+    }
+    
     void translate(const vec &p)
     {
         a.w += p.x;
@@ -688,7 +705,7 @@ struct matrix3x4
         a = vec4(o.a).mul(rot.a.x).add(vec4(o.b).mul(rot.b.x)).add(vec4(o.c).mul(rot.c.x)).addw(trans.x);
         b = vec4(o.a).mul(rot.a.y).add(vec4(o.b).mul(rot.b.y)).add(vec4(o.c).mul(rot.c.y)).addw(trans.y);
         c = vec4(o.a).mul(rot.a.z).add(vec4(o.b).mul(rot.b.z)).add(vec4(o.c).mul(rot.c.z)).addw(trans.z);
-    }
+    } 
 
     void transposemul(const matrix3x4 &m, const matrix3x4 &n)
     {
