@@ -4057,13 +4057,13 @@ namespace server
                 default:
                 {
                     int size = msgsizelookup(type);
-                    if(size==-1)
+                    if(size<=0)
                     {
                         conoutf("\fy[tag error] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
                         disconnect_client(sender, DISC_TAGT);
                         return;
                     }
-                    if(size>0) loopi(size-1) getint(p);
+                    loopi(size-1) getint(p);
                     if(ci) QUEUE_MSG;
                     break;
                 }
