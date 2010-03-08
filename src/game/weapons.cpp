@@ -13,6 +13,17 @@ namespace weapons
     ICOMMAND(0, weapselect, "", (), intret(game::player1->weapselect));
     ICOMMAND(0, ammo, "i", (int *n), intret(isweap(*n) ? game::player1->ammo[*n] : -1));
     ICOMMAND(0, hasweap, "ii", (int *n, int *o), intret(isweap(*n) && game::player1->hasweap(*n, *o) ? 1 : 0));
+    ICOMMAND(0, getweap, "ii", (int *n, int *o), {
+        if(isweap(*n))
+        {
+            switch(*o)
+            {
+                case 0: result(weaptype[*n].name); break;
+                case 1: result(hud::itemtex(WEAPON, *n)); break;
+                default: break;
+            }
+        }
+    });
 
     bool weapselect(gameent *d, int weap, bool local)
     {

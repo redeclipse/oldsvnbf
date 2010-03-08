@@ -832,9 +832,9 @@ namespace projs
                         if(WEAP2(proj.weap, explode, proj.flags&HIT_ALT))
                         {
                             quake(proj.o, proj.weap, proj.flags);
-                            part_fireball(proj.o, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x222222, 1.f, 0.5f);
+                            part_fireball(proj.o, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius*0.5f, PART_EXPLOSION, 100, 0x884411, 1.f, 0.5f);
                             if(!rnd(max(WEAP2(proj.weap, rays, proj.flags&HIT_ALT), 1))) adddecal(DECAL_SCORCH_SHORT, proj.o, proj.norm, WEAP2(proj.weap, explode, proj.flags&HIT_ALT));
-                            adddynlight(proj.o, 1.1f*WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.2f, 0.2f, 0.2f), proj.flags&HIT_ALT ? 300 : 100, 10);
+                            adddynlight(proj.o, 1.1f*WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius, vec(0.5f, 0.25f, 0.05f), proj.flags&HIT_ALT ? 300 : 100, 10);
                         }
                         else if(!rnd(max(WEAP2(proj.weap, rays, proj.flags&HIT_ALT), 1))) adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
                         break;
