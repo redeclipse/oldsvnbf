@@ -109,7 +109,7 @@ namespace hud
     TVAR(IDF_PERSIST, zoomtex, "textures/zoom", 3);
 
     VAR(IDF_PERSIST, showcrosshair, 0, 1, 1);
-    FVAR(IDF_PERSIST, crosshairsize, 0, 0.04f, 1000);
+    FVAR(IDF_PERSIST, crosshairsize, 0, 0.03f, 1000);
     VAR(IDF_PERSIST, crosshairhitspeed, 0, 500, INT_MAX-1);
     FVAR(IDF_PERSIST, crosshairblend, 0, 0.95f, 1);
     VAR(IDF_PERSIST, crosshairhealth, 0, 2, 2);
