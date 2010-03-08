@@ -230,7 +230,7 @@ enum
     GVAR(0, name##burns1, 0, x6, 1);                GVAR(0, name##burns2, 0, x7, 1); \
     GVAR(0, name##reloads, 0, x8, 1);               GVAR(0, name##zooms, 0, x9, 1); \
     GVAR(0, name##fullauto1, 0, xa, 1);             GVAR(0, name##fullauto2, 0, xb, 1); \
-    GVAR(0, name##allowed, 0, xc, 1); \
+    GVAR(0, name##allowed, 0, xc, 2); \
     GFVAR(0, name##elasticity1, -1000, y0, 1000);   GFVAR(0, name##elasticity2, 0, y1, 1); \
     GFVAR(0, name##reflectivity1, 0, y2, 360);      GFVAR(0, name##reflectivity2, 0, y3, 360); \
     GFVAR(0, name##relativity1, -1000, y4, 1000);   GFVAR(0, name##relativity2, 0, y5, 1000); \
