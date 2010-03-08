@@ -103,6 +103,7 @@ namespace game
     VAR(IDF_PERSIST, gibfade, 1, 10000, INT_MAX-1);
     VAR(IDF_PERSIST, fireburning, 0, 2, 2);
     VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
+    FVAR(IDF_PERSIST, fireburnblend, 0, 0.5f, 1);
     FVAR(IDF_PERSIST, impulsescale, 0, 1, 1000);
     VAR(IDF_PERSIST, impulsefade, 0, 200, INT_MAX-1);
 
@@ -311,7 +312,7 @@ namespace game
                 break;
             }
             if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_SUPER || d->loadweap == WEAP_GRENADE) d->loadweap = WEAP_MELEE;
-            if(WEAP(d->loadweap, allowed))
+            if(WEAP(d->loadweap, allowed) >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
                 client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
                 conoutft(CON_SELF, "you will spawn with: %s%s", weaptype[d->loadweap].text, (d->loadweap >= WEAP_OFFSET ? weaptype[d->loadweap].name : "random weapons"));
@@ -417,7 +418,7 @@ namespace game
     {
         if(fireburning >= (d != focus || thirdpersonview() ? 1 : 2) && fireburntime && d->lastfire && lastmillis-d->lastfire < fireburntime)
         {
-            int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f);
+            int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f)*fireburnblend;
             if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
             else pc = 0.75f+(float(millis%fireburndelay)/float(fireburndelay*4));
             vec pos = vec(d->headpos(-d->height*0.35f)).add(vec(rnd(9)-4, rnd(9)-4, rnd(5)-2).mul(pc));

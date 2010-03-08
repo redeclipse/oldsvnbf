@@ -1,7 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
-* Expand <weap>allow to cover different modes/muts, stuff other game vars like spawnweapon, etc into the weapon vars
+* Re-allow grenades in instagib post-protocol change
 * Port virtual slot system from Cube 2
 * Fix autogetmap (?)
 * Integrate new zombie model
