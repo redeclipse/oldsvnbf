@@ -135,41 +135,35 @@ namespace auth
         }
     }
 
-    int allowconnect(clientinfo *ci, const char *pwd)
+    int allowconnect(clientinfo *ci, const char *pwd = "", const char *authname = "")
     {
         if(ci->local) return DISC_NONE;
         if(m_demo(gamemode)) return DISC_PRIVATE;
         if(ci->privilege >= PRIV_ADMIN) return DISC_NONE;
-        if(*pwd)
+        if(*authname)
         {
-            if(pwd[0] == '@' && !ci->connectauth)
+            if(ci->connectauth) return DISC_NONE;
+            if(tryauth(ci, authname))
             {
                 ci->connectauth = true;
-                if(tryauth(ci, &pwd[1])) return DISC_NONE;
+                return DISC_NONE;
             }
-            else
-            {
-                if(adminpass[0] && checkpassword(ci, adminpass, pwd))
-                {
-                    setmaster(ci, true, pwd);
-                    return DISC_NONE;
-                }
-                if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
-                if(serverpass[0])
-                {
-                    if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
-                    return DISC_NONE;
-                }
-            }
-            if(ci->privilege) return DISC_NONE;
         }
-        else if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
-        else if(ci->privilege) return DISC_NONE;
-        else
+        if(*pwd)
         {
-            uint ip = getclientip(ci->clientnum);
+            if(adminpass[0] && checkpassword(ci, adminpass, pwd))
+            {
+                setmaster(ci, true, pwd);
+                return DISC_NONE;
+            }
+            if(serverpass[0] && checkpassword(ci, serverpass, pwd)) return DISC_NONE;
+        }
+        if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
+        uint ip = getclientip(ci->clientnum);
+        if(!ci->privilege && !checkipinfo(allows, ip))
+        {
+            if(mastermode >= MM_PRIVATE || serverpass[0]) return DISC_PRIVATE;
             if(checkipinfo(bans, ip)) return DISC_IPBAN;
-            if(mastermode >= MM_PRIVATE && !checkipinfo(allows, ip)) return DISC_PRIVATE;
         }
         return DISC_NONE;
     }
@@ -182,7 +176,7 @@ namespace auth
         sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
         if(ci->connectauth)
         {
-            int disc = allowconnect(ci, "");
+            int disc = allowconnect(ci);
             if(disc) { disconnect_client(id, disc); return; }
         }
         ci->connectauth = false;
@@ -203,7 +197,7 @@ namespace auth
         if(n >= PRIV_NONE) setmaster(ci, true, n ? name : "", n);
         else if(ci->connectauth) // else so 'user' can connect
         {
-            int disc = allowconnect(ci, "");
+            int disc = allowconnect(ci);
             if(disc) { disconnect_client(id, disc); return; }
         }
         ci->connectauth = false;

@@ -126,7 +126,7 @@ namespace server
         vec o;
         int state;
         projectilestate dropped, weapshots[WEAP_MAX][2];
-        int score, frags, spree, crits, rewards, flags, deaths, teamkills, shotdamage, damage;
+        int score, spree, crits, rewards, flags, teamkills, shotdamage, damage;
         int lasttimeplayed, timeplayed, aireinit, lastfireburn, lastfireowner;
         vector<int> fraglog, fragmillis, cpnodes;
 
@@ -636,7 +636,7 @@ namespace server
         if(rotate)
         {
             const char *maplist = GAME(mainmaps);
-            if(m_campaign(mode)) maplist = GAME(storymaps);
+            if(m_campaign(mode)) maplist = GAME(campaignmaps);
             else if(m_duel(mode, muts)) maplist = GAME(duelmaps);
             else if(m_stf(mode)) maplist = GAME(stfmaps);
             else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GAME(mctfmaps) : GAME(ctfmaps);
@@ -1011,7 +1011,7 @@ namespace server
         loopvk(clients) clients[k]->state.dropped.reset();
         setuptriggers(true);
         if(m_fight(gamemode)) setupitems(true);
-        setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GAME(storyplayers) : np));
+        setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GAME(campaignplayers) : np));
         hasgameinfo = aiman::dorefresh = true;
     }
 
@@ -1031,7 +1031,7 @@ namespace server
         }
         gs.spawnstate(weap, maxhealth, melee, arena, grenades);
         int spawn = pickspawn(ci);
-        sendf(ci->clientnum, 1, "ri8v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
+        sendf(ci->clientnum, 1, "ri9v", SV_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.points, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
         gs.lastrespawn = gs.lastspawn = gamemillis;
     }
 
@@ -1039,6 +1039,7 @@ namespace server
     void sendstate(servstate &gs, T &p)
     {
         putint(p, gs.state);
+        putint(p, gs.points);
         putint(p, gs.frags);
         putint(p, gs.health);
         putint(p, gs.cptime);
@@ -1380,7 +1381,7 @@ namespace server
                 case 1: case 2: maplist = GAME(allowmaps); break;
                 case 3: case 4:
                 {
-                    if(m_campaign(reqmode)) maplist = GAME(storymaps);
+                    if(m_campaign(reqmode)) maplist = GAME(campaignmaps);
                     else if(m_duel(reqmode, reqmuts)) maplist = GAME(duelmaps);
                     else if(m_stf(reqmode)) maplist = GAME(stfmaps);
                     else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GAME(mctfmaps) : GAME(ctfmaps);
@@ -2026,8 +2027,7 @@ namespace server
     void sendresume(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        sendf(-1, 1, "ri7vi", SV_RESUME, ci->clientnum, gs.state, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
-        sendf(-1, 1, "ri4", SV_POINTS, ci->clientnum, 0, ci->state.points);
+        sendf(-1, 1, "ri8vi", SV_RESUME, ci->clientnum, gs.state, gs.points, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0], -1);
     }
 
     void putinitclient(clientinfo *ci, packetbuf &p)
@@ -2192,10 +2192,6 @@ namespace server
             {
                 clientinfo *oi = clients[i];
                 if(oi->state.aitype >= 0 || (ci && oi->clientnum == ci->clientnum)) continue;
-                putint(p, SV_POINTS);
-                putint(p, oi->clientnum);
-                putint(p, 0);
-                putint(p, oi->state.points);
                 if(oi->mapvote[0])
                 {
                     putint(p, SV_MAPVOTE);
@@ -2960,7 +2956,7 @@ namespace server
             mutate(smuts, mut->leavegame(ci, true));
             ci->state.timeplayed += lastmillis-ci->state.lasttimeplayed;
             distpoints(ci, true); savescore(ci);
-            sendf(-1, 1, "ri2", SV_DISCONNECT, n);
+            sendf(-1, 1, "ri2", SV_DISCONNECT, n, reason);
             ci->connected = false;
             if(ci->name[0])
             {
@@ -3200,8 +3196,10 @@ namespace server
                 filtertext(text, text, true, true, true, MAXNAMELEN);
                 copystring(ci->name, text, MAXNAMELEN+1);
 
-                getstring(text, p);
-                int disc = auth::allowconnect(ci, text);
+                string password = "", authname = "";
+                getstring(text, p); copystring(password, text);
+                getstring(text, p); copystring(authname, text);
+                int disc = auth::allowconnect(ci, password, authname);
                 if(disc)
                 {
                     disconnect_client(sender, disc);

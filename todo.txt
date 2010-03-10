@@ -1,31 +1,23 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
-* Re-allow grenades in instagib post-protocol change
 * Port virtual slot system from Cube 2
 * Fix autogetmap (?)
 * Integrate new zombie model
-* Make client aware of an ability to do a critical hit (protocol reliant)
-* Update hacky '@authname' system with properly identified auth-on-connect requests
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
 * Undo forced impulse vars
 * Move to mutators: spawngrenades?, vampire, itemsallowed?, itemdropping?, kamikaze?, duelreset?, duelclear?, selfdamage?, trialdamage?, teamdamage?, ctfstyle, stfstyle, (low/high gravity?), extrahealth?
-* Add reason to client disconnects
 * Remember ammo counts for dropped weapons
 * Give remaining interactive entities a mode field
 * Make checkpoints/triggers linkable for a determined order (add to kinship system)
 * Create "assisted secures" for stf (player1, player2, player3 secured flag N)
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
 * Instead of wall 'kick', retool into a wall/ceiling 'grab', then use jump to 'kick' (??)
-* Rename 'storyplayers' and 'storymaps' to campaign
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
-* Don't destroy (certain?) projectiles entering death material
-* Make submerging extinguish at a lower level
 * Re-balance shotgun (more spread/less bullets?)
 * Make glass more visible/look better (combined texture?)
-* Send points along with spawn state (like frags are)
 * Elaborate and refine Story mode/AI
 * Master server tracking and unlockable system
 
@@ -46,8 +38,6 @@
 * (compass) voices
 
 = Maps =
-* Clip area behind beta flag in refuge
 * Fix gravity in wet
 * Ladderify dualstar
-* Post-freeze: Update to new version of darkness
 * Delisting unless improved: dualstar, siege, warehouse, wet
