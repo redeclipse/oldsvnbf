@@ -1,8 +1,6 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
-* Port virtual slot system from Cube 2
-* Fix autogetmap (?)
 * Integrate new zombie model
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
@@ -13,7 +11,6 @@
 * Make checkpoints/triggers linkable for a determined order (add to kinship system)
 * Create "assisted secures" for stf (player1, player2, player3 secured flag N)
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
-* Instead of wall 'kick', retool into a wall/ceiling 'grab', then use jump to 'kick' (??)
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
 * Re-balance shotgun (more spread/less bullets?)
