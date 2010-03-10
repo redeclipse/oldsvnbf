@@ -221,9 +221,11 @@ namespace server
         string clientmap;
         int mapcrc;
         bool warned;
+        ENetPacket *clipboard;
+        int lastclipboard;
 
-        clientinfo() { reset(); }
-        ~clientinfo() { events.deletecontentsp(); }
+        clientinfo() : clipboard(NULL) { reset(); }
+        ~clientinfo() { events.deletecontentsp(); cleanclipboard(); }
 
         void addevent(gameevent *e)
         {
@@ -245,6 +247,12 @@ namespace server
             warned = false;
         }
 
+        void cleanclipboard(bool fullclean = true)
+        {
+            if(clipboard) { if(--clipboard->referenceCount <= 0) enet_packet_destroy(clipboard); clipboard = NULL; }
+            if(fullclean) lastclipboard = 0;
+        }
+
         void reset()
         {
             ping = 0;
@@ -254,6 +262,7 @@ namespace server
             authreq = 0;
             position.setsizenodelete(0);
             messages.setsizenodelete(0);
+            cleanclipboard();
             mapchange(false);
         }
 
@@ -3149,14 +3158,29 @@ namespace server
         }
     }
 
-    bool sendpackets()
+    bool sendpackets(bool force)
     {
         if(clients.empty()) return false;
         enet_uint32 millis = enet_time_get()-lastsend;
-        if(millis<33) return false;
+        if(millis<33 && !force) return false;
         bool flush = buildworldstate();
         lastsend += millis - (millis%33);
         return flush;
+    }
+
+    void sendclipboard(clientinfo *ci)
+    {
+        if(!ci->lastclipboard || !ci->clipboard) return;
+        bool flushed = false;
+        loopv(clients)
+        {
+            clientinfo &e = *clients[i];
+            if(e.clientnum != ci->clientnum && e.connectmillis >= ci->lastclipboard)
+            {
+                if(!flushed) { flushserver(true); flushed = true; }
+                sendpacket(e.clientnum, 1, ci->clipboard);
+            }
+        }
     }
 
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
@@ -3188,6 +3212,7 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
+                ci->connectmillis = totalmillis;
                 masterupdate = true;
                 ci->state.lasttimeplayed = lastmillis;
 
@@ -3988,6 +4013,7 @@ namespace server
                             srvmsgf(ci->clientnum, "sending map, please wait..");
                             loopk(3) if(mapdata[k]) sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
                             sendwelcome(ci);
+                            ci->connectmillis = totalmillis;
                         }
                         else if(best)
                         {
@@ -4045,6 +4071,40 @@ namespace server
                     break;
                 }
 
+                case SV_COPY:
+                    ci->cleanclipboard();
+                    ci->lastclipboard = totalmillis;
+                    goto genericmsg;
+
+                case SV_PASTE:
+                    if(ci->state.state!=CS_SPECTATOR) sendclipboard(ci);
+                    goto genericmsg;
+
+                case SV_CLIPBOARD:
+                {
+                    int unpacklen = getint(p), packlen = getint(p);
+                    ci->cleanclipboard(false);
+                    if(ci->state.state==CS_SPECTATOR)
+                    {
+                        if(packlen > 0) p.subbuf(packlen);
+                        break;
+                    }
+                    if(packlen <= 0 || packlen > (1<<16) || unpacklen <= 0)
+                    {
+                        if(packlen > 0) p.subbuf(packlen);
+                        packlen = unpacklen = 0;
+                    }
+                    packetbuf q(32 + packlen, ENET_PACKET_FLAG_RELIABLE);
+                    putint(q, SV_CLIPBOARD);
+                    putint(q, ci->clientnum);
+                    putint(q, unpacklen);
+                    putint(q, packlen);
+                    if(packlen > 0) p.get(q.subbuf(packlen).buf, packlen);
+                    ci->clipboard = q.finalize();
+                    ci->clipboard->referenceCount++;
+                    break;
+                }
+
                 case -1:
                     conoutf("\fy[tag error] from: %d, cur: %d, msg: %d, prev: %d", sender, curtype, type, prevtype);
                     disconnect_client(sender, DISC_TAGT);
@@ -4054,7 +4114,7 @@ namespace server
                     disconnect_client(sender, DISC_OVERFLOW);
                     return;
 
-                default:
+                default: genericmsg:
                 {
                     int size = msgsizelookup(type);
                     if(size<=0)

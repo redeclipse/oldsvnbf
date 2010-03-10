@@ -128,7 +128,7 @@ namespace server
     extern int peerowner(int n);
     extern void recordpacket(int chan, void *data, int len);
     extern void parsepacket(int sender, int chan, packetbuf &p);
-    extern bool sendpackets();
+    extern bool sendpackets(bool force = false);
     extern void queryreply(ucharbuf &req, ucharbuf &p);
     extern void serverupdate();
     extern const char *gameid();

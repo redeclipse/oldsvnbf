@@ -702,6 +702,11 @@ void serverslice()  // main server update, called from main loop in sp, or from 
     if(server::sendpackets()) enet_host_flush(serverhost);
 }
 
+void flushserver(bool force)
+{
+    if(server::sendpackets(force) && serverhost) enet_host_flush(serverhost);
+}
+
 #ifndef STANDALONE
 int clockrealbase = 0, clockvirtbase = 0;
 void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
