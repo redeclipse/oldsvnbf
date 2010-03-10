@@ -700,6 +700,7 @@ namespace client
             {
                 conoutft(CON_MESG, "\fgtransmitting file: %s", reqfext);
                 sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
+                needclipboard = true;
                 delete f;
             }
             else conoutft(CON_MESG, "\frfailed to open map file: %s", reqfext);
@@ -759,6 +760,26 @@ namespace client
         }
     }
 
+    bool needclipboard = false;
+
+    void sendclipboard()
+    {
+        uchar *outbuf = NULL;
+        int inlen = 0, outlen = 0;
+        if(!packeditinfo(localedit, inlen, outbuf, outlen))
+        {
+            outbuf = NULL;
+            inlen = outlen = 0;
+        }
+        packetbuf p(16 + outlen, ENET_PACKET_FLAG_RELIABLE);
+        putint(p, SV_CLIPBOARD);
+        putint(p, inlen);
+        putint(p, outlen);
+        if(outlen > 0) p.put(outbuf, outlen);
+        sendclientpacket(p.finalize(), 1);
+        needclipboard = false;
+    }
+
     void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
     {
         if(m_edit(game::gamemode) && game::player1->state == CS_EDITING) switch(op)
@@ -768,6 +789,17 @@ namespace client
             case EDIT_PASTE:
             case EDIT_DELCUBE:
             {
+                switch(op)
+                {
+                    case EDIT_COPY: needclipboard = false; break;
+                    case EDIT_PASTE:
+                        if(needclipboard)
+                        {
+                            c2sinfo(true);
+                            sendclipboard();
+                        }
+                        break;
+                }
                 addmsg(SV_EDITF + op, "ri9i4",
                     sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                     sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner);
@@ -893,10 +925,10 @@ namespace client
         sendclientpacket(p.finalize(), 1);
     }
 
-    void c2sinfo() // send update to the server
+    void c2sinfo(bool force) // send update to the server
     {
         static int lastupdate = -1000;
-        if(totalmillis-lastupdate < 40) return;    // don't update faster than 25fps
+        if(totalmillis-lastupdate < 40 && !force) return;    // don't update faster than 25fps
         lastupdate = totalmillis;
         updateposition(game::player1);
         loopv(game::players) if(game::players[i] && game::players[i]->ai) updateposition(game::players[i]);
@@ -1256,9 +1288,7 @@ namespace client
                     {
                         if(game::showplayerinfo)
                             conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s has joined the game", game::colorname(d, text, "", false));
-                        loopv(game::players)    // clear copies since new player doesn't have them
-                            if(game::players[i]) freeeditinfo(game::players[i]->edit);
-                        freeeditinfo(localedit);
+                        needclipboard = true;
                         game::cameras.setsize(0);
                     }
                     copystring(d->name, text, MAXNAMELEN+1);
@@ -1554,6 +1584,15 @@ namespace client
                         }
                         default: break;
                     }
+                    break;
+                }
+
+                case SV_CLIPBOARD:
+                {
+                    int cn = getint(p), unpacklen = getint(p), packlen = getint(p);
+                    gameent *d = game::getclient(cn);
+                    ucharbuf q = p.subbuf(max(packlen, 0));
+                    if(d) unpackeditinfo(d->edit, q.buf, q.maxlen, unpacklen);
                     break;
                 }
 

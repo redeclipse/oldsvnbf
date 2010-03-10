@@ -499,6 +499,9 @@ extern gametypes gametype[], mutstype[];
 #define w_carry(w1,w2)      (w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads)))
 #define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
 
+#warning Uncomment SV_CLIPBOARD below on protocol version bump and remove compat hack line following.
+#define SV_CLIPBOARD -42
+
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -510,7 +513,7 @@ enum
     SV_PING, SV_PONG, SV_CLIENTPING,
     SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
     SV_SERVMSG, SV_GAMEINFO, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP,
+    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, /*SV_CLIPBOARD,*/ SV_NEWMAP,
     SV_GETMAP, SV_SENDMAP, SV_SENDMAPFILE, SV_SENDMAPSHOT, SV_SENDMAPCONFIG,
     SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_WAITING, SV_SETMASTER, SV_SETTEAM,
     SV_FLAGS, SV_FLAGINFO,
@@ -1229,10 +1232,10 @@ struct projent : dynent
 
 namespace client
 {
-    extern bool demoplayback, sendinfo, sendcrc;
+    extern bool demoplayback, sendinfo, sendcrc, needclipboard;
     extern void clearvotes(gameent *d);
     extern void addmsg(int type, const char *fmt = NULL, ...);
-    extern void c2sinfo();
+    extern void c2sinfo(bool force = false);
 }
 
 namespace physics
