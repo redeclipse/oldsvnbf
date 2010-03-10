@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID              "bfa"
-#define GAMEVERSION         161
+#define GAMEVERSION         162
 #define DEMO_VERSION        GAMEVERSION
 
 #define MAXAI 256
@@ -292,7 +292,7 @@ WEAPON(rifle,
 WEAPON(grenade,
     1,      2,      1,      1,      1500,       1500,       6000,   200,    200,    250,        250,        3000,   3000,       3000,       100,    42,     42,     1,      1,      0,      0,      0,      0,      1,      1,
     BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
-    0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      1,
+    0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      2,
     0.5f,   0,      0,      0,      1,      1,      2,      2,      64,     64,     1,      1,      5,      5,      1000,       1000,       400,    400,    2,      2,      0,      0
 );
 WEAPON(insta,
@@ -499,9 +499,6 @@ extern gametypes gametype[], mutstype[];
 #define w_carry(w1,w2)      (w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads)))
 #define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
 
-#warning Uncomment SV_CLIPBOARD below on protocol version bump and remove compat hack line following.
-#define SV_CLIPBOARD -42
-
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -513,7 +510,7 @@ enum
     SV_PING, SV_PONG, SV_CLIENTPING,
     SV_TIMEUP, SV_NEWGAME, SV_ITEMACC,
     SV_SERVMSG, SV_GAMEINFO, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, /*SV_CLIPBOARD,*/ SV_NEWMAP,
+    SV_EDITMODE, SV_EDITENT, SV_EDITLINK, SV_EDITVAR, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_CLIPBOARD, SV_NEWMAP,
     SV_GETMAP, SV_SENDMAP, SV_SENDMAPFILE, SV_SENDMAPSHOT, SV_SENDMAPCONFIG,
     SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_WAITING, SV_SETMASTER, SV_SETTEAM,
     SV_FLAGS, SV_FLAGINFO,
@@ -534,7 +531,7 @@ char msgsizelookup(int msg)
     static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
     {
         SV_CONNECT, 0, SV_SERVERINIT, 5, SV_WELCOME, 1, SV_CLIENTINIT, 0, SV_POS, 0, SV_PHYS, 0, SV_TEXT, 0, SV_COMMAND, 0,
-        SV_ANNOUNCE, 0, SV_DISCONNECT, 2,
+        SV_ANNOUNCE, 0, SV_DISCONNECT, 3,
         SV_SHOOT, 0, SV_DESTROY, 0, SV_SUICIDE, 3, SV_DIED, 8, SV_POINTS, 4, SV_DAMAGE, 10, SV_SHOTFX, 0,
         SV_LOADWEAP, 0, SV_TRYSPAWN, 2, SV_SPAWNSTATE, 0, SV_SPAWN, 0,
         SV_DROP, 0, SV_WEAPSELECT, 0,
@@ -664,10 +661,10 @@ struct gamestate
     int health, ammo[WEAP_MAX], entid[WEAP_MAX];
     int lastweap, loadweap, weapselect, weapload[WEAP_MAX], weapshot[WEAP_MAX], weapstate[WEAP_MAX], weapwait[WEAP_MAX], weaplast[WEAP_MAX];
     int lastdeath, lastspawn, lastrespawn, lastpain, lastregen, lastfire;
-    int aitype, aientity, ownernum, skill, points, cpmillis, cptime;
+    int aitype, aientity, ownernum, skill, points, frags, deaths, cpmillis, cptime;
 
     gamestate() : loadweap(-1), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
-        aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), cpmillis(0), cptime(0) {}
+        aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), frags(0), deaths(0), cpmillis(0), cptime(0) {}
     ~gamestate() {}
 
     int hasweap(int weap, int sweap, int level = 0, int exclude = -1)
@@ -958,7 +955,7 @@ extern const char * const animnames[];
 struct gameent : dynent, gamestate
 {
     editinfo *edit; ai::aiinfo *ai;
-    int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, frags, deaths, totaldamage, totalshots,
+    int team, clientnum, privilege, lastnode, checkpoint, cplast, respawned, suicided, lastupdate, lastpredict, plag, ping, lastflag, totaldamage, totalshots,
         actiontime[AC_MAX], impulse[IM_MAX], lastsprint, smoothmillis, turnmillis, turnside, aschan, vschan, wschan, fschan, lasthit, lastkill, lastattacker, lastpoints, quake,
         lastpush, lastjump;
     float deltayaw, deltapitch, newyaw, newpitch, deltaaimyaw, deltaaimpitch, newaimyaw, newaimpitch, turnyaw, turnroll;
@@ -969,7 +966,7 @@ struct gameent : dynent, gamestate
     vector<gameent *> dominating, dominated;
 
     gameent() : edit(NULL), ai(NULL), team(TEAM_NEUTRAL), clientnum(-1), privilege(PRIV_NONE), checkpoint(-1), cplast(0), lastupdate(0), lastpredict(0), plag(0), ping(0),
-        frags(0), deaths(0), totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
+        totaldamage(0), totalshots(0), smoothmillis(-1), turnmillis(0), aschan(-1), vschan(-1), wschan(-1), fschan(-1),
         lastattacker(-1), lastpoints(0), quake(0), lastpush(0), lastjump(0),
         head(-1, -1, -1), torso(-1, -1, -1), muzzle(-1, -1, -1), eject(-1, -1, -1), melee(-1, -1, -1), waist(-1, -1, -1),
         lfoot(-1, -1, -1), rfoot(-1, -1, -1), legs(-1, -1, -1), hrad(-1, -1, -1), trad(-1, -1, -1), lrad(-1, -1, -1),
@@ -1356,7 +1353,7 @@ namespace game
     extern gameent *newclient(int cn);
     extern gameent *getclient(int cn);
     extern gameent *intersectclosest(vec &from, vec &to, gameent *at);
-    extern void clientdisconnected(int cn);
+    extern void clientdisconnected(int cn, int reason = DISC_NONE);
     extern char *colorname(gameent *d, char *name = NULL, const char *prefix = "", bool team = true, bool dupname = true);
     extern void announce(int idx, int targ, gameent *d, const char *msg, ...);
     extern void respawn(gameent *d);

@@ -168,7 +168,6 @@ namespace client
     void connectattempt(const char *name, int port, const char *password, const ENetAddress &address)
     {
         if(*password) { copystring(connectpass, password); }
-        else if(*authname) { formatstring(connectpass)("@%s", authname); }
         else memset(connectpass, 0, sizeof(connectpass));
     }
 
@@ -840,11 +839,11 @@ namespace client
         mkstring(hash);
         if(connectpass[0])
         {
-            if(connectpass[0] == '@') copystring(hash, connectpass);
-            else server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
+            server::hashpassword(game::player1->clientnum, sessionid, connectpass, hash);
             memset(connectpass, 0, sizeof(connectpass));
         }
         sendstring(hash, p);
+        sendstring(authname, p);
         sendclientpacket(p.finalize(), 1);
     }
 
@@ -941,6 +940,7 @@ namespace client
         if(!d) { static gameent dummy; d = &dummy; }
         if(d == game::player1 || d->ai) getint(p);
         else d->state = getint(p);
+        d->points = getint(p);
         d->frags = getint(p);
         d->health = getint(p);
         d->cptime = getint(p);
@@ -1299,8 +1299,11 @@ namespace client
                 }
 
                 case SV_DISCONNECT:
-                    game::clientdisconnected(getint(p));
+                {
+                    int lcn = getint(p), reason = getint(p);
+                    game::clientdisconnected(lcn, reason);
                     break;
+                }
 
                 case SV_SPAWN:
                 {

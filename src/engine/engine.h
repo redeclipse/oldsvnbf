@@ -3,9 +3,9 @@
 
 #include "cube.h"
 
-#define ENG_VERSION         85
+#define ENG_VERSION         86
 #define ENG_NAME            "Blood Frontier"
-#define ENG_RELEASE         "Beta 2"
+#define ENG_RELEASE         "Beta 3 Devel"
 #define ENG_URL             "www.bloodfrontier.com"
 #define ENG_BLURB           "It's bloody fun!"
 #ifdef WIN32
@@ -15,7 +15,7 @@
 #else
 #define ENG_PLATFORM        "nix"
 #endif
-#define ENG_DEVEL           false
+#define ENG_DEVEL           true
 
 #define ENG_SERVER_PORT     (ENG_DEVEL ? 28797 : 28795)
 #define ENG_MASTER_PORT     28800

@@ -22,7 +22,7 @@ GVARF(IDF_ADMIN, gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepause
 GSVAR(IDF_ADMIN, defaultmap, "");
 GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
-GVAR(IDF_ADMIN, storyplayers, 1, 5, MAXPLAYERS);
+GVAR(IDF_ADMIN, campaignplayers, 1, 5, MAXPLAYERS);
 
 GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dutility eight enigma firehouse forge gladiator hollow longestyard nova oasis overseer panic refuge rivals siege smouldering testchamber tower venus warground");
 GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
@@ -31,7 +31,7 @@ GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli enigma forge gl
 GSVAR(IDF_ADMIN, mctfmaps, "deadsimple enigma refuge");
 GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge gladiator nova panic refuge rivals smouldering tower warground venus");
 GSVAR(IDF_ADMIN, trialmaps, "testchamber");
-GSVAR(IDF_ADMIN, storymaps, "wishbone storytest");
+GSVAR(IDF_ADMIN, campaignmaps, "wishbone campaigntest");
 
 GICOMMAND(0, resetvars, "", (), server::resetgamevars(true), return);
 GICOMMAND(IDF_ADMIN, resetconfig, "", (), rehash(true), );

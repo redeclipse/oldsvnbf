@@ -969,13 +969,13 @@ namespace game
         return NULL;
     }
 
-    void clientdisconnected(int cn)
+    void clientdisconnected(int cn, int reason)
     {
         if(!players.inrange(cn)) return;
         gameent *d = players[cn];
         if(!d) return;
         if(d->name[0] && showplayerinfo && (d->aitype < 0 || ai::showaiinfo))
-            conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game", colorname(d));
+            conoutft(showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fo%s left the game (%s)", colorname(d), reason >= 0 ? disc_reasons[reason] : "normal");
         gameent *e = NULL;
         loopi(numdynents()) if((e = (gameent *)iterdynents(i)))
         {
