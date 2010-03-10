@@ -480,7 +480,7 @@ namespace hud
         const char *cliptexs[WEAP_MAX] = {
             grenadecliptex, pistolcliptex, shotguncliptex, smgcliptex,
             flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, // end of regular weapons
-            riflecliptex, grenadecliptex
+            riflecliptex
         };
         Texture *t = textureload(cliptexs[weap], 3);
         if(!clipsizes[weap])
@@ -495,7 +495,7 @@ namespace hud
         const float clipskew[WEAP_MAX] = {
             grenadeclipskew, pistolclipskew, shotgunclipskew, smgclipskew,
             flamerclipskew, plasmaclipskew, rifleclipskew, grenadeclipskew, // end of regular weapons
-            rifleclipskew, grenadeclipskew
+            rifleclipskew
         };
         float fade = clipblend*hudblend, size = s*clipskew[weap];
         int interval = lastmillis-game::focus->weaplast[weap];
@@ -1371,7 +1371,7 @@ namespace hud
             case WEAPON:
             {
                 const char *weaptexs[WEAP_MAX] = {
-                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, grenadetex
+                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex
                 };
                 if(isweap(stype)) return weaptexs[stype];
                 break;
@@ -1409,7 +1409,7 @@ namespace hud
             if(inventoryammo)
             {
                 const char *hudtexs[WEAP_MAX] = {
-                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex, grenadetex
+                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rifletex
                 };
                 int sweap = m_weapon(game::gamemode, game::mutators);
                 loopi(WEAP_MAX) if(game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i])

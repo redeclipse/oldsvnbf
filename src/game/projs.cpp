@@ -640,7 +640,6 @@ namespace projs
                     break;
                 }
                 case WEAP_RIFLE: case WEAP_INSTA: proj.lifesize = clamp(proj.lifespan, 1e-3f, 1.f); break;
-                case WEAP_GIBS: proj.lifesize = 1; break;
                 default: break;
             }
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT) || WEAP2(proj.weap, taper, proj.flags&HIT_ALT))
@@ -752,17 +751,6 @@ namespace projs
                     proj.to = vec(proj.o).sub(vec(dir).mul(size));
                     part_flare(proj.to, proj.o, 1, PART_FLARE, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
                     part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.25f);
-                    break;
-                }
-                case WEAP_GIBS:
-                {
-                    part_create(PART_HINT_SOFT, 1, proj.o, 0x661111, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
-                    bool moving = proj.movement > 0.f;
-                    if(lastmillis-proj.lasteffect >= (moving ? 250 : 1000) && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
-                    {
-                        part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, (rnd(20)+1)/10.f, 1, 100, DECAL_BLOOD);
-                        proj.lasteffect = lastmillis;
-                    }
                     break;
                 }
                 default: break;
@@ -927,11 +915,6 @@ namespace projs
                                 adddecal(DECAL_ENERGY, proj.o, proj.norm, 2.f, bvec(98, 16, 254));
                             }
                         }
-                        break;
-                    }
-                    case WEAP_GIBS:
-                    {
-                        adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
                         break;
                     }
                     default: break;

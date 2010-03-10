@@ -86,7 +86,7 @@ namespace ai
         if(weaprange(d, d->weapselect, alt, dist))
         {
             if(d->weapselect == WEAP_MELEE) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect == WEAP_GRENADE || d->weapselect == WEAP_GIBS ? 0.25f : 1e16f);
+            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect == WEAP_GRENADE ? 0.25f : 1e16f);
             if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
         }
         return false;
