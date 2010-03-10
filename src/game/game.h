@@ -195,7 +195,7 @@ enum
     WEAP_MELEE = 0, WEAP_PISTOL, WEAP_OFFSET, // end of unselectable weapon set
     WEAP_SHOTGUN = WEAP_OFFSET, WEAP_SMG, WEAP_FLAMER, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_SUPER, // end of item weapon set
     WEAP_INSTA = WEAP_SUPER, WEAP_TOTAL, // end of selectable weapon set
-    WEAP_GIBS = WEAP_TOTAL, WEAP_MAX
+    WEAP_MAX = WEAP_TOTAL
 };
 #define isweap(a)       (a > -1 && a < WEAP_MAX)
 
@@ -301,12 +301,6 @@ WEAPON(insta,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      1,
     0,      0,      0,      0,      1,      0,      2,      2,      0,      0,      1,      1,      5,      0,      100,        200,        0,      0,      0.65f,  1.5f,   1024,   4096
 );
-WEAPON(gibs,
-    2,      2,      1,      1,      500,        500,        500,    25,     25,     250,        250,        0,      1500,       1500,       100,    0,      0,      1,      1,      0,      0,      0,      0,      1,      1,
-    IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
-    0,      0,      0,      0,      0,      0,      0,      0,      1,      0,      0,      0,      1,
-    0.35f,  0.35f,  0,      0,      1,      1,      2,      2,      35,     35,     2,      2,      5,      5,      100,        100,        200,    200,    2,      2,      0,      0
-);
 
 struct weaptypes
 {
@@ -372,23 +366,17 @@ weaptypes weaptype[] =
             { 0, 0 },               7,          0,
             "rifle",        "\fv",  "weapons/rifle/item",       "weapons/rifle/vwep",       "",                     ""
     },
-    {
-        WEAP_GIBS,          ANIM_GRENADE,       0x660000,       S_SPLOSH,   S_SPLAT,    S_WHIRR,    S_SPLAT,        1,
-            { true, true },     false,      false,
-            { 0.125f, 0.125f },     4,          0,
-            "gibs",         "\fw",  "projs/gibs/gibc",          "projs/gibs/gibc",          "projs/gibs/gibc",          ""
-    },
 };
-#define WEAPDEF(proto,name)     proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name, &sv_gibs##name};
-#define WEAPDEF2(proto,name)    proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2}, {&sv_gibs##name##1,&sv_gibs##name##2}};
+#define WEAPDEF(proto,name)     proto *sv_weap_stat_##name[] = {&sv_melee##name, &sv_pistol##name, &sv_shotgun##name, &sv_smg##name, &sv_flamer##name, &sv_plasma##name, &sv_rifle##name, &sv_grenade##name, &sv_insta##name };
+#define WEAPDEF2(proto,name)    proto *sv_weap_stat_##name[][2] = {{&sv_melee##name##1,&sv_melee##name##2}, {&sv_pistol##name##1,&sv_pistol##name##2}, {&sv_shotgun##name##1,&sv_shotgun##name##2}, {&sv_smg##name##1,&sv_smg##name##2}, {&sv_flamer##name##1,&sv_flamer##name##2}, {&sv_plasma##name##1,&sv_plasma##name##2}, {&sv_rifle##name##1,&sv_rifle##name##2}, {&sv_grenade##name##1,&sv_grenade##name##2}, {&sv_insta##name##1,&sv_insta##name##2} };
 #define WEAP(weap,name)         (*sv_weap_stat_##name[weap])
 #define WEAP2(weap,name,second) (*sv_weap_stat_##name[weap][second?1:0])
 #define WEAPSTR(a,weap,attr)    defformatstring(a)("sv_%s%s", weaptype[weap].name, #attr)
 #else
 extern weaptypes weaptype[];
 #ifdef GAMEWORLD
-#define WEAPDEF(proto,name)     proto *weap_stat_##name[] = {&melee##name, &pistol##name, &shotgun##name, &smg##name, &flamer##name, &plasma##name, &rifle##name, &grenade##name, &insta##name, &gibs##name};
-#define WEAPDEF2(proto,name)    proto *weap_stat_##name[][2] = {{&melee##name##1,&melee##name##2}, {&pistol##name##1,&pistol##name##2}, {&shotgun##name##1,&shotgun##name##2}, {&smg##name##1,&smg##name##2}, {&flamer##name##1,&flamer##name##2}, {&plasma##name##1,&plasma##name##2}, {&rifle##name##1,&rifle##name##2}, {&grenade##name##1,&grenade##name##2}, {&insta##name##1,&insta##name##2}, {&gibs##name##1,&gibs##name##2}};
+#define WEAPDEF(proto,name)     proto *weap_stat_##name[] = {&melee##name, &pistol##name, &shotgun##name, &smg##name, &flamer##name, &plasma##name, &rifle##name, &grenade##name, &insta##name };
+#define WEAPDEF2(proto,name)    proto *weap_stat_##name[][2] = {{&melee##name##1,&melee##name##2}, {&pistol##name##1,&pistol##name##2}, {&shotgun##name##1,&shotgun##name##2}, {&smg##name##1,&smg##name##2}, {&flamer##name##1,&flamer##name##2}, {&plasma##name##1,&plasma##name##2}, {&rifle##name##1,&rifle##name##2}, {&grenade##name##1,&grenade##name##2}, {&insta##name##1,&insta##name##2} };
 #else
 #define WEAPDEF(proto,name)     extern proto *weap_stat_##name[];
 #define WEAPDEF2(proto,name)    extern proto *weap_stat_##name[][2];

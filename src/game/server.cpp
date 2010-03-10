@@ -2252,7 +2252,7 @@ namespace server
                 {
                     float dist = actor->state.o.dist(target->state.o);
                     if(dist <= GAME(damagecritdist))
-                        offset = int(offset*dist/GAME(damagecritdist));
+                        offset = int(offset*clamp(dist, 1.f, GAME(damagecritdist))/GAME(damagecritdist));
                 }
                 if(offset <= 0 || !rnd(offset))
                 {

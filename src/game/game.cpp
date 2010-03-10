@@ -92,7 +92,7 @@ namespace game
     VAR(IDF_PERSIST, showobitdists, 0, 0, 1);
     VAR(IDF_PERSIST, showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
     VAR(IDF_PERSIST, playdamagetones, 0, 1, 3);
-    VAR(IDF_PERSIST, playcrittones, 0, 3, 3);
+    VAR(IDF_PERSIST, playcrittones, 0, 2, 3);
     VAR(IDF_PERSIST, playreloadnotify, 0, 1, 4);
 
     VAR(IDF_PERSIST, quakefade, 0, 100, INT_MAX-1);
@@ -709,7 +709,6 @@ namespace game
                     "got a good shock",
                     "kicked it, kamikaze style",
                     "pulled off an insta-stunt",
-                    "was gibbed"
                 };
                 concatstring(d->obit, suicidenames[weap]);
             }
@@ -735,7 +734,6 @@ namespace game
                         "laser shocked by",
                         "blown to pieces by",
                         "lasered by",
-                        "gibbed"
                     },
                     {
                         "smacked down by",
@@ -747,7 +745,6 @@ namespace game
                         "was given laser burn by",
                         "blown to pieces by",
                         "was given laser burn by",
-                        "gibbed"
                     },
                     {
                         "smacked down by",
@@ -759,7 +756,6 @@ namespace game
                         "expertly sniped by",
                         "blown to pieces by",
                         "expertly sniped by",
-                        "gibbed"
                     },
                     {
                         "knocked into next week by",
@@ -771,7 +767,6 @@ namespace game
                         "given laser shock treatment by",
                         "obliterated by",
                         "lasered in half by",
-                        "gibbed"
                     }
                 };
 
