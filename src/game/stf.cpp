@@ -181,6 +181,26 @@ namespace stf
         {
             extentity *e = entities::ents[i];
             if(e->type != FLAG || !m_check(e->attrs[3], game::gamemode)) continue;
+            int team = e->attrs[0];
+            switch(stfflags)
+            {
+                case 3:
+                {
+                    if(team && !isteam(game::gamemode, game::mutators, team, TEAM_NEUTRAL)) team = TEAM_NEUTRAL;
+                    break;
+                }
+                case 2:
+                {
+                    if(!isteam(game::gamemode, game::mutators, team, TEAM_FIRST)) continue;
+                    break;
+                }
+                case 1:
+                {
+                    if(team && !isteam(game::gamemode, game::mutators, team, TEAM_NEUTRAL)) continue;
+                    break;
+                }
+                case 0: team = TEAM_NEUTRAL; break;
+            }
             stfstate::flag &b = st.flags.add();
             b.o = e->o;
             defformatstring(alias)("flag_%d", e->attrs[4]);
@@ -188,6 +208,8 @@ namespace stf
             if(name[0]) copystring(b.name, name);
             else formatstring(b.name)("flag %d", st.flags.length());
             b.ent = i;
+            b.kinship = team;
+            b.reset();
         }
     }
 
@@ -198,6 +220,7 @@ namespace stf
         loopv(st.flags)
         {
             stfstate::flag &b = st.flags[i];
+            putint(p, b.kinship);
             putint(p, int(b.o.x*DMF));
             putint(p, int(b.o.y*DMF));
             putint(p, int(b.o.z*DMF));
