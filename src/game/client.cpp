@@ -5,6 +5,7 @@ namespace client
         demoplayback = false, needsmap = false, gettingmap = false, sendcrc = false;
     int lastping = 0, sessionid = 0;
     string connectpass = "";
+    int needclipboard = -1;
 
     struct mapvote
     {
@@ -699,7 +700,7 @@ namespace client
             {
                 conoutft(CON_MESG, "\fgtransmitting file: %s", reqfext);
                 sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
-                needclipboard = true;
+                if(needclipboard >= 0) needclipboard++;
                 delete f;
             }
             else conoutft(CON_MESG, "\frfailed to open map file: %s", reqfext);
@@ -759,8 +760,6 @@ namespace client
         }
     }
 
-    bool needclipboard = false;
-
     void sendclipboard()
     {
         uchar *outbuf = NULL;
@@ -776,7 +775,7 @@ namespace client
         putint(p, outlen);
         if(outlen > 0) p.put(outbuf, outlen);
         sendclientpacket(p.finalize(), 1);
-        needclipboard = false;
+        needclipboard = -1;
     }
 
     void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3)
@@ -790,9 +789,9 @@ namespace client
             {
                 switch(op)
                 {
-                    case EDIT_COPY: needclipboard = false; break;
+                    case EDIT_COPY: needclipboard = 0; break;
                     case EDIT_PASTE:
-                        if(needclipboard)
+                        if(needclipboard > 0)
                         {
                             c2sinfo(true);
                             sendclipboard();
@@ -1288,7 +1287,7 @@ namespace client
                     {
                         if(game::showplayerinfo)
                             conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s has joined the game", game::colorname(d, text, "", false));
-                        needclipboard = true;
+                        if(needclipboard >= 0) needclipboard++;
                         game::cameras.setsize(0);
                     }
                     copystring(d->name, text, MAXNAMELEN+1);
