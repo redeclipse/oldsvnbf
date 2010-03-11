@@ -98,6 +98,7 @@ GVAR(0, stfstyle, 0, 1, 1); // 0 = overthrow and secure, 1 = instant secure
 GVAR(0, stffinish, 0, 0, 1); // finish when all bases captured
 GVAR(0, stfpoints, 0, 1, INT_MAX-1); // points added to score
 GVAR(0, stfoccupy, 0, 100, INT_MAX-1); // points needed to occupy
+GVAR(0, stfflags, 0, 1, 3); // 0 = init all (neutral), 1 = init neutral and team only, 2 = init team only, 3 = init all (team + neutral + converted)
 
 GVAR(0, botbalance, -1, -1, MAXAI/2); // -1 = populate bots to map defined numplayers, 0 = don't balance, 1 or more = fill only with this*numteams
 GVAR(0, botminskill, 1, 70, 101);

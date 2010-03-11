@@ -124,6 +124,7 @@ struct stfservmode : stfstate, servmode
         loopv(flags)
         {
             flag &b = flags[i];
+            putint(p, b.kinship);
             putint(p, b.converted);
             putint(p, b.owner);
             putint(p, b.enemy);
@@ -233,11 +234,12 @@ struct stfservmode : stfstate, servmode
         {
             loopi(numflags)
             {
+                int kin = getint(p);
                 vec o;
                 o.x = getint(p)/DMF;
                 o.y = getint(p)/DMF;
                 o.z = getint(p)/DMF;
-                if(!hasflaginfo) addflag(o);
+                if(!hasflaginfo) addflag(o, kin);
             }
             if(!hasflaginfo)
             {

@@ -1795,8 +1795,8 @@ namespace client
                     int numflags = getint(p);
                     loopi(numflags)
                     {
-                        int converted = getint(p), owner = getint(p), enemy = getint(p);
-                        stf::st.initflag(i, owner, enemy, converted);
+                        int kin = getint(p), converted = getint(p), owner = getint(p), enemy = getint(p);
+                        stf::st.initflag(i, kin, owner, enemy, converted);
                     }
                     break;
                 }
