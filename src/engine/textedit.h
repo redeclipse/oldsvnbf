@@ -176,7 +176,7 @@ struct editor
     {
         cx = cy = 0;
         mark(false);
-        lines.setsize(0);
+        lines.shrink(0);
         if(init) lines.add().set(init);
     }
 

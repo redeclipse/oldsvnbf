@@ -608,14 +608,14 @@ struct filesval
     int millis;
 
     filesval(int type, const char *dir, const char *ext) : type(type), dir(newstring(dir)), ext(ext && ext[0] ? newstring(ext) : NULL), millis(-1) {}
-    ~filesval() { DELETEA(dir); DELETEA(ext); loopv(files) DELETEA(files[i]); files.setsize(0); }
+    ~filesval() { DELETEA(dir); DELETEA(ext); loopv(files) DELETEA(files[i]); files.shrink(0); }
 
     static int comparefiles(char **x, char **y) { return strcmp(*x, *y); }
 
     void update()
     {
         if(type!=FILES_DIR || millis >= commandmillis) return;
-        files.deletecontentsa();
+        files.deletearrays();
         listfiles(dir, ext, files);
         files.sort(comparefiles);
         loopv(files) if(i && !strcmp(files[i], files[i-1])) delete[] files.remove(i--);

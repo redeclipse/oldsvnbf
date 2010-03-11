@@ -113,8 +113,8 @@ struct stfstate
 
     void reset()
     {
-        flags.setsize(0);
-        scores.setsize(0);
+        flags.shrink(0);
+        scores.shrink(0);
         secured = 0;
     }
 

@@ -1606,7 +1606,7 @@ ICOMMAND(0, mapparticle, "siiiiiffifff", (const char *name, int *part, int *type
 
 void defaultparticles()
 {
-    if(mapparts.length()) mapparts.setsizenodelete(0);
+    if(mapparts.length()) mapparts.setsize(0);
     addmapparticle("fire", PART_FLAME, PARTTYPE_FIRE, 0x903020, -10, 500, 1.5f, 0.5f, 0, 2.f, 1, 200);
     addmapparticle("smoke", PART_SMOKE, PARTTYPE_SPLASH, 0x897661, -20, 200, 2.f, 0.f, 3, 2.4f, 0.f, 1, 1);
     addmapparticle("water", PART_SPARK, PARTTYPE_SPLASH, (int(watercol[0])<<16) | (int(watercol[1])<<8) | int(watercol[2]), 10, 500, 10.f, 0.f, 20, 0.6f, 1, 4);

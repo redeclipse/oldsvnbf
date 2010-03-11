@@ -14,7 +14,7 @@ namespace client
         int millis, mode, muts;
 
         mapvote() {}
-        ~mapvote() { players.setsize(0); }
+        ~mapvote() { players.shrink(0); }
     };
     vector<mapvote> mapvotes;
 
@@ -188,8 +188,8 @@ namespace client
         if(editmode) toggleedit();
         gettingmap = needsmap = remote = isready = sendinfo = false;
         sessionid = 0;
-        messages.setsize(0);
-        mapvotes.setsize(0);
+        messages.shrink(0);
+        mapvotes.shrink(0);
         messagereliable = false;
         projs::remove(game::player1);
         removetrackedparticles(game::player1);
@@ -559,7 +559,7 @@ namespace client
         game::nextmode = game::gamemode; game::nextmuts = game::mutators;
         game::minremain = -1;
         game::maptime = 0;
-        mapvotes.setsize(0);
+        mapvotes.shrink(0);
         if(editmode && !allowedittoggle(editmode)) toggleedit();
         if(m_demo(gamemode)) return;
         needsmap = false;
@@ -909,7 +909,7 @@ namespace client
         if(messages.length())
         {
             p.put(messages.getbuf(), messages.length());
-            messages.setsizenodelete(0);
+            messages.setsize(0);
             if(messagereliable) p.reliable();
             messagereliable = false;
         }
@@ -1288,7 +1288,7 @@ namespace client
                         if(game::showplayerinfo)
                             conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s has joined the game", game::colorname(d, text, "", false));
                         if(needclipboard >= 0) needclipboard++;
-                        game::cameras.setsize(0);
+                        game::cameras.shrink(0);
                     }
                     copystring(d->name, text, MAXNAMELEN+1);
                     int team = clamp(getint(p), int(TEAM_NEUTRAL), int(TEAM_ENEMY));
@@ -1644,7 +1644,7 @@ namespace client
                     int i = getint(p);
                     float x = getint(p)/DMF, y = getint(p)/DMF, z = getint(p)/DMF;
                     int type = getint(p), numattrs = getint(p);
-                    static vector<int> attrs; attrs.setsizenodelete(0);
+                    static vector<int> attrs; attrs.setsize(0);
                     loopk(numattrs) attrs.add(getint(p));
                     mpeditent(i, vec(x, y, z), type, attrs, false);
                     entities::setspawn(i, 0);
@@ -1912,7 +1912,7 @@ namespace client
                     int size = getint(p);
                     if(size>=0) emptymap(size, true);
                     else enlargemap(true);
-                    mapvotes.setsize(0);
+                    mapvotes.shrink(0);
                     needsmap = false;
                     if(d && d!=game::player1)
                     {

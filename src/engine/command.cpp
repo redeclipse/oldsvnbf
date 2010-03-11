@@ -313,7 +313,7 @@ void parsemacro(const char *&p, int level, vector<char> &wordbuf)
         return;
     }
     static vector<char> ident;
-    ident.setsizenodelete(0);
+    ident.setsize(0);
     while(isalnum(*p) || *p=='_') ident.add(*p++);
     ident.add(0);
     const char *alias = getalias(ident.getbuf());
@@ -395,7 +395,7 @@ char *parseexp(const char *&p, int right)         // parse any nested set of () 
             case '\0':
                 p--;
                 conoutf("\frmissing \"%c\"", right);
-                wordbuf.setsizenodelete(0);
+                wordbuf.setsize(0);
                 bufnest--;
                 return NULL;
             case '(': case '[': if(c==left) brak++; break;
@@ -416,7 +416,7 @@ char *parseexp(const char *&p, int right)         // parse any nested set of () 
     {
         s = newstring(wordbuf.getbuf(), wordbuf.length());
     }
-    wordbuf.setsizenodelete(0);
+    wordbuf.setsize(0);
     bufnest--;
     return s;
 }
@@ -1160,7 +1160,7 @@ void clearsleep(bool clearoverrides, bool clearworlds)
                 delete[] sleepcmds[i].command;
         else sleepcmds[len++] = sleepcmds[i];
     }
-    sleepcmds.setsize(len);
+    sleepcmds.shrink(len);
 }
 
 ICOMMAND(0, clearsleep, "ii", (int *a, int *b), clearsleep(*a!=0 || overrideidents, *b!=0 || worldidents));
@@ -1174,7 +1174,7 @@ void getvariable(int num)
     static int lastupdate = 0;
     if(ids.empty() || !lastupdate || lastmillis-lastupdate >= 60000)
     {
-        ids.setsizenodelete(0);
+        ids.setsize(0);
         enumerate(*idents, ident, id, ids.add(&id));
         lastupdate = lastmillis;
     }

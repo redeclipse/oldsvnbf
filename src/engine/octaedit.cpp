@@ -1051,7 +1051,7 @@ vector<int> htextures;
 
 COMMAND(0, clearbrush, "");
 COMMAND(0, brushvert, "iii");
-ICOMMAND(0, hmapcancel, "", (), htextures.setsizenodelete(0); );
+ICOMMAND(0, hmapcancel, "", (), htextures.setsize(0); );
 ICOMMAND(0, hmapselect, "", (),
     int t = lookupcube(cur.x, cur.y, cur.z).texture[orient];
     int i = htextures.find(t);
@@ -1648,7 +1648,7 @@ void mpeditvslot(const VSlot &ds, int allfaces, selinfo &sel, bool local)
     bool findrep = local && !allfaces && reptex < 0;
     VSlot *findedit = NULL;
     loopselxyz(remapvslots(c, ds, allfaces ? -1 : sel.orient, findrep, findedit));
-    remappedvslots.setsizenodelete(0);
+    remappedvslots.setsize(0);
     if(local && findedit)
     {
         lasttex = findedit->index;
@@ -1773,7 +1773,7 @@ void filltexlist()
 
 void compactmruvslots()
 {
-    remappedvslots.setsizenodelete(0);
+    remappedvslots.setsize(0);
     loopvrev(texmru)
     {
         if(vslots.inrange(texmru[i]))

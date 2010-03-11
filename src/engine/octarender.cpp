@@ -168,8 +168,8 @@ void flushvbo(int type = -1)
     if(data.empty()) return;
     vector<vtxarray *> &vas = vbovas[type];
     genvbo(type, data.getbuf(), data.length(), vas.getbuf(), vas.length());
-    data.setsizenodelete(0);
-    vas.setsizenodelete(0);
+    data.setsize(0);
+    vas.setsize(0);
     vbosize[type] = 0;
 }
 
@@ -200,8 +200,8 @@ struct verthash
     void clearverts()
     {
         memset(table, -1, sizeof(table));
-        chain.setsizenodelete(0);
-        verts.setsizenodelete(0);
+        chain.setsize(0);
+        verts.setsize(0);
     }
 
     int addvert(const vvec &v, short tu, short tv, const bvec &n)
@@ -280,12 +280,12 @@ struct vacollect : verthash
         skyclip = INT_MAX;
         skyarea = 0;
         indices.clear();
-        skyindices.setsizenodelete(0);
-        explicitskyindices.setsizenodelete(0);
-        matsurfs.setsizenodelete(0);
-        mapmodels.setsizenodelete(0);
-        grasstris.setsizenodelete(0);
-        texs.setsizenodelete(0);
+        skyindices.setsize(0);
+        explicitskyindices.setsize(0);
+        matsurfs.setsize(0);
+        mapmodels.setsize(0);
+        grasstris.setsize(0);
+        texs.setsize(0);
     }
 
     void remapunlit(vector<sortkey> &remap)
@@ -394,7 +394,7 @@ struct vacollect : verthash
 
         remapunlit(remap);
 
-        matsurfs.setsize(optimizematsurfs(matsurfs.getbuf(), matsurfs.length()));
+        matsurfs.shrink(optimizematsurfs(matsurfs.getbuf(), matsurfs.length()));
     }
 
     static int texsort(const sortkey *x, const sortkey *y)
@@ -1073,7 +1073,7 @@ void addskyverts(const ivec &o, int size)
         vector<cubeface> &sf = skyfaces[i];
         if(sf.empty()) continue;
         vc.skyfaces |= 0x3F&~(1<<opposite(i));
-        sf.setsizenodelete(mergefaces(i, sf.getbuf(), sf.length()));
+        sf.setsize(mergefaces(i, sf.getbuf(), sf.length()));
         loopvj(sf)
         {
             mergeinfo &m = sf[j];
@@ -1101,7 +1101,7 @@ void addskyverts(const ivec &o, int size)
             vc.skyindices.add(index[3]);
         nextskyface:;
         }
-        sf.setsizenodelete(0);
+        sf.setsize(0);
     }
 }
 
@@ -1340,7 +1340,7 @@ void addmergedverts(int level)
         addcubeverts(mf.orient, 1<<level, mf.v, mf.tex, mf.surface, mf.normals, mf.tjoints, mf.envmap, grassy);
         vahasmerges |= MERGE_USE;
     }
-    mfl.setsizenodelete(0);
+    mfl.setsize(0);
 }
 
 static uchar unusedmask;
@@ -1642,7 +1642,7 @@ void octarender()                               // creates va s for all leaf cub
     while(1<<csi < hdr.worldsize) csi++;
 
     recalcocprog = 0;
-    varoot.setsizenodelete(0);
+    varoot.setsize(0);
     updateva(worldroot, 0, 0, 0, hdr.worldsize/2, csi-1);
     flushvbo();
 
@@ -1685,13 +1685,13 @@ void allchanged(bool load)
     if(load) initenvmaps();
     guessshadowdir();
     entitiesinoctanodes();
-    tjoints.setsizenodelete(0);
+    tjoints.setsize(0);
     if(filltjoints)
     {
         recalcocprog = 0;
         gencubeedges();
         enumeratekt(edgegroups, edgegroup, g, int, e, findtjoints(e, g));
-        cubeedges.setsizenodelete(0);
+        cubeedges.setsize(0);
         edgegroups.clear();
     }
     octarender();

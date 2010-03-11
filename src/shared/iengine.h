@@ -91,7 +91,7 @@ struct bindlist
     {
         if(names.empty() || lastsearch != changedkeys)
         {
-            names.setsize(0);
+            names.shrink(0);
             searchbindlist(action, type, limit, sep, pretty, names);
             lastsearch = changedkeys;
         }
@@ -426,7 +426,7 @@ struct serverinfo
     }
     ~serverinfo() { reset(); }
 
-    void reset() { loopvrev(players) { DELETEP(players[i]); players.remove(i); } players.setsize(0); }
+    void reset() { loopvrev(players) { DELETEP(players[i]); players.remove(i); } players.shrink(0); }
 };
 extern vector<serverinfo *> servers;
 extern void sendclientpacket(ENetPacket *packet, int chan);

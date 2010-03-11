@@ -349,7 +349,7 @@ struct Texture
 
     Texture() : frame(0), delay(0), last(0), alphamask(NULL)
     {
-        frames.setsize(0);
+        frames.shrink(0);
     }
 
     GLuint idframe(int id)
@@ -423,7 +423,7 @@ struct VSlot
 
     void reset()
     {
-        params.setsize(0);
+        params.shrink(0);
         linked = false;
         scale = 1;
         rotation = xoffset = yoffset = 0;
@@ -468,9 +468,9 @@ struct Slot
 
     void reset()
     {
-        sts.setsize(0);
+        sts.shrink(0);
         shader = NULL;
-        params.setsize(0);
+        params.shrink(0);
         loaded = false;
         texmask = 0;
         DELETEA(autograss);

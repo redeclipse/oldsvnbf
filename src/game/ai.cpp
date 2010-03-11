@@ -144,7 +144,7 @@ namespace ai
                 if(showaiinfo > 1) conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s assigned to %s at skill %d", game::colorname(d, name), m, sk);
                 else conoutft(game::showplayerinfo > 1 ? int(CON_EVENT) : int(CON_MESG), "\fg%s joined the game", game::colorname(d, name), m, sk);
             }
-            game::cameras.setsize(0);
+            game::cameras.shrink(0);
             resetthisguy = true;
         }
         else
@@ -199,7 +199,7 @@ namespace ai
 
     bool checkothers(vector<int> &targets, gameent *d, int state, int targtype, int target, bool teams)
     { // checks the states of other ai for a match
-        targets.setsize(0);
+        targets.shrink(0);
         gameent *e = NULL;
         loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE && e->aitype == d->aitype)
         {
@@ -237,7 +237,7 @@ namespace ai
     bool randomnode(gameent *d, aistate &b, const vec &pos, float guard, float wander)
     {
         static vector<int> candidates;
-        candidates.setsizenodelete(0);
+        candidates.setsize(0);
         entities::findentswithin(WAYPOINT, pos, guard, wander, candidates);
 
         while(!candidates.empty())
@@ -432,7 +432,7 @@ namespace ai
 
     bool find(gameent *d, aistate &b)
     {
-        static vector<interest> interests; interests.setsizenodelete(0);
+        static vector<interest> interests; interests.setsize(0);
         if(d->aitype == AI_BOT)
         {
             if(!d->hasweap(d->loadweap, m_weapon(game::gamemode, game::mutators))) items(d, b, interests);
@@ -473,7 +473,7 @@ namespace ai
             interest n = interests.removeunordered(q);
             bool proceed = true;
             static vector<int> targets;
-            targets.setsizenodelete(0);
+            targets.setsize(0);
             if(m_fight(game::gamemode) && !m_campaign(game::gamemode) && d->aitype == AI_BOT) switch(n.state)
             {
                 case AI_S_DEFEND: // don't get into herds
@@ -519,7 +519,7 @@ namespace ai
             else if(hithurts(flags))
             {
                 static vector<int> targets; // check if one of our ai is defending them
-                targets.setsizenodelete(0);
+                targets.setsize(0);
                 if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
                 {
                     gameent *t;
@@ -843,7 +843,7 @@ namespace ai
         if(entities::ents.inrange(d->lastnode))
         {
             gameentity &e = *(gameentity *)entities::ents[d->lastnode];
-            static vector<int> anyremap; anyremap.setsizenodelete(0);
+            static vector<int> anyremap; anyremap.setsize(0);
             if(!e.links.empty())
             {
                 loopv(e.links) if(entities::ents.inrange(e.links[i]) && (retry || !d->ai->hasprevnode(e.links[i])))
@@ -1096,7 +1096,7 @@ namespace ai
             if(busy <= 3 && !d->action[AC_USE] && haswaited)
             {
                 static vector<actitem> actitems;
-                actitems.setsizenodelete(0);
+                actitems.setsize(0);
                 if(entities::collateitems(d, actitems))
                 {
                     while(!actitems.empty())

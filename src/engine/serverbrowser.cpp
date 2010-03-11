@@ -96,8 +96,8 @@ void resolverclear()
     if(resolverthreads.empty()) return;
 
     SDL_LockMutex(resolvermutex);
-    resolverqueries.setsize(0);
-    resolverresults.setsize(0);
+    resolverqueries.shrink(0);
+    resolverresults.shrink(0);
     loopv(resolverthreads)
     {
         resolverthread &rt = resolverthreads[i];
@@ -385,7 +385,7 @@ void checkpings()
         si->ping = totalmillis - getint(p);
         si->numplayers = getint(p);
         int numattr = getint(p);
-        si->attr.setsize(0);
+        si->attr.shrink(0);
         loopj(numattr) si->attr.add(getint(p));
         getstring(text, p);
         filtertext(si->map, text);
@@ -421,7 +421,7 @@ bool reqmaster = false;
 void clearservers()
 {
     resolverclear();
-    servers.deletecontentsp();
+    servers.deletecontents();
     lastinfo = 0;
 }
 

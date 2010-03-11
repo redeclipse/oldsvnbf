@@ -165,8 +165,8 @@ namespace projs
 
     void reset()
     {
-        projs.deletecontentsp();
-        projs.setsize(0);
+        projs.deletecontents();
+        projs.shrink(0);
     };
 
     void preload()
@@ -1186,7 +1186,7 @@ namespace projs
                 proj.hit = NULL;
                 proj.hitflags = HITFLAG_NONE;
             }
-            hits.setsizenodelete(0);
+            hits.setsize(0);
             if((proj.projtype != PRJ_SHOT || proj.owner) && proj.state != CS_DEAD)
             {
                 if(proj.projtype == PRJ_ENT && entities::ents.inrange(proj.id) && entities::ents[proj.id]->type == WEAPON) // in case spawnweapon changes

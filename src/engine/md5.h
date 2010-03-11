@@ -665,10 +665,10 @@ void md5animpart(char *maskstr)
     {
         char *bonestr = bonestrs[i];
         int bone = p->meshes ? ((md5::skelmeshgroup *)p->meshes)->skel->findbone(bonestr[0]=='!' ? bonestr+1 : bonestr) : -1;
-        if(bone<0) { conoutf("\frcould not find bone %s for anim part mask [%s]", bonestr, maskstr); bonestrs.deletecontentsa(); return; }
+        if(bone<0) { conoutf("\frcould not find bone %s for anim part mask [%s]", bonestr, maskstr); bonestrs.deletearrays(); return; }
         bonemask.add(bone | (bonestr[0]=='!' ? BONEMASK_NOT : 0));
     }
-    bonestrs.deletecontentsa();
+    bonestrs.deletearrays();
     bonemask.sort(bonemaskcmp);
     if(bonemask.length()) bonemask.add(BONEMASK_END);
 

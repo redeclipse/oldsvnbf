@@ -193,7 +193,7 @@ namespace hud
         int groupplayers()
         {
             int numgroups = 0;
-            spectators.setsize(0);
+            spectators.shrink(0);
             loopi(game::numdynents())
             {
                 gameent *o = (gameent *)game::iterdynents(i);
@@ -218,7 +218,7 @@ namespace hud
                 else if(m_ctf(game::gamemode)) g.score = ctf::st.findscore(o->team).total;
                 else g.score = o->points;
 
-                g.players.setsize(0);
+                g.players.shrink(0);
                 g.players.add(o);
             }
             loopi(numgroups) groups[i]->players.sort(playersort);

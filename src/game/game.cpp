@@ -599,7 +599,7 @@ namespace game
     void flushdamagetones()
     {
         loopv(damagetones) damagetones[i].play();
-        damagetones.setsizenodelete(0);
+        damagetones.setsize(0);
     }
 
     static int alarmchan = -1;
@@ -988,7 +988,7 @@ namespace game
                 resetcamera();
             }
         }
-        cameras.setsize(0);
+        cameras.shrink(0);
         client::clearvotes(d);
         projs::remove(d);
         removedamagetones(d);
@@ -1638,7 +1638,7 @@ namespace game
             if(!lastcamera)
             {
                 resetcursor();
-                cameras.setsize(0);
+                cameras.shrink(0);
                 if(mousestyle() == 2 && focus->state != CS_WAITING && focus->state != CS_SPECTATOR)
                 {
                     camera1->yaw = focus->aimyaw = focus->yaw;
