@@ -334,7 +334,7 @@ void mapmodelcompat(int *rad, int *h, int *tex, char *name, char *shadow)
     mmodel(name);
 }
 
-void resetmapmodels() { mapmodels.setsize(0); }
+void resetmapmodels() { mapmodels.shrink(0); }
 
 mapmodelinfo &getmminfo(int i) { return mapmodels.inrange(i) ? mapmodels[i] : *(mapmodelinfo *)0; }
 
@@ -630,7 +630,7 @@ static occludequery *modelquery = NULL;
 void startmodelbatches()
 {
     numbatches = 0;
-    modelattached.setsizenodelete(0);
+    modelattached.setsize(0);
 }
 
 modelbatch &addbatchedmodel(model *m)
@@ -642,7 +642,7 @@ modelbatch &addbatchedmodel(model *m)
         if(numbatches<batches.length())
         {
             b = batches[numbatches];
-            b->batched.setsizenodelete(0);
+            b->batched.setsize(0);
         }
         else b = batches.add(new modelbatch);
         b->m = m;
@@ -796,7 +796,7 @@ void endmodelquery()
     }
     endquery(modelquery);
     modelquery = NULL;
-    modelattached.setsizenodelete(minattached);
+    modelattached.setsize(minattached);
 }
 
 VAR(IDF_PERSIST, maxmodelradiusdistance, 10, 200, 1000);

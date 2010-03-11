@@ -92,7 +92,7 @@ struct duelservmode : servmode
     void clear()
     {
         dueltime = gamemillis+GAME(duellimit);
-        playing.setsize(0);
+        playing.shrink(0);
     }
 
     void update()
@@ -116,7 +116,7 @@ struct duelservmode : servmode
             {
                 vector<clientinfo *> alive;
                 loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GAME(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
-                allowed.setsize(0); playing.setsize(0);
+                allowed.shrink(0); playing.shrink(0);
                 if(!duelqueue.empty())
                 {
                     loopv(clients) position(clients[i], true);
@@ -224,9 +224,9 @@ struct duelservmode : servmode
     {
         duelround = 0;
         dueltime = -1;
-        allowed.setsize(0);
-        duelqueue.setsize(0);
-        playing.setsize(0);
+        allowed.shrink(0);
+        duelqueue.shrink(0);
+        playing.shrink(0);
     }
 } duelmutator;
 #endif

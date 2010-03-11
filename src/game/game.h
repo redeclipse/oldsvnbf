@@ -903,12 +903,12 @@ struct gameentity : extentity
     int mark;
     vector<int> kin;
 
-    gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(0) { kin.setsize(0); }
+    gameentity() : schan(-1), lastuse(0), lastspawn(0), mark(0) { kin.shrink(0); }
     ~gameentity()
     {
         if(issound(schan)) removesound(schan);
         schan = -1;
-        kin.setsize(0);
+        kin.shrink(0);
     }
 };
 
@@ -980,8 +980,8 @@ struct gameent : dynent, gamestate
         name[0] = info[0] = obit[0] = 0;
         weight = 200; // so we can control the 'gravity' feel
         maxspeed = 50; // ditto for movement
-        dominating.setsize(0);
-        dominated.setsize(0);
+        dominating.shrink(0);
+        dominated.shrink(0);
         checktags();
         respawn(-1, 100);
     }
@@ -1029,7 +1029,7 @@ struct gameent : dynent, gamestate
         clearstate();
         physent::reset();
         gamestate::respawn(millis, heal);
-        airnodes.setsizenodelete(0);
+        airnodes.setsize(0);
     }
 
     void editspawn(int millis, int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
@@ -1044,7 +1044,7 @@ struct gameent : dynent, gamestate
         floor = vec(0, 0, 1);
         resetinterp();
         gamestate::editspawn(millis, sweap, heal, melee, arena, grenades);
-        airnodes.setsizenodelete(0);
+        airnodes.setsize(0);
     }
 
     void resetstate(int millis, int heal)
@@ -1056,8 +1056,8 @@ struct gameent : dynent, gamestate
     void mapchange(int millis, int heal)
     {
         checkpoint = -1;
-        dominating.setsize(0);
-        dominated.setsize(0);
+        dominating.shrink(0);
+        dominated.shrink(0);
         resetstate(millis, heal);
         gamestate::mapchange();
     }
@@ -1341,7 +1341,7 @@ namespace game
 
         void reset()
         {
-            cansee.setsize(0);
+            cansee.shrink(0);
             dir = vec(0, 0, 0);
             score = 0;
         }
@@ -1426,8 +1426,8 @@ namespace entities
 
         void clear()
         {
-            obstacles.setsizenodelete(0);
-            entities.setsizenodelete(0);
+            obstacles.setsize(0);
+            entities.setsize(0);
         }
 
         void add(dynent *ent)

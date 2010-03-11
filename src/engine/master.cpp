@@ -152,7 +152,7 @@ void reqauth(masterclient &c, uint id, char *name)
     a.id = id;
     uint seed[3] = { starttime, lastmillis, randomMT() };
     static vector<char> buf;
-    buf.setsizenodelete(0);
+    buf.setsize(0);
     a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
 
     masteroutf(c, "chalauth %u %s\n", id, buf.getbuf());
@@ -357,7 +357,7 @@ void checkmaster()
                     c.outputpos += res;
                     if(c.outputpos>=c.output.length())
                     {
-                        c.output.setsizenodelete(0);
+                        c.output.setsize(0);
                         c.outputpos = 0;
                         if(!c.isserver) { purgemasterclient(i--); continue; }
                     }

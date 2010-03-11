@@ -24,7 +24,7 @@ struct cmenu : caction
     void reset()
     {
         loopvrev(actions) actions.remove(i);
-        actions.setsize(0);
+        actions.shrink(0);
     }
 };
 
@@ -48,7 +48,7 @@ void resetcmenus()
 {
     clearcmenu();
     loopvrev(cmenus) cmenus.remove(i);
-    cmenus.setsize(0);
+    cmenus.shrink(0);
 }
 ICOMMAND(0, resetcompass, "", (), resetcmenus());
 

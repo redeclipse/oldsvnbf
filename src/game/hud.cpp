@@ -832,7 +832,7 @@ namespace hud
                     {
                         pushfont("sub");
                         static vector<actitem> actitems;
-                        actitems.setsizenodelete(0);
+                        actitems.setsize(0);
                         if(entities::collateitems(target, actitems))
                         {
                             SEARCHBINDCACHE(actionkey)("action 3", 0);
@@ -869,7 +869,7 @@ namespace hud
                                                 w_carry(attr, sweap) && target->carry(sweap) >= maxcarry) drop = target->drop(sweap, attr);
                                             if(isweap(drop))
                                             {
-                                                static vector<int> attrs; attrs.setsizenodelete(0); loopk(5) attrs.add(k ? 0 : drop);
+                                                static vector<int> attrs; attrs.setsize(0); loopk(5) attrs.add(k ? 0 : drop);
                                                 defformatstring(dropweap)("%s", entities::entinfo(WEAPON, attrs, false));
                                                 ty += draw_textx("Press \fs\fc%s\fS to swap \fs%s\fS for \fs%s\fS", tx, ty, tr, tg, tb, tf, TEXT_CENTERED, -1, tw, actionkey, dropweap, entities::entinfo(e.type, e.attrs, false))*noticescale;
                                             }
@@ -951,7 +951,7 @@ namespace hud
 
     void drawconsole(int type, int w, int h, int x, int y, int s)
     {
-        static vector<int> refs; refs.setsizenodelete(0);
+        static vector<int> refs; refs.setsize(0);
         bool full = fullconsole || commandmillis > 0;
         pushfont("console");
         if(type >= 2)

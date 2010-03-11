@@ -30,7 +30,7 @@ struct gui : guient
     static int curdepth, curlist, xsize, ysize, curx, cury, fontdepth, mergelist, mergedepth;
     static bool shouldautotab;
 
-    static void reset() { lists.setsize(0); mergelist = mergedepth = -1; }
+    static void reset() { lists.shrink(0); mergelist = mergedepth = -1; }
 
     static int ty, tx, tpos, *tcurrent, tcolor; //tracking tab size and position since uses different layout method...
 
@@ -934,7 +934,7 @@ namespace UI
     {
         if(actionon) mouseaction[0] |= GUI_PRESSED;
 
-        gui::reset(); guis.setsize(0);
+        gui::reset(); guis.shrink(0);
 
         // call all places in the engine that may want to render a gui from here, they call addcb()
         if(progressing) progressmenu();

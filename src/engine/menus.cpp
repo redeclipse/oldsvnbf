@@ -589,7 +589,7 @@ static struct applymenu : menu
 
     void clear()
     {
-        needsapply.setsize(0);
+        needsapply.shrink(0);
     }
 } applymenu;
 
@@ -622,7 +622,7 @@ void menuprocess()
     int level = menustack.length();
     interactive = true;
     loopv(executelater) execute(executelater[i]);
-    executelater.deletecontentsa();
+    executelater.deletearrays();
     interactive = false;
     if(clearlater)
     {

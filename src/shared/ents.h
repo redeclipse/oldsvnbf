@@ -38,8 +38,8 @@ struct entity : entbase
 
     void reset()
     {
-        attrs.setsize(0);
-        links.setsize(0);
+        attrs.shrink(0);
+        links.shrink(0);
     }
 };
 

@@ -670,7 +670,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
         char *key = newstring(rname);
         t = &textures[key];
         t->name = key;
-        t->frames.setsize(0);
+        t->frames.shrink(0);
         t->frame = 0;
     }
 
@@ -1064,7 +1064,7 @@ void resettextures()
         for(VSlot *vs = s->variants; vs; vs = vs->next) vs->slot = &dummyslot;
         delete s;
     }
-    slots.setsize(0);
+    slots.shrink(0);
 }
 
 ICOMMAND(0, texturereset, "", (void), if(editmode || worldidents) resettextures(););
@@ -1082,8 +1082,8 @@ static bool markingvslots = false;
 void clearslots()
 {
     resetslotshader();
-    slots.deletecontentsp();
-    vslots.deletecontentsp();
+    slots.deletecontents();
+    vslots.deletecontents();
     loopi(MATF_VOLUME+1) materialslots[i].reset();
     clonedvslots = 0;
 }
@@ -1191,7 +1191,7 @@ int compactvslots(bool cull)
             swap(vslots[i], vslots[vslots[i]->index]);
     }
     for(int i = compactedvslots; i < vslots.length(); i++) delete vslots[i];
-    vslots.setsizenodelete(compactedvslots);
+    vslots.setsize(compactedvslots);
     return total;
 }
 
@@ -1982,7 +1982,7 @@ void clearenvmaps()
         skyenvmap = NULL;
     }
     loopv(envmaps) glDeleteTextures(1, &envmaps[i].tex);
-    envmaps.setsize(0);
+    envmaps.shrink(0);
 }
 
 VAR(0, aaenvmap, 0, 2, 4);
@@ -2122,7 +2122,7 @@ void cleanuptexture(Texture *t)
             t->frames[k] = 0;
         }
     }
-    t->frames.setsize(0);
+    t->frames.shrink(0);
     t->id = 0;
 
     if(t->type&Texture::TRANSIENT) textures.remove(t->name);
@@ -2177,7 +2177,7 @@ void reloadtex(char *name)
     if(t->type&Texture::TRANSIENT) { conoutf("\frcan't reload transient texture %s", name); return; }
     DELETEA(t->alphamask);
     Texture oldtex = *t;
-    t->frames.setsize(0);
+    t->frames.shrink(0);
     if(!reloadtexture(t))
     {
         loopv(t->frames) if(t->frames[i]) glDeleteTextures(1, &t->frames[i]);

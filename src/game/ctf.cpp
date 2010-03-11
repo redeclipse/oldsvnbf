@@ -34,7 +34,7 @@ namespace ctf
 
     void drawblips(int w, int h, float blend)
     {
-        static vector<int> hasflags; hasflags.setsizenodelete(0);
+        static vector<int> hasflags; hasflags.setsize(0);
         loopv(st.flags) if(entities::ents.inrange(st.flags[i].ent) && st.flags[i].owner == game::focus) hasflags.add(i);
         loopv(st.flags)
         {
@@ -83,7 +83,7 @@ namespace ctf
         if(game::player1->state == CS_ALIVE && hud::shownotices >= 3)
         {
             static vector<int> hasflags, takenflags, droppedflags;
-            hasflags.setsizenodelete(0); takenflags.setsizenodelete(0); droppedflags.setsizenodelete(0);
+            hasflags.setsize(0); takenflags.setsize(0); droppedflags.setsize(0);
             loopv(st.flags)
             {
                 ctfstate::flag &f = st.flags[i];
@@ -575,8 +575,8 @@ namespace ctf
         if(d->aitype == AI_BOT)
         {
             static vector<int> hasflags, takenflags;
-            hasflags.setsizenodelete(0);
-            takenflags.setsizenodelete(0);
+            hasflags.setsize(0);
+            takenflags.setsize(0);
             loopv(st.flags)
             {
                 ctfstate::flag &g = st.flags[i];
@@ -615,7 +615,7 @@ namespace ctf
             bool home = isctfhome(f, ai::owner(d));
             if(d->aitype == AI_BOT && (!home || ctfstyle >= 3) && !(f.base&BASE_FLAG)) continue; // don't bother with other bases
             static vector<int> targets; // build a list of others who are interested in this
-            targets.setsizenodelete(0);
+            targets.setsize(0);
             bool regen = d->aitype != AI_BOT || f.team == TEAM_NEUTRAL || ctfstyle >= 3 || !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
             ai::checkothers(targets, d, home || d->aitype != AI_BOT ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
             if(d->aitype == AI_BOT)
@@ -687,7 +687,7 @@ namespace ctf
         if(ctfstyle <= 2 && d->aitype == AI_BOT)
         {
             static vector<int> hasflags;
-            hasflags.setsizenodelete(0);
+            hasflags.setsize(0);
             loopv(st.flags)
             {
                 ctfstate::flag &g = st.flags[i];
@@ -714,7 +714,7 @@ namespace ctf
                 if(regen && lastmillis-b.millis >= (201-d->skill)*33)
                 {
                     static vector<int> targets; // build a list of others who are interested in this
-                    targets.setsizenodelete(0);
+                    targets.setsize(0);
                     ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
                     gameent *e = NULL;
                     loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && !e->ai && ai::owner(d) == ai::owner(e) && ai::targetable(d, e, false))
@@ -759,7 +759,7 @@ namespace ctf
             b.idle = -1;
             if(isctfhome(f, ai::owner(d)) && ctfstyle <= 2)
             {
-                static vector<int> hasflags; hasflags.setsizenodelete(0);
+                static vector<int> hasflags; hasflags.setsize(0);
                 loopv(st.flags)
                 {
                     ctfstate::flag &g = st.flags[i];

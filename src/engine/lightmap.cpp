@@ -877,7 +877,7 @@ VARF(0, lightcachesize, 4, 6, 12, clearlightcache());
 
 void findsunlights()
 {
-    sunlights.setsize(0);
+    sunlights.shrink(0);
     int numents = entities::lastent(ET_SUNLIGHT);
     const vector<extentity *> &ents = entities::getents();
     loopi(numents) if(ents[i]->type == ET_SUNLIGHT) sunlights.add(ents[i]);
@@ -897,7 +897,7 @@ void clearlightcache(int e)
                 lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
                 if(lce.x != x || lce.y != y) continue;
                 lce.x = -1;
-                lce.lights.setsizenodelete(0);
+                lce.lights.setsize(0);
             }
             return;
         }
@@ -905,9 +905,9 @@ void clearlightcache(int e)
     for(lightcacheentry *lce = lightcache; lce < &lightcache[LIGHTCACHESIZE]; lce++)
     {
         lce->x = -1;
-        lce->lights.setsizenodelete(0);
+        lce->lights.setsize(0);
     }
-    if(e < 0) sunlights.setsize(0);
+    if(e < 0) sunlights.shrink(0);
 }
 
 const vector<int> &checklightcache(int x, int y)
@@ -917,7 +917,7 @@ const vector<int> &checklightcache(int x, int y)
     lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
     if(lce.x == x && lce.y == y) return lce.lights;
 
-    lce.lights.setsizenodelete(0);
+    lce.lights.setsize(0);
     int csize = 1<<lightcachesize, cx = x<<lightcachesize, cy = y<<lightcachesize;
     const vector<extentity *> &ents = entities::getents();
     int numents = entities::lastent(ET_LIGHT);
@@ -1005,8 +1005,8 @@ static inline void addlight(const extentity &light, int cx, int cy, int cz, int 
 
 bool find_lights(int cx, int cy, int cz, int size, const vec *v, const vec *n, const vec *n2, const Slot &slot, const VSlot &vslot)
 {
-    lights1.setsizenodelete(0);
-    lights2.setsizenodelete(0);
+    lights1.setsize(0);
+    lights2.setsize(0);
     const vector<extentity *> &ents = entities::getents();
     if(size <= 1<<lightcachesize)
     {
@@ -1601,14 +1601,14 @@ void cleanuplightmaps()
         lm.tex = lm.offsetx = lm.offsety = -1;
     }
     loopv(lightmaptexs) glDeleteTextures(1, &lightmaptexs[i].id);
-    lightmaptexs.setsize(0);
+    lightmaptexs.shrink(0);
     if(lmprogtex) { glDeleteTextures(1, &lmprogtex); lmprogtex = 0; }
 }
 
 void resetlightmaps()
 {
     cleanuplightmaps();
-    lightmaps.setsize(0);
+    lightmaps.shrink(0);
     compressed.clear();
     clearlightcache();
 }

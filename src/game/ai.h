@@ -139,13 +139,13 @@ namespace ai
         void clear(bool prev = true)
         {
             if(prev) memset(prevnodes, -1, sizeof(prevnodes));
-            route.setsizenodelete(0);
+            route.setsize(0);
         }
 
         void wipe()
         {
             clear(true);
-            state.setsizenodelete(0);
+            state.setsize(0);
             addstate(AI_S_WAIT);
             trywipe = false;
         }

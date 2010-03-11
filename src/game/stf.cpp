@@ -285,7 +285,7 @@ namespace stf
             {
                 stfstate::flag &f = st.flags[j];
                 static vector<int> targets; // build a list of others who are interested in this
-                targets.setsizenodelete(0);
+                targets.setsize(0);
                 ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
                 gameent *e = NULL;
                 bool regen = !m_regen(game::gamemode, game::mutators) || d->health >= max(maxhealth, extrahealth);
@@ -318,7 +318,7 @@ namespace stf
             if(regen && (!f.enemy && ai::owner(d) == f.owner))
             {
                 static vector<int> targets; // build a list of others who are interested in this
-                targets.setsizenodelete(0);
+                targets.setsize(0);
                 ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
                 if(d->aitype == AI_BOT)
                 {

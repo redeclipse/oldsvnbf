@@ -15,8 +15,8 @@ namespace server
 
         void reset()
         {
-            attrs.setsize(0);
-            kin.setsize(0);
+            attrs.shrink(0);
+            kin.shrink(0);
         }
     };
 
@@ -99,7 +99,7 @@ namespace server
     {
         vector<int> projs;
         projectilestate() { reset(); }
-        void reset() { projs.setsize(0); }
+        void reset() { projs.shrink(0); }
         void add(int val)
         {
             projs.add(val);
@@ -145,7 +145,7 @@ namespace server
             if(!change) score = timeplayed = 0;
             else gamestate::mapchange();
             frags = spree = crits = rewards = flags = deaths = teamkills = shotdamage = damage = 0;
-            fraglog.setsize(0); fragmillis.setsize(0); cpnodes.setsize(0);
+            fraglog.shrink(0); fragmillis.shrink(0); cpnodes.shrink(0);
             respawn(0, m_health(server::gamemode, server::mutators));
         }
 
@@ -225,7 +225,7 @@ namespace server
         int lastclipboard;
 
         clientinfo() : clipboard(NULL) { reset(); }
-        ~clientinfo() { events.deletecontentsp(); cleanclipboard(); }
+        ~clientinfo() { events.deletecontents(); cleanclipboard(); }
 
         void addevent(gameevent *e)
         {
@@ -237,7 +237,7 @@ namespace server
         {
             mapvote[0] = 0;
             state.reset(change);
-            events.deletecontentsp();
+            events.deletecontents();
             overflow = 0;
             timesync = wantsmap = false;
             lastevent = gameoffset = lastvote = 0;
@@ -260,8 +260,8 @@ namespace server
             privilege = PRIV_NONE;
             connected = local = online = wantsmap = connectauth = false;
             authreq = 0;
-            position.setsizenodelete(0);
-            messages.setsizenodelete(0);
+            position.setsize(0);
+            messages.setsize(0);
             cleanclipboard();
             mapchange(false);
         }
@@ -328,7 +328,7 @@ namespace server
         int id;
         vector<int> ents;
         triggergrp() { reset(); }
-        void reset(int n = 0) { id = n; ents.setsize(0); }
+        void reset(int n = 0) { id = n; ents.shrink(0); }
     } triggers[TRIGGERIDS+1];
 
     struct servmode
@@ -811,7 +811,7 @@ namespace server
     int sortitems(int *a, int *b) { return rnd(3)-1; }
     void setupitems(bool update)
     {
-        static vector<int> items; items.setsizenodelete(0);
+        static vector<int> items; items.setsize(0);
         loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
         {
             sents[i].millis += GAME(itemspawndelay);
@@ -846,7 +846,7 @@ namespace server
 
         if(triggerid <= 0)
         {
-            static vector<int> valid; valid.setsizenodelete(0);
+            static vector<int> valid; valid.setsize(0);
             loopi(TRIGGERIDS) if(!triggers[i+1].ents.empty()) valid.add(triggers[i+1].id);
             if(!valid.empty()) triggerid = valid[rnd(valid.length())];
         }
@@ -879,8 +879,8 @@ namespace server
 
         void reset()
         {
-            ents.setsize(0);
-            cycle.setsize(0);
+            ents.shrink(0);
+            cycle.shrink(0);
             spawncycle = 0;
         }
         void add(int n)
@@ -1116,7 +1116,7 @@ namespace server
         if(!n)
         {
             loopv(demos) delete[] demos[i].data;
-            demos.setsize(0);
+            demos.shrink(0);
             srvoutf(4, "cleared all demos");
         }
         else if(demos.inrange(n-1))
@@ -1703,7 +1703,7 @@ namespace server
         oldtimelimit = GAME(timelimit);
         minremain = GAME(timelimit) ? GAME(timelimit) : -1;
         gamelimit = GAME(timelimit) ? minremain*60000 : 0;
-        sents.setsize(0); scores.setsize(0);
+        sents.shrink(0); scores.shrink(0);
         setuptriggers(false); setupspawns(false);
 
         const char *reqmap = name && *name ? name : pickmap(smapname, gamemode, mutators);
@@ -1735,7 +1735,7 @@ namespace server
         if(m_stf(gamemode)) smode = &stfmode;
         else if(m_ctf(gamemode)) smode = &ctfmode;
         else smode = NULL;
-        smuts.setsize(0);
+        smuts.shrink(0);
         if(m_duke(gamemode, mutators)) smuts.add(&duelmutator);
         if(smode) smode->reset(false);
         mutate(smuts, mut->reset(false));
@@ -2375,7 +2375,7 @@ namespace server
             dropitems(target);
             if(actor != target && actor->state.aitype >= AI_START) givepoints(target, pointvalue); else givepoints(actor, pointvalue);
             sendf(-1, 1, "ri8", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags, style, weap, realflags, realdamage);
-            target->position.setsizenodelete(0);
+            target->position.setsize(0);
             if(smode) smode->died(target, actor);
             mutate(smuts, mut->died(target, actor));
             target->state.state = CS_DEAD; // don't issue respawn yet until DEATHMILLIS has elapsed
@@ -2398,7 +2398,7 @@ namespace server
         if(!flags && (m_trial(gamemode) || m_lobby(gamemode)))
         {
             ci->state.cpmillis = 0;
-            ci->state.cpnodes.setsize(0);
+            ci->state.cpnodes.shrink(0);
         }
         ci->state.deaths++;
         dropitems(ci); givepoints(ci, pointvalue);
@@ -2409,7 +2409,7 @@ namespace server
             ci->state.lastfireowner = ci->clientnum;
         }
         sendf(-1, 1, "ri8", SV_DIED, ci->clientnum, ci->clientnum, ci->state.frags, 0, -1, flags, ci->state.health);
-        ci->position.setsizenodelete(0);
+        ci->position.setsize(0);
         if(smode) smode->died(ci, NULL);
         mutate(smuts, mut->died(ci, NULL));
         gs.state = CS_DEAD;
@@ -3135,7 +3135,7 @@ namespace server
                 if(!packet->referenceCount) enet_packet_destroy(packet);
                 else { ++ws.uses; packet->freeCallback = freecallback; }
             }
-            ci.position.setsizenodelete(0);
+            ci.position.setsize(0);
 
             if(ci.state.aitype < 0 && msize && (ci.msgoff<0 || msize-ci.msglen>0))
             {
@@ -3146,7 +3146,7 @@ namespace server
                 if(!packet->referenceCount) enet_packet_destroy(packet);
                 else { ++ws.uses; packet->freeCallback = freecallback; }
             }
-            ci.messages.setsizenodelete(0);
+            ci.messages.setsize(0);
         }
         reliablemessages = false;
         if(!ws.uses)
@@ -3282,7 +3282,7 @@ namespace server
                     if(flags&0x20) { getuint(p); getint(p); }
                     if(havecn && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                     {
-                        cp->position.setsizenodelete(0);
+                        cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
                     if(havecn && cp->state.state==CS_ALIVE)
@@ -3320,7 +3320,7 @@ namespace server
                         if(smode) smode->leavegame(ci);
                         mutate(smuts, mut->leavegame(ci));
                         ci->state.state = CS_EDITING;
-                        ci->events.deletecontentsp();
+                        ci->events.deletecontents();
                     }
                     else
                     {
@@ -3564,7 +3564,7 @@ namespace server
                                     case CP_START:
                                     {
                                         cp->state.cpmillis = gamemillis;
-                                        cp->state.cpnodes.setsize(0);
+                                        cp->state.cpnodes.shrink(0);
                                     }
                                     default: break;
                                 }
@@ -3861,7 +3861,7 @@ namespace server
                         mutate(smuts, mut->leavegame(cp));
                         distpoints(cp);
                         sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-                        cp->state.cpnodes.setsize(0);
+                        cp->state.cpnodes.shrink(0);
                         cp->state.cpmillis = 0;
                         cp->state.state = CS_SPECTATOR;
                         cp->state.timeplayed += lastmillis-cp->state.lasttimeplayed;
@@ -3870,7 +3870,7 @@ namespace server
                     }
                     else if(cp->state.state == CS_SPECTATOR && !val)
                     {
-                        cp->state.cpnodes.setsize(0);
+                        cp->state.cpnodes.shrink(0);
                         cp->state.cpmillis = 0;
                         cp->state.state = CS_DEAD;
                         cp->state.lasttimeplayed = lastmillis;
@@ -4040,7 +4040,7 @@ namespace server
                     if(size >= 0)
                     {
                         smapname[0] = '\0';
-                        sents.setsize(0);
+                        sents.shrink(0);
                         hasgameinfo = true;
                         if(smode) smode->reset(true);
                         mutate(smuts, mut->reset(true));

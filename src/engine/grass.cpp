@@ -217,8 +217,8 @@ void generategrass()
 
     checkgrass();
 
-    grassgroups.setsizenodelete(0);
-    grassverts.setsizenodelete(0);
+    grassgroups.setsize(0);
+    grassverts.setsize(0);
 
     loopi(grasswedges)
     {

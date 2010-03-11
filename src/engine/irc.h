@@ -19,7 +19,7 @@ struct ircchan
         name[0] = friendly[0] = passkey[0] = 0;
 #ifndef STANDALONE
         loopv(lines) DELETEA(lines[i]);
-        lines.setsize(0);
+        lines.shrink(0);
 #endif
     }
 };
@@ -44,9 +44,9 @@ struct ircnet
         state = IRC_DISC;
         port = lastattempt = 0;
         name[0] = serv[0] = nick[0] = ip[0] = passkey[0] = authname[0] = authpass[0] = 0;
-        channels.setsize(0);
+        channels.shrink(0);
         loopv(lines) DELETEA(lines[i]);
-        lines.setsize(0);
+        lines.shrink(0);
     }
 };
 

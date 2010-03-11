@@ -222,7 +222,7 @@ bool haveselent()
 
 void entcancel()
 {
-    entgroup.setsize(0);
+    entgroup.shrink(0);
 }
 
 void entadd(int id)
@@ -630,7 +630,7 @@ void entcopy()
 {
     if(noentedit()) return;
     entcopygrid = sel.grid;
-    entcopybuf.setsize(0);
+    entcopybuf.shrink(0);
     loopv(entgroup)
         entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.tovec()));
 }
@@ -693,7 +693,7 @@ void entset(char *what, char *attr)
 {
     if(noentedit()) return;
     int type = entities::findtype(what);
-    static vector<int> attrs; attrs.setsizenodelete(0);
+    static vector<int> attrs; attrs.setsize(0);
     entattrs(attr, attrs);
     groupedit({
         e.type = type;
@@ -832,7 +832,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)   // main empty wo
 
     copystring(hdr.gameid, server::gameid(), 4);
 
-    texmru.setsize(0);
+    texmru.shrink(0);
     freeocta(worldroot);
     worldroot = newcubes(F_EMPTY);
     loopi(4) solidfaces(worldroot[i]);

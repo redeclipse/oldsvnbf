@@ -73,7 +73,7 @@ void stopsound()
     stopmusic(false);
     clearsound();
     soundsamples.clear();
-    gamesounds.setsizenodelete(0);
+    gamesounds.setsize(0);
     closemumble();
     Mix_CloseAudio();
 }
@@ -87,7 +87,7 @@ void removesound(int c)
 void clearsound()
 {
     loopv(sounds) removesound(i);
-    mapsounds.setsizenodelete(0);
+    mapsounds.setsize(0);
 }
 
 Mix_Music *loadmusic(const char *name)
@@ -425,8 +425,8 @@ void resetsound()
         DELETEA(musicfile);
         DELETEA(musicdonecmd);
         music = NULL;
-        gamesounds.setsizenodelete(0);
-        mapsounds.setsizenodelete(0);
+        gamesounds.setsize(0);
+        mapsounds.setsize(0);
         soundsamples.clear();
         return;
     }

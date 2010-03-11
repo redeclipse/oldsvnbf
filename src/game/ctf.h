@@ -31,7 +31,7 @@ struct ctfstate
             base = BASE_NONE;
 #ifdef GAMESERVER
             owner = -1;
-            votes.setsize(0);
+            votes.shrink(0);
 #else
             pickup = false;
             owner = lastowner = NULL;
@@ -61,8 +61,8 @@ struct ctfstate
 
     void reset()
     {
-        flags.setsize(0);
-        scores.setsize(0);
+        flags.shrink(0);
+        scores.shrink(0);
     }
 
     int addflag(const vec &o, int team, int base = BASE_NONE, int i = -1)
@@ -88,7 +88,7 @@ struct ctfstate
         f.taketime = f.droptime ? t-max(1000-(t-f.droptime), 0) : t;
         f.droptime = 0;
 #ifdef GAMESERVER
-        f.votes.setsize(0);
+        f.votes.shrink(0);
 #else
         f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.lastowner = owner;
@@ -104,7 +104,7 @@ struct ctfstate
         f.taketime = 0;
 #ifdef GAMESERVER
         f.owner = -1;
-        f.votes.setsize(0);
+        f.votes.shrink(0);
 #else
         f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.pickup = false;
@@ -118,7 +118,7 @@ struct ctfstate
         f.droptime = f.taketime = 0;
 #ifdef GAMESERVER
         f.owner = -1;
-        f.votes.setsize(0);
+        f.votes.shrink(0);
 #else
         f.interptime = f.interptime ? t-max(1000-(t-f.interptime), 0) : t;
         f.pickup = false;

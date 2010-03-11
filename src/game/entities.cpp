@@ -412,7 +412,7 @@ namespace entities
     bool docacheclear = false;
     void clearentcache()
     {
-        entcache.setsizenodelete(0);
+        entcache.setsize(0);
         entcachedepth = -1;
         entcachemin = vec(1e16f, 1e16f, 1e16f);
         entcachemax = vec(-1e16f, -1e16f, -1e16f);
@@ -421,7 +421,7 @@ namespace entities
 
     void buildentcache()
     {
-        entcache.setsizenodelete(0);
+        entcache.setsize(0);
         vector<int> indices;
         loopv(ents)
         {
@@ -456,7 +456,7 @@ namespace entities
     {
         if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+        entcachestack.setsize(0);
 
         #define CHECKCLOSEST(branch) do { \
             int n = curnode->childindex(branch); \
@@ -513,7 +513,7 @@ namespace entities
 
         if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+        entcachestack.setsize(0);
 
         entcachenode *curnode = &entcache[0];
         #define CHECKWITHIN(branch) do { \
@@ -569,7 +569,7 @@ namespace entities
 
         if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+        entcachestack.setsize(0);
 
         entcachenode *curnode = &entcache[0];
         #define CHECKNEAR(branch) do { \
@@ -619,7 +619,7 @@ namespace entities
     {
         if(entcachedepth<0) buildentcache();
 
-        entcachestack.setsizenodelete(0);
+        entcachestack.setsize(0);
 
         entcachenode *curnode = &entcache[0];
         #define CHECKITEM(branch) do { \
@@ -785,7 +785,7 @@ namespace entities
                     {
                         e.lastuse = e.lastemit = lastmillis;
                         static vector<int> teleports;
-                        teleports.setsize(0);
+                        teleports.shrink(0);
                         loopv(e.links)
                             if(ents.inrange(e.links[i]) && ents[e.links[i]]->type == e.type)
                                 teleports.add(e.links[i]);
@@ -861,7 +861,7 @@ namespace entities
     void checkitems(gameent *d)
     {
         static vector<actitem> actitems;
-        actitems.setsizenodelete(0);
+        actitems.setsize(0);
         if(collateitems(d, actitems))
         {
             bool tried = false;
@@ -1359,9 +1359,9 @@ namespace entities
         nodes[node].curscore = 0.f;
         nodes[node].estscore = 0.f;
         nodes[node].prev = NULL;
-        queue.setsizenodelete(0);
+        queue.setsize(0);
         queue.add(&nodes[node]);
-        route.setsizenodelete(0);
+        route.setsize(0);
 
         int lowest = -1;
         while(!queue.empty())
@@ -1484,7 +1484,7 @@ namespace entities
                         ents[k]->links.remove(i);
                 }
             }
-            d->airnodes.setsizenodelete(0);
+            d->airnodes.setsize(0);
         }
     }
 
@@ -1647,7 +1647,7 @@ namespace entities
                 else nextpriority = max(nextpriority, enttype[i].priority);
             }
         } while(nextpriority < priority);
-        idxs.setsizenodelete(0);
+        idxs.setsize(0);
         idxs.reserve(offset + numinvalid);
         while(idxs.length() < offset + numinvalid) idxs.add(-1);
         loopv(ents)
@@ -1776,7 +1776,7 @@ namespace entities
                                 }
                             }
                             e.type = NOTUSED; // get rid of ye olde teledest
-                            e.links.setsize(0);
+                            e.links.shrink(0);
                             break;
                         }
                         else if(verbose) conoutf("\frWARNING: teledest %d has become a teleport", i);

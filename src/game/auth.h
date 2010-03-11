@@ -296,7 +296,7 @@ namespace auth
             if(socket == ENET_SOCKET_NULL) conoutf("couldn't connect to authentication server");
             else
             {
-                output.setsizenodelete(0);
+                output.setsize(0);
                 outputpos = inputpos = 0;
                 regserver();
                 loopv(clients) if(clients[i]->authreq) reqauth(clients[i]);
@@ -311,7 +311,7 @@ namespace auth
         enet_socket_destroy(socket);
         socket = ENET_SOCKET_NULL;
 
-        output.setsizenodelete(0);
+        output.setsize(0);
         outputpos = inputpos = 0;
         conoutf("disconnected from authentication server");
     }
@@ -330,7 +330,7 @@ namespace auth
             outputpos += sent;
             if(outputpos >= output.length())
             {
-                output.setsizenodelete(0);
+                output.setsize(0);
                 outputpos = 0;
             }
         }
