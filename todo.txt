@@ -21,9 +21,10 @@
 = Models =
 * New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso, tag_hat)
 * Turret/Pyro/Heavy models
+* Weapons (esp. rocket?)
 
 = Art =
-* Dead, Arrow, Melee, Dominated/Dominating icons
+* Dead, Arrow, Melee, Dominated/Dominating, Rocket icons/clips
 * Current "widgets" need glow removed so they are not clipped by image dimensions
 
 = Sounds =
