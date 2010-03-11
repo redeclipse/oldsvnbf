@@ -781,7 +781,7 @@ namespace server
             case WEAPON:
                 if(!isweap(sents[i].attrs[0]) || (WEAP(sents[i].attrs[0], allowed) < (m_insta(gamemode, mutators) ? 2 : 1))) return false;
                 if((sents[i].attrs[3] > 0 && sents[i].attrs[3] != triggerid) || !m_check(sents[i].attrs[2], gamemode)) return false;
-                if(m_arena(gamemode, mutators) && sents[i].attrs[0] != WEAP_GRENADE) return false;
+                if(m_arena(gamemode, mutators) && sents[i].attrs[0] < WEAP_ITEM) return false;
                 break;
             default: break;
         }
@@ -818,7 +818,12 @@ namespace server
             switch(GAME(itemspawnstyle))
             {
                 case 1: items.add(i); break;
-                case 2: sents[i].millis += rnd(GAME(itemspawntime)); break;
+                case 2:
+                {
+                    int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                    if(delay > 1) sents[i].millis += delay/2+rnd(delay/2);
+                    break;
+                }
                 default: break;
             }
         }
@@ -1633,7 +1638,7 @@ namespace server
                         droplist &d = drop.add();
                         d.weap = i;
                         d.ent = ts.entid[i];
-                        sents[ts.entid[i]].millis += GAME(itemspawntime);
+                        sents[ts.entid[i]].millis += w_spawn(sents[ts.entid[i]].attrs[0]);
                     }
                 }
             }
@@ -2557,7 +2562,7 @@ namespace server
         int dropped = gs.entid[weap];
         gs.ammo[weap] = gs.entid[weap] = -1;
         int nweap = gs.bestweap(sweap, true); // switch to best weapon
-        if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+GAME(itemspawntime);
+        if(sents.inrange(dropped)) sents[dropped].millis = gamemillis+w_spawn(sents[dropped].attrs[0]);
         gs.dropped.add(dropped);
         gs.weapswitch(nweap, millis);
         sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, dropped);
@@ -2644,13 +2649,13 @@ namespace server
             if(!(sents[dropped].attrs[1]&WEAP_F_FORCED))
             {
                 sents[dropped].spawned = false;
-                sents[dropped].millis = gamemillis+GAME(itemspawntime);
+                sents[dropped].millis = gamemillis+w_spawn(sents[dropped].attrs[0]);
             }
         }
         if(!(sents[ent].attrs[1]&WEAP_F_FORCED))
         {
             sents[ent].spawned = false;
-            sents[ent].millis = gamemillis+GAME(itemspawntime);
+            sents[ent].millis = gamemillis+w_spawn(sents[ent].attrs[0]);
         }
         sendf(-1, 1, "ri6", SV_ITEMACC, ci->clientnum, ent, sents[ent].spawned ? 1 : 0, weap, dropped);
     }
@@ -2755,7 +2760,8 @@ namespace server
         int items[MAXENTTYPES] = {0}, lowest[MAXENTTYPES] = {-1}, sweap = m_weapon(gamemode, mutators);
         if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators))
         {
-            loopv(clients) if(clients[i]->state.aitype < AI_START) items[WEAPON] += clients[i]->state.carry(sweap);
+            loopv(clients) if(clients[i]->clientnum >= 0 && clients[i]->name[0] && clients[i]->state.aitype < AI_START)
+                items[WEAPON] += clients[i]->state.carry(sweap);
             loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i) && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
             {
                 if(finditem(i, true, true)) items[sents[i].type]++;
@@ -2794,7 +2800,8 @@ namespace server
                     {
                         loopvk(clients) clients[k]->state.dropped.remove(i);
                         sents[i].spawned = true;
-                        sents[i].millis = gamemillis+GAME(itemspawntime);
+                        int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                        sents[i].millis = gamemillis+delay;
                         sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
                         items[sents[i].type]++;
                     }

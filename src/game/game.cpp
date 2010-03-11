@@ -311,7 +311,7 @@ namespace game
                 d->loadweap = i;
                 break;
             }
-            if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_SUPER || d->loadweap == WEAP_GRENADE) d->loadweap = WEAP_MELEE;
+            if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_ITEM) d->loadweap = WEAP_MELEE;
             if(WEAP(d->loadweap, allowed) >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
                 client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
@@ -708,6 +708,7 @@ namespace game
                     "tried to make out with plasma",
                     "got a good shock",
                     "kicked it, kamikaze style",
+                    "exploded with style",
                     "pulled off an insta-stunt",
                 };
                 concatstring(d->obit, suicidenames[weap]);
@@ -733,6 +734,7 @@ namespace game
                         "plasmified by",
                         "laser shocked by",
                         "blown to pieces by",
+                        "exploded by",
                         "lasered by",
                     },
                     {
@@ -744,6 +746,7 @@ namespace game
                         "shown the light by",
                         "was given laser burn by",
                         "blown to pieces by",
+                        "exploded by",
                         "was given laser burn by",
                     },
                     {
@@ -755,6 +758,7 @@ namespace game
                         "plasmafied by",
                         "expertly sniped by",
                         "blown to pieces by",
+                        "exploded by",
                         "expertly sniped by",
                     },
                     {
@@ -765,6 +769,7 @@ namespace game
                         "barbequed by chef",
                         "reduced to ooze by",
                         "given laser shock treatment by",
+                        "turned into shrapnel by",
                         "obliterated by",
                         "lasered in half by",
                     }
@@ -1813,7 +1818,7 @@ namespace game
             if((anim>>ANIM_SECONDARY)&ANIM_INDEX) switch(anim&ANIM_INDEX)
             {
                 case ANIM_IDLE: case ANIM_MELEE: case ANIM_PISTOL: case ANIM_SHOTGUN: case ANIM_SMG:
-                case ANIM_GRENADE: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE:
+                case ANIM_GRENADE: case ANIM_ROCKET: case ANIM_FLAMER: case ANIM_PLASMA: case ANIM_RIFLE:
                 {
                     anim = (anim>>ANIM_SECONDARY) | ((anim&((1<<ANIM_SECONDARY)-1))<<ANIM_SECONDARY);
                     swap(basetime, basetime2);
@@ -1932,7 +1937,7 @@ namespace game
                     }
                     case WEAP_S_SHOOT:
                     {
-                        if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WEAP(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+                        if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
                             showweap = false;
                         animflags = weaptype[weap].anim+d->weapstate[weap];
                         break;

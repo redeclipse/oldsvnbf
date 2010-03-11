@@ -256,6 +256,7 @@ namespace projs
             }
             case PRJ_EJECT:
             {
+                if(weaptype[proj.weap].ejdrop) break;
                 int mag = int(proj.vel.magnitude()), vol = clamp(mag*3, 10, 255);
                 playsound(S_SHELL1+rnd(6), proj.o, NULL, 0, vol);
                 break;
@@ -394,7 +395,8 @@ namespace projs
                 proj.relativity = 0.95f;
                 proj.waterfric = 1.75f;
                 proj.weight = (180+(proj.maxspeed*2))*proj.lifesize; // so they fall better in relation to their speed
-                proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER;
+                proj.projcollide = BOUNCE_GEOM;
+                if(!weaptype[proj.weap].ejdrop) proj.projcollide = BOUNCE_PLAYER;
                 proj.escaped = true;
                 proj.fadetime = rnd(250)+250;
                 if(proj.owner)
@@ -502,7 +504,7 @@ namespace projs
             if(entities::ents.inrange(n))
             {
                 if(!m_noitems(game::gamemode, game::mutators) && itemdropping && !(entities::ents[n]->attrs[1]&WEAP_F_FORCED))
-                    create(from, to, local, d, PRJ_ENT, itemspawntime, itemspawntime, 1, 1, n);
+                    create(from, to, local, d, PRJ_ENT, w_spawn(g), w_spawn(g), 1, 1, n);
                 d->ammo[g] = -1;
                 d->setweapstate(g, WEAP_S_SWITCH, WEAPSWITCHDELAY, lastmillis);
             }
@@ -584,7 +586,7 @@ namespace projs
                 adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
                 break;
             }
-            case WEAP_FLAMER:
+            case WEAP_FLAMER: case WEAP_ROCKET:
             {
                 part_create(PART_SMOKE_LERP, 150, from, 0x333333, 2, 0.25f, -20);
                 if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 100, from, firecols[rnd(FIRECOLOURS)], 1.5f, muz, -10, 0, d);
@@ -613,8 +615,8 @@ namespace projs
             default: break;
         }
         loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WEAP2(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags);
-        if(ejectfade && weaptype[weap].eject) loopi(max(WEAP2(weap, sub, flags&HIT_ALT), 1))
-            create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
+        if(ejectfade && weaptype[weap].eject) loopi(weaptype[weap].ejdrop ? 1 : max(WEAP2(weap, sub, flags&HIT_ALT), 1))
+            create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis+(weaptype[weap].ejdrop ? WEAP2(weap, adelay, flags&HIT_ALT) : 0), rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
 
         d->setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), lastmillis);
         d->ammo[weap] = max(d->ammo[weap]-offset, 0);
@@ -631,7 +633,7 @@ namespace projs
             switch(proj.weap)
             {
                 case WEAP_MELEE: proj.lifesize = 1.f-proj.lifespan; break;
-                case WEAP_PISTOL: case WEAP_SHOTGUN: case WEAP_SMG: case WEAP_GRENADE: proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f); break;
+                case WEAP_PISTOL: case WEAP_SHOTGUN: case WEAP_SMG: case WEAP_GRENADE: case WEAP_ROCKET: proj.lifesize = clamp(proj.lifespan, 0.1f, 1.f); break;
                 case WEAP_FLAMER: proj.lifesize = clamp(proj.flags&HIT_ALT ? proj.lifespan*proj.lifespan : proj.lifespan, 0.1f, 1.f); break;
                 case WEAP_PLASMA:
                 {
@@ -709,6 +711,19 @@ namespace projs
                     }
                     break;
                 }
+                case WEAP_ROCKET:
+                {
+                    int col = ((int(254*max(1.f-proj.lifespan,0.5f))<<16)+1)|((int(98*max(1.f-proj.lifespan,0.f))+1)<<8), interval = lastmillis%1000;
+                    float fluc = 1.f+(interval ? (interval <= 500 ? interval/500.f : (1000-interval)/500.f) : 0.f);
+                    part_create(PART_PLASMA_SOFT, 1, proj.o, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*fluc);
+                    bool moving = proj.movement > 0.f;
+                    if(lastmillis-proj.lasteffect >= (moving ? 50 : 100))
+                    {
+                        part_create(PART_SMOKE_LERP, 150, proj.o, 0x666666, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*(moving ? 0.5f : 1.f), 0.5f, -10);
+                        proj.lasteffect = lastmillis;
+                    }
+                    break;
+                }
                 case WEAP_SHOTGUN:
                 {
                     if(proj.movement > 0.f)
@@ -780,7 +795,7 @@ namespace projs
         {
             case PRJ_EJECT:
             {
-                if(isweap(proj.weap) && ejecthint)
+                if(isweap(proj.weap) && ejecthint && !weaptype[proj.weap].ejdrop)
                     part_create(PART_HINT, 1, proj.o, weaptype[proj.weap].colour, max(proj.xradius, proj.yradius)*1.75f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.2f);
                 bool moving = proj.movement > 0.f;
                 if(moving && lastmillis-proj.lasteffect >= 100)
@@ -827,8 +842,7 @@ namespace projs
                         else if(!rnd(max(WEAP2(proj.weap, rays, proj.flags&HIT_ALT), 1))) adddecal(DECAL_BULLET, proj.o, proj.norm, 2.f);
                         break;
                     }
-                    case WEAP_FLAMER:
-                    case WEAP_GRENADE:
+                    case WEAP_FLAMER: case WEAP_GRENADE: case WEAP_ROCKET:
                     { // both basically explosions
                         if(!proj.limited)
                         {
@@ -839,18 +853,18 @@ namespace projs
                             }
                             else
                             {
-                                int deviation = max(int(WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*0.45f), 1);
-                                loopi(10)
+                                int deviation = max(int(WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*0.5f), 1);
+                                loopi(proj.weap == WEAP_GRENADE ? 5 : 10)
                                 {
                                     vec to(proj.o); loopk(3) to.v[k] += rnd(deviation*2)-deviation;
-                                    part_create(PART_FIREBALL_SOFT, 1500, to, firecols[rnd(FIRECOLOURS)], WEAP2(proj.weap, explode, proj.flags&HIT_ALT), 0.25f+(rnd(50)/100.f), -5);
+                                    part_create(PART_FIREBALL_SOFT, proj.weap == WEAP_GRENADE ? 1500 : 2500, to, firecols[rnd(FIRECOLOURS)], WEAP2(proj.weap, explode, proj.flags&HIT_ALT), 0.25f+(rnd(50)/100.f), -5);
                                 }
-                                part_create(PART_PLASMA_SOFT, 1000, proj.o, 0xDD4400, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
+                                part_create(PART_PLASMA_SOFT, proj.weap == WEAP_GRENADE ? 1000 : 2000, proj.o, 0xDD4400, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*0.5f); // corona
                                 quake(proj.o, proj.weap, proj.flags);
-                                part_fireball(proj.o, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*1.5f, PART_EXPLOSION, 750, 0xAA4400, 1.f, 0.5f);
-                                loopi(rnd(50)+25) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
+                                part_fireball(proj.o, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*1.5f, PART_EXPLOSION, proj.weap == WEAP_GRENADE ? 750 : 1500, 0xAA4400, 1.f, 0.5f);
+                                loopi(rnd(proj.weap == WEAP_GRENADE ? 30 : 60)+30) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
                                 if(!rnd(max(WEAP2(proj.weap, rays, proj.flags&HIT_ALT), 1))) adddecal(DECAL_ENERGY, proj.o, proj.norm, WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*0.7f, bvec(196, 24, 0));
-                                part_create(PART_SMOKE_LERP_SOFT, 2000, proj.o, 0x333333, WEAP2(proj.weap, explode, proj.flags&HIT_ALT), 0.5f, -15);
+                                part_create(PART_SMOKE_LERP_SOFT, proj.weap == WEAP_GRENADE ? 2000 : 3000, proj.o, 0x333333, WEAP2(proj.weap, explode, proj.flags&HIT_ALT), 0.5f, -15);
                             }
                             if(!rnd(max(WEAP2(proj.weap, rays, proj.flags&HIT_ALT), 1))) adddecal(proj.weap == WEAP_FLAMER ? DECAL_SCORCH_SHORT : DECAL_SCORCH, proj.o, proj.norm, WEAP2(proj.weap, explode, proj.flags&HIT_ALT));
                             adddynlight(proj.o, 1.f*WEAP2(proj.weap, explode, proj.flags&HIT_ALT), vec(1.1f, 0.22f, 0.02f), proj.weap == WEAP_FLAMER ? 250 : 1000, 10);

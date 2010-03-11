@@ -71,7 +71,7 @@ namespace ai
             {
                 case WEAP_MELEE: return false; break;
                 case WEAP_SHOTGUN: case WEAP_SMG: if(rnd(d->skill*3) <= d->skill) return false;
-                case WEAP_GRENADE: if(rnd(d->skill*3) >= d->skill) return false;
+                case WEAP_GRENADE: case WEAP_ROCKET: if(rnd(d->skill*3) >= d->skill) return false;
                 case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false;
                 case WEAP_PISTOL: default: break;
             }
@@ -86,7 +86,7 @@ namespace ai
         if(weaprange(d, d->weapselect, alt, dist))
         {
             if(d->weapselect == WEAP_MELEE) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect == WEAP_GRENADE ? 0.25f : 1e16f);
+            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect >= WEAP_ITEM && d->weapselect < WEAP_SUPER ? 0.25f : 1e16f);
             if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
         }
         return false;
@@ -549,8 +549,8 @@ namespace ai
                 d->loadweap = rnd(WEAP_SUPER);
                 if(d->loadweap >= WEAP_OFFSET || !rnd(d->skill)) break;
             }
-            if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap == WEAP_GRENADE)
-                d->loadweap = WEAP_PISTOL;
+            if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap >= WEAP_ITEM)
+                d->loadweap = WEAP_SHOTGUN;
             d->ai->suspended = true;
         }
     }
@@ -1085,7 +1085,7 @@ namespace ai
             bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_SUPER) if(i != WEAP_GRENADE && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_SUPER) if(i < WEAP_ITEM && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
