@@ -1217,7 +1217,7 @@ struct projent : dynent
 
 namespace client
 {
-    extern bool demoplayback, sendinfo, sendcrc, needclipboard;
+    extern bool demoplayback, sendinfo, sendcrc;
     extern void clearvotes(gameent *d);
     extern void addmsg(int type, const char *fmt = NULL, ...);
     extern void c2sinfo(bool force = false);
