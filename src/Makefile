@@ -307,6 +307,7 @@ engine/rendermodel.o: engine/bih.h engine/texture.h engine/model.h
 engine/rendermodel.o: engine/varray.h engine/ragdoll.h engine/animmodel.h
 engine/rendermodel.o: engine/vertmodel.h engine/skelmodel.h engine/md2.h
 engine/rendermodel.o: engine/md3.h engine/md5.h engine/obj.h engine/smd.h
+engine/rendermodel.o: engine/iqm.h
 engine/renderparticles.o: engine/engine.h shared/cube.h shared/tools.h
 engine/renderparticles.o: shared/command.h shared/geom.h shared/ents.h
 engine/renderparticles.o: shared/iengine.h shared/igame.h engine/sound.h

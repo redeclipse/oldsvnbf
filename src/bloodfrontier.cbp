@@ -352,6 +352,11 @@
 			<Option target="client-dbg" />
 			<Option target="client-prof" />
 		</Unit>
+		<Unit filename="engine\iqm.h">
+			<Option target="client" />
+			<Option target="client-dbg" />
+			<Option target="client-prof" />
+		</Unit>
 		<Unit filename="engine\irc.cpp">
 			<Option target="client" />
 			<Option target="client-dbg" />
