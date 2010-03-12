@@ -2282,7 +2282,7 @@ struct texturegui : guicb
                         defformatstring(index)("%d", vslot.layer);
                         defformatstring(input)("texlayer_%d_layer_input", menutex);
                         char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-                        if(w && *w) { int layer = atoi(w); vslot.layer = ((layer < 0) ? max(slots.length() + layer, 0) : min(layer, slots.length() - 1)); slot.cleanup(); g.fieldedit(input); }
+                        if(w && *w) { int layer = atoi(w); vslot.layer = layer < 0 ? max(menutex + layer, 0) : layer; slot.cleanup(); g.fieldedit(input); }
                     }
                     {
                         defformatstring(input)("texlayer_%d_maskname_input", menutex);
