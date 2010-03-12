@@ -385,6 +385,8 @@ struct gui : guient
         char *result = NULL;
         if(visible())
         {
+            e->rendered = true;
+
             bool hit = ishit(w, h);
             bool editing = (fieldmode != FIELDSHOW) && (e==currentfocus());
             if(mouseaction[0]&GUI_UP && mergedepth >= 0 && hit) mouseaction[0] &= ~GUI_UP;
