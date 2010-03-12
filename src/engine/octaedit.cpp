@@ -2168,6 +2168,7 @@ struct texturegui : guicb
                 g.poplist();
                 if(!slot.sts.empty())
                 {
+                    bool changed = false;
                     loopvj(slot.params)
                     {
                         g.pushlist();
@@ -2177,14 +2178,14 @@ struct texturegui : guicb
                             defformatstring(index)("%s", slot.params[j].name);
                             defformatstring(input)("param_%d_%d_input", menutex, j);
                             char *w = g.field(input, 0x666666, -32, 0, index, EDITORFOREVER);
-                            if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+                            if(w && *w) { slot.params[j].index = atoi(w); changed = true; g.fieldedit(input); }
                         }
                         else
                         {
                             defformatstring(index)("%d", slot.params[j].index);
                             defformatstring(input)("param_%d_%d_input", menutex, j);
                             char *w = g.field(input, 0x666666, -2, 0, index, EDITORFOREVER);
-                            if(w && *w) { slot.params[j].index = atoi(w); g.fieldedit(input); }
+                            if(w && *w) { slot.params[j].index = atoi(w); changed = true; g.fieldedit(input); }
                         }
                         loopk(4)
                         {
@@ -2192,7 +2193,7 @@ struct texturegui : guicb
                             defformatstring(index)("%f", slot.params[j].val[k]);
                             defformatstring(input)("param_%d_%d_%d_input", menutex, j, k);
                             char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-                            if(w && *w) { slot.params[j].val[k] = atof(w); g.fieldedit(input); }
+                            if(w && *w) { slot.params[j].val[k] = atof(w); changed = true; g.fieldedit(input); }
                         }
                         g.poplist();
                         g.space(1);
@@ -2206,7 +2207,7 @@ struct texturegui : guicb
                             defformatstring(index)("%s", findtexturename(slot.sts[j].type));
                             defformatstring(input)("texture_%d_%d_name_input", menutex, j);
                             char *w = g.field(input, 0x666666, -3, 0, index, EDITORFOREVER);
-                            if(w && *w) { slot.sts[j].type = findtexturetype(w, true); g.fieldedit(input); }
+                            if(w && *w) { slot.sts[j].type = findtexturetype(w, true); changed = true; g.fieldedit(input); }
                         }
                         {
                             defformatstring(input)("texture_%d_%d_lname_input", menutex, j);
@@ -2215,7 +2216,7 @@ struct texturegui : guicb
                             {
                                 copystring(slot.sts[j].lname, w);
                                 copystring(slot.sts[j].name, w);
-                                slot.cleanup();
+                                changed = true;
                                 g.fieldedit(input);
                             }
                         }
@@ -2272,7 +2273,7 @@ struct texturegui : guicb
                         g.space(1);
                         defformatstring(input)("autograss_%d_input", menutex);
                         char *w = g.field(input, 0x666666, -45, 0, slot.autograss, EDITORFOREVER);
-                        if(w) { DELETEA(slot.autograss); slot.autograss = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
+                        if(w) { DELETEA(slot.autograss); slot.autograss = w[0] ? newstring(w) : NULL; g.fieldedit(input); }
                     }
                     g.poplist();
                     g.pushlist();
@@ -2282,27 +2283,37 @@ struct texturegui : guicb
                         defformatstring(index)("%d", vslot.layer);
                         defformatstring(input)("texlayer_%d_layer_input", menutex);
                         char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-                        if(w && *w) { int layer = atoi(w); vslot.layer = layer < 0 ? max(menutex + layer, 0) : layer; slot.cleanup(); g.fieldedit(input); }
+                        if(w && *w) { int layer = atoi(w); vslot.layer = layer < 0 ? max(menutex + layer, 0) : layer; changed = true; g.fieldedit(input); }
                     }
                     {
                         defformatstring(input)("texlayer_%d_maskname_input", menutex);
                         char *w = g.field(input, 0x666666, -54, 0, slot.layermaskname, EDITORFOREVER);
-                        if(w) { if(slot.layermaskname) delete[] slot.layermaskname; slot.layermaskname = w[0] ? newstring(w) : NULL; slot.cleanup(); g.fieldedit(input); }
+                        if(w) { if(slot.layermaskname) delete[] slot.layermaskname; slot.layermaskname = w[0] ? newstring(w) : NULL; changed = true; g.fieldedit(input); }
                     }
                     {
                         defformatstring(index)("%d", slot.layermaskmode);
                         defformatstring(input)("texlayer_%d_maskmode_input", menutex);
                         char *w = g.field(input, 0x666666, -6, 0, index, EDITORFOREVER);
-                        if(w && *w) { int mode = atoi(w); slot.layermaskmode = mode; g.fieldedit(input); }
+                        if(w && *w) { int mode = atoi(w); slot.layermaskmode = mode; changed = true; g.fieldedit(input); }
                     }
                     {
                         defformatstring(index)("%f", slot.layermaskscale);
                         defformatstring(input)("texlayer_%d_maskscale_input", menutex);
                         char *w = g.field(input, 0x666666, -12, 0, index, EDITORFOREVER);
-                        if(w && *w) { float scale = atof(w); slot.layermaskscale = scale <= 0 ? 1 : scale; g.fieldedit(input); }
+                        if(w && *w) { float scale = atof(w); slot.layermaskscale = scale <= 0 ? 1 : scale; changed = true; g.fieldedit(input); }
                     }
                     g.poplist();
-                }
+                    if(changed && slot.loaded)
+                    {
+                        slot.cleanup();
+                        lookupslot(menutex);
+                        for(VSlot *variant = slot.variants; variant; variant = variant->next)
+                        {
+                            if(variant->linked) { variant->cleanup(); lookupvslot(variant->index); }
+                        }
+                    }
+                }    
+
                 g.poplist();
                 g.poplist();
             }
