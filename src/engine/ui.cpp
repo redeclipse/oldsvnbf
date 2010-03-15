@@ -542,7 +542,7 @@ struct gui : guient
             }
             h = lists[parenth].h;
         }
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         rect_(curx, cury, w, h);
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -623,7 +623,7 @@ struct gui : guient
         loopk(4) { tc[k][0] = tc[k][0]/xt - float(xoff)/xr; tc[k][1] = tc[k][1]/yt - float(yoff)/yr; }
         vec color = hit && !overlaid ? vec(0.5f, 0.5f, 0.5f) : vec(1, 1, 1);
         glColor3fv(color.v);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
         glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
         glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
@@ -635,7 +635,7 @@ struct gui : guient
             glBindTexture(GL_TEXTURE_2D, glowtex->id);
             if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
             else glColor3fv(glowcolor.v);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             glTexCoord2fv(tc[0]); glVertex2f(xi,    yi);
             glTexCoord2fv(tc[1]); glVertex2f(xi+xs, yi);
             glTexCoord2fv(tc[2]); glVertex2f(xi+xs, yi+ys);
@@ -647,7 +647,7 @@ struct gui : guient
         {
             glBindTexture(GL_TEXTURE_2D, layertex->id);
             glColor3fv(color.v);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             glTexCoord2fv(tc[0]); glVertex2f(xi+xs/2, yi+ys/2);
             glTexCoord2fv(tc[1]); glVertex2f(xi+xs,   yi+ys/2);
             glTexCoord2fv(tc[2]); glVertex2f(xi+xs,   yi+ys);
@@ -662,7 +662,7 @@ struct gui : guient
             color = hit ? vec(1, 1, 1) : vec(0.5f, 0.5f, 0.5f);
             glColor3fv(color.v);
             glBindTexture(GL_TEXTURE_2D, overlaytex->id);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             rect_(xi - xpad, yi - ypad, xs + 2*xpad, ys + 2*ypad, 0);
             glEnd();
         }
@@ -690,7 +690,7 @@ struct gui : guient
             if(!slidertex) slidertex = textureload(guislidertex, 3, true, false);
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, slidertex->id);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             if(percent < 0.99f)
             {
                 glColor4f(0.5f, 0.5f, 0.5f, 0.375f);

@@ -862,7 +862,7 @@ namespace recorder
 
     void drawquad(float tw, float th, float x, float y, float w, float h)
     {
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0,  0);
         glVertex2f(x,   y);
         glTexCoord2f(tw, 0);
