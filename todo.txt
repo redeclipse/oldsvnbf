@@ -1,6 +1,7 @@
 * Keep an eye out for the elusive grenade bugs
 
 = Code =
+* Optical effects (sprinting. etc)
 * Integrate new zombie model
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
