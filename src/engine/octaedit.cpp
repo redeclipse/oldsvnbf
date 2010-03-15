@@ -2419,7 +2419,7 @@ void render_texture_panel(int w, int h)
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                         glColor4f(vslot.glowcolor.x, vslot.glowcolor.y, vslot.glowcolor.z, texpaneltimer/1000.0f);
                     }
-                    glBegin(GL_QUADS);
+                    glBegin(GL_TRIANGLE_FAN);
                     glTexCoord2fv(tc[0]); glVertex2f(x,   y);
                     glTexCoord2fv(tc[1]); glVertex2f(x+r, y);
                     glTexCoord2fv(tc[2]); glVertex2f(x+r, y+r);
@@ -2429,7 +2429,7 @@ void render_texture_panel(int w, int h)
                     if(j==1 && layertex)
                     {
                         glBindTexture(GL_TEXTURE_2D, layertex->id);
-                        glBegin(GL_QUADS);
+                        glBegin(GL_TRIANGLE_FAN);
                         glTexCoord2fv(tc[0]); glVertex2f(x+r/2, y+r/2);
                         glTexCoord2fv(tc[1]); glVertex2f(x+r,   y+r/2);
                         glTexCoord2fv(tc[2]); glVertex2f(x+r,   y+r);
