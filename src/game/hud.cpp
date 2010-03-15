@@ -322,7 +322,7 @@ namespace hud
 
     void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2)
     {
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(tx1, ty1); glVertex2f(x, y);
         glTexCoord2f(tx2, ty1); glVertex2f(x+w, y);
         glTexCoord2f(tx2, ty2); glVertex2f(x+w, y+h);
@@ -337,7 +337,7 @@ namespace hud
         if(!blend) glEnable(GL_BLEND);
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
         glColor3f(r, g, b);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glVertex2f(x, y); glVertex2f(x+w, y);
         glVertex2f(x+w, y+h); glVertex2f(x, y+h);
         glEnd();
@@ -1060,7 +1060,7 @@ namespace hud
         vec pos = vec(tx+(tr*x), ty+(tr*y), 0);
         settexture(tex, 3);
         glColor4f(r, g, b, blend);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         loopk(4)
         {
             vec norm;
@@ -1772,7 +1772,7 @@ namespace hud
     {
         Texture *t = textureload(bglefttex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_QUADS); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(512, h/2-256);
         glTexCoord2f(1, 0); glVertex2f(0, h/2-256);
         glTexCoord2f(1, 1); glVertex2f(0, h/2+256);
@@ -1781,7 +1781,7 @@ namespace hud
 
         t = textureload(bgrighttex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_QUADS); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(w, h/2-256);
         glTexCoord2f(1, 0); glVertex2f(w-512, h/2-256);
         glTexCoord2f(1, 1); glVertex2f(w-512, h/2+256);
@@ -1790,7 +1790,7 @@ namespace hud
 
         t = textureload(logotex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0, 0); glVertex2f(w-512, 0);
         glTexCoord2f(1, 0); glVertex2f(w, 0);
         glTexCoord2f(1, 1); glVertex2f(w, 128);
@@ -1799,7 +1799,7 @@ namespace hud
 
         t = textureload(badgetex, 3);
         glBindTexture(GL_TEXTURE_2D, t->id);
-        glBegin(GL_QUADS); // goes off the edge on purpose
+        glBegin(GL_TRIANGLE_FAN); // goes off the edge on purpose
         glTexCoord2f(0, 0); glVertex2f(w-208, 96);
         glTexCoord2f(1, 0); glVertex2f(w-16, 96);
         glTexCoord2f(1, 1); glVertex2f(w-16, 192);
