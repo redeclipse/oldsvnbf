@@ -433,10 +433,12 @@ namespace physics
 
         vec old(d->o);
         d->o.add(vec(stepdir).mul(stairheight/fabs(stepdir.z))).z -= stairheight;
+        d->zmargin = -stairheight;
         if(!collide(d, vec(0, 0, -1), slopez))
         {
             d->o = old;
             d->o.add(vec(stepdir).mul(step));
+            d->zmargin = 0;
             if(collide(d, vec(0, 0, -1)))
             {
                 stepdir.mul(-stepdir.z).z += 1;
@@ -447,6 +449,7 @@ namespace physics
             }
         }
         d->o = old;
+        d->zmargin = 0;
         return false;
     }
 
