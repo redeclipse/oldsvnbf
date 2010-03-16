@@ -1,6 +1,7 @@
-* Keep an eye out for the elusive grenade bugs
-
-= Code =
+* Make a better RL altfire
+* Fix /newmap issues with autoget/send
+* Work out why bans don't stick
+* Reduce shotgun insta-kill likelihood and fix self-hits
 * Optical effects (sprinting. etc)
 * Integrate new zombie model
 * Make 'tags' and/or 'theme' fields
@@ -19,6 +20,8 @@
 * Elaborate and refine Story mode/AI
 * Master server tracking and unlockable system
 
+! Keep an eye out for the elusive grenade bugs
+
 = Models =
 * New player model (tag_affinity, tag_camera, tag_weapon, tag_lfoot, tag_rfoot, tag_head, tag_torso, tag_hat)
 * Turret/Pyro/Heavy models
@@ -35,8 +38,3 @@
 * Team-alert and damage tones
 * First blood (+points?)
 * (compass) voices
-
-= Maps =
-* Fix gravity in wet
-* Ladderify dualstar
-* Delisting unless improved: dualstar, siege, warehouse, wet
