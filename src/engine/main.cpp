@@ -445,7 +445,7 @@ void resetgl()
 
 COMMAND(0, resetgl, "");
 
-bool activewindow = true, warpmouse = false;
+bool activewindow = true, warpmouse = false, minimized = false;
 int ignoremouse = 0;
 
 vector<SDL_Event> events;
@@ -563,6 +563,8 @@ void checkinput()
                     if(autograbinput)
                         setvar("grabinput", event.active.gain ? 1 : 0, true);
                 }
+                if(event.active.state & SDL_APPACTIVE)
+                    minimized = !event.active.gain;
                 break;
             }
             case SDL_MOUSEMOTION:
@@ -960,11 +962,14 @@ int main(int argc, char **argv)
             updateparticles();
             updatesounds();
             UI::update();
-            inbetweenframes = renderedframe = false;
-            gl_drawframe(screen->w, screen->h);
-            renderedframe = true;
-            swapbuffers();
-            inbetweenframes = true;
+            if(!minimized)
+            {
+                inbetweenframes = renderedframe = false;
+                gl_drawframe(screen->w, screen->h);
+                renderedframe = true;
+                swapbuffers();
+                inbetweenframes = true;
+            }
             defformatstring(cap)("%s - %s", game::gametitle(), game::gametext());
             setcaption(cap);
         }
