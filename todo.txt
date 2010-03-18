@@ -1,3 +1,4 @@
+* Look at making the server and vote menu shift positions less often
 * Re-init playerstarts in editmode
 * Make a better RL altfire
 * Fix /newmap issues with autoget/send
