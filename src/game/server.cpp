@@ -222,7 +222,7 @@ namespace server
         int mapcrc;
         bool warned;
         ENetPacket *clipboard;
-        int lastclipboard;
+        int lastclipboard, needclipboard;
 
         clientinfo() : clipboard(NULL) { reset(); }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); }
@@ -262,6 +262,7 @@ namespace server
             authreq = 0;
             position.setsize(0);
             messages.setsize(0);
+            needclipboard = 0;
             cleanclipboard();
             mapchange(false);
         }
@@ -3178,7 +3179,7 @@ namespace server
         loopv(clients)
         {
             clientinfo &e = *clients[i];
-            if(e.clientnum != ci->clientnum && e.connectmillis >= ci->lastclipboard)
+            if(e.clientnum != ci->clientnum && e.needclipboard >= ci->lastclipboard)
             {
                 if(!flushed) { flushserver(true); flushed = true; }
                 sendpacket(e.clientnum, 1, ci->clipboard);
@@ -3217,7 +3218,7 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
-                ci->connectmillis = totalmillis;
+                ci->needclipboard = totalmillis;
                 masterupdate = true;
                 ci->state.lasttimeplayed = lastmillis;
 
@@ -4018,7 +4019,7 @@ namespace server
                             srvmsgf(ci->clientnum, "sending map, please wait..");
                             loopk(3) if(mapdata[k]) sendfile(sender, 2, mapdata[k], "ri", SV_SENDMAPFILE+k);
                             sendwelcome(ci);
-                            ci->connectmillis = totalmillis;
+                            ci->needclipboard = totalmillis;
                         }
                         else if(best)
                         {
