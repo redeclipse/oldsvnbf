@@ -1,3 +1,5 @@
+* Model layering colour customisation via shaders
+* Commands to perform common geometry operations: slope, arch, stairs, circle, sphere
 * Look at making the server and vote menu shift positions less often
 * Re-init playerstarts in editmode
 * Make a better RL altfire
