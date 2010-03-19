@@ -528,7 +528,7 @@ static inline bool isinteger(char *c)
     return isdigit(c[0]) || ((c[0]=='+' || c[0]=='-' || c[0]=='.') && isdigit(c[1]));
 }
 
-#define parseint(s) strtol((s), NULL, 0)
+#define parseint(s) (int(strtol((s), NULL, 0)))
 
 char *commandret = NULL;
 
@@ -1071,10 +1071,30 @@ ICOMMAND(0, div, "ii", (int *a, int *b), intret(*b ? *a / *b : 0));
 ICOMMAND(0, mod, "ii", (int *a, int *b), intret(*b ? *a % *b : 0));
 ICOMMAND(0, divf, "ff", (float *a, float *b), floatret(*b ? *a / *b : 0));
 ICOMMAND(0, modf, "ff", (float *a, float *b), floatret(*b ? fmod(*a, *b) : 0));
-ICOMMAND(0, min, "ii", (int *a, int *b), intret(min(*a, *b)));
-ICOMMAND(0, max, "ii", (int *a, int *b), intret(max(*a, *b)));
-ICOMMAND(0, minf, "ff", (float *a, float *b), floatret(min(*a, *b)));
-ICOMMAND(0, maxf, "ff", (float *a, float *b), floatret(max(*a, *b)));
+ICOMMAND(0, min, "V", (char **args, int *numargs),
+{
+    int val = *numargs > 0 ? parseint(args[*numargs - 1]) : 0;
+    loopi(*numargs - 1) val = min(val, parseint(args[i]));
+    intret(val);
+});
+ICOMMAND(0, max, "V", (char **args, int *numargs),
+{
+    int val = *numargs > 0 ? parseint(args[*numargs - 1]) : 0;
+    loopi(*numargs - 1) val = max(val, parseint(args[i]));
+    intret(val);
+});
+ICOMMAND(0, minf, "V", (char **args, int *numargs),
+{
+    float val = *numargs > 0 ? (float)atof(args[*numargs - 1]) : 0.0f;
+    loopi(*numargs - 1) val = min(val, (float)atof(args[i]));
+    floatret(val);
+});
+ICOMMAND(0, maxf, "V", (char **args, int *numargs),
+{
+    float val = *numargs > 0 ? (float)atof(args[*numargs - 1]) : 0.0f;
+    loopi(*numargs - 1) val = max(val, (float)atof(args[i]));
+    floatret(val);
+});
 
 ICOMMAND(0, rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(0, strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
