@@ -529,6 +529,7 @@ static inline bool isinteger(char *c)
 }
 
 #define parseint(s) (int(strtol((s), NULL, 0)))
+#define parsefloat(s) (float(atof(s)))
 
 char *commandret = NULL;
 
@@ -602,7 +603,7 @@ char *executeret(const char *p)            // all evaluation happens here, recur
                     {
                         case 's': v[n] = ++wn < numargs ? w[wn] : (char *)""; break;
                         case 'i': nstor[n].i = ++wn < numargs ? parseint(w[wn]) : 0;  v[n] = &nstor[n].i; break;
-                        case 'f': nstor[n].f = ++wn < numargs ? atof(w[wn]) : 0.0f; v[n] = &nstor[n].f; break;
+                        case 'f': nstor[n].f = ++wn < numargs ? parsefloat(w[wn]) : 0.0f; v[n] = &nstor[n].f; break;
 #ifndef STANDALONE
                         case 'D': nstor[n].i = addreleaseaction(dargs = conc(w, numargs, true)) ? 1 : 0; v[n] = &nstor[n].i; break;
 #endif
@@ -700,7 +701,7 @@ char *executeret(const char *p)            // all evaluation happens here, recur
                         WORLDVAR;
 #endif
                         OVERRIDEVAR(id->overrideval.f = *id->storage.f, , );
-                        float f1 = atof(w[1]);
+                        float f1 = parsefloat(w[1]);
                         if(f1<id->minvalf || f1>id->maxvalf)
                         {
                             f1 = f1<id->minvalf ? id->minvalf : id->maxvalf;                // clamp to valid range
@@ -1085,14 +1086,14 @@ ICOMMAND(0, max, "V", (char **args, int *numargs),
 });
 ICOMMAND(0, minf, "V", (char **args, int *numargs),
 {
-    float val = *numargs > 0 ? (float)atof(args[*numargs - 1]) : 0.0f;
-    loopi(*numargs - 1) val = min(val, (float)atof(args[i]));
+    float val = *numargs > 0 ? parsefloat(args[*numargs - 1]) : 0.0f;
+    loopi(*numargs - 1) val = min(val, parsefloat(args[i]));
     floatret(val);
 });
 ICOMMAND(0, maxf, "V", (char **args, int *numargs),
 {
-    float val = *numargs > 0 ? (float)atof(args[*numargs - 1]) : 0.0f;
-    loopi(*numargs - 1) val = max(val, (float)atof(args[i]));
+    float val = *numargs > 0 ? parsefloat(args[*numargs - 1]) : 0.0f;
+    loopi(*numargs - 1) val = max(val, parsefloat(args[i]));
     floatret(val);
 });
 
