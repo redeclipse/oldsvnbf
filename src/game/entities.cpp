@@ -813,8 +813,8 @@ namespace entities
                                     d->vel.mul(mag);
                                     game::fixfullrange(d->yaw, d->pitch, d->roll, true);
                                     f.lastuse = f.lastemit = e.lastemit;
-                                    execlink(d, n, true); execlink(d, teleports[r], true);
                                     if(d == game::focus) game::resetcamera();
+                                    execlink(d, n, true); execlink(d, teleports[r], true);
                                     teleported = true;
                                     break;
                                 }
