@@ -3,6 +3,7 @@ namespace entities
 {
     vector<extentity *> ents;
     int lastenttype[MAXENTTYPES], lastusetype[EU_MAX];
+    bool haswaypoints = false;
 
     VAR(IDF_PERSIST, showentdescs, 0, 2, 3);
     VAR(IDF_PERSIST, showentinfo, 0, 2, 5);
@@ -11,7 +12,12 @@ namespace entities
     VAR(IDF_PERSIST, showentradius, 0, 1, 3);
     VAR(IDF_PERSIST, showentlinks, 0, 1, 3);
     VAR(IDF_PERSIST, showlighting, 0, 0, 1);
-    VAR(0, dropwaypoints, 0, 0, 1); // drop waypoints during play
+    VAR(0, dropwaypoints, 0, 0, 2); // drop waypoints during play, 2 = render as well
+
+    bool waypointdrop(bool render = false)
+    {
+        return dropwaypoints >= (render ? 2 : 1) || (!render && !haswaypoints && m_play(game::gamemode));
+    }
 
     vector<extentity *> &getents() { return ents; }
      int lastent(int type) { return lastenttype[type]; }
@@ -1438,7 +1444,7 @@ namespace entities
         if(d->state == CS_ALIVE)
         {
             vec v = d->feetpos();
-            bool clip = clipped(v, true), shoulddrop = (m_play(game::gamemode) || dropwaypoints) && !d->ai && !clip;
+            bool clip = clipped(v, true), shoulddrop = waypointdrop() && !d->ai && !clip;
             float dist = float(shoulddrop ? enttype[WAYPOINT].radius : (d->ai ? ai::JUMPMIN : ai::SIGHTMIN));
             int curnode = closestent(WAYPOINT, v, dist, false, d), prevnode = d->lastnode;
 
@@ -1959,6 +1965,7 @@ namespace entities
 
     void initents(stream *g, int mtype, int mver, char *gid, int gver)
     {
+        haswaypoints = false;
         loopv(ents)
         {
             gameentity &e = *(gameentity *)ents[i];
@@ -1969,7 +1976,11 @@ namespace entities
         if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 49)) importentities(mtype, mver, gver);
         if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver < GAMEVERSION)) updateoldentities(mtype, mver, gver);
         if(mtype == MAP_OCTA) importwaypoints(mtype, mver, gver);
-        loopv(ents) fixentity(i, false);
+        loopv(ents)
+        {
+            fixentity(i, false);
+            if(!haswaypoints && ents[i]->type == WAYPOINT) haswaypoints = true;
+        }
         memset(lastenttype, 0, sizeof(lastenttype));
         memset(lastusetype, 0, sizeof(lastusetype));
         loopv(ents)
@@ -2024,7 +2035,7 @@ namespace entities
 
     bool shouldshowents(int level)
     {
-        return max(showentradius, max(showentdir, showentlinks)) >= level || dropwaypoints || ai::aidebug >= 6;
+        return max(showentradius, max(showentdir, showentlinks)) >= level || dropwaypoints >= 2 || ai::aidebug >= 6;
     }
 
     void renderentshow(gameentity &e, int idx, int level)
@@ -2154,7 +2165,7 @@ namespace entities
                 default: break;
             }
         }
-        if(enttype[e.type].links && (showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints || ai::aidebug >= 6))))
+        if(enttype[e.type].links && (showentlinks >= level || (e.type == WAYPOINT && (dropwaypoints >= 2 || ai::aidebug >= 6))))
             renderlinked(e, idx);
     }
 
