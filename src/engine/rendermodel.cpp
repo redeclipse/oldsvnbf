@@ -181,6 +181,14 @@ void mdlscale(int *percent)
 
 COMMAND(0, mdlscale, "i");
 
+void mdlscalef(float *amt)
+{
+    checkmdl;
+    loadingmodel->scale = *amt;
+}
+
+COMMAND(0, mdlscalef, "f");
+
 void mdltrans(float *x, float *y, float *z)
 {
     checkmdl;

@@ -22,7 +22,7 @@ GVARF(IDF_ADMIN, gamepaused, 0, 0, 1, paused = sv_gamepaused, paused = gamepause
 GSVAR(IDF_ADMIN, defaultmap, "");
 GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
-GVAR(IDF_ADMIN, campaignplayers, 1, 5, MAXPLAYERS);
+GVAR(IDF_ADMIN, campaignplayers, 1, 4, MAXPLAYERS);
 
 GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dutility eight enigma firehouse forge ghost gladiator hollow longestyard nova oasis overseer panic refuge rivals siege smouldering testchamber tower venus warground");
 GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma ghost gladiator longestyard nova panic refuge rivals smouldering tower warground venus");
@@ -109,14 +109,14 @@ GFVAR(0, forcegravity, -1, -1, 1000);
 GFVAR(0, forcejumpspeed, -1, -1, 1000);
 GFVAR(0, forcemovespeed, -1, -1, 1000);
 GFVAR(0, forcemovecrawl, -1, -1, 1000);
-GFVAR(0, forceimpulsespeed, -1, 40, 1000);
+GFVAR(0, forceimpulsespeed, -1, -1, 1000);
 
 GVAR(0, forceimpulsestyle, -1, -1, 3);
-GVAR(0, forceimpulsemeter, -1, 60000, INT_MAX-1);
-GVAR(0, forceimpulsecost, -1, 500, INT_MAX-1);
-GVAR(0, forceimpulsecount, -1, 6, INT_MAX-1);
-GVAR(0, forceimpulseskate, -1, 750, INT_MAX-1);
-GFVAR(0, forceimpulseregen, -1, 5, 1000);
+GVAR(0, forceimpulsemeter, -1, -1, INT_MAX-1);
+GVAR(0, forceimpulsecost, -1, -1, INT_MAX-1);
+GVAR(0, forceimpulsecount, -1, -1, INT_MAX-1);
+GVAR(0, forceimpulseskate, -1, -1, INT_MAX-1);
+GFVAR(0, forceimpulseregen, -1, -1, 1000);
 
 GFVAR(0, forceliquidspeed, -1, -1, 1);
 GFVAR(0, forceliquidcurb, -1, -1, 1000);
