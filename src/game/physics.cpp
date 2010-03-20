@@ -8,7 +8,7 @@ namespace physics
     FVAR(IDF_WORLD, impulsespeed,       0, 40.f, 1000);         // extra velocity to add when impulsing
 
     VAR(IDF_WORLD, impulsestyle,        0, 1, 3);               // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
-    VAR(IDF_WORLD, impulsemeter,        0, 60000, INT_MAX-1);   // impulse dash length; 0 = unlimited, anything else = timer
+    VAR(IDF_WORLD, impulsemeter,        0, 90000, INT_MAX-1);   // impulse dash length; 0 = unlimited, anything else = timer
     VAR(IDF_WORLD, impulsecost,         0, 500, INT_MAX-1);     // cost of impulse jump
     VAR(IDF_WORLD, impulsecount,        0, 6, INT_MAX-1);       // number of impulse actions per air transit
     VAR(IDF_WORLD, impulseskate,        0, 750, INT_MAX-1);     // length of time a run along a wall can last

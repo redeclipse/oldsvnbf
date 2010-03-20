@@ -21,7 +21,7 @@ aistyles aistyle[] = {
     },
     {
         AI_ZOMBIE,      WEAP_MELEE,     50,     45,         3,              3,          3,          14,         150,
-            true,       false,      true,                   "zombie",   "actors/player/beta"
+            true,       false,      true,                   "zombie",   "actors/z1"
     },
     {
         AI_GUARD,       WEAP_PISTOL,    50,     40,         2,              3,          3,          14,         165,
@@ -29,15 +29,15 @@ aistyles aistyle[] = {
     },
     {
         AI_HEAVY,       WEAP_SHOTGUN,   200,    30,         2,              3,          3,          14,         200,
-            true,       false,      true,                   "heavy",    "actors/player/gamma"
+            true,       false,      true,                   "heavy",    "actors/player/beta"
     },
     {
         AI_PYRO,        WEAP_FLAMER,    150,    50,         2,              3,          3,          14,         175,
-            true,       false,      true,                   "pyro",     "actors/player/gamma"
+            true,       false,      true,                   "pyro",     "actors/player/beta"
     },
     {
         AI_SNIPER,      WEAP_RIFLE,     100,    40,         2,              3,          3,          14,         175,
-            true,       false,      true,                   "sniper",   "actors/player/gamma"
+            true,       false,      true,                   "sniper",   "actors/player/beta"
     },
 };
 #else
