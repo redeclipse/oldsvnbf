@@ -713,7 +713,7 @@ namespace server
                     return;
                 }
             }
-            if(GAME(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000))
+            if(GAME(timelimit) != oldtimelimit || (gamemillis-curtime>0 && gamemillis/1000!=(gamemillis-curtime)/1000))
             {
                 if(GAME(timelimit) != oldtimelimit)
                 {
