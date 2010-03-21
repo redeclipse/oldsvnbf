@@ -39,12 +39,12 @@ namespace hud
 
     VAR(IDF_PERSIST, titlefade, 0, 3000, 10000);
     VAR(IDF_PERSIST, tvmodefade, 0, 1000, INT_MAX-1);
-    VAR(IDF_PERSIST, spawnfade, 0, 1500, INT_MAX-1);
+    VAR(IDF_PERSIST, spawnfade, 0, 2500, INT_MAX-1);
 
     VAR(IDF_PERSIST, commandfade, 0, 250, INT_MAX-1);
-    FVAR(IDF_PERSIST, commandfadeamt, 0, 0.75f, 1);
+    FVAR(IDF_PERSIST, commandfadeamt, 0, 0.8f, 1);
     VAR(IDF_PERSIST, uifade, 0, 250, INT_MAX-1);
-    FVAR(IDF_PERSIST, uifadeamt, 0, 0.5f, 1);
+    FVAR(IDF_PERSIST, uifadeamt, 0, 0.8f, 1);
 
     int conskip = 0;
     void setconskip(int *n)
@@ -60,16 +60,16 @@ namespace hud
     VAR(IDF_PERSIST, conoverflow, 0, 6, INT_MAX-1);
     VAR(IDF_PERSIST, concenter, 0, 0, 1);
     VAR(IDF_PERSIST, confilter, 0, 1, 1);
-    FVAR(IDF_PERSIST, conblend, 0, 0.6f, 1);
+    FVAR(IDF_PERSIST, conblend, 0, 0.85f, 1);
     VAR(IDF_PERSIST, chatconsize, 0, 6, 100);
     VAR(IDF_PERSIST, chatcontime, 0, 30000, INT_MAX-1);
     VAR(IDF_PERSIST, chatconfade, 0, 2000, INT_MAX-1);
-    VAR(IDF_PERSIST, chatconoverflow, 0, 4, INT_MAX-1);
-    FVAR(IDF_PERSIST, chatconblend, 0, 0.75f, 1);
-    FVAR(IDF_PERSIST, fullconblend, 0, 0.9f, 1);
+    VAR(IDF_PERSIST, chatconoverflow, 0, 5, INT_MAX-1);
+    FVAR(IDF_PERSIST, chatconblend, 0, 0.85f, 1);
+    FVAR(IDF_PERSIST, fullconblend, 0, 1, 1);
 
     FVAR(IDF_PERSIST, noticeoffset, -1, 0.4f, 1);
-    FVAR(IDF_PERSIST, noticeblend, 0, 0.6f, 1);
+    FVAR(IDF_PERSIST, noticeblend, 0, 0.65f, 1);
     FVAR(IDF_PERSIST, noticescale, 1e-3f, 1, 1);
     VAR(IDF_PERSIST, noticetime, 0, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, obitnotices, 0, 2, 2);

@@ -9,7 +9,7 @@ namespace ai
     VAR(0, aisuspend, 0, 0, 1);
     VAR(0, aiforcegun, -1, -1, WEAP_SUPER-1);
     VAR(0, aicampaign, 0, 0, 1);
-    VAR(IDF_PERSIST, aideadfade, 0, 30000, 60000);
+    VAR(IDF_PERSIST, aideadfade, 0, 500, 60000);
     VAR(IDF_PERSIST, showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
     float viewdist(int x) { return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist); }
