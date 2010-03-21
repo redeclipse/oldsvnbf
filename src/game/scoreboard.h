@@ -252,11 +252,11 @@ namespace hud
             g.pushlist();
             g.pushfont("default");
             g.textf("%s", 0xFFFFFF, NULL, server::gamename(game::gamemode, game::mutators));
-            if((m_play(game::gamemode) || client::demoplayback) && game::minremain >= 0)
+            if((m_play(game::gamemode) || client::demoplayback) && game::timeremaining >= 0)
             {
-                if(!game::minremain) g.textf(", \fs\fyintermission\fS", 0xFFFFFF, NULL);
+                if(!game::timeremaining) g.textf(", \fs\fyintermission\fS", 0xFFFFFF, NULL);
                 else if(paused) g.textf(", \fs\fopaused\fS", 0xFFFFFF, NULL);
-                else g.textf(", \fs\fg%d\fS %s remain", 0xFFFFFF, NULL, game::minremain, game::minremain==1 ? "min" : "mins");
+                else g.textf(", \fs\fg%.2f\fS %s remain", 0xFFFFFF, NULL, game::timeremaining/60.f, game::timeremaining==60 ? "min" : "mins");
             }
             g.popfont();
             g.poplist();

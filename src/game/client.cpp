@@ -557,7 +557,7 @@ namespace client
         game::gamemode = gamemode; game::mutators = mutators;
         server::modecheck(&game::gamemode, &game::mutators);
         game::nextmode = game::gamemode; game::nextmuts = game::mutators;
-        game::minremain = -1;
+        game::timeremaining = -1;
         game::maptime = 0;
         mapvotes.shrink(0);
         if(editmode && !allowedittoggle(editmode)) toggleedit();
@@ -1668,7 +1668,7 @@ namespace client
                     d->ping = getint(p);
                     break;
 
-                case SV_TIMEUP:
+                case SV_TICK:
                     game::timeupdate(getint(p));
                     break;
 

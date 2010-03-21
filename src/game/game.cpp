@@ -2,7 +2,7 @@
 #include "game.h"
 namespace game
 {
-    int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, minremain = 0,
+    int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, timeremaining = 0,
         lastcamera = 0, lasttvcam = 0, lasttvchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
     bool intermission = false, prevzoom = false, zooming = false;
     float swayfade = 0, swayspeed = 0, swaydist = 0;
@@ -929,7 +929,7 @@ namespace game
 
     void timeupdate(int timeremain)
     {
-        minremain = timeremain;
+        timeremaining = timeremain;
         if(!timeremain && !intermission)
         {
             player1->stopmoving(true);
@@ -1836,9 +1836,7 @@ namespace game
         if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
 
         int flags = MDL_LIGHT;
-#if 0 // breaks linkpos
         if(d != focus && !(anim&ANIM_RAGDOLL)) flags |= MDL_CULL_VFC|MDL_CULL_OCCLUDED|MDL_CULL_QUERY;
-#endif
         if(d->type == ENT_PLAYER)
         {
             if(!early && third) flags |= MDL_FULLBRIGHT;
