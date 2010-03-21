@@ -32,7 +32,7 @@
 * Weapons (esp. rocket?)
 
 = Art =
-* Dead, Arrow, Melee, Dominated/Dominating, Rocket icons/clips
+* Dead, Arrow, Dominated/Dominating
 * Current "widgets" need glow removed so they are not clipped by image dimensions
 
 = Sounds =
