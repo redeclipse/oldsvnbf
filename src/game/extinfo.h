@@ -56,7 +56,7 @@
     {
         putint(p, m_fight(gamemode) && m_team(gamemode, mutators) ? 0 : 1);
         putint(p, gamemode);
-        putint(p, minremain);
+        putint(p, timeremaining/60);
         if(!m_team(gamemode, mutators) || !m_fight(gamemode)) return;
 
         vector<teamscore> scores;

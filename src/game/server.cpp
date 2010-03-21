@@ -301,7 +301,7 @@ namespace server
     bool hasgameinfo = false;
     int gamemode = -1, mutators = -1, gamemillis = 0, gamelimit = 0;
     string smapname;
-    int interm = 0, minremain = -1, oldtimelimit = -1;
+    int interm = 0, timeremaining = -1, oldtimelimit = -1;
     bool maprequest = false;
     enet_uint32 lastsend = 0;
     int mastermode = MM_OPEN;
@@ -691,13 +691,13 @@ namespace server
     void startintermission()
     {
         setpause(false);
-        minremain = 0;
+        timeremaining = 0;
         gamelimit = min(gamelimit, gamemillis);
         if(smode) smode->intermission();
         mutate(smuts, mut->intermission());
         maprequest = false;
         interm = gamemillis+GAME(intermlimit);
-        sendf(-1, 1, "ri2", SV_TIMEUP, 0);
+        sendf(-1, 1, "ri2", SV_TICK, 0);
     }
 
     void checklimits()
@@ -720,15 +720,15 @@ namespace server
                     if(GAME(timelimit)) gamelimit += (GAME(timelimit)-oldtimelimit)*60000;
                     oldtimelimit = GAME(timelimit);
                 }
-                if(minremain)
+                if(timeremaining)
                 {
                     if(GAME(timelimit))
                     {
-                        if(gamemillis >= gamelimit) minremain = 0;
-                        else minremain = (gamelimit-gamemillis+60000-1)/60000;
+                        if(gamemillis >= gamelimit) timeremaining = 0;
+                        else timeremaining = (gamelimit-gamemillis+1000-1)/1000;
                     }
-                    else minremain = -1;
-                    if(!minremain)
+                    else timeremaining = -1;
+                    if(!timeremaining)
                     {
                         sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fctime limit has been reached");
                         startintermission();
@@ -736,8 +736,8 @@ namespace server
                     }
                     else
                     {
-                        sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
-                        if(minremain == 1) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_MESG, "\fcone minute remains");
+                        sendf(-1, 1, "ri2", SV_TICK, timeremaining);
+                        if(timeremaining == 60) sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_V_ONEMINUTE, CON_MESG, "\fcone minute remains");
                     }
                 }
             }
@@ -1702,8 +1702,8 @@ namespace server
         gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
         nplayers = gamemillis = interm = 0;
         oldtimelimit = GAME(timelimit);
-        minremain = GAME(timelimit) ? GAME(timelimit) : -1;
-        gamelimit = GAME(timelimit) ? minremain*60000 : 0;
+        timeremaining = GAME(timelimit) ? GAME(timelimit)*60 : -1;
+        gamelimit = GAME(timelimit) ? timeremaining*1000 : 0;
         sents.shrink(0); scores.shrink(0);
         setuptriggers(false); setupspawns(false);
 
@@ -1754,7 +1754,7 @@ namespace server
             else spectator(ci);
         }
 
-        if(m_fight(gamemode) && numclients()) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+        if(m_fight(gamemode) && numclients()) sendf(-1, 1, "ri2", SV_TICK, timeremaining);
         if(m_demo(gamemode)) setupdemoplayback();
         else if(demonextmatch)
         {
@@ -2154,8 +2154,8 @@ namespace server
 
         if(!ci || (m_fight(gamemode) && numclients()))
         {
-            putint(p, SV_TIMEUP);
-            putint(p, minremain);
+            putint(p, SV_TICK);
+            putint(p, timeremaining);
         }
 
         if(hasgameinfo)
@@ -2993,8 +2993,8 @@ namespace server
         putint(p, GAMEVERSION);         // 1
         putint(p, gamemode);            // 2
         putint(p, mutators);            // 3
-        putint(p, minremain);           // 4
-        putint(p, GAME(serverclients));     // 5
+        putint(p, timeremaining/60);    // 4
+        putint(p, GAME(serverclients)); // 5
         putint(p, serverpass[0] ? MM_PASSWORD : (m_demo(gamemode) ? MM_PRIVATE : mastermode)); // 6
         sendstring(smapname, p);
         if(*GAME(serverdesc)) sendstring(GAME(serverdesc), p);
@@ -3057,7 +3057,7 @@ namespace server
         // only allow edit messages in coop-edit mode
         if(type >= SV_EDITENT && type <= SV_NEWMAP && (!m_edit(gamemode) || !ci || ci->state.state != CS_EDITING)) return -1;
         // server only messages
-        static int servtypes[] = { SV_SERVERINIT, SV_CLIENTINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
+        static int servtypes[] = { SV_SERVERINIT, SV_CLIENTINIT, SV_WELCOME, SV_NEWGAME, SV_MAPCHANGE, SV_SERVMSG, SV_DAMAGE, SV_SHOTFX, SV_DIED, SV_POINTS, SV_SPAWNSTATE, SV_ITEMACC, SV_ITEMSPAWN, SV_TICK, SV_DISCONNECT, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_SCORE, SV_FLAGINFO, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_REGEN, SV_SCOREFLAG, SV_RETURNFLAG, SV_CLIENT, SV_AUTHCHAL };
         if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
