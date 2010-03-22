@@ -216,7 +216,7 @@ namespace server
         vector<gameevent *> events;
         vector<uchar> position, messages;
         int posoff, poslen, msgoff, msglen;
-        uint authreq;
+        uint authreq, authlevel;
         string authname;
         string clientmap;
         int mapcrc;
@@ -260,6 +260,7 @@ namespace server
             privilege = PRIV_NONE;
             connected = local = online = wantsmap = connectauth = false;
             authreq = 0;
+            authlevel = -1;
             position.setsize(0);
             messages.setsize(0);
             needclipboard = 0;
@@ -4067,9 +4068,35 @@ namespace server
                 {
                     int val = getint(p);
                     getstring(text, p);
-                    auth::setmaster(ci, val!=0, text);
-                    // don't broadcast the master password
-                    break;
+                    if(val != 0)
+                    {
+                        if(adminpass[0] && (ci->local || (text[0] && checkpassword(ci, adminpass, text))))
+                            auth::setmaster(ci, true, PRIV_ADMIN);
+                        else
+                        {
+                            bool fail = false;
+                            if(ci->authlevel <= PRIV_NONE)
+                            {
+                                if(!(mastermask()&MM_AUTOAPPROVE) && !ci->privilege)
+                                {
+                                    srvmsgf(ci->clientnum, "\fraccess denied, you need auth/admin access to gain master");
+                                    fail = true;
+                                }
+                                else
+                                {
+                                    loopv(clients) if(ci != clients[i] && clients[i]->privilege >= PRIV_MASTER)
+                                    {
+                                        srvmsgf(ci->clientnum, "\fraccess denied, there is already another master");
+                                        fail = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if(!fail) auth::setmaster(ci, true, ci->authlevel > PRIV_NONE ? ci->authlevel : PRIV_MASTER);
+                        }
+                    }
+                    else auth::setmaster(ci, false);
+                    break; // don't broadcast the master password
                 }
 
                 case SV_ADDBOT: getint(p); break;

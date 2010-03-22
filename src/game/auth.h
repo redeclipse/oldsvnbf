@@ -65,6 +65,7 @@ namespace auth
     {
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
+        ci->authlevel = -1;
         defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
         sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "please wait, requesting credential match");
@@ -88,33 +89,13 @@ namespace auth
         return true;
     }
 
-    void setmaster(clientinfo *ci, bool val, const char *text = "", int flags = 0)
+    void setmaster(clientinfo *ci, bool val, int flags = 0)
     {
-        int privilege = ci->privilege, wants = flags;
-        bool haspass = val && !flags && adminpass[0] && checkpassword(ci, adminpass, text);
-        if((haspass || ci->local) && wants < PRIV_ADMIN) wants = PRIV_ADMIN;
+        int privilege = ci->privilege;
         if(val)
         {
-            if(ci->privilege >= (wants ? wants : PRIV_MASTER))
-            {
-                srvmsgf(ci->clientnum, "\foyou already have \fs\fc%s\fS access", privname(wants ? wants : PRIV_MASTER));
-                return;
-            }
-            if(wants) privilege = ci->privilege = wants;
-            else if(!(mastermask()&MM_AUTOAPPROVE) && !ci->privilege)
-            {
-                srvmsgf(ci->clientnum, "\fraccess denied, you need auth/admin access to gain master");
-                return;
-            }
-            else
-            {
-                loopv(clients) if(ci != clients[i] && clients[i]->privilege >= PRIV_MASTER)
-                {
-                    if(!ci->connectauth) srvmsgf(ci->clientnum, "\fraccess denied, there is already another master");
-                    return;
-                }
-                privilege = ci->privilege = PRIV_MASTER;
-            }
+            if(ci->privilege >= flags) return;
+            privilege = ci->privilege = flags;
         }
         else
         {
@@ -124,8 +105,7 @@ namespace auth
             loopv(clients) if(clients[i]->privilege >= PRIV_MASTER || clients[i]->local) others++;
             if(!others) mastermode = MM_OPEN;
         }
-        if(val && flags) srvoutf(2, "\fy%s claimed \fs\fc%s\fS as '\fs\fc%s\fS'", colorname(ci), privname(privilege), text);
-        else srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
+        srvoutf(2, "\fy%s %s \fs\fc%s\fS", colorname(ci), val ? "claimed" : "relinquished", privname(privilege));
         masterupdate = true;
         if(paused)
         {
@@ -153,7 +133,7 @@ namespace auth
         {
             if(adminpass[0] && checkpassword(ci, adminpass, pwd))
             {
-                setmaster(ci, true, pwd);
+                if(GAME(automaster)) setmaster(ci, true, PRIV_ADMIN);
                 return DISC_NONE;
             }
             if(serverpass[0] && checkpassword(ci, serverpass, pwd)) return DISC_NONE;
@@ -173,6 +153,7 @@ namespace auth
         clientinfo *ci = findauth(id);
         if(!ci) return;
         ci->authreq = ci->authname[0] = 0;
+        ci->authlevel = -1;
         sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
         if(ci->connectauth)
         {
@@ -194,11 +175,13 @@ namespace auth
             case 'm': n = PRIV_MASTER; break;
             case 'u': n = PRIV_NONE; break;
         }
-        if(n >= PRIV_NONE) setmaster(ci, true, n ? name : "", n);
+        ci->authlevel = n;
+        srvoutf(2, "\fy%s identified as '\fs\fc%s\fS'", colorname(ci), name);
+        if(ci->authlevel > PRIV_NONE && GAME(automaster)) setmaster(ci, true, ci->authlevel);
         if(ci->connectauth)
         {
             ci->connectauth = false;
-            if(n < 0)
+            if(ci->authlevel < 0)
             {
                 int disc = allowconnect(ci);
                 if(disc) { disconnect_client(id, disc); return; }
