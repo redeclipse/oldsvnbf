@@ -18,10 +18,21 @@ namespace client
     };
     vector<mapvote> mapvotes;
 
+    extern int votecmp(mapvote *a, mapvote *b);
+    VARF(IDF_PERSIST, sortvotes, 0, 0, 1, {
+        mapvotes.sort(votecmp);
+    });
+    VARF(IDF_PERSIST, cleanvotes, 0, 0, 1, {
+        if(cleanvotes && !mapvotes.empty()) loopvrev(mapvotes) if(mapvotes[i].players.empty()) mapvotes.remove(i);
+    });
+
     int votecmp(mapvote *a, mapvote *b)
     {
-        if(a->players.length() > b->players.length()) return -1;
-        if(b->players.length() > a->players.length()) return 1;
+        if(sortvotes)
+        {
+            if(a->players.length() > b->players.length()) return -1;
+            if(b->players.length() > a->players.length()) return 1;
+        }
         if(a->millis < b->millis) return -1;
         if(b->millis < a->millis) return 1;
         return 0;
@@ -33,7 +44,7 @@ namespace client
         loopvrev(mapvotes) if(mapvotes[i].players.find(d) >= 0)
         {
             mapvotes[i].players.removeobj(d); found++;
-            if(mapvotes[i].players.empty()) mapvotes.remove(i);
+            if(cleanvotes && mapvotes[i].players.empty()) mapvotes.remove(i);
         }
         if(found && !mapvotes.empty()) mapvotes.sort(votecmp);
     }
@@ -47,7 +58,7 @@ namespace client
             {
                 if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) return;
                 mapvotes[i].players.removeobj(d);
-                if(mapvotes[i].players.empty()) mapvotes.remove(i);
+                if(cleanvotes && mapvotes[i].players.empty()) mapvotes.remove(i);
             }
             if(!strcmp(text, mapvotes[i].map) && mode == mapvotes[i].mode && muts == mapvotes[i].muts) m = &mapvotes[i];
         }

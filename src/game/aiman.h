@@ -199,7 +199,7 @@ namespace aiman
             if(needent) addai(sents[i].attrs[0], i, -1);
         }
         int balance = 0;
-        if(m_campaign(gamemode)) balance = nplayers; // campaigns strictly obeys nplayers
+        if(m_campaign(gamemode)) balance = GAME(campaignplayers); // campaigns strictly obeys nplayers
         else if(m_fight(gamemode) && !m_trial(gamemode) && GAME(botlimit) > 0)
         {
             int numt = numteams(gamemode, mutators), people = numclients(-1, true, -1);

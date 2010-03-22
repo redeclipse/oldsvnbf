@@ -122,7 +122,7 @@ namespace projs
 
     void radialeffect(gameent *d, projent &proj, bool explode, float radius)
     {
-        float maxdist = proj.weap != WEAP_MELEE && explode ? radius*wavepusharea : radius, dist = 1e16f;
+        float maxdist = proj.weap != WEAP_MELEE && explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
         if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)))
         {
             if(!proj.o.reject(d->legs, maxdist+max(d->lrad.x, d->lrad.y)))
@@ -147,7 +147,7 @@ namespace projs
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
         if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
-        else if(proj.weap != WEAP_MELEE && explode && dist <= radius*wavepusharea) hitpush(d, proj, HIT_WAVE, radius, dist);
+        else if(proj.weap != WEAP_MELEE && explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
     }
 
     void remove(gameent *owner)
@@ -1020,7 +1020,7 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        if(proj.spawntime && lastmillis-proj.spawntime > 500) proj.escaped = true;
+        if(proj.spawntime && lastmillis-proj.spawntime > 100) proj.escaped = true;
 #if 0
         else if(proj.projcollide&COLLIDE_TRACE)
         {
@@ -1103,7 +1103,12 @@ namespace projs
         {
             case PRJ_SHOT: case PRJ_DEBRIS: case PRJ_GIBS: case PRJ_EJECT:
             {
-                if(!proj.lastbounce || proj.movement >= 1)
+                if(proj.projtype == PRJ_SHOT && proj.weap == WEAP_ROCKET)
+                {
+                    vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, proj.pitch);
+                    break;
+                }
+                else if(!proj.lastbounce || proj.movement >= 1)
                 {
                     vec axis(sinf(proj.yaw*RAD), -cosf(proj.yaw*RAD), 0);
                     if(proj.vel.dot2(axis) >= 0) { proj.pitch -= diff; if(proj.pitch < -180) proj.pitch = 180 - fmod(180 - proj.pitch, 360); }
@@ -1135,6 +1140,11 @@ namespace projs
         }
 
         bool alive = true;
+        if(proj.projtype == PRJ_SHOT && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) && proj.owner)
+        {
+            vec target; findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, target);
+            proj.vel = vec(target).sub(proj.o).normalize().mul(proj.vel.magnitude());
+        }
         proj.o = proj.newpos;
         proj.o.z += proj.height;
         loopi(physics::physsteps-1)
