@@ -82,7 +82,7 @@ hashtable<int, keym> keyms(128);
 
 void keymap(int *code, char *key)
 {
-    if(overrideidents) { conoutf("\frcannot override keymap %s", code); return; }
+    if(overrideidents) { conoutf("\frcannot override keymap"); return; }
     keym &km = keyms[*code];
     km.code = *code;
     DELETEA(km.name);
@@ -172,6 +172,15 @@ const char *searchbind(const char *action, int type)
         if(!strcmp(act, action)) return km.name;
     });
     return NULL;
+}
+
+int findkeycode(char *key)
+{
+    enumerate(keyms, keym, km,
+    {
+        if(!strcasecmp(km.name, key)) return i;
+    });
+    return 0;
 }
 
 keym *findbind(char *key)
@@ -543,7 +552,7 @@ void consolekey(int code, bool isdown, int cooked)
 
 void keypress(int code, bool isdown, int cooked)
 {
-    char alpha = cooked < 0x80 ? cooked : '?';
+    int alpha = cooked < 0x80 ? cooked : '?';
     keym *haskey = keyms.access(code);
     if(haskey && haskey->pressed) execbind(*haskey, isdown); // allow pressed keys to release
     else if(commandmillis > 0) consolekey(code, isdown, alpha);

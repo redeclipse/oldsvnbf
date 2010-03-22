@@ -1,22 +1,24 @@
-#define NUMCOMPASS 8
-
 FVAR(IDF_PERSIST, compasssize, 0, 0.15f, 1000);
 VAR(IDF_PERSIST, compassfade, 0, 250, INT_MAX-1);
 FVAR(IDF_PERSIST, compassfadeamt, 0, 0.75f, 1);
 TVAR(IDF_PERSIST, compasstex, "textures/compass", 3);
 TVAR(IDF_PERSIST, compassringtex, "textures/progress", 3);
 
-struct caction
+struct cstate
 {
     char *name, *contents;
-    caction() {}
-    ~caction()
+    cstate() {}
+    ~cstate()
     {
         DELETEP(name);
         DELETEP(contents);
     }
 };
-struct cmenu : caction
+struct caction : cstate
+{
+    char code;
+};
+struct cmenu : cstate
 {
     vector<caction> actions;
     cmenu() {}
@@ -25,6 +27,13 @@ struct cmenu : caction
     {
         loopvrev(actions) actions.remove(i);
         actions.shrink(0);
+    }
+
+    int locate(const char code)
+    {
+        loopv(actions) if(actions[i].code == code || actions[i].code == toupper(code) || actions[i].code == tolower(code))
+            return i;
+        return -1;
     }
 };
 
@@ -38,6 +47,7 @@ void clearcmenu()
     if(compassmillis > 0) compassmillis = -lastmillis;
     if(curcompass)
     {
+        playsound(S_GUIACT, camera1->o, camera1, SND_FORCED);
         curcompass->reset();
         curcompass = NULL;
     }
@@ -63,15 +73,38 @@ void addcmenu(const char *name, const char *contents)
 }
 ICOMMAND(0, newcompass, "ss", (char *n, char *c), addcmenu(n, c));
 
-void addaction(const char *name, const char *contents)
+void addaction(const char *name, char code, const char *contents)
 {
-    if(!name || !*name || !curcompass) return;
-    if(curcompass->actions.length() >= NUMCOMPASS) { conoutft(CON_DEBUG, "\frtoo many actions in compass: %s", curcompass->name); return; }
+    if(!name || !*name || !contents || !*contents || !curcompass || curcompass->locate(code) >= 0) return;
     caction &a = curcompass->actions.add();
-    a.name = newstring(name);
-    a.contents = newstring(contents && *contents ? contents : "");
+    a.name = newstring(strlen(name) > 1 ? name : contents);
+    a.contents = newstring(contents);
+    a.code = code;
 }
-ICOMMAND(0, compass, "ss", (char *n, char *c), addaction(n, c));
+ICOMMAND(0, compass, "sss", (char *n, char *a, char *b), if(curcompass)
+{
+    if(*b)
+    {
+        int code = findkeycode(a);
+        if(code) addaction(n, code, b);
+    }
+    else
+    {
+        char code = '1';
+        while(true)
+        {
+            if(code > '9') code = 'a';
+            if(curcompass->locate(code) < 0) break;
+            else if(code >= 'z')
+            {
+                code = 0;
+                break;
+            }
+            code++;
+        }
+        if(code) addaction(n, code, a);
+    }
+});
 
 void showcmenu(const char *name)
 {
@@ -83,18 +116,19 @@ void showcmenu(const char *name)
         compasspos = 0;
         curcompass->reset();
         execute(curcompass->contents);
+        playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
         return;
     }
     conoutft(CON_DEBUG, "\frno such compass menu: %s", name);
 }
 ICOMMAND(0, showcompass, "s", (char *n), showcmenu(n));
 
-ICOMMAND(0, compassactive, "", (), result(curcompass ? curcompass->name : "0"));
+ICOMMAND(0, compassactive, "", (), result(curcompass ? curcompass->name : ""));
 
 const struct compassdirs
 {
     int x, y, align;
-} compassdir[NUMCOMPASS+1] = {
+} compassdir[9] = {
     { 0, 0, TEXT_CENTERED }, // special cancel case
     { 0, -1, TEXT_CENTERED },       { 1, -1, TEXT_LEFT_JUSTIFY },
     { 1, 0, TEXT_LEFT_JUSTIFY },    { 1, 1, TEXT_LEFT_JUSTIFY  },
@@ -108,18 +142,18 @@ int cmenuhit()
     {
         if(compasspos > 0) return compasspos;
         float cx = (cursorx-0.5f)*2.f, cy = (cursory-0.5f)*2.f;
-        if(sqrtf(cx*cx+cy*cy) <= compasssize*0.5f) return 0;
+        if(sqrtf(cx*cx+cy*cy) <= compasssize*0.5f) return -1;
         else
         {
             float yaw = -(float)atan2(cx, cy)/RAD+202.5f; if(yaw >= 360) yaw -= 360;
-            loopv(curcompass->actions) if(yaw > i*45 && yaw <= (i+1)*45)
-                return i+1;
+            loopi(min(curcompass->actions.length(), 8)) if(yaw > i*45 && yaw <= (i+1)*45)
+                return i;
         }
     }
-    return 0;
+    return -1;
 }
 
-void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
+void renderaction(int idx, int size, Texture *t, char code, const char *name, bool hit)
 {
     int x = hudwidth/2+(size*compassdir[idx].x), y = hudsize/2+(size*compassdir[idx].y),
         r = 255, g = hit ? 0 : 255, b = hit ? 0 : 255, f = hit ? 255 : 128;
@@ -136,7 +170,7 @@ void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
     {
         glBindTexture(GL_TEXTURE_2D, t->id);
         glColor4f(r/255.f, g/255.f, b/255.f, f/255.f);
-        if(idx) drawslice(0.5f/NUMCOMPASS+(idx-2)/float(NUMCOMPASS), 1/float(NUMCOMPASS), hudwidth/2, hudsize/2, size);
+        if(idx) drawslice(0.5f/8+(idx-2)/float(8), 1/float(8), hudwidth/2, hudsize/2, size);
         else drawsized(hudwidth/2-size*3/8, hudsize/2-size*3/8, size*3/4);
     }
     switch(compassdir[idx].y)
@@ -146,14 +180,14 @@ void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
             pushfont("sub");
             y += draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
             popfont();
-            draw_textx("[%d]", x, y, r, g, b, 255, compassdir[idx].align, -1, -1, idx);
+            draw_textx("[%s]", x, y, r, g, b, 255, compassdir[idx].align, -1, -1, getkeyname(code));
             break;
         }
         case 0:
         {
             if(compassdir[idx].x)
             {
-                defformatstring(s)("[%d]", idx);
+                defformatstring(s)("[%s]", getkeyname(code));
                 draw_textx("%s", x, y, r, g, b, 255, compassdir[idx].align, -1, -1, s);
                 x += (text_width(s)+FONTW/4)*compassdir[idx].x;
                 y += FONTH/2;
@@ -166,7 +200,7 @@ void renderaction(int idx, int size, Texture *t, const char *name, bool hit)
         }
         case 1: default:
         {
-            y += draw_textx("[%d]", x, y, r, g, b, idx ? 255 : f, compassdir[idx].align, -1, -1, idx);
+            y += draw_textx("[%s]", x, y, r, g, b, idx ? 255 : f, compassdir[idx].align, -1, -1, getkeyname(code));
             pushfont("sub");
             draw_textx("%s", x, y, r, g, b, f, compassdir[idx].align, -1, -1, name);
             popfont();
@@ -180,25 +214,32 @@ void rendercmenu()
 {
     if(compassmillis <= 0 || !curcompass) return;
     int size = int(compasssize*hudsize), hit = cmenuhit();
-    renderaction(0, size, *compassringtex ? textureload(compassringtex, 3) : NULL, "cancel", !hit);
+    renderaction(0, size, *compassringtex ? textureload(compassringtex, 3) : NULL, '0', "cancel", hit < 0);
     Texture *t = *compasstex ? textureload(compasstex, 3) : NULL;
-    loopi(NUMCOMPASS)
-    {
-        if(!curcompass->actions.inrange(i)) break;
-        renderaction(i+1, size, t, curcompass->actions[i].name, hit == i+1);
-    }
+    loopi(min(curcompass->actions.length(), 8))
+        renderaction(i+1, size, t, curcompass->actions[i].code, curcompass->actions[i].name, hit == i);
 }
 
-void runcmenu(int idx)
+bool runcmenu(int idx)
 {
+    bool foundmenu = false;
     cmenu *oldcompass = curcompass;
-    if(idx > 0 && curcompass && curcompass->actions.inrange(idx-1))
+    if(curcompass)
     {
-        interactive = true;
-        execute(curcompass->actions[idx-1].contents);
-        interactive = false;
+        if(idx < 0)
+        {
+            foundmenu = true;
+            clearcmenu();
+        }
+        else if(curcompass->actions.inrange(idx))
+        {
+            foundmenu = interactive = true;
+            execute(curcompass->actions[idx].contents);
+            interactive = false;
+            if(oldcompass == curcompass) clearcmenu();
+        }
     }
-    if(oldcompass == curcompass) clearcmenu();
+    return foundmenu;
 }
 
 bool keycmenu(int code, bool isdown, int cooked)
@@ -206,16 +247,35 @@ bool keycmenu(int code, bool isdown, int cooked)
     switch(code)
     {
         case SDLK_RIGHT: case SDLK_UP: case SDLK_TAB: case -2: case -4:
-            if(!isdown) { if(++compasspos > curcompass->actions.length()) compasspos = 0; } return true; break;
+        {
+            if(!isdown && ++compasspos > curcompass->actions.length()) compasspos = 0;
+            return true;
+            break;
+        }
         case SDLK_LEFT: case SDLK_DOWN: case -5:
-            if(!isdown) { if(--compasspos < 0) compasspos = NUMCOMPASS; } return true; break;
+        {
+            if(!isdown && --compasspos < 0) compasspos = 8;
+            return true;
+            break;
+        }
         case SDLK_RETURN: case -1:
-            if(!isdown) { runcmenu(cmenuhit()); } return true; break;
+        {
+            if(!isdown) runcmenu(cmenuhit());
+            return true;
+            break;
+        }
         case SDLK_ESCAPE: case -3:
-            if(!isdown) { clearcmenu(); } return true; break;
-        case SDLK_0: case SDLK_1: case SDLK_2: case SDLK_3: case SDLK_4: case SDLK_5: case SDLK_6: case SDLK_7: case SDLK_8:
-            if(!isdown) { runcmenu(code-SDLK_0); } return true; break;
-        default: break;
+        {
+            if(!isdown) clearcmenu();
+            return true;
+            break;
+        }
+        default:
+        {
+            int idx = code != '0' ? curcompass->locate(code) : -1;
+            if(idx >= 0 || code == '0') return isdown || runcmenu(idx);
+            break;
+        }
     }
     return false;
 }
