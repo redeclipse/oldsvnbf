@@ -31,6 +31,7 @@ namespace projs
         int damage = WEAP2(weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
         if((flags&HIT_WAVE || (isweap(weap) && !WEAP2(weap, explode, flags&HIT_ALT))) && flags&HIT_FULL) flags &= ~HIT_FULL;
         if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist);
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
@@ -94,7 +95,7 @@ namespace projs
         if(proj.hitflags&HITFLAG_LEGS) flags |= HIT_LEGS;
         if(proj.hitflags&HITFLAG_TORSO) flags |= HIT_TORSO;
         if(proj.hitflags&HITFLAG_HEAD) flags |= HIT_HEAD;
-        if(flags) hitpush(d, proj, flags|HIT_PROJ);
+        if(flags) hitpush(d, proj, flags|HIT_PROJ, 0, max(proj.lifesize, 0.1f));
     }
 
     bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
@@ -547,73 +548,37 @@ namespace projs
                 playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
         }
         float muz = muzzleblend; if(d == game::focus) muz *= 0.5f;
-        switch(weap)
+        int plen = max(WEAP2(weap, adelay, flags&HIT_ALT), 50);
+        const struct weapfxs
         {
-            case WEAP_MELEE: break;
-            case WEAP_PISTOL:
+            int smoke, parttype, colour;
+            float partsize, flaresize, flarelen;
+        } weapfx[WEAP_MAX] = {
+            { 0, 0, 0, 0, 0, 0 },
+            { 200, PART_MUZZLE_FLASH, 0xFFCC22, 1.5f, 2, 4 },
+            { 350, PART_MUZZLE_FLASH, 0xFFAA00, 3, 5, 16 },
+            { 50, PART_MUZZLE_FLASH, 0xFF8800, 2.5f, 4, 12 },
+            { 150, PART_MUZZLE_FLASH, -1, 1.5f, 0, 0 },
+            { 150, PART_PLASMA, 0x226688, 1.5f, 0, 0 },
+            { 150, PART_PLASMA, 0x6611FF, 1.5f, 3, 9 },
+            { 0, 0, 0, 0, 0, 0 },
+            { 500, PART_MUZZLE_FLASH, -1, 2, 0, 0 },
+            { 150, PART_PLASMA, 0x6611FF, 1.5f, 3, 9 }
+        };
+        if(weapfx[weap].colour)
+        {
+            int colour = weapfx[weap].colour > 0 ? weapfx[weap].colour : firecols[rnd(FIRECOLOURS)];
+            if(weapfx[weap].smoke) part_create(PART_SMOKE_LERP, weapfx[weap].smoke, from, 0xAAAAAA, 1, 0.25f, -20);
+            if(muzzlechk(muzzleflash, d) && weapfx[weap].partsize > 0)
+                part_create(weapfx[weap].parttype, plen/3, from, colour, weapfx[weap].partsize, muz, 0, 0, d);
+            if(muzzlechk(muzzleflare, d) && weapfx[weap].flaresize > 0)
             {
-                part_create(PART_SMOKE_LERP, 200, from, 0xAAAAAA, 1, 0.25f, -20);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFCC22, 1.5f, muz, 0, 0, d);
-                if(muzzlechk(muzzleflare, d))
-                {
-                    vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-                    part_flare(from, to.mul(4.f).add(from), 150, PART_MUZZLE_FLARE, 0xFFCC22, 2, muz, 0, 0, d);
-                }
-                adddynlight(from, 32, vec(0.15f, 0.15f, 0.15f), 50, 0, DL_FLASH);
-                break;
+                vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
+                part_flare(from, to.mul(weapfx[weap].flarelen).add(from), plen/2, PART_MUZZLE_FLARE, colour, weapfx[weap].flaresize, muz, 0, 0, d);
             }
-            case WEAP_SHOTGUN:
-            {
-                part_create(PART_SMOKE_LERP, 500, from, 0x666666, 4, 0.25f, -20);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 100, from, 0xFFAA00, 3, muz, 0, 0, d);
-                if(muzzlechk(muzzleflare, d))
-                {
-                    vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-                    part_flare(from, to.mul(16.f).add(from), 150, PART_MUZZLE_FLARE, 0xFFAA00, 5, muz, 0, 0, d);
-                }
-                adddynlight(from, 48, vec(1.1f, 0.77f, 0.22f), 100, 0, DL_FLASH);
-                break;
-            }
-            case WEAP_SMG:
-            {
-                part_create(PART_SMOKE_LERP, 100, from, 0x999999, 1.5f, 0.25f, -20);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_MUZZLE_FLASH, 25, from, 0xFF8800, 2.25f, muz, 0, 0, d);
-                if(muzzlechk(muzzleflare, d))
-                {
-                    vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-                    part_flare(from, to.mul(12.f).add(from), 50, PART_MUZZLE_FLARE, 0xFF8800, 4, muz, 0, 0, d);
-                }
-                adddynlight(from, 32, vec(1.1f, 0.55f, 0.11f), 50, 0, DL_FLASH);
-                break;
-            }
-            case WEAP_FLAMER: case WEAP_ROCKET:
-            {
-                part_create(PART_SMOKE_LERP, 150, from, 0x333333, 2, 0.25f, -20);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_FIREBALL, 100, from, firecols[rnd(FIRECOLOURS)], 1.5f, muz, -10, 0, d);
-                adddynlight(from, 48, vec(1.1f, 0.3f, 0.01f), 100, 0, DL_FLASH);
-                break;
-            }
-            case WEAP_PLASMA:
-            {
-                part_create(PART_SMOKE_LERP, 150, from, 0x88AABB, 0.6f, 0.25f, -20);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x226688, 1.25f, muz, 0, 0, d);
-                adddynlight(from, 24, vec(0.1f, 0.4f, 0.6f), 75, 0, DL_FLASH);
-                break;
-            }
-            case WEAP_RIFLE: case WEAP_INSTA:
-            {
-                part_create(PART_SMOKE_LERP, 150, from, 0x444444, 0.8f, 0.25f, -40);
-                if(muzzlechk(muzzleflash, d)) part_create(PART_PLASMA, 75, from, 0x6611FF, 1.25f, muz, 0, 0, d);
-                if(muzzlechk(muzzleflare, d))
-                {
-                    vec to; vecfromyawpitch(d->yaw, d->pitch, 1, 0, to);
-                    part_flare(from, to.mul(8.f).add(from), 150, PART_MUZZLE_FLARE, 0x6611FF, 3, muz, 0, 0, d);
-                }
-                adddynlight(from, 32, vec(0.4f, 0.05f, 1.f), 75, 0, DL_FLASH);
-                break;
-            }
-            default: break;
+            adddynlight(from, 48, vec((colour>>16)/255.f, ((colour>>8)&0xFF)/255.f, (colour&0xFF)/255.f), plen/4, 0, DL_FLASH);
         }
+
         loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WEAP2(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags);
         if(ejectfade && weaptype[weap].eject) loopi(weaptype[weap].ejdrop ? 1 : max(WEAP2(weap, sub, flags&HIT_ALT), 1))
             create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis+(weaptype[weap].ejdrop ? WEAP2(weap, adelay, flags&HIT_ALT) : 0), rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
@@ -1020,7 +985,8 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        if(proj.spawntime && lastmillis-proj.spawntime > 100) proj.escaped = true;
+        int esctime = proj.projtype == PRJ_SHOT && WEAP2(proj.weap, speed, proj.flags&HIT_ALT) < 500 ? 600-WEAP2(proj.weap, speed, proj.flags&HIT_ALT) : 100;
+        if(proj.spawntime && lastmillis-proj.spawntime > esctime) proj.escaped = true;
 #if 0
         else if(proj.projcollide&COLLIDE_TRACE)
         {
@@ -1131,6 +1097,23 @@ namespace projs
         return true;
     }
 
+    bool moveframe(projent &proj)
+    {
+        if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner && proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
+        {
+            vec projection;
+            findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, projection);
+            projection.sub(proj.o).normalize().mul(proj.vel.magnitude());
+            proj.vel.lerp(projection, proj.vel, pow(1.f-WEAP2(proj.weap, guided, proj.flags&HIT_ALT), physics::physframetime/float(WEAP2(proj.weap, speed, proj.flags&HIT_ALT))));
+        }
+        if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime)))
+        {
+            if(proj.lifetime < 0) proj.lifetime = 0;
+            return false;
+        }
+        return true;
+    }
+
     bool move(projent &proj)
     {
         if(physics::physsteps <= 0)
@@ -1140,28 +1123,11 @@ namespace projs
         }
 
         bool alive = true;
-        if(proj.projtype == PRJ_SHOT && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) && proj.owner)
-        {
-            vec target; findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, target);
-            proj.vel = vec(target).sub(proj.o).normalize().mul(proj.vel.magnitude());
-        }
         proj.o = proj.newpos;
         proj.o.z += proj.height;
-        loopi(physics::physsteps-1)
-        {
-            if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime)))
-            {
-                if(proj.lifetime < 0) proj.lifetime = 0;
-                alive = false;
-                break;
-            }
-        }
+        loopi(physics::physsteps-1) if(!(alive = moveframe(proj))) break;
         proj.deltapos = proj.o;
-        if(alive && (((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime))))
-        {
-            if(proj.lifetime < 0) proj.lifetime = 0;
-            alive = false;
-        }
+        if(alive) alive = moveframe(proj);
         proj.newpos = proj.o;
         proj.deltapos.sub(proj.newpos);
         proj.newpos.z -= proj.height;
@@ -1248,7 +1214,7 @@ namespace projs
                     {
                         if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
                         radius = WEAP2(proj.weap, explode, proj.flags&HIT_ALT);
-                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) radius = max(radius*proj.radius, 1.f);
+                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) radius = min(radius*max(proj.lifesize, 0.1f), 1.f);
                         if(!proj.limited && radius > 0)
                         {
                             loopj(game::numdynents())
@@ -1263,13 +1229,13 @@ namespace projs
                 else if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
                 {
                     if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
-                    radius = WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*proj.radius;
+                    radius = min(WEAP2(proj.weap, explode, proj.flags&HIT_ALT)*max(proj.lifesize, 0.1f), 1.f);
                     if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 100))
                     {
                         loopj(game::numdynents())
                         {
                             gameent *f = (gameent *)game::iterdynents(j);
-                            if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, false)) continue;
+                            if(!f || f->state != CS_ALIVE || !physics::issolid(f, &proj, true)) continue;
                             radialeffect(f, proj, false, radius);
                             proj.lastradial = lastmillis;
                         }

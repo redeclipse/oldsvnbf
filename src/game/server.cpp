@@ -2425,6 +2425,7 @@ namespace server
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT);
         if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist);
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else if((flags&HIT_FULL) && !WEAP2(weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
         if(hithurts(flags))
