@@ -176,10 +176,10 @@ namespace auth
         sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
         if(ci->connectauth)
         {
+            ci->connectauth = false;
             int disc = allowconnect(ci);
             if(disc) { disconnect_client(id, disc); return; }
         }
-        ci->connectauth = false;
     }
 
     void authsucceeded(uint id, const char *name, const char *flags)
@@ -195,12 +195,15 @@ namespace auth
             case 'u': n = PRIV_NONE; break;
         }
         if(n >= PRIV_NONE) setmaster(ci, true, n ? name : "", n);
-        else if(ci->connectauth) // else so 'user' can connect
+        if(ci->connectauth)
         {
-            int disc = allowconnect(ci);
-            if(disc) { disconnect_client(id, disc); return; }
+            ci->connectauth = false;
+            if(n < 0)
+            {
+                int disc = allowconnect(ci);
+                if(disc) { disconnect_client(id, disc); return; }
+            }
         }
-        ci->connectauth = false;
     }
 
     void authchallenged(uint id, const char *val)
