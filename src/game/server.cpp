@@ -1017,7 +1017,7 @@ namespace server
         loopvk(clients) clients[k]->state.dropped.reset();
         setuptriggers(true);
         if(m_fight(gamemode)) setupitems(true);
-        setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : (m_campaign(gamemode) ? GAME(campaignplayers) : np));
+        setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : np);
         hasgameinfo = aiman::dorefresh = true;
     }
 
@@ -2253,18 +2253,21 @@ namespace server
             if(GAME(damagecritchance))
             {
                 actor->state.crits++;
-                int offset = GAME(damagecritchance)-actor->state.crits;
-                if(target != actor && GAME(damagecritdist) > 0)
+                if(WEAP(weap, critmult) > 0)
                 {
-                    float dist = actor->state.o.dist(target->state.o);
-                    if(dist <= GAME(damagecritdist))
-                        offset = int(offset*clamp(dist, 1.f, GAME(damagecritdist))/GAME(damagecritdist));
-                }
-                if(offset <= 0 || !rnd(offset))
-                {
-                    realflags |= HIT_CRIT;
-                    realdamage = int(realdamage*GAME(damagecritscale));
-                    actor->state.crits = 0;
+                    int offset = GAME(damagecritchance)-actor->state.crits;
+                    if(target != actor && WEAP(weap, critdist) > 0)
+                    {
+                        float dist = actor->state.o.dist(target->state.o);
+                        if(dist <= WEAP(weap, critdist))
+                            offset = int(offset*clamp(dist, 1.f, WEAP(weap, critdist))/WEAP(weap, critdist));
+                    }
+                    if(offset <= 0 || !rnd(offset))
+                    {
+                        realflags |= HIT_CRIT;
+                        realdamage = int(realdamage*WEAP(weap, critmult));
+                        actor->state.crits = 0;
+                    }
                 }
             }
             target->state.dodamage(target->state.health -= realdamage);
@@ -2447,7 +2450,7 @@ namespace server
                 {
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
-                    float size = radial ? (hflags&HIT_WAVE ? radial*GAME(wavepusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
+                    float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
@@ -3953,6 +3956,7 @@ namespace server
                     int numattrs = getint(p);
                     while(sents[n].attrs.length() < max(5, numattrs)) sents[n].attrs.add(0);
                     loopk(numattrs) sents[n].attrs[k] = getint(p);
+                    if(oldtype == PLAYERSTART || sents[n].type == PLAYERSTART) setupspawns(true);
                     hasgameinfo = true;
                     QUEUE_MSG;
                     if(tweaked)

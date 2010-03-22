@@ -1,16 +1,10 @@
 * Model layering colour customisation via shaders
 * Commands to perform common geometry operations: slope, arch, stairs, circle, sphere
-* Look at making the server and vote menu shift positions less often
-* Re-init playerstarts in editmode
-* Make a better RL altfire
 * Fix /newmap issues with autoget/send
 * Work out why bans don't stick
-* Reduce shotgun insta-kill likelihood and fix self-hits
 * Optical effects (sprinting. etc)
-* Integrate new zombie model
 * Make 'tags' and/or 'theme' fields
 * Move things like mastermode, ban, etc to server side commands/variables
-* Undo forced impulse vars
 * Move to mutators: spawngrenades?, vampire, itemsallowed?, itemdropping?, kamikaze?, duelreset?, duelclear?, selfdamage?, trialdamage?, teamdamage?, ctfstyle, stfstyle, (low/high gravity?), extrahealth?
 * Remember ammo counts for dropped weapons
 * Give remaining interactive entities a mode field
@@ -19,7 +13,6 @@
 * Create "assisted deaths" (make server aware of floor state too for assisted falling?)
 * Allow premature detonation by firing/exploding certain weapons at plasma/grenades
 * Try to balance kamikaze grenades better (timer? penalty?)
-* Re-balance shotgun (more spread/less bullets?)
 * Make glass more visible/look better (combined texture?)
 * Elaborate and refine Story mode/AI
 * Master server tracking and unlockable system
