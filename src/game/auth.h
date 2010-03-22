@@ -158,7 +158,7 @@ namespace auth
             }
             if(serverpass[0] && checkpassword(ci, serverpass, pwd)) return DISC_NONE;
         }
-        if(numclients(-1, true) >= GAME(serverclients)) return DISC_MAXCLIENTS;
+        if(numclients() >= GAME(serverclients)) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         if(!ci->privilege && !checkipinfo(allows, ip))
         {
