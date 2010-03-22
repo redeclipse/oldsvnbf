@@ -2250,7 +2250,7 @@ namespace server
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else
         {
-            if(GAME(damagecritchance))
+            if(isweap(weap) && GAME(damagecritchance))
             {
                 actor->state.crits++;
                 if(WEAP(weap, critmult) > 0)
