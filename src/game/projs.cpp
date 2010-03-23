@@ -1098,10 +1098,12 @@ namespace projs
     {
         if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner && proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
         {
-            vec projection;
+            float mag = proj.vel.magnitude(), amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)/physics::physframetime;
+            vec projection, dir = proj.vel.normalize();
             findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, projection);
-            projection.sub(proj.o).normalize().mul(proj.vel.magnitude());
-            proj.vel.lerp(projection, proj.vel, pow(1.f-WEAP2(proj.weap, guided, proj.flags&HIT_ALT), physics::physframetime/float(WEAP2(proj.weap, speed, proj.flags&HIT_ALT))));
+            projection.sub(proj.o).normalize();
+            dir.mul(1.f-amt).add(projection.mul(amt));
+            if(!dir.iszero()) proj.vel = dir.mul(mag);
         }
         if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime)))
         {
