@@ -41,7 +41,6 @@ void pushgui(menu *m, int pos = -1, int tab = 0)
         if(tab > 0) m->menutab = tab;
         m->usetitle = tab >= 0 ? true : false;
     }
-    playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
 void restoregui(int pos, int tab = 0)
@@ -55,7 +54,6 @@ void restoregui(int pos, int tab = 0)
         m->menustart = lastmillis;
         if(tab > 0) m->menutab = tab;
     }
-    playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
 void showgui(const char *name, int tab)
@@ -65,6 +63,7 @@ void showgui(const char *name, int tab)
     int pos = menustack.find(m);
     if(pos<0) pushgui(m, -1, tab);
     else restoregui(pos, tab);
+    playsound(S_GUIPRESS, camera1->o, camera1, SND_FORCED);
 }
 
 extern bool closetexgui();
@@ -75,7 +74,6 @@ int cleargui(int n)
     if(n>0) clear = min(clear, n);
     loopi(clear) popgui();
     if(!menustack.empty()) restoregui(menustack.length()-1);
-    else playsound(S_GUIACT, camera1->o, camera1, SND_FORCED);
     return clear;
 }
 

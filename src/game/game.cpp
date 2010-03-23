@@ -306,7 +306,7 @@ namespace game
         if(m_arena(gamemode, mutators))
         {
             if(*s >= '0' && *s <= '9') d->loadweap = atoi(s);
-            else loopi(WEAP_SUPER) if(!strcasecmp(weaptype[i].name, s))
+            else loopi(WEAP_MAX) if(!strcasecmp(weaptype[i].name, s))
             {
                 d->loadweap = i;
                 break;
@@ -709,7 +709,6 @@ namespace game
                     "got a good shock",
                     "kicked it, kamikaze style",
                     "exploded with style",
-                    "pulled off an insta-stunt",
                 };
                 concatstring(d->obit, suicidenames[weap]);
             }
@@ -735,7 +734,6 @@ namespace game
                         "laser shocked by",
                         "blown to pieces by",
                         "exploded by",
-                        "lasered by",
                     },
                     {
                         "smacked down by",
@@ -747,7 +745,6 @@ namespace game
                         "was given laser burn by",
                         "blown to pieces by",
                         "exploded by",
-                        "was given laser burn by",
                     },
                     {
                         "smacked down by",
@@ -759,7 +756,6 @@ namespace game
                         "expertly sniped by",
                         "blown to pieces by",
                         "exploded by",
-                        "expertly sniped by",
                     },
                     {
                         "knocked into next week by",
@@ -771,7 +767,6 @@ namespace game
                         "given laser shock treatment by",
                         "turned into shrapnel by",
                         "obliterated by",
-                        "lasered in half by",
                     }
                 };
 
@@ -1944,7 +1939,7 @@ namespace game
                     {
                         if(weap != WEAP_MELEE)
                         {
-                            if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!WEAP(weap, reloads) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+                            if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!w_reload(weap, m_weapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
                                 showweap = false;
                             animflags = weaptype[weap].anim+d->weapstate[weap];
                             break;

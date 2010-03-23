@@ -1044,9 +1044,9 @@ namespace entities
                 break;
             }
             case WEAPON:
-                if(create && (e.attrs[0] < WEAP_OFFSET || e.attrs[0] >= WEAP_SUPER)) e.attrs[0] = WEAP_OFFSET; // don't be stupid when creating the entity
-                while(e.attrs[0] < WEAP_OFFSET) e.attrs[0] += WEAP_SUPER-WEAP_OFFSET; // don't allow superimposed weaps
-                while(e.attrs[0] >= WEAP_SUPER) e.attrs[0] -= WEAP_SUPER-WEAP_OFFSET;
+                if(create && (e.attrs[0] < WEAP_OFFSET || e.attrs[0] >= WEAP_MAX)) e.attrs[0] = WEAP_OFFSET; // don't be stupid when creating the entity
+                while(e.attrs[0] < WEAP_OFFSET) e.attrs[0] += WEAP_MAX-WEAP_OFFSET; // don't allow superimposed weaps
+                while(e.attrs[0] >= WEAP_MAX) e.attrs[0] -= WEAP_MAX-WEAP_OFFSET;
                 while(e.attrs[2] <= -G_MAX) e.attrs[2] += G_MAX*2;
                 while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
                 break;

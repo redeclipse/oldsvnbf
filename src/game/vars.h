@@ -42,7 +42,7 @@ GVAR(0, maprotate, 0, 2, 2); // 0 = off, 1 = sequence, 2 = random
 GVAR(0, maxcarry, 1, 2, WEAP_MAX-1);
 GVAR(0, spawnrotate, 0, 2, 2); // 0 = let client decide, 1 = sequence, 2 = random
 GVAR(0, spawnweapon, 0, WEAP_PISTOL, WEAP_MAX-1);
-GVAR(0, instaweapon, 0, WEAP_INSTA, WEAP_MAX-1);
+GVAR(0, instaweapon, 0, WEAP_RIFLE, WEAP_MAX-1);
 GVAR(0, trialweapon, 0, WEAP_MELEE, WEAP_MAX-1);
 GVAR(0, spawnmelee, 0, 1, 2); // 0 = never, 1 = all but non-trial instagib, 2 = always
 GVAR(0, spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
@@ -87,7 +87,6 @@ GVAR(0, selfdamage, 0, 1, 1); // 0 = off, 1 = either hurt self or use teamdamage
 GVAR(0, trialdamage, 0, 0, 1); // 0 = off, 1 = allow damage in time-trial
 GVAR(0, teamdamage, 0, 1, 2); // 0 = off, 1 = non-bots damage team, 2 = all players damage team
 GVAR(0, teambalance, 0, 1, 3); // 0 = off, 1 = by number then rank, 2 = by rank then number, 3 = humans vs. ai
-
 GVAR(0, fraglimit, 0, 0, INT_MAX-1); // finish when score is this or more
 
 GVAR(0, ctflimit, 0, 0, INT_MAX-1); // finish when score is this or more
