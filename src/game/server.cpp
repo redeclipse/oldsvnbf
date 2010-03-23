@@ -1031,7 +1031,7 @@ namespace server
         if(ci->state.aitype >= AI_START)
         {
             weap = aistyle[ci->state.aitype].weap;
-            if(!isweap(weap)) weap = rnd(WEAP_SUPER-1)+1;
+            if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
             maxhealth = aistyle[ci->state.aitype].health;
             arena = grenades = false;
             melee = true;
@@ -1631,7 +1631,7 @@ namespace server
             }
             if(!m_noitems(gamemode, mutators))
             {
-                loopi(WEAP_MAX) if(ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
+                loopi(WEAP_MAX) if(i != WEAP_GRENADE && ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
                 {
                     sents[ts.entid[i]].millis = gamemillis;
                     if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
@@ -2230,7 +2230,7 @@ namespace server
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
     {
         int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-        if((realflags&HIT_WAVE || (isweap(weap) && !WEAP2(weap, explode, realflags&HIT_ALT))) && (realflags&HIT_FULL))
+        if((realflags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, realflags&HIT_ALT, gamemode, mutators))) && (realflags&HIT_FULL))
             realflags &= ~HIT_FULL;
         if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
         mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
@@ -2425,9 +2425,9 @@ namespace server
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT);
         if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist);
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist/1000.f);
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-        else if((flags&HIT_FULL) && !WEAP2(weap, explode, flags&HIT_ALT)) flags &= ~HIT_FULL;
+        else if((flags&HIT_FULL) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators)) flags &= ~HIT_FULL;
         if(hithurts(flags))
         {
             if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GAME(damagescale));
@@ -3412,7 +3412,7 @@ namespace server
                 {
                     int lcn = getint(p), id = getint(p), weap = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
-                    if(!hasclient(cp, ci)) break;
+                    if(!hasclient(cp, ci) || !isweap(weap)) break;
                     switchevent *ev = new switchevent;
                     ev->id = id;
                     ev->weap = weap;
@@ -3457,6 +3457,7 @@ namespace server
                     shotevent *ev = new shotevent;
                     ev->id = getint(p);
                     ev->weap = getint(p);
+                    if(!isweap(ev->weap)) havecn = false;
                     ev->flags = getint(p);
                     ev->power = getint(p);
                     if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id);
@@ -3464,7 +3465,7 @@ namespace server
                     ev->num = getint(p);
                     loopj(ev->num)
                     {
-                        if(p.overread() || !isweap(ev->weap)) break;
+                        if(p.overread()) break;
                         ivec &dest = ev->shots.add();
                         loopk(3) dest[k] = getint(p);
                     }
@@ -3482,7 +3483,7 @@ namespace server
                 { // gee this looks familiar
                     int lcn = getint(p), id = getint(p), weap = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
-                    if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
+                    if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum) || !isweap(weap))
                         break;
                     dropevent *ev = new dropevent;
                     ev->id = id;
@@ -3496,7 +3497,7 @@ namespace server
                 {
                     int lcn = getint(p), id = getint(p), weap = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
-                    if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum))
+                    if(!cp || (cp->clientnum != ci->clientnum && cp->state.ownernum != ci->clientnum) || !isweap(weap))
                         break;
                     reloadevent *ev = new reloadevent;
                     ev->id = id;
@@ -3513,10 +3514,11 @@ namespace server
                     bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
                     destroyevent *ev = new destroyevent;
                     ev->id = getint(p);
-                    if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
                     ev->weap = getint(p);
+                    if(!isweap(ev->weap)) havecn = false;
                     ev->flags = getint(p);
                     ev->id = getint(p); // this is the actual id
+                    if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
                     ev->radial = getint(p);
                     int hits = getint(p);
                     loopj(hits)

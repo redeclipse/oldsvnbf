@@ -7,7 +7,7 @@ namespace ai
 
     VAR(0, aidebug, 0, 0, 6);
     VAR(0, aisuspend, 0, 0, 1);
-    VAR(0, aiforcegun, -1, -1, WEAP_SUPER-1);
+    VAR(0, aiforcegun, -1, -1, WEAP_MAX-1);
     VAR(0, aicampaign, 0, 0, 1);
     VAR(IDF_PERSIST, aideadfade, 0, 500, 60000);
     VAR(IDF_PERSIST, showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
@@ -31,8 +31,8 @@ namespace ai
 
     bool weaprange(gameent *d, int weap, bool alt, float dist)
     {
-        if(WEAP2(weap, extinguish, alt) && d->inliquid) return false;
-        float mindist = WEAP2(weap, explode, alt) ? WEAP2(weap, explode, alt) : (d->weapselect != WEAP_MELEE ? d->radius*2 : 0),
+        if(!isweap(weap) || (WEAP2(weap, extinguish, alt) && d->inliquid)) return false;
+        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators) ? WEAPEX(weap, alt, game::gamemode, game::mutators) : (weap != WEAP_MELEE ? d->radius*2 : 0),
             maxdist = WEAP2(weap, maxdist, alt) ? WEAP2(weap, maxdist, alt) : hdr.worldsize;
         return dist >= mindist*mindist && dist <= maxdist*maxdist;
     }
@@ -54,7 +54,7 @@ namespace ai
 
     bool canshoot(gameent *d, gameent *e, bool alt = true)
     {
-        if(weaprange(d, d->weapselect, true, e->o.squaredist(d->o)))
+        if(isweap(d->weapselect) && weaprange(d, d->weapselect, true, e->o.squaredist(d->o)))
         {
             int prot = m_protect(game::gamemode, game::mutators);
             if((d->aitype >= AI_START || !d->protect(lastmillis, prot)) && targetable(d, e, true))
@@ -69,9 +69,9 @@ namespace ai
         {
             switch(d->weapselect)
             {
-                case WEAP_MELEE: return false; break;
+                case WEAP_MELEE: case WEAP_ROCKET: return false; break;
                 case WEAP_SHOTGUN: case WEAP_SMG: if(rnd(d->skill*3) <= d->skill) return false;
-                case WEAP_GRENADE: case WEAP_ROCKET: if(rnd(d->skill*3) >= d->skill) return false;
+                case WEAP_GRENADE: if(rnd(d->skill*3) >= d->skill) return false;
                 case WEAP_RIFLE: if(weaprange(d, d->weapselect, false, e->o.squaredist(d->o))) return false;
                 case WEAP_PISTOL: default: break;
             }
@@ -86,7 +86,7 @@ namespace ai
         if(weaprange(d, d->weapselect, alt, dist))
         {
             if(d->weapselect == WEAP_MELEE) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect >= WEAP_ITEM && d->weapselect < WEAP_SUPER ? 0.25f : 1e16f);
+            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*aistyle[d->aitype].frame*WEAP(d->weapselect, rdelay)/2000.f)+(d->skill*WEAP2(d->weapselect, adelay, alt)/200.f)), 0.f, d->weapselect >= WEAP_ITEM ? 0.25f : 1e16f);
             if(fabs(yaw-d->yaw) <= d->ai->views[0]*skew && fabs(pitch-d->pitch) <= d->ai->views[1]*skew) return true;
         }
         return false;
@@ -543,10 +543,10 @@ namespace ai
             if(d->aitype >= AI_START && aistyle[d->aitype].weap >= 0) d->loadweap = aistyle[d->aitype].weap;
             else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
                 d->loadweap = m_weapon(game::gamemode, game::mutators);
-            else if(aiforcegun >= 0 && aiforcegun < WEAP_SUPER) d->loadweap = aiforcegun;
+            else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
             else while(true)
             {
-                d->loadweap = rnd(WEAP_SUPER);
+                d->loadweap = rnd(WEAP_MAX);
                 if(d->loadweap >= WEAP_OFFSET || !rnd(d->skill)) break;
             }
             if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap >= WEAP_ITEM)
@@ -770,7 +770,7 @@ namespace ai
                         bool alt = altfire(d, e);
                         if(aistyle[d->aitype].maxspeed)
                         {
-                            float mindist = WEAP2(d->weapselect, explode, alt) ? WEAP2(d->weapselect, explode, alt) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
+                            float mindist = WEAPEX(d->weapselect, alt, game::gamemode, game::mutators) ? WEAPEX(d->weapselect, alt, game::gamemode, game::mutators) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
                             return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
                         }
                         else
@@ -1085,7 +1085,7 @@ namespace ai
             bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_SUPER) if(i < WEAP_ITEM && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_MAX) if(i != WEAP_GRENADE && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -1302,8 +1302,8 @@ namespace ai
         loopv(projs::projs)
         {
             projent *p = projs::projs[i];
-            if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAP2(p->weap, explode, p->flags&HIT_ALT))
-                obs.avoidnear(p, p->o, WEAP2(p->weap, explode, p->flags&HIT_ALT)*p->lifesize);
+            if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators))
+                obs.avoidnear(p, p->o, WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators)*p->lifesize);
         }
         loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
         {
