@@ -311,9 +311,13 @@ namespace physics
         {
             if(d->physstate < PHYS_SLIDE || fabs(dir.dot(d->floor)) > 0.01f*dir.magnitude()) return;
         }
-        float speed = d->vel.magnitude();
-        d->vel.projectxydir(floor);
-        d->vel.rescale(speed);
+        if(d->physstate < PHYS_SLIDE) d->vel.projectxy(floor);
+        else
+        {
+            float speed = d->vel.magnitude();
+            d->vel.projectxydir(floor);
+            d->vel.rescale(speed);
+        }
         d->falling.project(floor);
         recalcdir(d, oldvel, dir);
     }
