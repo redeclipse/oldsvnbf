@@ -310,9 +310,10 @@ namespace physics
         if(dir.dot(floor) >= 0)
         {
             if(d->physstate < PHYS_SLIDE || fabs(dir.dot(d->floor)) > 0.01f*dir.magnitude()) return;
-            d->vel.projectxy(floor, 0.0f);
         }
-        else d->vel.projectxy(floor);
+        float speed = d->vel.magnitude();
+        d->vel.projectxydir(floor);
+        d->vel.rescale(speed);
         d->falling.project(floor);
         recalcdir(d, oldvel, dir);
     }
@@ -424,7 +425,7 @@ namespace physics
         return false;
     }
 
-    bool trystepdown(physent *d, vec &dir, float step, float xy, float z)
+    bool trystepdown(physent *d, vec &dir, float step, float xy, float z, bool init = false)
     {
         vec stepdir(dir.x, dir.y, 0);
         stepdir.z = -stepdir.magnitude2()*z/xy;
@@ -441,10 +442,16 @@ namespace physics
             d->zmargin = 0;
             if(collide(d, vec(0, 0, -1)))
             {
+                if(init) d->o = old;
                 stepdir.mul(-stepdir.z).z += 1;
                 stepdir.normalize();
                 switchfloor(d, dir, stepdir);
                 d->floor = stepdir;
+                if(init)
+                {
+                    d->timeinair = 0;
+                    d->physstate = PHYS_STEP_DOWN;
+                }
                 return true;
             }
         }
@@ -453,22 +460,20 @@ namespace physics
         return false;
     }
 
+    bool trystepdown(physent *d, vec &dir, bool init = false)
+    {
+        if(!sticktofloor(d)) return false;
+        float step = dir.magnitude();
+        if(trystepdown(d, dir, step, 2, 1, init)) return true;
+        if(trystepdown(d, dir, step, 1, 1, init)) return true;
+        if(trystepdown(d, dir, step, 1, 2, init)) return true;
+        return false;
+    }
 
     void falling(physent *d, vec &dir, const vec &floor)
     {
-        if(d->physstate >= PHYS_FLOOR && (d->physstate != PHYS_STEP_DOWN || dir.z < -0.25f*dir.magnitude2()) && sticktofloor(d))
-        {
-            vec moved(d->o);
-            d->o.z -= stairheight+0.1f;
-            if(!collide(d, vec(0, 0, -1), slopez))
-            {
-                d->o = moved;
-                d->timeinair = 0;
-                d->physstate = PHYS_STEP_DOWN;
-                return;
-            }
-            else d->o = moved;
-        }
+        if(d->physstate >= PHYS_SLOPE && dir.dot(d->floor) <= 0.01f*dir.magnitude() && trystepdown(d, dir, true))
+            return;
 
         if(floor.z > 0.0f && floor.z < slopez)
         {
@@ -558,11 +563,11 @@ namespace physics
             d->o = old;
             d->o.z -= stairheight;
             d->zmargin = -stairheight;
-            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate == PHYS_STEP_UP || wall.z >= floorz || d->onladder)))
+            if(d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || (!collide(d, vec(0, 0, -1), slopez) && (d->physstate == PHYS_STEP_UP || d->physstate == PHYS_STEP_DOWN || wall.z >= floorz || d->onladder)))
             {
                 d->o = old;
                 d->zmargin = 0;
-                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR  || d->physstate == PHYS_STEP_DOWN || d->onladder ? d->floor : vec(wall)))
+                if(trystepup(d, dir, obstacle, stairheight, d->physstate == PHYS_SLOPE || d->physstate == PHYS_FLOOR || d->onladder ? d->floor : vec(wall)))
                     return true;
             }
             else
@@ -581,14 +586,12 @@ namespace physics
                 d->o.add(dir);
             }
         }
-        else if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN && sticktofloor(d))
+        else if((d->type == ENT_PLAYER || d->type == ENT_AI) && d->physstate == PHYS_STEP_DOWN)
         {
+            vec moved(d->o);
             d->o = old;
-            float step = dir.magnitude();
-            if(trystepdown(d, dir, step, 2, 1)) return true;
-            else if(trystepdown(d, dir, step, 1, 1)) return true;
-            else if(trystepdown(d, dir, step, 1, 2)) return true;
-            d->o = old; d->o.add(dir);
+            if(trystepdown(d, dir)) return true;
+            d->o = moved;
         }
         vec floor(0, 0, 0);
         bool slide = collided, found = findfloor(d, collided, obstacle, slide, floor);
