@@ -189,7 +189,6 @@ enum
 
 #define WEAPSWITCHDELAY PHYSMILLIS*2
 #define WEAPPICKUPDELAY PHYSMILLIS*2
-#define EXPLOSIONSCALE  16.f
 
 enum
 {
@@ -245,7 +244,7 @@ enum
     GFVAR(0, name##partlen1, 0, yk, 10000);         GFVAR(0, name##partlen2, 0, yl, 10000); \
     GFVAR(0, name##frequency, 0, ym, 10000);        GFVAR(0, name##pusharea, 0, yn, 1000); \
     GFVAR(0, name##critmult, 0, yo, 1000);          GFVAR(0, name##critdist, 0, yp, 1000); \
-    GFVAR(0, name##guided1, 0, yq, 1);              GFVAR(0, name##guided2, 0, yr, 1); \
+    GFVAR(0, name##guided1, 0, yq, 1000);           GFVAR(0, name##guided2, 0, yr, 1000); \
 
 //  add     max     sub1    sub2    adelay1     adelay2     rdelay  dam1    dam2    speed1      speed2      power   time1       time2       pdelay  expl1   expl2   rays1   rays2   sprd1   sprd2   zdiv1   zdiv2   aiskew1 aiskew2
 //  collide1                                                                collide2
@@ -264,7 +263,7 @@ WEAPON(pistol,
     0,      0,      0,      0,      0.05f,  0.05f,  2,      2,      0,      0,      1,      1,      2,      2,      150,        150,        300,    300,    0.5f,   0.5f,   10,     10,     1,      2,      4,      16,     0,      0
 );
 WEAPON(shotgun,
-    1,      8,      1,      2,      500,        750,        1000,   15,     15,     2000,       2500,       0,      500,        250,        0,      0,      0,      20,     40,     50,     30,     1,      2,      2,      2,
+    1,      8,      1,      2,      500,        750,        1000,   15,     10,     2000,       2500,       0,      500,        250,        0,      0,      0,      15,     30,     50,     25,     1,      1,      2,      2,
     BOUNCE_GEOM|IMPACT_PLAYER|COLLIDE_TRACE|COLLIDE_OWNER,                  IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_TRACE,
     1,      1,      0,      0,      0,      0,      0,      0,      1,      0,      0,      0,      1,
     0.5f,   0.35f,  50,     50,     0.05f,  0.05f,  2,      2,      25,     25,     1,      1,      15,     15,     20,         40,         150,    300,    0.75f,  0.75f,  50,     50,     1,      2,      2,      6,      0,      0
@@ -300,10 +299,10 @@ WEAPON(grenade,
     0.5f,   0,      0,      0,      1,      1,      2,      2,      64,     64,     1,      1,      5,      5,      1000,       1000,       400,    400,    2,      2,      0,      0,      2,      3,      2,      0,      0,      0
 );
 WEAPON(rocket,
-    1,      1,      1,      1,      500,        500,        2000,   200,    500,    1000,       200,        0,      5000,       5000,       0,      96,     128,    1,      1,      0,      0,      0,      0,      1,      1,
+    1,      1,      1,      1,      1000,     1000,        2000,    200,    200,    1000,       250,        0,      5000,       5000,       0,      64,     96,     1,      1,      0,      0,      0,      0,      8,      8,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
     0,      0,      0,      0,      0,      0,      1,      1,      -1,     0,      0,      0,      2,
-    0,      0,      0,      0,      1,      1,      2,      2,      0,      0,      1,      1,      15,     15,     1000,       1000,       400,    400,    3,      3,      0,      0,      3,      4,      2,      0,      0,      0.65f
+    0,      0,      0,      0,      1,      1,      2,      2,      0,      0,      1,      1,      15,     15,     1000,       1000,       400,    400,    3,      3,      0,      0,      3,      4,      2,      0,      0,      1
 );
 
 struct weaptypes
@@ -482,7 +481,7 @@ extern gametypes gametype[], mutstype[];
 #define m_duke(a,b)         (m_duel(a, b) || m_survivor(a, b))
 #define m_regen(a,b)        (!m_duke(a,b) && !m_insta(a,b))
 
-#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GAME(trialweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
+#define m_weapon(a,b)       (m_arena(a,b) ? -1 : (m_edit(a) || m_trial(a) ? GAME(limitedweapon) : (m_insta(a,b) ? GAME(instaweapon) : GAME(spawnweapon))))
 #define m_delay(a,b)        (m_play(a) && !m_duke(a,b) ? (m_trial(a) ? GAME(trialdelay) : ((m_insta(a, b) ? GAME(instadelay) : GAME(spawndelay)))) : 0)
 #define m_protect(a,b)      (m_insta(a, b) || m_arena(a, b) ? GAME(instaprotect) : GAME(spawnprotect))
 #define m_noitems(a,b)      (GAME(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))

@@ -30,8 +30,8 @@ namespace projs
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
         if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, game::gamemode, game::mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
-        if(radial) damage = int(ceil(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceil(damage*dist/1000.f));
+        if(radial) damage = int(ceilf(damage*clamp(1.f-dist/size, 1e-3f, 1.f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
@@ -48,15 +48,14 @@ namespace projs
             }
         }
         if(nodamage || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-        else if((flags&HIT_FULL) && !WEAPEX(weap, flags&HIT_ALT, game::gamemode, game::mutators)) flags &= ~HIT_FULL;
         if(hithurts(flags))
         {
-            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceil(damage*damagescale));
-            else if(flags&HIT_TORSO) damage = int(ceil(damage*0.5f*damagescale));
-            else if(flags&HIT_LEGS) damage = int(ceil(damage*0.25f*damagescale));
+            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceilf(damage*damagescale));
+            else if(flags&HIT_TORSO) damage = int(ceilf(damage*0.5f*damagescale));
+            else if(flags&HIT_LEGS) damage = int(ceilf(damage*0.25f*damagescale));
             else damage = 0;
         }
-        else damage = int(ceil(damage*damagescale));
+        else damage = int(ceilf(damage*damagescale));
         return damage;
     }
 
@@ -85,7 +84,7 @@ namespace projs
         h.flags = flags;
         h.target = d->clientnum;
         h.id = lastmillis-game::maptime;
-        h.dist = int(dist*DMF);
+        h.dist = int(dist*DNF);
         h.dir = ivec(int(dir.x*DNF), int(dir.y*DNF), int(dir.z*DNF));
     }
 
@@ -95,7 +94,7 @@ namespace projs
         if(proj.hitflags&HITFLAG_LEGS) flags |= HIT_LEGS;
         if(proj.hitflags&HITFLAG_TORSO) flags |= HIT_TORSO;
         if(proj.hitflags&HITFLAG_HEAD) flags |= HIT_HEAD;
-        if(flags) hitpush(d, proj, flags|HIT_PROJ, 0, proj.lifesize*1000);
+        if(flags) hitpush(d, proj, flags|HIT_PROJ, 0, proj.lifesize);
     }
 
     bool hiteffect(projent &proj, physent *d, int flags, const vec &norm)
@@ -121,7 +120,7 @@ namespace projs
         return false;
     }
 
-    void radialeffect(gameent *d, projent &proj, bool explode, float radius)
+    void radialeffect(gameent *d, projent &proj, bool explode, int radius)
     {
         float maxdist = proj.weap != WEAP_MELEE && explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
         if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)))
@@ -148,7 +147,7 @@ namespace projs
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
         if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
-        else if(proj.weap != WEAP_MELEE && explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
+        else if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
     }
 
     void remove(gameent *owner)
@@ -597,12 +596,12 @@ namespace projs
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT))
                 {
-                    if(proj.lifespan > 0.25f)
+                    if(proj.lifespan > 0.125f)
                     {
-                        if(!proj.stuck) proj.lifesize = 1.25f-proj.lifespan;
+                        if(!proj.stuck) proj.lifesize = 1.125f-proj.lifespan;
                         else proj.lifesize = 1;
                     }
-                    else proj.lifesize = proj.lifespan*4;
+                    else proj.lifesize = proj.lifespan*8;
                 }
                 else proj.lifesize = proj.lifespan;
             }
@@ -775,7 +774,7 @@ namespace projs
         int q = int(WEAP2(weap, damage, flags&HIT_ALT)/float(WEAP2(weap, rays, flags&HIT_ALT))), r = WEAP2(weap, radius, flags&HIT_ALT);
         gameent *d;
         loopi(game::numdynents()) if((d = (gameent *)game::iterdynents(i)))
-            d->quake = clamp(d->quake+max(int(q*(1.f-d->o.dist(o)/EXPLOSIONSCALE/r)), 1), 0, 1000);
+            d->quake = clamp(d->quake+max(int(q*max(1.f-d->o.dist(o)/r, 1e-3f)), 1), 0, 1000);
     }
 
     void destroy(projent &proj)
@@ -1003,7 +1002,19 @@ namespace projs
         if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
         bool water = isliquid(mat&MATF_VOLUME);
         float secs = float(qtime)/1000.f;
-        if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
+        if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner && proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
+        {
+            vec trg, ori = proj.vel.normalize();
+            findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, trg);
+            trg.sub(proj.o).normalize();
+            if(!trg.iszero())
+            {
+                float amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)*secs;
+                ori.mul(1.f-amt).add(trg.mul(amt)).normalize();
+                if(!ori.iszero()) proj.vel = ori.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+            }
+        }
+        else if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
 
         vec dir(proj.vel), pos(proj.o);
         if(water)
@@ -1064,21 +1075,22 @@ namespace projs
         if(!blocked) proj.movement += dist;
         switch(proj.projtype)
         {
-            case PRJ_SHOT: case PRJ_DEBRIS: case PRJ_GIBS: case PRJ_EJECT:
-            {
-                if(proj.projtype == PRJ_SHOT && proj.weap == WEAP_ROCKET)
+            case PRJ_SHOT:
+                if(proj.weap == WEAP_ROCKET)
                 {
                     vectoyawpitch(vec(proj.vel).normalize(), proj.yaw, proj.pitch);
                     break;
                 }
-                else if(!proj.lastbounce || proj.movement >= 1)
+            case PRJ_DEBRIS: case PRJ_GIBS: case PRJ_EJECT:
+            {
+                if(!proj.lastbounce || proj.movement >= 1)
                 {
                     vec axis(sinf(proj.yaw*RAD), -cosf(proj.yaw*RAD), 0);
                     if(proj.vel.dot2(axis) >= 0) { proj.pitch -= diff; if(proj.pitch < -180) proj.pitch = 180 - fmod(180 - proj.pitch, 360); }
                     else { proj.pitch += diff; if(proj.pitch > 180) proj.pitch = fmod(proj.pitch + 180, 360) - 180; }
                     break;
                 }
-                else if(proj.projtype == PRJ_GIBS) break;
+                if(proj.projtype == PRJ_GIBS) break;
             }
             case PRJ_ENT:
             {
@@ -1096,15 +1108,6 @@ namespace projs
 
     bool moveframe(projent &proj)
     {
-        if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner && proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
-        {
-            float mag = proj.vel.magnitude(), amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)/physics::physframetime;
-            vec projection, dir = proj.vel.normalize();
-            findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, projection);
-            projection.sub(proj.o).normalize();
-            dir.mul(1.f-amt).add(projection.mul(amt));
-            if(!dir.iszero()) proj.vel = dir.mul(mag);
-        }
         if(((proj.lifetime -= physics::physframetime) <= 0 && proj.lifemillis) || (!proj.stuck && !proj.beenused && !move(proj, physics::physframetime)))
         {
             if(proj.lifetime < 0) proj.lifetime = 0;
@@ -1206,14 +1209,14 @@ namespace projs
             else proj.state = CS_DEAD;
             if(proj.local && proj.owner && proj.projtype == PRJ_SHOT)
             {
-                float radius = 0;
+                int radius = 0;
                 if(proj.state == CS_DEAD)
                 {
                     if(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators))
                     {
                         if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
                         radius = WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators);
-                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) radius = radius*proj.lifesize;
+                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) radius = int(ceilf(radius*proj.lifesize));
                         if(!proj.limited && radius > 0)
                         {
                             loopj(game::numdynents())
@@ -1228,7 +1231,7 @@ namespace projs
                 else if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
                 {
                     if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
-                    radius = WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*proj.lifesize;
+                    radius = int(ceilf(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*proj.lifesize));
                     if(!proj.limited && radius > 0 && (!proj.lastradial || lastmillis-proj.lastradial >= 100))
                     {
                         loopj(game::numdynents())

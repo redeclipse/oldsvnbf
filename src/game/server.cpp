@@ -2423,19 +2423,19 @@ namespace server
 
     int calcdamage(int weap, int &flags, int radial, float size, float dist)
     {
-        int damage = WEAP2(weap, damage, flags&HIT_ALT);
-        if(radial) damage = int(ceil(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceil(damage*dist/1000.f));
+        int damage = WEAP2(weap, damage, flags&HIT_ALT); flags &= ~HIT_SFLAGS;
+        if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
+        if(radial) damage = int(ceilf(damage*clamp(1.f-dist/size, 1e-3f, 1.f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
-        else if((flags&HIT_FULL) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators)) flags &= ~HIT_FULL;
         if(hithurts(flags))
         {
-            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceil(damage*GAME(damagescale)));
-            else if(flags&HIT_TORSO) damage = int(ceil(damage*0.5f*GAME(damagescale)));
-            else if(flags&HIT_LEGS) damage = int(ceil(damage*0.25f*GAME(damagescale)));
+            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceilf(damage*GAME(damagescale)));
+            else if(flags&HIT_TORSO) damage = int(ceilf(damage*0.5f*GAME(damagescale)));
+            else if(flags&HIT_LEGS) damage = int(ceilf(damage*0.25f*GAME(damagescale)));
             else damage = 0;
         }
-        else damage = int(ceil(damage*GAME(damagescale)));
+        else damage = int(ceilf(damage*GAME(damagescale)));
         return damage;
     }
 
@@ -2452,9 +2452,9 @@ namespace server
                 {
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
-                    float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DMF;
+                    float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
-                    if(!target || target->state.state != CS_ALIVE || (size && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
+                    if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
                     int damage = calcdamage(weap, hflags, radial, size, dist);
                     if(damage > 0 && (hithurts(hflags) || hflags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
