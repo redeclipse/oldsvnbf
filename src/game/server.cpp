@@ -2424,18 +2424,18 @@ namespace server
     int calcdamage(int weap, int &flags, int radial, float size, float dist)
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT);
-        if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist/1000.f);
+        if(radial) damage = int(ceil(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceil(damage*dist/1000.f));
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else if((flags&HIT_FULL) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators)) flags &= ~HIT_FULL;
         if(hithurts(flags))
         {
-            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*GAME(damagescale));
-            else if(flags&HIT_TORSO) damage = int(damage*0.5f*GAME(damagescale));
-            else if(flags&HIT_LEGS) damage = int(damage*0.25f*GAME(damagescale));
+            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceil(damage*GAME(damagescale)));
+            else if(flags&HIT_TORSO) damage = int(ceil(damage*0.5f*GAME(damagescale)));
+            else if(flags&HIT_LEGS) damage = int(ceil(damage*0.25f*GAME(damagescale)));
             else damage = 0;
         }
-        else damage = int(damage*GAME(damagescale));
+        else damage = int(ceil(damage*GAME(damagescale)));
         return damage;
     }
 

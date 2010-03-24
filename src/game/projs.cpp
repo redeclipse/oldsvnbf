@@ -30,8 +30,8 @@ namespace projs
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
         if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, game::gamemode, game::mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
-        if(radial) damage = int(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f)));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(damage*dist/1000.f);
+        if(radial) damage = int(ceil(damage*(1.f-dist/EXPLOSIONSCALE/max(size, 1e-3f))));
+        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceil(damage*dist/1000.f));
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
@@ -51,12 +51,12 @@ namespace projs
         else if((flags&HIT_FULL) && !WEAPEX(weap, flags&HIT_ALT, game::gamemode, game::mutators)) flags &= ~HIT_FULL;
         if(hithurts(flags))
         {
-            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(damage*damagescale);
-            else if(flags&HIT_TORSO) damage = int(damage*0.5f*damagescale);
-            else if(flags&HIT_LEGS) damage = int(damage*0.25f*damagescale);
+            if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceil(damage*damagescale));
+            else if(flags&HIT_TORSO) damage = int(ceil(damage*0.5f*damagescale));
+            else if(flags&HIT_LEGS) damage = int(ceil(damage*0.25f*damagescale));
             else damage = 0;
         }
-        else damage = int(damage*damagescale);
+        else damage = int(ceil(damage*damagescale));
         return damage;
     }
 
@@ -639,10 +639,10 @@ namespace projs
                     if(proj.movement > 0.f)
                     {
                         bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= 200;
-                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifesize), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
+                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifespan), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
                         vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
                         proj.to = vec(proj.o).sub(vec(dir).mul(size));
-                        int col = ((int(220*max(1.f-proj.lifesize,0.3f))<<16))|((int(160*max(1.f-proj.lifesize,0.2f)))<<8);
+                        int col = ((int(220*max(1.f-proj.lifespan,0.3f))<<16))|((int(160*max(1.f-proj.lifespan,0.2f)))<<8);
                         part_flare(proj.to, proj.o, 1, PART_FLARE, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
                         part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.25f);
                         part_create(PART_PLASMA, 1, proj.o, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
@@ -654,7 +654,7 @@ namespace projs
                     if(proj.movement > 0.f)
                     {
                         bool effect = false;
-                        float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifesize, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f));
+                        float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f));
                         if(flamertrail && lastmillis-proj.lasteffect >= flamerdelay) { effect = true; proj.lasteffect = lastmillis; }
                         int len = effect ? max(int(flamerlength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
                         if(flamerhint && effect) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
@@ -693,10 +693,10 @@ namespace projs
                     if(proj.movement > 0.f)
                     {
                         bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= 200;
-                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifesize), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
+                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifespan), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
                         vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
                         proj.to = vec(proj.o).sub(vec(dir).mul(size));
-                        int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16)+1)|((int(144*max(1.f-proj.lifesize,0.15f))+1)<<8);
+                        int col = ((int(224*max(1.f-proj.lifespan,0.3f))<<16)+1)|((int(144*max(1.f-proj.lifespan,0.15f))+1)<<8);
                         part_flare(proj.to, proj.o, 1, PART_FLARE, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), clamp(1.25f-proj.lifespan, 0.5f, 1.f));
                         part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.25f, clamp(1.25f-proj.lifespan, 0.5f, 1.f));
                     }
@@ -707,10 +707,10 @@ namespace projs
                     if(proj.movement > 0.f)
                     {
                         bool iter = proj.lastbounce || proj.lifemillis-proj.lifetime >= 200;
-                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifesize), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
+                        float dist = proj.o.dist(proj.from), size = clamp(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT)*(1.f-proj.lifespan), 1.f, iter ? min(WEAP2(proj.weap, partlen, proj.flags&HIT_ALT), proj.movement) : dist);
                         vec dir = iter || dist >= size ? vec(proj.vel).normalize() : vec(proj.o).sub(proj.from).normalize();
                         proj.to = vec(proj.o).sub(vec(dir).mul(size));
-                        int col = ((int(224*max(1.f-proj.lifesize,0.3f))<<16))|((int(80*max(1.f-proj.lifesize,0.1f)))<<8);
+                        int col = ((int(224*max(1.f-proj.lifespan,0.3f))<<16))|((int(80*max(1.f-proj.lifespan,0.1f)))<<8);
                         part_flare(proj.to, proj.o, 1, PART_FLARE, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT), clamp(1.25f-proj.lifespan, 0.5f, 1.f));
                         part_flare(proj.to, proj.o, 1, PART_FLARE_LERP, col, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.125f, clamp(1.25f-proj.lifespan, 0.5f, 1.f));
                     }
