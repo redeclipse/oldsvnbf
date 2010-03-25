@@ -256,7 +256,6 @@ namespace projs
             }
             case PRJ_EJECT:
             {
-                if(weaptype[proj.weap].ejdrop) break;
                 int mag = int(proj.vel.magnitude()), vol = clamp(mag*3, 10, 255);
                 playsound(S_SHELL1+rnd(6), proj.o, NULL, 0, vol);
                 break;
@@ -396,7 +395,6 @@ namespace projs
                 proj.waterfric = 1.75f;
                 proj.weight = (180+(proj.maxspeed*2))*proj.lifesize; // so they fall better in relation to their speed
                 proj.projcollide = BOUNCE_GEOM;
-                if(!weaptype[proj.weap].ejdrop) proj.projcollide = BOUNCE_PLAYER;
                 proj.escaped = true;
                 proj.fadetime = rnd(250)+250;
                 if(proj.owner)
@@ -577,8 +575,8 @@ namespace projs
         }
 
         loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, life ? life : 1, WEAP2(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags);
-        if(ejectfade && weaptype[weap].eject) loopi(weaptype[weap].ejdrop ? 1 : max(WEAP2(weap, sub, flags&HIT_ALT), 1))
-            create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis+(weaptype[weap].ejdrop ? WEAP2(weap, adelay, flags&HIT_ALT) : 0), rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
+        if(ejectfade && weaptype[weap].eject) loopi(max(WEAP2(weap, sub, flags&HIT_ALT), 1))
+            create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
 
         d->setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), lastmillis);
         d->ammo[weap] = max(d->ammo[weap]-offset, 0);
@@ -756,7 +754,7 @@ namespace projs
         {
             case PRJ_EJECT:
             {
-                if(isweap(proj.weap) && ejecthint && !weaptype[proj.weap].ejdrop)
+                if(isweap(proj.weap) && ejecthint)
                     part_create(PART_HINT, 1, proj.o, weaptype[proj.weap].colour, max(proj.xradius, proj.yradius)*1.75f, clamp(1.f-proj.lifespan, 0.1f, 1.f)*0.2f);
                 bool moving = proj.movement > 0.f;
                 if(moving && lastmillis-proj.lasteffect >= 100)
