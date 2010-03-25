@@ -245,8 +245,8 @@ namespace weapons
         loopi(WEAP2(d->weapselect, rays, flags&HIT_ALT))
         {
             vec dest;
-            int spread = WEAP2(d->weapselect, spread, flags&HIT_ALT);
-            if(spread) offsetray(from, to, WEAP2(d->weapselect, spread, flags&HIT_ALT), WEAP2(d->weapselect, zdiv, flags&HIT_ALT), dest);
+            int spread = WEAPSP(d->weapselect, flags&HIT_ALT, game::gamemode, game::mutators);
+            if(spread) offsetray(from, to, spread, WEAP2(d->weapselect, zdiv, flags&HIT_ALT), dest);
             else dest = to;
             if(weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0] > 0)
                 dest.z += from.dist(dest)*weaptype[d->weapselect].thrown[flags&HIT_ALT ? 1 : 0];
