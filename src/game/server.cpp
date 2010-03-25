@@ -2457,7 +2457,7 @@ namespace server
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
                     int damage = calcdamage(weap, hflags, radial, size, dist);
-                    if(damage > 0 && (hithurts(hflags) || hflags&HIT_WAVE)) dodamage(target, ci, damage, weap, hflags, h.dir);
+                    dodamage(target, ci, damage, weap, hflags, h.dir);
                 }
             }
         }

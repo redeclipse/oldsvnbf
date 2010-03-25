@@ -77,8 +77,10 @@ namespace projs
         }
         if(proj.owner && (proj.owner == game::player1 || proj.owner->ai))
         {
-            int hflags = proj.flags|flags, damage = calcdamage(proj.owner, d, proj.weap, hflags, radial, float(radial), dist);
-            if(damage > 0) game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir, false);
+            int hflags = proj.flags|flags;
+            float size = hflags&HIT_WAVE ? radial*WEAP(proj.weap, pusharea) : radial;
+            int damage = calcdamage(proj.owner, d, proj.weap, hflags, radial, size, dist);
+            game::hiteffect(proj.weap, hflags, damage, d, proj.owner, dir, false);
         }
         hitmsg &h = hits.add();
         h.flags = flags;
@@ -122,7 +124,7 @@ namespace projs
 
     void radialeffect(gameent *d, projent &proj, bool explode, int radius)
     {
-        float maxdist = proj.weap != WEAP_MELEE && explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
+        float maxdist = explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
         if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)))
         {
             if(!proj.o.reject(d->legs, maxdist+max(d->lrad.x, d->lrad.y)))
