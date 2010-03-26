@@ -352,6 +352,13 @@ extern int octaentsize;
 
 static octaentities *visiblemms, **lastvisiblemms;
 
+static inline bool insideoe(const octaentities *oe, const vec &v, int margin = 1)
+{
+    int size = oe->size + margin;
+    return v.x>=oe->o.x-margin && v.y>=oe->o.y-margin && v.z>=oe->o.z-margin &&
+           v.x<=oe->o.x+size && v.y<=oe->o.y+size && v.z<=oe->o.z+size;
+}
+
 void findvisiblemms(const vector<extentity *> &ents)
 {
     for(vtxarray *va = visibleva; va; va = va->next)
@@ -506,7 +513,7 @@ void rendermapmodels()
     bool queried = false;
     for(octaentities *oe = visiblemms; oe; oe = oe->next) if(oe->distance<0)
     {
-        oe->query = doquery ? newquery(oe) : NULL;
+        oe->query = doquery && !insideoe(oe, camera1->o) ? newquery(oe) : NULL;
         if(!oe->query) continue;
         if(!queried)
         {
