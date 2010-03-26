@@ -1099,6 +1099,12 @@ ICOMMAND(0, maxf, "V", (char **args, int *numargs),
 
 ICOMMAND(0, rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(0, strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
+ICOMMANDN(0, =s, eqs, "ss", (char *a, char *b), intret(strcmp(a,b)==0));
+ICOMMANDN(0, !=s, neqs, "ss", (char *a, char *b), intret(strcmp(a,b)!=0));
+ICOMMANDN(0, <s, lts, "ss", (char *a, char *b), intret(strcmp(a,b)<0));
+ICOMMANDN(0, >s, gts, "ss", (char *a, char *b), intret(strcmp(a,b)>0));
+ICOMMANDN(0, <=s, ltes, "ss", (char *a, char *b), intret(strcmp(a,b)<=0));
+ICOMMANDN(0, >=s, gtes, "ss", (char *a, char *b), intret(strcmp(a,b)>=0));
 ICOMMAND(0, strcasecmp, "ss", (char *a, char *b), intret(strcasecmp(a,b)==0));
 ICOMMAND(0, strncmp, "ssi", (char *a, char *b, int *n), intret(strncmp(a,b,*n)==0));
 ICOMMAND(0, strncasecmp, "ssi", (char *a, char *b, int *n), intret(strncasecmp(a,b,*n)==0));
