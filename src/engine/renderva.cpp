@@ -362,10 +362,10 @@ void findvisiblemms(const vector<extentity *> &ents)
 {
     for(vtxarray *va = visibleva; va; va = va->next)
     {
-        if(!va->mapmodels || va->curvfc >= VFC_FOGGED || va->occluded >= OCCLUDE_BB) continue;
-        loopv(*va->mapmodels)
+        if(va->mapmodels.empty() || va->curvfc >= VFC_FOGGED || va->occluded >= OCCLUDE_BB) continue;
+        loopv(va->mapmodels)
         {
-            octaentities *oe = (*va->mapmodels)[i];
+            octaentities *oe = va->mapmodels[i];
             if(isfoggedcube(oe->o, oe->size) || pvsoccluded(oe->bbmin, ivec(oe->bbmax).sub(oe->bbmin))) continue;
 
             bool occluded = oe->query && oe->query->owner == oe && checkquery(oe->query);
@@ -439,10 +439,10 @@ void renderreflectedmapmodels()
         octaentities **lastmms = &mms;
         for(vtxarray *va = reflectedva; va; va = va->rnext)
         {
-            if(!va->mapmodels || va->distance > reflectdist) continue;
-            loopv(*va->mapmodels)
+            if(va->mapmodels.empty() || va->distance > reflectdist) continue;
+            loopv(va->mapmodels) 
             {
-                octaentities *oe = (*va->mapmodels)[i];
+                octaentities *oe = va->mapmodels[i];
                 *lastmms = oe;
                 lastmms = &oe->rnext;
             }
