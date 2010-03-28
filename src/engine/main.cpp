@@ -817,9 +817,9 @@ int main(int argc, char **argv)
                     {
                         extern int useshaders, shaderprecision, forceglsl;
                         int n = atoi(&argv[i][3]);
-                        useshaders = n ? 1 : 0;
-                        shaderprecision = clamp(n - 1, 0, 3);
-                        forceglsl = n - 1 > 3 ? 1 : 0;
+                        useshaders = n > 0 ? 1 : 0;
+                        shaderprecision = clamp(n >= 4 ? n - 4 : n - 1, 0, 2);
+                        forceglsl = n >= 4 ? 1 : 0;    
                         break;
                     }
                     default: conoutf("\frunknown display option %c", argv[i][2]); break;
