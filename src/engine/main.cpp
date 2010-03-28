@@ -181,8 +181,10 @@ void writeinitcfg()
     f->printf("stencilbits %d\n", stencilbits);
     f->printf("fsaa %d\n", fsaa);
     f->printf("vsync %d\n", vsync);
+    extern int useshaders, shaderprecision, forceglsl;
     f->printf("shaders %d\n", useshaders);
     f->printf("shaderprecision %d\n", shaderprecision);
+    f->printf("forceglsl %d\n", forceglsl);
     f->printf("soundmono %d\n", soundmono);
     f->printf("soundchans %d\n", soundchans);
     f->printf("soundbufferlen %d\n", soundbufferlen);
@@ -813,10 +815,11 @@ int main(int argc, char **argv)
                     case 's': stencilbits = atoi(&argv[i][3]); break;
                     case 'u':
                     {
-                        extern int useshaders, shaderprecision;
+                        extern int useshaders, shaderprecision, forceglsl;
                         int n = atoi(&argv[i][3]);
                         useshaders = n ? 1 : 0;
-                        shaderprecision = min(max(n - 1, 0), 3);
+                        shaderprecision = clamp(n - 1, 0, 3);
+                        forceglsl = n - 1 > 3 ? 1 : 0;
                         break;
                     }
                     default: conoutf("\frunknown display option %c", argv[i][2]); break;
