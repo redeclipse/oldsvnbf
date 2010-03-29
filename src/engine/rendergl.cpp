@@ -132,6 +132,7 @@ VAR(0, ati_minmax_bug, 0, 0, 1);
 VAR(0, ati_dph_bug, 0, 0, 1);
 VAR(0, ati_line_bug, 0, 0, 1);
 VAR(0, ati_cubemap_bug, 0, 0, 1);
+VAR(0, ati_ubo_bug, 0, 0, 1);
 VAR(0, nvidia_texgen_bug, 0, 0, 1);
 VAR(0, nvidia_scissor_bug, 0, 0, 1);
 VAR(0, apple_glsldepth_bug, 0, 0, 1);
@@ -478,6 +479,7 @@ void gl_checkextensions()
 
         useubo = 1;
         hasUBO = true;
+        if(strstr(vendor, "ATI")) ati_ubo_bug = 1;
         if(dbgexts) conoutf("\frUsing GL_ARB_uniform_buffer_object extension.");
     }
 
