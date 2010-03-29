@@ -3517,8 +3517,8 @@ namespace server
                     ev->weap = getint(p);
                     if(!isweap(ev->weap)) havecn = false;
                     ev->flags = getint(p);
-                    ev->id = getint(p); // this is the actual id
                     if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
+                    ev->id = getint(p); // this is the actual id
                     ev->radial = getint(p);
                     int hits = getint(p);
                     loopj(hits)

@@ -643,8 +643,12 @@ namespace game
             {
                 float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
                 if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
-                else if(d->health <= 0) force *= deadpushscale;
-                else force *= hitpushscale;
+                else
+                {
+                    force *= WEAP(weap, pusharea);
+                    if(d->health <= 0) force *= deadpushscale;
+                    else force *= hitpushscale;
+                }
                 vec push = dir; push.z += 0.125f; push.mul(force);
                 d->vel.add(push);
                 if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap == WEAP_MELEE) d->lastpush = lastmillis;
@@ -662,7 +666,7 @@ namespace game
             if(actor->type == ENT_PLAYER || actor->type == ENT_AI) actor->totaldamage += damage;
         }
         hiteffect(weap, flags, damage, d, actor, dir, actor == player1 || actor->ai);
-        if(showdamageabovehead >= (d != focus ? 1 : 2))
+        if(hithurts(flags) && showdamageabovehead >= (d != focus ? 1 : 2))
         {
             defformatstring(ds)("<sub>\fr+%d", damage);
             part_textcopy(d->abovehead(), ds, d != focus ? PART_TEXT : PART_TEXT_ONTOP, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, d);
