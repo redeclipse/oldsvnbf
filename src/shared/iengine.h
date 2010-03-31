@@ -166,6 +166,9 @@ extern vec worldpos, camerapos, camdir, camright, camup;
 extern void getscreenres(int &w, int &h);
 extern void gettextres(int &w, int &h);
 
+extern vec minimapcenter, minimapradius, minimapscale;
+extern void bindminimap();
+
 // renderparticles
 enum
 {

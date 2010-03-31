@@ -2018,12 +2018,12 @@ GLuint genenvmap(const vec &o, int envmapsize)
             case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB: // up
                 yaw = 90; pitch = 90; break;
         }
-        glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CCW : GL_CW);
+        glFrontFace((side.flipx==side.flipy)!=side.swapxy ? GL_CW : GL_CCW);
         drawcubemap(rendersize, 0, o, yaw, pitch, !side.flipx, !side.flipy, side.swapxy);
         glReadPixels(0, 0, rendersize, rendersize, GL_RGB, GL_UNSIGNED_BYTE, pixels);
         createtexture(tex, texsize, texsize, pixels, 3, 2, GL_RGB5, side.target, rendersize, rendersize);
     }
-    glFrontFace(GL_CCW);
+    glFrontFace(GL_CW);
     delete[] pixels;
     glViewport(0, 0, screen->w, screen->h);
     forcecubemapload(tex);

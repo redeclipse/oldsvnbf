@@ -57,6 +57,7 @@ namespace hud
     extern bool getcolour(vec &colour);
     extern void gamemenus();
     extern void update(int w, int h);
+    extern bool needminimap();
 }
 
 namespace physics
