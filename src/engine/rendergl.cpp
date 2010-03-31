@@ -1559,8 +1559,8 @@ void drawminimap()
     {
         ivec clipmin(hdr.worldsize, hdr.worldsize, hdr.worldsize), clipmax(0, 0, 0);
         clipminimap(clipmin, clipmax);
-        loopk(3) bbmin[k] = max(bbmin[k], clipmin[k]);
-        loopk(3) bbmax[k] = min(bbmax[k], clipmax[k]);
+        loopk(2) bbmin[k] = max(bbmin[k], clipmin[k]);
+        loopk(2) bbmax[k] = min(bbmax[k], clipmax[k]);
     }
 
     minimapradius = bbmax.tovec().sub(bbmin.tovec()).mul(0.5f);
