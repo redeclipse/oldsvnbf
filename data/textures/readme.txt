@@ -12,7 +12,7 @@ dead.png, dominated.png, dominating.png, flag.png, and melee.png
     Released as Public Domain Royalty Free Clipart
     
 All other files in this directory are:
-    (C) 2007-2009 Blood Frontier Team, all rights reserved.
+    (C) 2007-2010 Blood Frontier Team, all rights reserved.
 
 The "textures" package included in Blood Frontier may only be distributed
     with the Blood Frontier package. Redistribution or repacking outside
