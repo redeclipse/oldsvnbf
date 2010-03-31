@@ -587,7 +587,7 @@ void rendermaterials()
 
     varray::enable();
 
-    MSlot &wslot = lookupmaterialslot(MAT_WATER), &lslot = lookupmaterialslot(MAT_LAVA);
+    MSlot &wslot = lookupmaterialslot(MAT_WATER, false), &lslot = lookupmaterialslot(MAT_LAVA, false);
     uchar wcol[4] = { watercol[0], watercol[1], watercol[2], 192 }, wfcol[4] = { waterfallcol[0], waterfallcol[1], waterfallcol[2], 192 };
     if(!wfcol[0] && !wfcol[2] && !wfcol[2]) memcpy(wfcol, wcol, 3);
     int lastorient = -1, lastmat = -1;

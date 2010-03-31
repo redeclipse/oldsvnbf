@@ -253,6 +253,9 @@ namespace hud
     TVAR(IDF_PERSIST, bglefttex, "textures/bgleft", 3);
     TVAR(IDF_PERSIST, bgrighttex, "textures/bgright", 3);
 
+
+    bool needminimap() { return false; }
+
     bool chkcond(int val, bool cond)
     {
         if(val == 2 || (val && cond)) return true;
