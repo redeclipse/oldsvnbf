@@ -1505,14 +1505,13 @@ void clearminimap()
     if(minimaptex) { glDeleteTextures(1, &minimaptex); minimaptex = 0; }
 }
 
-VARF(IDF_WORLD, minimapheight, 0, 0, 2<<16, { if(minimaptex) drawminimap(); });
+VAR(IDF_WORLD, minimapheight, 0, 0, 2<<16);
 bvec minimapcolor(0, 0, 0);
 VARF(IDF_HEX|IDF_WORLD, minimapcolour, 0, 0, 0xFFFFFF,
 {
     minimapcolor = bvec((minimapcolour>>16)&0xFF, (minimapcolour>>8)&0xFF, minimapcolour&0xFF);
-    if(minimaptex) drawminimap();
 });
-VARF(IDF_WORLD, minimapclip, 0, 0, 1, { if(minimaptex) drawminimap(); });
+VAR(IDF_WORLD, minimapclip, 0, 0, 1);
 VARF(IDF_PERSIST, minimapsize, 7, 8, 10, { if(minimaptex) drawminimap(); });
 
 void bindminimap()
