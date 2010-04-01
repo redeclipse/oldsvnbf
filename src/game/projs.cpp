@@ -1004,7 +1004,7 @@ namespace projs
         float secs = float(qtime)/1000.f;
         if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner)
         {
-            if(altgameplay && GAME(allowtimedmods) && proj.lifetime >= 0.35f)
+            if(altgameplay && GAME(allowtimedmods) && proj.lifespan >= 0.35f)
             {
                 if(!proj.stuck) proj.stuck = false;
                 vec trg = vec(proj.owner->o).sub(proj.o).normalize();
