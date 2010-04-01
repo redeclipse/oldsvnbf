@@ -133,3 +133,5 @@ GFVAR(0, wavepushscale, 0, 1, 1000);
 GVAR(0, multikilldelay, 0, 5000, INT_MAX-1);
 GVAR(0, spreecount, 0, 5, INT_MAX-1);
 GVAR(0, dominatecount, 0, 5, INT_MAX-1);
+
+GVAR(0, allowtimedmods, 0, 1, 1); // 0 = off, 1 = on

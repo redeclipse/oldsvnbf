@@ -596,12 +596,12 @@ namespace projs
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT))
                 {
-                    if(proj.lifespan > 0.125f)
+                    if(proj.lifespan > 0.05f)
                     {
-                        if(!proj.stuck) proj.lifesize = 1.125f-proj.lifespan;
+                        if(!proj.stuck) proj.lifesize = 1.05f-proj.lifespan;
                         else proj.lifesize = 1;
                     }
-                    else proj.lifesize = proj.lifespan*8;
+                    else proj.lifesize = proj.lifespan*20;
                 }
                 else proj.lifesize = proj.lifespan;
             }
@@ -1002,16 +1002,25 @@ namespace projs
         if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
         bool water = isliquid(mat&MATF_VOLUME);
         float secs = float(qtime)/1000.f;
-        if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner && proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
+        if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner)
         {
-            vec trg, ori = proj.vel.normalize();
-            findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, trg);
-            trg.sub(proj.o).normalize();
-            if(!trg.iszero())
+            if(altgameplay && GAME(allowtimedmods) && proj.lifetime >= 0.35f)
             {
-                float amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)*secs;
-                ori.mul(1.f-amt).add(trg.mul(amt)).normalize();
-                if(!ori.iszero()) proj.vel = ori.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+                if(!proj.stuck) proj.stuck = false;
+                vec trg = vec(proj.owner->o).sub(proj.o).normalize();
+                if(!trg.iszero()) proj.vel = trg.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+            }
+            else if(proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
+            {
+                vec trg, ori = proj.vel.normalize();
+                findorientation(proj.owner->o, proj.owner->yaw, proj.owner->pitch, trg);
+                trg.sub(proj.o).normalize();
+                if(!trg.iszero())
+                {
+                    float amt = WEAP2(proj.weap, guided, proj.flags&HIT_ALT)*secs;
+                    ori.mul(1.f-amt).add(trg.mul(amt)).normalize();
+                    if(!ori.iszero()) proj.vel = ori.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
+                }
             }
         }
         else if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
