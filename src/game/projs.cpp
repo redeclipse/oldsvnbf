@@ -1023,7 +1023,7 @@ namespace projs
                 }
             }
         }
-        else if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
+        if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
 
         vec dir(proj.vel), pos(proj.o);
         if(water)
