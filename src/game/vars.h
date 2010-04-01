@@ -25,14 +25,14 @@ GVAR(IDF_ADMIN, defaultmode, -1, G_DEATHMATCH, G_MAX-1);
 GVAR(IDF_ADMIN, defaultmuts, -2, G_M_TEAM, G_M_ALL);
 GVAR(IDF_ADMIN, campaignplayers, 1, 4, MAXPLAYERS);
 
-GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dutility eight enigma firehouse forge ghost gladiator hollow longestyard nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower venus warground");
-GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma ghost gladiator longestyard nova panic refuge rivals smouldering stone tower warground venus");
-GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight ghost gladiator longestyard nova panic refuge rivals tower warground venus");
-GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli enigma forge ghost gladiator nova panic refuge rivals smouldering stone warground venus");
+GSVAR(IDF_ADMIN, allowmaps, "bath bloodgrounds chaos citadel darkness deadsimple deathtrap deli dutility eight enigma firehouse forge ghost gladiator hollow longestyard mist nova oasis overseer panic refuge rivals siege smouldering stone testchamber tower venus warground");
+GSVAR(IDF_ADMIN, mainmaps, "bath bloodgrounds citadel darkness deadsimple deathtrap deli eight enigma ghost gladiator longestyard mist nova panic refuge rivals smouldering stone tower warground venus");
+GSVAR(IDF_ADMIN, duelmaps, "bath citadel darkness deadsimple deathtrap dutility eight ghost gladiator longestyard mist nova panic refuge rivals tower warground venus");
+GSVAR(IDF_ADMIN, ctfmaps, "bath citadel darkness deadsimple deli enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone warground venus");
 GSVAR(IDF_ADMIN, mctfmaps, "deadsimple enigma ghost refuge");
-GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge ghost gladiator nova panic refuge rivals smouldering stone tower warground venus");
+GSVAR(IDF_ADMIN, stfmaps, "bath bloodgrounds citadel darkness deadsimple deli enigma forge ghost gladiator mist nova panic refuge rivals smouldering stone tower warground venus");
 GSVAR(IDF_ADMIN, trialmaps, "testchamber");
-GSVAR(IDF_ADMIN, campaignmaps, "wishbone campaigntest");
+GSVAR(IDF_ADMIN, campaignmaps, "wishbone alphacampain campaigntest");
 
 GICOMMAND(0, resetvars, "", (), server::resetgamevars(true), return);
 GICOMMAND(IDF_ADMIN, resetconfig, "", (), rehash(true), );
