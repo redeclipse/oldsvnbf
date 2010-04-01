@@ -228,7 +228,7 @@ enum
     GVAR(0, name##extinguish1, 0, x2, 1);           GVAR(0, name##extinguish2, 0, x3, 1); \
     GVAR(0, name##radial1, 0, x4, 1);               GVAR(0, name##radial2, 0, x5, 1); \
     GVAR(0, name##burns1, 0, x6, 1);                GVAR(0, name##burns2, 0, x7, 1); \
-    GVAR(0, name##reloads, -1, x8, 1);              GVAR(0, name##zooms, 0, x9, 1); \
+    GVAR(0, name##reloads, 0, x8, 1);               GVAR(0, name##zooms, 0, x9, 1); \
     GVAR(0, name##fullauto1, 0, xa, 1);             GVAR(0, name##fullauto2, 0, xb, 1); \
     GVAR(0, name##allowed, 0, xc, 2); \
     GFVAR(0, name##elasticity1, -1000, y0, 1000);   GFVAR(0, name##elasticity2, 0, y1, 1); \
@@ -301,7 +301,7 @@ WEAPON(grenade,
 WEAPON(rocket,
     1,      1,      1,      1,      1000,     1000,        2000,    350,    350,    1000,       250,        0,      5000,       5000,       0,      64,     96,     1,      1,      0,      0,      0,      0,      8,      8,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
-    0,      0,      0,      0,      0,      0,      1,      1,      -1,     0,      0,      0,      2,
+    0,      0,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      2,
     0,      0,      0,      0,      1,      1,      2,      2,      0,      0,      1,      1,      15,     15,     1000,       1000,       400,    400,    3,      3,      0,      0,      3,      4,      2,      0,      0,      1
 );
 
@@ -488,9 +488,9 @@ extern gametypes gametype[], mutstype[];
 #define m_noitems(a,b)      (GAME(itemsallowed) < (m_insta(a,b) || m_trial(a) ? 2 : 1))
 #define m_health(a,b)       (m_insta(a,b) ? 1 : GAME(maxhealth))
 
-#define w_reload(w1,w2)     (w1 != WEAP_MELEE && (w1 == (isweap(w1) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads) == 1)))
-#define w_carry(w1,w2)      (w1 != WEAP_MELEE && w1 != (isweap(w1) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads) != 0))
-#define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != (isweap(w2) ? w2 : WEAP_PISTOL)) ? w1 : WEAP_GRENADE)
+#define w_reload(w1,w2)     (w1 != WEAP_MELEE && (w1 == (isweap(w2) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads))))
+#define w_carry(w1,w2)      (w1 != WEAP_MELEE && w1 != (isweap(w2) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads)))
+#define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != w2) ? w1 : WEAP_GRENADE)
 #define w_spawn(weap)       int(GAME(itemspawntime)*WEAP(weap, frequency))
 
 // network messages codes, c2s, c2c, s2c
