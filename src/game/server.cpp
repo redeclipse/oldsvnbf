@@ -383,6 +383,27 @@ namespace server
         return 0;
     }
 
+    bool returningfiremod = false;
+
+    bool eastereggs()
+    {
+        if(!GAME(alloweastereggs)) return false;
+        time_t ct = time(NULL); // current time
+        struct tm *lt = localtime(&ct);
+        int month = lt->tm_mon+1, mday = lt->tm_mday; //, day = lt->tm_wday+1
+        if(month == 4 && mday == 1) returningfiremod = true;
+        return true;
+    }
+
+    #define setmod(a,b) \
+    { \
+        if(a != b) \
+        { \
+            setvar(#a, b, true); \
+            sendf(-1, 1, "ri2ss", SV_COMMAND, -1, &((const char *)#a)[3], #b); \
+        } \
+    }
+
     void resetgamevars(bool flush)
     {
         string val;
@@ -394,7 +415,6 @@ namespace server
                 {
                     case ID_VAR:
                     {
-                        setvar(id.name, id.def.i, true);
                         if(flush) formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
                         break;
                     }
@@ -416,6 +436,10 @@ namespace server
             }
         });
         execfile("servexec.cfg", false);
+        if(eastereggs())
+        {
+            if(returningfiremod) setmod(sv_returningfire, 1);
+        }
     }
 
     const char *pickmap(const char *suggest, int mode, int muts)
@@ -434,16 +458,16 @@ namespace server
         }
     }
 
-    void cleanup()
+    void cleanup(bool init = false)
     {
         setpause(false);
         if(GAME(resetmmonend)) mastermode = MM_OPEN;
-        if(GAME(resetvarsonend)) resetgamevars(true);
         if(GAME(resetbansonend)) loopv(bans) if(bans[i].time >= 0) bans.remove(i--);
+        if(GAME(resetvarsonend) || init) resetgamevars(true);
         changemap();
     }
 
-    void start() { cleanup(); }
+    void start() { cleanup(true); }
 
     void *newinfo() { return new clientinfo; }
     void deleteinfo(void *ci) { delete (clientinfo *)ci; }

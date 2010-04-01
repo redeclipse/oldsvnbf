@@ -982,7 +982,7 @@ namespace projs
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
         int esctime = proj.projtype == PRJ_SHOT && WEAP2(proj.weap, speed, proj.flags&HIT_ALT) < 500 ? 600-WEAP2(proj.weap, speed, proj.flags&HIT_ALT) : 100;
-        if(proj.spawntime && lastmillis-proj.spawntime > esctime) proj.escaped = true;
+        if(proj.spawntime && lastmillis-proj.spawntime >= esctime) proj.escaped = true;
 #if 0
         else if(proj.projcollide&COLLIDE_TRACE)
         {
@@ -1004,10 +1004,10 @@ namespace projs
         float secs = float(qtime)/1000.f;
         if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner)
         {
-            if(altgameplay && allowtimedmods && proj.lifespan >= 0.35f)
+            if(returningfire && lastmillis-proj.spawntime >= min(WEAP2(proj.weap, time, proj.flags&HIT_ALT)/3, 100))
             {
                 if(!proj.stuck) proj.stuck = false;
-                vec trg = vec(proj.owner->o).sub(proj.o).normalize();
+                vec trg = vec(proj.owner->feetpos(proj.owner->height/2)).sub(proj.o).normalize();
                 if(!trg.iszero()) proj.vel = trg.mul(max(proj.vel.magnitude(), physics::movevelocity(&proj)));
             }
             else if(proj.owner->state == CS_ALIVE && WEAP2(proj.weap, guided, proj.flags&HIT_ALT) > 0)
