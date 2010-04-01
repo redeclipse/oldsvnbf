@@ -5,7 +5,7 @@ extern float progresspart;
 namespace hud
 {
     const int NUMSTATS = 11;
-    int damageresidue = 0, hudwidth = 0, lastteam = 0, lastnewgame = 0, laststats = 0, prevstats[NUMSTATS] = {0}, curstats[NUMSTATS] = {0};
+    int damageresidue = 0, hudwidth = 0, hudheight = 0, lastteam = 0, lastnewgame = 0, laststats = 0, prevstats[NUMSTATS] = {0}, curstats[NUMSTATS] = {0};
 
     #include "compass.h"
     vector<int> teamkills;
@@ -637,7 +637,7 @@ namespace hud
             }
             else if(crosshairhealth) healthskew(cs, r, g, b, fade, crosshairskew, crosshairhealth > 1);
         }
-        int cx = int(hudwidth*cursorx), cy = int(hudsize*cursory), nx = int(hudwidth*0.5f), ny = int(hudsize*0.5f);
+        int cx = int(hudwidth*cursorx), cy = int(hudheight*cursory), nx = int(hudwidth*0.5f), ny = int(hudheight*0.5f);
         drawpointerindex(index, game::mousestyle() != 1 ? cx : nx, game::mousestyle() != 1 ? cy : ny, cs, r, g, b, fade);
         if(index > POINTER_GUI)
         {
@@ -673,7 +673,7 @@ namespace hud
         {
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            glOrtho(0, hudwidth, hudsize, 0, -1, 1);
+            glOrtho(0, hudwidth, hudheight, 0, -1, 1);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             drawpointer(w, h, index);
@@ -708,14 +708,14 @@ namespace hud
         {
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            glOrtho(0, hudwidth, hudsize, 0, -1, 1);
+            glOrtho(0, hudwidth, hudheight, 0, -1, 1);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             if(commandmillis <= 0 && curcompass) rendercmenu();
             else if(client::ready() && shownotices && !hasinput(false) && !texpaneltimer)
             {
                 pushfont("emphasis");
-                int ty = (hudsize/2)-FONTH+int(hudsize/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
+                int ty = (hudheight/2)-FONTH+int(hudheight/2*noticeoffset), tx = hudwidth/2, tf = int(255*hudblend*noticeblend), tr = 255, tg = 255, tb = 255,
                     tw = hudwidth-(int(hudsize*gapsize)*2+int(hudsize*inventorysize)*2);
                 if(noticescale < 1)
                 {
@@ -928,8 +928,8 @@ namespace hud
                     popfont();
                 }
 
-                if(m_stf(game::gamemode)) stf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
-                else if(m_ctf(game::gamemode)) ctf::drawlast(hudwidth, hudsize, tx, ty, tf/255.f);
+                if(m_stf(game::gamemode)) stf::drawlast(hudwidth, hudheight, tx, ty, tf/255.f);
+                else if(m_ctf(game::gamemode)) ctf::drawlast(hudwidth, hudheight, tx, ty, tf/255.f);
 
                 if(noticescale < 1) glPopMatrix();
                 popfont();
@@ -941,13 +941,13 @@ namespace hud
                 {
                     glBindTexture(GL_TEXTURE_2D, t->id);
                     glColor4f(1.f, 1.f, 1.f, overlayblend*hudblend);
-                    drawtex(0, 0, hudwidth, hudsize);
+                    drawtex(0, 0, hudwidth, hudheight);
                 }
             }
             glDisable(GL_BLEND);
         }
         if(UI::ready && (progressing || (commandmillis <= 0 && !curcompass))) UI::render();
-        if(!progressing) drawpointers(hudwidth, hudsize);
+        if(!progressing) drawpointers(hudwidth, hudheight);
     }
 
     void drawconsole(int type, int w, int h, int x, int y, int s)
@@ -1668,7 +1668,7 @@ namespace hud
                             if(millis <= inventoryteams)
                             {
                                 pre = "\fzRw";
-                                int off[2] = { hudwidth/2, hudsize/4 };
+                                int off[2] = { hudwidth/2, hudheight/4 };
                                 if(millis <= inventoryteams/2)
                                 {
                                     float tweak = millis <= inventoryteams/4 ? clamp(float(millis)/float(inventoryteams/4), 0.f, 1.f) : 1.f;
@@ -1957,20 +1957,20 @@ namespace hud
             }
         }
 
-        int gap = int(hudsize*gapsize), inv = int(hudsize*inventorysize), br = inv+gap*2, bs = (hudwidth-br*2)/2, bx = hudwidth-br, by = hudsize-gap;
+        int gap = int(hudsize*gapsize), inv = int(hudsize*inventorysize), br = inv+gap*2, bs = (hudwidth-br*2)/2, bx = hudwidth-br, by = hudheight-gap;
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glLoadIdentity();
-        glOrtho(0, hudwidth, hudsize, 0, -1, 1);
+        glOrtho(0, hudwidth, hudheight, 0, -1, 1);
         glColor3f(1, 1, 1);
 
-        if(noview) drawbackground(hudwidth, hudsize);
-        else if(showhud && client::ready() && fade > 0) drawheadsup(hudwidth, hudsize, fade, gap, inv, br, bs, bx, by);
+        if(noview) drawbackground(hudwidth, hudheight);
+        else if(showhud && client::ready() && fade > 0) drawheadsup(hudwidth, hudheight, fade, gap, inv, br, bs, bx, by);
         if(UI::ready && showconsole)
         {
-            drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudsize, gap, gap, hudwidth-gap*2);
+            drawconsole(showconsole >= 2 ? 1 : 0, hudwidth, hudheight, gap, gap, hudwidth-gap*2);
             if(showconsole >= 2 && !noview && !progressing)
-                drawconsole(2, hudwidth, hudsize, br+gap, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap*2 : (bs-gap*2)*2);
+                drawconsole(2, hudwidth, hudheight, br+gap, by, showfps > 1 || showstats > (m_edit(game::gamemode) ? 0 : 1) ? bs-gap*2 : (bs-gap*2)*2);
         }
 
         glDisable(GL_BLEND);
@@ -1982,6 +1982,16 @@ namespace hud
     {
         aspect = w/float(h);
         fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
-        hudwidth = int(ceil(hudsize*aspect));
+        if(w > h)
+        {
+            hudheight = hudsize;
+            hudwidth = int(ceil(hudsize*(w/float(h))));
+        }
+        else if(w < h)
+        {
+            hudwidth = hudsize;
+            hudheight = int(ceil(hudsize*(h/float(w))));
+        }
+        else hudwidth = hudheight = hudsize;
     }
 }

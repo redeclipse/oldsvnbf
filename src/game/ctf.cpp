@@ -124,7 +124,7 @@ namespace ctf
                         skew = 1; // override it
                         if(millis <= 2000)
                         {
-                            int off[2] = { hud::hudwidth/2, hud::hudsize/4 };
+                            int off[2] = { hud::hudwidth/2, hud::hudheight/4 };
                             if(millis <= 1000)
                             {
                                 float tweak = millis <= 500 ? clamp(float(millis)/500.f, 0.f, 1.f) : 1.f;
