@@ -717,6 +717,7 @@ static bool findarg(int argc, char **argv, const char *str)
 }
 
 const char *loadbackinfo = "";
+bool altgameplay = false;
 void eastereggs()
 {
     time_t ct = time(NULL); // current time
@@ -734,7 +735,8 @@ void eastereggs()
     tm_isdst    1 if daylight savings is on, zero if not,
     */
     int month = lt->tm_mon+1, day = lt->tm_wday+1, mday = lt->tm_mday;
-    if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
+    if(month == 4 && mday == 1) altgameplay = true;
+    else if(day == 6 && mday == 13) loadbackinfo = "Friday the 13th";
     else if(month == 10 && mday == 31) loadbackinfo = "Happy Halloween";
     if(month == 2 && mday == 6)     loadbackinfo = "Happy Birthday Ahven!";
     if(month == 2 && mday == 9)     loadbackinfo = "Happy Birthday Quin!";
@@ -819,7 +821,7 @@ int main(int argc, char **argv)
                         int n = atoi(&argv[i][3]);
                         useshaders = n > 0 ? 1 : 0;
                         shaderprecision = clamp(n >= 4 ? n - 4 : n - 1, 0, 2);
-                        forceglsl = n >= 4 ? 1 : 0;    
+                        forceglsl = n >= 4 ? 1 : 0;
                         break;
                     }
                     default: conoutf("\frunknown display option %c", argv[i][2]); break;
