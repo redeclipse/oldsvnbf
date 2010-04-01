@@ -523,14 +523,12 @@ void save_mapshot(char *mname)
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     ImageData image(mapshotsize, mapshotsize, 3);
     memset(image.data, 0, 3*mapshotsize*mapshotsize);
-    glFrontFace(GL_CCW);
     drawcubemap(mapshotsize, 1, camera1->o, camera1->yaw, camera1->pitch, false, false, false);
     glReadPixels(0, 0, mapshotsize, mapshotsize, GL_RGB, GL_UNSIGNED_BYTE, image.data);
 
     saveimage(mname, image, imageformat, compresslevel, true);
 
     glDeleteTextures(1, &tex);
-    glFrontFace(GL_CCW);
     glViewport(0, 0, screen->w, screen->h);
 
     reloadtexture(mname);
