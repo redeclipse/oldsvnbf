@@ -35,14 +35,14 @@ namespace projs
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
-            else if(m_team(game::gamemode, game::mutators) && actor->team == target->team)
+            else if(m_team(game::gamemode, game::mutators) && actor->team == target->team && actor != target)
             {
                 if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
                 else if(weap == WEAP_MELEE) nodamage++;
                 else if(m_play(game::gamemode)) switch(teamdamage)
                 {
                     case 2: default: break;
-                    case 1: if((actor == target && !selfdamage) || actor->aitype < 0) break;
+                    case 1: if(actor->aitype < 0 || target->aitype >= 0) break;
                     case 0: nodamage++; break;
                 }
             }
@@ -1004,7 +1004,7 @@ namespace projs
         float secs = float(qtime)/1000.f;
         if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner)
         {
-            if(altgameplay && GAME(allowtimedmods) && proj.lifespan >= 0.35f)
+            if(altgameplay && allowtimedmods && proj.lifespan >= 0.35f)
             {
                 if(!proj.stuck) proj.stuck = false;
                 vec trg = vec(proj.owner->o).sub(proj.o).normalize();

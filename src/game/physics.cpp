@@ -137,7 +137,7 @@ namespace physics
             {
                 projent *p = (projent *)e;
                 if(p->hit == d || !(p->projcollide&HIT_PLAYER)) return false;
-                if(p->owner == d && ((!(altgameplay && GAME(allowtimedmods)) && !(p->projcollide&COLLIDE_OWNER)) || (esc && !p->escaped))) return false;
+                if(p->owner == d && ((!(altgameplay && allowtimedmods) && !(p->projcollide&COLLIDE_OWNER)) || (esc && !p->escaped))) return false;
                 projectile = true;
                 break;
             }

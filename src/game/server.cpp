@@ -2237,13 +2237,13 @@ namespace server
         if(actor->state.aitype < AI_START)
         {
             if((actor == target && !GAME(selfdamage)) || (m_trial(gamemode) && !GAME(trialdamage))) nodamage++;
-            else if(m_team(gamemode, mutators) && actor->team == target->team)
+            else if(m_team(gamemode, mutators) && actor->team == target->team && actor != target)
             {
                 if(weap == WEAP_MELEE) nodamage++;
                 else if(m_play(gamemode)) switch(GAME(teamdamage))
                 {
                     case 2: default: break;
-                    case 1: if((actor == target && !GAME(selfdamage)) || actor->state.aitype < 0) break;
+                    case 1: if(actor->state.aitype < 0 || target->state.aitype >= 0) break;
                     case 0: nodamage++; break;
                 }
             }
