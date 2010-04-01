@@ -63,7 +63,7 @@ static void renderlightning(sharedlistparticle *p, float sz, float tx, float ty,
 struct lightningrenderer : sharedlistrenderer
 {
     lightningrenderer()
-        : sharedlistrenderer("particles/lightning", PT_LIGHTNING|PT_GLARE)
+        : sharedlistrenderer("particles/lightning", 3, PT_LIGHTNING|PT_GLARE)
     {}
 
     void startrender()

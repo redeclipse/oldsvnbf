@@ -43,10 +43,14 @@ struct partrenderer
 {
     Texture *tex;
     const char *texname;
+    int texclamp;
     uint type;
 
-    partrenderer(const char *texname, int type)
-        : tex(NULL), texname(texname), type(type) { }
+    partrenderer(const char *texname, int texclamp, int type)
+        : tex(NULL), texname(texname), texclamp(texclamp), type(type) { }
+    partrenderer(int type)
+        : tex(NULL), texname(NULL), texclamp(0), type(type) {}
+
     virtual ~partrenderer() { }
 
     virtual void init(int n) { }
@@ -64,7 +68,7 @@ struct partrenderer
     void preload()
     {
         if(texname && (!tex || tex == notexture))
-            tex = textureload(texname);
+            tex = textureload(texname, texclamp);
     }
 
     //blend = 0 => remove it
@@ -140,8 +144,12 @@ struct listrenderer : partrenderer
     static T *parempty;
     T *list;
 
-    listrenderer(const char *texname, int type)
-        : partrenderer(texname, type), list(NULL)
+    listrenderer(const char *texname, int texclamp, int type)
+        : partrenderer(texname, texclamp, type), list(NULL)
+    {
+    }
+    listrenderer(int type)
+        : partrenderer(type), list(NULL)
     {
     }
 
@@ -273,7 +281,7 @@ typedef listrenderer<sharedlistparticle> sharedlistrenderer;
 struct textrenderer : sharedlistrenderer
 {
     textrenderer(int type)
-        : sharedlistrenderer(NULL, type)
+        : sharedlistrenderer(type)
     {}
 
     void startrender()
@@ -330,7 +338,7 @@ struct portal : listparticle<portal>
 struct portalrenderer : listrenderer<portal>
 {
     portalrenderer(const char *texname)
-        : listrenderer<portal>(texname, PT_PORTAL|PT_GLARE|PT_LERP)
+        : listrenderer<portal>(texname, 3, PT_PORTAL|PT_GLARE|PT_LERP)
     {}
 
     void startrender()
@@ -387,7 +395,7 @@ struct iconrenderer : listrenderer<icon>
     Texture *lasttex;
 
     iconrenderer(int type)
-        : listrenderer<icon>(NULL, type)
+        : listrenderer<icon>(type)
     {}
 
     void startrender()
@@ -552,7 +560,7 @@ struct varenderer : partrenderer
     int maxparts, numparts, lastupdate, rndmask;
 
     varenderer(const char *texname, int type)
-        : partrenderer(texname, type),
+        : partrenderer(texname, 3, type),
           verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1), rndmask(0)
     {
         if(type & PT_HFLIP) rndmask |= 0x01;
@@ -745,7 +753,7 @@ struct lineprimitive : listparticle<lineprimitive>
 struct lineprimitiverenderer : listrenderer<lineprimitive>
 {
     lineprimitiverenderer(int type)
-        : listrenderer<lineprimitive>(NULL, type)
+        : listrenderer<lineprimitive>(type)
     {}
 
     void startrender()
@@ -800,7 +808,7 @@ struct trisprimitive : listparticle<trisprimitive>
 struct trisprimitiverenderer : listrenderer<trisprimitive>
 {
     trisprimitiverenderer(int type)
-        : listrenderer<trisprimitive>(NULL, type)
+        : listrenderer<trisprimitive>(type)
     {}
 
     void startrender()
@@ -864,7 +872,7 @@ struct loopprimitive : listparticle<loopprimitive>
 struct loopprimitiverenderer : listrenderer<loopprimitive>
 {
     loopprimitiverenderer(int type)
-        : listrenderer<loopprimitive>(NULL, type)
+        : listrenderer<loopprimitive>(type)
     {}
 
     void startrender()
@@ -937,7 +945,7 @@ struct coneprimitive : listparticle<coneprimitive>
 struct coneprimitiverenderer : listrenderer<coneprimitive>
 {
     coneprimitiverenderer(int type)
-        : listrenderer<coneprimitive>(NULL, type)
+        : listrenderer<coneprimitive>(type)
     {}
 
     void startrender()
