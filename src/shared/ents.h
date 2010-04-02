@@ -11,6 +11,7 @@ struct entbase                                   // persistent map entity
 {
     vec o;                                      // position
     uchar type;                                 // type is one of the above
+    uchar reserved[3];                          // left-over space due to struct alignment
 };
 
 struct entitylight
