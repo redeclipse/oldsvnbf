@@ -99,6 +99,7 @@ namespace game
     VAR(IDF_PERSIST, ragdolls, 0, 1, 1);
     FVAR(IDF_PERSIST, bloodscale, 0, 1, 1000);
     VAR(IDF_PERSIST, bloodfade, 1, 5000, INT_MAX-1);
+    VAR(IDF_PERSIST, bloodsize, 1, 15, 1000);
     FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
     VAR(IDF_PERSIST, gibfade, 1, 10000, INT_MAX-1);
     VAR(IDF_PERSIST, fireburning, 0, 2, 2);
@@ -618,7 +619,7 @@ namespace game
                     if(!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)
                     {
                         if(!kidmode && bloodscale > 0)
-                            part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, 1.5f, 1, 100, DECAL_BLOOD, int(d->radius*4));
+                            part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, (rnd(bloodsize)+1)/10.f, 1, 100, DECAL_BLOOD, int(d->radius*4));
                         else part_splash(PART_HINT, int(clamp(damage/2, 2, 10)), bloodfade, p, 0xFFFF88, 1.5f, 1, 50, DECAL_STAIN, int(d->radius*4));
                     }
                     if(d->aitype < AI_START && !issound(d->vschan)) playsound(S_PAIN1+rnd(5), d->o, d, 0, -1, -1, -1, &d->vschan);
@@ -631,12 +632,6 @@ namespace game
                     if(sameteam) { if(actor == focus && !burning && !issound(alarmchan)) playsound(S_ALARM, actor->o, actor, 0, -1, -1, -1, &alarmchan); }
                     else if(playdamagetones >= (actor == focus ? 1 : (d == focus ? 2 : 3))) mergedamagetone(d, actor, damage, burning ? damagetone::BURN : 0);
                     if(!burning && !sameteam) actor->lasthit = lastmillis;
-                    if(vampire)
-                    {
-                        float amt = damage/float(m_health(gamemode, mutators));
-                        part_splash(PART_HINT, clamp(int(amt*30), 1, 30), 100+int(100*amt), d->feetpos(), 0xFF0808, 0.3f+(0.7f*amt), clamp(0.3f+(0.7f*amt), 0.f, 1.f), -1, int(d->radius));
-                        part_trail(PART_HINT, 100+int(100*amt), d->feetpos(), actor->muzzlepos(weap), 0xFF0808, 0.3f+(0.7f*amt), clamp(0.3f+(0.7f*amt), 0.f, 1.f), -1);
-                    }
                 }
             }
             if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))

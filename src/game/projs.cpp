@@ -742,7 +742,7 @@ namespace projs
             {
                 if(proj.movement > 1 && lastmillis-proj.lasteffect >= 1000 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
                 {
-                    float size = ((rnd(15)+1)/10.f)*proj.radius;
+                    float size = ((rnd(game::bloodsize)+1)/10.f)*proj.radius;
                     part_create(PART_BLOOD, game::bloodfade, proj.o, 0x88FFFF, size, 1, 100, DECAL_BLOOD);
                     proj.lasteffect = lastmillis;
                 }
