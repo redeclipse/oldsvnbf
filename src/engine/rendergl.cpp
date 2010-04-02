@@ -1232,9 +1232,11 @@ void drawglare()
     glClearColor(0, 0, 0, 1);
     glClear((skyboxglare ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
 
+    if(skyboxglare && limitsky()) drawskybox(farplane, true);
+
     rendergeom();
 
-    if(skyboxglare) drawskybox(farplane, false);
+    if(skyboxglare && !limitsky()) drawskybox(farplane, false);
 
     renderreflectedmapmodels();
     rendergame();
