@@ -910,7 +910,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, fl
     else if(showboundingbox && !shadowmapping && !reflecting && !refracting)
     {
         glPushMatrix();
-        notextureshader->set();
+        lineshader->set();
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
         glEnable(GL_BLEND);

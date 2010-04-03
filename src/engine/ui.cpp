@@ -417,7 +417,7 @@ struct gui : guient
 
             e->draw(curx+guibound[0]/2, cury, color, editing);
 
-            notextureshader->set();
+            lineshader->set();
             glDisable(GL_TEXTURE_2D);
             if(editing) glColor3f(0.5f, 0.125f, 0.125f);
             else glColor3ub(color>>16, (color>>8)&0xFF, color&0xFF);
