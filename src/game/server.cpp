@@ -2848,32 +2848,33 @@ namespace server
             clientinfo *ci = clients[i];
             if(ci->state.state == CS_ALIVE)
             {
-                if(GAME(fireburntime) && ci->state.lastfire)
+                if(ci->state.onfire(gamemillis, GAME(fireburntime)))
                 {
-                    if(gamemillis-ci->state.lastfire <= GAME(fireburntime))
+                    if(gamemillis-ci->state.lastfireburn >= GAME(fireburndelay))
                     {
-                        if(gamemillis-ci->state.lastfireburn >= GAME(fireburndelay))
-                        {
-                            clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-                            dodamage(ci, co ? co : ci, GAME(fireburndamage), -1, HIT_BURN);
-                            ci->state.lastfireburn += GAME(fireburndelay);
-                        }
-                        continue;
+                        clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
+                        dodamage(ci, co ? co : ci, GAME(fireburndamage), -1, HIT_BURN);
+                        ci->state.lastfireburn += GAME(fireburndelay);
                     }
-                    else ci->state.lastfire = ci->state.lastfireburn = 0;
                 }
-                if(!m_regen(gamemode, mutators) || ci->state.aitype >= AI_START) continue;
-                int total = m_health(gamemode, mutators), amt = GAME(regenhealth), delay = ci->state.lastregen ? GAME(regentime) : GAME(regendelay);
-                if(smode) smode->regen(ci, total, amt, delay);
-                if(delay && (ci->state.health < total || ci->state.health > total) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
+                else
                 {
-                    int low = 0;
-                    if(ci->state.health > total) { amt = -GAME(regenhealth); total = ci->state.health; low = m_health(gamemode, mutators); }
-                    int rgn = ci->state.health, heal = clamp(ci->state.health+amt, low, total), eff = heal-rgn;
-                    if(eff)
+                    if(ci->state.lastfire) ci->state.lastfire = ci->state.lastfireburn = 0;
+                    if(m_regen(gamemode, mutators) && ci->state.aitype < AI_START)
                     {
-                        ci->state.health = heal; ci->state.lastregen = gamemillis;
-                        sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, eff);
+                        int total = m_health(gamemode, mutators), amt = GAME(regenhealth), delay = ci->state.lastregen ? GAME(regentime) : GAME(regendelay);
+                        if(smode) smode->regen(ci, total, amt, delay);
+                        if(delay && (ci->state.health < total || ci->state.health > total) && gamemillis-(ci->state.lastregen ? ci->state.lastregen : ci->state.lastpain) >= delay)
+                        {
+                            int low = 0;
+                            if(ci->state.health > total) { amt = -GAME(regenhealth); total = ci->state.health; low = m_health(gamemode, mutators); }
+                            int rgn = ci->state.health, heal = clamp(ci->state.health+amt, low, total), eff = heal-rgn;
+                            if(eff)
+                            {
+                                ci->state.health = heal; ci->state.lastregen = gamemillis;
+                                sendf(-1, 1, "ri4", SV_REGEN, ci->clientnum, ci->state.health, eff);
+                            }
+                        }
                     }
                 }
             }
@@ -3339,8 +3340,8 @@ namespace server
                     if(!hasclient(cp, ci)) break;
                     if(idx == SPHY_EXTINGUISH)
                     {
-                        if(!cp->state.lastfire || gamemillis-cp->state.lastfire > GAME(fireburntime)) break;
-                        cp->state.lastfire = cp->state.lastfireburn = 0;
+                        if(cp->state.onfire(gamemillis, GAME(fireburntime))) cp->state.lastfire = cp->state.lastfireburn = 0;
+                        else break; // don't propogate
                     }
                     QUEUE_MSG;
                     break;

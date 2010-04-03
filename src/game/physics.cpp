@@ -446,7 +446,7 @@ namespace physics
                 stepfloor.normalize();
                 if(d->physstate >= PHYS_SLOPE && d->floor != stepfloor)
                 {
-                    // prevent alternating step-down/step-up states if player would keep bumping into the same floor 
+                    // prevent alternating step-down/step-up states if player would keep bumping into the same floor
                     vec stepped(d->o);
                     d->o.z -= 0.5f;
                     d->zmargin = -0.5f;
@@ -866,11 +866,10 @@ namespace physics
             pl->submerged = found ? found/10.f : 1.f;
             if(local)
             {
-                if(curmat == MAT_WATER && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->submerged >= (iscrouching(pl) ? 0.2f : 0.4f) && ((gameent *)pl)->lastfire)
+                if(curmat == MAT_WATER && (pl->type == ENT_PLAYER || pl->type == ENT_AI) && pl->submerged >= 0.25f && ((gameent *)pl)->onfire(lastmillis, fireburntime))
                 {
                     gameent *d = (gameent *)pl;
-                    if(issound(d->fschan)) removesound(d->fschan);
-                    d->fschan = -1; d->lastfire = 0;
+                    d->resetfire();
                     playsound(S_EXTINGUISH, d->o, d, 0, d != game::focus ? 128 : 224, -1, -1);
                     client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
                 }

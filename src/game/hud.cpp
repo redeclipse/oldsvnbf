@@ -305,7 +305,7 @@ namespace hud
                       healthscale = float(m_health(game::gamemode, game::mutators));
                 if(healthscale > 0) damage = max(damage, 1.f-max(game::focus->health, 0)/healthscale);
                 amt += damage*0.65f;
-                if(fireburntime && game::focus->lastfire && lastmillis-game::focus->lastfire < fireburntime)
+                if(fireburntime && game::focus->onfire(lastmillis, fireburntime))
                     amt += 0.25f+(float((lastmillis-game::focus->lastfire)%fireburndelay)/float(fireburndelay))*0.35f;
                 if(physics::sprinting(game::focus)) amt += game::focus->turnside ? 0.125f : 0.25f;
                 break;
@@ -1724,9 +1724,9 @@ namespace hud
 
     void drawfire(int w, int h, int s, float blend)
     {
-        int interval = game::focus->lastfire ? lastmillis-game::focus->lastfire : 0;
-        if(interval && interval < fireburntime)
+        if(game::focus->onfire(lastmillis, fireburntime))
         {
+            int interval = lastmillis-game::focus->lastfire;
             Texture *t = *burntex ? textureload(burntex, 3) : notexture;
             if(t != notexture)
             {

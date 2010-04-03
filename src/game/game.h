@@ -798,7 +798,7 @@ struct gamestate
             {
                 int prev = ammo[attr];
                 weapswitch(attr, millis, weapselect != attr ? WEAP_S_SWITCH : WEAP_S_PICKUP);
-                ammo[attr] = clamp((ammo[attr] > 0 ? ammo[attr] : 0)+WEAP(attr, add), 1, WEAP(attr, max));
+                ammo[attr] = clamp(max(ammo[attr], 0)+WEAP(attr, add), 1, WEAP(attr, max));
                 weapload[attr] = ammo[attr]-prev;
                 entid[attr] = id;
                 break;
@@ -876,6 +876,8 @@ struct gamestate
         if(lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
         return amt;
     }
+
+    bool onfire(int millis, int len) { return len && lastfire && millis-lastfire <= len; }
 };
 
 namespace server
@@ -1173,6 +1175,13 @@ struct gameent : dynent, gamestate
         if(full) lastjump = 0;
         else resetphys();
         timeinair = turnside = impulse[IM_COUNT] = impulse[IM_TYPE] = 0;
+    }
+
+    void resetfire()
+    {
+        if(issound(fschan)) removesound(fschan);
+        fschan = -1;
+        lastfire = 0;
     }
 };
 
