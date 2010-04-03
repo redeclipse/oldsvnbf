@@ -385,7 +385,7 @@ namespace game
             if(fireburning && fireburntime)
             {
                 gameent *d = NULL;
-                loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->lastfire && lastmillis-d->lastfire < fireburntime)
+                loopi(numdynents()) if((d = (gameent *)iterdynents(i)) && d->onfire(lastmillis, fireburntime))
                 {
                     int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f);
                     if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
@@ -417,13 +417,13 @@ namespace game
 
     void fireeffect(gameent *d)
     {
-        if(fireburning >= (d != focus || thirdpersonview() ? 1 : 2) && fireburntime && d->lastfire && lastmillis-d->lastfire < fireburntime)
+        if(fireburning >= (d != focus || thirdpersonview() ? 1 : 2) && fireburntime && d->onfire(lastmillis, fireburntime))
         {
-            int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f)*fireburnblend;
+            int millis = lastmillis-d->lastfire; float pc = 1, intensity = 0.25f+(rnd(75)/100.f), blend = 0.5f+(rnd(50)/100.f);
             if(fireburntime-millis < fireburndelay) pc = float(fireburntime-millis)/float(fireburndelay);
             else pc = 0.75f+(float(millis%fireburndelay)/float(fireburndelay*4));
             vec pos = vec(d->headpos(-d->height*0.35f)).add(vec(rnd(9)-4, rnd(9)-4, rnd(5)-2).mul(pc));
-            regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 100), pos, firecols[rnd(FIRECOLOURS)], d->height*0.75f*deadscale(d, intensity*pc), blend*pc, -15, 0);
+            regular_part_create(PART_FIREBALL_SOFT, max(fireburnfade, 100), pos, firecols[rnd(FIRECOLOURS)], d->height*0.75f*deadscale(d, intensity*pc), blend*pc*fireburnblend, -15, 0);
         }
     }
 
@@ -508,22 +508,10 @@ namespace game
         }
         if(d->respawned > 0 && lastmillis-d->respawned >= PHYSMILLIS*4) d->respawned = -1;
         if(d->suicided > 0 && lastmillis-d->suicided >= PHYSMILLIS*4) d->suicided = -1;
-        if(d->lastfire > 0)
+        if(d->lastfire > 0 && lastmillis-d->lastfire >= fireburntime-500)
         {
-            if(lastmillis-d->lastfire >= fireburntime-500)
-            {
-                if(lastmillis-d->lastfire >= fireburntime)
-                {
-                    if(issound(d->fschan)) removesound(d->fschan);
-                    d->fschan = -1; d->lastfire = 0;
-                }
-                else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != focus ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
-            }
-        }
-        else if(issound(d->fschan))
-        {
-            removesound(d->fschan);
-            d->fschan = -1;
+            if(lastmillis-d->lastfire >= fireburntime) d->resetfire();
+            else if(issound(d->fschan)) sounds[d->fschan].vol = int((d != focus ? 128 : 224)*(1.f-(lastmillis-d->lastfire-(fireburntime-500))/500.f));
         }
     }
 

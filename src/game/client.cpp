@@ -1163,8 +1163,7 @@ namespace client
                         }
                         case SPHY_EXTINGUISH:
                         {
-                            if(issound(t->fschan)) removesound(t->fschan);
-                            t->fschan = -1; t->lastfire = 0;
+                            t->resetfire();
                             playsound(S_EXTINGUISH, t->o, t, 0, 128);
                             break;
                         }
@@ -1423,8 +1422,7 @@ namespace client
                     if(!amt)
                     {
                         f->impulse[IM_METER] = 0;
-                        if(issound(f->fschan)) removesound(f->fschan);
-                        f->fschan = -1; f->lastfire = 0;
+                        f->resetfire();
                     }
                     else if(amt > 0 && (!f->lastregen || lastmillis-f->lastregen >= 500)) playsound(S_REGEN, f->o, f);
                     f->health = heal; f->lastregen = lastmillis;
