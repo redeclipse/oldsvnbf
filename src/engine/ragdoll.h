@@ -9,6 +9,12 @@ struct ragdollskel
     struct tri
     {
         int vert[3];
+
+        bool shareverts(const tri &t) const
+        {
+            loopi(3) loopj(3) if(vert[i] == t.vert[j]) return true;
+            return false;
+        }
     };
 
     struct distlimit
@@ -20,9 +26,14 @@ struct ragdollskel
     struct rotlimit
     {
         int tri[2];
-        int sharedverts;
         float maxangle;
-        matrix3x3 middle, friction;
+        matrix3x3 middle;
+    };
+
+    struct rotfriction
+    {
+        int tri[2];
+        matrix3x3 middle;
     };
 
     struct joint
@@ -43,20 +54,14 @@ struct ragdollskel
     vector<tri> tris;
     vector<distlimit> distlimits;
     vector<rotlimit> rotlimits;
+    vector<rotfriction> rotfrictions;
     vector<joint> joints;
     vector<reljoint> reljoints;
 
     ragdollskel() : loaded(false), eye(-1) {}
 
-    void setup()
+    void setupjoints()
     {
-        loopv(rotlimits)
-        {
-            rotlimit &r = rotlimits[i];
-            tri &t1 = tris[r.tri[0]], &t2 = tris[r.tri[1]];
-            r.sharedverts = 0;
-            loopj(3) loopk(3) if(t1.vert[j] == t2.vert[k]) r.sharedverts++;
-        }
         loopv(verts) verts[i].weight = 0;
         loopv(joints)
         {
@@ -85,7 +90,24 @@ struct ragdollskel
         }
         loopv(verts) if(verts[i].weight) verts[i].weight = 1/verts[i].weight;
         reljoints.shrink(0);
-        
+    }
+
+    void setuprotfrictions()
+    {
+        rotfrictions.shrink(0);
+        loopv(tris) for(int j = i+1; j < tris.length(); j++) if(tris[i].shareverts(tris[j]))
+        {
+            rotfriction &r = rotfrictions.add();
+            r.tri[0] = i;
+            r.tri[1] = j;
+        }
+    }
+ 
+    void setup()
+    {
+        setupjoints();
+        setuprotfrictions();
+
         loaded = true;
     } 
 
@@ -179,9 +201,9 @@ struct ragdolldata
     void updatepos();
     void constrain();
     void constraindist();
-    void applyrotlimit(ragdollskel::rotlimit &r, float angle, const vec &axis);
+    void applyrotlimit(ragdollskel::tri &t1, ragdollskel::tri &t2, float angle, const vec &axis);
     void constrainrot();
-    void setuprotfriction();
+    void calcrotfriction();
     void applyrotfriction(float ts);
 
     static inline bool collidevert(const vec &pos, const vec &dir, float radius)
@@ -229,9 +251,8 @@ void ragdolldata::constraindist()
     }
 }
 
-inline void ragdolldata::applyrotlimit(ragdollskel::rotlimit &r, float angle, const vec &axis)
+inline void ragdolldata::applyrotlimit(ragdollskel::tri &t1, ragdollskel::tri &t2, float angle, const vec &axis)
 {
-    ragdollskel::tri &t1 = skel->tris[r.tri[0]], &t2 = skel->tris[r.tri[1]];
     vec v1[3], v2[3], c1(0, 0, 0), c2(0, 0, 0);
     loopk(3)
     {
@@ -288,20 +309,19 @@ void ragdolldata::constrainrot()
         if(angle >= 0) continue; 
         angle += 1e-3f;
 
-        applyrotlimit(r, angle, axis);
+        applyrotlimit(skel->tris[r.tri[0]], skel->tris[r.tri[1]], angle, axis);
     }
 }
 
 FVAR(0, ragdollrotfric, 0, 0.2f, 1);
 FVAR(0, ragdollrotfricstop, 0, 0.1f, 1);
 
-void ragdolldata::setuprotfriction()
+void ragdolldata::calcrotfriction()
 {
-    loopv(skel->rotlimits)
+    loopv(skel->rotfrictions)
     {
-        ragdollskel::rotlimit &r = skel->rotlimits[i];
-        if(r.sharedverts <= 0) continue;
-        r.friction.multranspose(tris[r.tri[0]], tris[r.tri[1]]);
+        ragdollskel::rotfriction &r = skel->rotfrictions[i];
+        r.middle.multranspose(tris[r.tri[0]], tris[r.tri[1]]);
     }
 }
 
@@ -309,12 +329,11 @@ void ragdolldata::applyrotfriction(float ts)
 {
     calctris();
     float stopangle = 2*M_PI*ts*ragdollrotfricstop;
-    loopv(skel->rotlimits)
+    loopv(skel->rotfrictions)
     {
-        ragdollskel::rotlimit &r = skel->rotlimits[i];
-        if(r.sharedverts <= 0) continue;
+        ragdollskel::rotfriction &r = skel->rotfrictions[i];
         matrix3x3 rot;
-        rot.transposemul(tris[r.tri[0]], r.friction);
+        rot.transposemul(tris[r.tri[0]], r.middle);
         rot.mul(tris[r.tri[1]]);
 
         vec axis;
@@ -322,7 +341,7 @@ void ragdolldata::applyrotfriction(float ts)
         rot.calcangleaxis(angle, axis);
         angle *= -(fabs(angle) >= stopangle ? ragdollrotfric : 1.0f);
 
-        applyrotlimit(r, angle, axis);
+        applyrotlimit(skel->tris[r.tri[0]], skel->tris[r.tri[1]], angle, axis);
     }
     loopv(skel->verts)
     {
@@ -390,7 +409,7 @@ void ragdolldata::move(dynent *pl, float ts)
     physics::updateragdoll(pl, center, radius);
     float gravity = physics::gravityforce(pl)*ragdollgravity;
 
-    setuprotfriction(); 
+    calcrotfriction(); 
     float airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     bool liquid = physics::liquidcheck(pl);
     collisions = 0;
