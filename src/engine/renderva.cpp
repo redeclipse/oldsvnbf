@@ -629,7 +629,7 @@ VAR(0, dtoutline, 0, 1, 1);
 
 void renderoutline()
 {
-    notextureshader->set();
+    lineshader->set();
 
     glDisable(GL_TEXTURE_2D);
     glEnableClientState(GL_VERTEX_ARRAY);

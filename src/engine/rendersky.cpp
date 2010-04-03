@@ -384,7 +384,7 @@ bool drawskylimits(bool explicitonly)
 
 void drawskyoutline()
 {
-    notextureshader->set();
+    lineshader->set();
 
     glDisable(GL_TEXTURE_2D);
     glDepthMask(GL_FALSE);
