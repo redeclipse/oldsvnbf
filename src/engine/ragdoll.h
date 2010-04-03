@@ -172,7 +172,7 @@ struct ragdolldata
         calcboundsphere();
         offset = d->o;
         offset.sub(skel->eye >= 0 ? verts[skel->eye].pos : center);
-        offset.z += (d->eyeheight + d->aboveeye)/2;
+        offset.z += (d->height + d->aboveeye)/2;
     }
 
     void move(dynent *pl, float ts);
@@ -190,13 +190,13 @@ struct ragdolldata
         {
             vertent()
             {
-                type = ENT_BOUNCE;
+                type = ENT_RAGDOLL;
                 collidetype = COLLIDE_AABB;
-                radius = xradius = yradius = eyeheight = aboveeye = 1;
+                radius = xradius = yradius = height = aboveeye = 1;
             }
         } v;
         v.o = pos;
-        if(v.radius != radius) v.radius = v.xradius = v.yradius = v.eyeheight = v.aboveeye = radius;
+        if(v.radius != radius) v.radius = v.xradius = v.yradius = v.height = v.aboveeye = radius;
         return collide(&v, dir, 0, false);
     }
 };
