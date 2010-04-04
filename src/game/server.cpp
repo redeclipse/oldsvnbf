@@ -1655,7 +1655,7 @@ namespace server
             }
             if(!m_noitems(gamemode, mutators))
             {
-                loopi(WEAP_MAX) if(i != WEAP_GRENADE && ts.hasweap(i, sweap, 1) && sents.inrange(ts.entid[i]))
+                loopi(WEAP_MAX) if(i != WEAP_GRENADE && i != sweap && ts.hasweap(i, sweap) && sents.inrange(ts.entid[i]))
                 {
                     sents[ts.entid[i]].millis = gamemillis;
                     if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
@@ -2450,7 +2450,7 @@ namespace server
         int damage = WEAP2(weap, damage, flags&HIT_ALT); flags &= ~HIT_SFLAGS;
         if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
         if(radial) damage = int(ceilf(damage*clamp(1.f-dist/size, 1e-3f, 1.f)));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT) > 0) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         if(hithurts(flags))
         {
@@ -2818,21 +2818,21 @@ namespace server
             }
             default:
             {
-                if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
+                bool allowed = hasitem(i), found = finditem(i, true, true);
+                if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
-                    bool override = false;
-                    if(m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
+                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
-                        if(dist < GAME(itemthreshold)) override = true;
+                        if(dist < GAME(itemthreshold)) found = finditem(i, true, true, true);
                     }
-                    if(!finditem(i, true, true, override))
+                    if(!found || !allowed)
                     {
                         loopvk(clients) clients[k]->state.dropped.remove(i);
-                        sents[i].spawned = true;
+                        sents[i].spawned = allowed;
                         int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
                         sents[i].millis = gamemillis+delay;
-                        sendf(-1, 1, "ri2", SV_ITEMSPAWN, i);
+                        sendf(-1, 1, "ri3", SV_ITEMSPAWN, i, sents[i].spawned ? 1 : 0);
                         items[sents[i].type]++;
                     }
                 }

@@ -1494,29 +1494,32 @@ namespace client
 
                 case SV_ITEMSPAWN:
                 {
-                    int ent = getint(p);
+                    int ent = getint(p), value = getint(p);
                     if(!entities::ents.inrange(ent)) break;
-                    entities::setspawn(ent, 1);
-                    playsound(S_ITEMSPAWN, entities::ents[ent]->o);
-                    int sweap = m_weapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? w_attr(game::gamemode, entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
-                        colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
-                    if(entities::showentdescs)
+                    entities::setspawn(ent, value);
+                    if(entities::ents[ent]->spawned)
                     {
-                        vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
-                        const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
-                        if(texname && *texname) part_icon(pos, textureload(texname, 3), 2, 1, -10, 0, game::aboveheadfade, colour);
-                        else
+                        playsound(S_ITEMSPAWN, entities::ents[ent]->o);
+                        int sweap = m_weapon(game::gamemode, game::mutators), attr = entities::ents[ent]->type == WEAPON ? w_attr(game::gamemode, entities::ents[ent]->attrs[0], sweap) : entities::ents[ent]->attrs[0],
+                            colour = entities::ents[ent]->type == WEAPON ? weaptype[attr].colour : 0xFFFFFF;
+                        if(entities::showentdescs)
                         {
-                            const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
-                            if(item && *item)
+                            vec pos = vec(entities::ents[ent]->o).add(vec(0, 0, 4));
+                            const char *texname = entities::showentdescs >= 2 ? hud::itemtex(entities::ents[ent]->type, attr) : NULL;
+                            if(texname && *texname) part_icon(pos, textureload(texname, 3), 2, 1, -10, 0, game::aboveheadfade, colour);
+                            else
                             {
-                                defformatstring(ds)("<emphasis>%s", item);
-                                part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, 1, -10);
+                                const char *item = entities::entinfo(entities::ents[ent]->type, entities::ents[ent]->attrs, false);
+                                if(item && *item)
+                                {
+                                    defformatstring(ds)("<emphasis>%s", item);
+                                    part_textcopy(pos, ds, PART_TEXT, game::aboveheadfade, 0xFFFFFF, 2, 1, -10);
+                                }
                             }
                         }
+                        if(game::dynlighteffects)
+                            adddynlight(entities::ents[ent]->o, enttype[entities::ents[ent]->type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
                     }
-                    if(game::dynlighteffects)
-                        adddynlight(entities::ents[ent]->o, enttype[entities::ents[ent]->type].radius*2, vec(colour>>16, (colour>>8)&0xFF, colour&0xFF).mul(2.f/0xFF), 250, 250);
                     break;
                 }
 

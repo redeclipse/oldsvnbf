@@ -33,7 +33,7 @@ namespace projs
         int damage = WEAP2(weap, damage, flags&HIT_ALT), nodamage = 0; flags &= ~HIT_SFLAGS;
         if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, game::gamemode, game::mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
         if(radial) damage = int(ceilf(damage*clamp(1.f-dist/size, 1e-3f, 1.f)));
-        else if(WEAP2(weap, taper, flags&HIT_ALT)) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
+        else if(WEAP2(weap, taper, flags&HIT_ALT) > 0) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
         if(actor->aitype < AI_START)
         {
             if((actor == target && !selfdamage) || (m_trial(game::gamemode) && !trialdamage)) nodamage++;
@@ -596,20 +596,20 @@ namespace projs
             if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
-                if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT))
+                if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
                 {
-                    if(proj.lifespan > 0.05f)
+                    if(proj.lifespan > 0.125f)
                     {
-                        if(!proj.stuck) proj.lifesize = 1.05f-proj.lifespan;
+                        if(!proj.stuck) proj.lifesize = clamp(1.125f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
                         else proj.lifesize = 1;
                     }
-                    else proj.lifesize = proj.lifespan*20;
+                    else proj.lifesize = clamp(0.0625f+(proj.lifespan*10), 0.0625f, 1.f);
                 }
                 else proj.lifesize = proj.lifespan;
             }
-            else if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) proj.lifesize = 1.f-proj.lifespan;
+            else if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0) proj.lifesize = clamp(1.f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
             else proj.lifesize = 1;
-            if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT) || WEAP2(proj.weap, taper, proj.flags&HIT_ALT))
+            if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT) || WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT)*proj.lifesize;
         }
         updatebb(proj);
@@ -1227,7 +1227,7 @@ namespace projs
                     {
                         if(!(proj.projcollide&COLLIDE_CONT)) proj.hit = NULL;
                         radius = WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators);
-                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT)) radius = int(ceilf(radius*proj.lifesize));
+                        if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0) radius = int(ceilf(radius*proj.lifesize));
                         if(!proj.limited && radius > 0)
                         {
                             loopj(game::numdynents())

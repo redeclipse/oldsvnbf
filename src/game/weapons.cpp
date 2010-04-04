@@ -115,7 +115,7 @@ namespace weapons
     {
         int weap = isweap(a) ? a : d->weapselect;
         bool found = false;
-        if(weap != WEAP_MELEE && isweap(weap) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])))
+        if(isweap(weap) && weap != WEAP_MELEE && weap != m_weapon(game::gamemode, game::mutators) && (!m_noitems(game::gamemode, game::mutators) || weap == WEAP_GRENADE) && ((weap == WEAP_GRENADE && d->ammo[weap] > 0) || entities::ents.inrange(d->entid[weap])))
         {
             if(d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true)))
             {
