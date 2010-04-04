@@ -209,7 +209,7 @@ enum
     COLLIDE_GEOM = IMPACT_GEOM|BOUNCE_GEOM, COLLIDE_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER, HIT_PLAYER = IMPACT_PLAYER|BOUNCE_PLAYER|RADIAL_PLAYER
 };
 
-#define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh,yi,yj,yk,yl,ym,yn,yo,yp,yq,yr) \
+#define WEAPON(name,w0,w1,w2,w3,w4,w5,w6,w7,w8,w9,wa,wb,wc,wd,we,wf,wg,wh,wi,wj,wk,wl,wm,wn,wo,wp,wq,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,t0,t1,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf,yg,yh,yi,yj,yk,yl,ym,yn,yo,yp,yq,yr) \
     GVAR(0, name##add, 1, w0, w1);                  GVAR(0, name##max, 1, w1, w1); \
     GVAR(0, name##sub1, 0, w2, w1);                 GVAR(0, name##sub2, 0, w3, w1); \
     GVAR(0, name##adelay1, 50, w4, 30000);          GVAR(0, name##adelay2, 50, w5, 30000);              GVAR(0, name##rdelay, 50, w6, 30000); \
@@ -230,7 +230,7 @@ enum
     GVAR(0, name##reloads, 0, x8, 1);               GVAR(0, name##zooms, 0, x9, 1); \
     GVAR(0, name##fullauto1, 0, xa, 1);             GVAR(0, name##fullauto2, 0, xb, 1); \
     GVAR(0, name##allowed, 0, xc, 2); \
-    GFVAR(0, name##taper1, 0, x0, 1);               GFVAR(0, name##taper2, 0, x1, 1); \
+    GFVAR(0, name##taper1, 0, t0, 1);               GFVAR(0, name##taper2, 0, t1, 1); \
     GFVAR(0, name##elasticity1, -1000, y0, 1000);   GFVAR(0, name##elasticity2, 0, y1, 1); \
     GFVAR(0, name##reflectivity1, 0, y2, 360);      GFVAR(0, name##reflectivity2, 0, y3, 360); \
     GFVAR(0, name##relativity1, -1000, y4, 1000);   GFVAR(0, name##relativity2, 0, y5, 1000); \
