@@ -224,6 +224,18 @@ namespace entities
                 }
                 break;
             }
+            case PUSHER:
+            {
+                if(full) switch(attr[5])
+                {
+                    case 0: addentinfo("conditional"); break;
+                    case 1: addentinfo("additional"); break;
+                    case 2: addentinfo("redirectional"); break;
+                    case 3: addentinfo("absolute"); break;
+                    default: break;
+                }
+                break;
+            }
             case WAYPOINT:
             {
                 if(full)
@@ -827,20 +839,33 @@ namespace entities
                 }
                 case PUSHER:
                 {
-                    float mag = 10.f;
+                    float mag = max(e.attrs[2], 1);
                     if(e.attrs[4] && e.attrs[4] < e.attrs[3])
                     {
                         vec m = vec(d->o).sub(vec(0, 0, d->height*0.5f));
                         float dist = m.dist(e.o);
                         if(dist >= e.attrs[4]) mag *= 1.f-clamp((dist-e.attrs[4])/float(e.attrs[3]-e.attrs[4]), 0.f, 1.f);
                     }
-                    vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]).mul(mag);
+                    vec dir;
+                    vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir);
+                    dir.mul(mag);
                     if(d->ai) d->ai->becareful = true;
                     d->dojumpreset();
-                    loopk(3)
+                    switch(e.attrs[5])
                     {
-                        if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
-                            d->vel.v[k] = dir.v[k];
+                        case 0:
+                        {
+                            loopk(3)
+                            {
+                                if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
+                                    d->vel.v[k] = dir.v[k];
+                            }
+                            break;
+                        }
+                        case 1: d->vel.add(dir); break;
+                        case 2: dir.add(vec(dir).normalize().mul(d->vel.magnitude())); // fall through
+                        case 3: d->vel = dir; break;
+                        default: break;
                     }
                     e.lastuse = e.lastemit = lastmillis; execlink(d, n, true);
                     break;
@@ -1001,8 +1026,8 @@ namespace entities
             case MAPMODEL:
                 while(e.attrs[1] < 0) e.attrs[1] += 360;
                 while(e.attrs[1] >= 360) e.attrs[1] -= 360;
-                while(e.attrs[2] < 0) e.attrs[2] += 360;
-                while(e.attrs[2] >= 360) e.attrs[2] -= 360;
+                while(e.attrs[2] < -90) e.attrs[2] += 180;
+                while(e.attrs[2] > 90) e.attrs[2] -= 180;
                 while(e.attrs[3] < 0) e.attrs[3] += 101;
                 while(e.attrs[3] >= 101) e.attrs[3] -= 101;
                 if(e.attrs[4] < 0) e.attrs[4] = 0;
@@ -1019,8 +1044,15 @@ namespace entities
             }
             case PUSHER:
             {
+                while(e.attrs[0] < 0) e.attrs[0] += 360;
+                while(e.attrs[0] >= 360) e.attrs[0] -= 360;
+                while(e.attrs[1] < -90) e.attrs[1] += 180;
+                while(e.attrs[1] > 90) e.attrs[1] -= 180;
+                if(e.attrs[2] < 1) e.attrs[2] = 1;
                 if(e.attrs[3] < 0) e.attrs[3] = 0;
-                if(e.attrs[4] < 0 || e.attrs[4] >= e.attrs[3]) e.attrs[4] = 0;
+                if(e.attrs[4] < 0 || e.attrs[4] >= (e.attrs[3] ? e.attrs[3] : enttype[PUSHER].radius)) e.attrs[4] = 0;
+                if(e.attrs[5] < 0) e.attrs[5] += 3;
+                if(e.attrs[5] >= 3) e.attrs[5] -= 3;
                 break;
             }
             case TRIGGER:
@@ -1893,8 +1925,17 @@ namespace entities
                 }
                 case PUSHER:
                 {
-                    if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95))
-                        e.attrs[0] = int(e.attrs[0]*1.25f);
+                    if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 95)) e.attrs[0] = int(e.attrs[0]*1.25f);
+                    if(mtype == MAP_OCTA || (mtype == MAP_BFGZ && gver <= 162))
+                    {
+                        vec dir = vec(e.attrs[2], e.attrs[1], e.attrs[0]).mul(10);
+                        float yaw = 0, pitch = 0;
+                        vectoyawpitch(vec(dir).normalize(), yaw, pitch);
+                        e.attrs[0] = int(yaw);
+                        e.attrs[1] = int(pitch);
+                        e.attrs[2] = int(dir.magnitude());
+                        e.attrs[5] = 0;
+                    }
                     break;
                 }
                 case FLAG:
@@ -2066,7 +2107,7 @@ namespace entities
                 case LIGHT:
                 {
                     int s = e.attrs[0] ? e.attrs[0] : hdr.worldsize,
-                        colour = ((e.attrs[1]/2)<<16)|((e.attrs[2]/2)<<8)|(e.attrs[3]/2);
+                        colour = ((e.attrs[1])<<16)|((e.attrs[2])<<8)|(e.attrs[3]);
                     part_radius(e.o, vec(s, s, s), 1, 1, 1, colour);
                     break;
                 }
@@ -2155,11 +2196,7 @@ namespace entities
                 }
                 case PUSHER:
                 {
-                    vec dir = vec((int)(char)e.attrs[2], (int)(char)e.attrs[1], (int)(char)e.attrs[0]);
-                    float mag = dir.magnitude();
-                    float yaw = 0.f, pitch = 0.f;
-                    vectoyawpitch(dir.normalize(), yaw, pitch);
-                    entdirpart(e.o, yaw, pitch, 4.f+mag, 1, 0x00FFFF);
+                    entdirpart(e.o, e.attrs[0], e.attrs[1], 4.f+e.attrs[2], 1, 0x00FFFF);
                     break;
                 }
                 default: break;
