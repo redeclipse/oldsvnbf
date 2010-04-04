@@ -1073,7 +1073,7 @@ namespace game
         formatstring(cname)("%s\fs%s%s", *prefix ? prefix : "", teamtype[d->team].chat, name);
         if(!name[0] || d->aitype >= 0 || (dupname && duplicatename(d, name)))
         {
-            defformatstring(s)(" [\fs\fc%s%d\fS]", d->aitype >= 0 ? "\fe" : "", d->clientnum);
+            defformatstring(s)(" [\fs%s%d\fS]", d->aitype >= 0 ? "\fc" : "\fw", d->clientnum);
             concatstring(cname, s);
         }
         concatstring(cname, "\fS");
