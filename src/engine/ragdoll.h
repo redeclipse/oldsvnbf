@@ -399,7 +399,7 @@ FVAR(0, ragdollgroundfric, 0, 0.8f, 1);
 FVAR(0, ragdollairfric, 0, 0.996f, 1);
 FVAR(0, ragdollgravity, 0, 1.f, 1000);
 FVAR(0, ragdollelasticity, 0, 0.5f, 1000);
-VAR(0, ragdollexpireoffset, 0, 1000, 30000);
+VAR(0, ragdollexpireoffset, 0, 1500, 30000);
 VAR(0, ragdollliquidexpireoffset, 0, 3000, 30000);
 
 void ragdolldata::move(dynent *pl, float ts)
