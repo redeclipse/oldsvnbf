@@ -313,7 +313,9 @@ void ragdolldata::constrainrot()
     }
 }
 
-FVAR(0, ragdollrotfric, 0, 0.2f, 1);
+VAR(0, ragdolltimestepmin, 1, 5, 50);
+VAR(0, ragdolltimestepmax, 1, 10, 50);
+FVAR(0, ragdollrotfric, 0, 0.8f, 1);
 FVAR(0, ragdollrotfricstop, 0, 0.1f, 1);
 
 void ragdolldata::calcrotfriction()
@@ -328,7 +330,7 @@ void ragdolldata::calcrotfriction()
 void ragdolldata::applyrotfriction(float ts)
 {
     calctris();
-    float stopangle = 2*M_PI*ts*ragdollrotfricstop;
+    float stopangle = 2*M_PI*ts*ragdollrotfricstop, rotfric = 1.0f - pow(ragdollrotfric, ts*1000.0f/ragdolltimestepmin);
     loopv(skel->rotfrictions)
     {
         ragdollskel::rotfriction &r = skel->rotfrictions[i];
@@ -339,7 +341,7 @@ void ragdolldata::applyrotfriction(float ts)
         vec axis;
         float angle;
         rot.calcangleaxis(angle, axis);
-        angle *= -(fabs(angle) >= stopangle ? ragdollrotfric : 1.0f);
+        angle *= -(fabs(angle) >= stopangle ? rotfric : 1.0f);
 
         applyrotlimit(skel->tris[r.tri[0]], skel->tris[r.tri[1]], angle, axis);
     }
@@ -399,8 +401,6 @@ FVAR(0, ragdollgravity, 0, 1.f, 1000);
 FVAR(0, ragdollelasticity, 0, 0.5f, 1000);
 VAR(0, ragdollexpireoffset, 0, 1000, 30000);
 VAR(0, ragdollliquidexpireoffset, 0, 3000, 30000);
-VAR(0, ragdolltimestepmin, 1, 5, 50);
-VAR(0, ragdolltimestepmax, 1, 10, 50);
 
 void ragdolldata::move(dynent *pl, float ts)
 {
