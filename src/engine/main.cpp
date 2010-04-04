@@ -869,12 +869,6 @@ int main(int argc, char **argv)
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-#ifdef WIN32
-    SDL_SysWMinfo wminfo;
-    SDL_VERSION(&wminfo.version);
-    if(SDL_GetWMInfo(&wminfo)) ShowWindow(wminfo.window, SW_SHOW);
-#endif
-
     conoutf("loading video misc..");
     ncursor = SDL_GetCursor();
     showcursor(false);
@@ -939,7 +933,14 @@ int main(int argc, char **argv)
     conoutf("loading main..");
     progress(0, "loading main..");
     if(initscript) execute(initscript);
+
+#ifdef WIN32
+    SDL_SysWMinfo wminfo;
+    SDL_VERSION(&wminfo.version);
+    if(SDL_GetWMInfo(&wminfo)) ShowWindow(wminfo.window, SW_SHOW);
+#endif
     if(autograbinput) setvar("grabinput", 1, true);
+
     localconnect(false);
     resetfps();
     UI::setup();
