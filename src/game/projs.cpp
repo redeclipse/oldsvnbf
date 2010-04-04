@@ -150,8 +150,8 @@ namespace projs
             vec bottom(d->o), top(d->o); bottom.z -= d->height; top.z += d->aboveeye;
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
+        if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
         if(dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
-        else if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
     }
 
     void remove(gameent *owner)
