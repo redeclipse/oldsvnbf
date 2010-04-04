@@ -248,6 +248,7 @@ void filtertext(char *dst, const char *src, bool newline, bool colour, bool whit
     }
     *dst = '\0';
 }
+ICOMMAND(0, filter, "siii", (char *s, int *a, int *b, int *c), string d; filtertext(s, d, *a==0, *b==0, *c==0); result(d));
 
 const char *escapetext(const char *src, bool quoteonly)
 {
@@ -267,6 +268,7 @@ const char *escapetext(const char *src, bool quoteonly)
     *dst = '\0';
     return escbuf;
 }
+ICOMMAND(0, escape, "si", (const char *s, int *a, int *b, int *c), result(escapetext(s, *a==0)));
 
 vector<clientdata *> clients;
 
