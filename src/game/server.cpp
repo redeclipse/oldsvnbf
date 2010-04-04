@@ -2818,20 +2818,23 @@ namespace server
             }
             default:
             {
-                bool allowed = hasitem(i), found = finditem(i, true, true);
+                bool allowed = hasitem(i);
                 if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
+                    bool found = finditem(i, true, true);
                     if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
-                        if(dist < GAME(itemthreshold)) found = finditem(i, true, true, true);
+                        if(dist < GAME(itemthreshold)) found = !finditem(i, true, true, true);
                     }
                     if(!found || !allowed)
                     {
                         loopvk(clients) clients[k]->state.dropped.remove(i);
-                        sents[i].spawned = allowed;
-                        int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
-                        sents[i].millis = gamemillis+delay;
+                        if((sents[i].spawned = allowed) != false)
+                        {
+                            int delay = sents[i].type == WEAPON && isweap(sents[i].attrs[0]) ? w_spawn(sents[i].attrs[0]) : GAME(itemspawntime);
+                            sents[i].millis = gamemillis+delay;
+                        }
                         sendf(-1, 1, "ri3", SV_ITEMSPAWN, i, sents[i].spawned ? 1 : 0);
                         items[sents[i].type]++;
                     }

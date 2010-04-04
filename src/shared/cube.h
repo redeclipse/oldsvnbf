@@ -45,10 +45,8 @@
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>
-#ifdef TTF2FONT
-#include <SDL_ttf.h>
-#endif
 #ifdef INTERFACE
+#include <SDL_syswm.h>
 #define GL_GLEXT_LEGACY
 #define __glext_h__
 #define NO_SDL_GLEXT

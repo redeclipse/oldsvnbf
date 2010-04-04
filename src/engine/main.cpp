@@ -869,6 +869,12 @@ int main(int argc, char **argv)
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
+#ifdef WIN32
+    SDL_SysWMinfo wminfo;
+    SDL_VERSION(&wminfo.version);
+    if(SDL_GetWMInfo(&wminfo)) ShowWindow(wminfo.window, SW_SHOW);
+#endif
+
     conoutf("loading video misc..");
     ncursor = SDL_GetCursor();
     showcursor(false);
