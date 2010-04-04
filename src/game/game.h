@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID              "bfa"
-#define GAMEVERSION         162
+#define GAMEVERSION         163
 #define DEMO_VERSION        GAMEVERSION
 
 #define MAXAI 256
@@ -134,10 +134,10 @@ enttypes enttype[] = {
             false,              "trigger",      { "id",     "type",     "action",   "radius",   "state",    "" }
     },
     {
-        PUSHER,         1,          58,     12,     EU_AUTO,    5,
+        PUSHER,         1,          58,     12,     EU_AUTO,    6,
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
-            false,              "pusher",       { "zpush",  "ypush",    "xpush",    "radius",   "min",      "" }
+            false,              "pusher",       { "yaw",    "pitch",    "force",    "maxrad",   "minrad",   "type" }
     },
     {
         FLAG,           1,          48,     36,     EU_NONE,    5,
