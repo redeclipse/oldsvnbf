@@ -1026,8 +1026,8 @@ namespace entities
             case MAPMODEL:
                 while(e.attrs[1] < 0) e.attrs[1] += 360;
                 while(e.attrs[1] >= 360) e.attrs[1] -= 360;
-                while(e.attrs[2] < -90) e.attrs[2] += 180;
-                while(e.attrs[2] > 90) e.attrs[2] -= 180;
+                while(e.attrs[2] < -180) e.attrs[2] += 360;
+                while(e.attrs[2] > 180) e.attrs[2] -= 360;
                 while(e.attrs[3] < 0) e.attrs[3] += 101;
                 while(e.attrs[3] >= 101) e.attrs[3] -= 101;
                 if(e.attrs[4] < 0) e.attrs[4] = 0;
