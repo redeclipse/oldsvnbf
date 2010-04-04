@@ -71,16 +71,12 @@ struct duelservmode : servmode
 
     void clearitems()
     {
-        loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM)
+        loopv(sents) if(enttype[sents[i].type].usetype == EU_ITEM && hasitem(i))
         {
-            bool allowed = hasitem(i), found = finditem(i);
-            if(allowed || found)
-            {
-                loopvk(clients) clients[k]->state.dropped.remove(i);
-                sents[i].millis = gamemillis; // hijack its spawn time
-                sents[i].spawned = allowed;
-                sendf(-1, 1, "ri3", SV_ITEMSPAWN, i, sents[i].spawned ? 1 : 0);
-            }
+            loopvk(clients) clients[k]->state.dropped.remove(i);
+            sents[i].spawned = true;
+            sents[i].millis = gamemillis; // hijack its spawn time
+            sendf(-1, 1, "ri3", SV_ITEMSPAWN, i, 1);
         }
     }
 

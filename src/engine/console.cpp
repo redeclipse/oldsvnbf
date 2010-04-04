@@ -248,7 +248,6 @@ COMMAND(0, inputcommand, "sss");
 
 #if !defined(WIN32) && !defined(__APPLE__)
 #include <X11/Xlib.h>
-#include <SDL_syswm.h>
 #endif
 
 void pasteconsole()
