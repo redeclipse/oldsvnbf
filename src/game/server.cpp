@@ -814,7 +814,7 @@ namespace server
         return true;
     }
 
-    bool finditem(int i, bool spawned = true, bool timeit = false, bool override = false)
+    bool finditem(int i, bool spawned = true, bool timeit = false)
     {
         if(!m_noitems(gamemode, mutators))
         {
@@ -826,7 +826,7 @@ namespace server
                 {
                     clientinfo *ci = clients[k];
                     if(ci->state.dropped.projs.find(i) >= 0 && (!spawned || (timeit && gamemillis < sents[i].millis))) return true;
-                    else if(!override) loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
+                    else loopj(WEAP_MAX) if(ci->state.entid[j] == i) return spawned;
                 }
             }
             if(spawned && timeit && gamemillis < sents[i].millis) return true;
@@ -2822,12 +2822,12 @@ namespace server
                 if(enttype[sents[i].type].usetype == EU_ITEM && (allowed || sents[i].spawned))
                 {
                     bool found = finditem(i, true, true);
-                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type])
+                    if(allowed && m_fight(gamemode) && !m_noitems(gamemode, mutators) && !m_arena(gamemode, mutators) && i == lowest[sents[i].type] && (sents[i].type != WEAPON || w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap)))
                     {
                         float dist = float(items[sents[i].type])/float(numclients(-1, true, AI_BOT))/float(GAME(maxcarry));
-                        if(dist < GAME(itemthreshold)) found = !finditem(i, true, true, true);
+                        if(dist < GAME(itemthreshold)) found = false;
                     }
-                    if(!found || !allowed)
+                    if((!found && !sents[i].spawned) || (!allowed && sents[i].spawned))
                     {
                         loopvk(clients) clients[k]->state.dropped.remove(i);
                         if((sents[i].spawned = allowed) != false)
