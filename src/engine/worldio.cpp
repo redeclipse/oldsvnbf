@@ -1212,6 +1212,7 @@ bool load_world(const char *mname, bool temp)       // still supports all map fo
                         e.attrs[3] = e.attrs[4] = 0;
                     }
                 }
+                if(e.type == ET_SUNLIGHT && hdr.version <= 38) e.attrs[1] -= 90; // reorient pitch axis
                 if(verbose && !insideworld(e.o) && e.type != ET_LIGHT && e.type != ET_LIGHTFX && e.type != ET_SUNLIGHT)
                     conoutf("\frWARNING: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::findname(e.type), i, e.o.x, e.o.y, e.o.z);
             }
