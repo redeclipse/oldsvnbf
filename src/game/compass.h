@@ -7,7 +7,7 @@ TVAR(IDF_PERSIST, compassringtex, "textures/progress", 3);
 struct cstate
 {
     char *name, *contents;
-    cstate() {}
+    cstate() : name(NULL), contents(NULL) {}
     ~cstate()
     {
         DELETEP(name);
@@ -17,6 +17,8 @@ struct cstate
 struct caction : cstate
 {
     char code;
+    caction() : code(0) {}
+    ~caction() {}
 };
 struct cmenu : cstate
 {
@@ -47,7 +49,6 @@ void clearcmenu()
     if(compassmillis > 0) compassmillis = -lastmillis;
     if(curcompass)
     {
-        playsound(S_GUIACT, camera1->o, camera1, SND_FORCED);
         curcompass->reset();
         curcompass = NULL;
     }
