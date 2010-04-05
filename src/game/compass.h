@@ -10,8 +10,8 @@ struct cstate
     cstate() : name(NULL), contents(NULL) {}
     ~cstate()
     {
-        DELETEP(name);
-        DELETEP(contents);
+        DELETEA(name);
+        DELETEA(contents);
     }
 };
 struct caction : cstate
