@@ -38,6 +38,16 @@ namespace weapons
         return false;
     }
 
+    bool doautoreload(int weap)
+    {
+        return autoreloading >= (WEAP(weap, add) < WEAP(weap, max) ? 2 : (WEAP(weap, zooms) ? 4 : 3));
+    }
+
+    bool canreload(gameent *d)
+    {
+        return !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
+    }
+
     bool weapreload(gameent *d, int weap, int load, int ammo, bool local)
     {
         if(!local || d->canreload(weap, m_weapon(game::gamemode, game::mutators), lastmillis))
@@ -60,7 +70,7 @@ namespace weapons
                 if(issound(d->wschan)) removesound(d->wschan);
                 playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
                 d->setweapstate(weap, WEAP_S_RELOAD, WEAP(weap, rdelay), lastmillis);
-                if(local) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+                if(local && d == game::player1 && doautoreload(weap)) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
             }
             return true;
         }
@@ -132,11 +142,10 @@ namespace weapons
     void reload(gameent *d)
     {
         int sweap = m_weapon(game::gamemode, game::mutators);
-        bool reload = d->action[AC_RELOAD], canreload = !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
-        if(!reload && canreload && autoreloading >= (WEAP(d->weapselect, add) < WEAP(d->weapselect, max) ? 2 : (WEAP(d->weapselect, zooms) ? 4 : 3)))
-            reload = true;
+        bool reload = d->action[AC_RELOAD];
+        if(!reload && canreload(d) && doautoreload(d->weapselect)) reload = true;
         if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
-        else if((canreload && reload) || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
+        else if(reload || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
     }
 
     void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
