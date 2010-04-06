@@ -415,6 +415,7 @@ namespace server
                 {
                     case ID_VAR:
                     {
+                        setvar(id.name, id.def.i, true);
                         if(flush) formatstring(val)(id.flags&IDF_HEX ? (id.maxval==0xFFFFFF ? "0x%.6X" : "0x%X") : "%d", *id.storage.i);
                         break;
                     }
