@@ -490,7 +490,7 @@ extern gametypes gametype[], mutstype[];
 
 #define w_reload(w1,w2)     (w1 != WEAP_MELEE && (w1 == (isweap(w2) ? w2 : WEAP_PISTOL) || (isweap(w1) && WEAP(w1, reloads))))
 #define w_carry(w1,w2)      (w1 != WEAP_MELEE && w1 != (isweap(w2) ? w2 : WEAP_PISTOL) && (isweap(w1) && WEAP(w1, reloads)))
-#define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != w2) ? w1 : WEAP_GRENADE)
+#define w_attr(a,w1,w2)     (m_edit(a) || (w1 >= WEAP_OFFSET && w1 != w2) ? w1 : (w2 == WEAP_GRENADE ? WEAP_ROCKET : WEAP_GRENADE))
 #define w_spawn(weap)       int(GAME(itemspawntime)*WEAP(weap, frequency))
 
 // network messages codes, c2s, c2c, s2c
