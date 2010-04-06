@@ -100,8 +100,8 @@ namespace game
     FVAR(IDF_PERSIST, bloodscale, 0, 1, 1000);
     VAR(IDF_PERSIST, bloodfade, 1, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, bloodsize, 1, 15, 1000);
-    FVAR(IDF_PERSIST, gibscale, 0, 1, 1000);
-    VAR(IDF_PERSIST, gibfade, 1, 10000, INT_MAX-1);
+    FVAR(IDF_PERSIST, debrisscale, 0, 1, 1000);
+    VAR(IDF_PERSIST, debrisfade, 1, 10000, INT_MAX-1);
     VAR(IDF_PERSIST, fireburning, 0, 2, 2);
     VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
     FVAR(IDF_PERSIST, fireburnblend, 0, 0.5f, 1);
@@ -895,11 +895,11 @@ namespace game
             if(showobitdists) announce(anc, target, d, "\fs\fw%s\fS (@\fs\fc%.2f\fSm)", d->obit, actor->o.dist(d->o)/8.f);
             else announce(anc, target, d, "\fw%s", d->obit);
         }
-        if(gibscale > 0)
+        if(debrisscale > 0)
         {
             vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
-            int gibs = clamp(max(damage,5)/5, 1, 25), amt = int((rnd(gibs)+gibs+1)*gibscale);
-            loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, rnd(gibfade)+gibfade, 0, rnd(500)+1, rnd(50)+10);
+            int debris = clamp(max(damage,5)/5, 1, 15), amt = int((rnd(debris)+debris+1)*debrisscale);
+            loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, rnd(debrisfade)+debrisfade, 0, rnd(500)+1, rnd(50)+10);
         }
         if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
         {

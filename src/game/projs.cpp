@@ -10,16 +10,16 @@ namespace projs
     vector<hitmsg> hits;
     vector<projent *> projs;
 
-    VAR(IDF_PERSIST, maxprojectiles, 32, 512, INT_MAX-1);
+    VAR(IDF_PERSIST, maxprojectiles, 32, 128, INT_MAX-1);
 
     VAR(IDF_PERSIST, ejectfade, 0, 3500, INT_MAX-1);
     VAR(IDF_PERSIST, ejectspin, 0, 1, 1);
     VAR(IDF_PERSIST, ejecthint, 0, 1, 1);
 
-    VAR(IDF_PERSIST, flamertrail, 0, 1, 1);
-    VAR(IDF_PERSIST, flamerdelay, 1, 100, INT_MAX-1);
-    VAR(IDF_PERSIST, flamerlength, 50, 100, INT_MAX-1);
-    VAR(IDF_PERSIST, flamerhint, 0, 1, 1);
+    VAR(IDF_PERSIST, firetrail, 0, 1, 1);
+    VAR(IDF_PERSIST, firedelay, 1, 100, INT_MAX-1);
+    VAR(IDF_PERSIST, firelength, 50, 100, INT_MAX-1);
+    VAR(IDF_PERSIST, firehint, 0, 1, 1);
 
     VAR(IDF_PERSIST, muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
     VAR(IDF_PERSIST, muzzleflare, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
@@ -244,7 +244,7 @@ namespace projs
             }
             case PRJ_GIBS:
             {
-                if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
+                if(!kidmode && game::bloodscale > 0 && game::debrisscale > 0)
                 {
                     adddecal(DECAL_BLOOD, proj.o, proj.norm, proj.radius*clamp(proj.vel.magnitude(), 0.25f, 2.f), bvec(125, 255, 255));
                     int mag = int(proj.vel.magnitude()), vol = clamp(mag*2, 10, 255);
@@ -331,7 +331,7 @@ namespace projs
             }
             case PRJ_GIBS:
             {
-                if(!kidmode && game::bloodscale > 0 && game::gibscale > 0)
+                if(!kidmode && game::bloodscale > 0 && game::debrisscale > 0)
                 {
                     if(proj.owner)
                     {
@@ -656,9 +656,9 @@ namespace projs
                     {
                         bool effect = false;
                         float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f));
-                        if(flamertrail && lastmillis-proj.lasteffect >= flamerdelay) { effect = true; proj.lasteffect = lastmillis; }
-                        int len = effect ? max(int(flamerlength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
-                        if(flamerhint && effect) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
+                        if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis; }
+                        int len = effect ? max(int(firelength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
+                        if(firehint && effect) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
                         part_create(PART_FIREBALL_SOFT, len, proj.o, firecols[rnd(FIRECOLOURS)], size, blend, -15);
                     }
                     break;
@@ -738,7 +738,7 @@ namespace projs
         }
         else if(proj.projtype == PRJ_GIBS || proj.projtype == PRJ_DEBRIS)
         {
-            if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::gibscale > 0)
+            if(proj.projtype == PRJ_GIBS && !kidmode && game::bloodscale > 0 && game::debrisscale > 0)
             {
                 if(proj.movement > 1 && lastmillis-proj.lasteffect >= 1000 && proj.lifetime >= min(proj.lifemillis, proj.fadetime))
                 {
@@ -749,9 +749,11 @@ namespace projs
             }
             else if(lastmillis-proj.lasteffect >= emitmillis/2)
             {
+                bool effect = false;
                 float radius = (proj.radius+0.5f)*(clamp(1.f-proj.lifespan, 0.1f, 1.f)+0.25f), blend = clamp(1.25f-proj.lifespan, 0.25f, 1.f)*(0.75f+(rnd(25)/100.f)); // gets smaller as it gets older
-                part_create(PART_FIREBALL_SOFT, 200, proj.o, firecols[rnd(FIRECOLOURS)], radius, blend, -5);
-                proj.lasteffect = lastmillis;
+                if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis; }
+                int len = effect ? max(int(firelength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
+                part_create(PART_FIREBALL_SOFT, len, proj.o, firecols[rnd(FIRECOLOURS)], radius, blend, -10);
             }
         }
         else switch(proj.projtype)
@@ -817,17 +819,21 @@ namespace projs
                             else
                             {
                                 int deviation = max(int(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*0.5f), 1);
-                                loopi(proj.weap == WEAP_GRENADE ? 5 : 10)
-                                {
-                                    vec to(proj.o); loopk(3) to.v[k] += rnd(deviation*2)-deviation;
-                                    part_create(PART_FIREBALL_SOFT, proj.weap == WEAP_GRENADE ? 1500 : 2500, to, firecols[rnd(FIRECOLOURS)], WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators), 0.25f+(rnd(50)/100.f), -5);
-                                }
                                 part_create(PART_PLASMA_SOFT, proj.weap == WEAP_GRENADE ? 1000 : 2000, proj.o, 0xDD4400, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*0.5f); // corona
                                 quake(proj.o, proj.weap, proj.flags);
                                 part_fireball(proj.o, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*1.5f, PART_EXPLOSION, proj.weap == WEAP_GRENADE ? 750 : 1500, 0xAA4400, 1.f, 0.5f);
-                                loopi(rnd(proj.weap == WEAP_GRENADE ? 30 : 60)+30) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(5001)+1500, 0, rnd(501), rnd(101)+50);
-                                if(notrayspam(proj.weap, proj.flags&HIT_ALT, 1)) adddecal(DECAL_ENERGY, proj.o, proj.norm, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*0.7f, bvec(196, 24, 0));
-                                part_create(PART_SMOKE_LERP_SOFT, proj.weap == WEAP_GRENADE ? 2000 : 3000, proj.o, 0x333333, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators), 0.5f, -15);
+                                if(notrayspam(proj.weap, proj.flags&HIT_ALT, 1))
+                                {
+                                    loopi(proj.weap == WEAP_GRENADE ? 3 : 6)
+                                    {
+                                        vec to(proj.o); loopk(3) to.v[k] += rnd(deviation*2)-deviation;
+                                        part_create(PART_FIREBALL_SOFT, proj.weap == WEAP_GRENADE ? 1500 : 2500, to, firecols[rnd(FIRECOLOURS)], WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators), 0.25f+(rnd(50)/100.f), -5);
+                                    }
+                                    part_create(PART_SMOKE_LERP_SOFT, proj.weap == WEAP_GRENADE ? 2000 : 3000, proj.o, 0x333333, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators), 0.5f, -15);
+                                    int debris = rnd(proj.weap == WEAP_GRENADE ? 10 : 20)+10, amt = int((rnd(debris)+debris+1)*game::debrisscale);
+                                    loopi(amt) create(proj.o, vec(proj.o).add(proj.vel), true, proj.owner, PRJ_DEBRIS, rnd(game::debrisfade)+game::debrisfade, 0, rnd(501), rnd(101)+50);
+                                }
+                                adddecal(DECAL_ENERGY, proj.o, proj.norm, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators)*0.7f, bvec(196, 24, 0));
                             }
                             if(notrayspam(proj.weap, proj.flags&HIT_ALT, 1)) adddecal(proj.weap == WEAP_FLAMER ? DECAL_SCORCH_SHORT : DECAL_SCORCH, proj.o, proj.norm, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators));
                             adddynlight(proj.o, 1.f*WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators), vec(1.1f, 0.22f, 0.02f), proj.weap == WEAP_FLAMER ? 250 : 1000, 10);
