@@ -1085,7 +1085,7 @@ namespace ai
             bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_MAX) if(i != WEAP_GRENADE && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_MAX) if(i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);

@@ -820,8 +820,7 @@ namespace server
         if(!m_noitems(gamemode, mutators))
         {
             if(sents[i].spawned) return true;
-            int sweap = m_weapon(gamemode, mutators);
-            if(sents[i].type == WEAPON && w_carry(w_attr(gamemode, sents[i].attrs[0], sweap), sweap))
+            if(sents[i].type == WEAPON)
             {
                 loopvk(clients)
                 {
@@ -1638,6 +1637,8 @@ namespace server
         else enddemorecord();
     }
 
+    void takeammo(clientinfo *ci, int weap, int amt = 1) { ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0); }
+
     struct droplist { int weap, ent; };
     void dropitems(clientinfo *ci, int level = 2)
     {
@@ -1653,10 +1654,11 @@ namespace server
                 droplist &d = drop.add();
                 d.weap = WEAP_GRENADE;
                 d.ent = -1;
+                takeammo(ci, WEAP_GRENADE, WEAP2(WEAP_GRENADE, sub, false));
             }
             if(!m_noitems(gamemode, mutators))
             {
-                loopi(WEAP_MAX) if(i != WEAP_GRENADE && i != sweap && ts.hasweap(i, sweap) && sents.inrange(ts.entid[i]))
+                loopi(WEAP_MAX) if(i != sweap && ts.hasweap(i, sweap) && sents.inrange(ts.entid[i]))
                 {
                     sents[ts.entid[i]].millis = gamemillis;
                     if(level && GAME(itemdropping) && !(sents[ts.entid[i]].attrs[1]&WEAP_F_FORCED))
@@ -2493,8 +2495,6 @@ namespace server
         }
     }
 
-    void takeammo(clientinfo *ci, int weap, int amt = 1) { ci->state.ammo[weap] = max(ci->state.ammo[weap]-amt, 0); }
-
     void shotevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
@@ -2665,8 +2665,7 @@ namespace server
         }
 
         int weap = -1, dropped = -1;
-        if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry))
-            weap = gs.drop(sweap, attr);
+        if(sents[ent].type == WEAPON && gs.ammo[attr] < 0 && w_carry(attr, sweap) && gs.carry(sweap) >= GAME(maxcarry)) weap = gs.drop(sweap, attr);
         if(isweap(weap))
         {
             dropped = gs.entid[weap];
