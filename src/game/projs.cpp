@@ -18,7 +18,7 @@ namespace projs
 
     VAR(IDF_PERSIST, firetrail, 0, 1, 1);
     VAR(IDF_PERSIST, firedelay, 1, 100, INT_MAX-1);
-    VAR(IDF_PERSIST, firelength, 50, 100, INT_MAX-1);
+    VAR(IDF_PERSIST, firelength, 50, 350, INT_MAX-1);
     VAR(IDF_PERSIST, firehint, 0, 1, 1);
 
     VAR(IDF_PERSIST, muzzleflash, 0, 3, 3); // 0 = off, 1 = only other players, 2 = only thirdperson, 3 = all
@@ -658,7 +658,7 @@ namespace projs
                         float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.85f)*(0.65f+(rnd(35)/100.f));
                         if(firetrail && lastmillis-proj.lasteffect >= firedelay) { effect = true; proj.lasteffect = lastmillis; }
                         int len = effect ? max(int(firelength*(proj.flags&HIT_ALT ? 2 : 1)*max(proj.lifespan, 0.1f)), 1) : 1;
-                        if(firehint && effect) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
+                        if(firehint && effect && notrayspam(proj.weap, proj.flags&HIT_ALT, 1)) part_create(PART_HINT_SOFT, 1, proj.o, 0x120226, size*1.5f, blend*(proj.flags&HIT_ALT ? 0.75f : 1.f));
                         part_create(PART_FIREBALL_SOFT, len, proj.o, firecols[rnd(FIRECOLOURS)], size, blend, -15);
                     }
                     break;
