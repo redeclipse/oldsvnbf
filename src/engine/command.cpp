@@ -830,15 +830,26 @@ void writeescapedstring(stream *f, const char *s)
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
 
-void intret(int v) { defformatstring(b)("%d", v); commandret = newstring(b); }
+static string retbuf[3];
+static int retidx = 0;
+
+const char *intstr(int v)
+{
+    retidx = (retidx + 1)%3;
+    formatstring(retbuf[retidx])("%d", v);
+    return retbuf[retidx];
+}
+
+void intret(int v) 
+{ 
+    commandret = newstring(intstr(v));
+}
 
 const char *floatstr(float v)
 {
-    static int n = 0;
-    static string t[3];
-    n = (n + 1)%3;
-    formatstring(t[n])(v==int(v) ? "%.1f" : "%.7g", v);
-    return t[n];
+    retidx = (retidx + 1)%3;
+    formatstring(retbuf[retidx])(v==int(v) ? "%.1f" : "%.7g", v);
+    return retbuf[retidx];
 }
 
 void floatret(float v)

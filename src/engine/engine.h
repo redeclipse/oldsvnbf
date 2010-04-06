@@ -549,49 +549,7 @@ extern void getfps(int &fps, int &bestdiff, int &worstdiff);
 extern void swapbuffers();
 
 // menu
-extern int guipasses;
 extern float menuscale;
-extern guient *cgui;
-struct menu : guicb
-{
-    char *name, *header, *contents, *initscript;
-    int passes, menutab, menustart;
-    bool world, useinput, usetitle;
-
-    menu() : name(NULL), header(NULL), contents(NULL), initscript(NULL), passes(0), menutab(0), menustart(0), world(false), useinput(true), usetitle(true) {}
-
-    void gui(guient &g, bool firstpass)
-    {
-        cgui = &g;
-        extern menu *cmenu; cmenu = this;
-        guipasses = passes;
-        if(!passes) world = worldidents;
-        if(initscript && *initscript)
-        {
-            if(world && passes) { RUNWORLD(initscript); }
-            else execute(initscript);
-        }
-        cgui->start(menustart, menuscale, &menutab, useinput, usetitle);
-        cgui->tab(header ? header : name);
-        if(contents && *contents)
-        {
-            if(world && passes) { RUNWORLD(contents); }
-            else execute(contents);
-        }
-        cgui->end();
-        guipasses = -1;
-        cmenu = NULL;
-        cgui = NULL;
-        passes++;
-    }
-
-    virtual void clear() {}
-};
-extern menu *cmenu;
-extern hashtable<const char *, menu> menus;
-extern vector<menu *> menustack;
-extern vector<char *> executelater;
-extern bool shouldclearmenu, clearlater;
 
 extern void menuprocess();
 extern void addchange(const char *desc, int type);
