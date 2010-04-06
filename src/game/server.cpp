@@ -2571,21 +2571,7 @@ namespace server
             if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - current state disallows it", weap);
             return;
         }
-        if(weap == WEAP_GRENADE)
-        {
-            int nweap = -1; // try to keep this weapon
-            gs.weapshots[WEAP_GRENADE][0].add(-1);
-            takeammo(ci, WEAP_GRENADE, 1);
-            if(!gs.hasweap(weap, sweap))
-            {
-                nweap = gs.bestweap(sweap, true);
-                gs.weapswitch(nweap, millis);
-            }
-            else gs.setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, false), millis);
-            sendf(-1, 1, "ri6", SV_DROP, ci->clientnum, nweap, 1, weap, -1);
-            return;
-        }
-        else if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attrs[1]&WEAP_F_FORCED))
+        if(!sents.inrange(gs.entid[weap]) || (sents[gs.entid[weap]].attrs[1]&WEAP_F_FORCED))
         {
             if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: drop [%d] failed - not droppable entity", weap);
             return;
