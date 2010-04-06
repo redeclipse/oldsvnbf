@@ -878,14 +878,6 @@ bool ircgui(guient *g, const char *s)
     return true;
 }
 
-void guiirc(const char *s)
-{
-    if(cgui)
-    {
-        if(!ircgui(cgui, s) && shouldclearmenu) clearlater = true;
-    }
-}
-ICOMMAND(0, ircgui, "s", (char *s), guiirc(s));
 #endif
 ICOMMAND(0, ircconns, "", (void), { int num = 0; loopv(ircnets) if(ircnets[i]->state >= IRC_ATTEMPT) num++; intret(num); });
 #else

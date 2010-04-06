@@ -91,6 +91,7 @@ struct ident
 };
 
 extern void addident(const char *name, ident *id);
+extern const char *intstr(int v);
 extern void intret(int v);
 extern const char *floatstr(float v);
 extern void floatret(float v);
@@ -114,6 +115,7 @@ extern int getvarmin(const char *name);
 extern int getvarmax(const char *name);
 extern bool identexists(const char *name);
 extern ident *getident(const char *name);
+extern ident *newident(const char *name);
 extern bool addcommand(const char *name, void (*fun)(), const char *narg, int flags = IDF_COMPLETE);
 
 extern int execute(const char *p);
