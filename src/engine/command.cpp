@@ -274,6 +274,93 @@ const char *getalias(const char *name)
     return i && i->type==ID_ALIAS ? i->action : "";
 }
 
+#ifndef STANDALONE
+#define WORLDVAR \
+    if (!worldidents && !editmode && id->flags&IDF_WORLD) \
+    { \
+        conoutft(CON_MESG, "\frcannot set world variable %s outside editmode", id->name); \
+        return; \
+    }
+#endif
+
+#define OVERRIDEVAR(saveval, resetval, clearval) \
+    if(overrideidents && id->flags&IDF_OVERRIDE) \
+    { \
+        if(id->flags&IDF_PERSIST) \
+        { \
+            conoutft(CON_MESG, "\frcannot override persistent variable %s", id->name); \
+            return; \
+        } \
+        if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
+        else { clearval; } \
+    } \
+    else \
+    { \
+        if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; } \
+        clearval; \
+    }
+
+void setvarchecked(ident *id, int val)
+{
+    if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
+    else
+    {
+#ifndef STANDALONE
+        WORLDVAR
+#endif
+        OVERRIDEVAR(id->overrideval.i = *id->storage.i, , )
+        if(val<id->minval || val>id->maxval)
+        {
+            val = val<id->minval ? id->minval : id->maxval;                // clamp to valid range
+            conoutft(CON_MESG,
+                id->flags&IDF_HEX ?
+                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
+                    "\frvalid range for %s is %d..%d",
+                id->name, id->minval, id->maxval);
+        }
+        *id->storage.i = val;
+        id->changed();                                             // call trigger function if available
+#ifndef STANDALONE
+        client::editvar(id, interactive && !overrideidents);
+#endif
+    }
+}
+
+void setfvarchecked(ident *id, float val)
+{
+    if(id->minvalf>id->maxvalf) conoutft(CON_MESG, "\frvariable %s is read-only", id->name);
+    else
+    {
+#ifndef STANDALONE
+        WORLDVAR
+#endif
+        OVERRIDEVAR(id->overrideval.f = *id->storage.f, , );
+        if(val<id->minvalf || val>id->maxvalf)
+        {
+            val = val<id->minvalf ? id->minvalf : id->maxvalf;                // clamp to valid range
+            conoutft(CON_MESG, "\frvalid range for %s is %s..%s", id->name, floatstr(id->minvalf), floatstr(id->maxvalf));
+        }
+        *id->storage.f = val;
+        id->changed();
+#ifndef STANDALONE
+        client::editvar(id, interactive && !overrideidents);
+#endif
+    }
+}
+
+void setsvarchecked(ident *id, const char *val)
+{
+#ifndef STANDALONE
+    WORLDVAR
+#endif
+    OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s, delete[] *id->storage.s);
+    *id->storage.s = newstring(val);
+    id->changed();
+#ifndef STANDALONE
+    client::editvar(id, interactive && !overrideidents);
+#endif
+}
+
 bool addcommand(const char *name, void (*fun)(), const char *narg, int flags)
 {
     if(!idents) idents = new identtable;
@@ -636,83 +723,22 @@ char *executeret(const char *p)            // all evaluation happens here, recur
 
                 case ID_VAR:                        // game defined variables
                     if(numargs <= 1) conoutft(CON_MESG, id->flags&IDF_HEX ? (id->maxval==0xFFFFFF ? "\fg%s = 0x%.6X" : "\fg%s = 0x%X") : "\fg%s = %d", c, *id->storage.i);      // var with no value just prints its current value
-                    else if(id->minval>id->maxval) conoutf("\frvariable %s is read-only", id->name);
                     else
                     {
-#ifndef STANDALONE
-                        #define WORLDVAR \
-                            if (!worldidents && !editmode && id->flags&IDF_WORLD) \
-                            { \
-                                conoutft(CON_MESG, "\frcannot set world variable %s outside editmode", id->name); \
-                                break; \
-                            }
-#endif
-
-                        #define OVERRIDEVAR(saveval, resetval, clearval) \
-                            if(overrideidents && id->flags&IDF_OVERRIDE) \
-                            { \
-                                if(id->flags&IDF_PERSIST) \
-                                { \
-                                    conoutft(CON_MESG, "\frcannot override persistent variable %s", id->name); \
-                                    break; \
-                                } \
-                                if(id->override==NO_OVERRIDE) { saveval; id->override = OVERRIDDEN; } \
-                                else { clearval; } \
-                            } \
-                            else \
-                            { \
-                                if(id->override!=NO_OVERRIDE) { resetval; id->override = NO_OVERRIDE; } \
-                                clearval; \
-                            }
-#ifndef STANDALONE
-                        WORLDVAR;
-#endif
-                        OVERRIDEVAR(id->overrideval.i = *id->storage.i, , )
-                        int i1 = parseint(w[1]);
+                        int val = parseint(w[1]);
                         if(id->flags&IDF_HEX && numargs > 2)
                         {
-                            i1 <<= 16;
-                            i1 |= parseint(w[2])<<8;
-                            if(numargs > 3) i1 |= parseint(w[3]);
+                            val <<= 16;
+                            val |= parseint(w[2])<<8;
+                            if(numargs > 3) val |= parseint(w[3]);
                         }
-                        if(i1<id->minval || i1>id->maxval)
-                        {
-                            i1 = i1<id->minval ? id->minval : id->maxval;               // clamp to valid range
-                            conoutft(CON_MESG,
-                                id->flags&IDF_HEX ?
-                                    (id->minval <= 255 ? "\frvalid range for %s is %d..0x%X" : "\frvalid range for %s is 0x%X..0x%X") :
-                                    "\frvalid range for %s is %d..%d",
-                                id->name, id->minval, id->maxval);
-                        }
-                        *id->storage.i = i1;
-                        id->changed();                                           // call trigger function if available
-#ifndef STANDALONE
-                        client::editvar(id, interactive && !overrideidents);
-#endif
+                        setvarchecked(id, val);
                     }
                     break;
 
                 case ID_FVAR:
                     if(numargs <= 1) conoutft(CON_MESG, "\fg%s = %s", c, floatstr(*id->storage.f));
-                    else if(id->minvalf>id->maxvalf) conoutft(CON_MESG, "\frvariable %s is read-only", id->name);
-                    else
-                    {
-#ifndef STANDALONE
-                        WORLDVAR;
-#endif
-                        OVERRIDEVAR(id->overrideval.f = *id->storage.f, , );
-                        float f1 = parsefloat(w[1]);
-                        if(f1<id->minvalf || f1>id->maxvalf)
-                        {
-                            f1 = f1<id->minvalf ? id->minvalf : id->maxvalf;                // clamp to valid range
-                            conoutft(CON_MESG, "\frvalid range for %s is %s..%s", id->name, floatstr(id->minvalf), floatstr(id->maxvalf));
-                        }
-                        *id->storage.f = f1;
-                        id->changed();
-#ifndef STANDALONE
-                        client::editvar(id, interactive && !overrideidents);
-#endif
-                    }
+                    else setfvarchecked(id, parsefloat(w[1]));
                     break;
 
                 case ID_SVAR:
@@ -721,16 +747,8 @@ char *executeret(const char *p)            // all evaluation happens here, recur
                     {
                         char *exargs = NULL, *val = w[1];
                         if(numargs > 2) val = exargs = conc(w+1, numargs-1, true);
-#ifndef STANDALONE
-                        WORLDVAR;
-#endif
-                        OVERRIDEVAR(id->overrideval.s = *id->storage.s, delete[] id->overrideval.s, delete[] *id->storage.s);
-                        *id->storage.s = newstring(val);
-                        id->changed();
+                        setsvarchecked(id, val);
                         if(exargs) delete[] exargs;
-#ifndef STANDALONE
-                        client::editvar(id, interactive && !overrideidents);
-#endif
                     }
                     break;
 
