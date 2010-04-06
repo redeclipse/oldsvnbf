@@ -70,7 +70,7 @@ namespace weapons
                 if(issound(d->wschan)) removesound(d->wschan);
                 playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
                 d->setweapstate(weap, WEAP_S_RELOAD, WEAP(weap, rdelay), lastmillis);
-                if(local && d == game::player1 && doautoreload(weap)) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
+                //if(local && d == game::player1 && doautoreload(weap)) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
             }
             return true;
         }
