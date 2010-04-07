@@ -113,6 +113,7 @@ extern void touchvar(const char *name);
 extern int getvar(const char *name);
 extern int getvarmin(const char *name);
 extern int getvarmax(const char *name);
+extern int getvardef(const char *name);
 extern bool identexists(const char *name);
 extern ident *getident(const char *name);
 extern ident *newident(const char *name);

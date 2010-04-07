@@ -101,7 +101,7 @@ namespace game
     VAR(IDF_PERSIST, bloodfade, 1, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, bloodsize, 1, 15, 1000);
     FVAR(IDF_PERSIST, debrisscale, 0, 1, 1000);
-    VAR(IDF_PERSIST, debrisfade, 1, 10000, INT_MAX-1);
+    VAR(IDF_PERSIST, debrisfade, 1, 5000, INT_MAX-1);
     VAR(IDF_PERSIST, fireburning, 0, 2, 2);
     VAR(IDF_PERSIST, fireburnfade, 100, 250, INT_MAX-1);
     FVAR(IDF_PERSIST, fireburnblend, 0, 0.5f, 1);
