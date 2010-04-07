@@ -1003,22 +1003,17 @@ namespace server
                     {
                         case 2:
                         {
-                            int num = 0, lowest = -1;
-                            loopv(spawns[team].cycle) if(lowest < 0 || spawns[team].cycle[i] < lowest) lowest = spawns[team].cycle[i];
-                            loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest) num++;
-                            if(num > 0)
+                            static vector<int> lowest; lowest.setsize(0);
+                            loopv(spawns[team].cycle) if(lowest.empty() || spawns[team].cycle[i] <= spawns[team].cycle[lowest[0]])
                             {
-                                int r = rnd(num+1), n = 0;
-                                loopv(spawns[team].cycle) if(spawns[team].cycle[i] == lowest)
-                                {
-                                    if(n == r)
-                                    {
-                                        spawns[team].cycle[i]++;
-                                        spawns[team].spawncycle = cycle = i;
-                                        break;
-                                    }
-                                    n++;
-                                }
+                                if(!lowest.empty() && spawns[team].cycle[i] < spawns[team].cycle[lowest[0]]) lowest.setsize(0);
+                                lowest.add(i);
+                            }
+                            if(!lowest.empty())
+                            {
+                                int r = lowest.length() > 1 ? rnd(lowest.length()) : 0, n = lowest[r];
+                                spawns[team].cycle[n]++;
+                                spawns[team].spawncycle = cycle = n;
                                 break;
                             }
                             // fall through if this fails..
