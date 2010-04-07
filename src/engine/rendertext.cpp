@@ -149,8 +149,8 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
     int i;\
     for(i = 0; str[i]; i++)\
     {\
-        TEXTINDEX(i)\
         int c = str[i];\
+        TEXTINDEX(i)\
         if(c=='\t')      { x = TEXTTAB(x); TEXTWHITE(i) }\
         else if(c==' ')  { x += curfont->defaultw; TEXTWHITE(i) }\
         else if(c=='\n') { TEXTLINE(i) TEXTALIGN }\
@@ -168,14 +168,13 @@ static void text_color(char c, char *stack, int size, int &sp, bvec &color, int 
                     if(i-j > 16) break;\
                     if(!curfont->chars.inrange(c-33)) break;\
                     int cw = curfont->chars[c-33].w + 1;\
-                    if(w + cw >= maxwidth) break;\
+                    if(w + cw >= maxwidth) break; \
                     w += cw;\
                 }\
                 if(x + w >= maxwidth && j!=0) { TEXTLINE(j-1) TEXTALIGN }\
                 TEXTWORD\
             }\
-            else\
-            { TEXTCHAR(i) }\
+            else { TEXTCHAR(i) }\
         }\
     }
 
@@ -210,16 +209,14 @@ int text_visible(const char *str, int hitx, int hity, int maxwidth, int flags)
 //inverse of text_visible
 void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int flags)
 {
-    #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; break; }
+    #define TEXTINDEX(idx) if(cursor == idx+1) { cx = x; cy = y; }
     #define TEXTWHITE(idx)
     #define TEXTLINE(idx)
     #define TEXTCOLOR(idx)
     #define TEXTCHAR(idx) x += curfont->chars[c-33].w + 1;
     #define TEXTWORD TEXTWORDSKELETON if(i >= cursor) break;
-    cx = INT_MIN;
-    cy = 0;
+    cx = cy = 0;
     TEXTSKELETON
-    if(cx == INT_MIN) { cx = x; cy = y; }
     #undef TEXTINDEX
     #undef TEXTWHITE
     #undef TEXTLINE
@@ -250,15 +247,15 @@ void text_bounds(const char *str, int &width, int &height, int maxwidth, int fla
 
 int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, int flags, int cursor, int maxwidth)
 {
-    #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
+    #define TEXTINDEX(idx) if(cursor == idx+1) { cx = x; cy = y; }
     #define TEXTWHITE(idx)
-    #define TEXTLINE(idx) cy += FONTH;
+    #define TEXTLINE(idx) ly += FONTH;
     #define TEXTCOLOR(idx) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, r, g, b, a);
     #define TEXTCHAR(idx) x += draw_char(c, left+x, top+y)+1;
     #define TEXTWORD TEXTWORDSKELETON
     char colorstack[10];
     bvec color(r, g, b);
-    int colorpos = 0, cx = INT_MIN, cy = 0, left = rleft, top = rtop;
+    int colorpos = 0, cx = -FONTW, cy = 0, ly = 0, left = rleft, top = rtop;
     loopi(10) colorstack[i] = 'u'; //indicate user color
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -268,17 +265,12 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     varray::defattrib(varray::ATTRIB_VERTEX, 2, GL_FLOAT);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
     varray::begin(GL_QUADS);
-    left = rleft;
-    top = rtop;
     TEXTSKELETON
     xtraverts += varray::end();
     if(cursor >= 0)
     {
-        float fade = 1.f-(float(lastmillis%1000)/1000.f);
-        glColor4ub(color.x, color.y, color.z, int(a*fade));
-        if(cx == INT_MIN) { cx = x; cy = y; }
-        if(maxwidth != -1 && cx >= maxwidth) { cx = 0; cy += FONTH; }
-        draw_char('|', left+cx-FONTW/2, top+cy-FONTH/32);
+        glColor4ub(color.x, color.y, color.z, int(a*(1.f-(float(lastmillis%1000)/1000.f))));
+        draw_char('|', left+cx+FONTW/2, top+cy);
         xtraverts += varray::end();
     }
     varray::disable();
@@ -288,7 +280,7 @@ int draw_text(const char *str, int rleft, int rtop, int r, int g, int b, int a, 
     #undef TEXTCOLOR
     #undef TEXTCHAR
     #undef TEXTWORD
-    return cy + FONTH;
+    return ly + FONTH;
 }
 
 void reloadfonts()
