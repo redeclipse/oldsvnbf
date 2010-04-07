@@ -96,7 +96,7 @@ struct delayedupdate
     {
         switch(type)
         {
-            case INT: return intstr(val.i); 
+            case INT: return intstr(val.i);
             case FLOAT: return intstr(int(floor(val.f)));
             case STRING: return val.s;
             default: return "";
@@ -392,20 +392,6 @@ static const char *getsval(char *var)
         case ID_SVAR: return *id->storage.s;
         case ID_ALIAS: return id->action;
         default: return "";
-    }
-}   
-
-static int getvardef(char *var)
-{
-    ident *id = getident(var);
-    if(!id) return 0;
-    switch(id->type)
-    {
-        case ID_VAR: return id->def.i;
-        case ID_FVAR: return int(id->def.f);
-        case ID_SVAR: return atoi(id->def.s);
-        case ID_ALIAS: return atoi(id->action);
-        default: return 0;
     }
 }
 

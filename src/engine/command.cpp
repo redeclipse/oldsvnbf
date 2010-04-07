@@ -246,11 +246,27 @@ int getvarmax(const char *name)
     GETVAR(id, name, 0);
     return id->maxval;
 }
+int getvardef(const char *name)
+{
+    ident *id = getident(name);
+    if(!id) return 0;
+    switch(id->type)
+    {
+        case ID_VAR: return id->def.i;
+        case ID_FVAR: return int(id->def.f);
+        case ID_SVAR: return atoi(id->def.s);
+        case ID_ALIAS: return atoi(id->action);
+        default: break;
+    }
+    return 0;
+}
+
 ICOMMAND(0, getvar, "s", (char *n), intret(getvar(n)));
 ICOMMAND(0, getvartype, "s", (char *n), intret(getvartype(n)));
 ICOMMAND(0, getvarflags, "s", (char *n), intret(getvarflags(n)));
 ICOMMAND(0, getvarmin, "s", (char *n), intret(getvarmin(n)));
 ICOMMAND(0, getvarmax, "s", (char *n), intret(getvarmax(n)));
+ICOMMAND(0, getvardef, "s", (char *n), intret(getvardef(n)));
 
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
@@ -840,8 +856,8 @@ const char *intstr(int v)
     return retbuf[retidx];
 }
 
-void intret(int v) 
-{ 
+void intret(int v)
+{
     commandret = newstring(intstr(v));
 }
 

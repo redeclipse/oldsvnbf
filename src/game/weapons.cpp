@@ -2,6 +2,8 @@
 namespace weapons
 {
     VAR(IDF_PERSIST, autoreloading, 0, 2, 4); // 0 = never, 1 = when empty, 2 = weapons that don't add a full clip, 3 = always (+1 zooming weaps too)
+    VAR(IDF_PERSIST, autoreloaddelay, 0, 100, INT_MAX-1);
+
     VAR(IDF_PERSIST, skipspawnweapon, 0, 0, 6); // skip spawnweapon; 0 = never, 1 = if numweaps > 1 (+1), 3 = if carry > 0 (+2), 6 = always
     VAR(IDF_PERSIST, skipmelee, 0, 7, 10); // skip melee; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
     VAR(IDF_PERSIST, skippistol, 0, 8, 10); // skip pistol; 0 = never, 1 = if numweaps > 1 (+2), 4 = if carry > 0 (+2), 7 = if carry > 0 and is offset (+2), 10 = always
@@ -38,16 +40,6 @@ namespace weapons
         return false;
     }
 
-    bool doautoreload(int weap)
-    {
-        return autoreloading >= (WEAP(weap, add) < WEAP(weap, max) ? 2 : (WEAP(weap, zooms) ? 4 : 3));
-    }
-
-    bool canreload(gameent *d)
-    {
-        return !d->action[AC_ATTACK] && !d->action[AC_ALTERNATE] && !d->action[AC_USE] && (d != game::player1 || !game::inzoom());
-    }
-
     bool weapreload(gameent *d, int weap, int load, int ammo, bool local)
     {
         if(!local || d->canreload(weap, m_weapon(game::gamemode, game::mutators), lastmillis))
@@ -70,7 +62,6 @@ namespace weapons
                 if(issound(d->wschan)) removesound(d->wschan);
                 playsound(S_RELOAD, d->o, d, 0, -1, -1, -1, &d->wschan);
                 d->setweapstate(weap, WEAP_S_RELOAD, WEAP(weap, rdelay), lastmillis);
-                //if(local && d == game::player1 && doautoreload(weap)) d->action[AC_ATTACK] = d->action[AC_ALTERNATE] = false;
             }
             return true;
         }
@@ -139,13 +130,22 @@ namespace weapons
     }
     ICOMMAND(0, drop, "s", (char *n), drop(game::player1, *n ? atoi(n) : -1));
 
+    bool autoreload(gameent *d, int flags = 0)
+    {
+        if(d == game::player1)
+        {
+            bool noammo = d->ammo[d->weapselect] < WEAP2(d->weapselect, sub, flags&HIT_ALT);
+            if((noammo || (!d->action[AC_ATTACK] && !d->action[AC_ALTERNATE])) && !d->action[AC_USE] && d->weapstate[d->weapselect] == WEAP_S_IDLE && (noammo || lastmillis-d->weaplast[d->weapselect] >= autoreloaddelay))
+                return autoreloading >= (noammo ? 1 : (WEAP(d->weapselect, add) < WEAP(d->weapselect, max) ? 2 : (WEAP(d->weapselect, zooms) ? 4 : 3)));
+        }
+        return false;
+    }
+
     void reload(gameent *d)
     {
         int sweap = m_weapon(game::gamemode, game::mutators);
-        bool reload = d->action[AC_RELOAD];
-        if(!reload && canreload(d) && doautoreload(d->weapselect)) reload = true;
         if(!d->hasweap(d->weapselect, sweap)) weapselect(d, d->bestweap(sweap, true));
-        else if(reload || (autoreloading && !d->ammo[d->weapselect])) weapreload(d, d->weapselect);
+        else if(d->action[AC_RELOAD] || autoreload(d)) weapreload(d, d->weapselect);
     }
 
     void offsetray(vec &from, vec &to, int spread, int z, vec &dest)
@@ -178,7 +178,8 @@ namespace weapons
         {
             if(!d->canshoot(d->weapselect, flags, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
             {
-                if(autoreloading && d->canreload(d->weapselect, sweap, lastmillis)) weapreload(d, d->weapselect);
+                // if the problem is not enough ammo, do the reload..
+                if(autoreload(d, flags)) weapreload(d, d->weapselect);
                 return;
             }
             else offset = -1;

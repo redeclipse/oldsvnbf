@@ -487,13 +487,14 @@ namespace hud
             progresstex, pistolcliptex, shotguncliptex, smgcliptex,
             flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, rocketcliptex, // end of regular weapons
         };
-        Texture *t = textureload(cliptexs[weap], 3);
         if(!clipsizes[weap])
         {
             WEAPSTR(clipmax, weap, max);
-            clipsizes[weap] = getvarmax(clipmax);
+            clipsizes[weap] = getvardef(clipmax);
         }
-        int ammo = game::focus->ammo[weap], maxammo = clipsizes[weap];
+        int ammo = game::focus->ammo[weap], maxammo = WEAP(weap, max), weapid = weap;
+        if(clipsizes[weap] != maxammo) weapid = 0;
+        Texture *t = textureload(cliptexs[weapid], 3);
         if(t->bpp == 4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         else glBlendFunc(GL_ONE, GL_ONE);
 
@@ -501,7 +502,7 @@ namespace hud
             1, pistolclipskew, shotgunclipskew, smgclipskew,
             flamerclipskew, plasmaclipskew, rifleclipskew, grenadeclipskew, rocketclipskew, // end of regular weapons
         };
-        float fade = clipblend*hudblend, size = s*clipskew[weap];
+        float fade = clipblend*hudblend, size = s*clipskew[weapid];
         int interval = lastmillis-game::focus->weaplast[weap];
         if(interval <= game::focus->weapwait[weap]) switch(game::focus->weapstate[weap])
         {
@@ -553,7 +554,7 @@ namespace hud
             case WEAP_S_SHOOT:
             {
                 int shot = game::focus->weapshot[weap] ? game::focus->weapshot[weap] : 1;
-                if(shot) switch(weap)
+                if(shot) switch(weapid)
                 {
                     case WEAP_FLAMER: case WEAP_ROCKET:
                         drawslice(ammo/float(maxammo), shot/float(maxammo), x, y, size);
@@ -566,7 +567,7 @@ namespace hud
                         break;
                 }
                 glColor4f(r, g, b, clipblend*hudblend);
-                size = s*clipskew[weap];
+                size = s*clipskew[weapid];
                 break;
             }
             case WEAP_S_RELOAD:
@@ -574,7 +575,7 @@ namespace hud
                 if(game::focus->weapload[weap] > 0)
                 {
                     ammo -= game::focus->weapload[weap];
-                    switch(weap)
+                    switch(weapid)
                     {
                         case WEAP_FLAMER: case WEAP_ROCKET:
                             drawslice(ammo/float(maxammo), game::focus->weapload[weap]/float(maxammo), x, y, size);
@@ -587,13 +588,13 @@ namespace hud
                             break;
                     }
                     glColor4f(r, g, b, clipblend*hudblend);
-                    size = s*clipskew[weap];
+                    size = s*clipskew[weapid];
                 }
                 break;
             }
             default: break;
         }
-        if(ammo > 0) switch(weap)
+        if(ammo > 0) switch(weapid)
         {
             case WEAP_FLAMER: case WEAP_ROCKET:
                 drawslice(0, ammo/float(maxammo), x, y, size);
