@@ -1656,11 +1656,10 @@ void makeparticle(const vec &o, vector<int> &attr)
         {
             const int typemap[] = { PART_FLARE, -1, -1, PART_LIGHTNING, PART_FIREBALL, PART_SMOKE, PART_ELECTRIC, PART_PLASMA, PART_SNOW, PART_SPARK };
             const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.25f, 4.f, 2.f, 0.6f, 4.f, 0.5f, 0.2f }, velmap[] = { 50, 0, 0, 20, 30, 30, 50, 20, 10, 20 },
-                gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 }, colmap[] = { 0, 0, 0, 0, 0, 0, 0, 0, DECAL_STAIN, 0 };
+                gravmap[] = { 0, 0, 0, 0, -5, -10, -10, 0, 10, 20 };
             int type = typemap[attr[0]-4];
-            float size = sizemap[attr[0]-4], vel = velmap[attr[0]-4], grav = gravmap[attr[0]-4], col = colmap[attr[0]-4];
-            if(attr[1] >= 256) regularshape(type, max(1+attr[2], 1), attr[3], attr[1]-256, 5, attr[4] > 0 ? attr[4] : 250, o, size, 1, grav, col, vel);
-            else newparticle(o, offsetvec(o, attr[1], max(1+attr[2], 0)), attr[4] > 0 ? attr[4] : 1, type, attr[3], size, 1, grav, col);
+            if(attr[1] >= 256) regularshape(type, max(1+attr[2], 1), attr[3], attr[1]-256, 5, attr[4] > 0 ? attr[4] : 250, o, attr[5] != 0 ? attr[5]/100.f : sizemap[attr[0]-4], 1, attr[7] != 0 ? attr[7] : gravmap[attr[0]-4], attr[6] > 0 && attr[6] <= DECAL_MAX ? attr[6]-1 : -1, attr[8] != 0 ? attr[8] : velmap[attr[0]-4]);
+            else newparticle(o, offsetvec(o, attr[1], max(1+attr[2], 0)), attr[4] > 0 ? attr[4] : 1, type, attr[3], attr[5] != 0 ? attr[5]/100.f : sizemap[attr[0]-4], 1, attr[7] != 0 ? attr[7] : gravmap[attr[0]-4], attr[6] > 0 && attr[6] <= DECAL_MAX ? attr[6]-1 : -1);
             break;
         }
         case 14: // flames <radius> <height> <rgb>
@@ -1668,9 +1667,8 @@ void makeparticle(const vec &o, vector<int> &attr)
         {
             const int typemap[] = { PART_FLAME, PART_SMOKE }, fademap[] = { 500, 1000 }, densitymap[] = { 3, 1 };
             const float sizemap[] = { 2, 2 }, velmap[] = { 25, 50 }, gravmap[] = { -5, -10 };
-            int type = typemap[attr[0]-14], density = densitymap[attr[0]-14], fade = attr[4] > 0 ? attr[4] : fademap[attr[0]-14];
-            float size = sizemap[attr[0]-14], vel = velmap[attr[0]-14], grav = gravmap[attr[0]-14];
-            regularflame(type, o, float(attr[1])/100.0f, float(attr[2])/100.0f, attr[3], density, fade, size, 1, grav, 0, vel);
+            int type = typemap[attr[0]-14], density = densitymap[attr[0]-14];
+            regularflame(type, o, float(attr[1])/100.0f, float(attr[2])/100.0f, attr[3], density, attr[4] > 0 ? attr[4] : fademap[attr[0]-14], attr[5] != 0 ? attr[5]/100.f : sizemap[attr[0]-14], 1, attr[6] != 0 ? attr[6] : gravmap[attr[0]-14], 0, attr[7] != 0 ? attr[7] : velmap[attr[0]-14]);
             break;
         }
         case 6: //meter, metervs - <percent> <rgb> <rgb2>

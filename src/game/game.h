@@ -51,7 +51,7 @@ struct enttypes
     int type,           priority, links,    radius, usetype,    numattrs,
             canlink,
             reclink;
-    bool    noisy;  const char *name,           *attrs[6];
+    bool    noisy;  const char *name,           *attrs[9];
 };
 #ifdef GAMESERVER
 enttypes enttype[] = {
@@ -59,13 +59,13 @@ enttypes enttype[] = {
         NOTUSED,        -1,         0,      0,      EU_NONE,    0,
             0,
             0,
-            true,               "none",         { "",       "",         "",         "",         "",         "" }
+            true,               "none",         { "" }
     },
     {
         LIGHT,          1,          59,     0,      EU_NONE,    4,
             (1<<LIGHTFX),
             (1<<LIGHTFX),
-            false,              "light",        { "radius", "red",      "green",    "blue",     "",         "" }
+            false,              "light",        { "radius", "red",      "green",    "blue"  }
     },
     {
         MAPMODEL,       1,          58,     0,      EU_NONE,    6,
@@ -77,31 +77,31 @@ enttypes enttype[] = {
         PLAYERSTART,    1,          59,     0,      EU_NONE,    5,
             0,
             0,
-            false,              "playerstart",  { "team",   "yaw",      "pitch",    "mode",     "id",       "" }
+            false,              "playerstart",  { "team",   "yaw",      "pitch",    "mode",     "id" }
     },
     {
         ENVMAP,         1,          0,      0,      EU_NONE,    1,
             0,
             0,
-            false,              "envmap",       { "radius", "",         "",         "",         "",         "" }
+            false,              "envmap",       { "radius" }
     },
     {
-        PARTICLES,      1,          59,     0,      EU_NONE,    5,
+        PARTICLES,      1,          59,     0,      EU_NONE,    9,
             (1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<TRIGGER)|(1<<PUSHER),
-            false,              "particles",    { "type",   "a",        "b",        "c",        "d",        "" }
+            false,              "particles",    { "type",   "a",        "b",        "c",        "d",        "e",        "f",        "g",        "i" }
     },
     {
         MAPSOUND,       1,          58,     0,      EU_NONE,    5,
             (1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<TRIGGER)|(1<<PUSHER),
-            false,              "sound",        { "type",   "maxrad",   "minrad",   "volume",   "flags",    "" }
+            false,              "sound",        { "type",   "maxrad",   "minrad",   "volume",   "flags" }
     },
     {
         LIGHTFX,        1,          1,      0,      EU_NONE,    5,
             (1<<LIGHT)|(1<<TELEPORT)|(1<<TRIGGER)|(1<<PUSHER),
             (1<<LIGHT)|(1<<TRIGGER)|(1<<PUSHER),
-            false,              "lightfx",      { "type",   "mod",      "min",      "max",      "flags",    "" }
+            false,              "lightfx",      { "type",   "mod",      "min",      "max",      "flags" }
     },
     {
         SUNLIGHT,       1,          160,    0,      EU_NONE,    6,
@@ -113,25 +113,25 @@ enttypes enttype[] = {
         WEAPON,         2,          59,     16,     EU_ITEM,    4,
             0,
             0,
-            false,              "weapon",       { "type",   "flags",    "mode",     "id",       "",         "" }
+            false,              "weapon",       { "type",   "flags",    "mode",     "id" }
     },
     {
         TELEPORT,       1,          50,     12,     EU_AUTO,    5,
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX)|(1<<TELEPORT),
             (1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
-            false,              "teleport",     { "yaw",    "pitch",    "push",     "radius",   "colour",   "" }
+            false,              "teleport",     { "yaw",    "pitch",    "push",     "radius",   "colour" }
     },
     {
         ACTOR,          1,          59,     0,      EU_NONE,    5,
             (1<<FLAG)|(1<<WAYPOINT),
             0,
-            false,              "actor",        { "type",   "yaw",      "pitch",    "mode",     "id",       "" }
+            false,              "actor",        { "type",   "yaw",      "pitch",    "mode",     "id" }
     },
     {
         TRIGGER,        1,          58,     16,     EU_AUTO,    5,
             (1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
             (1<<MAPMODEL)|(1<<MAPSOUND)|(1<<PARTICLES)|(1<<LIGHTFX),
-            false,              "trigger",      { "id",     "type",     "action",   "radius",   "state",    "" }
+            false,              "trigger",      { "id",     "type",     "action",   "radius",   "state" }
     },
     {
         PUSHER,         1,          58,     12,     EU_AUTO,    6,
@@ -143,7 +143,7 @@ enttypes enttype[] = {
         FLAG,           1,          48,     36,     EU_NONE,    5,
             (1<<FLAG),
             0,
-            false,              "flag",         { "team",   "yaw",      "pitch",    "mode",     "id",       "" }
+            false,              "flag",         { "team",   "yaw",      "pitch",    "mode",     "id" }
     },
     {
         CHECKPOINT,     1,          48,     16,     EU_AUTO,    6,
@@ -155,13 +155,13 @@ enttypes enttype[] = {
         CAMERA,         1,          48,     0,      EU_NONE,    3,
             (1<<CAMERA),
             0,
-            false,              "camera",       { "type",   "mindist",  "maxdist",  "",         "",         "" }
+            false,              "camera",       { "type",   "mindist",  "maxdist" }
     },
     {
         WAYPOINT,       0,          1,      16,     EU_NONE,    5,
             (1<<WAYPOINT),
             0,
-            true,               "waypoint",     { "type",   "state",    "id",       "radius",   "flags",    "" }
+            true,               "waypoint",     { "type",   "state",    "id",       "radius",   "flags" }
     }
 };
 #else
