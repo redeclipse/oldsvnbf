@@ -999,7 +999,7 @@ namespace server
                 int cycle = -1, team = m_fight(gamemode) && m_team(gamemode, mutators) && !spawns[ci->team].ents.empty() ? ci->team : TEAM_NEUTRAL;
                 if(!spawns[team].ents.empty())
                 {
-                    switch(GAME(spawnrotate))
+                    switch(min(GAME(spawnrotate), 2))
                     {
                         case 2:
                         {
@@ -1011,7 +1011,7 @@ namespace server
                             }
                             if(!lowest.empty())
                             {
-                                int r = lowest.length() > 1 ? rnd(lowest.length()) : 0, n = lowest[r];
+                                int r = lowest.length() > (spawns[team].cycle.length() > GAME(spawnrotate) ? 1 : 4) ? rnd(lowest.length()) : 0, n = lowest[r];
                                 spawns[team].cycle[n]++;
                                 spawns[team].spawncycle = cycle = n;
                                 break;
