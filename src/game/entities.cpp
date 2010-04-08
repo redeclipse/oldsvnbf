@@ -2104,6 +2104,12 @@ namespace entities
                     part_radius(e.o, vec(e.attrs[2], e.attrs[2], e.attrs[2]), 1, 1, 1, 0x00FFFF);
                     break;
                 }
+                case ENVMAP:
+                {
+                    int s = e.attrs[0] ? clamp(e.attrs[0], 0, 10000) : envmapradius;
+                    part_radius(e.o, vec(s, s, s), 1, 1, 1, 0x00FFFF);
+                    break;
+                }
                 case LIGHT:
                 {
                     int s = e.attrs[0] ? e.attrs[0] : hdr.worldsize,
