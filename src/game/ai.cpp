@@ -1087,7 +1087,7 @@ namespace ai
             {
                 loopirev(WEAP_MAX) if(i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
-                    client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
+                    client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
                     d->ai->lastaction = lastmillis;
                     break;
@@ -1340,8 +1340,8 @@ namespace ai
             }
             if((d->state == CS_DEAD || d->state == CS_WAITING) && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
             {
-                if(m_arena(game::gamemode, game::mutators)) client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
-                client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+                if(m_arena(game::gamemode, game::mutators)) client::addmsg(N_LOADWEAP, "ri2", d->clientnum, d->loadweap);
+                client::addmsg(N_TRYSPAWN, "ri", d->clientnum);
                 d->respawned = lastmillis;
             }
             else if(d->state == CS_ALIVE && run)

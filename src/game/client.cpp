@@ -110,7 +110,7 @@ namespace client
     VAR(IDF_PERSIST, showlaptimes, 0, 2, 3); // 0 = off, 1 = only player, 2 = +humans, 3 = +bots
     SVAR(IDF_PERSIST, serversort, "");
 
-    ICOMMAND(0, mastermode, "i", (int *val), addmsg(SV_MASTERMODE, "ri", *val));
+    ICOMMAND(0, mastermode, "i", (int *val), addmsg(N_MASTERMODE, "ri", *val));
     ICOMMAND(0, getname, "", (), result(escapetext(game::player1->name)));
     ICOMMAND(0, getteam, "", (), result(teamtype[game::player1->team].name));
     ICOMMAND(0, getteamicon, "", (), result(hud::teamtex(game::player1->team)));
@@ -123,7 +123,7 @@ namespace client
         {
             string text; filtertext(text, name);
             copystring(game::player1->name, text, MAXNAMELEN);
-            addmsg(SV_SWITCHNAME, "rs", game::player1->name);
+            addmsg(N_SWITCHNAME, "rs", game::player1->name);
         }
         else conoutft(CON_MESG, "\fgyour name is: %s", *game::player1->name ? game::colorname(game::player1) : "<not set>");
     }
@@ -161,7 +161,7 @@ namespace client
                 {
                     if(game::player1->team != t) hud::lastteam = 0;
                     game::player1->team = t;
-                    addmsg(SV_SWITCHTEAM, "ri", game::player1->team);
+                    addmsg(N_SWITCHTEAM, "ri", game::player1->team);
                 }
             }
             else conoutft(CON_MESG, "\frcan only change teams when actually playing in team games");
@@ -238,7 +238,7 @@ namespace client
         game::resetstate();
         physics::entinmap(game::player1, true); // find spawn closest to current floating pos
         projs::remove(game::player1);
-        if(m_edit(game::gamemode)) addmsg(SV_EDITMODE, "ri", edit ? 1 : 0);
+        if(m_edit(game::gamemode)) addmsg(N_EDITMODE, "ri", edit ? 1 : 0);
         entities::edittoggled(edit);
     }
 
@@ -335,14 +335,14 @@ namespace client
 
     void clearbans()
     {
-        addmsg(SV_CLEARBANS, "r");
+        addmsg(N_CLEARBANS, "r");
     }
     ICOMMAND(0, clearbans, "", (char *s), clearbans());
 
     void kick(const char *arg)
     {
         int i = parseplayer(arg);
-        if(i>=0 && i!=game::player1->clientnum) addmsg(SV_KICK, "ri", i);
+        if(i>=0 && i!=game::player1->clientnum) addmsg(N_KICK, "ri", i);
     }
     ICOMMAND(0, kick, "s", (char *s), kick(s));
 
@@ -354,7 +354,7 @@ namespace client
             if(i>=0 && i!=game::player1->clientnum)
             {
                 int t = teamname(arg2);
-                if(t) addmsg(SV_SETTEAM, "ri2", i, t);
+                if(t) addmsg(N_SETTEAM, "ri2", i, t);
             }
         }
         else conoutft(CON_MESG, "\frcan only change teams in team games");
@@ -377,25 +377,25 @@ namespace client
         mkstring(hash);
         if(!arg[1] && isdigit(arg[0])) val = atoi(arg);
         else server::hashpassword(game::player1->clientnum, sessionid, arg, hash);
-        addmsg(SV_SETMASTER, "ris", val, hash);
+        addmsg(N_SETMASTER, "ris", val, hash);
     }
     COMMAND(0, setmaster, "s");
 
     void tryauth()
     {
         if(!authname[0]) return;
-        addmsg(SV_AUTHTRY, "rs", authname);
+        addmsg(N_AUTHTRY, "rs", authname);
     }
     ICOMMAND(0, auth, "", (), tryauth());
 
     void togglespectator(int val, const char *who)
     {
         int i = who[0] ? parseplayer(who) : game::player1->clientnum;
-        if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
+        if(i>=0) addmsg(N_SPECTATOR, "rii", i, val);
     }
     ICOMMAND(0, spectator, "is", (int *val, char *who), togglespectator(*val, who));
 
-    ICOMMAND(0, checkmaps, "", (), addmsg(SV_CHECKMAPS, "r"));
+    ICOMMAND(0, checkmaps, "", (), addmsg(N_CHECKMAPS, "r"));
 
     void addmsg(int type, const char *fmt, ...)
     {
@@ -480,7 +480,7 @@ namespace client
         if(ready())
         {
             saytext(game::player1, flags, text);
-            addmsg(SV_TEXT, "ri2s", game::player1->clientnum, flags, text);
+            addmsg(N_TEXT, "ri2s", game::player1->clientnum, flags, text);
         }
     }
     ICOMMAND(0, say, "C", (char *s), toserver(SAY_NONE, s));
@@ -547,7 +547,7 @@ namespace client
     {
         if(ready())
         {
-            addmsg(SV_COMMAND, "ri2ss", game::player1->clientnum, nargs, cmd, arg);
+            addmsg(N_COMMAND, "ri2ss", game::player1->clientnum, nargs, cmd, arg);
             return true;
         }
         else
@@ -593,7 +593,7 @@ namespace client
         len -= p.length();
         switch(type)
         {
-            case SV_SENDDEMO:
+            case N_SENDDEMO:
             {
                 defformatstring(fname)("%d.dmo", lastmillis);
                 stream *demo = openfile(fname, "wb");
@@ -604,14 +604,14 @@ namespace client
                 break;
             }
 
-            case SV_SENDMAPCONFIG:
-            case SV_SENDMAPSHOT:
-            case SV_SENDMAPFILE:
+            case N_SENDMAPCONFIG:
+            case N_SENDMAPSHOT:
+            case N_SENDMAPFILE:
             {
                 const char *reqmap = mapname, *reqext = "xxx";
-                if(type == SV_SENDMAPCONFIG) reqext = "cfg";
-                else if(type == SV_SENDMAPSHOT) reqext = "png";
-                else if(type == SV_SENDMAPFILE) reqext = "bgz";
+                if(type == N_SENDMAPCONFIG) reqext = "cfg";
+                else if(type == N_SENDMAPSHOT) reqext = "png";
+                else if(type == N_SENDMAPFILE) reqext = "bgz";
                 if(!reqmap || !*reqmap) reqmap = "maps/untitled";
                 defformatstring(reqfile)(strstr(reqmap, "temp/")==reqmap || strstr(reqmap, "temp\\")==reqmap ? "%s" : "temp/%s", reqmap);
                 defformatstring(reqfext)("%s.%s", reqfile, reqext);
@@ -629,24 +629,24 @@ namespace client
         }
         return;
     }
-    ICOMMAND(0, getmap, "", (), if(multiplayer(false)) addmsg(SV_GETMAP, "r"));
+    ICOMMAND(0, getmap, "", (), if(multiplayer(false)) addmsg(N_GETMAP, "r"));
 
     void stopdemo()
     {
-        if(remote) addmsg(SV_STOPDEMO, "r");
+        if(remote) addmsg(N_STOPDEMO, "r");
         else server::stopdemo();
     }
     ICOMMAND(0, stopdemo, "", (), stopdemo());
 
     void recorddemo(int val)
     {
-        addmsg(SV_RECORDDEMO, "ri", val);
+        addmsg(N_RECORDDEMO, "ri", val);
     }
     ICOMMAND(0, recorddemo, "i", (int *val), recorddemo(*val));
 
     void cleardemos(int val)
     {
-        addmsg(SV_CLEARDEMOS, "ri", val);
+        addmsg(N_CLEARDEMOS, "ri", val);
     }
     ICOMMAND(0, cleardemos, "i", (int *val), cleardemos(*val));
 
@@ -654,14 +654,14 @@ namespace client
     {
         if(i<=0) conoutft(CON_MESG, "getting demo...");
         else conoutft(CON_MESG, "getting demo %d...", i);
-        addmsg(SV_GETDEMO, "ri", i);
+        addmsg(N_GETDEMO, "ri", i);
     }
     ICOMMAND(0, getdemo, "i", (int *val), getdemo(*val));
 
     void listdemos()
     {
         conoutft(CON_MESG, "listing demos...");
-        addmsg(SV_LISTDEMOS, "r");
+        addmsg(N_LISTDEMOS, "r");
     }
     ICOMMAND(0, listdemos, "", (), listdemos());
 
@@ -678,7 +678,7 @@ namespace client
         {
             string reqfile;
             copystring(reqfile, !strncasecmp(name, "temp/", 5) || !strncasecmp(name, "temp\\", 5) ? name+5 : name);
-            addmsg(SV_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
+            addmsg(N_MAPVOTE, "rsi2", reqfile, nextmode, nextmuts);
         }
     }
     ICOMMAND(0, map, "s", (char *s), changemap(s));
@@ -710,7 +710,7 @@ namespace client
             if(f)
             {
                 conoutft(CON_MESG, "\fgtransmitting file: %s", reqfext);
-                sendfile(-1, 2, f, "ri", SV_SENDMAPFILE+i);
+                sendfile(-1, 2, f, "ri", N_SENDMAPFILE+i);
                 if(needclipboard >= 0) needclipboard++;
                 delete f;
             }
@@ -755,16 +755,16 @@ namespace client
             switch(id->type)
             {
                 case ID_VAR:
-                    addmsg(SV_EDITVAR, "risi", id->type, id->name, *id->storage.i);
+                    addmsg(N_EDITVAR, "risi", id->type, id->name, *id->storage.i);
                     break;
                 case ID_FVAR:
-                    addmsg(SV_EDITVAR, "risf", id->type, id->name, *id->storage.f);
+                    addmsg(N_EDITVAR, "risf", id->type, id->name, *id->storage.f);
                     break;
                 case ID_SVAR:
-                    addmsg(SV_EDITVAR, "riss", id->type, id->name, *id->storage.s);
+                    addmsg(N_EDITVAR, "riss", id->type, id->name, *id->storage.s);
                     break;
                 case ID_ALIAS:
-                    addmsg(SV_EDITVAR, "riss", id->type, id->name, id->action);
+                    addmsg(N_EDITVAR, "riss", id->type, id->name, id->action);
                     break;
                 default: break;
             }
@@ -781,7 +781,7 @@ namespace client
             inlen = outlen = 0;
         }
         packetbuf p(16 + outlen, ENET_PACKET_FLAG_RELIABLE);
-        putint(p, SV_CLIPBOARD);
+        putint(p, N_CLIPBOARD);
         putint(p, inlen);
         putint(p, outlen);
         if(outlen > 0) p.put(outbuf, outlen);
@@ -809,7 +809,7 @@ namespace client
                         }
                         break;
                 }
-                addmsg(SV_EDITF + op, "ri9i4",
+                addmsg(N_EDITF + op, "ri9i4",
                     sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                     sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner);
                 break;
@@ -817,7 +817,7 @@ namespace client
             case EDIT_MAT:
             case EDIT_ROTATE:
             {
-                addmsg(SV_EDITF + op, "ri9i5",
+                addmsg(N_EDITF + op, "ri9i5",
                     sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                     sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
                     arg1);
@@ -827,7 +827,7 @@ namespace client
             case EDIT_TEX:
             case EDIT_REPLACE:
             {
-                addmsg(SV_EDITF + op, "ri9i6",
+                addmsg(N_EDITF + op, "ri9i6",
                     sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                     sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
                     arg1, arg2);
@@ -835,7 +835,7 @@ namespace client
             }
             case EDIT_REMIP:
             {
-                addmsg(SV_EDITF + op, "r");
+                addmsg(N_EDITF + op, "r");
                 break;
             }
         }
@@ -844,7 +844,7 @@ namespace client
     void sendintro()
     {
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        putint(p, SV_CONNECT);
+        putint(p, N_CONNECT);
         sendstring(game::player1->name, p);
         mkstring(hash);
         if(connectpass[0])
@@ -863,7 +863,7 @@ namespace client
         {
             // send position updates separately so as to not stall out aiming
             packetbuf q(100);
-            putint(q, SV_POS);
+            putint(q, N_POS);
             putint(q, d->clientnum);
             putuint(q, (int)(d->o.x*DMF));            // quantize coordinates to 1/4th of a cube, between 1 and 3 bytes
             putuint(q, (int)(d->o.y*DMF));
@@ -902,14 +902,14 @@ namespace client
         {
             p.reliable();
             sendcrc = false;
-            putint(p, SV_MAPCRC);
+            putint(p, N_MAPCRC);
             sendstring(game::clientmap, p);
             putint(p, game::clientmap[0] ? getmapcrc() : 0);
         }
         if(sendinfo && !needsmap)
         {
             p.reliable();
-            putint(p, SV_GAMEINFO);
+            putint(p, N_GAMEINFO);
             putint(p, game::numplayers);
             entities::putitems(p);
             putint(p, -1);
@@ -926,7 +926,7 @@ namespace client
         }
         if(lastmillis-lastping>250)
         {
-            putint(p, SV_PING);
+            putint(p, N_PING);
             putint(p, lastmillis);
             lastping = lastmillis;
         }
@@ -999,7 +999,7 @@ namespace client
         int type;
         while(p.remaining()) switch(type = getint(p))
         {
-            case SV_POS:                        // position of another client
+            case N_POS:                        // position of another client
             {
                 int lcn = getint(p);
                 vec o, vel, falling;
@@ -1112,7 +1112,7 @@ namespace client
             if(verbose > 5) conoutf("[client] msg: %d, prev: %d", type, prevtype);
             switch(type)
             {
-                case SV_SERVERINIT:                 // welcome messsage from the server
+                case N_SERVERINIT:                 // welcome messsage from the server
                 {
                     int mycn = getint(p), gver = getint(p);
                     if(gver!=GAMEVERSION)
@@ -1128,9 +1128,9 @@ namespace client
                     sendintro();
                     break;
                 }
-                case SV_WELCOME: isready = true; break;
+                case N_WELCOME: isready = true; break;
 
-                case SV_CLIENT:
+                case N_CLIENT:
                 {
                     int lcn = getint(p), len = getuint(p);
                     ucharbuf q = p.subbuf(len);
@@ -1139,7 +1139,7 @@ namespace client
                     break;
                 }
 
-                case SV_PHYS: // simple phys events
+                case N_PHYS: // simple phys events
                 {
                     int lcn = getint(p), st = getint(p);
                     gameent *t = game::getclient(lcn);
@@ -1172,7 +1172,7 @@ namespace client
                     break;
                 }
 
-                case SV_ANNOUNCE:
+                case N_ANNOUNCE:
                 {
                     int snd = getint(p), targ = getint(p);
                     getstring(text, p);
@@ -1181,7 +1181,7 @@ namespace client
                     break;
                 }
 
-                case SV_TEXT:
+                case N_TEXT:
                 {
                     int tcn = getint(p);
                     gameent *t = game::getclient(tcn);
@@ -1192,7 +1192,7 @@ namespace client
                     break;
                 }
 
-                case SV_COMMAND:
+                case N_COMMAND:
                 {
                     int lcn = getint(p);
                     gameent *f = game::getclient(lcn);
@@ -1203,7 +1203,7 @@ namespace client
                     break;
                 }
 
-                case SV_EXECLINK:
+                case N_EXECLINK:
                 {
                     int tcn = getint(p), index = getint(p);
                     gameent *t = game::getclient(tcn);
@@ -1212,7 +1212,7 @@ namespace client
                     break;
                 }
 
-                case SV_MAPCHANGE:
+                case N_MAPCHANGE:
                 {
                     int hasmap = getint(p);
                     if(hasmap) getstring(text, p);
@@ -1224,7 +1224,7 @@ namespace client
                         case 0: case 2:
                         {
                             conoutft(CON_MESG, "\fcserver requested map change to %s, and we need it, so asking for it", hasmap ? text : "<temp>");
-                            addmsg(SV_GETMAP, "r");
+                            addmsg(N_GETMAP, "r");
                             break;
                         }
                         case 1:
@@ -1237,7 +1237,7 @@ namespace client
                     break;
                 }
 
-                case SV_GAMEINFO:
+                case N_GAMEINFO:
                 {
                     int n;
                     while((n = getint(p)) != -1) entities::setspawn(n, getint(p));
@@ -1245,7 +1245,7 @@ namespace client
                     break;
                 }
 
-                case SV_NEWGAME: // server requests next game
+                case N_NEWGAME: // server requests next game
                 {
                     hud::sb.showscores(false);
                     if(!menuactive()) showgui("maps", 1);
@@ -1253,7 +1253,7 @@ namespace client
                     break;
                 }
 
-                case SV_SWITCHNAME:
+                case N_SWITCHNAME:
                     getstring(text, p);
                     if(!d) break;
                     filtertext(text, text, true, true, true, MAXNAMELEN);
@@ -1269,7 +1269,7 @@ namespace client
                     copystring(d->name, text, MAXNAMELEN+1);
                     break;
 
-                case SV_CLIENTINIT: // another client either connected or changed name/team
+                case N_CLIENTINIT: // another client either connected or changed name/team
                 {
                     int cn = getint(p);
                     gameent *d = game::newclient(cn);
@@ -1307,14 +1307,14 @@ namespace client
                     break;
                 }
 
-                case SV_DISCONNECT:
+                case N_DISCONNECT:
                 {
                     int lcn = getint(p), reason = getint(p);
                     game::clientdisconnected(lcn, reason);
                     break;
                 }
 
-                case SV_SPAWN:
+                case N_SPAWN:
                 {
                     int lcn = getint(p);
                     gameent *f = game::newclient(lcn);
@@ -1333,7 +1333,7 @@ namespace client
                     break;
                 }
 
-                case SV_LOADWEAP:
+                case N_LOADWEAP:
                 {
                     hud::sb.showscores(false);
                     game::player1->loadweap = -1;
@@ -1341,7 +1341,7 @@ namespace client
                     break;
                 }
 
-                case SV_SPAWNSTATE:
+                case N_SPAWNSTATE:
                 {
                     int lcn = getint(p), ent = getint(p);
                     gameent *f = game::newclient(lcn);
@@ -1356,7 +1356,7 @@ namespace client
                     f->state = CS_ALIVE;
                     if(f == game::player1 || f->ai)
                     {
-                        addmsg(SV_SPAWN, "ri", f->clientnum);
+                        addmsg(N_SPAWN, "ri", f->clientnum);
                         entities::spawnplayer(f, ent, true);
                         if(f->aitype < AI_START)
                         {
@@ -1370,7 +1370,7 @@ namespace client
                     break;
                 }
 
-                case SV_SHOTFX:
+                case N_SHOTFX:
                 {
                     int scn = getint(p), weap = getint(p), flags = getint(p), power = getint(p);
                     vec from;
@@ -1388,7 +1388,7 @@ namespace client
                     break;
                 }
 
-                case SV_DAMAGE:
+                case N_DAMAGE:
                 {
                     int tcn = getint(p),
                         acn = getint(p),
@@ -1405,7 +1405,7 @@ namespace client
                     break;
                 }
 
-                case SV_RELOAD:
+                case N_RELOAD:
                 {
                     int trg = getint(p), weap = getint(p), amt = getint(p), ammo = getint(p);
                     gameent *target = game::getclient(trg);
@@ -1414,7 +1414,7 @@ namespace client
                     break;
                 }
 
-                case SV_REGEN:
+                case N_REGEN:
                 {
                     int trg = getint(p), heal = getint(p), amt = getint(p);
                     gameent *f = game::getclient(trg);
@@ -1429,7 +1429,7 @@ namespace client
                     break;
                 }
 
-                case SV_DIED:
+                case N_DIED:
                 {
                     int vcn = getint(p), acn = getint(p), frags = getint(p), style = getint(p), weap = getint(p), flags = getint(p), damage = getint(p);
                     gameent *victim = game::getclient(vcn), *actor = game::getclient(acn);
@@ -1441,7 +1441,7 @@ namespace client
                     break;
                 }
 
-                case SV_POINTS:
+                case N_POINTS:
                 {
                     int acn = getint(p), add = getint(p), points = getint(p);
                     gameent *actor = game::getclient(acn);
@@ -1451,7 +1451,7 @@ namespace client
                     break;
                 }
 
-                case SV_DROP:
+                case N_DROP:
                 {
                     int trg = getint(p), weap = getint(p), ds = getint(p);
                     gameent *target = game::getclient(trg);
@@ -1470,7 +1470,7 @@ namespace client
                     break;
                 }
 
-                case SV_WEAPSELECT:
+                case N_WEAPSELECT:
                 {
                     int trg = getint(p), weap = getint(p);
                     gameent *target = game::getclient(trg);
@@ -1479,7 +1479,7 @@ namespace client
                     break;
                 }
 
-                case SV_RESUME:
+                case N_RESUME:
                 {
                     for(;;)
                     {
@@ -1492,7 +1492,7 @@ namespace client
                     break;
                 }
 
-                case SV_ITEMSPAWN:
+                case N_ITEMSPAWN:
                 {
                     int ent = getint(p), value = getint(p);
                     if(!entities::ents.inrange(ent)) break;
@@ -1523,14 +1523,14 @@ namespace client
                     break;
                 }
 
-                case SV_TRIGGER:
+                case N_TRIGGER:
                 {
                     int ent = getint(p), st = getint(p);
                     entities::setspawn(ent, st);
                     break;
                 }
 
-                case SV_ITEMACC:
+                case N_ITEMACC:
                 { // uses a specific drop so the client knows what to replace
                     int lcn = getint(p), ent = getint(p), spawn = getint(p), weap = getint(p), drop = getint(p);
                     gameent *target = game::getclient(lcn);
@@ -1540,7 +1540,7 @@ namespace client
                     break;
                 }
 
-                case SV_EDITVAR:
+                case N_EDITVAR:
                 {
                     int t = getint(p);
                     bool commit = true;
@@ -1601,7 +1601,7 @@ namespace client
                     break;
                 }
 
-                case SV_CLIPBOARD:
+                case N_CLIPBOARD:
                 {
                     int cn = getint(p), unpacklen = getint(p), packlen = getint(p);
                     gameent *d = game::getclient(cn);
@@ -1610,15 +1610,15 @@ namespace client
                     break;
                 }
 
-                case SV_EDITF:            // coop editing messages
-                case SV_EDITT:
-                case SV_EDITM:
-                case SV_FLIP:
-                case SV_COPY:
-                case SV_PASTE:
-                case SV_ROTATE:
-                case SV_REPLACE:
-                case SV_DELCUBE:
+                case N_EDITF:            // coop editing messages
+                case N_EDITT:
+                case N_EDITM:
+                case N_FLIP:
+                case N_COPY:
+                case N_PASTE:
+                case N_ROTATE:
+                case N_REPLACE:
+                case N_DELCUBE:
                 {
                     if(!d) return;
                     selinfo s;
@@ -1631,26 +1631,26 @@ namespace client
                     ivec moveo;
                     switch(type)
                     {
-                        case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, s, false); break;
-                        case SV_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, s, false); break;
-                        case SV_EDITM: mat = getint(p); mpeditmat(mat, s, false); break;
-                        case SV_FLIP: mpflip(s, false); break;
-                        case SV_COPY: if(d) mpcopy(d->edit, s, false); break;
-                        case SV_PASTE: if(d) mppaste(d->edit, s, false); break;
-                        case SV_ROTATE: dir = getint(p); mprotate(dir, s, false); break;
-                        case SV_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, s, false); break;
-                        case SV_DELCUBE: mpdelcube(s, false); break;
+                        case N_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, s, false); break;
+                        case N_EDITT: tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, s, false); break;
+                        case N_EDITM: mat = getint(p); mpeditmat(mat, s, false); break;
+                        case N_FLIP: mpflip(s, false); break;
+                        case N_COPY: if(d) mpcopy(d->edit, s, false); break;
+                        case N_PASTE: if(d) mppaste(d->edit, s, false); break;
+                        case N_ROTATE: dir = getint(p); mprotate(dir, s, false); break;
+                        case N_REPLACE: tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, s, false); break;
+                        case N_DELCUBE: mpdelcube(s, false); break;
                     }
                     break;
                 }
-                case SV_REMIP:
+                case N_REMIP:
                 {
                     if(!d) return;
                     conoutft(CON_MESG, "%s remipped", game::colorname(d));
                     mpremip(false);
                     break;
                 }
-                case SV_EDITENT:            // coop edit of ent
+                case N_EDITENT:            // coop edit of ent
                 {
                     if(!d) return;
                     int i = getint(p);
@@ -1664,27 +1664,27 @@ namespace client
                     break;
                 }
 
-                case SV_EDITLINK:
+                case N_EDITLINK:
                 {
                     if(!d) return;
                     int b = getint(p), index = getint(p), node = getint(p);
                     entities::linkents(index, node, b!=0, false, false);
                 }
 
-                case SV_PONG:
-                    addmsg(SV_CLIENTPING, "i", game::player1->ping = (game::player1->ping*5+lastmillis-getint(p))/6);
+                case N_PONG:
+                    addmsg(N_CLIENTPING, "i", game::player1->ping = (game::player1->ping*5+lastmillis-getint(p))/6);
                     break;
 
-                case SV_CLIENTPING:
+                case N_CLIENTPING:
                     if(!d) return;
                     d->ping = getint(p);
                     break;
 
-                case SV_TICK:
+                case N_TICK:
                     game::timeupdate(getint(p));
                     break;
 
-                case SV_SERVMSG:
+                case N_SERVMSG:
                 {
                     int lev = getint(p);
                     getstring(text, p);
@@ -1692,7 +1692,7 @@ namespace client
                     break;
                 }
 
-                case SV_SENDDEMOLIST:
+                case N_SENDDEMOLIST:
                 {
                     int demos = getint(p);
                     if(!demos) conoutft(CON_MESG, "\frno demos available");
@@ -1704,7 +1704,7 @@ namespace client
                     break;
                 }
 
-                case SV_DEMOPLAYBACK:
+                case N_DEMOPLAYBACK:
                 {
                     int on = getint(p);
                     if(on) game::player1->state = CS_SPECTATOR;
@@ -1717,7 +1717,7 @@ namespace client
                     break;
                 }
 
-                case SV_CURRENTMASTER:
+                case N_CURRENTMASTER:
                 {
                     int mn = getint(p), priv = getint(p);
                     if(mn >= 0)
@@ -1728,7 +1728,7 @@ namespace client
                     break;
                 }
 
-                case SV_EDITMODE:
+                case N_EDITMODE:
                 {
                     int val = getint(p);
                     if(!d) break;
@@ -1743,7 +1743,7 @@ namespace client
                     break;
                 }
 
-                case SV_SPECTATOR:
+                case N_SPECTATOR:
                 {
                     int sn = getint(p), val = getint(p);
                     gameent *s = game::newclient(sn);
@@ -1766,7 +1766,7 @@ namespace client
                     break;
                 }
 
-                case SV_WAITING:
+                case N_WAITING:
                 {
                     int sn = getint(p);
                     gameent *s = game::newclient(sn);
@@ -1784,7 +1784,7 @@ namespace client
                     break;
                 }
 
-                case SV_SETTEAM:
+                case N_SETTEAM:
                 {
                     int wn = getint(p), tn = getint(p);
                     gameent *w = game::getclient(wn);
@@ -1794,7 +1794,7 @@ namespace client
                     break;
                 }
 
-                case SV_FLAGINFO:
+                case N_FLAGINFO:
                 {
                     int flag = getint(p), converted = getint(p),
                             owner = getint(p), enemy = getint(p);
@@ -1802,7 +1802,7 @@ namespace client
                     break;
                 }
 
-                case SV_FLAGS:
+                case N_FLAGS:
                 {
                     int numflags = getint(p);
                     loopi(numflags)
@@ -1813,7 +1813,7 @@ namespace client
                     break;
                 }
 
-                case SV_MAPVOTE:
+                case N_MAPVOTE:
                 {
                     int vn = getint(p);
                     gameent *v = game::getclient(vn);
@@ -1825,7 +1825,7 @@ namespace client
                     break;
                 }
 
-                case SV_CHECKPOINT:
+                case N_CHECKPOINT:
                 {
                     int tn = getint(p), laptime = getint(p), besttime = getint(p);
                     gameent *t = game::getclient(tn);
@@ -1840,7 +1840,7 @@ namespace client
                     }
                 }
 
-                case SV_SCORE:
+                case N_SCORE:
                 {
                     int team = getint(p), total = getint(p);
                     if(m_stf(game::gamemode)) stf::setscore(team, total);
@@ -1848,13 +1848,13 @@ namespace client
                     break;
                 }
 
-                case SV_INITFLAGS:
+                case N_INITFLAGS:
                 {
                     ctf::parseflags(p, m_ctf(game::gamemode));
                     break;
                 }
 
-                case SV_DROPFLAG:
+                case N_DROPFLAG:
                 {
                     int ocn = getint(p), flag = getint(p);
                     vec droploc;
@@ -1864,7 +1864,7 @@ namespace client
                     break;
                 }
 
-                case SV_SCOREFLAG:
+                case N_SCOREFLAG:
                 {
                     int ocn = getint(p), relayflag = getint(p), goalflag = getint(p), score = getint(p);
                     gameent *o = game::newclient(ocn);
@@ -1872,7 +1872,7 @@ namespace client
                     break;
                 }
 
-                case SV_RETURNFLAG:
+                case N_RETURNFLAG:
                 {
                     int ocn = getint(p), flag = getint(p);
                     gameent *o = game::newclient(ocn);
@@ -1880,7 +1880,7 @@ namespace client
                     break;
                 }
 
-                case SV_TAKEFLAG:
+                case N_TAKEFLAG:
                 {
                     int ocn = getint(p), flag = getint(p);
                     gameent *o = game::newclient(ocn);
@@ -1888,14 +1888,14 @@ namespace client
                     break;
                 }
 
-                case SV_RESETFLAG:
+                case N_RESETFLAG:
                 {
                     int flag = getint(p);
                     if(m_ctf(game::gamemode)) ctf::resetflag(flag);
                     break;
                 }
 
-                case SV_GETMAP:
+                case N_GETMAP:
                 {
                     conoutft(CON_MESG, "\fcserver has requested we send the map..");
                     if(!needsmap && !gettingmap) sendmap();
@@ -1903,23 +1903,23 @@ namespace client
                     {
                         if(!gettingmap) conoutft(CON_MESG, "\fowe don't have the map though, so asking for it instead");
                         else conoutft(CON_MESG, "\fobut we're in the process of getting it");
-                        addmsg(SV_GETMAP, "r");
+                        addmsg(N_GETMAP, "r");
                     }
                     break;
                 }
 
-                case SV_SENDMAP:
+                case N_SENDMAP:
                 {
                     conoutft(CON_MESG, "\fcmap data has been uploaded");
                     if(needsmap && !gettingmap)
                     {
                         conoutft(CON_MESG, "\fowe want the map too, so asking for it");
-                        addmsg(SV_GETMAP, "r");
+                        addmsg(N_GETMAP, "r");
                     }
                     break;
                 }
 
-                case SV_NEWMAP:
+                case N_NEWMAP:
                 {
                     int size = getint(p);
                     if(size>=0) emptymap(size, true);
@@ -1935,7 +1935,7 @@ namespace client
                     break;
                 }
 
-                case SV_INITAI:
+                case N_INITAI:
                 {
                     int bn = getint(p), on = getint(p), at = getint(p), et = getint(p), sk = clamp(getint(p), 1, 101);
                     getstring(text, p);
@@ -1946,7 +1946,7 @@ namespace client
                     break;
                 }
 
-                case SV_AUTHCHAL:
+                case N_AUTHCHAL:
                 {
                     uint id = (uint)getint(p);
                     getstring(text, p);
@@ -1955,7 +1955,7 @@ namespace client
                         conoutft(CON_MESG, "server is challenging authentication details..");
                         vector<char> buf;
                         answerchallenge(authkey, text, buf);
-                        addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
+                        addmsg(N_AUTHANS, "ris", id, buf.getbuf());
                     }
                     break;
                 }

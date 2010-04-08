@@ -11,7 +11,7 @@ namespace ctf
             vecfromyawpitch(d->yaw, d->pitch, -d->move, -d->strafe, dir);
             dir.mul((d->radius*2.f)+enttype[FLAG].radius);
             vec o(vec(d->o).add(dir));
-            client::addmsg(SV_DROPFLAG, "ri4", game::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
+            client::addmsg(N_DROPFLAG, "ri4", game::player1->clientnum, int(o.x*DMF), int(o.y*DMF), int(o.z*DMF));
         }
         else if(d == game::player1) playsound(S_ERROR, d->o, d);
     }
@@ -376,7 +376,7 @@ namespace ctf
 
     void sendflags(packetbuf &p)
     {
-        putint(p, SV_INITFLAGS);
+        putint(p, N_INITFLAGS);
         putint(p, st.flags.length());
         loopv(st.flags)
         {
@@ -390,7 +390,7 @@ namespace ctf
     void dodrop(ctfstate::flag &f, int idx)
     {
         if((lookupmaterial(f.droploc)&MATF_FLAGS) == MAT_DEATH || !physics::droptofloor(f.droploc, 2, 0) || (lookupmaterial(f.droploc)&MATF_FLAGS) == MAT_DEATH)
-            client::addmsg(SV_RESETFLAG, "ri", idx);
+            client::addmsg(N_RESETFLAG, "ri", idx);
     }
 
     void setscore(int team, int total)
@@ -529,7 +529,7 @@ namespace ctf
             if(o.dist(f.pos()) <= enttype[FLAG].radius*2/3)
             {
                 if(f.pickup) continue;
-                client::addmsg(SV_TAKEFLAG, "ri2", d->clientnum, i);
+                client::addmsg(N_TAKEFLAG, "ri2", d->clientnum, i);
                 f.pickup = true;
             }
             else f.pickup = false;

@@ -315,7 +315,7 @@ namespace game
             if(d->loadweap < WEAP_OFFSET || d->loadweap >= WEAP_ITEM) d->loadweap = WEAP_MELEE;
             if(WEAP(d->loadweap, allowed) >= (m_insta(gamemode, mutators) ? 2 : 1))
             {
-                client::addmsg(SV_LOADWEAP, "ri2", d->clientnum, d->loadweap);
+                client::addmsg(N_LOADWEAP, "ri2", d->clientnum, d->loadweap);
                 conoutft(CON_SELF, "you will spawn with: %s%s", weaptype[d->loadweap].text, (d->loadweap >= WEAP_OFFSET ? weaptype[d->loadweap].name : "random weapons"));
             }
             else
@@ -332,7 +332,7 @@ namespace game
     {
         if(d->state == CS_DEAD && d->respawned < 0 && (!d->lastdeath || lastmillis-d->lastdeath >= 500))
         {
-            client::addmsg(SV_TRYSPAWN, "ri", d->clientnum);
+            client::addmsg(N_TRYSPAWN, "ri", d->clientnum);
             d->respawned = lastmillis;
         }
     }
@@ -1085,7 +1085,7 @@ namespace game
         if((d == player1 || d->ai) && d->state == CS_ALIVE && d->suicided < 0)
         {
             fireburn(d, -1, flags);
-            client::addmsg(SV_SUICIDE, "ri2", d->clientnum, flags);
+            client::addmsg(N_SUICIDE, "ri2", d->clientnum, flags);
             d->suicided = lastmillis;
         }
     }
@@ -1125,7 +1125,7 @@ namespace game
 
     void dynlighttrack(physent *owner, vec &o) { }
 
-    void newmap(int size) { client::addmsg(SV_NEWMAP, "ri", size); }
+    void newmap(int size) { client::addmsg(N_NEWMAP, "ri", size); }
 
     void loadworld(stream *f, int maptype) { }
     void saveworld(stream *f) { }

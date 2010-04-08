@@ -215,7 +215,7 @@ namespace stf
 
     void sendflags(packetbuf &p)
     {
-        putint(p, SV_FLAGS);
+        putint(p, N_FLAGS);
         putint(p, st.flags.length());
         loopv(st.flags)
         {

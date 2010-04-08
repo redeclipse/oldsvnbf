@@ -909,12 +909,12 @@ namespace projs
                     default: break;
                 }
                 if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
-                if(proj.local && proj.owner) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
+                if(proj.local && proj.owner) client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
                 break;
             }
             case PRJ_ENT:
             {
-                if(!proj.beenused && proj.local && proj.owner) client::addmsg(SV_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
+                if(!proj.beenused && proj.local && proj.owner) client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
                 break;
             }
             default: break;
@@ -1268,7 +1268,7 @@ namespace projs
                 }
                 if(!hits.empty())
                 {
-                    client::addmsg(SV_DESTROY, "ri6iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id,
+                    client::addmsg(N_DESTROY, "ri6iv", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id,
                             int(radius), hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
             }
