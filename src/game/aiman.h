@@ -97,7 +97,7 @@ namespace aiman
         mutate(smuts, mut->leavegame(ci, true));
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
         distpoints(ci, true); savescore(ci);
-        sendf(-1, 1, "ri3", SV_DISCONNECT, cn, DISC_NONE);
+        sendf(-1, 1, "ri3", N_DISCONNECT, cn, DISC_NONE);
         clients.removeobj(ci);
         delclient(cn);
         dorefresh = true;
@@ -124,7 +124,7 @@ namespace aiman
                 ci->state.dropped.reset();
                 loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
             }
-            sendf(-1, 1, "ri6si", SV_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
+            sendf(-1, 1, "ri6si", N_INITAI, ci->clientnum, ci->state.ownernum, ci->state.aitype, ci->state.aientity, ci->state.skill, ci->name, ci->team);
             if(ci->state.aireinit == 2)
             {
                 waiting(ci, 1, 2);

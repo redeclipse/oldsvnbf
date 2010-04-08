@@ -68,7 +68,7 @@ namespace auth
         ci->authlevel = -1;
         defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
-        sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "please wait, requesting credential match");
+        sendf(ci->clientnum, 1, "ri2s", N_SERVMSG, CON_MESG, "please wait, requesting credential match");
     }
 
     bool tryauth(clientinfo *ci, const char *user)
@@ -76,12 +76,12 @@ namespace auth
         if(!ci) return false;
         else if(!isconnected())
         {
-            sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "not connected to authentication server");
+            sendf(ci->clientnum, 1, "ri2s", N_SERVMSG, CON_MESG, "not connected to authentication server");
             return false;
         }
         else if(ci->authreq)
         {
-            sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "waiting for previous attempt..");
+            sendf(ci->clientnum, 1, "ri2s", N_SERVMSG, CON_MESG, "waiting for previous attempt..");
             return true;
         }
         filtertext(ci->authname, user, true, true, false, 100);
@@ -154,7 +154,7 @@ namespace auth
         if(!ci) return;
         ci->authreq = ci->authname[0] = 0;
         ci->authlevel = -1;
-        sendf(ci->clientnum, 1, "ri2s", SV_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
+        sendf(ci->clientnum, 1, "ri2s", N_SERVMSG, CON_MESG, "authority request failed, please check your credentials");
         if(ci->connectauth)
         {
             ci->connectauth = false;
@@ -193,7 +193,7 @@ namespace auth
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        sendf(ci->clientnum, 1, "riis", SV_AUTHCHAL, id, val);
+        sendf(ci->clientnum, 1, "riis", N_AUTHCHAL, id, val);
     }
 
     void answerchallenge(clientinfo *ci, uint id, char *val)

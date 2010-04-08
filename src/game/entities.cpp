@@ -740,7 +740,7 @@ namespace entities
                 case TR_TOGGLE: case TR_LINK: case TR_ONCE: case TR_EXIT:
                 { // wait for ack
                     if(e.attrs[1] == TR_EXIT && (d->aitype >= AI_BOT || (!m_campaign(game::gamemode) && !m_lobby(game::gamemode)))) break;
-                    client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
+                    client::addmsg(N_TRIGGER, "ri2", d->clientnum, n);
                     break;
                 }
                 case TR_SCRIPT:
@@ -776,7 +776,7 @@ namespace entities
                     int sweap = m_weapon(game::gamemode, game::mutators), attr = e.type == WEAPON ? w_attr(game::gamemode, e.attrs[0], sweap) : e.attrs[0];
                     if(d->canuse(e.type, attr, e.attrs, sweap, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
                     {
-                        client::addmsg(SV_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
+                        client::addmsg(N_ITEMUSE, "ri3", d->clientnum, lastmillis-game::maptime, n);
                         d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
                         d->action[AC_USE] = false;
 #if 0
@@ -880,7 +880,7 @@ namespace entities
                     if(!m_check(e.attrs[3], game::gamemode) || (!m_campaign(game::gamemode) && !m_trial(game::gamemode)&& !m_lobby(game::gamemode))) break;
                     if(d->checkpoint != n)
                     {
-                        client::addmsg(SV_TRIGGER, "ri2", d->clientnum, n);
+                        client::addmsg(N_TRIGGER, "ri2", d->clientnum, n);
                         d->checkpoint = n;
                         if(!d->cpmillis || e.attrs[5] == CP_START) d->cpmillis = lastmillis;
                     }
@@ -1190,7 +1190,7 @@ namespace entities
                     default: break;
                 }
             }
-            if(d && commit) client::addmsg(SV_EXECLINK, "ri2", d->clientnum, index);
+            if(d && commit) client::addmsg(N_EXECLINK, "ri2", d->clientnum, index);
         }
     }
 
@@ -1250,7 +1250,7 @@ namespace entities
         extentity &e = *ents[i];
         fixentity(i, true);
         if(m_edit(game::gamemode) && game::player1->state == CS_EDITING)
-            client::addmsg(SV_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
+            client::addmsg(N_EDITENT, "ri5iv", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attrs.length(), e.attrs.length(), e.attrs.getbuf()); // FIXME
         if(e.type >= NOTUSED && e.type < MAXENTTYPES)
         {
             lastenttype[e.type] = max(lastenttype[e.type], i+1);
@@ -1302,7 +1302,7 @@ namespace entities
                     e.links.remove(g);
                     if(recip) f.links.remove(h);
                     fixentity(index, true);
-                    if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, index, node);
+                    if(local && m_edit(game::gamemode)) client::addmsg(N_EDITLINK, "ri3", 0, index, node);
                     if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
                     return true;
                 }
@@ -1311,7 +1311,7 @@ namespace entities
                     f.links.add(index);
                     if(recip && (h = e.links.find(node)) < 0) e.links.add(node);
                     fixentity(node, true);
-                    if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, node, index);
+                    if(local && m_edit(game::gamemode)) client::addmsg(N_EDITLINK, "ri3", 1, node, index);
                     if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
                     return true;
                 }
@@ -1321,7 +1321,7 @@ namespace entities
                 f.links.remove(g);
                 if(recip && (h = e.links.find(node)) >= 0) e.links.remove(h);
                 fixentity(node, true);
-                if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 0, node, index);
+                if(local && m_edit(game::gamemode)) client::addmsg(N_EDITLINK, "ri3", 0, node, index);
                 if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) delinked", enttype[ents[node]->type].name, node, enttype[ents[index]->type].name, index);
                 return true;
             }
@@ -1330,7 +1330,7 @@ namespace entities
                 e.links.add(node);
                 if(recip && (h = f.links.find(index)) < 0) f.links.add(index);
                 fixentity(index, true);
-                if(local && m_edit(game::gamemode)) client::addmsg(SV_EDITLINK, "ri3", 1, index, node);
+                if(local && m_edit(game::gamemode)) client::addmsg(N_EDITLINK, "ri3", 1, index, node);
                 if(verbose > 2) conoutf("\faentity %s (%d) and %s (%d) linked", enttype[ents[index]->type].name, index, enttype[ents[node]->type].name, node);
                 return true;
             }

@@ -17,7 +17,7 @@ struct ctfservmode : ctfstate, servmode
         loopv(flags) if(flags[i].owner == ci->clientnum)
         {
             ivec p(vec(ci->state.o.dist(o) > enttype[FLAG].radius ? ci->state.o : o).mul(DMF));
-            sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, p.x, p.y, p.z);
+            sendf(-1, 1, "ri6", N_DROPFLAG, ci->clientnum, i, p.x, p.y, p.z);
             ctfstate::dropflag(i, p.tovec().div(DMF), gamemillis);
         }
     }
@@ -62,14 +62,14 @@ struct ctfservmode : ctfstate, servmode
                     {
                         ci->state.flags++;
                         int score = addscore(ci->team);
-                        sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, k, score);
+                        sendf(-1, 1, "ri5", N_SCOREFLAG, ci->clientnum, i, k, score);
                         if(GAME(ctflimit) && score >= GAME(ctflimit))
                         {
-                            sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
+                            sendf(-1, 1, "ri3s", N_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
                             startintermission();
                         }
                     }
-                    else sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+                    else sendf(-1, 1, "ri3", N_RETURNFLAG, ci->clientnum, i);
                 }
             }
         }
@@ -84,13 +84,13 @@ struct ctfservmode : ctfstate, servmode
         {
             ctfstate::returnflag(i, gamemillis);
             givepoints(ci, 5);
-            sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+            sendf(-1, 1, "ri3", N_RETURNFLAG, ci->clientnum, i);
         }
         else
         {
             ctfstate::takeflag(i, ci->clientnum, gamemillis);
             if(f.team != ci->team) givepoints(ci, 3);
-            sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+            sendf(-1, 1, "ri3", N_TAKEFLAG, ci->clientnum, i);
         }
     }
 
@@ -103,7 +103,7 @@ struct ctfservmode : ctfstate, servmode
         if(f.votes.length() >= numclients()/2)
         {
             ctfstate::returnflag(i, gamemillis);
-            sendf(-1, 1, "ri2", SV_RESETFLAG, i);
+            sendf(-1, 1, "ri2", N_RESETFLAG, i);
         }
     }
 
@@ -125,10 +125,10 @@ struct ctfservmode : ctfstate, servmode
                             givepoints(ci, 5);
                             ci->state.flags++;
                             int score = addscore(ci->team);
-                            sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, i, -1, score);
+                            sendf(-1, 1, "ri5", N_SCOREFLAG, ci->clientnum, i, -1, score);
                             if(GAME(ctflimit) && score >= GAME(ctflimit))
                             {
-                                sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
+                                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_GUIBACK, CON_MESG, "\fccpature limit has been reached");
                                 startintermission();
                             }
                         }
@@ -139,7 +139,7 @@ struct ctfservmode : ctfstate, servmode
                     {
                         ctfstate::returnflag(i, gamemillis);
                         loopvk(clients) if(isctfflag(f, clients[k]->team)) givepoints(clients[k], -5);
-                        sendf(-1, 1, "ri2", SV_RESETFLAG, i);
+                        sendf(-1, 1, "ri2", N_RESETFLAG, i);
                     }
                     break;
             }
@@ -153,12 +153,12 @@ struct ctfservmode : ctfstate, servmode
             loopv(scores)
             {
                 score &cs = scores[i];
-                putint(p, SV_SCORE);
+                putint(p, N_SCORE);
                 putint(p, cs.team);
                 putint(p, cs.total);
             }
         }
-        putint(p, SV_INITFLAGS);
+        putint(p, N_INITFLAGS);
         putint(p, flags.length());
         loopv(flags)
         {

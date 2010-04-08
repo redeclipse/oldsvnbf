@@ -661,7 +661,7 @@ namespace physics
                 d->vel.normalize().mul(mag); d->vel.z += mag/4;
                 d->doimpulse(PHYS(impulsecost), IM_T_DASH, lastmillis);
                 playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
-                client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
             }
             if(!d->turnside && onfloor)
             {
@@ -679,7 +679,7 @@ namespace physics
                     d->lastjump = lastmillis;
                     playsound(S_JUMP, d->o, d);
                     regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
-                    client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_JUMP);
+                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_JUMP);
                 }
             }
             else
@@ -690,7 +690,7 @@ namespace physics
                     d->doimpulse(PHYS(impulsecost), IM_T_BOOST, lastmillis);
                     playsound(S_IMPULSE, d->o, d);
                     game::impulseeffect(d, true);
-                    client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
                 }
                 if(PHYS(impulsestyle) && (d->turnside || (canimpulse(d, -1) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
                 {
@@ -732,7 +732,7 @@ namespace physics
                             d->turnroll = 0;
                             playsound(S_IMPULSE, d->o, d);
                             game::impulseeffect(d, true);
-                            client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+                            client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
                         }
                         else if(d->turnside || (d->action[AC_SPECIAL] && canimpulse(d, -1)))
                         {
@@ -871,7 +871,7 @@ namespace physics
                     gameent *d = (gameent *)pl;
                     d->resetfire();
                     playsound(S_EXTINGUISH, d->o, d, 0, d != game::focus ? 128 : 224, -1, -1);
-                    client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
+                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_EXTINGUISH);
                 }
                 if(pl->physstate < PHYS_SLIDE && sub >= 0.5f && pl->submerged < 0.5f && pl->vel.z > 1e-16f)
                     pl->vel.z = max(pl->vel.z, max(jumpforce(pl, false), max(gravityforce(pl), 50.f)));

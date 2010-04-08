@@ -31,7 +31,7 @@ namespace weapons
     {
         if(!local || d->canswitch(weap, m_weapon(game::gamemode, game::mutators), lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH)))
         {
-            if(local) client::addmsg(SV_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+            if(local) client::addmsg(N_WEAPSELECT, "ri3", d->clientnum, lastmillis-game::maptime, weap);
             playsound(S_SWITCH, d->o, d);
             d->weapswitch(weap, lastmillis);
             d->action[AC_RELOAD] = false;
@@ -47,7 +47,7 @@ namespace weapons
             bool doact = false;
             if(local)
             {
-                client::addmsg(SV_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+                client::addmsg(N_RELOAD, "ri3", d->clientnum, lastmillis-game::maptime, weap);
                 int oldammo = d->ammo[weap];
                 ammo = min(max(d->ammo[weap], 0) + WEAP(weap, add), WEAP(weap, max));
                 load = ammo-oldammo;
@@ -120,7 +120,7 @@ namespace weapons
         {
             if(d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true)))
             {
-                client::addmsg(SV_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
+                client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, weap);
                 d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
                 d->action[AC_RELOAD] = false;
                 found = true;
@@ -192,7 +192,7 @@ namespace weapons
                 {
                     if(pressed)
                     {
-                        client::addmsg(SV_PHYS, "ri2", d->clientnum, SPHY_POWER);
+                        client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_POWER);
                         d->setweapstate(d->weapselect, WEAP_S_POWER, 0, lastmillis);
                     }
                     else return;
@@ -263,7 +263,7 @@ namespace weapons
             addshot;
         }
         projs::shootv(d->weapselect, flags, offset, power, from, vshots, d, true);
-        client::addmsg(SV_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, d->weapselect, flags, power, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
+        client::addmsg(N_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, d->weapselect, flags, power, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
     }
 
     void preload(int weap)

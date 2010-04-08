@@ -63,7 +63,7 @@ struct stfservmode : stfstate, servmode
         loopvk(clients) if(clients[k]->state.aitype < AI_START && team == clients[k]->team && insideflag(b, clients[k]->state.o)) givepoints(clients[k], n);
         score &cs = findscore(team);
         cs.total += n;
-        sendf(-1, 1, "ri3", SV_SCORE, team, cs.total);
+        sendf(-1, 1, "ri3", N_SCORE, team, cs.total);
     }
 
     void update()
@@ -97,7 +97,7 @@ struct stfservmode : stfstate, servmode
     void sendflag(int i)
     {
         flag &b = flags[i];
-        sendf(-1, 1, "ri5", SV_FLAGINFO, i, b.enemy ? b.converted : 0, b.owner, b.enemy);
+        sendf(-1, 1, "ri5", N_FLAGINFO, i, b.enemy ? b.converted : 0, b.owner, b.enemy);
     }
 
     void sendflags()
@@ -114,12 +114,12 @@ struct stfservmode : stfstate, servmode
             loopv(scores)
             {
                 score &cs = scores[i];
-                putint(p, SV_SCORE);
+                putint(p, N_SCORE);
                 putint(p, cs.team);
                 putint(p, cs.total);
             }
         }
-        putint(p, SV_FLAGS);
+        putint(p, N_FLAGS);
         putint(p, flags.length());
         loopv(flags)
         {
@@ -133,7 +133,7 @@ struct stfservmode : stfstate, servmode
 
     void winner(int team, int score)
     {
-        sendf(-1, 1, "ri3", SV_SCORE, team, score);
+        sendf(-1, 1, "ri3", N_SCORE, team, score);
         startintermission();
     }
 
@@ -146,7 +146,7 @@ struct stfservmode : stfstate, servmode
             if(findscore(steam).total >= maxscore)
             {
                 findscore(steam).total = maxscore;
-                sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcsecure limit has been reached");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcsecure limit has been reached");
                 winner(steam, maxscore);
                 return;
             }
@@ -175,7 +175,7 @@ struct stfservmode : stfstate, servmode
             if(steam)
             {
                 findscore(steam).total = INT_MAX-1;
-                sendf(-1, 1, "ri3s", SV_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcall flags have been secured");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_GUIBACK, CON_MESG, "\fcall flags have been secured");
                 winner(steam, INT_MAX-1);
                 return;
             }
