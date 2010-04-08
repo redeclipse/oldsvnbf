@@ -3077,7 +3077,7 @@ namespace server
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
             if(type < N_EDITENT || type > N_NEWMAP || !m_edit(gamemode) || !ci || ci->state.state != CS_EDITING)
             {
-                if(++ci->overflow >= 200) return -2;
+                if(type != N_POS && ++ci->overflow >= 200) return -2;
             }
         }
         return type;
