@@ -1513,6 +1513,7 @@ struct skelmodel : animmodel
                     else GENVBOSTAT(vvert);
                     delete[] htdata;
                 }
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, 0);
             }
 
             if(hasVBO)
@@ -1520,6 +1521,7 @@ struct skelmodel : animmodel
                 glGenBuffers_(1, &ebuf);
                 glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
                 glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
             }
             else
             {
