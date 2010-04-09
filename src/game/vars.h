@@ -106,22 +106,22 @@ GVAR(0, botmaxskill, 1, 80, 101);
 GVAR(0, botlimit, 0, 16, MAXAI/2);
 
 GFVAR(0, forcegravity, -1, -1, 1000);
-GFVAR(0, forcejumpspeed, -1, -1, 1000);
-GFVAR(0, forcemovespeed, -1, -1, 1000);
-GFVAR(0, forcemovecrawl, -1, -1, 1000);
-GFVAR(0, forceimpulsespeed, -1, -1, 1000);
-
-GVAR(0, forceimpulsestyle, -1, -1, 3);
-GVAR(0, forceimpulsemeter, -1, -1, INT_MAX-1);
-GVAR(0, forceimpulsecost, -1, -1, INT_MAX-1);
-GVAR(0, forceimpulsecount, -1, -1, INT_MAX-1);
-GVAR(0, forceimpulseskate, -1, -1, INT_MAX-1);
-GFVAR(0, forceimpulseregen, -1, -1, 1000);
-
 GFVAR(0, forceliquidspeed, -1, -1, 1);
 GFVAR(0, forceliquidcurb, -1, -1, 1000);
 GFVAR(0, forcefloorcurb, -1, -1, 1000);
 GFVAR(0, forceaircurb, -1, -1, 1000);
+
+GFVAR(0, jumpspeed, 0, 50.f, 1000); // extra velocity to add when jumping
+GFVAR(0, movespeed, 0, 50.f, 1000); // speed
+GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
+GFVAR(0, impulsespeed, 0, 40.f, 1000); // extra velocity to add when impulsing
+
+GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
+GVAR(0, impulsemeter, 0, 100000, INT_MAX-1); // impulse dash length; 0 = unlimited, anything else = timer
+GVAR(0, impulsecost, 0, 500, INT_MAX-1); // cost of impulse jump
+GVAR(0, impulsecount, 0, 10, INT_MAX-1); // number of impulse actions per air transit
+GVAR(0, impulseskate, 0, 750, INT_MAX-1); // length of time a run along a wall can last
+GFVAR(0, impulseregen, 0, 10, 1000); // impulse regen multiplier
 
 GFVAR(0, damagescale, 0, 1, 1000);
 GVAR(0, damagecritchance, 0, 100, INT_MAX-1);

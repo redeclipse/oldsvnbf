@@ -63,7 +63,7 @@ namespace hud
 namespace physics
 {
     extern int physsteps, physframetime, physinterp;
-    extern float gravity, jumpvel, movespeed, floatspeed, stairheight, floorz, slopez, wallz, stepspeed, liquidfric, liquidscale, sinkfric, floorfric, airfric;
+    extern float gravity, floatspeed, stairheight, floorz, slopez, wallz, stepspeed, liquidfric, liquidscale, sinkfric, floorfric, airfric;
     extern float liquidmerge(physent *d, float from, float to);
     extern bool liquidcheck(physent *d);
     extern float gravityforce(physent *d);
