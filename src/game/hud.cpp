@@ -1124,7 +1124,7 @@ namespace hud
             {
                 int len = m_protect(game::gamemode, game::mutators), millis = d->protect(lastmillis, len);
                 if(millis > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
-                fade *= clamp(d->vel.magnitude()/PHYS(movespeed), 0.f, 1.f);
+                fade *= clamp(d->vel.magnitude()/movespeed, 0.f, 1.f);
             }
             else if(d->state != CS_EDITING) return;
             if(chkcond(radarplayernames, game::tvmode()))
@@ -1558,9 +1558,9 @@ namespace hud
                 if(!sy) sy += dt;
                 popfont();
             }
-            if(PHYS(impulsestyle) && PHYS(impulsemeter) && inventoryimpulse)
+            if(impulsestyle && impulsemeter && inventoryimpulse)
             {
-                float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(PHYS(impulsemeter)), 0.f, 1.f) : 1;
+                float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(impulsemeter), 0.f, 1.f) : 1;
                 settexture(progresstex, 3);
                 float r = 1.f, g = 1.f, b = 1.f;
                 int iw = int(width*inventoryimpulseskew), ow = (width-iw)/2, is = iw/2, ix = x+ow+is, iy = y-sy-is;
@@ -1576,7 +1576,7 @@ namespace hud
                 {
                     pushfont("sub");
                     draw_textx("%s%d%%", x+iw/2+ow, y-sy-iw/2-FONTH/2, 255, 255, 255, int(fade*255), TEXT_CENTERED, -1, -1,
-                        game::focus->impulse[IM_METER] > 0 ? (PHYS(impulsemeter)-game::focus->impulse[IM_METER] > PHYS(impulsecost) ? "\fy" : "\fw") : "\fg",
+                        game::focus->impulse[IM_METER] > 0 ? (impulsemeter-game::focus->impulse[IM_METER] > impulsecost ? "\fy" : "\fw") : "\fg",
                             int(len*100));
                     popfont();
                 }
