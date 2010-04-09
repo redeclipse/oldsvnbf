@@ -1003,18 +1003,21 @@ namespace server
                     {
                         case 2:
                         {
-                            static vector<int> lowest; lowest.setsize(0);
-                            loopv(spawns[team].cycle) if(lowest.empty() || spawns[team].cycle[i] <= spawns[team].cycle[lowest[0]])
+                            if(spawns[team].cycle.length() >= max(GAME(spawnrotate), nplayers/2))
                             {
-                                if(!lowest.empty() && spawns[team].cycle[i] < spawns[team].cycle[lowest[0]]) lowest.setsize(0);
-                                lowest.add(i);
-                            }
-                            if(!lowest.empty())
-                            {
-                                int r = lowest.length() > (spawns[team].cycle.length() > GAME(spawnrotate) ? 1 : 4) ? rnd(lowest.length()) : 0, n = lowest[r];
-                                spawns[team].cycle[n]++;
-                                spawns[team].spawncycle = cycle = n;
-                                break;
+                                static vector<int> lowest; lowest.setsize(0);
+                                loopv(spawns[team].cycle) if(lowest.empty() || spawns[team].cycle[i] <= spawns[team].cycle[lowest[0]])
+                                {
+                                    if(!lowest.empty() && spawns[team].cycle[i] < spawns[team].cycle[lowest[0]]) lowest.setsize(0);
+                                    lowest.add(i);
+                                }
+                                if(!lowest.empty())
+                                {
+                                    int r = lowest.length() > 1 ? rnd(lowest.length()) : 0, n = lowest[r];
+                                    spawns[team].cycle[n]++;
+                                    spawns[team].spawncycle = cycle = n;
+                                    break;
+                                }
                             }
                             // fall through if this fails..
                         }
