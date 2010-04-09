@@ -1245,7 +1245,7 @@ namespace ai
 
     void logic(gameent *d, aistate &b, bool run)
     {
-        if(!d->ai->suspended)
+        if(!aisuspend && !d->ai->suspended)
         {
             vec dp = d->headpos();
             findorientation(dp, d->yaw, d->pitch, d->ai->target);
