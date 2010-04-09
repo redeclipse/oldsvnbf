@@ -1297,13 +1297,13 @@ namespace ai
                 if(entities::ents.inrange(d->airnodes[j]) && entities::ents[d->airnodes[j]]->type == WAYPOINT)
                     obs.add(d, d->airnodes[j]);
             if(d->state != CS_ALIVE || !physics::issolid(d)) continue;
-            obs.avoidnear(d, d->feetpos(), d->radius);
+            obs.avoidnear(d, d->feetpos(), d->radius+1);
         }
         loopv(projs::projs)
         {
             projent *p = projs::projs[i];
             if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators))
-                obs.avoidnear(p, p->o, WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators)*p->lifesize);
+                obs.avoidnear(p, p->o, (WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators)*p->lifesize)+1);
         }
         loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
         {

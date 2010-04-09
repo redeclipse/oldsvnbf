@@ -1491,7 +1491,7 @@ namespace entities
                 {
                     obstacle &ob = obstacles[i];
                     int next = cur + ob.numentities;
-                    if(!ob.ent || ob.ent != d)
+                    if(!ob.ent || ob.ent != d || (d->blocked && ob.ent == d))
                     {
                         for(; cur < next; cur++) if(entities[cur] == n)
                         {
