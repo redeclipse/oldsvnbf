@@ -51,7 +51,7 @@ struct ipinfo
 extern vector<ipinfo> bans, allows;
 extern void addipinfo(vector<ipinfo> &info, const char *name);
 extern char *printipinfo(const ipinfo &info, char *buf = NULL);
-extern bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global = false);
+extern bool checkipinfo(vector<ipinfo> &info, enet_uint32 host);
 extern void writecfg();
 extern void rehash(bool reload = true);
 
