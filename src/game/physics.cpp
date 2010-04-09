@@ -651,69 +651,67 @@ namespace physics
                 playsound(S_IMPULSE, d->o, d); game::impulseeffect(d, true);
                 client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
             }
-            if(!d->turnside && onfloor)
+            if(!d->turnside && onfloor && d->action[AC_JUMP])
             {
-                if(d->action[AC_JUMP])
+                d->vel.z += jumpforce(d, true);
+                if(d->inliquid)
                 {
-                    d->vel.z += jumpforce(d, true);
-                    if(d->inliquid)
-                    {
-                        float scale = liquidmerge(d, 1.f, PHYS(liquidspeed));
-                        d->vel.x *= scale;
-                        d->vel.y *= scale;
-                    }
-                    d->action[AC_JUMP] = false;
-                    d->resetphys();
-                    d->lastjump = lastmillis;
-                    playsound(S_JUMP, d->o, d);
-                    regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
-                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_JUMP);
+                    float scale = liquidmerge(d, 1.f, PHYS(liquidspeed));
+                    d->vel.x *= scale;
+                    d->vel.y *= scale;
                 }
+                d->action[AC_JUMP] = false;
+                d->resetphys();
+                d->lastjump = lastmillis;
+                playsound(S_JUMP, d->o, d);
+                regularshape(PART_SMOKE, int(d->radius), 0x111111, 21, 20, 150, d->feetpos(), 1, 1, -10, 0, 10.f);
+                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_JUMP);
             }
-            else
+            if(!d->turnside && !onfloor && d->action[AC_JUMP] && impulsestyle && !d->turnside && !onfloor && canimpulse(d))
             {
-                if(impulsestyle && !d->turnside && !onfloor && canimpulse(d) && d->action[AC_JUMP])
+                d->vel.z += impulseforce(d)*1.5f;
+                d->doimpulse(impulsecost, IM_T_BOOST, lastmillis);
+                playsound(S_IMPULSE, d->o, d);
+                game::impulseeffect(d, true);
+                client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
+            }
+            if(impulsestyle && (d->turnside || d->action[AC_SPECIAL]) && !d->inliquid && !d->onladder)
+            {
+                loopi(d->turnside ? 4 : 2)
                 {
-                    d->vel.z += impulseforce(d)*1.5f;
-                    d->doimpulse(impulsecost, IM_T_BOOST, lastmillis);
-                    playsound(S_IMPULSE, d->o, d);
-                    game::impulseeffect(d, true);
-                    client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
-                }
-                if(impulsestyle && (d->turnside || (canimpulse(d, -1) && d->action[AC_SPECIAL])) && !d->inliquid && !d->onladder)
-                {
-                    loopi(d->turnside ? 3 : 1)
+                    vec oldpos = d->o, dir;
+                    int move = i%2 ? -1 : 1, strafe = i >= 2 ? d->turnside : d->strafe;
+                    vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
+                    d->o.add(vec(dir).mul(d->radius));
+                    if(collide(d, dir) || (!hitplayer && wall.iszero()))
                     {
-                        vec oldpos = d->o, dir;
-                        int move = i ? (i%2 ? 1 : -1) : d->move, strafe = i >= 2 ? d->turnside : d->strafe;
-                        if(!move && !strafe) continue;
-                        vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
-                        d->o.add(dir);
-                        if(collide(d, dir) || wall.iszero())
-                        {
-                            d->o = oldpos;
-                            if(i >= (d->turnside ? 2 : 0)) { if(d->turnside) { d->turnside = 0; d->resetphys(); } break; }
-                            continue;
-                        }
                         d->o = oldpos;
-                        wall.normalize();
-                        float yaw = 0, pitch = 0;
-                        vectoyawpitch(wall, yaw, pitch);
-                        float off = yaw-d->aimyaw;
-                        if(off > 180) off -= 360;
-                        else if(off < -180) off += 360;
-                        int key = (d->turnside && d->action[AC_JUMP]) ? AC_JUMP : ((!d->turnside && d->action[AC_SPECIAL] && fabs(off) >= impulsereflect) ? AC_SPECIAL : -1);
-                        if(key >= 0 && canimpulse(d, -1))
+                        if(i >= (d->turnside ? 3 : 0)) { if(d->turnside) { d->turnside = 0; d->resetphys(); } break; }
+                        continue;
+                    }
+                    d->o = oldpos;
+                    if(hitplayer) wall = vec(hitplayer->o).sub(d->o);
+                    wall.normalize();
+                    float yaw = 0, pitch = 0;
+                    vectoyawpitch(wall, yaw, pitch);
+                    float off = yaw-d->aimyaw;
+                    if(off > 180) off -= 360;
+                    else if(off < -180) off += 360;
+                    int key = (d->action[AC_JUMP] && d->turnside) ? AC_JUMP : ((d->action[AC_SPECIAL] && (hitplayer || (!d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1)))) ? AC_SPECIAL : -1);
+                    if(key >= 0)
+                    {
+                        float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
+                        d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
+                        d->vel.z += d->turnside || hitplayer ? mag : mag/2;
+                        d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
+                        d->action[key] = false;
+                        if(hitplayer) weapons::doshot(d, vec(d->feetpos(1)).add(vec(dir).mul(d->radius*2)), WEAP_MELEE, true, true);
+                        else
                         {
-                            float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
-                            d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
                             vectoyawpitch(d->vel, yaw, pitch);
-                            d->vel.z += d->turnside ? mag : mag/2;
                             off = yaw-d->aimyaw;
                             if(off > 180) off -= 360;
                             else if(off < -180) off += 360;
-                            d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
-                            d->action[key] = false;
                             d->turnmillis = PHYSMILLIS;
                             d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
                             d->turnyaw = off;
@@ -722,35 +720,35 @@ namespace physics
                             game::impulseeffect(d, true);
                             client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
                         }
-                        else if(d->turnside || (d->action[AC_SPECIAL] && canimpulse(d, -1)))
-                        {
-                            if(off < 0) yaw += 90;
-                            else yaw -= 90;
-                            while(yaw >= 360) yaw -= 360;
-                            while(yaw < 0) yaw += 360;
-                            vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft);
-                            if(!d->turnside)
-                            {
-                                float mag = max(d->vel.magnitude(), 3.f);
-                                d->vel = vec(rft).mul(mag);
-                                off = yaw-d->aimyaw;
-                                if(off > 180) off -= 360;
-                                else if(off < -180) off += 360;
-                                d->doimpulse(impulsecost, IM_T_SKATE, lastmillis);
-                                d->action[AC_SPECIAL] = false;
-                                d->turnmillis = PHYSMILLIS;
-                                d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
-                                d->turnyaw = off;
-                                d->turnroll = (impulseroll*d->turnside)-d->roll;
-                            }
-                            else if(d->vel.magnitude() >= 3) m = rft; // re-project and override
-                            else { d->turnside = 0; d->resetphys(); break; }
-                        }
-                        break;
                     }
+                    else if(d->turnside || (!onfloor && d->action[AC_SPECIAL] && canimpulse(d, -1)))
+                    {
+                        if(off < 0) yaw += 90;
+                        else yaw -= 90;
+                        while(yaw >= 360) yaw -= 360;
+                        while(yaw < 0) yaw += 360;
+                        vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft);
+                        if(!d->turnside)
+                        {
+                            float mag = max(d->vel.magnitude(), 3.f);
+                            d->vel = vec(rft).mul(mag);
+                            off = yaw-d->aimyaw;
+                            if(off > 180) off -= 360;
+                            else if(off < -180) off += 360;
+                            d->doimpulse(impulsecost, IM_T_SKATE, lastmillis);
+                            d->action[AC_SPECIAL] = false;
+                            d->turnmillis = PHYSMILLIS;
+                            d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
+                            d->turnyaw = off;
+                            d->turnroll = (impulseroll*d->turnside)-d->roll;
+                        }
+                        else if(d->vel.magnitude() >= 3) m = rft; // re-project and override
+                        else { d->turnside = 0; d->resetphys(); break; }
+                    }
+                    break;
                 }
-                else if(d->turnside) { d->turnside = 0; d->resetphys(); }
             }
+            else if(d->turnside) { d->turnside = 0; d->resetphys(); }
         }
 
         if(d->action[AC_JUMP] && impulseaction < (PHYS(gravity) > 0 && impulsestyle < 2 ? 2 : 1))
