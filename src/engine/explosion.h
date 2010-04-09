@@ -394,8 +394,8 @@ static const float WOBBLE = 1.25f;
 
 struct fireballrenderer : sharedlistrenderer
 {
-    fireballrenderer(int type)
-        : sharedlistrenderer("particles/explosion", 0, type)
+    fireballrenderer(const char *texname)
+        : sharedlistrenderer(texname, 0, PT_FIREBALL|PT_GLARE)
     {}
 
     void startrender()
@@ -527,5 +527,5 @@ struct fireballrenderer : sharedlistrenderer
         glPopMatrix();
     }
 };
-static fireballrenderer fireballs(PT_FIREBALL|PT_GLARE), noglarefireballs(PT_FIREBALL);
+static fireballrenderer fireballs("particles/explosion");
 

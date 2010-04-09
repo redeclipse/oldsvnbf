@@ -1041,7 +1041,7 @@ static partrenderer *parts[] =
     new quadrenderer("particles/muzzle", PT_PART|PT_GLARE|PT_RND4|PT_FLIP|PT_ROT),
     new quadrenderer("<grey>particles/snow", PT_PART|PT_GLARE|PT_FLIP|PT_ROT),
     &texts, &textontop,
-    &fireballs, &noglarefireballs, &lightnings,
+    &fireballs, &lightnings,
     &flares // must be done last!
 };
 
