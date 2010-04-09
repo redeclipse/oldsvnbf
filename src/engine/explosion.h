@@ -414,13 +414,12 @@ struct fireballrenderer : sharedlistrenderer
         deleteexplosions();
     }
 
-    int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, vec &bbmax)
+    int finddepthfxranges(void **owners, float *ranges, int numranges, int maxranges, vec &bbmin, vec &bbmax)
     {
         physent e;
         e.type = ENT_CAMERA;
         e.collidetype = COLLIDE_AABB;
 
-        int numranges = 0;
         for(sharedlistparticle *p = list; p; p = p->next)
         {
             int ts = p->fade <= 5 ? 1 : lastmillis-p->millis;
