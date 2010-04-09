@@ -248,10 +248,10 @@ enum
 //  ext1    ext2    radl1   radl2   brn1    brn2    rlds    zooms   fa1     fa2     allowed
 //  tpr1    tpr2    elas1   elas2   rflt1   rflt2   relt1   relt2   wfrc1   wfrc2   wght1   wght2   rads1   rads2   kpsh1   kpsh2   hpsh1       hpsh2       mdst1   mdst2   psz1    psz2    plen1   plen2   freq    push    cmult   cdist   guided1 guided2
 WEAPON(melee,
-    2,      2,      0,      0,      300,        300,        0,      50,     30,     150,        150,        0,      100,        100,        1,      0,      0,      1,      1,      1,      1,      1,      1,      0,      0,
+    1,      1,      0,      0,      300,        300,        0,      50,     100,    150,        150,        0,      100,        100,        1,      0,      0,      1,      1,      1,      1,      1,      1,      0,      0,
     IMPACT_PLAYER,                                                          IMPACT_PLAYER,
     0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      6,      6,      2,      4,      100,        500,        25,     25,     0.75f,  0.75f,  0,      0,      0,      2,      2,      0,      0,      0
+    1,      1,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      6,      6,      2,      4,      100,        150,        25,     25,     0.75f,  0.75f,  0,      0,      0,      2,      2,      0,      0,      0
 );
 WEAPON(pistol,
     10,     10,     1,      1,      100,        200,        1000,   40,     40,     3000,       3000,       0,      2000,       2000,       0,      0,      0,      1,      1,      1,      1,      1,      1,      100,    100,
@@ -638,6 +638,8 @@ enum { SSTAT_OPEN = 0, SSTAT_LOCKED, SSTAT_PRIVATE, SSTAT_FULL, SSTAT_UNKNOWN, S
 enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_SPRINT, AC_CROUCH, AC_SPECIAL, AC_TOTAL, AC_DASH = AC_TOTAL, AC_MAX };
 enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_COUNT, IM_MAX };
 enum { IM_T_NONE = 0, IM_T_BOOST, IM_T_DASH, IM_T_KICK, IM_T_SKATE, IM_T_MAX, IM_T_WALL = IM_T_KICK };
+
+#define iskick(a,b) (a == WEAP_MELEE && b&HIT_ALT)
 #define CROUCHHEIGHT 0.7f
 #define PHYSMILLIS 250
 
@@ -756,7 +758,7 @@ struct gamestate
 
     bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
     {
-        if(hasweap(weap, sweap) && ammo[weap] >= WEAP2(weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+        if(iskick(weap, flags) || (hasweap(weap, sweap) && ammo[weap] >= WEAP2(weap, sub, flags&HIT_ALT) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip))))
             return true;
         return false;
     }
@@ -1268,6 +1270,7 @@ namespace weapons
     extern bool weapselect(gameent *d, int weap, bool local = true);
     extern bool weapreload(gameent *d, int weap, int load = -1, int ammo = -1, bool local = true);
     extern void reload(gameent *d);
+    extern void doshot(gameent *d, vec &targ, int weap, bool pressed = false, bool secondary = false, int force = 0);
     extern void shoot(gameent *d, vec &targ, int force = 0);
     extern void preload(int weap = -1);
 }

@@ -40,7 +40,6 @@ namespace projs
             else if(m_team(game::gamemode, game::mutators) && actor->team == target->team && actor != target)
             {
                 if(m_campaign(game::gamemode)) { if(target->team == TEAM_NEUTRAL) nodamage++; }
-                else if(weap == WEAP_MELEE) nodamage++;
                 else if(m_play(game::gamemode)) switch(teamdamage)
                 {
                     case 2: default: break;
@@ -315,7 +314,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.owner->muzzlepos(proj.weap);
+                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = iskick(proj.weap, proj.flags) ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
                 proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
                 proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -593,7 +592,7 @@ namespace projs
         proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
         if(proj.projtype == PRJ_SHOT)
         {
-            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
+            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = iskick(proj.weap, proj.flags) ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
@@ -788,7 +787,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.owner->muzzlepos(proj.weap);
+                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = iskick(proj.weap, proj.flags) ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
                 int vol = 255;
                 switch(proj.weap)
                 {
@@ -995,8 +994,7 @@ namespace projs
 
     void checkescaped(projent &proj, const vec &pos, const vec &dir)
     {
-        int esctime = proj.projtype == PRJ_SHOT && WEAP2(proj.weap, speed, proj.flags&HIT_ALT) < 500 ? 600-WEAP2(proj.weap, speed, proj.flags&HIT_ALT) : 100;
-        if(proj.spawntime && lastmillis-proj.spawntime >= esctime) proj.escaped = true;
+        if(!(proj.projcollide&COLLIDE_OWNER) || (proj.spawntime && lastmillis-proj.spawntime >= (proj.projtype == PRJ_SHOT ? max(600-WEAP2(proj.weap, speed, proj.flags&HIT_ALT), 100) : 100))) proj.escaped = true;
 #if 0
         else if(proj.projcollide&COLLIDE_TRACE)
         {

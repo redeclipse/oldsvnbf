@@ -712,7 +712,7 @@ namespace game
             {
                 static const char *obitnames[4][WEAP_MAX] = {
                     {
-                        "smacked down by",
+                        "punched by",
                         "pierced by",
                         "sprayed with buckshot by",
                         "riddled with holes by",
@@ -723,7 +723,7 @@ namespace game
                         "exploded by",
                     },
                     {
-                        "smacked down by",
+                        "kicked by",
                         "pierced by",
                         "filled with lead by",
                         "spliced apart by",
@@ -734,7 +734,7 @@ namespace game
                         "exploded by",
                     },
                     {
-                        "smacked down by",
+                        "given kung-fu lessons by",
                         "capped by",
                         "scrambled by",
                         "air conditioned courtesy of",
@@ -819,7 +819,7 @@ namespace game
                 }
             }
 
-            if(style&FRAG_HEADSHOT)
+            if(weap != WEAP_MELEE && style&FRAG_HEADSHOT)
             {
                 part_text(az, "<super>\fzcwHEADSHOT", PART_TEXT, aboveheadfade, 0xFFFFFF, 4, 1, -10, 0, actor); az.z += 4;
                 if(!override) anc = S_V_HEADSHOT;
