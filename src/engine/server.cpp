@@ -67,9 +67,9 @@ char *printipinfo(const ipinfo &info, char *buf)
     return str;
 }
 
-bool checkipinfo(vector<ipinfo> &info, enet_uint32 host, bool global)
+bool checkipinfo(vector<ipinfo> &info, enet_uint32 host)
 {
-    loopv(info) if((!global || info[i].time < 0) && ((host & info[i].mask) == info[i].ip)) return true;
+    loopv(info) if((host & info[i].mask) == info[i].ip) return true;
     return false;
 }
 

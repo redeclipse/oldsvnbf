@@ -77,8 +77,8 @@ GVAR(0, kamikaze, 0, 1, 3); // 0 = never, 1 = holding grenade, 2 = have grenade,
 
 GVAR(0, timelimit, 0, 15, INT_MAX-1);
 GVAR(0, triallimit, 0, 60000, INT_MAX-1);
-GVAR(0, intermlimit, 0, 15000, INT_MAX-1); // .. before vote menu comes up
-GVAR(0, votelimit, 0, 30000, INT_MAX-1); // .. before vote passes by default
+GVAR(0, intermlimit, 0, 30000, INT_MAX-1); // .. before vote menu comes up
+GVAR(0, votelimit, 0, 60000, INT_MAX-1); // .. before vote passes by default
 GVAR(0, duelreset, 0, 1, 1); // reset winner in duel
 GVAR(0, duelclear, 0, 1, 1); // clear items in duel
 GVAR(0, duellimit, 0, 5000, INT_MAX-1); // .. before duel goes to next round

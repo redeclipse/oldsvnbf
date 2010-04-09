@@ -98,7 +98,7 @@ struct duelservmode : servmode
 
         if(dueltime < 0)
         {
-            if(duelqueue.length() >= 2) dueltime = gamemillis+GAME(duellimit);
+            if(duelqueue.length() >= 2) clear();
             else
             {
                 loopv(clients) queue(clients[i]); // safety
