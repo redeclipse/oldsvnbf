@@ -416,9 +416,14 @@ struct fireballrenderer : sharedlistrenderer
 
     int finddepthfxranges(void **owners, float *ranges, int numranges, int maxranges, vec &bbmin, vec &bbmax)
     {
-        physent e;
-        e.type = ENT_CAMERA;
-        e.collidetype = COLLIDE_AABB;
+        static struct fireballent : physent
+        {
+            fireballent()
+            {
+                type = ENT_CAMERA;
+                collidetype = COLLIDE_AABB;
+            }
+        } e;
 
         for(sharedlistparticle *p = list; p; p = p->next)
         {
