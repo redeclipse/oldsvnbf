@@ -31,7 +31,7 @@ VAR(IDF_WORLD, skybgglare, 0, 0, 1);
 
 SVARF(IDF_WORLD, skybox, "", { if(skybox[0]) loadsky(skybox, sky); });
 FVAR(IDF_WORLD, skyblend, 0, 1.0f, 1);
-VAR(IDF_WORLD, skyglare, 0, 1, 1);
+VAR(IDF_WORLD, skyglare, 0, 0, 1);
 VAR(IDF_HEX|IDF_WORLD, skycolour, 0, 0xFFFFFF, 0xFFFFFF);
 FVAR(IDF_WORLD, spinsky, -720, 0, 720);
 VAR(IDF_WORLD, yawsky, 0, 0, 360);
@@ -98,25 +98,25 @@ void draw_envbox(int w, float z1clip = 0.0f, float z2clip = 1.0f, int faces = 0x
     if(faces&0x01)
         draw_envbox_face(0.0f, v2,  -w, -w, z2,
                          1.0f, v2,  -w,  w, z2,
-                         1.0f, v1,  -w,  w, z1, 
+                         1.0f, v1,  -w,  w, z1,
                          0.0f, v1,  -w, -w, z1, sky && sky[0] ? sky[0]->id : notexture->id);
 
     if(faces&0x02)
         draw_envbox_face(1.0f, v1, w, -w, z1,
                          0.0f, v1, w,  w, z1,
-                         0.0f, v2, w,  w, z2, 
+                         0.0f, v2, w,  w, z2,
                          1.0f, v2, w, -w, z2, sky && sky[1] ? sky[1]->id : notexture->id);
 
     if(faces&0x04)
         draw_envbox_face(1.0f, v1, -w, -w, z1,
                          0.0f, v1,  w, -w, z1,
-                         0.0f, v2,  w, -w, z2, 
+                         0.0f, v2,  w, -w, z2,
                          1.0f, v2, -w, -w, z2, sky && sky[2] ? sky[2]->id : notexture->id);
 
     if(faces&0x08)
         draw_envbox_face(1.0f, v1,  w,  w, z1,
                          0.0f, v1, -w,  w, z1,
-                         0.0f, v2, -w,  w, z2, 
+                         0.0f, v2, -w,  w, z2,
                          1.0f, v2,  w,  w, z2, sky && sky[3] ? sky[3]->id : notexture->id);
 
     if(z1clip <= 0 && faces&0x10)
