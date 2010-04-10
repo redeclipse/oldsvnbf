@@ -697,7 +697,7 @@ namespace physics
                     float off = yaw-d->aimyaw;
                     if(off > 180) off -= 360;
                     else if(off < -180) off += 360;
-                    int key = (d->action[AC_JUMP] && d->turnside) ? AC_JUMP : ((d->action[AC_SPECIAL] && (hitplayer || (!d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1)))) ? AC_SPECIAL : -1);
+                    int key = (d->action[AC_JUMP] && d->turnside) ? AC_JUMP : ((hitplayer && (d->action[AC_SPECIAL] || d->turnside)) || ((d->action[AC_SPECIAL] && !d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1))) ? AC_SPECIAL : -1);
                     if(key >= 0)
                     {
                         float mag = (impulseforce(d)+max(d->vel.magnitude(), 1.f))/2;
@@ -705,7 +705,7 @@ namespace physics
                         d->vel.z += d->turnside || hitplayer ? mag : mag/2;
                         d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
                         d->action[key] = false;
-                        if(hitplayer) weapons::doshot(d, vec(d->feetpos(1)).add(vec(dir).mul(d->radius*2)), WEAP_MELEE, true, true);
+                        if(hitplayer) weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, true);
                         else
                         {
                             vectoyawpitch(d->vel, yaw, pitch);

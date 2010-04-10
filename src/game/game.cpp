@@ -1911,7 +1911,7 @@ namespace game
                     }
                     case WEAP_S_POWER:
                     {
-                        if(WEAP(weap, power)) animflags = weaptype[weap].anim+d->weapstate[weap];
+                        if(weap == WEAP_GRENADE) animflags = weaptype[weap].anim+d->weapstate[weap];
                         else animflags = weaptype[weap].anim|ANIM_LOOP;
                         break;
                     }

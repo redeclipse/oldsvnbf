@@ -32,7 +32,7 @@ namespace ai
     bool weaprange(gameent *d, int weap, bool alt, float dist)
     {
         if(!isweap(weap) || (WEAP2(weap, extinguish, alt) && d->inliquid)) return false;
-        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators) ? WEAPEX(weap, alt, game::gamemode, game::mutators) : (weap != WEAP_MELEE ? d->radius*2 : 0),
+        float mindist = WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) ? WEAPEX(weap, alt, game::gamemode, game::mutators, 1.f) : (weap != WEAP_MELEE ? d->radius*2 : 0),
             maxdist = WEAP2(weap, maxdist, alt) ? WEAP2(weap, maxdist, alt) : hdr.worldsize;
         return dist >= mindist*mindist && dist <= maxdist*maxdist;
     }
@@ -770,7 +770,7 @@ namespace ai
                         bool alt = altfire(d, e);
                         if(aistyle[d->aitype].maxspeed)
                         {
-                            float mindist = WEAPEX(d->weapselect, alt, game::gamemode, game::mutators) ? WEAPEX(d->weapselect, alt, game::gamemode, game::mutators) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
+                            float mindist = WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) ? WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
                             return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
                         }
                         else
@@ -1302,8 +1302,8 @@ namespace ai
         loopv(projs::projs)
         {
             projent *p = projs::projs[i];
-            if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators))
-                obs.avoidnear(p, p->o, (WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators)*p->lifesize)+1);
+            if(p && p->state == CS_ALIVE && p->projtype == PRJ_SHOT && WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators, p->scale))
+                obs.avoidnear(p, p->o, (WEAPEX(p->weap, p->flags&HIT_ALT, game::gamemode, game::mutators, p->scale)*p->lifesize)+1);
         }
         loopi(entities::lastenttype[MAPMODEL]) if(entities::ents[i]->type == MAPMODEL && entities::ents[i]->lastemit < 0 && !entities::ents[i]->spawned)
         {

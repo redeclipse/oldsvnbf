@@ -1372,7 +1372,8 @@ namespace client
 
                 case N_SHOTFX:
                 {
-                    int scn = getint(p), weap = getint(p), flags = getint(p), power = getint(p);
+                    int scn = getint(p), weap = getint(p), flags = getint(p);
+                    float scale = getint(p)/DMF;
                     vec from;
                     loopk(3) from[k] = getint(p)/DMF;
                     int ls = getint(p);
@@ -1384,7 +1385,9 @@ namespace client
                     }
                     gameent *s = game::getclient(scn);
                     if(!s || !isweap(weap) || s == game::player1 || s->ai) break;
-                    projs::shootv(weap, flags, WEAP2(weap, sub, flags&HIT_ALT), power, from, locs, s, false);
+                    int sub = WEAP2(weap, sub, flags&HIT_ALT);
+                    if(sub > 1 && WEAP2(weap, power, flags&HIT_ALT)) sub = int(ceilf(sub*scale));
+                    projs::shootv(weap, flags, sub, scale, from, locs, s, false);
                     break;
                 }
 

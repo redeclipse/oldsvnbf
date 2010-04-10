@@ -40,7 +40,7 @@ namespace server
 
     struct shotevent : timedevent
     {
-        int id, weap, flags, power, num;
+        int id, weap, flags, scale, num;
         ivec from;
         vector<ivec> shots;
         void process(clientinfo *ci);
@@ -2255,7 +2255,7 @@ namespace server
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int weap, int flags, const ivec &hitpush = ivec(0, 0, 0))
     {
         int realdamage = damage, realflags = flags, nodamage = 0; realflags &= ~HIT_SFLAGS;
-        if((realflags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, realflags&HIT_ALT, gamemode, mutators))) && (realflags&HIT_FULL))
+        if((realflags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, realflags&HIT_ALT, gamemode, mutators, 1.f))) && (realflags&HIT_FULL))
             realflags &= ~HIT_FULL;
         if(smode && !smode->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; }
         mutate(smuts, if(!mut->damage(target, actor, realdamage, weap, realflags, hitpush)) { nodamage++; });
@@ -2448,7 +2448,7 @@ namespace server
     int calcdamage(int weap, int &flags, int radial, float size, float dist)
     {
         int damage = WEAP2(weap, damage, flags&HIT_ALT); flags &= ~HIT_SFLAGS;
-        if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators))) && flags&HIT_FULL) flags &= ~HIT_FULL;
+        if((flags&HIT_WAVE || (isweap(weap) && !WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f))) && flags&HIT_FULL) flags &= ~HIT_FULL;
         if(radial) damage = int(ceilf(damage*clamp(1.f-dist/size, 1e-3f, 1.f)));
         else if(WEAP2(weap, taper, flags&HIT_ALT) > 0) damage = int(ceilf(damage*clamp(dist, 0.f, 1.f)));
         if(!hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
@@ -2476,6 +2476,7 @@ namespace server
                 {
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
+                    if(radial) radial = clamp(radial, 1, WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f));
                     float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
@@ -2500,27 +2501,36 @@ namespace server
             if(GAME(serverdebug) >= 3) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - unexpected message", weap);
             return;
         }
+        int sub = WEAP2(weap, sub, flags&HIT_ALT);
+        if(sub > 1 && WEAP2(weap, power, flags&HIT_ALT))
+        {
+            if(ci->state.ammo[weap] < sub)
+            {
+                int maxscale = int(ci->state.ammo[weap]/float(sub)*DMF);
+                if(scale > maxscale) scale = maxscale;
+            }
+            if(scale < int(DMF)) sub = int(ceilf(sub*scale/DMF));
+        }
         if(!gs.canshoot(weap, flags, m_weapon(gamemode, mutators), millis))
         {
             if(!gs.canshoot(weap, flags, m_weapon(gamemode, mutators), millis, (1<<WEAP_S_RELOAD)))
             {
-                if(WEAP2(weap, sub, flags&HIT_ALT) && WEAP(weap, max))
-                    ci->state.ammo[weap] = max(ci->state.ammo[weap]-WEAP2(weap, sub, flags&HIT_ALT), 0);
+                if(sub && WEAP(weap, max)) ci->state.ammo[weap] = max(ci->state.ammo[weap]-sub, 0);
                 if(GAME(serverdebug)) srvmsgf(ci->clientnum, "sync error: shoot [%d] failed - current state disallows it", weap);
                 return;
             }
             else if(gs.weapload[weap] > 0)
             {
-                takeammo(ci, weap, gs.weapload[weap]+WEAP2(weap, sub, flags&HIT_ALT));
+                takeammo(ci, weap, gs.weapload[weap]+sub);
                 gs.weapload[weap] = -gs.weapload[weap];
                 sendf(-1, 1, "ri5", N_RELOAD, ci->clientnum, weap, gs.weapload[weap], gs.ammo[weap]);
             }
             else return;
         }
-        else takeammo(ci, weap, WEAP2(weap, sub, flags&HIT_ALT));
+        else takeammo(ci, weap, sub);
         gs.setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), millis);
-        sendf(-1, 1, "ri8ivx", N_SHOTFX, ci->clientnum, weap, flags, power, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
-        gs.weapshot[weap] = WEAP2(weap, sub, flags&HIT_ALT);
+        sendf(-1, 1, "ri8ivx", N_SHOTFX, ci->clientnum, weap, flags, scale, from[0], from[1], from[2], shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf(), ci->clientnum);
+        gs.weapshot[weap] = sub;
         gs.shotdamage += WEAP2(weap, damage, flags&HIT_ALT)*shots.length();
         loopv(shots) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].add(id);
     }
@@ -3472,7 +3482,7 @@ namespace server
                     ev->weap = getint(p);
                     if(!isweap(ev->weap)) havecn = false;
                     ev->flags = getint(p);
-                    ev->power = getint(p);
+                    ev->scale = clamp(getint(p), 0, int(DMF));
                     if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id);
                     loopk(3) ev->from[k] = getint(p);
                     ev->num = getint(p);
@@ -3485,8 +3495,9 @@ namespace server
                     }
                     if(havecn)
                     {
-                        while(ev->shots.length() > WEAP2(ev->weap, rays, ev->flags&HIT_ALT))
-                            ev->shots.remove(rnd(ev->shots.length()));
+                        int rays = WEAP2(ev->weap, rays, ev->flags&HIT_ALT);
+                        if(rays > 1 && WEAP2(ev->weap, power, ev->flags&HIT_ALT)) rays = int(ceilf(rays*ev->scale/DMF));
+                        while(ev->shots.length() > rays) ev->shots.remove(rnd(ev->shots.length()));
                         cp->addevent(ev);
                     }
                     else delete ev;
