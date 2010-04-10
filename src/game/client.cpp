@@ -232,7 +232,7 @@ namespace client
 
     void edittoggled(bool edit)
     {
-        game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), !m_insta(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
+        game::player1->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), m_insta(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
         game::player1->state = edit ? CS_EDITING : CS_ALIVE;
         game::player1->resetinterp();
         game::resetstate();
@@ -1143,7 +1143,7 @@ namespace client
                 {
                     int lcn = getint(p), st = getint(p);
                     gameent *t = game::getclient(lcn);
-                    if(t && t != game::player1 && !t->ai) switch(st)
+                    if(t && (st == SPHY_EXTINGUISH || (t != game::player1 && !t->ai))) switch(st)
                     {
                         case SPHY_JUMP:
                         {
@@ -1164,7 +1164,8 @@ namespace client
                         case SPHY_EXTINGUISH:
                         {
                             t->resetfire();
-                            playsound(S_EXTINGUISH, t->o, t, 0, 128);
+                            playsound(S_EXTINGUISH, t->o, t, 0, t != game::focus ? 128 : 224, -1, -1);
+                            part_create(PART_SMOKE, 500, t->feetpos(t->height/2), 0xAAAAAA, t->height/2, 0.5f, -10);
                             break;
                         }
                         default: break;
@@ -1739,7 +1740,7 @@ namespace client
                     else
                     {
                         d->state = CS_ALIVE;
-                        d->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), !m_insta(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
+                        d->editspawn(lastmillis, m_weapon(game::gamemode, game::mutators), m_health(game::gamemode, game::mutators), m_insta(game::gamemode, game::mutators), m_arena(game::gamemode, game::mutators), spawngrenades >= (m_insta(game::gamemode, game::mutators) ? 2 : 1));
                     }
                     d->resetinterp();
                     projs::remove(d);

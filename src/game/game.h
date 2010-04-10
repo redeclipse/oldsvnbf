@@ -251,10 +251,10 @@ enum
 //  ext1    ext2    cook1   cook2   radl1   radl2   brn1    brn2    rlds    zooms   fa1     fa2     allowed
 //  tpr1    tpr2    elas1   elas2   rflt1   rflt2   relt1   relt2   wfrc1   wfrc2   wght1   wght2   rads1   rads2   kpsh1   kpsh2   hpsh1       hpsh2       mdst1   mdst2   psz1    psz2    plen1   plen2   freq    push    cmult   cdist   guided1 guided2
 WEAPON(melee,
-    1,      1,      0,      0,      300,        300,        0,      50,     100,    150,        150,        0,      0,      100,        100,        1,      1,      0,      0,      1,      1,      1,      1,      1,      1,      0,      0,
-    IMPACT_PLAYER,                                                          IMPACT_PLAYER,
+    1,      1,      0,      0,      200,        200,        0,      100,    100,    500,        500,        0,      0,      100,        250,        0,      0,      0,      28,     1,      1,      1,      1,      1,      1,      1,      1,
+    IMPACT_PLAYER,                                                          IMPACT_PLAYER|IMPACT_GEOM,
     0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      1,      1,      1,
-    1,      1,      0,      0,      0,      0,      1,      1,      0,      0,      0,      0,      6,      6,      2,      4,      100,        150,        25,     25,     0.75f,  0.75f,  0,      0,      0,      2,      2,      0,      0,      0
+    0,      1,      0,      0,      0,      0,      0,      2,      0,      0,      0,      0,      1,      1,      -1,      -1,    250,        -100,       25,     25,     2,      28,     0,      0,      0,      1,      2,      0,      0,      10
 );
 WEAPON(pistol,
     10,     10,     1,      1,      100,        200,        1000,   40,     40,     2500,       2500,       0,      0,      2000,       2000,       0,      0,      0,      0,      1,      1,      1,      1,      1,      1,      100,    100,
@@ -284,7 +284,7 @@ WEAPON(plasma,
     20,     20,     1,      20,     500,        1000,       2000,   30,     35,     1500,       35,         0,      2000,   500,        5000,       0,      100,    24,     64,     1,      1,      5,      5,      0,      0,      50,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|RADIAL_PLAYER|COLLIDE_OWNER|COLLIDE_STICK,
     1,      0,      0,      0,      1,      1,      0,      0,      1,      0,      1,      0,      1,
-    0.5f,   0.75f,  0,      0,      0,      0,      0.125f, 0.175f, 1,      1,      0,      0,      1,      1,      3,      6,      50,     200,            200,    50,     24,     64,     0,      0,      2,      2,      3,      12,     0,      0
+    0.5f,   0.75f,  0,      0,      0,      0,      0.125f, 0.175f, 1,      1,      0,      0,      1,      1,      3,      6,      50,     -250,           200,    50,     24,     64,     0,      0,      2,      2,      3,      12,     0,      0
 );
 WEAPON(rifle,
     5,      5,      1,      1,      750,        750,        2000,   50,     100,    5000,       50000,      0,      0,      5000,       5000,       0,      0,      24,     0,      1,      1,      0,      0,      0,      0,      40,     40,
@@ -302,7 +302,7 @@ WEAPON(rocket,
     1,      1,      1,      1,      1000,     1000,        2000,    350,    350,    1000,       250,        2000,   2000,   5000,       5000,       0,      0,      48,     64,     1,      1,      0,      0,      0,      0,      10,     10,
     IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,                                IMPACT_GEOM|IMPACT_PLAYER|COLLIDE_OWNER,
     0,      0,      1,      1,      0,      0,      1,      1,      0,      0,      0,      0,      2,
-    0,      0,      0,      0,      0,      0,      1,      1,      2,      2,      0,      0,      1,      1,      15,     15,     1000,       1000,       400,    400,    3,      3,      0,      0,      3,      4,      2,      0,      0,      1
+    0,      0,      0,      0,      0,      0,      0,      0,      2,      2,      0,      0,      1,      1,      15,     15,     1000,       1000,       400,    400,    3,      3,      0,      0,      3,      4,      2,      0,      0,      1
 );
 
 struct weaptypes
@@ -390,8 +390,8 @@ extern weaptypes weaptype[];
 #define FIRECOLOURS 8
 const int firecols[FIRECOLOURS] = { 0xFF5808, 0x981808, 0x782808, 0x481808, 0x983818, 0x601808, 0xFF1808, 0x381808 };
 #endif
-#define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAP2(a, explode, b)*e)) : 0)
-#define WEAPSP(a,b,c,d)         (!m_insta(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b) : 0)
+#define WEAPEX(a,b,c,d,e)       (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? int(ceilf(WEAP2(a, explode, b)*e*(m_insta(c, d) || m_arena(c, d) ? GAME(limitedscale) : GAME(explodescale)))) : 0)
+#define WEAPSP(a,b,c,d)         (!m_insta(c, d) || m_arena(c, d) || a != WEAP_RIFLE ? WEAP2(a, spread, b) : 0)
 
 WEAPDEF(int, add); WEAPDEF(int, max); WEAPDEF2(int, sub); WEAPDEF2(int, adelay); WEAPDEF(int, rdelay); WEAPDEF2(int, damage); WEAPDEF2(int, speed); WEAPDEF2(int, power);
 WEAPDEF2(int, time); WEAPDEF2(int, pdelay); WEAPDEF2(int, explode); WEAPDEF2(int, rays); WEAPDEF2(int, spread); WEAPDEF2(int, zdiv); WEAPDEF2(int, aiskew); WEAPDEF2(int, collide);
@@ -447,7 +447,7 @@ gametypes gametype[] = {
 }, mutstype[] = {
     { G_M_MULTI,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_TEAM|G_M_MULTI,     "multi" },
     { G_M_TEAM,         G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_TEAM,               "team" },
-    { G_M_INSTA,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR,                 G_M_INSTA,              "insta" },
+    { G_M_INSTA,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_INSTA,              "insta" },
     { G_M_DUEL,         G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA,                    G_M_DUEL,               "duel" },
     { G_M_SURVIVOR,     G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA,                G_M_SURVIVOR,           "survivor" },
     { G_M_ARENA,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_ARENA,              "arena" },
@@ -642,7 +642,6 @@ enum { AC_ATTACK = 0, AC_ALTERNATE, AC_RELOAD, AC_USE, AC_JUMP, AC_SPRINT, AC_CR
 enum { IM_METER = 0, IM_TYPE, IM_TIME, IM_COUNT, IM_MAX };
 enum { IM_T_NONE = 0, IM_T_BOOST, IM_T_DASH, IM_T_KICK, IM_T_SKATE, IM_T_MAX, IM_T_WALL = IM_T_KICK };
 
-#define iskick(a,b) (a == WEAP_MELEE && b&HIT_ALT)
 #define CROUCHHEIGHT 0.7f
 #define PHYSMILLIS 250
 
@@ -656,7 +655,7 @@ struct gamestate
     int lastdeath, lastspawn, lastrespawn, lastpain, lastregen, lastfire;
     int aitype, aientity, ownernum, skill, points, frags, deaths, cpmillis, cptime;
 
-    gamestate() : loadweap(WEAP_MELEE), weapselect(WEAP_MELEE), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
+    gamestate() : loadweap(WEAP_PISTOL), weapselect(WEAP_PISTOL), lastdeath(0), lastspawn(0), lastrespawn(0), lastpain(0), lastregen(0), lastfire(0),
         aitype(-1), aientity(-1), ownernum(-1), skill(0), points(0), frags(0), deaths(0), cpmillis(0), cptime(0) {}
     ~gamestate() {}
 
@@ -713,7 +712,6 @@ struct gamestate
             weapwait[i] = weaplast[i] = weapload[i] = weapshot[i] = 0;
             if(full) ammo[i] = entid[i] = -1;
         }
-        if(full) { lastweap = -1; weapselect = WEAP_MELEE; }
     }
 
     void setweapstate(int weap, int state, int delay, int millis)
@@ -761,7 +759,7 @@ struct gamestate
 
     bool canshoot(int weap, int flags, int sweap, int millis, int skip = 0)
     {
-        if((iskick(weap, flags) || (hasweap(weap, sweap) && ammo[weap] >= (WEAP2(weap, power, flags&HIT_ALT) ? 1 : WEAP2(weap, sub, flags&HIT_ALT)))) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
+        if((weap == WEAP_MELEE || (hasweap(weap, sweap) && ammo[weap] >= (WEAP2(weap, power, flags&HIT_ALT) ? 1 : WEAP2(weap, sub, flags&HIT_ALT)))) && weapwaited(weap, millis, skipwait(weap, flags, millis, skip)))
             return true;
         return false;
     }
@@ -828,13 +826,14 @@ struct gamestate
         weapreset(true);
     }
 
-    void spawnstate(int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
+    void spawnstate(int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
     {
         health = heal;
         weapreset(true);
         if(!isweap(sweap)) sweap = WEAP_PISTOL;
-        if(melee && sweap != WEAP_MELEE) ammo[WEAP_MELEE] = WEAP(WEAP_MELEE, max);
         ammo[sweap] = WEAP(sweap, reloads) ? WEAP(sweap, add) : WEAP(sweap, max);
+        if(grenades && sweap != WEAP_GRENADE) ammo[WEAP_GRENADE] = WEAP(WEAP_GRENADE, max);
+        if(!insta && sweap != WEAP_PISTOL) ammo[WEAP_PISTOL] = WEAP(WEAP_PISTOL, max);
         if(arena)
         {
             int aweap = loadweap;
@@ -847,17 +846,12 @@ struct gamestate
             loadweap = -1;
             lastweap = weapselect = sweap;
         }
-        if(grenades && sweap != WEAP_GRENADE)
-        {
-            ammo[WEAP_GRENADE] = WEAP(WEAP_GRENADE, max);
-            if(loadweap < 0) lastweap = weapselect = WEAP_GRENADE;
-        }
     }
 
-    void editspawn(int millis, int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
+    void editspawn(int millis, int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
     {
         clearstate();
-        spawnstate(sweap, heal, melee, arena, grenades);
+        spawnstate(sweap, heal, insta, arena, grenades);
     }
 
     int respawnwait(int millis, int delay)
@@ -1026,7 +1020,7 @@ struct gameent : dynent, gamestate
         airnodes.setsize(0);
     }
 
-    void editspawn(int millis, int sweap, int heal, bool melee = true, bool arena = false, bool grenades = false)
+    void editspawn(int millis, int sweap, int heal, bool insta = false, bool arena = false, bool grenades = false)
     {
         stopmoving(true);
         clearstate();
@@ -1037,7 +1031,7 @@ struct gameent : dynent, gamestate
         vel = falling = vec(0, 0, 0);
         floor = vec(0, 0, 1);
         resetinterp();
-        gamestate::editspawn(millis, sweap, heal, melee, arena, grenades);
+        gamestate::editspawn(millis, sweap, heal, insta, arena, grenades);
         airnodes.setsize(0);
     }
 

@@ -1048,17 +1048,15 @@ namespace server
     {
         servstate &gs = ci->state;
         int weap = m_weapon(gamemode, mutators), maxhealth = m_health(gamemode, mutators);
-        bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators),
-            melee = GAME(spawnmelee) >= (!m_insta(gamemode, mutators) || m_trial(gamemode) ? 1 : 2);
+        bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
         if(ci->state.aitype >= AI_START)
         {
             weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
             maxhealth = aistyle[ci->state.aitype].health;
             arena = grenades = false;
-            melee = true;
         }
-        gs.spawnstate(weap, maxhealth, melee, arena, grenades);
+        gs.spawnstate(weap, maxhealth, m_insta(gamemode, mutators), arena, grenades);
         int spawn = pickspawn(ci);
         sendf(ci->clientnum, 1, "ri9v", N_SPAWNSTATE, ci->clientnum, spawn, gs.state, gs.points, gs.frags, gs.health, gs.cptime, gs.weapselect, WEAP_MAX, &gs.ammo[0]);
         gs.lastrespawn = gs.lastspawn = gamemillis;
@@ -2272,6 +2270,16 @@ namespace server
                 }
             }
         }
+        if(weap == WEAP_MELEE && flags&HIT_ALT)
+        {
+            nodamage++;
+            if(actor != target && m_team(gamemode, mutators) && actor->team == target->team && target->state.onfire(gamemillis, GAME(fireburntime)))
+            {
+                sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
+                target->state.lastfire = target->state.lastfireburn = 0;
+                realdamage = 0;
+            }
+        }
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         else
         {
@@ -2477,7 +2485,7 @@ namespace server
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
                     if(radial) radial = clamp(radial, 1, WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f));
-                    float size = radial ? (hflags&HIT_WAVE ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
+                    float size = radial ? (hflags&HIT_WAVE || (weap == WEAP_MELEE && hflags&HIT_ALT) ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
@@ -3352,7 +3360,7 @@ namespace server
                     if(!allowstate(ci, val ? 4 : 5) && !haspriv(ci, PRIV_MASTER, "unspectate and edit")) { spectator(ci); break; }
                     ci->state.dropped.reset();
                     loopk(WEAP_MAX) loopj(2) ci->state.weapshots[k][j].reset();
-                    ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), !m_insta(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
+                    ci->state.editspawn(gamemillis, m_weapon(gamemode, mutators), m_health(gamemode, mutators), m_insta(gamemode, mutators), m_arena(gamemode, mutators), GAME(spawngrenades) >= (m_insta(gamemode, mutators) ? 2 : 1));
                     if(val)
                     {
                         if(smode) smode->leavegame(ci);
