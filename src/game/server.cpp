@@ -229,7 +229,7 @@ namespace server
 
         void addevent(gameevent *e)
         {
-            if(state.state==CS_SPECTATOR || events.length()>100) delete e;
+            if(state.state==CS_SPECTATOR || events.length()>250) delete e;
             else events.add(e);
         }
 
@@ -3479,6 +3479,7 @@ namespace server
                     loopj(ev->num)
                     {
                         if(p.overread()) break;
+                        if(j >= 100) { loopk(3) getint(p); continue; }
                         ivec &dest = ev->shots.add();
                         loopk(3) dest[k] = getint(p);
                     }
@@ -3537,7 +3538,7 @@ namespace server
                     loopj(hits)
                     {
                         if(p.overread()) break;
-                        if(!havecn)
+                        if(!havecn || j >= 100)
                         {
                             loopi(7) getint(p);
                             continue;
