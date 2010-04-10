@@ -625,11 +625,11 @@ namespace game
             if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
             {
                 float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
-                if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
+                if(weap != WEAP_MELEE && (flags&HIT_WAVE || !hithurts(flags))) force *= wavepushscale;
                 else
                 {
                     force *= WEAP(weap, pusharea);
-                    if(d->health <= 0) force *= deadpushscale;
+                    if(weap != WEAP_MELEE && d->health <= 0) force *= deadpushscale;
                     else force *= hitpushscale;
                 }
                 vec push = dir; push.z += 0.125f; push.mul(force);
@@ -712,7 +712,7 @@ namespace game
             {
                 static const char *obitnames[4][WEAP_MAX] = {
                     {
-                        "punched by",
+                        "kicked by",
                         "pierced by",
                         "sprayed with buckshot by",
                         "riddled with holes by",
@@ -723,7 +723,7 @@ namespace game
                         "exploded by",
                     },
                     {
-                        "kicked by",
+                        "killed by",
                         "pierced by",
                         "filled with lead by",
                         "spliced apart by",
@@ -757,7 +757,7 @@ namespace game
                     }
                 };
 
-                int o = style&FRAG_OBLITERATE ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT ? 1 : 0));
+                int o = style&FRAG_OBLITERATE ? 3 : (style&FRAG_HEADSHOT ? 2 : (flags&HIT_ALT || actor->aitype >= AI_BOT ? 1 : 0));
                 concatstring(d->obit, burning ? "set ablaze by" : (isweap(weap) ? obitnames[o][weap] : "killed by"));
             }
             bool override = false;
@@ -1917,10 +1917,13 @@ namespace game
                     }
                     case WEAP_S_SHOOT:
                     {
-                        if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
-                            showweap = false;
-                        animflags = weaptype[weap].anim+d->weapstate[weap];
-                        break;
+                        if(weap != WEAP_MELEE || d->aitype >= AI_BOT)
+                        {
+                            if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
+                                showweap = false;
+                            animflags = weaptype[weap].anim+d->weapstate[weap];
+                            break;
+                        }
                     }
                     case WEAP_S_RELOAD:
                     {
@@ -1934,7 +1937,7 @@ namespace game
                     }
                     case WEAP_S_IDLE: case WEAP_S_WAIT: default:
                     {
-                        if(!d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
+                        if(weap != WEAP_MELEE && !d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
                         animflags = weaptype[weap].anim|ANIM_LOOP;
                         break;
                     }

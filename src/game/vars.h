@@ -44,7 +44,6 @@ GVAR(0, spawnrotate, 0, 4, INT_MAX-1); // 0 = let client decide, 1 = sequence, 2
 GVAR(0, spawnweapon, 0, WEAP_PISTOL, WEAP_MAX-1);
 GVAR(0, instaweapon, 0, WEAP_RIFLE, WEAP_MAX-1);
 GVAR(0, limitedweapon, 0, WEAP_MELEE, WEAP_MAX-1);
-GVAR(0, spawnmelee, 0, 1, 2); // 0 = never, 1 = all but non-trial instagib, 2 = always
 GVAR(0, spawngrenades, 0, 0, 2); // 0 = never, 1 = all but instagib/time-trial, 2 = always
 GVAR(0, spawndelay, 0, 3000, INT_MAX-1); // delay before spawning in most modes
 GVAR(0, instadelay, 0, 1500, INT_MAX-1); // .. in instagib/arena matches
@@ -123,6 +122,8 @@ GVAR(0, impulsecount, 0, 10, INT_MAX-1); // number of impulse actions per air tr
 GVAR(0, impulseskate, 0, 750, INT_MAX-1); // length of time a run along a wall can last
 GFVAR(0, impulseregen, 0, 10, 1000); // impulse regen multiplier
 
+GFVAR(0, explodescale, 0, 1, 1000);
+GFVAR(0, limitedscale, 0, 0.5f, 1000);
 GFVAR(0, damagescale, 0, 1, 1000);
 GVAR(0, damagecritchance, 0, 100, INT_MAX-1);
 

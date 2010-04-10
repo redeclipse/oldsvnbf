@@ -180,8 +180,12 @@ namespace weapons
             else offset = -1;
         }
         float scale = 1;
-        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && !iskick(weap, secondary ? HIT_ALT : 0))
+        int sub = WEAP2(weap, sub, secondary);
+        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && weap != WEAP_MELEE)
         {
+            float maxscale = 1;
+            if(sub > 1 && d->ammo[weap] < sub) maxscale = d->ammo[weap]/float(sub);
+            int len = int(WEAP2(weap, power, secondary)*maxscale);
             if(!force)
             {
                 if(d->weapstate[weap] != WEAP_S_POWER)
@@ -193,22 +197,13 @@ namespace weapons
                     }
                     else return;
                 }
-                force = clamp(lastmillis-d->weaplast[weap], 0, WEAP2(weap, power, secondary));
-                if(pressed && force < WEAP2(weap, power, secondary)) return;
+                force = clamp(lastmillis-d->weaplast[weap], 0, len);
+                if(pressed && force < len) return;
             }
-            scale = clamp(clamp(force, 1, WEAP2(weap, power, secondary))/float(WEAP2(weap, power, secondary)), 1e-3f, 1.f);
+            scale = clamp(clamp(force, 1, len)/float(WEAP2(weap, power, secondary)), 1e-3f, maxscale);
+            if(sub > 1 && scale < 1) sub = int(ceilf(sub*scale));
         }
         else if(!pressed) return;
-        int sub = WEAP2(weap, sub, secondary);
-        if(sub > 1 && WEAP2(weap, power, secondary))
-        {
-            if(d->ammo[weap] < sub)
-            {
-                float maxscale = d->ammo[weap]/float(sub);
-                if(scale > maxscale) scale = maxscale;
-            }
-            if(scale < 1) sub = int(ceilf(sub*scale));
-        }
         if(offset < 0)
         {
             offset = max(d->weapload[weap], 1)+sub;
@@ -216,14 +211,14 @@ namespace weapons
         }
         else offset = sub;
 
-        if(!iskick(weap, secondary ? HIT_ALT : 0))
+        if(weap != WEAP_MELEE)
         {
             if(!WEAP2(weap, fullauto, secondary))
                 d->action[secondary && !WEAP(weap, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
             d->action[AC_RELOAD] = false;
         }
 
-        vec to = targ, from = iskick(weap, secondary ? HIT_ALT : 0) ? d->feetpos(1) : d->muzzlepos(weap), unitv;
+        vec to = targ, from = weap == WEAP_MELEE && d->aitype < AI_BOT ? d->feetpos(secondary ? d->height/2 : 1) : d->muzzlepos(weap), unitv;
         float dist = to.dist(from, unitv);
         if(dist > 0) unitv.div(dist);
         else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
@@ -285,7 +280,7 @@ namespace weapons
     {
         if(!game::allowmove(d)) return;
         bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WEAP(d->weapselect, zooms)));
-        if(d->weapselect != WEAP_MELEE)
+        if(d->weapselect != WEAP_MELEE || d->aitype >= AI_BOT)
         {
             if(WEAP(d->weapselect, zooms))
             {
@@ -293,8 +288,8 @@ namespace weapons
             }
             else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
             else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
+            doshot(d, targ, d->weapselect, pressed, secondary, force);
         }
-        doshot(d, targ, d->weapselect, pressed, secondary, force);
     }
 
     void preload(int weap)
