@@ -3081,7 +3081,7 @@ namespace server
             {
                 static const int exempt[] = { N_POS, N_DESTROY };
                 loopi(sizeof(exempt)/sizeof(int)) if(type == exempt[i]) return type;
-                if(++ci->overflow >= 200) return -2;
+                if(++ci->overflow >= 250) return -2;
             }
         }
         return type;
