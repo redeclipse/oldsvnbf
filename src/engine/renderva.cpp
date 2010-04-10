@@ -2139,7 +2139,7 @@ void rendergeom(float causticspass, bool fogpass)
                 }
             }
         }
-        else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o) && oqgeom)
+        else if(hasOQ && oqfrags && (zpass || va->distance > oqdist) && !insideva(va, camera1->o) && oqgeom && !envmapping)
         {
             if(!zpass && va->query && va->query->owner == va)
             {
