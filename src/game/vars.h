@@ -114,7 +114,7 @@ GFVAR(0, forceaircurb, -1, -1, 1000);
 GFVAR(0, jumpspeed, 0, 50.f, 1000); // extra velocity to add when jumping
 GFVAR(0, movespeed, 0, 50.f, 1000); // speed
 GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
-GFVAR(0, impulsespeed, 0, 40.f, 1000); // extra velocity to add when impulsing
+GFVAR(0, impulsespeed, 0, 35.f, 1000); // extra velocity to add when impulsing
 
 GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 GVAR(0, impulsemeter, 0, 100000, INT_MAX-1); // impulse dash length; 0 = unlimited, anything else = timer

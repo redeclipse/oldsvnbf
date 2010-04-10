@@ -168,20 +168,21 @@ namespace weapons
 
     void doshot(gameent *d, vec &targ, int weap, bool pressed, bool secondary, int force)
     {
-        int power = clamp(force, 0, WEAP(weap, power)), flags = secondary ? HIT_ALT : 0, offset = WEAP2(weap, sub, flags&HIT_ALT), sweap = m_weapon(game::gamemode, game::mutators);
-        if(!d->canshoot(weap, flags, sweap, lastmillis))
+        int offset = WEAP2(weap, sub, secondary), sweap = m_weapon(game::gamemode, game::mutators);
+        if(!d->canshoot(weap, secondary ? HIT_ALT : 0, sweap, lastmillis))
         {
-            if(!d->canshoot(weap, flags, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
+            if(!d->canshoot(weap, secondary ? HIT_ALT : 0, sweap, lastmillis, (1<<WEAP_S_RELOAD)))
             {
                 // if the problem is not enough ammo, do the reload..
-                if(autoreload(d, flags)) weapreload(d, weap);
+                if(autoreload(d, secondary ? HIT_ALT : 0)) weapreload(d, weap);
                 return;
             }
             else offset = -1;
         }
-        if(WEAP(weap, power) && !WEAP(weap, zooms))
+        float scale = 1;
+        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && !iskick(weap, secondary ? HIT_ALT : 0))
         {
-            if(!power)
+            if(!force)
             {
                 if(d->weapstate[weap] != WEAP_S_POWER)
                 {
@@ -192,36 +193,48 @@ namespace weapons
                     }
                     else return;
                 }
-                power = clamp(lastmillis-d->weaplast[weap], 0, WEAP(weap, power));
-                if(pressed && power < WEAP(weap, power)) return;
+                force = clamp(lastmillis-d->weaplast[weap], 0, WEAP2(weap, power, secondary));
+                if(pressed && force < WEAP2(weap, power, secondary)) return;
             }
+            scale = clamp(clamp(force, 1, WEAP2(weap, power, secondary))/float(WEAP2(weap, power, secondary)), 1e-3f, 1.f);
         }
         else if(!pressed) return;
+        int sub = WEAP2(weap, sub, secondary);
+        if(sub > 1 && WEAP2(weap, power, secondary))
+        {
+            if(d->ammo[weap] < sub)
+            {
+                float maxscale = d->ammo[weap]/float(sub);
+                if(scale > maxscale) scale = maxscale;
+            }
+            if(scale < 1) sub = int(ceilf(sub*scale));
+        }
         if(offset < 0)
         {
-            offset = max(d->weapload[weap], 1)+WEAP2(weap, sub, flags&HIT_ALT);
+            offset = max(d->weapload[weap], 1)+sub;
             d->weapload[weap] = -d->weapload[weap];
         }
+        else offset = sub;
 
-        if(!iskick(weap, flags))
+        if(!iskick(weap, secondary ? HIT_ALT : 0))
         {
-            if(!WEAP2(weap, fullauto, flags&HIT_ALT))
+            if(!WEAP2(weap, fullauto, secondary))
                 d->action[secondary && !WEAP(weap, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
             d->action[AC_RELOAD] = false;
         }
 
-        vec to = targ, from = iskick(weap, flags) ? d->feetpos(1) : d->muzzlepos(weap), unitv;
+        vec to = targ, from = iskick(weap, secondary ? HIT_ALT : 0) ? d->feetpos(1) : d->muzzlepos(weap), unitv;
         float dist = to.dist(from, unitv);
         if(dist > 0) unitv.div(dist);
         else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
         if(d->aitype < AI_START || d->maxspeed)
         {
-            vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, flags&HIT_ALT));
+            vec kick = vec(unitv).mul(-WEAP2(weap, kickpush, secondary));
             if(d == game::player1)
             {
                 if(WEAP(weap, zooms) && game::inzoom()) kick.mul(0.0125f);
                 game::swaypush.add(vec(kick).mul(0.025f));
-                if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, flags&HIT_ALT)), 1), 0, 1000);
+                if(!physics::iscrouching(d)) d->quake = clamp(d->quake+max(int(WEAP2(weap, kickpush, secondary)), 1), 0, 1000);
             }
             if(!physics::iscrouching(d)) d->vel.add(vec(kick).mul(0.5f));
         }
@@ -252,18 +265,20 @@ namespace weapons
         vector<vec> vshots;
         vector<ivec> shots;
         #define addshot { vshots.add(dest); shots.add(ivec(int(dest.x*DMF), int(dest.y*DMF), int(dest.z*DMF))); }
-        loopi(WEAP2(weap, rays, flags&HIT_ALT))
+        int rays = WEAP2(weap, rays, secondary);
+        if(rays > 1 && WEAP2(weap, power, secondary) && scale < 1) rays = int(ceilf(rays*scale));
+        loopi(rays)
         {
             vec dest;
-            int spread = WEAPSP(weap, flags&HIT_ALT, game::gamemode, game::mutators);
-            if(spread) offsetray(from, to, spread, WEAP2(weap, zdiv, flags&HIT_ALT), dest);
+            int spread = WEAPSP(weap, secondary, game::gamemode, game::mutators);
+            if(spread) offsetray(from, to, spread, WEAP2(weap, zdiv, secondary), dest);
             else dest = to;
-            if(weaptype[weap].thrown[flags&HIT_ALT ? 1 : 0] > 0)
-                dest.z += from.dist(dest)*weaptype[weap].thrown[flags&HIT_ALT ? 1 : 0];
+            if(weaptype[weap].thrown[secondary ? 1 : 0] > 0)
+                dest.z += from.dist(dest)*weaptype[weap].thrown[secondary ? 1 : 0];
             addshot;
         }
-        projs::shootv(weap, flags, offset, power, from, vshots, d, true);
-        client::addmsg(N_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, weap, flags, power, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
+        projs::shootv(weap, secondary ? HIT_ALT : 0, offset, scale, from, vshots, d, true);
+        client::addmsg(N_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, weap, secondary ? HIT_ALT : 0, int(scale*DMF), int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
     }
 
     void shoot(gameent *d, vec &targ, int force)
@@ -272,9 +287,12 @@ namespace weapons
         bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WEAP(d->weapselect, zooms)));
         if(d->weapselect != WEAP_MELEE)
         {
-            if(d == game::player1 && WEAP(d->weapselect, zooms) && game::zooming && game::inzoomswitch()) secondary = true;
-            else if(!WEAP(d->weapselect, zooms) && d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
-            else if(WEAP(d->weapselect, power) && d->weapstate[d->weapselect] == WEAP_S_POWER && d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK]) secondary = true;
+            if(WEAP(d->weapselect, zooms))
+            {
+                if(d == game::player1 && game::zooming && game::inzoomswitch()) secondary = true;
+            }
+            else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
+            else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
         }
         doshot(d, targ, d->weapselect, pressed, secondary, force);
     }

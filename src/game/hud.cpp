@@ -446,15 +446,15 @@ namespace hud
     }
 
 
-    void drawindicator(int weap, int x, int y, int s)
+    void drawindicator(int weap, int x, int y, int s, bool secondary)
     {
         int millis = lastmillis-game::focus->weaplast[weap];
         float r = 1, g = 1, b = 1, amt = 0;
         switch(game::focus->weapstate[weap])
         {
-            case WEAP_S_POWER: if(WEAP(game::focus->weapselect, power))
+            case WEAP_S_POWER: if(WEAP2(weap, power, secondary))
             {
-                amt = clamp(float(millis)/float(WEAP(weap, power)), 0.f, 1.f);
+                amt = clamp(float(millis)/float(WEAP2(weap, power, secondary)), 0.f, 1.f);
                 colourskew(r, g, b, 1.f-amt);
                 break;
             }
@@ -482,7 +482,7 @@ namespace hud
 
     void drawclip(int weap, int x, int y, float s)
     {
-        if(!isweap(weap) || (!WEAP2(weap, sub, false) && !WEAP2(weap, sub, true))) return;
+        if(!isweap(weap) || (!WEAP2(weap, sub, false) && !WEAP2(weap, sub, true)) || WEAP(weap, max) <= 1) return;
         const char *cliptexs[WEAP_MAX] = {
             progresstex, pistolcliptex, shotguncliptex, smgcliptex,
             flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, rocketcliptex, // end of regular weapons
@@ -645,7 +645,7 @@ namespace hud
             if(game::focus->state == CS_ALIVE && game::focus->hasweap(game::focus->weapselect, m_weapon(game::gamemode, game::mutators)))
             {
                 if(showclips) drawclip(game::focus->weapselect, nx, ny, clipsize*hudsize);
-                if(showindicator) drawindicator(game::focus->weapselect, nx, ny, int(indicatorsize*hudsize));
+                if(showindicator && game::focus == game::player1) drawindicator(game::focus->weapselect, nx, ny, int(indicatorsize*hudsize), game::focus->action[AC_ALTERNATE]);
             }
             if(game::mousestyle() >= 1) // renders differently
                 drawpointerindex(POINTER_RELATIVE, game::mousestyle() != 1 ? nx : cx, game::mousestyle() != 1 ? ny : cy, int(crosshairsize*hudsize), 1, 1, 1, crosshairblend*hudblend);
@@ -1438,7 +1438,7 @@ namespace hud
                         b = (weaptype[i].colour&0xFF)/255.f;
                     }
                     int oldy = y-sy;
-                    if(inventoryammo && (instate || inventoryammo > 1) && (WEAP2(i, sub, false) || WEAP2(i, sub, true)) && game::focus->hasweap(i, sweap))
+                    if(inventoryammo && (instate || inventoryammo > 1) && WEAP(i, max) > 1 && game::focus->hasweap(i, sweap))
                         sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew, "super", "%d", game::focus->ammo[i]);
                     else sy += drawitem(hudtexs[i], x, y-sy, size, false, r, g, b, fade, skew);
                     if(inventoryweapids && (instate || inventoryweapids > 1))
