@@ -484,7 +484,7 @@ namespace hud
     {
         if(!isweap(weap) || (!WEAP2(weap, sub, false) && !WEAP2(weap, sub, true)) || WEAP(weap, max) <= 1) return;
         const char *cliptexs[WEAP_MAX] = {
-            progresstex, pistolcliptex, shotguncliptex, smgcliptex,
+            progresstex, progresstex, pistolcliptex, shotguncliptex, smgcliptex,
             flamercliptex, plasmacliptex, riflecliptex, grenadecliptex, rocketcliptex, // end of regular weapons
         };
         if(!clipsizes[weap])
@@ -499,7 +499,7 @@ namespace hud
         else glBlendFunc(GL_ONE, GL_ONE);
 
         const float clipskew[WEAP_MAX] = {
-            1, pistolclipskew, shotgunclipskew, smgclipskew,
+            1, 1, pistolclipskew, shotgunclipskew, smgclipskew,
             flamerclipskew, plasmaclipskew, rifleclipskew, grenadeclipskew, rocketclipskew, // end of regular weapons
         };
         float fade = clipblend*hudblend, size = s*clipskew[weapid];
@@ -1375,7 +1375,7 @@ namespace hud
             case WEAPON:
             {
                 const char *weaptexs[WEAP_MAX] = {
-                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rockettex
+                    meleetex, meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rockettex
                 };
                 if(isweap(stype)) return weaptexs[stype];
                 break;
@@ -1413,10 +1413,10 @@ namespace hud
             if(inventoryammo)
             {
                 const char *hudtexs[WEAP_MAX] = {
-                    meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rockettex
+                    meleetex, meleetex, pistoltex, shotguntex, smgtex, flamertex, plasmatex, rifletex, grenadetex, rockettex
                 };
                 int sweap = m_weapon(game::gamemode, game::mutators);
-                loopi(WEAP_MAX) if(game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i])
+                loopi(WEAP_MAX) if(i >= WEAP_MELEE && (game::focus->hasweap(i, sweap) || i == game::focus->weapselect || lastmillis-game::focus->weaplast[i] < game::focus->weapwait[i]))
                 {
                     if(y-sy-s < m) break;
                     float fade = blend*inventoryblend, size = s, skew = 0.f;
