@@ -530,7 +530,7 @@ namespace game
 
     bool fireburn(gameent *d, int weap, int flags)
     {
-        if(fireburntime && (doesburn(weap, flags) || flags&HIT_MELT || (weap == WEAP_SPECIAL && flags&HIT_BURN)))
+        if(fireburntime && (doesburn(weap, flags) || flags&HIT_MELT || (weap == -1 && flags&HIT_BURN)))
         {
             if(!issound(d->fschan)) playsound(S_BURNFIRE, d->o, d, SND_LOOP, d != focus ? 128 : 224, -1, -1, &d->fschan);
             if(flags&HIT_FULL) d->lastfire = lastmillis;
@@ -625,16 +625,16 @@ namespace game
             if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
             {
                 float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
-                if(weap != WEAP_SPECIAL && (flags&HIT_WAVE || !hithurts(flags))) force *= wavepushscale;
+                if(weap != WEAP_TRACTOR && (flags&HIT_WAVE || !hithurts(flags))) force *= wavepushscale;
                 else
                 {
                     force *= WEAP(weap, pusharea);
                     if(d->health <= 0) force *= deadpushscale;
                     else force *= hitpushscale;
                 }
-                vec push = dir; push.z += 0.125f; push.mul(force);
+                vec push = dir; push.z += force/100.f; push.mul(force);
                 d->vel.add(push);
-                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap <= WEAP_MELEE) d->lastpush = lastmillis;
+                if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap <= WEAP_MELEE || weap == WEAP_TRACTOR) d->lastpush = lastmillis;
             }
             ai::damaged(d, actor, weap, flags, damage);
         }
@@ -687,9 +687,9 @@ namespace game
             else if(flags && isweap(weap) && !burning)
             {
                 static const char *suicidenames[WEAP_MAX] = {
-                    "kicked themself",
-                    "punched themself",
+                    "hit themself",
                     "ate a bullet",
+                    "created too much torsional stress",
                     "discovered buckshot bounces",
                     "got caught in their own crossfire",
                     "spontaneously combusted",
@@ -713,9 +713,9 @@ namespace game
             {
                 static const char *obitnames[4][WEAP_MAX] = {
                     {
-                        "kicked by",
                         "punched by",
                         "pierced by",
+                        "tractored by",
                         "sprayed with buckshot by",
                         "riddled with holes by",
                         "char-grilled by",
@@ -725,9 +725,9 @@ namespace game
                         "exploded by",
                     },
                     {
-                        "killed by",
-                        "punched by",
+                        "kicked by",
                         "pierced by",
+                        "tractored by",
                         "filled with lead by",
                         "spliced apart by",
                         "fireballed by",
@@ -738,8 +738,8 @@ namespace game
                     },
                     {
                         "given kung-fu lessons by",
-                        "knocked into next week by",
                         "capped by",
+                        "warped into next week by",
                         "scrambled by",
                         "air conditioned courtesy of",
                         "char-grilled by",
@@ -750,8 +750,8 @@ namespace game
                     },
                     {
                         "given kung-fu lessons by",
-                        "knocked into next week by",
                         "skewered by",
+                        "warped into next week by",
                         "turned into little chunks by",
                         "swiss-cheesed by",
                         "barbequed by chef",
@@ -1089,7 +1089,7 @@ namespace game
     {
         if((d == player1 || d->ai) && d->state == CS_ALIVE && d->suicided < 0)
         {
-            fireburn(d, WEAP_SPECIAL, flags);
+            fireburn(d, -1, flags);
             client::addmsg(N_SUICIDE, "ri2", d->clientnum, flags);
             d->suicided = lastmillis;
         }
@@ -1922,27 +1922,21 @@ namespace game
                     }
                     case WEAP_S_SHOOT:
                     {
-                        if(weap != WEAP_SPECIAL)
-                        {
-                            if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
-                                showweap = false;
-                            animflags = weaptype[weap].anim+d->weapstate[weap];
-                            break;
-                        }
+                        if(weaptype[weap].thrown[0] > 0 && (lastmillis-d->weaplast[weap] <= d->weapwait[weap]/2 || !d->hasweap(weap, m_weapon(gamemode, mutators))))
+                            showweap = false;
+                        animflags = weaptype[weap].anim+d->weapstate[weap];
+                        break;
                     }
                     case WEAP_S_RELOAD:
                     {
-                        if(weap != WEAP_SPECIAL)
-                        {
-                            if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!w_reload(weap, m_weapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
-                                showweap = false;
-                            animflags = weaptype[weap].anim+d->weapstate[weap];
-                            break;
-                        }
+                        if(!d->hasweap(weap, m_weapon(gamemode, mutators)) || (!w_reload(weap, m_weapon(gamemode, mutators)) && lastmillis-d->weaplast[weap] <= d->weapwait[weap]/3))
+                            showweap = false;
+                        animflags = weaptype[weap].anim+d->weapstate[weap];
+                        break;
                     }
                     case WEAP_S_IDLE: case WEAP_S_WAIT: default:
                     {
-                        if(weap != WEAP_SPECIAL && !d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
+                        if(!d->hasweap(weap, m_weapon(gamemode, mutators))) showweap = false;
                         animflags = weaptype[weap].anim|ANIM_LOOP;
                         break;
                     }

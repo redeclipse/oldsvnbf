@@ -2270,14 +2270,30 @@ namespace server
                 }
             }
         }
-        if(weap == WEAP_SPECIAL && flags&HIT_ALT)
+        if(weap == WEAP_TRACTOR)
         {
             nodamage++;
-            if(actor != target && m_team(gamemode, mutators) && actor->team == target->team && target->state.onfire(gamemillis, GAME(fireburntime)))
+            if(actor != target && m_team(gamemode, mutators) && actor->team == target->team)
             {
-                sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
-                target->state.lastfire = target->state.lastfireburn = 0;
-                realdamage = 0;
+                if(realflags&HIT_ALT)
+                {
+                    int total = m_health(gamemode, mutators), amt = 0, delay = 0;
+                    if(smode) smode->regen(target, total, amt, delay);
+                    if(total && target->state.health < total && realdamage > 0)
+                    {
+                        int rgn = target->state.health, heal = clamp(target->state.health+realdamage, 0, total), eff = heal-rgn;
+                        target->state.health = heal;
+                        target->state.lastregen = gamemillis;
+                        sendf(-1, 1, "ri4", N_REGEN, target->clientnum, target->state.health, eff);
+                    }
+                    return;
+                }
+                else if(target->state.onfire(gamemillis, GAME(fireburntime)))
+                {
+                    sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
+                    target->state.lastfire = target->state.lastfireburn = 0;
+                    return;
+                }
             }
         }
         if(nodamage || !hithurts(realflags)) realflags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
@@ -2314,14 +2330,15 @@ namespace server
             }
         }
         sendf(-1, 1, "ri7i3", N_DAMAGE, target->clientnum, actor->clientnum, weap, realflags, realdamage, target->state.health, hitpush.x, hitpush.y, hitpush.z);
-        if(GAME(vampire) && actor->state.state == CS_ALIVE)
+        if(GAME(vampire) && actor->state.state == CS_ALIVE && realdamage > 0)
         {
             int total = m_health(gamemode, mutators), amt = 0, delay = 0;
             if(smode) smode->regen(actor, total, amt, delay);
             if(total && actor->state.health < total)
             {
                 int rgn = actor->state.health, heal = clamp(actor->state.health+realdamage, 0, total), eff = heal-rgn;
-                actor->state.health = heal; actor->state.lastregen = gamemillis;
+                actor->state.health = heal;
+                actor->state.lastregen = gamemillis;
                 sendf(-1, 1, "ri4", N_REGEN, actor->clientnum, actor->state.health, eff);
             }
         }
@@ -2485,7 +2502,7 @@ namespace server
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
                     if(radial) radial = clamp(radial, 1, WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f));
-                    float size = radial ? (hflags&HIT_WAVE || (weap == WEAP_SPECIAL && hflags&HIT_ALT) ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
+                    float size = radial ? (hflags&HIT_WAVE || weap == WEAP_TRACTOR ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
@@ -2857,7 +2874,7 @@ namespace server
                     if(gamemillis-ci->state.lastfireburn >= GAME(fireburndelay))
                     {
                         clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-                        dodamage(ci, co ? co : ci, GAME(fireburndamage), WEAP_SPECIAL, HIT_BURN);
+                        dodamage(ci, co ? co : ci, GAME(fireburndamage), -1, HIT_BURN);
                         ci->state.lastfireburn += GAME(fireburndelay);
                     }
                 }

@@ -677,14 +677,12 @@ namespace physics
                 game::impulseeffect(d, true);
                 client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
             }
-            bool special = d == game::player1 && d->canshoot(WEAP_SPECIAL, 0, m_weapon(game::gamemode, game::mutators), (1<<WEAP_S_RELOAD)),
-                found = false;
+            bool found = false;
             if(d->turnside || d->action[AC_JUMP] || d->action[AC_SPECIAL])
             {
                 const int movements[6][2] = {
                     { 2, 2 }, { 1, 2 }, { 1, -1 }, { 1, 1 }, { 0, 2 }, { -1, 2 }
                 };
-                bool playercol = special && (d->action[AC_SPECIAL] || d->turnside);
                 loopi(d->turnside ? 6 : 4)
                 {
                     vec oldpos = d->o, dir;
@@ -696,7 +694,7 @@ namespace physics
                     d->o.add(vec(dir).mul(d->radius));
                     bool collided = collide(d, dir);
                     d->o = oldpos;
-                    if(collided || (hitplayer ? !playercol : wall.iszero())) continue;
+                    if(collided || (hitplayer ? !d->action[AC_SPECIAL] && !d->turnside : wall.iszero())) continue;
                     if(hitplayer) wall = vec(hitplayer->o).sub(d->o);
                     wall.normalize();
                     float yaw = 0, pitch = 0;
@@ -710,12 +708,13 @@ namespace physics
                         float mag = ((impulseforce(d)*1.5f)+max(d->vel.magnitude(), 1.f))/2;
                         if(hitplayer)
                         {
-                            weapons::doshot(d, hitplayer->o, WEAP_SPECIAL, true, false);
+                            if(weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, !onfloor))
+                                d->action[key] = false;
                             if(!onfloor) d->vel.z += mag*2;
-                            special = false;
                         }
                         else
                         {
+                            d->action[key] = false;
                             d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
                             d->vel.z += d->turnside ? mag : mag/2;
                             d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
@@ -749,7 +748,7 @@ namespace physics
                             if(off > 180) off -= 360;
                             else if(off < -180) off += 360;
                             d->doimpulse(impulsecost, IM_T_SKATE, lastmillis);
-                            //d->action[AC_SPECIAL] = false;
+                            d->action[AC_SPECIAL] = false;
                             d->turnmillis = PHYSMILLIS;
                             d->turnside = (off < 0 ? -1 : 1)*(move ? move : 1);
                             d->turnyaw = off;
@@ -761,11 +760,7 @@ namespace physics
                     }
                 }
             }
-            if(!found)
-            {
-                if(d->turnside) { d->turnside = 0; d->resetphys(); }
-                if(d->action[AC_SPECIAL] && d == game::player1 && special) weapons::doshot(d, worldpos, WEAP_SPECIAL, true, true);
-            }
+            if(!found) { if(d->turnside) { d->turnside = 0; d->resetphys(); } }
             else if(d->action[AC_JUMP]) d->action[AC_JUMP] = false;
         }
         else d->action[AC_JUMP] = false;
