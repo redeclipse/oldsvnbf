@@ -1737,8 +1737,7 @@ namespace entities
                         }
                     }
                     int best = e.attrs[0];
-                    loopj(WEAP_MAX) if(weaps[j] > weaps[best])
-                        best = j;
+                    loopj(WEAP_MAX) if(weaps[j] > weaps[best]) best = j;
                     e.attrs[0] = best;
                     break;
                 }
@@ -1916,6 +1915,7 @@ namespace entities
                         e.attrs[0]++; // add in melee
                         if(e.attrs[0] < WEAP_OFFSET) e.attrs[0] = WEAP_GRENADE; // cleanup for fixentity
                     }
+                    if(mtype == MAP_BFGZ && gver <= 163) e.attrs[0]++; // add in impulse
                     break;
                 }
                 case TRIGGER:

@@ -95,6 +95,7 @@ namespace weapons
                         case 0: default: break; \
                     } \
                 }
+                if(s == WEAP_SPECIAL) continue;
                 skipweap(skipspawnweapon, p);
                 skipweap(skipmelee, WEAP_MELEE);
                 skipweap(skippistol, WEAP_PISTOL);
@@ -116,7 +117,7 @@ namespace weapons
     {
         int weap = isweap(a) ? a : d->weapselect;
         bool found = false;
-        if(isweap(weap) && weap != WEAP_MELEE && weap != m_weapon(game::gamemode, game::mutators) && !m_noitems(game::gamemode, game::mutators) && entities::ents.inrange(d->entid[weap]))
+        if(isweap(weap) && weap > WEAP_MELEE && weap != m_weapon(game::gamemode, game::mutators) && !m_noitems(game::gamemode, game::mutators) && entities::ents.inrange(d->entid[weap]))
         {
             if(d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD)|(1<<WEAP_S_SWITCH), true)))
             {
@@ -181,7 +182,7 @@ namespace weapons
         }
         float scale = 1;
         int sub = WEAP2(weap, sub, secondary);
-        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && weap != WEAP_MELEE)
+        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && weap != WEAP_SPECIAL)
         {
             float maxscale = 1;
             if(sub > 1 && d->ammo[weap] < sub) maxscale = d->ammo[weap]/float(sub);
@@ -211,14 +212,14 @@ namespace weapons
         }
         else offset = sub;
 
-        if(weap != WEAP_MELEE)
+        if(weap != WEAP_SPECIAL)
         {
             if(!WEAP2(weap, fullauto, secondary))
                 d->action[secondary && !WEAP(weap, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
             d->action[AC_RELOAD] = false;
         }
 
-        vec to = targ, from = weap == WEAP_MELEE && d->aitype < AI_BOT ? d->feetpos(secondary ? d->height/2 : 1) : d->muzzlepos(weap), unitv;
+        vec to = targ, from = weap == WEAP_SPECIAL ? d->feetpos(secondary ? d->height/2 : 1) : d->muzzlepos(weap), unitv;
         float dist = to.dist(from, unitv);
         if(dist > 0) unitv.div(dist);
         else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
@@ -278,24 +279,21 @@ namespace weapons
 
     void shoot(gameent *d, vec &targ, int force)
     {
-        if(!game::allowmove(d)) return;
+        if(!game::allowmove(d) || d->weapselect == WEAP_SPECIAL) return;
         bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WEAP(d->weapselect, zooms)));
-        if(d->weapselect != WEAP_MELEE || d->aitype >= AI_BOT)
+        if(WEAP(d->weapselect, zooms))
         {
-            if(WEAP(d->weapselect, zooms))
-            {
-                if(d == game::player1 && game::zooming && game::inzoomswitch()) secondary = true;
-            }
-            else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
-            else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
-            doshot(d, targ, d->weapselect, pressed, secondary, force);
+            if(d == game::player1 && game::zooming && game::inzoomswitch()) secondary = true;
         }
+        else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
+        else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
+        doshot(d, targ, d->weapselect, pressed, secondary, force);
     }
 
     void preload(int weap)
     {
         int g = weap < 0 ? m_weapon(game::gamemode, game::mutators) : weap;
-        if(g != WEAP_MELEE && isweap(g))
+        if(g > WEAP_MELEE && isweap(g))
         {
             if(*weaptype[g].item) loadmodel(weaptype[g].item, -1, true);
             if(*weaptype[g].vwep) loadmodel(weaptype[g].vwep, -1, true);

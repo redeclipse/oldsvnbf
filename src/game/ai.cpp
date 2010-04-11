@@ -7,7 +7,7 @@ namespace ai
 
     VAR(0, aidebug, 0, 0, 6);
     VAR(0, aisuspend, 0, 0, 1);
-    VAR(0, aiforcegun, -1, -1, WEAP_MAX-1);
+    VAR(0, aiforcegun, 0, 0, WEAP_MAX-1);
     VAR(0, aicampaign, 0, 0, 1);
     VAR(IDF_PERSIST, aideadfade, 0, 500, 60000);
     VAR(IDF_PERSIST, showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
@@ -543,7 +543,7 @@ namespace ai
             if(d->aitype >= AI_START && aistyle[d->aitype].weap >= 0) d->loadweap = aistyle[d->aitype].weap;
             else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
                 d->loadweap = m_weapon(game::gamemode, game::mutators);
-            else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
+            else if(aiforcegun > 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
             else while(true)
             {
                 d->loadweap = rnd(WEAP_MAX);
@@ -1085,7 +1085,7 @@ namespace ai
             bool haswaited = d->weapwaited(d->weapselect, lastmillis, d->skipwait(d->weapselect, 0, lastmillis, (1<<WEAP_S_RELOAD), true));
             if(busy <= 1 && !m_noitems(game::gamemode, game::mutators) && d->carry(sweap, 1, d->hasweap(d->loadweap, sweap) ? d->loadweap : d->weapselect) > 0)
             {
-                loopirev(WEAP_MAX) if(i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
+                loopirev(WEAP_MAX) if(i > WEAP_MELEE && i != d->loadweap && i != d->weapselect && entities::ents.inrange(d->entid[i]))
                 {
                     client::addmsg(N_DROP, "ri3", d->clientnum, lastmillis-game::maptime, i);
                     d->setweapstate(d->weapselect, WEAP_S_WAIT, WEAPSWITCHDELAY, lastmillis);
@@ -1159,7 +1159,7 @@ namespace ai
             int weap = d->loadweap;
             if(!isweap(weap) || !d->hasweap(d->loadweap, sweap))
             {
-                loopirev(WEAP_MAX) if(d->hasweap(i, sweap)) { weap = i; break; }
+                loopirev(WEAP_MAX) if(i >= WEAP_MELEE && d->hasweap(i, sweap)) { weap = i; break; }
             }
             if(isweap(weap) && weap != d->weapselect && weapons::weapselect(d, weap))
             {

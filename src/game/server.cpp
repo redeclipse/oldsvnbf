@@ -2270,7 +2270,7 @@ namespace server
                 }
             }
         }
-        if(weap == WEAP_MELEE && flags&HIT_ALT)
+        if(weap == WEAP_SPECIAL && flags&HIT_ALT)
         {
             nodamage++;
             if(actor != target && m_team(gamemode, mutators) && actor->team == target->team && target->state.onfire(gamemillis, GAME(fireburntime)))
@@ -2485,7 +2485,7 @@ namespace server
                     hitset &h = hits[i];
                     int hflags = flags|h.flags;
                     if(radial) radial = clamp(radial, 1, WEAPEX(weap, flags&HIT_ALT, gamemode, mutators, 1.f));
-                    float size = radial ? (hflags&HIT_WAVE || (weap == WEAP_MELEE && hflags&HIT_ALT) ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
+                    float size = radial ? (hflags&HIT_WAVE || (weap == WEAP_SPECIAL && hflags&HIT_ALT) ? radial*WEAP(weap, pusharea) : radial) : 0.f, dist = float(h.dist)/DNF;
                     clientinfo *target = (clientinfo *)getinfo(h.target);
                     if(!target || target->state.state != CS_ALIVE || (size>0 && (dist<0 || dist>size)) || target->state.protect(gamemillis, m_protect(gamemode, mutators)))
                         continue;
@@ -2857,7 +2857,7 @@ namespace server
                     if(gamemillis-ci->state.lastfireburn >= GAME(fireburndelay))
                     {
                         clientinfo *co = (clientinfo *)getinfo(ci->state.lastfireowner);
-                        dodamage(ci, co ? co : ci, GAME(fireburndamage), -1, HIT_BURN);
+                        dodamage(ci, co ? co : ci, GAME(fireburndamage), WEAP_SPECIAL, HIT_BURN);
                         ci->state.lastfireburn += GAME(fireburndelay);
                     }
                 }

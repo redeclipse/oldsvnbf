@@ -48,7 +48,7 @@ namespace projs
                 }
             }
         }
-        if(nodamage || (weap == WEAP_MELEE && flags&HIT_ALT) || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+        if(nodamage || (weap == WEAP_SPECIAL && flags&HIT_ALT) || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         if(hithurts(flags))
         {
             if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceilf(damage*damagescale));
@@ -110,7 +110,7 @@ namespace projs
             if(!WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
             switch(proj.weap)
             {
-                case WEAP_MELEE: if(!(proj.flags&HIT_ALT)) part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)); break;
+                case WEAP_SPECIAL: case WEAP_MELEE: part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)); break;
                 case WEAP_RIFLE:
                     part_splash(PART_SPARK, 25, 250, proj.o, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.125f, 1, 20, 0, 24);
                     part_create(PART_PLASMA, 250, proj.o, 0x6611FF, 2, 1, 0, 0);
@@ -150,7 +150,7 @@ namespace projs
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
         if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
-        if(proj.weap != WEAP_MELEE && dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
+        if(proj.weap != WEAP_SPECIAL && dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
     }
 
     void remove(gameent *owner)
@@ -220,7 +220,7 @@ namespace projs
             {
                 switch(proj.weap)
                 {
-                    case WEAP_MELEE:
+                    case WEAP_SPECIAL:
                     {
                         if(proj.flags&HIT_ALT && proj.owner && proj.local)
                         {
@@ -323,7 +323,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_MELEE && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
                 proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
                 proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -509,7 +509,7 @@ namespace projs
 
     void drop(gameent *d, int g, int n, bool local)
     {
-        if(g != WEAP_MELEE && isweap(g))
+        if(g > WEAP_MELEE && isweap(g))
         {
             vec from(d->o), to(d->muzzlepos(g));
             if(entities::ents.inrange(n))
@@ -563,6 +563,7 @@ namespace projs
             float partsize, flaresize, flarelen;
         } weapfx[WEAP_MAX] = {
             { 0, 0, 0, 0, 0, 0 },
+            { 0, 0, 0, 0, 0, 0 },
             { 200, PART_MUZZLE_FLASH, 0xFFCC22, 1.5f, 2, 4 },
             { 350, PART_MUZZLE_FLASH, 0xFFAA00, 3, 5, 16 },
             { 50, PART_MUZZLE_FLASH, 0xFF8800, 2.5f, 4, 12 },
@@ -601,7 +602,7 @@ namespace projs
         proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
         if(proj.projtype == PRJ_SHOT)
         {
-            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.weap == WEAP_MELEE && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
@@ -621,7 +622,6 @@ namespace projs
         updatebb(proj);
     }
 
-    VAR(0, testmelee, 0, 0, 1);
     void effect(projent &proj)
     {
         if(proj.projtype == PRJ_SHOT)
@@ -640,7 +640,7 @@ namespace projs
             }
             switch(proj.weap)
             {
-                case WEAP_MELEE:
+                case WEAP_SPECIAL:
                 {
                     if(proj.flags&HIT_ALT)
                     {
@@ -802,11 +802,11 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.weap == WEAP_MELEE && proj.owner && proj.owner->aitype < AI_BOT ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
                 int vol = 255;
                 switch(proj.weap)
                 {
-                    case WEAP_MELEE: break;
+                    case WEAP_SPECIAL: case WEAP_MELEE: break;
                     case WEAP_PISTOL:
                     {
                         vol = int(255*(1.f-proj.lifespan)*proj.scale);

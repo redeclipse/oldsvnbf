@@ -677,14 +677,14 @@ namespace physics
                 game::impulseeffect(d, true);
                 client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_IMPULSE);
             }
-            bool canmelee = d == game::player1 && d->canshoot(WEAP_MELEE, 0, m_weapon(game::gamemode, game::mutators), (1<<WEAP_S_RELOAD)),
+            bool special = d == game::player1 && d->canshoot(WEAP_SPECIAL, 0, m_weapon(game::gamemode, game::mutators), (1<<WEAP_S_RELOAD)),
                 found = false;
             if(d->turnside || d->action[AC_JUMP] || d->action[AC_SPECIAL])
             {
                 const int movements[6][2] = {
                     { 2, 2 }, { 1, 2 }, { 1, -1 }, { 1, 1 }, { 0, 2 }, { -1, 2 }
                 };
-                bool playercol = canmelee && (d->action[AC_SPECIAL] || d->turnside);
+                bool playercol = special && (d->action[AC_SPECIAL] || d->turnside);
                 loopi(d->turnside ? 6 : 4)
                 {
                     vec oldpos = d->o, dir;
@@ -711,8 +711,8 @@ namespace physics
                     {
                         if(kicked)
                         {
-                            weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, false);
-                            canmelee = false;
+                            weapons::doshot(d, hitplayer->o, WEAP_SPECIAL, true, false);
+                            special = false;
                         }
                         else
                         {
@@ -765,7 +765,7 @@ namespace physics
             if(!found)
             {
                 if(d->turnside) { d->turnside = 0; d->resetphys(); }
-                if(d->action[AC_SPECIAL] && d == game::player1 && canmelee) weapons::doshot(d, worldpos, WEAP_MELEE, true, true);
+                if(d->action[AC_SPECIAL] && d == game::player1 && special) weapons::doshot(d, worldpos, WEAP_SPECIAL, true, true);
             }
             else if(d->action[AC_JUMP]) d->action[AC_JUMP] = false;
         }
