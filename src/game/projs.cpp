@@ -110,7 +110,10 @@ namespace projs
             if(!WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
             switch(proj.weap)
             {
-                case WEAP_SPECIAL: case WEAP_MELEE: part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)); break;
+                case WEAP_SPECIAL: case WEAP_MELEE:
+                    if(proj.weap != WEAP_SPECIAL || !(proj.flags&HIT_ALT))
+                        part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
+                    break;
                 case WEAP_RIFLE:
                     part_splash(PART_SPARK, 25, 250, proj.o, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.125f, 1, 20, 0, 24);
                     part_create(PART_PLASMA, 250, proj.o, 0x6611FF, 2, 1, 0, 0);
@@ -225,6 +228,8 @@ namespace projs
                         if(proj.flags&HIT_ALT && proj.owner && proj.local)
                         {
                             float mag = WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*proj.lifesize;
+                            if(proj.hit || proj.norm.z > 0.5f) mag *= proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner) ? 0.25f : 0.5f;
+                            else if(proj.norm.z < -0.5f) mag *= proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner) ? 1.5f : 1.25f;
                             if(mag != 0) proj.owner->vel.add(vec(proj.o).sub(proj.owner->o).normalize().mul(-mag));
                         }
                         break;

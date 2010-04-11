@@ -693,30 +693,29 @@ namespace physics
                     if(strafe == 2) strafe = d->turnside ? d->turnside : d->strafe;
                     if(!move && !strafe) continue;
                     vecfromyawpitch(d->aimyaw, 0, move, strafe, dir);
-                    d->o.add(dir);
+                    d->o.add(vec(dir).mul(d->radius));
                     bool collided = collide(d, dir);
                     d->o = oldpos;
-                    bool kicked = !collided && playercol && hitplayer;
-                    if((collided || wall.iszero()) && !kicked) continue;
-                    if(kicked) wall = vec(hitplayer->o).sub(d->o);
-                    else if(!d->turnside && onfloor) continue;
+                    if(collided || (hitplayer ? !playercol : wall.iszero())) continue;
+                    if(hitplayer) wall = vec(hitplayer->o).sub(d->o);
                     wall.normalize();
                     float yaw = 0, pitch = 0;
                     vectoyawpitch(wall, yaw, pitch);
                     float off = yaw-d->aimyaw;
                     if(off > 180) off -= 360;
                     else if(off < -180) off += 360;
-                    int key = !kicked && d->action[AC_JUMP] && d->turnside ? AC_JUMP : (kicked || ((d->action[AC_SPECIAL] && !d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1))) ? AC_SPECIAL : -1);
+                    int key = !hitplayer && d->action[AC_JUMP] && d->turnside ? AC_JUMP : (hitplayer || ((d->action[AC_SPECIAL] && !d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1))) ? AC_SPECIAL : -1);
                     if(key >= 0)
                     {
-                        if(kicked)
+                        float mag = ((impulseforce(d)*1.5f)+max(d->vel.magnitude(), 1.f))/2;
+                        if(hitplayer)
                         {
                             weapons::doshot(d, hitplayer->o, WEAP_SPECIAL, true, false);
+                            if(!onfloor) d->vel.z += mag*2;
                             special = false;
                         }
                         else
                         {
-                            float mag = ((impulseforce(d)*1.5f)+max(d->vel.magnitude(), 1.f))/2;
                             d->vel = vec(d->turnside ? wall : vec(dir).reflect(wall)).add(vec(d->vel).reflect(wall).rescale(1)).mul(mag/2);
                             d->vel.z += d->turnside ? mag : mag/2;
                             d->doimpulse(impulsecost, IM_T_KICK, lastmillis);
