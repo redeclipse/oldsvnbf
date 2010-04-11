@@ -48,7 +48,7 @@ namespace projs
                 }
             }
         }
-        if(nodamage || (weap == WEAP_SPECIAL && flags&HIT_ALT) || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
+        if(nodamage || weap == WEAP_TRACTOR || !hithurts(flags)) flags = HIT_WAVE|(flags&HIT_ALT ? HIT_ALT : 0); // so it impacts, but not hurts
         if(hithurts(flags))
         {
             if(flags&HIT_FULL || flags&HIT_HEAD) damage = int(ceilf(damage*damagescale));
@@ -110,9 +110,8 @@ namespace projs
             if(!WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale) && (d->type == ENT_PLAYER || d->type == ENT_AI)) hitproj((gameent *)d, proj);
             switch(proj.weap)
             {
-                case WEAP_SPECIAL: case WEAP_MELEE:
-                    if(proj.weap != WEAP_SPECIAL || !(proj.flags&HIT_ALT))
-                        part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
+                case WEAP_MELEE:
+                    part_create(PART_PLASMA_SOFT, 500, proj.o, 0xFFCC22, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT));
                     break;
                 case WEAP_RIFLE:
                     part_splash(PART_SPARK, 25, 250, proj.o, 0x6611FF, WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*0.125f, 1, 20, 0, 24);
@@ -153,7 +152,7 @@ namespace projs
             dist = closestpointcylinder(proj.o, bottom, top, d->radius).dist(proj.o);
         }
         if(explode && dist <= radius*WEAP(proj.weap, pusharea)) hitpush(d, proj, HIT_WAVE, radius, dist);
-        if(proj.weap != WEAP_SPECIAL && dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
+        if(proj.weap != WEAP_TRACTOR && dist <= radius) hitpush(d, proj, HIT_FULL|(explode ? HIT_EXPLODE : HIT_BURN), radius, dist);
     }
 
     void remove(gameent *owner)
@@ -223,9 +222,9 @@ namespace projs
             {
                 switch(proj.weap)
                 {
-                    case WEAP_SPECIAL:
+                    case WEAP_TRACTOR:
                     {
-                        if(proj.flags&HIT_ALT && proj.owner && proj.local)
+                        if(proj.owner && proj.local)
                         {
                             float mag = WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*proj.lifesize;
                             if(proj.hit || proj.norm.z > 0.5f) mag *= proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner) ? 0.25f : 0.5f;
@@ -328,7 +327,7 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+                if(proj.owner && (proj.owner != game::focus || waited)) proj.o = proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
                 proj.height = proj.radius = proj.xradius = proj.yradius = WEAP2(proj.weap, radius, proj.flags&HIT_ALT);
                 proj.elasticity = WEAP2(proj.weap, elasticity, proj.flags&HIT_ALT);
                 proj.reflectivity = WEAP2(proj.weap, reflectivity, proj.flags&HIT_ALT);
@@ -552,11 +551,11 @@ namespace projs
 
         if(weaptype[weap].sound >= 0)
         {
-            if(weap == WEAP_FLAMER && !(flags&HIT_ALT))
+            if((weap == WEAP_FLAMER && !(flags&HIT_ALT)) || weap == WEAP_TRACTOR)
             {
                 int ends = lastmillis+(WEAP2(weap, adelay, flags&HIT_ALT)*2);
                 if(issound(d->wschan)) sounds[d->wschan].ends = ends;
-                else playsound(weaptype[weap].sound, d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
+                else playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, SND_LOOP, -1, -1, -1, &d->wschan, ends);
             }
             else if(!WEAP2(weap, time, flags&HIT_ALT) || life)
                 playsound(weaptype[weap].sound+(flags&HIT_ALT ? 1 : 0), d->o, d, 0, -1, -1, -1, &d->wschan);
@@ -568,8 +567,8 @@ namespace projs
             float partsize, flaresize, flarelen;
         } weapfx[WEAP_MAX] = {
             { 0, 0, 0, 0, 0, 0 },
-            { 0, 0, 0, 0, 0, 0 },
             { 200, PART_MUZZLE_FLASH, 0xFFCC22, 1.5f, 2, 4 },
+            { 0, PART_PLASMA, 0x2244FF, 1.f, 0, 0 },
             { 350, PART_MUZZLE_FLASH, 0xFFAA00, 3, 5, 16 },
             { 50, PART_MUZZLE_FLASH, 0xFF8800, 2.5f, 4, 12 },
             { 150, PART_MUZZLE_FLASH, -1, 1.5f, 0, 0 },
@@ -607,7 +606,7 @@ namespace projs
         proj.lifespan = clamp((proj.lifemillis-proj.lifetime)/float(max(proj.lifemillis, 1)), 0.f, 1.f);
         if(proj.projtype == PRJ_SHOT)
         {
-            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+            if(weaptype[proj.weap].follows[proj.flags&HIT_ALT?1:0] && proj.owner) proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
             if(WEAP2(proj.weap, radial, proj.flags&HIT_ALT))
             {
                 if(WEAP2(proj.weap, taper, proj.flags&HIT_ALT) > 0)
@@ -645,13 +644,10 @@ namespace projs
             }
             switch(proj.weap)
             {
-                case WEAP_SPECIAL:
+                case WEAP_TRACTOR:
                 {
-                    if(proj.flags&HIT_ALT)
-                    {
-                        float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.95f)*(0.5f+(rnd(50)/100.f))*proj.scale;
-                        part_create(PART_HINT, 1, proj.o, teamtype[proj.owner ? proj.owner->team : TEAM_NEUTRAL].colour, size, blend, 0);
-                    }
+                    float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.95f)*(0.5f+(rnd(50)/100.f))*proj.scale;
+                    part_create(PART_HINT, 1, proj.o, teamtype[proj.owner ? proj.owner->team : TEAM_NEUTRAL].colour, size, blend, 0);
                     break;
                 }
                 case WEAP_PISTOL:
@@ -807,11 +803,11 @@ namespace projs
         {
             case PRJ_SHOT:
             {
-                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.weap == WEAP_SPECIAL && proj.owner ? proj.owner->feetpos(proj.flags&HIT_ALT ? proj.owner->height/2 : 1) : proj.owner->muzzlepos(proj.weap);
+                if(weaptype[proj.weap].follows[proj.flags&HIT_ALT ? 1 : 0] && proj.owner) proj.from = proj.weap == WEAP_MELEE && proj.flags&HIT_ALT ? proj.owner->feetpos(1) : proj.owner->muzzlepos(proj.weap);
                 int vol = 255;
                 switch(proj.weap)
                 {
-                    case WEAP_SPECIAL: case WEAP_MELEE: break;
+                    case WEAP_TRACTOR: case WEAP_MELEE: break;
                     case WEAP_PISTOL:
                     {
                         vol = int(255*(1.f-proj.lifespan)*proj.scale);

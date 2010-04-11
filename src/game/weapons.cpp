@@ -95,7 +95,6 @@ namespace weapons
                         case 0: default: break; \
                     } \
                 }
-                if(s == WEAP_SPECIAL) continue;
                 skipweap(skipspawnweapon, p);
                 skipweap(skipmelee, WEAP_MELEE);
                 skipweap(skippistol, WEAP_PISTOL);
@@ -167,7 +166,7 @@ namespace weapons
         }
     }
 
-    void doshot(gameent *d, vec &targ, int weap, bool pressed, bool secondary, int force)
+    bool doshot(gameent *d, vec &targ, int weap, bool pressed, bool secondary, int force)
     {
         int offset = WEAP2(weap, sub, secondary), sweap = m_weapon(game::gamemode, game::mutators);
         if(!d->canshoot(weap, secondary ? HIT_ALT : 0, sweap, lastmillis))
@@ -176,13 +175,13 @@ namespace weapons
             {
                 // if the problem is not enough ammo, do the reload..
                 if(autoreload(d, secondary ? HIT_ALT : 0)) weapreload(d, weap);
-                return;
+                return false;
             }
             else offset = -1;
         }
         float scale = 1;
         int sub = WEAP2(weap, sub, secondary);
-        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && weap != WEAP_SPECIAL)
+        if(WEAP2(weap, power, secondary) && !WEAP(weap, zooms) && weap != WEAP_TRACTOR)
         {
             float maxscale = 1;
             if(sub > 1 && d->ammo[weap] < sub) maxscale = d->ammo[weap]/float(sub);
@@ -196,15 +195,16 @@ namespace weapons
                         client::addmsg(N_PHYS, "ri2", d->clientnum, SPHY_POWER);
                         d->setweapstate(weap, WEAP_S_POWER, 0, lastmillis);
                     }
-                    else return;
+                    else return false;
                 }
                 force = clamp(lastmillis-d->weaplast[weap], 0, len);
-                if(pressed && force < len) return;
+                if(pressed && force < len) return false;
             }
             scale = clamp(clamp(force, 1, len)/float(WEAP2(weap, power, secondary)), 1e-3f, maxscale);
             if(sub > 1 && scale < 1) sub = int(ceilf(sub*scale));
         }
-        else if(!pressed) return;
+        else if(!pressed) return false;
+
         if(offset < 0)
         {
             offset = max(d->weapload[weap], 1)+sub;
@@ -212,14 +212,7 @@ namespace weapons
         }
         else offset = sub;
 
-        if(weap != WEAP_SPECIAL)
-        {
-            if(!WEAP2(weap, fullauto, secondary))
-                d->action[secondary && !WEAP(weap, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
-            d->action[AC_RELOAD] = false;
-        }
-
-        vec to = targ, from = weap == WEAP_SPECIAL ? d->feetpos(secondary ? d->height/2 : 1) : d->muzzlepos(weap), unitv;
+        vec to = targ, from = weap == WEAP_MELEE && secondary ? d->feetpos(1) : d->muzzlepos(weap), unitv;
         float dist = to.dist(from, unitv);
         if(dist > 0) unitv.div(dist);
         else vecfromyawpitch(d->yaw, d->pitch, 1, 0, unitv);
@@ -275,11 +268,13 @@ namespace weapons
         }
         projs::shootv(weap, secondary ? HIT_ALT : 0, offset, scale, from, vshots, d, true);
         client::addmsg(N_SHOOT, "ri8iv", d->clientnum, lastmillis-game::maptime, weap, secondary ? HIT_ALT : 0, int(scale*DMF), int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), shots.length(), shots.length()*sizeof(ivec)/sizeof(int), shots.getbuf());
+
+        return true;
     }
 
     void shoot(gameent *d, vec &targ, int force)
     {
-        if(!game::allowmove(d) || d->weapselect == WEAP_SPECIAL) return;
+        if(!game::allowmove(d)) return;
         bool secondary = false, pressed = (d->action[AC_ATTACK] || (d->action[AC_ALTERNATE] && !WEAP(d->weapselect, zooms)));
         if(WEAP(d->weapselect, zooms))
         {
@@ -287,7 +282,12 @@ namespace weapons
         }
         else if(d->action[AC_ALTERNATE] && (!d->action[AC_ATTACK] || d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK])) secondary = true;
         else if(d->actiontime[AC_ALTERNATE] > d->actiontime[AC_ATTACK] && WEAP2(d->weapselect, power, true) && d->weapstate[d->weapselect] == WEAP_S_POWER) secondary = true;
-        doshot(d, targ, d->weapselect, pressed, secondary, force);
+        if(doshot(d, targ, d->weapselect, pressed, secondary, force))
+        {
+            if(!WEAP2(d->weapselect, fullauto, secondary))
+                d->action[secondary && !WEAP(d->weapselect, zooms) ? AC_ALTERNATE : AC_ATTACK] = false;
+            d->action[AC_RELOAD] = false;
+        }
     }
 
     void preload(int weap)

@@ -1557,7 +1557,7 @@ namespace entities
                 case 9: case 10: case 11: case 12: case 13: case 14:
                 {
                     int weap = f.type-8, weapmap[6] = {
-                        WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_GRENADE
+                        WEAP_SHOTGUN, WEAP_SMG, WEAP_PLASMA, WEAP_RIFLE, WEAP_GRENADE, WEAP_TRACTOR
                     };
 
                     if(weap >= 0 && weap <= 5)
