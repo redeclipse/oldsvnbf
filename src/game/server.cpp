@@ -2275,6 +2275,13 @@ namespace server
             nodamage++;
             if(actor != target && m_team(gamemode, mutators) && actor->team == target->team)
             {
+                if(target->state.onfire(gamemillis, GAME(fireburntime)))
+                {
+                    sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
+                    target->state.lastfire = target->state.lastfireburn = 0;
+                    givepoints(actor, 1);
+                    return;
+                }
                 if(realflags&HIT_ALT)
                 {
                     int total = m_health(gamemode, mutators), amt = 0, delay = 0;
@@ -2286,12 +2293,6 @@ namespace server
                         target->state.lastregen = gamemillis;
                         sendf(-1, 1, "ri4", N_REGEN, target->clientnum, target->state.health, eff);
                     }
-                    return;
-                }
-                else if(target->state.onfire(gamemillis, GAME(fireburntime)))
-                {
-                    sendf(-1, 1, "ri3", N_PHYS, target->clientnum, SPHY_EXTINGUISH);
-                    target->state.lastfire = target->state.lastfireburn = 0;
                     return;
                 }
             }
