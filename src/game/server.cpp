@@ -1673,11 +1673,6 @@ namespace server
         }
     }
 
-    #include "stfmode.h"
-    #include "ctfmode.h"
-    #include "duelmut.h"
-    #include "aiman.h"
-
     #include "auth.h"
 
     void spectator(clientinfo *ci, int sender = -1)
@@ -1716,6 +1711,11 @@ namespace server
         }
         return true;
     }
+
+    #include "stfmode.h"
+    #include "ctfmode.h"
+    #include "duelmut.h"
+    #include "aiman.h"
 
     void changemap(const char *name, int mode, int muts)
     {
