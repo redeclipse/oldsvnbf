@@ -1,7 +1,7 @@
 #ifdef GAMESERVER
 struct duelservmode : servmode
 {
-    int duelround, dueltime;
+    int duelround, dueltime, duelcheck;
     vector<clientinfo *> duelqueue, allowed, playing;
 
     duelservmode() {}
@@ -21,8 +21,8 @@ struct duelservmode : servmode
                 if(m_survivor(gamemode, mutators)) srvmsgf(ci->clientnum, "\fayou are \fs\fgqueued\fS for the next round");
                 else
                 {
-                    if(m_team(gamemode, mutators) || n > 1) srvmsgf(ci->clientnum, "\fayou are \fs\fg#%d\fS in the queue", n+(m_team(gamemode, mutators) ? 1 : 0));
-                    else if(n) srvmsgf(ci->clientnum, "\fayou are \fs\fgNEXT\fS in the queue");
+                    if(n) srvmsgf(ci->clientnum, "\fayou are \fs\fg#%d\fS in the queue", n+1);
+                    else srvmsgf(ci->clientnum, "\fwyou are \fs\fzgyNEXT\fS in the queue");
                 }
             }
         }
@@ -88,6 +88,7 @@ struct duelservmode : servmode
 
     void clear()
     {
+        duelcheck = 0;
         dueltime = gamemillis+GAME(duellimit);
         playing.shrink(0);
     }
@@ -161,65 +162,85 @@ struct duelservmode : servmode
                     }
                     if(m_survivor(gamemode, mutators) || GAME(duelclear)) clearitems();
                     dueltime = 0;
+                    duelcheck = gamemillis;
                 }
             }
         }
-        else if(allowed.empty())
+        else
         {
+            bool cleanup = false;
             vector<clientinfo *> alive;
             loopv(clients) if(clients[i]->state.state == CS_ALIVE && clients[i]->state.aitype < AI_START) alive.add(clients[i]);
-            if(m_survivor(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
+            if(!allowed.empty() && duelcheck && gamemillis-duelcheck >= 5000) loopvrev(allowed)
             {
-                bool found = false;
-                loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
-                if(!found)
-                {
-                    srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
-                    loopv(playing) if(allowbroadcast(playing[i]->clientnum))
-                    {
-                        if(playing[i]->team == alive[0]->team)
-                        {
-                            sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
-                            givepoints(playing[i], playing.length());
-                        }
-                        else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
-                    }
-                    clear();
-                }
+                if(alive.find(allowed[i]) < 0) spectator(allowed[i]);
+                allowed.remove(i);
+                cleanup = true;
             }
-            else switch(alive.length())
+            if(allowed.empty())
             {
-                case 0:
+                if(m_survivor(gamemode, mutators) && m_team(gamemode, mutators) && !alive.empty())
                 {
-                    srvmsgf(-1, "\faeveryone died, epic fail");
-                    loopv(playing) if(allowbroadcast(playing[i]->clientnum))
-                        sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
-                    clear();
-                    break;
-                }
-                case 1:
-                {
-                    srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
-                    loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                    bool found = false;
+                    loopv(alive) if(i && alive[i]->team != alive[i-1]->team) { found = true; break; }
+                    if(!found)
                     {
-                        if(playing[i] == alive[0])
+                        if(!cleanup)
                         {
-                            sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
-                            givepoints(playing[i], playing.length());
+                            srvmsgf(-1, "\fateam \fs%s%s\fS are the victors", teamtype[alive[0]->team].chat, teamtype[alive[0]->team].name);
+                            loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                            {
+                                if(playing[i]->team == alive[0]->team)
+                                {
+                                    sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
+                                    givepoints(playing[i], playing.length());
+                                }
+                                else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
+                            }
                         }
-                        else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
+                        clear();
                     }
-                    clear();
-                    break;
                 }
-                default: break;
+                else switch(alive.length())
+                {
+                    case 0:
+                    {
+                        if(!cleanup)
+                        {
+                            srvmsgf(-1, "\faeveryone died, epic fail");
+                            loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                                sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
+                        }
+                        clear();
+                        break;
+                    }
+                    case 1:
+                    {
+                        if(!cleanup)
+                        {
+                            srvmsgf(-1, "\fa%s was the victor", colorname(alive[0]));
+                            loopv(playing) if(allowbroadcast(playing[i]->clientnum))
+                            {
+                                if(playing[i] == alive[0])
+                                {
+                                    sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOUWIN, -1, "");
+                                    givepoints(playing[i], playing.length());
+                                }
+                                else sendf(playing[i]->clientnum, 1, "ri3s", N_ANNOUNCE, S_V_YOULOSE, -1, "");
+                            }
+                        }
+                        clear();
+                        break;
+                    }
+                    default: break;
+                }
             }
         }
     }
 
     void reset(bool empty)
     {
-        duelround = 0;
+        duelround = duelcheck = 0;
         dueltime = -1;
         allowed.shrink(0);
         duelqueue.shrink(0);
