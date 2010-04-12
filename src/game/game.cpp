@@ -625,15 +625,14 @@ namespace game
             if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
             {
                 float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
-                if(weap != WEAP_TRACTOR && (flags&HIT_WAVE || !hithurts(flags))) force *= wavepushscale;
+                if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
                 else
                 {
                     force *= WEAP(weap, pusharea);
                     if(d->health <= 0) force *= deadpushscale;
                     else force *= hitpushscale;
                 }
-                vec push = dir; push.z += force/100.f; push.mul(force);
-                d->vel.add(push);
+                d->vel.add(vec(dir).mul(force));
                 if(flags&HIT_WAVE || flags&HIT_EXPLODE || weap <= WEAP_MELEE || weap == WEAP_TRACTOR) d->lastpush = lastmillis;
             }
             ai::damaged(d, actor, weap, flags, damage);

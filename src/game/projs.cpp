@@ -226,9 +226,8 @@ namespace projs
                     {
                         if(proj.owner && proj.local)
                         {
-                            float mag = WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*proj.lifesize;
-                            if(proj.hit || proj.norm.z > 0.5f) mag *= proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner) ? 0.25f : 0.5f;
-                            else if(proj.norm.z < -0.5f) mag *= proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner) ? 1.5f : 1.25f;
+                            float mag = proj.lifesize*proj.scale*WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*(100.f/proj.owner->weight);
+                            if(proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner)) mag *= 0.5f;
                             if(mag != 0) proj.owner->vel.add(vec(proj.o).sub(proj.owner->o).normalize().mul(-mag));
                         }
                         break;
@@ -392,6 +391,7 @@ namespace projs
                 proj.projcollide = BOUNCE_GEOM|BOUNCE_PLAYER|COLLIDE_OWNER;
                 proj.escaped = !proj.owner;
                 proj.fadetime = rnd(250)+250;
+                proj.extinguish = 2;
                 break;
             }
             case PRJ_EJECT:
@@ -538,16 +538,13 @@ namespace projs
         int delay = WEAP2(weap, pdelay, flags&HIT_ALT), millis = delay,
             life = WEAP2(weap, time, flags&HIT_ALT), speed = WEAP2(weap, speed, flags&HIT_ALT);
 
-        if(WEAP2(weap, cooked, flags&HIT_ALT) || WEAP2(weap, power, flags&HIT_ALT))
+        if(WEAP2(weap, power, flags&HIT_ALT)) switch(WEAP2(weap, cooked, flags&HIT_ALT))
         {
-            if(WEAP2(weap, rays, flags&HIT_ALT) == 1)
-            {
-                float amt = WEAP2(weap, cooked, flags&HIT_ALT) ? 1.f-scale : scale;
-                life = int(ceilf(life*amt));
-            }
-            if(WEAP2(weap, cooked, flags&HIT_ALT)) scale = 1;
+            case 1: break;
+            case 2: case 3: life = int(ceilf(life*(1.f-scale))); if(!(WEAP2(weap, cooked, flags&HIT_ALT)%2)) scale = 1; break; // shorter
+            case 4: case 5: life = int(ceilf(life*scale)); if(!(WEAP2(weap, cooked, flags&HIT_ALT)%2)) scale = 1; break; // longer
+            default: scale = 1; break;
         }
-        else scale = 1;
 
         if(weaptype[weap].sound >= 0)
         {
@@ -646,8 +643,8 @@ namespace projs
             {
                 case WEAP_TRACTOR:
                 {
-                    float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*1.25f*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.95f)*(0.5f+(rnd(50)/100.f))*proj.scale;
-                    part_create(PART_HINT, 1, proj.o, teamtype[proj.owner ? proj.owner->team : TEAM_NEUTRAL].colour, size, blend, 0);
+                    float size = WEAP2(proj.weap, partsize, proj.flags&HIT_ALT)*proj.lifespan*proj.scale, blend = clamp(1.25f-proj.lifespan, 0.25f, 0.95f)*(0.5f+(rnd(50)/100.f))*proj.scale;
+                    part_create(PART_HINT, 1, proj.o, 0x2244FF, size, blend, 0);
                     break;
                 }
                 case WEAP_PISTOL:
@@ -762,7 +759,7 @@ namespace projs
                     proj.lasteffect = lastmillis;
                 }
             }
-            else
+            else if(!proj.limited)
             {
                 bool effect = false;
                 float radius = (proj.radius+0.5f)*(clamp(1.f-proj.lifespan, 0.1f, 1.f)+0.25f), blend = clamp(1.25f-proj.lifespan, 0.25f, 1.f)*(0.75f+(rnd(25)/100.f)); // gets smaller as it gets older
@@ -830,7 +827,7 @@ namespace projs
                         if(!proj.limited)
                         {
                             if(proj.weap == WEAP_FLAMER)
-                                part_create(PART_SMOKE_LERP_SOFT, firelength*(proj.weap == WEAP_GRENADE ? 2 : 3), proj.o, 0x666666, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale), 0.25f+(rnd(50)/100.f), -15);
+                                part_create(PART_SMOKE_LERP_SOFT, firelength*3, proj.o, 0x666666, WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale), 0.25f+(rnd(50)/100.f), -15);
                             else
                             {
                                 int deviation = max(int(WEAPEX(proj.weap, proj.flags&HIT_ALT, game::gamemode, game::mutators, proj.scale)*0.5f), 1);
@@ -1058,8 +1055,8 @@ namespace projs
         {
             if(proj.extinguish)
             {
-                proj.limited = true;
-                return false; // gets "put out"
+                if(proj.extinguish >= 2) proj.limited = true;
+                if(proj.projtype != PRJ_DEBRIS) return false; // gets "put out"
             }
             if(proj.waterfric > 0) dir.div(proj.waterfric);
         }
