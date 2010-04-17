@@ -1552,6 +1552,7 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
             int tcount = count + (csi < int(sizeof(vamerges)/sizeof(vamerges[0])) ? vamerges[csi].length() : 0);
             if(tcount > vacubemax || (tcount >= vacubemin && size >= vacubesize) || size == min(0x1000, hdr.worldsize/2))
             {
+                loadprogress = clamp(recalcocprog/float(allocnodes), 0.0f, 1.0f);
                 setva(c[i], o.x, o.y, o.z, size, csi);
                 if(c[i].ext && c[i].ext->va)
                 {
@@ -1683,6 +1684,7 @@ void octarender()                               // creates va s for all leaf cub
     recalcocprog = 0;
     varoot.setsize(0);
     updateva(worldroot, 0, 0, 0, hdr.worldsize/2, csi-1);
+    loadprogress = 0;
     flushvbo();
 
     loopi(8) buildclipmasks(worldroot[i]);
