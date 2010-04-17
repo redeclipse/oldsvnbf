@@ -748,7 +748,7 @@ int findentity(int type, int index, vector<int> &attr)
 
 void splitocta(cube *c, int size)
 {
-    if(size <= VVEC_INT_MASK+1) return;
+    if(size <= 0x1000) return;
     loopi(8)
     {
         if(!c[i].children) c[i].children = newcubes(isempty(c[i]) ? F_EMPTY : F_SOLID);
@@ -829,7 +829,7 @@ bool emptymap(int scale, bool force, char *mname, bool nocfg)   // main empty wo
     worldroot = newcubes(F_EMPTY);
     loopi(4) solidfaces(worldroot[i]);
 
-    if(hdr.worldsize > VVEC_INT_MASK+1) splitocta(worldroot, hdr.worldsize>>1);
+    if(hdr.worldsize > 0x1000) splitocta(worldroot, hdr.worldsize>>1);
 
     if(!nocfg)
     {
@@ -861,7 +861,7 @@ bool enlargemap(bool force)
     loopi(3) solidfaces(c[i+1]);
     worldroot = c;
 
-    if(hdr.worldsize > VVEC_INT_MASK+1) splitocta(worldroot, hdr.worldsize>>1);
+    if(hdr.worldsize > 0x1000) splitocta(worldroot, hdr.worldsize>>1);
 
     enlargeblendmap();
 
