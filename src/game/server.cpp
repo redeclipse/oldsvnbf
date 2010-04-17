@@ -2492,7 +2492,12 @@ namespace server
     void destroyevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        if(isweap(weap))
+        if(weap == -1)
+        {
+            gs.dropped.remove(id);
+            if(sents.inrange(id)) sents[id].millis = gamemillis;
+        }
+        else if(isweap(weap))
         {
             if(gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].find(id) < 0) return;
             if(hits.empty()) gs.weapshots[weap][flags&HIT_ALT ? 1 : 0].remove(id);
@@ -2511,11 +2516,6 @@ namespace server
                     dodamage(target, ci, damage, weap, hflags, h.dir);
                 }
             }
-        }
-        else if(weap == -1)
-        {
-            gs.dropped.remove(id);
-            if(sents.inrange(id)) sents[id].millis = gamemillis;
         }
     }
 
@@ -3560,16 +3560,14 @@ namespace server
 
                 case N_DESTROY: // cn millis weap id radial hits
                 {
-                    int lcn = getint(p);
+                    int lcn = getint(p), millis = getint(p);
                     clientinfo *cp = (clientinfo *)getinfo(lcn);
                     bool havecn = (cp && (cp->clientnum == ci->clientnum || cp->state.ownernum == ci->clientnum));
                     destroyevent *ev = new destroyevent;
-                    ev->id = getint(p);
                     ev->weap = getint(p);
-                    if(!isweap(ev->weap)) havecn = false;
                     ev->flags = getint(p);
-                    if(havecn) ev->millis = cp->getmillis(gamemillis, ev->id); // this is the event millis
-                    ev->id = getint(p); // this is the actual id
+                    if(havecn) ev->millis = cp->getmillis(gamemillis, millis);
+                    ev->id = getint(p);
                     ev->radial = getint(p);
                     int hits = getint(p);
                     loopj(hits)
