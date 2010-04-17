@@ -94,7 +94,7 @@ VARF(0, moving, 0, 0, 1,
     if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-VARF(0, gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
+VARF(0, gridpower, 0, 3, 12,
 {
     if(dragging) return;
     gridsize = 1<<gridpower;
@@ -505,7 +505,7 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
         }
         if(c[i].children)
         {
-            if(size<=(8>>VVEC_FRAC))
+            if(size<=1)
             {
                 solidfaces(c[i]);
                 discardchildren(c[i]);
