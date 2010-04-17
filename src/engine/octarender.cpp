@@ -1573,7 +1573,7 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
                 else count = 0;
             }
         }
-        if(csi < VVEC_INT-1 && vamerges[csi].length()) vamerges[csi+1].move(vamerges[csi]);
+        if(csi+1 < int(sizeof(vamerges)/sizeof(vamerges[0])) && vamerges[csi].length()) vamerges[csi+1].move(vamerges[csi]);
         cmergemax = max(cmergemax, vamergemax);
         chasmerges |= vahasmerges;
         ccount += count;
