@@ -921,25 +921,41 @@ namespace projs
                     default: break;
                 }
                 if(vol && weaptype[proj.weap].esound >= 0) playsound(weaptype[proj.weap].esound, proj.o, NULL, 0, vol);
-                if(proj.local && proj.owner) client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
+                if(proj.local && proj.owner)
+                    client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, proj.weap, proj.flags, proj.id >= 0 ? proj.id-game::maptime : proj.id, 0, 0);
                 break;
             }
             case PRJ_ENT:
             {
-                if(!proj.beenused && proj.local && proj.owner) client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
+                if(proj.beenused <= 1 && proj.local && proj.owner)
+                    client::addmsg(N_DESTROY, "ri7", proj.owner->clientnum, lastmillis-game::maptime, -1, 0, proj.id, 0, 0);
                 break;
             }
             default: break;
         }
     }
 
+    int checkmaterial(projent &proj)
+    {
+        int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
+        if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return 2;
+        else if(isliquid(mat&MATF_VOLUME)) return 1;
+        return 0;
+    }
+
     int bounce(projent &proj, const vec &dir)
     {
-        if((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM))
+        int check = checkmaterial(proj);
+        if(((!collide(&proj, dir, 0.f, proj.projcollide&COLLIDE_PLAYER) || inside) && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM)) || check)
         {
             if(hitplayer)
             {
                 if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
+            }
+            else if(check >= (proj.extinguish ? 1 : 2))
+            {
+                if(check == 1 && proj.extinguish >= 2) proj.limited = true;
+                proj.norm = dir;
             }
             else
             {
@@ -952,7 +968,8 @@ namespace projs
                 proj.norm = wall;
             }
             bounceeffect(proj);
-            if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+            if(check >= (proj.extinguish ? 1 : 2) && proj.projtype != PRJ_DEBRIS) return 0;
+            else if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
                 reflect(proj, proj.norm);
                 proj.movement = 0;
@@ -974,11 +991,17 @@ namespace projs
         ray.mul(1/maxdist);
         float dist = tracecollide(&proj, proj.o, ray, maxdist, RAY_CLIPMAT | RAY_ALPHAPOLY, proj.projcollide&COLLIDE_PLAYER);
         proj.o.add(vec(ray).mul(dist >= 0 ? dist : maxdist));
-        if(dist >= 0 && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM))
+        int check = checkmaterial(proj);
+        if((dist >= 0 && (hitplayer ? proj.projcollide&COLLIDE_PLAYER : proj.projcollide&COLLIDE_GEOM)) || check)
         {
             if(hitplayer)
             {
                 if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
+            }
+            else if(check >= (proj.extinguish ? 1 : 2))
+            {
+                if(check == 1 && proj.extinguish >= 2) proj.limited = true;
+                proj.norm = dir;
             }
             else
             {
@@ -991,7 +1014,8 @@ namespace projs
                 proj.norm = hitsurface;
             }
             bounceeffect(proj);
-            if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
+            if(check >= (proj.extinguish ? 1 : 2) && proj.projtype != PRJ_DEBRIS) return 0;
+            else if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
                 reflect(proj, proj.norm);
                 proj.o.add(vec(proj.norm).mul(0.1f)); // offset from surface slightly to avoid initial collision
@@ -1023,9 +1047,6 @@ namespace projs
 
     bool move(projent &proj, int qtime)
     {
-        int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
-        if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return false; // gets destroyed
-        bool water = isliquid(mat&MATF_VOLUME);
         float secs = float(qtime)/1000.f;
         if(proj.projtype == PRJ_SHOT && proj.escaped && proj.owner)
         {
@@ -1051,15 +1072,8 @@ namespace projs
         if(proj.weight != 0.f) proj.vel.z -= physics::gravityforce(&proj)*secs;
 
         vec dir(proj.vel), pos(proj.o);
-        if(water)
-        {
-            if(proj.extinguish)
-            {
-                if(proj.extinguish >= 2) proj.limited = true;
-                if(proj.projtype != PRJ_DEBRIS) return false; // gets "put out"
-            }
-            if(proj.waterfric > 0) dir.div(proj.waterfric);
-        }
+        int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
+        if(isliquid(mat&MATF_VOLUME) && proj.waterfric > 0) dir.div(proj.waterfric);
         dir.mul(secs);
 
         if(!proj.escaped && proj.owner) checkescaped(proj, pos, dir);
@@ -1216,14 +1230,18 @@ namespace projs
                 iter(proj);
                 if(proj.projtype == PRJ_SHOT || proj.projtype == PRJ_ENT)
                 {
-                    if(!move(proj) && !proj.beenused)
+                    if(!move(proj)) switch(proj.projtype)
                     {
-                        if(proj.projtype == PRJ_ENT)
+                        case PRJ_ENT:
                         {
-                            proj.beenused = 1;
-                            proj.lifetime = min(proj.lifetime, proj.fadetime);
+                            if(!proj.beenused)
+                            {
+                                proj.beenused = 1;
+                                proj.lifetime = min(proj.lifetime, proj.fadetime);
+                            }
+                            if(proj.lifetime > 0) break;
                         }
-                        else proj.state = CS_DEAD;
+                        default: proj.state = CS_DEAD; break;
                     }
                 }
                 else for(int rtime = curtime; proj.state != CS_DEAD && rtime > 0;)
