@@ -589,7 +589,7 @@ namespace projs
         }
 
         loopv(locs) create(from, locs[i], local, d, PRJ_SHOT, max(life, 1), WEAP2(weap, time, flags&HIT_ALT), millis+(delay*i), speed, 0, weap, flags, scale);
-        if(ejectfade && weaptype[weap].eject) loopi(max(offset, 1))
+        if(ejectfade && weaptype[weap].eject) loopi(clamp(offset, 1, WEAP2(weap, sub, flags&HIT_ALT)))
             create(from, from, local, d, PRJ_EJECT, rnd(ejectfade)+ejectfade, 0, millis, rnd(weaptype[weap].espeed)+weaptype[weap].espeed, 0, weap, flags);
 
         d->setweapstate(weap, WEAP_S_SHOOT, WEAP2(weap, adelay, flags&HIT_ALT), lastmillis);
