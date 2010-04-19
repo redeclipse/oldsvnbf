@@ -1235,8 +1235,9 @@ namespace physics
 {
     extern float gravity, liquidspeed, liquidcurb, floorcurb, aircurb;
     extern int smoothmove, smoothdist;
+    extern bool allowimpulse(int level = 2);
     extern bool sprinting(physent *d, bool last = false, bool turn = true, bool move = true);
-    extern bool canimpulse(physent *d, int cost = 0);
+    extern bool canimpulse(physent *d, int cost = 0, int level = 2);
     extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
     extern void smoothplayer(gameent *d, int res, bool local);
     extern void update();

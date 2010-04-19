@@ -114,6 +114,7 @@ GFVAR(0, movespeed, 0, 50.f, 1000); // speed
 GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
 GFVAR(0, impulsespeed, 0, 35.f, 1000); // extra velocity to add when impulsing
 
+GVAR(0, impulseallowed, 0, 3, 3); // impulse allowed; 0 = off, 1 = dash/boost only, 2 = dash/boost and sprint, 3 = all mechanics including parkour
 GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle
 GVAR(0, impulsemeter, 0, 100000, INT_MAX-1); // impulse dash length; 0 = unlimited, anything else = timer
 GVAR(0, impulsecost, 0, 500, INT_MAX-1); // cost of impulse jump
