@@ -587,55 +587,39 @@ ENetSocket mastersend(ENetAddress &remoteaddress, const char *hostname, const ch
     return sock;
 }
 
-bool masterreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
-{
-    if(sock==ENET_SOCKET_NULL) return false;
-    enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
-    if(enet_socket_wait(sock, &events, timeout) >= 0 && events)
-    {
-        int len = enet_socket_receive(sock, NULL, &buf, 1);
-        if(len<=0)
-        {
-            enet_socket_destroy(sock);
-            return false;
-        }
-        buf.data = ((char *)buf.data)+len;
-        ((char*)buf.data)[0] = 0;
-        buf.dataLength -= len;
-    }
-    return true;
-}
-
 #define RETRIEVELIMIT 20000
-uchar *retrieveservers(uchar *buf, int buflen)
+void retrieveservers(vector<char> &data)
 {
-    buf[0] = '\0';
     ENetAddress address = { ENET_HOST_ANY, servermasterport };
     ENetSocket sock = mastersend(address, servermaster, "update");
-    if(sock==ENET_SOCKET_NULL) return buf;
+    if(sock==ENET_SOCKET_NULL) return;
     /* only cache this if connection succeeds */
     defformatstring(text)("retrieving servers from %s:[%d]", servermaster, address.port);
     progress(0, text);
 
-    ENetBuffer eb;
-    eb.data = buf;
-    eb.dataLength = buflen-1;
-
     int starttime = SDL_GetTicks(), timeout = 0;
-    while(masterreceive(sock, eb, 250))
+    ENetBuffer buf;
+    for(;;)
     {
+        enet_uint32 events = ENET_SOCKET_WAIT_RECEIVE;
+        if(enet_socket_wait(sock, &events, 250) >= 0 && events)
+        {
+            if(data.length() >= data.capacity()) data.reserve(4096);
+            buf.data = data.getbuf() + data.length();
+            buf.dataLength = data.capacity() - data.length();
+            int recv = enet_socket_receive(sock, NULL, &buf, 1);
+            if(recv <= 0) break;
+            data.advance(recv);
+        }
         timeout = SDL_GetTicks() - starttime;
         progress(min(float(timeout)/RETRIEVELIMIT, 1.0f), text);
         if(interceptkey(SDLK_ESCAPE)) timeout = RETRIEVELIMIT + 1;
-        if(timeout > RETRIEVELIMIT)
-        {
-            buf[0] = '\0';
-            enet_socket_destroy(sock);
-            return buf;
-        }
+        if(timeout > RETRIEVELIMIT) break;
     }
 
-    return buf;
+    if(data.length()) data.add('\0');
+
+    enet_socket_destroy(sock);
 }
 #endif
 

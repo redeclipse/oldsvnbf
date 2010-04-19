@@ -475,7 +475,7 @@ extern void initgame();
 extern void cleanupserver();
 extern void serverslice();
 
-extern uchar *retrieveservers(uchar *buf, int buflen);
+extern void retrieveservers(vector<char> &data);
 extern void localclienttoserver(int chan, ENetPacket *);
 extern void lanconnect();
 extern bool serveroption(char *opt);
