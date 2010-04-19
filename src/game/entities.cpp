@@ -118,11 +118,6 @@ namespace entities
                         defformatstring(str)("team %s", teamtype[attr[0]].name);
                         addentinfo(str);
                     }
-                    else if(attr[0] < TEAM_MAX)
-                    {
-                        defformatstring(str)("%s", teamtype[attr[0]].name);
-                        addentinfo(str);
-                    }
                 }
                 else
                 {
@@ -1083,8 +1078,8 @@ namespace entities
                 while(e.attrs[2] >= G_MAX) e.attrs[2] -= G_MAX*2;
                 break;
             case PLAYERSTART:
-                while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
-                while(e.attrs[0] >= TEAM_MAX) e.attrs[0] -= TEAM_MAX;
+                while(e.attrs[0] < 0) e.attrs[0] += TEAM_COUNT;
+                while(e.attrs[0] >= TEAM_COUNT) e.attrs[0] -= TEAM_COUNT;
             case CHECKPOINT:
                 while(e.attrs[1] < 0) e.attrs[1] += 360;
                 while(e.attrs[1] >= 360) e.attrs[1] -= 360;
@@ -1109,8 +1104,8 @@ namespace entities
                 while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
                 break;
             case FLAG:
-                while(e.attrs[0] < 0) e.attrs[0] += TEAM_MAX;
-                while(e.attrs[0] >= TEAM_MAX) e.attrs[0] -= TEAM_MAX;
+                while(e.attrs[0] < 0) e.attrs[0] += TEAM_COUNT;
+                while(e.attrs[0] >= TEAM_COUNT) e.attrs[0] -= TEAM_COUNT;
                 while(e.attrs[1] < 0) e.attrs[1] += 360;
                 while(e.attrs[1] >= 360) e.attrs[1] -= 360;
                 while(e.attrs[2] < -90) e.attrs[2] += 180;
@@ -1863,6 +1858,7 @@ namespace entities
                         e.attrs[1] = yaw;
                         e.attrs[2] = e.attrs[3] = e.attrs[4] = 0;
                     }
+                    if(mtype == MAP_BFGZ && gver <= 164 && e.attrs[0] > TEAM_LAST) e.attrs[0] = TEAM_NEUTRAL;
                     break;
                 }
                 case PARTICLES:
@@ -1947,6 +1943,7 @@ namespace entities
                         e.attrs[2] = e.attrs[3];
                         e.attrs[3] = e.attrs[4] = 0;
                     }
+                    if(mtype == MAP_BFGZ && gver <= 164 && e.attrs[0] > TEAM_LAST) e.attrs[0] = TEAM_NEUTRAL;
                     break;
                 }
                 case WAYPOINT:

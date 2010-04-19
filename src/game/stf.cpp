@@ -10,7 +10,7 @@ namespace stf
 
     void preload()
     {
-        loopi(TEAM_MAX) loadmodel(teamtype[i].flag, -1, true);
+        loopi(TEAM_COUNT) loadmodel(teamtype[i].flag, -1, true);
     }
 
     void skewrgb(float &r, float &g, float &b, int owner, int enemy)
