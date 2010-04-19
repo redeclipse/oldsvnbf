@@ -455,8 +455,6 @@ struct blobrenderer
 
     static void setuprenderstate()
     {
-        if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, reflectz);
-
         foggedshader->set();
 
         enablepolygonoffset(GL_POLYGON_OFFSET_FILL);

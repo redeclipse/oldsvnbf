@@ -290,7 +290,6 @@ struct textrenderer : sharedlistrenderer
 
     void endrender()
     {
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
     }
 
     void cleanup(sharedlistparticle *p)
@@ -302,11 +301,6 @@ struct textrenderer : sharedlistrenderer
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging)
-        {
-            if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - p->o.z)/waterfog)));
-        }
         glRotatef(camera1->yaw-180, 0, 0, 1);
         glRotatef(camera1->pitch-90, 1, 0, 0);
         float scale = size/80.0f;
@@ -349,14 +343,12 @@ struct portalrenderer : listrenderer<portal>
     void endrender()
     {
         glEnable(GL_CULL_FACE);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
     }
 
     void renderpart(portal *p, int blend, int ts, float size, uchar *color)
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glRotatef(p->yaw-180, 0, 0, 1);
         glRotatef(p->pitch, 1, 0, 0);
         glScalef(size, size, size);
@@ -405,7 +397,6 @@ struct iconrenderer : listrenderer<icon>
 
     void endrender()
     {
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
     }
 
     void renderpart(icon *p, int blend, int ts, float size, uchar *color)
@@ -418,7 +409,6 @@ struct iconrenderer : listrenderer<icon>
 
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glRotatef(camera1->yaw-180, 0, 0, 1);
         glRotatef(camera1->pitch, 1, 0, 0);
         glScalef(size, size, size);
@@ -480,7 +470,6 @@ template<int T>
 static inline void modifyblend(const vec &o, int &blend)
 {
     blend = min(blend<<2, 255);
-    if(renderpath==R_FIXEDFUNCTION && fogging) blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
 }
 
 template<>
@@ -767,7 +756,6 @@ struct lineprimitiverenderer : listrenderer<lineprimitive>
     {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_CULL_FACE);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
         particleshader->set();
     }
 
@@ -775,7 +763,6 @@ struct lineprimitiverenderer : listrenderer<lineprimitive>
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
@@ -822,7 +809,6 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
     {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_CULL_FACE);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
         particleshader->set();
     }
 
@@ -830,7 +816,6 @@ struct trisprimitiverenderer : listrenderer<trisprimitive>
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
@@ -886,7 +871,6 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
     {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_CULL_FACE);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
         particleshader->set();
     }
 
@@ -894,7 +878,6 @@ struct loopprimitiverenderer : listrenderer<loopprimitive>
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 
@@ -959,7 +942,6 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
     {
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_CULL_FACE);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(1, reflectz);
         particleshader->set();
     }
 
@@ -967,7 +949,6 @@ struct coneprimitiverenderer : listrenderer<coneprimitive>
     {
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging && renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
         glScalef(size, size, size);
         glColor4ub(color[0], color[1], color[2], uchar(p->blend*blend));
 

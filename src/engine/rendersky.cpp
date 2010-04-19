@@ -465,7 +465,7 @@ void drawskybox(int farplane, bool limited)
     }
     if(skyclip) skyclip = 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize);
 
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
+    glDisable(GL_FOG);
 
     if(limited)
     {
@@ -614,7 +614,7 @@ void drawskybox(int farplane, bool limited)
     }
     else glDepthFunc(GL_LESS);
 
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
+    glEnable(GL_FOG);
 }
 
 VARN(IDF_WORLD, skytexture, useskytexture, 0, 1, 1);
