@@ -1054,7 +1054,12 @@ namespace ai
         }
 
         if(d->ai->dontmove) d->move = d->strafe = 0;
-        else if(!aistyle[d->aitype].canstrafe) { d->move = 1; d->strafe = 0; }
+        else if(!aistyle[d->aitype].canstrafe)
+        {
+            d->aimyaw = d->yaw;
+            d->aimpitch = d->pitch;
+            d->move = 1; d->strafe = 0;
+        }
         else
         { // our guys move one way.. but turn another?! :)
             const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1075,8 +1080,8 @@ namespace ai
             d->move = ad.move;
             d->strafe = ad.strafe;
             d->aimyaw -= ad.offset;
-            game::fixrange(d->aimyaw, d->aimpitch);
         }
+        game::fixrange(d->aimyaw, d->aimpitch);
         return result;
     }
 

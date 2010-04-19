@@ -175,15 +175,9 @@ enum
     ANIM_SINK, ANIM_EDIT, ANIM_LAG, ANIM_SWITCH, ANIM_PICKUP, ANIM_WIN, ANIM_LOSE,
     ANIM_CROUCH, ANIM_CRAWL_FORWARD, ANIM_CRAWL_BACKWARD, ANIM_CRAWL_LEFT, ANIM_CRAWL_RIGHT,
     ANIM_MELEE, ANIM_MELEE_ATTACK,
-    ANIM_PISTOL, ANIM_PISTOL_SHOOT, ANIM_PISTOL_RELOAD,
-    ANIM_TRACTOR, ANIM_TRACTOR_SHOOT, ANIM_TRACTOR_RELOAD,
-    ANIM_SHOTGUN, ANIM_SHOTGUN_SHOOT, ANIM_SHOTGUN_RELOAD,
-    ANIM_SMG, ANIM_SMG_SHOOT, ANIM_SMG_RELOAD,
-    ANIM_GRENADE, ANIM_GRENADE_THROW, ANIM_GREANDES_RELOAD, ANIM_GRENADE_POWER,
-    ANIM_FLAMER, ANIM_FLAMER_SHOOT, ANIM_FLAMER_RELOAD,
-    ANIM_PLASMA, ANIM_PLASMA_SHOOT, ANIM_PLASMA_RELOAD,
-    ANIM_RIFLE, ANIM_RIFLE_SHOOT, ANIM_RIFLE_RELOAD,
-    ANIM_ROCKET, ANIM_ROCKET_SHOOT, ANIM_ROCKET_RELOAD,
+    ANIM_LIGHT, ANIM_LIGHT_SHOOT, ANIM_LIGHT_RELOAD,
+    ANIM_HEAVY, ANIM_HEAVY_SHOOT, ANIM_HEAVY_RELOAD,
+    ANIM_GRASP, ANIM_GRASP_THROW, ANIM_GRASP_RELOAD, ANIM_GRASP_POWER,
     ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAX
 };
@@ -329,55 +323,55 @@ weaptypes weaptype[] =
             "melee",        "\fd",  "",                         "",                         "",                     ""
     },
     {
-        WEAP_PISTOL,        ANIM_PISTOL,        0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
+        WEAP_PISTOL,        ANIM_LIGHT,         0x888888,       S_PISTOL,   S_BZAP,     S_WHIZZ,    -1,             10,
             { true, true },     true,       true,
             { 0, 0 },               4,          0.35f,
             "pistol",       "\fa",  "weapons/pistol/item",      "weapons/pistol/vwep",      "",                     "projs/cartridge"
     },
     {
-        WEAP_TRACTOR,       ANIM_TRACTOR,       0x2222FF,       S_TRACTOR,  -1,          -1,         -1,             1,
+        WEAP_TRACTOR,       ANIM_HEAVY,         0x2222FF,       S_TRACTOR,  -1,          -1,         -1,             1,
             { true, true },     true,       false,
             { 0, 0 },               7,          0,
             "tractor",     "\fb",   "weapons/tractor/item",     "weapons/tractor/vwep",     "",                     ""
     },
     {
-        WEAP_SHOTGUN,       ANIM_SHOTGUN,       0xFFFF22,       S_SHOTGUN,  S_BZAP,     S_WHIZZ,    S_RICOCHET,     10,
+        WEAP_SHOTGUN,       ANIM_HEAVY,         0xFFFF22,       S_SHOTGUN,  S_BZAP,     S_WHIZZ,    S_RICOCHET,     10,
             { true, true },     true,       true,
             { 0, 0 },               6,          0.45f,
             "shotgun",      "\fy",  "weapons/shotgun/item",     "weapons/shotgun/vwep",     "",                     "projs/shell"
     },
     {
-        WEAP_SMG,           ANIM_SMG,           0xFF8822,       S_SMG,      S_BZAP,     S_WHIZZ,    S_RICOCHET,     20,
+        WEAP_SMG,           ANIM_LIGHT,         0xFF8822,       S_SMG,      S_BZAP,     S_WHIZZ,    S_RICOCHET,     20,
             { true, true },     true,       true,
             { 0, 0 },               5.5f,       0.35f,
             "smg",          "\fo",  "weapons/smg/item",         "weapons/smg/vwep",         "",                     "projs/cartridge"
     },
     {
-        WEAP_FLAMER,        ANIM_FLAMER,        0xFF2222,       S_FLAMER,   S_BURN,     S_BURNING,  -1,             1,
+        WEAP_FLAMER,        ANIM_HEAVY,         0xFF2222,       S_FLAMER,   S_BURN,     S_BURNING,  -1,             1,
             { true, true },     true,       false,
             { 0, 0 },               7,          0,
             "flamer",       "\fr",  "weapons/flamer/item",      "weapons/flamer/vwep",      "",                     ""
     },
     {
-        WEAP_PLASMA,        ANIM_PLASMA,        0x22FFFF,       S_PLASMA,   S_ENERGY,   S_HUM,      -1,             1,
+        WEAP_PLASMA,        ANIM_LIGHT,         0x22FFFF,       S_PLASMA,   S_ENERGY,   S_HUM,      -1,             1,
             { true, true },     true,       false,
             { 0, 0 },               5,          0,
             "plasma",       "\fc",  "weapons/plasma/item",      "weapons/plasma/vwep",      "",                     ""
     },
     {
-        WEAP_RIFLE,         ANIM_RIFLE,         0xAA66FF,       S_RIFLE,    S_ENERGY,   S_BZZT,     -1,             1,
+        WEAP_RIFLE,         ANIM_HEAVY,         0xAA66FF,       S_RIFLE,    S_ENERGY,   S_BZZT,     -1,             1,
             { false, false },   true,       false,
             { 0, 0 },               7,          0,
             "rifle",        "\fv",  "weapons/rifle/item",       "weapons/rifle/vwep",       "",                     ""
     },
     {
-        WEAP_GRENADE,       ANIM_GRENADE,       0x22FF22,       S_GRENADE,  S_EXPLODE,  S_BEEP, S_TINK,             1,
+        WEAP_GRENADE,       ANIM_GRASP,         0x22FF22,       S_GRENADE,  S_EXPLODE,  S_BEEP, S_TINK,             1,
             { true, true },     false,      false,
             { 0.0625f, 0.0625f },   3,          0,
             "grenade",      "\fg",  "weapons/grenade/item",     "weapons/grenade/vwep",     "weapons/grenade/proj", ""
     },
     {
-        WEAP_ROCKET,        ANIM_ROCKET,        0x993311,       S_ROCKET,   S_EXPLODE,  S_WHIZZ,    -1,             1,
+        WEAP_ROCKET,        ANIM_HEAVY,         0x993311,       S_ROCKET,   S_EXPLODE,  S_WHIZZ,    -1,             1,
             { false, false },     true,      false,
             { 0, 0 },               8,          0,
             "rocket",      "\fn",  "weapons/rocket/item",       "weapons/rocket/vwep",      "weapons/rocket/proj",  ""
@@ -947,15 +941,9 @@ const char * const animnames[] =
     "sink", "edit", "lag", "switch", "pickup", "win", "lose",
     "crouch", "crawl forward", "crawl backward", "crawl left", "crawl right",
     "melee", "melee attack",
-    "pistol", "pistol shoot", "pistol reload",
-    "tractor", "tractor shoot", "tractor reload",
-    "shotgun", "shotgun shoot", "shotgun reload",
-    "smg", "smg shoot", "smg reload",
-    "grenade", "grenade throw", "grenade reload", "grenade power",
-    "flamer", "flamer shoot", "flamer reload",
-    "plasma", "plasma shoot", "plasma reload",
-    "rifle", "rifle shoot", "rifle reload",
-    "rocket", "rocket shoot", "rocket reload",
+    "light", "light shoot", "light reload",
+    "heavy", "heavy shoot", "heavy reload",
+    "grasp", "grasp throw", "grasp reload", "grasp power",
     "vwep", "shield", "powerup",
     ""
 };
