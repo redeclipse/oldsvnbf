@@ -938,8 +938,8 @@ namespace projs
     int checkmaterial(projent &proj)
     {
         int mat = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.height)/2));
-        if(int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0) return 2;
-        else if(isliquid(mat&MATF_VOLUME)) return 1;
+        if(proj.extinguish >= 2 && (int(mat&MATF_VOLUME) == MAT_LAVA || int(mat&MATF_FLAGS) == MAT_DEATH || proj.o.z < 0)) return 2;
+        else if(proj.extinguish >= 1 && (isliquid(mat&MATF_VOLUME))) return 1;
         return 0;
     }
 
@@ -952,7 +952,7 @@ namespace projs
             {
                 if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
             }
-            else if(check >= (proj.extinguish ? 1 : 2))
+            else if(check)
             {
                 if(check == 1 && proj.extinguish >= 2) proj.limited = true;
                 proj.norm = dir;
@@ -968,7 +968,7 @@ namespace projs
                 proj.norm = wall;
             }
             bounceeffect(proj);
-            if(check >= (proj.extinguish ? 1 : 2) && proj.projtype != PRJ_DEBRIS) return 0;
+            if(check && proj.projtype != PRJ_DEBRIS) return 0;
             else if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
                 reflect(proj, proj.norm);
@@ -998,7 +998,7 @@ namespace projs
             {
                 if(!hiteffect(proj, hitplayer, hitflags, vec(hitplayer->o).sub(proj.o).normalize())) return 1;
             }
-            else if(check >= (proj.extinguish ? 1 : 2))
+            else if(check)
             {
                 if(check == 1 && proj.extinguish >= 2) proj.limited = true;
                 proj.norm = dir;
@@ -1014,7 +1014,7 @@ namespace projs
                 proj.norm = hitsurface;
             }
             bounceeffect(proj);
-            if(check >= (proj.extinguish ? 1 : 2) && proj.projtype != PRJ_DEBRIS) return 0;
+            if(check && proj.projtype != PRJ_DEBRIS) return 0;
             else if(proj.projcollide&(hitplayer ? BOUNCE_PLAYER : BOUNCE_GEOM))
             {
                 reflect(proj, proj.norm);
