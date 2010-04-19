@@ -5,7 +5,6 @@ VARF(IDF_PERSIST, waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershade
 VARF(IDF_PERSIST, waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARF(IDF_PERSIST, waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
 
-VAR(IDF_WORLD, refractfog, 0, 1, 1);
 VAR(IDF_WORLD, watersubdiv, 0, 3, 3);
 VAR(IDF_WORLD, waterlod, 0, 1, 3);
 
@@ -52,7 +51,7 @@ VERTWN(vertwtn, {
 VERTW(vertwc, {
     varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
 }, {
-    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(wcol[3] + fabs(s)*0x18));
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], clamp(int(wcol[3] + fabs(s)*0x18), 0, 255));
 })
 VERTWN(vertwcn, {
     varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
@@ -63,11 +62,11 @@ VERTWT(vertwtc, {
     varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
 }, {
-    varray::attrib<uchar>(0xFF, 0xFF, 0xFF, int(0x33 + fabs(s)*0x18));
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
     varray::attrib<float>(v1+duv, v2+duv, v3+h);
 })
 VERTWN(vertwtcn, {
-    glColor4ub(0xFF, 0xFF, 0xFF, 0x33);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
 }, {
     varray::attrib<float>(v1, v2, v3+h);
@@ -77,12 +76,12 @@ VERTWT(vertwmtc, {
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
     varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
 }, {
-    varray::attrib<uchar>(0xFF, 0xFF, 0xFF, int(0x33 + fabs(s)*0x18));
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
     varray::attrib<float>(v1-duv, v2+duv, v3+h);
     varray::attrib<float>(v1+duv, v2+duv, v3+h);
 })
 VERTWN(vertwmtcn, {
-    glColor4ub(0xFF, 0xFF, 0xFF, 0x33);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
     varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
 }, {
@@ -93,11 +92,11 @@ VERTWT(vertwetc, {
     varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
 }, {
-    varray::attrib<uchar>(0xFF, 0xFF, 0xFF, int(0x33 + fabs(s)*0x18));
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
     varray::attrib<float>(v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
 })
 VERTWN(vertwetcn, {
-    glColor4ub(0xFF, 0xFF, 0xFF, 0x33);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
 }, {
     varray::attrib<float>(v1-camera1->o.x, v2-camera1->o.y, camera1->o.z-(v3+h));
@@ -107,12 +106,12 @@ VERTWT(vertwemtc, {
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
     varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
 }, {
-    varray::attrib<uchar>(0xFF, 0xFF, 0xFF, int(0x33 + fabs(s)*0x18));
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
     varray::attrib<float>(v1-duv, v2+duv, v3+h);
     varray::attrib<float>(v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
 })
 VERTWN(vertwemtcn, {
-    glColor4ub(0xFF, 0xFF, 0xFF, 0x33);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
     varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
     varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
 }, {
@@ -348,7 +347,7 @@ void setprojtexmatrix(Reflection &ref, bool init = true)
 
 void setuprefractTMUs()
 {
-    if(!refractfog) setuptmu(0, "K , T @ Ka");
+    setuptmu(0, "= T");
 
     if(waterreflect || (waterenvmap && hasCM))
     {
@@ -356,7 +355,7 @@ void setuprefractTMUs()
         glEnable(waterreflect ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP_ARB);
         if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookupmaterialslot(MAT_WATER)));
 
-        setuptmu(1, "P , T @ C~a");
+        setuptmu(1, "T , P @ Ca");
 
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
@@ -364,7 +363,7 @@ void setuprefractTMUs()
 
 void setupreflectTMUs()
 {
-    setuptmu(0, "T , K @ Ca", "Ka * P~a");
+    setuptmu(0, "T , K @ Ca", "Ka * C~a");
 
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
@@ -493,12 +492,10 @@ void renderwaterff()
                 float depth = !waterfog ? 1.0f : min(0.75f*m.depth/waterfog, 0.95f);
                 if(nowater || !waterrefract) depth = max(depth, nowater || (!waterreflect && (!waterenvmap || !hasCM)) || below ? 0.6f : 0.3f);
                 wcol[3] = int(depth*255);
-                if(!nowater && (waterrefract || ((waterreflect || (waterenvmap && hasCM)) && !below)))
+                if(!nowater && !waterrefract && ((waterreflect || (waterenvmap && hasCM)) && !below))
                 {
                     if(varray::data.length()) varray::end();
-                    float ec[4] = { wcol[0]/255.0f, wcol[1]/255.0f, wcol[2]/255.0f, depth };
-                    if(!waterrefract) { loopk(3) ec[k] *= depth; ec[3] = 1-ec[3]; }
-                    colortmu(0, ec[0], ec[1], ec[2], ec[3]);
+                    colortmu(0, depth*wcol[0]/255.0f, depth*wcol[1]/255.0f, depth*wcol[2]/255.0f, 1-depth);
                 }
                 lastdepth = m.depth;
             }

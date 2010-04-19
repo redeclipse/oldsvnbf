@@ -364,8 +364,6 @@ static void cleanupexplosion()
     else
     {
         if(explosion2d) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-        if(fogging) setfogplane(1, reflectz);
     }
 
     if(hasVBO)
@@ -482,11 +480,6 @@ struct fireballrenderer : sharedlistrenderer
 
         glPushMatrix();
         glTranslatef(p->o.x, p->o.y, p->o.z);
-        if(fogging)
-        {
-            if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - p->o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - p->o.z)/waterfog)));
-        }
 
         bool inside = p->o.dist(camera1->o) <= psize*WOBBLE;
         vec oc(p->o);

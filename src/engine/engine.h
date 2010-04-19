@@ -142,6 +142,9 @@ extern PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC glCompressedTexSubImage2D_;
 extern PFNGLCOMPRESSEDTEXSUBIMAGE1DARBPROC glCompressedTexSubImage1D_;
 extern PFNGLGETCOMPRESSEDTEXIMAGEARBPROC   glGetCompressedTexImage_;
 
+// GL_EXT_fog_coord
+extern PFNGLFOGCOORDPOINTEREXTPROC glFogCoordPointer_;
+
 #include "varray.h"
 
 extern physent *camera1, camera;
@@ -242,11 +245,11 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB, hasUBO, hasBUE;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB, hasUBO, hasBUE, hasFC;
 extern int hasstencil;
 
 extern bool envmapping, minimapping, renderedgame;
-extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
+extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix, fogmatrix, invfogmatrix;
 extern bvec fogcolor;
 
 extern float cursorx, cursory;
@@ -284,8 +287,6 @@ extern void disablepolygonoffset(GLenum type);
 extern void calcspherescissor(const vec &center, float size, float &sx1, float &sy1, float &sx2, float &sy2);
 extern int pushscissor(float sx1, float sy1, float sx2, float sy2);
 extern void popscissor();
-extern void setfogplane(const plane &p, bool flush = false);
-extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void setcolormask(bool r = true, bool g = true, bool b = true);
 
 // renderextras
@@ -391,15 +392,9 @@ extern void updatevabb(vtxarray *va, bool force = false);
 extern void updatevabbs(bool force = false);
 
 // renderva
-extern GLuint fogtex;
-extern bvec fogtexcolor;
-
-#define SETUPFOGTEX do { if(!fogtex || fogtexcolor != watercol) createfogtex(); } while(0)
-
 extern void visiblecubes(float fov, float fovy);
 extern void reflectvfcP(float z, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI);
 extern void restorevfcP();
-extern void createfogtex();
 extern void rendergeom(float causticspass = 0, bool fogpass = false);
 extern void rendermapmodels();
 extern void renderreflectedgeom(bool causticspass = false, bool fogpass = false);
@@ -452,7 +447,7 @@ extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size, u
 extern int refracting;
 extern bool reflecting, fading, fogging;
 extern float reflectz;
-extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
+extern int reflectdist, vertwater, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
 extern bvec watercol, waterfallcol, lavacol;
 
 extern void cleanreflections();
