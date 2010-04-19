@@ -29,15 +29,15 @@ aistyles aistyle[] = {
     },
     {
         AI_HEAVY,       WEAP_SHOTGUN,   200,    30,         2,              3,          3,          14,         200,
-            true,       true,       true,                   "heavy",    "actors/player/beta"
+            true,       true,       true,                   "heavy",    "actors/player/delta"
     },
     {
         AI_PYRO,        WEAP_FLAMER,    150,    50,         2,              3,          3,          14,         175,
-            true,       true,       true,                   "pyro",     "actors/player/beta"
+            true,       true,       true,                   "pyro",     "actors/player/delta"
     },
     {
         AI_SNIPER,      WEAP_RIFLE,     100,    40,         2,              3,          3,          14,         175,
-            true,       true,       true,                   "sniper",   "actors/player/beta"
+            true,       true,       true,                   "sniper",   "actors/player/delta"
     },
 };
 #else

@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define GAMEID              "bfa"
-#define GAMEVERSION         164
+#define GAMEVERSION         165
 #define DEMO_VERSION        GAMEVERSION
 
 #define MAXAI 256
@@ -432,9 +432,9 @@ enum
 };
 enum
 {
-    G_M_NONE = 0, G_M_MULTI = 1<<0, G_M_TEAM = 1<<1, G_M_INSTA = 1<<2, G_M_DUEL = 1<<3, G_M_SURVIVOR = 1<<4, G_M_ARENA = 1<<5,
-    G_M_ALL = G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_SOME = G_M_INSTA|G_M_ARENA,
-    G_M_NUM = 6
+    G_M_NONE = 0, G_M_TEAM = 1<<0, G_M_INSTA = 1<<1, G_M_DUEL = 1<<2, G_M_SURVIVOR = 1<<3, G_M_ARENA = 1<<4,
+    G_M_ALL = G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA, G_M_SOME = G_M_INSTA|G_M_ARENA,
+    G_M_NUM = 5
 };
 
 struct gametypes
@@ -447,17 +447,16 @@ gametypes gametype[] = {
     { G_LOBBY,          G_M_SOME,                                                           G_M_NONE,               "lobby" },
     { G_EDITMODE,       G_M_SOME,                                                           G_M_NONE,               "editing" },
     { G_CAMPAIGN,       G_M_TEAM|G_M_SOME,                                                  G_M_TEAM,               "campaign" },
-    { G_DEATHMATCH,     G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_NONE,               "deathmatch" },
-    { G_STF,            G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,                             G_M_TEAM,               "secure-the-flag" },
-    { G_CTF,            G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,                             G_M_TEAM,               "capture-the-flag" },
-    { G_TRIAL,          G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_ARENA,                             G_M_NONE,               "time-trial" },
+    { G_DEATHMATCH,     G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_NONE,               "deathmatch" },
+    { G_STF,            G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_TEAM,               "secure-the-flag" },
+    { G_CTF,            G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_TEAM,               "capture-the-flag" },
+    { G_TRIAL,          G_M_TEAM|G_M_INSTA|G_M_ARENA,                                       G_M_NONE,               "time-trial" },
 }, mutstype[] = {
-    { G_M_MULTI,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_TEAM|G_M_MULTI,     "multi" },
-    { G_M_TEAM,         G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_TEAM,               "team" },
-    { G_M_INSTA,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_INSTA,              "insta" },
-    { G_M_DUEL,         G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA,                    G_M_DUEL,               "duel" },
-    { G_M_SURVIVOR,     G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA,                G_M_SURVIVOR,           "survivor" },
-    { G_M_ARENA,        G_M_MULTI|G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,       G_M_ARENA,              "arena" },
+    { G_M_TEAM,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_TEAM,               "team" },
+    { G_M_INSTA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_INSTA,              "insta" },
+    { G_M_DUEL,         G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_ARENA,                              G_M_DUEL,               "duel" },
+    { G_M_SURVIVOR,     G_M_TEAM|G_M_INSTA|G_M_SURVIVOR|G_M_ARENA,                          G_M_SURVIVOR,           "survivor" },
+    { G_M_ARENA,        G_M_TEAM|G_M_INSTA|G_M_DUEL|G_M_SURVIVOR|G_M_ARENA,                 G_M_ARENA,              "arena" },
 };
 #else
 extern gametypes gametype[], mutstype[];
@@ -479,7 +478,6 @@ extern gametypes gametype[], mutstype[];
 #define m_flag(a)           (m_stf(a) || m_ctf(a))
 #define m_fight(a)          (a >= G_FIGHT)
 
-#define m_multi(a,b)        ((b & G_M_MULTI) || (gametype[a].implied & G_M_MULTI))
 #define m_team(a,b)         ((b & G_M_TEAM) || (gametype[a].implied & G_M_TEAM))
 #define m_insta(a,b)        ((b & G_M_INSTA) || (gametype[a].implied & G_M_INSTA))
 #define m_duel(a,b)         ((b & G_M_DUEL) || (gametype[a].implied & G_M_DUEL))
@@ -574,8 +572,8 @@ struct demoheader
 
 enum
 {
-    TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_GAMMA, TEAM_DELTA, TEAM_ENEMY, TEAM_MAX,
-    TEAM_FIRST = TEAM_ALPHA, TEAM_LAST = TEAM_DELTA, TEAM_NUM = TEAM_LAST-(TEAM_FIRST-1)
+    TEAM_NEUTRAL = 0, TEAM_ALPHA, TEAM_BETA, TEAM_ENEMY, TEAM_MAX,
+    TEAM_FIRST = TEAM_ALPHA, TEAM_LAST = TEAM_BETA, TEAM_NUM = (TEAM_LAST-TEAM_FIRST)+1, TEAM_COUNT = TEAM_LAST+1
 };
 struct teamtypes
 {
@@ -601,16 +599,6 @@ teamtypes teamtype[] = {
         "flag/beta",    "teambeta",         "\fr",      "red"
     },
     {
-        TEAM_GAMMA,     0x22AA22,           "gamma",
-        "actors/player/gamma",              "actors/player/gamma/vwep",
-        "flag/gamma",   "teamgamma",        "\fg",      "green"
-    },
-    {
-        TEAM_DELTA,     0xAAAA22,           "delta",
-        "actors/player/delta",              "actors/player/delta/vwep",
-        "flag/delta",   "teamdelta",        "\fy",      "yellow"
-    },
-    {
         TEAM_ENEMY,     0x222222,           "enemy",
         "actors/player",                    "actors/player/vwep",
         "flag",         "team",             "\fd",      "dark grey"
@@ -621,7 +609,7 @@ extern teamtypes teamtype[];
 #endif
 enum { BASE_NONE = 0, BASE_HOME = 1<<0, BASE_FLAG = 1<<1, BASE_BOTH = BASE_HOME|BASE_FLAG };
 
-#define numteams(a,b)   (m_fight(a) && m_team(a,b) ? (m_multi(a,b) ? TEAM_NUM : TEAM_NUM/2) : 1)
+#define numteams(a,b)   (m_fight(a) && m_team(a,b) ? TEAM_NUM : 1)
 #define isteam(a,b,c,d) (m_fight(a) && m_team(a,b) ? (c >= d && c <= numteams(a,b)) : c == TEAM_NEUTRAL)
 #define valteam(a,b)    (a >= b && a <= TEAM_NUM)
 #define adjustscaled(t,n,s) { \

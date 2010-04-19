@@ -666,7 +666,7 @@ namespace server
             if(m_campaign(mode)) maplist = GAME(campaignmaps);
             else if(m_duel(mode, muts)) maplist = GAME(duelmaps);
             else if(m_stf(mode)) maplist = GAME(stfmaps);
-            else if(m_ctf(mode)) maplist = m_multi(mode, muts) ? GAME(mctfmaps) : GAME(ctfmaps);
+            else if(m_ctf(mode)) maplist = GAME(ctfmaps);
             else if(m_trial(mode)) maplist = GAME(trialmaps);
             if(maplist && *maplist)
             {
@@ -914,13 +914,13 @@ namespace server
             ents.add(n);
             cycle.add(0);
         }
-    } spawns[TEAM_LAST+1];
+    } spawns[TEAM_COUNT];
     int nplayers, totalspawns;
 
     void setupspawns(bool update, int players = 0)
     {
         nplayers = totalspawns = 0;
-        loopi(TEAM_LAST+1) spawns[i].reset();
+        loopi(TEAM_COUNT) spawns[i].reset();
         if(update)
         {
             int numt = numteams(gamemode, mutators), cplayers = 0;
@@ -940,7 +940,7 @@ namespace server
                     {
                         loopi(numt) if(spawns[i+TEAM_FIRST].ents.empty())
                         {
-                            loopj(TEAM_LAST+1) spawns[j].reset();
+                            loopj(TEAM_COUNT) spawns[j].reset();
                             totalspawns = 0;
                             break;
                         }
@@ -1411,7 +1411,7 @@ namespace server
                     if(m_campaign(reqmode)) maplist = GAME(campaignmaps);
                     else if(m_duel(reqmode, reqmuts)) maplist = GAME(duelmaps);
                     else if(m_stf(reqmode)) maplist = GAME(stfmaps);
-                    else if(m_ctf(reqmode)) maplist = m_multi(reqmode, reqmuts) ? GAME(mctfmaps) : GAME(ctfmaps);
+                    else if(m_ctf(reqmode)) maplist = GAME(ctfmaps);
                     else if(m_trial(reqmode)) maplist = GAME(trialmaps);
                     else if(m_fight(reqmode)) maplist = GAME(mainmaps);
                     else maplist = GAME(allowmaps);
@@ -1572,9 +1572,7 @@ namespace server
             if(balance < 3 && ci->state.aitype >= 0) balance = 1;
             if(balance || team < 0)
             {
-                teamscore teamscores[TEAM_NUM] = {
-                    teamscore(TEAM_ALPHA), teamscore(TEAM_BETA), teamscore(TEAM_GAMMA), teamscore(TEAM_DELTA)
-                };
+                teamscore teamscores[TEAM_NUM] = { teamscore(TEAM_ALPHA), teamscore(TEAM_BETA) };
                 loopv(clients)
                 {
                     clientinfo *cp = clients[i];
