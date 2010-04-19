@@ -429,12 +429,12 @@ COMMAND(0, clearservers, "");
 
 void updatefrommaster()
 {
-    uchar buf[32000];
-    uchar *reply = retrieveservers(buf, sizeof(buf));
-    if(*reply)
+    vector<char> data;
+    retrieveservers(data);
+    if(data.length() && data[0])
     {
         clearservers();
-        execute((char *)reply);
+        execute(data.getbuf());
         if(verbose) conoutf("\faretrieved %d server(s) from master", servers.length());
         else conoutf("\faretrieved list from master successfully", servers.length());
     }
