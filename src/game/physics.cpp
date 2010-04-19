@@ -342,7 +342,6 @@ namespace physics
             vec checkdir = stairdir;
             checkdir.mul(0.1f);
             checkdir.z += maxstep + 0.1f;
-            checkdir.mul(force);
             d->o.add(checkdir);
             if(!collide(d))
             {
@@ -354,37 +353,38 @@ namespace physics
 
         if(cansmooth)
         {
-            d->o = old;
             vec checkdir = stairdir;
             checkdir.z += 1;
-            checkdir.mul(maxstep*force);
-            d->o.add(checkdir);
-            if(!collide(d, checkdir))
-            {
-                if(collide(d, vec(0, 0, -1), slopez))
-                {
-                    d->o = old;
-                    return false;
-                }
-            }
-            /* try stepping up half as much as forward */
+            checkdir.mul(maxstep);
             d->o = old;
-            vec smoothdir = vec(dir.x, dir.y, 0).mul(force);
+            d->o.add(checkdir);
+            if(!collide(d, checkdir) && collide(d, vec(0, 0, -1), slopez)) 
+            {
+                d->o = old;
+                return false;
+            }
+            d->o.add(checkdir);
+            int scale = 2;
+            if(!collide(d, checkdir) && !collide(d, vec(0, 0, -1), slopez)) scale = 1;
+
+            d->o = old;
+            vec smoothdir = vec(dir.x, dir.y, 0);
             float magxy = smoothdir.magnitude();
             if(magxy > 1e-9f)
             {
-                if(magxy > 2*dir.z)
+                if(magxy > scale*dir.z)
                 {
                     smoothdir.mul(1/magxy);
-                    smoothdir.z = 0.5f;
-                    smoothdir.mul(dir.magnitude()*force/smoothdir.magnitude());
+                    smoothdir.z = 1;
+                    smoothdir.mul(dir.magnitude()/smoothdir.magnitude());
                 }
                 else smoothdir.z = dir.z;
-                d->o.add(smoothdir);
-                d->o.z += maxstep*force + 0.1f*force;
+                d->o.add(smoothdir.mul(force));
+                float margin = (maxstep + 0.1f)*ceil(force);
+                d->o.z += margin;
                 if(collide(d, smoothdir))
                 {
-                    d->o.z -= maxstep*force + 0.1f*force;
+                    d->o.z -= margin;
                     if(d->physstate == PHYS_FALL || d->floor != floor)
                     {
                         d->timeinair = 0;
