@@ -7,7 +7,7 @@ enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 struct aistyles
 {
     int type,           weap,           health, maxspeed,   frame;  float   xradius,    yradius,    height,     weight;
-    bool    canmove,    canfight,   useweap;    const char  *name,      *mdl;
+    bool    canmove,    canstrafe,  useweap;    const char  *name,      *mdl;
 };
 #ifdef GAMESERVER
 aistyles aistyle[] = {
@@ -17,7 +17,7 @@ aistyles aistyle[] = {
     },
     {
         AI_TURRET,      WEAP_SMG,       100,    0,          2,              3,          3,          4,          0,
-            false,      true,       true,                   "turret",   "weapons/smg/vwep"
+            false,      false,      true,                   "turret",   "weapons/smg/vwep"
     },
     {
         AI_ZOMBIE,      WEAP_MELEE,     50,     45,         3,              3,          3,          14,         150,
@@ -25,19 +25,19 @@ aistyles aistyle[] = {
     },
     {
         AI_GUARD,       WEAP_PISTOL,    50,     40,         2,              3,          3,          14,         165,
-            true,       false,      true,                   "guard",    "actors/player/gamma"
+            true,       true,       true,                   "guard",    "actors/player/gamma"
     },
     {
         AI_HEAVY,       WEAP_SHOTGUN,   200,    30,         2,              3,          3,          14,         200,
-            true,       false,      true,                   "heavy",    "actors/player/beta"
+            true,       true,       true,                   "heavy",    "actors/player/beta"
     },
     {
         AI_PYRO,        WEAP_FLAMER,    150,    50,         2,              3,          3,          14,         175,
-            true,       false,      true,                   "pyro",     "actors/player/beta"
+            true,       true,       true,                   "pyro",     "actors/player/beta"
     },
     {
         AI_SNIPER,      WEAP_RIFLE,     100,    40,         2,              3,          3,          14,         175,
-            true,       false,      true,                   "sniper",   "actors/player/beta"
+            true,       true,       true,                   "sniper",   "actors/player/beta"
     },
 };
 #else

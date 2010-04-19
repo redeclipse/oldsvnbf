@@ -3764,12 +3764,11 @@ namespace server
 
                 case N_GAMEINFO:
                 {
-                    bool valid = !hasgameinfo && !strcmp(ci->clientmap, smapname);
                     int n, np = getint(p);
                     while((n = getint(p)) != -1)
                     {
                         int type = getint(p), numattr = getint(p), numkin = getint(p);
-                        if(valid && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == CHECKPOINT || type == ACTOR || type == TRIGGER))
+                        if(!hasgameinfo && (enttype[type].usetype == EU_ITEM || type == PLAYERSTART || type == CHECKPOINT || type == ACTOR || type == TRIGGER))
                         {
                             while(sents.length() <= n) sents.add();
                             sents[n].reset();
@@ -3786,7 +3785,7 @@ namespace server
                             loopk(numkin) getint(p);
                         }
                     }
-                    if(valid) setupgameinfo(np);
+                    if(!hasgameinfo) setupgameinfo(np);
                     break;
                 }
 

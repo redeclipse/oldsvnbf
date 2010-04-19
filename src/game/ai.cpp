@@ -1030,27 +1030,31 @@ namespace ai
         d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
         if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-        bool wantsimpulse = false;
-        if(d->aitype == AI_BOT && b.idle == -1 && !d->ai->dontmove)
-            wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
-        if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
+        if(d->aitype == AI_BOT)
         {
-            float offyaw, offpitch;
-            vec v = vec(d->vel).normalize();
-            vectoyawpitch(v, offyaw, offpitch);
-            offyaw -= d->aimyaw; offpitch -= d->aimpitch;
-            if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
-            else if(d->ai->becareful)
+            bool wantsimpulse = false;
+            if(b.idle == -1 && !d->ai->dontmove)
+                wantsimpulse = (d->action[AC_SPRINT] || !d->actiontime[AC_SPRINT] || lastmillis-d->actiontime[AC_SPRINT] > PHYSMILLIS*2);
+            if((d->ai->becareful && d->physstate == PHYS_FALL) || wantsimpulse)
             {
-                d->ai->dontmove = true;
-                wantsimpulse = false;
+                float offyaw, offpitch;
+                vec v = vec(d->vel).normalize();
+                vectoyawpitch(v, offyaw, offpitch);
+                offyaw -= d->aimyaw; offpitch -= d->aimpitch;
+                if(fabs(offyaw)+fabs(offpitch) >= 135) wantsimpulse = d->ai->becareful = false;
+                else if(d->ai->becareful)
+                {
+                    d->ai->dontmove = true;
+                    wantsimpulse = false;
+                }
             }
+            else d->ai->becareful = false;
+            if(d->action[AC_SPRINT] != wantsimpulse)
+                if((d->action[AC_SPRINT] = !d->action[AC_SPRINT]) == true) d->actiontime[AC_SPRINT] = lastmillis;
         }
-        else d->ai->becareful = false;
-        if(d->action[AC_SPRINT] != wantsimpulse)
-            if((d->action[AC_SPRINT] = !d->action[AC_SPRINT]) == true) d->actiontime[AC_SPRINT] = lastmillis;
 
         if(d->ai->dontmove) d->move = d->strafe = 0;
+        else if(!aistyle[d->aitype].canstrafe) { d->move = 1; d->strafe = 0; }
         else
         { // our guys move one way.. but turn another?! :)
             const struct aimdir { int move, strafe, offset; } aimdirs[8] =
@@ -1067,8 +1071,7 @@ namespace ai
             float yaw = d->aimyaw-d->yaw;
             while(yaw < 0.0f) yaw += 360.0f;
             while(yaw >= 360.0f) yaw -= 360.0f;
-            int r = clamp(((int)floor((yaw+22.5f)/45.0f))&7, 0, 7);
-            const aimdir &ad = aimdirs[r];
+            const aimdir &ad = aimdirs[clamp(((int)floor((yaw+22.5f)/45.0f))&7, 0, 7)];
             d->move = ad.move;
             d->strafe = ad.strafe;
             d->aimyaw -= ad.offset;
