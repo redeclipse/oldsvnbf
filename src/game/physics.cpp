@@ -358,14 +358,23 @@ namespace physics
             checkdir.mul(maxstep);
             d->o = old;
             d->o.add(checkdir);
-            if(!collide(d, checkdir) && collide(d, vec(0, 0, -1), slopez)) 
+            int scale = 2;
+            if(!collide(d, checkdir)) 
+            { 
+                if(collide(d, vec(0, 0, -1), slopez))
+                {
+                    d->o = old;
+                    return false;
+                }
+                d->o.add(checkdir);
+                if(!collide(d, vec(0, 0, -1), slopez)) scale = 1;
+            }
+            if(scale != 1)
             {
                 d->o = old;
-                return false;
+                d->o.sub(checkdir.mul(vec(2, 2, 1)));
+                if(collide(d, vec(0, 0, -1), slopez)) scale = 1;
             }
-            d->o.add(checkdir);
-            int scale = 2;
-            if(!collide(d, checkdir) && !collide(d, vec(0, 0, -1), slopez)) scale = 1;
 
             d->o = old;
             vec smoothdir = vec(dir.x, dir.y, 0);
