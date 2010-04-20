@@ -459,7 +459,7 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *sligh
     int hit = 0;
     loopi(17) if(normal.dot(rays[i])>=0)
     {
-        if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
+        if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW|RAY_SKIPSKY | flags, t)>1e15f) hit++;
     }
 
     loopk(3) slight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/17.0f);
@@ -473,7 +473,7 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
         if(light.attrs.length() < 5 || (slight[0] >= light.attrs[2] && slight[1] >= light.attrs[3] && slight[2] >= light.attrs[4])) continue;
         int yaw = light.attrs[0], pitch = light.attrs[1]+90, offset = light.attrs.inrange(5) && light.attrs[5] ? light.attrs[5] : 10, hit = 0;
         vec dir(yaw*RAD, pitch*RAD);
-        if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+        if(normal.dot(dir) >= 0 && shadowray(vec(dir).mul(tolerance).add(o), dir, 1e16f, RAY_SHADOW|RAY_SKIPSKY | flags, t) > 1e15f)
             hit++;
         matrix3x3 rot;
         rot.rotate(90*RAD, dir);
@@ -481,14 +481,14 @@ void calcsunlight(const vec &o, const vec &normal, float tolerance, uchar *sligh
         spoke.rotate(21*RAD, dir);
         loopk(4)
         {
-            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW|RAY_SKIPSKY | flags, t) > 1e15f)
                 hit++;
             spoke = rot.transform(spoke);
         }
         spoke = vec(yaw*RAD, (pitch + 0.5f*offset)*RAD).rotate((66-21)*RAD, dir);
         loopk(4)
         {
-            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW | flags, t) > 1e15f)
+            if(normal.dot(spoke) >= 0 && shadowray(vec(spoke).mul(tolerance).add(o), spoke, 1e16f, RAY_SHADOW|RAY_SKIPSKY | flags, t) > 1e15f)
                 hit++;
             spoke = rot.transform(spoke);
         }
@@ -2039,7 +2039,7 @@ static inline void fastskylight(const vec &o, float tolerance, uchar *skylight, 
         vec(0, 0, 1),
     };
     int hit = 0;
-    loopi(5) if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW | flags, t)>1e15f) hit++;
+    loopi(5) if(shadowray(vec(rays[i]).mul(tolerance).add(o), rays[i], 1e16f, RAY_SHADOW|RAY_SKIPSKY | flags, t)>1e15f) hit++;
 
     loopk(3) skylight[k] = uchar(ambientcolor[k] + (max(skylightcolor[k], ambientcolor[k]) - ambientcolor[k])*hit/5.0f);
 }
