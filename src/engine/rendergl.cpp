@@ -1198,8 +1198,8 @@ void drawglare()
     glGetFloatv(GL_FOG_END, &oldfogend);
     glGetFloatv(GL_FOG_COLOR, oldfogcolor);
 
-    glFogi(GL_FOG_START, (fog+64)/8);
-    glFogi(GL_FOG_END, fog);
+    glFogf(GL_FOG_START, (fog+64)/8);
+    glFogf(GL_FOG_END, fog);
     glFogfv(GL_FOG_COLOR, zerofog);
 
     glClearColor(0, 0, 0, 1);
@@ -1254,8 +1254,8 @@ void drawreflection(float z, bool refract)
 
     if(fogging)
     {
-        glFogi(GL_FOG_START, camera1->o.z - z);
-        glFogi(GL_FOG_END, camera1->o.z - (z-waterfog));
+        glFogf(GL_FOG_START, camera1->o.z - z);
+        glFogf(GL_FOG_END, camera1->o.z - (z-waterfog));
         GLfloat m[16] =
         {
              1,   0,  0, 0,
@@ -1273,8 +1273,8 @@ void drawreflection(float z, bool refract)
     }
     else
     {
-        glFogi(GL_FOG_START, (fog+64)/8);
-        glFogi(GL_FOG_END, fog);
+        glFogf(GL_FOG_START, (fog+64)/8);
+        glFogf(GL_FOG_END, fog);
         float fogc[4] = { fogcolor.x/255.0f, fogcolor.y/255.0f, fogcolor.z/255.0f, 1.0f };
         glFogfv(GL_FOG_COLOR, fogc);
     }
