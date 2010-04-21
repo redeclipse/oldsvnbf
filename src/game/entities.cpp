@@ -841,9 +841,7 @@ namespace entities
                         float dist = m.dist(e.o);
                         if(dist >= e.attrs[4]) mag *= 1.f-clamp((dist-e.attrs[4])/float(e.attrs[3]-e.attrs[4]), 0.f, 1.f);
                     }
-                    vec dir;
-                    vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir);
-                    dir.mul(mag);
+                    vec dir; vecfromyawpitch(e.attrs[0], e.attrs[1], 1, 0, dir); dir.normalize().mul(mag);
                     if(d->ai) d->ai->becareful = true;
                     d->dojumpreset();
                     switch(e.attrs[5])
@@ -852,7 +850,7 @@ namespace entities
                         {
                             loopk(3)
                             {
-                                if((d->vel.v[k] > 0.f && dir.v[k] < 0.f) || (d->vel.v[k] < 0.f && dir.v[k] > 0.f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
+                                if((d->vel.v[k] > 1e-1f && dir.v[k] < -1e-1f) || (d->vel.v[k] < -1e-1f && dir.v[k] > 1e-1f) || (fabs(dir.v[k]) > fabs(d->vel.v[k])))
                                     d->vel.v[k] = dir.v[k];
                             }
                             break;
