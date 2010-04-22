@@ -345,28 +345,12 @@ namespace entities
         }
     }
 
-    static void buildentcache(int *indices, int numindices, int depth = 1)
+    static void buildentcache(int *indices, int numindices, const vec &vmin, const vec &vmax, int depth = 1)
     {
-        vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-        loopi(numindices) if(ents.inrange(indices[i]))
-        {
-            extentity &e = *ents[indices[i]];
-            float radius = calcentcacheradius(e);
-            loopk(3)
-            {
-                vmin[k] = min(vmin[k], e.o[k]-radius);
-                vmax[k] = max(vmax[k], e.o[k]+radius);
-            }
-        }
-        if(depth==1)
-        {
-            entcachemin = vmin;
-            entcachemax = vmax;
-        }
-
         int axis = 2;
         loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
+        vec leftmin(1e16f, 1e16f, 1e16f), leftmax(-1e16f, -1e16f, -1e16f), rightmin(1e16f, 1e16f, 1e16f), rightmax(-1e16f, -1e16f, -1e16f);
         float split = 0.5f*(vmax[axis] + vmin[axis]), splitleft = -1e16f, splitright = 1e16f;
         int left, right;
         for(left = 0, right = numindices; left < right;) if(ents.inrange(indices[left]))
@@ -377,17 +361,23 @@ namespace entities
             {
                 ++left;
                 splitleft = max(splitleft, e.o[axis]+radius);
+                leftmin.min(vec(e.o).sub(radius));
+                leftmax.max(vec(e.o).add(radius));
             }
             else
             {
                 --right;
                 swap(indices[left], indices[right]);
                 splitright = min(splitright, e.o[axis]-radius);
+                rightmin.min(vec(e.o).sub(radius));
+                rightmax.max(vec(e.o).add(radius));
             }
         }
 
         if(!left || right==numindices)
         {
+            leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+            leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
             left = right = numindices/2;
             splitleft = -1e16f;
             splitright = 1e16f;
@@ -395,8 +385,18 @@ namespace entities
             {
                 extentity &e = *ents[indices[i]];
                 float radius = calcentcacheradius(e);
-                if(i < left) splitleft = max(splitleft, e.o[axis]+radius);
-                else splitright = min(splitright, e.o[axis]-radius);
+                if(i < left) 
+                {
+                    splitleft = max(splitleft, e.o[axis]+radius);
+                    leftmin.min(vec(e.o).sub(radius));
+                    leftmax.max(vec(e.o).add(radius));
+                }
+                else 
+                {
+                    splitright = min(splitright, e.o[axis]-radius);
+                    rightmin.min(vec(e.o).sub(radius));
+                    rightmax.max(vec(e.o).add(radius));
+                }
             }
         }
 
@@ -409,14 +409,14 @@ namespace entities
         else
         {
             entcache[node].child[0] = (axis<<30) | entcache.length();
-            if(left) buildentcache(indices, left, depth+1);
+            if(left) buildentcache(indices, left, leftmin, leftmax, depth+1);
         }
 
         if(numindices-right==1) entcache[node].child[1] = (1<<31) | (left==1 ? 1<<30 : 0) | indices[right];
         else
         {
             entcache[node].child[1] = (left==1 ? 1<<30 : 0) | entcache.length();
-            if(numindices-right) buildentcache(&indices[right], numindices-right, depth+1);
+            if(numindices-right) buildentcache(&indices[right], numindices-right, rightmin, rightmax, depth+1);
         }
 
         entcachedepth = max(entcachedepth, depth);
@@ -436,12 +436,20 @@ namespace entities
     {
         entcache.setsize(0);
         vector<int> indices;
+        entcachemin = vec(1e16f, 1e16f, 1e16f);
+        entcachemax = vec(-1e16f, -1e16f, -1e16f);
         loopv(ents)
         {
             extentity &e = *ents[i];
-            if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE) indices.add(i);
+            if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE) 
+            {
+                indices.add(i);
+                float radius = calcentcacheradius(e);
+                entcachemin.min(vec(e.o).sub(radius));
+                entcachemax.max(vec(e.o).add(radius));
+            }
         }
-        buildentcache(indices.getbuf(), indices.length());
+        buildentcache(indices.getbuf(), indices.length(), entcachemin, entcachemax);
     }
 
     struct entcachestack
