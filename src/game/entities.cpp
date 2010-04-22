@@ -157,6 +157,7 @@ namespace entities
                         else formatstring(ds)("%s", gametype[attr[3]].name);
                         addentinfo(ds);
                     }
+                    addentinfo(weaptype[attr[5] > 0 && attr[5] <= WEAP_MAX ? attr[5]-1 : aistyle[attr[0]].weap].name);
                 }
                 break;
             }
@@ -1108,6 +1109,12 @@ namespace entities
                 while(e.attrs[2] > 90) e.attrs[2] -= 180;
                 while(e.attrs[3] <= -G_MAX) e.attrs[3] += G_MAX*2;
                 while(e.attrs[3] >= G_MAX) e.attrs[3] -= G_MAX*2;
+                while(e.attrs[4] < 0) e.attrs[4] += TRIGGERIDS+1;
+                while(e.attrs[4] > TRIGGERIDS) e.attrs[4] -= TRIGGERIDS+1;
+                while(e.attrs[5] < 0) e.attrs[5] += WEAP_MAX+1; // allow any weapon
+                while(e.attrs[5] > WEAP_MAX) e.attrs[5] -= WEAP_MAX+1;
+                if(e.attrs[6] < 0) e.attrs[6] = 0;
+                if(e.attrs[7] < 0) e.attrs[7] = 0;
                 break;
             case FLAG:
                 while(e.attrs[0] < 0) e.attrs[0] += TEAM_COUNT;

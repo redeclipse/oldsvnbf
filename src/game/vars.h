@@ -103,16 +103,18 @@ GVAR(0, botminskill, 1, 70, 101);
 GVAR(0, botmaxskill, 1, 80, 101);
 GVAR(0, botlimit, 0, 16, MAXAI/2);
 
+GVAR(0, enemydelay, 0, 10000, INT_MAX-1);
+
 GFVAR(0, forcegravity, -1, -1, 1000);
 GFVAR(0, forceliquidspeed, -1, -1, 1);
 GFVAR(0, forceliquidcurb, -1, -1, 1000);
 GFVAR(0, forcefloorcurb, -1, -1, 1000);
 GFVAR(0, forceaircurb, -1, -1, 1000);
 
-GFVAR(0, jumpspeed, 0, 50.f, 1000); // extra velocity to add when jumping
-GFVAR(0, movespeed, 0, 50.f, 1000); // speed
+GFVAR(0, jumpspeed, 0, 100.f, 1000); // extra velocity to add when jumping
+GFVAR(0, movespeed, 0, 100.f, 1000); // speed
 GFVAR(0, movecrawl, 0, 0.5f, 1000); // crawl modifier
-GFVAR(0, impulsespeed, 0, 35.f, 1000); // extra velocity to add when impulsing
+GFVAR(0, impulsespeed, 0, 75.f, 1000); // extra velocity to add when impulsing
 
 GVAR(0, impulseallowed, 0, 3, 3); // impulse allowed; 0 = off, 1 = dash/boost only, 2 = dash/boost and sprint, 3 = all mechanics including parkour
 GVAR(0, impulsestyle, 0, 1, 3); // impulse style; 0 = off, 1 = touch and count, 2 = count only, 3 = freestyle

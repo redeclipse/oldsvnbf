@@ -1053,9 +1053,14 @@ namespace server
         bool grenades = GAME(spawngrenades) >= (m_insta(gamemode, mutators) || m_trial(gamemode) ? 2 : 1), arena = m_arena(gamemode, mutators);
         if(ci->state.aitype >= AI_START)
         {
-            weap = aistyle[ci->state.aitype].weap;
+            int health = aistyle[ci->state.aitype].health;
+            if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[6] > 0)
+                health = sents[ci->state.aientity].attrs[6];
+            maxhealth = max(health+(rnd(health)-(health/2)), max(health/5, 10));
+            if(sents.inrange(ci->state.aientity) && sents[ci->state.aientity].type == ACTOR && sents[ci->state.aientity].attrs[5] > 0)
+                weap = sents[ci->state.aientity].attrs[5]-1;
+            else weap = aistyle[ci->state.aitype].weap;
             if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
-            maxhealth = aistyle[ci->state.aitype].health;
             arena = grenades = false;
         }
         gs.spawnstate(weap, maxhealth, m_insta(gamemode, mutators), arena, grenades);
@@ -2362,20 +2367,19 @@ namespace server
                     pointvalue *= 2;
                 }
             }
-            else if(actor != target)
+            else if(actor != target && actor->state.aitype < AI_START)
             {
-                int logs = 0;
-                if(actor->state.aitype >= AI_START) pointvalue *= -3;
-                else
+                if((flags&HIT_PROJ) && (flags&HIT_HEAD))
                 {
+                    style |= FRAG_HEADSHOT;
+                    pointvalue *= 2;
+                }
+                if(m_fight(gamemode) && target->state.aitype < AI_START)
+                {
+                    int logs = 0;
                     actor->state.spree++;
                     actor->state.fraglog.add(target->clientnum);
-                    if((flags&HIT_PROJ) && (flags&HIT_HEAD))
-                    {
-                        style |= FRAG_HEADSHOT;
-                        pointvalue *= 2;
-                    }
-                    if(m_fight(gamemode) && GAME(multikilldelay))
+                    if(GAME(multikilldelay))
                     {
                         logs = 0;
                         loopv(actor->state.fragmillis)
@@ -2407,28 +2411,26 @@ namespace server
                             pointvalue *= offset+1;
                         }
                     }
-                    if(m_fight(gamemode))
+                    logs = 0;
+                    loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
+                    if(logs >= GAME(dominatecount))
                     {
-                        logs = 0;
-                        loopv(target->state.fraglog) if(target->state.fraglog[i] == actor->clientnum) { logs++; target->state.fraglog.remove(i--); }
-                        if(logs >= GAME(dominatecount))
-                        {
-                            style |= FRAG_REVENGE;
-                            pointvalue *= GAME(dominatecount);
-                        }
-                        logs = 0;
-                        loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
-                        if(logs == GAME(dominatecount))
-                        {
-                            style |= FRAG_DOMINATE;
-                            pointvalue *= GAME(dominatecount);
-                        }
+                        style |= FRAG_REVENGE;
+                        pointvalue *= GAME(dominatecount);
+                    }
+                    logs = 0;
+                    loopv(actor->state.fraglog) if(actor->state.fraglog[i] == target->clientnum) logs++;
+                    if(logs == GAME(dominatecount))
+                    {
+                        style |= FRAG_DOMINATE;
+                        pointvalue *= GAME(dominatecount);
                     }
                 }
             }
             target->state.deaths++;
             dropitems(target);
-            if(actor != target && actor->state.aitype >= AI_START) givepoints(target, pointvalue); else givepoints(actor, pointvalue);
+            if(actor != target && actor->state.aitype >= AI_START && target->state.aitype < AI_START) givepoints(target, -pointvalue);
+            else if(actor->state.aitype < AI_START) givepoints(actor, pointvalue);
             sendf(-1, 1, "ri8", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, style, weap, realflags, realdamage);
             target->position.setsize(0);
             if(smode) smode->died(target, actor);
@@ -2910,7 +2912,7 @@ namespace server
                     if(ci->state.lastdeath)
                     {
                         if(m_campaign(gamemode)) continue;
-                        else if(!m_duke(gamemode, mutators)) delay = 30000;
+                        else if(!m_duke(gamemode, mutators)) delay = GAME(enemydelay);
                     }
                 }
                 if(delay && ci->state.respawnwait(gamemillis, delay)) continue;

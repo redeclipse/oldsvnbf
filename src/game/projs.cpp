@@ -128,7 +128,7 @@ namespace projs
     void radialeffect(gameent *d, projent &proj, bool explode, int radius)
     {
         float maxdist = explode ? radius*WEAP(proj.weap, pusharea) : radius, dist = 1e16f;
-        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)))
+        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(d->aitype) || aistyle[d->aitype].canmove)))
         {
             if(!proj.o.reject(d->legs, maxdist+max(d->lrad.x, d->lrad.y)))
             {

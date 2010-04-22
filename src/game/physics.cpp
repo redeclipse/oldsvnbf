@@ -14,7 +14,7 @@ namespace physics
     FVAR(IDF_WORLD, stepspeed,          1e-3f, 1.f, 1000);
     FVAR(IDF_WORLD, ladderspeed,        1e-3f, 1.f, 1000);
 
-    FVAR(IDF_PERSIST, floatspeed,       1e-3f, 75, 1000);
+    FVAR(IDF_PERSIST, floatspeed,       1e-3f, 100, 1000);
     FVAR(IDF_PERSIST, floatcurb,        0, 1.f, 1000);
 
     FVAR(IDF_PERSIST, impulseroll,      0, 10, 90);
@@ -190,8 +190,7 @@ namespace physics
         return from;
     }
 
-    float jumpforce(physent *d, bool liquid) { return jumpspeed*(d->weight/100.f)*(liquid ? liquidmerge(d, 1.f, PHYS(liquidspeed)) : 1.f); }
-    float impulseforce(physent *d) { return impulsespeed*(d->weight/100.f); }
+    float jumpforce(physent *d, bool liquid) { return jumpspeed*(liquid ? liquidmerge(d, 1.f, PHYS(liquidspeed)) : 1.f); }
     float gravityforce(physent *d) { return PHYS(gravity)*(d->weight/100.f); }
 
     float stepforce(physent *d, bool up)
@@ -243,16 +242,16 @@ namespace physics
 
     float movevelocity(physent *d)
     {
-        if(d->type == ENT_CAMERA) return game::player1->maxspeed*(game::player1->weight/100.f)*(floatspeed/100.0f);
+        if(d->type == ENT_CAMERA) return game::player1->maxspeed*(floatspeed/100.0f);
         else if(d->type == ENT_PLAYER || d->type == ENT_AI)
         {
-            if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(d->weight/100.f)*(floatspeed/100.0f);
+            if(d->state == CS_EDITING || d->state == CS_SPECTATOR) return d->maxspeed*(floatspeed/100.0f);
             else
             {
                 float speed = movespeed;
                 if(iscrouching(d) || (d == game::player1 && game::inzoom())) speed *= movecrawl;
                 if(physics::sprinting(d, false, false)) speed += impulsespeed*(d->move < 0 ? 0.5f : 1);
-                return max(d->maxspeed,1.f)*(d->weight/100.f)*(speed/100.f);
+                return max(d->maxspeed,1.f)*(speed/100.f);
             }
         }
         return max(d->maxspeed,1.f);
@@ -359,8 +358,8 @@ namespace physics
             d->o = old;
             d->o.add(checkdir);
             int scale = 2;
-            if(!collide(d, checkdir)) 
-            { 
+            if(!collide(d, checkdir))
+            {
                 if(collide(d, vec(0, 0, -1), slopez))
                 {
                     d->o = old;
@@ -656,7 +655,7 @@ namespace physics
 
             if((d->ai || (impulsedash > 0 && impulsedash < 3)) && canimpulse(d, 0, 1) && (d->move || d->strafe) && (!d->ai && impulsedash == 2 ? d->action[AC_DASH] : d->action[AC_JUMP] && !onfloor))
             {
-                float mag = impulseforce(d)+max(d->vel.magnitude(), 1.f);
+                float mag = impulsespeed+max(d->vel.magnitude(), 1.f);
                 vecfromyawpitch(d->aimyaw, !d->ai && impulsedash == 2 ? max(d->aimpitch, 10.f) : d->aimpitch, d->move, d->strafe, d->vel);
                 d->vel.normalize().mul(mag); d->vel.z += mag/4;
                 d->doimpulse(allowimpulse() ? impulsecost : 0, IM_T_DASH, lastmillis);
@@ -681,7 +680,7 @@ namespace physics
             }
             if(!d->turnside && !onfloor && d->action[AC_JUMP] && canimpulse(d, 0, 1))
             {
-                d->vel.z += impulseforce(d)*1.5f;
+                d->vel.z += impulsespeed*1.5f;
                 d->doimpulse(allowimpulse() ? impulsecost : 0, IM_T_BOOST, lastmillis);
                 if(impulseaction < (PHYS(gravity) > 0 && impulsestyle < 2 ? 2 : 1)) d->action[AC_JUMP] = false;
                 playsound(S_IMPULSE, d->o, d);
@@ -716,7 +715,7 @@ namespace physics
                     int key = !hitplayer && d->action[AC_JUMP] && d->turnside ? AC_JUMP : (hitplayer || ((d->action[AC_SPECIAL] && !d->turnside && !onfloor && fabs(off) >= impulsereflect && canimpulse(d, -1, 3))) ? AC_SPECIAL : -1);
                     if(key >= 0)
                     {
-                        float mag = ((impulseforce(d)*1.5f)+max(d->vel.magnitude(), 1.f))/2;
+                        float mag = ((impulsespeed*1.5f)+max(d->vel.magnitude(), 1.f))/2;
                         if(hitplayer)
                         {
                             if(weapons::doshot(d, hitplayer->o, WEAP_MELEE, true, !onfloor))
@@ -753,7 +752,7 @@ namespace physics
                         vec rft; vecfromyawpitch(yaw, 0, 1, 0, rft);
                         if(!d->turnside)
                         {
-                            float mag = ((impulseforce(d)*1.5f)+max(d->vel.magnitude(), 1.f))/2;
+                            float mag = ((impulsespeed*1.5f)+max(d->vel.magnitude(), 1.f))/2;
                             d->vel = vec(rft).mul(mag);
                             off = yaw-d->aimyaw;
                             if(off > 180) off -= 360;
@@ -1116,7 +1115,7 @@ namespace physics
     bool xcollide(physent *d, const vec &dir, physent *o)
     {
         hitflags = HITFLAG_NONE;
-        if(d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].maxspeed))))
+        if(d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].canmove))))
         {
             gameent *e = (gameent *)o;
             if(!d->o.reject(e->legs, d->radius+max(e->lrad.x, e->lrad.y)) && !ellipsecollide(d, dir, e->legs, vec(0, 0, 0), e->yaw, e->lrad.x, e->lrad.y, e->lrad.z, e->lrad.z))
@@ -1138,7 +1137,7 @@ namespace physics
     bool xtracecollide(physent *d, const vec &from, const vec &to, float x1, float x2, float y1, float y2, float maxdist, float &dist, physent *o)
     {
         hitflags = HITFLAG_NONE;
-        if(d && d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].maxspeed))))
+        if(d && d->type == ENT_PROJ && (o->type == ENT_PLAYER || (o->type == ENT_AI && (!isaitype(((gameent *)o)->aitype) || aistyle[((gameent *)o)->aitype].canmove))))
         {
             gameent *e = (gameent *)o;
             float bestdist = 1e16f;
@@ -1173,7 +1172,7 @@ namespace physics
     {
         render3dbox(d->o, d->height, d->aboveeye, d->radius);
         renderellipse(d->o, d->xradius, d->yradius, d->yaw);
-        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].maxspeed)))
+        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].canmove)))
         {
             gameent *e = (gameent *)d;
             render3dbox(e->head, e->hrad.z, e->hrad.z, max(e->hrad.x, e->hrad.y));
@@ -1200,7 +1199,7 @@ namespace physics
                 d->o = orig; \
             } \
         }
-        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].maxspeed)))
+        if(d->type == ENT_PLAYER || (d->type == ENT_AI && (!isaitype(((gameent *)d)->aitype) || aistyle[((gameent *)d)->aitype].canmove)))
         {
             vec dir; vecfromyawpitch(d->yaw, d->pitch, 1, 0, dir);
             inmapchk(100, d->o.add(vec(dir).mul(i/10.f)));
