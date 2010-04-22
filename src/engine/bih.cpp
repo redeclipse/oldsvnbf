@@ -162,16 +162,16 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, co
             {
                 ++left;
                 splitleft = max(splitleft, amax);
-                leftmin[axis] = min(leftmin[axis], amin);
-                leftmax[axis] = max(leftmax[axis], amax);
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
             }
             else
             {
                 --right;
                 swap(indices[left], indices[right]);
                 splitright = min(splitright, amin);
-                rightmin[axis] = min(rightmin[axis], amin);
-                rightmax[axis] = max(rightmax[axis], amax);
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
             }
         }
         if(left > 0 && right < numindices) break;
@@ -193,14 +193,14 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, co
             if(i < left) 
             {
                 splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
-                leftmin[axis] = min(leftmin[axis], amin);
-                leftmax[axis] = max(leftmax[axis], amax);
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
             }
             else 
             {
                 splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
-                rightmin[axis] = min(rightmin[axis], amin);
-                rightmax[axis] = max(rightmax[axis], amax);
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
             }
         }
     }
@@ -239,13 +239,8 @@ BIH::BIH(vector<tri> *t)
     loopi(numtris)
     {
         tri &tri = tris[i];
-        loopk(3)
-        {
-            float amin = min(tri.a[k], min(tri.b[k], tri.c[k])),
-                  amax = max(tri.a[k], max(tri.b[k], tri.c[k]));
-            bbmin[k] = min(bbmin[k], amin);
-            bbmax[k] = max(bbmax[k], amax);
-        }
+        bbmin.min(tri.a).min(tri.b).min(tri.c);
+        bbmax.max(tri.a).max(tri.b).max(tri.c);
     }
 
     vector<BIHNode> buildnodes;
