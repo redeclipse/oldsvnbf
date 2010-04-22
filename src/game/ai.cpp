@@ -511,7 +511,6 @@ namespace ai
                     vec tp = t->headpos();
                     if(cansee(t, tp, dp) || tp.squaredist(dp) <= maxdist)
                     {
-                        d->ai->unsuspend();
                         aistate &c = t->ai->getstate();
                         if(violence(t, c, e, true)) return;
                     }
@@ -592,7 +591,7 @@ namespace ai
                     gameent *t = NULL;
                     loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype <= AI_BOT)
                     {
-                        if(d->aitype == AI_BOT ? (t->state != CS_SPECTATOR && t->aitype < 0) : (t->state == CS_ALIVE && d->o.squaredist(t->o) <= 512))
+                        if(d->aitype == AI_BOT ? (t->state != CS_SPECTATOR && t->aitype < 0) : (t->state == CS_ALIVE && d->o.squaredist(t->o) <= 262144))
                         {
                             d->ai->unsuspend();
                             break;
