@@ -196,7 +196,11 @@ namespace aiman
         {
             bool needent = true;
             loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-            if(needent) addai(sents[i].attrs[0], i, -1);
+            if(needent)
+            {
+                addai(sents[i].attrs[0], i, -1);
+                sents[i].millis = gamemillis;
+            }
         }
         int balance = 0;
         if(m_campaign(gamemode)) balance = GAME(campaignplayers); // campaigns strictly obeys nplayers

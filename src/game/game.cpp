@@ -342,7 +342,7 @@ namespace game
         float total = amt;
         if(d->state == CS_DEAD || d->state == CS_WAITING)
         {
-            int len = d->aitype >= AI_START ? min(ai::aideadfade, m_campaign(gamemode) ? 60000 : 30000) : m_delay(gamemode, mutators);
+            int len = d->aitype >= AI_START ? min(ai::aideadfade, enemydelay ? enemydelay : INT_MAX-1) : m_delay(gamemode, mutators);
             if(len > 0 && (!timechk || len > 1000))
             {
                 int interval = min(len/3, 1000), over = max(len-interval, 500), millis = lastmillis-d->lastdeath;
@@ -604,7 +604,7 @@ namespace game
                 {
                     vec p = d->headpos();
                     p.z += 0.6f*(d->height + d->aboveeye) - d->height;
-                    if(!isaitype(d->aitype) || aistyle[d->aitype].maxspeed)
+                    if(!isaitype(d->aitype) || aistyle[d->aitype].living)
                     {
                         if(!kidmode && bloodscale > 0)
                             part_splash(PART_BLOOD, int(clamp(damage/2, 2, 10)*bloodscale), bloodfade, p, 0x88FFFF, (rnd(bloodsize)+1)/10.f, 1, 100, DECAL_BLOOD, int(d->radius*4));
@@ -622,7 +622,7 @@ namespace game
                     if(!burning && !sameteam) actor->lasthit = lastmillis;
                 }
             }
-            if(isweap(weap) && !burning && (d == player1 || (d->ai && aistyle[d->aitype].maxspeed)))
+            if(isweap(weap) && !burning && (d == player1 || !isaitype(d->aitype) || aistyle[d->aitype].canmove))
             {
                 float force = (float(damage)/float(WEAP2(weap, damage, flags&HIT_ALT)))*(100.f/d->weight)*WEAP2(weap, hitpush, flags&HIT_ALT);
                 if(flags&HIT_WAVE || !hithurts(flags)) force *= wavepushscale;
@@ -677,7 +677,7 @@ namespace game
         d->lastattacker = actor->clientnum;
         if(d == actor)
         {
-            if(d->aitype == AI_TURRET) concatstring(d->obit, "was destroyed");
+            if(isaitype(d->aitype) && !aistyle[d->aitype].living) concatstring(d->obit, "was destroyed");
             else if(flags&HIT_DEATH) concatstring(d->obit, *obitdeath ? obitdeath : "died");
             else if(flags&HIT_WATER) concatstring(d->obit, *obitwater ? obitwater : "died");
             else if(flags&HIT_MELT) concatstring(d->obit, "melted into a ball of fire");
@@ -707,7 +707,7 @@ namespace game
         {
             concatstring(d->obit, "was ");
             if(flags&HIT_CRIT) concatstring(d->obit, "\fs\fzgrcritically\fS ");
-            if(d->aitype == AI_TURRET) concatstring(d->obit, "destroyed by");
+            if(isaitype(d->aitype) && !aistyle[d->aitype].living) concatstring(d->obit, "destroyed by");
             else
             {
                 static const char *obitnames[4][WEAP_MAX] = {
@@ -903,7 +903,7 @@ namespace game
         {
             vec pos = vec(d->o).sub(vec(0, 0, d->height*0.5f));
             int debris = clamp(max(damage,5)/5, 1, 15), amt = int((rnd(debris)+debris+1)*debrisscale);
-            loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].maxspeed ? PRJ_GIBS : PRJ_DEBRIS, rnd(debrisfade)+debrisfade, 0, rnd(500)+1, rnd(50)+10);
+            loopi(amt) projs::create(pos, vec(pos).add(d->vel), true, d, !isaitype(d->aitype) || aistyle[d->aitype].living ? PRJ_GIBS : PRJ_DEBRIS, rnd(debrisfade)+debrisfade, 0, rnd(500)+1, rnd(50)+10);
         }
         if(m_team(gamemode, mutators) && d->team == actor->team && d != actor && actor == player1)
         {
@@ -1776,7 +1776,7 @@ namespace game
         }
         else
         {
-            if(secondary && (d->aitype < AI_START || aistyle[d->aitype].maxspeed))
+            if(secondary && (!isaitype(d->aitype) || aistyle[d->aitype].canmove))
             {
                 if(physics::liquidcheck(d) && d->physstate <= PHYS_FALL)
                     anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? int(ANIM_SWIM) : int(ANIM_SINK))|ANIM_LOOP)<<ANIM_SECONDARY;

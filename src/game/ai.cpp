@@ -9,7 +9,7 @@ namespace ai
     VAR(0, aisuspend, 0, 0, 1);
     VAR(0, aiforcegun, -1, -1, WEAP_MAX-1);
     VAR(0, aicampaign, 0, 0, 1);
-    VAR(IDF_PERSIST, aideadfade, 0, 500, 60000);
+    VAR(IDF_PERSIST, aideadfade, 0, 10000, INT_MAX-1);
     VAR(IDF_PERSIST, showaiinfo, 0, 0, 2); // 0/1 = shows/hides bot join/parts, 2 = show more verbose info
 
     float viewdist(int x) { return x <= 100 ? clamp((SIGHTMIN+(SIGHTMAX-SIGHTMIN))/100.f*float(x), float(SIGHTMIN), float(game::fogdist)) : float(game::fogdist); }
@@ -163,8 +163,9 @@ namespace ai
         if((d->aitype = at) >= AI_START)
         {
             d->type = ENT_AI;
-            d->aientity = et;
-            d->maxspeed = aistyle[d->aitype].maxspeed;
+            if(entities::ents.inrange(d->aientity = et) && entities::ents[d->aientity]->type == ACTOR && entities::ents[d->aientity]->attrs[7] > 0)
+                d->maxspeed = entities::ents[d->aientity]->attrs[7];
+            else d->maxspeed = aistyle[d->aitype].maxspeed;
             d->weight = aistyle[d->aitype].weight;
             d->xradius = aistyle[d->aitype].xradius;
             d->yradius = aistyle[d->aitype].yradius;
@@ -280,7 +281,7 @@ namespace ai
 
     bool patrol(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk, bool retry)
     {
-        if(aistyle[d->aitype].maxspeed)
+        if(aistyle[d->aitype].canmove)
         {
             vec feet = d->feetpos();
             float dist = feet.squaredist(pos), fardist = guard*4;
@@ -311,7 +312,7 @@ namespace ai
     bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
     {
         bool hasenemy = enemy(d, b, pos, wander, false, false);
-        if(!aistyle[d->aitype].maxspeed) { b.idle = hasenemy ? 2 : 1; return true; }
+        if(!aistyle[d->aitype].canmove) { b.idle = hasenemy ? 2 : 1; return true; }
         else if(!walk)
         {
             if(pos.squaredist(d->feetpos()) <= guard*guard)
@@ -360,7 +361,7 @@ namespace ai
     void assist(gameent *d, aistate &b, vector<interest> &interests, bool all = false, bool force = false)
     {
         gameent *e = NULL;
-        loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && owner(d) == owner(e) && e->lastnode >= 0)
+        loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && (all || e->aitype < 0) && owner(d) == owner(e))
         {
             interest &n = interests.add();
             n.state = AI_S_DEFEND;
@@ -481,7 +482,7 @@ namespace ai
                     break;
                 default: break;
             }
-            if(proceed && (!aistyle[d->aitype].maxspeed || makeroute(d, b, n.node, false)))
+            if(proceed && (!aistyle[d->aitype].canmove || makeroute(d, b, n.node, false)))
             {
                 d->ai->addstate(n.state, n.targtype, n.target);
                 return true;
@@ -496,7 +497,7 @@ namespace ai
         {
             if(d->ai && (d->aitype >= AI_START || hithurts(flags))) // see if this ai is interested in a grudge
             {
-                if(d->lastnode >= 0) d->ai->unsuspend();
+                d->ai->unsuspend();
                 aistate &b = d->ai->getstate();
                 violence(d, b, e, d->aitype == AI_BOT ? false : true);
             }
@@ -510,7 +511,7 @@ namespace ai
                     vec tp = t->headpos();
                     if(cansee(t, tp, dp) || tp.squaredist(dp) <= maxdist)
                     {
-                        if(d->lastnode >= 0) d->ai->unsuspend();
+                        d->ai->unsuspend();
                         aistate &c = t->ai->getstate();
                         if(violence(t, c, e, true)) return;
                     }
@@ -540,17 +541,21 @@ namespace ai
         {
             d->ai->reset(tryreset);
             d->ai->lastrun = lastmillis;
-            if(d->aitype >= AI_START && aistyle[d->aitype].weap >= 0) d->loadweap = aistyle[d->aitype].weap;
+            int weap = -1;
+            if(d->aitype >= AI_START)
+            {
+                if(entities::ents.inrange(d->aientity) && entities::ents[d->aientity]->type == ACTOR && entities::ents[d->aientity]->attrs[5] > 0)
+                    weap = entities::ents[d->aientity]->attrs[5]-1;
+                else weap = aistyle[d->aitype].weap;
+                if(!isweap(weap)) weap = rnd(WEAP_MAX-1)+1;
+            }
+            if(isweap(weap)) d->loadweap = weap;
             else if(m_noitems(game::gamemode, game::mutators) && !m_arena(game::gamemode, game::mutators))
                 d->loadweap = m_weapon(game::gamemode, game::mutators);
             else if(aiforcegun >= 0 && aiforcegun < WEAP_MAX) d->loadweap = aiforcegun;
-            else while(true)
-            {
-                d->loadweap = rnd(WEAP_MAX);
-                if(d->loadweap >= WEAP_OFFSET || !rnd(d->skill)) break;
-            }
+            else weap = rnd(WEAP_MAX-WEAP_OFFSET)+WEAP_OFFSET;
             if(d->aitype == AI_BOT && m_arena(game::gamemode, game::mutators) && d->loadweap >= WEAP_ITEM)
-                d->loadweap = WEAP_SHOTGUN;
+                d->loadweap -= WEAP_MAX-WEAP_ITEM;
             d->ai->suspended = true;
         }
     }
@@ -579,25 +584,26 @@ namespace ai
     {
         if(!m_edit(game::gamemode))
         {
-            if(d->aitype == AI_BOT && d->ai->suspended && d->lastnode >= 0)
+            if(d->ai->suspended)
             { // bots idle until a human is around
-                if(!m_campaign(game::gamemode) || aicampaign || !entities::ents.inrange(d->aientity) || entities::ents[d->aientity]->type != PLAYERSTART)
-                    d->ai->unsuspend();
+                if(!m_campaign(game::gamemode) && d->aitype == AI_BOT) d->ai->unsuspend();
                 else
                 {
                     gameent *t = NULL;
-                    loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype < 0 && t->state == CS_ALIVE)
+                    loopi(game::numdynents()) if((t = (gameent *)game::iterdynents(i)) && t != d && t->aitype <= AI_BOT)
                     {
-                        d->ai->unsuspend();
-                        break;
+                        if(d->aitype == AI_BOT ? (t->state != CS_SPECTATOR && t->aitype < 0) : (t->state == CS_ALIVE && d->o.squaredist(t->o) <= 512))
+                        {
+                            d->ai->unsuspend();
+                            break;
+                        }
                     }
-                    if(d->ai->suspended) return 0;
                 }
             }
             if(!d->ai->suspended && (check(d, b) || find(d, b))) return 1;
             if(target(d, b, true, false, d->ai->suspended && d->aitype >= AI_START ? SIGHTMIN : 0.f)) return 1;
         }
-        else if(d->aitype == AI_BOT && d->ai->suspended && d->lastnode >= 0) d->ai->unsuspend();
+        else if(d->aitype == AI_BOT && d->ai->suspended) d->ai->unsuspend();
 
         if(!d->ai->suspended)
         {
@@ -673,7 +679,7 @@ namespace ai
 
     int dointerest(gameent *d, aistate &b)
     {
-        if(!d->ai->suspended && d->state == CS_ALIVE && aistyle[d->aitype].maxspeed)
+        if(!d->ai->suspended && d->state == CS_ALIVE && aistyle[d->aitype].canmove)
         {
             int sweap = m_weapon(game::gamemode, game::mutators);
             switch(b.targtype)
@@ -768,7 +774,7 @@ namespace ai
                     if(e && e->state == CS_ALIVE)
                     {
                         bool alt = altfire(d, e);
-                        if(aistyle[d->aitype].maxspeed)
+                        if(aistyle[d->aitype].canmove)
                         {
                             float mindist = WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) ? WEAPEX(d->weapselect, alt, game::gamemode, game::mutators, 1.f) : (d->weapselect != WEAP_MELEE ? SIGHTMIN : 0);
                             return patrol(d, b, e->feetpos(), mindist, SIGHTMAX) ? 1 : 0;
@@ -927,9 +933,10 @@ namespace ai
     {
         int result = 0, stupify = d->skill <= 30+rnd(20) ? rnd(d->skill*1111) : 0, skmod = max((111-d->skill)*10, 100);
         float frame = float(lastmillis-d->ai->lastrun)/float(max(skmod/2,1)*aistyle[d->aitype].frame);
+        if(!aistyle[d->aitype].canstrafe) frame *= 4;
         vec dp = d->headpos();
 
-        bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aistyle[d->aitype].maxspeed || d->ai->suspended;
+        bool wasdontmove = d->ai->dontmove, idle = b.idle == 1 || (stupify && stupify <= skmod) || !aistyle[d->aitype].canmove || d->ai->suspended;
         d->ai->dontmove = false;
         if(idle)
         {
@@ -943,7 +950,7 @@ namespace ai
         }
         else d->ai->dontmove = true;
 
-        if(d->aitype == AI_BOT)
+        if(aistyle[d->aitype].canjump)
         {
             if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
             if(idle)
@@ -990,10 +997,10 @@ namespace ai
                 {
                     d->ai->targyaw = yaw;
                     d->ai->targpitch = pitch;
-                    frame /= !insight ? 4.f : 2.f;
+                    if(!idle) frame *= 2;
                     d->ai->becareful = false;
                 }
-                else if(!insight) frame /= 2.f;
+                else if(!insight) frame *= 0.5f;
                 game::scaleyawpitch(d->yaw, d->pitch, yaw, pitch, frame, sskew);
                 if((insight || quick) && !d->ai->becareful)
                 {
@@ -1009,28 +1016,30 @@ namespace ai
             }
             else
             {
+                enemyok = false;
                 d->ai->enemy = -1;
                 d->ai->enemymillis = 0;
                 result = 0;
-                frame /= 2.f;
+                frame *= 0.5f;
             }
         }
         else
         {
+            enemyok = false;
             if(!enemyok)
             {
                 d->ai->enemy = -1;
                 d->ai->enemymillis = 0;
             }
             result = 0;
-            frame /= 2.f;
+            frame *= 0.5f;
         }
 
         game::fixrange(d->ai->targyaw, d->ai->targpitch);
         d->aimyaw = d->ai->targyaw; d->aimpitch = d->ai->targpitch;
         if(!result) game::scaleyawpitch(d->yaw, d->pitch, d->ai->targyaw, d->ai->targpitch, frame, 1.f);
 
-        if(d->aitype == AI_BOT)
+        if(d->aitype == AI_BOT && physics::allowimpulse())
         {
             bool wantsimpulse = false;
             if(b.idle == -1 && !d->ai->dontmove)
@@ -1058,7 +1067,10 @@ namespace ai
         {
             d->aimyaw = d->yaw;
             d->aimpitch = d->pitch;
-            d->move = 1; d->strafe = 0;
+            if(lastmillis-d->lastpain < PHYSMILLIS/4) d->move = -1;
+            else if(enemyok && e->o.squaredist(d->o) <= d->radius*d->radius) d->move = 0;
+            else d->move = 1;
+            d->strafe = 0;
         }
         else
         { // our guys move one way.. but turn another?! :)
@@ -1067,11 +1079,11 @@ namespace ai
                 {  1,  0,   0 },
                 {  1,  -1,  45 },
                 {  0,  -1,  90 },
-                { -1,  -1, 135 },
-                { -1,  0, 180 },
-                { -1, 1, 225 },
-                {  0, 1, 270 },
-                {  1, 1, 315 }
+                { -1,  -1,  135 },
+                { -1,  0,   180 },
+                { -1,  1,   225 },
+                {  0,  1,   270 },
+                {  1,  1,   315 }
             };
             float yaw = d->aimyaw-d->yaw;
             while(yaw < 0.0f) yaw += 360.0f;
@@ -1280,7 +1292,7 @@ namespace ai
                 {
                     bool ladder = d->onladder;
                     physics::move(d, 1, true);
-                    if(aistyle[d->aitype].maxspeed && !b.idle) timeouts(d, b);
+                    if(aistyle[d->aitype].canmove && !b.idle) timeouts(d, b);
                     if(!ladder && d->onladder) d->ai->jumpseed = lastmillis;
                     entities::checkitems(d);
                 }
@@ -1346,7 +1358,7 @@ namespace ai
                 c.override = false;
                 cleannext = false;
             }
-            if((d->state == CS_DEAD || d->state == CS_WAITING) && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= PHYSMILLIS*12) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : 30000)))
+            if((d->state == CS_DEAD || d->state == CS_WAITING) && (d->aitype == AI_BOT || !m_campaign(game::gamemode)) && (d->respawned < 0 || lastmillis-d->respawned >= 5000) && (!d->lastdeath || lastmillis-d->lastdeath > (d->aitype == AI_BOT || m_duke(game::gamemode, game::mutators) ? 500 : enemydelay)))
             {
                 if(m_arena(game::gamemode, game::mutators)) client::addmsg(N_LOADWEAP, "ri2", d->clientnum, d->loadweap);
                 client::addmsg(N_TRYSPAWN, "ri", d->clientnum);
@@ -1376,7 +1388,7 @@ namespace ai
                         continue; // shouldn't interfere
                     }
                 }
-                else if(d->ai->suspended && d->lastnode >= 0) d->ai->unsuspend();
+                else if(d->ai->suspended) d->ai->unsuspend();
             }
             logic(d, c, run);
             break;
@@ -1470,7 +1482,7 @@ namespace ai
                 {
                     aistate &b = d->ai->state[i];
                     drawstate(d, b, top, above += 2);
-                    if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aistyle[d->aitype].maxspeed)
+                    if(aidebug > 3 && top && rendernormally && b.type != AI_S_WAIT && aistyle[d->aitype].canmove)
                         drawroute(d, b, 4.f*(float(amt[1])/float(amt[0])));
                     if(top)
                     {

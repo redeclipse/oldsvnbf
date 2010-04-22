@@ -122,10 +122,10 @@ enttypes enttype[] = {
             false,              "teleport",     { "yaw",    "pitch",    "push",     "radius",   "colour" }
     },
     {
-        ACTOR,          1,          59,     0,      EU_NONE,    5,
+        ACTOR,          1,          59,     0,      EU_NONE,    8,
             (1<<FLAG)|(1<<WAYPOINT),
             0,
-            false,              "actor",        { "type",   "yaw",      "pitch",    "mode",     "id" }
+            false,              "actor",        { "type",   "yaw",      "pitch",    "mode",     "id",       "weap",     "health",   "speed" }
     },
     {
         TRIGGER,        1,          58,     16,     EU_AUTO,    5,
@@ -1120,7 +1120,7 @@ struct gameent : dynent, gamestate
         }
     }
 
-    bool wantshitbox() { return type == ENT_PLAYER || (type == ENT_AI && (!isaitype(aitype) || aistyle[aitype].maxspeed)); }
+    bool wantshitbox() { return type == ENT_PLAYER || (type == ENT_AI && (!isaitype(aitype) || aistyle[aitype].canmove)); }
 
     void checktags()
     {

@@ -1110,8 +1110,7 @@ namespace hud
                 int millis = d->lastdeath ? lastmillis-d->lastdeath : 0;
                 if(millis > 0)
                 {
-                    int len = m_delay(game::gamemode, game::mutators);
-                    if(!len && d->aitype >= AI_START) len = ai::aideadfade;
+                    int len = min(d->aitype >= AI_START ? min(ai::aideadfade, enemydelay ? enemydelay : INT_MAX-1) : m_delay(game::gamemode, game::mutators), 2500);
                     if(len > 0) fade *= clamp(float(len-millis)/float(len), 0.f, 1.f);
                     else return;
                 }
