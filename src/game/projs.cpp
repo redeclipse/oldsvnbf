@@ -224,7 +224,7 @@ namespace projs
                 {
                     case WEAP_TRACTOR:
                     {
-                        if(proj.owner && proj.local)
+                        if(proj.owner && proj.local && (!m_team(game::gamemode, game::mutators) || !proj.hit || proj.hit->type != ENT_PLAYER || proj.owner->team != ((gameent *)proj.hit)->team))
                         {
                             float mag = proj.lifesize*proj.scale*WEAP2(proj.weap, hitpush, proj.flags&HIT_ALT)*(100.f/proj.owner->weight);
                             if(proj.owner->physstate >= PHYS_SLOPE || proj.owner->onladder || physics::liquidcheck(proj.owner)) mag *= 0.5f;
@@ -611,7 +611,6 @@ namespace projs
                     if(proj.lifespan > 0.125f)
                     {
                         if(!proj.stuck) proj.lifesize = clamp(1.125f-proj.lifespan, 1.f-WEAP2(proj.weap, taper, proj.flags&HIT_ALT), 1.f);
-                        else proj.lifesize = 1;
                     }
                     else proj.lifesize = clamp(0.0625f+(proj.lifespan*10), 0.0625f, 1.f);
                 }

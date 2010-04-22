@@ -8,7 +8,7 @@ struct duelservmode : servmode
 
     void position(clientinfo *ci, bool clean)
     {
-        if(allowbroadcast(ci->clientnum))
+        if(allowbroadcast(ci->clientnum) && ci->state.aitype < AI_START)
         {
             int n = duelqueue.find(ci);
             if(n >= 0)
@@ -30,7 +30,7 @@ struct duelservmode : servmode
 
     void queue(clientinfo *ci, bool top = false, bool wait = true, bool clean = false)
     {
-        if(ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING)
+        if(ci->online && ci->state.state != CS_SPECTATOR && ci->state.state != CS_EDITING && ci->state.aitype < AI_START)
         {
             int n = duelqueue.find(ci);
             if(top)
@@ -60,7 +60,7 @@ struct duelservmode : servmode
 
     bool canspawn(clientinfo *ci, bool tryspawn = false)
     {
-        if(allowed.find(ci) >= 0) return true;
+        if(allowed.find(ci) >= 0 || ci->state.aitype >= AI_START) return true;
         if(tryspawn) queue(ci, false, duelround > 0 || duelqueue.length() > 1);
         return false; // you spawn when we want you to buddy
     }
@@ -113,11 +113,12 @@ struct duelservmode : servmode
             if(gamemillis >= dueltime)
             {
                 vector<clientinfo *> alive;
-                loopv(clients) queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GAME(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
+                loopv(clients) if(clients[i]->state.aitype < AI_START)
+                    queue(clients[i], clients[i]->state.state == CS_ALIVE || clients[i]->state.aitype >= AI_START, GAME(duelreset) || clients[i]->state.state != CS_ALIVE || clients[i]->state.aitype >= AI_START, true);
                 allowed.shrink(0); playing.shrink(0);
                 if(!duelqueue.empty())
                 {
-                    loopv(clients) position(clients[i], true);
+                    loopv(clients) if(clients[i]->state.aitype < AI_START) position(clients[i], true);
                     loopv(duelqueue)
                     {
                         if(m_duel(gamemode, mutators) && alive.length() >= 2) break;
@@ -141,11 +142,8 @@ struct duelservmode : servmode
                             sendf(-1, 1, "ri4", N_REGEN, ci->clientnum, ci->state.health, 0); // amt = 0 regens impulse
                             dropitems(ci, 1);
                         }
-                        if(ci->state.aitype < AI_START)
-                        {
-                            alive.add(ci);
-                            playing.add(ci);
-                        }
+                        alive.add(ci);
+                        playing.add(ci);
                     }
                     duelround++;
                     if(m_duel(gamemode, mutators))
@@ -170,7 +168,9 @@ struct duelservmode : servmode
         {
             bool cleanup = false;
             vector<clientinfo *> alive;
-            loopv(clients) if(clients[i]->state.state == CS_ALIVE && clients[i]->state.aitype < AI_START) alive.add(clients[i]);
+            loopv(clients)
+                if(clients[i]->state.aitype < AI_START && clients[i]->state.state == CS_ALIVE && clients[i]->state.aitype < AI_START)
+                    alive.add(clients[i]);
             if(!allowed.empty() && duelcheck && gamemillis-duelcheck >= 5000) loopvrev(allowed)
             {
                 if(alive.find(allowed[i]) < 0) spectator(allowed[i]);
