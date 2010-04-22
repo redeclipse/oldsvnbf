@@ -138,35 +138,20 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
     }
 }
 
-void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, int depth)
+void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, const vec &vmin, const vec &vmax, int depth)
 {
     maxdepth = max(maxdepth, depth);
-
-    vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-    loopi(numindices)
-    {
-        tri &tri = tris[indices[i]];
-        loopk(3)
-        {
-            float amin = min(tri.a[k], min(tri.b[k], tri.c[k])),
-                  amax = max(tri.a[k], max(tri.b[k], tri.c[k]));
-            vmin[k] = min(vmin[k], amin);
-            vmax[k] = max(vmax[k], amax);
-        }
-    }
-    if(depth==1)
-    {
-        bbmin = vmin;
-        bbmax = vmax;
-    }
 
     int axis = 2;
     loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
+    vec leftmin, leftmax, rightmin, rightmax;
     float splitleft, splitright;
     int left, right;
     loopk(3)
     {
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
         float split = 0.5f*(vmax[axis] + vmin[axis]);
         for(left = 0, right = numindices, splitleft = SHRT_MIN, splitright = SHRT_MAX; left < right;)
         {
@@ -177,12 +162,16 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
             {
                 ++left;
                 splitleft = max(splitleft, amax);
+                leftmin[axis] = min(leftmin[axis], amin);
+                leftmax[axis] = max(leftmax[axis], amax);
             }
             else
             {
                 --right;
                 swap(indices[left], indices[right]);
                 splitright = min(splitright, amin);
+                rightmin[axis] = min(rightmin[axis], amin);
+                rightmax[axis] = max(rightmax[axis], amax);
             }
         }
         if(left > 0 && right < numindices) break;
@@ -191,14 +180,28 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
 
     if(!left || right==numindices) 
     {
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
         left = right = numindices/2;
         splitleft = SHRT_MIN;
         splitright = SHRT_MAX;
         loopi(numindices)
         {
             tri &tri = tris[indices[i]];
-            if(i < left) splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
-            else splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+            float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
+                  amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
+            if(i < left) 
+            {
+                splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
+                leftmin[axis] = min(leftmin[axis], amin);
+                leftmax[axis] = max(leftmax[axis], amax);
+            }
+            else 
+            {
+                splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+                rightmin[axis] = min(rightmin[axis], amin);
+                rightmax[axis] = max(rightmax[axis], amax);
+            }
         }
     }
 
@@ -211,14 +214,14 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     else
     {
         buildnodes[node].child[0] = (axis<<14) | buildnodes.length();
-        build(buildnodes, indices, left, depth+1);
+        build(buildnodes, indices, left, leftmin, leftmax, depth+1);
     }
 
     if(numindices-right==1) buildnodes[node].child[1] = (1<<15) | (left==1 ? 1<<14 : 0) | indices[right];
     else
     {
         buildnodes[node].child[1] = (left==1 ? 1<<14 : 0) | buildnodes.length();
-        build(buildnodes, &indices[right], numindices-right, depth+1);
+        build(buildnodes, &indices[right], numindices-right, rightmin, rightmax, depth+1);
     }
 }
 
@@ -233,13 +236,25 @@ BIH::BIH(vector<tri> *t)
     memcpy(tris, t[0].getbuf(), t[0].length()*sizeof(tri));
     memcpy(noclip, t[1].getbuf(), t[1].length()*sizeof(tri));
 
+    loopi(numtris)
+    {
+        tri &tri = tris[i];
+        loopk(3)
+        {
+            float amin = min(tri.a[k], min(tri.b[k], tri.c[k])),
+                  amax = max(tri.a[k], max(tri.b[k], tri.c[k]));
+            bbmin[k] = min(bbmin[k], amin);
+            bbmax[k] = max(bbmax[k], amax);
+        }
+    }
+
     vector<BIHNode> buildnodes;
     ushort *indices = new ushort[numtris];
     loopi(numtris) indices[i] = i;
 
     maxdepth = 0;
 
-    build(buildnodes, indices, numtris);
+    build(buildnodes, indices, numtris, bbmin, bbmax);
 
     delete[] indices;
 
