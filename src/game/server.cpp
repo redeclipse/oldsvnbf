@@ -295,7 +295,7 @@ namespace server
         extern void removeai(clientinfo *ci, bool complete = false);
         extern bool reassignai(int exclude = -1);
         extern void checkskills();
-        extern void clearai(bool all = true);
+        extern void clearai(int type = 0);
         extern void checkai();
     }
 
@@ -1725,7 +1725,7 @@ namespace server
     void changemap(const char *name, int mode, int muts)
     {
         hasgameinfo = maprequest = mapsending = shouldcheckvotes = false;
-        aiman::clearai(m_play(mode) ? false : true);
+        aiman::clearai();
         aiman::dorefresh = true;
         stopdemo();
         gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);

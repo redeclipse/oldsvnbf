@@ -868,7 +868,7 @@ struct gamestate
     int protect(int millis, int delay)
     {
         int amt = 0;
-        if(lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
+        if(aitype < AI_START && lastspawn && delay && millis-lastspawn <= delay) amt = delay-(millis-lastspawn);
         return amt;
     }
 

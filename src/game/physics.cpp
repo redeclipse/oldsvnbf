@@ -221,21 +221,24 @@ namespace physics
 
     bool canimpulse(physent *d, int cost, int level)
     {
-        if((d->type == ENT_PLAYER || d->type == ENT_AI) && allowimpulse(level))
+        if(d->type == ENT_PLAYER || d->type == ENT_AI)
         {
             gameent *e = (gameent *)d;
-            if(allowimpulse() && impulsemeter && e->impulse[IM_METER]+(cost > 0 ? cost : impulsecost) > impulsemeter) return false;
-            if(cost <= 0)
+            if(e->aitype < AI_START && allowimpulse(level))
             {
-                if(e->impulse[IM_TIME] && lastmillis-e->impulse[IM_TIME] <= PHYSMILLIS) return false;
-                if(PHYS(gravity) > 0)
+                if(allowimpulse() && impulsemeter && e->impulse[IM_METER]+(cost > 0 ? cost : impulsecost) > impulsemeter) return false;
+                if(cost <= 0)
                 {
-                    if(impulsestyle <= 2 && e->impulse[IM_COUNT] >= impulsecount) return false;
-                    if(cost == 0 && impulsestyle == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL)
-                        return false;
+                    if(e->impulse[IM_TIME] && lastmillis-e->impulse[IM_TIME] <= PHYSMILLIS) return false;
+                    if(PHYS(gravity) > 0)
+                    {
+                        if(impulsestyle <= 2 && e->impulse[IM_COUNT] >= impulsecount) return false;
+                        if(cost == 0 && impulsestyle == 1 && e->impulse[IM_TYPE] > IM_T_NONE && e->impulse[IM_TYPE] < IM_T_WALL)
+                            return false;
+                    }
                 }
+                return true;
             }
-            return true;
         }
         return false;
     }
