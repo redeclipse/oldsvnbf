@@ -386,7 +386,7 @@ namespace physics
                 if(magxy > scale*dir.z)
                 {
                     smoothdir.mul(1/magxy);
-                    smoothdir.z = 1;
+                    smoothdir.z = 1.0f/scale;
                     smoothdir.mul(dir.magnitude()/smoothdir.magnitude());
                 }
                 else smoothdir.z = dir.z;
