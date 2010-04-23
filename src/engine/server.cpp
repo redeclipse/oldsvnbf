@@ -248,7 +248,7 @@ void filtertext(char *dst, const char *src, bool newline, bool colour, bool whit
     }
     *dst = '\0';
 }
-ICOMMAND(0, filter, "siii", (char *s, int *a, int *b, int *c), string d; filtertext(s, d, *a==0, *b==0, *c==0); result(d));
+ICOMMAND(0, filter, "siii", (char *s, int *a, int *b, int *c), string d; filtertext(d, s, *a==0, *b==0, *c==0); result(d));
 
 const char *escapetext(const char *src, bool quoteonly)
 {
