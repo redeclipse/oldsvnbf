@@ -7,7 +7,7 @@ enum { AI_F_NONE = 0, AI_F_RANDWEAP = 1<<0 };
 struct aistyles
 {
     int type,           weap,           health, maxspeed,   frame;  float   xradius,    yradius,    height,     weight;
-    bool    canmove,    canstrafe,  canjump,    useweap,    living;    const char  *name,      *fpmdl,                      *tpmdl;
+    bool    canmove,    canstrafe,  canjump,    useweap,    living;    const char  *name,      *tpmdl,                      *fpmdl;
 };
 #ifdef GAMESERVER
 aistyles aistyle[] = {
