@@ -192,16 +192,22 @@ namespace aiman
             }
             if(ci->state.aitype == AI_BOT && ++numbots >= GAME(botlimit)) shiftai(ci, -1);
         }
-        loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
+
+        if(GAME(enemyallowed) >= (m_campaign(gamemode) ? 0 : (m_insta(gamemode, mutators) ? 2 : 1)))
         {
-            bool needent = true;
-            loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
-            if(needent)
+            loopv(sents) if(sents[i].type == ACTOR && sents[i].attrs[0] >= AI_START && sents[i].attrs[0] < AI_MAX && (sents[i].attrs[4] == triggerid || !sents[i].attrs[4]) && m_check(sents[i].attrs[3], gamemode))
             {
-                addai(sents[i].attrs[0], i, -1);
-                sents[i].millis = gamemillis;
+                bool needent = true;
+                loopvk(clients) if(clients[k]->state.aientity == i) { needent = false; break; }
+                if(needent)
+                {
+                    addai(sents[i].attrs[0], i, -1);
+                    sents[i].millis = gamemillis;
+                }
             }
         }
+        else clearai(2);
+
         int balance = 0;
         if(m_campaign(gamemode)) balance = GAME(campaignplayers); // campaigns strictly obeys nplayers
         else if(m_fight(gamemode) && !m_trial(gamemode) && GAME(botlimit) > 0)
@@ -261,12 +267,13 @@ namespace aiman
             while(numclients(-1, true, AI_BOT) < balance) if(!addai(AI_BOT, -1, -1)) break;
             while(numclients(-1, true, AI_BOT) > balance) if(!delai(AI_BOT)) break;
         }
-        else clearai();
+        else clearai(1);
     }
 
-    void clearai(bool all)
+    void clearai(int type)
     { // clear and remove all ai immediately
-        loopvrev(clients) if(clients[i]->state.aitype >= (all ? AI_BOT : AI_START)) deleteai(clients[i]);
+        loopvrev(clients) if(type ? (type == 2 ? clients[i]->state.aitype >= AI_START : clients[i]->state.aitype == AI_BOT) : true)
+            deleteai(clients[i]);
         dorefresh = false;
     }
 
