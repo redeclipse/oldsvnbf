@@ -717,6 +717,7 @@ namespace game
             concatstring(d->obit, "was ");
             if(flags&HIT_CRIT) concatstring(d->obit, "\fs\fzgrcritically\fS ");
             if(isaitype(d->aitype) && !aistyle[d->aitype].living) concatstring(d->obit, "destroyed by");
+            else if(isaitype(actor->aitype) && actor->aitype == AI_ZOMBIE) concatstring(d->obit, "a tasty snack for");
             else
             {
                 static const char *obitnames[4][WEAP_MAX] = {
