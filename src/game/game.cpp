@@ -91,6 +91,9 @@ namespace game
     VAR(IDF_PERSIST, showobituaries, 0, 4, 5); // 0 = off, 1 = only me, 2 = 1 + announcements, 3 = 2 + but dying bots, 4 = 3 + but bot vs bot, 5 = all
     VAR(IDF_PERSIST, showobitdists, 0, 0, 1);
     VAR(IDF_PERSIST, showplayerinfo, 0, 2, 2); // 0 = none, 1 = CON_MESG, 2 = CON_EVENT
+
+    VAR(IDF_PERSIST, damagetonedelay, 0, 75, INT_MAX-1);
+    VAR(IDF_PERSIST, damageburndelay, 0, 250, INT_MAX-1);
     VAR(IDF_PERSIST, playdamagetones, 0, 1, 3);
     VAR(IDF_PERSIST, playcrittones, 0, 2, 3);
     VAR(IDF_PERSIST, playreloadnotify, 0, 1, 4);
@@ -544,14 +547,14 @@ namespace game
         enum { BURN = 1<<0, CRIT = 1<<1 };
 
         gameent *d, *actor;
-        int damage, flags;
+        int damage, flags, millis;
 
-        damagetone() {}
-        damagetone(gameent *d, gameent *actor, int damage, int flags) : d(d), actor(actor), damage(damage), flags(flags) {}
+        damagetone() { millis = lastmillis; }
+        damagetone(gameent *d, gameent *actor, int damage, int flags) : d(d), actor(actor), damage(damage), flags(flags) { millis = lastmillis; }
 
         bool merge(const damagetone &m)
         {
-            if(d != m.d || actor != m.actor || flags != m.flags) return false;
+            if(actor != m.actor || flags != m.flags) return false;
             damage += m.damage;
             return true;
         }
@@ -587,8 +590,14 @@ namespace game
 
     void flushdamagetones()
     {
-        loopv(damagetones) damagetones[i].play();
-        damagetones.setsize(0);
+        loopv(damagetones)
+        {
+            if(damagetones[i].flags&damagetone::CRIT || lastmillis-damagetones[i].millis >= (damagetones[i].flags&damagetone::BURN ? damageburndelay : damagetonedelay))
+            {
+                damagetones[i].play();
+                damagetones.remove(i--);
+            }
+        }
     }
 
     static int alarmchan = -1;
@@ -1727,12 +1736,8 @@ namespace game
     void renderclient(gameent *d, bool third, float trans, float size, int team, modelattach *attachments, bool secondary, int animflags, int animdelay, int lastaction, bool early)
     {
         const char *mdl = "";
-        if(d->aitype < AI_START)
-        {
-            if(third) mdl = teamtype[team].tpmdl;
-            else mdl = teamtype[team].fpmdl;
-        }
-        else if(d->aitype < AI_MAX) mdl = aistyle[d->aitype].mdl;
+        if(d->aitype < AI_START) mdl = third ? teamtype[team].tpmdl : teamtype[team].fpmdl;
+        else if(d->aitype < AI_MAX) mdl = third ? aistyle[d->aitype].tpmdl : aistyle[d->aitype].fpmdl;
         else return;
 
         float yaw = d->yaw, pitch = d->pitch, roll = d->calcroll(physics::iscrouching(d));

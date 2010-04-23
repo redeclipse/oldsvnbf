@@ -1556,7 +1556,7 @@ namespace hud
                 if(!sy) sy += dt;
                 popfont();
             }
-            if(physics::allowimpulse() && impulsemeter && impulsecost && inventoryimpulse)
+            if(game::focus->aitype < AI_START && physics::allowimpulse() && impulsemeter && impulsecost && inventoryimpulse)
             {
                 float len = game::focus == game::player1 ? 1-clamp(game::focus->impulse[IM_METER]/float(impulsemeter), 0.f, 1.f) : 1;
                 settexture(progresstex, 3);
