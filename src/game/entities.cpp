@@ -259,7 +259,7 @@ namespace entities
                 return weaptype[attr1].item;
             }
             case FLAG: return teamtype[attr[0]].flag;
-            case ACTOR: if(attr[0] >= AI_START && attr[0] < AI_MAX) return aistyle[attr[0]].mdl;
+            case ACTOR: if(attr[0] >= AI_START && attr[0] < AI_MAX) return aistyle[attr[0]].tpmdl;
             default: break;
         }
         return "";
@@ -386,13 +386,13 @@ namespace entities
             {
                 extentity &e = *ents[indices[i]];
                 float radius = calcentcacheradius(e);
-                if(i < left) 
+                if(i < left)
                 {
                     splitleft = max(splitleft, e.o[axis]+radius);
                     leftmin.min(vec(e.o).sub(radius));
                     leftmax.max(vec(e.o).add(radius));
                 }
-                else 
+                else
                 {
                     splitright = min(splitright, e.o[axis]-radius);
                     rightmin.min(vec(e.o).sub(radius));
@@ -442,7 +442,7 @@ namespace entities
         loopv(ents)
         {
             extentity &e = *ents[i];
-            if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE) 
+            if(e.type==WAYPOINT || enttype[e.type].usetype != EU_NONE)
             {
                 indices.add(i);
                 float radius = calcentcacheradius(e);
