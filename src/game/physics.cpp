@@ -482,6 +482,17 @@ namespace physics
     bool trystepdown(physent *d, vec &dir, bool init = false)
     {
         if(!sticktofloor(d)) return false;
+        vec old(d->o);
+        d->o.z -= stairheight;
+        d->zmargin = -stairheight;
+        if(collide(d, vec(0, 0, -1), slopez))
+        {
+            d->o = old;
+            d->zmargin = 0;
+            return false;
+        }
+        d->o = old;
+        d->zmargin = 0;
         float step = dir.magnitude();
         if(trystepdown(d, dir, step, 2, 1, init)) return true;
         if(trystepdown(d, dir, step, 1, 1, init)) return true;
