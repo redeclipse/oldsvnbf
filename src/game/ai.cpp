@@ -40,7 +40,11 @@ namespace ai
     bool targetable(gameent *d, gameent *e, bool z)
     {
         if(e && d != e && !m_edit(game::gamemode) && e->state == CS_ALIVE && physics::issolid(e, d))
-            return !z || !m_team(game::gamemode, game::mutators) || owner(d) != owner(e);
+        {
+            int dt = owner(d), et = owner(e);
+            if(dt == TEAM_ENEMY && et == TEAM_ENEMY) return false;
+            if(!z || !m_team(game::gamemode, game::mutators) || dt != et) return true;
+        }
         return false;
     }
 
@@ -109,19 +113,10 @@ namespace ai
 
     void create(gameent *d)
     {
-        if(!d->ai)
+        if(!d->ai && !(d->ai = new aiinfo()))
         {
-            if((d->ai = new aiinfo()) == NULL)
-            {
-                fatal("could not create ai");
-                return;
-            }
-        }
-        if(d->ai)
-        {
-            d->ai->views[0] = viewfieldx(d->skill);
-            d->ai->views[1] = viewfieldy(d->skill);
-            d->ai->views[2] = viewdist(d->skill);
+            fatal("could not create ai");
+            return;
         }
     }
 
@@ -176,7 +171,16 @@ namespace ai
         d->team = tm;
 
         if(resetthisguy) projs::remove(d);
-        if(d->ownernum >= 0 && game::player1->clientnum == d->ownernum) create(d);
+        if(d->ownernum >= 0 && game::player1->clientnum == d->ownernum)
+        {
+            create(d);
+            if(d->ai)
+            {
+                d->ai->views[0] = viewfieldx(d->skill);
+                d->ai->views[1] = viewfieldy(d->skill);
+                d->ai->views[2] = viewdist(d->skill);
+            }
+        }
         else if(d->ai) destroy(d);
     }
 
@@ -205,7 +209,14 @@ namespace ai
         loopi(game::numdynents()) if((e = (gameent *)game::iterdynents(i)) && e != d && e->ai && e->state == CS_ALIVE && e->aitype == d->aitype)
         {
             if(targets.find(e->clientnum) >= 0) continue;
-            if(teams && m_team(game::gamemode, game::mutators) && d && owner(d) != owner(e)) continue;
+            if(teams)
+            {
+                int dt = owner(d), et = owner(e);
+                if(dt != TEAM_ENEMY || et != TEAM_ENEMY)
+                {
+                    if(m_team(game::gamemode, game::mutators) && dt != et) continue;
+                }
+            }
             aistate &b = e->ai->getstate();
             if(state >= 0 && b.type != state) continue;
             if(target >= 0 && b.target != target) continue;
@@ -442,7 +453,7 @@ namespace ai
                 if(m_stf(game::gamemode)) stf::aifind(d, b, interests);
                 else if(m_ctf(game::gamemode)) ctf::aifind(d, b, interests);
             }
-            if(m_team(game::gamemode, game::mutators)) assist(d, b, interests, false, m_campaign(game::gamemode));
+            if(m_team(game::gamemode, game::mutators) || owner(d) == TEAM_ENEMY) assist(d, b, interests, false, m_campaign(game::gamemode));
             if(m_campaign(game::gamemode) && aicampaign)
             {
                 loopi(entities::lastent(TRIGGER)) if(entities::ents[i]->type == TRIGGER && entities::ents[i]->attrs[1] == TR_EXIT)
