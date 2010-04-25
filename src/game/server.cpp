@@ -300,7 +300,7 @@ namespace server
     }
 
     bool hasgameinfo = false;
-    int gamemode = -1, mutators = -1, gamemillis = 0, gamelimit = 0;
+    int gamemode = G_EDITMODE, mutators = 0, gamemillis = 0, gamelimit = 0;
     string smapname;
     int interm = 0, timeremaining = -1, oldtimelimit = -1;
     bool maprequest = false;
@@ -577,38 +577,38 @@ namespace server
     }
     ICOMMAND(0, gamename, "iii", (int *g, int *m), result(gamename(*g, *m)));
 
-    void modecheck(int *mode, int *muts, int trying)
+    void modecheck(int &mode, int &muts, int trying)
     {
-        if(!m_game(*mode))
+        if(!m_game(mode))
         {
-            *mode = G_DEATHMATCH;
-            *muts = gametype[*mode].implied;
+            mode = G_DEATHMATCH;
+            muts = gametype[mode].implied;
         }
-        #define modecheckreset(a) { if(*muts && ++count < G_M_NUM*4) { i = 0; a; } else { *muts = 0; break; } }
-        if(!gametype[*mode].mutators) *muts = G_M_NONE;
+        #define modecheckreset(a) { if(muts && ++count < G_M_NUM*4) { i = 0; a; } else { muts = 0; break; } }
+        if(!gametype[mode].mutators) muts = G_M_NONE;
         else
         {
             int count = 0;
-            if(gametype[*mode].implied) *muts |= gametype[*mode].implied;
-            if(*muts) loopi(G_M_NUM)
+            if(gametype[mode].implied) muts |= gametype[mode].implied;
+            if(muts) loopi(G_M_NUM)
             {
-                if(trying && !(gametype[*mode].mutators&mutstype[i].type) && (trying&mutstype[i].type)) trying &= ~mutstype[i].type;
-                if(!(gametype[*mode].mutators&mutstype[i].type) && (*muts&mutstype[i].type))
+                if(trying && !(gametype[mode].mutators&mutstype[i].type) && (trying&mutstype[i].type)) trying &= ~mutstype[i].type;
+                if(!(gametype[mode].mutators&mutstype[i].type) && (muts&mutstype[i].type))
                 {
-                    *muts &= ~mutstype[i].type;
+                    muts &= ~mutstype[i].type;
                     modecheckreset(continue);
                 }
-                if(*muts&mutstype[i].type) loopj(G_M_NUM)
+                if(muts&mutstype[i].type) loopj(G_M_NUM)
                 {
-                    if(mutstype[i].mutators && !(mutstype[i].mutators&mutstype[j].type) && (*muts&mutstype[j].type))
+                    if(mutstype[i].mutators && !(mutstype[i].mutators&mutstype[j].type) && (muts&mutstype[j].type))
                     {
-                        if(trying && (trying&mutstype[j].type) && !(gametype[*mode].implied&mutstype[i].type)) *muts &= ~mutstype[i].type;
-                        else *muts &= ~mutstype[j].type;
+                        if(trying && (trying&mutstype[j].type) && !(gametype[mode].implied&mutstype[i].type)) muts &= ~mutstype[i].type;
+                        else muts &= ~mutstype[j].type;
                         modecheckreset(break);
                     }
-                    if(mutstype[i].implied && (mutstype[i].implied&mutstype[j].type) && !(*muts&mutstype[j].type))
+                    if(mutstype[i].implied && (mutstype[i].implied&mutstype[j].type) && !(muts&mutstype[j].type))
                     {
-                        *muts |= mutstype[j].type;
+                        muts |= mutstype[j].type;
                         modecheckreset(break);
                     }
                 }
@@ -619,29 +619,29 @@ namespace server
     int mutscheck(int mode, int muts, int trying)
     {
         int gm = mode, mt = muts;
-        modecheck(&gm, &mt, trying);
+        modecheck(gm, mt, trying);
         return mt;
     }
     ICOMMAND(0, mutscheck, "iii", (int *g, int *m, int *t), intret(mutscheck(*g, *m, *t)));
 
-    void changemode(int *mode, int *muts)
+    void changemode(int &mode, int &muts)
     {
-        if(*mode < 0)
+        if(mode < 0)
         {
-            if(GAME(defaultmode) >= G_START) *mode = GAME(defaultmode);
-            else *mode = rnd(G_RAND)+G_FIGHT;
+            if(GAME(defaultmode) >= G_START) mode = GAME(defaultmode);
+            else mode = rnd(G_RAND)+G_FIGHT;
         }
-        if(*muts < 0)
+        if(muts < 0)
         {
-            if(GAME(defaultmuts) >= G_M_NONE) *muts = GAME(defaultmuts);
+            if(GAME(defaultmuts) >= G_M_NONE) muts = GAME(defaultmuts);
             else
             {
-                *muts = G_M_NONE;
+                muts = G_M_NONE;
                 int num = rnd(G_M_NUM+1);
                 if(num) loopi(num)
                 {
                     int rmut = rnd(G_M_NUM+1);
-                    if(rmut) *muts |= 1<<(rmut-1);
+                    if(rmut) muts |= 1<<(rmut-1);
                 }
             }
         }
@@ -983,7 +983,7 @@ namespace server
         if(ci->state.aitype >= AI_START) return ci->state.aientity;
         else
         {
-            if((m_campaign(gamemode) || m_trial(gamemode) || m_lobby(gamemode)) && !ci->state.cpnodes.empty())
+            if((m_campaign(gamemode) || m_trial(gamemode)) && !ci->state.cpnodes.empty())
             {
                 int checkpoint = ci->state.cpnodes.last();
                 if(sents.inrange(checkpoint)) return checkpoint;
@@ -1034,7 +1034,7 @@ namespace server
         loopvk(clients) clients[k]->state.dropped.reset();
         setuptriggers(true);
         if(m_fight(gamemode)) setupitems(true);
-        setupspawns(true, m_trial(gamemode) || m_lobby(gamemode) ? 0 : np);
+        setupspawns(true, m_trial(gamemode) ? 0 : np);
         hasgameinfo = aiman::dorefresh = true;
     }
 
@@ -1350,7 +1350,7 @@ namespace server
             else
             {
                 int mode = GAME(defaultmode) >= 0 ? gamemode : -1, muts = GAME(defaultmuts) >= -1 ? mutators : -2;
-                changemode(&mode, &muts);
+                changemode(mode, muts);
                 const char *map = choosemap(smapname, mode, muts);
                 srvoutf(3, "server chooses: \fs\fy%s\fS on map \fs\fo%s\fS", gamename(mode, muts), map);
                 sendf(-1, 1, "ri2si3", N_MAPCHANGE, 1, map, 0, mode, muts);
@@ -1373,7 +1373,7 @@ namespace server
 
     void vote(char *reqmap, int &reqmode, int &reqmuts, int sender)
     {
-        clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(&reqmode, &reqmuts);
+        clientinfo *ci = (clientinfo *)getinfo(sender); modecheck(reqmode, reqmuts);
         if(!ci || !m_game(reqmode) || !reqmap || !*reqmap) return;
         if(GAME(modelock) == 5 && GAME(mapslock) == 5 && !haspriv(ci, PRIV_MAX, "vote for a new game")) return;
         else switch(GAME(votelock))
@@ -1388,7 +1388,7 @@ namespace server
             if(ci->lastvote && lastmillis-ci->lastvote <= GAME(votewait)) return;
             if(ci->modevote == reqmode && ci->mutsvote == reqmuts && !strcmp(ci->mapvote, reqmap)) return;
         }
-        if(reqmode < G_LOBBY && !ci->local)
+        if(reqmode < G_START && !ci->local)
         {
             srvmsgf(ci->clientnum, "\fraccess denied, you must be a local client");
             return;
@@ -1721,7 +1721,7 @@ namespace server
         aiman::clearai();
         aiman::dorefresh = true;
         stopdemo();
-        gamemode = mode; mutators = muts; changemode(&gamemode, &mutators);
+        changemode(gamemode = mode, mutators = muts);
         nplayers = gamemillis = interm = 0;
         oldtimelimit = GAME(timelimit);
         timeremaining = GAME(timelimit) ? GAME(timelimit)*60 : -1;
@@ -2446,7 +2446,7 @@ namespace server
         int fragvalue = -1, pointvalue = smode ? smode->points(ci, ci) : fragvalue;
         ci->state.frags += fragvalue;
         ci->state.spree = 0;
-        if(!flags && (m_trial(gamemode) || m_lobby(gamemode)))
+        if(!flags && m_trial(gamemode))
         {
             ci->state.cpmillis = 0;
             ci->state.cpnodes.shrink(0);
@@ -3661,7 +3661,7 @@ namespace server
                                 case TR_EXIT:
                                 {
                                     if(sents[ent].spawned) break;
-                                    if(m_campaign(gamemode) || m_lobby(gamemode))
+                                    if(m_campaign(gamemode))
                                     {
                                         sents[ent].spawned = true;
                                         startintermission();

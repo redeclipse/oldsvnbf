@@ -324,8 +324,7 @@ namespace hud
             {
                 g.space(1);
                 g.pushfont("default");
-                if(m_lobby(game::gamemode)) g.textf("Free Roam", 0xFFFFFF, NULL);
-                else if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
+                if(m_edit(game::gamemode)) g.textf("Map Editing", 0xFFFFFF, NULL);
                 else if(m_campaign(game::gamemode)) g.textf("Campaign", 0xFFFFFF, NULL);
                 else if(m_team(game::gamemode, game::mutators))
                     g.textf("Team \fs%s%s\fS", 0xFFFFFF, NULL, teamtype[game::player1->team].chat, teamtype[game::player1->team].name);

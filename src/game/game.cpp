@@ -2,7 +2,7 @@
 #include "game.h"
 namespace game
 {
-    int nextmode = -1, nextmuts = -1, gamemode = -1, mutators = -1, maptime = 0, timeremaining = 0,
+    int nextmode = G_EDITMODE, nextmuts = 0, gamemode = G_EDITMODE, mutators = 0, maptime = 0, timeremaining = 0,
         lastcamera = 0, lasttvcam = 0, lasttvchg = 0, lastzoom = 0, lastmousetype = 0, liquidchan = -1, fogdist = 0;
     bool intermission = false, prevzoom = false, zooming = false;
     float swayfade = 0, swayspeed = 0, swaydist = 0;
@@ -443,11 +443,7 @@ namespace game
         return NULL;
     }
 
-    void setmode(int nmode, int nmuts)
-    {
-        nextmode = nmode; nextmuts = nmuts;
-        server::modecheck(&nextmode, &nextmuts);
-    }
+    void setmode(int nmode, int nmuts) { server::modecheck(nextmode = nmode, nextmuts = nmuts); }
     ICOMMAND(0, mode, "ii", (int *val, int *mut), setmode(*val, *mut));
 
     void heightoffset(gameent *d, bool local)
@@ -1523,8 +1519,6 @@ namespace game
             else if(maptime < 0)
             {
                 maptime = lastmillis;
-                //if(m_lobby(gamemode)) smartmusic(true, false);
-                //else
                 if(*mapmusic && (!music || !Mix_PlayingMusic() || strcmp(mapmusic, musicfile))) playmusic(mapmusic, "");
                 else musicdone(false);
                 RUNWORLD("on_start");

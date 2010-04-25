@@ -207,7 +207,8 @@ namespace client
         removetrackedsounds(game::player1);
         game::player1->clientnum = -1;
         game::player1->privilege = PRIV_NONE;
-        game::gamemode = game::mutators = -1;
+        game::gamemode = G_EDITMODE;
+        game::mutators = 0;
         loopv(game::players) if(game::players[i]) game::clientdisconnected(i);
         emptymap(0, true, NULL, true);
         smartmusic(true, false);
@@ -566,7 +567,7 @@ namespace client
     {
         if(editmode) toggleedit();
         game::gamemode = gamemode; game::mutators = mutators;
-        server::modecheck(&game::gamemode, &game::mutators);
+        server::modecheck(game::gamemode, game::mutators);
         game::nextmode = game::gamemode; game::nextmuts = game::mutators;
         game::timeremaining = -1;
         game::maptime = 0;
